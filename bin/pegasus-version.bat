@@ -18,4 +18,4 @@ if "%CLASSPATH%" == "" (
     exit /b 1
 )
 
-%JAVA_HOME%\bin\java "-pegasus.home=%PEGASUS_HOME%" org.griphyn.vdl.toolkit.VersionNumber "%*"
+%JAVA_HOME%\bin\java "-Dpegasus.home=%PEGASUS_HOME%" org.griphyn.vdl.toolkit.VersionNumber "%*"

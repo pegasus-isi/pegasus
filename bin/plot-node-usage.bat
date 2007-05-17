@@ -34,5 +34,5 @@ if "%has:~0,2%" == "-D" (
 )
 set has=
 
-%JAVA_HOME%\bin\java "-pegasus.home=%PEGASUS_HOME%" %addon% org.griphyn.cPlanner.toolkit.PlotNodeUsage "%*"
+%JAVA_HOME%\bin\java "-Dpegasus.home=%PEGASUS_HOME%" %addon% org.griphyn.cPlanner.toolkit.PlotNodeUsage "%*"
 

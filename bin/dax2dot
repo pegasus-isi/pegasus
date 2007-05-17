@@ -6,4 +6,4 @@
 . "`dirname $0`/common.sh"
 
 # run java program
-${JAVA_HOME}/bin/java -pegasus.home=${PEGASUS_HOME} $addon org.griphyn.vdl.toolkit.VizDAX "$@"
+${JAVA_HOME}/bin/java -Dpegasus.home=${PEGASUS_HOME} $addon org.griphyn.vdl.toolkit.VizDAX "$@"
