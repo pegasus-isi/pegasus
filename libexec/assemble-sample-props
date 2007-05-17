@@ -21,8 +21,8 @@ if ( @ARGV < 1 || @ARGV > 2 ) {
     die "this should not happen!";
 }
 
-die "Set your VDS_HOME environment variable\n" unless exists $ENV{'VDS_HOME'};
-my $psp = File::Spec->catfile( $ENV{'VDS_HOME'}, 'libexec', 'parse-sample-props' );
+die "Set your PEGASUS_HOME environment variable\n" unless exists $ENV{'PEGASUS_HOME'};
+my $psp = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'libexec', 'parse-sample-props' );
 die "$psp does not exist\n" unless -e $psp;
 die "$psp is not readable\n" unless -r _;
 die "$psp is not executable\n" unless -x _;
