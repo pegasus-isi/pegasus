@@ -28,7 +28,7 @@ package org.griphyn.vdl.dbschema;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public interface Catalog
 {

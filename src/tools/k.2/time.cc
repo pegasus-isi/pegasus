@@ -15,7 +15,7 @@
 #include "time.hh"
 
 static const char* RCS_ID =
-"$Id: time.cc,v 1.4 2005/04/08 19:40:51 griphyn Exp $";
+"$Id$";
 
 bool Time::c_local = true;
 bool Time::c_extended = true;

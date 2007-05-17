@@ -21,7 +21,7 @@ package org.griphyn.common.catalog.transformation.client;
  * This is a helper class which all TC client components (like tcAdd, tcDelete and tcQuery) must  extend.
  *
  * @author Gaurang Mehta gmehta@isi.edu
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 
 import org.griphyn.cPlanner.common.LogManager;

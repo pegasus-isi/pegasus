@@ -25,7 +25,7 @@ import java.text.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.6 $
+ * @version $Revision$
  *
  * @see java.util.Date
  * @see java.text.SimpleDateFormat

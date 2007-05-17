@@ -69,7 +69,7 @@ import java.util.Iterator;
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @version $Revision: 1.49 $
+ * @version $Revision$
  */
 
 public class CPlanner extends Executable{
@@ -521,7 +521,7 @@ public class CPlanner extends Executable{
      */
     public void printShortVersion(){
         String text =
-          "\n $Id: CPlanner.java,v 1.49 2007/03/01 00:02:23 vahi Exp $ " +
+          "\n $Id$ " +
           "\n " + getGVDSVersion() +
           "\n Usage : gencdag [-Dprop  [..]] -d|-P <dax file|pdax file> " +
           " [-p site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
@@ -538,7 +538,7 @@ public class CPlanner extends Executable{
     public void printLongVersion(){
 
         String text =
-           "\n $Id: CPlanner.java,v 1.49 2007/03/01 00:02:23 vahi Exp $ " +
+           "\n $Id$ " +
            "\n " + getGVDSVersion() +
            "\n CPlanner/gencdag - The main class which is used to run  Pegasus. "  +
            "\n Usage: gencdag [-Dprop  [..]] --dax|--pdax <file> [--pools <execution sites>] " +

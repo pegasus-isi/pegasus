@@ -32,7 +32,7 @@ import java.util.regex.*;
  * @author Kavitha Ranganathan
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.30 $
+ * @version $Revision$
  *
  * @see DAXParser
  * @see org.griphyn.vdl.dax.ADAG
@@ -42,7 +42,7 @@ public class DAX2DAG implements Callback
   /**
    * Stores the current version number for whatever purposes.
    */
-  public static final String c_version = "$Revision: 1.30 $";
+  public static final String c_version = "$Revision$";
 
   /**
    * Stores the digested version number from the class constant.
@@ -1207,7 +1207,7 @@ public class DAX2DAG implements Callback
 
     String linefeed = System.getProperty( "line.separator", "\r\n" );
     System.out.println(
-"$Id: DAX2DAG.java,v 1.30 2005/10/12 18:45:37 griphyn Exp $" );
+"$Id$" );
     System.out.println( "Usage: " + basename + 
 			" [-d dir] [-V] [-w wfrc] [-P pre] [-p post] [-l min] [-t sft] dax" );
     System.out.println( linefeed + 
@@ -1292,7 +1292,7 @@ linefeed +
 	break;
 	
       case 'V':
-	System.out.println("$Id: DAX2DAG.java,v 1.30 2005/10/12 18:45:37 griphyn Exp $" );
+	System.out.println("$Id$" );
 	return;
 
       case 'd':

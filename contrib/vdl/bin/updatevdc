@@ -2,7 +2,7 @@
 #
 # parse VDLx documents and update VDC accordingly, if a TR/DV doesn't exist
 # in the VDC, it is added to VDC.
-# $Id: updatevdc,v 1.6 2005/07/26 18:48:24 griphyn Exp $
+# $Id$
 #
 . "`dirname $0`/common.sh"
 

@@ -45,7 +45,7 @@ import java.util.Set;
  * files for the clustered jobs.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public abstract class Abstract implements Clusterer {

@@ -15,7 +15,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.4 $
+# Revision : $Revision$
 #
 package GriPhyN::Scanner;
 use 5.006;
@@ -39,7 +39,7 @@ our %classes = ( 'EOF' => 0,
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 our $VERSION = '0.1';
-$VERSION=$1 if ( '$Revision: 1.4 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = qw($VERSION %classes @classes);

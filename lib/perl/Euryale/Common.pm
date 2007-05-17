@@ -1,7 +1,7 @@
 package Euryale::Common;
 #
 # Contains functionality that is shared between prescript and postscript.
-# $Id: Common.pm,v 1.3 2005/11/05 06:22:02 voeckler Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -39,7 +39,7 @@ sub obtain_delegation($$$);	# { }
 	     on_death make_boolean tell_queue_manager transfer_files);
 @EXPORT_OK = qw($VERSION);
 
-$VERSION=$1 if ( '$Revision: 1.3 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 $__PACKAGE__::prefix = undef;
 
 #

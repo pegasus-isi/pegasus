@@ -24,7 +24,7 @@ import java.util.List;
  * This implementation of the Selector select a transformation from a list in a round robin fashion.
  *
  * @author Gaurang Mehta
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class RoundRobin
     extends TransformationSelector {

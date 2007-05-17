@@ -15,7 +15,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision: $Revision: 1.3 $
+# Revision: $Revision$
 #
 package Site::Selector;
 use 5.006;
@@ -35,7 +35,7 @@ our %multikeys = ( 'resource.id' => 1, 'input.lfn' => 1, 'resource.bad' => 1 );
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 our $VERSION='1.0';
-$VERSION=$1 if ( '$Revision: 1.3 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = qw($VERSION %multikeys parse_file_v2);

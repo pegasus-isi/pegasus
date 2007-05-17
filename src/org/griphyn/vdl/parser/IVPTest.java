@@ -26,7 +26,7 @@ import java.io.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.3 $
+ * @version $Revision$
  *
  * @see InvocationParser
  * @see org.griphyn.vdl.invocation.Invocation

@@ -28,7 +28,7 @@ import java.util.regex.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.3 $
+ * @version $Revision$
  *
  * @see UpdateVDC
  * @see VDLc

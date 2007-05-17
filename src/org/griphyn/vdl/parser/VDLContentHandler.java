@@ -31,7 +31,7 @@ import java.util.Stack;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.7 $
+ * @version $Revision$
  *
  * @see Definition
  * @see DefinitionHandler 

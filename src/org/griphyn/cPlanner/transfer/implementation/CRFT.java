@@ -110,7 +110,7 @@ import java.util.Properties;
  *
  *
  * @author Karan Vahi
- * @version $Revision: 1.5 $
+ * @version $Revision$
  */
 public class CRFT extends AbstractMultipleFTPerXFERJob {
 

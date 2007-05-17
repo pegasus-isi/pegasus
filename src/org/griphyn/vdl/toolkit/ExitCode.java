@@ -36,7 +36,7 @@ import gnu.getopt.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.24 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.parser.InvocationParser
  * @see org.griphyn.vdl.dbschema.DatabaseSchema
@@ -65,7 +65,7 @@ public class ExitCode extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println( 
-"$Id: ExitCode.java,v 1.24 2006/09/23 19:02:43 benc Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println( "Usage: " + this.m_application + ' ' + m_usage1 );
@@ -159,7 +159,7 @@ linefeed +
       while ( (option = opts.getopt()) != -1 ) {
 	switch ( option ) {
 	case 'V':
-	  System.out.println( "$Id: ExitCode.java,v 1.24 2006/09/23 19:02:43 benc Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
 

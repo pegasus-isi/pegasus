@@ -26,7 +26,7 @@ package org.griphyn.cPlanner.classes;
  * @author Saurabh Khurana
  * @author Karan Vahi
  *
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 
 public class GridFTPBandwidth {

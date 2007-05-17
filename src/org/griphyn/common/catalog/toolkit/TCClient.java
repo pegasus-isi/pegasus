@@ -41,7 +41,7 @@ import gnu.getopt.LongOpt;
  * implementation.
  *
  * @author Gaurang Mehta
- * @version $Revision: 1.9 $
+ * @version $Revision$
  */
 public class TCClient {
 

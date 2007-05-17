@@ -20,7 +20,7 @@ package org.griphyn.cPlanner.classes;
  *
  * @author Karan Vahi vahi@isi.edu
  * @author Gaurang Mehta gmehta@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class TransferJob extends SubInfo {
 

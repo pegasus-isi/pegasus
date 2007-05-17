@@ -45,7 +45,7 @@ import java.util.HashSet;
  * the number of transfer nodes per execution pool.
  *
  * @author Karan Vahi
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 
 public class Bundle extends Default {

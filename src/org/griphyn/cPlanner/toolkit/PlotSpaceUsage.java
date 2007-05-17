@@ -54,7 +54,7 @@ import java.util.List;
  *
  * @author Karan Vahi
  *
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 
 public class PlotSpaceUsage extends Executable{
@@ -412,7 +412,7 @@ public class PlotSpaceUsage extends Executable{
      */
     public void printShortVersion(){
         String text =
-          "\n $Id: PlotSpaceUsage.java,v 1.7 2007/04/10 21:41:17 vahi Exp $ " +
+          "\n $Id$ " +
           "\n " + getGVDSVersion() +
           "\n Usage : plot-space-usage [-Dprop  [..]] -i <input directory>  " +
           " [-o output directory] [-b basename] [-s size units] [-t timing source] " +
@@ -428,7 +428,7 @@ public class PlotSpaceUsage extends Executable{
     public void printLongVersion(){
 
         String text =
-           "\n $Id: PlotSpaceUsage.java,v 1.7 2007/04/10 21:41:17 vahi Exp $ " +
+           "\n $Id$ " +
            "\n " + getGVDSVersion() +
            "\n plot-space-usage - A plotting tool that plots out the space usage on remote clusters over time"  +
            "\n Usage: plot_space_usage [-Dprop  [..]] --dir <input directory> [--base basename] " +

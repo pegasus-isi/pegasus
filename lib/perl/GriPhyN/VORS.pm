@@ -16,9 +16,9 @@ package GriPhyN::VORS;
 # Southern California. All rights reserved.
 #
 # Author: Karan Vahi vahi aT isi dot edu
-# Revision : $Revision: 1.2 $
+# Revision : $Revision$
 #
-# $Id: VORS.pm,v 1.2 2006/08/30 20:13:28 vahi Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -36,7 +36,7 @@ sub get_sites_in_grid($$$$);
 
 #our @EXPORT_OK = qw($VERSION convert_siteinfo_to_vds get_site_information get_sites_in_grid);
 our @EXPORT_OK = qw();
-$VERSION=$1 if ( '$Revision: 1.2 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 
 

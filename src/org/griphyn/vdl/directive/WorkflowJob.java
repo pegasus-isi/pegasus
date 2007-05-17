@@ -25,7 +25,7 @@ import org.griphyn.vdl.workflow.*;
  *
  * @author Mike Wilde
  * @author Eric Gilbert
- * @version $Revision: 1.8 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.toolkit.VDLc
  */

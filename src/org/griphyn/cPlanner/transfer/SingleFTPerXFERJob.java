@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.transfer;
  * handle only one file transfer per transfer job like old guc and Stork.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface SingleFTPerXFERJob /*extends Implementation */{
     //empty for time being

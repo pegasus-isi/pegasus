@@ -29,7 +29,7 @@ import org.griphyn.vdl.dbschema.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.13 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.util.Logging
  * @see org.griphyn.vdl.util.ChimeraProperties

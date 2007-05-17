@@ -36,7 +36,7 @@ import org.griphyn.vdl.util.Logging;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.7 $
+ * @version $Revision$
  * @see org.griphyn.vdl.dbdriver
  */
 public abstract class DatabaseSchema

@@ -38,7 +38,7 @@ import java.util.TreeMap;
  * or through profile tags in DAX.
  *
  * @author Karan Vahi
- * @version $Revision: 1.9 $
+ * @version $Revision$
  */
 
 public class Globus extends Namespace {

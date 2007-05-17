@@ -37,7 +37,7 @@ import java.util.Set;
  * dax and gets the information about the jobs making up the partition.
  *
  * @author Karan Vahi
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 public class MultipleLook extends DAXWriter{
 

@@ -35,7 +35,7 @@ import java.io.File;
  * the X bit for the staged compute jobs.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public interface  GridStart {
 

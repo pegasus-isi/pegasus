@@ -32,7 +32,7 @@
 #endif
 
 static const char* RCS_ID =
-"$Id: getif.cc,v 1.3 2005/10/11 16:40:30 griphyn Exp $";
+"$Id$";
 
 const unsigned long 
 PrimaryInterface::vpn_netmask[4] = {

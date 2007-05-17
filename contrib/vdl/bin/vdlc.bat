@@ -1,7 +1,7 @@
 @echo off
 rem
 rem process the pipeline from VDLt to DAX in one go
-rem $Id: vdlc.bat,v 1.1 2005/06/10 21:45:55 griphyn Exp $
+rem $Id$
 rem
 if "%JAVA_HOME%" == "" (
     echo "Error! Please set your JAVA_HOME variable"

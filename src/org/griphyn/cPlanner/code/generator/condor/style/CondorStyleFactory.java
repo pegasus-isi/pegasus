@@ -40,7 +40,7 @@ import java.io.IOException;
  * of the Factory methods.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public class CondorStyleFactory {
 

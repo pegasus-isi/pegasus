@@ -34,7 +34,7 @@ import org.griphyn.vdl.dax.ADAG;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.11 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.router.Route
  * @see org.griphyn.vdl.router.BookKeeper

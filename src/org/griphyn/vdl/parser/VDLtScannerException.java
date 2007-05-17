@@ -21,7 +21,7 @@ import java.io.*;
  * @see VDLtScanner
  *
  * @author Jens-S. Vöckler
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class VDLtScannerException 
   extends VDLtException

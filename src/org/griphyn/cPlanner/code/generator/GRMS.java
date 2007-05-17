@@ -49,7 +49,7 @@ import java.util.Vector;
  * the workflow to a GRMS server.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public class GRMS extends Abstract {
 

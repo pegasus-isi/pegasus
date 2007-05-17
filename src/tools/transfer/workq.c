@@ -32,7 +32,7 @@
 #include "debug.h"
 
 static const char* RCS_ID =
-"$Id: workq.c,v 1.6 2005/01/25 18:34:51 griphyn Exp $";
+"$Id$";
 
 #ifdef USE_DEBUG
 static

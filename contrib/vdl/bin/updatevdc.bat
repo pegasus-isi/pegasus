@@ -2,7 +2,7 @@
 rem
 rem parse VDLx documents and update VDC accordingly, if a TR/DV doesn't exist
 rem in the VDC, it is added to VDC.
-rem $Id: updatevdc.bat,v 1.2.0.1 2003/09/12 00:01:47 gmehta Exp $
+rem $Id$
 rem
 if "%JAVA_HOME%" == "" (
     echo "Error! Please set your JAVA_HOME variable"

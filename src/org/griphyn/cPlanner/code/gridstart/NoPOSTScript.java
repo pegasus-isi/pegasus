@@ -34,7 +34,7 @@ import java.io.File;
  * Dagman profile key passed.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class NoPOSTScript implements POSTScript {

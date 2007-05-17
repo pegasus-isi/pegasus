@@ -28,7 +28,7 @@
 #include "getif.h"
 
 static const char* RCS_ID =
-"$Id: show-if.c,v 1.2 2005/10/19 18:37:20 griphyn Exp $";
+"$Id$";
 
 int
 main( int argc, char* argv[] )

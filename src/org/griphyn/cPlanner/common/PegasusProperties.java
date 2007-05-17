@@ -46,7 +46,7 @@ import java.util.HashMap;
  * @author Karan Vahi
  * @author Gaurang Mehta
  *
- * @version $Revision: 1.93 $
+ * @version $Revision$
  *
  * @see org.griphyn.common.util.VDSProperties
  */

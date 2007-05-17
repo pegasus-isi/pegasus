@@ -28,7 +28,7 @@
 #include "tools.h"
 
 static const char* RCS_ID =
-"$Id: statinfo.c,v 1.18 2007/01/23 23:55:35 voeckler Exp $";
+"$Id$";
 
 extern int isExtended; /* timestamp format concise or extended */
 extern int isLocal;    /* timestamp time zone, UTC or local */

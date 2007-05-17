@@ -35,7 +35,7 @@ import java.util.*;
  *
  * @author Jens-S. Vöckler
  * @author Karan Vahi
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 public interface ReplicaCatalog extends Catalog
 {

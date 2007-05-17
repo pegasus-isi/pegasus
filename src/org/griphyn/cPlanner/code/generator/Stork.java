@@ -37,7 +37,7 @@ import java.util.StringTokenizer;
  * This implementation generates files that can be understood by Stork.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class Stork extends Abstract {

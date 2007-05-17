@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @author Karan Vahi
  *
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 
 public interface Callback {

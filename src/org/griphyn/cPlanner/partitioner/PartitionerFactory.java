@@ -35,7 +35,7 @@ import java.util.Map;
  * being loaded.
  *
  * @author Karan Vahi
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 public class PartitionerFactory {
 

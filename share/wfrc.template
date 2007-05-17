@@ -1,6 +1,6 @@
 #
 # template for workflow control
-# $Id: wfrc.template,v 1.11 2005/09/07 18:43:32 griphyn Exp $
+# $Id$
 #
 
 wf.profile.vds.voname   ivdgl

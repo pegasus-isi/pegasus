@@ -10,7 +10,7 @@
 #include "invoke.h"
 
 static const char* RCS_ID =
-"$Id: main.c,v 1.2 2005/11/10 18:50:08 voeckler Exp $";
+"$Id$";
 
 int debug = 0;
 

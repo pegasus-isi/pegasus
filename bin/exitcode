@@ -3,7 +3,7 @@
 # parse the returned invocation record and optionally pass 
 # into the database. Make the parser return a non-zero exitcode
 # on remote application failures. 
-# $Id: exitcode,v 1.4 2005/09/10 02:12:19 gmehta Exp $
+# $Id$
 #
 no_heap_setup=1
 . "`dirname $0`/common.sh"

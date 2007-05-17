@@ -16,7 +16,7 @@ package org.griphyn.cPlanner.classes;
 
 /**
  * Class to capture reserved words.
- * $Revision: 1.4 $
+ * $Revision$
  * @author Jens Voeckler
  * @author Gaurang Mehta
  */

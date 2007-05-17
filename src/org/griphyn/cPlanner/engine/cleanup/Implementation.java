@@ -23,7 +23,7 @@ import java.util.List;
  * The interface that defines how the cleanup job is invoked and created.
  *
  * @author  Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface Implementation {
 

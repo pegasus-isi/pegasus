@@ -71,7 +71,7 @@ import org.griphyn.vdl.util.ChimeraProperties;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.7 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.toolkit.ExitCode
  * @see org.griphyn.vdl.parser.InvocationParser

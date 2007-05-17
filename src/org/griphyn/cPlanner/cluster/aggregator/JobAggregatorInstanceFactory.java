@@ -37,7 +37,7 @@ import java.util.HashMap;
  *
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  * @see JobAggregatorFactory
  */

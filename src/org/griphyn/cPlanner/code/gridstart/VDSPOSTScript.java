@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.code.POSTScript;
  * kickstart records.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public abstract class VDSPOSTScript implements POSTScript {

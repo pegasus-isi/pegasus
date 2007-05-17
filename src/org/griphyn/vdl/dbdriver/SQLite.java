@@ -35,7 +35,7 @@ import org.griphyn.vdl.util.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  *
  * @see DatabaseDriver
  * @see org.griphyn.vdl.dbschema

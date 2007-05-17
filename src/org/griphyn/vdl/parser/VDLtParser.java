@@ -26,7 +26,7 @@ import java.util.ArrayList;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.12 $
+ * @version $Revision$
  *
  * @see VDLtScanner
  * @see VDLtToken

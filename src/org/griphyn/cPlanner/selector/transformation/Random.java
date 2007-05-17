@@ -26,7 +26,7 @@ import java.util.List;
  * TransformationCatalogEntry from a List of entries.
  *
  * @author Gaurang Mehta
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class Random
     extends TransformationSelector {

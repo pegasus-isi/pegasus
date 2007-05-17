@@ -16,9 +16,9 @@ package GriPhyN::SC;
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.2 $
+# Revision : $Revision$
 #
-# $Id: SC.pm,v 1.2 2005/11/16 23:28:35 voeckler Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -33,7 +33,7 @@ sub break_uri($);		# { }
 sub major_from_contact($);	# { }
 our @EXPORT_OK = qw($VERSION sanitize break_uri major_from_contact);
 
-$VERSION=$1 if ( '$Revision: 1.2 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 #
 # --- start -----------------------------------------------------

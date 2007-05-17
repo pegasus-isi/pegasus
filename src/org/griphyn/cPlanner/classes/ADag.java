@@ -37,7 +37,7 @@ import java.io.IOException;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.15 $
+ * @version $Revision$
  *
  * @see DagInfo
  * @see SubInfo

@@ -15,7 +15,7 @@
 #include "null.hh"
 
 static const char* RCS_ID =
-"$Id: null.cc,v 1.2 2004/02/23 20:21:53 griphyn Exp $";
+"$Id$";
 
 null_pointer::~null_pointer() throw()
 {

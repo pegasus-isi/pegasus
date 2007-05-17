@@ -27,7 +27,7 @@ import java.util.regex.*;
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @author Karan Vahi
- * @version $Revision: 1.9 $
+ * @version $Revision$
  * */
 public class VDSProperties
 {

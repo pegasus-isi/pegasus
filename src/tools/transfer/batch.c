@@ -24,7 +24,7 @@
 #include "batch.h"
 
 static const char* RCS_ID =
-"$Id: batch.c,v 1.3 2004/12/02 20:36:55 griphyn Exp $";
+"$Id$";
 
 void
 init_batching( Batch* result, unsigned parallel )

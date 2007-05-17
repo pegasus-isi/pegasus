@@ -2,7 +2,7 @@
 #
 # generate a Concrete Dag by providing a DAX
 #
-# $Id: gencdag,v 1.7 2005/09/10 02:12:19 gmehta Exp $
+# $Id$
 
 . "`dirname $0`/common.sh"
 

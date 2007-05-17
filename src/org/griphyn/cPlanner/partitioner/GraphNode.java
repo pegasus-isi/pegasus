@@ -25,7 +25,7 @@ import java.util.List;
  * parents and children.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public class GraphNode extends Data {
 

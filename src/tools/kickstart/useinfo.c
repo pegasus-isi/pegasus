@@ -17,7 +17,7 @@
 #include <string.h>
 
 static const char* RCS_ID =
-"$Id: useinfo.c,v 1.5 2007/01/23 23:55:35 voeckler Exp $";
+"$Id$";
 
 int
 printXMLUseInfo( char* buffer, size_t size, size_t* len, size_t indent,

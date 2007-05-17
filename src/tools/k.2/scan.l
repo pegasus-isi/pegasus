@@ -14,7 +14,7 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  *
- * $Id: scan.l,v 1.5 2004/06/07 22:17:19 griphyn Exp $
+ * $Id$
  * 
  * Author:   Jens-S. Vöckler <voeckler@cs.uchicago.edu>
  * File:     scan.l
@@ -134,7 +134,7 @@ xmlns		return TK_XMLNS;
 %%
 
 static const char *RCS_ID = 
-  "$Id: scan.l,v 1.5 2004/06/07 22:17:19 griphyn Exp $";
+  "$Id$";
 
 static
 std::string

@@ -34,7 +34,7 @@ import java.util.Iterator;
  *  </pre>
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class TestSiteCatalog {

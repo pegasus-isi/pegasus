@@ -40,7 +40,7 @@ import java.util.Iterator;
  * file transfer in a single file transfer job.
  *
  * @author Karan Vahi
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 
 public abstract class AbstractSingleFTPerXFERJob extends Abstract

@@ -30,7 +30,7 @@ import java.io.IOException;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.10 $ 
+ * @version $Revision$ 
  *
  * @see Leaf
  * @see PseudoText

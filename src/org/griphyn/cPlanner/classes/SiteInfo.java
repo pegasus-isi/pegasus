@@ -67,7 +67,7 @@ import java.util.Iterator;
  * @author Gaurang Mehta gmehta@isi.edu
  * @author Karan Vahi vahi@isi.edu
  *
- * @version $Revision: 1.8 $
+ * @version $Revision$
  *
  * @see GlobusVersion
  * @see GridFTPServer

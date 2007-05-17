@@ -1,7 +1,7 @@
 --
 -- schema: org.griphyn.vdl.dbschema.InvocationSchema
 -- driver: PostGreSQL 7.4.*
--- $Revision: 1.11 $
+-- $Revision$
 --
 
 -- if the next step fails, you forgot to run "create-init-pg.sql"

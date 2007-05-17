@@ -27,7 +27,7 @@ import java.io.*;
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  *
- * @version $Revision: 1.1 $
+ * @version $Revision$
  * @see Graph
  */
 public class Topology 

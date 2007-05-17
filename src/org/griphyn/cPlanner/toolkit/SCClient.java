@@ -51,7 +51,7 @@ import java.util.StringTokenizer;
  *
  * @author Gaurang Mehta gmehta@isi.edu
  *
- * @version $Revision: 1.15 $
+ * @version $Revision$
  */
 public class SCClient
     extends Executable {

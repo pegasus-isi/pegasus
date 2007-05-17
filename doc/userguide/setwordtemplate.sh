@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Revision: 1.1 $
+# $Revision$
 
 #
 # setwordtemplate $file

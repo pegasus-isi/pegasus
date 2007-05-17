@@ -30,7 +30,7 @@ import java.util.*;
  *
  * @author Jens-S. Vöckler
  * @author Karan Vahi
- * @version $Revision: 1.11 $
+ * @version $Revision$
  */
 public class ReplicaCatalogEntry implements CatalogEntry
 {

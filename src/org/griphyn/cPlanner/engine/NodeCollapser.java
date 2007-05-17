@@ -56,7 +56,7 @@ import java.util.StringTokenizer;
  * @author Karan Vahi vahi@isi.edu
  * @author Mei-Hui Su mei@isi.edu
  *
- * @version $Revision: 1.30 $
+ * @version $Revision$
  */
 public class NodeCollapser extends Engine {
 

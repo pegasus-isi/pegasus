@@ -26,7 +26,7 @@ import java.util.List;
  * children from a node. Parents are kept to facilitate bottom up traversals.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public class GraphNode extends Data {
 

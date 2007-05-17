@@ -36,7 +36,7 @@ import java.util.Set;
  * configuration file.
  *
  * @author Karan Vahi
- * @version $Revision: 1.5 $
+ * @version $Revision$
  */
 public class AuthenticateEngine extends Engine {
 

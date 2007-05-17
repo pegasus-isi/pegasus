@@ -48,7 +48,7 @@ import java.util.HashSet;
  * precedence.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public class Horizontal extends BFS{
 

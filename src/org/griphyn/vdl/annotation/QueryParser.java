@@ -140,7 +140,7 @@ import org.griphyn.vdl.dbschema.Annotation;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.4 $
+ * @version $Revision$
  *
  * @see QueryScanner
  * @see QueryTree

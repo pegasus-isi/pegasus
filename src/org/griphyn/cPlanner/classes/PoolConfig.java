@@ -29,7 +29,7 @@ import java.util.Iterator;
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @version $Revision: 1.7 $
+ * @version $Revision$
  *
  * @see SiteInfo
  */

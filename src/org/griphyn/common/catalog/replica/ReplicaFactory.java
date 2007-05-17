@@ -31,7 +31,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
  *
  * @author Karan Vahi
  * @author Jens-S. Vöckler
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  * @see org.griphyn.common.catalog.ReplicaCatalog
  * @see org.griphyn.common.catalog.ReplicaCatalogEntry

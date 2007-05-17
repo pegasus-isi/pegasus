@@ -40,7 +40,7 @@ import java.lang.reflect.InvocationTargetException;
  * @author Karan Vahi
  * @author Gaurang Mehta
  *
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public abstract class SingleFTPerXFERJobRefiner extends AbstractRefiner{
 

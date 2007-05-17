@@ -16,9 +16,9 @@ package GriPhyN::TC;
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.2 $
+# Revision : $Revision$
 #
-# $Id: TC.pm,v 1.2 2005/08/11 01:35:57 griphyn Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -30,7 +30,7 @@ our @EXPORT = qw();
 sub _add(\@$);			# { }
 our @EXPORT_OK = qw($VERSION _add);
 
-$VERSION=$1 if ( '$Revision: 1.2 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 #
 # --- start -----------------------------------------------------

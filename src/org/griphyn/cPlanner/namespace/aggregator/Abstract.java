@@ -20,7 +20,7 @@ package org.griphyn.cPlanner.namespace.aggregator;
  * An abstract implementation of the Profile Aggregators.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public abstract class Abstract implements Aggregator{
 

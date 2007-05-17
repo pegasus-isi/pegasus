@@ -23,7 +23,7 @@ import java.util.Properties;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public interface Catalog
 {

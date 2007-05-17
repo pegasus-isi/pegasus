@@ -18,7 +18,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler   voeckler at cs dot uchicago dot edu
-# $Id: vds-delegationd,v 1.5 2005/11/11 19:40:30 voeckler Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -48,7 +48,7 @@ my $margin = 7200;		# safety margin in seconds
 my $uuid_re = '([[:xdigit:]]{8}(?:-[[:xdigit:]]{4}){3}-[[:xdigit:]]{12})';
 
 # revision handling
-$_ = '$Revision: 1.5 $';      # don't edit, automatically updated by CVS
+$_ = '$Revision$';      # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/;
 
 # forward declarations

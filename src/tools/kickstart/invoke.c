@@ -19,7 +19,7 @@
 #include "invoke.h"
 
 static const char* RCS_ID =
-"$Id: invoke.c,v 1.4 2005/11/10 19:11:23 voeckler Exp $";
+"$Id$";
 
 int
 append_arg( char* data, char*** arg, size_t* index, size_t* capacity )

@@ -24,7 +24,7 @@
 #include <pthread.h>
 
 static const char* RCS_ID =
-"$Id: debug.c,v 1.2 2005/02/02 19:43:04 griphyn Exp $";
+"$Id$";
 
 ssize_t
 debug( const char* fmt, ... )

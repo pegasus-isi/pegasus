@@ -2,7 +2,7 @@
 #
 # poor man's tool to obtain remote exit code.
 #
-# $Id: parse-exitcode,v 1.4 2006/07/12 15:22:05 benc Exp $
+# $Id$
 require 5.6.0;
 use strict;
 use Getopt::Long;

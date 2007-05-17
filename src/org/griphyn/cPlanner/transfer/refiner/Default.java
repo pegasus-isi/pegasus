@@ -45,7 +45,7 @@ import java.util.List;
  * to a remote site, that is shared amongst jobs.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public class Default extends MultipleFTPerXFERJobRefiner {

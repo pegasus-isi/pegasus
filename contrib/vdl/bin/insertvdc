@@ -2,7 +2,7 @@
 #
 # parse VDLx documents and add definition's to VDC, if a TR/DV already
 # exists in VDC, it is skipped.
-# $Id: insertvdc,v 1.6 2005/07/26 18:48:24 griphyn Exp $
+# $Id$
 #
 . "`dirname $0`/common.sh"
 

@@ -34,7 +34,7 @@
 #include "appinfo.hh"
 
 static const char* RCS_ID =
-"$Id: stagejob.cc,v 1.5 2004/02/23 20:21:53 griphyn Exp $";
+"$Id$";
 
 StageJob::StageJob( const char* tag, 
 		    const std::string& format, 

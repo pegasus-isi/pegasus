@@ -15,7 +15,7 @@
 #
 # Authors Jens Voeckler voeckler@cs.uchicago.edu
 #         Gaurang Mehta gmehta@isi.edu
-# Revision : $Revision: 1.7 $
+# Revision : $Revision$
 #
 require 5.005;
 use strict;

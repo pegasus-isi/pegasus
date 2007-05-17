@@ -20,7 +20,7 @@ package org.griphyn.vdl.planner;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  */
 public interface Wrapper

@@ -27,7 +27,7 @@ import org.xml.sax.SAXParseException;
  * @author Karan Vahi
  * @author Gaurang Mehta
  *
- * $Revision: 1.4 $
+ * $Revision$
  */
 
 public class XMLErrorHandler implements ErrorHandler{

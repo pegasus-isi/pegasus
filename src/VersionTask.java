@@ -24,7 +24,7 @@ import org.griphyn.common.util.Version;
  * @author Karan Vahi
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 public class VersionTask extends Task
 {

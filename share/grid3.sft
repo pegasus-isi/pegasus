@@ -1,5 +1,5 @@
 #  template     = @@TEMPLATE@@
-#  revision     = $Revision: 1.2 $
+#  revision     = $Revision$
 #  version	= @@VERSION@@
 #  jobid	= @@JOBID@@
 #  level	= @@LEVEL@@

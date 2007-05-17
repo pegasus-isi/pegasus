@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # search the vdc for specific definition's
-# $Id: xsearchvdc,v 1.4 2005/07/26 18:48:24 griphyn Exp $
+# $Id$
 #
 . "`dirname $0`/common.sh"
 

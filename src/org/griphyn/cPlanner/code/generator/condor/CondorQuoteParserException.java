@@ -21,7 +21,7 @@ package org.griphyn.cPlanner.code.generator.condor;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  * @see CondorQuoteParser
  */

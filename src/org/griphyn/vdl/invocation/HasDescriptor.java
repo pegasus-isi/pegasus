@@ -21,7 +21,7 @@ package org.griphyn.vdl.invocation;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public interface HasDescriptor
 {

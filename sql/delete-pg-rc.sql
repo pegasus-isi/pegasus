@@ -1,7 +1,7 @@
 --
 -- schema: org.griphyn.common.catalog.ReplicaCatalog
 -- driver: PostGreSQL 7.4.*
--- $Revision: 1.5 $
+-- $Revision$
 --
 
 DROP INDEX ix_rc_attr;

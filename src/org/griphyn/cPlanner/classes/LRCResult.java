@@ -144,7 +144,7 @@ import org.globus.replica.rls.RLSString2Bulk;
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @version $Revision: 1.3 $
+ * @version $Revision$
  *
  * @see org.globus.replica.rls.RLSString2Bulk
  */

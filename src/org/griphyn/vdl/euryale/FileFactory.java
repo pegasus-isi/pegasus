@@ -22,7 +22,7 @@ import java.io.*;
  * @author Kavitha Ranganathan
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  * @see DAX2DAG
  */

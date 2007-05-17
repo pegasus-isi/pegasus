@@ -33,7 +33,7 @@ import org.xml.sax.InputSource;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.13 $ 
+ * @version $Revision$ 
  */
 public class ChunkSchema extends DatabaseSchema implements VDC
 {

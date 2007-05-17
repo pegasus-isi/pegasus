@@ -31,7 +31,7 @@ import java.util.Map;
  * assigned a level.
  *
  * @author Karan Vahi
- * @version $Revision: 1.12 $
+ * @version $Revision$
  */
 public class BFS extends Partitioner{
 

@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.cluster;
  * It is a checked exception.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class ClustererException extends Exception {

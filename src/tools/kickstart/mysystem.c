@@ -30,7 +30,7 @@
 #include "mysystem.h"
 
 static const char* RCS_ID =
-"$Id: mysystem.c,v 1.13 2006/09/14 20:01:31 voeckler Exp $";
+"$Id$";
 
 #include "mysignal.h"
 

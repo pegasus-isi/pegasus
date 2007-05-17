@@ -70,7 +70,7 @@ import org.griphyn.common.catalog.transformation.TCMode;
  * 
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.13 $
+ * @version $Revision$
  *
  */
 public class Scriptor 

@@ -1,7 +1,7 @@
 --
 -- schema : org.griphyn.common.catalog.TransformationCatalog
 -- driver : PostGreSQL
--- $Revision: 1.5 $
+-- $Revision$
 -- Author : Gaurang Mehta gmehta@isi.edu
 
 --

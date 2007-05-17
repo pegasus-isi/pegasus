@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * This implementation of the Selector select a transformation of type STATIC_BINARY and only on the submit site.
  * @author Gaurang Mehta
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class Submit
     extends TransformationSelector {

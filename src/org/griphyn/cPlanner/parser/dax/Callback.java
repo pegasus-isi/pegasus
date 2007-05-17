@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
  *
  * @author Karan Vahi
  * @author Jens-S. V�ckler
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface Callback {
 

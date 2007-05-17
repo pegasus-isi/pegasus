@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
  * the job.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public interface POSTScript {

@@ -41,7 +41,7 @@ import java.util.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.8 $
+ * @version $Revision$
  *
  */
 public class Logging {

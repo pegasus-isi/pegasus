@@ -31,7 +31,7 @@ import java.util.TreeMap;
  * Condor namespace by the user either through dax or through profiles in pool.
  *
  * @author Karan Vahi
- * @version $Revision: 1.18 $
+ * @version $Revision$
  */
 
 public class Condor extends Namespace{

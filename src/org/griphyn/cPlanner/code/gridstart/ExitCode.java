@@ -22,7 +22,7 @@ import java.io.File;
  * database also.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class ExitCode extends VDSPOSTScript {

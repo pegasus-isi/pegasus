@@ -23,7 +23,7 @@
 #include <unistd.h>
 
 static const char* RCS_ID =
-"$Id: mylist.c,v 1.2 2005/08/15 16:45:38 griphyn Exp $";
+"$Id$";
 
 #ifndef ITEM_MAGIC
 #define ITEM_MAGIC 0xcd82bd08

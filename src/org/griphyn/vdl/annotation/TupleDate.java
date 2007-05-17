@@ -26,7 +26,7 @@ import java.text.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.10 $
+ * @version $Revision$
  */
 public class TupleDate extends Tuple
 {

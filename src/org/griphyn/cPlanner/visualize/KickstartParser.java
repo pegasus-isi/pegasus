@@ -46,7 +46,7 @@ import java.io.StringWriter;
  * input.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 
 public class KickstartParser {

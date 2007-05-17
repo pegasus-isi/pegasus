@@ -14,7 +14,7 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  *
- * $Id: scan.y,v 1.11 2004/07/22 21:17:21 griphyn Exp $
+ * $Id$
  * 
  * Author:   Jens-S. Vöckler <voeckler@cs.uchicago.edu>
  * File:     scan.y
@@ -699,7 +699,7 @@ command: TK_EOC
 %%
 
 static const char* RCS_ID = 
-  "$Id: scan.y,v 1.11 2004/07/22 21:17:21 griphyn Exp $";
+  "$Id$";
 
 #include <stdio.h>
 #include <stdarg.h>

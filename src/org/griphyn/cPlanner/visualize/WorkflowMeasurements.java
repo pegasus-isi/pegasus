@@ -27,7 +27,7 @@ import java.util.Iterator;
  * the workflow was executed.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class WorkflowMeasurements {
 

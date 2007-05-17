@@ -28,7 +28,7 @@ import java.lang.reflect.InvocationTargetException;
  * to be passed to the DAX Parser.
  *
  * @author Karan Vahi
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class DAXCallbackFactory {
 

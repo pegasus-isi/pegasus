@@ -55,7 +55,7 @@ import java.util.List;
  *
  * @author Karan Vahi
  *
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class PlotNodeUsage extends Executable{
@@ -360,7 +360,7 @@ public class PlotNodeUsage extends Executable{
      */
     public void printShortVersion(){
         String text =
-          "\n $Id: PlotNodeUsage.java,v 1.1 2007/04/10 21:42:34 vahi Exp $ " +
+          "\n $Id$ " +
           "\n " + getGVDSVersion() +
           "\n Usage : plot_node_usage [-Dprop  [..]] -i <input directory>  " +
           " [-o output directory] [-b basename] [-T time units] [-v] [-V] [-h]";
@@ -375,7 +375,7 @@ public class PlotNodeUsage extends Executable{
     public void printLongVersion(){
 
         String text =
-           "\n $Id: PlotNodeUsage.java,v 1.1 2007/04/10 21:42:34 vahi Exp $ " +
+           "\n $Id$ " +
            "\n " + getGVDSVersion() +
            "\n plot-node-usage - A plotting tool that plots out the number of jobs running on remote clusters over time"  +
            "\n Usage: plot_node_usage [-Dprop  [..]] --input <input directory> [--base basename] " +

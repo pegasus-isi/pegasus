@@ -35,7 +35,7 @@ import java.lang.reflect.InvocationTargetException;
  * @author Karan Vahi
  * @author Gaurang Mehta
  *
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public interface Refiner {
 

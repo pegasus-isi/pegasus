@@ -33,7 +33,7 @@ import java.io.IOException;
  * A Condor Submit Writer, that understands the notion of hashed file directories.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class HashedFile extends CondorGenerator {
 

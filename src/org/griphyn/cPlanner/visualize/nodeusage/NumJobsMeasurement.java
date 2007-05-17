@@ -8,7 +8,7 @@ import java.util.Date;
  * Stores the number of jobs as an integer.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class NumJobsMeasurement implements Measurement {

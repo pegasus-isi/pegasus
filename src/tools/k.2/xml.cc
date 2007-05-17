@@ -20,7 +20,7 @@
 #include <iomanip>
 
 static const char* RCS_ID =
-"$Id: xml.cc,v 1.2 2004/02/23 20:21:54 griphyn Exp $";
+"$Id$";
 
 std::string
 XML::indent( int width )

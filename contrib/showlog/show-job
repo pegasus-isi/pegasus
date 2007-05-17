@@ -12,7 +12,7 @@ use Data::Dumper;
 use Getopt::Long qw(:config bundling no_ignore_case);
 
 $main::version = 'unknown';
-$_ = '$Revision: 1.9 $';       # don't edit
+$_ = '$Revision$';       # don't edit
 $main::version = $1 if /Revision:\s+([0-9.]+)/o;
 
 sub usage {

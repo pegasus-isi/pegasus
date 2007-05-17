@@ -21,7 +21,7 @@ package org.griphyn.cPlanner.namespace.aggregator;
  * on profiles during merging of profiles.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface Aggregator{
 

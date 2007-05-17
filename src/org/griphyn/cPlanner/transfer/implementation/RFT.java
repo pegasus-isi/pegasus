@@ -118,7 +118,7 @@ import java.util.Properties;
  *
  *
  * @author Karan Vahi
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public class RFT extends AbstractMultipleFTPerXFERJob {
 

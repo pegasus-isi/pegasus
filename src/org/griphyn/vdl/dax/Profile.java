@@ -45,7 +45,7 @@ import java.io.Writer;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 public class Profile extends DAX implements Cloneable
 {

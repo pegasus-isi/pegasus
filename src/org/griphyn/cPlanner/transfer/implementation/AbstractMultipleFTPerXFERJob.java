@@ -40,7 +40,7 @@ import java.util.HashSet;
  * file transfers in a single file transfer job.
  *
  * @author Karan Vahi
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 
 public abstract class AbstractMultipleFTPerXFERJob extends Abstract

@@ -21,7 +21,7 @@ import org.griphyn.vdl.classes.*;
  * and the kanonical executable for GriPhyN aka keg.
  *
  * @author   Jens-S. Vöckler
- * @version  $Revision: 1.3 $
+ * @version  $Revision$
  */
 public class CreateDiamondKeg {
 

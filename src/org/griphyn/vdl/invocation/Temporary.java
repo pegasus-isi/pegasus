@@ -24,7 +24,7 @@ import java.io.IOException;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public class Temporary extends File implements HasDescriptor, HasFilename
 {

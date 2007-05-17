@@ -35,7 +35,7 @@ import java.text.DecimalFormat;
  * An implementation that plots in the Ploticus format.
  *
  * @author Karan Vahi
- * @version $Revision: 1.9 $
+ * @version $Revision$
  */
 
 public class Ploticus implements Plot {

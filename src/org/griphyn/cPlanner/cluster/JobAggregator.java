@@ -62,7 +62,7 @@ import java.util.Iterator;
  * implementing class in NodeCollapser.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public interface JobAggregator {
 

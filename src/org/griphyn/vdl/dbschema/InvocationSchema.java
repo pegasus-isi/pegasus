@@ -31,7 +31,7 @@ import org.griphyn.vdl.util.Logging;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.13 $
+ * @version $Revision$
  */
 public class InvocationSchema extends DatabaseSchema 
   implements PTC

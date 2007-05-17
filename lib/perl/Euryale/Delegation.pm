@@ -2,7 +2,7 @@ package Euryale::Delegation;
 #
 # Contains GT4 delegation-specific functionality that is shared between
 # prescript and postscript.
-# $Id: Delegation.pm,v 1.2 2005/11/04 17:13:44 voeckler Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -20,7 +20,7 @@ sub vdd_connect($);		# { }
 sub vdd_get_delegation(*$;$); # { }
 
 # create the export lists
-$VERSION=$1 if ( '$Revision: 1.2 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 @EXPORT = qw(parse_epr print_epr vdd_socket vdd_get_delegation vdd_connect);
 @EXPORT_OK = qw($VERSION);
 

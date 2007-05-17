@@ -16,9 +16,9 @@ package GriPhyN::RC::LRC;
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.2 $
+# Revision : $Revision$
 #
-# $Id: LRC.pm,v 1.2 2005/09/01 23:46:15 griphyn Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -30,7 +30,7 @@ our @EXPORT = qw();
 our @EXPORT_OK = qw($VERSION);
 our $MAXCMD = 100;		# something in RLS
 
-$VERSION=$1 if ( '$Revision: 1.2 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 #
 # --- start -----------------------------------------------------

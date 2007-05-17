@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# $Revision: 1.3 $
+# $Revision$
 
 # Expected files
 #    .chapterlist_html (with single # before start of numbered chapters)

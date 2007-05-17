@@ -34,7 +34,7 @@ import java.util.StringTokenizer;
  * refiners.
  *
  * @author Karan Vahi
- * @version $Revision: 1.5 $
+ * @version $Revision$
  */
 
 public abstract class AbstractRefiner implements Refiner{

@@ -27,7 +27,7 @@
 #include "util.h"
 
 static const char* RCS_ID =
-"$Id: item.c,v 1.2 2004/10/22 00:10:47 griphyn Exp $";
+"$Id$";
 
 int
 item_init( item_p item, xfer_p xfer )

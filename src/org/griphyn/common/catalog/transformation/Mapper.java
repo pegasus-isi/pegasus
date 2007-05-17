@@ -35,7 +35,7 @@ import java.util.Map;
  * query for a particular lfn is made to it.
  *
  * @author Gaurang Mehta
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public abstract class Mapper {
 

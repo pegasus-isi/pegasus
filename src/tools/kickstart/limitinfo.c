@@ -23,7 +23,7 @@
 #include "limitinfo.h"
 
 static const char* RCS_ID =
-"$Id: limitinfo.c,v 1.1 2007/01/24 00:03:54 voeckler Exp $";
+"$Id$";
 
 #ifndef RLIMIT_NLIMITS
 #ifdef RLIM_NLIMITS

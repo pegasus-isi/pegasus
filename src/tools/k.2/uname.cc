@@ -15,7 +15,7 @@
 #include "uname.hh"
 
 static const char* RCS_ID =
-"$Id: uname.cc,v 1.3 2004/06/15 20:42:36 griphyn Exp $";
+"$Id$";
 
 #if 0
 static

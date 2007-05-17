@@ -25,7 +25,7 @@ import java.io.IOException;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  * @see Job
  */
 public class Environment extends Invocation

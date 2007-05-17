@@ -25,7 +25,7 @@ import org.griphyn.vdl.workflow.*;
  *
  * @author Jens-S. Vöckler
  * @author Mike Wilde
- * @version $Revision: 1.1 $
+ * @version $Revision$
  * @see org.griphyn.vdl.dbschema.DatabaseSchema
  * @see org.griphyn.vdl.dbdriver 
  */

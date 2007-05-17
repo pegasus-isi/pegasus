@@ -18,7 +18,7 @@
 # Author: Douglas Scheftner dscheftn at cs dot uchicago dot edu
 #
 
-scriptversion='$Id: pegasus-config,v 1.31 2005/11/09 21:41:05 voeckler Exp $'
+scriptversion='$Id$'
 self="`basename $0`"
 
 # 

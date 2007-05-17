@@ -1,7 +1,7 @@
 --
 -- schema: org.griphyn.common.catalog.ReplicaCatalog
 -- driver: MySQL 4.*
--- $Revision: 1.5 $
+-- $Revision$
 --
 INSERT INTO vds_schema VALUES ('JDBCRC','rc','1.2',current_user(),current_timestamp(0));
 

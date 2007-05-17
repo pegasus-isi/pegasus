@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2006/08/10 16:44:44 pavelk Exp $
+# $Id$
 
 INSTALL = install
 RM      = rm -f

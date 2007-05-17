@@ -1,6 +1,6 @@
 --
 -- driver: PostGreSQL 7.*
--- $Revision: 1.1 $
+-- $Revision$
 --
 
 DROP TABLE wf_siteinfo CASCADE;

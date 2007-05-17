@@ -29,7 +29,7 @@ import gnu.getopt.LongOpt;
  *
  * @author GAURANG MEHTA
  * @author KARAN VAHI
- * @version $Revision: 1.10 $
+ * @version $Revision$
  *
  */
 public abstract class Executable {

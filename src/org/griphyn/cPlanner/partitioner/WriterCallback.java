@@ -32,7 +32,7 @@ import java.io.IOException;
  * between the partitions.
  *
  * @author not attributable
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class WriterCallback implements Callback {

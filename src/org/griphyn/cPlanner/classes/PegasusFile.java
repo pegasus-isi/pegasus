@@ -28,7 +28,7 @@ import java.util.BitSet;
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @version $Revision: 1.13 $
+ * @version $Revision$
  */
 public class PegasusFile extends Data {
 

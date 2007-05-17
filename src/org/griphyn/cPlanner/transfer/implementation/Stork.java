@@ -58,7 +58,7 @@ import java.util.HashSet;
  * value <code>Stork</code>.
  *
  * @author Karan Vahi
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 public class Stork extends AbstractSingleFTPerXFERJob {
 

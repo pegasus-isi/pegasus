@@ -147,7 +147,7 @@ import java.util.Vector;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.13 $
+ * @version $Revision$
  *
  * @see org.griphyn.cPlanner.classes.PlannerOptions
  */

@@ -20,7 +20,7 @@ package org.griphyn.common.util;
  *
  * @author Gaurang Mehta
  * @author Jens-S. Vöckler
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class ProfileParserException 
   extends Exception

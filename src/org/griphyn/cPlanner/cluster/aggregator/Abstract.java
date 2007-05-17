@@ -65,7 +65,7 @@ import java.util.Iterator;
  * implementations can choose to extend.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.8 $
+ * @version $Revision$
  *
  */
 public abstract class Abstract implements JobAggregator {

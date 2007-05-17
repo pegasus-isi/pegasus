@@ -24,7 +24,7 @@
 #include "mypopen.h"
 
 static const char* RCS_ID =
-"$Id: capabilities.c,v 1.7 2005/11/23 18:47:38 voeckler Exp $";
+"$Id$";
 
 /*
  * state transition machinery to recognize options from guc -help output

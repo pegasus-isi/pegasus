@@ -1,5 +1,5 @@
 --
--- $Id: create-sofa.sql,v 1.3 2005/10/03 23:14:24 griphyn Exp $
+-- $Id$
 -- This is a SQLite script
 -- sqlite file.db < this-script.sql
 --

@@ -146,7 +146,7 @@ import java.util.Random;
  * <p>Company: USC/ISI</p>
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 
 public class PegRandom {

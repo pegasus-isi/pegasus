@@ -30,7 +30,7 @@ import java.util.Map;
  * This is a TCClient class which handles the Delete Operations.
  *
  * @author Gaurang Mehta gmehta@isi.edu
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class TCDelete
     extends Client {

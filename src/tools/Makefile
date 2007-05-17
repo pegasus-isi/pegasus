@@ -1,7 +1,7 @@
 #
 # build all C/C++ sources 
 #
-# $Id: Makefile,v 1.8 2006/07/20 22:38:42 benc Exp $
+# $Id$
 #
 TARGET	= kickstart k.2 keg transfer T2 cluster invoke # free
 CONDOR_VERSION	= $(shell condor_version | awk '{ print $2; exit }')

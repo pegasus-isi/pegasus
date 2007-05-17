@@ -30,7 +30,7 @@ import java.util.StringTokenizer;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public  class Utility {
 

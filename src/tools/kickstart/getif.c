@@ -35,7 +35,7 @@
 #endif
 
 static const char* RCS_ID =
-"$Id: getif.c,v 1.8 2005/10/19 18:37:20 griphyn Exp $";
+"$Id$";
 
 int getif_debug = 0; /* enable debugging code paths */
 

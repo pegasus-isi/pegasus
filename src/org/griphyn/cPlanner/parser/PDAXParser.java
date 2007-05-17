@@ -39,7 +39,7 @@ import java.util.List;
  * various partitions and the relations between the partitions.
  *
  * @author Karan Vahi
- * @version $Revision: 1.10 $
+ * @version $Revision$
  */
 public class PDAXParser extends Parser {
 

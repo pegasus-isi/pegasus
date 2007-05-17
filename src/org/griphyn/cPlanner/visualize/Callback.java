@@ -27,7 +27,7 @@ import java.util.Map;
  * for stdout, stderr and stdin.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public interface Callback {
 

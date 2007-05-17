@@ -36,7 +36,7 @@ import java.util.HashMap;
  *
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public class ClustererFactory {

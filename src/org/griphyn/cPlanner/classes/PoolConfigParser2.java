@@ -30,7 +30,7 @@ import java.util.StringTokenizer;
  * @author Jens Voeckler
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @version $Revision: 1.11 $
+ * @version $Revision$
  *
  * @see org.griphyn.cPlanner.classes.PoolConfigScanner
  * @see org.griphyn.cPlanner.classes.PoolConfigToken

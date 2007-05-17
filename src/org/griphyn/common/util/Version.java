@@ -32,7 +32,7 @@ import java.io.*;
  *
  * @author Karan Vahi
  * @author Jens-S. Vöckler
- * @version $Revision: 1.37 $
+ * @version $Revision$
  */
 public class Version 
 {

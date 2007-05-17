@@ -48,7 +48,7 @@ import org.griphyn.cPlanner.partitioner.graph.MapGraph;
  * @author Arun ramakrishnan
  * @author Karan Vahi
  *
- * @version $Revision: 1.10 $
+ * @version $Revision$
  */
 public class InPlace implements Strategy{
 

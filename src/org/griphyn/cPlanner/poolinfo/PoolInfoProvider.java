@@ -54,7 +54,7 @@ import java.util.Set;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.24 $
+ * @version $Revision$
  */
 
 public abstract class PoolInfoProvider {

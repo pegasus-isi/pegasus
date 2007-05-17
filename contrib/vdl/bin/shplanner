@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # generate shell scripts fit for local execution
-# $Id: shplanner,v 1.6 2005/07/26 18:48:24 griphyn Exp $
+# $Id$
 #
 . "`dirname $0`/common.sh"
 

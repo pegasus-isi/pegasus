@@ -1,7 +1,7 @@
 @echo off
 rem
 rem just show the version number. Don't require full-fledged setup.
-rem $Id: pegasus-version.bat,v 1.3 2005/07/13 16:45:22 griphyn Exp $
+rem $Id$
 rem
 if "%JAVA_HOME%" == "" (
     echo "Error! Please set your JAVA_HOME variable"

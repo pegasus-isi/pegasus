@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
  *       - Condor
  *       - Condor GlideIn
  *
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public interface CondorStyle {

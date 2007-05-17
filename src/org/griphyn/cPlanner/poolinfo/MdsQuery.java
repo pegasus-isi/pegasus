@@ -49,7 +49,7 @@ import org.griphyn.cPlanner.classes.WorkDir;
  * @author Gaurang Mehta gmehta@isi.edu
  * @author Karan Vahi vahi@isi.edu
  *
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 public class MdsQuery {
 

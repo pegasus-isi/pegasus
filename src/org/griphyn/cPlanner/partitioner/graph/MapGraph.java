@@ -29,7 +29,7 @@ import java.util.HashMap;
  * An implementation of the Graph that is backed by a Map.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public class MapGraph implements Graph{

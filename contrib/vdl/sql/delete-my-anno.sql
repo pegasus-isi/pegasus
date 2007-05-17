@@ -1,7 +1,7 @@
 --
 -- schema: org.griphyn.vdl.dbschema.AnnotationSchema
 -- driver: MySQL 4.*
--- $Revision: 1.4 $
+-- $Revision$
 --
 
 DROP TABLE anno_bool CASCADE;

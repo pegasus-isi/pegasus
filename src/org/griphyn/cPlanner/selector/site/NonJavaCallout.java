@@ -169,7 +169,7 @@ import org.griphyn.cPlanner.selector.SiteSelector;
  * @author Karan Vahi
  * @author Jens V�ckler
  *
- * @version $Revision: 1.8 $
+ * @version $Revision$
  *
  * @see java.lang.Runtime
  * @see java.lang.Process

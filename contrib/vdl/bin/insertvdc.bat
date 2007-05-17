@@ -2,7 +2,7 @@
 rem
 rem parse VDLx documents and add definition's to VDC, if a TR/DV already
 rem exists in VDC, it is skipped.
-rem $Id: insertvdc.bat,v 1.2.0.1 2003/09/12 00:01:46 gmehta Exp $
+rem $Id$
 rem
 if "%JAVA_HOME%" == "" (
     echo "Error! Please set your JAVA_HOME variable"

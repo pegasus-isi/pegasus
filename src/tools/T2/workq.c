@@ -30,7 +30,7 @@
 #include "workq.h"
 
 static const char* RCS_ID =
-"$Id: workq.c,v 1.2 2004/10/22 00:10:47 griphyn Exp $";
+"$Id$";
 
 int
 workq_init( workq_p wq, size_t size, int (*engine)(item_p) )

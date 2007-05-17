@@ -26,7 +26,7 @@ import java.io.IOException;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 public class Status extends Invocation // implements Cloneable
 {

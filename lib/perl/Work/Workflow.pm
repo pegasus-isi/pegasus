@@ -15,7 +15,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.14 $
+# Revision : $Revision$
 #
 package Work::Workflow;
 use 5.006;
@@ -31,7 +31,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 our $VERSION = '0.1';
-$VERSION=$1 if ( '$Revision: 1.14 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 # name of tables to check for in the database dictionary of the rDBMS
 our @tables = qw(wf_work wf_jobstate wf_siteinfo);

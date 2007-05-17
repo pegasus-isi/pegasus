@@ -27,7 +27,7 @@
 #include "rwio.h"
 
 static const char* RCS_ID =
-"$Id: rwio.c,v 1.5 2007/01/23 23:55:34 voeckler Exp $";
+"$Id$";
 
 ssize_t
 writen( int fd, const char* buffer, ssize_t n, unsigned restart )

@@ -21,7 +21,7 @@ package org.griphyn.common.catalog.transformation;
  * This is the database implementation for the TC.
  *
  * @author Gaurang Mehta gmehta@isi.edu
- * @version $Revision: 1.16 $
+ * @version $Revision$
  */
 
 import org.griphyn.cPlanner.classes.Profile;

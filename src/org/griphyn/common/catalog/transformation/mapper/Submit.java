@@ -35,7 +35,7 @@ import java.util.Map;
  * Stageable executables from the Local site.
  *
  * @author Gaurang Mehta
- * @version $Revision: 1.5 $
+ * @version $Revision$
  */
 public class Submit
     extends Mapper {

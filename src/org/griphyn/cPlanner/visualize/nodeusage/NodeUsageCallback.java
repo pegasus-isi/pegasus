@@ -43,7 +43,7 @@ import java.io.IOException;
  * over time.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class NodeUsageCallback implements Callback {

@@ -2,7 +2,7 @@
 #
 # common functionality used in the various log processors
 #
-# $Id: Common.pm,v 1.1 2006/05/08 19:14:48 voeckler Exp $
+# $Id$
 #
 package Common;
 use 5.006;
@@ -27,7 +27,7 @@ our @EXPORT = qw(log unix2iso iso2unix find_exec read_submit_file
 		 default_title);
 our @EXPORT_OK = qw($VERSION);
 
-$VERSION=$1 if ( '$Revision: 1.1 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 $__PACKAGE__::prefix = undef;
 
 #

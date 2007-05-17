@@ -28,7 +28,7 @@ import org.griphyn.common.util.Currently;
  *
  * @author Jens-S. Vöckler
  * @author Mike Wilde
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class JobStateEntry implements Workflow, Cloneable
 {

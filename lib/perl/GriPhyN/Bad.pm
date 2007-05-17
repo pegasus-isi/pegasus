@@ -16,7 +16,7 @@ package GriPhyN::Bad;
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler   voeckler at cs dot uchicago dot edu
-# $Id: Bad.pm,v 1.1 2005/08/08 22:04:43 griphyn Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -28,7 +28,7 @@ our @ISA = qw(Exporter);
 
 # version management
 our $VERSION='1.0';
-$VERSION=$1 if ( '$Revision: 1.1 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 # prototypes
 sub create_lock($);		# { }

@@ -51,7 +51,7 @@ import java.util.TreeSet;
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @version $Revision: 1.21 $
+ * @version $Revision$
  */
 public class File
     implements TransformationCatalog {

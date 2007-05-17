@@ -55,7 +55,7 @@ import java.io.IOException;
  * Use's RM to do removal of the files on the remote sites.
  *
  * @author Karan Vahi
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 public class Cleanup implements Implementation{
 

@@ -20,7 +20,7 @@ package org.griphyn.common.util;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.classes.Definition
  */

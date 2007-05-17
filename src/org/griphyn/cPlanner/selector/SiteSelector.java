@@ -38,7 +38,7 @@ import java.util.List;
  * @author Gaurang Mehta
  *
  *
- * @version $Revision: 1.5 $
+ * @version $Revision$
  */
 public abstract class SiteSelector {
 

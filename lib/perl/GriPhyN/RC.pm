@@ -16,9 +16,9 @@ package GriPhyN::RC;
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.1 $
+# Revision : $Revision$
 #
-# $Id: RC.pm,v 1.1 2005/08/08 22:04:43 griphyn Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -29,7 +29,7 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw();
 our @EXPORT_OK = qw($VERSION);
 
-$VERSION=$1 if ( '$Revision: 1.1 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 #
 # --- start -----------------------------------------------------

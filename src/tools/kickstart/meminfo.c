@@ -24,7 +24,7 @@
 #include <fcntl.h>
 
 static const char* RCS_ID =
-"$Id: meminfo.c,v 1.2 2006/04/12 18:28:47 voeckler Exp $";
+"$Id$";
 
 #if 0
 --- 2.4.29 Linux kernel, fs/proc/array.c ---

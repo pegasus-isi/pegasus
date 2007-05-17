@@ -23,7 +23,7 @@
 #include <unistd.h>
 
 static const char* RCS_ID =
-"$Id: tools.c,v 1.7 2007/01/23 23:55:35 voeckler Exp $";
+"$Id$";
 
 void
 full_append( char* buffer, const size_t size, size_t* len, 

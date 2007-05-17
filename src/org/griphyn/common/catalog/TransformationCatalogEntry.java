@@ -19,7 +19,7 @@ package org.griphyn.common.catalog;
  * An object of this class corresponds to a
  * tuple in the Transformation Catalog.
  * @author Gaurang Mehta
- * @$Revision: 1.9 $
+ * @$Revision$
  *
  * @see org.griphyn.common.classes.SysInfo
  * @see org.griphyn.common.classes.TCType

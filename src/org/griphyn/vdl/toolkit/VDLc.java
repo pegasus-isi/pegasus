@@ -42,7 +42,7 @@ import gnu.getopt.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.16 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.parser.VDLtParser
  * @see org.griphyn.vdl.parser.VDLxParser 
@@ -67,7 +67,7 @@ public class VDLc extends VDLHelper
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println(
-"$Id: VDLc.java,v 1.16 2006/09/23 18:52:11 benc Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println( "Usage: " + this.m_application + ' ' + "[options] vdlt|vdlx [..]" );
@@ -250,7 +250,7 @@ public class VDLc extends VDLHelper
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id: VDLc.java,v 1.16 2006/09/23 18:52:11 benc Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
 	

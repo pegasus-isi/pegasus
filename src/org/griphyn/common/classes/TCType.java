@@ -21,7 +21,7 @@ package org.griphyn.common.classes;
  * This is an enumerated data class for the different types of transformation.
  *
  * @author Gaurang Mehta gmehta@isi.edu
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 
 import java.io.Serializable;

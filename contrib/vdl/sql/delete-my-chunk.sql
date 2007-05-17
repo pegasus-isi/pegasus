@@ -1,7 +1,7 @@
 --
 -- schema: org.griphyn.vdl.dbschema.ChunkSchema
 -- driver: MySQL 4.*
--- $Revision: 1.5 $
+-- $Revision$
 --
 
 DROP INDEX ix_vdc_blfn ON vdc_blfn;

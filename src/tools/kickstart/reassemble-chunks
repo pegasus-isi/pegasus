@@ -4,7 +4,7 @@
 #
 # Requires some Perl XML modules to be post-installed.
 #
-# $Id: reassemble-chunks,v 1.2 2005/08/04 22:30:08 griphyn Exp $
+# $Id$
 #
 require 5.005;
 use strict;

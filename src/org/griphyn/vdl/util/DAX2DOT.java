@@ -28,7 +28,7 @@ import org.griphyn.vdl.classes.LFN;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.11 $
+ * @version $Revision$
  */
 public class DAX2DOT
 {

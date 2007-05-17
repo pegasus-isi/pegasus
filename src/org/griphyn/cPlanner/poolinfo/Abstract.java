@@ -38,7 +38,7 @@ import java.util.Set;
  * the contents of the catalog.
  *
  * @author Karan Vahi
- * @version $Revision: 1.5 $
+ * @version $Revision$
  *
  * @see #mPoolConfig
  */

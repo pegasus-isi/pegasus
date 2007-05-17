@@ -37,7 +37,7 @@ import java.util.Set;
  * up the job details for the jobs making up a particular partition.
  *
  * @author Karan Vahi
- * @version $Revision: 1.9 $
+ * @version $Revision$
  */
 public class SingleLook extends DAXWriter{
 

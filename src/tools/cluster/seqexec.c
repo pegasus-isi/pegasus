@@ -33,7 +33,7 @@
 #include <sys/poll.h>
 
 static const char* RCS_ID =
-"$Id: seqexec.c,v 1.13 2006/09/20 16:59:48 voeckler Exp $";
+"$Id$";
 
 #define MAXSTR 4096
 

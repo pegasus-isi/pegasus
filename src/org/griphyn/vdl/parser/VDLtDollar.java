@@ -19,7 +19,7 @@ package org.griphyn.vdl.parser;
  * This class is module-local on purpose.
  *
  * @author Jens-S. Vöckler
- * @version $Revision: 1.3 $
+ * @version $Revision$
  *
  */
 class VDLtDollar

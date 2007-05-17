@@ -31,7 +31,7 @@ import java.util.Iterator;
  * sorts the partition before clustering the jobs into aggregated jobs.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class Vertical extends Abstract {

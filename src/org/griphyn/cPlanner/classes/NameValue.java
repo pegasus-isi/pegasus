@@ -21,7 +21,7 @@ package org.griphyn.cPlanner.classes;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public class NameValue extends Data
 implements Comparable{

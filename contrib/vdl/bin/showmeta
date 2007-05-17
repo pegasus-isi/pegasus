@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Show metadata for definition's and lfn's
-# $Id: showmeta,v 1.3 2005/07/26 18:48:24 griphyn Exp $
+# $Id$
 #
 . "`dirname $0`/common.sh"
 

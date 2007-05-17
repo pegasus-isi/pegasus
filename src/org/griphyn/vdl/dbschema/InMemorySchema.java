@@ -31,7 +31,7 @@ import org.griphyn.vdl.dbdriver.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.5 $
+ * @version $Revision$
  * @see org.griphyn.vdl.dbdriver
  * @see org.griphyn.vdl.classes.Definitions
  */

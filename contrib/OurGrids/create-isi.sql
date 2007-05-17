@@ -1,5 +1,5 @@
 --
--- $Id: create-isi.sql,v 1.3 2006/03/13 22:56:49 gmehta Exp $
+-- $Id$
 -- This is a SQLite script
 -- sqlite file.db < this-script.sql
 --

@@ -37,7 +37,7 @@ import java.util.Vector;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.14 $
+ * @version $Revision$
  */
 
 public class DagInfo extends Data {

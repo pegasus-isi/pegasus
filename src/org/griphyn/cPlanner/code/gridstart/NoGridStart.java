@@ -40,7 +40,7 @@ import java.util.Iterator;
  *
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 
 public class NoGridStart implements GridStart {

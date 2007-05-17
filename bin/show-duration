@@ -11,7 +11,7 @@ use POSIX qw(strftime);
 
 # version information from CVS
 $main::version = 'unknown';
-$_ = '$Revision: 1.8 $';       # don't edit
+$_ = '$Revision$';       # don't edit
 $main::version = $1 if /Revision:\s+([0-9.]+)/o;
 
 $main::debug = 0;

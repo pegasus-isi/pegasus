@@ -17,7 +17,7 @@
 #include "util.h"
 
 static const char* RCS_ID =
-"$Id: lnx-free.c,v 1.9 2005/03/02 17:24:21 griphyn Exp $";
+"$Id$";
 
 int
 main( int argc, char* argv[] )

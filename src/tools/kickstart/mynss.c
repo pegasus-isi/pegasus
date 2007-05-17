@@ -15,7 +15,7 @@
 #include "mynss.h"
 
 static const char* RCS_ID =
-"$Id: mynss.c,v 1.2 2005/08/05 20:28:33 griphyn Exp $";
+"$Id$";
 
 #ifdef LINUX
 #include <setjmp.h>

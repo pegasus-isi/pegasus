@@ -20,7 +20,7 @@
 #include "parse.h"
 
 static const char* RCS_ID =
-"$Id: parse.c,v 1.5 2006/08/03 20:44:25 voeckler Exp $";
+"$Id$";
 
 size_t
 countNodes( const Node* head )

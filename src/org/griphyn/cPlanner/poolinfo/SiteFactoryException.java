@@ -22,7 +22,7 @@ import org.griphyn.common.util.FactoryException;
  * implementations.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class SiteFactoryException extends FactoryException {

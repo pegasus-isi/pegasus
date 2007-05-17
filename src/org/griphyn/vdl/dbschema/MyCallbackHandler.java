@@ -26,7 +26,7 @@ import org.griphyn.vdl.classes.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 class MyCallbackHandler implements FinalizerHandler
 {

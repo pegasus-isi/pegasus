@@ -19,7 +19,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler at cs dot uchicago dot edu
-# Revision : $Revision: 1.17 $
+# Revision : $Revision$
 # 
 use 5.006;			# this will make your perl fail if too old
 use strict;

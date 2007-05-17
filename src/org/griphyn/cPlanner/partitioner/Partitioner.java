@@ -29,7 +29,7 @@ import java.util.Map;
  * of the partitions etc.
  *
  * @author Karan Vahi
- * @version $Revision: 1.11 $
+ * @version $Revision$
  */
 
 public abstract class Partitioner {

@@ -1,7 +1,7 @@
 ---
 --- schema: all
 --- driver: MySQL 4.*
---- $Revision: 1.3 $
+--- $Revision$
 ---
 
 DROP TABLE vds_schema CASCADE;

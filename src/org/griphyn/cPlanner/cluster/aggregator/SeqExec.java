@@ -41,7 +41,7 @@ import java.io.File;
  * package, and can be usually found at $PEGASUS_HOME/bin/seqexec.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.5 $
+ * @version $Revision$
  */
 
 public class SeqExec extends Abstract {

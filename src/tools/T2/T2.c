@@ -37,7 +37,7 @@
 #include "mypopen.h"
 
 static const char* RCS_ID =
-"$Id: T2.c,v 1.12 2005/12/22 21:27:54 voeckler Exp $";
+"$Id$";
 
 static const char* REGEX_RFC2396 =
 "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)";

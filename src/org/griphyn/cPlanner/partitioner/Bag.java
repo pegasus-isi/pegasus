@@ -20,7 +20,7 @@ package org.griphyn.cPlanner.partitioner;
  * with other data structures, like Graph Nodes.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public interface Bag {

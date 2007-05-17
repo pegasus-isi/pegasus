@@ -20,7 +20,7 @@ import org.griphyn.cPlanner.code.CodeGeneratorException;
  * A specific exception for the Condor Style generators.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class CondorStyleException extends CodeGeneratorException {

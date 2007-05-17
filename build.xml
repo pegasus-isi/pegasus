@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- $Id: build.xml,v 1.67 2006/10/10 21:33:42 gmehta Exp $ -->
+<!-- $Id$ -->
 <project name="pegasus-all" default="jar">
   <description>Manages Pegasus</description>
   <property name="build.src" location="build/classes"/>

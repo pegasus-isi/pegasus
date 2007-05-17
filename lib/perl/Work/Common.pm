@@ -15,7 +15,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.8 $
+# Revision : $Revision$
 #
 package Work::Common;
 use 5.006;

@@ -24,7 +24,7 @@ import org.griphyn.vdl.Chimera;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public abstract class DAX extends Chimera
 {

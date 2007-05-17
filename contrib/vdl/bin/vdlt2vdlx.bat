@@ -1,7 +1,7 @@
 @echo off
 rem
 rem convert a VDLt file into an VDLx file
-rem $Id: vdlt2vdlx.bat,v 1.2.0.1 2003/09/12 00:01:47 gmehta Exp $
+rem $Id$
 rem
 if "%JAVA_HOME%" == "" (
     echo "Error! Please set your JAVA_HOME variable"

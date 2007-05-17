@@ -22,7 +22,7 @@ import java.util.Date;
  * from the kickstart records.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public interface Measurement {

@@ -22,7 +22,7 @@ package org.griphyn.common.classes;
  * resource or transformation.
  *
  * @author Gaurang Mehta gmehta@isi.edu
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 
 public class SysInfo{

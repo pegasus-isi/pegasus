@@ -50,7 +50,7 @@ import org.xml.sax.InputSource;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class NXDInvSchema extends DatabaseSchema 
   implements PTC

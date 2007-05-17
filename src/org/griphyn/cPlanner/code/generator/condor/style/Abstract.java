@@ -31,7 +31,7 @@ import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
  * Impelements the initialization method.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public abstract class Abstract implements CondorStyle {

@@ -29,7 +29,7 @@ extern int setenv( const char* name, const char* value, int overwrite );
 #endif
 
 static const char* RCS_ID =
-"$Id: statinfo.cc,v 1.8 2004/07/22 21:05:04 griphyn Exp $";
+"$Id$";
 
 //
 // --- StatInfo -------------------------------------------------

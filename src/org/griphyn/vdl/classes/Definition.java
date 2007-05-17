@@ -32,7 +32,7 @@ import java.io.Serializable;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.5 $
+ * @version $Revision$
  *
  * @see Transformation
  * @see Derivation */

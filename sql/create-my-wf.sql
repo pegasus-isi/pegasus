@@ -1,6 +1,6 @@
 --
 -- driver: MySQL 4.*
--- $Revision: 1.3 $
+-- $Revision$
 --
 
 -- if the next step fails, you forgot to run "create-init-pg.sql"

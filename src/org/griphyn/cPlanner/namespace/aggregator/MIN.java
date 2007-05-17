@@ -22,7 +22,7 @@ package org.griphyn.cPlanner.namespace.aggregator;
  * integers, the default value is picked up.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class MIN extends Abstract{
 

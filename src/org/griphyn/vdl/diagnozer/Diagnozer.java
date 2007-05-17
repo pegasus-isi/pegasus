@@ -27,7 +27,7 @@ import org.griphyn.vdl.toolkit.FriendlyNudge;
  * Inspects various files in a run directory to help diagnoze an error.
  *
  * @author Jin Soon Chang
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public class Diagnozer
 {

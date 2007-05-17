@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.namespace.Condor;
  * in the concrete workflow.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class CondorG extends Abstract {

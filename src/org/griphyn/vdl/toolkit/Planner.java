@@ -31,7 +31,7 @@ import gnu.getopt.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.12 $
+ * @version $Revision$
  *
  */
 public class Planner extends Toolkit 
@@ -52,7 +52,7 @@ public class Planner extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println(
-"$Id: Planner.java,v 1.12 2006/07/22 16:43:10 benc Exp $" + linefeed + 
+"$Id$" + linefeed + 
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println(
@@ -117,7 +117,7 @@ public class Planner extends Toolkit
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id: Planner.java,v 1.12 2006/07/22 16:43:10 benc Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
 

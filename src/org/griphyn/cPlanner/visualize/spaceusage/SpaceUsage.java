@@ -26,7 +26,7 @@ import java.util.Iterator;
  * A container object that stores the space usage for each site.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class SpaceUsage {
 

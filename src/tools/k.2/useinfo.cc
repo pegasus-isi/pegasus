@@ -18,7 +18,7 @@
 #include <string.h>
 
 static const char* RCS_ID =
-"$Id: useinfo.cc,v 1.3 2005/05/20 15:00:08 griphyn Exp $";
+"$Id$";
 
 UseInfo::UseInfo()
   :m_tag()

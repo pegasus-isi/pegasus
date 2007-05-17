@@ -32,7 +32,7 @@ import java.lang.reflect.InvocationTargetException;
  * CodeGenerator implementation is used to write out the concrete plan.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class CodeGeneratorFactory {
 

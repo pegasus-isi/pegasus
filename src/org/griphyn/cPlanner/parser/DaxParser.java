@@ -55,7 +55,7 @@ import java.util.HashSet;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.29 $
+ * @version $Revision$
  *
  * @see org.griphyn.cPlanner.classes.SubInfo
  * @see org.griphyn.cPlanner.classes.DagInfo

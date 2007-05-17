@@ -1,7 +1,7 @@
 #!/bin/env perl
 #
 # converts the dependencies in an ant build file into graphviz format
-# $Id: build.pl,v 1.2 2005/05/20 15:54:54 griphyn Exp $
+# $Id$
 #
 use 5.005;
 use warnings;

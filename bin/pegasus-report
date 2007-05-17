@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-my $version = '$Revision: 1.6 $';      # don't edit, automatically updated by CVS
+my $version = '$Revision$';      # don't edit, automatically updated by CVS
 
 use File::Find;
 use XML::Simple;

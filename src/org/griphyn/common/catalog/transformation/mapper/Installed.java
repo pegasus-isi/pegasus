@@ -34,7 +34,7 @@ import java.util.Map;
  *This class only generates maps for sites with installed transformations.
  *
  *@author Gaurang Mehta
- *@version $Revision: 1.6 $
+ *@version $Revision$
  */
 public class Installed
     extends Mapper {

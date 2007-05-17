@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.parser.ConfigXmlParser;
  *
  * @author Gaurang Mehta gmehta@isi.edu
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 public class XML
     extends Abstract {

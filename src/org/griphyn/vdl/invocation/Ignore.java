@@ -24,7 +24,7 @@ import java.io.IOException;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.1 $
+ * @version $Revision$
  * @see StatCall
  */
 public class Ignore extends Invocation implements HasText

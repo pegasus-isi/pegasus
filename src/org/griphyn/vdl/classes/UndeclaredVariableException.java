@@ -24,7 +24,7 @@ package org.griphyn.vdl.classes;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.3 $
+ * @version $Revision$
  *
  * @see Derivation
  * @see Transformation

@@ -22,7 +22,7 @@ import org.griphyn.vdl.Chimera;
  *
  * @author Jens-S. Vöckler
  * @author Mike Wilde
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface Workflow
 {

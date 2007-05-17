@@ -20,7 +20,7 @@ package org.griphyn.cPlanner.partitioner.graph;
  * by default with the label.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class LabelBag implements Bag {

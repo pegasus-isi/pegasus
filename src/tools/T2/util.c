@@ -29,7 +29,7 @@
 #include "mypopen.h"
 
 static const char* RCS_ID =
-"$Id: util.c,v 1.8 2005/12/22 21:23:23 voeckler Exp $";
+"$Id$";
 
 void
 double2timeval( struct timeval* tv, double interval )

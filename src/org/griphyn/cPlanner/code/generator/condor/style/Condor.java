@@ -33,7 +33,7 @@ import org.griphyn.cPlanner.namespace.VDS;
  *        - on the local condor pool of which the submit host is a part of
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class Condor extends Abstract {
 

@@ -19,7 +19,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. V�ckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.29 $
+# Revision : $Revision$
 #
 use 5.006;
 use strict;
@@ -67,7 +67,7 @@ $main::pid = 0;			# DAGMan's pid -- set later
 %main::waiting = ();		# site => stamp/60 => [ #P->R, sum(ptime) ]
 
 # revision handling
-$_ = '$Revision: 1.29 $';      # don't edit, automatically updated by CVS
+$_ = '$Revision$';      # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/;
 
 # forward declarations

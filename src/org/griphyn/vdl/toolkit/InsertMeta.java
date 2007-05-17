@@ -32,7 +32,7 @@ import org.griphyn.common.util.Version;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.9 $
+ * @version $Revision$
  *
  */
 
@@ -54,7 +54,7 @@ public class InsertMeta extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println( 
-"$Id: InsertMeta.java,v 1.9 2006/01/16 23:25:27 griphyn Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println( 
@@ -154,7 +154,7 @@ linefeed +
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id: InsertMeta.java,v 1.9 2006/01/16 23:25:27 griphyn Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
  

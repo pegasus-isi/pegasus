@@ -24,7 +24,7 @@ import gnu.getopt.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.11 $
+ * @version $Revision$
  */
 public class VersionNumber
 {
@@ -50,7 +50,7 @@ public class VersionNumber
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println( 
-"$Id: VersionNumber.java,v 1.11 2005/10/07 21:23:18 griphyn Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println( "Usage: " + m_application + " [-f | -V | -m]" );
@@ -114,7 +114,7 @@ linefeed +
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id: VersionNumber.java,v 1.11 2005/10/07 21:23:18 griphyn Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + v.toString() );
 	  return;
 

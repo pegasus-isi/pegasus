@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# $Revision: 1.1 $
+# $Revision$
 
 # genmaster - create a Word "master" document from a text list of chapter.
 #    sets the attachedTemplate tag to the User Guide template (.dot)

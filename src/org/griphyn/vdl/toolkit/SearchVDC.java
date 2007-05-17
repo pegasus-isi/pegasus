@@ -40,7 +40,7 @@ import gnu.getopt.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.18 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.parser.VDLxParser
  */
@@ -63,7 +63,7 @@ public class SearchVDC extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println(
-"$Id: SearchVDC.java,v 1.18 2005/10/11 21:30:16 griphyn Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println(
@@ -180,7 +180,7 @@ linefeed +
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id: SearchVDC.java,v 1.18 2005/10/11 21:30:16 griphyn Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
 

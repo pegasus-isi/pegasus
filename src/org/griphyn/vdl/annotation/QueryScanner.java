@@ -138,7 +138,7 @@ import org.griphyn.vdl.Chimera;
  * purpose.
  *
  * @author Jens-S. Vöckler
- * @version $Revision: 1.4 $
+ * @version $Revision$
  *
  */
 class QueryScanner

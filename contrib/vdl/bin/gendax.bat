@@ -1,7 +1,7 @@
 @echo off
 rem
 rem generate DAX upon the request for an lfn or a specific DV.
-rem $Id: gendax.bat,v 1.2.0.1 2003/09/12 00:01:46 gmehta Exp $
+rem $Id$
 rem
 if "%JAVA_HOME%" == "" (
     echo "Error! Please set your JAVA_HOME variable"

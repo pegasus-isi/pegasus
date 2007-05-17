@@ -41,7 +41,7 @@ import org.griphyn.vdl.toolkit.Toolkit; // for now
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.11 $
+ * @version $Revision$
  *
  * @see org.griphyn.common.catalog.ReplicaCatalog
  * @see org.griphyn.common.catalog.ReplicaCatalogEntry
@@ -200,7 +200,7 @@ public class RCClient extends Toolkit
   {
     String linefeed = System.getProperty( "line.separator", "\r\n" );
     System.out.println(
-"$Id: ShellRC.java,v 1.11 2006/07/12 15:07:38 benc Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println(
@@ -810,7 +810,7 @@ public class RCClient extends Toolkit
       while ( (option = opts.getopt()) != -1 ) {
 	switch ( option ) {
 	case 'V':
-	  System.out.println( "$Id: RCClient.java,v 1.11 2006/07/12 15:07:38 benc Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "Pegasus version " + Version.instance().toString() );
 	  return ;
 

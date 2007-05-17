@@ -38,7 +38,7 @@
 
 
 static const char* RCS_ID =
-"$Id: transfer.c,v 1.34 2005/12/22 21:31:44 voeckler Exp $";
+"$Id$";
 
 struct {
   workq_t  crew;	/* worker node management system */

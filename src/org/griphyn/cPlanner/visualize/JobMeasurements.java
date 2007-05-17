@@ -25,7 +25,7 @@ import java.util.ArrayList;
  * corresponding to the GRIDSTART_PREJOB, GRIDSTART_MAINJOB and GRIDSTART_POSTJOB.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class JobMeasurements {

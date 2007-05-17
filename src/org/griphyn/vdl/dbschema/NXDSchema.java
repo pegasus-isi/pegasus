@@ -52,7 +52,7 @@ import org.xml.sax.InputSource;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.5 $ 
+ * @version $Revision$ 
  */
 public class NXDSchema extends DatabaseSchema implements XDC
 {

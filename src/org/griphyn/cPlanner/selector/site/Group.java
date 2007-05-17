@@ -49,7 +49,7 @@ import java.util.TreeMap;
  * @author Gaurang Mehta
  * @author Mei-Hui Su
  *
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 
 public class Group extends SiteSelector {

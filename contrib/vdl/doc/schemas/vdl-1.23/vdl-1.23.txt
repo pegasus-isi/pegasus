@@ -8,7 +8,7 @@
 (* is to make the grammar more readible. Tokens that are quoted together  *)
 (* must never be separated by gaps, e.g. "${" is one token.               *)
 (*                                                                        *)
-(* $Id: vdl-1.23.txt,v 1.1 2004/05/03 18:13:10 griphyn Exp $                                                                   *)
+(* $Id$                                                                   *)
 (*                                                                        *)
 definitions = { definition } ;
 

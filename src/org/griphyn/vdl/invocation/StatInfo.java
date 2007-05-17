@@ -25,7 +25,7 @@ import java.io.IOException;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 public class StatInfo extends Invocation // implements Cloneable
 {

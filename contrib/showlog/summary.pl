@@ -2,7 +2,7 @@
 #
 # summarizes a given DAGMan Condor log file
 #
-# $Id: summary.pl,v 1.3 2004/05/11 21:13:33 griphyn Exp $
+# $Id$
 # 
 require 5.005;
 use strict;

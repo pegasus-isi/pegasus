@@ -43,7 +43,7 @@ import java.util.Date;
  * a handle to the Old File Transformation Catalog.
  *
  * @author Gaurang Mehta
- * @version $Revision: 1.11 $
+ * @version $Revision$
  */
 
 public class OldFile

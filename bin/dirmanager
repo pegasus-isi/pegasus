@@ -14,7 +14,7 @@
 # Southern California. All rights reserved.
 #
 # Authors Gaurang Mehta gmehta@isi.edu
-# Revision : $Revision: 1.7 $
+# Revision : $Revision$
 
 require 5.005;
 use strict;
@@ -43,7 +43,7 @@ my $file='';
 
 # let CVS set version automagically
 $main::revision = 'unknown';
-$main::revision = $1 if ( '$Revision: 1.7 $' =~ /([0-9.]+)/o );
+$main::revision = $1 if ( '$Revision$' =~ /([0-9.]+)/o );
 
 sub version {
     # puporse: print version and exit

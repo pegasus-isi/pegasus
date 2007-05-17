@@ -53,7 +53,7 @@ public class VDLtConv extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println( 
-"$Id: VDLtConv.java,v 1.10 2005/08/16 16:25:31 griphyn Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println(
@@ -108,7 +108,7 @@ public class VDLtConv extends Toolkit
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id: VDLtConv.java,v 1.10 2005/08/16 16:25:31 griphyn Exp $");
+	  System.out.println( "$Id$");
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
 

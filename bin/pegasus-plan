@@ -16,7 +16,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.32 $
+# Revision : $Revision$
 #
 use 5.006;
 use strict;
@@ -34,7 +34,7 @@ use Work::Workflow;
 use Work::Properties qw(:parse %initial %system); # parses -Dp=v from CLI
 
 $main::version = 'unknown';
-$_ = '$Revision: 1.32 $';	# don't edit
+$_ = '$Revision$';	# don't edit
 $main::version = $1 if /Revision:\s+([0-9.]+)/o;
 
 # constants

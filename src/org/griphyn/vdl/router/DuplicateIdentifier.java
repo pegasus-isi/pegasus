@@ -21,7 +21,7 @@ package org.griphyn.vdl.router;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.classes.Transformation
  * @see org.griphyn.vdl.classes.Local

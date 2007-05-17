@@ -80,7 +80,7 @@ import java.util.Vector;
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public class CondorGenerator extends Abstract {
 

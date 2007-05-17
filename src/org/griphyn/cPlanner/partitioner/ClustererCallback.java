@@ -27,7 +27,7 @@ import java.util.List;
  * is passed off to the callback during the callback initialization.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class ClustererCallback implements Callback {

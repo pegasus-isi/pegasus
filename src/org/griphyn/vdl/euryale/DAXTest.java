@@ -30,7 +30,7 @@ import java.util.*;
  * @author Kavitha Ranganathan
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  *
  * @see DAXParser
  * @see org.griphyn.vdl.dax.ADAG

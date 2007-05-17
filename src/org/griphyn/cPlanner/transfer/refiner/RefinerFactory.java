@@ -34,7 +34,7 @@ import java.lang.reflect.InvocationTargetException;
  * as specified by the properties.
  *
  * @author Karan Vahi
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class RefinerFactory {
 

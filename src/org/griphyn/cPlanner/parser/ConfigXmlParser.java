@@ -41,7 +41,7 @@ import org.xml.sax.SAXException;
  *
  * @author Gaurang Mehta gmehta@isi.edu
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.13 $
+ * @version $Revision$
  */
 public class ConfigXmlParser extends Parser {
 

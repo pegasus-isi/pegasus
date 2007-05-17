@@ -130,7 +130,7 @@ package org.griphyn.cPlanner.classes;
 /**
  * @author Jens Voeckler
  * @author Gaurang Mehta
- * @version $Revision: 1.2.0.1 $
+ * @version $Revision$
  */
 
 class PoolConfigOpenParanthesis implements PoolConfigToken{

@@ -24,7 +24,7 @@ import java.util.List;
  * formats.
  *
  * @author Karan Vahi
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 
 public interface Plot {

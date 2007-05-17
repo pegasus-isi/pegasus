@@ -1,7 +1,7 @@
 --
 -- schema: org.griphyn.vdl.dbschema.InvocationSchema
 -- driver: MySQL 4.*
--- $Revision: 1.9 $
+-- $Revision$
 --
 
 -- if the next step fails, you forgot to run "create-init-my.sql"

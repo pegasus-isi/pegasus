@@ -34,7 +34,7 @@ import org.griphyn.vdl.directive.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.11 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.parser.VDLxParser
  */
@@ -56,7 +56,7 @@ public class DeleteVDC extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println( 
-"$Id: DeleteVDC.java,v 1.11 2005/08/16 16:25:31 griphyn Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println( 
@@ -136,7 +136,7 @@ public class DeleteVDC extends Toolkit
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id: DeleteVDC.java,v 1.11 2005/08/16 16:25:31 griphyn Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
 	  

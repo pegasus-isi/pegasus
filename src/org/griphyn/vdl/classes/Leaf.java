@@ -25,7 +25,7 @@ import java.io.Serializable;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.3 $
+ * @version $Revision$
  *
  * @see Text
  * @see Use

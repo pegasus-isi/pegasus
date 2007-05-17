@@ -135,7 +135,7 @@ package org.griphyn.cPlanner.classes;
  * authentication, the contact string of the resource.
  *
  * @author Karan Vahi
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 
 public class AuthenticateRequest extends Data {

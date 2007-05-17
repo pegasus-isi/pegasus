@@ -52,7 +52,7 @@ import org.xml.sax.InputSource;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.34 $
+ * @version $Revision$
  */
 public class AnnotationSchema extends DatabaseSchema 
   implements Advanced, Annotation

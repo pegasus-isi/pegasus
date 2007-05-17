@@ -55,7 +55,7 @@ import java.util.StringTokenizer;
 
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public class GRMS extends SingleFTPerXFERJobRefiner {
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: substitute.pl,v 1.2.0.1 2003/09/12 00:02:28 gmehta Exp $
+# $Id$
 # substitute @VARIABLE@ with known values
 # arguments: N x ( VARIABLE=value | filename | @filelist )
 

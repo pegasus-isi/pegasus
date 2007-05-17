@@ -22,7 +22,7 @@ import java.io.File;
  * error files.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class ExitPOST extends VDSPOSTScript {

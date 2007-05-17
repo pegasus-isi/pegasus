@@ -24,7 +24,7 @@ import java.io.PrintWriter;
  * A helper class, that generates VDS specific classads for the jobs.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public class ClassADSGenerator {

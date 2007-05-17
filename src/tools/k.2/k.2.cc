@@ -40,7 +40,7 @@ extern FILE* yyin;
 extern int yyparse();
 
 static const char* RCS_ID =
-"$Id: k.2.cc,v 1.1 2004/03/15 19:56:49 griphyn Exp $";
+"$Id$";
 
 static
 void

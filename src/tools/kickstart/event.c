@@ -27,7 +27,7 @@
 #include "mysignal.h"
 
 static const char* RCS_ID =
-"$Id: event.c,v 1.12 2007/01/23 23:55:34 voeckler Exp $";
+"$Id$";
 
 static sig_atomic_t seen_sigpipe; /* defaults to 0 */
 

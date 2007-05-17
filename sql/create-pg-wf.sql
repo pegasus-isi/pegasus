@@ -1,6 +1,6 @@
 --
 -- driver: PostGreSQL 7.*
--- $Revision: 1.2 $
+-- $Revision$
 --
 
 -- if the next step fails, you forgot to run "create-init-pg.sql"

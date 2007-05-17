@@ -35,7 +35,7 @@ import java.util.Iterator;
  * The refiner that results in the creation of cleanup jobs within the workflow.
  *
  * @author  Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  *
  */
 public class CleanupEngine extends Engine {

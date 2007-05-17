@@ -25,7 +25,7 @@ import java.io.IOException;
  * Captures the parent child relationship between the  jobs in the ADAG.
  *
  * @author Karan Vahi
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 
 public class PCRelation extends Data /*implements Comparable*/{

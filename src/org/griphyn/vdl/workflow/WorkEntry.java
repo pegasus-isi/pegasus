@@ -23,7 +23,7 @@ import java.util.*;
  *
  * @author Jens-S. Vöckler
  * @author Mike Wilde
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public class WorkEntry implements Workflow, Cloneable
 {

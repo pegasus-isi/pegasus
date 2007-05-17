@@ -37,7 +37,7 @@ import java.sql.SQLException;
  * @author Douglas Scheftner
  * @author Mike Wilde
  * @author Eric Gilbert
- * @version $Revision: 1.11 $
+ * @version $Revision$
  *
  */
 

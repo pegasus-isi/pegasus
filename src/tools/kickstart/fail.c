@@ -18,7 +18,7 @@
 #include <stdlib.h>
 
 static const char* RCS_ID =
-"$Id: fail.c,v 1.3 2004/07/22 14:43:26 griphyn Exp $";
+"$Id$";
 
 int
 main( int argc, char* argv[] )

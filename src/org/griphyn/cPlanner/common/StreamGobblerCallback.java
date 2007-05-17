@@ -5,7 +5,7 @@ package org.griphyn.cPlanner.common;
  * StreamGobbler while working on a stream.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface StreamGobblerCallback {
 

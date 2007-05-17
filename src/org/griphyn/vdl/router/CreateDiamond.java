@@ -20,7 +20,7 @@ import org.griphyn.vdl.classes.*;
  * create a Diamond DAG exmample structure in memory using VDL classes.
  *
  * @author   Jens-S. Vöckler
- * @version  $Revision: 1.3 $
+ * @version  $Revision$
  */
 public class CreateDiamond {
 

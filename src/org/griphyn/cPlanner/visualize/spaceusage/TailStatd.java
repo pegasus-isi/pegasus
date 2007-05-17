@@ -35,7 +35,7 @@ import java.util.Date;
  *
  * @author Karan Vahi vahi@isi.edu
  *
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 
 public class TailStatd extends SpaceUsageCallback{

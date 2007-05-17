@@ -25,7 +25,7 @@ import java.nio.channels.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  *
  * @see java.io.RandomAccessFile
  * @see java.nio.channels.FileChannel

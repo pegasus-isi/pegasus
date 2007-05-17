@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
  * constructor, or a default key is used.
  *
  * @author Karan Vahi
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 
 public class DAX2LabelGraph extends DAX2Graph {

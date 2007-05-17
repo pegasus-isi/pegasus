@@ -35,7 +35,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
  * @author Karan Vahi
  * @author Gaurang Mehta
  *
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface CodeGenerator {
 

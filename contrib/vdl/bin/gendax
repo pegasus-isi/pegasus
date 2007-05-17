@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # generate DAX upon the request for an lfn or a specific DV.
-# $Id: gendax,v 1.7 2005/07/26 18:48:24 griphyn Exp $
+# $Id$
 #
 . "`dirname $0`/common.sh"
 

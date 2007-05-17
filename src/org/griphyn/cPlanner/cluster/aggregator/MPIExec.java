@@ -32,7 +32,7 @@ import java.util.List;
  * can be usually found at $PEGASUS_HOME/bin/mpiexec.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public class MPIExec extends Abstract {

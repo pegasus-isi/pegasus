@@ -28,7 +28,7 @@ import java.util.Iterator;
  * Does a topological sort on the Partition.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public class Topological //implements Iterator

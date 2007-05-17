@@ -26,7 +26,7 @@ import java.util.StringTokenizer;
  * @author Gaurang Mehta gmehta@isi.edu
  * @author Karan Vahi vahi@isi.edu
  *
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class GlobusVersion {
 

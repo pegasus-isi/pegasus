@@ -30,7 +30,7 @@ import org.griphyn.common.util.DynamicLoader;
  *     used by the Concrete Planner.
  *
  * @author Gaurang Mehta
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 public class TCMode {
 

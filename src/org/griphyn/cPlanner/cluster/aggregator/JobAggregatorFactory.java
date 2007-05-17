@@ -29,7 +29,7 @@ import org.griphyn.common.util.DynamicLoader;
  * clustering jobs.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class JobAggregatorFactory {

@@ -33,7 +33,7 @@ import java.util.Map;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.11 $
+ * @version $Revision$
  *
  */
 public class FileTransfer extends PegasusFile {

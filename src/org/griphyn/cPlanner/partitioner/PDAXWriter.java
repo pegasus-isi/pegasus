@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.common.LogManager;
  * It writes out the partition graph in xml form.
  *
  * @author Karan Vahi
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 public class PDAXWriter {
 

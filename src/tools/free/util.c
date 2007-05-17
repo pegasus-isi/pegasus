@@ -18,7 +18,7 @@
 #include "util.h"
 
 static const char* RCS_ID =
-"$Id: util.c,v 1.4 2005/03/02 17:24:21 griphyn Exp $";
+"$Id$";
 
 void 
 show( unsigned megs )

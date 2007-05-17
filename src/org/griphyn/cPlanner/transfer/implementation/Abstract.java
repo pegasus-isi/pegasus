@@ -61,7 +61,7 @@ import java.util.StringTokenizer;
  * the Implementation Interface that are required by all the implementations.
  *
  * @author Karan Vahi
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public abstract class Abstract implements Implementation{
 

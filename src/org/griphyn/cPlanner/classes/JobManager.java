@@ -76,7 +76,7 @@ package org.griphyn.cPlanner.classes;
  * @author Gaurang Mehta gmehta@isi.edu
  * @author Karan Vahi vahi@isi.edu
  *
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public class JobManager {
 

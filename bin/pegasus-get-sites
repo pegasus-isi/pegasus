@@ -16,7 +16,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler at cs dot uchicago dot edu
-# $Id: pegasus-get-sites,v 1.18 2006/08/02 01:16:49 vahi Exp $
+# $Id$
 #
 require 5.005;
 use strict;
@@ -214,7 +214,7 @@ warn "# local hostname \"$host\"\n" if $main::DEBUG;
 # version
 our $BASENAME = basename($0);
 our $VERSION='1.0';
-$VERSION=$1 if ( '$Revision: 1.18 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 $main::DEBUG = 0;
 GetOptions( 'help' => \&usage,
@@ -416,7 +416,7 @@ sub showall {
 
 sub usage {
     print "Generate site catalog (SC) and transformation catalog (TC) from different sources like VORS or GRIDCAT\n";
-    print '$Id: pegasus-get-sites,v 1.18 2006/08/02 01:16:49 vahi Exp $', "\n";
+    print '$Id$', "\n";
     print << "EOF";
 
 Standard options: 

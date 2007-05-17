@@ -19,7 +19,7 @@ use lib File::Basename::dirname($0);
 use Common;
 
 $main::version = 'unknown';
-$_ = '$Revision: 1.9 $';       # don't edit
+$_ = '$Revision$';       # don't edit
 $main::version = $1 if /Revision:\s+([0-9.]+)/o;
 
 # globals

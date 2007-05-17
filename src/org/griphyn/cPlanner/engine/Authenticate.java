@@ -48,7 +48,7 @@ import java.util.StringTokenizer;
  * required.
  *
  * @author Karan Vahi
- * @version $Revision: 1.15 $
+ * @version $Revision$
  */
 
 public class Authenticate {

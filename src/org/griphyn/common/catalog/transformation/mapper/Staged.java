@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  * This implementation only generates maps for sites where transformation can be staged
  *@author Gaurang Mehta
- *@version $Revision: 1.6 $
+ *@version $Revision$
  */
 public class Staged
     extends Mapper {

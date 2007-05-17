@@ -17,9 +17,9 @@ package GriPhyN::RC::DBI;
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.2 $
+# Revision : $Revision$
 #
-# $Id: DBI.pm,v 1.2 2005/08/10 01:02:58 griphyn Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -31,7 +31,7 @@ our @ISA = qw(Exporter GriPhyN::RC);
 our @EXPORT = qw();
 our @EXPORT_OK = qw($VERSION);
 
-$VERSION=$1 if ( '$Revision: 1.2 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 #
 # --- start -----------------------------------------------------

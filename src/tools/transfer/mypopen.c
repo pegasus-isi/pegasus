@@ -22,7 +22,7 @@
 #include "mypopen.h"
 
 static const char* RCS_Id =
-"$Id: mypopen.c,v 1.2 2004/11/30 23:56:14 griphyn Exp $";
+"$Id$";
 
 PipeCmd*
 mypopen( const char* tag, char* argv[], char* envp[] )

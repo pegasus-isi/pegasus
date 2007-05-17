@@ -2,7 +2,7 @@
 #
 # Common structure to all shell wrappers. This file
 # is sourced from the shell wrapper scripts. 
-# $Id: common.sh,v 1.5 2005/09/27 15:29:28 griphyn Exp $
+# $Id$
 #
 if [ "X${JAVA_HOME}" = "X" ]; then
     echo "ERROR: Please set your JAVA_HOME variable" 1>&2

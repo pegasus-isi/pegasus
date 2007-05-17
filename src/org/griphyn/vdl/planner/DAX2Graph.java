@@ -25,7 +25,7 @@ import org.griphyn.vdl.planner.Graph;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.1 $
+ * @version $Revision$
  *
  * @see Graph
  */

@@ -34,7 +34,7 @@ import java.net.UnknownHostException;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.17 $
+ * @version $Revision$
  *
  */
 public class InvocationParser extends DefaultHandler

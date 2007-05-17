@@ -17,7 +17,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler at cs dot uchicago dot edu
-# $Id: pegasus-check-sites,v 1.9 2005/11/16 23:28:35 voeckler Exp $
+# $Id$
 #
 require 5.005;
 use strict;
@@ -51,7 +51,7 @@ sub canonical($);		# { }
 # version
 our $BASENAME = basename($0);
 our $VERSION='1.0';
-$VERSION=$1 if ( '$Revision: 1.9 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 my $host = Sys::Hostname::hostname || die "Hey, your hostname is not set!\n";
 my $proto = getprotobyname('tcp') || die "FATAL: getprotobyname tcp: $!\n";
@@ -236,7 +236,7 @@ sub usage(;$) {
     $ec = 1 unless defined $ec;
 
     print "Sanitize site catalog (SC) and transformation catalog (TC)\n";
-    print '$Id: pegasus-check-sites,v 1.9 2005/11/16 23:28:35 voeckler Exp $', "\n";
+    print '$Id$', "\n";
     print << "EOF";
 
  -Dprop=val    property overwrite, required first argument(s).

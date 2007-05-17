@@ -55,7 +55,7 @@ import java.lang.reflect.*;
  *
  * @author Karan Vahi
  * @author Jens-S. Vöckler
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 public class DynamicLoader
 {

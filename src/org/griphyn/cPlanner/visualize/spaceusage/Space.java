@@ -21,7 +21,7 @@ import java.util.Date;
  * A data class that stores the space usage.
  *
  * @author Karan Vahi
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 
 public class Space implements Cloneable{

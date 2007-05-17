@@ -1,5 +1,5 @@
 Release Notes for VDS 1.4.7
-$Id: RELEASE_NOTES,v 1.11 2006/10/11 00:16:03 vahi Exp $
+$Id$
 -------------------------------
 - Start using the new properties outlined in the release notes, in
   lieu of the properties deprecated in this release. Though, the

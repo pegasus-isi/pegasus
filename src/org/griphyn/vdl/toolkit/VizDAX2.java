@@ -30,7 +30,7 @@ import gnu.getopt.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.8 $
+ * @version $Revision$
  *
  */
 public class VizDAX2 extends Toolkit 
@@ -51,7 +51,7 @@ public class VizDAX2 extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println(
-"$Id: VizDAX2.java,v 1.8 2005/08/16 16:25:31 griphyn Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println(
@@ -102,7 +102,7 @@ public class VizDAX2 extends Toolkit
       while ( (option = opts.getopt()) != -1 ) {
 	switch ( option ) {
 	case 'V':
-	  System.out.println( "$Id: VizDAX2.java,v 1.8 2005/08/16 16:25:31 griphyn Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
 

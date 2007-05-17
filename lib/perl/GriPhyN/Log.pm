@@ -2,7 +2,7 @@ package GriPhyN::Log;
 #
 # contains just some log function - shared and specific.
 #
-# $Id: Log.pm,v 1.4 2005/08/24 21:29:57 griphyn Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -19,7 +19,7 @@ sub logging_prefix(;$);		# { }
 our @EXPORT = qw(log clog logging_prefix);
 our @EXPORT_OK = qw($VERSION utc2iso);
 
-$VERSION=$1 if ( '$Revision: 1.4 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 $__PACKAGE__::prefix = undef;
 $__PACKAGE__::clogfn = 'euryale.log'; # default name of shared logfile
 

@@ -624,7 +624,7 @@ public class VDS2PegasusProperties extends Executable {
      */
     public void printShortVersion(){
         String text =
-          "\n $Id: VDS2PegasusProperties.java,v 1.1 2007/04/10 21:42:34 vahi Exp $ " +
+          "\n $Id$ " +
           "\n " + getGVDSVersion() +
           "\n Usage : properties-converter [-Dprop  [..]] -i <input directory>  " +
           " [-o output directory] [-h]";
@@ -639,7 +639,7 @@ public class VDS2PegasusProperties extends Executable {
     public void printLongVersion(){
 
         String text =
-           "\n $Id: VDS2PegasusProperties.java,v 1.1 2007/04/10 21:42:34 vahi Exp $ " +
+           "\n $Id$ " +
            "\n " + getGVDSVersion() +
            "\n properties-converter - A tool that converts the VDS properties file to the corresponding"  +
            "\n                        Pegasus properties file " +

@@ -43,7 +43,7 @@ extern int isExtended; /* timestamp format concise or extended */
 extern int isLocal;    /* timestamp time zone, UTC or local */
 
 static const char* RCS_ID =
-"$Id: appinfo.c,v 1.22 2007/01/26 20:02:41 voeckler Exp $";
+"$Id$";
 
 static
 size_t

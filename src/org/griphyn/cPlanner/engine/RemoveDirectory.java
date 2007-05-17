@@ -42,7 +42,7 @@ import java.util.List;
  * is tied to the pool not the job itself.
  *
  * @author Karan Vahi
- * @version $Revision: 1.9 $
+ * @version $Revision$
  * @see CreateDirectory
  */
 public class RemoveDirectory extends Engine {

@@ -34,7 +34,7 @@ import org.griphyn.vdl.dbschema.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.27 $
+ * @version $Revision$
  */
 public class Route 
 {

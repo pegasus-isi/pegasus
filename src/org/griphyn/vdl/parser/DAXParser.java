@@ -37,7 +37,7 @@ import java.util.Stack;
 
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.9 $
+ * @version $Revision$
  */
 
 public class DAXParser extends DefaultHandler

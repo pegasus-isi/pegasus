@@ -30,7 +30,7 @@ import org.xml.sax.InputSource;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.parser.VDLxParser
  * @see org.griphyn.vdl.parser.DefinitionHandler

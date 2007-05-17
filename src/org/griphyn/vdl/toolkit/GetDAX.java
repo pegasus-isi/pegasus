@@ -36,7 +36,7 @@ import gnu.getopt.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.28 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.router.Route
  * @see org.griphyn.vdl.router.BookKeeper
@@ -59,7 +59,7 @@ public class GetDAX extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
     System.out.println(
-"$Id: GetDAX.java,v 1.28 2006/09/09 17:00:52 benc Exp $" + linefeed +
+"$Id$" + linefeed +
 "VDS version " + Version.instance().toString() + linefeed );
 
     System.out.println(
@@ -184,7 +184,7 @@ linefeed +
 	  break;
 
 	case 'V':
-	  System.out.println( "$Id: GetDAX.java,v 1.28 2006/09/09 17:00:52 benc Exp $" );
+	  System.out.println( "$Id$" );
 	  System.out.println( "VDS version " + Version.instance().toString() );
 	  return;
 	

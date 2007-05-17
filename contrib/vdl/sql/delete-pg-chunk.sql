@@ -1,7 +1,7 @@
 --
 -- schema: org.griphyn.vdl.dbschema.ChunkSchema
 -- driver: PostGreSQL 7.4.*
--- $Revision: 1.7 $
+-- $Revision$
 --
 
 DROP INDEX ix_vdc_blfn;

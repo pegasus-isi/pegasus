@@ -25,7 +25,7 @@ import org.griphyn.vdl.classes.Definition;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  *
  * @see org.griphyn.vdl.dbschema.DatabaseSchema 
  * @see org.griphyn.vdl.dbdriver 

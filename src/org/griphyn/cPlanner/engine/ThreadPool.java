@@ -37,7 +37,7 @@ import org.ietf.jgss.GSSCredential;
  * particular resource.
  *
  * @author Karan Vahi
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 
 public class ThreadPool {

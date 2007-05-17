@@ -36,7 +36,7 @@ extern "C" {
 #include "mysignal.hh"
 
 static const char* RCS_ID =
-"$Id: jobinfo.cc,v 1.10 2005/05/20 15:00:08 griphyn Exp $";
+"$Id$";
 
 #ifdef sun
 #define sys_siglist _sys_siglist

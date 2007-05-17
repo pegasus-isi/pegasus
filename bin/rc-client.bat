@@ -3,7 +3,7 @@ rem
 rem manipulate any replica catalog implementation through a generic
 rem interface from the shell.
 rem
-rem $Id: rc-client.bat,v 1.1 2005/09/02 23:36:53 griphyn Exp $
+rem $Id$
 rem
 if "%JAVA_HOME%" == "" (
     echo "Error! Please set your JAVA_HOME variable"

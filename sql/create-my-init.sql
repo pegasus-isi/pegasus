@@ -1,7 +1,7 @@
 ---
 --- schema: all
 --- driver: MySQL 4.0.*
---- $Revision: 1.3 $
+--- $Revision$
 ---
 
 CREATE TABLE sequences (

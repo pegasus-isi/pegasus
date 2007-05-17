@@ -36,7 +36,7 @@ import java.util.Vector;
  * be as small as a single job. The partitions are determined by the Partitioner.
  *
  * @author Karan Vahi
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class DAX2CDAG implements Callback {
 

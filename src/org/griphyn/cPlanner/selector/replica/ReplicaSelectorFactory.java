@@ -28,7 +28,7 @@ import org.griphyn.common.util.DynamicLoader;
  * factory results in a ReplicaSelector being instantiated.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public class ReplicaSelectorFactory {

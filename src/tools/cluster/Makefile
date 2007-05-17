@@ -1,6 +1,6 @@
 #
 # Makefile
-# $Id: Makefile,v 1.7 2006/09/22 22:02:50 voeckler Exp $
+# $Id$
 #
 INSTALL	= install
 RM	= rm -f

@@ -30,7 +30,7 @@ import java.io.Serializable;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.9 $
+ * @version $Revision$
  *
  * @see Leaf
  * @see Text

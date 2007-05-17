@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.partitioner.Partition;
  * and memory-efficient parser of PDAX is expected to call these callbacks.
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public interface Callback {
 

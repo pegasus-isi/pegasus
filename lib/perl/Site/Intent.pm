@@ -15,7 +15,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision: $Revision: 1.5 $
+# Revision: $Revision$
 #
 package Site::Intent;
 use 5.006;
@@ -34,7 +34,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 our $VERSION='1.0';
-$VERSION=$1 if ( '$Revision: 1.5 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 # prototypes
 sub create_lock($);		# { }

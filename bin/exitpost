@@ -18,7 +18,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler jens at isi dot edu
-# Revision : $Revision: 1.3 $
+# Revision : $Revision$
 #
 use 5.006;
 use strict;

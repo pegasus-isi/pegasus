@@ -21,7 +21,7 @@ import org.griphyn.common.util.FactoryException;
  * Class to notify of failures while instantiating JobAggregator implementations.
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class JobAggregatorFactoryException extends FactoryException {

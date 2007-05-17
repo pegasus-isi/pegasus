@@ -16,9 +16,9 @@ package GriPhyN::RC::vds;
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler at cs dot uchicago dot edu
-# Revision : $Revision: 1.2 $
+# Revision : $Revision$
 #
-# $Id: vds.pm,v 1.2 2005/10/31 19:55:12 voeckler Exp $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -29,7 +29,7 @@ our @ISA = qw(Exporter GriPhyN::RC);
 our @EXPORT = qw();
 our @EXPORT_OK = qw($VERSION);
 
-$VERSION=$1 if ( '$Revision: 1.2 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 #
 # --- start -----------------------------------------------------

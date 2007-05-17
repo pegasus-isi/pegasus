@@ -24,7 +24,7 @@
 #include "mysignal.hh"
 
 static const char* RCS_ID = 
-"$Id: mysignal.cc,v 1.2 2004/02/23 20:21:53 griphyn Exp $";
+"$Id$";
 
 SigFunc*
 mysignal( int signo, SigFunc* newhandler, bool doInterrupt )

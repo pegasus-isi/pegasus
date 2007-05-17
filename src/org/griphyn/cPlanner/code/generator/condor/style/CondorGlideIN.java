@@ -34,7 +34,7 @@ import org.griphyn.cPlanner.namespace.Condor;
  *        - on the nodes that have been flocked to the local pool (NOT TESTED)
  *
  * @author Karan Vahi
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public class CondorGlideIN extends Abstract {

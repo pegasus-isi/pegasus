@@ -59,7 +59,7 @@ import java.util.List;
  * value <code>Transfer</code>.
  *
  * @author Karan Vahi
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public class Transfer extends AbstractMultipleFTPerXFERJob {
 

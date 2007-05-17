@@ -15,7 +15,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 1.15 $
+# Revision : $Revision$
 #
 package Work::Properties;
 use 5.006;
@@ -37,7 +37,7 @@ sub PARSE_ALL  { PARSE_WFRC | PARSE_GVDS }
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 our $VERSION = '0.1';
-$VERSION=$1 if ( '$Revision: 1.15 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 our %EXPORT_TAGS = (parse => [qw(PARSE_NONE PARSE_WFRC PARSE_GVDS PARSE_ALL)]);
 our @EXPORT_OK = qw($VERSION parse_properties %initial %system

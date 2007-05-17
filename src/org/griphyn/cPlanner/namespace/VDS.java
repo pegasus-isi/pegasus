@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.20 $
+ * @version $Revision$
  */
 
 public class VDS extends Namespace {

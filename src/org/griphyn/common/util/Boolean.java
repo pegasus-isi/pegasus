@@ -23,7 +23,7 @@ package org.griphyn.common.util;
  * @author Gaurang Mehta
  * @author Karan Vahi
  * @author Jens-S. Vöckler
- * @version $Revision: 1.6 $
+ * @version $Revision$
  */
 public class Boolean
 {

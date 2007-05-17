@@ -140,7 +140,7 @@ import org.globus.replica.rls.RLSStats;
  * by connecting to the server from the RLS client.
  *
  * @author Sonal Patil
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 
 

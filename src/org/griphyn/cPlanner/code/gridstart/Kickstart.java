@@ -59,7 +59,7 @@ import java.io.IOException;
  * at $PEGASUS_HOME/bin/kickstart
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.14 $
+ * @version $Revision$
  */
 public class Kickstart implements GridStart {
 

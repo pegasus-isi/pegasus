@@ -30,7 +30,7 @@ import org.griphyn.vdl.util.Logging;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.20 $
+ * @version $Revision$
  *
  * @see org.griphyn.common.util.VDSProperties
  */

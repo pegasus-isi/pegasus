@@ -21,7 +21,7 @@ package org.griphyn.common.catalog.transformation.client;
  * This is a TCClient class which handles the Query Operations.
  *
  * @author Gaurang Mehta gmehta@isi.edu
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 
 import org.griphyn.cPlanner.classes.Profile;

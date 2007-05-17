@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * A filename filter for identifying the kickstart output files.
  *
  * @author Karan Vahi vahi@isi.edu
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 
 public class KickstartOutputFilenameFilter implements FilenameFilter {

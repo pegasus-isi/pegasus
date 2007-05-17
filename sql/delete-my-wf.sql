@@ -1,6 +1,6 @@
 --
 -- driver: MySQL 4.*
--- $Revision: 1.2 $
+-- $Revision$
 --
 
 DROP TABLE wf_siteinfo CASCADE;

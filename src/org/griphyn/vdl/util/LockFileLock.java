@@ -30,7 +30,7 @@ import java.io.*;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.2 $
+ * @version $Revision$
  *
  * @see java.io.File
  * @see LockHelper

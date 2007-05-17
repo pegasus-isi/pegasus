@@ -35,7 +35,7 @@ import java.util.Map;
  * uniformly in the Pegasus code base.
  *
  * @author Karan Vahi
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 
 public class DAX2Graph implements Callback {

@@ -43,7 +43,7 @@ static AppInfo appinfo; /* sigh, needs to be global for atexit handler */
 static volatile sig_atomic_t global_no_atexit;
 
 static const char* RCS_ID =
-"$Id: kickstart.c,v 1.27 2007/01/23 23:55:34 voeckler Exp $";
+"$Id$";
 
 static
 int

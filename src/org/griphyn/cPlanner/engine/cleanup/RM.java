@@ -44,7 +44,7 @@ import java.util.HashSet;
  * Use's RM to do removal of the files on the remote sites.
  *
  * @author Karan Vahi
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public class RM implements Implementation{
 

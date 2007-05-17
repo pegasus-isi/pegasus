@@ -30,7 +30,7 @@ import java.util.Collection;
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
- * @version $Revision: 1.3 $
+ * @version $Revision$
  */
 public interface Implementation {
 

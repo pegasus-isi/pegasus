@@ -1,7 +1,7 @@
 --
 -- schema: org.griphyn.vdl.dbschema.InvocationSchema
 -- driver: MySQL 4.*
--- $Revision: 1.5 $
+-- $Revision$
 --
 
 DROP TABLE ptc_lfn CASCADE;

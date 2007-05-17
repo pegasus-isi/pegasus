@@ -28,7 +28,7 @@ import org.griphyn.vdl.util.DAX2DOT;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 public class Display extends Directive
 {

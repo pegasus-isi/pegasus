@@ -18,7 +18,7 @@
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler at cs dot uchicago dot edu
-# Revision : $Revision: 1.2 $
+# Revision : $Revision$
 #
 require 5.005;
 use strict;

@@ -30,7 +30,7 @@
 #include "appinfo.hh"
 
 static const char* RCS_ID =
-"$Id: appinfo.cc,v 1.10 2006/07/12 15:22:06 benc Exp $";
+"$Id$";
 
 #define XML_SCHEMA_URI "http://www.griphyn.org/chimera/Invocation"
 #define XML_SCHEMA_LOC "http://www.griphyn.org/chimera/iv-1.3.xsd"

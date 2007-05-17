@@ -61,7 +61,7 @@ import java.io.FileWriter;
  * </pre>
  *
  * @author Karan Vahi
- * @version $Revision: 1.2 $
+ * @version $Revision$
  */
 public class SRM extends AbstractMultipleFTPerXFERJob {
 

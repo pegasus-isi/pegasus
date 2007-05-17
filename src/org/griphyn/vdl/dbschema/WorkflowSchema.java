@@ -30,7 +30,7 @@ import org.griphyn.vdl.util.Logging;
  *
  * @author Jens-S. Vöckler
  * @author Mike Wilde
- * @version $Revision: 1.4 $
+ * @version $Revision$
  */
 public class WorkflowSchema extends DatabaseSchema 
   implements WF

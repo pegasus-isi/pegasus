@@ -39,7 +39,7 @@ import java.util.Set;
  *
  *
  * @author Karan Vahi
- * @version $Revision: 1.7 $
+ * @version $Revision$
  */
 
 public class Partition extends Data {

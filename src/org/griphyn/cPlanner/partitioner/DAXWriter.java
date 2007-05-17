@@ -34,7 +34,7 @@ import java.io.PrintWriter;
  * by the implementing classes by parsing the original dax.
  *
  * @author Karan Vahi
- * @version $Revision: 1.8 $
+ * @version $Revision$
  */
 public abstract class DAXWriter {
 

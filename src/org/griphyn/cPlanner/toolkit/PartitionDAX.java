@@ -46,7 +46,7 @@ import java.util.Map;
  *
  *
  * @author Karan Vahi
- * @version $Revision: 1.13 $
+ * @version $Revision$
  */
 
 public class PartitionDAX extends Executable {
@@ -282,7 +282,7 @@ public class PartitionDAX extends Executable {
      */
     public void printShortVersion() {
         String text =
-          "\n $Id: PartitionDAX.java,v 1.13 2007/02/23 01:28:41 vahi Exp $ " +
+          "\n $Id$ " +
           "\n" + getGVDSVersion() +
           "\n Usage :partitiondax -d <dax file> [-D <dir for partitioned daxes>] " +
           "   -t <type of partitioning to be used> [-v] [-V] [-h]";

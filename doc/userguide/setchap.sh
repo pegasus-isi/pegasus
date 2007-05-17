@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# $Revision: 1.1 $
+# $Revision$
 #
 # Sets the chapter number in a userguide chapter
 # (by inserting invisible "spacer" chapters at the front of the doc,

@@ -20,7 +20,7 @@ package org.griphyn.vdl.toolkit;
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
- * @version $Revision: 1.3 $
+ * @version $Revision$
  *
  * @see ExitCode 
  */
