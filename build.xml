@@ -28,14 +28,11 @@
     <echo>full ISO timestamp: ${ISODATE.full}</echo>   
 
     <!-- substitute built timestamp into Version.java -->
-    <exec executable="sed" 
+    <exec executable="perl" 
 	  output="src/org/griphyn/common/util/Version.java">
-      <arg value="-e"/>
-      <arg value="s/BUILDTIMESTAMP/${ISODATE.utc}/"/>
-      <arg value="-e"/>
-      <arg value="s/BUILDARCHITECTURE/${dist.arch}/"/>
-      <arg value="-e"/>
-      <arg value="s/DONOTEDITWARNING/DO NOT EDIT! This file is generated automatically/"/>
+      <arg value="-CSio"/>
+      <arg value="-pe"/>
+      <arg value="s/BUILDTIMESTAMP/${ISODATE.utc}/; s/BUILDARCHITECTURE/${dist.arch}/; s/DONOTEDITWARNING/DO NOT EDIT! This file is generated automatically/"/>
       <arg value="src/org/griphyn/common/util/Version.in"/>
     </exec>
   </target>
@@ -61,7 +58,7 @@
   <target name="common" depends="init"
 	  description="Compiles the code common to both, Chimera and Pegasus">
     <javac destdir="${build.src}" srcdir="src" 
-	   encoding="ISO-8859-1" deprecation="true" debug="true"
+	   encoding="UTF-8" deprecation="true" debug="true"
            target="1.5" source="1.5"
 	   includes="org/griphyn/common/**/*.java,*.java"
 	   excludes="org/griphyn/common/**/*Test.java,*Test.java"/>
@@ -71,7 +68,7 @@
 	  description="Compiles the abstract planner Chimera">
     <javac destdir="${build.src}" srcdir="src" 
            target="1.5" source="1.5"
-	   encoding="ISO-8859-1" debug="true"
+	   encoding="UTF-8" debug="true"
 	   includes="org/griphyn/vdl/*.java,org/griphyn/vdl/**/*.java"
            excludes="org/griphyn/vdl/*Test.java,org/griphyn/vdl/**/*Test.java"/>
   </target>
@@ -80,7 +77,7 @@
 	  description="Compiles the concrete planner Pegasus">
     <javac destdir="${build.src}" srcdir="src"
            target="1.5" source="1.5"
-	   encoding="ISO-8859-1" debug="true"
+	   encoding="UTF-8" debug="true"
 	   includes="org/griphyn/cPlanner/**/*.java"
 	   excludes="org/griphyn/cPlanner/**/*Test.java"/>
   </target>
@@ -89,7 +86,7 @@
 	  description="Compiles all sources, including tests">
     <javac destdir="${build.src}" srcdir="src" 
            target="1.5" source="1.5"
-	   encoding="ISO-8859-1" debug="true"
+	   encoding="UTF-8" debug="true"
 	   includes="*.java,org/**/*.java"/>
   </target>
 
@@ -97,7 +94,7 @@
 	  description="compiles everything with deprecation flag">
     <javac destdir="${build.src}" srcdir="src" 
            target="1.5" source="1.5"
-	   encoding="ISO-8859-1" deprecation="true" debug="true"
+	   encoding="UTF-8" deprecation="true" debug="true"
 	   includes="*.java,org/**/*.java"/>
   </target>
 
