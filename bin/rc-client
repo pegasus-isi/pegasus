@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# manipulate any replica catalog implementation through a generic
+# interface from the shell.
+#
+# $Id: rc-client,v 1.1 2005/09/02 23:36:53 griphyn Exp $
+#
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java "-pegasus.home=${PEGASUS_HOME}" $addon org.griphyn.common.catalog.toolkit.RCClient "$@"

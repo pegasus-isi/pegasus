@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XML Spy v4.3 U (http://www.xmlspy.com) by Jens-S. Vöckler (private) -->
+<definitions xmlns="http://www.griphyn.org/chimera/VDL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.griphyn.org/chimera/VDL http://www.griphyn.org/chimera/vdl-1.20.xsd" version="1.0" vdlns="example1">
+	<transformation name="t1">
+		<declare name="a1" container="scalar" link="input"/>
+		<declare name="a2" container="scalar" link="output"/>
+		<declare name="pa" container="scalar" link="none">
+			<scalar>
+				<text>500</text>
+			</scalar>
+		</declare>
+		<declare name="env" container="scalar" link="none">
+			<scalar>
+				<text>100000</text>
+			</scalar>
+		</declare>
+		<argument name="parg">
+			<text>-p </text>
+			<use name="pa" link="none"/>
+		</argument>
+		<argument name="farg">
+			<text>-f </text>
+			<use name="a1" link="input"/>
+		</argument>
+		<argument name="xarg">
+			<text>-x -y </text>
+		</argument>
+		<argument name="stdout">
+			<use link="output" name="a2"/>
+		</argument>
+		<profile key="pfnhint" namespace="hints">
+			<text>/usr/bin/app3</text>
+		</profile>
+		<profile namespace="env" key="MAXMEM">
+			<use name="env" link="none"/>
+		</profile>
+	</transformation>
+</definitions>

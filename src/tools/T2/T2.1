@@ -1,0 +1,252 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: T2.1,v 1.4 2006/07/13 09:47:33 benc Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.\"
+.TH T2 1 "April, 1st 2004"
+.SH NAME
+T2 \- a globus\-url\-copy wrapper
+.SH SYNOPSIS
+.B T2
+[\-P\~pp] [\-t\~bs] [\-p\~ns] [\-r\~nr] [\-q] baseuri basemnt
+.PP
+.B T2
+[\-P\~pp] [\-t\~bs] [\-p\~ns] [\-r\~nr] [\-q] baseuri basemnt fof
+.SH DESCRIPTION
+The 
+.I T2 
+program is a multi-threaded wrapper around globus-url-copy to handle a
+list of source and destination URIs. The list is either supplied inside
+a file as third argument, or via
+.I stdin
+from another process. 
+.PP
+.I T2
+will check for the existence and accessibility of the programs
+globus-url-copy and grid-proxy-info. The
+.I T2
+program will exit with an error if the user proxy certificate does
+not have at least one hour remaining.
+.SH ARGUMENTS
+.TP
+.B \-P pp
+configures the maximum number of parallel running globus-url-copy
+processes. Please note that no sanity checks are implemented, if you
+use an unreasonably high number. You might run out of filedescriptors
+or user processes. 
+.IP
+The default is to run no more than 4 parallel active copy processes.
+.TP
+.B \-t bs
+configures the buffer size of the
+.I \-tcp\-bs 
+parameter from globus-url-copy. A well-tuned buffer size may have 
+beneficial effects while insane buffer sizes gobble resources.
+.IP
+The default is 0, which lets the system determine the appropriate size.
+.TP
+.B \-p ns
+configures the number of parallel streams that are use with the
+.I \-p
+option of globus-url-copy to transfer a single file. 
+.IP
+By default, only 1 stream is being used. 
+.TP
+.B \-r nr
+configures the number of retries for soft failures. Certain known 
+hard failures will not trigger a retry, but most unknown failures are
+taken to be soft failures, and will trigger retries. In case of multiple
+retries and multiple failures, the last retry will attempt to set more
+friendly setting (e.g. only one data channel, no more than 64k buffers).
+.IP
+By default, 3 retries are attempted. 
+.TP
+.B \-q
+triggers a quieter mode. 
+.IP
+By default, the T2 program is rather talkive about what it does. 
+.TP
+.B baseuri
+specifies the URI prefix of the host that the instance of the
+.I T2 
+program is running upon. It is the URI-prefix one would use from the
+outside to access files. You may use an (almost) arbitrary character 
+string to denote that you don't intend to use this feature. See also
+.I basemnt.
+.IP
+This is a required argument. There are no defaults.
+.TP
+.B basemnt
+denotes the mount point that reflects the inside view where paths
+with the
+.I baseuri
+prefix would be mounted to. You can use an almost arbitrary string
+to denote not to use this feature.
+.IP
+Together, the two required arguments allow optimization by replacing
+an external URI with an internal file:/// schema, as the latter is 
+usually faster.
+.IP
+This is a required argument. There are no defaults.
+.PP
+The list of URIs denoting files to transfer is either put onto
+.IR stdin ,
+or it is the optional third argument. The list of URIs contains pairs.
+The logical filename, for debugging purposes, introduces a section, and
+may contain certain flags. The LFN must not contain whitespaces. The
+source URI list follows the section header, each URI indented by one
+whitespace. The list of source-URI constitutes alternatives for the same
+file, and each alternative is equivalent. The source-URI list is
+followed by a destination-URI list. Each destination URI is indented by
+two whitespaces. The URI-per-line format was chosen, because in praxi
+URIs may contain unquoted whitespaces.
+.SH "INPUT FILE FORMAT"
+Each input record of variable length is considered a 
+.IR section . 
+Each section contains one header, and multiple sources and destinations.
+Each section describes exactly one transfer. Flags are attached to the
+header. A section is terminated by either the next LFN, or by the EOF.
+.nf
+\f(CB
+LFN_1 [flag [..]]
+ws TFN_src_1_1
+ws TFN_src_1_..
+ws TFN_src_1_N
+ws ws TFN_dst_1_1
+ws ws TFN_dst_1_..
+ws ws TFN_dst_1_M
+# comment
+LFN_2 [flag [..]]
+ws TFN_src_2_1
+ws TFN_src_2_..
+ws TFN_src_2_N
+ws ws TFN_dst_2_1
+ws ws TFN_dst_2_..
+ws ws TFN_dst_2_M
+\fP
+.fi
+comments start with a hash (#), and extend to the end of line. A comment
+line is ignored when encountered.
+.PP
+The header starts with a logical filename (LFN) on the leftmost side. 
+A LFN must not contain any whitespaces. It may optionally be followed
+by flags, which modify the behavior for this transfer. The LFN is only
+used for reporting and debugging.
+.PP
+A file may exist in multiple locations. Each source is a transfer
+filename (TFN). A TFN describes how to access a file from the outside
+world. Each source TFN is equivalent. At least one such must be
+specified. Each source TFN is indented with one whitespace. 
+.PP
+There may be multiple destinations for a file. Again, a TFN is used to
+describe where to place a copy, as viewed from the outside. Each
+destination is indented by two whitespaces. 
+.PP
+The transfer tool tries to transfer between the cartesian product of
+source and destination pairs, e.g. N x M and O x P pairs. The flags
+determine at what point and how to stop.
+.PP
+Flags are separated by whitespace. The following optional flags are
+possible, being mutually exclusive, with 
+.I any 
+being the default in case no flag is specified:
+.TP
+.B any
+is the default option. Any source file transfer to any destination
+success causes success of the section. If all pair candidates
+were exhausted without success, the transfer will fail. All sources are
+equivalent. However, missing a file on any source will result in
+immediate try for the next source. On the last source, it will result in
+failure.
+.TP
+.B optional
+means that failure to transfer this file does not consitute a failure of
+the transfer tool. All sources are equivalent. However, missing a file
+on any source will result in immediate try for the next source. On the
+last source, it will result still in success.
+.TP
+.B all
+is a short-cut to transfer any found source to all destinations.
+However, this option is currently not implemented. All sources are
+considered equivalent. It is attempted to distribute any reachable
+source file onto all reachable destinations. Partial success is still
+considered a failure.
+.SH "RETURN VALUE"
+Execution as planned will return 0. Normal failures will return 1.
+Check-up failures due to inaccessible globus-url-copy or grid-proxy-info
+will return 2. Failure to install the signal handler returns 3. Failure
+from the transfer of any file will return 42.
+.SH "SEE ALSO"
+.BR globus-url-copy,
+.BR grid-proxy-info
+.SH EXAMPLE
+If the input file
+.I fof
+looks like this
+.nf
+\f(CB
+# comment 1
+a any
+ gsiftp://some.host/some/where/a
+  https://any.host/else/where/a
+b optional
+ gsiftp://some.host/some/where/b
+ gsiftp://some.host2/else/where/b
+  https://any.host/else/where/b
+c all
+  gsiftp://another.host/some/where/c
+   https://any.host/else/where/c
+   https://any.other/else/where/d
+\fP
+.fi
+and the 
+.I T2
+executable was invoked like this
+.nf
+\f(CB
+T2 gsiftp://another.host/some /mnt/some fof
+\fP
+.fi
+on host 
+.IR another.host, 
+the T2 program would do the following calls to globus-url-copy
+in parallel (since by default it starts four instances maximum):
+.nf
+\f(CB
+globus-url-copy gsiftp://some.host/some/where/a https://any.host/else/where/a
+globus-url-copy gsiftp://some.host/some/where/b https://any.host/else/where/b
+globus-url-copy file:///mnt/some/where/c https://any.host/else/where/c
+globus-url-copy file:///mnt/some/where/c https://any.other/else/where/d
+\fP
+.fi
+.SH RESTRICTIONS
+The list of filesnames must be a textual file.
+.PP
+Outragious requests for memory or parallel resources will lead to failure
+of the T2. 
+.SH AUTHORS
+Jens-S. Vöckler <voeckler@cs.uchicago.edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde@mcs.anl.gov>,
+.br
+Yong Zhao <yongzh@cs.uchicago.edu>.
+.PP
+Chimera
+.B http://www.griphyn.org/chimera/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

@@ -1,0 +1,21 @@
+#List of Errors to find
+error
+fatal
+line
+chose site
+remembering bad site
+replan
+
+#List of Errors to ignore
+transfer_error
+statcall error
+echo ERROR
+echo "ERROR
+stream_error
+.err
+linear
+
+#Files to ignore
+.sub
+.cleanup
+.setup

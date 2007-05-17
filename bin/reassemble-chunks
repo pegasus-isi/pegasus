@@ -1,0 +1,83 @@
+#!/usr/bin/env perl
+#
+# Reassembles kickstart feedback channel messages from chunks
+#
+# Requires some Perl XML modules to be post-installed.
+#
+# $Id: reassemble-chunks,v 1.2 2004/08/12 18:14:43 griphyn Exp $
+#
+require 5.005;
+use strict;
+use XML::Parser::Expat;
+
+%main::data = ();		# contents
+@main::stack = ();		# written by s_e, read by c_h
+$main::tail = "</foo>\n";
+$main::head = "<?xml version=\"1.0\"?>\n" .
+    "<!DOCTYPE foo [" .
+    " <!ELEMENT foo (#PCDATA|chunk)*>" .
+    " <!ELEMENT chunk (#PCDATA)>" .
+    " <!ATTLIST chunk channel CDATA \"0\">" .
+    " <!ATTLIST chunk size CDATA #REQUIRED>" .
+    " <!ATTLIST chunk start CDATA #REQUIRED>" .
+    "]>\n" . "<foo>\n";
+
+
+
+sub start_element {
+    # purpose: callback for open tag
+    my ($self,$element,%attr) = @_;
+    if ( $element eq 'chunk' ) {
+	push( @main::stack, [ @attr{'channel','start'} ] );
+	$self->setHandlers( Char => \&content_handler );
+    }
+}
+
+sub final_element {
+    # purpose: callback for close tag
+    my ($self,$element) = @_;
+    if ( $element eq 'chunk' ) {
+	$self->setHandlers( Char => \&skip_handler );
+	pop( @main::stack );
+    }
+}
+
+sub skip_handler {
+    # purpose: generic character handler, ignores text
+    my ($self,$text) = @_;
+    # noop
+}
+
+sub content_handler {
+    # purpose: special character handler, active within chunks
+    my $self = shift;
+    my @tos = @{ $main::stack[ $#main::stack ] };
+    push( @{$main::data{$tos[0]}{$tos[1]}}, shift() );
+}
+
+# read contents into $contents
+$/ = undef;			# big gulp mode
+my $fn = shift || die "Usage: $0 filename";
+open( XML, '<' . $fn ) || die "open $fn: $!\n";
+my $content = <XML>;
+close XML;
+
+# init XML parser
+my $xml = new XML::Parser::Expat;
+$xml->setHandlers( Start => \&start_element,
+		   End => \&final_element,
+		   Char => \&skip_handler );
+
+# artificially introduce a root element to contain all chunks
+# and any other data the remote scheduler may have messed into the stream.
+#$content = "<foo>\n" . $content . "</foo>";
+$content =  $main::head . $content . $main::tail;
+$xml->parsestring($content);
+undef $content;
+
+# now produce content sorted by timestamp
+foreach my $channel ( sort { $a <=> $b } keys %main::data ) {
+    foreach my $time ( sort keys %{$main::data{$channel}} ) {
+	print( join('',@{$main::data{$channel}{$time}}) );
+    }
+}

@@ -1,0 +1,298 @@
+/*
+ * This file or a portion of this file is licensed under the terms of
+ * the Globus Toolkit Public License, found in file GTPL, or at
+ * http://www.globus.org/toolkit/download/license.html. This notice must
+ * appear in redistributions of this file, with or without modification.
+ *
+ * Redistributions of this Software, with or without modification, must
+ * reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+ * some other similar material which is provided with the Software (if
+ * any).
+ *
+ * Copyright 1999-2004 University of Chicago and The University of
+ * Southern California. All rights reserved.
+ */
+package org.griphyn.cPlanner.transfer.implementation;
+
+import org.griphyn.cPlanner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.NameValue;
+import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.FileTransfer;
+
+import org.griphyn.cPlanner.common.LogManager;
+import org.griphyn.cPlanner.common.PegasusProperties;
+
+import org.griphyn.cPlanner.namespace.VDS;
+
+import org.griphyn.common.classes.TCType;
+
+import org.griphyn.common.catalog.TransformationCatalogEntry;
+
+import org.griphyn.common.util.Separator;
+
+import java.io.FileWriter;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * The implementation that creates transfer jobs referring to the transfer
+ * executable distributed with the VDS.
+ *
+ * <p>
+ * The Transfer client is generally invoked on the remote execution sites, unless
+ * the user uses the thirdparty transfer option, in which case the transfer is
+ * invoked on the submit host. Hence there should be an entry in the transformation
+ * catalog for logical transformation <code>Transfer</code> at the execution sites.
+ * Transfer is distributed as part of the VDS worker package and can be found at
+ * $PEGASUS_HOME/bin/transfer.
+ * <p>
+ * It leads to the creation of the setup chmod jobs to the workflow, that appear
+ * as parents to compute jobs in case the transfer implementation does not
+ * preserve the X bit on the file being transferred. This is required for
+ * staging of executables as part of the workflow. The setup jobs are only added
+ * as children to the stage in jobs.
+ * <p>
+ * In order to use the transfer implementation implemented by this class, the
+ * property <code>pegasus.transfer.*.impl</code> must be set to
+ * value <code>Transfer</code>.
+ *
+ * @author Karan Vahi
+ * @version $Revision: 1.3 $
+ */
+public class Transfer extends AbstractMultipleFTPerXFERJob {
+
+    /**
+     * The transformation namespace for the transfer job.
+     */
+    public static final String TRANSFORMATION_NAMESPACE = null;
+
+    /**
+     * The name of the underlying transformation that is queried for in the
+     * Transformation Catalog.
+     */
+    public static final String TRANSFORMATION_NAME = "transfer";
+
+    /**
+     * The version number for the transfer job.
+     */
+    public static final String TRANSFORMATION_VERSION = null;
+
+    /**
+     * The derivation namespace for for the transfer job.
+     */
+    public static final String DERIVATION_NAMESPACE = "VDS";
+
+    /**
+     * The name of the underlying derivation.
+     */
+    public static final String DERIVATION_NAME = "transfer";
+
+    /**
+     * The derivation version number for the transfer job.
+     */
+    public static final String DERIVATION_VERSION = "1.0";
+
+    /**
+     * A short description of the transfer implementation.
+     */
+    public static final String DESCRIPTION = "VDS Transfer Wrapper around GUC";
+
+    /**
+     * The number of g-u-c processes that are spawned to transfer the files in
+     * one transfer job.
+     */
+    protected String mNumOfTXProcesses;
+
+    /**
+     * The number of streams that each g-u-c process opens to do the ftp transfer.
+     */
+    protected String mNumOfTXStreams;
+
+    /**
+     * Whether to use force option for the transfer executable or not.
+     */
+    protected boolean mUseForce;
+
+
+
+    /**
+     * The overloaded constructor, that is called by the Factory to load the
+     * class.
+     *
+     * @param properties  the properties object.
+     * @param options     the options passed to the Planner.
+     */
+    public Transfer(PegasusProperties properties,PlannerOptions options){
+        super(properties,options);
+        mNumOfTXProcesses = mProps.getNumOfTransferProcesses();
+        mNumOfTXStreams   = mProps.getNumOfTransferStreams();
+        mUseForce         = mProps.useForceInTransfer();
+
+    }
+
+    /**
+     * Return a boolean indicating whether the transfers to be done always in
+     * a third party transfer mode. A value of false, results in the
+     * direct or peer to peer transfers being done.
+     * <p>
+     * A value of false does not preclude third party transfers. They still can
+     * be done, by setting the property "pegasus.transfer.*.thirdparty.sites".
+     *
+     * @return boolean indicating whether to always use third party transfers
+     *         or not.
+     *
+     * @see PegasusProperties#getThirdPartySites(String)
+     */
+    public boolean useThirdPartyTransferAlways(){
+        return false;
+    }
+
+    /**
+     * Returns a boolean indicating whether the transfer protocol being used by
+     * the implementation preserves the X Bit or not while staging.
+     *
+     * @return boolean
+     */
+    public boolean doesPreserveXBit(){
+        return false;
+    }
+
+
+    /**
+     * Returns a textual description of the transfer implementation.
+     *
+     * @return a short textual description
+     */
+    public  String getDescription(){
+        return this.DESCRIPTION;
+    }
+
+    /**
+     * Retrieves the transformation catalog entry for the executable that is
+     * being used to transfer the files in the implementation.
+     *
+     * @param siteHandle  the handle of the  site where the transformation is
+     *                    to be searched.
+     *
+     * @return  the transformation catalog entry if found, else null.
+     */
+    public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle){
+        List tcentries = null;
+        try {
+            //namespace and version are null for time being
+            tcentries = mTCHandle.getTCEntries(this.TRANSFORMATION_NAMESPACE,
+                                               this.TRANSFORMATION_NAME,
+                                               this.TRANSFORMATION_VERSION,
+                                               siteHandle,
+                                               TCType.INSTALLED);
+        } catch (Exception e) {
+            mLogger.log(
+                "Unable to retrieve entry from TC for " + getCompleteTCName()
+                + " Cause:" + e,LogManager.ERROR_MESSAGE_LEVEL);
+        }
+
+        //see if any record is returned or not
+        return(tcentries == null)?
+               null:
+              (TransformationCatalogEntry) tcentries.get(0);
+    }
+
+    /**
+     * Returns the namespace of the derivation that this implementation
+     * refers to.
+     *
+     * @return the namespace of the derivation.
+     */
+    protected String getDerivationNamespace(){
+        return this.DERIVATION_NAMESPACE;
+    }
+
+
+    /**
+     * Returns the logical name of the derivation that this implementation
+     * refers to.
+     *
+     * @return the name of the derivation.
+     */
+    protected String getDerivationName(){
+        return this.DERIVATION_NAME;
+    }
+
+    /**
+     * Returns the version of the derivation that this implementation
+     * refers to.
+     *
+     * @return the version of the derivation.
+     */
+    protected String getDerivationVersion(){
+        return this.DERIVATION_VERSION;
+    }
+
+
+    /**
+     * It constructs the arguments to the transfer executable that need to be passed
+     * to the executable referred to in this transfer mode.
+     *
+     * @param job   the object containing the transfer node.
+     * @return  the argument string
+     */
+    protected String generateArgumentString(TransferJob job) {
+        StringBuffer sb = new StringBuffer();
+        if(job.vdsNS.containsKey(VDS.TRANSFER_ARGUMENTS_KEY)){
+            sb.append(
+                      job.vdsNS.removeKey(VDS.TRANSFER_ARGUMENTS_KEY)
+                      );
+        }
+        else{
+            sb.append(" -P ").append(mNumOfTXProcesses).
+                append(" -p ").append(mNumOfTXStreams);
+
+            sb = (this.mUseForce)?
+                sb.append(" -f ") :
+                sb;
+        }
+
+        sb.append(" base-uri se-mount-point");
+
+        return sb.toString();
+    }
+
+
+    /**
+     * Writes to a FileWriter stream the stdin which goes into the magic script
+     * via standard input
+     *
+     * @param writer    the writer to the stdin file.
+     * @param files    Collection of <code>FileTransfer</code> objects containing
+     *                 the information about sourceam fin and destURL's.
+     *
+     *
+     * @throws Exception
+     */
+    protected void writeJumboStdIn(FileWriter writer, Collection files) throws
+        Exception {
+        for(Iterator it = files.iterator();it.hasNext();){
+            FileTransfer ft = (FileTransfer) it.next();
+            NameValue source = ft.getSourceURL();
+            NameValue dest   = ft.getDestURL();
+            writer.write("#" + source.getKey() + "\n" + source.getValue() + "\n#" +
+                        dest.getKey() + "\n" + dest.getValue() + "\n");
+            writer.flush();
+        }
+
+
+    }
+
+    /**
+     * Returns the complete name for the transformation.
+     *
+     * @return the complete name.
+     */
+    protected String getCompleteTCName(){
+        return Separator.combine(this.TRANSFORMATION_NAMESPACE,
+                                 this.TRANSFORMATION_NAME,
+                                 this.TRANSFORMATION_VERSION);
+    }
+}

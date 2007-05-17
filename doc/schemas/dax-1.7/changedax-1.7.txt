@@ -1,0 +1,22 @@
+CHANGELOG 
+=========
+
+DAX 1.6 -> 1.7
+--------------
+
+o Added adag@version at Karan's request to help maintain parsability
+  for both version of documents.
+
+o Added adag/job@compound to record the list of compound transformations
+  that resulted in producing this job. This is an optional multivalue
+  attribute. 
+
+o Added adag/job/profile@origin to record the entity responsible for
+  including this profile element into the DAX. Conceivable values from
+  Chimera are "vdl", "vo" and "user", from Pegasus "tc", "pc" and "vo". 
+
+o Introduced new complex type StdioType to add the notion of the VDL's 
+  variable name which was responsible for generating the stdio LFN. This
+  is the attribute adag/job/std*@varname. 
+
+o The transfer mode is tri-state instead of boolean; added as simple type.

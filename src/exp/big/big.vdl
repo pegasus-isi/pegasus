@@ -1,0 +1,1922 @@
+TR big::generate:1.0(
+	output f,
+	none p1 )
+{
+  argument = "-aTOP -T10";
+  argument = "-p"p1;
+  argument = "-o"f;
+}
+TR big::process:1.0(
+	input f1,
+	output f2,
+	none name,
+	none p2 )
+{
+  argument = "-a"name" -T10";
+  argument = "-p"p2;
+  argument = "-i"f1;
+  argument = "-o"f2;
+}
+TR big::combine:1.0(
+	input f1,
+	input f2,
+	output f3 )
+{
+  argument = "-aBOTTOM -T10";
+  argument = "-i"f1" "f2;
+  argument = "-o"f3;
+}
+TR big::diamond:1.0(
+	inout fa,
+	inout fb,
+	inout fc,
+	output fd,
+	none p1,
+	none p2 )
+{
+  call big::generate(
+	f=(output)fa,
+	p1=p1 );
+  call big::process(
+	f1=(input)fa,
+	f2=(output)fb,
+	name="LEFT",
+	p2=p2 );
+  call big::process(
+	f1=(input)fa,
+	f2=(output)fc,
+	name="RIGHT",
+	p2=p2 );
+  call big::combine(
+	f1=(input)fb,
+	f2=(input)fc,
+	f3=(output)fd );
+}
+TR big::multi:1.0(
+	input f1[],
+	output f2,
+	none name )
+{
+  argument = "-a"name" -T10";
+  argument = "-i"f1;
+  argument = "-o"f2;
+}
+DV big::d1:1.0->big::diamond(
+  fa=@{inout:"big.f.00000":"big.f.00000"},
+  fb=@{inout:"big.f.00001":"big.f.00001"},
+  fc=@{inout:"big.f.00002":"big.f.00002"},
+  fd=@{output:"big.f.00003":"big.f.00003"},
+  p1="0",
+  p2="100" );
+DV big::d2:1.0->big::diamond(
+  fa=@{inout:"big.f.00004":"big.f.00004"},
+  fb=@{inout:"big.f.00005":"big.f.00005"},
+  fc=@{inout:"big.f.00006":"big.f.00006"},
+  fd=@{output:"big.f.00007":"big.f.00007"},
+  p1="0",
+  p2="141.421356237309" );
+DV big::d3:1.0->big::diamond(
+  fa=@{inout:"big.f.00008":"big.f.00008"},
+  fb=@{inout:"big.f.00009":"big.f.00009"},
+  fc=@{inout:"big.f.0000A":"big.f.0000A"},
+  fd=@{output:"big.f.0000B":"big.f.0000B"},
+  p1="0",
+  p2="200" );
+DV big::d4:1.0->big::diamond(
+  fa=@{inout:"big.f.0000C":"big.f.0000C"},
+  fb=@{inout:"big.f.0000D":"big.f.0000D"},
+  fc=@{inout:"big.f.0000E":"big.f.0000E"},
+  fd=@{output:"big.f.0000F":"big.f.0000F"},
+  p1="0",
+  p2="282.842712474619" );
+DV big::d5:1.0->big::diamond(
+  fa=@{inout:"big.f.00010":"big.f.00010"},
+  fb=@{inout:"big.f.00011":"big.f.00011"},
+  fc=@{inout:"big.f.00012":"big.f.00012"},
+  fd=@{output:"big.f.00013":"big.f.00013"},
+  p1="0",
+  p2="400" );
+DV big::d6:1.0->big::diamond(
+  fa=@{inout:"big.f.00014":"big.f.00014"},
+  fb=@{inout:"big.f.00015":"big.f.00015"},
+  fc=@{inout:"big.f.00016":"big.f.00016"},
+  fd=@{output:"big.f.00017":"big.f.00017"},
+  p1="0",
+  p2="565.685424949238" );
+DV big::d7:1.0->big::diamond(
+  fa=@{inout:"big.f.00018":"big.f.00018"},
+  fb=@{inout:"big.f.00019":"big.f.00019"},
+  fc=@{inout:"big.f.0001A":"big.f.0001A"},
+  fd=@{output:"big.f.0001B":"big.f.0001B"},
+  p1="0",
+  p2="799.999999999999" );
+DV big::c1:1.0->big::multi(
+  f1=[ @{input:"big.f.00003":"big.f.00003"}, @{input:"big.f.00007":"big.f.00007"}, @{input:"big.f.0000B":"big.f.0000B"}, @{input:"big.f.0000F":"big.f.0000F"}, @{input:"big.f.00013":"big.f.00013"}, @{input:"big.f.00017":"big.f.00017"}, @{input:"big.f.0001B":"big.f.0001B"} ],
+  f2=@{output:"big.r.f.00000":"big.r.f.00000"},
+  name="COLLECTOR" );
+DV big::d8:1.0->big::diamond(
+  fa=@{inout:"big.f.0001C":"big.f.0001C"},
+  fb=@{inout:"big.f.0001D":"big.f.0001D"},
+  fc=@{inout:"big.f.0001E":"big.f.0001E"},
+  fd=@{output:"big.f.0001F":"big.f.0001F"},
+  p1="2",
+  p2="100" );
+DV big::d9:1.0->big::diamond(
+  fa=@{inout:"big.f.00020":"big.f.00020"},
+  fb=@{inout:"big.f.00021":"big.f.00021"},
+  fc=@{inout:"big.f.00022":"big.f.00022"},
+  fd=@{output:"big.f.00023":"big.f.00023"},
+  p1="2",
+  p2="141.421356237309" );
+DV big::d10:1.0->big::diamond(
+  fa=@{inout:"big.f.00024":"big.f.00024"},
+  fb=@{inout:"big.f.00025":"big.f.00025"},
+  fc=@{inout:"big.f.00026":"big.f.00026"},
+  fd=@{output:"big.f.00027":"big.f.00027"},
+  p1="2",
+  p2="200" );
+DV big::d11:1.0->big::diamond(
+  fa=@{inout:"big.f.00028":"big.f.00028"},
+  fb=@{inout:"big.f.00029":"big.f.00029"},
+  fc=@{inout:"big.f.0002A":"big.f.0002A"},
+  fd=@{output:"big.f.0002B":"big.f.0002B"},
+  p1="2",
+  p2="282.842712474619" );
+DV big::d12:1.0->big::diamond(
+  fa=@{inout:"big.f.0002C":"big.f.0002C"},
+  fb=@{inout:"big.f.0002D":"big.f.0002D"},
+  fc=@{inout:"big.f.0002E":"big.f.0002E"},
+  fd=@{output:"big.f.0002F":"big.f.0002F"},
+  p1="2",
+  p2="400" );
+DV big::d13:1.0->big::diamond(
+  fa=@{inout:"big.f.00030":"big.f.00030"},
+  fb=@{inout:"big.f.00031":"big.f.00031"},
+  fc=@{inout:"big.f.00032":"big.f.00032"},
+  fd=@{output:"big.f.00033":"big.f.00033"},
+  p1="2",
+  p2="565.685424949238" );
+DV big::d14:1.0->big::diamond(
+  fa=@{inout:"big.f.00034":"big.f.00034"},
+  fb=@{inout:"big.f.00035":"big.f.00035"},
+  fc=@{inout:"big.f.00036":"big.f.00036"},
+  fd=@{output:"big.f.00037":"big.f.00037"},
+  p1="2",
+  p2="799.999999999999" );
+DV big::c2:1.0->big::multi(
+  f1=[ @{input:"big.f.0001F":"big.f.0001F"}, @{input:"big.f.00023":"big.f.00023"}, @{input:"big.f.00027":"big.f.00027"}, @{input:"big.f.0002B":"big.f.0002B"}, @{input:"big.f.0002F":"big.f.0002F"}, @{input:"big.f.00033":"big.f.00033"}, @{input:"big.f.00037":"big.f.00037"} ],
+  f2=@{output:"big.r.f.0001C":"big.r.f.0001C"},
+  name="COLLECTOR" );
+DV big::d15:1.0->big::diamond(
+  fa=@{inout:"big.f.00038":"big.f.00038"},
+  fb=@{inout:"big.f.00039":"big.f.00039"},
+  fc=@{inout:"big.f.0003A":"big.f.0003A"},
+  fd=@{output:"big.f.0003B":"big.f.0003B"},
+  p1="4",
+  p2="100" );
+DV big::d16:1.0->big::diamond(
+  fa=@{inout:"big.f.0003C":"big.f.0003C"},
+  fb=@{inout:"big.f.0003D":"big.f.0003D"},
+  fc=@{inout:"big.f.0003E":"big.f.0003E"},
+  fd=@{output:"big.f.0003F":"big.f.0003F"},
+  p1="4",
+  p2="141.421356237309" );
+DV big::d17:1.0->big::diamond(
+  fa=@{inout:"big.f.00040":"big.f.00040"},
+  fb=@{inout:"big.f.00041":"big.f.00041"},
+  fc=@{inout:"big.f.00042":"big.f.00042"},
+  fd=@{output:"big.f.00043":"big.f.00043"},
+  p1="4",
+  p2="200" );
+DV big::d18:1.0->big::diamond(
+  fa=@{inout:"big.f.00044":"big.f.00044"},
+  fb=@{inout:"big.f.00045":"big.f.00045"},
+  fc=@{inout:"big.f.00046":"big.f.00046"},
+  fd=@{output:"big.f.00047":"big.f.00047"},
+  p1="4",
+  p2="282.842712474619" );
+DV big::d19:1.0->big::diamond(
+  fa=@{inout:"big.f.00048":"big.f.00048"},
+  fb=@{inout:"big.f.00049":"big.f.00049"},
+  fc=@{inout:"big.f.0004A":"big.f.0004A"},
+  fd=@{output:"big.f.0004B":"big.f.0004B"},
+  p1="4",
+  p2="400" );
+DV big::d20:1.0->big::diamond(
+  fa=@{inout:"big.f.0004C":"big.f.0004C"},
+  fb=@{inout:"big.f.0004D":"big.f.0004D"},
+  fc=@{inout:"big.f.0004E":"big.f.0004E"},
+  fd=@{output:"big.f.0004F":"big.f.0004F"},
+  p1="4",
+  p2="565.685424949238" );
+DV big::d21:1.0->big::diamond(
+  fa=@{inout:"big.f.00050":"big.f.00050"},
+  fb=@{inout:"big.f.00051":"big.f.00051"},
+  fc=@{inout:"big.f.00052":"big.f.00052"},
+  fd=@{output:"big.f.00053":"big.f.00053"},
+  p1="4",
+  p2="799.999999999999" );
+DV big::c3:1.0->big::multi(
+  f1=[ @{input:"big.f.0003B":"big.f.0003B"}, @{input:"big.f.0003F":"big.f.0003F"}, @{input:"big.f.00043":"big.f.00043"}, @{input:"big.f.00047":"big.f.00047"}, @{input:"big.f.0004B":"big.f.0004B"}, @{input:"big.f.0004F":"big.f.0004F"}, @{input:"big.f.00053":"big.f.00053"} ],
+  f2=@{output:"big.r.f.00038":"big.r.f.00038"},
+  name="COLLECTOR" );
+DV big::d22:1.0->big::diamond(
+  fa=@{inout:"big.f.00054":"big.f.00054"},
+  fb=@{inout:"big.f.00055":"big.f.00055"},
+  fc=@{inout:"big.f.00056":"big.f.00056"},
+  fd=@{output:"big.f.00057":"big.f.00057"},
+  p1="6",
+  p2="100" );
+DV big::d23:1.0->big::diamond(
+  fa=@{inout:"big.f.00058":"big.f.00058"},
+  fb=@{inout:"big.f.00059":"big.f.00059"},
+  fc=@{inout:"big.f.0005A":"big.f.0005A"},
+  fd=@{output:"big.f.0005B":"big.f.0005B"},
+  p1="6",
+  p2="141.421356237309" );
+DV big::d24:1.0->big::diamond(
+  fa=@{inout:"big.f.0005C":"big.f.0005C"},
+  fb=@{inout:"big.f.0005D":"big.f.0005D"},
+  fc=@{inout:"big.f.0005E":"big.f.0005E"},
+  fd=@{output:"big.f.0005F":"big.f.0005F"},
+  p1="6",
+  p2="200" );
+DV big::d25:1.0->big::diamond(
+  fa=@{inout:"big.f.00060":"big.f.00060"},
+  fb=@{inout:"big.f.00061":"big.f.00061"},
+  fc=@{inout:"big.f.00062":"big.f.00062"},
+  fd=@{output:"big.f.00063":"big.f.00063"},
+  p1="6",
+  p2="282.842712474619" );
+DV big::d26:1.0->big::diamond(
+  fa=@{inout:"big.f.00064":"big.f.00064"},
+  fb=@{inout:"big.f.00065":"big.f.00065"},
+  fc=@{inout:"big.f.00066":"big.f.00066"},
+  fd=@{output:"big.f.00067":"big.f.00067"},
+  p1="6",
+  p2="400" );
+DV big::d27:1.0->big::diamond(
+  fa=@{inout:"big.f.00068":"big.f.00068"},
+  fb=@{inout:"big.f.00069":"big.f.00069"},
+  fc=@{inout:"big.f.0006A":"big.f.0006A"},
+  fd=@{output:"big.f.0006B":"big.f.0006B"},
+  p1="6",
+  p2="565.685424949238" );
+DV big::d28:1.0->big::diamond(
+  fa=@{inout:"big.f.0006C":"big.f.0006C"},
+  fb=@{inout:"big.f.0006D":"big.f.0006D"},
+  fc=@{inout:"big.f.0006E":"big.f.0006E"},
+  fd=@{output:"big.f.0006F":"big.f.0006F"},
+  p1="6",
+  p2="799.999999999999" );
+DV big::c4:1.0->big::multi(
+  f1=[ @{input:"big.f.00057":"big.f.00057"}, @{input:"big.f.0005B":"big.f.0005B"}, @{input:"big.f.0005F":"big.f.0005F"}, @{input:"big.f.00063":"big.f.00063"}, @{input:"big.f.00067":"big.f.00067"}, @{input:"big.f.0006B":"big.f.0006B"}, @{input:"big.f.0006F":"big.f.0006F"} ],
+  f2=@{output:"big.r.f.00054":"big.r.f.00054"},
+  name="COLLECTOR" );
+DV big::d29:1.0->big::diamond(
+  fa=@{inout:"big.f.00070":"big.f.00070"},
+  fb=@{inout:"big.f.00071":"big.f.00071"},
+  fc=@{inout:"big.f.00072":"big.f.00072"},
+  fd=@{output:"big.f.00073":"big.f.00073"},
+  p1="8",
+  p2="100" );
+DV big::d30:1.0->big::diamond(
+  fa=@{inout:"big.f.00074":"big.f.00074"},
+  fb=@{inout:"big.f.00075":"big.f.00075"},
+  fc=@{inout:"big.f.00076":"big.f.00076"},
+  fd=@{output:"big.f.00077":"big.f.00077"},
+  p1="8",
+  p2="141.421356237309" );
+DV big::d31:1.0->big::diamond(
+  fa=@{inout:"big.f.00078":"big.f.00078"},
+  fb=@{inout:"big.f.00079":"big.f.00079"},
+  fc=@{inout:"big.f.0007A":"big.f.0007A"},
+  fd=@{output:"big.f.0007B":"big.f.0007B"},
+  p1="8",
+  p2="200" );
+DV big::d32:1.0->big::diamond(
+  fa=@{inout:"big.f.0007C":"big.f.0007C"},
+  fb=@{inout:"big.f.0007D":"big.f.0007D"},
+  fc=@{inout:"big.f.0007E":"big.f.0007E"},
+  fd=@{output:"big.f.0007F":"big.f.0007F"},
+  p1="8",
+  p2="282.842712474619" );
+DV big::d33:1.0->big::diamond(
+  fa=@{inout:"big.f.00080":"big.f.00080"},
+  fb=@{inout:"big.f.00081":"big.f.00081"},
+  fc=@{inout:"big.f.00082":"big.f.00082"},
+  fd=@{output:"big.f.00083":"big.f.00083"},
+  p1="8",
+  p2="400" );
+DV big::d34:1.0->big::diamond(
+  fa=@{inout:"big.f.00084":"big.f.00084"},
+  fb=@{inout:"big.f.00085":"big.f.00085"},
+  fc=@{inout:"big.f.00086":"big.f.00086"},
+  fd=@{output:"big.f.00087":"big.f.00087"},
+  p1="8",
+  p2="565.685424949238" );
+DV big::d35:1.0->big::diamond(
+  fa=@{inout:"big.f.00088":"big.f.00088"},
+  fb=@{inout:"big.f.00089":"big.f.00089"},
+  fc=@{inout:"big.f.0008A":"big.f.0008A"},
+  fd=@{output:"big.f.0008B":"big.f.0008B"},
+  p1="8",
+  p2="799.999999999999" );
+DV big::c5:1.0->big::multi(
+  f1=[ @{input:"big.f.00073":"big.f.00073"}, @{input:"big.f.00077":"big.f.00077"}, @{input:"big.f.0007B":"big.f.0007B"}, @{input:"big.f.0007F":"big.f.0007F"}, @{input:"big.f.00083":"big.f.00083"}, @{input:"big.f.00087":"big.f.00087"}, @{input:"big.f.0008B":"big.f.0008B"} ],
+  f2=@{output:"big.r.f.00070":"big.r.f.00070"},
+  name="COLLECTOR" );
+DV big::d36:1.0->big::diamond(
+  fa=@{inout:"big.f.0008C":"big.f.0008C"},
+  fb=@{inout:"big.f.0008D":"big.f.0008D"},
+  fc=@{inout:"big.f.0008E":"big.f.0008E"},
+  fd=@{output:"big.f.0008F":"big.f.0008F"},
+  p1="10",
+  p2="100" );
+DV big::d37:1.0->big::diamond(
+  fa=@{inout:"big.f.00090":"big.f.00090"},
+  fb=@{inout:"big.f.00091":"big.f.00091"},
+  fc=@{inout:"big.f.00092":"big.f.00092"},
+  fd=@{output:"big.f.00093":"big.f.00093"},
+  p1="10",
+  p2="141.421356237309" );
+DV big::d38:1.0->big::diamond(
+  fa=@{inout:"big.f.00094":"big.f.00094"},
+  fb=@{inout:"big.f.00095":"big.f.00095"},
+  fc=@{inout:"big.f.00096":"big.f.00096"},
+  fd=@{output:"big.f.00097":"big.f.00097"},
+  p1="10",
+  p2="200" );
+DV big::d39:1.0->big::diamond(
+  fa=@{inout:"big.f.00098":"big.f.00098"},
+  fb=@{inout:"big.f.00099":"big.f.00099"},
+  fc=@{inout:"big.f.0009A":"big.f.0009A"},
+  fd=@{output:"big.f.0009B":"big.f.0009B"},
+  p1="10",
+  p2="282.842712474619" );
+DV big::d40:1.0->big::diamond(
+  fa=@{inout:"big.f.0009C":"big.f.0009C"},
+  fb=@{inout:"big.f.0009D":"big.f.0009D"},
+  fc=@{inout:"big.f.0009E":"big.f.0009E"},
+  fd=@{output:"big.f.0009F":"big.f.0009F"},
+  p1="10",
+  p2="400" );
+DV big::d41:1.0->big::diamond(
+  fa=@{inout:"big.f.000A0":"big.f.000A0"},
+  fb=@{inout:"big.f.000A1":"big.f.000A1"},
+  fc=@{inout:"big.f.000A2":"big.f.000A2"},
+  fd=@{output:"big.f.000A3":"big.f.000A3"},
+  p1="10",
+  p2="565.685424949238" );
+DV big::d42:1.0->big::diamond(
+  fa=@{inout:"big.f.000A4":"big.f.000A4"},
+  fb=@{inout:"big.f.000A5":"big.f.000A5"},
+  fc=@{inout:"big.f.000A6":"big.f.000A6"},
+  fd=@{output:"big.f.000A7":"big.f.000A7"},
+  p1="10",
+  p2="799.999999999999" );
+DV big::c6:1.0->big::multi(
+  f1=[ @{input:"big.f.0008F":"big.f.0008F"}, @{input:"big.f.00093":"big.f.00093"}, @{input:"big.f.00097":"big.f.00097"}, @{input:"big.f.0009B":"big.f.0009B"}, @{input:"big.f.0009F":"big.f.0009F"}, @{input:"big.f.000A3":"big.f.000A3"}, @{input:"big.f.000A7":"big.f.000A7"} ],
+  f2=@{output:"big.r.f.0008C":"big.r.f.0008C"},
+  name="COLLECTOR" );
+DV big::d43:1.0->big::diamond(
+  fa=@{inout:"big.f.000A8":"big.f.000A8"},
+  fb=@{inout:"big.f.000A9":"big.f.000A9"},
+  fc=@{inout:"big.f.000AA":"big.f.000AA"},
+  fd=@{output:"big.f.000AB":"big.f.000AB"},
+  p1="12",
+  p2="100" );
+DV big::d44:1.0->big::diamond(
+  fa=@{inout:"big.f.000AC":"big.f.000AC"},
+  fb=@{inout:"big.f.000AD":"big.f.000AD"},
+  fc=@{inout:"big.f.000AE":"big.f.000AE"},
+  fd=@{output:"big.f.000AF":"big.f.000AF"},
+  p1="12",
+  p2="141.421356237309" );
+DV big::d45:1.0->big::diamond(
+  fa=@{inout:"big.f.000B0":"big.f.000B0"},
+  fb=@{inout:"big.f.000B1":"big.f.000B1"},
+  fc=@{inout:"big.f.000B2":"big.f.000B2"},
+  fd=@{output:"big.f.000B3":"big.f.000B3"},
+  p1="12",
+  p2="200" );
+DV big::d46:1.0->big::diamond(
+  fa=@{inout:"big.f.000B4":"big.f.000B4"},
+  fb=@{inout:"big.f.000B5":"big.f.000B5"},
+  fc=@{inout:"big.f.000B6":"big.f.000B6"},
+  fd=@{output:"big.f.000B7":"big.f.000B7"},
+  p1="12",
+  p2="282.842712474619" );
+DV big::d47:1.0->big::diamond(
+  fa=@{inout:"big.f.000B8":"big.f.000B8"},
+  fb=@{inout:"big.f.000B9":"big.f.000B9"},
+  fc=@{inout:"big.f.000BA":"big.f.000BA"},
+  fd=@{output:"big.f.000BB":"big.f.000BB"},
+  p1="12",
+  p2="400" );
+DV big::d48:1.0->big::diamond(
+  fa=@{inout:"big.f.000BC":"big.f.000BC"},
+  fb=@{inout:"big.f.000BD":"big.f.000BD"},
+  fc=@{inout:"big.f.000BE":"big.f.000BE"},
+  fd=@{output:"big.f.000BF":"big.f.000BF"},
+  p1="12",
+  p2="565.685424949238" );
+DV big::d49:1.0->big::diamond(
+  fa=@{inout:"big.f.000C0":"big.f.000C0"},
+  fb=@{inout:"big.f.000C1":"big.f.000C1"},
+  fc=@{inout:"big.f.000C2":"big.f.000C2"},
+  fd=@{output:"big.f.000C3":"big.f.000C3"},
+  p1="12",
+  p2="799.999999999999" );
+DV big::c7:1.0->big::multi(
+  f1=[ @{input:"big.f.000AB":"big.f.000AB"}, @{input:"big.f.000AF":"big.f.000AF"}, @{input:"big.f.000B3":"big.f.000B3"}, @{input:"big.f.000B7":"big.f.000B7"}, @{input:"big.f.000BB":"big.f.000BB"}, @{input:"big.f.000BF":"big.f.000BF"}, @{input:"big.f.000C3":"big.f.000C3"} ],
+  f2=@{output:"big.r.f.000A8":"big.r.f.000A8"},
+  name="COLLECTOR" );
+DV big::d50:1.0->big::diamond(
+  fa=@{inout:"big.f.000C4":"big.f.000C4"},
+  fb=@{inout:"big.f.000C5":"big.f.000C5"},
+  fc=@{inout:"big.f.000C6":"big.f.000C6"},
+  fd=@{output:"big.f.000C7":"big.f.000C7"},
+  p1="14",
+  p2="100" );
+DV big::d51:1.0->big::diamond(
+  fa=@{inout:"big.f.000C8":"big.f.000C8"},
+  fb=@{inout:"big.f.000C9":"big.f.000C9"},
+  fc=@{inout:"big.f.000CA":"big.f.000CA"},
+  fd=@{output:"big.f.000CB":"big.f.000CB"},
+  p1="14",
+  p2="141.421356237309" );
+DV big::d52:1.0->big::diamond(
+  fa=@{inout:"big.f.000CC":"big.f.000CC"},
+  fb=@{inout:"big.f.000CD":"big.f.000CD"},
+  fc=@{inout:"big.f.000CE":"big.f.000CE"},
+  fd=@{output:"big.f.000CF":"big.f.000CF"},
+  p1="14",
+  p2="200" );
+DV big::d53:1.0->big::diamond(
+  fa=@{inout:"big.f.000D0":"big.f.000D0"},
+  fb=@{inout:"big.f.000D1":"big.f.000D1"},
+  fc=@{inout:"big.f.000D2":"big.f.000D2"},
+  fd=@{output:"big.f.000D3":"big.f.000D3"},
+  p1="14",
+  p2="282.842712474619" );
+DV big::d54:1.0->big::diamond(
+  fa=@{inout:"big.f.000D4":"big.f.000D4"},
+  fb=@{inout:"big.f.000D5":"big.f.000D5"},
+  fc=@{inout:"big.f.000D6":"big.f.000D6"},
+  fd=@{output:"big.f.000D7":"big.f.000D7"},
+  p1="14",
+  p2="400" );
+DV big::d55:1.0->big::diamond(
+  fa=@{inout:"big.f.000D8":"big.f.000D8"},
+  fb=@{inout:"big.f.000D9":"big.f.000D9"},
+  fc=@{inout:"big.f.000DA":"big.f.000DA"},
+  fd=@{output:"big.f.000DB":"big.f.000DB"},
+  p1="14",
+  p2="565.685424949238" );
+DV big::d56:1.0->big::diamond(
+  fa=@{inout:"big.f.000DC":"big.f.000DC"},
+  fb=@{inout:"big.f.000DD":"big.f.000DD"},
+  fc=@{inout:"big.f.000DE":"big.f.000DE"},
+  fd=@{output:"big.f.000DF":"big.f.000DF"},
+  p1="14",
+  p2="799.999999999999" );
+DV big::c8:1.0->big::multi(
+  f1=[ @{input:"big.f.000C7":"big.f.000C7"}, @{input:"big.f.000CB":"big.f.000CB"}, @{input:"big.f.000CF":"big.f.000CF"}, @{input:"big.f.000D3":"big.f.000D3"}, @{input:"big.f.000D7":"big.f.000D7"}, @{input:"big.f.000DB":"big.f.000DB"}, @{input:"big.f.000DF":"big.f.000DF"} ],
+  f2=@{output:"big.r.f.000C4":"big.r.f.000C4"},
+  name="COLLECTOR" );
+DV big::d57:1.0->big::diamond(
+  fa=@{inout:"big.f.000E0":"big.f.000E0"},
+  fb=@{inout:"big.f.000E1":"big.f.000E1"},
+  fc=@{inout:"big.f.000E2":"big.f.000E2"},
+  fd=@{output:"big.f.000E3":"big.f.000E3"},
+  p1="16",
+  p2="100" );
+DV big::d58:1.0->big::diamond(
+  fa=@{inout:"big.f.000E4":"big.f.000E4"},
+  fb=@{inout:"big.f.000E5":"big.f.000E5"},
+  fc=@{inout:"big.f.000E6":"big.f.000E6"},
+  fd=@{output:"big.f.000E7":"big.f.000E7"},
+  p1="16",
+  p2="141.421356237309" );
+DV big::d59:1.0->big::diamond(
+  fa=@{inout:"big.f.000E8":"big.f.000E8"},
+  fb=@{inout:"big.f.000E9":"big.f.000E9"},
+  fc=@{inout:"big.f.000EA":"big.f.000EA"},
+  fd=@{output:"big.f.000EB":"big.f.000EB"},
+  p1="16",
+  p2="200" );
+DV big::d60:1.0->big::diamond(
+  fa=@{inout:"big.f.000EC":"big.f.000EC"},
+  fb=@{inout:"big.f.000ED":"big.f.000ED"},
+  fc=@{inout:"big.f.000EE":"big.f.000EE"},
+  fd=@{output:"big.f.000EF":"big.f.000EF"},
+  p1="16",
+  p2="282.842712474619" );
+DV big::d61:1.0->big::diamond(
+  fa=@{inout:"big.f.000F0":"big.f.000F0"},
+  fb=@{inout:"big.f.000F1":"big.f.000F1"},
+  fc=@{inout:"big.f.000F2":"big.f.000F2"},
+  fd=@{output:"big.f.000F3":"big.f.000F3"},
+  p1="16",
+  p2="400" );
+DV big::d62:1.0->big::diamond(
+  fa=@{inout:"big.f.000F4":"big.f.000F4"},
+  fb=@{inout:"big.f.000F5":"big.f.000F5"},
+  fc=@{inout:"big.f.000F6":"big.f.000F6"},
+  fd=@{output:"big.f.000F7":"big.f.000F7"},
+  p1="16",
+  p2="565.685424949238" );
+DV big::d63:1.0->big::diamond(
+  fa=@{inout:"big.f.000F8":"big.f.000F8"},
+  fb=@{inout:"big.f.000F9":"big.f.000F9"},
+  fc=@{inout:"big.f.000FA":"big.f.000FA"},
+  fd=@{output:"big.f.000FB":"big.f.000FB"},
+  p1="16",
+  p2="799.999999999999" );
+DV big::c9:1.0->big::multi(
+  f1=[ @{input:"big.f.000E3":"big.f.000E3"}, @{input:"big.f.000E7":"big.f.000E7"}, @{input:"big.f.000EB":"big.f.000EB"}, @{input:"big.f.000EF":"big.f.000EF"}, @{input:"big.f.000F3":"big.f.000F3"}, @{input:"big.f.000F7":"big.f.000F7"}, @{input:"big.f.000FB":"big.f.000FB"} ],
+  f2=@{output:"big.r.f.000E0":"big.r.f.000E0"},
+  name="COLLECTOR" );
+DV big::d64:1.0->big::diamond(
+  fa=@{inout:"big.f.000FC":"big.f.000FC"},
+  fb=@{inout:"big.f.000FD":"big.f.000FD"},
+  fc=@{inout:"big.f.000FE":"big.f.000FE"},
+  fd=@{output:"big.f.000FF":"big.f.000FF"},
+  p1="18",
+  p2="100" );
+DV big::d65:1.0->big::diamond(
+  fa=@{inout:"big.f.00100":"big.f.00100"},
+  fb=@{inout:"big.f.00101":"big.f.00101"},
+  fc=@{inout:"big.f.00102":"big.f.00102"},
+  fd=@{output:"big.f.00103":"big.f.00103"},
+  p1="18",
+  p2="141.421356237309" );
+DV big::d66:1.0->big::diamond(
+  fa=@{inout:"big.f.00104":"big.f.00104"},
+  fb=@{inout:"big.f.00105":"big.f.00105"},
+  fc=@{inout:"big.f.00106":"big.f.00106"},
+  fd=@{output:"big.f.00107":"big.f.00107"},
+  p1="18",
+  p2="200" );
+DV big::d67:1.0->big::diamond(
+  fa=@{inout:"big.f.00108":"big.f.00108"},
+  fb=@{inout:"big.f.00109":"big.f.00109"},
+  fc=@{inout:"big.f.0010A":"big.f.0010A"},
+  fd=@{output:"big.f.0010B":"big.f.0010B"},
+  p1="18",
+  p2="282.842712474619" );
+DV big::d68:1.0->big::diamond(
+  fa=@{inout:"big.f.0010C":"big.f.0010C"},
+  fb=@{inout:"big.f.0010D":"big.f.0010D"},
+  fc=@{inout:"big.f.0010E":"big.f.0010E"},
+  fd=@{output:"big.f.0010F":"big.f.0010F"},
+  p1="18",
+  p2="400" );
+DV big::d69:1.0->big::diamond(
+  fa=@{inout:"big.f.00110":"big.f.00110"},
+  fb=@{inout:"big.f.00111":"big.f.00111"},
+  fc=@{inout:"big.f.00112":"big.f.00112"},
+  fd=@{output:"big.f.00113":"big.f.00113"},
+  p1="18",
+  p2="565.685424949238" );
+DV big::d70:1.0->big::diamond(
+  fa=@{inout:"big.f.00114":"big.f.00114"},
+  fb=@{inout:"big.f.00115":"big.f.00115"},
+  fc=@{inout:"big.f.00116":"big.f.00116"},
+  fd=@{output:"big.f.00117":"big.f.00117"},
+  p1="18",
+  p2="799.999999999999" );
+DV big::c10:1.0->big::multi(
+  f1=[ @{input:"big.f.000FF":"big.f.000FF"}, @{input:"big.f.00103":"big.f.00103"}, @{input:"big.f.00107":"big.f.00107"}, @{input:"big.f.0010B":"big.f.0010B"}, @{input:"big.f.0010F":"big.f.0010F"}, @{input:"big.f.00113":"big.f.00113"}, @{input:"big.f.00117":"big.f.00117"} ],
+  f2=@{output:"big.r.f.000FC":"big.r.f.000FC"},
+  name="COLLECTOR" );
+DV big::d71:1.0->big::diamond(
+  fa=@{inout:"big.f.00118":"big.f.00118"},
+  fb=@{inout:"big.f.00119":"big.f.00119"},
+  fc=@{inout:"big.f.0011A":"big.f.0011A"},
+  fd=@{output:"big.f.0011B":"big.f.0011B"},
+  p1="20",
+  p2="100" );
+DV big::d72:1.0->big::diamond(
+  fa=@{inout:"big.f.0011C":"big.f.0011C"},
+  fb=@{inout:"big.f.0011D":"big.f.0011D"},
+  fc=@{inout:"big.f.0011E":"big.f.0011E"},
+  fd=@{output:"big.f.0011F":"big.f.0011F"},
+  p1="20",
+  p2="141.421356237309" );
+DV big::d73:1.0->big::diamond(
+  fa=@{inout:"big.f.00120":"big.f.00120"},
+  fb=@{inout:"big.f.00121":"big.f.00121"},
+  fc=@{inout:"big.f.00122":"big.f.00122"},
+  fd=@{output:"big.f.00123":"big.f.00123"},
+  p1="20",
+  p2="200" );
+DV big::d74:1.0->big::diamond(
+  fa=@{inout:"big.f.00124":"big.f.00124"},
+  fb=@{inout:"big.f.00125":"big.f.00125"},
+  fc=@{inout:"big.f.00126":"big.f.00126"},
+  fd=@{output:"big.f.00127":"big.f.00127"},
+  p1="20",
+  p2="282.842712474619" );
+DV big::d75:1.0->big::diamond(
+  fa=@{inout:"big.f.00128":"big.f.00128"},
+  fb=@{inout:"big.f.00129":"big.f.00129"},
+  fc=@{inout:"big.f.0012A":"big.f.0012A"},
+  fd=@{output:"big.f.0012B":"big.f.0012B"},
+  p1="20",
+  p2="400" );
+DV big::d76:1.0->big::diamond(
+  fa=@{inout:"big.f.0012C":"big.f.0012C"},
+  fb=@{inout:"big.f.0012D":"big.f.0012D"},
+  fc=@{inout:"big.f.0012E":"big.f.0012E"},
+  fd=@{output:"big.f.0012F":"big.f.0012F"},
+  p1="20",
+  p2="565.685424949238" );
+DV big::d77:1.0->big::diamond(
+  fa=@{inout:"big.f.00130":"big.f.00130"},
+  fb=@{inout:"big.f.00131":"big.f.00131"},
+  fc=@{inout:"big.f.00132":"big.f.00132"},
+  fd=@{output:"big.f.00133":"big.f.00133"},
+  p1="20",
+  p2="799.999999999999" );
+DV big::c11:1.0->big::multi(
+  f1=[ @{input:"big.f.0011B":"big.f.0011B"}, @{input:"big.f.0011F":"big.f.0011F"}, @{input:"big.f.00123":"big.f.00123"}, @{input:"big.f.00127":"big.f.00127"}, @{input:"big.f.0012B":"big.f.0012B"}, @{input:"big.f.0012F":"big.f.0012F"}, @{input:"big.f.00133":"big.f.00133"} ],
+  f2=@{output:"big.r.f.00118":"big.r.f.00118"},
+  name="COLLECTOR" );
+DV big::d78:1.0->big::diamond(
+  fa=@{inout:"big.f.00134":"big.f.00134"},
+  fb=@{inout:"big.f.00135":"big.f.00135"},
+  fc=@{inout:"big.f.00136":"big.f.00136"},
+  fd=@{output:"big.f.00137":"big.f.00137"},
+  p1="22",
+  p2="100" );
+DV big::d79:1.0->big::diamond(
+  fa=@{inout:"big.f.00138":"big.f.00138"},
+  fb=@{inout:"big.f.00139":"big.f.00139"},
+  fc=@{inout:"big.f.0013A":"big.f.0013A"},
+  fd=@{output:"big.f.0013B":"big.f.0013B"},
+  p1="22",
+  p2="141.421356237309" );
+DV big::d80:1.0->big::diamond(
+  fa=@{inout:"big.f.0013C":"big.f.0013C"},
+  fb=@{inout:"big.f.0013D":"big.f.0013D"},
+  fc=@{inout:"big.f.0013E":"big.f.0013E"},
+  fd=@{output:"big.f.0013F":"big.f.0013F"},
+  p1="22",
+  p2="200" );
+DV big::d81:1.0->big::diamond(
+  fa=@{inout:"big.f.00140":"big.f.00140"},
+  fb=@{inout:"big.f.00141":"big.f.00141"},
+  fc=@{inout:"big.f.00142":"big.f.00142"},
+  fd=@{output:"big.f.00143":"big.f.00143"},
+  p1="22",
+  p2="282.842712474619" );
+DV big::d82:1.0->big::diamond(
+  fa=@{inout:"big.f.00144":"big.f.00144"},
+  fb=@{inout:"big.f.00145":"big.f.00145"},
+  fc=@{inout:"big.f.00146":"big.f.00146"},
+  fd=@{output:"big.f.00147":"big.f.00147"},
+  p1="22",
+  p2="400" );
+DV big::d83:1.0->big::diamond(
+  fa=@{inout:"big.f.00148":"big.f.00148"},
+  fb=@{inout:"big.f.00149":"big.f.00149"},
+  fc=@{inout:"big.f.0014A":"big.f.0014A"},
+  fd=@{output:"big.f.0014B":"big.f.0014B"},
+  p1="22",
+  p2="565.685424949238" );
+DV big::d84:1.0->big::diamond(
+  fa=@{inout:"big.f.0014C":"big.f.0014C"},
+  fb=@{inout:"big.f.0014D":"big.f.0014D"},
+  fc=@{inout:"big.f.0014E":"big.f.0014E"},
+  fd=@{output:"big.f.0014F":"big.f.0014F"},
+  p1="22",
+  p2="799.999999999999" );
+DV big::c12:1.0->big::multi(
+  f1=[ @{input:"big.f.00137":"big.f.00137"}, @{input:"big.f.0013B":"big.f.0013B"}, @{input:"big.f.0013F":"big.f.0013F"}, @{input:"big.f.00143":"big.f.00143"}, @{input:"big.f.00147":"big.f.00147"}, @{input:"big.f.0014B":"big.f.0014B"}, @{input:"big.f.0014F":"big.f.0014F"} ],
+  f2=@{output:"big.r.f.00134":"big.r.f.00134"},
+  name="COLLECTOR" );
+DV big::d85:1.0->big::diamond(
+  fa=@{inout:"big.f.00150":"big.f.00150"},
+  fb=@{inout:"big.f.00151":"big.f.00151"},
+  fc=@{inout:"big.f.00152":"big.f.00152"},
+  fd=@{output:"big.f.00153":"big.f.00153"},
+  p1="24",
+  p2="100" );
+DV big::d86:1.0->big::diamond(
+  fa=@{inout:"big.f.00154":"big.f.00154"},
+  fb=@{inout:"big.f.00155":"big.f.00155"},
+  fc=@{inout:"big.f.00156":"big.f.00156"},
+  fd=@{output:"big.f.00157":"big.f.00157"},
+  p1="24",
+  p2="141.421356237309" );
+DV big::d87:1.0->big::diamond(
+  fa=@{inout:"big.f.00158":"big.f.00158"},
+  fb=@{inout:"big.f.00159":"big.f.00159"},
+  fc=@{inout:"big.f.0015A":"big.f.0015A"},
+  fd=@{output:"big.f.0015B":"big.f.0015B"},
+  p1="24",
+  p2="200" );
+DV big::d88:1.0->big::diamond(
+  fa=@{inout:"big.f.0015C":"big.f.0015C"},
+  fb=@{inout:"big.f.0015D":"big.f.0015D"},
+  fc=@{inout:"big.f.0015E":"big.f.0015E"},
+  fd=@{output:"big.f.0015F":"big.f.0015F"},
+  p1="24",
+  p2="282.842712474619" );
+DV big::d89:1.0->big::diamond(
+  fa=@{inout:"big.f.00160":"big.f.00160"},
+  fb=@{inout:"big.f.00161":"big.f.00161"},
+  fc=@{inout:"big.f.00162":"big.f.00162"},
+  fd=@{output:"big.f.00163":"big.f.00163"},
+  p1="24",
+  p2="400" );
+DV big::d90:1.0->big::diamond(
+  fa=@{inout:"big.f.00164":"big.f.00164"},
+  fb=@{inout:"big.f.00165":"big.f.00165"},
+  fc=@{inout:"big.f.00166":"big.f.00166"},
+  fd=@{output:"big.f.00167":"big.f.00167"},
+  p1="24",
+  p2="565.685424949238" );
+DV big::d91:1.0->big::diamond(
+  fa=@{inout:"big.f.00168":"big.f.00168"},
+  fb=@{inout:"big.f.00169":"big.f.00169"},
+  fc=@{inout:"big.f.0016A":"big.f.0016A"},
+  fd=@{output:"big.f.0016B":"big.f.0016B"},
+  p1="24",
+  p2="799.999999999999" );
+DV big::c13:1.0->big::multi(
+  f1=[ @{input:"big.f.00153":"big.f.00153"}, @{input:"big.f.00157":"big.f.00157"}, @{input:"big.f.0015B":"big.f.0015B"}, @{input:"big.f.0015F":"big.f.0015F"}, @{input:"big.f.00163":"big.f.00163"}, @{input:"big.f.00167":"big.f.00167"}, @{input:"big.f.0016B":"big.f.0016B"} ],
+  f2=@{output:"big.r.f.00150":"big.r.f.00150"},
+  name="COLLECTOR" );
+DV big::d92:1.0->big::diamond(
+  fa=@{inout:"big.f.0016C":"big.f.0016C"},
+  fb=@{inout:"big.f.0016D":"big.f.0016D"},
+  fc=@{inout:"big.f.0016E":"big.f.0016E"},
+  fd=@{output:"big.f.0016F":"big.f.0016F"},
+  p1="26",
+  p2="100" );
+DV big::d93:1.0->big::diamond(
+  fa=@{inout:"big.f.00170":"big.f.00170"},
+  fb=@{inout:"big.f.00171":"big.f.00171"},
+  fc=@{inout:"big.f.00172":"big.f.00172"},
+  fd=@{output:"big.f.00173":"big.f.00173"},
+  p1="26",
+  p2="141.421356237309" );
+DV big::d94:1.0->big::diamond(
+  fa=@{inout:"big.f.00174":"big.f.00174"},
+  fb=@{inout:"big.f.00175":"big.f.00175"},
+  fc=@{inout:"big.f.00176":"big.f.00176"},
+  fd=@{output:"big.f.00177":"big.f.00177"},
+  p1="26",
+  p2="200" );
+DV big::d95:1.0->big::diamond(
+  fa=@{inout:"big.f.00178":"big.f.00178"},
+  fb=@{inout:"big.f.00179":"big.f.00179"},
+  fc=@{inout:"big.f.0017A":"big.f.0017A"},
+  fd=@{output:"big.f.0017B":"big.f.0017B"},
+  p1="26",
+  p2="282.842712474619" );
+DV big::d96:1.0->big::diamond(
+  fa=@{inout:"big.f.0017C":"big.f.0017C"},
+  fb=@{inout:"big.f.0017D":"big.f.0017D"},
+  fc=@{inout:"big.f.0017E":"big.f.0017E"},
+  fd=@{output:"big.f.0017F":"big.f.0017F"},
+  p1="26",
+  p2="400" );
+DV big::d97:1.0->big::diamond(
+  fa=@{inout:"big.f.00180":"big.f.00180"},
+  fb=@{inout:"big.f.00181":"big.f.00181"},
+  fc=@{inout:"big.f.00182":"big.f.00182"},
+  fd=@{output:"big.f.00183":"big.f.00183"},
+  p1="26",
+  p2="565.685424949238" );
+DV big::d98:1.0->big::diamond(
+  fa=@{inout:"big.f.00184":"big.f.00184"},
+  fb=@{inout:"big.f.00185":"big.f.00185"},
+  fc=@{inout:"big.f.00186":"big.f.00186"},
+  fd=@{output:"big.f.00187":"big.f.00187"},
+  p1="26",
+  p2="799.999999999999" );
+DV big::c14:1.0->big::multi(
+  f1=[ @{input:"big.f.0016F":"big.f.0016F"}, @{input:"big.f.00173":"big.f.00173"}, @{input:"big.f.00177":"big.f.00177"}, @{input:"big.f.0017B":"big.f.0017B"}, @{input:"big.f.0017F":"big.f.0017F"}, @{input:"big.f.00183":"big.f.00183"}, @{input:"big.f.00187":"big.f.00187"} ],
+  f2=@{output:"big.r.f.0016C":"big.r.f.0016C"},
+  name="COLLECTOR" );
+DV big::d99:1.0->big::diamond(
+  fa=@{inout:"big.f.00188":"big.f.00188"},
+  fb=@{inout:"big.f.00189":"big.f.00189"},
+  fc=@{inout:"big.f.0018A":"big.f.0018A"},
+  fd=@{output:"big.f.0018B":"big.f.0018B"},
+  p1="28",
+  p2="100" );
+DV big::d100:1.0->big::diamond(
+  fa=@{inout:"big.f.0018C":"big.f.0018C"},
+  fb=@{inout:"big.f.0018D":"big.f.0018D"},
+  fc=@{inout:"big.f.0018E":"big.f.0018E"},
+  fd=@{output:"big.f.0018F":"big.f.0018F"},
+  p1="28",
+  p2="141.421356237309" );
+DV big::d101:1.0->big::diamond(
+  fa=@{inout:"big.f.00190":"big.f.00190"},
+  fb=@{inout:"big.f.00191":"big.f.00191"},
+  fc=@{inout:"big.f.00192":"big.f.00192"},
+  fd=@{output:"big.f.00193":"big.f.00193"},
+  p1="28",
+  p2="200" );
+DV big::d102:1.0->big::diamond(
+  fa=@{inout:"big.f.00194":"big.f.00194"},
+  fb=@{inout:"big.f.00195":"big.f.00195"},
+  fc=@{inout:"big.f.00196":"big.f.00196"},
+  fd=@{output:"big.f.00197":"big.f.00197"},
+  p1="28",
+  p2="282.842712474619" );
+DV big::d103:1.0->big::diamond(
+  fa=@{inout:"big.f.00198":"big.f.00198"},
+  fb=@{inout:"big.f.00199":"big.f.00199"},
+  fc=@{inout:"big.f.0019A":"big.f.0019A"},
+  fd=@{output:"big.f.0019B":"big.f.0019B"},
+  p1="28",
+  p2="400" );
+DV big::d104:1.0->big::diamond(
+  fa=@{inout:"big.f.0019C":"big.f.0019C"},
+  fb=@{inout:"big.f.0019D":"big.f.0019D"},
+  fc=@{inout:"big.f.0019E":"big.f.0019E"},
+  fd=@{output:"big.f.0019F":"big.f.0019F"},
+  p1="28",
+  p2="565.685424949238" );
+DV big::d105:1.0->big::diamond(
+  fa=@{inout:"big.f.001A0":"big.f.001A0"},
+  fb=@{inout:"big.f.001A1":"big.f.001A1"},
+  fc=@{inout:"big.f.001A2":"big.f.001A2"},
+  fd=@{output:"big.f.001A3":"big.f.001A3"},
+  p1="28",
+  p2="799.999999999999" );
+DV big::c15:1.0->big::multi(
+  f1=[ @{input:"big.f.0018B":"big.f.0018B"}, @{input:"big.f.0018F":"big.f.0018F"}, @{input:"big.f.00193":"big.f.00193"}, @{input:"big.f.00197":"big.f.00197"}, @{input:"big.f.0019B":"big.f.0019B"}, @{input:"big.f.0019F":"big.f.0019F"}, @{input:"big.f.001A3":"big.f.001A3"} ],
+  f2=@{output:"big.r.f.00188":"big.r.f.00188"},
+  name="COLLECTOR" );
+DV big::d106:1.0->big::diamond(
+  fa=@{inout:"big.f.001A4":"big.f.001A4"},
+  fb=@{inout:"big.f.001A5":"big.f.001A5"},
+  fc=@{inout:"big.f.001A6":"big.f.001A6"},
+  fd=@{output:"big.f.001A7":"big.f.001A7"},
+  p1="30",
+  p2="100" );
+DV big::d107:1.0->big::diamond(
+  fa=@{inout:"big.f.001A8":"big.f.001A8"},
+  fb=@{inout:"big.f.001A9":"big.f.001A9"},
+  fc=@{inout:"big.f.001AA":"big.f.001AA"},
+  fd=@{output:"big.f.001AB":"big.f.001AB"},
+  p1="30",
+  p2="141.421356237309" );
+DV big::d108:1.0->big::diamond(
+  fa=@{inout:"big.f.001AC":"big.f.001AC"},
+  fb=@{inout:"big.f.001AD":"big.f.001AD"},
+  fc=@{inout:"big.f.001AE":"big.f.001AE"},
+  fd=@{output:"big.f.001AF":"big.f.001AF"},
+  p1="30",
+  p2="200" );
+DV big::d109:1.0->big::diamond(
+  fa=@{inout:"big.f.001B0":"big.f.001B0"},
+  fb=@{inout:"big.f.001B1":"big.f.001B1"},
+  fc=@{inout:"big.f.001B2":"big.f.001B2"},
+  fd=@{output:"big.f.001B3":"big.f.001B3"},
+  p1="30",
+  p2="282.842712474619" );
+DV big::d110:1.0->big::diamond(
+  fa=@{inout:"big.f.001B4":"big.f.001B4"},
+  fb=@{inout:"big.f.001B5":"big.f.001B5"},
+  fc=@{inout:"big.f.001B6":"big.f.001B6"},
+  fd=@{output:"big.f.001B7":"big.f.001B7"},
+  p1="30",
+  p2="400" );
+DV big::d111:1.0->big::diamond(
+  fa=@{inout:"big.f.001B8":"big.f.001B8"},
+  fb=@{inout:"big.f.001B9":"big.f.001B9"},
+  fc=@{inout:"big.f.001BA":"big.f.001BA"},
+  fd=@{output:"big.f.001BB":"big.f.001BB"},
+  p1="30",
+  p2="565.685424949238" );
+DV big::d112:1.0->big::diamond(
+  fa=@{inout:"big.f.001BC":"big.f.001BC"},
+  fb=@{inout:"big.f.001BD":"big.f.001BD"},
+  fc=@{inout:"big.f.001BE":"big.f.001BE"},
+  fd=@{output:"big.f.001BF":"big.f.001BF"},
+  p1="30",
+  p2="799.999999999999" );
+DV big::c16:1.0->big::multi(
+  f1=[ @{input:"big.f.001A7":"big.f.001A7"}, @{input:"big.f.001AB":"big.f.001AB"}, @{input:"big.f.001AF":"big.f.001AF"}, @{input:"big.f.001B3":"big.f.001B3"}, @{input:"big.f.001B7":"big.f.001B7"}, @{input:"big.f.001BB":"big.f.001BB"}, @{input:"big.f.001BF":"big.f.001BF"} ],
+  f2=@{output:"big.r.f.001A4":"big.r.f.001A4"},
+  name="COLLECTOR" );
+DV big::d113:1.0->big::diamond(
+  fa=@{inout:"big.f.001C0":"big.f.001C0"},
+  fb=@{inout:"big.f.001C1":"big.f.001C1"},
+  fc=@{inout:"big.f.001C2":"big.f.001C2"},
+  fd=@{output:"big.f.001C3":"big.f.001C3"},
+  p1="32",
+  p2="100" );
+DV big::d114:1.0->big::diamond(
+  fa=@{inout:"big.f.001C4":"big.f.001C4"},
+  fb=@{inout:"big.f.001C5":"big.f.001C5"},
+  fc=@{inout:"big.f.001C6":"big.f.001C6"},
+  fd=@{output:"big.f.001C7":"big.f.001C7"},
+  p1="32",
+  p2="141.421356237309" );
+DV big::d115:1.0->big::diamond(
+  fa=@{inout:"big.f.001C8":"big.f.001C8"},
+  fb=@{inout:"big.f.001C9":"big.f.001C9"},
+  fc=@{inout:"big.f.001CA":"big.f.001CA"},
+  fd=@{output:"big.f.001CB":"big.f.001CB"},
+  p1="32",
+  p2="200" );
+DV big::d116:1.0->big::diamond(
+  fa=@{inout:"big.f.001CC":"big.f.001CC"},
+  fb=@{inout:"big.f.001CD":"big.f.001CD"},
+  fc=@{inout:"big.f.001CE":"big.f.001CE"},
+  fd=@{output:"big.f.001CF":"big.f.001CF"},
+  p1="32",
+  p2="282.842712474619" );
+DV big::d117:1.0->big::diamond(
+  fa=@{inout:"big.f.001D0":"big.f.001D0"},
+  fb=@{inout:"big.f.001D1":"big.f.001D1"},
+  fc=@{inout:"big.f.001D2":"big.f.001D2"},
+  fd=@{output:"big.f.001D3":"big.f.001D3"},
+  p1="32",
+  p2="400" );
+DV big::d118:1.0->big::diamond(
+  fa=@{inout:"big.f.001D4":"big.f.001D4"},
+  fb=@{inout:"big.f.001D5":"big.f.001D5"},
+  fc=@{inout:"big.f.001D6":"big.f.001D6"},
+  fd=@{output:"big.f.001D7":"big.f.001D7"},
+  p1="32",
+  p2="565.685424949238" );
+DV big::d119:1.0->big::diamond(
+  fa=@{inout:"big.f.001D8":"big.f.001D8"},
+  fb=@{inout:"big.f.001D9":"big.f.001D9"},
+  fc=@{inout:"big.f.001DA":"big.f.001DA"},
+  fd=@{output:"big.f.001DB":"big.f.001DB"},
+  p1="32",
+  p2="799.999999999999" );
+DV big::c17:1.0->big::multi(
+  f1=[ @{input:"big.f.001C3":"big.f.001C3"}, @{input:"big.f.001C7":"big.f.001C7"}, @{input:"big.f.001CB":"big.f.001CB"}, @{input:"big.f.001CF":"big.f.001CF"}, @{input:"big.f.001D3":"big.f.001D3"}, @{input:"big.f.001D7":"big.f.001D7"}, @{input:"big.f.001DB":"big.f.001DB"} ],
+  f2=@{output:"big.r.f.001C0":"big.r.f.001C0"},
+  name="COLLECTOR" );
+DV big::d120:1.0->big::diamond(
+  fa=@{inout:"big.f.001DC":"big.f.001DC"},
+  fb=@{inout:"big.f.001DD":"big.f.001DD"},
+  fc=@{inout:"big.f.001DE":"big.f.001DE"},
+  fd=@{output:"big.f.001DF":"big.f.001DF"},
+  p1="34",
+  p2="100" );
+DV big::d121:1.0->big::diamond(
+  fa=@{inout:"big.f.001E0":"big.f.001E0"},
+  fb=@{inout:"big.f.001E1":"big.f.001E1"},
+  fc=@{inout:"big.f.001E2":"big.f.001E2"},
+  fd=@{output:"big.f.001E3":"big.f.001E3"},
+  p1="34",
+  p2="141.421356237309" );
+DV big::d122:1.0->big::diamond(
+  fa=@{inout:"big.f.001E4":"big.f.001E4"},
+  fb=@{inout:"big.f.001E5":"big.f.001E5"},
+  fc=@{inout:"big.f.001E6":"big.f.001E6"},
+  fd=@{output:"big.f.001E7":"big.f.001E7"},
+  p1="34",
+  p2="200" );
+DV big::d123:1.0->big::diamond(
+  fa=@{inout:"big.f.001E8":"big.f.001E8"},
+  fb=@{inout:"big.f.001E9":"big.f.001E9"},
+  fc=@{inout:"big.f.001EA":"big.f.001EA"},
+  fd=@{output:"big.f.001EB":"big.f.001EB"},
+  p1="34",
+  p2="282.842712474619" );
+DV big::d124:1.0->big::diamond(
+  fa=@{inout:"big.f.001EC":"big.f.001EC"},
+  fb=@{inout:"big.f.001ED":"big.f.001ED"},
+  fc=@{inout:"big.f.001EE":"big.f.001EE"},
+  fd=@{output:"big.f.001EF":"big.f.001EF"},
+  p1="34",
+  p2="400" );
+DV big::d125:1.0->big::diamond(
+  fa=@{inout:"big.f.001F0":"big.f.001F0"},
+  fb=@{inout:"big.f.001F1":"big.f.001F1"},
+  fc=@{inout:"big.f.001F2":"big.f.001F2"},
+  fd=@{output:"big.f.001F3":"big.f.001F3"},
+  p1="34",
+  p2="565.685424949238" );
+DV big::d126:1.0->big::diamond(
+  fa=@{inout:"big.f.001F4":"big.f.001F4"},
+  fb=@{inout:"big.f.001F5":"big.f.001F5"},
+  fc=@{inout:"big.f.001F6":"big.f.001F6"},
+  fd=@{output:"big.f.001F7":"big.f.001F7"},
+  p1="34",
+  p2="799.999999999999" );
+DV big::c18:1.0->big::multi(
+  f1=[ @{input:"big.f.001DF":"big.f.001DF"}, @{input:"big.f.001E3":"big.f.001E3"}, @{input:"big.f.001E7":"big.f.001E7"}, @{input:"big.f.001EB":"big.f.001EB"}, @{input:"big.f.001EF":"big.f.001EF"}, @{input:"big.f.001F3":"big.f.001F3"}, @{input:"big.f.001F7":"big.f.001F7"} ],
+  f2=@{output:"big.r.f.001DC":"big.r.f.001DC"},
+  name="COLLECTOR" );
+DV big::d127:1.0->big::diamond(
+  fa=@{inout:"big.f.001F8":"big.f.001F8"},
+  fb=@{inout:"big.f.001F9":"big.f.001F9"},
+  fc=@{inout:"big.f.001FA":"big.f.001FA"},
+  fd=@{output:"big.f.001FB":"big.f.001FB"},
+  p1="36",
+  p2="100" );
+DV big::d128:1.0->big::diamond(
+  fa=@{inout:"big.f.001FC":"big.f.001FC"},
+  fb=@{inout:"big.f.001FD":"big.f.001FD"},
+  fc=@{inout:"big.f.001FE":"big.f.001FE"},
+  fd=@{output:"big.f.001FF":"big.f.001FF"},
+  p1="36",
+  p2="141.421356237309" );
+DV big::d129:1.0->big::diamond(
+  fa=@{inout:"big.f.00200":"big.f.00200"},
+  fb=@{inout:"big.f.00201":"big.f.00201"},
+  fc=@{inout:"big.f.00202":"big.f.00202"},
+  fd=@{output:"big.f.00203":"big.f.00203"},
+  p1="36",
+  p2="200" );
+DV big::d130:1.0->big::diamond(
+  fa=@{inout:"big.f.00204":"big.f.00204"},
+  fb=@{inout:"big.f.00205":"big.f.00205"},
+  fc=@{inout:"big.f.00206":"big.f.00206"},
+  fd=@{output:"big.f.00207":"big.f.00207"},
+  p1="36",
+  p2="282.842712474619" );
+DV big::d131:1.0->big::diamond(
+  fa=@{inout:"big.f.00208":"big.f.00208"},
+  fb=@{inout:"big.f.00209":"big.f.00209"},
+  fc=@{inout:"big.f.0020A":"big.f.0020A"},
+  fd=@{output:"big.f.0020B":"big.f.0020B"},
+  p1="36",
+  p2="400" );
+DV big::d132:1.0->big::diamond(
+  fa=@{inout:"big.f.0020C":"big.f.0020C"},
+  fb=@{inout:"big.f.0020D":"big.f.0020D"},
+  fc=@{inout:"big.f.0020E":"big.f.0020E"},
+  fd=@{output:"big.f.0020F":"big.f.0020F"},
+  p1="36",
+  p2="565.685424949238" );
+DV big::d133:1.0->big::diamond(
+  fa=@{inout:"big.f.00210":"big.f.00210"},
+  fb=@{inout:"big.f.00211":"big.f.00211"},
+  fc=@{inout:"big.f.00212":"big.f.00212"},
+  fd=@{output:"big.f.00213":"big.f.00213"},
+  p1="36",
+  p2="799.999999999999" );
+DV big::c19:1.0->big::multi(
+  f1=[ @{input:"big.f.001FB":"big.f.001FB"}, @{input:"big.f.001FF":"big.f.001FF"}, @{input:"big.f.00203":"big.f.00203"}, @{input:"big.f.00207":"big.f.00207"}, @{input:"big.f.0020B":"big.f.0020B"}, @{input:"big.f.0020F":"big.f.0020F"}, @{input:"big.f.00213":"big.f.00213"} ],
+  f2=@{output:"big.r.f.001F8":"big.r.f.001F8"},
+  name="COLLECTOR" );
+DV big::d134:1.0->big::diamond(
+  fa=@{inout:"big.f.00214":"big.f.00214"},
+  fb=@{inout:"big.f.00215":"big.f.00215"},
+  fc=@{inout:"big.f.00216":"big.f.00216"},
+  fd=@{output:"big.f.00217":"big.f.00217"},
+  p1="38",
+  p2="100" );
+DV big::d135:1.0->big::diamond(
+  fa=@{inout:"big.f.00218":"big.f.00218"},
+  fb=@{inout:"big.f.00219":"big.f.00219"},
+  fc=@{inout:"big.f.0021A":"big.f.0021A"},
+  fd=@{output:"big.f.0021B":"big.f.0021B"},
+  p1="38",
+  p2="141.421356237309" );
+DV big::d136:1.0->big::diamond(
+  fa=@{inout:"big.f.0021C":"big.f.0021C"},
+  fb=@{inout:"big.f.0021D":"big.f.0021D"},
+  fc=@{inout:"big.f.0021E":"big.f.0021E"},
+  fd=@{output:"big.f.0021F":"big.f.0021F"},
+  p1="38",
+  p2="200" );
+DV big::d137:1.0->big::diamond(
+  fa=@{inout:"big.f.00220":"big.f.00220"},
+  fb=@{inout:"big.f.00221":"big.f.00221"},
+  fc=@{inout:"big.f.00222":"big.f.00222"},
+  fd=@{output:"big.f.00223":"big.f.00223"},
+  p1="38",
+  p2="282.842712474619" );
+DV big::d138:1.0->big::diamond(
+  fa=@{inout:"big.f.00224":"big.f.00224"},
+  fb=@{inout:"big.f.00225":"big.f.00225"},
+  fc=@{inout:"big.f.00226":"big.f.00226"},
+  fd=@{output:"big.f.00227":"big.f.00227"},
+  p1="38",
+  p2="400" );
+DV big::d139:1.0->big::diamond(
+  fa=@{inout:"big.f.00228":"big.f.00228"},
+  fb=@{inout:"big.f.00229":"big.f.00229"},
+  fc=@{inout:"big.f.0022A":"big.f.0022A"},
+  fd=@{output:"big.f.0022B":"big.f.0022B"},
+  p1="38",
+  p2="565.685424949238" );
+DV big::d140:1.0->big::diamond(
+  fa=@{inout:"big.f.0022C":"big.f.0022C"},
+  fb=@{inout:"big.f.0022D":"big.f.0022D"},
+  fc=@{inout:"big.f.0022E":"big.f.0022E"},
+  fd=@{output:"big.f.0022F":"big.f.0022F"},
+  p1="38",
+  p2="799.999999999999" );
+DV big::c20:1.0->big::multi(
+  f1=[ @{input:"big.f.00217":"big.f.00217"}, @{input:"big.f.0021B":"big.f.0021B"}, @{input:"big.f.0021F":"big.f.0021F"}, @{input:"big.f.00223":"big.f.00223"}, @{input:"big.f.00227":"big.f.00227"}, @{input:"big.f.0022B":"big.f.0022B"}, @{input:"big.f.0022F":"big.f.0022F"} ],
+  f2=@{output:"big.r.f.00214":"big.r.f.00214"},
+  name="COLLECTOR" );
+DV big::d141:1.0->big::diamond(
+  fa=@{inout:"big.f.00230":"big.f.00230"},
+  fb=@{inout:"big.f.00231":"big.f.00231"},
+  fc=@{inout:"big.f.00232":"big.f.00232"},
+  fd=@{output:"big.f.00233":"big.f.00233"},
+  p1="40",
+  p2="100" );
+DV big::d142:1.0->big::diamond(
+  fa=@{inout:"big.f.00234":"big.f.00234"},
+  fb=@{inout:"big.f.00235":"big.f.00235"},
+  fc=@{inout:"big.f.00236":"big.f.00236"},
+  fd=@{output:"big.f.00237":"big.f.00237"},
+  p1="40",
+  p2="141.421356237309" );
+DV big::d143:1.0->big::diamond(
+  fa=@{inout:"big.f.00238":"big.f.00238"},
+  fb=@{inout:"big.f.00239":"big.f.00239"},
+  fc=@{inout:"big.f.0023A":"big.f.0023A"},
+  fd=@{output:"big.f.0023B":"big.f.0023B"},
+  p1="40",
+  p2="200" );
+DV big::d144:1.0->big::diamond(
+  fa=@{inout:"big.f.0023C":"big.f.0023C"},
+  fb=@{inout:"big.f.0023D":"big.f.0023D"},
+  fc=@{inout:"big.f.0023E":"big.f.0023E"},
+  fd=@{output:"big.f.0023F":"big.f.0023F"},
+  p1="40",
+  p2="282.842712474619" );
+DV big::d145:1.0->big::diamond(
+  fa=@{inout:"big.f.00240":"big.f.00240"},
+  fb=@{inout:"big.f.00241":"big.f.00241"},
+  fc=@{inout:"big.f.00242":"big.f.00242"},
+  fd=@{output:"big.f.00243":"big.f.00243"},
+  p1="40",
+  p2="400" );
+DV big::d146:1.0->big::diamond(
+  fa=@{inout:"big.f.00244":"big.f.00244"},
+  fb=@{inout:"big.f.00245":"big.f.00245"},
+  fc=@{inout:"big.f.00246":"big.f.00246"},
+  fd=@{output:"big.f.00247":"big.f.00247"},
+  p1="40",
+  p2="565.685424949238" );
+DV big::d147:1.0->big::diamond(
+  fa=@{inout:"big.f.00248":"big.f.00248"},
+  fb=@{inout:"big.f.00249":"big.f.00249"},
+  fc=@{inout:"big.f.0024A":"big.f.0024A"},
+  fd=@{output:"big.f.0024B":"big.f.0024B"},
+  p1="40",
+  p2="799.999999999999" );
+DV big::c21:1.0->big::multi(
+  f1=[ @{input:"big.f.00233":"big.f.00233"}, @{input:"big.f.00237":"big.f.00237"}, @{input:"big.f.0023B":"big.f.0023B"}, @{input:"big.f.0023F":"big.f.0023F"}, @{input:"big.f.00243":"big.f.00243"}, @{input:"big.f.00247":"big.f.00247"}, @{input:"big.f.0024B":"big.f.0024B"} ],
+  f2=@{output:"big.r.f.00230":"big.r.f.00230"},
+  name="COLLECTOR" );
+DV big::d148:1.0->big::diamond(
+  fa=@{inout:"big.f.0024C":"big.f.0024C"},
+  fb=@{inout:"big.f.0024D":"big.f.0024D"},
+  fc=@{inout:"big.f.0024E":"big.f.0024E"},
+  fd=@{output:"big.f.0024F":"big.f.0024F"},
+  p1="42",
+  p2="100" );
+DV big::d149:1.0->big::diamond(
+  fa=@{inout:"big.f.00250":"big.f.00250"},
+  fb=@{inout:"big.f.00251":"big.f.00251"},
+  fc=@{inout:"big.f.00252":"big.f.00252"},
+  fd=@{output:"big.f.00253":"big.f.00253"},
+  p1="42",
+  p2="141.421356237309" );
+DV big::d150:1.0->big::diamond(
+  fa=@{inout:"big.f.00254":"big.f.00254"},
+  fb=@{inout:"big.f.00255":"big.f.00255"},
+  fc=@{inout:"big.f.00256":"big.f.00256"},
+  fd=@{output:"big.f.00257":"big.f.00257"},
+  p1="42",
+  p2="200" );
+DV big::d151:1.0->big::diamond(
+  fa=@{inout:"big.f.00258":"big.f.00258"},
+  fb=@{inout:"big.f.00259":"big.f.00259"},
+  fc=@{inout:"big.f.0025A":"big.f.0025A"},
+  fd=@{output:"big.f.0025B":"big.f.0025B"},
+  p1="42",
+  p2="282.842712474619" );
+DV big::d152:1.0->big::diamond(
+  fa=@{inout:"big.f.0025C":"big.f.0025C"},
+  fb=@{inout:"big.f.0025D":"big.f.0025D"},
+  fc=@{inout:"big.f.0025E":"big.f.0025E"},
+  fd=@{output:"big.f.0025F":"big.f.0025F"},
+  p1="42",
+  p2="400" );
+DV big::d153:1.0->big::diamond(
+  fa=@{inout:"big.f.00260":"big.f.00260"},
+  fb=@{inout:"big.f.00261":"big.f.00261"},
+  fc=@{inout:"big.f.00262":"big.f.00262"},
+  fd=@{output:"big.f.00263":"big.f.00263"},
+  p1="42",
+  p2="565.685424949238" );
+DV big::d154:1.0->big::diamond(
+  fa=@{inout:"big.f.00264":"big.f.00264"},
+  fb=@{inout:"big.f.00265":"big.f.00265"},
+  fc=@{inout:"big.f.00266":"big.f.00266"},
+  fd=@{output:"big.f.00267":"big.f.00267"},
+  p1="42",
+  p2="799.999999999999" );
+DV big::c22:1.0->big::multi(
+  f1=[ @{input:"big.f.0024F":"big.f.0024F"}, @{input:"big.f.00253":"big.f.00253"}, @{input:"big.f.00257":"big.f.00257"}, @{input:"big.f.0025B":"big.f.0025B"}, @{input:"big.f.0025F":"big.f.0025F"}, @{input:"big.f.00263":"big.f.00263"}, @{input:"big.f.00267":"big.f.00267"} ],
+  f2=@{output:"big.r.f.0024C":"big.r.f.0024C"},
+  name="COLLECTOR" );
+DV big::d155:1.0->big::diamond(
+  fa=@{inout:"big.f.00268":"big.f.00268"},
+  fb=@{inout:"big.f.00269":"big.f.00269"},
+  fc=@{inout:"big.f.0026A":"big.f.0026A"},
+  fd=@{output:"big.f.0026B":"big.f.0026B"},
+  p1="44",
+  p2="100" );
+DV big::d156:1.0->big::diamond(
+  fa=@{inout:"big.f.0026C":"big.f.0026C"},
+  fb=@{inout:"big.f.0026D":"big.f.0026D"},
+  fc=@{inout:"big.f.0026E":"big.f.0026E"},
+  fd=@{output:"big.f.0026F":"big.f.0026F"},
+  p1="44",
+  p2="141.421356237309" );
+DV big::d157:1.0->big::diamond(
+  fa=@{inout:"big.f.00270":"big.f.00270"},
+  fb=@{inout:"big.f.00271":"big.f.00271"},
+  fc=@{inout:"big.f.00272":"big.f.00272"},
+  fd=@{output:"big.f.00273":"big.f.00273"},
+  p1="44",
+  p2="200" );
+DV big::d158:1.0->big::diamond(
+  fa=@{inout:"big.f.00274":"big.f.00274"},
+  fb=@{inout:"big.f.00275":"big.f.00275"},
+  fc=@{inout:"big.f.00276":"big.f.00276"},
+  fd=@{output:"big.f.00277":"big.f.00277"},
+  p1="44",
+  p2="282.842712474619" );
+DV big::d159:1.0->big::diamond(
+  fa=@{inout:"big.f.00278":"big.f.00278"},
+  fb=@{inout:"big.f.00279":"big.f.00279"},
+  fc=@{inout:"big.f.0027A":"big.f.0027A"},
+  fd=@{output:"big.f.0027B":"big.f.0027B"},
+  p1="44",
+  p2="400" );
+DV big::d160:1.0->big::diamond(
+  fa=@{inout:"big.f.0027C":"big.f.0027C"},
+  fb=@{inout:"big.f.0027D":"big.f.0027D"},
+  fc=@{inout:"big.f.0027E":"big.f.0027E"},
+  fd=@{output:"big.f.0027F":"big.f.0027F"},
+  p1="44",
+  p2="565.685424949238" );
+DV big::d161:1.0->big::diamond(
+  fa=@{inout:"big.f.00280":"big.f.00280"},
+  fb=@{inout:"big.f.00281":"big.f.00281"},
+  fc=@{inout:"big.f.00282":"big.f.00282"},
+  fd=@{output:"big.f.00283":"big.f.00283"},
+  p1="44",
+  p2="799.999999999999" );
+DV big::c23:1.0->big::multi(
+  f1=[ @{input:"big.f.0026B":"big.f.0026B"}, @{input:"big.f.0026F":"big.f.0026F"}, @{input:"big.f.00273":"big.f.00273"}, @{input:"big.f.00277":"big.f.00277"}, @{input:"big.f.0027B":"big.f.0027B"}, @{input:"big.f.0027F":"big.f.0027F"}, @{input:"big.f.00283":"big.f.00283"} ],
+  f2=@{output:"big.r.f.00268":"big.r.f.00268"},
+  name="COLLECTOR" );
+DV big::d162:1.0->big::diamond(
+  fa=@{inout:"big.f.00284":"big.f.00284"},
+  fb=@{inout:"big.f.00285":"big.f.00285"},
+  fc=@{inout:"big.f.00286":"big.f.00286"},
+  fd=@{output:"big.f.00287":"big.f.00287"},
+  p1="46",
+  p2="100" );
+DV big::d163:1.0->big::diamond(
+  fa=@{inout:"big.f.00288":"big.f.00288"},
+  fb=@{inout:"big.f.00289":"big.f.00289"},
+  fc=@{inout:"big.f.0028A":"big.f.0028A"},
+  fd=@{output:"big.f.0028B":"big.f.0028B"},
+  p1="46",
+  p2="141.421356237309" );
+DV big::d164:1.0->big::diamond(
+  fa=@{inout:"big.f.0028C":"big.f.0028C"},
+  fb=@{inout:"big.f.0028D":"big.f.0028D"},
+  fc=@{inout:"big.f.0028E":"big.f.0028E"},
+  fd=@{output:"big.f.0028F":"big.f.0028F"},
+  p1="46",
+  p2="200" );
+DV big::d165:1.0->big::diamond(
+  fa=@{inout:"big.f.00290":"big.f.00290"},
+  fb=@{inout:"big.f.00291":"big.f.00291"},
+  fc=@{inout:"big.f.00292":"big.f.00292"},
+  fd=@{output:"big.f.00293":"big.f.00293"},
+  p1="46",
+  p2="282.842712474619" );
+DV big::d166:1.0->big::diamond(
+  fa=@{inout:"big.f.00294":"big.f.00294"},
+  fb=@{inout:"big.f.00295":"big.f.00295"},
+  fc=@{inout:"big.f.00296":"big.f.00296"},
+  fd=@{output:"big.f.00297":"big.f.00297"},
+  p1="46",
+  p2="400" );
+DV big::d167:1.0->big::diamond(
+  fa=@{inout:"big.f.00298":"big.f.00298"},
+  fb=@{inout:"big.f.00299":"big.f.00299"},
+  fc=@{inout:"big.f.0029A":"big.f.0029A"},
+  fd=@{output:"big.f.0029B":"big.f.0029B"},
+  p1="46",
+  p2="565.685424949238" );
+DV big::d168:1.0->big::diamond(
+  fa=@{inout:"big.f.0029C":"big.f.0029C"},
+  fb=@{inout:"big.f.0029D":"big.f.0029D"},
+  fc=@{inout:"big.f.0029E":"big.f.0029E"},
+  fd=@{output:"big.f.0029F":"big.f.0029F"},
+  p1="46",
+  p2="799.999999999999" );
+DV big::c24:1.0->big::multi(
+  f1=[ @{input:"big.f.00287":"big.f.00287"}, @{input:"big.f.0028B":"big.f.0028B"}, @{input:"big.f.0028F":"big.f.0028F"}, @{input:"big.f.00293":"big.f.00293"}, @{input:"big.f.00297":"big.f.00297"}, @{input:"big.f.0029B":"big.f.0029B"}, @{input:"big.f.0029F":"big.f.0029F"} ],
+  f2=@{output:"big.r.f.00284":"big.r.f.00284"},
+  name="COLLECTOR" );
+DV big::d169:1.0->big::diamond(
+  fa=@{inout:"big.f.002A0":"big.f.002A0"},
+  fb=@{inout:"big.f.002A1":"big.f.002A1"},
+  fc=@{inout:"big.f.002A2":"big.f.002A2"},
+  fd=@{output:"big.f.002A3":"big.f.002A3"},
+  p1="48",
+  p2="100" );
+DV big::d170:1.0->big::diamond(
+  fa=@{inout:"big.f.002A4":"big.f.002A4"},
+  fb=@{inout:"big.f.002A5":"big.f.002A5"},
+  fc=@{inout:"big.f.002A6":"big.f.002A6"},
+  fd=@{output:"big.f.002A7":"big.f.002A7"},
+  p1="48",
+  p2="141.421356237309" );
+DV big::d171:1.0->big::diamond(
+  fa=@{inout:"big.f.002A8":"big.f.002A8"},
+  fb=@{inout:"big.f.002A9":"big.f.002A9"},
+  fc=@{inout:"big.f.002AA":"big.f.002AA"},
+  fd=@{output:"big.f.002AB":"big.f.002AB"},
+  p1="48",
+  p2="200" );
+DV big::d172:1.0->big::diamond(
+  fa=@{inout:"big.f.002AC":"big.f.002AC"},
+  fb=@{inout:"big.f.002AD":"big.f.002AD"},
+  fc=@{inout:"big.f.002AE":"big.f.002AE"},
+  fd=@{output:"big.f.002AF":"big.f.002AF"},
+  p1="48",
+  p2="282.842712474619" );
+DV big::d173:1.0->big::diamond(
+  fa=@{inout:"big.f.002B0":"big.f.002B0"},
+  fb=@{inout:"big.f.002B1":"big.f.002B1"},
+  fc=@{inout:"big.f.002B2":"big.f.002B2"},
+  fd=@{output:"big.f.002B3":"big.f.002B3"},
+  p1="48",
+  p2="400" );
+DV big::d174:1.0->big::diamond(
+  fa=@{inout:"big.f.002B4":"big.f.002B4"},
+  fb=@{inout:"big.f.002B5":"big.f.002B5"},
+  fc=@{inout:"big.f.002B6":"big.f.002B6"},
+  fd=@{output:"big.f.002B7":"big.f.002B7"},
+  p1="48",
+  p2="565.685424949238" );
+DV big::d175:1.0->big::diamond(
+  fa=@{inout:"big.f.002B8":"big.f.002B8"},
+  fb=@{inout:"big.f.002B9":"big.f.002B9"},
+  fc=@{inout:"big.f.002BA":"big.f.002BA"},
+  fd=@{output:"big.f.002BB":"big.f.002BB"},
+  p1="48",
+  p2="799.999999999999" );
+DV big::c25:1.0->big::multi(
+  f1=[ @{input:"big.f.002A3":"big.f.002A3"}, @{input:"big.f.002A7":"big.f.002A7"}, @{input:"big.f.002AB":"big.f.002AB"}, @{input:"big.f.002AF":"big.f.002AF"}, @{input:"big.f.002B3":"big.f.002B3"}, @{input:"big.f.002B7":"big.f.002B7"}, @{input:"big.f.002BB":"big.f.002BB"} ],
+  f2=@{output:"big.r.f.002A0":"big.r.f.002A0"},
+  name="COLLECTOR" );
+DV big::d176:1.0->big::diamond(
+  fa=@{inout:"big.f.002BC":"big.f.002BC"},
+  fb=@{inout:"big.f.002BD":"big.f.002BD"},
+  fc=@{inout:"big.f.002BE":"big.f.002BE"},
+  fd=@{output:"big.f.002BF":"big.f.002BF"},
+  p1="50",
+  p2="100" );
+DV big::d177:1.0->big::diamond(
+  fa=@{inout:"big.f.002C0":"big.f.002C0"},
+  fb=@{inout:"big.f.002C1":"big.f.002C1"},
+  fc=@{inout:"big.f.002C2":"big.f.002C2"},
+  fd=@{output:"big.f.002C3":"big.f.002C3"},
+  p1="50",
+  p2="141.421356237309" );
+DV big::d178:1.0->big::diamond(
+  fa=@{inout:"big.f.002C4":"big.f.002C4"},
+  fb=@{inout:"big.f.002C5":"big.f.002C5"},
+  fc=@{inout:"big.f.002C6":"big.f.002C6"},
+  fd=@{output:"big.f.002C7":"big.f.002C7"},
+  p1="50",
+  p2="200" );
+DV big::d179:1.0->big::diamond(
+  fa=@{inout:"big.f.002C8":"big.f.002C8"},
+  fb=@{inout:"big.f.002C9":"big.f.002C9"},
+  fc=@{inout:"big.f.002CA":"big.f.002CA"},
+  fd=@{output:"big.f.002CB":"big.f.002CB"},
+  p1="50",
+  p2="282.842712474619" );
+DV big::d180:1.0->big::diamond(
+  fa=@{inout:"big.f.002CC":"big.f.002CC"},
+  fb=@{inout:"big.f.002CD":"big.f.002CD"},
+  fc=@{inout:"big.f.002CE":"big.f.002CE"},
+  fd=@{output:"big.f.002CF":"big.f.002CF"},
+  p1="50",
+  p2="400" );
+DV big::d181:1.0->big::diamond(
+  fa=@{inout:"big.f.002D0":"big.f.002D0"},
+  fb=@{inout:"big.f.002D1":"big.f.002D1"},
+  fc=@{inout:"big.f.002D2":"big.f.002D2"},
+  fd=@{output:"big.f.002D3":"big.f.002D3"},
+  p1="50",
+  p2="565.685424949238" );
+DV big::d182:1.0->big::diamond(
+  fa=@{inout:"big.f.002D4":"big.f.002D4"},
+  fb=@{inout:"big.f.002D5":"big.f.002D5"},
+  fc=@{inout:"big.f.002D6":"big.f.002D6"},
+  fd=@{output:"big.f.002D7":"big.f.002D7"},
+  p1="50",
+  p2="799.999999999999" );
+DV big::c26:1.0->big::multi(
+  f1=[ @{input:"big.f.002BF":"big.f.002BF"}, @{input:"big.f.002C3":"big.f.002C3"}, @{input:"big.f.002C7":"big.f.002C7"}, @{input:"big.f.002CB":"big.f.002CB"}, @{input:"big.f.002CF":"big.f.002CF"}, @{input:"big.f.002D3":"big.f.002D3"}, @{input:"big.f.002D7":"big.f.002D7"} ],
+  f2=@{output:"big.r.f.002BC":"big.r.f.002BC"},
+  name="COLLECTOR" );
+DV big::d183:1.0->big::diamond(
+  fa=@{inout:"big.f.002D8":"big.f.002D8"},
+  fb=@{inout:"big.f.002D9":"big.f.002D9"},
+  fc=@{inout:"big.f.002DA":"big.f.002DA"},
+  fd=@{output:"big.f.002DB":"big.f.002DB"},
+  p1="52",
+  p2="100" );
+DV big::d184:1.0->big::diamond(
+  fa=@{inout:"big.f.002DC":"big.f.002DC"},
+  fb=@{inout:"big.f.002DD":"big.f.002DD"},
+  fc=@{inout:"big.f.002DE":"big.f.002DE"},
+  fd=@{output:"big.f.002DF":"big.f.002DF"},
+  p1="52",
+  p2="141.421356237309" );
+DV big::d185:1.0->big::diamond(
+  fa=@{inout:"big.f.002E0":"big.f.002E0"},
+  fb=@{inout:"big.f.002E1":"big.f.002E1"},
+  fc=@{inout:"big.f.002E2":"big.f.002E2"},
+  fd=@{output:"big.f.002E3":"big.f.002E3"},
+  p1="52",
+  p2="200" );
+DV big::d186:1.0->big::diamond(
+  fa=@{inout:"big.f.002E4":"big.f.002E4"},
+  fb=@{inout:"big.f.002E5":"big.f.002E5"},
+  fc=@{inout:"big.f.002E6":"big.f.002E6"},
+  fd=@{output:"big.f.002E7":"big.f.002E7"},
+  p1="52",
+  p2="282.842712474619" );
+DV big::d187:1.0->big::diamond(
+  fa=@{inout:"big.f.002E8":"big.f.002E8"},
+  fb=@{inout:"big.f.002E9":"big.f.002E9"},
+  fc=@{inout:"big.f.002EA":"big.f.002EA"},
+  fd=@{output:"big.f.002EB":"big.f.002EB"},
+  p1="52",
+  p2="400" );
+DV big::d188:1.0->big::diamond(
+  fa=@{inout:"big.f.002EC":"big.f.002EC"},
+  fb=@{inout:"big.f.002ED":"big.f.002ED"},
+  fc=@{inout:"big.f.002EE":"big.f.002EE"},
+  fd=@{output:"big.f.002EF":"big.f.002EF"},
+  p1="52",
+  p2="565.685424949238" );
+DV big::d189:1.0->big::diamond(
+  fa=@{inout:"big.f.002F0":"big.f.002F0"},
+  fb=@{inout:"big.f.002F1":"big.f.002F1"},
+  fc=@{inout:"big.f.002F2":"big.f.002F2"},
+  fd=@{output:"big.f.002F3":"big.f.002F3"},
+  p1="52",
+  p2="799.999999999999" );
+DV big::c27:1.0->big::multi(
+  f1=[ @{input:"big.f.002DB":"big.f.002DB"}, @{input:"big.f.002DF":"big.f.002DF"}, @{input:"big.f.002E3":"big.f.002E3"}, @{input:"big.f.002E7":"big.f.002E7"}, @{input:"big.f.002EB":"big.f.002EB"}, @{input:"big.f.002EF":"big.f.002EF"}, @{input:"big.f.002F3":"big.f.002F3"} ],
+  f2=@{output:"big.r.f.002D8":"big.r.f.002D8"},
+  name="COLLECTOR" );
+DV big::d190:1.0->big::diamond(
+  fa=@{inout:"big.f.002F4":"big.f.002F4"},
+  fb=@{inout:"big.f.002F5":"big.f.002F5"},
+  fc=@{inout:"big.f.002F6":"big.f.002F6"},
+  fd=@{output:"big.f.002F7":"big.f.002F7"},
+  p1="54",
+  p2="100" );
+DV big::d191:1.0->big::diamond(
+  fa=@{inout:"big.f.002F8":"big.f.002F8"},
+  fb=@{inout:"big.f.002F9":"big.f.002F9"},
+  fc=@{inout:"big.f.002FA":"big.f.002FA"},
+  fd=@{output:"big.f.002FB":"big.f.002FB"},
+  p1="54",
+  p2="141.421356237309" );
+DV big::d192:1.0->big::diamond(
+  fa=@{inout:"big.f.002FC":"big.f.002FC"},
+  fb=@{inout:"big.f.002FD":"big.f.002FD"},
+  fc=@{inout:"big.f.002FE":"big.f.002FE"},
+  fd=@{output:"big.f.002FF":"big.f.002FF"},
+  p1="54",
+  p2="200" );
+DV big::d193:1.0->big::diamond(
+  fa=@{inout:"big.f.00300":"big.f.00300"},
+  fb=@{inout:"big.f.00301":"big.f.00301"},
+  fc=@{inout:"big.f.00302":"big.f.00302"},
+  fd=@{output:"big.f.00303":"big.f.00303"},
+  p1="54",
+  p2="282.842712474619" );
+DV big::d194:1.0->big::diamond(
+  fa=@{inout:"big.f.00304":"big.f.00304"},
+  fb=@{inout:"big.f.00305":"big.f.00305"},
+  fc=@{inout:"big.f.00306":"big.f.00306"},
+  fd=@{output:"big.f.00307":"big.f.00307"},
+  p1="54",
+  p2="400" );
+DV big::d195:1.0->big::diamond(
+  fa=@{inout:"big.f.00308":"big.f.00308"},
+  fb=@{inout:"big.f.00309":"big.f.00309"},
+  fc=@{inout:"big.f.0030A":"big.f.0030A"},
+  fd=@{output:"big.f.0030B":"big.f.0030B"},
+  p1="54",
+  p2="565.685424949238" );
+DV big::d196:1.0->big::diamond(
+  fa=@{inout:"big.f.0030C":"big.f.0030C"},
+  fb=@{inout:"big.f.0030D":"big.f.0030D"},
+  fc=@{inout:"big.f.0030E":"big.f.0030E"},
+  fd=@{output:"big.f.0030F":"big.f.0030F"},
+  p1="54",
+  p2="799.999999999999" );
+DV big::c28:1.0->big::multi(
+  f1=[ @{input:"big.f.002F7":"big.f.002F7"}, @{input:"big.f.002FB":"big.f.002FB"}, @{input:"big.f.002FF":"big.f.002FF"}, @{input:"big.f.00303":"big.f.00303"}, @{input:"big.f.00307":"big.f.00307"}, @{input:"big.f.0030B":"big.f.0030B"}, @{input:"big.f.0030F":"big.f.0030F"} ],
+  f2=@{output:"big.r.f.002F4":"big.r.f.002F4"},
+  name="COLLECTOR" );
+DV big::d197:1.0->big::diamond(
+  fa=@{inout:"big.f.00310":"big.f.00310"},
+  fb=@{inout:"big.f.00311":"big.f.00311"},
+  fc=@{inout:"big.f.00312":"big.f.00312"},
+  fd=@{output:"big.f.00313":"big.f.00313"},
+  p1="56",
+  p2="100" );
+DV big::d198:1.0->big::diamond(
+  fa=@{inout:"big.f.00314":"big.f.00314"},
+  fb=@{inout:"big.f.00315":"big.f.00315"},
+  fc=@{inout:"big.f.00316":"big.f.00316"},
+  fd=@{output:"big.f.00317":"big.f.00317"},
+  p1="56",
+  p2="141.421356237309" );
+DV big::d199:1.0->big::diamond(
+  fa=@{inout:"big.f.00318":"big.f.00318"},
+  fb=@{inout:"big.f.00319":"big.f.00319"},
+  fc=@{inout:"big.f.0031A":"big.f.0031A"},
+  fd=@{output:"big.f.0031B":"big.f.0031B"},
+  p1="56",
+  p2="200" );
+DV big::d200:1.0->big::diamond(
+  fa=@{inout:"big.f.0031C":"big.f.0031C"},
+  fb=@{inout:"big.f.0031D":"big.f.0031D"},
+  fc=@{inout:"big.f.0031E":"big.f.0031E"},
+  fd=@{output:"big.f.0031F":"big.f.0031F"},
+  p1="56",
+  p2="282.842712474619" );
+DV big::d201:1.0->big::diamond(
+  fa=@{inout:"big.f.00320":"big.f.00320"},
+  fb=@{inout:"big.f.00321":"big.f.00321"},
+  fc=@{inout:"big.f.00322":"big.f.00322"},
+  fd=@{output:"big.f.00323":"big.f.00323"},
+  p1="56",
+  p2="400" );
+DV big::d202:1.0->big::diamond(
+  fa=@{inout:"big.f.00324":"big.f.00324"},
+  fb=@{inout:"big.f.00325":"big.f.00325"},
+  fc=@{inout:"big.f.00326":"big.f.00326"},
+  fd=@{output:"big.f.00327":"big.f.00327"},
+  p1="56",
+  p2="565.685424949238" );
+DV big::d203:1.0->big::diamond(
+  fa=@{inout:"big.f.00328":"big.f.00328"},
+  fb=@{inout:"big.f.00329":"big.f.00329"},
+  fc=@{inout:"big.f.0032A":"big.f.0032A"},
+  fd=@{output:"big.f.0032B":"big.f.0032B"},
+  p1="56",
+  p2="799.999999999999" );
+DV big::c29:1.0->big::multi(
+  f1=[ @{input:"big.f.00313":"big.f.00313"}, @{input:"big.f.00317":"big.f.00317"}, @{input:"big.f.0031B":"big.f.0031B"}, @{input:"big.f.0031F":"big.f.0031F"}, @{input:"big.f.00323":"big.f.00323"}, @{input:"big.f.00327":"big.f.00327"}, @{input:"big.f.0032B":"big.f.0032B"} ],
+  f2=@{output:"big.r.f.00310":"big.r.f.00310"},
+  name="COLLECTOR" );
+DV big::d204:1.0->big::diamond(
+  fa=@{inout:"big.f.0032C":"big.f.0032C"},
+  fb=@{inout:"big.f.0032D":"big.f.0032D"},
+  fc=@{inout:"big.f.0032E":"big.f.0032E"},
+  fd=@{output:"big.f.0032F":"big.f.0032F"},
+  p1="58",
+  p2="100" );
+DV big::d205:1.0->big::diamond(
+  fa=@{inout:"big.f.00330":"big.f.00330"},
+  fb=@{inout:"big.f.00331":"big.f.00331"},
+  fc=@{inout:"big.f.00332":"big.f.00332"},
+  fd=@{output:"big.f.00333":"big.f.00333"},
+  p1="58",
+  p2="141.421356237309" );
+DV big::d206:1.0->big::diamond(
+  fa=@{inout:"big.f.00334":"big.f.00334"},
+  fb=@{inout:"big.f.00335":"big.f.00335"},
+  fc=@{inout:"big.f.00336":"big.f.00336"},
+  fd=@{output:"big.f.00337":"big.f.00337"},
+  p1="58",
+  p2="200" );
+DV big::d207:1.0->big::diamond(
+  fa=@{inout:"big.f.00338":"big.f.00338"},
+  fb=@{inout:"big.f.00339":"big.f.00339"},
+  fc=@{inout:"big.f.0033A":"big.f.0033A"},
+  fd=@{output:"big.f.0033B":"big.f.0033B"},
+  p1="58",
+  p2="282.842712474619" );
+DV big::d208:1.0->big::diamond(
+  fa=@{inout:"big.f.0033C":"big.f.0033C"},
+  fb=@{inout:"big.f.0033D":"big.f.0033D"},
+  fc=@{inout:"big.f.0033E":"big.f.0033E"},
+  fd=@{output:"big.f.0033F":"big.f.0033F"},
+  p1="58",
+  p2="400" );
+DV big::d209:1.0->big::diamond(
+  fa=@{inout:"big.f.00340":"big.f.00340"},
+  fb=@{inout:"big.f.00341":"big.f.00341"},
+  fc=@{inout:"big.f.00342":"big.f.00342"},
+  fd=@{output:"big.f.00343":"big.f.00343"},
+  p1="58",
+  p2="565.685424949238" );
+DV big::d210:1.0->big::diamond(
+  fa=@{inout:"big.f.00344":"big.f.00344"},
+  fb=@{inout:"big.f.00345":"big.f.00345"},
+  fc=@{inout:"big.f.00346":"big.f.00346"},
+  fd=@{output:"big.f.00347":"big.f.00347"},
+  p1="58",
+  p2="799.999999999999" );
+DV big::c30:1.0->big::multi(
+  f1=[ @{input:"big.f.0032F":"big.f.0032F"}, @{input:"big.f.00333":"big.f.00333"}, @{input:"big.f.00337":"big.f.00337"}, @{input:"big.f.0033B":"big.f.0033B"}, @{input:"big.f.0033F":"big.f.0033F"}, @{input:"big.f.00343":"big.f.00343"}, @{input:"big.f.00347":"big.f.00347"} ],
+  f2=@{output:"big.r.f.0032C":"big.r.f.0032C"},
+  name="COLLECTOR" );
+DV big::d211:1.0->big::diamond(
+  fa=@{inout:"big.f.00348":"big.f.00348"},
+  fb=@{inout:"big.f.00349":"big.f.00349"},
+  fc=@{inout:"big.f.0034A":"big.f.0034A"},
+  fd=@{output:"big.f.0034B":"big.f.0034B"},
+  p1="60",
+  p2="100" );
+DV big::d212:1.0->big::diamond(
+  fa=@{inout:"big.f.0034C":"big.f.0034C"},
+  fb=@{inout:"big.f.0034D":"big.f.0034D"},
+  fc=@{inout:"big.f.0034E":"big.f.0034E"},
+  fd=@{output:"big.f.0034F":"big.f.0034F"},
+  p1="60",
+  p2="141.421356237309" );
+DV big::d213:1.0->big::diamond(
+  fa=@{inout:"big.f.00350":"big.f.00350"},
+  fb=@{inout:"big.f.00351":"big.f.00351"},
+  fc=@{inout:"big.f.00352":"big.f.00352"},
+  fd=@{output:"big.f.00353":"big.f.00353"},
+  p1="60",
+  p2="200" );
+DV big::d214:1.0->big::diamond(
+  fa=@{inout:"big.f.00354":"big.f.00354"},
+  fb=@{inout:"big.f.00355":"big.f.00355"},
+  fc=@{inout:"big.f.00356":"big.f.00356"},
+  fd=@{output:"big.f.00357":"big.f.00357"},
+  p1="60",
+  p2="282.842712474619" );
+DV big::d215:1.0->big::diamond(
+  fa=@{inout:"big.f.00358":"big.f.00358"},
+  fb=@{inout:"big.f.00359":"big.f.00359"},
+  fc=@{inout:"big.f.0035A":"big.f.0035A"},
+  fd=@{output:"big.f.0035B":"big.f.0035B"},
+  p1="60",
+  p2="400" );
+DV big::d216:1.0->big::diamond(
+  fa=@{inout:"big.f.0035C":"big.f.0035C"},
+  fb=@{inout:"big.f.0035D":"big.f.0035D"},
+  fc=@{inout:"big.f.0035E":"big.f.0035E"},
+  fd=@{output:"big.f.0035F":"big.f.0035F"},
+  p1="60",
+  p2="565.685424949238" );
+DV big::d217:1.0->big::diamond(
+  fa=@{inout:"big.f.00360":"big.f.00360"},
+  fb=@{inout:"big.f.00361":"big.f.00361"},
+  fc=@{inout:"big.f.00362":"big.f.00362"},
+  fd=@{output:"big.f.00363":"big.f.00363"},
+  p1="60",
+  p2="799.999999999999" );
+DV big::c31:1.0->big::multi(
+  f1=[ @{input:"big.f.0034B":"big.f.0034B"}, @{input:"big.f.0034F":"big.f.0034F"}, @{input:"big.f.00353":"big.f.00353"}, @{input:"big.f.00357":"big.f.00357"}, @{input:"big.f.0035B":"big.f.0035B"}, @{input:"big.f.0035F":"big.f.0035F"}, @{input:"big.f.00363":"big.f.00363"} ],
+  f2=@{output:"big.r.f.00348":"big.r.f.00348"},
+  name="COLLECTOR" );
+DV big::d218:1.0->big::diamond(
+  fa=@{inout:"big.f.00364":"big.f.00364"},
+  fb=@{inout:"big.f.00365":"big.f.00365"},
+  fc=@{inout:"big.f.00366":"big.f.00366"},
+  fd=@{output:"big.f.00367":"big.f.00367"},
+  p1="62",
+  p2="100" );
+DV big::d219:1.0->big::diamond(
+  fa=@{inout:"big.f.00368":"big.f.00368"},
+  fb=@{inout:"big.f.00369":"big.f.00369"},
+  fc=@{inout:"big.f.0036A":"big.f.0036A"},
+  fd=@{output:"big.f.0036B":"big.f.0036B"},
+  p1="62",
+  p2="141.421356237309" );
+DV big::d220:1.0->big::diamond(
+  fa=@{inout:"big.f.0036C":"big.f.0036C"},
+  fb=@{inout:"big.f.0036D":"big.f.0036D"},
+  fc=@{inout:"big.f.0036E":"big.f.0036E"},
+  fd=@{output:"big.f.0036F":"big.f.0036F"},
+  p1="62",
+  p2="200" );
+DV big::d221:1.0->big::diamond(
+  fa=@{inout:"big.f.00370":"big.f.00370"},
+  fb=@{inout:"big.f.00371":"big.f.00371"},
+  fc=@{inout:"big.f.00372":"big.f.00372"},
+  fd=@{output:"big.f.00373":"big.f.00373"},
+  p1="62",
+  p2="282.842712474619" );
+DV big::d222:1.0->big::diamond(
+  fa=@{inout:"big.f.00374":"big.f.00374"},
+  fb=@{inout:"big.f.00375":"big.f.00375"},
+  fc=@{inout:"big.f.00376":"big.f.00376"},
+  fd=@{output:"big.f.00377":"big.f.00377"},
+  p1="62",
+  p2="400" );
+DV big::d223:1.0->big::diamond(
+  fa=@{inout:"big.f.00378":"big.f.00378"},
+  fb=@{inout:"big.f.00379":"big.f.00379"},
+  fc=@{inout:"big.f.0037A":"big.f.0037A"},
+  fd=@{output:"big.f.0037B":"big.f.0037B"},
+  p1="62",
+  p2="565.685424949238" );
+DV big::d224:1.0->big::diamond(
+  fa=@{inout:"big.f.0037C":"big.f.0037C"},
+  fb=@{inout:"big.f.0037D":"big.f.0037D"},
+  fc=@{inout:"big.f.0037E":"big.f.0037E"},
+  fd=@{output:"big.f.0037F":"big.f.0037F"},
+  p1="62",
+  p2="799.999999999999" );
+DV big::c32:1.0->big::multi(
+  f1=[ @{input:"big.f.00367":"big.f.00367"}, @{input:"big.f.0036B":"big.f.0036B"}, @{input:"big.f.0036F":"big.f.0036F"}, @{input:"big.f.00373":"big.f.00373"}, @{input:"big.f.00377":"big.f.00377"}, @{input:"big.f.0037B":"big.f.0037B"}, @{input:"big.f.0037F":"big.f.0037F"} ],
+  f2=@{output:"big.r.f.00364":"big.r.f.00364"},
+  name="COLLECTOR" );
+DV big::d225:1.0->big::diamond(
+  fa=@{inout:"big.f.00380":"big.f.00380"},
+  fb=@{inout:"big.f.00381":"big.f.00381"},
+  fc=@{inout:"big.f.00382":"big.f.00382"},
+  fd=@{output:"big.f.00383":"big.f.00383"},
+  p1="64",
+  p2="100" );
+DV big::d226:1.0->big::diamond(
+  fa=@{inout:"big.f.00384":"big.f.00384"},
+  fb=@{inout:"big.f.00385":"big.f.00385"},
+  fc=@{inout:"big.f.00386":"big.f.00386"},
+  fd=@{output:"big.f.00387":"big.f.00387"},
+  p1="64",
+  p2="141.421356237309" );
+DV big::d227:1.0->big::diamond(
+  fa=@{inout:"big.f.00388":"big.f.00388"},
+  fb=@{inout:"big.f.00389":"big.f.00389"},
+  fc=@{inout:"big.f.0038A":"big.f.0038A"},
+  fd=@{output:"big.f.0038B":"big.f.0038B"},
+  p1="64",
+  p2="200" );
+DV big::d228:1.0->big::diamond(
+  fa=@{inout:"big.f.0038C":"big.f.0038C"},
+  fb=@{inout:"big.f.0038D":"big.f.0038D"},
+  fc=@{inout:"big.f.0038E":"big.f.0038E"},
+  fd=@{output:"big.f.0038F":"big.f.0038F"},
+  p1="64",
+  p2="282.842712474619" );
+DV big::d229:1.0->big::diamond(
+  fa=@{inout:"big.f.00390":"big.f.00390"},
+  fb=@{inout:"big.f.00391":"big.f.00391"},
+  fc=@{inout:"big.f.00392":"big.f.00392"},
+  fd=@{output:"big.f.00393":"big.f.00393"},
+  p1="64",
+  p2="400" );
+DV big::d230:1.0->big::diamond(
+  fa=@{inout:"big.f.00394":"big.f.00394"},
+  fb=@{inout:"big.f.00395":"big.f.00395"},
+  fc=@{inout:"big.f.00396":"big.f.00396"},
+  fd=@{output:"big.f.00397":"big.f.00397"},
+  p1="64",
+  p2="565.685424949238" );
+DV big::d231:1.0->big::diamond(
+  fa=@{inout:"big.f.00398":"big.f.00398"},
+  fb=@{inout:"big.f.00399":"big.f.00399"},
+  fc=@{inout:"big.f.0039A":"big.f.0039A"},
+  fd=@{output:"big.f.0039B":"big.f.0039B"},
+  p1="64",
+  p2="799.999999999999" );
+DV big::c33:1.0->big::multi(
+  f1=[ @{input:"big.f.00383":"big.f.00383"}, @{input:"big.f.00387":"big.f.00387"}, @{input:"big.f.0038B":"big.f.0038B"}, @{input:"big.f.0038F":"big.f.0038F"}, @{input:"big.f.00393":"big.f.00393"}, @{input:"big.f.00397":"big.f.00397"}, @{input:"big.f.0039B":"big.f.0039B"} ],
+  f2=@{output:"big.r.f.00380":"big.r.f.00380"},
+  name="COLLECTOR" );
+DV big::d232:1.0->big::diamond(
+  fa=@{inout:"big.f.0039C":"big.f.0039C"},
+  fb=@{inout:"big.f.0039D":"big.f.0039D"},
+  fc=@{inout:"big.f.0039E":"big.f.0039E"},
+  fd=@{output:"big.f.0039F":"big.f.0039F"},
+  p1="66",
+  p2="100" );
+DV big::d233:1.0->big::diamond(
+  fa=@{inout:"big.f.003A0":"big.f.003A0"},
+  fb=@{inout:"big.f.003A1":"big.f.003A1"},
+  fc=@{inout:"big.f.003A2":"big.f.003A2"},
+  fd=@{output:"big.f.003A3":"big.f.003A3"},
+  p1="66",
+  p2="141.421356237309" );
+DV big::d234:1.0->big::diamond(
+  fa=@{inout:"big.f.003A4":"big.f.003A4"},
+  fb=@{inout:"big.f.003A5":"big.f.003A5"},
+  fc=@{inout:"big.f.003A6":"big.f.003A6"},
+  fd=@{output:"big.f.003A7":"big.f.003A7"},
+  p1="66",
+  p2="200" );
+DV big::d235:1.0->big::diamond(
+  fa=@{inout:"big.f.003A8":"big.f.003A8"},
+  fb=@{inout:"big.f.003A9":"big.f.003A9"},
+  fc=@{inout:"big.f.003AA":"big.f.003AA"},
+  fd=@{output:"big.f.003AB":"big.f.003AB"},
+  p1="66",
+  p2="282.842712474619" );
+DV big::d236:1.0->big::diamond(
+  fa=@{inout:"big.f.003AC":"big.f.003AC"},
+  fb=@{inout:"big.f.003AD":"big.f.003AD"},
+  fc=@{inout:"big.f.003AE":"big.f.003AE"},
+  fd=@{output:"big.f.003AF":"big.f.003AF"},
+  p1="66",
+  p2="400" );
+DV big::d237:1.0->big::diamond(
+  fa=@{inout:"big.f.003B0":"big.f.003B0"},
+  fb=@{inout:"big.f.003B1":"big.f.003B1"},
+  fc=@{inout:"big.f.003B2":"big.f.003B2"},
+  fd=@{output:"big.f.003B3":"big.f.003B3"},
+  p1="66",
+  p2="565.685424949238" );
+DV big::d238:1.0->big::diamond(
+  fa=@{inout:"big.f.003B4":"big.f.003B4"},
+  fb=@{inout:"big.f.003B5":"big.f.003B5"},
+  fc=@{inout:"big.f.003B6":"big.f.003B6"},
+  fd=@{output:"big.f.003B7":"big.f.003B7"},
+  p1="66",
+  p2="799.999999999999" );
+DV big::c34:1.0->big::multi(
+  f1=[ @{input:"big.f.0039F":"big.f.0039F"}, @{input:"big.f.003A3":"big.f.003A3"}, @{input:"big.f.003A7":"big.f.003A7"}, @{input:"big.f.003AB":"big.f.003AB"}, @{input:"big.f.003AF":"big.f.003AF"}, @{input:"big.f.003B3":"big.f.003B3"}, @{input:"big.f.003B7":"big.f.003B7"} ],
+  f2=@{output:"big.r.f.0039C":"big.r.f.0039C"},
+  name="COLLECTOR" );
+DV big::d239:1.0->big::diamond(
+  fa=@{inout:"big.f.003B8":"big.f.003B8"},
+  fb=@{inout:"big.f.003B9":"big.f.003B9"},
+  fc=@{inout:"big.f.003BA":"big.f.003BA"},
+  fd=@{output:"big.f.003BB":"big.f.003BB"},
+  p1="68",
+  p2="100" );
+DV big::d240:1.0->big::diamond(
+  fa=@{inout:"big.f.003BC":"big.f.003BC"},
+  fb=@{inout:"big.f.003BD":"big.f.003BD"},
+  fc=@{inout:"big.f.003BE":"big.f.003BE"},
+  fd=@{output:"big.f.003BF":"big.f.003BF"},
+  p1="68",
+  p2="141.421356237309" );
+DV big::d241:1.0->big::diamond(
+  fa=@{inout:"big.f.003C0":"big.f.003C0"},
+  fb=@{inout:"big.f.003C1":"big.f.003C1"},
+  fc=@{inout:"big.f.003C2":"big.f.003C2"},
+  fd=@{output:"big.f.003C3":"big.f.003C3"},
+  p1="68",
+  p2="200" );
+DV big::d242:1.0->big::diamond(
+  fa=@{inout:"big.f.003C4":"big.f.003C4"},
+  fb=@{inout:"big.f.003C5":"big.f.003C5"},
+  fc=@{inout:"big.f.003C6":"big.f.003C6"},
+  fd=@{output:"big.f.003C7":"big.f.003C7"},
+  p1="68",
+  p2="282.842712474619" );
+DV big::d243:1.0->big::diamond(
+  fa=@{inout:"big.f.003C8":"big.f.003C8"},
+  fb=@{inout:"big.f.003C9":"big.f.003C9"},
+  fc=@{inout:"big.f.003CA":"big.f.003CA"},
+  fd=@{output:"big.f.003CB":"big.f.003CB"},
+  p1="68",
+  p2="400" );
+DV big::d244:1.0->big::diamond(
+  fa=@{inout:"big.f.003CC":"big.f.003CC"},
+  fb=@{inout:"big.f.003CD":"big.f.003CD"},
+  fc=@{inout:"big.f.003CE":"big.f.003CE"},
+  fd=@{output:"big.f.003CF":"big.f.003CF"},
+  p1="68",
+  p2="565.685424949238" );
+DV big::d245:1.0->big::diamond(
+  fa=@{inout:"big.f.003D0":"big.f.003D0"},
+  fb=@{inout:"big.f.003D1":"big.f.003D1"},
+  fc=@{inout:"big.f.003D2":"big.f.003D2"},
+  fd=@{output:"big.f.003D3":"big.f.003D3"},
+  p1="68",
+  p2="799.999999999999" );
+DV big::c35:1.0->big::multi(
+  f1=[ @{input:"big.f.003BB":"big.f.003BB"}, @{input:"big.f.003BF":"big.f.003BF"}, @{input:"big.f.003C3":"big.f.003C3"}, @{input:"big.f.003C7":"big.f.003C7"}, @{input:"big.f.003CB":"big.f.003CB"}, @{input:"big.f.003CF":"big.f.003CF"}, @{input:"big.f.003D3":"big.f.003D3"} ],
+  f2=@{output:"big.r.f.003B8":"big.r.f.003B8"},
+  name="COLLECTOR" );
+DV big::FINAL:1.0->big::multi(
+  f1=[ @{input:"big.r.f.00000"}, @{input:"big.r.f.0001C"}, @{input:"big.r.f.00038"}, @{input:"big.r.f.00054"}, @{input:"big.r.f.00070"}, @{input:"big.r.f.0008C"}, @{input:"big.r.f.000A8"}, @{input:"big.r.f.000C4"}, @{input:"big.r.f.000E0"}, @{input:"big.r.f.000FC"}, @{input:"big.r.f.00118"}, @{input:"big.r.f.00134"}, @{input:"big.r.f.00150"}, @{input:"big.r.f.0016C"}, @{input:"big.r.f.00188"}, @{input:"big.r.f.001A4"}, @{input:"big.r.f.001C0"}, @{input:"big.r.f.001DC"}, @{input:"big.r.f.001F8"}, @{input:"big.r.f.00214"}, @{input:"big.r.f.00230"}, @{input:"big.r.f.0024C"}, @{input:"big.r.f.00268"}, @{input:"big.r.f.00284"}, @{input:"big.r.f.002A0"}, @{input:"big.r.f.002BC"}, @{input:"big.r.f.002D8"}, @{input:"big.r.f.002F4"}, @{input:"big.r.f.00310"}, @{input:"big.r.f.0032C"}, @{input:"big.r.f.00348"}, @{input:"big.r.f.00364"}, @{input:"big.r.f.00380"}, @{input:"big.r.f.0039C"}, @{input:"big.r.f.003B8"} ],
+  f2=@{output:"final"},
+  name="FINAL" );

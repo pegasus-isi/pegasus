@@ -1,0 +1,152 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: insertvdc.1,v 1.7 2005/09/29 22:59:56 griphyn Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.\"
+.TH insertvdc 1 "May, 12th 2005"
+.SH NAME
+insertvdc \- add new definitions to the VDDB
+.SH SYNOPSIS
+.B insertvdc
+[\-Dprop [..]] [\-d db-prefix] [\-r rejects] [\-\-verbose] [vdlx | vdlt [..]]
+.br
+.B insertvdc
+[\-Dprop [..]] \-V
+.SH DESCRIPTION
+The insertion command allows to add new definitions to the database
+without fearing to overwrite existing definitions. This is the preferred
+mode of operation when adding new definitions.
+.SH ARGUMENTS
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+A CLI property take precedence over the properties file property 
+of the same key.
+.TP
+.B \-d db-prefix
+.PD 0
+.TP
+.PD 1
+.B \-\-dbase db-prefix
+The database prefix is currently unused.
+.IP
+Default is to use the VDC pointed to by the
+.I vds.db.schema
+property. If this property is unset, the 
+.I SingleFileSchema
+becomes the chosen schema, and the property
+.I vds.db.schema.file.store
+defaults to
+.IR $VDS_HOME/var/vds.db ,
+the eventual default database file.
+.TP
+.B \-r rejects
+.PD 0
+.TP
+.PD 1
+.B \-\-rejects rejects
+Whenever a definition is already in place, it cannot be replaced in
+insertion mode. Rather, the rejected definitions can be collected into
+a file. Please note that this file is not a VDLx file. Rather, it is
+a collections of definitions.
+.IP
+Default is to run without collecting rejects, which is more
+memory efficient, and should be faster.
+.TP
+.B vdlt | vdlx [..]
+the remaining arguments are one or more files containing either VDLt or
+VDLx. The contents of each file are attempted to be inserted into the
+VDC. VDLt contents are converted into VDLx before insertion, using a
+temporary file. The files are inserted in the order specified.
+.IP
+Trying to add a fully-qualified definition will result in an warning.
+Processing will continue. The existing definition will be kept. The new
+definition will be ignored.
+.TP
+.B \-V
+.PD 0
+.TP
+.PD 1
+.B \-\-version
+displays the version of the GriPhyN Virtual Data System you are using.
+.TP
+.B \-\-verbose
+increases the verbosity of messages about what is going on. 
+.SH "RETURN VALUE"
+Regular and planned program terminations will result in an exit code of 0.
+Abnormal termination will result in a non-zero exit code.
+.SH FILES
+.TP
+.B $VDS_HOME/etc/vdl-1.24.xsd
+is the suggested location of the latest XML schema to read the database.
+.TP
+.B $VDS_HOME/etc/properties
+contains the system properties with all configurable options.
+.TP
+.B $HOME/.vdsrc
+contains the user properties with all configurable options.
+.TP
+.B gvds.jar
+contains all compiled Java bytecode to run the GriPhyN Virtual Data System.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B $VDS_HOME
+is the suggested base directory of your the execution environment.
+.TP
+.B $JAVA_HOME
+should be set and point to a valid location to start the intended Java
+virtual machine as
+.IR $JAVA_HOME/bin/java .
+.TP
+.B $CLASSPATH
+should be set to contain all necessary files for the execution environment.
+Please make sure that your 
+.I CLASSPATH
+includes the Xerces 2 classes.
+.SH "SEE ALSO"
+.BR updatevdc (1),
+.BR searchvdc (1),
+.BR deletevdc (1).
+.SH EXAMPLE
+.nf
+\f(CB
+$ insertvdc helloworld.xml 
+2005.08.16 13:04:51.129 CDT: [app] tut::echo already exists (SQL anno_definition.id=13125), ignoring
+2005.08.16 13:04:51.139 CDT: [app] voeckler::hello already exists (SQL anno_definition.id=17643), ignoring
+
+$ echo $?
+0
+\fP
+.fi
+.SH RESTRICTIONS
+Plenty. 
+.SH AUTHORS
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>,
+.br
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.PP
+Chimera
+.B http://www.griphyn.org/chimera/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

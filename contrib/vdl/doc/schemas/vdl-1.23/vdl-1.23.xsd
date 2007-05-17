@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by Jens-S. Vöckler (University of Chicago) -->
+<!-- edited with XML Spy v4.4 U (http://www.xmlspy.com) by Jens-S. Vöckler (private) -->
+<xs:schema targetNamespace="http://www.griphyn.org/chimera/VDL" xmlns="http://www.griphyn.org/chimera/VDL" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.23" xml:lang="en">
+	<xs:annotation>
+		<xs:documentation>This XML Schema allows to validate either complete VDL scripts, or specific VDL chunks.</xs:documentation>
+	</xs:annotation>
+	<xs:attributeGroup name="DescriptionAG">
+		<xs:annotation>
+			<xs:documentation>describe a tranformation or derivation with metadata.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="description" type="xs:string" use="optional"/>
+		<xs:attribute name="title" type="xs:string" use="optional"/>
+		<xs:attribute name="keyword" type="xs:string" use="optional"/>
+		<xs:attribute name="url" type="xs:anyURI" use="optional"/>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="TransformationMapAG">
+		<xs:annotation>
+			<xs:documentation>describe the mapping data towards a transformation</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="uses" type="xs:NMTOKEN" use="required"/>
+		<xs:attribute name="usesspace" type="NamespaceType" use="optional"/>
+		<xs:attribute name="maxIncludeVersion" type="VersionType" use="optional"/>
+		<xs:attribute name="minIncludeVersion" type="VersionType" use="optional"/>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="DefinitionIdentifierAG">
+		<xs:annotation>
+			<xs:documentation>provides the unique identifier for a definition.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
+		<xs:attribute name="namespace" type="NamespaceType" use="optional"/>
+		<xs:attribute name="version" type="VersionType" use="optional"/>
+	</xs:attributeGroup>
+	<xs:simpleType name="TransferType">
+		<xs:annotation>
+			<xs:documentation>defines the tri-state transfer modes.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="false"/>
+			<xs:enumeration value="optional"/>
+			<xs:enumeration value="true"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ContainerType">
+		<xs:annotation>
+			<xs:documentation>defines the three basic containers for parameters.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="scalar"/>
+			<xs:enumeration value="list"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LinkageType">
+		<xs:annotation>
+			<xs:documentation>defines the usage of a logical filename.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="input"/>
+			<xs:enumeration value="output"/>
+			<xs:enumeration value="inout"/>
+			<xs:enumeration value="none"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ProfileNamespace">
+		<xs:annotation>
+			<xs:documentation>defines the legal namespaces of execution profiles.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="vds"/>
+			<xs:enumeration value="condor"/>
+			<xs:enumeration value="dagman"/>
+			<xs:enumeration value="env"/>
+			<xs:enumeration value="hints"/>
+			<xs:enumeration value="globus"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="VersionType">
+		<xs:annotation>
+			<xs:documentation>defines the permissable range for version numbers.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9.]+"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NamespaceType">
+		<xs:annotation>
+			<xs:documentation>defines the permissable range for namespace identifiers.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[\-A-Za-z_/][\-A-Za-z_0-9./]*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MetadataType">
+		<xs:annotation>
+			<xs:documentation>enumerates the permissable metadata types.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="boolean"/>
+			<xs:enumeration value="string"/>
+			<xs:enumeration value="float"/>
+			<xs:enumeration value="integer"/>
+			<xs:enumeration value="datetime"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:group name="OutsideLeaf">
+		<xs:annotation>
+			<xs:documentation>"text" or "lfn" are permissable outside a TR.</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="lfn" type="LFNType">
+				<xs:annotation>
+					<xs:documentation>A logical filename.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="text" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Pure text.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:group>
+	<xs:group name="InsideLeaf">
+		<xs:annotation>
+			<xs:documentation>"text" or "use" are permissable inside a TR.</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="use">
+				<xs:annotation>
+					<xs:documentation>References a bound variable.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:annotation>
+						<xs:documentation>name="UseType"</xs:documentation>
+					</xs:annotation>
+					<xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
+					<xs:attribute name="suffix" type="xs:string" use="optional"/>
+					<xs:attribute name="separator" type="xs:string" use="optional" default=" ">
+						<xs:annotation>
+							<xs:documentation>The default is a single space.</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute name="prefix" type="xs:string" use="optional"/>
+					<xs:attribute name="link" type="LinkageType" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="text" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Pure text.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:group>
+	<xs:complexType name="LFNType">
+		<xs:annotation>
+			<xs:documentation>Defines attributes for a logical filename.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="file" type="xs:string" use="required"/>
+		<xs:attribute name="dontRegister" type="xs:boolean" use="optional" default="false"/>
+		<xs:attribute name="dontTransfer" type="TransferType" use="optional" default="false"/>
+		<xs:attribute name="link" type="LinkageType" use="required"/>
+		<xs:attribute name="temporaryHint" type="xs:string" use="optional"/>
+		<xs:attribute name="isTemporary" type="xs:boolean" use="optional">
+			<xs:annotation>
+				<xs:documentation>DEPRECATED! Will be removed soon.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="optional" type="xs:boolean" use="optional" default="false"/>
+	</xs:complexType>
+	<xs:complexType name="InsideScalarType">
+		<xs:annotation>
+			<xs:documentation>A simple element for text or files.</xs:documentation>
+		</xs:annotation>
+		<xs:group ref="InsideLeaf" maxOccurs="unbounded"/>
+	</xs:complexType>
+	<xs:complexType name="OutsideScalarType">
+		<xs:annotation>
+			<xs:documentation>A simple element for text or files.</xs:documentation>
+		</xs:annotation>
+		<xs:group ref="OutsideLeaf" maxOccurs="unbounded"/>
+	</xs:complexType>
+	<xs:complexType name="OutsideListType">
+		<xs:annotation>
+			<xs:documentation>A list element containing simple elements.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence minOccurs="0" maxOccurs="unbounded">
+			<xs:element name="scalar" type="OutsideScalarType">
+				<xs:annotation>
+					<xs:documentation>A simple element for text or logical filenames.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MetaType" mixed="false">
+		<xs:annotation>
+			<xs:documentation>A generic metadata encapsulation.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence maxOccurs="unbounded">
+			<xs:element name="data">
+				<xs:annotation>
+					<xs:documentation>A row of metadata.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="key" type="xs:token" use="required"/>
+					<xs:attribute name="type" type="MetadataType" use="required"/>
+					<xs:attribute name="value" type="xs:anySimpleType" use="optional"/>
+					<xs:attribute name="gid" type="xs:decimal" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="transformation">
+		<xs:annotation>
+			<xs:documentation>A "transformation" describes the specification of process environment with placeholders</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:annotation>
+				<xs:documentation>A "transformation" describes the specification of process environment with placeholders</xs:documentation>
+			</xs:annotation>
+			<xs:sequence>
+				<xs:element name="meta" type="MetaType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Annotates the transformation itself.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="declare" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Each parameter is declared using the "declare" element, specifying the name and container type.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:annotation>
+							<xs:documentation>A declaration of a bound variable.</xs:documentation>
+						</xs:annotation>
+						<xs:sequence>
+							<xs:element name="meta" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>Annotates each single formal argument.</xs:documentation>
+								</xs:annotation>
+								<xs:complexType mixed="false">
+									<xs:complexContent mixed="false">
+										<xs:extension base="MetaType"/>
+									</xs:complexContent>
+								</xs:complexType>
+							</xs:element>
+							<xs:choice minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>Optional default value.</xs:documentation>
+								</xs:annotation>
+								<xs:element name="scalar" type="OutsideScalarType"/>
+								<xs:element name="list" type="OutsideListType">
+									<xs:annotation>
+										<xs:documentation>A list of simple scalars.</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+							</xs:choice>
+						</xs:sequence>
+						<xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
+						<xs:attribute name="link" type="LinkageType" use="required"/>
+						<xs:attribute name="container" type="ContainerType" default="scalar"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:choice>
+					<xs:element name="argument" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation>A command line argument spec consists of an arbitrary number of namable chunks.</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:group ref="InsideLeaf" maxOccurs="unbounded"/>
+							<xs:attribute name="name" type="xs:NMTOKEN"/>
+						</xs:complexType>
+					</xs:element>
+					<xs:sequence>
+						<xs:element name="local" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>Associates a local variable with a name to either an LFN or a parameter (const).</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:annotation>
+									<xs:documentation>A declaration of a bound variable.</xs:documentation>
+								</xs:annotation>
+								<xs:choice>
+									<xs:element name="scalar" type="OutsideScalarType"/>
+									<xs:element name="list" type="OutsideListType"/>
+								</xs:choice>
+								<xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
+								<xs:attribute name="link" type="LinkageType" use="required"/>
+								<xs:attribute name="container" type="ContainerType" default="scalar"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="call" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>Like an anonymous "derivation" element, allows to call other transformations from within a compound.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="meta" type="MetaType" minOccurs="0">
+										<xs:annotation>
+											<xs:documentation>Annotates the call structure, which is an anonymous DV.</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:element name="pass" minOccurs="0" maxOccurs="unbounded">
+										<xs:annotation>
+											<xs:documentation>The "pass" element established the binding between an actual parameter with its named formal counterpart.</xs:documentation>
+										</xs:annotation>
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="meta" type="MetaType" minOccurs="0">
+													<xs:annotation>
+														<xs:documentation>Annotates each actual argument as it is passed.</xs:documentation>
+													</xs:annotation>
+												</xs:element>
+												<xs:choice>
+													<xs:element name="scalar" type="InsideScalarType"/>
+													<xs:element name="list">
+														<xs:annotation>
+															<xs:documentation>A list of simple elements.</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence minOccurs="0" maxOccurs="unbounded">
+																<xs:element name="scalar" type="InsideScalarType"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:choice>
+											</xs:sequence>
+											<xs:attribute name="bind" type="xs:NMTOKEN" use="required"/>
+											<xs:attribute name="name" type="xs:NMTOKEN" use="optional"/>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+								<xs:attributeGroup ref="TransformationMapAG"/>
+								<xs:attributeGroup ref="DescriptionAG"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:choice>
+				<xs:element name="profile" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Each "profile" element declares one DAGMan, Condor, VDS, or Unix environment variable.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:group ref="InsideLeaf" maxOccurs="unbounded"/>
+						<xs:attribute name="key" type="xs:string" use="required"/>
+						<xs:attribute name="namespace" type="ProfileNamespace" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attributeGroup ref="DefinitionIdentifierAG"/>
+			<xs:attribute name="argumentSeparator" type="xs:string" use="optional" default=" ">
+				<xs:annotation>
+					<xs:documentation>Please note that the default is a single space.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attributeGroup ref="DescriptionAG"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="derivation">
+		<xs:annotation>
+			<xs:documentation>A "derivation" contains actual parameters. This element must occur, even if the list is empty.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:annotation>
+				<xs:documentation>A "derivation" makes use of previous or outside transformations, and fills the placeholders with specific values.</xs:documentation>
+			</xs:annotation>
+			<xs:sequence>
+				<xs:element name="meta" type="MetaType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Annotates the derivation itself.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:sequence minOccurs="0" maxOccurs="unbounded">
+					<xs:element name="pass">
+						<xs:annotation>
+							<xs:documentation>The "pass" element established the binding between an actual parameter with its named formal counterpart.</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="meta" type="MetaType" minOccurs="0">
+									<xs:annotation>
+										<xs:documentation>Annotates each single actual argument. </xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:choice>
+									<xs:element name="scalar" type="OutsideScalarType"/>
+									<xs:element name="list" type="OutsideListType"/>
+								</xs:choice>
+							</xs:sequence>
+							<xs:attribute name="bind" type="xs:NMTOKEN" use="required"/>
+							<xs:attribute name="name" type="xs:NMTOKEN" use="optional"/>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:sequence>
+			<xs:attributeGroup ref="DefinitionIdentifierAG"/>
+			<xs:attributeGroup ref="TransformationMapAG"/>
+			<xs:attributeGroup ref="DescriptionAG"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="definitions">
+		<xs:annotation>
+			<xs:documentation>The virtual data modification language.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A VDL document consists of any number of "transformation" and "derivation" elements in arbitrary order.</xs:documentation>
+				</xs:annotation>
+				<xs:element ref="transformation"/>
+				<xs:element ref="derivation"/>
+			</xs:choice>
+			<xs:attribute name="version" type="VersionType" use="optional"/>
+			<xs:attribute name="vdlns" type="NamespaceType" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

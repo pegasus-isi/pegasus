@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- edited manually by Jens-S. Vöckler (private) -->
+<definitions xmlns="http://www.griphyn.org/chimera/VDL"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.griphyn.org/chimera/VDL http://www.griphyn.org/chimera/vdl-1.20.xsd"
+ version="2.34" vdlns="diamond">
+  <transformation name="simple">
+    <declare name="name" link="none">
+      <scalar>
+        <text>demo</text>
+      </scalar>
+    </declare>
+    <declare name="a1" link="input"/>
+    <declare name="a2" link="output"/>
+    <argument>
+      <text>-a </text>
+      <use name="name"/>
+    </argument>
+    <argument>
+      <text>-i </text>
+      <use name="a1" link="input"/>
+    </argument>
+    <argument>
+      <text>-o </text>
+      <use name="a2" link="output"/>
+    </argument>
+    <profile namespace="hints" key="pfnHint">
+      <text>/home/voeckler/bin/keg</text>
+    </profile>
+    <profile namespace="hints" key="A">
+      <text>this is simple</text>
+    </profile>
+  </transformation>
+  <transformation name="inner">
+    <declare name="b" link="output" container="scalar"/>
+    <declare name="a" link="input" container="scalar"/>
+    <declare name="p" link="inout">
+      <scalar><lfn file="temp" link="inout"/></scalar>
+    </declare>
+    <call uses="simple">
+      <pass bind="a1">
+        <scalar>
+          <use name="a" link="input"/>
+        </scalar>
+      </pass>
+      <pass bind="a2">
+        <scalar>
+          <use name="p" link="output"/>
+        </scalar>
+      </pass>
+    </call>
+    <call uses="simple">
+      <pass bind="a1">
+        <scalar>
+          <use name="p" link="input"/>
+        </scalar>
+      </pass>
+      <pass bind="a2">
+        <scalar>
+          <use name="b" link="output"/>
+        </scalar>
+      </pass>
+    </call>
+    <profile namespace="hints" key="A">
+      <text>this is inner</text>
+    </profile>
+    <profile namespace="hints" key="B">
+      <text>this is inner</text>
+    </profile>
+  </transformation>
+  <transformation name="middle">
+    <declare name="am" link="input"/>
+    <declare name="bm" link="output"/>
+    <call uses="inner">
+      <pass bind="a"><scalar><use name="am" link="input"/></scalar></pass>
+      <pass bind="b"><scalar><use name="bm" link="output"/></scalar></pass>
+    </call>
+    <profile namespace="hints" key="A">
+      <text>this is middle</text>
+    </profile>
+    <profile namespace="hints" key="B">
+      <text>this is middle</text>
+    </profile>
+    <profile namespace="hints" key="C">
+      <text>this is middle</text>
+    </profile>
+  </transformation>
+  <transformation name="outer">
+    <declare name="ao" link="input"/>
+    <declare name="bo" link="output"/>
+    <call uses="middle">
+      <pass bind="am"><scalar><use name="ao" link="input"/></scalar></pass>
+      <pass bind="bm"><scalar><use name="bo" link="output"/></scalar></pass>
+    </call>
+    <profile namespace="hints" key="A">
+      <text>this is outer</text>
+    </profile>
+    <profile namespace="hints" key="B">
+      <text>this is outer</text>
+    </profile>
+    <profile namespace="hints" key="C">
+      <text>this is outer</text>
+    </profile>
+    <profile namespace="hints" key="D">
+      <text>this is outer</text>
+    </profile>
+  </transformation>
+  <derivation name="single" uses="outer">
+    <pass bind="ao">
+      <scalar>
+        <lfn file="f.a" link="input"/>
+      </scalar>
+    </pass>
+    <pass bind="bo">
+      <scalar>
+        <lfn file="f.d" link="output"/>
+      </scalar>
+    </pass>
+  </derivation>
+</definitions>

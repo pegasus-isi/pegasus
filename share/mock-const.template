@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# Mock site selector: Always return "uofc" for everything, regardless of
+# any input file. This is useful to for testing purposes only.
+#
+# This site selector understands V1 and V2 format of the information files.
+#
+echo "SOLUTION:<worknode>"
+exit 0

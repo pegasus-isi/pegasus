@@ -1,0 +1,41 @@
+#!/bin/sh
+
+#SCRIPT that reads in from the STDIN the files to remove
+#It first transfers the files to a temp directory 
+#where it does a du to estimate the size of the files being 
+#cleaned. This size information is logged to stdout.
+
+
+exitcode() {
+    if [ $1 -ne 0 ] ; then
+	"ERROR "
+	exit $1
+    fi
+}
+
+DIR=`mktemp -d ../temp.XXXXXXX`
+
+while read i
+do
+mv $i $DIR/$i
+exitcode $?
+done
+
+X=`du -s $DIR | awk '{print $1}'`
+
+exitcode $?
+
+#sleep for 2 seconds
+sleep 2 
+
+echo " @@@MAINJOB@@@ " 
+date --iso-8601=seconds
+echo " $X  "
+echo " @@@MAINJOB@@@ "
+
+rm -rf $DIR
+
+exitcode $?
+
+exit 0
+

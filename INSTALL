@@ -1,0 +1,38 @@
+SOFTWARE REQUIRED TO BUILD FROM SOURCE
+=======================================
+
+o ANT v1.6 or higher
+o JAVA v1.5 or higher
+o gcc, gtar, gmake
+
+  OPTIONAL
+
+o  Latex
+o  Condor
+
+
+BUILDING PEGASUS FROM SOURCE
+=========================
+
+o Untar the pegasus-source.*.tar.gz
+o Unset CLASSPATH
+o Set env PEGASUS_HOME=<directory that was untarred>
+o Source $PEGASUS_HOME/setup-devel.csh or setup-devel.sh
+
+BUILD BINARY Package
+====================
+o ant clean dist
+o cd dist
+
+BUILD WORKER Package
+=========================
+
+o ant clean dist-worker
+o cd dist
+
+The PEGASUS binary or worker tar ball should be available in the dist directory
+
+Mail 		: pegasus-discuss@isi.edu
+Bugzilla 	: http://pegasus.isi.edu/bugzilla
+Web 		: http://pegasus.isi.edu
+

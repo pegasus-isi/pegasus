@@ -1,0 +1,8 @@
+vds.rls.url             rls://sheveled.mcs.anl.gov
+vds.replica.mode        rls
+vds.exitcode.mode       all
+vds.transfer.mode       single
+vds.pool.mode           single
+vds.pool.file           /home/voeckler/vds/src/exp/big/pool.config
+vds.tc.mode             single
+vds.tc.file		/home/voeckler/vds/src/exp/big/tc.data

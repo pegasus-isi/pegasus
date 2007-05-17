@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<!--
+
+  $Id: package.html,v 1.6 2005/02/22 19:56:45 griphyn Exp $
+
+  Copyright (c) 2003 The University of Chicago and The University of 
+  Southern California. All Rights Reserved.
+
+-->
+</head>
+<body bgcolor="white">
+
+Provides for the database driver encapsulation. 
+
+<h2>Package Specification</h2>
+
+The classes in this package provide an implementation for different 
+relational database management backend systems. The correct backend 
+system is dynamically instantiated, steered through properties.<p>
+
+<center>
+<map name="p0">
+<area shape="RECT" coords="225,0,375,30" href="DatabaseDriver.html">
+<area shape="RECT" coords="375,100,525,130" href="SQLServer2000.html">
+<area shape="RECT" coords="125,100,225,130" href="MySQL.html">
+<area shape="RECT" coords="250,100,350,130" href="Postgres.html">
+<area shape="RECT" coords="0,100,100,130" href="SQLite.html">
+<area shape="RECT" coords="555,100,655,130" href="Oracle.html">
+
+</map>
+<img src="doc-files/dbdriver-1.gif" usemap="#p0" border="0">
+</center><p>
+
+Shown in black are implemented drivers. Red and black show non-working
+implementations. In red are shown projected drivers that won't work at
+all.<p>
+
+To provide an alternative implementation for an rDBMS, you need to 
+extend {@link org.griphyn.vdl.dbdriver.DatabaseDriver}.
+
+<h2>Related Documentation</h2>
+
+For overviews, tutorials, examples, guides, and tool documentation,
+please see:
+
+<ul>
+  <li><a href="http://www.griphyn.org/workspace/VDS/">GVDS</a>
+  <li><a href="http://www.griphyn.org/chimera/">Chimera</a>
+  <li><a href="http://www.griphyn.org/">GriPhyN</a>
+</ul>
+
+The following properties are understood by most if not all JDBC drivers.
+Please note the GVDS-specific prefix. The asterisk should either be used
+literally, meaning that the driver configuration applies to all
+catalogs, or with the appropriate catalog abbreviation (vdc, ptc,
+tc):<p>
+
+<dl>
+ <dt><b><code>vds.db.*.driver</code></b></dt>
+ <dd>This property names the class that implements
+  the {@link org.griphyn.vdl.dbdriver.DatabaseDriver} for a specific 
+  database engine. If the value is a identifier without periods, the prefix
+  <code>org.griphyn.vdl.dbdrivers.</code> is assumed. Otherwise, the
+  value denotes the complete Java path to the implementing class. Being
+  a class name, capitalization is important.</dd>
+ <dt><b><code>vds.db.*.driver.url</code></b></dt>
+ <dd>The URL under which a database may be access. This URL is often
+  specific to the database itself. However, usually it contains the 
+  host and port (or file) to contact the rDBMS, and the name of the
+  database within the rDBMS.</dd>
+ <dt><b><code>vds.db.*.driver.user</code></b></dt>
+ <dd>This property specifies the name of the database user as which
+  to connect to the database.</dd>
+ <dt><b><code>vds.db.*.driver.password</code></b></dt>
+ <dd>The password property specifies the password of the database user.</dd>
+</dl>
+
+<!-- Put @see and @since tags down here. -->
+
+@see org.griphyn.vdl.dbschema
+
+</body>
+</html>

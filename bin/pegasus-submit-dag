@@ -1,0 +1,231 @@
+#!/usr/bin/env perl
+#
+# wrapper around condor_submit_dag, activates basic throttles
+#
+# This file or a portion of this file is licensed under the terms of
+# the Globus Toolkit Public License, found in file GTPL, or at
+# http://www.globus.org/toolkit/download/license.html. This notice must
+# appear in redistributions of this file, with or without modification.
+#
+# Redistributions of this Software, with or without modification, must
+# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+# some other similar material which is provided with the Software (if
+# any).
+#
+# Copyright 1999-2004 University of Chicago and The University of
+# Southern California. All rights reserved.
+#
+# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
+# Revision : $Revision: 1.16 $
+#
+use 5.006;
+use strict;
+use File::Spec;
+use File::Basename qw(basename);
+use Getopt::Long qw(:config bundling no_ignore_case);
+use Data::Dumper;
+
+# load our own local modules, see PERL5LIB settings
+use Work::Properties;		# parses -Dprop=val from @ARGV
+
+# some reasonable defaults
+my $maxpre = 20;
+my $maxpost = 20;
+my $maxjobs = 0;
+my $dagman;
+my $notify = 'NEVER';
+my $verbose;
+my %props = ();
+
+$main::DEBUG = 1;		# for now
+$main::revision = 'unknown';
+$_ = '$Revision: 1.16 $';      # don't edit, automatically updated by CVS
+$main::revision=$1 if /Revision:\s+([0-9.]+)/o;
+
+sub version() {
+    my $version = `pegasus-version`;
+    chomp($version);
+    print "Pegasus $version, @{[basename($0)]} $main::revision\n";
+    exit 0;
+}
+
+sub usage(;$) {
+    my $msg = shift;
+    print "ERROR: $msg\n" if defined $msg && lc($msg) ne 'help';
+
+    print << "EOF";
+Usage: @{[basename($0)]} [-Dprops] [options] dagfile
+ -Dprop=val     Commandline overwrite for properties, must be initial args!
+ -d|--debug lv  Initializes the level lv of verbosity, default $main::DEBUG
+ -e|--dagman fn Specify an alternative dagman binary to use. 
+ -P|--maxpre N  Maximum number of pre-scripts to run, default $maxpre
+ -p|--maxpost N Maximum number of post-scripts to run, default $maxpost
+ -j|--maxjobs N Maximum number of jobs to submit to Condor, default $maxjobs
+ -n|--notify x  When to notify: Never, Error, Complete; default $notify
+ -v|--verbose   Enter DAGMan verbose mode, default is not
+ -V|--version   Print version number and exit.
+
+A maximum number of 0 means unlimited. 
+
+EOF
+    exit(1);
+}
+
+sub find_exec($) {
+    # purpose: determine location of given binary in $PATH
+    # returns: fully qualified path to binary, undef if not found
+    my $program = shift;
+    foreach my $dir ( File::Spec->path ) {
+        my $fs = File::Spec->catfile( $dir, $program );
+        return $fs if -x $fs;
+    }
+    undef;
+}
+
+sub proxy_duration {
+    # purpose: determine remaining time on grid user proxy
+    # returns: undef in case of error, or remaining time.
+    #
+    my $gpi = File::Spec->catfile( $ENV{'GLOBUS_LOCATION'}, 'bin', 
+				   'grid-proxy-info' );
+    die "ERROR: Unable to find GLOBUS_LOCATION, please check your setup\n"
+	unless exists $ENV{'GLOBUS_LOCATION'} && $ENV{'GLOBUS_LOCATION'};
+    die "ERROR: Unable to execute grid-proxy-info\n"
+	unless -x $gpi;
+    
+    my $left = 0;
+    chomp($left=`$gpi -timeleft`);
+    $? == 0 ? $left + 0 : undef;
+}
+
+sub salvage_logfile($) {
+    # purpose: salvage Condor common log file from truncation
+    # paramtr: $dagfn (IN): Name of dag filename
+    # returns: -
+    #
+    my $dagfn = shift;
+    my $result = undef;
+    local(*DAG,*SUB,*LOG);
+    if ( open( DAG, "<$dagfn" ) ) {
+	# read to to figure out submit files
+	my @x;
+	my %submit = ();
+	while ( <DAG> ) {
+	    next unless /^\s*job/i;
+	    s/[\r\n]+$//;	# safe chomp
+	    @x = split;
+	    $submit{$x[1]} = $x[2]; # dagjobid -> subfn
+	}
+	close DAG;
+
+	if ( $main::DEBUG > 2 ) {
+	    print STDERR "# found the following associations:\n";
+
+	    local $Data::Dumper::Indent = 1;
+	    local $Data::Dumper::Pad = "# ";
+	    print STDERR Data::Dumper->Dump( [\%submit], [qw(config)] );
+	}
+
+	# read two submit files to figure out condor common log file
+	foreach my $subfn ( values %submit ) {
+	    if ( open( SUB, "<$subfn" ) ) {
+		my $logfile = undef;
+		while ( <SUB> ) {
+		    next unless /^log(=|\s)/i;
+		    s/[\r\n]+$//; # safe chomp
+		    @x = split /\s*=\s*/, $_, 2;
+		    $logfile = ( substr( $x[1], 0, 1 ) =~ /[''""]/ ?
+				 substr( $x[1], 1, -1 ) : $x[1] );
+		    last;
+		}
+		close SUB;
+		
+		print STDERR "# $subfn points to $logfile\n"
+		    if ( $main::DEBUG > 1 );
+
+		if ( ! defined $result ) {
+		    $result = $logfile;
+		} else {
+		    last if $result eq $logfile;
+		    warn "# Using distinct, different log files, skipping preservation.\n";
+		    return undef;
+		}
+	    } else {
+		warn "Unable to read sub file $subfn: $!\n";
+	    }
+	}
+
+	# try to preserve log file
+	if ( defined $result && -e $result ) {
+	    my $newfn;
+	    print STDERR "# log $result exists, rescuing from DAGMan.\n" 
+		if $main::DEBUG;
+	    for ( my $i=0; $i<1000; ++$i ) {
+		$newfn = sprintf "%s.%03d", $result, $i;
+		if ( open( LOG, "<$newfn" ) ) {
+		    # file exists
+		    close LOG;
+		} else {
+		    # file does not exist, use that
+		    warn "Rescued $result as $newfn\n" 
+			if rename( $result, $newfn );
+		    last;
+		}
+	    }
+	} else {
+	    print STDERR "# log $result does not yet exist (good)\n"
+		if ( $main::DEBUG );
+	}
+    } else {
+	die "ERROR: Unable to read dag file $dagfn: $!\n";
+    }
+
+    $result;
+}
+
+# check Globus proxy lifetime?
+my $left = proxy_duration() || 
+    die "ERROR: Problems with grid-proxy-info. Check your user proxy\n";
+if ( $left <= 0 ) {
+    die "ERROR: Your grid user proxy has expired, please refresh now.\n";
+} elsif ( $left < 7200 ) {
+    warn "Warning: There is little time remaining on your proxy. You need to refresh soon!\n";
+}
+
+# read various property files -- all the magic is in this c'tor
+my $props = Work::Properties->new();
+
+# set true defaults from properties
+$maxpre = $props->property('pegasus.dagman.maxpre') || $maxpre;
+$maxpost = $props->property('pegasus.dagman.maxpost') || $maxpost;
+$maxjobs = $props->property('pegasus.dagman.maxjobs') || $maxjobs;
+$notify = $props->property('pegasus.dagman.notify') || $notify;
+$verbose = 1 if lc($props->property('pegasus.dagman.verbose')) =~ /(true|on|1)/;
+
+GetOptions( "debug|d=i"    => \$main::DEBUG,
+	    "maxpre|P=i"   => \$maxpre,
+	    "maxpost|p=i"  => \$maxpost,
+	    'dagman|e=s' => \$dagman, 
+	    "maxjob|maxjobs|j=i" => \$maxjobs,
+	    "notify|n=s" => \$notify,
+	    "version|V" => \&version,
+	    "verbose|v" => \$verbose,
+	    "help|h|?" => \&usage );
+
+my $dag = shift || usage("Need the name of a .dag file\n");
+my $c_s_d = find_exec( 'condor_submit_dag' ) ||
+    die "Unable to locate condor_submit_dag\n";
+salvage_logfile($dag);
+
+# construct commandline
+my @arg = ( $c_s_d );
+push( @arg, '-dagman', $dagman ) if $dagman;
+push( @arg, '-MaxPre', $maxpre ) if $maxpre > 0;
+push( @arg, '-MaxPost', $maxpost ) if $maxpost > 0;
+push( @arg, '-maxjobs', $maxjobs ) if $maxjobs > 0;
+push( @arg, '-notification', $notify );
+push( @arg, '-verbose' ) if $verbose;
+push( @arg, $dag );
+print STDERR "# @arg\n" if $main::DEBUG;
+exec { $arg[0] } @arg;
+exit 127;			# if exec didn't work

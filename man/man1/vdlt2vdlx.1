@@ -1,0 +1,155 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: vdlt2vdlx.1,v 1.6 2005/08/16 18:28:58 griphyn Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.\"
+.TH vdlt2vdlx 1 "Mai, 3rd 2004"
+.SH NAME
+vdlt2vdlx \- converts VDLt into VDLx 
+.SH SYNOPSIS
+.B vdlt2vdlx 
+[\-Dprop [..]] [\-n\~vdlns] [\-v\~version] in.vdl out.xml
+.br
+.B vdlt2vdlx
+[\-Dprop [..]] [\-n\~vdlns] [\-v\~version] in.vdl > out.xml
+.br
+.B vdlt2vdlx
+[\-Dprop [..] [\-n\~vdlns] [\-v\~version] < in.vdl > out.xml
+.br
+.B vdlt2vdlx
+[\-Dprop [..] \-V
+.SH DESCRIPTION
+The translator converts the textual representation of VDL, called VDLt,
+into the XML representation of VDL, called VDLx. The textual
+representation is meant for human consumption and wall\-talk sessions.
+The XML version is meant for machine consumption, data transfer and
+computation.
+.SH ARGUMENTS
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+A CLI property take precedence over the properties file property 
+of the same key.
+.TP
+.B \-n vdlns
+.PD 0
+.TP
+.PD 1
+.B \-\-vdlns vdlns
+.PD 0
+.TP
+.PD 1
+.B \-\-ns vdlns
+This parameter allows to set the value for the 
+.I vdlns
+attribute that is part of the generated definitions. The attribute will
+become the default namespace of all enclosed definitions, unless they
+set a namespace of their own.
+.PP
+By default, the 
+.I vdlns
+attribute is null, and will not be set in the output.
+.TP
+.B \-v version
+.PD 0
+.TP
+.PD 1
+.B \-\-vdlvs version
+sets the version number of a definition. The version will become the
+default version number of all  enclosed definitions, unless they
+set a version of their own.
+.PP
+By default, the 
+.I version
+attribute is 1.0 to be backward compatible.
+.TP
+.B in.vdl
+In the one or two argument form, the first argument specifies the 
+file to read VDLt from. 
+.IP
+Default is to read from
+.IR stdin .
+.TP
+.B out.xml
+is the optional second argument to put the new definitions into. 
+.IP
+Default is to write to
+.IR stdout .
+.TP
+.B \-V
+.PD 0
+.TP
+.PD 1
+.B \-\-version
+displays the version of the GriPhyN Virtual Data System you are using.
+.TP
+.B \-\-verbose
+increases the verbosity of messages protocolled. 
+.SH "RETURN VALUE"
+Regular and planned program terminations will result in an exit code of
+0. Abnormal termination, e.g. on parsing errors, will result in a
+non-zero exit code.
+.SH FILES
+.TP
+.B $VDS_HOME/etc/vdl-1.23.xsd
+is the suggested location of the latest XML schema to read the database.
+.TP
+.B $VDS_HOME/etc/properties
+contains the system properties with all configurable options.
+.TP
+.B $HOME/.vdsrc
+contains the user properties with all configurable options.
+.TP
+.B gvds.jar
+contains all compiled Java bytecode to run the GriPhyN Virtual Data System.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B $VDS_HOME
+is the suggested base directory of your the execution environment.
+.TP
+.B $JAVA_HOME
+should be set and point to a valid location to start the intended Java
+virtual machine as
+.IR $JAVA_HOME/bin/java .
+.TP
+.B $CLASSPATH
+should be set to contain all necessary files for the execution environment.
+Please make sure that your 
+.I CLASSPATH
+includes the Xerces 2.6 classes.
+.SH "SEE ALSO"
+.BR vdlx2vdlt (1),
+.BR insertvdc (1).
+.\".SH EXAMPLE
+.SH RESTRICTIONS
+Plenty. 
+.SH AUTHORS
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>,
+.br
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.PP
+VDS
+.B http://www.griphyn.org/vds/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

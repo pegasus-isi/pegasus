@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# generate a Concrete Dag by providing a DAX
+#
+# $Id: gencdag,v 1.7 2005/09/10 02:12:19 gmehta Exp $
+
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java "-pegasus.home=${PEGASUS_HOME}" $addon org.griphyn.cPlanner.toolkit.CPlanner "$@"

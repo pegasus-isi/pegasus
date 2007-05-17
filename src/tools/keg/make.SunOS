@@ -1,0 +1,8 @@
+#!/bin/sh
+gmake distclean
+gmake EXTRACXXFLAGS='$(V7FLAGS)' keg
+mv keg keg.sparcv7
+gmake clean
+gmake EXTRACXXFLAGS='$(V9FLAGS)' keg
+mv keg keg.sparcv9
+gmake clean

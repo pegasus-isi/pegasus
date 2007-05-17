@@ -1,0 +1,255 @@
+/*
+ * This file or a portion of this file is licensed under the terms of
+ * the Globus Toolkit Public License, found in file GTPL, or at
+ * http://www.globus.org/toolkit/download/license.html. This notice must
+ * appear in redistributions of this file, with or without modification.
+ *
+ * Redistributions of this Software, with or without modification, must
+ * reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+ * some other similar material which is provided with the Software (if
+ * any).
+ *
+ * Copyright 1999-2004 University of Chicago and The University of
+ * Southern California. All rights reserved.
+ */
+package org.griphyn.cPlanner.engine;
+
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.Data;
+import org.griphyn.cPlanner.classes.JobManager;
+import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.SubInfo;
+
+import org.griphyn.cPlanner.common.LogManager;
+import org.griphyn.cPlanner.common.PegasusProperties;
+
+import org.griphyn.common.catalog.TransformationCatalogEntry;
+import org.griphyn.common.catalog.transformation.TCMode;
+
+import org.griphyn.common.classes.TCType;
+
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
+/**
+ * Ends up creating a cleanup dag that deletes the remote directories that
+ * were created by the create dir jobs. The cleanup dag is generated in a
+ * sub directory from the main directory containing the submit files of the
+ * dag. The dag consists of independant jobs, with each job responsible for
+ * deleting directory for a execution pool. The current way of generating the
+ * dag is tied to the fact, that the directories in which a job are executed
+ * is tied to the pool not the job itself.
+ *
+ * @author Karan Vahi
+ * @version $Revision: 1.9 $
+ * @see CreateDirectory
+ */
+public class RemoveDirectory extends Engine {
+
+    /**
+     * The prefix that is attached to the name of the dag for which the
+     * cleanup Dag is being generated, to generate the name of the cleanup
+     * Dag.
+     */
+    public static final String CLEANUP_DAG_PREFIX = "del_";
+
+    /**
+     * Constant suffix for the names of the remote directory nodes.
+     */
+    public static final String REMOVE_DIR_SUFFIX = "_rdir";
+
+    /**
+     * The concrete dag so far, for which the clean up dag needs to be generated.
+     */
+    private ADag mConcDag;
+
+    /**
+     * The overloaded constructor that sets the dag for which we have to
+     * generated the cleanup dag for.
+     *
+     * @param concDag  the concrete dag for which cleanup is reqd.
+     * @param properties the <code>PegasusProperties</code> to be used.
+     */
+    public RemoveDirectory( ADag concDag, PegasusProperties properties ) {
+        super( properties );
+        mConcDag = concDag;
+        mTCHandle = TCMode.loadInstance();
+    }
+
+    /**
+     * Generates a cleanup DAG for the dag associated with the class. Creates a
+     * cleanup node per remote pool. It looks at the ADAG, to determine the
+     * sites at which the jobs in the dag have been scheduled.
+     *
+     * @return the cleanup DAG.
+     * @see org.griphyn.cPlanner.classes.ADag#getExecutionSites()
+     */
+    public ADag generateCleanUPDAG(){
+        return this.generateCleanUPDAG(mConcDag);
+    }
+
+
+    /**
+     * Generates a cleanup DAG for the dag object passed. Creates a cleanup
+     * node per remote pool. It looks at the ADAG, to determine the sites at
+     * which the jobs in the dag have been scheduled.
+     *
+     * @param dag  the dag for which cleanup dag needs to be generated.
+     *
+     * @return the cleanup DAG.
+     * @see org.griphyn.cPlanner.classes.ADag#getExecutionSites()
+     */
+    public ADag generateCleanUPDAG(ADag dag){
+        ADag cDAG = new ADag();
+        cDAG.dagInfo.nameOfADag = this.CLEANUP_DAG_PREFIX + dag.dagInfo.nameOfADag;
+        cDAG.dagInfo.index      = dag.dagInfo.index;
+
+        Set pools = this.getCreateDirSites(dag);
+        String pool    = null;
+        String jobName = null;
+
+        //remove the entry for the local pool
+        //pools.remove("local");
+
+        for(Iterator it = pools.iterator();it.hasNext();){
+            pool    = (String)it.next();
+            jobName = getRemoveDirJobName(dag,pool);
+            cDAG.add(makeRemoveDirJob(pool,jobName));
+        }
+
+        return cDAG;
+    }
+
+    /**
+     * Retrieves the sites for which the create dir jobs need to be created.
+     * It returns all the sites where the compute jobs have been scheduled.
+     *
+     * @param dag the workflow for which the sites have to be computed.
+     *
+     * @return  a Set containing a list of siteID's of the sites where the
+     *          dag has to be run.
+     */
+    public Set getCreateDirSites(ADag dag){
+        Set set = new HashSet();
+
+        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
+            SubInfo job = (SubInfo)it.next();
+            //add to the set only if the job is
+            //being run in the work directory
+            //this takes care of local site create dir
+            if(job.runInWorkDirectory()){
+                set.add(job.executionPool);
+            }
+        }
+
+        //remove the stork pool
+        set.remove("stork");
+
+        return set;
+    }
+
+
+    /**
+     * It returns the name of the remove directory job, that is to be assigned.
+     * The name takes into account the workflow name while constructing it, as
+     * that is thing that can guarentee uniqueness of name in case of deferred
+     * planning.
+     *
+     * @param dag   the dag for which the cleanup DAG is being generated.
+     * @param pool  the execution pool for which the remove directory job
+     *              is responsible.
+     *
+     * @return String corresponding to the name of the job.
+     */
+    private String getRemoveDirJobName(ADag dag,String pool){
+        StringBuffer sb = new StringBuffer();
+        sb.append(dag.dagInfo.nameOfADag).append("_").
+           append(dag.dagInfo.index).append("_").
+           append(pool).append(this.REMOVE_DIR_SUFFIX);
+
+       return sb.toString();
+    }
+
+
+    /**
+     * It creates a remove directory job that creates a directory on the remote pool
+     * using the perl executable that Gaurang wrote. It access mkdir underneath.
+     * It gets the name of the random directory from the Pool handle.
+     *
+     * @param execPool  the execution pool for which the create dir job is to be
+     *                  created.
+     * @param jobName   the name that is to be assigned to the job.
+     */
+    private SubInfo makeRemoveDirJob(String execPool, String jobName) {
+        SubInfo newJob  = new SubInfo();
+        List entries    = null;
+        String execPath = null;
+        TransformationCatalogEntry entry   = null;
+        JobManager jm   = null;
+
+        try {
+            entries = mTCHandle.getTCEntries(null,
+                                               CreateDirectory.CREATE_DIR_TRANSFORMATION, null,
+                                               execPool, TCType.INSTALLED);
+
+            if(entries == null){
+                StringBuffer error = new StringBuffer();
+                error.append( "Unable to map transformation " ).
+                      append( CreateDirectory.CREATE_DIR_TRANSFORMATION ).append( " on site " ).
+                      append( execPool );
+                mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
+                throw new RuntimeException( error.toString() );
+            }
+            else{
+                entry = (TransformationCatalogEntry) entries.get(0);
+                execPath = entry.getPhysicalTransformation();
+            }
+
+        } catch (Exception e) {
+            //non sensical catching
+            mLogger.log("Unable to retrieve entry from TC " + e.getMessage(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+        }
+
+        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
+        jm = ePool.selectJobManager("transfer",true);
+        String argString = "--verbose --remove --dir " +
+            mPoolHandle.getExecPoolWorkDir(execPool);
+
+        newJob.jobName = jobName;
+        newJob.logicalName = CreateDirectory.CREATE_DIR_TRANSFORMATION;
+        newJob.namespace = CreateDirectory.TRANSFORMATION_NS;
+        newJob.version = null;
+        newJob.dvName = CreateDirectory.CREATE_DIR_TRANSFORMATION;
+        newJob.dvNamespace = CreateDirectory.DERIVATION_NS;
+        newJob.dvVersion = CreateDirectory.DERIVATION_VERSION;
+        newJob.condorUniverse = "vanilla";
+        newJob.globusScheduler = jm.getInfo(JobManager.URL);
+        newJob.executable = execPath;
+        newJob.executionPool = execPool;
+        newJob.strargs = argString;
+        newJob.jobClass = SubInfo.CREATE_DIR_JOB;
+        newJob.jobID = jobName;
+
+        //the profile information from the pool catalog needs to be
+        //assimilated into the job.
+        newJob.updateProfiles(mPoolHandle.getPoolProfile(newJob.executionPool));
+
+        //the profile information from the transformation
+        //catalog needs to be assimilated into the job
+        //overriding the one from pool catalog.
+        newJob.updateProfiles(entry);
+
+        //the profile information from the properties file
+        //is assimilated overidding the one from transformation
+        //catalog.
+        newJob.updateProfiles(mProps);
+
+
+        return newJob;
+
+    }
+
+
+}

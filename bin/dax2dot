@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# generate GraphViz dot formatn from a dax file 
+# $Id: dax2dot,v 1.6 2005/07/26 18:48:24 griphyn Exp $
+#
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java -pegasus.home=${PEGASUS_HOME} $addon org.griphyn.vdl.toolkit.VizDAX "$@"

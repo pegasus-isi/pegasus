@@ -1,0 +1,332 @@
+#!/usr/bin/env perl
+#
+# Shows the application and the duration from a kickstart record
+#
+use 5.006;
+use strict;
+use File::Basename;
+use XML::Parser::Expat;
+use Getopt::Long qw(:config bundling no_ignore_case);
+use POSIX qw(strftime);
+
+# version information from CVS
+$main::version = 'unknown';
+$_ = '$Revision: 1.8 $';       # don't edit
+$main::version = $1 if /Revision:\s+([0-9.]+)/o;
+
+$main::debug = 0;
+%main::jobtags = ( 'mainjob' => 1, 'prejob' => 1, 'postjob' => 1, 
+		   'setup' => 1, 'cleanup' => 1 );
+my $minutes = 0;
+
+sub usage {
+    my $base = basename($0);
+    print << "EOF";
+Usage: base [options] f1 [f2 [..]]
+
+Mandatory arguments: 
+  fX   any number of kickstart output records. Your shell will be happy to 
+       expand your meta characters like * and ?. Uses stdin as default.
+
+Optional arguments:
+ -h|--help      this little text.
+ -d|--debug     each occurance increases the debug level.
+ -V|--version   print version information and exit. 
+ -m|--match re  only use events whose argv matches re.
+ -S|--sum       provide a sum of all tallies.
+ --totals       show only totals statistics.
+ --minutes      show durations in up-rounded minutes.
+
+EOF
+    exit 1;
+}
+
+sub isodate(;$) {
+    # purpose: convert seconds since epoch into ISO timestamp
+    # paramtr: $seconds (opt. IN): seconds since epoch, now is default
+    # returns: string of ISO timestamp
+    my $now = shift || time();
+
+    my $a = strftime( "%Y-%m-%dT%H:%M:%S", localtime($now) );
+    my $b = strftime( "%z", localtime($now) );
+    substr( $b, -2, 0, ':' );
+    $a . '.000' . $b;
+}
+
+sub deviation($@) {
+    # purpose: compute the standard deviations
+    # paramtr: $sum (IN): sum over all elements
+    #          @x (IN): elements 
+    # returns: [0] unbiased standard deviation
+    #          [1] max likelihood standard deviation
+    #
+    my $sum = shift;
+    my $n = @_;
+    my $avg = $sum / $n;
+    my ($result,$diff);
+    foreach my $x ( @_ ) {
+	$diff = $x - $avg;
+	$result += $diff*$diff;
+    }
+
+    ( sqrt( $result / ($n-1) ), sqrt( $result / $n ) );
+}
+
+sub quartile {
+    # purpose: compute quartiles
+    # paramtr: @x (IN): assume sorted input array of numbers
+    # warning: using the weighted average method
+    # returns: [0]: 1st quartile
+    #          [1]: 2nd quartile aka median
+    #          [2]: 3rd quartile
+    #
+    my $n = @_;
+    my @result = ();
+    for ( my $i=1; $i<=3; ++$i ) {
+	my ($frac,$int) = POSIX::modf( $i * $n / 4.0 );
+	$result[$i-1] = $_[$int] + $frac * abs( $_[$int+1] - $_[$int] );
+    }
+    @result;
+}
+
+sub transform {
+    my @result = ();
+    foreach my $arg ( @_ ) {
+	if ( length($arg) < 30 ) {
+	    push( @result, $arg );
+	} elsif ( index($arg,' ')>0 ) {
+	    push( @result, transform(split(/\s+/,$arg)) );
+	} elsif ( index($arg,'/')>=0 ) {
+	    push( @result, basename($arg) );
+	} else {
+	    push( @result, $arg );
+	}
+    }
+    join( ' ', @result );
+}
+
+# set callback structures
+sub parse($) {
+    my $chunk = shift;
+    my @result = ();
+
+    for ( my $i=0; $i<@{$chunk}; ++$i ) {
+	$chunk->[$i] =~ s/[\x00-\x1f\x7f-\xff]+//g;
+	# $_ = substr( $chunk->[$i], 0, 70 );
+	# printf STDERR "# %4d: $_\n", $i+1;
+    }
+
+    my @stack = ();
+    my %db = ();
+    my ($what,$arg);
+    my $parser = new XML::Parser::Expat( 'Namespaces' => 1 ) ||
+	die "ERROR: Unable to instantiate XML parser\n";
+
+    $parser->setHandlers( 'Start' => sub {
+	my $self = shift;
+	my $element = shift;
+	my %attr = @_;
+	push( @stack, $element );
+
+	if ( @stack >= 2 ) {
+	    if ( $main::jobtags{$element} ) {
+		%db = ( job => '', raw => -1, arg => [], 
+			start => $attr{start}, duration => $attr{duration} );
+		$db{duration} /= 60.0 if $minutes;
+	    } elsif ( $main::jobtags{$stack[1]} ) {
+		if ( @stack == 3 && $element eq 'status' ) {
+		    $db{raw} = $attr{raw};
+		} elsif ( @stack == 4 && $element eq 'file' ) {
+		    $db{job} = $attr{name};
+		} elsif ( @stack == 4 && $element eq 'arg' ) {
+		    $what = $attr{nr} - 1;
+		    $arg = '';
+		}
+	    }
+	}
+	1;
+    }, 'End' => sub {
+	my $self = shift;
+	my $element = shift;
+	my $result = ( pop(@stack) eq $element );
+	
+	if ( @stack > 2 && $main::jobtags{$stack[1]} && $element eq 'arg' ) {
+	    $db{arg}[$what] = $arg;
+	}
+
+	if ( $main::jobtags{$element} ) {
+	    push( @result, { start => $db{start},
+			     duration => $db{duration},
+			     status => $db{raw},
+			     jobtype => $element,
+			     argv => [ $db{job}, @{$db{arg}} ] } );
+	}
+	$result;
+    }, 'Char' => sub {
+        my $self = shift;
+	if ( @stack > 2 && $main::jobtags{$stack[1]} && 
+	     $stack[$#stack] eq 'arg' ) {
+	    local($_) = shift;
+	    $arg .= $_ unless ( /^\s*$/ );
+	}
+        1;
+    } );
+
+    $parser->parse( join('', @{$chunk}) );
+    @result;
+}
+
+sub show($$;$) {
+    # purpose: format and print statistics
+    # paramtr: $msg (IN): what 
+    #          $x (IN): value
+    # returns: formatted string
+    my $msg = shift;
+    my $x = shift;
+    my $width = shift;
+    my $what = $minutes ? 'min' : 's';
+
+    my $result;
+    if ( defined $width && $width >= 0 ) {
+	$result = sprintf " %*.3f $what %s", $width+0, $x, $msg;
+    } else {
+	$result = sprintf " %.3f $what %s", $x, $msg;
+    }
+
+    if ( $minutes ) {
+	$result .= sprintf " (%.1f h)", $x / 60.0;
+    } else {
+	if ( $x > 150 ) {
+	    $result .= sprintf " (%.2f min", $x/60.0;
+	    if ( $x > 3600 ) {
+		$result .= sprintf "; %.1f h", $x/3600.0;
+	    }
+	    $result .= ")";
+	}
+    }
+    $result;
+}
+
+sub exitline($) {
+    my $raw = shift;
+    if ( $raw == -1 ) {
+	sprintf " %d", $raw;
+    } else {
+	sprintf "%d/%d", (( $raw >> 8 ) & 255), ( $raw & 127 );
+    }
+}
+
+my ($match,$showsum);
+my $totals = 0;
+GetOptions( 'help|h' => \&usage,
+	    'debug|d+' => \$main::debug,
+	    'sum|S' => \$showsum,
+	    'minutes' => \$minutes,
+	    'totals' => \$totals,
+	    'version|V' => sub { print "$main::version\n"; exit(0) },
+	    'match|m=s' => \$match );
+
+# make stdin default, if no files
+push( @ARGV, '-' ) if @ARGV == 0;
+
+# parse all files into result.
+my (@result,@x,@backmap) = ();
+for my $fn ( @ARGV ) {
+    if ( -s $fn == 0 ) {
+	warn "# ignoring empty $fn\n";
+    } elsif ( open( OUT, $fn ) ) {
+	my $state = 0;
+	my @save = ();
+        # $start = '';
+	# $duration = $count = 0;
+	while ( <OUT> ) {
+	    if ( $state == 0 ) {
+		if ( m{^\s*<invocation\s} ) {
+		    $state = 1;
+		    push( @save, $_ );
+		}
+	    } elsif ( $state == 1 ) {
+		push( @save, $_ );
+		if ( m{^\s*</invocation>} ) {
+		    if ( (@x = parse( \@save )) > 0 ) {
+			if ( defined $match ) {
+			    my @y = ();
+			    foreach my $x ( @x ) {
+				if ( join(' ',@{$x->{argv}}) =~ /$match/o ) {
+				    push(@y,$x);
+				}
+			    }
+			    @x = @y;
+			}
+			push( @result, @x );
+			my $n = @backmap;
+			for ( my $i=$n; $i<$n+@x; ++$i ) {
+			    $backmap[$i] = $fn;
+			}
+		    }
+		    $state = @save = ();
+		}
+	    }
+	}
+
+	warn "Warning: Corrupt file $fn\n" if $state;
+	close OUT;
+    } else {
+	warn "Unable to read $fn: $!, skipping\n";
+    }
+}
+
+warn( "# found ", @result+0, " results\n" ) if $main::debug;
+
+
+printf "%29s %9s %3s %7s %s\n", 
+	'START_TIMESTAMP', 'SPAN_[s]', 'E/S', 'JOBTYPE', 'ARGUMENTS'
+    unless $totals;
+
+sub datesort {
+    $a->{start} = isodate($^T) if $a->{start} =~ /^19[67]/;
+    $b->{start} = isodate($^T) if $b->{start} =~ /^19[67]/;
+    $a->{start} cmp $b->{start}
+}
+
+foreach my $db ( @result ) {
+    if ( $db->{start} =~ /^19(?:69|70)/ ) {
+	$db->{savetime} = $db->{start};
+	$db->{start} = isodate($^T);
+    }
+}
+
+my (@sum,$sum);
+foreach my $db ( sort datesort @result ) {
+    my $x = transform( @{$db->{argv}} );
+    substr( $x, 72, length($x)-72, '..' ) if length($x) > 72;
+    printf( "%s %9.3f %s %-7s $x\n", 
+	    exists $db->{savetime} ? $db->{savetime} : $db->{start}, 
+	    $db->{duration}, 
+	    exitline( $db->{status} ),$db->{jobtype} )
+	unless $totals;
+    push( @sum, $db->{duration} );
+    $sum += $db->{duration};
+}
+
+print( show( 'SEQENTIAL-SUM', $sum, 9 ), "\n" )
+    if ( defined $showsum && $showsum );
+
+if ( @sum > 1 && defined $match ) {
+    @sum = sort { $a <=> $b } @sum;
+    my @qt = quartile( @sum );
+    my @dv = deviation($sum,@sum);
+    print( "STATISTICS: ", @sum+0, " elements\n",
+	   show( 'minimum', $sum[0] ), "\n",
+	   show( '1st qtl', $qt[0] ), "\n",
+	   show( 'average', $sum/@sum ), "\n",
+	   show( 'median ', $qt[1] ), "\n",
+	   show( '3rd qtl', $qt[2] ), "\n",
+	   show( 'maximum', $sum[$#sum] ), "\n",
+	   show( 'max. lik. standard deviation', $dv[1] ), "\n",
+	   show( 'unbiased standard deviation', $dv[0] ), "\n",
+	   show( 'qartile spread', abs($qt[2]-$qt[0]) ), "\n",
+	   show( 'max-min spread', abs($sum[$#sum]-$sum[0]) ), "\n",
+	   sprintf( "%9.3f ratio thereof\n", 
+		    abs($sum[$#sum]-$sum[0]) / abs($qt[2]-$qt[0]) ) );
+}

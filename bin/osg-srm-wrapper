@@ -1,0 +1,36 @@
+#!/bin/sh
+
+if [ "X${OSG_GRID}" = "X"  ]; then
+   echo 'Please set the $OSG_GRID environment variable' 1>&2
+   exit 1
+fi
+
+
+if [ -r "$OSG_GRID/setup.sh" ];then
+   echo "Going to source $OSG_GRID/setup.sh" 1>&2
+   source $OSG_GRID/setup.sh
+else
+   echo "$OSG_GRID/setup.sh does not exist!" 1>&2
+   exit 1
+fi
+
+#construct the arguments
+arguments="$@"
+
+
+if [ -r "$OSG_GRID/srmclient/bin/srmcp" ];then
+   executable="$OSG_GRID/srmclient/bin/srmcp"   
+   command="$executable $arguments"
+
+   echo "Command to run is " 1>&2
+   echo $command 1>&2
+
+   $command 
+   exit $?
+
+else
+    echo "Unable to find srmcp client at $OSG_GRID/srmclient/bin/srmcp" 1>&2
+    exit 1
+fi
+
+exit 0

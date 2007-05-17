@@ -1,0 +1,924 @@
+#!/usr/bin/env perl
+#
+# With a given DAX file and configuration, check for sanity. Sanity means
+# checking, if a planner will find immediate and obvious errors.
+#
+# Usage: pegasus-verify [opt.] daxfile
+#
+# This file or a portion of this file is licensed under the terms of
+# the Globus Toolkit Public License, found in file GTPL, or at
+# http://www.globus.org/toolkit/download/license.html. This notice must
+# appear in redistributions of this file, with or without modification.
+#
+# Redistributions of this Software, with or without modification, must
+# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+# some other similar material which is provided with the Software (if
+# any).
+#
+# Copyright 1999-2004 University of Chicago and The University of
+# Southern California. All rights reserved.
+#
+# Author: Jens-S. Vöckler voeckler at cs dot uchicago dot edu
+# Revision : $Revision: 1.17 $
+# 
+use 5.006;			# this will make your perl fail if too old
+use strict;
+use Socket;			# std module
+use File::Basename;		# std module
+use Getopt::Long qw(:config bundling no_ignore_case); # semi-std module
+#use XML::Parser::Expat;	# load at run-time on demand
+
+# our modules from PERL5LIB
+use Work::Common;		
+use Work::Properties qw(:parse %initial %system);
+use GriPhyN::WF;
+use GriPhyN::RC;
+use GriPhyN::SC;
+use GriPhyN::TC;
+
+# perl module list for checking
+#
+my %perl_mod = ( 'Archive::Tar'   => [ 0 ],
+		 'AutoLoader'     => [ 1 ], # perl's
+		 'Carp'           => [ 1 ], # perl's
+		 'Config'         => [ 1 ], # perl's
+		 'Compress::Zlib' => [ 0 ],
+		 'Cwd'            => [ 0 ],
+		 'DBI'            => [ 2, '1.38' ],
+		 'DBD::SQLite2'   => [ 0 ],
+		 'DB_File'        => [ 0 ],
+		 'Data::Dumper'   => [ 1 ], # perl's
+		 'Digest::MD5'    => [ 1 ],
+		 'Errno'          => [ 1 ], # perl's ??
+		 'Exporter'       => [ 2, '5.0' ], # perl's
+		 'Fcntl'          => [ 1 ], # perl's ??
+		 'File::Basename' => [ 1 ],
+		 'File::Path'     => [ 1 ],
+		 'File::Spec'     => [ 1 ], # perl's
+		 'File::Temp'     => [ 2, '0.14' ],
+		 'File::Copy'     => [ 2, '2.01' ], # perl's > 5.6.1
+		 'Getopt::Long'   => [ 1 ],
+		 'Getopt::Std'    => [ 1 ],
+		 'POSIX'          => [ 1 ], # perl's
+		 'HTML::Entities' => [ 0 ],
+		 'HTML::Tagset'   => [ 0 ],
+		 'HTTP::Status'   => [ 0 ],
+		 'IO::File'       => [ 1 ],
+		 'IO::Socket'     => [ 1 ],
+		 'IPC::Open2'     => [ 1 ],
+		 'RPC::XML'       => [ 0 ],
+		 'Site::Intent'   => [ 1 ], # ours
+		 'Site::Selector' => [ 1 ], # ours
+		 'Socket'         => [ 1 ], # perl's
+		 'Sys::Hostname'  => [ 1 ],
+		 'Time::HiRes'    => [ 2, '1.51' ],
+		 'Time::Local'    => [ 1 ],
+		 'URI'            => [ 2, '1.32' ],
+		 'Work::Common'   => [ 1 ], # ours
+		 'Work::Workflow' => [ 1 ], # ours
+		 'XML::Simple'    => [ 1 ],
+		 'XML::Parser::EasyTree' => [ 0 ],
+		 'XML::Parser::Expat' => [ 2, '2.29' ],
+		 'XML::Parser'    => [ 2, '2.29' ] );
+
+my %extra_mod = ( postgresql => [ 'DBD::Pg',      [ 2, '1.40' ] ],
+		  Pg         => [ 'DBD::Pg',      [ 2, '1.40' ] ],
+		  mysql      => [ 'DBD::mysql',   [ 2, '2.9003' ] ],
+		  sqlite     => [ 'DBD::SQLite2', [ 2, '0.30' ] ],
+		  SQLite2    => [ 'DBD::SQLite2', [ 2, '0.30' ] ] );
+
+my $basename = basename($0,'.pl');
+sub usage(;$);                  # { }
+$main::DEBUG = 0;		# debug mode
+my $planner = 1;		# 1: Pegasus
+my $extra_quiet = 0;		# extra quiet
+my $encoding = 'ISO-8859-1';	# protocol encoding of DAX file
+GetOptions( "help|h" => \&usage,
+	    "quiet|q" => \$extra_quiet, 
+	    "encoding|E=s" => \$encoding, 
+	    "debug|d+" => \$main::DEBUG );
+
+# initial sanity
+usage(1) unless ( $planner >= 1 && $planner <= 2 );
+my $daxfn = shift || usage(1);
+fatal( 'ini', "dax file $daxfn is not readable" ) unless -r $daxfn;
+debug( 1, 'ini', "checking setup for planner $planner" );
+my $user = $ENV{LOGNAME} || $ENV{USER} || scalar getpwuid($<);
+
+# --- functions -------------------------------------------------
+
+sub usage(;$) {
+    # purpose: report usage and exit
+    my $ec = shift || 0;
+    print << "EOF";
+
+Usage: $basename  daxfile
+
+Mandatory arguments:
+ daxfile               location to the DAX file to run.
+
+Optional arguments:
+ -h|--help             print this help message and exit.
+ -d|--debug            switch on debugging verbosity.
+ -q|--quiet            try to be extra quiet, cancels debug mode.
+
+EOF
+    exit($ec);
+}
+
+sub load_module($$) {
+    # purpose: dynamically load a module at run-time
+    # warning: This function must reside in module 'main' ???
+    # paramtr: $config (IN): hash reference configuring the module
+    #          $base (IN): Perl name of the base module (name prefix)
+    # returns: an instance towards the module, or undef for failure
+    die 'need a hash reference' unless ref($_[0]) eq 'HASH';
+    my %temp = %{ shift() };
+    my $base = shift || die "need the name of the module to load";
+    no strict 'refs';
+
+    # create module name
+    $base .= '::' unless substr($base,-2) eq '::';
+    my $module = $base . $temp{style};
+    
+    # dynamically load module at run-time into main namespace
+    eval "require $module;";
+    die $@ if $@;
+    # import the exported variable (module ISA exporter)
+    $module->import() if $module->can('import');
+    
+    my $handle = undef;
+    eval { $handle = $module->new(%temp) };
+    if ( defined $handle ) {
+	debug( 1, 'mod', "loaded @{[ref($handle)]} [ @{[$handle->VERSION]} ]" );
+    } else {
+	$@ =~ s/[\r\n]+//g;
+	$@ =~ s/ at .*$// if index($@,__PACKAGE__);
+	# log( 'ERROR while instantiating module: ', $@ );
+	die( 'ERROR while instantiating module: ', "$@\n" );
+    }
+    
+    $handle;
+}
+
+sub fatal {
+    # purpose: Fail with a reason why something is mis-setup
+    # paramtr: $tag (IN): which portion of the checking failed (3 chars)
+    #          ... (IN): elaborate reason why something failed
+    # returns: exits with an error
+    my $tag = shift;
+    die "ERROR [$tag]: @_\n";
+}
+
+sub warning {
+    # purpose: Warn if something is not quite right, but not doomed either. 
+    # paramtr: $tag (IN): which portion of the checking failed (3 chars)
+    #          ... (IN): elaborate reason why something may fail
+    # returns: -
+    my $tag = shift;
+    print STDERR "WARNING [$tag]: @_\n";
+}
+
+sub debug {
+    # purpose: Report what you are doing.
+    # paramtr: $level (IN): minimum level to print this debug message
+    #          $tag (IN): which portion of the checking we are in (3 chars)
+    #          ... (IN): elaborate description of what we are doing
+    # returns: -
+    my $level = shift;
+    my $tag = shift;
+    print STDERR "# [$tag] @_\n" if ( $main::DEBUG >= $level );
+}
+
+sub combine($$$) {
+    # purpose: combines a fully-qualified definition identifier from parts
+    # returns: concatenated version
+    my $ns = shift;
+    my $id = shift;
+    my $vs = shift;
+
+    my $result = ( defined $ns ? $ns . '::' . $id : $id );
+    $result .= ":$vs" if defined $vs;
+    $result;
+}
+
+sub exitcode(;$) {
+    # purpose: translate exit status
+    # paramtr: $ec (opt. IN): $?
+    # returns: clear text message of exit status
+    my $ec = shift;
+    $ec = $? unless defined $ec;
+
+    my $result;
+    if ( $ec == 0 ) {
+	$result = 'OK';
+    } elsif ( ($ec & 127) > 0 ) {
+	my $signo = ($ec & 127);
+	$result = "died on signal $signo";
+	$result .= " (core)" if ( ($ec & 128) );
+    } else {
+	my $code = $ec >> 8;
+	$result = "exit with status $code";
+    }
+    $result;
+}
+
+sub bind_and_connect (*$$) {
+    # purpose: use optional bind() follow by connect() on a socket.
+    #          The bind will only be attempted in the presence of GTPR
+    # warning: Use inside eval { } as this method employs die()!
+    # globals: $Common::term will be checked for async timeouts
+    # paramtr: SOCK (IN): socket filehandle
+    #          $host (IN): remote hostname
+    #          $port (IN): remote port number
+    # returns: -
+    local (*SOCK) = shift;
+    my $host = shift;
+    my $port = shift;
+
+    # resolve peer
+    my $site = inet_aton($host) || die "resolve $host: $!\n";
+
+    # handle non-local peer and G_T_P_R with local bind
+    my $range = $ENV{'GLOBUS_TCP_SOURCE_RANGE'} || 
+	$ENV{'GLOBUS_TCP_PORT_RANGE'};
+    if ( defined $range && length($range) ) {
+        my ($lo,$hi) = split /\D/, $range, 2;
+        my ($i,$sin);
+        for ( $i = $lo; $i < $hi; ++$i ) {
+            $sin = sockaddr_in( $i, INADDR_ANY );
+            bind( SOCK, $sin ) && last;
+        }
+        die "unable to bind to a local port\n" if ( $i >= $hi );
+    }
+
+    # connect
+    connect( SOCK, sockaddr_in( $port, $site ) ) || die "connect: $!\n";
+    # die "timeout\n" if $Common::term;
+
+    # protocol our connection
+    my @src = unpack_sockaddr_in getsockname(SOCK);
+    my @dst = unpack_sockaddr_in getpeername(SOCK);
+    debug( 2, '???', 'connection ', inet_ntoa($src[1]), ":$src[0] -> ", 
+	   inet_ntoa($dst[1]), ":$dst[0]" );
+
+    # autoflush
+    my $save = select(SOCK);
+    $|=1;
+    select($save);
+}
+
+sub ping_rls($) {
+    # purpose: check, if an RLI is up and alive
+    # paramtr: $uri (IN): LRC or RLI contact
+    # returns: 0 for OK, dies with fatal message for error
+    my $uri = shift;
+    local(*RLS);
+    if ( $uri =~ m{rlsn?://([^:/]+)(:([0-9]+))?} ) {
+	my $host = $1;
+	my $port = $3 || 39281;
+	eval {
+	    my $proto = getprotobyname('tcp') || die "getprotobyname: $!\n";
+	    socket( RLS, PF_INET, SOCK_STREAM, $proto ) || die "socket: $!\n";
+	    bind_and_connect( RLS, $host, $port );
+	};
+	close(RLS);
+	fatal( 'rls', $@ ) if $@;
+    } else {
+	fatal( 'rls', "Unable to parse $uri" );
+    }
+    0;
+}
+
+sub check_exists($@) {
+    # purpose: checks that a property contains some value
+    # paramtr: $p (IN): instance of property handler
+    #          $key (IN): name of property key(s)
+    # returns: value of property
+    my $p = shift;
+    my ($key,$v);
+
+    foreach ( @_ ) {
+	$key = $_;
+	debug( 1, 'pro', "existence check for property $key" );
+	$v = $p->property($key);
+	last if ( defined $v && length($v) );
+    }
+
+    unless ( defined $v && length($v) ) {
+	if ( @_ == 1 ) {
+	    fatal( 'pro', "Property $_[0] is mandatory, but not set" );
+	} else {
+	    my $x = join( ', ', @_ );
+	    fatal( 'pro', "One of the properties in $x is mandatory" );
+	}
+    }
+
+    wantarray ? ($v,$key) : $v;
+}
+
+sub default_exists($$@) {
+    # purpose: checks that a property contains some value
+    # paramtr: $p (IN): instance of property handler
+    #          $d (IN): default value in absence of any property
+    #          $key (IN): name of property key(s)
+    # returns: value of property
+    my $p = shift;
+    my $d = shift;
+    my ($key,$v);
+
+    foreach ( @_ ) {
+	$key = $_;
+	debug( 1, 'pro', "existence check for property $key" );
+	$v = $p->property($key);
+	last if ( defined $v && length($v) );
+    }
+
+    unless ( defined $v && length($v) ) {
+	if ( @_ == 1 ) {
+	    debug( 1, 'pro', "Property $_[0] is recommended, but not set.")
+	} else {
+	    my $x = join( ', ', @_ );
+	    debug( 1, 'pro', "One of the properties in $x is recommended, but not set.");
+	}
+
+	warning( 'pro', "Assuming default $_[0] = $d" );
+	$v = $d;
+    }
+
+    wantarray ? ($v,$key) : $v;
+}
+
+sub check_loc($@) {
+    # purpose: Checks that a property points to an readable file
+    # paramtr: $p (IN): instance of property handler
+    #          $key (IN): name of the property key(s) to check for
+    # returns: the value of the property
+    my $p = shift;
+    my ($v,$key) = check_exists( $p, @_ );
+
+    fatal( 'pro', "Value \"$v\" of property $key is not a readable file" )
+	unless -r $v;
+
+    wantarray ? ($v,$key) : $v;
+}
+
+sub check_app($$;$) {
+    # purpose: Checks that a property points to an executable file
+    # paramtr: $p (IN): instance of property handler
+    #          $key (IN): name of the property key to check for
+    #          $opt (opt. IN): If set, the key existence is optional.
+    # returns: the value of the property
+    my $p = shift;
+    my $key = shift;
+    my $opt = shift || 0;
+    debug( 1, 'pro', "executable check for property $key" );
+
+    my $v = $p->property($key);
+    unless ( defined $v && length($v) ) {
+	return 0 if $opt;
+	fatal( 'pro', "Property $key is not set" );
+    }
+    return $v if $v eq 'null';	# special
+    fatal( 'pro', "Value \"$v\" of property $key is not an executable file" )
+	unless -x $v;
+    $v;
+}
+
+sub check_dir($$;$) {
+    # purpose: Checks that a property points to a directory
+    # paramtr: $p (IN): instance of property handler
+    #          $key (IN): name of the property key to check for
+    #          $opt (opt. IN): If set, the key existence is optional.
+    # returns: the value of the property
+    my $p = shift;
+    my $key = shift;
+    my $opt = shift || 0;
+    debug( 1, 'pro', "directory existence check for property $key" );
+    
+    my $v = $p->property($key);
+    unless ( defined $v && length($v) ) {
+	return 0 if $opt;
+	fatal( 'pro', "Property $key is not set" );
+    }
+    fatal( 'pro', "Value \"$v\" of property $key is not a directory" )
+	unless ( -d $v );
+    warning( 'pro', "Value \"$v\" of property $key is not writable" )
+	unless -w _;
+    $v;
+}
+
+sub make_version($) {
+    # purpose: Turns a string or float into something comparable
+    # paramtr: $v (IN): is a version number like 0.14 or 1.4
+    # whythis: Version 1.4 is _not_ larger than version 1.22
+    # returns: a comparable number, e.g. 1004 or 1022 for above
+    my $x = shift;
+
+    my $result = 0;
+    foreach ( split( /\./, $x, 2 ) ) {
+	$_ /= 10**(length($_)-3) if length($_) > 3;
+	$result = $result * 1000 + $_;
+    }
+    $result;
+}
+
+sub compare($$) {
+    my $a = make_version(shift());
+    my $b = make_version(shift());
+    $a - $b;
+}
+
+sub add_perl_module($) {
+    # purpose: Add a DBD::* test to %perl_mod
+    # paramtr: $driver (IN): The Java or Perl base name of driver
+    # returns: -
+    # globals: modifies %perl_mod
+    my $driver = shift;
+    if ( exists $extra_mod{$driver} ) {
+	my @x = @{ $extra_mod{$driver} };
+	$perl_mod{$x[0]} = $x[1];
+    }
+}
+
+# --- main ------------------------------------------------------
+
+#
+# check for environment variables and setup
+#
+my %env = ( 'GLOBUS_LOCATION' => 'bin',
+	    'PEGASUS_HOME' => 'bin',
+	    'JAVA_HOME' => 'bin',
+	    'CLASSPATH' => undef );
+foreach my $env ( keys %env ) {
+    debug( 1, 'env', "checking environment setting of $env" );
+    fatal( 'env', "environment variable $env is not set" )
+	unless exists $ENV{$env};
+    fatal( 'env', "environment variable $env is empty" )
+	unless length($ENV{$env});
+    if ( defined $env{$env} ) {
+	my $bin = File::Spec->catdir( $ENV{$env}, $env{$env} );
+	debug( 1, 'dir', "checking directory $bin" );
+	fatal( 'dir', "$bin is not a directory" )
+	    unless -d $bin;
+	fatal( 'dir', "$bin is not part of your PATH" )
+	    unless ( index($ENV{PATH},$bin) >= 0 );
+    }
+}
+
+my $pegasushome = $ENV{'PEGASUS_HOME'};
+my %basedir = ( pegasus    => $ENV{'PEGASUS_HOME'},
+		globus => $ENV{'GLOBUS_LOCATION'},
+		java   => $ENV{'JAVA_HOME'} );
+my %bindir = map { $_ => File::Spec->catdir( $basedir{$_}, 'bin' ) } 
+             keys %basedir;
+
+#
+# check for executables
+#
+my %app = ( 'condor_submit' => undef,
+	    'condor_submit_dag' => undef,
+	    'condor_version' => undef,
+	    'd2d' => $bindir{pegasus},
+	    'dirmanager' => $bindir{pegasus},
+	    'gencdag' => $bindir{pegasus},
+	    'genmdag' => $bindir{pegasus},
+	    'rls-client' => $bindir{pegasus},
+	    'rc-client' => $bindir{pegasus},
+	    'tc-client' => $bindir{pegasus},
+	    'tailstatd' => $bindir{pegasus},
+	    'grid-proxy-info' => $bindir{globus},
+	    'globus-url-copy' => $bindir{globus},
+	    'globus-rls-cli' => $bindir{globus},
+	    'java' => $bindir{java} );
+foreach my $app ( sort keys %app ) {
+    debug( 1, 'exe', "checking for application $app" );
+    unless ( defined ($_ = find_exec($app)) ) {
+	warning( 'exe', "$app not found in PATH" );
+	if ( defined $app{$app} ) {
+	    fatal( 'exe', "$app not found anywhere" )
+		unless -r File::Spec->catfile( $app{$app}, $app );
+	}
+	fatal( 'exe', "$app is not executable" )
+	    unless -x _;
+    }
+}
+
+#
+# check runtime environment
+#
+debug( 1, 'gt ', "checking remaining time on grid proxy" );
+my @left = `grid-proxy-info -timeleft 2>&1`;
+fatal( 'gt ', "Unable to determine a valid time on grid proxy:",
+       exitcode($?), "\nReason:", grep(/^ERROR/,@left) )
+    if ( $? != 0 );
+chomp(@left);
+if ( $left[0] == -1 ) {
+    fatal( 'gt ', "Your grid proxy is not initialized. Please initialize." );
+} elsif ( $left[0] == 0 ) {
+    fatal( 'gt ', "Your grid proxy has expired. Please refresh." );
+} elsif ( $left[0] < 7200 ) {
+    fatal( 'gt ', "The remaining time on your grid proxy is too short." );
+}
+
+#
+# check properties
+#
+my $p = Work::Properties->new( PARSE_ALL );
+fatal( 'pro', "There are no properties defined whatsoever." )
+    if ( $p->keyset == 0 );
+
+my %remember = ();
+
+    # check Pegasus minimum properties
+    # my $p = Work::Properties->new( PARSE_GVDS );
+
+    my $ec = lc default_exists( $p, 'none', 'pegasus.exitcode', 'pegasus.exitcode.mode' );
+    if ( defined $ec ) {
+	fatal( 'pro', "Illegal value $_ for property pegasus.exitcode" )
+	    unless ( $ec eq 'all' || $ec eq 'essential' || $ec eq 'none' );
+    } else {
+	warning( 'pro', "Suggest to set pegasus.exitcode.mode to \"all\"" );
+    }
+
+    my $tm = default_exists( $p, 'multiple', 'pegasus.transfer', 'pegasus.transfer.mode' );
+    if ( defined $tm ) {
+	my %ok = ( 'single' => 1, 'multiple' => 2, 'T2' => 3, 'StorkSingle' => 4,
+		   'Bundle' => 5, 'Chain' => 6, 'RFT' => 7 );
+	fatal( 'pro', "Illegal value \"$tm\" for property pegasus.transfer" )
+	    unless exists $ok{$tm};
+    } else {
+	warning( 'pro', "Suggest to set pegasus.transfer.mode to \"multiple\"" );
+    }
+
+    my $rc = default_exists( $p, 'rls', 'pegasus.rc', 'pegasus.replica.mode' );
+    fatal( 'pro', "Illegal value $rc for property pegasus.rc" )
+	unless lc($rc) eq 'rls';
+    my $rli = check_exists( $p, 'pegasus.rc.url', 'pegasus.rls.url' );
+    fatal( 'pro', "Misformatted URI $rli in property pegasus.rls.url" )
+	unless ( $rli =~ m{^rlsn?://[A-Za-z0-9][A-Za-z0-9-.]+} );
+    ping_rls($rli);
+
+    # add RC
+    $remember{rc} = load_module( { style => 'RLS', lrc => $rli, rli => $rli },
+				 'GriPhyN::RC' );
+
+    # TC mode defaults to "File"
+    my $tc = default_exists( $p, 'File', 'pegasus.tc', 'pegasus.tc.mode');
+    if ( $tc eq 'File' ) {
+	my $tcfn = check_loc( $p, 'pegasus.tc.file' );
+	$remember{tc} = load_module( { style => 'new', file => $tcfn },
+				     'GriPhyN::TC' );
+    } elsif ( $tc eq 'Database' ) {
+	# FIXME: translate java jdbc props into perl dbi props
+	my %extra = $p->jdbc2perl('tc');
+	$remember{tc} = load_module( { style => 'pegasus', %extra },
+				     'GriPhyN::TC' );
+    } else {
+	fatal( 'pro', "Illegal value $tc for property pegasus.tc.mode" );
+    }
+
+    my $sc = check_exists( $p, 'pegasus.sc', 'pegasus.pool.mode' );
+    if ( lc($sc) eq 'xml' ) {
+	my $scfn = check_loc( $p, 'pegasus.sc.file', 'pegasus.pool.file' );
+	$remember{sc} = load_module( { style => 'xml', file => $scfn },
+				     'GriPhyN::SC' );
+    } elsif ( lc($sc) eq 'text' ) {
+	my $scfn = check_loc( $p, 'pegasus.sc.file', 'pegasus.pool.file' );
+	$remember{sc} = load_module( { style => 'new', file => $scfn },
+				     'GriPhyN::SC' );
+    } else {
+	fatal( 'pro', "Illegal value $sc for property pegasus.pool.mode" );
+    }
+
+
+
+
+
+
+# POSTCONDITION: %remember will contain handles for the RC, SC and TC 
+foreach ( qw(rc sc tc) ) {
+    debug( 1, 'cat', "checking for valid \U$_\E" );
+    fatal( 'cat', "Your \U$_\E is in an invalid state" )
+	unless defined $remember{$_};
+}
+
+#
+# add check for all database drivers we intend to use (from props)
+#
+add_perl_module($_) if ( defined ($_ = $p->property('work.db')) );
+foreach my $key ( $p->keyset('\.url$') ) {
+    my $v = $p->property($key);
+    next unless substr($v,0,4) eq 'jdbc';
+    my $driver = (split(/:/,$v))[1];
+    add_perl_module($driver) if defined $driver;
+}
+
+#
+# check sites in SC + TC
+#
+my @sc = $remember{sc}->sites;
+my %sc = map { $_ => 1 } @sc;
+debug( 1, 'cat', "found", 0+@sc, "sites in SC" );
+warning( 'cat', "Only local site defined in SC" )
+    if ( @sc == 1 && $sc[0] eq 'local' );
+
+my @tc = $remember{tc}->all_sites(1);
+my %tc = map { $_ => 1 } @tc;
+debug( 1, 'cat', "found", 0+@tc, "sites in TC" );
+warning( 'cat', "Only local site defined in TC" )
+    if ( @tc == 1 && $tc[0] eq 'local' );
+
+my $found = 0;
+foreach my $site ( @sc ) {
+    if ( exists $tc{$site} ) {
+	debug( 2, 'cat', "found site $site in both, SC and TC" );
+	$tc{$site} = 0;
+	$found++;
+    } else {
+	warning( 'cat', "site $site exists only in SC" );
+    }
+}
+foreach my $site ( grep { $tc{$_} != 0 } @tc ) {
+    warning( 'cat', "site $site exists only in TC" );
+}
+fatal( 'cat', "There is no site correspondence between TC and SC" )
+    if $found == 0;
+
+# 
+# check perl modules
+#
+
+# site note: This will import *all* modules into our space, including
+# the XML::Parser::Expat to parse the DAX file later.
+# FIXME: Make the DBD::* checking dependent on the property setup.
+# FIXME: Module version checks not reliable (must do string magic)
+my (@warn,@fatal);
+for my $module ( sort keys %perl_mod ) {
+    no strict 'refs';
+    debug( 1, 'mod', "probing for Perl module $module" );
+    my $status = eval "require $module;";
+    if ( $@ ) {
+	# module failed to load
+	if ( $perl_mod{$module}[0] <= 0 ) {
+	    # non-essential module, just warn
+	    push( @warn, $module );
+	} else {
+	    push( @fatal, $module );
+	}
+    } else {
+	# module loaded - poke at its $VERSION
+	my $version = $module->VERSION;
+	if ( $perl_mod{$module}[0] == -1 || $perl_mod{$module}[0] == 2 ) {
+	    # require a specific version 
+	    if ( compare( $version, $perl_mod{$module}[1] ) < 0 ) {
+		push( @fatal, [ $module, $version, $perl_mod{$module}[1] ] );
+	    } else {
+		debug( 2, 'mod', "found version $version" ) if $version;
+	    }
+	} else {
+	    debug( 2, 'mod', "found version $version" )	if $version;
+	}
+    }
+}
+
+# warn about non-essential modules
+warning( 'mod', "Unable to detect the following non-essential Perl modules:",
+	 "\n" . join("\n", @warn) ) if ( @warn > 0 );
+
+# fail about missing or too old modules
+if ( @fatal > 0 ) {
+    my @list = ();
+    foreach my $f ( @fatal ) {
+	if ( ref($f) eq 'ARRAY' ) {
+	    my @x = @{$f};
+	    push( @list, "$x[0] is outdated ($x[1] < $x[2])" );
+	} else {
+	    push( @list, "$f is not installed" );
+	}
+    }
+    fatal( 'mod', "There are problems with the following Perl modules:",
+	   "\n" . join("\n",@list) );
+}
+
+
+
+#
+# parse DAX file
+#
+my %link = ( none => 0, input => 1, output => 2, inout => 3 );
+my $parser = new XML::Parser::Expat( 'ProtocolEncoding' => $encoding,
+				     'Namespaces' => 1 );
+my @stack = ();
+my %dax = ();
+my ($job,$child);
+$parser->setHandlers( 'Start' => sub {
+    my $self = shift;
+    my $element = shift;	# name of element
+    my %attr = @_;		# attributes
+    push( @stack, $element );	# document ordering
+    if ( @stack == 1 && $element eq 'adag' ) {
+	# root element
+	my $v = 0;
+	foreach ( split /\./, $attr{version} ) {
+	    $v *= 1000;
+	    $v += $_;
+	}
+
+	$dax{root} = { version => $v, label => $attr{name} };
+	debug( 1, 'xml', "dax \"$attr{name}\" version $attr{version}" );
+	if ( $attr{name} eq 'test' ) {
+	    my $suggestion = basename( $daxfn, '.dax' );
+	    my $addon = '';
+	    $addon = "(e.g. \"$suggestion\")" unless $suggestion eq 'test';
+	    warning( 'xml', "Useless label \"$attr{name}\", consider revising",
+		     $addon );
+	}
+
+	if ( $v < 1005 ) {
+	    fatal( 'xml', "unsupported version $attr{version} of DAX format" );
+	} elsif ( $v < 1010 ) {
+	    warning( 'xml', "dated version $attr{version} of DAX format" );
+	}
+    } elsif ( @stack == 2 && $element eq 'filename' ) {
+	# part 1 filename
+	if ( exists $dax{file}{$attr{file}} ) {
+	    # filename already exists - this should not happen
+	    fatal( 'xml', "file $attr{file} was specified multiple times" );
+	}
+	unless ( exists $link{$attr{link}} && $link{$attr{link}} ) {
+	    # filename linkage is illegal
+	    fatal( 'xml', "file $attr{file} has illegal linkage $attr{link}" );
+	}
+
+	debug( 1, 'xml', "file $attr{file} as $attr{link}" );
+	$dax{file}{$attr{file}} = $link{$attr{link}};
+	push( @{$dax{link}{$attr{link}}}, $attr{file} );
+    } elsif ( @stack == 2 && $element eq 'job' ) {
+	# part 2 job
+	if ( exists $dax{job}{$attr{id}} ) {
+	    fatal( 'xml', "job $attr{id} is already defined" );
+	}
+	my $tr = combine( $attr{namespace}, $attr{name}, $attr{version} );
+	my $dv = exists $attr{'dv-name'} && defined $attr{'dv-name'} ? 
+	    combine( $attr{'dv-namespace'}, $attr{'dv-name'}, $attr{'dv-version'} ) :
+	    undef;
+
+	debug( 1, 'xml', "job $attr{id} uses transformation $tr" );
+	$dax{job}{ $job = $attr{id} } = { tr => $tr, dv => $dv };
+    } elsif ( @stack == 3 && $stack[1] eq 'job' && $element eq 'uses' ) {
+	# part 2 job -- uses files
+	if ( exists $dax{job}{$job}{uses}{$attr{file}} ) {
+	    fatal( 'xml', "file $attr{file} already known to job $job" );
+	}
+	unless ( exists $link{$attr{link}} && $link{$attr{link}} ) {
+	    # filename linkage is illegal
+	    fatal( 'xml', "file $attr{file} has illegal linkage $attr{link}" );
+	}
+
+	debug( 2, 'xml', "job $job declares $attr{file} as $attr{link}" );
+	$dax{job}{$job}{uses}{$attr{file}} = $link{$attr{link}};
+    } elsif ( @stack == 2 && $element eq 'child' ) {
+	# part 3 link -- child
+	if ( exists $dax{child}{$attr{ref}} ) {
+	    # child already exists - this should not happen
+	    fatal( 'xml', "dependency child $attr{ref} already exists" );
+	}
+
+	debug( 2, 'xml', "seen child $attr{ref}" );
+	$dax{child}{ $child = $attr{ref} } = {};
+    } elsif ( @stack == 3 && $stack[1] eq 'child' && $element eq 'parent' ) {
+	# part 3 link -- parent
+	if ( exists $dax{child}{$child}{$attr{ref}} ) {
+	    # parent already exists in child - this should not happen
+	    fatal( 'xml', "dependency $attr{ref} <- $child already exists" );
+	}
+
+	$dax{child}{$child}{$attr{ref}} = 1;
+	debug( 2, 'xml', "seen parent $attr{ref}" );
+	debug( 1, 'xml', "dependency $attr{ref} <- $child" );
+    } else {
+	debug( 3, 'xml', "<$element>" );
+    }
+    1;
+}, 'End' => sub {
+    my $self = shift;
+    my $element = shift;
+    debug( 3, 'xml', "</$element>" );
+    my $tos = pop(@stack);
+    fatal( 'xml', "</$element> closes <$tos>" )
+	unless ( $tos eq $element );
+    1;
+}, 'Char' => sub {
+    my $self = shift;
+    my $text = shift;
+    unless ( $text =~ /^\s*$/ ) {
+	debug( 3, 'xml', "<text>$text</text>" );
+    }
+    1;
+}, 'Comment' => sub {
+    # ignore
+    1;
+}, 'XMLDecl' => sub {
+    # ignore
+    1;
+}, 'Default' => sub {
+    my $self = shift;
+    my $text = shift;
+    if ( $text =~ /^\s*$/ ) {
+	# ignore 
+    } else {
+	warning( 'xml', "unknown \"$text\" in XML, ignoring\n" );
+    }
+    1;
+} );
+
+#
+# %dax => {
+#   root => { version, label },
+#   file => { 
+#     <lfn> => <link> 
+#   },
+#   link => [ <lfn> ],
+#   job  => {
+#     <id> => { 
+#       <tr>, 
+#       <dv>,
+#       uses => {
+#         <lfn> => link 
+#       } 
+#     }
+#   },
+#   child => {
+#     <id> => { <id> => 1 } 
+#   }
+# }           
+#          
+open( DAX, "<$daxfn" ) || fatal( 'xml', "open DAX file $daxfn: $!" );
+debug( 1, 'xml', "reading from $daxfn" );
+fatal( 'xml', "DAX file $daxfn is empty" ) if ( eof(*DAX) );
+$parser->parse(*DAX);
+close DAX;
+
+# 
+# check that any dependency does not refer to a non-existing jobs
+# NOTE: For gendax generated daxes, this should never trigger.
+#
+debug( 1, 'dep', "checking dependencies against jobs" );
+foreach my $child ( keys %{$dax{child}} ) {
+    fatal( 'dep', "child $child refers to non-existing job" )
+	unless exists $dax{job}{$child};
+    foreach my $id ( keys %{$dax{child}{$child}} ) {
+	fatal( 'dep', "parent $id in child $child refers to non-existing job" )
+	    unless exists $dax{job}{$id};
+    }
+}
+
+#
+# check that all input files are in the replica catalog
+#
+debug( 1, 'rc ', "checking logical input files against replica catalog" );
+my @input = ();
+foreach my $lfn ( keys %{$dax{file}} ) {
+    push( @input, $lfn ) if $dax{file}{$lfn} == 1; # input
+}
+if ( @input > 0 ) {
+    my %pfn = ();
+    eval { %pfn = $remember{rc}->bulk_lookup(@input) };
+    fatal( 'rc ', "Unable to do bulk lookups: $@" ) if ( $@ );
+
+    foreach my $lfn ( sort @input ) {
+	my $n = @{$pfn{$lfn}} + 0;
+	if ( $n == 0 ) {
+	    fatal( 'rc ', "Input LFN \"$lfn\" is not registered" );
+	} else {
+	    debug( 1, 'rc ', "Found $n PFNs for input LFN \"$lfn\"" );
+	}
+    }
+} else {
+    debug( 2, 'rc ', "No input files in DAX" );
+}
+
+# 
+# check that all transformation have at least one entry in the TC
+#
+debug( 1, 'tc ', "checking transformations against transformation catalog" );
+foreach my $job ( keys %{$dax{job}} ) {
+    my $tr = $dax{job}{$job}{tr};
+    fatal( 'tc ', "job $job does not specify a transformation string" )
+	unless ( defined $tr && length($tr) );
+    my @sites = ();
+    eval { @sites = $remember{tc}->sites($tr) };
+    fatal( 'tc ', "Unable to lookup TR $tr: $@" ) if ( $@ );
+    my $n = @sites + 0;
+    if ( $n == 0 ) {
+	fatal( 'tc ', "TR $tr is not known to the transformation catalog" );
+    } elsif ( $n == 0 ) {
+	warning( 'tc ', "TR $tr is only known to one site" );
+    } else {
+	debug( 1, 'tc ', "Found $n sites for TR $tr" );
+    }
+}
+
+print "\nAll is well that ends well.\n\n" unless ( $extra_quiet );
+exit 0;

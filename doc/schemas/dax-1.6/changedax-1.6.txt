@@ -1,0 +1,40 @@
+CHANGELOG 
+=========
+
+DAX 1.5 -> 1.6
+--------------
+
+o Introduced a new complex type PlainFilenameType that just contains a
+  name. 
+
+o The initial list of filenames adag/filename which is used by a DAG now
+  consists of the filename with the link attribute. No transient
+  markers.
+
+o The adag/job/argument/filename and adag/job/profile/filename inside a
+  job only consist of the logical filename, referencing the
+  PlainFilenameType. Neither linkage nor transiency is marked.
+
+o The adag/job/stdio handles similarily only point to a filename and
+  have a fixed linkage attached.
+
+o The adag/job/uses list has the full per-job file information,
+  including linkage and transiency of each file. Output files that 
+  are not transient are expected to be transferred and registered.
+
+o A job has the new extra, currently optional, attributes that allow to
+  specify the DV a job was derived from: adag/job@dv-namespace,
+  adag/job@dv-name, and adag/job@dv-version are a FQDI of the derivation
+  pertaining to the job.
+
+o split adag/job/uses@isTemporary into two separate attributes
+  adag/job/uses@dontTransfer and adag/job/uses@dontRegister attributes.
+  Support for isTemporary will be dropped (soon). Applications should
+  regard isTemporary as mutually exclusive to the presence of
+  dontRegister and dontTransfer. isTemporary with a true value should
+  be interpreted as dontRegister and dontTransfer with a true value
+  each.
+
+o added an optional attribute adag/job@level which represents the 
+  recursion depth during routing (abstract planning).
+

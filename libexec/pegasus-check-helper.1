@@ -1,0 +1,101 @@
+#!/bin/sh
+# 
+# This script is staged to fork jobmanager to return a couple of things
+# $Id: vds-check-helper.1,v 1.3 2005/11/16 23:28:35 voeckler Exp $
+#
+PATH=/bin:/usr/bin
+
+# install trap for premature exit
+trap 'echo "FATAL: premature exit"' EXIT
+
+# temp file
+fn=$1
+shift
+
+# remove filename that gridftp check put there
+if [ "X$fn" != "X" ]; then
+    /bin/ls "$fn" >> /dev/null 2>&1
+    if [ -e "$fn" ]; then
+	/bin/rm $fn 2>&1 | sed -e 's/^/DELETE: /'
+    else 
+	echo "DELETE: $fn: no such file"
+    fi
+fi
+
+# supposed workdir
+wd=$1
+shift
+
+# kickstart location
+ks=$1
+shift
+
+# reflect the environment settings
+echo "ENV: GLOBUS_LOCATION=$GLOBUS_LOCATION"
+echo "ENV: GLOBUS_TCP_PORT_RANGE=$GLOBUS_TCP_PORT_RANGE"
+echo "ENV: GLOBUS_TCP_SOURCE_RANGE=$GLOBUS_TCP_SOURCE_RANGE"
+echo "ENV: LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+echo "ENV: HOME=$HOME"
+
+# vds-get-sites
+echo "ENV: app=$app"
+echo "ENV: data=$data"
+echo "ENV: tmp=$tmp"
+echo "ENV: wntmp=$wntmp"
+echo "ENV: grid3=$grid3"
+
+# new in VDT 1.3.8
+echo "ENV: GRID3_SITE_NAME=$GRID3_SITE_NAME"
+echo "ENV: GRID3_BASE_DIR=$GRID3_BASE_DIR"
+echo "ENV: GRID3_APP_DIR=$GRID3_APP_DIR"
+echo "ENV: GRID3_DATA_DIR=$GRID3_DATA_DIR"
+echo "ENV: GRID3_TMP_DIR=$GRID3_TMP_DIR"
+echo "ENV: GRID3_TMP_WN_DIR=$GRID3_TMP_WN_DIR"
+echo "ENV: GRID3_JOB_CONTACT=$GRID3_JOB_CONTACT"
+echo "ENV: GRID3_TRANSFER_CONTACT=$GRID3_TRANSFER_CONTACT"
+echo "ENV: GRID3_SPONSOR=$GRID3_SPONSOR"
+echo "ENV: GRID3_SITEINFO=$GRID3_SITEINFO"
+
+# wild goose chase sanity check - you never know
+for i in "$GLOBUS_LOCATION" "$HOME" "$wd" "$app" "$data" "$tmp" "$wntmp" "$grid3"; do
+    if [ "X$i" != "X" ]; then 
+	/bin/ls -d "$i" >> /dev/null 2>&1
+	if [ -d "$i" ]; then
+	    echo "DIR: OK $i"
+	else 
+	    echo "DIR: NOTADIR $i"
+	fi
+    fi
+done
+
+# show some app
+/bin/date +'DATE: %Y-%m-%dT%H:%M:%S%z'
+
+# check out kickstart
+if [ -x $ks ]; then
+    version=`$ks -V 2>&1`
+    if [ $? -eq 0 ]; then
+	echo "KICKSTART: $version"
+    else
+	echo "KICKSTART: FAILED: $version"
+    fi
+else
+    echo "KICKSTART: INVALID"
+fi
+
+# obtain remote system arch info
+if tmpdir=`mktemp -d /tmp/$$.XXXXXX`; then
+    if wget -P $tmpdir 'http://smarty.isi.edu/cgi-bin/cvsweb.cgi/~checkout~/vds/release-tools/getsystem/getsystem' >> /dev/null 2>&1; then 
+	echo "SYSINFO: `perl $tmpdir/getsystem`"
+    else
+	echo 'SYSINFO: (no network)'
+    fi
+    rm -rf $tmpdir
+else
+    echo 'SYSINFO: UNKNOWN'
+fi
+
+# done
+trap - EXIT
+echo 'OK'
+exit 0

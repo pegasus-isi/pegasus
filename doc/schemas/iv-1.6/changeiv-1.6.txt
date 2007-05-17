@@ -1,0 +1,62 @@
+CHANGELOG
+=========
+
+IV 1.5 -> 1.6
+-------------
+
+o Added root attributes invocation@wf-label and invocation@wf-stamp
+  to reflect the DAX's workflow label and the DAX file's last mod.
+  time.
+
+IV 1.4 -> 1.5
+-------------
+
+o Added optional attribute statinfo@lfn to provide information on 
+  LFN to PFN mappings in the record.
+
+o synchronized kickstart with schema. The element that captures the
+  CLI arguments of a job is now called job/arguments, which is what
+  kickstart has been producing for a while now. 
+
+IV 1.2 -> 1.4
+-------------
+
+o Note: IV 1.3 is used for the prototypical implementation of k.2,
+  the successor to kickstart. It will change to use IV 2.0
+
+o Added a setup job. 
+
+o Added symbolic information for hostaddress, uid and gid into 
+  root element.
+
+o Added symbolic information for uid and gid to each stat info.
+
+o Permitted an arbitrary number of stat calls to accumulate in the end. 
+
+IV 1.1 -> 1.2
+-------------
+
+o Moved the JobType/cwd to invocation/cwd, because the current
+  working directory is specific to gridstart, but not beyond. All it's
+  jobs will be started with that particular working directory - it is
+  not job specific. 
+
+o Added the "channel" stat to invocation/statcall for the feedback
+  channel.
+
+o Augmented another filetype StatCallType/fifo to record filename and
+  descriptor of the fifo, as well as the number of message, and bytes
+  going in and out (out refers to stderr, the app. channel). 
+
+o Changed invocation/mainjob to optional, as it may not execute, if
+  the prejob failed. Of the eight permutations with the existence of
+  pre-, main- and postjob, only six are valid.
+
+o Added independent optional job invocation/cleanup.
+
+o Added architecture information as invocation/uname. This includes
+  a highly platform dependent archmode, which currently supports
+  Linux IA (IA32, IA64) and SunOS SPARC (ILP32, LP64). 
+
+o deprecated JobType/command-line@executable, because the file info
+  is already stored in JobType/statcall/file@name.

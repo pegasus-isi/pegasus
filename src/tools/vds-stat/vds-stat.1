@@ -1,0 +1,162 @@
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\"
+.\" $Id: vds-stat.1,v 1.1 2006/08/10 16:17:58 pavelk Exp $
+.\"
+.\" Authors: Pavel Krajcevski
+.\"
+.TH "vds\-stat" "1" "1.4.6" "GriPhyN Virtual Data System"
+.SH NAME
+vds\-stat \- tool for interpreting kickstart records
+.SH SYNOPSIS
+.B vds\-stat
+[\-h] [[\-v]|[\-s]|[\-b]|[\-n]|[\-a]] [\-o file] 
+.I dir
+.br
+.B vds\-stat
+[\-h] [[\-k]|[\-d]] [\-o file]
+.I kickstart record
+.SH DESCRIPTION
+The tool used to extract various data from kickstart records in a given
+job directory. This tool also is able to interpret single files and return
+the
+.I stdout
+and
+.I stderr
+elements of a given kickstart record.
+.PP
+.SH ARGUMENTS
+Any option will be displayed with its long options synonym(s).
+.TP
+.PD 0
+.B \-h
+.TP
+.PD 1
+.B \-\-help
+A quick guide to the usability of the program
+.TP
+.PD 0
+.B \-v
+.TP
+.PD 1
+.B \-\-verbose
+This option provides information on every .out file in the given
+.IR dir .
+The default is to ignore files that are either empty or contain data
+unparsable by the kickstart formatter. These will be displayed as such.
+.TP
+.PD 0
+.B \-s
+.TP
+.PD 1
+.B \-\-stdouts
+This option implies the -b option. It iterates through all of the
+kickstart records which do not have an exitcode of 0, and then prints
+all of the stdout and stderr elements of these files. Generally this
+should be used in conjunction with the -o option because there is alot
+of output.
+.TP
+.PD 0
+.B \-b
+.TP
+.PD 1
+.B \-\-badfile
+This option iterates through a given 
+.I dir 
+and finds all of the kickstart
+records which exited with an errorcode other than 0.
+.TP
+.PD 0
+.B \-k
+.TP
+.PD 1
+.B \-\-vds\-format\-kickstart
+Run the given
+.I kickstart record
+through the kickstart formatter.
+.TP
+.PD 0
+.B \-d
+.TP
+.PD 1
+.B \-\-data
+Return the stdout and stderr elements of a given
+.I kickstart record.
+This is usually the preferrable method to the -s option
+.TP
+.PD 0
+.B \-n
+.TP
+.PD 1
+.B \-\-numerr
+Returns the number of 
+.I kickstart records
+in a given 
+.I dir 
+which produced an error code other than 0.
+.TP
+.PD 0
+.B \-S
+.TP
+.PD 1
+.B \-\-sum
+Returns the total time (in seconds) it took to run all invocations of 
+kickstart in the given
+.IR dir .
+.SH "RETURN VALUE"
+Regular and planned program terminations will result in an exit code of 0.
+Abnormal termination will result in a non-zero exit code.
+.SH "OUTPUT"
+Default output will be of the form:
+.I username	date time duration stdout stderr exitcode filename
+.br
+.TP
+Single file output will also have the executable and arguments
+.br
+.TP
+.I stdout
+and
+.I stderr
+will be
+.B TEMP
+if they were redirected to a temporary file
+and
+.B NTEMP
+if they were redirected to a "real" file.
+.br
+.TP
+.I exitcode
+will contain a letter (r, f, or s) to indicate regular, failed, or signalled
+exits from the program. Or it might contain "sus" which indicates suspension,
+however according to kickstart this should not happen. Also, if it does not
+contain any letters, then the exit was a raw UNIX failure.
+.br
+.TP
+.I duration
+will be the time it took to complete in seconds.
+.SH "EXAMPLE"
+.nf
+\f(CB
+.PD 0
+~$ vds-stat -k ~/vds-test/mytest/dags/QuarkCode/wf1/run0001/lsnum_ID000001.out
+.br
+pavelk  Jul 21 2006 10:07 0.014   NTEMP   TEMP  r0  lsnum_ID000001.out /home/pavelk/vds-test/mytest/lsnum 5 15
+
+.PP
+~$ vds-stat -n ~/vds-test/mytest/dags/QuarkCode/wf1/run0001
+.br
+.TP
+0
+\fP
+.fi
+.SH "RESTRICTIONS"
+When pointing to a directory it only searches for .out files. Any
+other files will have to be manually pointed to using the -k and/or -d
+options.
+.SH "AUTHORS"
+Pavel Krajcevski		<pavelk at uchicago dot edu>
+.PP
+VDS     -
+.BR http://vds.isi.edu/
+.br

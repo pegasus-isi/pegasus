@@ -1,0 +1,287 @@
+#!/usr/bin/env perl
+#
+# Removes existing replicas from RLS and also from the grid site (-f). 
+#
+# Usage: see --help
+#
+# This file or a portion of this file is licensed under the terms of
+# the Globus Toolkit Public License, found in file GTPL, or at
+# http://www.globus.org/toolkit/download/license.html. This notice must
+# appear in redistributions of this file, with or without modification.
+#
+# Redistributions of this Software, with or without modification, must
+# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+# some other similar material which is provided with the Software (if
+# any).
+#
+# Copyright 1999-2004 University of Chicago and The University of
+# Southern California. All rights reserved.
+#
+# Author: Jens-S. Vöckler voeckler at cs dot uchicago dot edu
+# Revision : $Revision: 1.2 $
+#
+require 5.005;
+use strict;
+use Getopt::Long;
+use File::Basename;
+use File::Spec;
+
+#
+# Set up variables with defaults before calling getopt to parse options
+#
+my $rls = $ENV{rls};		# could be undef'd
+my ($lfnmatch,$pfnmatch,$yes);
+
+sub usage {
+    # purpose: print usage and exit
+    print << "EOF";
+
+Usage: @{[basename($0)]} -r rls [-f] -l re | -p re
+
+ -l|--lfn-match re  Only use entries where the LFN matches the re
+ -p|--pfn-match re  Only use entries where the PFN matches the re
+ -r|--rls rls       Use RLS server rls, default @{[defined $rls ? $rls : "(no default)"]}
+ -f|--remove        Remotely remove the physical TFN (gsiftp:// only)
+
+If both -l and -p are specified, both must match (AND). If you specify neither
+option, nothing in the RLS is matched. Alternatives should be specified
+within the regular expression (OR). You will need to escape your REs from the
+shell, suggesting single quotes. You can set the environment variable "rls"
+to your favorite RLS server to avoid using the -r option.
+
+EOF
+    exit 0;
+}
+
+# 
+# Parse our commandline options
+#
+GetOptions( 'remove|f' => \$yes,
+	    'lfn-match|l=s' => \$lfnmatch,
+	    'pfn-match|p=s' => \$pfnmatch,
+	    'rls|r=s' => \$rls,
+	    'help|h' => \&usage );
+#
+# Sanity checks
+#
+die( "ERROR: You must specify a valid RLS server URI (-r option)\n",
+     "Hint: Use rls://your.rls.server or rlsn://your.rls.server\n" )
+    unless $rls =~ m{^rlsn?://};
+die( "ERROR: You specified neither -f nor -p. Nothing will be matched, exiting.\n",
+     "Hint: If you want to match everything in RLS, use \"-f .\" without the quotes.\n" )
+    unless ( $pfnmatch || $lfnmatch );
+die( "ERROR: Your \$GLOBUS_LOCATION variable is not set.\n",
+     "Hint: Make sure you have set up Globus, and run its init scripts.\n" )
+    unless exists $ENV{'GLOBUS_LOCATION'};
+
+#
+# Check that we have the binaries installed that we need
+#
+my $gjr = File::Spec->catfile( $ENV{'GLOBUS_LOCATION'}, 
+			       'bin', 'globus-job-run' );
+die( "ERROR: Unable to execute $gjr\n",
+     "Hint: Check your \$GLOBUS_LOCATION environment variable.\n" ) 
+    unless -x $gjr;
+my $grun = File::Spec->catfile( $ENV{'GLOBUS_LOCATION'}, 
+			       'bin', 'globusrun' );
+die( "ERROR: Unable to execute $grun\n",
+     "Hint: Check your \$GLOBUS_LOCATION environment variable.\n" ) 
+    unless -x $grun;
+my $grc = File::Spec->catfile( $ENV{'GLOBUS_LOCATION'},
+			       'bin', 'globus-rls-cli' );
+die( "ERROR: Unable to execute $grc\n",
+     "Hint: Check your \$GLOBUS_LOCATION environment variable.\n" ) 
+    unless -x $grc;
+my $gpi = File::Spec->catfile( $ENV{'GLOBUS_LOCATION'},
+			       'bin', 'grid-proxy-info' );
+die( "ERROR: Unable to execute $gpi\n",
+     "Hint: Check your \$GLOBUS_LOCATION environment variable.\n" ) 
+    unless -x $gpi;
+
+#
+# Check that our grid proxy is valid before anything else
+#
+my $timeleft = `$gpi -timeleft`;
+chomp($timeleft);
+$timeleft += 0;			# make numeric (type cast)
+die( "ERROR: Insufficient time ($timeleft s) on user grid proxy\n",
+     "Hint: Use grid-proxy-init to (re) initialize your user proxy\n" )
+    if $timeleft < 7200; 
+
+# 
+# Obtain a list of all files that are in the RLS
+# ISA: open( RLS, "$grc q w l l \\\* $rls|" )
+#
+my $pid = open( RLS, '-|' );
+die "ERROR: Unable to fork: $!\n" unless defined $pid;
+unless ( $pid ) {
+    # child process -- avoid /bin/sh invocation, because
+    # asterisk (*) is a shell meta character which will
+    # prompt Perl to use /bin/sh -c in popen, which in
+    # turn will require extra escapes, see comment above.
+    exec { $grc } $grc, 'query', 'wildcard', 'lrc', 'lfn', '*', $rls;
+    exit 127;			# normally not reached
+}
+
+# parent process
+print STDERR "# reading data from $rls\n";
+select STDERR; 
+$|=1;
+select STDOUT;
+
+#
+# The %rls hash uses the LFN as the key, and maps one or more PFNs to
+# this key. Note that there may be more than one PFN per LFN, thus
+# the value portion of each %rls entry is a vector, not a scalar. 
+#
+# The %del structure uses the remote gridftp server name as the key into
+# the hash. It uses the filename component of the PFN reduced by the
+# gsiftp://..../ prefix, as value. Again, each host may have accumulated
+# multiple files, and thus a vector is the value. 
+#
+# Variable %count just counts how many entries %rls and %del will have.
+#
+# Variables $lfn and $tfn are declared outside to be more efficient.
+#
+my (%rls,%del,%count,$lfn,$tfn);
+#
+# I am alive progress reporter helpers
+#
+my $isatty = -t STDERR;
+my @alive = ('-', '/', '|', '\\' );
+#
+# match everything in the undefined portion
+#
+$lfnmatch = '.' unless defined $lfnmatch;
+$pfnmatch = '.' unless defined $pfnmatch;
+while ( <RLS> ) {
+    # report progress
+    if ( $isatty ) {
+	print STDERR $alive[$. % @alive], "\b";
+    } else {
+	print STDERR '.';
+    }
+
+    s/^\s+//;			# trim front
+    s/\s*[\r\n]+$//;		# trim rear
+
+    # split and match
+    ($lfn,$tfn) = split /: /, $_, 2; # split once only at first ": " string
+    next unless $lfn =~ /$lfnmatch/;
+    next unless $tfn =~ /$pfnmatch/;
+
+    # if OK, only work with valid filenames
+    if ( $tfn =~ m{^(([^:/?\#]+):)?(//([^/?\#]*))?([^?\#]*)(\?([^\#]*))?(\#(.*))?} ) {
+        # see RFC 2396, appendix A, for the regular expression
+	# Extract the hostname and filename component from a URI
+
+	# only remember hosts+paths for gsiftp scheme
+        if ( $2 eq 'gsiftp' ) {
+	    push( @{$del{$4}}, $5 );
+	    $count{del}++;
+	} 
+
+	# only remember RLS names that looked valid
+        push( @{$rls{$lfn}}, $tfn );
+	$count{rls}++;
+	print STDERR '*'; 	# report progress
+    } else {
+        warn "Warning: Illegal URI $tfn, ignoring\n";
+    }
+}
+close RLS;			# close connection to RLS
+my $status = $?;		# safe status from waitpid
+print STDERR " \n";              # finalize progress report
+
+# check for errors, e.g. timeout on server
+if ( $status != 0 ) {
+    print STDERR "ERROR: RLS died on signal ", ($status & 127), "\n" 
+	if ( ($status & 127) > 0 );
+    print STDERR "ERROR: RLS exited with status ", ($status >> 8), "\n"
+	if ( ($status >> 8) > 0 );
+    die "ERROR: Querying RLS exited with a non-zero status.\n";
+}
+
+# 
+# POST CONDITION: All filenames were parsed into the two hash
+# structures %rls and %del, see above. $count{rls} contains 
+# the number of entries in %rls, and $count{del} the number of
+# entries in %del.
+#
+
+#
+# delete all %rls entries from RLS
+#
+if ( $count{rls} ) {
+    open( RLS, "|$grc $rls" ) || die "open $grc: $!\n";
+    foreach $lfn ( keys %rls ) {
+	foreach $tfn ( @{$rls{$lfn}} ) {
+	    print STDERR "deleting $tfn\n";
+	    print RLS "delete $lfn $tfn\n";
+	}
+    }
+    close RLS;
+} else {
+    print STDERR "Warning: No matches found\n";
+}
+
+#
+# delete all %del entries from the grid -- only
+# if the user said 'yes' on the commandline
+#
+if ( $yes && $count{del} ) {
+    foreach my $host ( keys %del ) {
+	#
+	# we need to remove in chunks, or we may risk overrunning
+	# the commandline-length limit imposed by Unix.
+	#
+	while ( @{$del{$host}} > 0 ) {
+	    # count number of elements in vector
+	    my $n = 0+@{$del{$host}}; 
+	    # move first MIN($n,100) items into @x
+	    my @x = splice( @{$del{$host}}, 0, $n > 100 ? 100 : $n );
+	    
+	    # remove with globus-job-run
+	    print STDERR "physically removing ", 0+@x, " files on $host\n";
+
+	    my $pid = open( RUN, "-|" );
+	    if ( ! defined $pid ) {
+		warn("ERROR: Unable to fork: $!, trying next\n");
+		next;
+	    } elsif ( $pid == 0 ) {
+		# child process -- avoid /bin/sh invocation, because
+		# shell meta characters inside the filename which will
+		# prompt Perl to use /bin/sh -c in popen.
+		open( STDERR, ">&STDOUT" ) || exit(126); # dup2
+		select(STDERR); $|=1;
+		select(STDOUT); $|=1;
+		exec { $gjr } $gjr, "$host/jobmanager-fork", '-l', '/bin/rm', '-f', @x;
+		exit 127;			# normally not reached
+	    } else {
+		# parent process -- nothing should be readable
+		my @result = ();
+		while ( <RUN> ) { 
+		    s/[\r\n]+$//;
+		    next unless length($_);
+		    warn( "Warning: $_\n" );
+		}
+		close RUN;
+		my $status = $?;
+		if ( $status != 0 ) {
+		    warn( "ERROR: globus-job-run died on signal ", ($status & 127), "\n" )
+			if ( ($status & 127) > 0 );
+		    warn( "ERROR: globus-job-run exited with status ", ($status >> 8), "\n" )
+			if ( ($status >> 8) > 0 );
+		}
+	    }
+
+#	    system( "$gjr $host/jobmanager-fork -l /bin/rm -f " . join(' ',@x) );
+#	    system( "$grun -q -o -r $host/jobmanager-fork ",
+#		    "\'&(executable=\"/bin/rm\")(arguments=\"-f\" )",
+#		    join(' ', map { "\"$_\"" } @x ), ")\'" );
+	}
+    }
+} else {
+    print STDERR "Not physically removing any files\n" if $yes;
+}
+

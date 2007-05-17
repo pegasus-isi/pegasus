@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XML Spy v4.3 U (http://www.xmlspy.com) by Jens-S. Vöckler (private) -->
+<definitions xmlns="http://www.griphyn.org/chimera/VDL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.griphyn.org/chimera/VDL http://www.griphyn.org/chimera/vdl-1.20.xsd" version="1.1" vdlns="linking">
+	<transformation name="trans1">
+		<declare name="a1" link="input"/>
+		<declare name="a2" link="output"/>
+		<argument name="stdin">
+			<use name="a1" link="input"/>
+		</argument>
+		<argument name="stdout">
+			<use name="a2" link="output"/>
+		</argument>
+		<profile key="pfnhint" namespace="hints">
+			<text>/usr/bin/app1</text>
+		</profile>
+	</transformation>
+	<transformation name="trans2">
+		<declare name="a1" link="input"/>
+		<declare name="a2" link="output"/>
+		<argument name="stdin">
+			<use name="a1" link="input"/>
+		</argument>
+		<argument name="stdout">
+			<use name="a2" link="output"/>
+		</argument>
+		<profile key="pfnhint" namespace="hints">
+			<text>/usr/bin/app2</text>
+		</profile>
+	</transformation>
+	<derivation uses="trans1" name="usetrans1">
+		<pass bind="a1">
+			<scalar>
+				<lfn file="file1" link="input"/>
+			</scalar>
+		</pass>
+		<pass bind="a2">
+			<scalar>
+				<lfn file="file2" link="output"/>
+			</scalar>
+		</pass>
+	</derivation>
+	<derivation uses="trans2" name="usetrans2">
+		<pass bind="a1">
+			<scalar>
+				<lfn file="file2" link="input"/>
+			</scalar>
+		</pass>
+		<pass bind="a2">
+			<scalar>
+				<lfn file="file3" link="output"/>
+			</scalar>
+		</pass>
+	</derivation>
+</definitions>

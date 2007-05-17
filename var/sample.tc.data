@@ -1,0 +1,11 @@
+#SITE	LFN	PFN	TYPE	SYSINFO		PROFILES
+
+local	RLS_Client		/home/pegasus/bin/rls-client	INSTALLED	null	env::JAVA_HOME="/opt/java";env::PEGASUS="/home/pegasus/";env::CLASSPATH="/home/pegasus/lib/java-getopt-1.0.9.jar:/home/pegasus/lib/g.jar:/home/pegasus/lib/rls.jar";env::GLOBUS_LOCATION="/vdt/globus";env::LD_LIBRARY_PATH="/vdt/globus/lib"
+local	transfer	/home/pegasus/bin/linux/transfer	INSTALLED	null	env::GLOBUS_LOCATION="/vdt/globus";env::LD_LIBRARY_PATH="/vdt/globus/lib"
+local	dirmanager 	/home/pegasus/bin/dirmanager		INSTALLED	null	null
+
+isi	transfer	/home/pegasus/bin/linux/transfer	INSTALLED	INTEL32::LINUX	env::GLOBUS_LOCATION="/vdt/globus";env::LD_LIBRARY_PATH="/vdt/globus/lib"
+isi  	dirmanager 	/home/pegasus/bin/dirmanager		INSTALLED	INTEL32::LINUX	null
+isi	pgs::analyze:1.0		/home/pegasus/bin/keg		INSTALLED	INTEL32::LINUX	null
+isi	pgs::preprocess:1.0		/home/pegasus/bin/keg		INSTALLED	INTEL32::LINUX	null
+isi	pgs::findrange:1.0		/home/pegasus/bin/keg		INSTALLED	INTEL32::LINUX	null

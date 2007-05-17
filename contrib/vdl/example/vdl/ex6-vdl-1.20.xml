@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XML Spy v4.3 U (http://www.xmlspy.com) by Jens-S. Vöckler (private) -->
+<definitions xmlns="http://www.griphyn.org/chimera/VDL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.griphyn.org/chimera/VDL http://www.griphyn.org/chimera/vdl-1.20.xsd" version="2.34" vdlns="diamond">
+	<transformation name="trans5">
+		<declare name="a1" link="input"/>
+		<declare name="a2" link="input"/>
+		<declare name="a3" link="output"/>
+	  <declare name="a4" link="inout">
+			<scalar>
+				<lfn file="someplace" link="inout" isTemporary="true" temporaryHint=""/>
+			</scalar>
+		</declare>
+		<call uses="trans1">
+			<pass bind="a1">
+				<scalar>
+					<use name="a1"/>
+				</scalar>
+			</pass>
+			<pass bind="a2">
+				<scalar>
+					<use name="a4" link="output"/>
+				</scalar>
+			</pass>
+		</call>
+		<call uses="trans4">
+			<pass bind="a1">
+				<scalar>
+					<use name="a2"/>
+				</scalar>
+			</pass>
+			<pass bind="a2">
+				<scalar>
+					<use name="a4" link="input"/>
+				</scalar>
+			</pass>
+			<pass bind="a3">
+				<scalar>
+					<use name="a3"/>
+				</scalar>
+			</pass>
+		</call>
+	</transformation>
+</definitions>

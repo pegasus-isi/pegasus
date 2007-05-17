@@ -1,0 +1,347 @@
+#!/usr/bin/env perl
+#
+# Wrapper around pegasus-submit-dag to run a workflow
+#
+# Usage: pegasus-run rundir
+#
+# This file or a portion of this file is licensed under the terms of
+# the Globus Toolkit Public License, found in file GTPL, or at
+# http://www.globus.org/toolkit/download/license.html. This notice must
+# appear in redistributions of this file, with or without modification.
+#
+# Redistributions of this Software, with or without modification, must
+# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+# some other similar material which is provided with the Software (if
+# any).
+#
+# Copyright 1999-2004 University of Chicago and The University of
+# Southern California. All rights reserved.
+#
+# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
+# Revision : $Revision: 1.19 $
+#
+use 5.006;
+use strict;
+use Carp;
+use File::Spec;
+use File::Basename qw(basename dirname);
+use Getopt::Long qw(:config bundling no_ignore_case);
+
+# load our own local modules
+use Work::Common;
+use Work::Properties qw(%initial); # parses -Dprop=val from @ARGV
+use Work::Workflow;
+use Euryale::Delegation;	# GT4 delegation cache daemon client
+
+# constants
+sub usage(;$);			# { }
+$main::DEBUG = 0;		# for now
+my $condor;			# if set, use Condor for tailstatd
+my $props = Work::Properties->new();
+my $default_tsd = File::Spec->catfile( File::Spec->rel2abs( 
+    File::Spec->canonpath(dirname($0)) ), 'tailstatd' );
+my $tsd = $props->property('pegasus.tailstatd') || $default_tsd;
+
+my $default_vdd = 
+    File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'libexec', 'pegasus-delegationd' );
+my $vdd = $props->property('pegasus.delegationd');
+    
+GetOptions( "help|h" => \&usage,
+	    "monitor|tsd|m=s" => \$tsd,
+	    "condor" => \$condor,
+	    "vdd=s" => \$vdd,
+	    "debug|d=o" => \$main::DEBUG,
+	    "verbose|v+" => \$main::DEBUG
+	    );
+
+# arguments
+my $run = shift || usage(1);
+usage(1) unless -d $run;
+my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
+
+#
+# --- functions -------------------------------------------------
+#
+
+sub usage(;$) {
+    my $ec = shift || 0;
+    my $basename = basename($0,'.pl');
+    print << "EOF";
+
+Usage: $basename [options] rundir
+
+Mandatory arguments:
+  rundir  is the directory where the workflow resides as well as all
+          ancilliary files related to the workflow.
+
+Optional arguments:
+ -Dprop=val         explicit settings of a property (multi-option). 
+ -h|--help          print this help message and exit.
+ -m|--monitor l     uses the workflow monitor daemon installed as l, default
+                    is $default_tsd.
+ -d|--debug lvl     sets the debug level (verbosity), default is $main::DEBUG. 
+ -v|--verbose       raises debug level by 1, see --debug. 
+ --condor           uses Condor to submit daemons (prototype).
+ --vdd l            uses GT4 delegation cache daemon installed as l, default
+                    is $default_vdd.
+EOF
+    exit($ec);
+}
+
+sub create_args {
+    # purpose: create either a shell daemon, or condor-submitted job
+    # warning: It is assumed that condor-jobs require -N to foreground
+    # globals: $condor (IN): use Condor (true) or daemon (false) mode
+    # paramtr: $daemon (IN): executable location of daemon 
+    #          @args (IN): other arguments to daemon
+    # returns: argument vector ready to execute
+    my $daemon = shift || croak "Need a daemon name";
+
+    my @result;
+    if ( $condor ) {
+	# use Condor to submit a daemon -- makes it restartable on SH death
+	# however, insert -N into the daemon's argument list for foregrounding
+	my $condor_submit = find_exec('condor_submit') || 
+	    die "ERROR: Unable to find condor_submit\n";
+	my $base = 'pegasus-run-' . basename($daemon);
+	my $fn = File::Spec->catfile( $run, "$base.sub" );
+	local(*SUB);
+	open( SUB, ">$fn" ) || die "open $fn: $!\n";
+
+	# only arg
+	@result = ( );
+	foreach my $k ( keys %initial ) { push( @result, "-D$k=$initial{$k}" ) }
+	push( @result, '-N' );
+	push( @result, @_ ) if ( @_ > 0 );
+
+	# write submit file for (restartable) tailstatd
+	print SUB "initialdir = $run\n";
+	print SUB 'executable = ', File::Spec->rel2abs($daemon), "\n";
+	print SUB 'arguments  = ', join(' ',@result), "\n";
+	print SUB "universe   = scheduler\n";
+	print SUB "notification = NEVER\n";
+	print SUB "getenv = True\n";
+	print SUB "output = $base.out.txt\n";
+	print SUB "error  = $base.err.txt\n";
+	print SUB "log    = $base.log.txt\n";
+	print SUB "queue\n";
+	close SUB;
+	@result = ( $condor_submit, $fn );
+    } else {
+	# run daemon directly
+	@result = ( $daemon );
+	foreach my $k ( keys %initial ) { push( @result, "-D$k=$initial{$k}" ) }
+	push( @result, @_ ) if ( @_ > 0 );
+    }
+
+    @result;
+}
+
+sub check_rescue($$) {
+    # purpose: Check for the existence of (multiple levels of) rescue DAGs.
+    # paramtr: $dir (IN): directory to check for the presence of rescue DAGs.
+    #          $dag (IN): filename of regular DAG file.
+    # returns: List of rescue DAGs, may be empty, if none found
+    my $dir = shift || croak "Need a directory to check";
+    my $dag = shift || croak "Need a dag filename";
+    my $base = basename($dag);
+    my @result = ();
+
+    local(*DIR);
+    if ( opendir( DIR, $dir ) ) {
+	while ( defined ($_ = readdir(DIR)) ) {
+	    next unless /^$base/o; # only pegasus-planned DAGs
+	    next unless /\.rescue$/; # that have a rescue DAG.
+	    push( @result, File::Spec->catfile( $dir, $_ ) );
+	}
+	@result = sort @result;
+	closedir DIR;
+    }
+
+    wantarray ? @result : $result[$#result];
+}
+
+sub log10($) {
+    # purpose: Simpler than ceil(log($x) / log(10))
+    # paramtr: $x (IN): non-negative number
+    # returns: approximate width of number
+    use integer;
+    my $x = shift;
+    my $result = 0;
+    while ( $x > 1 ) {
+	$result++;
+	$x /= 10;
+    }
+    $result || 1;
+}
+
+#
+# --- main ------------------------------------------------------
+#
+
+# sanity check: lower umask
+umask 0002;
+
+# if brain-dump failed, this will be undefined
+# if the user corrupted things, this will not be readable
+die "ERROR: Unable to determine job state log\n" 
+    unless ( $config{jsd} && -r $config{jsd} );
+
+# where were we...
+my $here = File::Spec->curdir();
+$SIG{'__DIE__'} = sub {
+    chdir($here) if defined $here;
+};
+chdir($run) || die "ERROR: chdir $run: $!\n";
+
+# sanity check: find the tailstat daemon
+die "ERROR: Unable to execute $tsd\n" unless -x $tsd;
+print STDERR "# found $tsd\n" if $main::DEBUG;
+
+# sanity check: Is there a GLOBUS_LOCATION?
+die( "ERROR: Your environment setup misses GLOBUS_LOCATION. This bodes ill.\n",
+     "Please check carefully that you have sourced the correct setup files!\n" )
+    unless exists $ENV{'GLOBUS_LOCATION'};
+
+# sanity check: find grid-proxy-init from GLOBUS_LOCATION
+my $g_l = $ENV{'GLOBUS_LOCATION'};
+print STDERR "# GLOBUS_LOCATION=$g_l\n" if $main::DEBUG;
+
+my $gpi = File::Spec->catfile( $g_l, 'bin', 'grid-proxy-info' );
+die "ERROR: Unable to find $gpi\n" unless -x $gpi;
+print STDERR "# found $gpi\n" if $main::DEBUG;
+
+## sanity check: Is there a G_T_P_R
+print STDERR "# GLOBUS_TCP_PORT_RANGE=", $ENV{'GLOBUS_TCP_PORT_RANGE'}, "\n"
+    if ( exists $ENV{'GLOBUS_TCP_PORT_RANGE'} && $main::DEBUG );
+print STDERR "# GLOBUS_TCP_SOURCE_RANGE=", $ENV{'GLOBUS_TCP_SOURCE_RANGE'}, "\n"
+    if ( exists $ENV{'GLOBUS_TCP_SOURCE_RANGE'} && $main::DEBUG );
+
+# sanity check: Is G_L part of L_L_P?
+my @llp = grep { /^$g_l/ } split /:/, $ENV{'LD_LIBRARY_PATH'};
+die( "ERROR: Your LD_LIBRARY_PATH does not contain a directory which has your\n",
+     "GLOBUS_LOCATION as a prefix. Something is severly amiss here.\n" )
+    if @llp == 0;
+print STDERR "# found $llp[0]\n" if $main::DEBUG;
+
+# common user error
+# sanity check: Sufficient time left on grid proxy certificate
+open( GPI, "$gpi -timeleft 2>&1|" ) || die "open $gpi: $!\n";
+my $timeleft = <GPI>;
+chomp($timeleft);
+$timeleft += 0;			# make numeric
+close GPI;
+die( "ERROR: $gpi died on signal ", ($? & 127) ) if ( ($? & 127) > 0 );
+die( "ERROR: Grid proxy not initialized\n" ) if $timeleft == -1;
+die( "ERROR: Grid proxy expired, please refresh\n" ) if $timeleft == 0;
+die( "ERROR: $gpi exited with status ", $?>>8 ) if ( $? != 0 );
+die( "ERROR: Too little time left ($timeleft s) on grid proxy\n" ) 
+    if $timeleft < 7200;
+print STDERR "# grid proxy has $timeleft s left\n" if $main::DEBUG;
+
+# find pegasus-submit-dag
+my $vsd = File::Spec->catfile( $config{pegasushome}, 'bin', 'pegasus-submit-dag' );
+die "ERROR: Unable to access $vsd\n" unless -x $vsd;
+print STDERR "# found $vsd\n" if $main::DEBUG;
+
+# sanity check: Is the DAG file there? 
+die "ERROR: Unable to locate $config{dag}\n" unless -r $config{dag};
+print STDERR "# found $config{dag}\n" if $main::DEBUG;
+
+# NEW: is there a rescue file, or multiple rescue levels?
+my $original;
+my @rescue = check_rescue($run,$config{dag});
+if ( @rescue > 0 ) {
+    my (@stat,%rescue,$maxsize);
+    foreach my $fn ( @rescue ) {
+	if ( (@stat = stat($fn)) > 0 ) {
+	    $rescue{$fn} = [ @stat ];
+	    $maxsize = $stat[7] if $maxsize < $stat[7];
+	}
+    }
+
+    print "\n\nDetected the presence of Rescue DAGs:\n";
+    my $width = log10($maxsize);
+    foreach my $fn ( @rescue ) {
+	printf( " %s %*u %s\n", 
+		isodate($rescue{$fn}[9]), 
+		$width, $rescue{$fn}[7], 
+		basename($fn) );
+    }
+
+    # overwrite with "latest" (read: longest basename) rescue DAG
+    $original = $config{dag};
+    $config{dag} = $rescue[$#rescue];
+    print "\nWILL USE ", $config{dag}, "\n\n";
+}
+
+# start DAGMan with default throttles
+my @extra = ();
+foreach my $k ( keys %initial ) {
+    push( @extra, "-D$k=$initial{$k}" );
+}
+
+my @args = ( $vsd );
+push( @args, @extra ) if @extra > 0;
+push( @args, '-d', 0+$main::DEBUG, $config{dag} );
+print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
+system(@args) == 0 
+    or die( "ERROR: Running pegasus-submit-dag failed with ", $? >> 8 );
+print STDERR "# dagman is running\n" if $main::DEBUG;
+
+# run tailstatd to update job stats until DAGMan finishes
+@args = create_args( $tsd, $config{dag} . '.dagman.out' );
+print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
+system(@args) == 0 
+    or die( "ERROR: Running @{[basename($args[0])]} failed with ", 
+	    parse_exit($?) );
+print STDERR "# $tsd is running\n" if $main::DEBUG;
+
+# If using Pegasus delegation cache daemon, start one, if necessary
+# FIXME: No locking here, though I should lock
+if ( defined $vdd && length($vdd) ) {
+    unless ( -e vdd_socket() ) {
+	@args = create_args( $vdd );
+	print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
+	if ( system(@args) == 0 ) {
+	    print STDERR "# $vdd is running\n" if $main::DEBUG;
+	} else {
+	    print STDERR "ERROR: Ignoring @{[basename($args[0])]} failed with ",
+	    parse_exit($?);
+	}
+    } else {
+	print "# $vdd already appears to be running\n" if $main::DEBUG;
+    }
+}
+
+# update workflow in work db -- late connect
+eval {
+    my $workdb = Work::Workflow->new($props); # fail late
+    my $workid = $workdb->work_id( $config{basedir}, $config{vogroup}, 
+				   $config{label}, $config{rundir} );
+    $workdb->update_work( $workid, -1 );
+    undef $workdb;
+};
+warn "Warning: While trying to access work database\n$@\n" if $@;
+
+# next step
+if ( @rescue > 0 ) {
+    my $n = @rescue + 0;
+    print( "\nI found $n rescue DAG", ( $n>1 ? 's' : '' ), 
+	   ". I submitted the rescue DAG\n", 
+	   $config{dag}, "\ninstead of\n", $original, "\n" );
+}
+
+print << "EOF";
+
+I have started your workflow, committed it to DAGMan, and updated its
+state in the work database. A separate daemon was started to collect
+information about the progress of the workflow. The job state will soon
+be visible. Your workflow runs in base directory
+
+cd $run
+
+EOF
+
+chdir($here);
+exit 0;

@@ -1,0 +1,51 @@
+#
+# this VDL file will be run through a preprocessor
+# which converts certain macros
+#
+TR @USER@::preprocess:1.0( output b[], input a )
+{
+  argument = "-a top -T60";
+  argument = " -i "${input:a};
+  argument = " -o "${output:b};
+}
+
+TR @USER@::findrange:1.0( output b, input a2, input a1, 
+   none name="findrange", none p="0.0" )
+{
+  argument arg = "-a "${none:name} " -T60";
+  argument = " -i "${input:a1}" "${input:a2};
+  argument = " -o "${output:b};
+  argument = " -p "${none:p};
+}
+
+TR @USER@::analyze:1.0( output b, input a[] )
+{
+  argument arg = "-a bottom -T60";
+  argument = " -i "${input:a};
+  argument = " -o "${output:b};
+}
+
+DV @USER@::top:1.0->@USER@::preprocess:1.0,1.0( 
+  b=[ @{output:"@USER@.f.b1":"true"}, @{output:"@USER@.f.b2":"true"} ], 
+  a=@{input:"@USER@.f.a"} 
+);
+
+DV @USER@::left:1.0->@USER@::findrange:1.0,1.0( 
+  b=@{output:"@USER@.f.c1":"true"}, 
+ a2=@{input:"@USER@.f.b2":"true"}, 
+ a1=@{input:"@USER@.f.b1":"true"}, 
+  name="left", p="0.5" 
+);
+
+DV @USER@::right:1.0->@USER@::findrange:1.0,1.0( 
+  b=@{output:"@USER@.f.c2":"true"},
+ a2=@{input:"@USER@.f.b2":"true"},
+ a1=@{input:"@USER@.f.b1":"true"},
+  name="right", p="1.0" 
+);
+
+DV @USER@::bottom:1.0->@USER@::analyze:1.0,1.0( 
+  b=@{output:"@USER@.f.d"}, 
+  a=[ @{input:"@USER@.f.c1"}, @{input:"@USER@.f.c2"} ] 
+);
+

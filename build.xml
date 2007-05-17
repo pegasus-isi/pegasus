@@ -1,0 +1,530 @@
+<?xml version="1.0"?>
+<!-- $Id: build.xml,v 1.67 2006/10/10 21:33:42 gmehta Exp $ -->
+<project name="pegasus-all" default="jar">
+  <description>Manages Pegasus</description>
+  <property name="build.src" location="build/classes"/>
+  <property environment="env"/>
+
+  <target name="getsystem"
+          description="Obtains the system information and architecture"
+          unless="dist.arch">
+    <exec executable="${env.PEGASUS_HOME}/release-tools/getsystem/getsystem"
+          outputproperty="dist.arch"
+          failonerror="true"/>
+    <echo>Architecture ${dist.arch}</echo>
+  </target>
+
+  <target name="init" depends="getsystem" unless="ISODATE.full">
+    <tstamp/>
+    <mkdir dir="dist"/>  
+    <mkdir dir="${build.src}"/>
+    <copy preservelastmodified="true" todir="${build.src}" file="LICENSE"/>
+    <copy preservelastmodified="true" todir="${build.src}" file="GTPL"/>
+    <tstamp>
+      <format property="ISODATE.full" pattern="yyyy-MM-dd'T'HH:mm:ssZZZZZ"/>
+      <format property="ISODATE.short" pattern="yyyyMMdd"/>
+      <format property="ISODATE.utc" pattern="yyyyMMddHHmmss'Z'" timezone="UTC"/>
+    </tstamp>
+    <echo>full ISO timestamp: ${ISODATE.full}</echo>   
+
+    <!-- substitute built timestamp into Version.java -->
+    <exec executable="sed" 
+	  output="src/org/griphyn/common/util/Version.java">
+      <arg value="-e"/>
+      <arg value="s/BUILDTIMESTAMP/${ISODATE.utc}/"/>
+      <arg value="-e"/>
+      <arg value="s/BUILDARCHITECTURE/${dist.arch}/"/>
+      <arg value="-e"/>
+      <arg value="s/DONOTEDITWARNING/DO NOT EDIT! This file is generated automatically/"/>
+      <arg value="src/org/griphyn/common/util/Version.in"/>
+    </exec>
+  </target>
+
+  <target name="version" depends="common"
+	  unless="dist.dir"
+	  description="Provides the version number from within PEGASUS to ANT">
+    <taskdef name="versiontask"
+	     classpath="${build.src}"
+	     classname="VersionTask"/>
+    <versiontask/>
+    <echo>${pegasus.version}</echo>
+    <property name="dist.dir" location="dist/pegasus-${pegasus.version}"/>
+    <property name="dist.lib" location="${dist.dir}/lib"/> 
+    <property name="dist.doc" location="${dist.dir}/doc"/>
+    <property name="dist.man" location="${dist.dir}/man"/>
+    <mkdir dir="${dist.dir}"/>
+    <echo file="${dist.dir}/stamp">${ISODATE.utc} ${dist.arch}${line.separator}</echo>
+    <!-- developer env sneak -->
+    <echo file="stamp">${ISODATE.utc} ${dist.arch}${line.separator}</echo>
+  </target>
+
+  <target name="common" depends="init"
+	  description="Compiles the code common to both, Chimera and Pegasus">
+    <javac destdir="${build.src}" srcdir="src" 
+	   encoding="ISO-8859-1" deprecation="true" debug="true"
+           target="1.5" source="1.5"
+	   includes="org/griphyn/common/**/*.java,*.java"
+	   excludes="org/griphyn/common/**/*Test.java,*Test.java"/>
+  </target>
+
+  <target name="chimera" depends="init"
+	  description="Compiles the abstract planner Chimera">
+    <javac destdir="${build.src}" srcdir="src" 
+           target="1.5" source="1.5"
+	   encoding="ISO-8859-1" debug="true"
+	   includes="org/griphyn/vdl/*.java,org/griphyn/vdl/**/*.java"
+           excludes="org/griphyn/vdl/*Test.java,org/griphyn/vdl/**/*Test.java"/>
+  </target>
+
+  <target name="pegasus" depends="init"
+	  description="Compiles the concrete planner Pegasus">
+    <javac destdir="${build.src}" srcdir="src"
+           target="1.5" source="1.5"
+	   encoding="ISO-8859-1" debug="true"
+	   includes="org/griphyn/cPlanner/**/*.java"
+	   excludes="org/griphyn/cPlanner/**/*Test.java"/>
+  </target>
+
+  <target name="compile" depends="init"
+	  description="Compiles all sources, including tests">
+    <javac destdir="${build.src}" srcdir="src" 
+           target="1.5" source="1.5"
+	   encoding="ISO-8859-1" debug="true"
+	   includes="*.java,org/**/*.java"/>
+  </target>
+
+  <target name="deprecation" depends="init"
+	  description="compiles everything with deprecation flag">
+    <javac destdir="${build.src}" srcdir="src" 
+           target="1.5" source="1.5"
+	   encoding="ISO-8859-1" deprecation="true" debug="true"
+	   includes="*.java,org/**/*.java"/>
+  </target>
+
+  <target name="jar" depends="compile,version"
+	  description="Create the PEGASUS JAR files excluding tests">
+    <mkdir dir="${dist.lib}"/>
+    <jar destfile="${dist.lib}/pegasus.jar" basedir="${build.src}"
+	 excludes="*.class,org/griphyn/**/*Test.class"/>
+    <chmod perm="a+x" file="${dist.lib}/pegasus.jar"/>
+  </target>
+
+  <target name="abstract-jar" depends="version,chimera"
+          description="Compiles a jar to test web services with">
+    <mkdir dir="${dist.lib}"/>
+    <jar destfile="${dist.lib}/abstract.jar" basedir="${build.src}"
+	 excludes="*.class,org/griphyn/**/*Test.class,org/griphyn/cPlanner/**/*.class"/>
+  </target>
+
+  <target name="validate-latex">
+    <condition property="latex.available">
+      <and>
+	<or>
+	  <available file="pdflatex"     filepath="${env.PATH}"/>
+	  <available file="pdflatex.exe" filepath="${env.PATH}"/>
+	  <available file="pdflatex.exe" filepath="${env.Path}"/>
+	</or>
+	<or>
+	  <available file="makeindex"     filepath="${env.PATH}"/>
+	  <available file="makeindex.exe" filepath="${env.PATH}"/>
+	  <available file="makeindex.exe" filepath="${env.Path}"/>
+	</or>
+      </and>
+    </condition>
+    <echo>latex.available=${latex.available}</echo>
+  </target>
+  
+  <target name="latex-pre" depends="version">
+    <mkdir dir="${dist.doc}"/>
+    <uptodate property="pegasus.predicate.latex">
+      <srcfiles dir="etc" includes="sample.properties"/>
+      <mapper type="regexp" from="^(.*)sample\.(.*)$" to="${dist.doc}/\2.pdf"/>
+    </uptodate>
+  </target>
+  
+  <target name="latex" depends="latex-pre,validate-latex,jar"
+          description="Runs PDF-LaTeX to auto-document properties" 
+	  if="latex.available"
+          unless="pegasus.predicate.latex">
+    <exec executable="libexec/assemble-sample-props"
+	  failonerror="true">
+      <arg file="${dist.doc}/properties.pdf"/>
+    </exec>
+    <exec executable="libexec/assemble-sample-props"
+	  failonerror="true"> <arg
+	  file="${env.PEGASUS_HOME}/etc/sample.dot.wfrc"/> <arg
+	  file="${dist.doc}/wfrc.pdf"/>
+    </exec>
+  </target>
+
+  <target name="javadoc-pre" depends="version">
+    <uptodate property="pegasus.predicate.doc">
+      <srcfiles dir="src" includes="org/griphyn/**/*.java" 
+	        excludes="**/*Test.java"/>
+      <mapper type="glob" from="*.java" to="${dist.doc}/javadoc/*.html"/>
+    </uptodate>
+  </target>    
+
+  <target name="javadoc" depends="compile,javadoc-pre"
+          description="Generates the javadoc auto-documentation"
+          unless="pegasus.predicate.doc">
+    <!-- <delete dir="${dist.doc}/javadoc"/> -->
+    <javadoc destdir="${dist.doc}/javadoc"
+             Author="true" 
+	     Use="true"
+             Version="true"
+             Private="true"
+             Windowtitle="PEGASUS">
+      <packageset dir="src">
+        <!-- <include name="org/globus/**"/> -->
+        <include name="org/griphyn/common/**"/>
+        <include name="org/griphyn/vdl/**"/>
+        <include name="org/griphyn/cPlanner/**"/>
+      </packageset>
+      <fileset dir="src" includes="*.java"/>
+      <doctitle><![CDATA[PEGASUS ${pegasus.version}]]></doctitle>
+      <bottom><![CDATA[<i>Copyright &#169; 2007 The University of Southern California. All Rights Reserved.</i>]]></bottom>
+      <!-- <group title="Replica Management" packages="org.globus.*"/> -->
+      <group title="Common Shared Code" packages="org.griphyn.common.*"/>
+      <group title="Chimera">
+	<package name="org.griphyn.vdl"/>
+	<package name="org.griphyn.vdl.*"/>
+      </group>
+      <group title="Pegasus" packages="org.griphyn.cPlanner.*"/>
+      <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+    </javadoc>
+  </target>
+
+  <target name="validate-make">
+    <condition property="make.available">
+      <or>
+	<available file="gmake"    filepath="${env.PATH}"/>
+	<available file="make"     filepath="${env.PATH}"/>
+	<available file="make.exe" filepath="${env.PATH}"/>
+	<available file="make.exe" filepath="${env.Path}"/>
+      </or>
+    </condition>
+    <echo>make.available=${make.available}</echo>
+  </target>
+
+  <target name="ctools" depends="version,validate-make"
+          description="INTERNAL: Compiles all C tools, no installation" 
+	  if="make.available">
+    <exec executable="${basedir}/src/tools/make.pl" dir="src/tools" failonerror="true">
+      <env key="prefix" value="${dist.dir}"/>
+      <arg line="prefix=${dist.dir} all"/>
+    </exec>
+  </target>
+
+  <target name="ctools-all" depends="version,validate-make"
+          description="INTERNAL: Compiles all C tools and installs them"
+	  if="make.available">
+    <mkdir dir="${dist.dir}/man"/>
+    <mkdir dir="${dist.dir}/man/man1"/>
+    <mkdir dir="${dist.dir}/bin"/>
+    <exec executable="${basedir}/src/tools/make.pl" dir="src/tools" failonerror="true">
+      <env key="prefix" value="${dist.dir}"/>
+      <arg line="prefix=${dist.dir}"/>
+      <arg line="install.all"/>
+    </exec>
+  </target>
+
+  <target name="ctools-clean" depends="validate-make"
+          description="INTERNAL: Cleans up all C tools" 
+	  if="make.available">
+    <exec executable="${basedir}/src/tools/make.pl" dir="src/tools" failonerror="true">
+      <arg line="distclean"/>
+    </exec>
+  </target>
+
+  <target name="validate-groff">
+    <condition property="groff.available">
+      <or>
+	<available file="groff"     filepath="${env.PATH}"/>
+	<available file="groff.exe" filepath="${env.PATH}"/>
+	<available file="groff.exe" filepath="${env.Path}"/>
+      </or>
+    </condition>
+    <echo>groff.available=${groff.available}</echo>
+  </target>
+
+  <target name="man-ps" depends="validate-groff,version" 
+	  if="groff.available">
+    <mkdir dir="${dist.man}"/>
+    <apply executable="${basedir}/groff.sh" dest="${dist.man}">
+      <srcfile/>
+      <targetfile/>
+      <fileset dir="man/man1" includes="*.1"/>
+      <mapper type="glob" from="*.1" to="*.ps"/>
+    </apply>
+  </target>
+
+  <target name="man-txt" depends="validate-groff,version" 
+	  if="groff.available">
+    <mkdir dir="${dist.man}"/>
+    <apply executable="${basedir}/groff.sh" dest="${dist.man}">
+      <srcfile/>
+      <targetfile/>
+      <fileset dir="man/man1" includes="*.1"/>
+      <mapper type="glob" from="*.1" to="*.txt"/>
+    </apply>
+  </target>
+
+  <target name="man-html" depends="validate-groff,version" 
+          if="groff.available">
+    <mkdir dir="${dist.man}"/>
+    <apply executable="${basedir}/groff.sh" dest="${dist.man}">
+      <srcfile/>
+      <targetfile/>
+      <fileset dir="man/man1" includes="*.1"/>
+      <mapper type="glob" from="*.1" to="*.html"/>
+    </apply>
+  </target>
+
+  <target name="man-roff" depends="version"
+          description="[internal] Copies roff sources to distribution">
+    <mkdir dir="${dist.man}/man1"/>
+    <copy preservelastmodified="true" todir="${dist.man}/man1">
+      <fileset dir="man/man1" includes="*.1"/>
+    </copy>
+  </target>
+
+  <target name="man" depends="man-roff,man-ps,man-html,man-txt"
+          description="Copies and formats the client tool manpages"/>
+
+  <target depends="jar" name="webapps">
+    <!-- prepares for creation of the .war file -->
+    <property name="webapp.src" value="contrib/chiron"/>
+    <property name="webapp.dir" value="dist/webapps"/>
+    <mkdir dir="${webapp.dir}"/>
+    <mkdir dir="${webapp.dir}/tmp"/>
+    <copy todir="${webapp.dir}">
+      <fileset dir="${webapp.src}">
+        <exclude name="**/*~"/>
+      </fileset>
+    </copy>
+    <copy todir="${webapp.dir}/WEB-INF/lib">
+      <fileset dir="lib">
+      <include name="*.jar"/>
+      <exclude name="pegasus.jar"/>
+      </fileset>
+    </copy>
+    <copy todir="${webapp.dir}/WEB-INF/lib">
+      <fileset dir="${dist.lib}">
+      <include name="pegasus.jar"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="dist-war" depends="webapps"
+	  description="Creates the WAR file for the Chiron portal">
+    <jar basedir="dist/webapps" jarfile="dist/chiron-${pegasus.version}.war"/>
+  </target>
+
+  <target name="dist-setup-app">
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${dist.dir}/bin">
+	<include name="*"/>
+	<!-- <include name="sparcv?/*"/> -->
+	<exclude name="*.bat"/>
+	<exclude name="*.cmd"/>
+      </fileset>
+    </chmod>
+    <echo>Ran chmod on ${dist.dir}/bin</echo>
+  </target>
+
+  <target name="dist-worker" depends="version,ctools-all,getsystem"
+          description="Creates a distribution of only the C/C++ tools">
+    <!-- bin -->
+    <copy preservelastmodified="true" todir="${dist.dir}/bin">
+      <fileset dir="bin">
+	<include name="dirmanager"/>
+        <include name="cleanup"/>
+        
+	<!-- add script files to copy as necessary -->
+      </fileset>
+    </copy>
+    <antcall target="dist-setup-app"/>
+    <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
+    <copy preservelastmodified="true" todir="${dist.dir}" file="GTPL"/>
+    <copy preservelastmodified="true" todir="${dist.dir}" file="RELEASE_NOTES"/>
+
+    <!-- creates the worker tarball -->
+    <exec executable="sh" dir="dist">
+      <arg value="-c"/>
+      <arg value="tar cf pegasus-worker-${pegasus.version}.tar pegasus-${pegasus.version}"/>
+    </exec>
+    <gzip src="dist/pegasus-worker-${pegasus.version}.tar" 
+	  destfile="dist/pegasus-worker-${pegasus.version}-${dist.arch}.tar.gz"/>
+    <delete file="dist/pegasus-worker-${pegasus.version}.tar"/>
+  </target>
+
+  <target name="cpio">
+    <!-- copies trees preserving all flags and links -->
+    <exec executable="sh" dir="${src.dir}">
+      <arg value="-c"/>
+      <arg value="find * -depth | cpio -pdma ${dst.dir}"/>
+    </exec>
+  </target>
+
+  <target name="dist-copy-lib" depends="version">
+    <mkdir dir="${dist.lib}"/>
+    <copy preservelastmodified="true" todir="${dist.lib}">
+      <fileset dir="lib" includes="*.jar">
+	<exclude name="antlr.debug.jar"/>
+	<exclude name="antlr.jar"/>
+	<exclude name="cog.jar"/>
+	<exclude name="loggerservice.jar"/>
+	<exclude name="mysql-connector-java-2*"/>
+	<exclude name="pg*jdbc2.jar"/>
+	<exclude name="pg73*.jar"/>
+      </fileset>
+      <fileset dir="lib" includes="*.sh"/>
+      <fileset dir="lib">
+        <include name="0*"/>
+	<include name="C*"/>
+	<include name="L*"/>
+	<include name="R*"/>
+      </fileset>
+    </copy>
+    <mkdir dir="${dist.lib}/perl"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/perl">
+      <fileset dir="lib/perl" includes="**/*.pm"/>
+    </copy>
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${dist.lib}" includes="*.jar"/>
+    </chmod>
+  </target>
+
+  <target name="dist" depends="jar,latex,javadoc,man,ctools-all,getsystem"
+          description="Sets up the dist directory">
+    <!-- bin -->
+    <mkdir dir="${dist.dir}/bin"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/bin">
+      <fileset dir="bin">
+        <exclude name="*-free"/>
+        <exclude name="CVS"/>
+        <exclude name="Archive"/>
+        <exclude name="Archive/*"/>
+      </fileset>
+    </copy>
+    <fixcrlf srcdir="${dist.dir}/bin" eol="crlf" 
+             includes="*.bat,*.cmd" />
+    <fixcrlf srcdir="${dist.dir}/bin" eol="lf">
+      <exclude name="*.bat"/>
+      <exclude name="*.cmd"/>
+      <exclude name="*-free"/>
+      <exclude name="T2"/>
+      <exclude name="transfer"/>
+      <exclude name="kickstart"/>
+      <exclude name="k.2"/>
+      <exclude name="keg"/>
+      <exclude name="guc"/>
+      <exclude name="invoke"/>
+      <exclude name="keg.condor"/>
+      <exclude name="seqexec"/>
+      <exclude name="mpi*"/>
+      <exclude name="condor-log-parser"/>
+    </fixcrlf>
+    <antcall target="dist-setup-app"/>
+
+    <!-- contrib -->
+    <mkdir dir="${dist.dir}/contrib"/>
+    <antcall target="cpio">
+      <param name="src.dir" value="contrib"/>
+      <param name="dst.dir" value="${dist.dir}/contrib"/>
+    </antcall>
+
+    <!-- doc -->
+    <mkdir dir="${dist.doc}"/>
+    <copy preservelastmodified="true" todir="${dist.doc}">
+      <fileset dir="doc" includes="**/*" 
+               excludes="properties.pdf,wfrc.pdf"/>
+    </copy>
+
+    <!-- etc -->
+    <mkdir dir="${dist.dir}/etc"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/etc">
+      <fileset dir="etc" includes="**/*"/>
+    </copy>
+
+    <!-- examples -->
+    <mkdir dir="${dist.dir}/examples"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/examples">
+      <fileset dir="examples" includes="**/*"/>
+    </copy>
+
+    <!-- lib -->
+    <antcall target="dist-copy-lib"/>
+
+    <!-- libexec -->
+    <mkdir dir="${dist.dir}/libexec"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/libexec">
+      <fileset dir="libexec" includes="**/*"/>
+    </copy>
+    <fixcrlf srcdir="${dist.dir}/libexec" eol="lf"/>
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${dist.dir}/libexec" excludes="README*"/>
+    </chmod>
+
+    <!-- share -->
+    <mkdir dir="${dist.dir}/share"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/share">
+      <fileset dir="share" includes="*"/>
+    </copy>
+
+    <!-- sql -->
+    <mkdir dir="${dist.dir}/sql"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/sql">
+      <fileset dir="sql" includes="README*,*my*,*pg*"/>
+    </copy>
+    <fixcrlf srcdir="${dist.dir}/sql" tab="remove" tablength="8" 
+	     excludes="README*" eol="lf"/>
+
+    <!-- test -->
+    <mkdir dir="${dist.dir}/test"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/test">
+      <fileset dir="test" includes="**/*" excludes="mike/**"/>
+      <mapper type="regexp" from="Jensens/(.*)$" to="\1"/>
+    </copy>
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${dist.dir}/test" includes="**/*.pl,**/*sh"/>
+    </chmod>
+
+    <!-- var -->
+    <mkdir dir="${dist.dir}/var"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/var">
+      <fileset dir="var" includes="*"/>
+    </copy>
+
+    <!-- . -->
+    <copy preservelastmodified="true" todir="${dist.dir}">
+      <fileset dir=".">
+	<include name="README"/>
+<include name="LICENSE"/>                                                               
+    <include name="GTPL"/> 
+        <include name="RELEASE_NOTES"/>
+	<include name="CHANGELOG"/>
+	<include name="setup.*sh"/>
+      </fileset>
+    </copy>
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${dist.dir}" includes="setup.*sh"/>
+    </chmod>
+
+    <!-- creates the binary tarball -->
+    <exec executable="sh" dir="dist">
+      <arg value="-c"/>
+      <arg value="tar cf pegasus-binary-${pegasus.version}.tar pegasus-${pegasus.version}"/>
+    </exec>
+    <gzip src="dist/pegasus-binary-${pegasus.version}.tar" 
+	  destfile="dist/pegasus-binary-${pegasus.version}-${dist.arch}.tar.gz"/>
+    <delete file="dist/pegasus-binary-${pegasus.version}.tar"/>
+  </target>
+
+  <target name="clean" depends="ctools-clean"
+	  description="Removes the build and dist directories">
+    <delete dir="dist"/>
+    <delete dir="build"/>
+  </target>
+</project>

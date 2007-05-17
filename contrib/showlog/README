@@ -1,0 +1,16 @@
+The newly revamped show-run replaces show-chimera. There is one subtle
+change in commandline options, which should make things easier:
+
+   OLD STYLE                           NEW STYLE
+   ---------                           ---------
+   -b base (mandatory)                 -b base is optional
+   -l clog (mandatory)                 log location is "found"
+
+   n.a.                                -D dag file, mandatory
+
+The show-run tool relies on a number of files: The .dag file, the .log
+file that all your Condor jobs logged into, the .sub files and the .out
+files produced by kickstart. The submit files will be found relative to
+the base directory, from information inside the DAG file. The kickstart
+output records are expected to be found in the same location. 
+

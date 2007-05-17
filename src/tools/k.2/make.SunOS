@@ -1,0 +1,11 @@
+#!/bin/sh
+gmake distclean 
+rm -rf SunWS_cache
+gmake EXTRACFLAGS='$(V7FLAGS)' k.2
+mv k.2 k.2.sparcv7
+gmake clean
+rm -rf SunWS_cache
+gmake EXTRACFLAGS='$(V9FLAGS)' k.2
+mv k.2 k.2.sparcv9
+gmake clean
+rm -rf SunWS_cache

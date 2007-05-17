@@ -1,0 +1,280 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: transfer.1,v 1.5 2006/07/13 09:47:33 benc Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.\"
+.TH keg 1 "August, 06th 2002"
+.SH "NAME"
+transfer \- a globus\-url\-copy wrapper
+.SH "SYNOPSIS"
+.B transfer
+[\-g\~guc] [\-P\~pp] [\-f] [\-t\~bs] [\-p\~ns] [\-r\~n] [\-q] [\-R]
+[\-T\~iv] [\-i\~iv] [\-s] [\-S] baseuri basemnt
+.PP
+.B transfer
+[\-g\~guc] [\-P\~pp] [\-f] [\-t\~bs] [\-p\~ns] [\-r\~n] [\-q] [\-R]
+[\-T\~iv] [\-i\~iv] [\-s] [\-S] baseuri basemnt fof
+.SH "DESCRIPTION"
+The 
+.I transfer 
+program is a wrapper around 
+.I globus-url-copy 
+to handle a list of source and destination URIs. The list is either 
+supplied inside a file passed as third argument, or via
+.IR stdin .
+.PP
+The
+.I transfer
+program will check for the existence and accessibility of the Globus
+client programs
+.I globus-url-copy 
+and 
+.IR grid-proxy-info . 
+The 
+.I transfer
+program will exit with an error if the user proxy certificate does
+not have at least one hour remaining.
+.PP
+There is a local transfer mode to increase efficiency. If both source
+URL and destination URL are in the 
+.I file
+URL schema, a local symbolic link will be placed instead of incurring
+the overhead of invoking a
+.IR globus-url-copy .
+Symlinking is a feature that cannot be switched off. 
+.SH "ARGUMENTS"
+The 
+.I transfer
+program distinguishes between versions of 
+.I globus-url-copy
+that do support the 
+.B \-f
+argument, called batching mode afterwards, and versions that do not have
+that capability. The behavior of the 
+.I transfer
+program is distinctly different in batching mode than in non-batching
+mode. 
+.TP
+.B \-g guc
+This option permits to specify a particular version of
+.I globus-url-copy
+to use. The argument
+.B guc
+is the fully-qualified pathname to the 
+.I globus-url-copy 
+to use.
+.IP
+The default is to use the system-installed 
+.I globus-url-copy
+from 
+.IR $GLOBUS_LOCATION/bin .
+Additionally, the location 
+.I $PEGASUS_HOME/bin
+is checked for a program called
+.I guc
+with better capabilities than the system one.
+.TP
+.B \-P pp
+configures the maximum number of parallel running globus-url-copy
+processes. Please note that no sanity checks are implemented. If you
+use an unreasonably high number, you might run out of file descriptors
+or user processes. 
+.IP
+The default is to run no more than 4 parallel active copy processes.
+.TP
+.B \-f
+This option pertains to the use of local symbolic links. If a local
+symbolic link was chosen, with this option active,
+.I transfer
+will emulate the behavior of 
+.IR ln\~\-sf .
+.TP
+.B \-t bs
+configures the buffer size of the
+.I \-tcp\-bs 
+parameter from globus-url-copy. A well-tuned buffer size may have 
+beneficial effects while insane buffer sizes gobble resources.
+.IP
+The default is 0, which lets the system determine the appropriate size.
+.TP
+.B \-p ns
+configures the number of parallel streams that are use with the
+.I \-p
+option of globus-url-copy to transfer a single file. 
+.IP
+By default, only 1 stream is being used. 
+.TP
+.B \-r n
+This option is currently only active for 
+.I globus-url-copy
+without the ability to batch. In this case, the argument
+.B n
+specifies the number of retries for the a given URL pair before
+giving up. Certain error conditions merit a premature giving up.
+.IP
+By default, 5 retry attempts are made. This does not apply to batching 
+mode (yet). 
+.TP
+.B \-q
+Enforces some modicum of quietness. It can be specified multiple times
+for more quietness. 
+.IP
+By default, 
+.I transfer
+is somewhat talkive. 
+.TP
+.B \-R
+This option affects the retry mode of option 
+.B \-r 
+above. If specified, almost all server-side gridftp errors are ignored
+and made retryable. 
+.IP
+By default, most server-side error conditions merit a premature exit
+from retries. This does not apply to batching mode (ever). 
+.TP
+.B \-T iv
+When in retry mode, see
+.B \-r
+option above, this option permits to deal with the initial sleep time
+for before attempting the next retry. After each retry, the sleep time
+is double to enforce an exponential backoff due to server overload. The
+argument is a floating point number in seconds. 
+.IP 
+By default, a 5.0 second initial retry sleep is used. This does not
+apply to batching mode (yet). 
+.TP
+.B \-i iv
+When in retry mode, see
+.B \-r
+option above, this option permits to deal with the sleep time before the
+initial transfer attempt is being made. By staggering the transfers, it
+is hoped to provoke less overload scenarios. The argument is a floating
+point number in seconds.   
+.IP
+By default, a 0.2 second initial sleep is used. This does not apply to
+batching mode (ever).  
+.TP
+.B \-S
+This option applies to batching mode. If specified, the URL pairs are
+sorted by a hash value from the source URL hostname over the available
+transfer slots. Such behavior is useful, if the filelist contains
+multiple source servers. 
+.IP
+Note: This option may be extended in the future.
+.IP
+By default, the URL pairs are sorted round-robin over the available
+slots. Such behavior is useful, if only a single source is present. 
+.TP
+.B \-s
+If this option is specified, all configurable options are shown after
+all arguments were parsed. This permits to check defaults. 
+.TP
+.B baseuri
+specifies the URI prefix of the host that the instance of the
+.I transfer 
+program is running upon. It is the URI-prefix one would use from the
+outside to access files. You may use an (almost) arbitrary character 
+string to denote that you don't intend to use this feature. See also
+.I basemnt.
+.IP
+This is a required argument. There are no defaults.
+.TP
+.B basemnt
+denotes the mount point that reflects the inside view where paths
+with the
+.I baseuri
+prefix would be mounted to. You can use an almost arbitrary string
+to denote not to use this feature.
+.IP
+Together, the two required arguments allow optimization by replacing
+an external URI with an internal file:/// schema, as the latter is 
+usually faster.
+.IP
+This is a required argument. There are no defaults.
+.PP
+The list of URIs denoting files to transfer is either put onto
+.IR stdin ,
+or it is the optional third argument. The list of URIs contains
+pairs. The source URI is on the first line, the complementary
+destination URI on the next line. Thus, the file list must have
+an even number of lines. 
+.IP
+The two line format was chosen, because in praxi URIs may contain
+unquoted whitespaces. However, for batching mode, a one pair per
+line is being re-assembled. 
+.SH "RETURN VALUE"
+Execution as planned will return 0. Normal failures will return 1.
+Check-up failures due to inaccessible globus-url-copy or grid-proxy-info
+will return 2. Failure to install the signal handler returns 3. Failure
+from the transfer of any file will return 42.
+.SH "SEE ALSO"
+.BR globus-url-copy,
+.BR grid-proxy-info
+.SH EXAMPLE
+If the input file
+.I fof
+looks like
+.nf
+\f(CB
+gsiftp://some.host/some/where/a
+https://any.host/else/where/a
+gsiftp://some.host/some/where/b
+https://any.host/else/where/b
+gsiftp://another.host/some/where/c
+https://any.host/else/where/c
+gsiftp://another.host/some/where/d
+https://any.host/else/where/d
+\fP
+.fi
+and the 
+.I transfer
+executable was invoked like
+.nf
+\f(CB
+transfer gsiftp://another.host/some /mnt/some fof
+\fP
+.fi
+on host 
+.IR another.host, 
+the transfer program would do the following calls to globus-url-copy
+in parallel (since by default it starts four instances maximum):
+.nf
+\f(CB
+globus-url-copy gsiftp://some.host/some/where/a https://any.host/else/where/a
+globus-url-copy gsiftp://some.host/some/where/b https://any.host/else/where/b
+globus-url-copy file:///mnt/some/where/c https://any.host/else/where/c
+globus-url-copy file:///mnt/some/where/d https://any.host/else/where/d
+\fP
+.fi
+.SH RESTRICTIONS
+The list of filesnames must be a textual file with an even number of
+lines.
+.PP
+Outragious requests for memory or parallel resources will lead to failure
+of the transfer. 
+.SH AUTHORS
+Jens-S. Vöckler <voeckler@cs.uchicago.edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde@mcs.anl.gov>,
+.br
+Yong Zhao <yongzh@cs.uchicago.edu>.
+.PP
+.\"Chimera
+.\".B http://www.griphyn.org/chimera/
+.\".br
+GriPhyN
+.BR http://www.griphyn.org/

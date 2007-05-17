@@ -1,0 +1,11 @@
+vds.db.vdc.schema	  NXDSchema
+vds.db.ptc.schema         NXDInvSchema
+vds.db.*.driver		  org.exist.xmldb.DatabaseImpl
+vds.db.*.driver.url       xmldb:exist://localhost:8080/exist/xmlrpc
+vds.db.*.driver.user      guest
+vds.db.*.driver.password  guest
+vds.rls.url             rls://sheveled.mcs.anl.gov
+vds.replica.mode        rls
+vds.exitcode.mode       all
+vds.pool.mode		xml
+

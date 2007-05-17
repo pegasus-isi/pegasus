@@ -1,0 +1,192 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: shplanner.1,v 1.7 2006/07/12 15:22:05 benc Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.\"
+.TH "shplanner" "1" "1.4.2" "GriPhyN Virtual Data System"
+.SH "NAME"
+.LP
+shplanner \- generate shell scripts fit for local execution
+.SH "SYNTAX"
+.B shplanner
+[\-Dprop [..]] [\-o dir] [\-k kickstart] [-b] [-n] dax-file
+.br
+.B shplanner
+[\-Dprop [..]] \-V
+.SH DESCRIPTION
+The shell planner allows a user to quickly and without Condor or Grid
+infrastructure to test application for compatibility with the GVDS
+planning process. The
+.B shplanner
+command creates a couple of shell scripts for the jobs to run, according
+to the dependencies in the DAX input file, and existence of referenced
+files in the filesystem.
+.PP
+The planner uses the VDS catalog infrastructure of replica catalog, site
+catalog and transformation catalog. The replica catalog is used to
+determine the location of existing files on pool
+.I local 
+during the planning process. At run-time, unless disabled, new data
+files are registered with the replica catalog. The site catalog is
+optional. It is used to determine the location of kickstart for job
+starts, and to gather any profiles like environment settings. The
+transformation catalog is queried for the job's application on the
+site
+.IR local .
+.SH "ARGUMENTS"
+.TP
+.B \-Dprop
+The \-D option in conjunction with properties allows an experienced user
+to override certain properties which influence the program execution,
+among them the default location of the user's properties file and the
+catalog locations. One may set several CLI properties by giving this
+option multiple times.
+.I The \-D option(s) must be the first option on the command line. 
+Properties on the command\-line take precedence over the file\-based
+properties of the same key.
+.TP
+.B \-\-build
+.PD 0
+.TP
+.PD 1
+.B \-b
+enters the build mode, as opposed to default make mode. In build mode,
+all jobs in the DAX will be executed. In make mode, only those jobs are
+executed which produce files missing from the replica catalog.
+.IP
+Default is the make mode.
+.TP
+.B \-\-kickstart fn
+.PD 0
+.TP
+.PD 1
+.B \-k fn
+This option permits to overide the location of the 
+.I kickstart
+program. The 
+.I kickstart
+program starts programs and records their execution. It is a good source
+for debugging and provides provenance tracking information. Any argument
+execpt the empty string points to the location of a local installation
+of
+.IR kickstart .
+The empty string forces the shell planner to ignore kickstart, as does
+an invalid location. 
+.IP
+By default, the kickstart location is determined from the site catalog.
+If the site catalog is inaccessible, or the location cannot be correctly
+determined, kickstart is not used. 
+.TP
+.B \-\-output dir
+.PD 0
+.TP
+.PD 1
+.B \-o dir
+permits to specify the location to generate the scripts into. 
+.IP
+Default is to use a directory named after the workflow's label.
+.TP
+.B \-\-no\-register
+.PD 0
+.TP
+.PD 1
+.B \-n 
+enters the do-not-register mode. Usually, all files produced need to be
+registered with the replica catalog. In certain environments, the
+registration is not wanted.
+.IP
+Default is to register data products with the replica catalog.
+.TP
+.B \-\-version
+.PD 0
+.TP
+.PD 1
+.B \-V
+displays the version of the GriPhyN Virtual Data System you are using.
+.TP
+.B \-\-verbose
+.PD 0
+.TP
+.PD 1
+.B \-v
+increases the verbosity of messages about what is going on. 
+.TP
+.B dax\-file
+Each invocation centers upon an abstractly planned dependency file
+(DAX). This is the single mandatory argument. 
+.SH "CHANGES"
+.LP
+The 
+.I hints
+profile namespace is no longer supported by the shell planner.
+.LP
+The old file-based replica catalog was retired in favor of the common
+GVDS replica catalog API. The new replica catalog API permits to connect
+to local database tables, LRCs or RLS. 
+.LP 
+The old file-based transformation catalog was retired in favor of the
+common GVDS transformation catalog API. 
+.SH "RETURN VALUE"
+Regular and planned program terminations will result in an exit code of 0.
+Abnormal termination will result in a non-zero exit code.
+.SH FILES
+.TP
+.B $VDS_HOME/etc/dax-1.10.xsd
+is the suggested location of the latest DAX schema to produce DAX output.
+.TP
+.B $VDS_HOME/etc/properties
+contains the system properties with all configurable options.
+.TP
+.B $HOME/.vdsrc
+contains the user properties with all configurable options.
+.TP
+.B gvds.jar
+contains all compiled Java bytecode to run the GriPhyN Virtual Data System.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B $VDS_HOME
+is the suggested base directory of your the execution environment.
+.TP
+.B $JAVA_HOME
+should be set and point to a valid location to start the intended Java
+virtual machine as
+.IR $JAVA_HOME/bin/java .
+.TP
+.B $CLASSPATH
+should be set to contain all necessary files for the execution environment.
+Please make sure that your 
+.I CLASSPATH
+includes pointer to the Xerces 2 classes to run this program.
+.SH "SEE ALSO"
+.BR gencdag (1),
+.BR gendax (1).
+.SH "EXAMPLE"
+.I TBD
+.SH "RESTRICTIONS"
+Plenty. 
+.SH "AUTHORS"
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>,
+.br
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.PP
+VDS
+.B http://vds.isi.edu/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

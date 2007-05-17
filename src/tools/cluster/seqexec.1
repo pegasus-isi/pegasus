@@ -1,0 +1,159 @@
+.\"
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: seqexec.1,v 1.1 2006/05/26 17:51:00 voeckler Exp $
+.\"
+.\" Authors: Jens-S. Vöckler
+.\"
+.\"
+.TH "seqexec" "1" "1.4.2" "GriPhyN Virtual Data System"
+.SH "NAME"
+seqexec \- run a bunch of applications
+.SH "SYNTAX"
+.B seqexec [\-d] [\-f] [\-s\~fn] [\-R\~fn] [inputfile]
+.SH "DESCRIPTION"
+The 
+.B seqexec
+tool executes a list of application in the order specified. It
+is generally used to do horizontal clustering of independent
+application, and does not care about any application failures.
+Such failures should be caught by using
+.B kickstart
+to start application. In vertical clustering mode, the 
+.I hard failure
+mode is encouraged, ending execution as soon as one application
+fails. When running a complex workflow through 
+.BR seqexec ,
+the order of applications must be topologically sorted.
+.PP
+Applications are usually using
+.B kickstart
+to execute. In the
+.B kickstart 
+case, all invocations of 
+.B kickstart
+except the first should add the 
+.B kickstart
+option
+.I \-H
+to supress repeating the XML preamble. 
+.PP
+.B seqexec
+permits shell-style quoting. One level of quoting is removed from the 
+arguments. Please note that 
+.B kickstart
+will also remove one level of quoting. 
+.SH "ARGUMENTS"
+.TP
+.B \-d
+This option increases the debug level. Debug message are generated on 
+.IR stdout .
+.IP
+By default, debugging is minimal.
+.TP
+.B \-f
+In hard failure mode, as soon as one application fails, either through
+a non-zero exit code, or by dying on a signal, further execution is
+stopped. 
+.IP
+By default, all applications are executed regardless of failures. 
+.TP
+.B \-h
+This option prints the help message and exits the program.
+.TP
+.B \-s fn
+This option will send protocol message (for Mei) to the specified
+file. 
+.IP
+By default, all message are written to 
+.IR stdout .
+.TP
+.B \-R fn
+The progress reporting feature, if turned on, will write one event
+record whenever an application is started, and one event record whenever
+an application finished. This is to enable tracking of jobs in progress.
+.IP
+By default, track logs are not written, unless the environment
+variable
+.I SEQEXEC_PROGRESS_REPORT
+is set. If set, progress reports are appended to the file pointed
+to by the environment variable. 
+.TP
+.B inputfile
+The input file specifies a list of application to run, one per line. 
+Comments and empty lines are permitted. The comment character is the
+octothorpe (#), and extends to the end of line. 
+.IP
+By default, 
+.B seqexec
+uses
+.I stdin
+to read the list of applications to execute. 
+.SH "RETURN VALUE"
+The
+.B seqexec
+tool returns 1, if an illegal option was used. It returns 2, if the
+status file from option
+.B \-s
+cannot be opened. It returns 3, if the input file cannot be opened. 
+It does
+.I not
+return any failure for failed applications, except in hard failure mode,
+where it will return 5.
+.SH "SEE ALSO"
+.BR kickstart (1).
+.SH "EXAMPLE"
+The following shows an example input file to
+.B seqexec
+making use of 
+.B kickstart
+to track applications. 
+.nf
+\f(CB
+#
+# mkdir
+/path/to/kickstart -R HPC -n mkdir /bin/mkdir -m 2755 -p split-corpus split-ne-corpus
+#
+# drop-dian
+/path/to/kickstart -H -R HPC -n drop-dian -o '^f-new.plain' /path/to/drop-dian /path/to/f-tok.plain /path/to/f-tok.NE
+#
+# split-corpus
+/path/to/kickstart -H -R HPC -n split-corpus /path/to/split-seq-new.pl 23 f-new.plain split-corpus/corpus.
+#
+# split-corpus
+/path/to/kickstart -H -R HPC -n split-corpus /path/to/split-seq-new.pl 23 /path/to/f-tok.NE split-ne-corpus/corpus.
+\fP
+.fi
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B SEQEXEC_PROGRESS_REPORT
+If this variable is set, and points to a writable file location,
+progress report records are appended to the file. While care is
+taken to atomically append records to the log file, in case 
+concurrent instances of
+.B seqexec
+are running, broken Linux NFS may still garble some content. 
+.SH "AUTHORS"
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>
+.PP
+VDS
+.B http://vds.isi.edu/
+and
+.B http://vds.uchicago.edu/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

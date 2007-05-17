@@ -1,0 +1,50 @@
+The annotational VDC is the new default VDC. If you have a previous VDC
+before version 1.3.6, please use the -old.sql files for it.
+
+The "real" Documentation
+------------------------
+
+Please refer to the Database Admin Guide for the in-depth documentation.
+
+Filenames
+---------
+
+The schema-related filenames follow a pattern:
+
+	<work>-<db>-<schema>.sql
+
+where
+
+  <work>	is either "create" to instantiate a schema
+		or "delete" to drop the schema and all data.
+		The "update" is used to migrate an existing
+		database from an old schema to a new schema.
+
+  <db>		is the database backend for which this flavor of
+		DDL instruction is being issued:
+
+	my	MySQL 4.0.*
+	pg	PostGreSQL 7.4.* (we do NOT recommend Pg 8.0.*)
+	sl      SQLite 2.* (not supported)
+
+  <schema>	is a short for a database schema description.
+		Currently we support:
+
+	init	schema metadata upon which the rest depends
+	tc	org.griphyn.common.catalog.transformation.Database
+	rc      JDBC generic (uses autoinc) implementation
+	wf      workflow manager and site information
+
+The schemas marked with a "+" are mutually exclusive. The special files:
+
+	<work>-<db>.sql
+
+creates, deletes, or updates a recommended set of schemas
+(init,anno,ptc,tc,rc,wf) for Annotations. Alternatively, the special
+files:
+
+	<work>-<db>-old.sql
+
+creates, deletes, or updates a recommended set of schemas
+(init,chunk,ptc,tc,rc,wf) for chunks.
+

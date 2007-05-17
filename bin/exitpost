@@ -1,0 +1,148 @@
+#!/usr/bin/env perl
+#
+# To be run as Condor DAGMan POST script, will invoke PEGASUS_HOME exitcode internally.
+#
+# Usage: exitpost [exitcode options] dot-out-file 
+#
+# This file or a portion of this file is licensed under the terms of
+# the Globus Toolkit Public License, found in file GTPL, or at
+# http://www.globus.org/toolkit/download/license.html. This notice must
+# appear in redistributions of this file, with or without modification.
+#
+# Redistributions of this Software, with or without modification, must
+# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+# some other similar material which is provided with the Software (if
+# any).
+#
+# Copyright 1999-2004 University of Chicago and The University of
+# Southern California. All rights reserved.
+#
+# Author: Jens-S. Vöckler jens at isi dot edu
+# Revision : $Revision: 1.3 $
+#
+use 5.006;
+use strict;
+use File::Spec;
+use File::Basename qw(dirname);
+
+sub fatal($) {
+    # purpose: fail fatally similar to die()
+    # paramtr: $reason: single string reason, no line-feed!
+    # returns: does not return
+    #
+    warn $_[0], "\n";
+    exit 42;
+}
+
+sub rescue($) {
+    # purpose: Rename a file with a digit backup
+    # paramtr: $oldfn (IN): Original filename
+    # returns: result from rename() function, see perldoc -f rename
+    # warning: 1000 backup files already tax many Unix filesystems
+    #
+    my $oldfn = shift;
+    my $result = undef;
+
+    local(*TEST);
+    my ($i,$newfn);
+    for ( $i=0; $i<1000; ++$i ) {
+	$newfn = sprintf '%s.%03d', $oldfn, $i;
+	# open() is cheaper/faster than stat()
+	if ( open( TEST, "<$newfn" ) ) {
+	    # file exists, move on
+	    close TEST;
+	} else {
+	    $result = rename( $oldfn, $newfn );
+	    last;
+	}
+    }
+    fatal "ERROR: Too many backups" if $i >= 1000;
+
+    $result;
+}
+
+sub test_and_rescue($) {
+    # purpose: Check for file existence and rescue, if it does exist
+    # paramtr: $fn (IN): filenmame
+    # returns: undef if not renamed, or result from rename() op
+    #
+    my $fn = shift;
+    my $result = undef;
+    local(*TRY);
+    if ( open( TRY, "<$fn" ) ) {
+	close TRY;
+	$result = rescue($fn);
+    }
+    $result;
+}
+
+sub silent_killer($) {
+    # purpose: Check for PBS walltime exceeded silent killer.
+    # paramtr: $fn (IN): filename which captures stderr
+    # returns: 0 for OK, 9 if silent kill was detected
+    #
+    my $fn = shift;
+    my $result = 0;
+
+    local(*ERR);
+    if ( open( ERR, "<$fn" ) ) {
+	# we need only the last line
+	my $line = '';
+	while ( <ERR> ) { $line = $_ }
+	close ERR;
+	$result = 9 if ( $line =~ /PBS: job killed: / );
+    }
+    $result;
+}
+
+# import Time::HiRes, but do not fail if it does not exist
+eval { require Time::HiRes };
+my $timeok = ( $@ ? 0 : 1 );
+
+my $ec = 'exitcode';
+if ( exists $ENV{'PEGASUS_HOME'} ) {
+    # use PEGASUS_HOME
+    $ec = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'exitcode' );
+} else {
+    # check this script's directory
+    $ec = File::Spec->catfile( dirname($0), 'exitcode' );
+}
+fatal "ERROR: Unable to find $ec\n" unless -e $ec;
+fatal "ERROR: Unable to read $ec\n" unless -r _;
+fatal "ERROR: Unable to execute $ec\n" unless -x _;
+
+# first run exitcode
+my $start = ( $timeok ? &Time::HiRes::time : time() );
+system { $ec } ( $ec, @ARGV );	# run efficiently 
+my $rc = $?;			# remember
+my $final = ( $timeok ? &Time::HiRes::time : time() );
+
+# small debug for self
+my $tmp = $ENV{TMP} || $ENV{TEMP} || File::Spec->tmpdir() || '/tmp';
+my $user = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($<);
+if ( open( LOG, ">>$tmp/ExitPost.$user" ) ) {
+    my @now = localtime($final);
+    my $msg = sprintf( "%04d-%02d-%02dT%02d:%02d:%02d %7.3f [$$] $0\n",
+		       $now[5]+1900, $now[4]+1, $now[3], 
+		       $now[2], $now[1], $now[0], $final-$start );
+    syswrite( LOG, $msg );
+    close LOG;
+}
+
+# then rename all files
+my $fn;
+for ( my $i=$#ARGV; $i >= 0; --$i ) {
+    # quit loop at first thing that starts with a hyphen
+    last if substr($ARGV[$i],0,1) eq '-';
+    # rescue dot-out file
+    test_and_rescue( $ARGV[$i] );
+
+    # rescue PEGASUS_HOME-style dot-err file
+    my $err = substr($ARGV[$i],0,-4) . '.err';
+    my $rc2 = silent_killer($err);
+    test_and_rescue( $err );
+    $rc = $rc2 << 8 if ( $rc==0 && $rc2 != 0 );
+}
+
+# exit with exit code from exitcode. 
+exit( ($rc & 127) > 0 ? 42 : ($rc >> 8) );

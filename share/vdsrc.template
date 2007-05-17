@@ -1,0 +1,19 @@
+vds.db.vdc.schema       AnnotationSchema
+vds.db.ptc.schema       InvocationSchema
+vds.db.*.driver         <dbdriver>
+vds.db.*.driver.url     <db_url>
+vds.db.*.driver.user     <dbuser>
+vds.db.*.driver.password <dbpass>
+# shell-planner only RC file:
+vds.rc.file		${vds.home}/var/rc.data
+# concrete planner: 
+vds.rc		        rls
+vds.rc.url		<rlsuri>
+vds.tc			File
+vds.tc.file		${user.home}/.vds/current/tc.data
+vds.sc			xml
+vds.sc.file		${user.home}/.vds/current/sites.xml
+vds.exitcode		all
+vds.transfer   		multiple
+vds.scheduler.condor.output.stream      false
+vds.scheduler.condor.error.stream       false

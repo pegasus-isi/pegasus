@@ -1,0 +1,525 @@
+#!/usr/bin/env perl
+#
+# creates diagrams from jobstate log file, see --help for usage info.
+#
+use 5.006;
+use strict;
+use File::Spec;
+use File::Basename;
+use File::Temp qw(tempfile);
+use Time::Local;
+use Data::Dumper;
+use Getopt::Long qw(:config bundling no_ignore_case);
+
+$main::version = 'unknown';
+$_ = '$Revision: 1.9 $';       # don't edit
+$main::version = $1 if /Revision:\s+([0-9.]+)/o;
+
+sub usage {
+    my $base = basename($0,'.pl');
+    print "Usage: $base [options] dot-dag-file\n\n";
+    print "Mandatory arguments:\n";
+    print " dot-dat-file  path to the DAGMan input file. This path is also\n";
+    print "               used to derive the location of the jobstate.log.\n";
+    print "\n";
+    print "Optional arguments:\n";
+    print " -h|--help     print usage information and exit.\n";
+    print " -V|--version  print version information and exit.\n";
+    print " -k|--keep     don't unlink temporary data files.\n";
+    print " -a|--adjust s adjust time information by s seconds.\n";
+    print "\n";
+    exit(1);
+}
+
+# global variables
+my $adjustment = 0;		# time zone adjustment (@#~! Condor)
+my $nounlink = 0;		# remove temporary files later
+GetOptions( 'help|h' => \&usage, 
+	    'version|V' => sub { print "$main::version\n"; exit(0); },
+	    "keep|k!" => \$nounlink,
+	    "adjust|a=i" => \$adjustment );
+
+# determine dag filename to find kickstart records
+my $dagfn = shift || die "ERROR: Need the name of the DAG file\n";
+die "ERROR: No DAGMan file $dagfn\n" unless -r $dagfn;
+my $dagdir = File::Spec->rel2abs( dirname($dagfn) );
+
+# determine job log
+my $joblog = shift || File::Spec->catfile( $dagdir, 'jobstate.log' );
+die "ERROR: No jobstate file $joblog\n" unless -r $joblog;
+
+# globals
+my $dpo;			# used later as $diff+1
+$main::duration = 0.0;
+$main::min = $main::kmin = 1E20;
+$main::max = $main::kmax = 0;
+$main::failure = 0;
+%main::fail = ();
+%main::order = ();		# records earliest timestamp for jobid
+%main::state = 
+    ( UN_READY => -1,
+      PRE_SCRIPT_STARTED => 0,
+      PRE_SCRIPT_SUCCESS => 1,
+      PRE_SCRIPT_FAILURE => 1,
+      SUBMIT => 2,
+      GLOBUS_SUBMIT => 3,
+      GRID_SUBMIT => 3,
+      EXECUTE => 4,
+      IMAGE_SIZE => 4,
+      JOB_TERMINATED => 5,
+      JOB_ABORTED => 5,
+      POST_SCRIPT_STARTED => 6,
+      POST_SCRIPT_SUCCESS => 7,
+      POST_SCRIPT_TERMINATED => -1,
+      POST_SCRIPT_FAILURE => 7 );
+
+sub find_exec($;$) {
+    # purpose: determine location of given binary in $PATH
+    # paramtr: $program (IN): executable basename to look for
+    #          $curdir (opt. IN): if true, logically also check '.'
+    # returns: fully qualified path to binary, undef if not found
+    my $program = shift;
+    my $curdir = shift;
+    foreach my $dir ( File::Spec->path ) {
+        my $fs = File::Spec->catfile( $dir, $program );
+        return $fs if -x $fs;
+    }
+    if ( defined $curdir && $curdir ) {
+        my $fs = File::Spec->catfile( File::Spec->curdir(), $program );
+        return $fs if -x $fs;
+    }
+    undef;
+}
+
+sub unix2iso (;$) {
+    my $stamp = shift || time();
+    my $offset = int($stamp) - timelocal( (gmtime($stamp))[0..5] );
+    my @stamp = localtime($stamp);
+    my $result = sprintf( "%04d-%02d-%02dT%02d:%02d:%02d", 
+			  $stamp[5]+1900, $stamp[4]+1, $stamp[3],
+			  $stamp[2], $stamp[1], $stamp[0] );
+    $result .= ( ( $offset >= 0 ) ? '+' : '-' );
+    $offset = abs($offset);
+    $result .= sprintf( "%02d:%02d", $offset / 3600, ($offset % 3600) / 60 );
+}
+
+sub iso2unix ($) {
+    local $_ = shift;
+    die unless /(\d{4})-?(\d{2})-?(\d{2})T(\d{2}):?(\d{2}):?(\d{2})/;
+    my $stamp = timegm($6,$5,$4,$3,$2-1,$1-1900);
+    die unless /\.(\d+)([-+])(\d{2}):?(\d{2})$/;
+    my ($fraction,$pm,$offset) = ("0.$1",$2,$3*3600+$4*60);
+    $stamp += $fraction;
+    $stamp += (( $pm eq '-' ) ? $offset : -$offset);
+}
+
+sub default_title($) {
+    my $dagfn = shift;
+    my @stat = stat($dagfn);
+
+    my $result;
+    if ( @stat > 0 ) {
+	$result = unix2iso($stat[9]) . ' by ' . getpwuid($stat[4]);
+    } else {
+	$result = unix2iso() . ' by ' . getpwuid($>);
+    }
+    $result;
+}
+
+sub slurp_dagfile($) {
+    my $dagfn = shift;
+    my $dagdir = File::Spec->rel2abs( dirname($dagfn) );
+    my %result = ();
+    open( DAG, "<$dagfn" ) || die "ERROR: open $dagfn: $!\n";
+    my @x;
+    while ( <DAG> ) {
+	next unless /^job/i;
+	chomp;
+	@x = split;
+	$result{$x[1]} = ( index($x[2],0,1) eq '/' ) ? $x[2] : 
+	    File::Spec->catfile( $dagdir, $x[2] );
+    }
+    close DAG;
+    %result;
+}
+
+sub slurp_jobstate($) {
+    my $fn = shift;
+    open( JOB, "<$fn" ) ||
+	die "ERROR: Unable to read jobstate from $fn: $!\n";
+
+    #   stamp jobid state condorid sitehandle walltime
+    # * 1113521855 ID000017 UN_READY - - -
+    # x 1113521856 ID000017 PRE_SCRIPT_STARTED - - -
+    # x 1113521990 ID000017 PRE_SCRIPT_SUCCESS - - -
+    #   1113521996 ID000017 SUBMIT 1633.0 - -
+    # * 1113522089 ID000017 GLOBUS_SUBMIT 1633.0 griodine 120
+    #   1113522114 ID000017 EXECUTE 1633.0 griodine 120
+    #   1113522224 ID000017 JOB_TERMINATED 1633.0 griodine 120
+    # x 1113522224 ID000017 POST_SCRIPT_STARTED - griodine 120
+    # x 1113522426 ID000017 POST_SCRIPT_TERMINATED 1633.0 griodine 120
+    # x 1113522426 ID000017 POST_SCRIPT_SUCCESS - griodine 120
+    my (%result,@x);
+    while ( <JOB> ) {
+	my ($stamp,$jobid,$state,$condorid,$site) = split;
+	if ( $stamp !~ /^\d+$/ && $stamp > 0 ) {
+	    warn "Warning: Ignoring illegal input line $_";
+	    next;
+	}
+	    
+	$stamp += $adjustment;
+#	$main::min = $stamp if $main::min > $stamp;
+#	$main::max = $stamp if $main::max < $stamp;
+	if ( $jobid eq 'INTERNAL' ) {
+	    $main::min = $stamp 
+		if ( $condorid eq 'DAGMAN_STARTED' && $main::min > $stamp );
+	    $main::max = $stamp 
+		if ( $condorid eq 'DAGMAN_FINISHED' && $main::max < $stamp );
+	} else {
+	    $main::min = $stamp if $main::min > $stamp;
+	    $main::max = $stamp if $main::max < $stamp;
+	    if ( exists $main::state{$state} ) {
+		if ( $state eq 'PRE_SCRIPT_FAILURE' ) {
+		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[0], $stamp ] );
+		    $main::failure++;
+		} elsif ( $state eq 'POST_SCRIPT_FAILURE' ) {
+		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[6], $stamp ] );
+		    $main::failure++;
+		} elsif ( $state eq 'JOB_ABORTED' ) {
+		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[2], $stamp ] );
+		    $main::failure++;
+		}
+
+		if ( $main::state{$state} >= 0 ) {
+		    $main::order{$jobid} = 1E20
+			unless exists $main::order{$jobid};
+		    $main::order{$jobid} = $stamp
+			if $main::order{$jobid} > $stamp;
+		    $result{$jobid}[$main::state{$state}] = $stamp;
+		}
+	    } else {
+		warn "Warning: $jobid: Ignoring state $state\n";
+	    }
+	}
+    }
+
+    close JOB;
+    %result;
+}
+
+sub gen_data($$$\%) {
+    my $dfn = shift;
+    my $y = shift || die;
+    my $n = shift;		# number of jobs
+    my $p = shift;
+    die unless ref $p eq 'HASH';
+
+    # try auto-guess x scale
+    my ($xstubs,$xtics,$width);
+    my $diff = $main::max - $main::min;
+    if ( $diff <= 60 ) {
+	$xstubs = 5;
+	$xtics = 1;
+	$width = 8.0;
+    } elsif ( $diff <= 3600 ) {
+	$xstubs = 600;
+	$xtics = 60;
+	$width = 8.0;
+    } elsif ( $diff <= 14400 ) {
+	$xstubs = 1800;
+	$xtics = 600;
+	$width = ( $diff < 7200 ? 8.0 : $diff / 900 );
+    } elsif ( $diff <= 43200 ) {
+	$xstubs = 3600;
+	$xtics = 600;
+	$width = $diff / 3600;
+    } elsif ( $diff <= 86400 ) {
+	$xstubs = 7200;
+	$xtics = 1200;
+	$width = $diff / 7200;
+    } else {
+	die "ERROR: $diff s workflow is just too long!\n";
+    }
+
+    my $title = default_title($dagfn);
+    my $height = ( $n <= 101 ? 5.0 : $n / 20 );
+    warn "# xstubs=$xstubs, xticks=$xtics, width=$width, height=$height\n";
+
+    my $cfn = substr( $dfn, 0, -4 ) . "-$y.pls";
+    open( OUT, ">$cfn" ) || die "ERROR: open $cfn: $!\n";
+    print OUT << "END";
+//
+// generated: @{[scalar localtime]}
+//
+#proc getdata
+  file: $dfn
+
+#proc areadef
+  rectangle: 0 0 $width $height
+  xautorange: datafields=3,5,10,12
+  yautorange: datafield=$y
+  frame: width=0.5 color=gray(0.3)
+  title: $title
+  titledetails: align=C style=B size=14
+
+#proc xaxis
+  ticincrement: $xtics
+  grid: color=rgb(1,0.9,0.8) style=1 dashscale=2
+
+#proc xaxis
+  label: jobs over time
+  tics: yes
+  stubs: incremental $xstubs
+  minorticinc: $xtics
+  grid: color=gray(0.8)
+
+#proc yaxis
+  ticincrement: 1
+  grid: color=rgb(1,0.9,0.8) style=1 dashscale=2
+
+#proc yaxis
+  tics: yes
+  stubs: incremental 5
+  minorticinc: 1
+  grid: color=gray(0.8)
+
+#proc bars
+  select: \@3 != $dpo
+  outline: no
+  barwidth: 0.03
+  horizontalbars: yes
+  segmentfields: 3 4
+  locfield: $y
+  color: darkblue
+  tails: 0.03
+
+#proc legendentry
+  sampletype: color
+  label: pre script
+  details: darkblue
+
+#proc bars
+  outline: no
+  barwidth: 0.03
+  horizontalbars: yes
+  segmentfields: 5 8
+  locfield: $y
+  color: green
+  tails: 0.03
+
+#proc legendentry
+  sampletype: color
+  label: condor job
+  details: green
+
+#proc bars
+  select: \@9 != $dpo
+  outline: no
+  barwidth: 0.03
+  horizontalbars: yes
+  segmentfields: 9 10
+  locfield: $y
+  color: purple
+  tails: 0.03
+
+#proc legendentry
+  sampletype: color
+  label: post script
+  details: purple
+
+#proc bars
+  select: \@6 != $dpo
+  outline: color=yellow
+  color: yellow2
+  horizontalbars: yes
+  barwidth: 0.04
+  tails: no
+  segmentfields: 6 7
+  locfield: $y
+
+#proc legendentry
+  sampletype: color
+  label: Q delay
+  details: yellow2
+
+#proc scatterplot
+  select: \@7 != $dpo
+  xfield: 7
+  yfield: $y
+  symbol: shape=square style=spokes linecolor=black
+
+#proc bars
+  select: \@11 != $dpo
+  outline: color=gray(0.4)
+  color: gray(0.75)
+  horizontalbars: yes
+  barwidth: 0.06
+  tails: no
+  segmentfields: 11 12
+  locfield: $y
+
+#proc legendentry
+  sampletype: color
+  label: job duration
+  details: gray(0.75)
+
+END
+    ;
+
+    # deal with failures here (optional output)
+    if ( %main::fail > 0 ) {
+	print OUT "#proc getdata\n";
+	my $flag;
+	foreach my $jobid ( keys %main::fail ) {
+	    foreach my $item ( @{$main::fail{$jobid}} ) {
+		print OUT ( $flag ? "\t" : "data:\t" );
+		$flag=1;
+		printf OUT " %d", $p->{$jobid};
+		printf OUT " %d", $item->[0] - $main::min;
+		printf OUT " %d\n", $item->[1] - $main::min;
+	    }
+	}
+	print OUT << "END";
+
+#proc bars
+  outline: no
+  barwidth: 0.03
+  horizontalbars: yes
+  segmentfields: 2 3
+  locfield: 1
+  color: red
+  tails: 0.03
+
+#proc legendentry
+  sampletype: color
+  label: failed script
+  details: red
+
+END
+    ;
+    }
+
+    if ( $y == 1 ) {
+	print OUT "#proc legend\n";
+	print OUT "  format: multiline\n";
+	print OUT "  location: max-0.5 max\n\n";
+    } else {
+	print OUT "#proc legend\n";
+	print OUT "  format: multiline\n";
+	print OUT "  location: min+0.5 max\n\n";
+    }
+
+    close OUT;
+    $cfn;
+}
+
+# sanity check: find apps first, and fail early
+my %app = ();
+foreach my $app ( qw(ploticus convert) ) {
+    $app{$app} = find_exec($app) || die "ERROR: Unable to locate $app\n";
+}
+
+my %submit = slurp_dagfile($dagfn);
+my %job = slurp_jobstate($joblog);
+warn( "# min=$main::min @{[unix2iso($main::min)]}\n", 
+      "# max=$main::max @{[unix2iso($main::max)]}\n", 
+      "# diff=", $main::max-$main::min, "\n" );
+my @keylist = sort keys %job;	# sort by jobid -- Euryale only?
+my $count = 0;
+my %keylist = map { $_ => $count++ } @keylist;
+$count = 0;
+my %start = map { $_ => $count++ }
+            sort { $main::order{$a} <=> $main::order{$b} } @keylist;
+#            sort { $job{$a}[0] <=> $job{$b}[0] } @keylist;
+
+my $jsize = length( sprintf( "%d", $#keylist ) );
+my $diff = $main::max - $main::min;
+$dpo = $diff + 1;
+my $dsize = length( sprintf( "%d", $diff ) );
+
+my ($dfh,$dfn) = tempfile( 'sj-XXXXXX', SUFFIX => '.dat', 
+			   DIR => File::Spec->tmpdir() );
+die "ERROR: Unable to create temporary file\n" unless defined $dfh;
+
+for ( my $j=0; $j < @keylist; ++$j ) {
+    my $jobid = $keylist[$j];
+    printf $dfh "%*d %*d", $jsize, $j, $jsize, $start{$jobid};
+    # id y pss psf s gs ex t pss psf ksb ksf
+    #      ------- --------- ------- -------
+    for ( my $i=0; $i < @{$job{$jobid}}; ++$i ) {
+	if ( defined $job{$jobid}[$i] && $job{$jobid}[$i] > 0 ) {
+	    printf $dfh " %*d", $dsize, $job{$jobid}[$i] - $main::min;
+	} else {
+	    # printf $dfh " %*d", $dsize, $diff;
+	    printf $dfh " %*d", $dsize, $dpo;
+	}
+    }
+
+    if ( @{$job{$jobid}} == 8 ) {
+	my $kfn = substr( $submit{$jobid}, 0, -4 ) . '.out';
+	if ( -r $kfn && -s _ && open( KS, "<$kfn" ) ) {
+	    my ($kss,$ksf,$d);
+	    while ( <KS> ) {
+		next unless /<invocation\s/;
+		$kss = iso2unix($1) if /start=\"([^\"]+)\"/;
+	        $ksf = $kss+($d=$1) if /duration=\"([^\"]+)\"/;
+		$main::duration += $d if $d; 
+		$main::kmin = $kss if $main::kmin > $kss;
+		$main::kmax = $ksf if $main::kmax < $ksf;
+		$kss -= $main::min; $ksf -= $main::min;
+		if ( $kss > -100 && $ksf > -10 ) {
+		    printf $dfh " %*d", $dsize, $kss;
+		    printf $dfh " %*d", $dsize, $ksf;
+		} else {
+		    warn "Warning: kickstart duration out of range\n";
+		    printf $dfh " %*d %*d", $dsize, $dpo, $dsize, $dpo;
+		}
+		last;
+	    }
+	    close KS;
+	} else {
+	    warn "Warning: Not reading kickstart $kfn: $!\n";
+	    print $dfh " %*d %*d", $dsize, $dpo, $dsize, $dpo;
+	}
+    } else {
+	warn "Warning: job $jobid is underspecified\n";
+    }
+    print $dfh "\n";
+}
+close $dfh;
+
+my $n = 0 + @keylist;
+my (@arg);
+for ( my $y=1; $y <= 2; ++$y ) {
+    warn "# running y=$y...\n";
+
+    my $dagbase = basename( $dagfn );
+    $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $dagbase =~ s/-\d+$//;
+    
+    my $epsfn = File::Spec->catfile( $dagdir, $dagbase . "-$y.eps" );
+    my $jpgfn = File::Spec->catfile( $dagdir, $dagbase . "-$y.png" );
+    my $cfn = $y == 1 ?
+	gen_data( $dfn, $y, $n, %keylist ) :
+	gen_data( $dfn, $y, $n, %start );
+    @arg = ( $app{ploticus}, $cfn, '-eps', '-o', $epsfn  );
+    warn "# @arg\n";
+    system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
+
+    @arg = ( $app{convert}, '-density', '96x96', $epsfn, $jpgfn );
+    warn "# @arg\n";
+    system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
+    unlink $cfn unless $nounlink;
+}
+
+
+# statistics
+print "\n";
+printf( "number of jobs: %d\n", $count );
+printf( "number of script failures: %d\n", $main::failure );
+printf( "sequential duration of jobs: %.0f s\n", $main::duration );
+printf( "total workflow duration: %d s (speed-up %.1f)\n\n", 
+	$diff, $main::duration / $diff );
+
+unlink $dfn unless $nounlink;
+exit 0;

@@ -1,0 +1,10 @@
+#! /bin/sh
+#
+# convert a VDLx file into an VDLt file
+# $Id: vdlx2vdlt,v 1.6 2005/07/26 18:48:24 griphyn Exp $
+#
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java "-Dvds.home=$VDS_HOME" $addon org.griphyn.vdl.toolkit.VDLx2VDLt "$@"
+

@@ -1,0 +1,210 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: vds-submit-dag.1,v 1.3 2005/08/24 22:43:31 griphyn Exp $
+.\"
+.TH "vds-submit-dag" "1" "1.3.9" "GriPhyN Virtual Data System"
+.SH "NAME"
+vds-submit-dag \- wraps 
+.B condor_submit_dag
+with reasonable throttles.
+.SH SYNOPSIS
+.B vds-submit-dag [-Dprops] [options] dagfile
+.SH DESCRIPTION
+This small program wraps the 
+.B condor_submit_dag
+program to submit DAGs to Condor. While doing so, it institutes 
+reasonable defaults from VDS property files to throttle DAGMan. 
+By default, many of DAGman's options are not throttled and thus
+can cause havoc on the submit host under certain conditions. 
+.SH ARGUMENTS
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+CLI properties take precedence over the file-based properties of the
+same key. 
+.IP
+Please refer to the
+.B PROPERTIES 
+section below.
+.TP
+.B \-d level
+.PD 0
+.TP
+.PD 1
+.B \-\-debug level
+The debug level specifies the amount of verbosity accompanying actions.
+.IP
+By default, maximimum verbosity is chosen (value of -1). 
+.TP
+.B \-e c_d
+.PD 0
+.TP
+.PD 1
+.B \-\-dagman c_d
+This option permits to specify an alternate location of a 
+.B condor_dagman
+binary. This binary is the actual application constituting DAGMan. This
+option is mostly for developers who need to override the system default
+DAGMan. 
+.IP
+By default, the DAGman from the Condor installation is used.
+.TP
+.B \-j jobs
+.PD 0
+.TP
+.PD 1
+.B \-\-maxjobs jobs
+This option permits to limit the number of jobs that DAGman keeps
+submitted to Condor at any one time. If there are more runnable (ready)
+jobs than this number, remaining jobs are run as slots become free. 
+.IP
+By default, there is no limit on the number of jobs submittable to
+Condor. 
+.IP
+See also property
+.IR vds.dagman.maxjobs .
+.TP
+.B \-n x
+.PD 0
+.TP
+.PD 1
+.B \-\-notify x
+This option permits notifications at the end of a workflow. While DAGMan
+usually sends notifications, we don't like that feature most of the
+time. Thus, the wrapper disables notification. Levels of notification
+are 
+.BR error ,
+.B complete
+and
+.BR never .
+.IP
+By default, notifications are suppressed. 
+.IP
+See also property
+.IR vds.dagmax.notify .
+.TP
+.B \-P N
+.PD 0
+.TP
+.PD 1
+.B \-\-maxpre N
+This option limits the number of PRE scripts that are simultaneously
+runnable. While DAGman does not impose a limit, we find that about 20
+simultaneous complex PRE scripts are as many as a host can handle. 
+.IP
+By default, the PRE scripts are throttled to 20.
+.IP
+See also property
+.IR vds.dagman.maxpre .
+.TP
+.B \-p N
+.PD 0
+.TP
+.PD 1
+.B \-\-maxpost N
+This option limits the number of POST scripts that are simultaneously
+runnable. While DAGman does not impose a limit, we find that about 20
+simultaneous complex POST scripts are as many as a host can handle. 
+.IP
+By default, the POST scripts are throttled to 20.
+.IP
+See also property
+.IR vds.dagman.maxpost .
+.TP
+.PD 0
+.B \-v
+.PD 0
+.TP
+.PD 1
+.B \-\-verbose
+This option tells DAGman to enter its verbose mode. In verbose mode, it
+gives more error messages, and it generally tells more about what it
+currently is attempting to do.
+.IP
+By default, verbose mode is not entered. 
+.IP
+See also property
+.IR vds.dagman.verbose .
+.TP
+.PD 0
+.B \-V
+.TP
+.PD 1
+.B \-\-version
+displays the version of the GriPhyN Virtual Data System you are using.
+.SH "RETURN VALUE"
+The program will usually return with success (0). If problems were
+encountered, an exit code of 1 will follow the error message. If the 
+.B condor_submit_dag
+could not be called, because the 
+.B exec
+system call failed, an exit code of 127 is returned. 
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B VDS_HOME
+points to the installation base directory of your the VDS execution
+environment. 
+.TP
+.B PERL5LIB
+is a path-like variable. It must include to the VDS perl module
+installation. 
+.TP
+.B PATH
+should include the Condor binaries. 
+.SH "PROPERTIES"
+A number of properties can be read from the VDS property files.
+Currently, the Euryale property file is included in the process.
+Property precedence rules apply. If your property files mention one of
+the following properties, they will impact the way this wrapper
+determines defaults.
+.TP
+.B vds.dagman.maxpre
+If set, it throttles the maximum number of PRE scripts that can run
+simultaneously. A value of 0 disables throttling. Our default is 20.
+.TP
+.B vds.dagman.maxpost
+If set, it throttles the maximum number of POST scripts that can run
+simultaneously. A value of 0 disables throttling. Our default is 20. 
+.TP
+.B vds.dagman.maxjobs
+If set, it throttles the maximum number that DAGMan has submitted to
+Condor at any one time. A value of 0 disables throttling. Our default
+does not throttle this value. 
+.TP
+.B vds.dagman.notify
+If set, this is the notification level, when to send an email to the
+submitting user about certain DAGman final events. Our default is 
+.IR NEVER .
+.TP
+.B vds.dagman.verbose
+If set, DAGMan enters verbose submit mode. Our default is no verbosity. 
+.SH "SEE ALSO"
+.BR vds\-plan (1),
+.BR vds\-run (1),
+.BR tailstatd (1).
+.SH "AUTHORS"
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Gaurang Mehta <gmehta at isi dot edu>,
+.PP
+Chimera
+.B http://www.griphyn.org/chimera/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

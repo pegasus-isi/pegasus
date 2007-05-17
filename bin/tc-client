@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Query, Add, modify delete a TC.
+# 
+# $Id: tc-client,v 1.6 2005/09/10 02:12:19 gmehta Exp $
+
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java "-pegasus.home=${PEGASUS_HOME}" $addon org.griphyn.common.catalog.toolkit.TCClient "$@"

@@ -1,0 +1,160 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: vds-verify.1,v 1.2 2006/07/12 15:22:05 benc Exp $
+.\"
+.\" Authors: Jens-S. Vöckler
+.\"
+.\"
+.TH vds-verify 1 "August, 11th 2005"
+.SH NAME
+vds-verify \- checks for foreseeable pitfalls before you trip. 
+.SH SYNOPSIS
+.B vds-verify [-Dprops] [--debug | --quiet] (--pegasus | --euryale) daxfile
+.br
+.B vds-verify --help
+.SH DESCRIPTION
+The verify program checks for pitfalls that frequently occur when
+attempting to plan, or even run, a large workflow. The current check
+list includes, albeit all local to the submit host:
+.TP
+* environment setup and path check
+.TP
+* essential executable accessibility check
+.TP
+* property file parsing and sanity
+.TP
+* VDS catalog sanity checks
+.TP
+* Perl module availability and version check
+.TP
+* XML parsability of the DAX file
+.TP
+* dangling dependency DAX check
+.TP
+* DAX input files existence check (RC)
+.TP
+* DAX transformation existence check (TC)
+.SH ARGUMENTS
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+CLI properties take precedence over the file-based properties of the
+same key. 
+.TP
+.B \-d 
+.PD 0
+.TP
+.PD 1
+.B \-\-debug 
+The debug option specifies the amount of verbosity accompanying actions.
+It may be specified multiple times to increase verbosity. 
+.TP
+.B \-q
+.PD 0
+.TP
+.PD 1
+.B \-\-quiet
+If the quiet option is chosen, only warnings and errors will be
+displayed.
+.TP
+.B \-e
+.PD 0
+.TP
+.PD 1
+.B \-\-euryale
+This option specifies that the checks specific for the Euryale concrete
+planner are activated. The planner-specific checks include only a small
+subset of the overall-checks, limited to the Java properties. 
+.IP
+You must specify either \-\-pegasus or \-\-euryale.
+.TP
+.B \-p
+.PD 0
+.TP
+.PD 1
+.B \-\-pegasus
+This option specifies that the checks specific for the Pegasus concrete
+planner are activated. The planner-specific checks include only a small
+subset of the overall-checks, limited to the Java properties. 
+.IP
+You must specify either \-\-pegasus or \-\-euryale.
+.TP
+.B \-h
+.PD 0
+.TP
+.PD 1
+.B \-\-help
+shows a concise usage output.
+.TP
+.B \-E enc
+.PD 0
+.TP
+.PD 1
+.B \-\-encoding enc
+permits to use a different character encoding for the DAX file. 
+.IP
+By default, the XML file is assumed to be in 
+.I ISO-8859-1 
+format. 
+.SH "RETURN VALUE"
+The program will return with success, if the checks turn out OK. It may
+have displayed warnings along the way. If problems were encountered, an
+exit code of 1 will follow the error message.
+.SH EXAMPLE
+The following invocation checks a setup for a subsequent Euryale run.
+.nf
+\f(CB
+$ vds-verify --euryale ~/work/blackdiamond.dax 
+WARNING [pro]: transformation catalog style old is deprecated
+
+All is well that ends well.
+
+\fP
+.fi
+The property settings trigger a warning that the old style TC will fall
+prey to bit rot. The final message shows that no problem was perceived
+when attempting the workflow. A significantly more verbose output can be
+gained using the debug option.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B VDS_HOME
+points to the installation base directory of your the VDS execution
+environment. 
+.TP
+.B PERL5LIB
+is a path-like variable. It must include to the VDS perl module
+installation. 
+.TP
+.B PATH
+should include the Condor, Globus and VDS binaries. 
+.TP
+.B GLOBUS_LOCATION
+should point to the root of your Globus installation.
+.TP
+.B JAVA_HOME
+must point to the root of your Java installation (JRE suffices). 
+.SH AUTHORS
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.br
+Gaurang Mehta <gmehta at isi dot edu>,
+.PP
+GVDS
+.B http://www.griphyn.org/vds/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

@@ -1,0 +1,643 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\" 
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\" 
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\" 
+.\" $Id: vds-get-sites.1,v 1.10 2006/08/10 09:56:10 benc Exp $
+.TH "vds-get-sites" "1" "1.3.9" "Jens-S. VÃ¶ckler" "GriPhyN Virtual Data System"
+.SH "NAME"
+.LP 
+vds\-get\-sites \- generates a site catalog from gridcat sources.
+.SH "SYNTAX"
+.LP 
+.B vds\-get\-sites [\-Dprops] [\-\-grid gid] [\-\-euryale] [\-\-cutoff|\-C n] [\-\-debug|\-d] [\-\-globus] [\-\-with\-mis] [\-\-tc|\-t fn] [\-\-sc|\-s fn] [\-\-tc\-style mode] [\-\-sc\-style mode] [\-\-app|\-a ttc [\-\-keep]] [\-\-default\-rls rls] [\-\-default\-arch a::os] [\-\-default\-inst inst] [\-\-default\-version m.m.p]
+.LP 
+The following options modify each \fI\-\-grid\fR option they were
+specified after:
+.LP 
+.B 
+[\-\-type dbt] [\-\-host|\-h dbh] [\-\-port|\-p dbp] [\-\-dbname|\-D db] [\-\-user|\-u dbac] [\-\-pass|\-p dbpw] [\-\-rls|\-r url] [\-\-version|\-v m.m.p] [\-\-inst state] [\-\-arch a::os] 
+.LP 
+The following options override defaults derived from gridcat\-specific
+variables like $data etc.:
+.LP 
+.B 
+[\-\-workdir|\-w rdir] [\-\-vds|\-v rdir] [\-\-kick|\-k rks]
+.LP 
+.B vds\-get\-sites \-\-help
+.SH "DESCRIPTION"
+.LP 
+Each grid has its own grid handle, currently an identifier chosen by
+vds\-get\-sites. Each grid hosts its own gridcat. Each gridcat contains
+the configuration of all clusters associated with that grid.
+.LP 
+Gridcat provides in its tables \fIsites\fR and \fIsiteinfo\fR the
+necessary configuration information to describe a remote cluster. The
+\fBvds\-get\-sites\fR software extracts the configuration information
+about the special directories $app, $data, $grid3, $tmp and $wntmp, the
+addresses of gatekeeper and gridftp services, the jobmanagers available,
+the number of CPUs at the site, and the \fIsite handle\fR assigned to
+the site. The site handle is a unique identifier for the site. At the
+moment, it has to be globally unique, too.
+.LP 
+\fBvds\-get\-sites\fR queries one or more remote gridcat databases. It
+produces a site catalog (SC) and transformation catalog (TC) for all
+valid sites found on all chosen grids. \fBvds\-get\-sites\fR permits to
+query multiple gridcats, modifying information pertaining to the gridcat
+in the process.
+.SH "OPTIONS"
+.LP 
+The ordering of grid\-related options (see above) is important relative
+to the \-\-grid command\-line option. The ordering of \-\-grid
+command\-line options themselves is also important, if you have sites
+that participate in multiple grids.
+.TP 
+.B  \-Dprop
+The \-D option in conjunction with properties allows an experienced user
+to override certain properties which influence the program execution,
+among them the default location of the user's properties file and the
+catalog locations. One may set several CLI properties by giving this
+option multiple times.
+.I The \-D option(s) must be the first option on the command line. 
+Properties on the command\-line take precedence over the file\-based
+properties of the same key.
+.TP 
+.B \-\-cutoff n
+.PD 0
+.TP 
+.PD 1
+.B \-C n
+This option permits the exclusion of sites that fail to satisfy a requirement
+of a minimum of number of CPUs. Only sites with
+.I  n
+or more CPUs are included into the site\- and transformation\-catalog.
+.IP 
+The default setting is 1, which includes all sites that have a CPU number
+defined.
+.TP
+.B \-\-euryale
+is just a formatting option. If specified, the storage directory of 
+the gridftp server will be made identical to the working directory of
+a site. Euryale itself does not care (as of this writing). If the 
+.B \-\-workdir
+option set a different working directory, this will then also affect
+the storage directory.
+.IP
+Default is to always use the $data directory as storage path.
+.TP 
+.B \-\-debug
+.PD 0
+.TP 
+.PD 1
+.B \-d
+raises the debug level. A higher debug level will increase the verbosity of
+the output messages on
+.IR stderr .
+This is a multi\-option \- each specification will increase the debug
+level by 1.
+.IP 
+The default debug level is 0.
+.TP 
+.B \-\-globus
+This option triggers the deprecated generation of VDS
+.I globus
+universe jobmanager entries into the site catalog.
+.IP 
+It is off by default, and should not be used.
+.TP 
+.B \-\-with\-mis
+This option triggers the inclusion of the OSG information\-service
+jobmanagers called
+.IR jobmanager\-mis .
+Please note that this special jobmanager is limited to site monitoring
+infrastructure. It is
+.B not
+meant to run regular user jobs.
+.IP 
+It is off by default. If you don't know what MIS is good for, you will
+not need this option.
+.TP 
+.B \-\-tc fn
+.PD 0
+.TP 
+.PD 1
+.B \-t fn
+This option permits overriding of the location of the transformation
+catalog. Existing files will be backed up.
+.IP 
+The default is to read the location from property
+.IR vds.tc.file .
+If it does not exist, the default location 
+.I $VDS_HOME/var/tc.data
+is assumed.
+.TP 
+.B \-\-sc fn
+.PD 0
+.TP 
+.PD 1
+.B \-s fn
+This option permits overriding the location of the site catalog.
+Existing files will be backed up.
+.IP 
+The defualt is to read the location from property
+.IR vds.sc.file .
+If it does not exist, the default location
+.I $VDS_HOME/var/sites.txt
+or
+.I $VDS_HOME/var/sites.xml 
+is assumed, depending on the site catalog mode.
+.TP 
+.B \-\-tc\-style mode
+This option sets the mode or formatting of the transformation catalog. 
+Available styles include
+.I old
+for the deprecated 4\-column textual format,
+.I new
+for the 6\-column textual format, and 
+.I vds
+for the database\-driven format.
+.IP 
+Default is to read the format option from the property
+.I vds.tc
+or
+.IR vds.tc.mode .
+The Pegasus modes 
+.IR single ,
+.I multiple
+and
+.I OldFile
+translate into the Euryale style
+.IR old .
+The recommended Pegasus mode 
+.I File
+translates into Euryale style 
+.IR new .
+The Pegasus mode
+.I Database
+translates into Euryale style
+.IR vds .
+Default style in the absence of properties is
+.IR new .
+.TP 
+.B \-\-sc\-style mode
+This option sets the mode or formatting of the site catalog. Available
+styles include
+.I old
+for the deprecated multi\-column site catalog,
+.I new
+for the multi\-line site catalog, and
+.I xml
+for the XML site catalog.
+.IP 
+Default is to read the format option from the property
+.I  vds.sc
+or 
+.IR vds.pool.mode .
+The dysfunctional Pegasus modes
+.I single
+and
+.I multiple
+map to the Euryale style
+.IR old ,
+Pegasus mode
+.I Text
+maps to Euryale style
+.I new 
+and Pegasus mode
+.I XML
+maps to Euryale style 
+.IR xml .
+Default style in the absence of properties is
+.IR xml .
+.TP 
+.B \-\-grid gid
+This major option selects the gridcat from which to retreive the layout
+of the remote sites. It is a multi\-option, and may be specified
+multiple times to merge multiple grids into one site\- and
+transformation catalog.
+.IP 
+Currently, the following 
+.I gid
+values are available:
+
+    fallback   A UofC cached copy of the grid3 information
+    green      The Dartmouth clusters (private)
+    grid3      The Grid3 layout (deprecated)
+    osg        The OSG production layout database
+    osg\-itb    The OSG ITB layout database
+.IP 
+Default grid is 
+.IR osg .
+.LP 
+The following set of options, if specified after a
+.B \-\-grid
+option, permits modifications to the presets of the grid defaults. These
+options are useful to test alternative caches or to assign LRCs into
+your site catalog.
+.TP 
+.B \-\-type drv
+This option permits to specify a Perl DBI database driver module name,
+which is used to connect to the remote gridcat. You can obtain a list of
+modules available on your system using
+.nf
+\f(CB
+perl \-MDBI \-e 'DBI\->installed_versions'
+\fP
+.fi
+.IP 
+The default is determined from the grid 
+.I gid 
+value.
+.TP 
+.B \-\-host dbh
+.PD 0
+.TP 
+.PD 1
+.B \-h dbh
+This option permits to override the remote gridcat database host 
+.I dbh
+which is contacted for the chosen grid. 
+.IP 
+The default is determined from the grid 
+.I gid 
+value.
+.TP 
+.B \-\-port dbp
+.PD 0
+.TP 
+.PD 1
+.B \-p dbp
+This option permits to override the remote gridcat database port
+.I dbp
+which is contacted for the chosen grid.
+.IP 
+The default is determined from the grid 
+.I gid 
+value.
+.TP 
+.B \-\-dbname db
+.PD 0
+.TP 
+.PD 1
+.B \-D db
+This option permits to override the remote gridcat database name
+.IR db .
+The database name is like a namespace or collection of tables that is
+access through one common identifier. Please note that the short option
+.B \-D
+must not be used as first command\-line argument. 
+.IP 
+The default is determined from the grid 
+.I gid 
+value.
+.TP 
+.B \-\-user dbac
+.PD 0
+.TP 
+.PD 1
+.B \-u dbac
+This option permits to override the account 
+.I dbac
+used to access the remote gridcat database.
+.IP 
+The default is determined from the grid 
+.I gid 
+value.
+.TP 
+.B \-\-pass dbpw
+.PD 0
+.TP 
+.PD 1
+.B \-p dbpw
+This option permits to override the account's password
+.I dbpw
+that is used to access the remote gridcat database.
+.IP 
+The default is determined from the grid 
+.I gid 
+value.
+.TP 
+.B \-\-rls rls
+.PD 0
+.TP 
+.PD 1
+.B \-r rls
+This option permits setting of an LRC to record into the site catalog
+for each site found in this grid. Note that you can record a different
+LRC for each grid.
+.IP 
+The default is set to 
+.IR rls://evitable.uchicago.edu .
+The global default can be changed using the 
+.B \-\-default\-rls 
+option described below.
+.TP 
+.B \-\-version ver
+This option permits setting the version of the Globus Toolkit that each
+site in the grid is expected to have. Of importance are major and minor
+version. The version string is either two or three period\-separated
+integers.
+.IP 
+Default is to assume 
+.I 2.4.3 
+for all sites. The global default can be changed using the 
+.B \-\-default\-version 
+option described below.
+.TP 
+.B \-\-inst token
+This option permits setting the installation status of the applications
+in the transformation catalog for each remote site in the current grid.
+Valid installation tokens include
+.IR INSTALLED , 
+.IR STATIC_BINARY , 
+.IR DYNAMIC_BINARY ,
+.IR PACMAN_PACKAGE ,
+.I SOURCE
+and
+.IR SCRIPT .
+.IP 
+Default is to assume
+.IR INSTALLED .
+The global default can be changed using the 
+.B \-\-default-inst
+option described below.
+.TP 
+.B \-\-arch a::os
+This token permits setting the architecture and operating system tokens
+for each remote site in the grid, and each application. Valid
+architecture tokens include
+.IR INTEL32 ,
+.IR INTEL64 ,
+.IR AMD64 ,
+.I SPARCV7 
+and
+.IR SPARCV9 .
+Valid operating system tokens include
+.IR LINUX ,
+.I SOLARIS
+and
+.IR AIX .
+.IP 
+Default is to assume
+.IR INTEL32::LINUX .
+The global default can be changed using the 
+.B \-\-default\-arch 
+option described below.
+.LP 
+The following options permit the variables $app, $data, $grid3, $tmp and
+$wntmp to be set. One additional variable $vds is set to the assumed location of
+the remotely installed VDS worker tools directory. Variables are
+replaced by their site\-specific values:
+.TP 
+.B \-\-app ttc
+.PD 0
+.TP 
+.PD 1
+.B \-a ttc
+This option permits a user to override the default 
+.I template transformation catalog
+which is used to populate the transformation catalog for each site. The
+template catalog has the same format as the 6\-columned textual
+transformation catalog
+.B minus the site column. 
+The template TC usually mentions the variables $app .. $wntmp, which are
+replaced, as the catalog contents are instantiated for each site. The
+default templates are remove in the presence of a user\-specified
+template, unless option
+.B \-\-keep
+is specified.
+.IP 
+Default is to map the basic example transformations from the test
+directory onto each site. Please refer to the output of the
+.B \-\-help
+option for an example of the file's layout. 
+.TP 
+.B \-\-keep
+If this option is specified in conjunction with a user template
+transformation catalog, the example applications will be retained, and
+become part of the generated transformation catalog.
+.TP 
+.B \-\-workdir rdir
+.PD 0
+.TP 
+.PD 1
+.B \-w rdir
+This option permits specifying the remote working directory. It is
+highly recommended to override the default, and to use one of the
+template variables in the specification, e.g. '$data/ourvo'. Please note
+that you will have to protect the dollar sign from the shell, e.g. using
+single quotes around your values.
+.IP 
+Default is to use the remote shared 
+.I $tmp 
+as working directory.
+.TP 
+.B \-\-vds rdir
+.PD 0
+.TP 
+.PD 1
+.B \-v rdir
+This option sets the variable $vds to a different value. It specifies
+the location where on the remote site the VDS worker tools are
+installed. For sites installed with VDS < 1.3.5 you need to override the
+default with '$grid3/vds/linux/bin'. Please note that you will have to
+protect the dollar sign from the shell, e.g. using single quotes around
+your values.
+.IP 
+Default is to use 
+.I '$grid3/vds/bin' 
+as VDS worker tools directory.
+.TP 
+.B \-\-kick ks
+.PD 0
+.TP 
+.PD 1
+.B \-k ks
+This option permits specifying an alternate location for the remote
+kickstart. This is useful, if you are using a fresher version of
+kickstart than the site administrator installed as part of the VDS
+worker tools package.
+.IP 
+Default is to use the VDS worker tools 
+.IR $vds/kickstart .
+.TP
+.B \-\-default\-rls rls
+This option overwrites the initial default to chose as RLS server for
+all grids. It will also affect which RLS server is chosen for the
+special site
+.IR local .
+Individual grids can overwrite their RLS using the 
+.B \-\-rls 
+option after the 
+.B \-\-grid 
+option.
+.TP
+.B \-\-default\-version m.m.p
+This option overwrites the initial default version of the Globus Toolkit
+for all grids. It will also affect which GT version is chosen for the
+special site
+.IR local .
+Individual grids can overwrite their GT version using the 
+.B \-\-version
+option after the 
+.B \-\-grid 
+option.
+.TP
+.B \-\-default\-inst inst
+This option overwrites the initial default installation status to assume
+for transformations in all grids. It will also affect the installation
+status of application on the special site
+.IR local .
+Individual grids can overwrite their installation status using the 
+.B \-\-inst
+option after the 
+.B \-\-grid 
+option. For valid values to this option, please refer to the 
+.B \-\-inst
+option above.
+.TP
+.B \-\-default\-arch a::os
+This option overwrites the initial default architecture to assume for
+all grids. It will also affect, which architecture is chosen for the
+special site
+.IR local .
+Individual grids can overwrite their architecture settings using the 
+.B \-\-rls 
+option after the 
+.B \-\-grid 
+option. For valid values to this option, please refer to the 
+.B \-\-inst
+option above.
+.SH "FILES"
+.LP 
+.TP 
+.B $VDS_HOME/var/sites.xml
+is the default location where the default site catalog will be produced,
+using the default style 
+.IR xml .
+.TP 
+.B $VDS_HOME/var/sites.txt
+is the alternative location for the produced site catalog, if the style
+is not
+.IR xml .
+.TP 
+.B $VDS_HOME/var/tc.data
+is the default location for the transformation catalog, unless the
+database style
+.I vds
+was chosen.
+.SH "PROPERTIES"
+.LP 
+Properties are read and evaluated according to the VDS property
+precedence rules. Please refer to the property documentation for
+in\-depth description of properties and their effects.
+.TP 
+.B vds.sc
+.PD 0
+.TP
+.PD 1
+.B vds.pool.mode
+This property determines the default formatting in which the site
+catalog is generated. Its effect can be overwritten with the
+\-\-sc\-style command\-line option. The alternatives are ordered by
+preference. 
+.TP 
+.B vds.sc.file
+.PD 0
+.TP
+.PD 1
+.B vds.pool.file
+This property determines the default location where a file\-based site
+catalog is generated. Its effect can be overwritten with the \-\-sc
+command\-line option. The alternatives are ordered by preference.
+.TP 
+.B vds.tc
+.PD 0
+.TP
+.PD 1
+.B vds.tc.mode
+This property determines the default formatting in which the
+transformation catalog is generated. Its effect can be overwritten with
+the \-\-sc\-style command\-line option. The alternatives are ordered by
+preference.
+.TP 
+.B vds.tc.file
+This property determines the default location in where a file\-based
+transformation catalog is generated. Its value is unused, if database
+access is chosen. The effect can be overwritten using the \-\-tc
+command\-line option.
+.SH "ENVIRONMENT VARIABLES"
+.LP 
+.TP 
+\fBVDS_HOME\fP
+points to the base of the Virtual Data System (VDS) installation.
+.TP 
+\fBPERL5LIB\fP
+contains the VDS Perl modules required to access the various catalogs. 
+
+.SH "EXAMPLES"
+.LP 
+This first example queries just for one grid. It is always a good idea
+to explicitely specify the grid you are querying. The example uses
+default locations for the site catalog (SC) and transformation catalog
+(TC). \fBWarning:\fR The default location is derived from settings in
+your VDS properties file. The example supplies its own template
+transformation catalog and chooses not to keep the example
+transformations:
+.nf 
+\f(CB
+$ vds\-get\-sites \-\-grid osg\-itb \-\-app my.ttc 
+# local hostname "griodine.uchicago.edu"
+# reading transformation mappings from /dev/null
+# assembling information for grid "osg\-itb".
+...
+# adding myself as local site
+# dumping /home/voeckler/work/pool.gt2...
+# dumping /home/voeckler/vds/contrib/Euryale/Grid3/tc.new.data...
+\fP
+.fi 
+.LP 
+Again, please note that the user properties were set up to some
+non\-standard locations, and the files there were consequently
+overwritten.
+.LP 
+A more demanding example mixes sites from two grids, assigning a
+different RLS default. The output is captured in separate SC and TC
+files. Only sites with 10 or more CPUs are included. Please note that
+the RLS override will also affect the local site: 
+.nf 
+\f(CB
+$ vds\-get\-sites \-\-default\-rls rls://griodine.uchicago.edu \-\-cutoff 10 \\
+ \-\-sc\-style xml \-\-sc sites.xml \-\-tc\-style new \-\-tc tc.data \\
+ \-\-grid osg \-\-grid osg\-itb
+...
+\fP
+.fi 
+.LP 
+In my case, the example included a couple of warnings due to the fact
+that one site handle was part of both gridcats. The precedence is that
+the later found information overwrites any previous information. Thus,
+the ordering of the \-\-grid options is important.
+.LP
+Note, it is a bad idea to mix grids OSG and OSG-ITB.
+.SH "AUTHORS"
+.LP 
+Jens\-S. Vöckler <voeckler at cs dot uchicago dot edu>
+.PP 
+GVDS
+.B http://www.griphyn.org/vds/
+.br 
+GriPhyN
+.BR http://www.griphyn.org/
+.SH "SEE ALSO"
+.LP 
+vds\-check\-sites(1)
+

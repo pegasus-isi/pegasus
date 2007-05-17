@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# generate a Concrete Dag by providing a DAX
+#
+# $Id: plot-space-usage,v 1.1 2007/03/17 01:10:05 vahi Exp $
+
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java "-pegasus.home=${PEGASUS_HOME}" $addon org.griphyn.cPlanner.toolkit.PlotSpaceUsage "$@"

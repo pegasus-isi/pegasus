@@ -1,0 +1,75 @@
+#
+# template for workflow control
+# $Id: wfrc.template,v 1.11 2005/09/07 18:43:32 griphyn Exp $
+#
+
+wf.profile.vds.voname   ivdgl
+wf.profile.vds.vogroup  ivdgl1
+wf.script.pre		${vds.home}/contrib/Euryale/prescript.pl
+wf.script.post		${vds.home}/contrib/Euryale/postscript.pl
+#wf.final.output		gsiftp://chalant.uchicago.edu/${user.home}
+wf.transfer.program	true
+#wf.transfer.arguments	-q
+wf.permit.hardlinks     false
+wf.exitcode.file	${vds.home}/bin/exitcode
+wf.use.relative		true
+wf.site.selector	${user.home}/.vds/current/site.select
+#wf.site.selector	${user.home}/.vds/current/mock-rnd
+#wf.site.selector	${user.home}/.vds/current/mock-wlr
+#wf.site.selector	${user.home}/.vds/current/mock-wlr2
+#wf.site.selector	${user.home}/.vds/current/select_site.py
+#wf.policy.manager	true
+#wf.initially.held	true
+#wf.queue.manager	localhost:60010
+wf.replica.pin		null
+wf.popularity.manager	null
+#wf.popularity.manager	${vds.home}/contrib/Euryale/popman-dummy
+#wf.popularity.manager	${vds.home}/contrib/Euryale/popman.py
+wf.keep.rewrite 	true
+wf.pool.style		xml
+wf.pool.file		${user.home}/.vds/current/sites.xml
+wf.tc.style		new
+wf.tc.keep		true
+wf.tc.file		${user.home}/.vds/current/tc.data
+wf.rc.style		LRC
+wf.rc.lrc		<rlsuri>
+#wf.rc.java.home	/where/ever
+#wf.rc.globus.location	/where/ever
+#wf.rc.vds.home		/where/ever
+#wf.rc.grc		/path/to/globus-rls-cli
+#wf.rc.r_c		/path/to/rls-client
+#wf.rc.pool		do not set
+# create table RC_MAP (
+#   LFN  VARCHAR(255),
+#   PFN  VARCHAR(255),
+#   UNIQUE(LFN,PFN)
+# );
+# create index RC_MAX_IDX on RC_MAP(LFN);
+#
+# style: DBI 
+# uri: the DBI::connect() first argument
+# dbuser: the database username for the connection
+# dbpass: the database username for the connection
+#
+#wf.rc.style		DBI
+##wf.rc.uri		dbi:SQLite2:dbname=$HOME/rc-local.db
+#wf.rc.uri		dbi:Pg:dbname=<dbname>
+#wf.rc.dbuser		<dbuser>
+#wf.rc.dbpass		<dbpass>
+#wf.remote.job.queues	jazz=SC03
+wf.job.retries		10
+#wf.site.temp.unlink	  true
+#wf.site.temp.suffix	   .lof
+#wf.site.temp.dir	  /tmp
+wf.job.keep.output	true
+wf.job.keep.error	true
+#wf.bad.timeout		600
+work.db                 <dbperl>
+work.db.hostname        <dbhost>
+work.db.database        <dbname>
+work.db.user            <dbuser>
+work.db.password        <dbpass>
+#wf.base.dir		<home>/work
+#wf.slow.start		winsize.db
+#wf.dump.variables	false
+wf.check.gridftp        false

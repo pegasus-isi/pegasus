@@ -1,0 +1,120 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\"
+.\" $Id: show-properties.1,v 1.3 2005/08/23 20:34:27 griphyn Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.\"
+.TH "show\-properties" "1" "1.3.9" "GriPhyN Virtual Data System"
+.SH NAME
+show\-properties \- show VDS properties after everything was parsed
+.SH SYNOPSIS
+.B show\-properties
+[\-Dprop [..]] [\-c] [\-u]
+.br
+.B show\-properties
+[\-Dprop [..]] \-V
+.SH DESCRIPTION
+The property testing permits to show the effective property settings
+after all property sources were parsed. This permits debugging of VDS
+properties, as it shows the effective properties. 
+.SH ARGUMENTS
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+A CLI property take precedence over the properties file property 
+of the same key.
+.TP
+.B \-c
+.PD 0
+.TP
+.PD 1
+.B \-\-concise
+This option permits to list the properties in a concise format, using
+simply an equals (=) sign between property key and property value,
+without adding any other linear whitespaces. 
+.IP
+Default is to left-adjust keys and values into two columns. 
+.TP
+.B \-u
+.PD 0
+.TP
+.PD 1
+.B \-\-unsorted
+The properties are by default displayed sorted by their key, as it
+makes finding a particular property easier. However, using this option,
+one can print properties in an unsorted order. There is no speed gain
+with this options. 
+.IP
+Default is sort the output by the property key. 
+.TP
+.B \-V
+.PD 0
+.TP
+.PD 1
+.B \-\-version
+displays the version of the GriPhyN Virtual Data System you are using.
+.TP
+.B \-\-verbose
+increases the verbosity of messages about what is going on. This option
+may be defunct in 
+.IR show\-properties .
+.SH "RETURN VALUE"
+Regular program terminations will result in an exit code of 0.
+Abnormal termination will result in a non-zero exit code.
+.SH FILES
+.TP
+.B $VDS_HOME/etc/properties
+contains the basic system properties with all configurable options.
+.TP
+.B $HOME/.vdsrc
+contains the basic user properties with all configurable options.
+.TP
+.B gvds.jar
+contains all compiled Java bytecode to run the GriPhyN virtual data system.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B $VDS_HOME
+is the suggested base directory of your the execution environment.
+.TP
+.B $JAVA_HOME
+should be set and point to a valid location to start the intended Java
+virtual machine as
+.IR $JAVA_HOME/bin/java .
+.TP
+.B $CLASSPATH
+should be set to contain all necessary files for the execution environment.
+Please make sure that your 
+.I CLASSPATH
+includes the Xerces 2.6 classes.
+.SH "SEE ALSO"
+.BR vds-bug-report (1).
+.SH AUTHORS
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>,
+.br
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.PP
+Chimera
+.B http://www.griphyn.org/chimera/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

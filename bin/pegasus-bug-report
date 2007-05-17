@@ -1,0 +1,281 @@
+#!/usr/bin/env perl
+#
+# Compiles an archive all all bug-related files to ship.
+#
+# Usage: pegasus-bug-report <directory>
+#
+# This file or a portion of this file is licensed under the terms of
+# the Globus Toolkit Public License, found in file GTPL, or at
+# http://www.globus.org/toolkit/download/license.html. This notice must
+# appear in redistributions of this file, with or without modification.
+#
+# Redistributions of this Software, with or without modification, must
+# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+# some other similar material which is provided with the Software (if
+# any).
+#
+# Copyright 1999-2004 University of Chicago and The University of
+# Southern California. All rights reserved.
+#
+# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
+# Revision : $Revision: 1.4 $
+#
+use 5.006;
+use strict;
+use File::Spec;
+use File::Temp qw(tempfile);
+use File::Basename qw(basename);
+use Getopt::Long qw(:config bundling no_ignore_case);
+
+# GPT/GT4 ships Archive::Tar and IO::Zlib
+BEGIN {
+    push( @INC, File::Spec->catdir( $ENV{'GLOBUS_LOCATION'}, 'lib', 'perl' ) )
+	if ( exists $ENV{'GLOBUS_LOCATION'} );
+}
+
+use Archive::Tar;
+use Work::Properties ();
+
+# constants
+sub usage(;$);			# { }
+sub version();			# { }
+$main::DEBUG = 0;		# for now
+$main::revision = 'unknown';
+$main::revision=$1 if '$Revision: 1.4 $' =~ /Revision:\s+([0-9.]+)/o;
+
+# argument checking
+my $daxfn;
+GetOptions( "help|h" => \&usage,
+	    "version|V" => \&version,
+	    "dax|d=s" => \$daxfn,
+	    "verbose|v+" => \$main::DEBUG
+	    );
+
+# --dax is a mandatory option since most users "forget" the dax
+die "ERROR: Please specify a valid dax filename using --dax or -d option.\n"
+    unless ( defined $daxfn && -r $daxfn );
+
+# check that there are arguments. 
+die "ERROR: You must specify the run directory where the concrete DAG resides.\n"
+    if ( @ARGV == 0 );
+
+# check arg
+my $dir = shift;
+if ( ! -d $dir ) {
+    print STDERR "ERROR: Argument $dir is not a directory.\n";
+    exit 1;
+}
+
+#
+# --- functions -------------------------------------------------
+#
+
+sub version() {
+    my $basename = basename($0,'.pl');
+    print "$basename $main::revision\n";
+    print '$Id: pegasus-bug-report,v 1.4 2005/09/19 21:00:43 griphyn Exp $', "\n";
+    exit(0);
+}
+
+sub usage(;$) {
+    my $ec = shift || 0;
+    my $basename = basename($0,'.pl');
+    print << "EOF";
+
+Usage: $basename [options] -d dax rundir [file [..]]
+
+Mandatory arguments:
+ -d|--dax dax points to the .dax file that created the workflow.
+  rundir      is the directory where the workflow resides as well as all its
+              ancillary files related to the workflow.
+
+Optional arguments:
+ -Dprop=val       explicit settings of a property (multi-option).
+ -h|--help        print this help and exit.
+ -v|--verbose     increase debug level by 1.
+ -V|--version     print version and exit.
+ [file [..]]      extra files and directories to include (optional)
+
+EOF
+    exit($ec);
+}
+
+sub showenv {
+    # purpose: print a set of environment variable(s)
+    # paramtr: $fh (IN): scalar filehandle to temp file
+    #          ... (IN): one or more name of env vars to print
+    my $fh = shift;
+    foreach (@_) {
+	print $fh "$_=$ENV{$_}\n";
+    }
+}
+
+sub splitpath {
+    # purpose: Report components of a PATH-like variable
+    # paramtr: $fh (IN): scalar filehandle to print to
+    #          ... (IN): PATH-like environment variables
+    my $fh = shift;
+    foreach my $x ( @_ ) {
+	foreach ( split/:/, $ENV{$x} ) {
+	    my $flag;
+	    $flag .= 'd' if -d $_;
+	    $flag .= 'r' if -r $_;
+	    printf $fh "$x %2s $_\n", $flag;
+	}
+    }
+}
+
+sub readprops($$@) {
+    # purpose: read a Java properties file
+    # paramtr: $fh (IN): scalar filehandle to print to
+    #          $fn (IN): filename
+    # returns: hash map with properties from file
+    my $fh = shift;
+    my $dbref = shift;
+    my %result = ();
+
+    foreach my $fn ( @_ ) {
+	next unless length($fn);
+	if ( -r $fn ) {
+	    print $fh "Reading properties from $fn\n";
+	    %result = Work::Properties::parse_properties($fn,%{$dbref});
+	    last;
+	} else {
+	    print $fh "Unable to read properties from $fn: no such file\n";
+	}
+    }
+
+    # done
+    return %result;
+}
+
+sub showprops ($$\%) {
+    my $fh = shift;
+    my $prefix = shift;
+    my $pref = shift;
+    my $indent = 1;
+    foreach my $key ( keys %{$pref} ) {
+	$indent = length($key) if length($key) > $indent;
+    }
+    foreach my $key ( sort keys %{$pref} ) {
+	printf $fh "$prefix %*s %s\n", -$indent, $key, $pref->{$key};
+    }
+}
+
+#
+# --- main ------------------------------------------------------
+#
+
+# open temp file for text
+my ($fh,$fname) = tempfile( "bug.XXXXXX", SUFFIX => '.txt' );
+
+# assumble some information about the environment
+print $fh "#\n# PEGASUS basics\n#\n";
+print $fh "pegasus-bug-report $main::revision\n";
+showenv( $fh, 'JAVA_HOME', 'PEGASUS_HOME' );
+splitpath( $fh, 'CLASSPATH' );
+print $fh 'PEGASUS version ', `pegasus-version`;
+print $fh `pegasus-version --match`;
+print $fh "\n";
+
+print $fh "#\n# VDT\n#\n";
+showenv( $fh, qw(VDT_LOCATION GLOBUS_LOCATION CONDOR_CONFIG) );
+print $fh `condor_version`;
+print $fh `vdt-version`;
+print $fh "\n";
+
+print $fh "#\n# Operating environment\n#\n";
+splitpath( $fh, qw(PATH LD_LIBRARY_PATH) );
+print $fh 'OS-machine ', `uname -m`;
+print $fh 'OS-system  ', `uname -s`;
+print $fh 'OS-release ', `uname -r`;
+print $fh "\n";
+
+print $fh "#\n# PEGASUS properties\n#\n";
+my $pegasushome = $ENV{'PEGASUS_HOME'};
+my %sys = readprops( $fh, { },
+		     File::Spec->catfile( $pegasushome, 'etc', 'properties' ) );
+showprops( $fh, 'Sys-prop', %sys );
+
+my %usr = readprops( $fh, \%sys,
+		     $sys{'pegasus.user.properties'}, 
+		     File::Spec->catfile( $ENV{HOME}, '.pegasusrc' ), 
+		     File::Spec->catfile( $ENV{HOME}, '.chimerarc' ) );
+showprops( $fh, 'Usr-prop', %usr );
+print $fh `show-properties | sed -e 's/^/Eff-prop /'`;
+print $fh "\n";
+
+my %all = ( %sys, %usr ); 	# let %usr overwrite %sys
+my $sysconfdir = $all{'pegasus.home.sysconfdir'} || 
+    File::Spec->catfile( $pegasushome, 'etc' );
+
+my $scfile = undef;		# may remain undef
+my $scmode = lc($all{'pegasus.sc'} || $all{'pegasus.pool.mode'} || 'XML');
+if ( $scmode eq 'xml' ) {
+    $scfile = $all{'pegasus.sc.file'} || $all{'pegasus.pool.file'} || 
+	File::Spec->catfile( $sysconfdir, 'sites.xml' );
+} elsif ( $scmode eq 'text' ) {
+    $scfile = $all{'pegasus.sc.file'} || $all{'pegasus.pool.file'} || 
+	File::Spec->catfile( $sysconfdir, 'sites.txt' );
+} else {
+    print $fh "Warning: Unknown SC mode $scmode\n";
+}
+
+my $tcfile = undef;		# may remain undef
+my $tcmode = $all{'pegasus.tc'} || $all{'pegasus.tc.mode'} || 'File';
+if ( lc($tcmode) eq 'single' || lc($tcmode) eq 'multiple' || 
+     lc($tcmode) eq 'oldfile' ) {
+    $tcfile = $all{'pegasus.tc.file'} || 
+	File::Spec->catfile( File::Spec->catdir( $ENV{'PEGASUS_HOME'}, 'var' ),
+			     'tc.data' );
+} elsif ( $tcmode eq 'File' ) {
+    $tcfile = $all{'pegasus.tc.file'} || 
+	File::Spec->catfile( $sysconfdir, 'tc.data' );
+} elsif ( $tcmode eq 'Database' ) {
+    # nothing
+} else {
+    print $fh "Warning: Unknown TC mode $tcmode\n";
+}
+
+my @files = ($fname);
+push( @files, $scfile ) if ( defined $scfile && -r $scfile );
+push( @files, $tcfile ) if ( defined $tcfile && -r $tcfile );
+
+if ( opendir( DIR, $dir ) ) {
+    foreach my $fn ( readdir(DIR) ) {
+	next if ( $fn eq '.' || $fn eq '..' );
+	push( @files, File::Spec->catfile( $dir, $fn ) );
+    }
+    closedir( DIR );
+} else {
+    print $fh "Error: Unable to read $dir: $!\n";
+}
+
+foreach ( @ARGV ) {
+    push( @files, $_ ) if -r $_;
+}
+
+foreach my $fn ( @files ) {
+    my $flag;
+    $flag .= 'd' if -d $fn;
+    $flag .= 'r' if -r $fn;
+    printf $fh "Files %2s $fn\n", $flag;
+}
+
+close $fh;
+system( '/bin/cat', $fname );
+
+my $tarname = substr($fname, 0, -4) . '.tar';
+my $tar = Archive::Tar->create_archive( $tarname, undef, @files );
+unlink( $fname );
+if ( system( 'gzip', '-5', $tarname ) == 0 ) {
+    $tarname .= '.gz';
+} else {
+    warn "Warning: Unable to compress archive";
+}
+
+print "\n\n";
+print "I have collected information about the directory and your system.\n";
+print "Please send $tarname as a proper binary attachment to\n";
+print "\n\tpegasus-support\@griphyn.org\n\n";
+print "Remember to include your bug description in the regular email body.\n";

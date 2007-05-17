@@ -1,0 +1,13 @@
+rc=$?
+log @@JOBID@@ finished
+
+# check job for failures
+if [ $rc -ne 0 ]; then 
+    log @@JOBID@@ "exited with code $rc"
+    exit 1
+fi
+
+if ! check_output @@FILELIST@@; then 
+    log @@JOBID@@ "missing output file(s)"
+    exit 2
+fi

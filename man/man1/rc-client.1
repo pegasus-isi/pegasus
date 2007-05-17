@@ -1,0 +1,296 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\"
+.\" $Id: rc-client.1,v 1.3 2006/06/27 23:09:19 vahi Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao, Karan Vahi
+.\"
+.TH "rc\-client" "1" "1.4.5" "GriPhyN Virtual Data System"
+.SH NAME
+rc\-client \- shell client for replica implementations
+.SH SYNOPSIS
+.B rc\-client
+[\-Dprop [..]] [\-p k=v] [[\-f fn]|[\-i|-d fn]|[cmd [args]]  
+.br
+.B rc\-client
+[\-Dprop [..]] \-V
+.SH DESCRIPTION
+The shell interface to replica catalog implementations is a prototype. 
+It determines from various property setting which class implements the
+replica manager interface, and loads that driver at run-time. Some 
+commands depend on the implementation. 
+.PP
+.SH ARGUMENTS
+Any option will be displayed with its long options synonym(s).
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+A CLI property take precedence over the properties file property 
+of the same key.
+.TP
+.PD 0
+.B \-f fn
+.TP
+.PD 1
+.B \-\-file fn
+The optional input file argument permits to enter non-interactive bulk
+mode. If this option is not present, replica manager specific commands
+should be issued on the command-line. The special filename hyphen (\-)
+can be used to read from pipes.
+.IP
+Default is to use an interactive interface reading from 
+.IR stdin .
+.TP
+.PD 0
+.B \-i fn
+.TP
+.PD 1
+.B \-\-insert fn
+The optional input file argument permits insertion of entries from the 
+Replica Catalog in a bulk mode, wherever supported by the underlying
+implementation. This is highly, useful when interfacing with the
+Globus RLS as the backend, and one wants to inserts millions of
+entries in it.
+
+.IP
+Each line in the file denotes one mapping of the format
+.B <lfn> <pfn> [k=v [..]]
+.TP
+.PD 0
+.B \-p k=v
+.TP
+.PD 1
+.B \-\-delete fn
+The optional input file argument permits deletion of entries from the 
+Replica Catalog in a bulk mode, wherever supported by the underlying
+implementation. This is highly, useful when interfacing with the
+Globus RLS as the backend, and one wants to delete millions of
+entries from it.
+
+.IP
+Each line in the file denotes one mapping of the format
+.B <lfn> <pfn> [k=v [..]]
+.TP
+.PD 0
+.B \-p k=v
+.TP
+.PD 1
+.B \-\-pref k=v
+This option may be specified multiple times. Each specification
+populates instance preferences. Preferences control the extend of log
+information, or the output format string to use in listings. 
+.IP
+The keys 
+.B format
+and
+.B level
+are recognized as of this writing. 
+.IP
+There are no defaults.
+.TP
+.B cmd [args]
+If not in file-driven mode, a single command can be specified with its
+arguments. 
+.IP
+Default is to use interactive mode. 
+.TP
+.PD 0
+.B \-V
+.TP
+.PD 1
+.B \-\-version
+displays the version of the GriPhyN Virtual Data System you are using.
+.SH "RETURN VALUE"
+Regular and planned program terminations will result in an exit code of 0.
+Abnormal termination will result in a non-zero exit code.
+.SH FILES
+.TP
+.B $VDS_HOME/etc/properties
+contains the basic properties with all configurable options.
+.TP
+.B $HOME/.vdsrc
+contains the basic properties with all configurable options.
+.TP
+.B gvds.jar
+contains all compiled Java bytecode to run the replica manager. 
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B $VDS_HOME
+is the suggested base directory of your the execution environment.
+.TP
+.B $JAVA_HOME
+should be set and point to a valid location to start the intended Java
+virtual machine as
+.IR $JAVA_HOME/bin/java .
+.TP
+.B $CLASSPATH
+should be set to contain all necessary files for the execution environment.
+Please make sure that your 
+.I CLASSPATH
+includes pointer to the replica implementation required jar files.
+.SH "PROPERTIES"
+The complete branch of properties 
+.I vds.rc
+including itself are interpreted by the prototype. While the 
+.I vds.rc
+property itself steers the backend to connect to, any meaning of
+branched keys is dependent on the backend. The same key may have
+different meanings for different backends. 
+.TP
+.B vds.rc
+determines the name of the implementing class to load at run-time. If
+the class resides in 
+.I org.griphyn.common.catalog
+no prefix is required. Otherwise, the fully qualified class name must be
+specified. 
+.TP
+.B vds.rc.driver
+is used by a simple rDBMs implementation. The string is the
+fully-qualified class name of the JDBC driver used by the rDBMS
+implementer. 
+.TP
+.B vds.rc.url
+is used by a simple rDBMS implementation. The string determines the JDBC
+contact URI to use. 
+.TP
+.B vds.rc.user
+is used by a simple rDBMS implementation. It constitutes the database
+user account that contains the 
+.I RC_LFN
+and
+.I RC_ATTR
+tables.
+.TP
+.B vds.rc.password
+is used by a simple rDBMS implementation. It constitutes the database
+user account that contains the 
+.I RC_LFN
+and
+.I RC_ATTR
+tables.
+.TP
+.B vds.rc.chunk.size
+is used by the rc-client for the bulk insert and delete
+operations. The value determines the number of lines that are read in
+at a time, and worked upon at together.
+.TP
+.B vds.rc.*
+are other keys a JDBC driver may make use of. The keys are
+driver-specific. 
+.SH "COMMANDS"
+The commandline tool provides a simplified shell-wrappable interface to
+manage a replica catalog backend. The commands can either be specified
+in a file in bulk mode, in a pipe, or as additional arguments to the
+invocation.
+.P
+Note that you must escape special characters from the shell.
+.TP
+.B help
+displays a small resume of the commands.
+.TP
+.PD 0
+.B exit
+.TP
+.PD 1
+.B quit
+should only be used in interactive mode to exit the interactive mode. 
+.TP
+.B clear
+drops all contents from the backend. Use with special care!
+.TP
+.B insert <lfn> <pfn> [k=v [..]]
+inserts a given 
+.B lfn 
+and 
+.BR pfn , 
+and an optional 
+.B site 
+string into the backend. If the site is not specified, a 
+.I null
+value is inserted for the 
+.BR site .
+.TP 
+.B delete <lfn> <pfn> [k=v [..]]
+removes a triple of
+.BR lfn ,
+.B pfn
+and, optionally, 
+.B site
+from the replica backend. If the site was not specified, all matches of
+the 
+.B lfn
+.B pfn
+pairs will be removed, regardless of the 
+.BR site .
+.TP
+.B lookup <lfn> [<lfn> [..]]
+retrieves one or more mappings for a given 
+.B lfn
+from the replica backend. 
+.TP
+.B remove <lfn> [<lfn> [..]]
+removes all mappings for each 
+.B lfn
+from the replica backend. 
+.TP 
+.B list [lfn <pat>] [pfn <pat>] [<name> <pat>]
+obtains all matches from the replica backend. If no arguments were
+specified, all contents of the replica backend are matched. You must use
+the word
+.BR lfn ,
+.B pfn
+or
+.B <name>
+before specifying a pattern. The pattern is meaningful only to the
+implementation. Thus, a SQL implementation may chose to permit SQL
+wild-card characters. A memory-resident service may chose to interpret
+the pattern as regular expression. 
+.TP 
+.B set [var [value]]
+sets an internal variable that controls the behavior of the front-end.
+With no arguments, all possible behaviors are displayed. With one
+argument, just the matching behavior is listed. With two arguments, the
+matching behavior is set to the value. 
+.SH "EXAMPLE"
+.nf
+\f(CB
+to be done
+\fP
+.fi
+.SH "DATABASE SCHEMA"
+.LP
+The tables are set up as part of the VDS database setup. The files
+concerned with the database have a suffix
+.BR -rc.sql .
+.SH "RESTRICTIONS"
+Plenty. 
+.SH "AUTHORS"
+Gaurang Mehta       <gmetha at isi dot edu>
+.br
+Karan Vahi          <vahi at isi dot edu>
+.br
+.\" Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+Jens-S. V\(:ockler    <voeckler at cs dot uchicago dot edu>
+.br
+Yong Zhao           <yongzh at cs dot uchicago dot edu>
+.PP
+VDS     -
+.BR http://vds.isi.edu/
+.br
+GriPhyN -
+.BR http://www.griphyn.org/

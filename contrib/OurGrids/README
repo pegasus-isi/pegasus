@@ -1,0 +1,10 @@
+This is the directory containing the setup information for the 
+
+	* UofC SofaGrid, and
+	* ISI "HiJack"Grid. 
+
+In order to regenerate the local databases, e.g. after modifications,
+you will need to run the create script through sqlite (version 2), e.g.:
+
+	sqlite sofa.db < create-sofa.sql
+

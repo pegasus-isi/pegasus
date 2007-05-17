@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# Delete metadata from definition's and lfn's
+# $Id: deletemeta,v 1.3 2005/07/26 18:48:24 griphyn Exp $
+#
+. "`dirname $0`/common.sh"
+
+#run java program
+${JAVA_HOME}/bin/java  "-Dvds.home=${VDS_HOME}" $addon org.griphyn.vdl.toolkit.DeleteMeta "$@"

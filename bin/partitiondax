@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# generate the partitioned daxes by providing a DAX
+#
+# $Id: partitiondax,v 1.5 2005/09/10 02:12:19 gmehta Exp $
+
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java "-pegasus.home=${PEGASUS_HOME}" $addon org.griphyn.cPlanner.toolkit.PartitionDAX "$@"

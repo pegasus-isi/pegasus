@@ -1,0 +1,30 @@
+CHANGELOG
+=========
+
+IV 1.1 -> 1.2
+-------------
+
+o Moved the JobType/cwd to invocation/cwd, because the current
+  working directory is specific to gridstart, but not beyond. All it's
+  jobs will be started with that particular working directory - it is
+  not job specific. 
+
+o Added the "channel" stat to invocation/statcall for the feedback
+  channel.
+
+o Augmented another filetype StatCallType/fifo to record filename and
+  descriptor of the fifo, as well as the number of message, and bytes
+  going in and out (out refers to stderr, the app. channel). 
+
+o Changed invocation/mainjob to optional, as it may not execute, if
+  the prejob failed. Of the eight permutations with the existence of
+  pre-, main- and postjob, only six are valid.
+
+o Added independent optional job invocation/cleanup.
+
+o Added architecture information as invocation/uname. This includes
+  a highly platform dependent archmode, which currently supports
+  Linux IA (IA32, IA64) and SunOS SPARC (ILP32, LP64). 
+
+o deprecated JobType/command-line@executable, because the file info
+  is already stored in JobType/statcall/file@name.

@@ -1,0 +1,8 @@
+#!/bin/sh
+gmake distclean
+gmake EXTRACFLAGS='$(V7FLAGS)' T2
+mv T2 T2.sparcv7
+gmake clean
+gmake EXTRACFLAGS='$(V9FLAGS)' T2
+mv T2 T2.sparcv9
+gmake clean

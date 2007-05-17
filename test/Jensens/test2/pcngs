@@ -1,0 +1,72 @@
+#pool	universe job-mgr-string				url-prefix						workdir			gridstart				LRC pointer
+
+uofc	vanilla	 e.cs.uchicago.edu/jobmanager-condor	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart		rls://sheveled.mcs.anl.gov
+uofc	standard e.cs.uchicago.edu/jobmanager-condor	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	null					null
+uofc	globus	 e.cs.uchicago.edu/jobmanager-condor	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart		null
+uofc	transfer e.cs.uchicago.edu/jobmanager-fork	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart		null
+
+ucngs	vanilla	 e.cs.uchicago.edu/jobmanager-condor	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	null	rls://sheveled.mcs.anl.gov
+ucngs	standard e.cs.uchicago.edu/jobmanager-condor	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	null	null
+ucngs	globus	 e.cs.uchicago.edu/jobmanager-condor	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	null	null
+ucngs	transfer e.cs.uchicago.edu/jobmanager-fork	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	null	null
+
+uw	vanilla	 beak.cs.wisc.edu/jobmanager-condor	gsiftp://beak.cs.wisc.edu/u/v/o/voeckler/vdldemo	/u/v/o/voeckler/vdldemo	/u/v/o/voeckler/vdldemo/bin/kickstart	rls://sheveled.mcs.anl.gov
+uw	standard beak.cs.wisc.edu/jobmanager-condor	gsiftp://beak.cs.wisc.edu/u/v/o/voeckler/vdldemo	/u/v/o/voeckler/vdldemo	null					null
+uw	globus	 beak.cs.wisc.edu/jobmanager-condor	gsiftp://beak.cs.wisc.edu/u/v/o/voeckler/vdldemo	/u/v/o/voeckler/vdldemo	/u/v/o/voeckler/vdldemo/bin/kickstart	null
+uw	transfer beak.cs.wisc.edu/jobmanager		gsiftp://beak.cs.wisc.edu/u/v/o/voeckler/vdldemo	/u/v/o/voeckler/vdldemo	/u/v/o/voeckler/vdldemo/bin/kickstart	null
+#uw	vanilla	 michael.cs.wisc.edu/jobmanager-condor	gsiftp://michael.cs.wisc.edu/home/chimera/vdldemo	/home/chimera/vdldemo	/home/chimera/bin/kickstart		rls://sheveled.mcs.anl.gov
+#uw	standard michael.cs.wisc.edu/jobmanager-condor	gsiftp://michael.cs.wisc.edu/home/chimera/vdldemo	/home/chimera/vdldemo	null					null
+#uw	globus	 michael.cs.wisc.edu/jobmanager-condor	gsiftp://michael.cs.wisc.edu/home/chimera/vdldemo	/home/chimera/vdldemo	/home/chimera/bin/kickstart		null
+#uw	transfer michael.cs.wisc.edu/jobmanager		gsiftp://michael.cs.wisc.edu/home/chimera/vdldemo	/home/chimera/vdldemo	/home/chimera/bin/kickstart		null
+
+uwm	vanilla	 hydra.phys.uwm.edu/jobmanager-condor	gsiftp://hydra.phys.uwm.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	rls://sheveled.mcs.anl.gov
+uwm	standard hydra.phys.uwm.edu/jobmanager-condor	gsiftp://hydra.phys.uwm.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	null				null
+uwm	globus	 hydra.phys.uwm.edu/jobmanager-condor	gsiftp://hydra.phys.uwm.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	null
+uwm	transfer hydra.phys.uwm.edu/jobmanager		gsiftp://hydra.phys.uwm.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	null
+
+utb	vanilla	 lobizon.utb.edu/jobmanager-condor	gsiftp://lobizon.utb.edu/home/chicago/vdldemo		/home/chicago/vdldemo	/home/chicago/bin/kickstart	rls://sheveled.mcs.anl.gov
+utb	standard lobizon.utb.edu/jobmanager-condor	gsiftp://lobizon.utb.edu/home/chicago/vdldemo		/home/chicago/vdldemo	null				null
+utb	globus	 lobizon.utb.edu/jobmanager-condor	gsiftp://lobizon.utb.edu/home/chicago/vdldemo		/home/chicago/vdldemo	/home/chicago/bin/kickstart	null
+utb	transfer lobizon.utb.edu/jobmanager		gsiftp://lobizon.utb.edu/home/chicago/vdldemo		/home/chicago/vdldemo	/home/chicago/bin/kickstart	null
+
+ufl	vanilla	 testulix.phys.ufl.edu/jobmanager-condor	gsiftp://testulix.phys.ufl.edu/users/voeckler/vdldemo	/users/voeckler/vdldemo	/grinraid/raid1/voeckler/bin/kickstart rls://sheveled.mcs.anl.gov
+ufl	standard testulix.phys.ufl.edu/jobmanager-condor	gsiftp://testulix.phys.ufl.edu/users/voeckler/vdldemo	/users/voeckler/vdldemo	null				       null
+ufl	globus	 testulix.phys.ufl.edu/jobmanager-condor	gsiftp://testulix.phys.ufl.edu/users/voeckler/vdldemo	/users/voeckler/vdldemo	/grinraid/raid1/voeckler/bin/kickstart null
+ufl	transfer testulix.phys.ufl.edu/jobmanager		gsiftp://testulix.phys.ufl.edu/users/voeckler/vdldemo	/users/voeckler/vdldemo	/grinraid/raid1/voeckler/bin/kickstart null
+gfl	vanilla	 ufgriphyn.phys.ufl.edu/jobmanager-condor	gsiftp://ufgriphyn.phys.ufl.edu/users/voeckler/vdldemo	/users/voeckler/vdldemo	/grinraid/raid1/voeckler/bin/kickstart rls://sheveled.mcs.anl.gov
+gfl	standard ufgriphyn.phys.ufl.edu/jobmanager-condor	gsiftp://ufgriphyn.phys.ufl.edu/users/voeckler/vdldemo	/users/voeckler/vdldemo	null				       null
+gfl	globus	 ufgriphyn.phys.ufl.edu/jobmanager-condor	gsiftp://ufgriphyn.phys.ufl.edu/users/voeckler/vdldemo	/users/voeckler/vdldemo	/grinraid/raid1/voeckler/bin/kickstart null
+gfl	transfer ufgriphyn.phys.ufl.edu/jobmanager		gsiftp://ufgriphyn.phys.ufl.edu/users/voeckler/vdldemo	/users/voeckler/vdldemo	/grinraid/raid1/voeckler/bin/kickstart null
+ufeng	vanilla	 zeta-1.hcs.ufl.edu/jobmanager-condor	gsiftp://zeta-1.hcs.ufl.edu/home/ivdgl/vdldemo		/home/ivdgl/vdldemo	/home/ivdgl/bin/kickstart rls://sheveled.mcs.anl.gov
+ufeng	standard zeta-1.hcs.ufl.edu/jobmanager-condor	gsiftp://zeta-1.hcs.ufl.edu/home/ivdgl/vdldemo		/home/ivdgl/vdldemo	null			  null
+ufeng	globus	 zeta-1.hcs.ufl.edu/jobmanager-condor	gsiftp://zeta-1.hcs.ufl.edu/home/ivdgl/vdldemo		/home/ivdgl/vdldemo	/home/ivdgl/bin/kickstart null
+ufeng	transfer zeta-1.hcs.ufl.edu/jobmanager		gsiftp://zeta-1.hcs.ufl.edu/home/ivdgl/vdldemo		/home/ivdgl/vdldemo	/home/ivdgl/bin/kickstart null
+
+anl	vanilla	 chalant.mcs.anl.gov/jobmanager-condor	gsiftp://chalant.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	/homes/voeckler/bin/kickstart	rls://sheveled.mcs.anl.gov
+anl	standard chalant.mcs.anl.gov/jobmanager-condor	gsiftp://chalant.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	null				null
+anl	globus	 chalant.mcs.anl.gov/jobmanager-condor	gsiftp://chalant.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	/homes/voeckler/bin/kickstart	null
+anl	transfer chalant.mcs.anl.gov/jobmanager		gsiftp://chalant.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	/homes/voeckler/bin/kickstart	null
+
+dgc	vanilla	 dg0cm.mcs.anl.gov/jobmanager-pbs	gsiftp://dg0cm.mcs.anl.gov/shared/voeckler/vdldemo	/shared/voeckler/vdldemo	/homes/voeckler/bin/kickstart	rls://sheveled.mcs.anl.gov
+dgc	globus	 dg0cm.mcs.anl.gov/jobmanager-pbs	gsiftp://dg0cm.mcs.anl.gov/shared/voeckler/vdldemo	/shared/voeckler/vdldemo	/homes/voeckler/bin/kickstart	null
+dgc	transfer dg0cm.mcs.anl.gov/jobmanager-fork	gsiftp://dg0cm.mcs.anl.gov/shared/voeckler/vdldemo	/shared/voeckler/vdldemo	/homes/voeckler/bin/kickstart	null
+
+dgc2	vanilla	 dg0n13.mcs.anl.gov:2120/jobmanager-pbs	gsiftp://dg0n13.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	/homes/voeckler/bin/kickstart	rls://sheveled.mcs.anl.gov
+dgc2	globus	 dg0n13.mcs.anl.gov:2120/jobmanager-pbs	gsiftp://dg0n13.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	/homes/voeckler/bin/kickstart	null
+dgc2	transfer dg0n13.mcs.anl.gov:2120/jobmanager-fork gsiftp://dg0n13.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	/homes/voeckler/bin/kickstart	null
+
+dsl	vanilla	 hamachi.cs.uchicago.edu/jobmanager	gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	rls://sheveled.mcs.anl.gov
+dsl	standard hamachi.cs.uchicago.edu/jobmanager	gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	null				null
+dsl	globus	 hamachi.cs.uchicago.edu/jobmanager	gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	null
+dsl	transfer hamachi.cs.uchicago.edu/jobmanager	gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	null
+
+local	vanilla	 chalant.mcs.anl.gov/jobmanager-condor	gsiftp://chalant.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	null	rls://sheveled.mcs.anl.gov
+local	globus	 chalant.mcs.anl.gov/jobmanager-condor	gsiftp://chalant.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	null	null
+local	transfer chalant.mcs.anl.gov/jobmanager		gsiftp://chalant.mcs.anl.gov/homes/voeckler/vdldemo	/homes/voeckler/vdldemo	null	null
+#local	vanilla	 hamachi.cs.uchicago.edu/jobmanager-condor	gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	rls://sheveled.mcs.anl.gov
+#local	globus	 hamachi.cs.uchicago.edu/jobmanager-condor	gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	null
+#local	transfer hamachi.cs.uchicago.edu/jobmanager		gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/bin/kickstart	null
+
+isi	globus	 smarty.isi.edu/jobmanager-condor	gsiftp://smarty.isi.edu/nfs/asd2/gmehta/GRIPHYN	/nfs/asd2/gmehta/GRIPHYN	/local/gridstart	rls://dc-user.isi.edu
+isi	vanilla	 smarty.isi.edu/jobmanager-condor	gsiftp://birdie.isi.edu/nfs/asd2/gmehta/GRIPHYN	/nfs/asd2/gmehta/GRIPHYN	/local/gridstart	null
+isi	standard smarty.isi.edu/jobmanager-condor	gsiftp://birdie.isi.edu/nfs/asd2/gmehta/GRIPHYN	/nfs/asd2/gmehta/GRIPHYN	null			null

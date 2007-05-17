@@ -1,0 +1,7 @@
+CVS-NIGHTLY Scripts
+==================
+
+The cvs-nightly scripts downloads the VDS TRUNK and builds the
+vds-binary, vds-worker and vds-source tarballs.
+
+Usage: cvs-nightly <dir where to download the trunk> <dir to save the tars>

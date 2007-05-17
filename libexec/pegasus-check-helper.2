@@ -1,0 +1,22 @@
+#!/bin/sh
+# 
+# This script is staged to batch jobmanager to check all VDS transformations
+# $Id: vds-check-helper.2,v 1.1 2005/08/09 15:53:23 griphyn Exp $
+#
+PATH=/bin:/usr/bin
+
+# install trap for premature exit
+trap 'echo "FATAL: premature exit"' EXIT
+
+# read list of application filesnames from staged stdin
+while [ "X$1" != "X" ]; do
+    # app=$1
+    # shift
+    read app
+    test -x "$app" || echo "ERROR: $app"
+done
+
+# done
+trap - EXIT
+echo 'OK'
+exit 0

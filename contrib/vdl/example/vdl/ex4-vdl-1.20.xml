@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XML Spy v4.3 U (http://www.xmlspy.com) by Jens-S. Vöckler (private) -->
+<definitions xmlns="http://www.griphyn.org/chimera/VDL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.griphyn.org/chimera/VDL http://www.griphyn.org/chimera/vdl-1.20.xsd" version="2.34" vdlns="diamond">
+	<transformation name="generate">
+		<declare name="a" link="output"/>
+		<argument name="stdout">
+			<use name="a2" link="output"/>
+		</argument>
+		<profile key="pfnhint" namespace="hints">
+			<text>generator.exe</text>
+		</profile>
+	</transformation>
+	<transformation name="findrange">
+		<declare name="a" link="input"/>
+		<declare name="b" link="output"/>
+		<declare name="p" link="none">
+			<scalar>
+				<text>0.0</text>
+			</scalar>
+		</declare>
+		<argument name="arg">
+			<text>-i </text>
+			<use name="p"/>
+		</argument>
+		<argument name="stdin">
+			<use name="a" link="output"/>
+		</argument>
+		<argument name="stdout">
+			<use name="b" link="output"/>
+		</argument>
+		<profile key="pfnhint" namespace="hints">
+			<text>ranger.exe</text>
+		</profile>
+	</transformation>
+	<transformation name="analyze">
+		<declare name="a" link="input" container="list"/>
+		<declare name="c" link="output"/>
+		<argument name="files">
+			<use name="a" separator=" "/>
+		</argument>
+		<argument name="stdout">
+			<use name="a2" link="output"/>
+		</argument>
+		<profile key="pfnhint" namespace="hints">
+			<text>analze.exe</text>
+		</profile>
+	</transformation>
+	<derivation uses="generate" name="top">
+		<pass bind="a">
+			<scalar>
+				<lfn file="f.a" link="output"/>
+			</scalar>
+		</pass>
+	</derivation>
+	<derivation uses="findrange" name="left">
+		<pass bind="b">
+			<scalar>
+				<lfn file="f.b" link="output"/>
+			</scalar>
+		</pass>
+		<pass bind="a">
+			<scalar>
+				<lfn file="f.a" link="input"/>
+			</scalar>
+		</pass>
+		<pass bind="p">
+			<scalar>
+				<text>0.5</text>
+			</scalar>
+		</pass>
+	</derivation>
+	<derivation uses="findrange" name="right">
+		<pass bind="b">
+			<scalar>
+				<lfn file="f.c" link="output"/>
+			</scalar>
+		</pass>
+		<pass bind="a">
+			<scalar>
+				<lfn file="f.a" link="input"/>
+			</scalar>
+		</pass>
+		<pass bind="p">
+			<scalar>
+				<text>1.0</text>
+			</scalar>
+		</pass>
+	</derivation>
+	<derivation uses="analyze" name="bottom">
+		<pass bind="a">
+			<list>
+				<scalar>
+					<lfn file="f.b" link="input"/>
+				</scalar>
+				<scalar>
+					<lfn file="f.c" link="input"/>
+				</scalar>
+			</list>
+		</pass>
+		<pass bind="c">
+			<scalar>
+				<lfn file="f.d" link="output"/>
+			</scalar>
+		</pass>
+	</derivation>
+</definitions>

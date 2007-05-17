@@ -1,0 +1,10 @@
+TR tut::echo( message, output file )
+{
+  argument = ${message};
+  argument stdout = ${file};
+}
+
+DV voeckler::hello->tut::echo(
+	message = "Hello World",
+	file=@{output:"voeckler.hw.txt"}
+);

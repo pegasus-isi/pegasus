@@ -1,0 +1,126 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: vdlx2vdlt.1,v 1.5 2005/08/09 19:52:54 griphyn Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.\"
+.TH vdlx2vdlt 1 "Mai, 3rd 2004"
+.SH NAME
+vdlx2vdlt \- convert VDLt into VDLx 
+.SH SYNOPSIS
+.B vdlx2vdlt
+[\-Dprop [..]] [-v] in.xml out.vdl
+.br
+.B vdlx2vdlt
+[\-Dprop [..]] [-v] in.xml > out.vdl
+.br
+.B vdlx2vdlt
+[\-Dprop [..]] [-v] < in.xml > out.vdl
+.br
+.B vdlx2vdlt
+[\-Dprop [..]] \-V
+.SH DESCRIPTION
+The translator converts the XML representation of VDL, called VDLx into
+the textual representation of VDL, called VDLt. The textual
+representation is meant for human consumption and wall\-talk sessions.
+The XML version is meant for machine consumption, data transfer and
+computation.
+.SH ARGUMENTS
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+A CLI property take precedence over the properties file property 
+of the same key.
+.TP
+.B \-v
+.PD 0
+.TP
+.PD 1
+.B \-\-verbose
+is an optional argument to trigger a verbose mode. If present, the short
+definition identifier of any definition that was read from XML and that
+is about to be output in textual format will be printed as log line.
+.IP
+Default is the non-verbose mode. 
+.TP
+.B in.xml
+In the one or two argument form, the first argument specifies the 
+file to read VDLx from. 
+.IP
+Default is to read XML from
+.IR stdin .
+.TP
+.B out.vdl
+is the optional second argument to put the new definitions into. 
+.IP
+Default is to write textual VDL to
+.IR stdout .
+.TP
+.B \-V
+displays the version of the GriPhyN Virtual Data System you are using.
+.SH "RETURN VALUE"
+Regular and planned program terminations will result in an exit code of 0.
+Abnormal termination will result in a non-zero exit code.
+.SH FILES
+.TP
+.B $VDS_HOME/etc/vdl-1.23.xsd
+is the suggested location of the latest XML schema to read the database.
+.TP
+.B $VDS_HOME/etc/properties
+contains the system properties with all configurable options.
+.TP
+.B $HOME/.vdsrc
+contains the user properties with all configurable options.
+.TP
+.B gvds.jar
+contains all compiled Java bytecode to run the GriPhyN Virtual Data System.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B $VDS_HOME
+is the suggested base directory of your the execution environment.
+.TP
+.B $JAVA_HOME
+should be set and point to a valid location to start the intended Java
+virtual machine as
+.IR $JAVA_HOME/bin/java .
+.TP
+.B $CLASSPATH
+should be set to contain all necessary files for the execution environment.
+Please make sure that your 
+.I CLASSPATH
+includes the Xerces 2.6 classes for the XML parser.
+.SH "SEE ALSO"
+.BR vdlt2vdlx (1),
+.BR insertvdc (1).
+.\".SH EXAMPLE
+.SH RESTRICTIONS
+Plenty. 
+.SH AUTHORS
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>,
+.br
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.PP
+Chimera
+.B http://www.griphyn.org/chimera/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

@@ -1,0 +1,148 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\" 
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\" 
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\" 
+.\" $Id: clean-rls.1,v 1.1 2005/08/29 16:35:20 griphyn Exp $
+.TH "clean-rls" "1" "1.3.9" "GriPhyN Virtual Data System"
+.SH "NAME"
+.LP 
+clean\-rls \- removes existing replica entries from RLS (and sites). 
+.SH "SYNTAX"
+.LP 
+.B clean\-rls \-\-help
+.LP 
+.B clean\-rls [\-r lrc] [\-f] (\-l re | \-p re)
+.SH "DESCRIPTION"
+.LP 
+This helpful script enable a user of a half-run workflow to remove
+unwanted intermediary results from RLS. Additionally, if wished, the
+script can also attempt to remove the files physically from the remote
+site, as pointed to by RLS's PFN. The file removal should be used with
+care, as it wipes out content. 
+.LP
+Querying the LRC, updating the LRC and removing the files can be very
+time-consuming operations. Usually, a kind of 
+.I I am alive
+flag is displayed during these operations. 
+.SH "ARGUMENTS"
+.TP
+.B \-\-rls lrc
+.PD 0
+.TP
+.PD 1
+.B \-r lrc
+This option is usually mandatory. It specifies the RLS LRC to query for
+the file mappings. If you don't like to specify this option, you can set
+the environment variable
+.I rls
+to the RLS LRC URI. 
+.IP
+There is no default.
+.TP
+.B \-\-remove
+.PD 0
+.TP
+.PD 1
+.B \-f
+If this flag is specified, remote physical files are attempted to be
+removed. To be more efficient, files are sorted and collected by their
+remote site. It is assumed for now that the gsiftp URI hostname is also
+the hostname of the gatekeeper. This may not always be true, but
+suffices for most of our grids. To avoid command-line overflows, about
+100 files are removed per grid job. Thus, multiple jobs may need to be
+started, if a site houses many files. Grid jobs are run sequentially
+using 
+.IR globus\-job\-run . 
+.IP
+By default, no remote files are removed. 
+.LP
+The matching options for LFN and PFN in the RLS work using Perl regular
+expression syntax. If you specify none of the match options, no file
+will match. This is a security precaution. If you specify both, LFN and
+PFN expressions, for a match, a mapping must match both (AND). If you
+specify either LFN or PFN matches, the non-specified option will become
+the regular expression wildcard, matching anything. To express
+alternatives (OR), use appropriate regular expression syntax. It is
+highly recommended to protect your regular expressions from the shell by
+placing apostrophes around them.
+.TP
+.B \-\-lfn\-match re
+.PD 0
+.TP
+.PD 1
+.B \-l re
+This option specifies a single regular expression for the LFN portion of
+a RLS mapping. 
+.IP 
+There is no default.
+.TP
+.B \-\-pfn\-match re
+.PD 0
+.TP
+.PD 1
+.B \-p re
+This option specifies a single regular expression for the PFN portion of
+a RLS mapping. 
+.IP
+There is no default.
+.SH "RETURN VALUE"
+If no errors occur, an exit code of 0 is produced. Any errors will
+result in a non-zero exit code. 
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B GLOBUS_HOME
+points to the installation base directory of your the Globus Toolkit.
+.TP
+.B rls
+is an optional environment variable pointing to your LRC. Setting this
+variable avoid having to use the 
+.B \-r 
+option. 
+.TP
+.B PATH
+should include the Globus binaries for
+.I globus\-rls\-cli
+and 
+.IR globus\-job\-run . 
+.SH "WARNINGS"
+Unfortunately, RLS is not very accomodating with permissions. It is
+easily possible for any user to wipe out files from another user. Thus,
+use with utter caution. 
+.SH "EXAMPLES"
+.LP
+The following example will remove all files from the LRC which have the
+same prefix in their LFN: 
+.nf 
+\f(CB
+$ clean-rls -r rls://a.b.c -l '^test' 
+\fP
+.fi 
+.LP
+The following example will remove all files from an LRC and the remote
+sites, if the LFN matches a prefix, and the PFN also matches only
+gridftp URIs:  
+.nf 
+\f(CB
+$ clean-rls -f -r rls://a.b.c -l '^test' -p '^gsiftp'
+\fP
+.fi 
+.SH "SEE ALSO"
+.BR globus\-rls\-cli (1).
+.SH "AUTHORS"
+.LP 
+Jens\-S. Vöckler <voeckler at cs dot uchicago dot edu>
+.PP 
+GVDS
+.B http://www.griphyn.org/vds/
+.br 
+GriPhyN
+.BR http://www.griphyn.org/

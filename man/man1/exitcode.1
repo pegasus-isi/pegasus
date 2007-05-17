@@ -1,0 +1,289 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id: exitcode.1,v 1.9 2005/08/16 18:28:57 griphyn Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.\"
+.TH exitcode 1 "August, 30th 2004"
+.SH NAME
+exitcode \- parse invocation records
+.SH SYNOPSIS
+.B exitcode
+[\-Dprop [..]] [\-d db-prefix | -n] [-l log] [-e] [-f] [-i] [-l tag -m ISO] [-v] file [..]
+.br
+.B exitcode
+[\-Dprop [..]] \-V
+.SH DESCRIPTION
+The exit code parsing command allows DAGMan to obtain remote exit codes,
+and act accordingly. Additionally, remote exit codes allow to trace
+provenance of job executions, when inserted back into the VDC. 
+.SH ARGUMENTS
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+A CLI property take precedence over the properties file property 
+of the same key.
+.TP
+.B \-d db-prefix 
+.PD 0
+.TP
+.PD 1
+.B \-\-dbase db-prefix
+The database prefix is currently unused.
+.IP
+Default is to use the VDC pointed to by the
+.I vds.db.schema
+property. If this property is unset, the 
+.I SingleFileSchema
+becomes the chosen schema, and the property
+.I vds.db.schema.file.store
+defaults to
+.IR $VDS_HOME/var/vds.db ,
+the eventual default database file. 
+.IP
+.B exitcode
+is unable to add provenance records to a file-based VDC. 
+.TP
+.B \-e
+.PD 0
+.TP
+.PD 1
+.B \-\-empty\-fail
+activates the fail-on-empty mode. In this mode, a result file of size
+zero constitutes a failure.
+.IP
+Due to NFS problems at the remote sites, the default is to assume
+success, if file exists, even if it is of size zero. 
+.TP
+.B \-v
+.PD 0
+.TP
+.PD 1
+.B \-\-verbose
+activates the verbose mode. This is equivalent to setting the property
+.I vds.log.app
+to 
+.IR stdout .
+More details about the program execution will become visible at the 
+command-line.
+.IP
+Default is to be more silent about the program execution, as it is
+expected to be called from non-interactive agents. 
+.TP
+.B \-i
+.PD 0
+.TP
+.PD 1
+.B \-\-ignore
+Disables the exit-code parsing. This mode may be of benefit, if the
+job is not important enough to have the workflow fail. 
+.IP
+Default is to extract the exit code and externalize it.
+.TP
+.B \-n 
+.PD 0
+.TP
+.PD 1
+.B \-\-noadd
+Disables the database insertion of the provenance information. The
+provenance information will only inserted, if the chosen database
+schema supports invocation records. If it does not, the
+.B \-n
+mode will implicitely be chosen. 
+.IP
+Default is to add the invocation record to the VDC, if it allows it.
+.TP
+.B \-l tag
+.PD 0
+.TP 
+.PD 1
+.B \-\-label tag
+permits all invocation records to be associated with a workflow
+identification tag. The tag has a maxiumum length of 32 characters. It
+is expected to be the 
+.I label
+that was provided to the
+.I gendax
+command. 
+.IP
+Default is not to store any tag. This option should be used in
+conjunction with the 
+.I \-m
+option. 
+.TP
+.B \-m iso
+.PD 0
+.TP
+.PD 1
+.B \-\-mtime iso
+associates a timestamp with all invocations records. The timestamp has
+to be specified as ISO 8601 compliant full timestamp, e.g.
+.IR 2005-06-10T15:20:11-0500 . 
+It is expected
+that the timestamp derives from the modification time of the .dax file
+produced by the
+.I gendax
+command. 
+.IP
+Default is not to store any timestamp. This option should be used in
+conjunction with the 
+.I \-l
+option. 
+.TP
+.B \-V
+.PD 0
+.TP
+.PD 1
+.B \-\-version
+displays the version of the GriPhyN Virtual Data System you are using.
+.TP
+.B file [..]
+The given invocation record will be added to the database. One or more
+files can be added with each invocation.
+.SH "RETURN VALUE"
+When not in 
+.B \-i 
+mode, a set of exit codes is employed to signal the exit code of the
+remote main job to the calling instance (usually DAGMan):
+.TP
+.B 0
+is returned, if the remote main job exited with an exit code of 0. An
+empty invocation record file will also be assumed to be a successful
+execution. 
+.TP
+.B 1
+is returned, if the remote main job exited with a non-zero exit code.
+.TP
+.B 2
+is returned, if the grid launch mechnaism was incapable of starting
+the application for some reason. The usual reason is a mis-specified
+path to the application.
+.TP
+.B 3
+is returned, if the remote main job died on a signal.
+.TP
+.B 4
+is returned, if the remote main job was suspended. Usually, you should
+not see this state.
+.TP
+.B 5
+is returned, if the invocation record had an invalid state, was not
+parsable, or is simply non-existent. 
+.TP
+.B 6
+denotes an illegal state. Please inform 
+.I vds-support@griphyn.org .
+.TP
+.B 7
+denotes that an exception was caught during the execution. This is
+always bad. You may want to run in verbose mode to obtain more
+information about the cause (stack trace), and provide the GVDS team
+with the file (typically the .out file) you run with. 
+.TP
+.B 10
+is an error message from the shell wrapper. The environment variable
+.I JAVA_HOME
+was not set. Thus, the 
+.I java
+executable cannot be found and invoked.
+.TP
+.B 11
+is an error message from the shell wrapper: The environment variable
+.I VDS_HOME
+was not set.
+.TP
+.B 12
+is an error message from the shell wrapper: The environment variable
+.I CLASSPATH
+is suspiciouly empty.
+.PP
+When working in 
+.B \-i 
+mode, the exit code from the database operation will be returned. A zero
+exit code means all is well while a non-zero exit code indicates failure.
+.PP
+If both 
+.B \-i
+and
+.B \-n
+are given, the latter may be turned on implicitely, the command degenerates
+into a no-operation.
+.SH FILES
+.TP
+.B $VDS_HOME/etc/iv-1.5.xsd
+is the suggested location of the latest XML schema to read the database.
+.TP
+.B $VDS_HOME/etc/properties
+contains the system properties with all configurable options.
+.TP
+.B $HOME/.vdsrc
+contains the user properties with all configurable options.
+.TP
+.B gvds.jar
+contains all compiled Java bytecode to run the GriPhyN Virtual Data System.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B $VDS_HOME
+must be set to the base directory of your the execution environment.
+.TP
+.B $JAVA_HOME
+must be set and point to a valid location to start the intended Java
+virtual machine as
+.IR $JAVA_HOME/bin/java .
+.TP
+.B $CLASSPATH
+must be set to contain all necessary files for the execution environment.
+Please make sure that your 
+.I CLASSPATH
+includes the Xerces 2 classes.
+.SH "SEE ALSO"
+.BR gendax (1),
+.BR kickstart (1).
+.SH EXAMPLE
+.nf
+\f(CB
+$ exitcode date.out
+$ echo $?
+0
+
+$ exitcode -vvv date.out
+2005.08.16 13:10:52.816 CDT: [app] will use /home/voeckler/vds/etc/iv-1.5.xsd
+2005.08.16 13:10:52.823 CDT: [app] starting to parse invocation
+2005.08.16 13:10:53.470 CDT: [app] invocation 1 was parsed successfully
+2005.08.16 13:10:53.575 CDT: [app] invocation already exists, skipping!
+2005.08.16 13:10:53.576 CDT: [app] exit status = 0
+$ echo $?
+0
+\fP
+.fi
+.SH RESTRICTIONS
+Plenty. 
+.SH AUTHORS
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>,
+.br
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.PP
+Chimera
+.B http://www.griphyn.org/chimera/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

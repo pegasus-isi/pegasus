@@ -1,0 +1,50 @@
+#!/usr/bin/env perl
+# 
+# Take a stab at what this system is
+# 
+require 5.005;
+use strict;
+use POSIX qw(uname);
+
+#$main::DEBUG = -1;
+
+sub glibc_version() {
+    # purpose: Check version of glibc, source of infinite trouble
+    # returns: concatenated version string <major><minor><patch>
+    # warning: attempts to return highest version found
+    my ($version,$result);
+    opendir( DIR, "/lib" );
+    foreach ( readdir(DIR) ) {
+	if ( /ld-(\d+)\.(\d+)\.(\d+)\.so/ ) {
+	    my $temp = $1 * 1000000 + $2 * 1000 + $3;
+	    warn "# found glibc $temp\n" if $main::DEBUG;
+	    if ( ! defined $version || $version < $temp ) {
+		$result = "$1$2$3";
+		$version = $temp;
+	    }
+	}
+    }
+    closedir DIR;
+    $result;
+}
+
+my ($sysname,$nodename,$release,$version,$machine) = map { lc } POSIX::uname();
+my ($major,$minor) = split /\./, $release;
+my $result = $sysname;
+$machine='amd64' if $machine eq 'x86_64';
+if ( $sysname eq 'linux' ) {
+    $result .= '-' . $machine;
+    # must check glibc, too!
+    $result .= "-glibc" . glibc_version();
+} elsif ( $sysname eq 'sunos' ) {
+    my $platform = `isainfo -n`;
+    chomp($platform);
+    $result = 'solaris' . ($major-3) . $minor . '-' . $platform;
+} elsif ( $sysname eq 'darwin' ) {
+    $result .= $major . '-' . $machine;
+} else {
+    # all others
+    $result .= '-' . $machine;
+}
+
+print "$result\n";

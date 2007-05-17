@@ -1,0 +1,286 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\"
+.\" $Id: d2d.1,v 1.4 2005/08/16 18:28:57 griphyn Exp $
+.\"
+.\" Authors: Jens-S. Vöckler, Kavitha Ranganathan
+.\"
+.TH d2d 1 "Oct, 25th 2003"
+.SH NAME
+d2d \- prepares a DAX for job-by-job deferred planning.
+.SH SYNOPSIS
+.B d2d
+[\-Dprop [..]] [\-d dir] [\-l min] [-w rc] [-P pre] [-p post] -t sft dax
+.br
+.B d2d
+[\-Dprop [..]] \-V
+.SH "DESCRIPTION"
+The 
+.B d2d
+tool, known as 
+.I dax2dag
+prepares an abstract workflow in XML (DAX) file for job-by-job deferred
+planning using Condor DAGMan and Condor-G. The product of the process is
+a number of description files for the workflow, consisting of a 
+.IR .dag
+file for Condor DAGMan, and one or more 
+.IR .sub
+submit files for Condor-G. 
+.PP
+To run the workflow, change into the directory of your 
+.I \-\-dir
+option, and submit the workflow to DAGMan using
+.IR condor_submit_dag . 
+It is usually wise to limit the number of simultaneous pre-, post- and
+true Condor jobs with DAGMan's throttles, see DAGMan documentation.
+.SH "ARGUMENTS"
+Any option will be displayed with its long options synonym(s).
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the VDS home location. One may set several
+CLI properties by giving this option multiple times.
+.I The -D option(s) must be first on the command line. 
+A CLI property takes precedence over the properties file property of the
+same key.
+.TP
+.B \-d dir
+.PD 0
+.TP
+.PD 1
+.B \-\-dir dir
+The directory option points to a location underneath which to create the
+workflow related files. If a path components toward the specified
+location is missing, it will be created (yes, even multiple
+directories), provided sufficient permissions.
+.IP
+It is highly recommended to always use the directory option, and to
+always point it to a fresh location. Good practice is to use a directory
+name 
+.I run.N
+where 
+.I N
+is a monotonically increasing number. 
+.IP
+Default is to use the current working directory.
+.TP
+.PD 0
+.B \-t sft
+.TP
+.PD 1
+.B \-\-template sft
+The submit file template controls the sceleton of the generated
+.IR .sub
+Condor submit files. It is a mandatory option. Usually, different grids
+will require different submit file templates. 
+.IP
+No default, mandatory option. 
+.TP
+.PD 0
+.B \-l min
+.TP
+.PD 1
+.B \-\-level min
+Depending on the number of jobs contained in the workflow, the number of
+subdirectory levels underneath the base directory is automatically
+chosen to balance the directory filling. For workflows with less than 31
+jobs, no subdirectories will be created (level 0). Some people find this
+aesthetically offensive, and may want to require a minimum subdirectory
+level of 1. 
+.IP
+Permitted are values between 0 and 3. Note that 3 levels can accomodate
+about 2 million submit files.
+.IP
+The default number of levels is a function of the number of jobs, the
+optimal number of files per directory, and a multiplicator for the jobs
+to file ratio. The level option only enforces minimum number of levels. 
+.TP
+.PD 0
+.B \-w rc
+.TP
+.PD 1
+.B \-\-wfrc rc
+The rc file contains a set of properties that is shared between the
+planner, and its run-time extensions. These properties control the
+runtime behavior of the active workflow. Some information from the rc
+file is used by the 
+.B d2d
+application to determine certain defaults, like the location of the pre-
+and post-script. 
+.IP
+Default is to use the 
+.IR $HOME/.wfrc
+location.
+.TP
+.PD 0
+.B \-P fn
+.TP
+.PD 1
+.B \-\-prescript fn
+The pre-script is a run-time extensions of the job-by-job deferred
+planner, which is invoked by Condor DAGMan. Usually, the
+.I wfrc
+file specifies its location, but for debug purposes, it can be
+overridden on the command-line.
+.IP
+Default location is taken from the
+.I wfrc
+properties.
+.TP
+.PD 0
+.B \-p fn
+.TP
+.PD 1
+.B \-\-postscript fn
+The post-script is a run-time extensions of the job-by-job deferred
+planner, which is invoked by Condor DAGMan. Usually, the
+.I wfrc
+file specifies its location, but for debug purposes, it can be
+overridden on the command-line. 
+.IP
+Default location is taken from the
+.I wfrc
+properties.
+.TP
+.PD 0
+.B \-V
+.TP
+.PD 1
+.B \-\-version
+displays the version of the GriPhyN Virtual Data System you are using.
+.TP
+.B \-v
+.PD 0
+.TP
+.PD 1
+.B \-\-verbose
+activates the verbose mode. This is equivalent to setting the property
+.I vds.log.app
+to 
+.IR stdout .
+More details about the program execution will become visible at the 
+command-line.
+.LP
+The final mandatory option is the location of the 
+.IR .dax
+file that is to be planned. Only one file can be planned per invocation; 
+there is no bulk mode. 
+.SH "RETURN VALUE"
+If the XML parser was unable to process the specified 
+.I .dax
+file, an error code of 42 is returned. Successful processing results in
+an error code of 0. Unexpected exceptional error result in program
+abortion and an error code of 1. 
+.SH "FILES"
+.TP
+.B $VDS_HOME/etc/dax-1.10.xsd
+is the suggested location of the latest DAX schema to produce DAX output.
+.TP
+.B $VDS_HOME/etc/properties 
+.TP
+.B $HOME/.vdsrc
+contain properties with all configurable options.
+.TP 
+.B $HOME/.wfrc
+contains additional properties to configure the workflow execution
+behavior. 
+.TP
+.B gvds.jar
+contains all compiled Java bytecode to run the GriPhyN Virtual Data System.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B $VDS_HOME
+is the suggested base directory of your the execution environment.
+.TP
+.B $JAVA_HOME
+should be set and point to a valid location to start the intended Java
+virtual machine as
+.IR $JAVA_HOME/bin/java .
+.TP
+.B $CLASSPATH
+should be set to contain all necessary files for the execution environment.
+Please make sure that your 
+.I CLASSPATH
+includes pointer to the Xerces 2.6.0 classes to run this program.
+.SH "SEE ALSO"
+.TP
+.BR DAGMan ,
+http://www.cs.wisc.edu/condor/dagman/
+.TP
+.BR Condor ,
+http://www.cs.wisc.edu/condor/
+.TP
+.BR condor_submit ,
+http://www.cs.wisc.edu/condor/manual/v6.6/condor_submit.html
+.TP
+.BR condor_submit_dag ,
+http://www.cs.wisc.edu/condor/manual/v6.6/condor_submit_dag.html
+.TP
+.BR Eurale .
+$VDS_HOME/doc/eurale.pdf
+.SH "EXAMPLE"
+The following example will plan the "black diamond" example, and put the
+generated files into the subdirectory 
+.IR run.2
+underneath the current directory. 
+.nf
+\f(CB
+$ d2d --dir run.2 -t /path/to/grid3.sft blackdiamond.dax
+2004.10.26 12:18:42.882 CDT: [default] starting
+2004.10.26 12:18:43.850 CDT: [default] using 0 directory levels
+2004.10.26 12:18:43.931 CDT: [default] created 4 structured filenames.
+2004.10.26 12:18:43.931 CDT: [default] created 1 flat filenames.
+\fP
+.fi
+.PP
+The following files were generated by the "black diamond" example. Since
+the example only consists of four jobs, no subdirectory structure was
+generated to contain the submit files. 
+.nf
+\f(CB
+$ ls -la run.2
+total 28
+drwxr-xr-x    2 x x     4096 Oct 26 12:18 ./
+drwxr-xr-x    5 x x     4096 Oct 26 12:18 ../
+-rw-r--r--    1 x x     1777 Oct 26 12:18 ID000001.sub
+-rw-r--r--    1 x x     1787 Oct 26 12:18 ID000002.sub
+-rw-r--r--    1 x x     1791 Oct 26 12:18 ID000003.sub
+-rw-r--r--    1 x x     1777 Oct 26 12:18 ID000004.sub
+-rw-r--r--    1 x x     1323 Oct 26 12:18 black-diamond-0.dag
+\fP
+.fi
+.PP
+The next step is to change into the 
+.IR run.2
+directory, and submit the files to Condor DAGMan. Before submitting
+anything to the grid, please make sure that your grid proxy certificate
+is active and valid, and that you did set up your site selector. It is
+usually a good idea to use the 
+.IR \-MaxPre ,
+.IR \-MaxPost and
+.IR \-MaxJob
+throttles of DAGMan.
+.SH "RESTRICTIONS"
+Plenty. 
+.SH AUTHORS
+Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+.\"Jens-S. V\*:ockler 
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>,
+.br
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.PP
+GriPhyN
+.BR http://www.griphyn.org/

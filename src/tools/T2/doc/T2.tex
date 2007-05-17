@@ -1,0 +1,93 @@
+\documentclass[11pt,letterpaper,headsepline,pagesize,letterpaper,DIV12,liststotoc]{scrartcl}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx,verbatim,rotate,times,subfigure}
+\usepackage{longtable}
+\usepackage[latin1]{inputenc}
+% paragraph setup
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4\baselineskip plus1pt minus1pt}
+% not in this country: \frenchspacing
+%
+% page setup
+%
+\usepackage[automark]{scrpage2}
+\pagestyle{scrheadings}
+\renewcommand{\headfont}{\normalfont\sffamily}
+\renewcommand{\pnumfont}{\normalfont\sffamily}
+\clearscrheadfoot
+\ohead{\pagemark}\chead{}\ihead{\headmark}
+\ofoot{}\cfoot{}\ifoot{}
+\pagestyle{scrheadings}
+\thispagestyle{empty}
+%\ohead{\pagemark}\chead{}\ihead{\headmark}\cfoot{}
+%
+% I hate koma's page layout, so I fix it my way
+%
+%\setlength{\topmargin}{0pt} % headexclude document style is broken
+\setlength{\textheight}{1.08\textheight} % add n% more length
+\setlength{\textwidth}{1.05\textwidth} % add n% more width
+%
+% my verbatim stuff
+%
+\makeatletter
+\newlength{\myverbatimindent}
+\setlength{\myverbatimindent}{10mm}
+\renewcommand{\verbatim@processline}{%
+  \leavevmode\hspace*{\myverbatimindent}\the\verbatim@line\par}
+\renewcommand{\verbatim@font}{\bf\ttfamily\small\baselineskip10pt}
+\makeatother
+%
+% personal shortcuts
+%
+\font\manual =manfnt scaled \magstep0
+\def\dbend{{\manual\symbol{127}}}
+%
+\newenvironment{difficult}%
+  {{\makebox[-50pt][r]{\raisebox{8pt}{\dbend}}\makebox[50pt][l]{}}%
+   \small\leftskip5mm}%
+  {\par\normalsize\leftskip0pt}
+%
+\def\bs{$\mathbf{\backslash}$}
+\def\dd{\\\hline}
+\def\at{\symbol{64}}
+\def\ul#1{\underline{#1}}
+\def\rref#1{\ref{#1} (page~\pageref{#1})}
+%
+% should be last
+%
+\usepackage{hyperref}
+%
+%
+\title{Transfer V2 (T2)\\\vspace*{15mm}\includegraphics[scale=0.5]{T2}}
+\date{06/10/2004}
+\author{Jens-S. Vöckler}
+%
+\usepackage{hyperref}
+%
+\begin{document}
+\thispagestyle{empty}
+\maketitle
+\begin{center}
+  \begin{tabular}{|l|l|p{80mm}|}\hline
+    \textbf{Author} & \textbf{Date} & \textbf{Modification}\dd\hline
+    Jens Vöckler & 20040610 & initial document\dd
+  \end{tabular}
+\end{center}
+\setlongtables
+\pagebreak
+\tableofcontents
+\vfill
+\begin{difficult}
+Difficult sections which are not important for the casual users are
+expressed with a dangerous bend sign in the margin.  
+\end{difficult}
+% \pagebreak
+
+\section{Overview}
+\label{sec:overview}
+
+\end{document}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

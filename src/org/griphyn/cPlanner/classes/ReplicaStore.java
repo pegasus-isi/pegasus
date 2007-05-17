@@ -1,0 +1,293 @@
+/*
+ * This file or a portion of this file is licensed under the terms of
+ * the Globus Toolkit Public License, found in file GTPL, or at
+ * http://www.globus.org/toolkit/download/license.html. This notice must
+ * appear in redistributions of this file, with or without modification.
+ *
+ * Redistributions of this Software, with or without modification, must
+ * reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+ * some other similar material which is provided with the Software (if
+ * any).
+ *
+ * Copyright 1999-2004 University of Chicago and The University of
+ * Southern California. All rights reserved.
+ */
+package org.griphyn.cPlanner.classes;
+
+
+import org.griphyn.common.catalog.ReplicaCatalogEntry;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collection;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
+
+/**
+ * A Replica Store that allows us to store the entries from a replica catalog.
+ * The store map is indexed by LFN's and values stored are ReplicaLocation
+ * objects.
+ *
+ * @author Karan Vahi
+ * @author Gaurang Mehta
+ *
+ * @version $Revision$
+ *
+ * @see org.griphyn.common.catalog.ReplicaCatalogEntry
+ */
+public class ReplicaStore
+       extends Data
+       implements Cloneable{
+
+    /**
+     * The replica store.
+     */
+    private Map mStore;
+
+
+    /**
+     * Default constructor.
+     */
+    public ReplicaStore(){
+        mStore = new HashMap();
+    }
+
+    /**
+     * Overloaded constructor.
+     * Intializes the member variables to the values passed.
+     *
+     * @param rces  map indexed by LFN's and each value is a collection
+     *                of replica catalog entries for the LFN.
+     */
+    public ReplicaStore( Map rces ){
+        mStore = new HashMap( rces.size() );
+        store( rces );
+    }
+
+
+    /**
+     * Stores replica catalog entries into the store. It overwrites any
+     * existing entries with the same LFN's. The <code>ReplicaCatlogEntry</code>
+     * ends up being stored as a <code>ReplicaLocation</code> object.
+     *
+     * @param rces  map indexed by LFN's and each value is a collection
+     *                of replica catalog entries for the LFN.
+     */
+    public void store( Map rces ){
+        String lfn;
+        Map.Entry entry;
+        Collection values;
+
+        //traverse through all the entries and render them into
+        //ReplicaLocation objects before storing in the store
+        for( Iterator it = rces.entrySet().iterator(); it.hasNext(); ){
+            entry = ( Map.Entry )it.next();
+            lfn = ( String )entry.getKey();
+            values = ( Collection )entry.getValue();
+            put( lfn, new ReplicaLocation(lfn, values) );
+        }
+    }
+
+
+    /**
+     * Adds ReplicaCatalogEntries into the store. Any existing
+     * mapping of the same LFN and PFN will be replaced, including all its
+     * attributes. The <code>ReplicaCatlogEntry</code>
+     * ends up being stored as a <code>ReplicaLocation</code> object.
+     *
+     * @param rces  map indexed by LFN's and each value is a collection
+     *                of replica catalog entries for the LFN.
+     */
+    public void add( Map rces ){
+        String lfn;
+        Map.Entry entry;
+        Collection values;
+        ReplicaLocation rl;
+
+
+        //traverse through all the entries and render them into
+        //ReplicaLocation objects before storing in the store
+        for( Iterator it = rces.entrySet().iterator(); it.hasNext(); ){
+            entry = ( Map.Entry )it.next();
+            lfn = ( String )entry.getKey();
+            values = ( Collection )entry.getValue();
+            add( lfn, values );
+        }
+    }
+
+    /**
+     * Adds replica catalog entries into the store. Any existing
+     * mapping of the same LFN and PFN will be replaced, including all its
+     * attributes.
+     *
+     * @param lfn     the lfn.
+     * @param tuples  list of <code>ReplicaCatalogEntry<code> containing the PFN and the
+     *                attributes.
+     */
+    public void add( String lfn, Collection tuples ){
+        //add only if tuples is not empty
+        if( tuples.isEmpty() ){ return; }
+        this.add( new ReplicaLocation( lfn, tuples ) );
+    }
+
+
+    /**
+     * Adds replica catalog entries into the store. Any existing
+     * mapping of the same LFN and PFN will be replaced, including all its
+     * attributes.
+     *
+     * @param rl   the <code>ReplicaLocation</code> containing a pfn and all
+     *             the attributes.
+     */
+    public void add( ReplicaLocation rl ){
+        String lfn = rl.getLFN();
+
+        if( this.containsLFN( lfn ) ){
+            //add to the existing Replica Location
+            ReplicaLocation existing = this.get( lfn );
+            existing.addPFNs( rl.getPFNList() );
+        }
+        else{
+            //store directly in the store.
+            put( lfn, rl );
+        }
+    }
+
+
+
+    /**
+     * Returns a <code>ReplicaLocation</code> corresponding to the LFN.
+     *
+     * @param lfn  the lfn for which the ReplicaLocation is required.
+     *
+     * @return <code>ReplicaLocation</code> if entry exists else null.
+     */
+    public ReplicaLocation getReplicaLocation( String lfn ){
+        return get( lfn );
+    }
+
+
+    /**
+     * Returns an iterator to the list of <code>ReplicaLocation</code>
+     * objects stored in the store.
+     *
+     * @return Iterator.
+     */
+    public Iterator replicaLocationIterator(){
+        return this.mStore.values().iterator();
+    }
+
+
+
+    /**
+     * Returns the set of LFN's for which the mappings are stored in the store.
+     *
+     * @return Set
+     */
+    public Set getLFNs(){
+        return this.mStore.keySet();
+    }
+
+    /**
+     * Returns a <code>Set</code> of lfns for which the mappings are stored in
+     * the store, amongst the <code>Set</code> passed as input.
+     *
+     * @param lfns   the collections of lfns
+     *
+     * @return Set
+     */
+    public Set getLFNs( Set lfns ){
+        Set s = new HashSet();
+        String lfn;
+        for( Iterator it = lfns.iterator(); it.hasNext(); ){
+            lfn = (String)it.next();
+            if( this.containsLFN( lfn ) ){
+                s.add( lfn );
+            }
+        }
+        return s;
+    }
+
+
+    /**
+     * Returns the number of LFN's for which the mappings are stored in the
+     * store.
+     *
+     * @return int
+     */
+    public int getLFNCount(){
+        return this.mStore.size();
+    }
+
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+
+        //clone is not implemented fully.
+        throw new RuntimeException( "Clone not implemented for " + this.getClass().getName() );
+
+//        return rc;
+    }
+
+
+
+
+    /**
+     * Returns the textual description of the data class.
+     *
+     * @return the textual description.
+     */
+    public String toString(){
+        StringBuffer sb = new StringBuffer();
+        for( Iterator it = this.replicaLocationIterator(); it.hasNext(); ){
+            sb.append( it.next() );
+            sb.append( "\n" );
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Returns a boolean indicating whether the store has a mapping for a
+     * particular LFN or not.
+     *
+     * @param lfn   the logical file name of the file.
+     *
+     * @return boolean
+     */
+    public boolean containsLFN( String lfn ){
+        return mStore.containsKey( lfn );
+    }
+
+
+    /**
+     * Inserts entry in the store overwriting any existing entry.
+     *
+     * @param key   the key
+     * @param value <code>ReplicaLocation</code> object.
+     *
+     * @return Object
+     */
+    protected Object put( String key, ReplicaLocation value ){
+        return mStore.put( key, value );
+    }
+
+    /**
+     * Returns an entry corresponding to the LFN
+     *
+     * @param lfn  the LFN
+     *
+     * @return <code>ReplicaLocation</code> object if exists, else null.
+     */
+    protected ReplicaLocation get( String key ){
+        Object result = mStore.get( key );
+        return ( result == null )? null : ( ReplicaLocation )result;
+    }
+
+
+
+}

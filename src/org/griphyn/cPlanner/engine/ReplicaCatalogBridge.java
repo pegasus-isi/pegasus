@@ -1,0 +1,739 @@
+/*
+ * This file or a portion of this file is licensed under the terms of
+ * the Globus Toolkit Public License, found in file GTPL, or at
+ * http://www.globus.org/toolkit/download/license.html. This notice must
+ * appear in redistributions of this file, with or without modification.
+ *
+ * Redistributions of this Software, with or without modification, must
+ * reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+ * some other similar material which is provided with the Software (if
+ * any).
+ *
+ * Copyright 1999-2004 University of Chicago and The University of
+ * Southern California. All rights reserved.
+ */
+package org.griphyn.cPlanner.engine;
+
+
+import org.griphyn.cPlanner.classes.FileTransfer;
+import org.griphyn.cPlanner.classes.LRC;
+import org.griphyn.cPlanner.classes.NameValue;
+import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.Profile;
+import org.griphyn.cPlanner.classes.ReplicaLocation;
+import org.griphyn.cPlanner.classes.ReplicaStore;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PlannerOptions;
+
+import org.griphyn.cPlanner.common.LogManager;
+import org.griphyn.cPlanner.common.PegRandom;
+import org.griphyn.cPlanner.common.PegasusProperties;
+import org.griphyn.cPlanner.common.Utility;
+
+import org.griphyn.cPlanner.namespace.ENV;
+
+import org.griphyn.common.catalog.ReplicaCatalog;
+import org.griphyn.common.catalog.TransformationCatalogEntry;
+import org.griphyn.common.catalog.ReplicaCatalogEntry;
+
+import org.griphyn.common.catalog.replica.ReplicaFactory;
+
+import org.griphyn.common.catalog.transformation.TCMode;
+
+import org.griphyn.common.classes.TCType;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.Vector;
+
+/**
+ * This coordinates the look up to the Replica Location Service, to determine
+ * the logical to physical mappings.
+ *
+ * @author Karan Vahi
+ * @author Gaurang Mehta
+ * @version $Revision: 1.45 $
+ *
+ */
+public class ReplicaCatalogBridge
+             extends Engine //for the time being.
+             {
+
+    /**
+     * The transformation namespace for the regostration jobs.
+     */
+    public static final String RC_TRANSFORMATION_NS = "pegasus";
+
+    /**
+     * The logical name of the transformation used.
+     */
+    public static final String RC_TRANSFORMATION_NAME = "rc-client";
+
+    /**
+     * The logical name of the transformation used.
+     */
+    public static final String RC_TRANSFORMATION_VERSION = null;
+
+    /**
+     * The derivation namespace for the transfer jobs.
+     */
+    public static final String RC_DERIVATION_NS = "pegasus";
+
+    /**
+     * The derivation name for the transfer jobs.
+     */
+    public static final String RC_DERIVATION_NAME = "rc-client";
+
+
+    /**
+     * The version number for the derivations for registration jobs.
+     */
+    public static final String RC_DERIVATION_VERSION = "1.0";
+
+    /**
+     * The name of the Replica Catalog Implementer that serves as the source for
+     * cache files.
+     */
+    public static final String CACHE_REPLICA_CATALOG_IMPLEMENTER = "SimpleFile";
+
+    /**
+     * The name of the source key for Replica Catalog Implementer that serves as
+     * cache
+     */
+    public static final String CACHE_REPLICA_CATALOG_KEY = "file";
+
+
+    /**
+     * The name of the URL key for the replica catalog impelementer to be picked
+     * up.
+     */
+    public static final String REPLICA_CATALOG_URL_KEY = "url";
+
+    /**
+     * The LRC query state indicating that LRC needs to queried fully. The LRC
+     * returns all PFNs irrespective of whether they have a site attribute or
+     * not.
+     */
+    public static final int LRC_QUERY_NORMAL = 0;
+
+    /**
+     * The LRC query state indicating that LRC has to be restricted query.
+     * LRC should return only PFNs with site attributes tagged.
+     */
+    public static final int LRC_QUERY_RESTRICT = 1;
+
+    /**
+     * The LRC query state indicating that LRC has to be ignored.
+     */
+    public static final int LRC_QUERY_IGNORE = 2;
+
+
+
+    /**
+     * The handle to the main Replica Catalog.
+     */
+    private ReplicaCatalog mReplicaCatalog;
+
+
+    /**
+     * Contains the various options to the Planner as passed by the user at
+     * runtime.
+     */
+    private PlannerOptions mPOptions;
+
+
+    /**
+     * The Vector of <code>String</code> objects containing the logical
+     * filenames of the files whose locations are to be searched in the
+     * Replica Catalog.
+     */
+    protected Set mSearchFiles ;
+
+
+    /**
+     * A boolean variable to desingnate whether the RLI queried was down or not.
+     * By default it is up, unless it is set to true explicitly.
+     */
+    private boolean mRCDown;
+
+    /**
+     * The replica store in which we store all the results that are queried from
+     * the main replica catalog.
+     */
+    private ReplicaStore mReplicaStore;
+
+    /**
+     * The replica store in which we store all the results that are queried from
+     * the cache replica catalogs.
+     */
+    private ReplicaStore mCacheStore;
+
+
+    /**
+     * A boolean indicating whether the cache file needs to be treated as a
+     * replica catalog or not.
+     */
+    private boolean mTreatCacheAsRC;
+
+    /**
+     * The namespace object holding the environment variables for local
+     * pool.
+     */
+    private ENV mLocalEnv;
+
+    /**
+     * A String array contains the LRC URLs that have to be ignored for querying.
+     */
+    private String[] mLRCIgnoreList;
+
+    /**
+     * A String array contains the LRC URLs that have to be restricted for querying.
+     * Only those entries are returned that have a site attribute associated
+     * with them.
+     */
+    private String[] mLRCRestrictList;
+
+
+    /**
+     * The overloaded constructor.
+     *
+     * @param dag         the workflow that is being worked on.
+     * @param properties  the properties passed to the planner.
+     * @param options     the options passed to the planner at runtime.
+     *
+     *
+     */
+    public ReplicaCatalogBridge( ADag dag ,
+                                 PegasusProperties properties,
+                                 PlannerOptions options ) {
+        super( properties );
+        this.initialize( dag, properties, options);
+    }
+
+    /**
+     * Intialises the refiner.
+     *
+     * @param dag         the workflow that is being worked on.
+     * @param properties  the properties passed to the planner.
+     * @param options     the options passed to the planner at runtime.
+     *
+     */
+    public void initialize( ADag dag ,
+                            PegasusProperties properties,
+                            PlannerOptions options ){
+
+        mProps = properties;
+        mPOptions = options;
+        mRCDown = false;
+        mCacheStore = new ReplicaStore();
+        mTreatCacheAsRC = mProps.treatCacheAsRC();
+
+        //converting the Vector into vector of
+        //strings just containing the logical
+        //filenames
+        mSearchFiles = dag.dagInfo.getLFNs( options.getForce() );
+
+        //load the local environment variable
+        //from pool config and property file
+        mLocalEnv = loadLocalEnvVariables();
+
+        try {
+
+            //make sure that RLS can be loaded from local environment
+            //Karan May 1 2007
+            mReplicaCatalog = null;
+            if ( mSearchFiles != null && !mSearchFiles.isEmpty() ){
+               mReplicaCatalog = ReplicaFactory.loadInstance(properties);
+            }
+
+            //load all the mappings.
+            mReplicaStore = new ReplicaStore( mReplicaCatalog.lookup( mSearchFiles ) );
+
+
+        } catch ( Exception ex ) {
+            String msg = "Problem while connecting with the Replica Catalog: ";
+            mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
+            //set the flag to denote RLI is down
+            mRCDown = true;
+            mReplicaStore = new ReplicaStore();
+
+            //exit if there is no cache overloading specified.
+            if ( options.getCacheFiles().isEmpty() ) {
+                throw new RuntimeException( msg );
+            }
+        }
+
+
+
+        mTCHandle = TCMode.loadInstance();
+        mLRCIgnoreList   = mProps.getRLSLRCIgnoreURLs();
+        mLRCRestrictList = mProps.getRLSLRCRestrictURLs();
+
+        //incorporate the caching if any
+        if ( !options.getCacheFiles().isEmpty() ) {
+            loadCacheFiles( options.getCacheFiles() );
+        }
+    }
+
+
+    /**
+     * To close the connection to replica services. This must be defined in the
+     * case where one has not done a singleton implementation. In other
+     * cases just do an empty implementation of this method.
+     */
+    public void closeConnection() {
+        if ( mReplicaCatalog != null ) {
+            mReplicaCatalog.close();
+        }
+    }
+
+    /**
+     * Closes the connection to the rli.
+     */
+    public void finalize() {
+        this.closeConnection();
+    }
+
+
+    /**
+     * This returns the files for which mappings exist in the Replica Catalog.
+     * This should return a subset of the files which are
+     * specified in the mSearchFiles, while getting an instance to this.
+     *
+     * @return  a <code>Set</code> of logical file names as String objects, for
+     *          which logical to physical mapping exists.
+     *
+     * @see #mSearchFiles
+     */
+    public Set getFilesInReplica() {
+
+        //check if any exist in the cache
+        Set lfnsFound = mCacheStore.getLFNs( mSearchFiles );
+        mLogger.log(lfnsFound.size()  + " entries found in cache of total " +
+                    mSearchFiles.size(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+
+        //check in the main replica catalog
+        if ( mRCDown || mReplicaCatalog == null ) {
+            mLogger.log("Replica Catalog is either down or connection to it was never opened ",
+                        LogManager.WARNING_MESSAGE_LEVEL);
+            return lfnsFound;
+        }
+
+        //look up from the the main replica catalog
+        lfnsFound.addAll( mReplicaStore.getLFNs() );
+
+
+        return lfnsFound;
+
+    }
+
+
+
+
+    /**
+     * Returns all the locations as returned from the Replica Lookup Mechanism.
+     *
+     * @param logicalFile   The name of the logical file whose PFN mappings are
+     *                      required.
+     *
+     * @return ReplicaLocation containing all the locations for that LFN
+     *
+     * @see org.griphyn.cPlanner.classes.ReplicaLocation
+     */
+    public ReplicaLocation getFileLocs( String lfn ) {
+
+        ReplicaLocation rl = retrieveFromCache( lfn );
+        //first check from cache
+        if(rl != null && !mTreatCacheAsRC){
+            mLogger.log( "Location of file " + lfn +
+                         " retrieved from cache" , LogManager.DEBUG_MESSAGE_LEVEL);
+            return rl;
+        }
+
+        ReplicaLocation rcEntry = mReplicaStore.getReplicaLocation( lfn );
+        if (rl == null) {
+            rl = rcEntry;
+        }
+        else{
+            //merge with the ones found in cache
+            rl.merge(rcEntry);
+        }
+
+
+        return rl;
+    }
+
+
+
+
+
+
+    /**
+     * Returns a boolean indicating whether all input files of the workflow
+     * are in the collection of LFNs passed.
+     *
+     * @param lfns  collection of LFNs in which to search for existence.
+     *
+     * @return boolean.
+     */
+     /*
+    public boolean allIPFilesInCollection( Collection lfns ){
+        boolean result = true;
+        String lfn;
+        String type;
+        for (Iterator it = mLFNMap.keySet().iterator(); it.hasNext(); ) {
+            lfn = (String) it.next();
+            type = (String) mLFNMap.get( lfn );
+
+            //search for existence of input file in lfns
+            if ( type.equals("i") && !lfns.contains( lfn ) ) {
+                mLogger.log("Input LFN not found in collection " + lfn,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                return false;
+            }
+        }
+        return result;
+    }
+    */
+
+    /**
+     * It constructs the SubInfo object for the registration node, which
+     * registers the materialized files on the output pool in the RLS.
+     * Note that the relations corresponding to this node should already have
+     * been added to the concerned <code>DagInfo</code> object.
+     *
+     * @param regJobName  The name of the job which registers the files in the
+     *                    Replica Location Service.
+     * @param job         The job whose output files are to be registered in
+     *                    the Replica Location Service.
+     *
+     * @param files       Collection of <code>FileTransfer</code> objects
+     *                    containing the information about source and
+     *                    destination URLs. The destination
+     *                    URLs would be our PFNs.
+     *
+     * @return SubInfo corresponding to the new registration node.
+     */
+    public  SubInfo makeRCRegNode( String regJobName, SubInfo job,
+                                  Collection files ) {
+        //making the files string
+
+        SubInfo newJob = new SubInfo();
+
+        newJob.setName( regJobName );
+        newJob.setTransformation( this.RC_TRANSFORMATION_NS,
+                                  this.RC_TRANSFORMATION_NAME,
+                                  this.RC_TRANSFORMATION_VERSION );
+        newJob.setDerivation( this.RC_DERIVATION_NS,
+                              this.RC_DERIVATION_NAME,
+                              this.RC_DERIVATION_VERSION );
+
+        //change this function
+        List tcentries = null;
+        try {
+            tcentries = mTCHandle.getTCEntries( newJob.getTXNamespace(),
+                                                newJob.getTXName(),
+                                                newJob.getTXVersion(),
+                                                "local",
+                                                TCType.INSTALLED );
+
+        } catch ( Exception e ) {
+            mLogger.log( "While retrieving entries from TC " + e.getMessage(),
+                         LogManager.ERROR_MESSAGE_LEVEL);
+        }
+        if ( tcentries == null || tcentries.isEmpty() ) {
+            throw new RuntimeException( "Unable to find " + newJob.getCompleteTCName() +                             " on site local");
+        }
+
+        TransformationCatalogEntry tc = ( TransformationCatalogEntry ) tcentries.get( 0 );
+        newJob.setRemoteExecutable( tc.getPhysicalTransformation() );
+        newJob.setArguments( this.generateRepJobArgumentString( regJobName, files ) );
+        newJob.setUniverse( Engine.REGISTRATION_UNIVERSE );
+        newJob.setSiteHandle( tc.getResourceId() );
+        newJob.setJobType( SubInfo.REPLICA_REG_JOB );
+        newJob.setVDSSuperNode( job.getName() );
+
+        //the profile information from the pool catalog needs to be
+        //assimilated into the job.
+        newJob.updateProfiles( mPoolHandle.getPoolProfile( newJob.getSiteHandle() ) );
+
+        //the profile information from the transformation
+        //catalog needs to be assimilated into the job
+        //overriding the one from pool catalog.
+        newJob.updateProfiles( tc );
+
+        //the profile information from the properties file
+        //is assimilated overidding the one from transformation
+        //catalog.
+        newJob.updateProfiles( mProps );
+
+        return newJob;
+    }
+
+    /**
+     * Generates the argument string to be given to the replica registration job.
+     * At present by default it would be picking up the file containing the
+     * mappings.
+     *
+     * @param regJob   The name of the registration job.
+     *
+     * @param files Collection of <code>FileTransfer</code> objects containing the
+     *                 information about source and destURLs. The destination
+     *                 URLs would be our PFNs.
+     */
+    private String generateRepJobArgumentString( String regJob, Collection files ) {
+        StringBuffer arguments = new StringBuffer();
+
+        //select a LRC. disconnect here. It should be select a RC.
+        SiteInfo pool = mPoolHandle.getPoolEntry( mOutputPool, "vanilla" );
+        LRC lrc = (pool == null) ? null : pool.selectLRC(true);
+        if (lrc  == null || lrc.getURL() == null || lrc.getURL().length() == 0) {
+            throw new RuntimeException(
+                "The LRC URL is not specified in site catalog for site " + mOutputPool );
+        }
+
+        //get any command line properties that may need specifying
+        arguments.append( this.getCommandLineProperties( mProps ) );
+
+        //we have a lrc selected . construct vds.rc.url property
+        arguments.append( "-D" ).append( ReplicaCatalog.c_prefix ).append( "." ).
+                  append( this.REPLICA_CATALOG_URL_KEY).append( "=" ).append( lrc.getURL() ).
+                  append( " " );
+
+        //append the insert option
+        arguments.append( "--insert" ).append( " " ).
+                  append( this.generateMappingsFile( regJob, files ) );
+
+        return arguments.toString();
+
+    }
+
+    /**
+     * Returns the properties that need to be passed to the the rc-client
+     * invocation on the command line . It is of the form
+     * "-Dprop1=value1 -Dprop2=value2 .."
+     *
+     * @param properties   the properties object
+     *
+     * @return the properties list, else empty string.
+     */
+    protected String getCommandLineProperties( PegasusProperties properties ){
+        StringBuffer sb = new StringBuffer();
+        appendProperty( sb,
+                        "pegasus.user.properties",
+                        properties.getPropertiesInSubmitDirectory( ));
+        return sb.toString();
+    }
+
+    /**
+     * Appends a property to the StringBuffer, in the java command line format.
+     *
+     * @param sb    the StringBuffer to append the property to.
+     * @param key   the property.
+     * @param value the property value.
+     */
+    protected void appendProperty( StringBuffer sb, String key, String value ){
+        sb.append("-D").append( key ).append( "=" ).append( value ).append( " ");
+    }
+
+
+    /**
+     * Generates the registration mappings in a text file that is generated in the
+     * dax directory (the directory where all the condor submit files are
+     * generated). The pool value for the mapping is the output pool specified
+     * by the user when running Pegasus. The name of the file is regJob+.in
+     *
+     * @param regJob   The name of the registration job.
+     * @param files    Collection of <code>FileTransfer</code>objects containing the
+     *                 information about source and destURLs. The destination
+     *                 URLs would be our PFNs.
+     *
+     * @return String corresponding to the path of the the file containig the
+     *                mappings in the appropriate format.
+     */
+    private String generateMappingsFile( String regJob, Collection files ) {
+        String fileName = regJob + ".in";
+        File f = null;
+        String submitFileDir = mPOptions.getSubmitDirectory();
+
+        //writing the stdin file
+        try {
+            f = new File( submitFileDir, fileName );
+            FileWriter stdIn = new FileWriter( f );
+
+            for(Iterator it = files.iterator();it.hasNext();){
+                FileTransfer ft = ( FileTransfer ) it.next();
+                //checking for transient flag
+                if ( !ft.getTransientRegFlag() ) {
+                    stdIn.write( ftToRC( ft ) );
+                    stdIn.flush();
+                }
+            }
+
+            stdIn.close();
+
+        } catch ( Exception e ) {
+            throw new RuntimeException(
+                "While writing out the registration file for job " + regJob, e );
+        }
+
+        return fileName;
+    }
+
+
+    /**
+     * Converts a <code>FileTransfer</code> to a RC compatible string representation.
+     *
+     * @param ft  the <code>FileTransfer</code> object
+     *
+     * @return the RC version.
+     */
+    private String ftToRC( FileTransfer ft ){
+        StringBuffer sb = new StringBuffer();
+        NameValue destURL = ft.getDestURL();
+        sb.append( ft.getLFN() ).append( " " );
+        sb.append( destURL.getValue()  ).append( " " );
+        sb.append( "pool=\"" ).append( destURL.getKey() ).append( "\"" );
+        sb.append( "\n" );
+        return sb.toString();
+    }
+
+
+
+
+    /**
+     * Retrieves a location from the cache table, that contains the contents
+     * of the cache files specified at runtime.
+     *
+     * @param lfn  the logical name of the file.
+     *
+     * @return <code>ReplicaLocation</code> object corresponding to the entry
+     *         if found, else null.
+     */
+    private ReplicaLocation retrieveFromCache( String lfn ){
+        return mCacheStore.getReplicaLocation( lfn );
+    }
+
+    /**
+     * Ends up loading the cache files so as to enable the lookup for the transient
+     * files created by the parent jobs.
+     *
+     * @param cacheFiles  set of paths to the cache files.
+     */
+    private void loadCacheFiles( Set cacheFiles ) {
+        Properties cacheProps = mProps.getVDSProperties().matchingSubset(
+                                                              ReplicaCatalog.c_prefix,
+                                                              false );
+
+        mLogger.log("Loading transient cache files",
+                    LogManager.INFO_MESSAGE_LEVEL);
+
+        ReplicaCatalog simpleFile;
+        Map wildcardConstraint = null;
+
+        for ( Iterator it = cacheFiles.iterator(); it.hasNext() ; ) {
+            //read each of the cache file and load in memory
+            String  file = ( String ) it.next();
+            //set the appropriate property to designate path to file
+            cacheProps.setProperty( this.CACHE_REPLICA_CATALOG_KEY, file );
+
+            mLogger.log("Loading cache file: " + file,  LogManager.DEBUG_MESSAGE_LEVEL);
+            try{
+                simpleFile = ReplicaFactory.loadInstance( CACHE_REPLICA_CATALOG_IMPLEMENTER,
+                                                          cacheProps );
+            }
+            catch( Exception e ){
+                mLogger.log( "Unable to load cache file " + file,
+                             e,
+                             LogManager.ERROR_MESSAGE_LEVEL );
+                continue;
+            }
+            //suck in all the entries into the cache replica store.
+            //returns an unmodifiable collection. so merging an issue..
+            mCacheStore.add( simpleFile.lookup( mSearchFiles ) );
+
+            //no wildcards as we only want to load mappings for files that
+            //we require
+            //mCacheStore.add( simpleFile.lookup( wildcardConstraint ) );
+
+            //close connection
+            simpleFile.close();
+        }
+
+        mLogger.logCompletion("Loading transient cache files",
+                              LogManager.INFO_MESSAGE_LEVEL );
+    }
+
+    /**
+     * Reads in the environment variables into memory from the properties file
+     * and the pool catalog.
+     *
+     * @return  the <code>ENV</code> namespace object holding the environment
+     *          variables.
+     */
+    private ENV loadLocalEnvVariables() {
+        //assumes that pool handle, and property handle are initialized.
+        ENV env = new ENV();
+
+        //load from the pool.config
+        env.checkKeyInNS( mPoolHandle.getPoolProfile( "local", Profile.ENV ) );
+        //load from property file
+        env.checkKeyInNS( mProps.getLocalPoolEnvVar() );
+
+        // the new RC API has a different key. if that is specified use that.
+        //mProps.getProperty( ReplicaCatalog.c_prefix )
+
+        return env;
+    }
+
+    /**
+     * Returns a tri state indicating what type of query needs to be done to
+     * a particular LRC.
+     *
+     * @param url   the LRC url.
+     *
+     * @return tristate
+     */
+    private int determineQueryType(String url){
+        int type = this.LRC_QUERY_NORMAL;
+
+        if(mLRCRestrictList != null){
+            for ( int j = 0; j < mLRCRestrictList.length; j++ ) {
+                if ( url.indexOf( mLRCRestrictList[ j ] ) != -1 ) {
+                    type = this.LRC_QUERY_RESTRICT;
+                    break;
+                }
+            }
+        }
+        if(mLRCIgnoreList != null){
+            for ( int j = 0; j < mLRCIgnoreList.length; j++ ) {
+                if ( url.indexOf( mLRCIgnoreList[ j ] ) != -1 ) {
+                    type = this.LRC_QUERY_IGNORE;
+                    break;
+                }
+            }
+        }
+
+
+        return type;
+    }
+
+}

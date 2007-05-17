@@ -1,0 +1,417 @@
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\" 
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\" 
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\" 
+.\" $Id: vds-plan.1,v 1.5 2006/07/12 15:22:05 benc Exp $
+.TH "vds-plan" "1" "1.3.9" "GriPhyN Virtual Data System"
+.SH "NAME"
+.LP 
+vds\-plan \- executes workflow planners w/o running the workflow.
+.SH "SYNTAX"
+.LP 
+.B vds\-plan \-\-help
+.LP
+.B vds\-plan \-\-version
+.LP 
+.B vds\-plan [\-Dprops] [miscopt] [planopt] [-g vogroup] (\-p | \-e) dax
+.LP 
+The following options modify the behavior of any concrete planner:
+.LP 
+.B [\-\-vdsrc prop] [\-w wfrc] [\-f prop=val] [\-o opt[=val]]
+.LP
+The following options modify the behavior of the Euryale planner:
+.LP
+.B [\-s fn | \-t sft] [\-P fn] [\-p fn]
+.LP
+The following options modify the behavior of the Pegasus planner:
+.LP
+.B [none yet]
+.SH "DESCRIPTION"
+.LP 
+This script permits to plan a workflow for execution, but not execute
+the workflow itself. The input is an abstract workflow description in
+logical entities. The result is a set of files in a run directory, as
+necessary for execution. Worklow state is maintained in a workflow
+database. 
+.LP
+The hierarchy of directories is also part and parcel of a secondary key
+to find the workflow in the workflow database, as explained below in 
+.IR HIERARCHY .
+.SH "ARGUMENTS"
+.TP
+.B \-Dprop
+The -D options allows an experienced user to override certain properties
+which influence the 
+.B vds\-plan
+program execution, among them the default location of the user's
+properties file and the VDS home location. One may set several CLI
+properties by giving this option multiple times.
+.I The -D option(s) must be the first option on the command line. 
+CLI properties take precedence over the file-based properties of the
+same key.
+.IP
+Any
+.I \-D 
+option(s) to
+.B vds\-plan 
+only affect
+.B vds\-plan 
+itself, no other tools! To affect other tools, use the 
+.I \-\-forward
+option. To switch the default option file and affect subsequent tools,
+use the
+.I \-\-vdsrc 
+or 
+.I \-\-wfrc
+option.
+.IP
+Please refer to the
+.I PROPERTIES
+section below.
+.TP
+.B \-\-pegasus
+.PD 0
+.TP
+.PD 1
+.B \-\-peg
+.PD 0
+.TP
+.PD 1
+.B \-p
+This option uses Pegasus as the concrete planner. It is mutually
+exclusive with the
+.I \-e
+option.
+.TP
+.B \-\-euryale
+.PD 0
+.TP
+.PD 1
+.B \-\-eury
+.PD 0
+.TP
+.PD 1
+.B \-e
+This option uses Euryale as the concrete planner. It is mutually 
+exclusive with the
+.I \-p
+option.
+.TP 
+.B \-\-debug lv
+.PD 0
+.TP 
+.PD 1
+.B \-d lv
+sets the debug level to a specific level. A higher debug level increases
+the message verbosity on 
+.IR stderr . 
+.IP
+The default debug level is 0.
+.TP
+.B \-\-verbose
+.PD 0
+.TP
+.PD 1
+.B \-v
+raises debug level. A higher debug level will increase the verbosity of
+the output messages on
+.IR stderr .
+This is a multi\-option, each specification will increase the debug
+level by 1.
+.IP 
+The default debug level is 0.
+.TP
+.B \-\-basedir dir
+.PD 0
+.TP
+.PD 1
+.B \-b dir
+This option permits to overwrite the base directory, see
+.I FILES AND DIRECTORIES
+below. The base directory is the first of the four directory components,
+under which the other directories are created as necessary.
+.IP
+Default is to use what property
+.I wf.base.dir
+points to, which in turn defaults to
+.IR $HOME/run .
+.TP
+.B \-\-vogroup id
+.PD 0
+.TP
+.PD 1
+.B \-g id
+The Virtual Organization group is an arbitrary identifier of a group of
+researchers on a common goal within a Virtual Organization. The VO group
+also determines where in the directory hierarchy a workflow in
+generated. If there is no explicit VO group assigned to you, it is
+customary to use the VO name appended with a digit.
+.IP
+Default is to use the contents of property
+.I wf.profile.vo.group
+which in turn defaults to 
+.IR ivdgl1 .
+.TP
+.B \-\-template sft
+.PD 0
+.TP
+.PD 1
+.B \-t sft
+This option permits to overwrite the location of the submit file
+template file. The argument specifies the full location where the
+alternate template can be found. 
+.IP
+This option is mutually exclusive with the 
+.I \-s
+option.
+.IP
+Default is to use the 
+.I grid3.sft
+template that ships with Euryale.
+.TP
+.B \-\-sftbase fn
+.PD 0
+.TP
+.PD 1
+.B \-s fn
+This option permits to chose an alternate submit file template from the
+set of template files shipped with Euryale. These templates are taken
+from a standard directory. Thus, only the basename of the alternate
+template needs to be specified.
+.IP
+This option is mutually exclusive with the
+.I \-t
+option. 
+.IP
+Default is to use the
+.I grid3.sft
+template that ships with Euryale. 
+.TP
+.B \-\-vdsrc prop
+This option permits to specify a different location of the VDS user
+properties file. It is helpful, when experimenting with properties. The
+new location will be propagated to subsequent tools. 
+.IP
+Default location of the VDS user properties is
+.IR $HOME/.vdsrc .
+.TP
+.B \-\-wfrc wfrc
+.PD 0
+.TP
+.PD 1
+.B \-w wfrc
+This option permits to specify a different location of the Euryale
+properties file. It is helpful, when experimenting with properties. The
+new location will be propagated to subsequent tools.  
+.IP
+Default location of the Euryale properties is
+.IR $HOME/.wfrc .
+.TP
+.B \-\-prescript fn
+.PD 0
+.TP
+.PD 1
+.B \-P fn
+This option permits to specify an alternative PRE script to run for each
+job in the Euryale process. This is a developer option.
+.IP
+Default is
+.IR $VDS_HOME/libexec/prescript.pl .
+.TP
+.B \-\-postscript fn
+.PD 0
+.TP
+.PD 1
+.B \-p fn
+This option permits to specify an alternative POST script to run for
+each job in the Euryale process. This is a developer option. 
+.IP
+Default is 
+.IR $VDS_HOME/libexec/postscript.pl .
+.TP
+.B \-\-forward k=v
+.PD 0
+.TP
+.PD 1
+.B \-f k=v
+This option forwards properties to the command-line of the concrete
+planner. It may also be useful, if you require a specific properties of
+your concrete planner that this planning wrapper does not let you set
+otherwise. 
+.IP
+Properties are propagated as 
+.I -Dk=v
+initial command-line options to subsequent tools. 
+.TP
+.B \-\-option opt[=val]
+.PD 0
+.TP
+.PD 1
+.B \-o opt[=val]
+This option forwards command-line arguments to the concrete planner. It
+is a developer option. It is useful, if you require specific arguments
+of your concrete planner that this planning wrapper does not let you set
+otherwise. 
+.IP
+The 
+.I val
+portion is optional, e.g. for command-line flags. If you need to use a
+flag, that is an option without arguments, or regular arguments, use the
+long version
+.I \-\-option flag
+without equals (=) nor value. 
+.LP
+The 
+.B .dax
+file is a mandatory argument. 
+.SH "RETURN VALUE"
+If the plan could be constructed, 
+.I vds\-plan
+returns with an exit code of 0. However, in case of error, a non-zero
+exit code indicates problems. An error message clearly marks the cause. 
+.SH "FILES AND DIRECTORIES"
+The workflow tools support a somewhat rigid directory hierarchy, made up
+of four parts: 
+.TP
+.B 1.
+The 
+.I basedir
+is the directory where the other directories spring from. For personal
+workflows, it can be 
+.I $HOME/run
+and for shared workflows in a sharable location.
+.TP
+.B 2.
+The
+.I vogroup
+is the next level. The directory name is directly taken from the 
+.I -g option
+above. If a directory of this name does not exist, it is created. 
+.TP
+.B 3.
+The
+.I wflabel
+is the label of the workflow, as supplied to the abstract planning
+process, e.g. 
+.I gendax 
+or 
+.IR vdlc . 
+If a directory of this name does not exist underneath the vogroup
+directory, it is created. 
+.TP
+.B 4.
+The
+.I rundir
+is a numbered directory to permit multiple replans of the same workflow
+(dax file). If no rundir exists, the first one will be created.
+Otherwise, each invocation will create the next run directory. 
+.LP
+Together, the four directories form a quadruple. The quadruple is also
+the secondary key that can be used to locate the workflow inside the
+workflow database. 
+.SH "PROPERTIES"
+.LP
+Properties are read from
+.BR $VDS_HOME/etc/properties ,
+.B $HOME/.wfrc
+and
+.B $HOME/.vdsrc
+with rising priority. Properties are read and evaluated according to the
+VDS property precedence rules. Additionally, wfrc properties are merged.
+Please refer to the property documentation for in\-depth description of
+properties and their effects.
+.TP 
+.B wf.properties
+points to the location where the wfrc file is location.
+.IP
+Default is 
+.IR $HOME/.wfrc .
+.TP
+.B vds.user.properties
+points to the location where the VDS properties reside.
+.IP
+Default is
+.IR $HOME/.vdsrc .
+.TP
+.B wf.base.dir
+points to the base directory, see
+.I FILES AND 
+.IR DIRECTORIES .
+It can be overridden using the 
+.I -b
+option. 
+.TP
+.B wf.profile.vds.vogroup
+determines the VO group which is assigned to a job and workflow. The VO
+group can be overridden using the
+.I -g
+option. 
+.TP
+.B wf.vo.group
+is deprecated. Please use
+.I wf.profile.vds.vogroup
+instead. 
+.LP
+The following properties impact the Euryale planner.
+.TP
+.B wf.site.selector
+is a property that points to an application committed to site selection.
+As part of sanity checks, existence of the property and executability of
+the value is determined. 
+.TP
+.B wf.popularity.manager
+is a property that points to an application committed to popularity
+management, or to the value
+.IR null .
+Sanity checks on existence and executability are performed. 
+.TP
+.B wf.quick.start
+.PD 0
+.TP
+.PD 1
+.B wf.quick.setup
+These properties concern an experimental site selector. 
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B VDS_HOME
+points to the installation base directory of your the VDS execution
+environment. 
+.TP
+.B PERL5LIB
+is a path-like variable. It must include to the VDS perl module
+installation. 
+.TP
+.B PATH
+should include the Condor binaries. 
+.SH "EXAMPLES"
+.LP
+.nf 
+\f(CB
+TBD
+\fP
+.fi 
+.SH "LIMITATIONS"
+The same workflow (dax file) can only be re-planned 10000 times using
+.IR vds\-plan . 
+.SH "SEE ALSO"
+.BR vds\-run (1),
+.BR tailstatd (1),
+.BR vds\-submit\-dag (1).
+.SH "AUTHORS"
+.LP 
+Jens\-S. Vöckler <voeckler at cs dot uchicago dot edu>
+.PP 
+GVDS
+.B http://www.griphyn.org/vds/
+.br 
+GriPhyN
+.BR http://www.griphyn.org/
