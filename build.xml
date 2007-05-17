@@ -526,5 +526,6 @@
 	  description="Removes the build and dist directories">
     <delete dir="dist"/>
     <delete dir="build"/>
+    <delete file="stamp"/>
   </target>
 </project>
