@@ -1,117 +1,17 @@
-pool uofc {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo" "2.4.0"
-  gridlaunch "/home/voeckler/bin/kickstart"
-  workdir "/home/voeckler/vdldemo"
-  universe vanilla "e.cs.uchicago.edu/jobmanager-condor"  "2.4.0"
-  universe standard "e.cs.uchicago.edu/jobmanager-condor"  "2.4.0"
-  universe globus "e.cs.uchicago.edu/jobmanager-condor"  "2.4.0"
-  universe transfer "e.cs.uchicago.edu/jobmanager-fork"  "2.4.0"
-}
-pool uw {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://beak.cs.wisc.edu/u/v/o/voeckler/vdldemo" "2.4.0"
-  gridlaunch "/u/v/o/voeckler/vdldemo/bin/kickstart"
-  workdir "/u/v/o/voeckler/vdldemo"
-  universe vanilla "beak.cs.wisc.edu/jobmanager-condor"  "2.4.0"
-  universe standard "beak.cs.wisc.edu/jobmanager-condor"  "2.4.0"
-  universe globus "beak.cs.wisc.edu/jobmanager-condor"  "2.4.0"
-  universe transfer "beak.cs.wisc.edu/jobmanager"  "2.4.0"
-}
-pool uwm {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://hydra.phys.uwm.edu/home/voeckler/vdldemo" "2.2.4"
-  gridlaunch "/home/voeckler/bin/kickstart"
-  workdir "/home/voeckler/vdldemo"
-  universe vanilla "hydra.phys.uwm.edu/jobmanager-condor"  "2.2.4"
-  universe standard "hydra.phys.uwm.edu/jobmanager-condor"  "2.2.4"
-  universe globus "hydra.phys.uwm.edu/jobmanager-condor"  "2.2.4"
-  universe transfer "hydra.phys.uwm.edu/jobmanager"  "2.2.4"
-}
-pool utb {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://lobizon.utb.edu/home/chicago/vdldemo" "2.2.4"
-  gridlaunch "/home/chicago/bin/kickstart"
-  workdir "/home/chicago/vdldemo"
-  universe vanilla "lobizon.utb.edu/jobmanager-condor"  "2.2.4"
-  universe standard "lobizon.utb.edu/jobmanager-condor"  "2.2.4"
-  universe globus "lobizon.utb.edu/jobmanager-condor"  "2.2.4"
-  universe transfer "lobizon.utb.edu/jobmanager"  "2.2.4"
-}
-pool ufl {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://testulix.phys.ufl.edu/users/voeckler/vdldemo" "2.4.0"
-  gridlaunch "/grinraid/raid1/voeckler/bin/kickstart"
-  workdir "/users/voeckler/vdldemo"
-  universe vanilla "testulix.phys.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe standard "testulix.phys.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe globus "testulix.phys.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe transfer "testulix.phys.ufl.edu/jobmanager"  "2.4.0"
-}
-pool gfl {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://ufgriphyn.phys.ufl.edu/users/voeckler/vdldemo" "2.4.0"
-  gridlaunch "/grinraid/raid1/voeckler/bin/kickstart"
-  workdir "/users/voeckler/vdldemo"
-  universe vanilla "ufgriphyn.phys.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe standard "ufgriphyn.phys.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe globus "ufgriphyn.phys.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe transfer "ufgriphyn.phys.ufl.edu/jobmanager"  "2.4.0"
-}
-pool ufeng {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://zeta-1.hcs.ufl.edu/home/ivdgl/vdldemo" "2.4.0"
-  gridlaunch "/home/ivdgl/bin/kickstart"
-  workdir "/home/ivdgl/vdldemo"
-  universe vanilla "zeta-1.hcs.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe standard "zeta-1.hcs.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe globus "zeta-1.hcs.ufl.edu/jobmanager-condor"  "2.4.0"
-  universe transfer "zeta-1.hcs.ufl.edu/jobmanager"  "2.4.0"
-}
-pool anl {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://chalant.mcs.anl.gov/homes/voeckler/vdldemo" "2.4.0"
-  gridlaunch "/homes/voeckler/bin/kickstart"
-  workdir "/homes/voeckler/vdldemo"
-  universe vanilla "chalant.mcs.anl.gov/jobmanager-condor"  "2.4.0"
-  universe standard "chalant.mcs.anl.gov/jobmanager-condor"  "2.4.0"
-  universe globus "chalant.mcs.anl.gov/jobmanager-condor"  "2.4.0"
-  universe transfer "chalant.mcs.anl.gov/jobmanager-fork"  "2.4.0"
-}
-pool dgc {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://dg0cm.mcs.anl.gov/shared/voeckler/vdldemo" "2.4.0"
-  gridlaunch "/home/voeckler/bin/kickstart"
-  workdir "/shared/voeckler/vdldemo"
-  universe vanilla "dg0cm.mcs.anl.gov/jobmanager-pbs"  "2.4.0"
-  universe globus "dg0cm.mcs.anl.gov/jobmanager-pbs"  "2.4.0"
-  universe transfer "dg0cm.mcs.anl.gov/jobmanager-fork"  "2.4.0"
-}
-pool dsl {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo" "2.4.0"
-  gridlaunch "/home/voeckler/bin/kickstart"
-  workdir "/home/voeckler/vdldemo"
-  universe vanilla "hamachi.cs.uchicago.edu/jobmanager"  "2.4.0"
-  universe standard "hamachi.cs.uchicago.edu/jobmanager"  "2.4.0"
-  universe globus "hamachi.cs.uchicago.edu/jobmanager"  "2.4.0"
-  universe transfer "hamachi.cs.uchicago.edu/jobmanager"  "2.4.0"
-}
 pool local {
-  lrc "rls://sheveled.mcs.anl.gov"
-  gridftp "gsiftp://hamachi.cs.uchicago.edu/home/voeckler/vdldemo" "2.4.0"
-  gridlaunch "/home/voeckler/bin/kickstart"
-  workdir "/home/voeckler/vdldemo"
-  universe vanilla "hamachi.cs.uchicago.edu/jobmanager-condor"  "2.4.0"
-  universe globus "hamachi.cs.uchicago.edu/jobmanager-condor"  "2.4.0"
-  universe transfer "hamachi.cs.uchicago.edu/jobmanager-fork"  "2.4.0"
+  lrc "rlsn://smarty.isi.edu"
+  gridftp "gsiftp://smarty.isi.edu/smarty/storage" "4.0.4"
+  gridlaunch "/smarty/software/pegasus/bin/kickstart"
+  workdir "/smarty/scratch/"
+  universe vanilla "smarty.isi.edu/jobmanager-fork"  "4.0.4"
+  universe transfer "smarty.isi.edu/jobmanager-fork"  "4.0.4"
 }
+
 pool isi {
-  lrc "rls://dc-user.isi.edu"
-  gridftp "gsiftp://birdie.isi.edu/nfs/asd2/gmehta/GRIPHYN" "2.2.4"
-  gridlaunch "/local/gridstart"
-  workdir "/nfs/asd2/gmehta/GRIPHYN"
-  universe globus "smarty.isi.edu/jobmanager-condor"  "2.2.4"
-  universe vanilla "smarty.isi.edu/jobmanager-condor"  "2.2.4"
-  universe standard "smarty.isi.edu/jobmanager-condor"  "2.2.4"
+  lrc "rlsn://smarty.isi.edu"
+  gridftp "gsiftp://skynet-data.isi.edu/exports/storage01" "4.0.4"
+  gridlaunch "/nfs/software/pegasus/default/bin/kickstart"
+  workdir "/nfs/scratch01"
+  universe vanilla "smarty.isi.edu/jobmanager-pbs"  "4.0.4"
+  universe transfer "smarty.isi.edu/jobmanager-pbs"  "4.0.4"
 }
