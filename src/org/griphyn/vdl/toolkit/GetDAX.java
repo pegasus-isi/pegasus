@@ -34,7 +34,7 @@ import gnu.getopt.*;
 /**
  * This class generates the DAX per the request for an lfn or a derivation.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

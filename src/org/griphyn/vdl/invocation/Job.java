@@ -24,7 +24,7 @@ import java.io.IOException;
  * This class is contains the record from each jobs that ran in every
  * invocation. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

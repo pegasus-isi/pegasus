@@ -18,7 +18,7 @@ package org.griphyn.vdl.parser;
  * Base class for the tokens passed from the VDLt scanner to the VDLt parser.
  * This class is module-local on purpose.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
  *
  */

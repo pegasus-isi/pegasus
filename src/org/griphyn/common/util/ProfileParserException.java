@@ -19,7 +19,7 @@ package org.griphyn.common.util;
  * @see ProfileParser
  *
  * @author Gaurang Mehta
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
  */
 public class ProfileParserException 

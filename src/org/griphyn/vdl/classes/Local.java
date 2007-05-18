@@ -25,7 +25,7 @@ import java.io.Serializable;
  * This class defines the temporary variables in compound
  * <code>Transformation</code>.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

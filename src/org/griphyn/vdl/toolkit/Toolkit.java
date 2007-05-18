@@ -27,7 +27,7 @@ import org.griphyn.vdl.dbschema.*;
  * basical common functions, to be extended, used or restricted
  * by siblings as necessary.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

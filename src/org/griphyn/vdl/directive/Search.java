@@ -32,7 +32,7 @@ import java.util.MissingResourceException;
  * namespace, name, version combination, or contain a certain 
  * LFN.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

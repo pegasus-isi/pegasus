@@ -27,7 +27,7 @@ import org.griphyn.common.catalog.TransformationCatalogEntry;
 /**
  * This class wraps the shell planner's request into the new TC API.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -22,7 +22,7 @@ import org.griphyn.vdl.classes.*;
  * <code>VDLContentHandler</code> to convert string-valued type in XML
  * document to number-valued type in java objects.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

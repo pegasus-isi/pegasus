@@ -128,7 +128,7 @@
 package org.griphyn.cPlanner.classes;
 
 /**
- * @author Jens Voeckler
+ * @author Jens Vöckler
  * @author Gaurang Mehta
  * @version $Revision$
  */

@@ -22,7 +22,7 @@ import java.util.*;
  * java object reference. The structure is used by the stack in 
  * <code>InvocationParser</code>. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

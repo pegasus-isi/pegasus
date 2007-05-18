@@ -35,7 +35,7 @@ import org.griphyn.vdl.util.Logging;
  * cost, as only N driver and M schemas need to be implemented, instead
  * of N x M schema-specific database-specific drivers.
  *
- * @author Jens-S. V�ckler
+ * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  * @see org.griphyn.vdl.dbschema

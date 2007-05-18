@@ -20,7 +20,7 @@ import org.griphyn.vdl.Chimera;
  * This abstract class defines a common base for all workflow related
  * Java objects. This class is empty. It exists for grouping purposes.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Mike Wilde
  * @version $Revision$
  */

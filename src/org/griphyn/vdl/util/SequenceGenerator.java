@@ -19,7 +19,7 @@ import java.text.DecimalFormat;
  * Each instance of this class produces a row of sequence numbers.
  * By default, the sequence string has six digits.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

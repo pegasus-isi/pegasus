@@ -23,7 +23,7 @@ import org.griphyn.vdl.workflow.*;
  * of the implementing database, and does so by going via the database
  * driver class API.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Mike Wilde
  * @version $Revision$
  * @see org.griphyn.vdl.dbschema.DatabaseSchema

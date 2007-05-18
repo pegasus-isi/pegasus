@@ -23,7 +23,7 @@ import org.griphyn.vdl.util.Logging;
  * All VDL-related classes must conform to this interface, in order to
  * make various instances available as a reference to this class.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

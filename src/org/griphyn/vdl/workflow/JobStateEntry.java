@@ -26,7 +26,7 @@ import org.griphyn.common.util.Currently;
  * modification time after setting the state. However, none of the
  * constructors will set the modification to the current time (yet). 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Mike Wilde
  * @version $Revision$
  */

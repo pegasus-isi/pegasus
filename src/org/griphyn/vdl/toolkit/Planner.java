@@ -29,7 +29,7 @@ import gnu.getopt.*;
  * The shell planner. This class is the command-line tool for 
  * generating shell scripts from a DAX.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

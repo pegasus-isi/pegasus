@@ -48,7 +48,7 @@ import org.xml.sax.InputSource;
  * backend database for invocation records, such as insertion, deletion,
  * and search.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

@@ -22,7 +22,7 @@ import org.griphyn.vdl.classes.*;
  * Any overwrite or dontcare mode is not part of this interface's 
  * contract.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

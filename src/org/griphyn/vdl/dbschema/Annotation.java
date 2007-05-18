@@ -25,7 +25,7 @@ import org.griphyn.vdl.annotation.Tuple;
  * This layer is independent of the implementing database, and does so
  * by going via the database driver class API.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * @see org.griphyn.vdl.dbschema.DatabaseSchema 

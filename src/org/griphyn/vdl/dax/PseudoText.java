@@ -24,7 +24,7 @@ import java.io.IOException;
  * attribute to store the content of a the textual data of mixed
  * content. The <code>PseudoText</code> is not an element!
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

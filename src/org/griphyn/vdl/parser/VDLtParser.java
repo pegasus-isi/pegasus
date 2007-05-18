@@ -24,7 +24,7 @@ import java.util.ArrayList;
  * Parses the input stream and generates pool configuration map as
  * output.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

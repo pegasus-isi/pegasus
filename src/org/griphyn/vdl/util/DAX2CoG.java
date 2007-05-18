@@ -23,7 +23,7 @@ import org.griphyn.vdl.dax.*;
  * Convert a dag structure into the new CoG's XML format for
  * visualization.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$ 
  */

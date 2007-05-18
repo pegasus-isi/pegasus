@@ -44,7 +44,7 @@ import java.io.IOException;
  * multiple instances stored in a DAX.
  * </ol>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

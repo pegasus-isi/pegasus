@@ -17,7 +17,7 @@ package org.griphyn.cPlanner.classes;
 /**
  * Class to capture reserved words.
  * $Revision$
- * @author Jens Voeckler
+ * @author Jens Vöckler
  * @author Gaurang Mehta
  */
 class PoolConfigReservedWord

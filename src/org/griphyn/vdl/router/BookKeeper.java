@@ -36,7 +36,7 @@ import java.io.*;
  * class performs the state tracking. The class is tightly coupled
  * to the class that performs the routing.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * @see Route

@@ -43,7 +43,7 @@ import org.griphyn.vdl.dbdriver.*;
  * operations. Thus, the file operations are sneaked into this class.<p>
  * This class is thought more for experimental use than production.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * @see org.griphyn.vdl.dbdriver

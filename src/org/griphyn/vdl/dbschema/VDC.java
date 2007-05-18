@@ -23,7 +23,7 @@ import org.griphyn.vdl.classes.Definition;
  * implementing database, and does so by going via the database driver
  * class API.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * @see org.griphyn.vdl.dbschema.DatabaseSchema 

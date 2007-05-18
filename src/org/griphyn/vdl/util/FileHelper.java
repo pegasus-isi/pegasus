@@ -40,7 +40,7 @@ import java.io.*;
  * All access to the files must go through the respective open and close
  * methods provided by this class in order to guarantee proper locking!
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

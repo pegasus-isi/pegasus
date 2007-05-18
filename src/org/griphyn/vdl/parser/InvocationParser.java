@@ -32,7 +32,7 @@ import java.net.UnknownHostException;
  * document which contains information from kickstart generated
  * invocation record.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

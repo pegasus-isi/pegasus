@@ -22,7 +22,7 @@ import java.util.HashMap;
  * Instantiated with the default constructor, the generated
  * identifiers will satisfy NMTOKEN.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

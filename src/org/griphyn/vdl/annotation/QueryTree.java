@@ -133,7 +133,7 @@ import java.util.*;
  * This class defines the node structure for the tree representation of
  * the query.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

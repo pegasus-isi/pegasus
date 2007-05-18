@@ -133,7 +133,7 @@ import java.io.*;
  * This class changes file permission modes in
  * Unix/Linux environment.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

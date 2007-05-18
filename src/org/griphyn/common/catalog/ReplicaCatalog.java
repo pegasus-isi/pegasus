@@ -33,7 +33,7 @@ import java.util.*;
  * <dd>removes en-bulk by LFN</dd>
  * </dl>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Karan Vahi
  * @version $Revision$
  */

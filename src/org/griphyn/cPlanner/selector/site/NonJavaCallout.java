@@ -167,7 +167,7 @@ import org.griphyn.cPlanner.selector.SiteSelector;
  * is given up upon after 60 s.<p>
  *
  * @author Karan Vahi
- * @author Jens V�ckler
+ * @author Jens Vöckler
  *
  * @version $Revision$
  *

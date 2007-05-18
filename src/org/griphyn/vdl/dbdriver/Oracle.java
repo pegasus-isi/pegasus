@@ -27,7 +27,7 @@ import org.griphyn.vdl.util.*;
  * In order to use the Oracle driver, you must have access to Oracle's
  * thin JDCB client.<p>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -23,7 +23,7 @@ import org.griphyn.vdl.classes.Definition;
  * matches, and candidate list compilations that are not part of the
  * simpler {@link VDC} interface.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

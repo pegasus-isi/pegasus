@@ -22,7 +22,7 @@ import java.io.IOException;
  * This class is the container for a regular file object. A regular 
  * file object contains just a filename.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

@@ -23,7 +23,7 @@ import java.io.IOException;
  * arguments to the commandline that were actually passed on to
  * the application.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * @see Job

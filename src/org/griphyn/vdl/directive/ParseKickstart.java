@@ -69,7 +69,7 @@ import org.griphyn.vdl.util.ChimeraProperties;
  * pks = null;
  * </pre>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

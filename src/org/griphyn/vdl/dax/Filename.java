@@ -28,7 +28,7 @@ import java.io.IOException;
  * <code>Filename</code> extends the <code>Leaf</code> class by adding a
  * filename, linkage type, temporary pattern, and management attributes.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$ 
  *

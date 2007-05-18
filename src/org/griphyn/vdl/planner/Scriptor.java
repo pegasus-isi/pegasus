@@ -68,7 +68,7 @@ import org.griphyn.common.catalog.transformation.TCMode;
  * <tr><td>USER</td><td>JRE system property user.name</td></tr>
  * </table>
  * 
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
  * callbacks, and generate its own information on the fly.
  *
  * @author Karan Vahi
- * @author Jens-S. V�ckler
+ * @author Jens-S. Vöckler
  * @version $Revision$
  */
 public interface Callback {

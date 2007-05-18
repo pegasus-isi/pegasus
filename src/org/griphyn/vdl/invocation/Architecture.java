@@ -22,7 +22,7 @@ import java.io.IOException;
  * This class is transient for XML parsing. The data value will be
  * incorporated into the job classes.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * @see StatCall

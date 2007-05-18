@@ -24,7 +24,7 @@ import java.io.IOException;
  * aggregates an instance of the JobStatus interface, which describes
  * more clearly failure, regular execution, signal and suspension. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

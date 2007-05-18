@@ -22,7 +22,7 @@ import org.griphyn.vdl.util.*;
 /**
  * This class implements the driver API for the MySQL 4.* database.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -23,7 +23,7 @@ import java.io.Serializable;
 /**
  * This class defines the formal arguments to a <code>Transformation</code>.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

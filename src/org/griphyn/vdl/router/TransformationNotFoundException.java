@@ -21,7 +21,7 @@ package org.griphyn.vdl.router;
  * declare in its throws clause any subclasses of RuntimeException that
  * might be thrown during the execution of the method but not caught.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

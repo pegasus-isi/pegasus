@@ -35,7 +35,7 @@ import java.util.Stack;
  * document. This class extends the xerces DefaultHandler so that we
  * only need to override callbacks of interest. 
 
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

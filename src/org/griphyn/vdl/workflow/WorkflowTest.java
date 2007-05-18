@@ -24,7 +24,7 @@ import java.util.*;
 /**
  * This class is used to show-case some elementary WF table stuff.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
  */
 public class WorkflowTest // extends Toolkit

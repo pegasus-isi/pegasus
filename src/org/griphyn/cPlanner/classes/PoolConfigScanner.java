@@ -23,7 +23,7 @@ import java.io.Reader;
  * generated from the input stream. This class is module-local on
  * purpose.
  *
- * @author Jens Voeckler
+ * @author Jens Vöckler
  */
 class PoolConfigScanner
 {

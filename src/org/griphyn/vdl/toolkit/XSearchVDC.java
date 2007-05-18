@@ -34,7 +34,7 @@ import gnu.getopt.*;
  * triple, then prints the search results in one of the formats: vdlx, vdlt,
  * or name. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -22,7 +22,7 @@ import java.io.IOException;
  * This class pushes an environmental entry into the environment map.
  * This calls is expected to be transient to the parsing process only.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

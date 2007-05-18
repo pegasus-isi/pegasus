@@ -138,7 +138,7 @@ import org.griphyn.vdl.dbschema.Annotation;
  * Parses the input stream and generates a query tree as
  * output.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

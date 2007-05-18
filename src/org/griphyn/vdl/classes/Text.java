@@ -27,7 +27,7 @@ import java.io.Serializable;
  * <code>Text</code> element is designed to be a leaf class in the
  * instance tree. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

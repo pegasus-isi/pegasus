@@ -24,7 +24,7 @@ import org.griphyn.vdl.util.*;
  * 7.4.* series database. Please note that at this point, we cannot
  * recommend to use Postgres 8.0.*.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

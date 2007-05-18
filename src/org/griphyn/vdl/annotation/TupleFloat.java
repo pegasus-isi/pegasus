@@ -20,7 +20,7 @@ import java.sql.Types;
  * This simple class defines the double values for the values at the
  * heart of Yong's annotations. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

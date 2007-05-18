@@ -30,7 +30,7 @@ import java.util.regex.*;
  * The parser converts the DAX document specified in the commandline.
  *
  * @author Kavitha Ranganathan
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

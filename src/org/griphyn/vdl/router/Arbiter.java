@@ -24,7 +24,7 @@ import org.griphyn.vdl.classes.Derivation;
  * all others. There is not yet any mean to declare that none will
  * do.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision $
  */

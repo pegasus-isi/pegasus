@@ -26,7 +26,7 @@ import org.griphyn.vdl.util.DAX2DOT;
  *
  * @see org.griphyn.vdl.parser.VDLxParser
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

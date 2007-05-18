@@ -21,7 +21,7 @@ import java.io.IOException;
  * <code>Leaf</code> is an abstract base class for leaf nodes in the
  * instance tree.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

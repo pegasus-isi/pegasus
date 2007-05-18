@@ -21,7 +21,7 @@ package org.griphyn.vdl.invocation;
  * callback. Due to the fact that SAX may present text in several chunks,
  * all text-carrying classes must also provide the append function. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

@@ -29,7 +29,7 @@ import org.griphyn.vdl.dbdriver.*;
  * but rather on an existing Definitions data structure in main
  * memory. This schema is for internal use only.</p>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * @see org.griphyn.vdl.dbdriver

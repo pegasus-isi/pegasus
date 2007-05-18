@@ -26,7 +26,7 @@ import org.griphyn.vdl.classes.LFN;
 /**
  * Convert a dag structure into GraphViz dot format.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

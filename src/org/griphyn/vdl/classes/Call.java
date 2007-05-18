@@ -41,7 +41,7 @@ import java.io.Serializable;
  * the class hierarchies need to be re-designed, and attribute groups
  * should be out-sourced.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision $
  *

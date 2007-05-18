@@ -22,7 +22,7 @@ import java.io.IOException;
  * This class is the container for a temporary file object. A temporary
  * file object contains a filename and a file descriptor.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

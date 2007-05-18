@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * This class is the base class for a file object.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

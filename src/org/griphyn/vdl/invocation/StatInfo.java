@@ -23,7 +23,7 @@ import java.io.IOException;
  * This class is the container for the results of a call to either
  * stat() or fstat(). Not all stat information is kept. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

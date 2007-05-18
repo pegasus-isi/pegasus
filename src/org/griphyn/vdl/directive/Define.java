@@ -37,7 +37,7 @@ import org.xml.sax.InputSource;
  * This class parses VDL XML specifications and stores
  * them to database backend.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

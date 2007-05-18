@@ -22,7 +22,7 @@ import org.griphyn.vdl.dbschema.Annotation;
  * Currently included: AND, OR, NOT, EXISTS, LIKE, BETWEEN_AND, 
  * CONTAINS, EQ, NE, GT, LT, GE, LE.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

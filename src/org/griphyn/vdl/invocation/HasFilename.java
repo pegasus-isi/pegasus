@@ -19,7 +19,7 @@ package org.griphyn.vdl.invocation;
  * record that carry a filename in their values. It exists primarily for
  * grouping purposes and for easier access for the database manager.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

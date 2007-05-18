@@ -28,7 +28,7 @@ import java.util.*;
  * appears to be sufficient to make the resource handle a regular PFN
  * attribute.<p>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Karan Vahi
  * @version $Revision$
  */

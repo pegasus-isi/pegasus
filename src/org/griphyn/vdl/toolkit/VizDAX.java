@@ -27,7 +27,7 @@ import gnu.getopt.*;
 /**
  * This class generates GraphViz dot format from a DAX
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

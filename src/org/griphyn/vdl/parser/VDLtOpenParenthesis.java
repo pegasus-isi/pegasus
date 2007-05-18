@@ -18,7 +18,7 @@ package org.griphyn.vdl.parser;
  * Class to signal an opened parenthesis to the parser.
  * This class is module-local on purpose.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
  *
  */

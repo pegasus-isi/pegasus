@@ -23,7 +23,7 @@ import java.io.LineNumberReader;
  * generated from the input stream. This class is module-local on
  * purpose.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
  *
  */

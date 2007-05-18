@@ -35,7 +35,7 @@ import java.io.Serializable;
  * the same class instead of hierarchy needs some serious redesigning.
  * Unfortunately, this entails a redesign of just about everything...
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

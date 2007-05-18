@@ -39,7 +39,7 @@ import java.util.*;
  * pieces, or a multi-line message by smuggling line feeds within the
  * message.<p>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

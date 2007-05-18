@@ -24,7 +24,7 @@ import org.griphyn.vdl.classes.*;
  * versatile {@link MemoryStorage} handler. End-users should not use 
  * this class.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

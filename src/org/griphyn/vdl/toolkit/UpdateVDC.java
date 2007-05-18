@@ -40,7 +40,7 @@ import gnu.getopt.*;
  * in the database, it is updated in overwrite mode, or rejected in 
  * insert mode.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -32,7 +32,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
  * catalog API. The site catalog is only queried for the contents of its
  * "local" special site. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

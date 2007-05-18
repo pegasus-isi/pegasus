@@ -27,7 +27,7 @@ import java.util.Date;
  * For the moment, we are happy to be able to store things inside. The
  * rest, in form of more required methods, comes later.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

@@ -22,7 +22,7 @@ import gnu.getopt.*;
 /**
  * This class just prints the current version number on stdout.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

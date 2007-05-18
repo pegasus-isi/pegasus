@@ -20,7 +20,7 @@ import org.griphyn.vdl.classes.*;
  * Creates a Diamond DAG exmample structure in memory using VDL classes
  * and the kanonical executable for GriPhyN aka keg.
  *
- * @author   Jens-S. Vöckler
+ * @author   Jens-S. VÃ¶ckler
  * @version  $Revision$
  */
 public class CreateDiamondKeg {

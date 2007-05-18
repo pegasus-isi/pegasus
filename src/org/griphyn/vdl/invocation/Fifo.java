@@ -23,7 +23,7 @@ import java.io.IOException;
  * named pipe, does not consume space on the filesystem except for an
  * inode.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

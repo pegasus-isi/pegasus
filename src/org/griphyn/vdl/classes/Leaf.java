@@ -23,7 +23,7 @@ import java.io.Serializable;
  * instance tree. FIXME: The content value is actually handled in the
  * child classes, and needs to be unified into this class. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

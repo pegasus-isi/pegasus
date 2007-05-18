@@ -20,7 +20,7 @@ import java.io.*;
  * This interface describes what file factories should look like.
  *
  * @author Kavitha Ranganathan
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

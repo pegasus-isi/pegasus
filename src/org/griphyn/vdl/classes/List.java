@@ -24,7 +24,7 @@ import java.io.Serializable;
  * This class implements the list argument type used for parameters passed
  * to transformations from derivations. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -30,7 +30,7 @@ import org.griphyn.common.util.Version;
 /**
  * This class deletes annotations for definition's and lfn's
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -27,7 +27,7 @@ import java.io.*;
  * the input file list if the last definition in the document is 
  * a derivation.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

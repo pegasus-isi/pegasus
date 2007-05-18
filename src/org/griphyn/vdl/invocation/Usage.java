@@ -23,7 +23,7 @@ import java.io.IOException;
  * Linux not populating a lot of records, the amount of information is
  * restricted. Adjustments to LP64 architecture may be necessary.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

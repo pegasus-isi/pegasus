@@ -25,7 +25,7 @@ import java.io.Serializable;
  * is separated into a list of distinct fragments. Each fragment can only
  * be of type <code>Use</code> or <code>Text</code>.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * 

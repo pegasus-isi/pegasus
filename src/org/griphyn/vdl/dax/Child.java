@@ -28,7 +28,7 @@ import java.io.IOException;
  * true DAGMan form, because for each child, there can be multiple
  * parents, but multiple children cannot be grouped.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$ 
  */

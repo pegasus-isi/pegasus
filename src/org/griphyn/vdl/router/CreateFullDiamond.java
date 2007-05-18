@@ -30,7 +30,7 @@ import org.griphyn.vdl.classes.*;
  *   D --<-- B
  * </pre>
  *
- * @author   Jens-S. Vöckler
+ * @author   Jens-S. VÃ¶ckler
  * @version $Revision$ 
 */
 public class CreateFullDiamond {

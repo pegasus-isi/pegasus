@@ -23,7 +23,7 @@ import java.io.IOException;
  * It contains information about the file or descriptor. Optionally, it
  * may also contain some data from the file or descriptor. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

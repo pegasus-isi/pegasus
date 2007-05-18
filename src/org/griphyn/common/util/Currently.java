@@ -23,7 +23,7 @@ import java.text.*;
  * Create a common interface to handle obtaining string timestamps.
  * The difficult part is to allow for an ISO 8601 date formatting.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

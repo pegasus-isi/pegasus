@@ -30,7 +30,7 @@ import java.io.Serializable;
  * null checks. The compareTo method compares the type and short ids of
  * the Definitions.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

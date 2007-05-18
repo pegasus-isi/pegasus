@@ -23,7 +23,7 @@ import java.io.Serializable;
  * This class is the base class for {@link Scalar} and {@link List}
  * child classes. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

@@ -26,7 +26,7 @@ import java.io.IOException;
  * high-level common modules that facilitate user interaction
  * with the Chimera system.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

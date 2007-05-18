@@ -22,7 +22,7 @@ import org.griphyn.common.util.Version;
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

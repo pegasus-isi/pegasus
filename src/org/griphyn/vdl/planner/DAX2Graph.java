@@ -23,7 +23,7 @@ import org.griphyn.vdl.planner.Graph;
  * This class converts a given DAX into the internal representation of a
  * graph.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

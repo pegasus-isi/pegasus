@@ -24,7 +24,7 @@ import java.util.regex.*;
  * requirements crop up for write access). The class is implemented
  * as a Singleton pattern.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @author Karan Vahi
  * @version $Revision$

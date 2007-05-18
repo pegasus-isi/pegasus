@@ -19,7 +19,7 @@ import java.util.*;
 import java.io.*;
 
 /**
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

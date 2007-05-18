@@ -24,7 +24,7 @@ import java.io.*;
  * It parses an invocation record, creates the corresponding java
  * objects, and generates an XML document from these objects.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

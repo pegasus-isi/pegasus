@@ -28,7 +28,7 @@ import org.xml.sax.InputSource;
  * This class uses the <code>VDLxParser</code> to parse VDL XML 
  * specification and output VDL textual specification. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

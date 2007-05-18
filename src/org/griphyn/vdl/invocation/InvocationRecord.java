@@ -25,7 +25,7 @@ import java.io.IOException;
  * itself contains information about the job or jobs that ran, the total
  * usage, and information about central files that were used.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

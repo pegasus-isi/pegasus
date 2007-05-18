@@ -25,7 +25,7 @@ import org.xml.sax.*;
  * and fatal error. Here we simply print the error message and the location
  * where the error happend.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

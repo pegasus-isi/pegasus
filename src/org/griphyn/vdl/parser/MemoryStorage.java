@@ -24,7 +24,7 @@ import java.util.ArrayList;
  * This class adds a given Definition from the parser's callback into
  * the already established in-memory storage. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

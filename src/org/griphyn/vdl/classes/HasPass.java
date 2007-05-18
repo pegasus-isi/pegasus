@@ -20,7 +20,7 @@ import java.util.List;
  * This interface defines a common base for {@link Derivation} and
  * {@link Call}. The latter is in a sense an anonymous DV.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

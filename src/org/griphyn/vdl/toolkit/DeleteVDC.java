@@ -32,7 +32,7 @@ import org.griphyn.vdl.directive.*;
  * This class deletes definition's that match the namespace, identifier,
  * version triple.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

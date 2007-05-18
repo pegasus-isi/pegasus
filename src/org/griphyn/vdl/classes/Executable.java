@@ -21,7 +21,7 @@ import java.util.*;
  * This class is a leftover from an earlier version, and now solely 
  * here for the purposes of providing the Condor universe constants.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

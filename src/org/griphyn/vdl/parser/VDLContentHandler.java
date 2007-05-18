@@ -29,7 +29,7 @@ import java.util.Stack;
  * objects read, and does the callback on the storage interface.
  * This class is the content handler for the XML document being parsed.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -24,7 +24,7 @@ import org.griphyn.vdl.classes.Derivation;
  * derivation within the same current working namespace. If there is no
  * such derivation, returns the first one from the collection.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision $
  */

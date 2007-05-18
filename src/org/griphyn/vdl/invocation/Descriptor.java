@@ -22,7 +22,7 @@ import java.io.IOException;
  * This class is the container for a file descriptor object. A file
  * descriptor object contains just the descriptor number.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

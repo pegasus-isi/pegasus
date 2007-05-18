@@ -20,7 +20,7 @@ import org.griphyn.common.catalog.CatalogException;
  * Class to notify of failures. Exceptions are chained like the
  * {@link java.sql.SQLException} interface.<p>
  *
- * @author Jens-S. Vöckler, Karan Vahi
+ * @author Jens-S. VÃ¶ckler, Karan Vahi
  * @see org.griphyn.common.catalog.ReplicaCatalog
  */
 public class ReplicaCatalogException 

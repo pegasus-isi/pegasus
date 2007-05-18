@@ -24,7 +24,7 @@ import java.io.*;
  * the set of lock filenames in status locked. These files need to be
  * removed on exit. Thus, this class is implemented as a Singleton.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision $
  *

@@ -21,7 +21,7 @@ package org.griphyn.common.util;
  * representation of a definition looks like ns::name:version, and
  * a textual representation of a uses like ns::name:min,max.<p>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -34,7 +34,7 @@ import org.griphyn.common.util.Version;
 /**
  * This class searches definitions or LFNs which match a query.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

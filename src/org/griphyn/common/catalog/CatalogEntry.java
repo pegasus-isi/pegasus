@@ -18,7 +18,7 @@ package org.griphyn.common.catalog;
 /**
  * This interface create a common ancestor for all catalog entries.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

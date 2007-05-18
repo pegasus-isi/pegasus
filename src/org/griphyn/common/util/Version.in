@@ -31,9 +31,9 @@ import java.io.*;
  * integers yourself.
  *
  * @author Karan Vahi
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
- * $Id:$
+ * $Id$
  */
 public class Version 
 {

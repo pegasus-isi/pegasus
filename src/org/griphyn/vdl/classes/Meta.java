@@ -24,7 +24,7 @@ import java.io.Serializable;
 /**
  * This class implements nothing for meta data.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

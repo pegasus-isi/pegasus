@@ -32,7 +32,7 @@ import java.io.Serializable;
  * actual parameter to a job. The immutable parts are hidden in a
  * <code>Transformation</code>.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

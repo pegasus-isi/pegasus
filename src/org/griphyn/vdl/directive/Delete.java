@@ -31,7 +31,7 @@ import java.util.MissingResourceException;
  * This class deletes definitions that either match certain 
  * namespace, name, version combination
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

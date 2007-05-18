@@ -25,7 +25,7 @@ import org.griphyn.common.util.DynamicLoader;
  * a subclass of this class.
  *
  * @author Karan Vahi
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Gaurang Mehta
  */
 public class FactoryException

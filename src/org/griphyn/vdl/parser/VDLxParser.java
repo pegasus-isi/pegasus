@@ -28,7 +28,7 @@ import java.io.*;
  * error handler <code>VDLErrorHandler</code> are necessary to handle
  * various callbacks.
 
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
 

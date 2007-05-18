@@ -30,7 +30,7 @@ import org.griphyn.common.util.Version;
 /**
  * This class inserts annotations into the backend database.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

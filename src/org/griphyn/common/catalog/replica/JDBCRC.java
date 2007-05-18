@@ -91,7 +91,7 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
  * The site attribute should be specified whenever possible. For the
  * shell planner, it will always be of value "local".
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

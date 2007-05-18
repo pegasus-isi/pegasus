@@ -33,7 +33,7 @@ import org.griphyn.vdl.util.*;
  * to either install the shared JNI library into your Java runtime, or
  * point your LD_LIBRARY_PATH to the shared library.<p>
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

@@ -27,7 +27,7 @@ import org.griphyn.vdl.util.*;
  * the commercial JDBC3-compatible driver, you are encouraged to
  * implement the missing functionality.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

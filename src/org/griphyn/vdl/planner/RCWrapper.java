@@ -27,7 +27,7 @@ import org.griphyn.common.catalog.replica.*;
 /**
  * This class wraps the shell planner's request into the new RC API.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

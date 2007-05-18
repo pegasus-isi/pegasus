@@ -20,7 +20,7 @@ import java.sql.Types;
  * This abstract base class defines the key value tuple that define the
  * heart of Yong's annotations. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

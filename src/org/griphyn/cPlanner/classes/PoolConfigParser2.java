@@ -27,7 +27,7 @@ import java.util.StringTokenizer;
  * Parses the input stream and generates pool configuration map as
  * output.
  *
- * @author Jens Voeckler
+ * @author Jens Vöckler
  * @author Gaurang Mehta
  * @author Karan Vahi
  * @version $Revision$

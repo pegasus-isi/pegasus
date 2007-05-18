@@ -24,7 +24,7 @@ import java.util.Map;
  * callbacks, and generate its own information on the fly.
  *
  * @author Kavitha Ranganathan
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

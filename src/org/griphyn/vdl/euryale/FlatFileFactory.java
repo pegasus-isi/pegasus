@@ -24,7 +24,7 @@ import java.util.*;
  * toplevel directory. There is no subdirectory structuring. 
  *
  * @author Kavitha Ranganathan
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

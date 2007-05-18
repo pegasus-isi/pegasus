@@ -18,7 +18,7 @@ package org.griphyn.vdl.planner;
 /**
  * This interface permits to categorizes the various catalog accessors.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

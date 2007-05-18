@@ -49,7 +49,7 @@ import java.util.ArrayList;
  * </pre>
  *
  * @author Karan Vahi
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  */
 public class CatalogException 
   // method A: no need to change interface, obsfuscated use, though

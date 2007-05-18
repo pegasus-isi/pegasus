@@ -53,7 +53,7 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
  * are only quoted and escaped, if necessary. The attribute values are
  * always quoted and escaped.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
  */
 public class SimpleFile implements ReplicaCatalog

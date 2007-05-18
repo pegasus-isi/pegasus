@@ -22,7 +22,7 @@ import java.util.*;
  * This class maintains a stack of classes that implement the
  * {@link java.util.List} interface.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision $
  */

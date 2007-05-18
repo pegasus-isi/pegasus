@@ -39,7 +39,7 @@ import org.griphyn.vdl.toolkit.Toolkit; // for now
  * the underlying true catalog without knowing (once instantiated) which
  * one it is.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

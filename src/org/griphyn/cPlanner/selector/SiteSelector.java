@@ -34,7 +34,7 @@ import java.util.List;
  * making an api call to a java based site selector.
  *
  * @author Karan Vahi
- * @author Jens-S. Voeckler
+ * @author Jens-S. Vöckler
  * @author Gaurang Mehta
  *
  *

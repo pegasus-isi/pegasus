@@ -32,7 +32,7 @@ import org.griphyn.vdl.dax.ADAG;
 /**
  * This class generates the DAX per the request for LFNs or DVs
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

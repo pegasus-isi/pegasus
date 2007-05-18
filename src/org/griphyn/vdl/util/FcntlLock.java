@@ -23,7 +23,7 @@ import java.nio.channels.*;
  * This class encapsulates the instance variables necessary to lock 
  * a file. The NIO new locking methods are required.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

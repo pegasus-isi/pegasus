@@ -27,7 +27,7 @@ import org.griphyn.vdl.planner.*;
  * This class makes concrete plans for a DAX, when planning using the
  * shell planner.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

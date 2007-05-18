@@ -32,7 +32,7 @@ import org.griphyn.vdl.dbschema.*;
  * that produce these files will be considered etc. Thus, a build-style
  * directed acyclic graph (DAG) is formed. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

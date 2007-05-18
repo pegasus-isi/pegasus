@@ -19,7 +19,7 @@ package org.griphyn.vdl.router;
  * This exception is thrown if a transformation uses the same name for
  * a formal argument as for a local variable. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

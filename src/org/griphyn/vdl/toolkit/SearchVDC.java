@@ -38,7 +38,7 @@ import gnu.getopt.*;
  * vdlx, vdlt, or name. Alternatively, it permits to search from a list
  * of inputs, either DVs or LFNs. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

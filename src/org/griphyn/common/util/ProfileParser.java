@@ -27,7 +27,7 @@ import org.griphyn.cPlanner.classes.Profile;
  * and the parsed triples and back again.
  *
  * @author Gaurang Mehta
- * @author Jens-S. V�ckler
+ * @author Jens-S. Vöckler
  */
 public class ProfileParser
 {

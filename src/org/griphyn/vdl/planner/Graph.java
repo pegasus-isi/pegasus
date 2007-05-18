@@ -24,7 +24,7 @@ import java.util.*;
  * of a job in the workflow. The arcs represent dependencies of the
  * jobs on one another. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision $
  */ 

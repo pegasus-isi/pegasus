@@ -31,7 +31,7 @@ import org.xml.sax.InputSource;
  * backend database, such as insertion, deletion, and search of
  * entities in the VDC.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$ 
  */

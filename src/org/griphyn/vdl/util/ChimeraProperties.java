@@ -28,7 +28,7 @@ import org.griphyn.vdl.util.Logging;
  * to get the value of the property. It access the VDSProperties class
  * to read the property file.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

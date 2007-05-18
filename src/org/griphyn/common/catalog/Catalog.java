@@ -21,7 +21,7 @@ import java.util.Properties;
  * This interface create a common ancestor for all cataloging
  * interfaces.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

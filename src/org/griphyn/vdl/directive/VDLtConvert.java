@@ -26,7 +26,7 @@ import java.util.MissingResourceException;
 /**
  * The class converts VDLt syntax into VDLx syntax.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

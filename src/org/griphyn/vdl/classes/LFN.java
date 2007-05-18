@@ -28,7 +28,7 @@ import java.io.Serializable;
  * <code>LFN</code> extends the <code>Leaf</code> class by adding
  * a filename and linkage type. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

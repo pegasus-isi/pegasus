@@ -23,7 +23,7 @@ import org.griphyn.vdl.dbschema.*;
  * the stack instead of globally. In some cases, the caching may be
  * adverse to the performance, though.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision $
  */

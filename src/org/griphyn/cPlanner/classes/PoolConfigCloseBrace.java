@@ -130,7 +130,7 @@
  * <p>Description: </p>
  * <p>Copyright: Copyright (c) 2003</p>
  * <p>Company: ISI/USC</p>
- * @author Jens Voeckler
+ * @author Jens Vöckler
  * @version 1.0
  */
 

@@ -26,7 +26,7 @@ import java.util.ArrayList;
  * versatile {@link MemoryStorage} handler. End-users should not use 
  * this class, hence it is not public.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

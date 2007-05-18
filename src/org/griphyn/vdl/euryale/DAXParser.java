@@ -37,7 +37,7 @@ import java.util.Stack;
  * only need to override callbacks of interest. 
  *
  * @author Kavitha Ranganathan
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

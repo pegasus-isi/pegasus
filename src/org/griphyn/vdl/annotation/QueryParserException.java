@@ -20,7 +20,7 @@ import java.io.*;
  * This class is used to signal errors while scanning only.
  * @see QueryScanner
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
  */
 public class QueryParserException 

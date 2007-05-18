@@ -28,7 +28,7 @@ import org.griphyn.vdl.util.Logging;
  * backend database for workflow records. Currently, only searches
  * that fill the workflow class are implemented.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Mike Wilde
  * @version $Revision$
  */

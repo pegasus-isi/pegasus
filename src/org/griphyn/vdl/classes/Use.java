@@ -30,7 +30,7 @@ import java.io.Serializable;
  * <code>Use</code> extends the base class <code>Leaf</code> by adding
  * most attributes of all siblings.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

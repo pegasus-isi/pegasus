@@ -34,7 +34,7 @@ import gnu.getopt.*;
 /**
  * This class gets the exit code of a job from invocation record.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

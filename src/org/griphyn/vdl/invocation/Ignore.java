@@ -22,7 +22,7 @@ import java.io.IOException;
  * This class is transient for XML parsing. It does not store
  * anything, just goes through the motions to satisfy the API.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  * @see StatCall

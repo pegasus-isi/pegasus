@@ -26,7 +26,7 @@ import java.io.*;
  * In addition, it captures some attributes from the root element of
  * the XML document. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

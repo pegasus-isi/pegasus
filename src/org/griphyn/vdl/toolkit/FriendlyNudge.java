@@ -18,7 +18,7 @@ package org.griphyn.vdl.toolkit;
 /**
  * This exception is a signal by the invocation record digestor.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

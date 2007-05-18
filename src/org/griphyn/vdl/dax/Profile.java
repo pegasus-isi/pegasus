@@ -43,7 +43,7 @@ import java.io.Writer;
  *
  * In the future, more namespaces may be added. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

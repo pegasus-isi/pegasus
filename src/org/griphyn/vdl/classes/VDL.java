@@ -23,7 +23,7 @@ import java.io.Serializable;
  * Since all necessary functionality is described in {@link Chimera},
  * this class is empty. It exists for grouping purposes.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  */

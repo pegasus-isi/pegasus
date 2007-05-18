@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
  * connection to the replica catalog.
  *
  * @author Karan Vahi
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @version $Revision$
  *
  * @see org.griphyn.common.catalog.ReplicaCatalog

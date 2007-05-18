@@ -24,7 +24,7 @@ import java.io.Serializable;
  * This class encapsulates a single formal argument that is passed
  * from a {@link Derivation} to a {@link Transformation}.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

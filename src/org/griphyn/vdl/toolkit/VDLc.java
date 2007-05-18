@@ -40,7 +40,7 @@ import gnu.getopt.*;
  * This class generates implements the pipeline of the usual suspect
  * from vdlt2vdlx via insert- or updatevdc to gendax. 
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *

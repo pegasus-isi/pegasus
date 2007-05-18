@@ -28,7 +28,7 @@ import java.io.IOException;
  * transformations also refer to logical transformtions, though through
  * <code>Profile</code> physical location hints can be passed.
  *
- * @author Jens-S. Vöckler
+ * @author Jens-S. VÃ¶ckler
  * @author Yong Zhao
  * @version $Revision$
  *
