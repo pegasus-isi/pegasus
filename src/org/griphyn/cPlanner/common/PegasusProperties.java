@@ -1438,7 +1438,7 @@ public class PegasusProperties {
      *         else null.
      */
     public String getRemoteSchedulerProjects() {
-        return mProps.getProperty( "pegasus.remote.projects" );
+        return mProps.getProperty( "pegasus.remote.scheduler.projects" );
     }
 
     /**
@@ -1451,7 +1451,7 @@ public class PegasusProperties {
      *         else null.
      */
     public String getRemoteSchedulerQueues() {
-        return mProps.getProperty( "pegasus.remote.queues" );
+        return mProps.getProperty( "pegasus.remote.scheduler.queues" );
     }
 
     /**
@@ -1465,7 +1465,7 @@ public class PegasusProperties {
      *         else null.
      */
     public String getRemoteSchedulerMaxWallTimes() {
-        return mProps.getProperty( "pegasus.remote.min.maxwalltime" );
+        return mProps.getProperty( "pegasus.remote.scheduler.min.maxwalltime" );
     }
 
     /**
@@ -1480,7 +1480,7 @@ public class PegasusProperties {
      */
     public int getMinimumRemoteSchedulerTime( String key ){
         StringBuffer property = new StringBuffer();
-        property.append( "pegasus.remote.min." ).append( key );
+        property.append( "pegasus.remote.scheduler.min." ).append( key );
 
         int val = -1;
 
@@ -1758,7 +1758,7 @@ public class PegasusProperties {
      * @return  the value specified in the properties file, else null.
      */
     public String getCollapseFactors() {
-        return mProps.getProperty( "pegasus.cluster.nodes" );
+        return mProps.getProperty( "pegasus.clusterer.nodes" );
     }
 
     /**
@@ -1773,7 +1773,7 @@ public class PegasusProperties {
      * @see #DEFAULT_JOB_AGGREGATOR
      */
     public String getJobAggregator(){
-        return mProps.getProperty("pegasus.cluster.job.aggregator",DEFAULT_JOB_AGGREGATOR);
+        return mProps.getProperty("pegasus.clusterer.job.aggregator",DEFAULT_JOB_AGGREGATOR);
     }
 
 
@@ -1789,7 +1789,7 @@ public class PegasusProperties {
      * @see #DEFAULT_JOB_AGGREGATOR
      */
     public boolean jobAggregatorLogGlobal(){
-        return Boolean.parse( mProps.getProperty( "pegasus.cluster.job.aggregator.seqexec.hasgloballog" ),
+        return Boolean.parse( mProps.getProperty( "pegasus.clusterer.job.aggregator.seqexec.hasgloballog" ),
                               true );
     }
 

@@ -308,12 +308,12 @@ public class VDS2PegasusProperties extends Executable {
         associate( "vds.prescript.arguments",  "pegasus.prescript.arguments" );
 
         //PROPERTIES RELATED TO REMOTE SCHEDULERS
-        associate( "vds.scheduler.remote.projects", "pegasus.remote.projects" );
-        associate( "vds.scheduler.remote.queues",   "pegasus.remote.queues" );
-        associate( "vds.scheduler.remote.maxwalltimes", "pegasus.remote.maxwalltimes" );
-        associate( "vds.scheduler.remote.min.maxtime",  "pegasus.remote.min.maxtime" );
-        associate( "vds.scheduler.remote.min.maxwalltime", "pegasus.remote.min.maxwalltime" );
-        associate( "vds.scheduler.remote.min.maxcputime", "pegasus.remote.min.maxcputime" );
+        associate( "vds.scheduler.remote.projects", "pegasus.remote.scheduler.projects" );
+        associate( "vds.scheduler.remote.queues",   "pegasus.remote.scheduler.queues" );
+//        associate( "vds.scheduler.remote.maxwalltimes", "pegasus.remote.scheduler.maxwalltimes" );
+        associate( "vds.scheduler.remote.min.maxtime",  "pegasus.remote.scheduler.min.maxtime" );
+        associate( "vds.scheduler.remote.min.maxwalltime", "pegasus.remote.scheduler.min.maxwalltime" );
+        associate( "vds.scheduler.remote.min.maxcputime", "pegasus.remote.scheduler.min.maxcputime" );
 
         //PROPERTIES RELATED TO Condor and DAGMAN
         associate( "vds.scheduler.condor.release",         "pegasus.condor.release" );
@@ -324,9 +324,10 @@ public class VDS2PegasusProperties extends Executable {
         associate( "vds.scheduler.condor.retry",           "pegasus.dagman.retry" );
 
         //JOB CLUSTERING
-        associate( "vds.exec.node.collapse", "pegasus.cluster.nodes" );
-        associate( "vds.job.aggregator",     "pegasus.cluster.job.aggregator" );
-        associate( "vds.job.aggregator.seqexec.isgloballog", "pegasus.cluster.job.aggregator.hasgloballog" );
+        associate( "vds.exec.node.collapse", "pegasus.clusterer.nodes" );
+        associate( "vds.job.aggregator",     "pegasus.clusterer.job.aggregator" );
+        associate( "vds.job.aggregator.seqexec.isgloballog", "pegasus.clusterer.job.aggregator.hasgloballog" );
+        associate( "vds.clusterer.label.key", "pegasus.clusterer.label.key" );
 
         //MISCELLANEOUS
         associate( "vds.auth.gridftp.timeout", "pegasus.auth.gridftp.timeout" );
@@ -339,7 +340,6 @@ public class VDS2PegasusProperties extends Executable {
         associate( "vds.partition.parser.mode", "pegasus.partitioner.parser.load" );
 //        associate( "vds.partitioner.horizontal.bundle.", "pegasus.partitioner.horizontal.bundle." );
 //        associate( "vds.partitioner.horizontal.collapse.", "pegasus.partitioner.horizontal.collapse." );
-        associate( "vds.clusterer.label.key", "pegasus.clusterer.label.key" );
 
         return mVDSToPegasusPropertiesTable;
     }
