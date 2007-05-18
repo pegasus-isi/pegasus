@@ -30,7 +30,7 @@
     <!-- substitute built timestamp into Version.java -->
     <exec executable="perl" 
 	  output="src/org/griphyn/common/util/Version.java">
-      <arg value="-CSio"/>
+      <arg value="-CS"/>
       <arg value="-pe"/>
       <arg value="s/BUILDTIMESTAMP/${ISODATE.utc}/; s/BUILDARCHITECTURE/${dist.arch}/; s/DONOTEDITWARNING/DO NOT EDIT! This file is generated automatically/"/>
       <arg value="src/org/griphyn/common/util/Version.in"/>
