@@ -170,75 +170,29 @@ public class SCClient
             //else bank upon the the default logging level
             mLogger.setLevel(level);
         }
-	//        if ( mGIISHost != null && mGIISDN == null ) {
-	    //            mLogger.log("The giis dn is missing. "+
-	//              "\nYou need to define vds.giis.dn in the properties file",
-	//               LogManager.FATAL_MESSAGE_LEVEL );
-	//   printShortVersion();
-	//   System.exit( 1 );
-
-	//        }
-
-	//        if ( mGIISHost == null && mLocalPoolConfig == null ) {
-	//  mLogger.log(
-	//       "The giis host as well as the local pool config file is missing." +
-	//       "\nYou need to define vds.giis.host and vds.giis.dn in the properties file" +
-	//       "\nor provide a local config file to generate the xml pool config file",
-	//     LogManager.FATAL_MESSAGE_LEVEL );
-	//  printShortVersion();
-	//  System.exit( 1 );
-	//
-	//        } else {
 	try {
 	    generatePoolConfig();
 	} catch ( Exception e ) {
 	    e.printStackTrace();
 	}
     }
-    //    }
+
 
     public void generatePoolConfig() throws Exception {
-        if ( mText ) {
-            //convert the xml file to text file.
-            if ( mLocalPoolConfig != null ) {
-                ConfigXmlParser p = new ConfigXmlParser( mProps );
+	//convert the xml file to text file.
+	if ( mLocalPoolConfig != null ) {
+	    if ( mText ) {
+		ConfigXmlParser p = new ConfigXmlParser( mProps );
                 p.startParser( ( String ) mLocalPoolConfig.get( 0 ) );
                 mConfig = p.getPoolConfig();
             } else {
-                mLogger.log("Provide the xml pool config file with --poolconfig option",
+		mConfig=getLocalConfigInfo(mLocalPoolConfig);
+	    }
+	} else {
+                mLogger.log("Provide thepool config file with --files option",
                             LogManager.ERROR_MESSAGE_LEVEL);
-            }
-        }// else {
-         //   if ( mGIISHost != null ) {
-	//      StringTokenizer st = new StringTokenizer( mGIISHost, ":" );
-	//
-	//      if ( st.countTokens() < 2 ) {
-	//          mGIISHost = st.nextToken().trim();
-	//      } else {
-	//          mGIISHost = st.nextToken();
-	//          mGIISPort = ( new Integer( st.nextToken() ).intValue() );
-	//      }
-	//  }
-	//
-	//  if ( mLocalPrec ) {
-	//      if ( mLocalPoolConfig != null ) {
-	//          mConfig = getLocalConfigInfo( mLocalPoolConfig );
-	//              }
-//      if ( mGIISHost != null ) {
-	//          mConfig = getMdsInfo( mGIISHost, mGIISPort,
-	//              mGIISDN );
-	//      }
-	//  } else {
-	//      if ( mGIISHost != null ) {
-	//          mConfig = getMdsInfo( mGIISHost, mGIISPort,
-	//              mGIISDN );
-	//      }
-	//      if ( mLocalPoolConfig != null ) {
-	//          mConfig = getLocalConfigInfo( mLocalPoolConfig );
-	//      }
-	//
-	//  }
-        //}
+	}
+      
         if ( mConfig != null ) {
             if ( mText && mOutputXML == null ) {
                 //not sure about this
@@ -316,90 +270,6 @@ public class SCClient
         mLogger.log( text,LogManager.INFO_MESSAGE_LEVEL );
 
     }
-
-    /**
-     * This method obtains the MDS information and stuffs it into the poolconfig object.
-     * @param host The host name for the giis.
-     * @param port The port for the Giis.
-     * @param baseDN The base dn for the Giis.
-     * @return PoolConfig
-     * @throws java.lang.Exception
-     */
-    //for PEGASUS Release May 2007
-    //        public PoolConfig getMdsInfo( String host, int port, String baseDN ) throws
-    //    Exception {
-    //    String message = "Quering GIIS on host " + host + ":" + port;
-    //   mLogger.log( message,LogManager.INFO_MESSAGE_LEVEL);
-    //   String filtergvds = "(objectclass=Gvds-Pool-Info)";
-    //  String filtergram =
-    //      "(|(objectclass=MdsServiceGram)(objectclass=MdsGramJobQueue))";
-    //
-    //  //  sk added a filter for getting jobmanagersubnet and for bandwidth
-    //  String filtergvdsBandwidth =
-    //      "(objectclass=gridftp-pair-bandwidth-info)";
-    //
-    //  MdsQuery mds = new MdsQuery( host, port );
-    //
-    //       /**
-    //   * create a Ldap Context
-    //  */
-    //
-    //  LdapContext ctx = mds.connectMds();
-    //
-    //  /**
-    //   * Specify the Search controls
-    //   * Enable Subtre searching scope.
-    // */
-    //
-    //  SearchControls constraints = new SearchControls();
-    //  constraints.setSearchScope( SearchControls.SUBTREE_SCOPE );
-    //
-    //  NamingEnumeration resultsgvds, resultsgram, resultsgvdsBandwidth;
-    //  /**
-    //   * Search the context for the required objects.
-    //   */
-    //  mLogger.log( "Querying GVDS entries in the GIIS ",
-    //               LogManager.DEBUG_MESSAGE_LEVEL);
-    //  resultsgvds = ctx.search( baseDN, filtergvds, constraints );
-    //  mLogger.logCompletion("Querying GVDS entries in the GIIS ",
-    //                        LogManager.DEBUG_MESSAGE_LEVEL);
-    //  mLogger.log( "Querying Gram entries in the GIIS",
-    //               LogManager.DEBUG_MESSAGE_LEVEL);
-    //  resultsgram = ctx.search( baseDN, filtergram, constraints );
-    //  mLogger.logCompletion("Querying Gram entries in the GIIS",
-    //                        LogManager.DEBUG_MESSAGE_LEVEL );
-    // //TODO:sk added a search
-    //  //commented this because subnet information is no more required
-    //  //resultssubnet = ctx.search(baseDN,filtersubnet,constraints);
-    //  resultsgvdsBandwidth = ctx.search( baseDN, filtergvdsBandwidth,
-    //      constraints );
-    //  mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL );
-    //
-    //  /**
-    //   * Close the Ldap Context
-    //   */
-    //  ctx.close();
-    //
-    //  /**
-    //     * Store the results from the MDS into the dataclasses
-    //     */
-    //    message = "Storing GVDS entries from the GIIS";
-    //   mLogger.log(message,LogManager.DEBUG_MESSAGE_LEVEL);
-    //   mConfig = mds.StoreGvdsMdsInfo( resultsgvds, baseDN, mConfig );
-    //   mLogger.logCompletion( message, LogManager.DEBUG_MESSAGE_LEVEL );
-    //   message = "Storing Gram entries from the GIIS";
-    //   mLogger.log( message,LogManager.DEBUG_MESSAGE_LEVEL);
-    //   mConfig = mds.StoreGvdsMdsInfo( resultsgram, baseDN, mConfig );
-    //   mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
-    //   //  mConfig = mds.StoreGvdsMdsInfo(resultsqueue, baseDN, mConfig);
-    //   message = "Quering GIIS on host " + host + ":" + port;
-    //   mLogger.logCompletion( message,LogManager.INFO_MESSAGE_LEVEL );
-    //
-    //   //sk storing the result into the dataclass
-    //   mConfig = mds.StoreGvdsMdsInfo( resultsgvdsBandwidth, baseDN, mConfig );
-    //
-    //   return mConfig;
-    //}
 
 
     public PoolConfig getLocalConfigInfo( ArrayList localpoolconfig ) {
