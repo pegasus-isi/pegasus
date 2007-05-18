@@ -190,7 +190,7 @@ print << 'EOF';
 %
 \begin{document}
 
-\subject{The GriPhyN Virtual Data System Properties}
+\subject{The Pegasus Workflow Planner Properties}
 \title{Property Documentation}
 EOF
 
