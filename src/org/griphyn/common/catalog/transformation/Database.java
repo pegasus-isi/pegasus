@@ -66,7 +66,7 @@ public class Database
         NoSuchMethodException, InstantiationException,
         IllegalAccessException, InvocationTargetException,
         SQLException, IOException {
-        super( ( String )null, "vds.db.tc.schema" );
+        super( ( String )null, "pegasus.db.tc.schema" );
         //mLogger = LogManager.getInstance();
         mLogger.log( "TC Mode being used is " + this.getTCMode(),
             LogManager.CONFIG_MESSAGE_LEVEL );

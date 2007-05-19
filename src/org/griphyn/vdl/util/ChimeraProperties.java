@@ -34,22 +34,22 @@ import org.griphyn.vdl.util.Logging;
  *
  * @see org.griphyn.common.util.VDSProperties
  */
-public class ChimeraProperties 
+public class ChimeraProperties
 {
-  /**  
+  /**
    * Default values for schema locations.
    */
-  public static final String VDL_SCHEMA_LOCATION = 
+  public static final String VDL_SCHEMA_LOCATION =
     "http://www.griphyn.org/chimera/vdl-1.24.xsd";
 
-  public static final String DAX_SCHEMA_LOCATION = 
-    "http://www.griphyn.org/chimera/dax-1.10.xsd";
+  public static final String DAX_SCHEMA_LOCATION =
+    "http://pegasus.isi.edu/schema/dax-2.0.xsd";
 
-  public static final String IVR_SCHEMA_LOCATION = 
-    "http://vds.isi.edu/schemas/iv-1.10.xsd";
+  public static final String IVR_SCHEMA_LOCATION =
+    "http://pegasus.isi.edu/schema/iv-2.0.xsd";
 
   public static final String DBDRIVER_ALL_PREFIX =
-    "vds.db.*.driver";
+    "pegasus.db.*.driver";
 
   /**
    * Implements the Singleton access.
@@ -83,7 +83,7 @@ public class ChimeraProperties
    * Constructor that is called only once, when creating the
    * Singleton instance.
    */
-  private ChimeraProperties() 
+  private ChimeraProperties()
     throws IOException, MissingResourceException
   {
     m_props = getVDSPropertiesInstance();
@@ -100,9 +100,9 @@ public class ChimeraProperties
   }
 
   /**
-   * Set up logging 
+   * Set up logging
    */
-  public void setupLogging(Logging logger) 
+  public void setupLogging(Logging logger)
   {
     for ( Enumeration e = m_props.propertyNames(); e.hasMoreElements(); ) {
       String key = (String) e.nextElement();
@@ -140,7 +140,7 @@ public class ChimeraProperties
    * @return the root directory of the VDS runtime system, as initially
    * set from the system properties.
    */
-  public String getVDSHome() 
+  public String getVDSHome()
   {
     return m_props.getVDSHome();
   }
@@ -181,8 +181,8 @@ public class ChimeraProperties
   public String getVDCSchemaName()
   {
     // load the default schema name - default is to use the file based
-    // schema. 
-    String schemaName = 
+    // schema.
+    String schemaName =
       m_props.getProperty( "vds.db.vdc.schema", "SingleFileSchema" );
     if ( schemaName.indexOf('.') == -1 )
       schemaName = "org.griphyn.vdl.dbschema." + schemaName;
@@ -197,14 +197,14 @@ public class ChimeraProperties
    *
    * @return the fully-qualified name of the class which implements
    * the PTC according to properties, or <code>null</code>, if no
-   * such class exists. 
+   * such class exists.
    */
   public String getPTCSchemaName()
   {
     // load the default schema name - default is to use the file based
-    // schema. 
-    String schemaName = 
-      m_props.getProperty( "vds.db.ptc.schema" );
+    // schema.
+    String schemaName =
+      m_props.getProperty( "pegasus.db.ptc.schema" );
     if ( schemaName != null && schemaName.indexOf('.') == -1 )
       schemaName = "org.griphyn.vdl.dbschema." + schemaName;
 
@@ -282,7 +282,7 @@ public class ChimeraProperties
    * @return a location pointing to a definition document of the XML
    * schema that can read DAX. Result may be null, if such a document
    * is unknown or unspecified.
-   * @see org.griphyn.vdl.parser.InvocationParser#InvocationParser( String ) 
+   * @see org.griphyn.vdl.parser.InvocationParser#InvocationParser( String )
    */
   public String getPTCSchemaLocation()
   {
@@ -292,35 +292,35 @@ public class ChimeraProperties
       new File( m_props.getSysConfDir(), uri.getName() );
 
     // Nota bene: vds.schema.ptc may be a networked URI...
-    return m_props.getProperty( "vds.schema.ptc", ptc.getAbsolutePath() );
+    return m_props.getProperty( "pegasus.schema.ptc", ptc.getAbsolutePath() );
   }
 
   /**
-   * Get the rc.data file location, which is used by shell planner 
+   * Get the rc.data file location, which is used by shell planner
    *
    */
   public String getRCLocation()
   {
     File rcFile = new File( m_props.getLocalStateDir(), "rc.data" );
     return m_props.getProperty( "vds.db.rc", rcFile.getAbsolutePath() );
-  } 
+  }
 
   /**
-   * Get the tc.data file location, which is used by shell planner 
+   * Get the tc.data file location, which is used by shell planner
    *
    */
   public String getTCLocation()
   {
     File tcFile = new File( m_props.getLocalStateDir(), "tc.data" );
     return m_props.getProperty( "vds.db.tc", tcFile.getAbsolutePath() );
-  } 
+  }
 
 
 
   /**
    * Gets the name of the database schema name from the properties.
    *
-   * @param dbSchemaPrefix is the database schema key name in the 
+   * @param dbSchemaPrefix is the database schema key name in the
    * properties file, which happens to be the pointer to the class
    * to load.
    * @return the database schema name, result may be null, if such
@@ -332,10 +332,10 @@ public class ChimeraProperties
   }
 
   /**
-   * Gets then name of the database driver from the properties. 
-   * A specific match is preferred over the any match. 
+   * Gets then name of the database driver from the properties.
+   * A specific match is preferred over the any match.
    *
-   * @param dbDriverPrefix is the database schema key name in the 
+   * @param dbDriverPrefix is the database schema key name in the
    * properties file, which happens to be the pointer to the class
    * to load.
    * @return the database driver name, result may be null, if such
@@ -343,17 +343,17 @@ public class ChimeraProperties
    */
   public String getDatabaseDriverName( String dbDriverPrefix )
   {
-    return ( dbDriverPrefix == null ? 
+    return ( dbDriverPrefix == null ?
 	     m_props.getProperty( DBDRIVER_ALL_PREFIX ) :
 	     m_props.getProperty( dbDriverPrefix,
 				  m_props.getProperty(DBDRIVER_ALL_PREFIX) )
 	   );
-  } 
+  }
 
   /**
    * Gets the Database URL from Properties file, the URL is a contact
    * string to the database. The URL contact string is removed from the
-   * regular properties which are passed to the JDBC driver. 
+   * regular properties which are passed to the JDBC driver.
    *
    * @param dbDriverPrefix is the database schema key name.
    * @return the database url, result may be <code>null</code>, if the
@@ -362,20 +362,20 @@ public class ChimeraProperties
    */
   public String getDatabaseURL( String dbDriverPrefix )
   {
-    return ( dbDriverPrefix == null ? 
+    return ( dbDriverPrefix == null ?
 	     m_props.getProperty( DBDRIVER_ALL_PREFIX + ".url" ) :
 	     m_props.getProperty( dbDriverPrefix + ".url",
-		  m_props.getProperty( DBDRIVER_ALL_PREFIX + ".url" ) ) 
+		  m_props.getProperty( DBDRIVER_ALL_PREFIX + ".url" ) )
 	   );
-  } 
+  }
 
   /**
    * Extracts a specific property key subset from the known properties.
    * The prefix is removed from the keys in the resulting dictionary.
    *
-   * @param prefix is the key prefix to filter the properties by. 
+   * @param prefix is the key prefix to filter the properties by.
    * @return a property dictionary matching the filter key. May be
-   * an empty dictionary, if no prefix matches were found. 
+   * an empty dictionary, if no prefix matches were found.
    */
   public Properties matchingSubset( String prefix )
   {
@@ -386,7 +386,7 @@ public class ChimeraProperties
    * Obtains database driver specific properties.
    *
    * @param dbDriverPrefix is the database driver property key prefix
-   * for which to obtain properties. 
+   * for which to obtain properties.
    * @return a property set to be filled with driver specific
    * properties. May be null if no such properties specified.
    */
@@ -402,7 +402,7 @@ public class ChimeraProperties
   /**
    * Obtains the database schema specific properties.
    *
-   * @param dbSchemaPrefix is the database schema key name in the 
+   * @param dbSchemaPrefix is the database schema key name in the
    * properties file
    * @return a property set to be filled with schema specific
    * properties. May be null if no such properties specified.
@@ -416,7 +416,7 @@ public class ChimeraProperties
    * Gets the name of the replica catalog implementating class from the
    * properties.
    *
-   * @param dbReplicaPrefix is the replica catalog class name in the 
+   * @param dbReplicaPrefix is the replica catalog class name in the
    * properties file.
    * @return the replica catalog implementing class name, result may be
    * null, if such property is not specified.
@@ -429,8 +429,8 @@ public class ChimeraProperties
   /**
    * Obtains all properties to handle the experimental replica catalog
    * interface.
-   * @param dbReplicaPrefix is the prefix for the replica catalog's 
-   * implementation configuration. 
+   * @param dbReplicaPrefix is the prefix for the replica catalog's
+   * implementation configuration.
    * @return all properties, excluding the prefix itself, for the RC.
    */
   public Properties getReplicaCatalogProperties( String dbReplicaPrefix )
