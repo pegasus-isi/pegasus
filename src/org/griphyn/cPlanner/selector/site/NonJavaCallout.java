@@ -180,7 +180,7 @@ public class NonJavaCallout extends SiteSelector {
      * The prefix to be used while creating a temporary file to pass to
      * the external siteselector.
      */
-    public static final String PREFIX_TEMPORARY_FILE = "vds";
+    public static final String PREFIX_TEMPORARY_FILE = "pegasus";
 
     /**
      * The suffix to be used while creating a temporary file to pass to

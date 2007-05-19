@@ -432,8 +432,8 @@ public abstract class Abstract implements Implementation{
         //jobname has the dagname and index to indicate different
         //jobs for deferred planning
         newJob.setName( name );
-        newJob.setTransformation( "vds", "noop", "1.0" );
-        newJob.setDerivation( "vds", "noop", "1.0" );
+        newJob.setTransformation( "pegasus", "noop", "1.0" );
+        newJob.setDerivation( "pegasus", "noop", "1.0" );
 
         newJob.setUniverse( "vanilla" );
         //the noop job does not get run by condor

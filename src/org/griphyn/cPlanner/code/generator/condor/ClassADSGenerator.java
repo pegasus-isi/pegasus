@@ -38,59 +38,59 @@ public class ClassADSGenerator {
     /**
      * The complete classad designating Pegasus as the generator.
      */
-    public static final String GENERATOR_AD_KEY = "vds_generator";
+    public static final String GENERATOR_AD_KEY = "pegasus_generator";
 
     /**
      * The class ad key for the version id.
      *
      * @see org.griphyn.cPlanner.classes.DagInfo#releaseVersion
      */
-    public static final String VERSION_AD_KEY  = "vds_version";
+    public static final String VERSION_AD_KEY  = "pegasus_version";
 
     /**
      * The classad for the flow id.
      *
      * @see org.griphyn.cPlanner.classes.DagInfo#flowIDName
      */
-    public static final String WF_NAME_AD_KEY = "vds_wf_name";
+    public static final String WF_NAME_AD_KEY = "pegasus_wf_name";
 
     /**
      * The classad for the timestamp.
      *
      * @see org.griphyn.cPlanner.classes.DagInfo#mFlowTimestamp
      */
-    public static final String WF_TIME_AD_KEY = "vds_wf_time";
+    public static final String WF_TIME_AD_KEY = "pegasus_wf_time";
 
     /**
      * The classad for the complete transformation name.
      */
-    public static final String XFORMATION_AD_KEY = "vds_wf_xformation";
+    public static final String XFORMATION_AD_KEY = "pegasus_wf_xformation";
 
     /**
      * The classad for the corresponding vdl derivation.
      */
-    public static final String DERIVATION_AD_KEY = "vds_wf_derivation";
+    public static final String DERIVATION_AD_KEY = "pegasus_wf_derivation";
 
     /**
      * The class ad for job Class.
      *
      * @see org.griphyn.cPlanner.classes.SubInfo#jobClass
      */
-    public static final String JOB_CLASS_AD_KEY = "vds_job_class";
+    public static final String JOB_CLASS_AD_KEY = "pegasus_job_class";
 
     /**
      * The class ad for the jobId.
      *
      * @see org.griphyn.cPlanner.classes.SubInfo#jobID
      */
-    public static final String JOB_ID_AD_KEY = "vds_job_id";
+    public static final String JOB_ID_AD_KEY = "pegasus_job_id";
 
     /**
      * The class ad to store the execution pool at which the job is run. The
      * globusscheduler specified in the submit file refers to the jobmanager on
      * this execution pool.
      */
-    public static final String RESOURCE_AD_KEY = "vds_site";
+    public static final String RESOURCE_AD_KEY = "pegasus_site";
 
 
 
