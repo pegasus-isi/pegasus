@@ -91,7 +91,8 @@ public class VDS2PegasusProperties extends Executable {
                                      "(vds.partitioner.horizontal.bundle.)([a-zA-Z_0-9]*[-]*)+",
                                      "(vds.partitioner.horizontal.collapse.)([a-zA-Z_0-9]*[-]*)+",
                                      "(vds.transfer.rft.)([a-zA-Z_0-9]*[-]*)+",
-                                     "(vds.transfer.crft.)([a-zA-Z_0-9]*[-]*)+"
+                                     "(vds.transfer.crft.)([a-zA-Z_0-9]*[-]*)+",
+                                     "(vds.db.)([a-zA-Z_0-9]*[-]*)+(.)([a-zA-Z_0-9.]*[-]*)+"
                                      };
 
 
@@ -106,7 +107,8 @@ public class VDS2PegasusProperties extends Executable {
                                      { "vds.partitioner.horizontal.bundle", "pegasus.partitioner.horizontal.bundle."},
                                      { "vds.partitioner.horizontal.collapse", "pegasus.partitioner.horizontal.collapse."},
                                      { "vds.transfer.rft.", "pegasus.transfer.rft."},
-                                     { "vds.transfer.crft.", "pegasus.transfer.crft."}
+                                     { "vds.transfer.crft.", "pegasus.transfer.crft."},
+                                     { "vds.db.", "pegasus.db." }
                                  };
 
 
@@ -210,6 +212,8 @@ public class VDS2PegasusProperties extends Executable {
             return mVDSToPegasusPropertiesTable;
         }
 
+        associate( "vds.home", "pegasus.home" );
+
         //PROPERTIES RELATED TO SCHEMAS
         associate( "vds.schema.dax",  "pegasus.schema.dax" );
         associate( "vds.schema.pdax", "pegasus.schema.pdax" );
@@ -233,6 +237,7 @@ public class VDS2PegasusProperties extends Executable {
         //REPLICA CATALOG PROPERTIES
         associate( "vds.replica.mode",    "pegasus.catalog.replica" );
         associate( "vds.rc",              "pegasus.catalog.replica" );
+        associate( "vds.rls.url",          "pegasus.catalog.replica.url" );
         associate( "vds.rc.url",          "pegasus.catalog.replica.url" );
         associate( "vds.rc.lrc.ignore",   "pegasus.catalog.replica.lrc.ignore" );
         associate( "vds.rc.lrc.restrict", "pegasus.catalog.replica.lrc.restrict" );
@@ -391,8 +396,9 @@ public class VDS2PegasusProperties extends Executable {
                     //ignore
                     continue;
                 }
-                temp.setProperty( pgs, vdsValue );
             }
+            //put the pegasus property with the vds value
+            temp.setProperty( pgs, vdsValue );
         }
 
 
@@ -468,7 +474,7 @@ public class VDS2PegasusProperties extends Executable {
             if( mCompiledPatterns[i].matcher( vds ).matches() ){
                 //get the replacement value
                 pgs = vds.replaceFirst( mStarReplacements[i][0], mStarReplacements[i][1] );
-                //System.out.println( "The matching pgs * property for " + vds + " is " + pgs );
+                System.out.println( "The matching pgs * property for " + vds + " is " + pgs );
                 break;
             }
         }
