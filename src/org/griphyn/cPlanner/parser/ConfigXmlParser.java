@@ -123,9 +123,9 @@ public class ConfigXmlParser extends Parser {
 
     public void endElement( String uri, String localName, String qName ) {
         try {
-            if ( localName.trim().equalsIgnoreCase( "config" ) ) {
+            if ( localName.trim().equalsIgnoreCase( "sitecatalog" ) ) {
                 handleConfigTagEnd();
-            } else if ( localName.trim().equalsIgnoreCase( "pool" ) ) {
+            } else if ( localName.trim().equalsIgnoreCase( "site" ) ) {
                 handlePoolTagEnd();
             } else if ( localName.trim().equalsIgnoreCase( "lrc" ) ) {
                 handleLRCTagEnd();
@@ -156,9 +156,9 @@ public class ConfigXmlParser extends Parser {
     public void startElement( String uri, String localName, String qName,
         Attributes attrs ) {
         try {
-            if ( localName.trim().equalsIgnoreCase( "config" ) ) {
+            if ( localName.trim().equalsIgnoreCase( "sitecatalog" ) ) {
                 handleConfigTagStart();
-            } else if ( localName.trim().equalsIgnoreCase( "pool" ) ) {
+            } else if ( localName.trim().equalsIgnoreCase( "site" ) ) {
                 m_pool_info = handlePoolTagStart( m_pconfig, attrs );
             } else if ( localName.trim().equalsIgnoreCase( "lrc" ) ) {
                 handleLRCTagStart( m_pool_info, attrs );
