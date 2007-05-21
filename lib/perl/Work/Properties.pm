@@ -115,7 +115,7 @@ BEGIN {
     $system{'user.timezone'} = $ENV{TZ}; # can be undef'd
 
     # not require, but useful
-    $system{'vds.home'} = $ENV{'VDS_HOME'}; # can be undef'd
+    $system{'pegasus.home'} = $ENV{'PEGASUS_HOME'}; # can be undef'd
 }
 
 BEGIN {
@@ -160,46 +160,46 @@ sub new {
     %config = ( %{$hashref} ) if ( ref $hashref eq 'HASH' );
 
     # magic property
-    my $vdshome;
+    my $pegasushome;
     my $flag = 0;
     if ( ($flags & PARSE_GVDS) ) {
-	if ( exists $ENV{'VDS_HOME'} ) {
-	    if ( -d $ENV{'VDS_HOME'} ) {
-		$vdshome = $config{'vds.home'} = $ENV{'VDS_HOME'};
+	if ( exists $ENV{'PEGASUS_HOME'} ) {
+	    if ( -d $ENV{'PEGASUS_HOME'} ) {
+		$pegasushome = $config{'pegasus.home'} = $ENV{'PEGASUS_HOME'};
 	    } else {
-		warn "Warning: VDS_HOME does not point to a(n accessible) directory!\n";
+		warn "Warning: PEGASUS_HOME does not point to a(n accessible) directory!\n";
 	    }
 	} elsif ( exists $ENV{'VDT_LOCATION'} ) {
-	    my $tmp = File::Spec->catdir( $ENV{'VDT_LOCATION'}, 'vds' );
+	    my $tmp = File::Spec->catdir( $ENV{'VDT_LOCATION'}, 'pegasus' );
 	    if ( -d $tmp ) {
-		$vdshome = $config{'vds.home'} = $tmp;
+		$pegasushome = $config{'pegasus.home'} = $tmp;
 	    } else {
 		warn "Warning: $tmp does not point to a(n accessible) directory!\n";
 	    }
 	} else {
-	    croak "Warning: Your environment variable VDS_HOME is not set!\n";
+	    croak "Warning: Your environment variable PEGASUS_HOME is not set!\n";
 	}
 
 	# system properties go first
-	if ( exists $system{'vds.properties'} ) {
+	if ( exists $system{'pegasus.properties'} ) {
 	    # overwrite for system property location from CLI property
-	    my $sys = $system{'vds.properties'};
+	    my $sys = $system{'pegasus.properties'};
 	    if ( -r $sys ) {
 		%config = ( %config, parse_properties($sys) );
 	    } else {
 		$flag++;
 	    }
-	} elsif ( exists $config{'vds.properties'} ) {
+	} elsif ( exists $config{'pegasus.properties'} ) {
 	    # overwrite for system property location from c'tor property
-	    my $sys = $config{'vds.properties'};
+	    my $sys = $config{'pegasus.properties'};
 	    if ( -r $sys ) {
 		%config = ( %config, parse_properties($sys) );
 	    } else {
 		$flag++;
 	    }
-	} elsif ( defined $vdshome ) {
+	} elsif ( defined $pegasushome ) {
 	    # default system property location
-	    my $sys = File::Spec->catfile( $vdshome, 'etc', 'properties' );
+	    my $sys = File::Spec->catfile( $pegasushome, 'etc', 'properties' );
 	    if ( -r $sys ) {
 		%config = ( %config, parse_properties($sys) );
 	    } else {
@@ -213,7 +213,7 @@ sub new {
 #	$flag++;
     }
 
-    # load wfrc user properties before vds user properties
+    # load wfrc user properties before pegasus user properties
     if ( ($flags & PARSE_WFRC) ) {
 	if ( exists $system{'wf.properties'} ) {
 	    # overwrite for wfrc property location from CLI property
@@ -249,17 +249,17 @@ sub new {
 
     # user properties go last
     if ( ($flags & PARSE_GVDS) ) {
-	if ( exists $system{'vds.user.properties'} ) {
+	if ( exists $system{'pegasus.user.properties'} ) {
 	    # overwrite for user property location from CLI property
-	    my $usr = $system{'vds.user.properties'};
+	    my $usr = $system{'pegasus.user.properties'};
 	    if ( -r $usr ) {
 		%config = ( %config, parse_properties($usr) );
 	    } else {
 		$flag++;
 	    }
-	} elsif ( exists $config{'vds.user.properties'} ) {
+	} elsif ( exists $config{'pegasus.user.properties'} ) {
 	    # overwrite for user property location from lower property
-	    my $usr = $config{'vds.user.properties'};
+	    my $usr = $config{'pegasus.user.properties'};
 	    if ( -r $usr ) {
 		%config = ( %config, parse_properties($usr) );
 	    } else {
@@ -268,7 +268,7 @@ sub new {
 	} elsif ( exists $ENV{'HOME'} ) {
 	    # default user property locations
 	    my $usr1 = File::Spec->catfile( $ENV{HOME}, '.chimerarc' );
-	    my $usr2 = File::Spec->catfile( $ENV{HOME}, '.vdsrc' );
+	    my $usr2 = File::Spec->catfile( $ENV{HOME}, '.pegasusrc' );
 	    if ( -r $usr2 ) {
 		# prefer new property definition
 		%config = ( %config, parse_properties($usr2) );
@@ -358,15 +358,15 @@ sub jdbc2perl {
     #          dbuser => database account username
     #          dbpass => database account password
     #
-    # vds.db.(*|$cat).driver	(Postgres|MySQL)
-    # vds.db.(*|$cat).driver.url	jdbc:jdbtype:[//dbhost[:dbport]/]dbname
-    # vds.db.(*|$cat).driver.user	dbuser
-    # vds.db.(*|$cat).driver.password	dbpass
+    # pegasus.db.(*|$cat).driver	(Postgres|MySQL)
+    # pegasus.db.(*|$cat).driver.url	jdbc:jdbtype:[//dbhost[:dbport]/]dbname
+    # pegasus.db.(*|$cat).driver.user	dbuser
+    # pegasus.db.(*|$cat).driver.password	dbpass
     my $self = shift;
     my $cat = shift || croak "need a catalog name, e.g. 'tc' or 'wf'";
 
-    my %x = ( $self->propertyset( "vds.db.*.", 1 ),
-	      $self->propertyset( "vds.db.$cat.", 1 ) );
+    my %x = ( $self->propertyset( "pegasus.db.*.", 1 ),
+	      $self->propertyset( "pegasus.db.$cat.", 1 ) );
 
     # turn JDBC to DBI uri
     my $dbuser = $x{'driver.user'};
@@ -462,12 +462,12 @@ Work::Properties - parsing of Java property files from Perl.
     $p = Work::Properties->new( $pflags, { 'weak' => 'property' } );
     $p->dump('-'); # dump all known properties on stdout
 
-    something() if $p->property('vds.db');
-    $p->property('vds.tc.file') = "/some/where";
+    something() if $p->property('pegasus.db');
+    $p->property('pegasus.tc.file') = "/some/where";
 
-    foreach my $key ( $p->keyset('^vds\.rc') ) { ... }
+    foreach my $key ( $p->keyset('^pegasus\.rc') ) { ... }
 
-    %x = $p->propertyset('vds.rc.');
+    %x = $p->propertyset('pegasus.rc.');
 
 =head1 DESCRIPTION
 
@@ -534,10 +534,10 @@ replaced by an empty string.
 The constructor takes an optional hash reference to an arbitrary list of
 weak properties (of least priority) for debugging purposes. When
 constructing an instance variable, the constructor will parse the
-contents of the file pointed to by I<vds.properties> (defaults to
-F<$VDS_HOME/etc/properties>), I<wf.properties> (defaults to
-F<$HOME/.wfrc>), and I<vds.user.properties> which either defaults to
-F<$HOME/.vdsrc> or to F<$HOME/.chimerarc>. If both exist, F<.vdsrc> is
+contents of the file pointed to by I<pegasus.properties> (defaults to
+F<$PEGASUS_HOME/etc/properties>), I<wf.properties> (defaults to
+F<$HOME/.wfrc>), and I<pegasus.user.properties> which either defaults to
+F<$HOME/.pegasusrc> or to F<$HOME/.chimerarc>. If both exist, F<.pegasusrc> is
 preferred and F<.chimerarc> ignored.
 
 The commandline properties are added last, giving them the highest
@@ -577,12 +577,12 @@ prefixes by anchoring the expression with an initial roof (C<^>)
 character, and that you must backslash-escape the period character that
 is literal part of most properties.
 
-    foreach my $key ( $p->keyset('^vds\.db\.') ) {
+    foreach my $key ( $p->keyset('^pegasus\.db\.') ) {
 	xxx( $p->property($key) );
     }
 
 The above code snippet will only find properties matching the prefix of
-C<vds.db.>, but not C<vds.db> itself.
+C<pegasus.db.>, but not C<pegasus.db> itself.
 
 If invoked without argument, this method will return all keys. 
 
@@ -597,14 +597,14 @@ string prefix matching.
 If the optional argument $truncate is specified and true, the prefix
 string will be removed from the keys in the result set. 
 
-    %x = $p->propertyset('vds.db.');
+    %x = $p->propertyset('pegasus.db.');
     foreach my $key ( sort keys %x ) {
 	xxx( $x{$key} );
     }
 
 =item jdbc2perl( $catalog )
 
-This very special property parses the vds.db property database driver
+This very special property parses the pegasus.db property database driver
 section. The only permitted argument is the (lower case) catalog name.
 The method will determine the necessary Perl connection string from 
 the JDBC connection information. 
