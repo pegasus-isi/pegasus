@@ -31,7 +31,7 @@ sub glibc_version() {
 my ($sysname,$nodename,$release,$version,$machine) = map { lc } POSIX::uname();
 my ($major,$minor) = split /\./, $release;
 my $result = $sysname;
-$machine='amd64' if $machine eq 'x86_64';
+#$machine='amd64' if $machine eq 'x86_64';
 if ( $sysname eq 'linux' ) {
     $result .= '-' . $machine;
     # must check glibc, too!
