@@ -54,18 +54,18 @@ public class ADAG extends DAX implements Cloneable
    * The "official" namespace URI of the DAX schema.
    */
   public static final String SCHEMA_NAMESPACE =
-    "http://www.griphyn.org/chimera/DAX";
+    "http://pegasus.isi.edu/schema/DAX";
 
   /**
    * The "not-so-official" location URL of the DAX schema definition.
    */
   public static final String SCHEMA_LOCATION =
-    "http://www.griphyn.org/chimera/dax-1.10.xsd";
+    "http://pegasus.isi.edu/schema/dax-2.0.xsd";
 
   /**
    * The version to report.
    */
-  public static final String SCHEMA_VERSION = "1.10";
+  public static final String SCHEMA_VERSION = "2.2";
 
   /**
    * list of all filenames in terms of Filename
