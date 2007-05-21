@@ -759,7 +759,7 @@ public class PegasusProperties {
     * @see #mDefaultPoolFile
     */
    public String getPoolFile() {
-       return mProps.getProperty( "pegasus.catalog.site",
+       return mProps.getProperty( "pegasus.catalog.site.file",
                                   mDefaultPoolFile );
    }
 
