@@ -8,12 +8,19 @@ HTML	= -Thtml
 # use /usr/ucb/install on Solaris
 INSTALL	= install
 
-SRC	= d2d.1 deletevdc.1 exitcode.1 gencdag.1 gendax.1 \
-	genmdag.1 genpoolconfig.1 insertvdc.1 rls-client.1 \
-	searchvdc.1 show-properties.1 shplanner.1 shrc.1 \
-	tc-client.1 test-version.1 updatevdc.1 vdlc.1 \
-	vdlt2vdlx.1 vdlx2vdlt.1 vds-check-sites.1 vds-get-sites.1 \
-	vds-plan.1 vds-submit-dag.1 vds-verify.1 vds-version.1
+SRC	= exitcode.1 \
+	gencdag.1 \
+	sc-client.1 \
+	rc-client.1 \
+	show-properties.1 \
+	tc-client.1 \
+	test-version.1 \
+	pegasus-check-sites.1 \
+	pegasus-get-sites.1 \
+	pegasus-plan.1 \
+	pegasus-submit-dag.1 \
+	pegasus-verify.1 \
+	pegasus-version.1
 
 OUTPS	= $(SRC:.1=.ps)
 OUTPDF	= $(SRC:.1=.pdf)
