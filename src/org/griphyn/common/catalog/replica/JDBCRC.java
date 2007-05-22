@@ -20,6 +20,8 @@ import java.sql.*;
 import org.griphyn.common.catalog.Catalog;
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
+import org.griphyn.common.util.VDSProperties;
+import org.griphyn.cPlanner.common.LogManager;
 
 /**
  * This class implements a replica catalog on top of a simple table in a
@@ -108,17 +110,23 @@ public class JDBCRC implements ReplicaCatalog
    * Maintains the connection to the database over the lifetime of
    * this instance.
    */
-  protected Connection m_connection = null;
+  protected Connection mConnection = null;
 
   /**
    * Maintains an essential set of prepared statement, ready to use.
    */
-  protected PreparedStatement m_statements[] = null;
+  protected PreparedStatement mStatements[] = null;
+
+  /**
+     * The handle to the logging object.
+     */
+    protected LogManager mLogger;
+
 
   /**
    * The statement to prepare to slurp attributes.
    */
-  private static final String c_statements[] =
+  private static final String mCStatements[] =
   { // 0:
     "SELECT name,value FROM rc_attr WHERE id=?",
     // 1:
@@ -190,6 +198,7 @@ public class JDBCRC implements ReplicaCatalog
     throws LinkageError, ExceptionInInitializerError, ClassNotFoundException,
 	   SQLException
   {
+      this();
     // load database driver jar
     Class.forName( jdbc );
     // may throw LinkageError,
@@ -211,8 +220,9 @@ public class JDBCRC implements ReplicaCatalog
   public JDBCRC()
   {
     // make connection defunc
-    m_connection = null;
-    m_statements = null;
+    mConnection = null;
+    mStatements = null;
+    mLogger = LogManager.getInstance();
   }
 
   /**
@@ -237,14 +247,14 @@ public class JDBCRC implements ReplicaCatalog
     throws SQLException
   {
     // establish connection to database generically
-    m_connection = DriverManager.getConnection( url, username, password );
+    mConnection = DriverManager.getConnection( url, username, password );
 
     // may throws SQLException
-    m_autoinc = m_connection.getMetaData().supportsGetGeneratedKeys();
+    m_autoinc = mConnection.getMetaData().supportsGetGeneratedKeys();
 
     // prepared statements are Singletons -- prepared on demand
-    m_statements = new PreparedStatement[ c_statements.length ];
-    for ( int i=0; i < c_statements.length; ++i ) m_statements[i] = null;
+    mStatements = new PreparedStatement[ mCStatements.length ];
+    for ( int i=0; i < mCStatements.length; ++i ) mStatements[i] = null;
   }
 
   /**
@@ -264,36 +274,55 @@ public class JDBCRC implements ReplicaCatalog
    *
    * @throws Error subclasses for runtime errors in the class loader.
    */
-  public boolean connect( Properties props )
-  {
-    boolean result = false;
-    Properties localProps = (Properties) props.clone();
+  public boolean connect( Properties props ){
 
-    String url = (String) localProps.remove("url");
-    if ( url == null || url.length() == 0 ) return result;
+      boolean result = false;
+        // class loader: Will propagate any runtime errors!!!
+        String driver = (String) props.remove("db.driver");
 
-    // class loader: Will propagate any runtime errors!!!
-    String driver = (String) localProps.remove("driver");
-    try {
-      if ( driver != null ) Class.forName(driver);
-    } catch ( Exception e ) {
-      return result;
-    }
+        Properties localProps = VDSProperties.matchingSubset( (Properties)props.clone(), "db.driver", false );
 
-    try {
-      m_connection = DriverManager.getConnection( url, localProps );
-      m_autoinc = m_connection.getMetaData().supportsGetGeneratedKeys();
+        String url = (String) localProps.remove("url");
+        if (url == null || url.length() == 0) {
+            return result;
+        }
 
-      // prepared statements are Singletons -- prepared on demand
-      m_statements = new PreparedStatement[ c_statements.length ];
-      for ( int i=0; i < c_statements.length; ++i ) m_statements[i] = null;
 
-      result = true;
-    } catch ( SQLException e ) {
-      result = false;
-    }
+        try {
+            if (driver != null) {
+                //only support mysql and postgres for time being
+                if( driver.equalsIgnoreCase( "MySQL") ){
+                    driver = "com.mysql.jdbc.Driver";
+                }
+                else if ( driver.equalsIgnoreCase( "Postgres" )){
+                    driver = "org.postgresql.Driver";
+                }
+                Class.forName(driver);
+            }
+        }
+        catch (Exception e) {
+            mLogger.log( "While connecting to JDBCRC Replica Catalog", e, LogManager.DEBUG_MESSAGE_LEVEL );
+            return result;
+        }
 
-    return result;
+        try {
+            mConnection = DriverManager.getConnection( url, localProps );
+            m_autoinc = mConnection.getMetaData().supportsGetGeneratedKeys();
+
+            // prepared statements are Singletons -- prepared on demand
+            mStatements = new PreparedStatement[mCStatements.length];
+            for (int i = 0; i < mCStatements.length; ++i) {
+                mStatements[i] = null;
+            }
+
+            result = true;
+        }
+        catch (SQLException e) {
+            mLogger.log( "While connecting to JDBCRC Replica Catalog", e , LogManager.DEBUG_MESSAGE_LEVEL );
+            result = false;
+        }
+
+        return result;
   }
 
   /**
@@ -302,36 +331,36 @@ public class JDBCRC implements ReplicaCatalog
   public void close()
   {
 
-    if ( m_connection != null ) {
+    if ( mConnection != null ) {
       try {
-	if ( ! m_connection.getAutoCommit() ) m_connection.commit();
+	if ( ! mConnection.getAutoCommit() ) mConnection.commit();
       } catch ( SQLException e ) {
 	// ignore
       }
     }
 
-    if ( m_statements != null ) {
+    if ( mStatements != null ) {
       try {
-	for ( int i=0; i < c_statements.length; ++i ) {
-	  if ( m_statements[i] != null ) {
-	    m_statements[i].close();
-	    m_statements[i] = null;
+	for ( int i=0; i < mCStatements.length; ++i ) {
+	  if ( mStatements[i] != null ) {
+	    mStatements[i].close();
+	    mStatements[i] = null;
 	  }
 	}
       } catch ( SQLException e ) {
 	// ignore
       } finally {
-	m_statements = null;
+	mStatements = null;
       }
     }
 
-    if ( m_connection != null ) {
+    if ( mConnection != null ) {
       try {
-	m_connection.close();
+	mConnection.close();
       } catch ( SQLException e ) {
 	// ignore
       } finally {
-	m_connection = null;
+	mConnection = null;
       }
     }
   }
@@ -346,7 +375,7 @@ public class JDBCRC implements ReplicaCatalog
    */
   public boolean isClosed()
   {
-    return ( m_connection == null );
+    return ( mConnection == null );
   }
 
   /**
@@ -381,12 +410,12 @@ public class JDBCRC implements ReplicaCatalog
   protected PreparedStatement getStatement( int i )
     throws SQLException
   {
-    if ( m_statements[i] == null )
-      m_statements[i] = m_connection.prepareStatement( c_statements[i] );
+    if ( mStatements[i] == null )
+      mStatements[i] = mConnection.prepareStatement( mCStatements[i] );
     else
-      m_statements[i].clearParameters();
+      mStatements[i].clearParameters();
 
-    return m_statements[i];
+    return mStatements[i];
   }
 
   /**
@@ -402,11 +431,11 @@ public class JDBCRC implements ReplicaCatalog
   {
     String result = null;
     int which = ( handle == null ? 3 : 2 );
-    String query = c_statements[which];
+    String query = mCStatements[which];
 
     // sanity check
     if ( lfn == null ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       PreparedStatement ps = getStatement(which);
@@ -470,11 +499,11 @@ public class JDBCRC implements ReplicaCatalog
   public Collection lookup( String lfn )
   {
     List result = new ArrayList();
-    String query = c_statements[1];
+    String query = mCStatements[1];
 
     // sanity check
     if ( lfn == null ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // start to ask
     try {
@@ -508,11 +537,11 @@ public class JDBCRC implements ReplicaCatalog
   public Set lookupNoAttributes( String lfn )
   {
     Set result = new TreeSet();
-    String query = c_statements[1];
+    String query = mCStatements[1];
 
     // sanity check
     if ( lfn == null ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // start to ask
     try {
@@ -545,11 +574,11 @@ public class JDBCRC implements ReplicaCatalog
   public Map lookup( Set lfns )
   {
     Map result = new HashMap();
-    String query = c_statements[1];
+    String query = mCStatements[1];
 
     // sanity check
     if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       ResultSet rs = null;
@@ -587,11 +616,11 @@ public class JDBCRC implements ReplicaCatalog
   public Map lookupNoAttributes( Set lfns )
   {
     Map result = new HashMap();
-    String query = c_statements[1];
+    String query = mCStatements[1];
 
     // sanity check
     if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       ResultSet rs = null;
@@ -629,11 +658,11 @@ public class JDBCRC implements ReplicaCatalog
   {
     Map result = new HashMap();
     int which = ( handle == null ? 3 : 2 );
-    String query = c_statements[which];
+    String query = mCStatements[which];
 
     // sanity check
     if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       ResultSet rs = null;
@@ -676,11 +705,11 @@ public class JDBCRC implements ReplicaCatalog
   {
     Map result = new HashMap();
     int which = ( handle == null ? 3 : 2 );
-    String query = c_statements[which];
+    String query = mCStatements[which];
 
     // sanity check
     if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       ResultSet rs = null;
@@ -747,7 +776,7 @@ public class JDBCRC implements ReplicaCatalog
     Map result = new TreeMap();
 
     // more sanity
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // prepare statement
     boolean flag = false;
@@ -779,7 +808,7 @@ public class JDBCRC implements ReplicaCatalog
     ReplicaCatalogEntry pair = null;
     String query = q.toString();
     try {
-      Statement st = m_connection.createStatement();
+      Statement st = mConnection.createStatement();
       ResultSet rs = st.executeQuery(query);
       while ( rs.next() ) {
 	lfn = rs.getString("lfn");
@@ -828,7 +857,7 @@ public class JDBCRC implements ReplicaCatalog
     Set result = new TreeSet();
 
     // more sanity
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // prepare statement
     // FIXME: work with pre-prepared statements
@@ -838,7 +867,7 @@ public class JDBCRC implements ReplicaCatalog
 
     // start to ask
     try {
-      Statement st = m_connection.createStatement();
+      Statement st = mConnection.createStatement();
       ResultSet rs = st.executeQuery(query);
       while ( rs.next() ) {
 	result.add( rs.getString(0) );
@@ -874,12 +903,12 @@ public class JDBCRC implements ReplicaCatalog
 
     // sanity checks
     if ( lfn == null || tuple == null ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       // delete-before-insert as one transaction
-      if ( (autoCommitWasOn = m_connection.getAutoCommit()) )
-	m_connection.setAutoCommit(false);
+      if ( (autoCommitWasOn = mConnection.getAutoCommit()) )
+	mConnection.setAutoCommit(false);
       state++; // state == 1
 
       // // delete before insert...
@@ -895,7 +924,7 @@ public class JDBCRC implements ReplicaCatalog
 	// use sequences, no auto-generated keys possible
 	//
 	query = "SELECT nextval('rc_lfn_id')";
-	st = m_connection.createStatement();
+	st = mConnection.createStatement();
 	rs = st.executeQuery(query);
         if ( rs.next() ) id = rs.getString(1);
 	else throw new SQLException( "Unable to access sequence generator" );
@@ -908,7 +937,7 @@ public class JDBCRC implements ReplicaCatalog
 	m.append(quote(lfn)).append("','");
 	m.append(quote(tuple.getPFN())).append("')");
 	query = m.toString();
-	st = m_connection.createStatement();
+	st = mConnection.createStatement();
 	result = st.executeUpdate(query); // ,Statement.RETURN_GENERATED_KEYS);
 	st.close();
 	state++; // state == 4
@@ -920,7 +949,7 @@ public class JDBCRC implements ReplicaCatalog
 	m.append(quote(lfn)).append("','");
 	m.append(quote(tuple.getPFN())).append("')");
 	query = m.toString();
-	st = m_connection.createStatement();
+	st = mConnection.createStatement();
 	result = st.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
 	state++; // state == 3
 
@@ -932,7 +961,7 @@ public class JDBCRC implements ReplicaCatalog
 	state++; // state == 4
       }
 
-      query = c_statements[4];
+      query = mCStatements[4];
       PreparedStatement ps = getStatement(4);
 //      ps.setString( 1, id ); // GRRR, Pg8!!!
       ps.setLong( 1, Long.parseLong(id) );
@@ -949,10 +978,10 @@ public class JDBCRC implements ReplicaCatalog
       }
       state++; // state == 5
 
-      m_connection.commit();
+      mConnection.commit();
     } catch ( SQLException e ) {
       try {
-	if ( state > 0 && state < 4 ) m_connection.rollback();
+	if ( state > 0 && state < 4 ) mConnection.rollback();
       } catch ( SQLException e2 ) {
 	// ignore rollback problems
       }
@@ -963,7 +992,7 @@ public class JDBCRC implements ReplicaCatalog
     } finally {
       // restore original auto-commit state
       try {
-	if ( autoCommitWasOn ) m_connection.setAutoCommit(true);
+	if ( autoCommitWasOn ) mConnection.setAutoCommit(true);
       } catch ( SQLException e ) {
 	// ignore
       }
@@ -1007,7 +1036,7 @@ public class JDBCRC implements ReplicaCatalog
 
     // sanity checks
     if ( x == null || x.size() == 0 ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // FIXME: Create a true bulk mode. This is inefficient, but will
     // get the job done (for now).
@@ -1065,7 +1094,7 @@ public class JDBCRC implements ReplicaCatalog
 
     // sanity checks
     if ( lfn == null || pfn == null ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // prepare statement
     // FIXME: work with pre-prepared statements
@@ -1076,7 +1105,7 @@ public class JDBCRC implements ReplicaCatalog
     String query = m.toString();
 
     try {
-      Statement st = m_connection.createStatement();
+      Statement st = mConnection.createStatement();
       st.execute(query);
       result = st.getUpdateCount();
       st.close();
@@ -1107,7 +1136,7 @@ public class JDBCRC implements ReplicaCatalog
 
     // sanity checks
     if ( lfn == null || tuple == null ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       StringBuffer m = new StringBuffer(256);
@@ -1127,11 +1156,11 @@ public class JDBCRC implements ReplicaCatalog
       m.append("' AND pfn='" ).append(quote(tuple.getPFN()));
       m.append("' AND id=?");
 
-      Statement st = m_connection.createStatement();
+      Statement st = mConnection.createStatement();
       ResultSet rs = st.executeQuery(query);
 
       query = m.toString();
-      PreparedStatement ps = m_connection.prepareStatement(query);
+      PreparedStatement ps = mConnection.prepareStatement(query);
       while ( rs.next() ) {
 	ps.setString( 1, rs.getString(1) );
 	result += ps.executeUpdate();
@@ -1164,11 +1193,11 @@ public class JDBCRC implements ReplicaCatalog
   {
     int result = 0;
     int which = value == null ? 9 : 8;
-    String query = c_statements[which];
+    String query = mCStatements[which];
 
     // sanity checks
     if ( lfn == null || name == null ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       PreparedStatement ps = getStatement(which);
@@ -1211,11 +1240,11 @@ public class JDBCRC implements ReplicaCatalog
   public int remove( String lfn )
   {
     int result = 0;
-    String query = c_statements[5];
+    String query = mCStatements[5];
 
     // sanity checks
     if ( lfn == null ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       PreparedStatement ps = getStatement(5);
@@ -1239,11 +1268,11 @@ public class JDBCRC implements ReplicaCatalog
   public int remove( Set lfns )
   {
     int result = 0;
-    String query = c_statements[5];
+    String query = mCStatements[5];
 
     // sanity checks
     if ( lfns == null || lfns.size() == 0 ) return result;
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       PreparedStatement ps = getStatement(5);
@@ -1272,10 +1301,10 @@ public class JDBCRC implements ReplicaCatalog
   {
     int result = 0;
     int which = value == null ? 7 : 6;
-    String query = c_statements[which];
+    String query = mCStatements[which];
 
     // sanity checks
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     try {
       PreparedStatement ps = getStatement(which);
@@ -1317,12 +1346,12 @@ public class JDBCRC implements ReplicaCatalog
     int result = 0;
 
     // sanity checks
-    if ( m_connection == null ) throw new RuntimeException( c_error );
+    if ( mConnection == null ) throw new RuntimeException( c_error );
 
     // prepare statement
     String query = "DELETE FROM lfn_rc";
     try {
-      Statement st = m_connection.createStatement();
+      Statement st = mConnection.createStatement();
       st.execute(query);
       result = st.getUpdateCount();
       st.close();

@@ -45,6 +45,12 @@ public interface ReplicaCatalog extends Catalog
   public static final String c_prefix = "pegasus.catalog.replica";
 
   /**
+    * The  DB Driver properties prefix.
+    */
+   public static final String DBDRIVER_PREFIX = "pegasus.catalog.replica.db.driver";
+
+
+  /**
    * The suffix for the property that if set, specifies the size of the chunk
    * in which the implementations handle multiple queries. The property that
    * needs to be specified is vds.rc.chunk.size.

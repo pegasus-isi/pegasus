@@ -298,9 +298,7 @@ public class Database
         boolean result = false;
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
-
         Properties localProps = VDSProperties.matchingSubset( (Properties)props.clone(), "db.driver", false );
-        System.out.println( "The properties passed are " + localProps );
 
         String url = (String) localProps.remove("url");
         if (url == null || url.length() == 0) {
@@ -317,6 +315,10 @@ public class Database
                 else if ( driver.equalsIgnoreCase( "Postgres" )){
                     driver = "org.postgresql.Driver";
                 }
+
+                mLogger.log( "Driver being used to connect to Work Catalog is " + driver,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+
                 Class.forName(driver);
             }
         }

@@ -23,6 +23,7 @@ import org.griphyn.common.util.*;
 import org.griphyn.common.catalog.*;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
+import java.util.Enumeration;
 
 /**
  * This factory loads a replica catalog, as specified by the properties.
@@ -104,12 +105,40 @@ public class ReplicaFactory{
              IllegalAccessException, InvocationTargetException
     {
         // sanity check
+
         if ( props == null ) throw new NullPointerException("invalid properties");
 
-        // determine the class that implements the replica catalog
+
+        Properties connect = props.matchingSubset( ReplicaCatalog.c_prefix, false );
+
+        //get the default db driver properties in first pegasus.catalog.*.db.driver.*
+        Properties db = props.matchingSubset( ReplicaCatalog.DBDRIVER_ALL_PREFIX, false );
+        //now overload with the work catalog specific db properties.
+        //pegasus.catalog.work.db.driver.*
+        db.putAll( props.matchingSubset( ReplicaCatalog.DBDRIVER_PREFIX , false ) );
+
+
+        //to make sure that no confusion happens.
+        //add the db prefix to all the db properties
+        for( Enumeration e = db.propertyNames(); e.hasMoreElements(); ){
+            String key = (String)e.nextElement();
+            connect.put( "db.driver." + key, db.getProperty( key ));
+        }
+
+        //put the driver property back into the DB property
+        String driver = props.getProperty( ReplicaCatalog.DBDRIVER_PREFIX );
+        if( driver == null ){ driver = props.getProperty( ReplicaCatalog.DBDRIVER_ALL_PREFIX ); }
+        connect.put( "db.driver", driver );
+
+
+
+        // determine the class that implements the work catalog
         return loadInstance( props.getProperty( ReplicaCatalog.c_prefix ),
-                             props.matchingSubset( ReplicaCatalog.c_prefix, false )
-                             );
+                             connect );
+
+
+
+
     }
 
 
