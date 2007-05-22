@@ -276,7 +276,7 @@ public class ReplicaCatalogBridge
 
             //exit if there is no cache overloading specified.
             if ( options.getCacheFiles().isEmpty() ) {
-                throw new RuntimeException( msg );
+                throw new RuntimeException( msg , ex );
             }
         }
 
