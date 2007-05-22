@@ -25,15 +25,22 @@ import java.util.Properties;
  * @author Yong Zhao
  * @version $Revision$
  */
-public interface Catalog
-{
+public interface Catalog{
+
+
+    /**
+     * The default DB Driver properties prefix.
+     */
+    public static final String DBDRIVER_ALL_PREFIX = "pegasus.catalog.*.db.driver";
+
+
   /**
    * Establishes a link between the implementation and the thing the
    * implementation is build upon. <p>
-   * FIXME: The cause for failure is lost without exceptions. 
+   * FIXME: The cause for failure is lost without exceptions.
    *
-   * @param props contains all necessary data to establish the link. 
-   * @return true if connected now, or false to indicate a failure. 
+   * @param props contains all necessary data to establish the link.
+   * @return true if connected now, or false to indicate a failure.
    */
   public boolean connect( Properties props );
 
