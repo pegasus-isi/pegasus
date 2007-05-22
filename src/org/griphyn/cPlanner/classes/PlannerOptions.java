@@ -150,6 +150,11 @@ public class PlannerOptions extends Data implements Cloneable{
     private boolean mMonitor;
 
     /**
+     * The VOGroup to which the user belongs to.
+     */
+    private String mVOGroup;
+
+    /**
      * Default Constructor.
      */
     public PlannerOptions(){
@@ -173,6 +178,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mBasenamePrefix   = null;
         mMonitor          = false;
         mCleanup          = true;
+        mVOGroup          = "pegasus";
     }
 
     /**
@@ -350,6 +356,15 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public List getVDSProperties(){
         return mVDSProps;
+    }
+
+    /**
+     * Returns the VO Group to which the user belongs
+     *
+     * @return VOGroup
+     */
+    public String getVOGroup( ){
+        return mVOGroup;
     }
 
     /**
@@ -619,6 +634,17 @@ public class PlannerOptions extends Data implements Cloneable{
         mVDSProps = properties;
     }
 
+
+    /**
+     * Set the VO Group to which the user belongs
+     *
+     * @param group  the VOGroup
+     */
+    public void setVOGroup( String group ){
+        mVOGroup = group;
+    }
+
+
     /**
      * Returns the textual description of all the options that were set for
      * the planner.
@@ -645,6 +671,7 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Authenticate         " + mAuthenticate +
                     "\n Clustering Technique " + mClusterer +
                     "\n Monitor Workflow     " + mMonitor +
+                    "\n VO Group             " + mVOGroup +
                     "\n VDS Properties       " + mVDSProps;
         return st;
     }
@@ -666,7 +693,7 @@ public class PlannerOptions extends Data implements Cloneable{
         if(mBasenamePrefix != null){ sb.append(" --basename ").append(mBasenamePrefix);}
 
         if(!mvExecPools.isEmpty()){
-            sb.append(" --pools ");
+            sb.append(" --sites ");
             //generate the comma separated string
             //for the execution pools
             sb.append(setToString(mvExecPools,","));
@@ -684,7 +711,7 @@ public class PlannerOptions extends Data implements Cloneable{
         if(mOutputPool != null){ sb.append(" --output ").append(mOutputPool);}
 
         //the condor submit option
-        if(mSubmit){ sb.append(" --submit "); }
+        if(mSubmit){ sb.append(" --run "); }
 
         //the force option
         if(mForce){ sb.append(" --force "); }
@@ -721,6 +748,9 @@ public class PlannerOptions extends Data implements Cloneable{
         //specify the megadag option if set
         if(mMegadag != null){ sb.append(" --megadag ").append(mMegadag);}
 
+        //specify the vogroup
+        sb.append(" --group ").append( mVOGroup );
+
         //help option
         if(mDisplayHelp){  sb.append(" --help ");}
 
@@ -752,6 +782,8 @@ public class PlannerOptions extends Data implements Cloneable{
 
     /**
      * Clones a Set.
+     *
+     * @param s Set
      *
      * @return  the cloned set as a HashSet
      */
@@ -803,6 +835,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mAuthenticate   = this.mAuthenticate;
         pOpt.mClusterer      = this.mClusterer;
         pOpt.mBasenamePrefix = this.mBasenamePrefix;
+        pOpt.mVOGroup        = this.mVOGroup;
         //Note not cloning the vdsProps
         pOpt.mVDSProps       = null;
         return pOpt;

@@ -385,7 +385,7 @@ public class CPlanner extends Executable{
                 mLogger.log( "Ignoring: " + convertException( e ),  LogManager.DEBUG_MESSAGE_LEVEL );
             }
             if ( wc != null ) {
-                wc.insert( submitDir, "ligo", finalDag.getLabel(),
+                wc.insert( submitDir, mPOptions.getVOGroup(), finalDag.getLabel(),
                            new File( relativeDir ).getName(),
                            mUser,
                            Currently.parse( finalDag.getMTime() ),
@@ -416,8 +416,8 @@ public class CPlanner extends Executable{
     public PlannerOptions parseCommandLineArguments(String[] args){
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("gencdag",args,
-                              "vhfsnVr::aD:d:p:o:P:c:C:b:",
+        Getopt g = new Getopt("pegasus-plan",args,
+                              "vhfRnVr::aD:d:s:o:P:c:C:b:g:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -460,6 +460,10 @@ public class CPlanner extends Executable{
                     options.setForce(true);
                     break;
 
+                case 'g': //group
+                    options.setVOGroup( g.getOptarg() );
+                    break;
+
                 case 'h'://help
                     options.setHelp(true);
                     break;
@@ -476,9 +480,6 @@ public class CPlanner extends Executable{
                     options.setOutputSite(g.getOptarg());
                     break;
 
-                case 'p'://pools
-                    options.setExecutionSites( g.getOptarg() );
-                    break;
 
                 case 'P'://pdax file
                     options.setPDAX(g.getOptarg());
@@ -488,9 +489,14 @@ public class CPlanner extends Executable{
                     options.setRandomDir(g.getOptarg());
                     break;
 
-                case 's'://submit option
-                    options.setSubmitToScheduler( true);
+//                case 'R'://submit option
+//                    options.setSubmitToScheduler( true);
+//                    break;
+
+                case 's'://sites
+                    options.setExecutionSites( g.getOptarg() );
                     break;
+
 
                 case 'v'://verbose
                     options.incrementLogging();
@@ -553,16 +559,16 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[18];
+        LongOpt[] longopts = new LongOpt[19];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
-        longopts[2]   = new LongOpt( "pools", LongOpt.REQUIRED_ARGUMENT, null, 'p' );
+        longopts[2]   = new LongOpt( "sites", LongOpt.REQUIRED_ARGUMENT, null, 's' );
         longopts[3]   = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
         longopts[4]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[5]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[6]   = new LongOpt( "force", LongOpt.NO_ARGUMENT, null, 'f' );
-        longopts[7]   = new LongOpt( "submit", LongOpt.NO_ARGUMENT, null, 's' );
+        longopts[7]   = new LongOpt( "run", LongOpt.NO_ARGUMENT, null, 'R' );
         longopts[8]   = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[9]   = new LongOpt( "randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r' );
         longopts[10]  = new LongOpt( "authenticate", LongOpt.NO_ARGUMENT, null, 'a' );
@@ -576,6 +582,7 @@ public class CPlanner extends Executable{
         longopts[15]  = new LongOpt( "basename", LongOpt.REQUIRED_ARGUMENT, null, 'b' );
         longopts[16]  = new LongOpt( "monitor", LongOpt.NO_ARGUMENT, null , 1 );
         longopts[17]  = new LongOpt( "nocleanup", LongOpt.NO_ARGUMENT, null, 'n' );
+        longopts[18]  = new LongOpt( "group",   LongOpt.REQUIRED_ARGUMENT, null, 'g' );
         return longopts;
     }
 
@@ -587,10 +594,10 @@ public class CPlanner extends Executable{
         String text =
           "\n $Id$ " +
           "\n " + getGVDSVersion() +
-          "\n Usage : gencdag [-Dprop  [..]] -d|-P <dax file|pdax file> " +
-          " [-p site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
-          "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <dir  for o/p files>] [-o <output pool>] " +
-          "[-r[dir name]] [--monitor] [-n] [-s] [-v] [-V] [-h]";
+          "\n Usage : pegasus-plan [-Dprop  [..]] -d|-P <dax file|pdax file> " +
+          " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
+          "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <dir  for o/p files>] [-g <vogroup>] [-o <output site>] " +
+          "[-r[dir name]] [--monitor] [-n]  [-v] [-V] [-h]";
 
         System.out.println(text);
     }
@@ -604,11 +611,11 @@ public class CPlanner extends Executable{
         String text =
            "\n $Id$ " +
            "\n " + getGVDSVersion() +
-           "\n CPlanner/gencdag - The main class which is used to run  Pegasus. "  +
-           "\n Usage: gencdag [-Dprop  [..]] --dax|--pdax <file> [--pools <execution sites>] " +
+           "\n pegasus-plan - The main class which is used to run  Pegasus. "  +
+           "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " +
            "\n [--authenticate] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] " +
-           "\n [--dir <dir for o/p files>] [--force] [--megadag style] [--monitor] [--nocleanup] " +
-           "\n [--output output site] [--randomdir=[dir name]] [--submit][--verbose] [--version][--help] " +
+           "\n [--dir <dir for o/p files>] [--force] [--group vogroup] [--megadag style] [--monitor] [--nocleanup] " +
+           "\n [--output output site] [--randomdir=[dir name]] [--verbose] [--version][--help] " +
            "\n" +
            "\n Mandatory Options " +
            "\n -d |-P fn "+
@@ -623,14 +630,15 @@ public class CPlanner extends Executable{
            "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads." +
            "\n -D |--dir          the directory where to generate the concrete workflow." +
            "\n -f |--force        skip reduction of the workflow, resulting in build style dag." +
+           "\n -g |--group        the VO Group to which the user belongs " +
            "\n -m |--megadag      type of style to use while generating the megadag in deferred planning." +
            "\n -o |--output       the output site where the data products during workflow execution are transferred to." +
-           "\n -p |--pools        comma separated list of executions sites on which to map the workflow." +
+           "\n -p |--sites        comma separated list of executions sites on which to map the workflow." +
            "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed" +
            "\n                    can optionally specify the basename of the remote directories" +
            "\n     --monitor      monitor the execution of the workflow, using workflow monitor daemon like tailstatd." +
            "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the concrete workflow." +
-           "\n -s |--submit       submit the concrete workflow generated" +
+// "\n -R |--run          submit the concrete workflow generated" +
            "\n -v |--verbose      increases the verbosity of messages about what is going on" +
            "\n -V |--version      displays the version of the Griphyn Virtual Data System" +
            "\n -h |--help         generates this help." +
