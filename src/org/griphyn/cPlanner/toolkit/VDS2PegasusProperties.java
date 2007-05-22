@@ -93,9 +93,9 @@ public class VDS2PegasusProperties extends Executable {
                                      "(vds.transfer.rft.)([a-zA-Z_0-9]*[-]*)+",
                                      "(vds.transfer.crft.)([a-zA-Z_0-9]*[-]*)+",
                                      //"(vds.db.)([a-zA-Z_0-9]*[-]*)+(.)([a-zA-Z_0-9.]*[-]*)+"
-                                     "(vds.db.tc.driver)[.]*([a-zA-Z_0-9]*[-]*)+",
-                                     "(vds.db.ptc.driver)[.]*([a-zA-Z_0-9]*[-]*)+",
-                                     "(vds.db.*.driver)[.]*([a-zA-Z_0-9]*[-]*)+",
+                                     "(vds.db.tc.driver)[.]+([a-zA-Z_0-9]*[-]*)+",
+                                     "(vds.db.ptc.driver)[.]+([a-zA-Z_0-9]*[-]*)+",
+                                     "(vds.db.*.driver)[.]+([a-zA-Z_0-9]*[-]*)+",
                                      };
 
 
@@ -112,9 +112,9 @@ public class VDS2PegasusProperties extends Executable {
                                      { "vds.transfer.rft.", "pegasus.transfer.rft."},
                                      { "vds.transfer.crft.", "pegasus.transfer.crft."},
                                      //{ "vds.db.", "pegasus.db." }
-                                     { "vds.db.tc.driver", "pegasus.catalog.transformation.db.driver" },
-                                     { "vds.db.ptc.driver", "pegasus.catalog.provenance.db.driver" },
-                                     { "vds.db.*.driver", "pegasus.catalog.*.db.driver" },
+                                     { "vds.db.tc.driver.", "pegasus.catalog.transformation.db." },
+                                     { "vds.db.ptc.driver.", "pegasus.catalog.provenance.db." },
+                                     { "vds.db.*.driver.", "pegasus.catalog.*.db." },
                                  };
 
 
@@ -354,14 +354,18 @@ public class VDS2PegasusProperties extends Executable {
 //        associate( "vds.partitioner.horizontal.collapse.", "pegasus.partitioner.horizontal.collapse." );
 
 
+        //SOME DB DRIVER PROPERTIES
+        associate( "vds.db.*.driver", "pegasus.catalog.*.db.driver" );
+        associate( "vds.db.tc.driver", "pegasus.catalog.transformation.db.driver" );
+        associate( "vds.db.ptc.driver", "pegasus.catalog.provenance.db.driver" );
 
 
         //WORK DB PROPERTIES
-        associate( "work.db",             "pegasus.catalog.work.db.driver" );
-        associate( "work.db.hostname",    "pegasus.catalog.work.db.driver.hostname" );
-        associate( "work.db.database",    "pegasus.catalog.work.db.driver.database" );
-        associate( "work.db.user",        "pegasus.catalog.work.db.driver.user" );
-        associate( "work.db.password",    "pegasus.catalog.work.db.driver.password" );
+        associate( "work.db",             "pegasus.catalog.work.db" );
+        associate( "work.db.hostname",    "pegasus.catalog.work.db.hostname" );
+        associate( "work.db.database",    "pegasus.catalog.work.db.database" );
+        associate( "work.db.user",        "pegasus.catalog.work.db.user" );
+        associate( "work.db.password",    "pegasus.catalog.work.db.password" );
 
 
         return mVDSToPegasusPropertiesTable;
