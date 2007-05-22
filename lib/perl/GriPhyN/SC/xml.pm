@@ -1,6 +1,6 @@
 package GriPhyN::SC::xml;
 #
-# XML formatted pool.config file
+# XML formatted site catalog file
 #
 # This file or a portion of this file is licensed under the terms of
 # the Globus Toolkit Public License, found in file GTPL, or at
@@ -59,11 +59,11 @@ sub parse_xml($) {
 	if ( @stack == 1 ) {
 	    # <config>
 	    die( "Illegal XML root element $element\n" )
-		if ( $element ne 'config' );
+		if ( $element ne 'sitecatalog' );
 	} elsif ( @stack == 2 ) {
-	    # <pool ...>
-	    die( "Illegal XML element $element under <config>\n" )
-		if ( $element ne 'pool' );
+	    # <site ...>
+	    die( "Illegal XML element $element under <sitecatalog>\n" )
+		if ( $element ne 'site' );
 
 	    $site = $attr{handle};
 	    if ( exists $result{$site} ) {
@@ -83,7 +83,7 @@ sub parse_xml($) {
 	    # use defaults
 	    $result{$site}->{sysinfo} = $attr{sysinfo} || 'INTEL32::LINUX';
 	} else {
-	    # inside pool
+	    # inside site
 	    if ( $element eq 'workdirectory' ) {
 		# ignore -- value is text
 	    } elsif ( $element eq 'lrc' ) {
@@ -189,12 +189,12 @@ sub new {
     
      if ( exists $self->{file} && ! defined $self->{file} ) {
 	# special case file => undef
-	$self->{pool} = { };
+	$self->{site} = { };
     } else {
 	# normal case
 	my $file = $self->file || 
 	    croak $prefix, "no location specified (missing property ...file)"; 
-	$self->{pool} = { parse_xml($file) };
+	$self->{site} = { parse_xml($file) };
     }
 
     # return handle to self
@@ -214,8 +214,8 @@ sub show_site {
     my $fh = shift || croak $prefix, "need an open filehandle";
     croak $prefix, "need an open filehandle" unless ref $fh;
     my $site = shift || croak $prefix, "need a site parameter";
-    return unless exists $self->{pool}->{$site};
-    my $sref = $self->{pool}->{$site};
+    return unless exists $self->{site}->{$site};
+    my $sref = $self->{site}->{$site};
 
     # preamble
     if ( exists $sref->{special} ) {
@@ -223,7 +223,7 @@ sub show_site {
     }
 
     # site entry
-    print $fh "  <pool handle=\"$site\"";
+    print $fh "  <site handle=\"$site\"";
     print $fh " sysinfo=\"", $sref->{sysinfo}, "\"" if exists $sref->{sysinfo};
     print $fh " gridlaunch=\"", $sref->{gridshell}, "\">\n";
     foreach my $ns ( sort keys %{ $sref->{profile} } ) {
@@ -258,7 +258,7 @@ sub show_site {
 	}
     }
     print $fh "    <workdirectory>", $sref->{workdir}, "</workdirectory>\n";
-    print $fh "  </pool>\n\n";
+    print $fh "  </site>\n\n";
 }
 
 sub show_preamble {
@@ -271,7 +271,7 @@ sub show_preamble {
     print $fh '<!-- gen. user: ', scalar getpwuid($>), " -->\n";
     print $fh '<!-- generator: ', ref $self, " $VERSION -->\n";
 
-    print $fh '<config xmlns="http://www.griphyn.org/chimera/GVDS-PoolConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.griphyn.org/chimera/GVDS-PoolConfig http://www.griphyn.org/chimera/sc-1.4.xsd" version="1.4">', "\n";
+    print $fh '<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-2.0.xsd" version="2.0">', "\n";
 }
 
 sub show_postamble {
@@ -280,7 +280,7 @@ sub show_postamble {
     croak $prefix, "need an open filehandle" unless ref $fh;
     
     # XML postable
-    print $fh "</config>\n";
+    print $fh "</sitecatalog>\n";
 }
 
 #
