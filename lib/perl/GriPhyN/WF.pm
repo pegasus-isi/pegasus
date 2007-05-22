@@ -16,9 +16,9 @@ package GriPhyN::WF;
 # Southern California. All rights reserved.
 #
 # Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
-# Revision : $Revision: 7 $
+# Revision : $Revision$
 #
-# $Id: WF.pm 7 2007-05-17 20:39:13Z gmehta $
+# $Id$
 #
 use 5.006;
 use strict;
@@ -31,7 +31,7 @@ our @EXPORT = qw();
 sub parse_properties($;\%);	# { }
 our @EXPORT_OK = qw($VERSION %system parse_properties);
 
-$VERSION=$1 if ( '$Revision: 7 $' =~ /Revision:\s+([0-9.]+)/o );
+$VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
 #
 # --- start -----------------------------------------------------
