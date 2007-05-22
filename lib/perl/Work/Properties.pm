@@ -29,9 +29,7 @@ our @ISA = qw(Exporter);
 # declarations of methods here. Use the commented body to unconfuse emacs
 sub parse_properties($;\%); 	# { }
 sub PARSE_NONE { 0x0000 }
-sub PARSE_WFRC { 0x0001 }	
-sub PARSE_GVDS { 0x0002 }
-sub PARSE_ALL  { PARSE_WFRC | PARSE_GVDS }
+sub PARSE_ALL { 0x0001 }
 
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
@@ -39,9 +37,9 @@ sub PARSE_ALL  { PARSE_WFRC | PARSE_GVDS }
 our $VERSION = '0.1';
 $VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
-our %EXPORT_TAGS = (parse => [qw(PARSE_NONE PARSE_WFRC PARSE_GVDS PARSE_ALL)]);
+our %EXPORT_TAGS = (parse => [qw(PARSE_NONE PARSE_ALL)]);
 our @EXPORT_OK = qw($VERSION parse_properties %initial %system
-		    PARSE_NONE PARSE_WFRC PARSE_GVDS PARSE_ALL);
+		    PARSE_NONE PARSE_ALL);
 our @EXPORT = ();
 
 # Preloaded methods go here.
@@ -162,7 +160,7 @@ sub new {
     # magic property
     my $pegasushome;
     my $flag = 0;
-    if ( ($flags & PARSE_GVDS) ) {
+    if ( ($flags & PARSE_ALL) ) {
 	if ( exists $ENV{'PEGASUS_HOME'} ) {
 	    if ( -d $ENV{'PEGASUS_HOME'} ) {
 		$pegasushome = $config{'pegasus.home'} = $ENV{'PEGASUS_HOME'};
@@ -211,44 +209,46 @@ sub new {
 #    } else {
 #	# asked not to parse
 #	$flag++;
-    }
+
+
+## TODO : Delete this section when everything works fine in pegasus-run
 
     # load wfrc user properties before pegasus user properties
-    if ( ($flags & PARSE_WFRC) ) {
-	if ( exists $system{'wf.properties'} ) {
-	    # overwrite for wfrc property location from CLI property
-	    my $wfrc = $system{'wf.properties'};
-	    if ( -r $wfrc ) {
-		%config = ( %config, parse_properties($wfrc) );
-	    } else {
-		$flag++;
-	    }
-	} elsif ( exists $config{'wf.properties'} ) {
-	    # overwrite for wfrc property location from c'tor property
-	    my $wfrc = $config{'wf.properties'};
-	    if ( -r $wfrc ) {
-		%config = ( %config, parse_properties($wfrc) );
-	    } else {
-		$flag++;
-	    }
-	} elsif  ( exists $ENV{'HOME'} ) {
-	    # default wfrc property location
-	    my $wfrc = File::Spec->catfile( $ENV{HOME}, '.wfrc' );
-	    if ( -r $wfrc ) {
-		%config = ( %config, parse_properties($wfrc) );
-	    } else {
-		$flag++;
-	    }
-	} else { 
-	    $flag++;
-	}
+#    if ( ($flags & PARSE_WFRC) ) {
+#	if ( exists $system{'wf.properties'} ) {
+#	    # overwrite for wfrc property location from CLI property
+#	    my $wfrc = $system{'wf.properties'};
+#	    if ( -r $wfrc ) {
+#		%config = ( %config, parse_properties($wfrc) );
+#	    } else {
+#		$flag++;
+#	    }
+#	} elsif ( exists $config{'wf.properties'} ) {
+#	    # overwrite for wfrc property location from c'tor property
+#	    my $wfrc = $config{'wf.properties'};
+#	    if ( -r $wfrc ) {
+#		%config = ( %config, parse_properties($wfrc) );
+#	    } else {
+#		$flag++;
+#	    }
+#	} elsif  ( exists $ENV{'HOME'} ) {
+#	    # default wfrc property location
+#	    my $wfrc = File::Spec->catfile( $ENV{HOME}, '.wfrc' );
+#	    if ( -r $wfrc ) {
+#		%config = ( %config, parse_properties($wfrc) );
+#	    } else {
+#		$flag++;
+#	    }
+#	} else { 
+#	    $flag++;
+#	}
 #    } else {
 #	# asked not to parse
 #	$flag++;
-    }
+#    }
 
     # user properties go last
-    if ( ($flags & PARSE_GVDS) ) {
+
 	if ( exists $system{'pegasus.user.properties'} ) {
 	    # overwrite for user property location from CLI property
 	    my $usr = $system{'pegasus.user.properties'};
@@ -266,16 +266,12 @@ sub new {
 		$flag++;
 	    }
 	} elsif ( exists $ENV{'HOME'} ) {
-	    # default user property locations
-	    my $usr1 = File::Spec->catfile( $ENV{HOME}, '.chimerarc' );
+	    # default user property 
 	    my $usr2 = File::Spec->catfile( $ENV{HOME}, '.pegasusrc' );
 	    if ( -r $usr2 ) {
 		# prefer new property definition
 		%config = ( %config, parse_properties($usr2) );
-	    } elsif ( -r $usr1 ) {
-		# over old property definitions
-		%config = ( %config, parse_properties($usr1) );
-	    } else {
+	    } else
 		$flag++;
 	    }
 	} else {
@@ -289,9 +285,7 @@ sub new {
     # sanity check -- only in warnings mode
     carp "Warning: Unable to load any properties at all" 
 	if ( $^W &&
-	     ( $flag == 3 && $flags == PARSE_ALL ) ||
-	     ( $flag == 2 && $flags == PARSE_GVDS ) ||
-	     ( $flag == 1 && $flags == PARSE_WFRC ) );
+	     ( $flag == 1 && $flags == PARSE_ALL ) );
 	
     # create instance and return handle to self
     # WARNING: Keep ordering of %config before %initial to permit
@@ -352,7 +346,7 @@ my %translate = ( 'mysql' => 'mysql',
 		  'oracle' => 'Oracle' );
 
 sub jdbc2perl {
-    # purpose: Convert VDS JDBC connect properties into what DBI needs
+    # purpose: Convert PEGASUS JDBC connect properties into what DBI needs
     # paramtr: $cat (IN): catalog name, e.g. "tc" or "wf". 
     # returns: uri => DBI-uri
     #          dbuser => database account username
@@ -363,10 +357,10 @@ sub jdbc2perl {
     # pegasus.db.(*|$cat).driver.user	dbuser
     # pegasus.db.(*|$cat).driver.password	dbpass
     my $self = shift;
-    my $cat = shift || croak "need a catalog name, e.g. 'tc' or 'wf'";
+    my $cat = shift || croak "need a catalog name, e.g. 'transformation' , 'replica', 'provenance'or 'work'";
 
-    my %x = ( $self->propertyset( "pegasus.db.*.", 1 ),
-	      $self->propertyset( "pegasus.db.$cat.", 1 ) );
+    my %x = ( $self->propertyset( "pegasus.catalog.*.db.", 1 ),
+	      $self->propertyset( "pegasus.catalog.$cat.db.", 1 ) );
 
     # turn JDBC to DBI uri
     my $dbuser = $x{'driver.user'};
@@ -535,10 +529,8 @@ The constructor takes an optional hash reference to an arbitrary list of
 weak properties (of least priority) for debugging purposes. When
 constructing an instance variable, the constructor will parse the
 contents of the file pointed to by I<pegasus.properties> (defaults to
-F<$PEGASUS_HOME/etc/properties>), I<wf.properties> (defaults to
-F<$HOME/.wfrc>), and I<pegasus.user.properties> which either defaults to
-F<$HOME/.pegasusrc> or to F<$HOME/.chimerarc>. If both exist, F<.pegasusrc> is
-preferred and F<.chimerarc> ignored.
+F<$PEGASUS_HOME/etc/properties>) and I<pegasus.user.properties> which defaults to
+F<$HOME/.pegasusrc>.
 
 The commandline properties are added last, giving them the highest
 priority. The constructor arguments were added first, giving them the
@@ -550,8 +542,8 @@ flag I<PARSE_ALL>.
 
 =item new( $pflags )
 
-If invoked with one of the property flags I<PARSE_NONE>, I<PARSE_WFRC>,
-I<PARSE_GVDS> or I<PARSE_ALL>, only a subset of the properties above
+If invoked with one of the property flags I<PARSE_NONE> or I<PARSE_ALL>, 
+only a subset of the properties above
 will be parsed. 
 
 =item new( $pflags, %extra )
@@ -593,8 +585,8 @@ The emulated system properties will not be considered.
 Given a normal string prefix, this method returns a hash starting with
 the prefix string. This is not a regular expression match, just plain
 string prefix matching. 
-
-If the optional argument $truncate is specified and true, the prefix
+I
+f the optional argument $truncate is specified and true, the prefix
 string will be removed from the keys in the result set. 
 
     %x = $p->propertyset('pegasus.db.');
@@ -628,7 +620,8 @@ L<http://www.griphyn.org/>
 
 =head1 AUTHOR
 
-Jens-S. VE<ouml>ckler, C<voeckler at cs dot uchicago dot edu>
+Jens-S. VE<ouml>ckler, C<voeckler at isi dot edu>
+Gaurang Mehta, C<gmehta at isi dot edu>
 
 =head1 COPYRIGHT AND LICENSE
 

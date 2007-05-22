@@ -59,8 +59,8 @@ sub determine_driver($;$) {
     my $default = shift;        # may be undef'd
 
     # determined the database system we work with - default to SQLite2
-    my $driver = $props->property('work.db') || $default ||
-	die "ERROR: Please set property work.db to a database driver!\n";
+    my $driver = $props->property('pegasus.catalog.work.db.driver') || $props->property('pegasus.catalog.*.db.driver') || $default ||
+	die "ERROR: Please set property pegasus.catalog.work.db.driver or pegasus.catalog.*.db.driver to a database driver!\n";
     my %installed = %{ scalar DBI->installed_versions };
     if ( exists $installed{$driver} ) {
         # example: DBD::SQLite2, DBD::mysql, DBD::Pg
@@ -79,15 +79,13 @@ sub determine_driver($;$) {
                 $driver = substr($key,5);
             }               
         }
-
         unless ( $found ) {
             my $msg = "ERROR: Unable to utilize a DBI driver \"$driver\".\n";
             $msg .= "Available drivers: ";
             $msg .= join( ", ", map { substr($_,5) } sort keys %installed );
             croak( $msg );
         }
-    }
-    
+    }    
     $driver;
 }
 
@@ -95,28 +93,21 @@ sub determine_connection($$) {
     # purpose: Determine the specifics of the database connection
     # paramtr: $props (IN): handle to properties
     #          $driver (IN): chosen DBI driver with DBD:: prefix
-    # returns: [0] database name
-    #          [1] database host (optional)
-    #          [2] database port (optional)
-    #          [3] database user
-    #          [4] database password
+    # returns: [0] database uri
+    #          [1] database user
+    #          [2] database password
+    #          [3] database name in case of SQLite
     my $props = shift;
     my $driver = shift;
 
-    my $dbname = $props->property('work.db.databasename') ||
-        $props->property('work.db.database') ||
-        $props->property('work.db.dbname');
-    my $dbhost = $props->property('work.db.servername') || 
-        $props->property('work.db.host') ||
-        $props->property('work.db.hostname');
-    my $dbport = $props->property('work.db.portnumber') ||
-        $props->property('work.db.port');
-    my $dbuser = $props->property('work.db.user') ||
-        $props->property('work.db.username');
-    my $dbpass = $props->property('work.db.password') ||
-        $props->property('work.db.pass');
+   
+    my %driverprops=jdbc2perl('work');
+    my $dburi = $driverprops{'uri'};
+    my $dbuser = $driverprops{'dbuser'};
+    my $dbpass = $driverprops{'dbpasswd'};
 
-    unless ( defined $dbname ) {
+    my $dbname=undef;
+    unless ( defined $dburi ) {
         if ( $driver =~ /SQLite/ ) {
             $dbname = File::Spec->catfile( $props->property('user.home') ||
                                            $system{'user.home'} || '/tmp',
@@ -127,18 +118,15 @@ sub determine_connection($$) {
     }
 
     # done
-    ($dbname,$dbhost,$dbport,$dbuser,$dbpass);
+    ($dburi,$dbuser,$dbpass,$dbname);
 }
 
 sub verify_tables($$;$) {
     my $driver = shift;
-    my ($dbname,$dbhost,$dbport,$dbuser,$dbpass) = @{shift()};
+    my ($dburi,$dbuser,$dbpass,$dbname) = @{shift()};
     my $autocommit = shift;
     $autocommit = 1 unless defined $autocommit;
 
-    my $dburi = "dbi:$driver:dbname=$dbname";
-    $dburi .= ";host=$dbhost" if defined $dbhost;
-    $dburi .= ";port=$dbport" if defined $dbport;
 
     my $dbh = DBI->connect( $dburi, $dbuser, $dbpass,
 			    { RaiseError => 1, 
@@ -159,7 +147,7 @@ sub verify_tables($$;$) {
 	unless ( exists $tables{$table} ) {
 	    # table is missing
 	    die( "ERROR: Missing table $table in database. Please run the database setup\n",
-		 "script for the WF catalog from the \$VDS_HOME/sql subdirectory.\n" );
+		 "script for the WF catalog from the \$PEGASUS_HOME/sql subdirectory.\n" );
 	}
     }
 
@@ -193,11 +181,9 @@ sub new {
     my $self = {
 	m_props => $props, 
 	m_driver => $driver, 
-	m_dbname => $connect[0],
-	m_dbhost => $connect[1],
-	m_dbport => $connect[2],
-	m_dbuser => $connect[3],
-	m_dbpass => $connect[4],
+	m_dbuser => $connect[1],
+	m_dbpass => $connect[2],
+	m_dbname => $connect[3],
 	m_uri    => $uri,
 	m_handle => $dbh,
 	m_autocommit => $autocommit,
