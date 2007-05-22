@@ -38,9 +38,9 @@ $VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 #
 # --- start -----------------------------------------------------
 #
-# description of basic (deep) data structure in 'pool' hash reference:
+# description of basic (deep) data structure in 'site' hash reference:
 #
-# 'pool' =>
+# 'site' =>
 #    $site =>
 #       'lrc' => [ $uri ]
 #       'gridshell => $
@@ -152,7 +152,7 @@ sub new {
 
     # create defaults
     $self->{'_permitted'}->{style} = 1;
-    $self->{pool} = {} unless exists $self->{pool};
+    $self->{site} = {} unless exists $self->{site};
 
     # return handle to self
     $self;
@@ -189,7 +189,7 @@ sub sites {
     # purpose: find all sites
     # returns: list of all sites including local
     my $self = shift;
-    keys %{ $self->{pool} };
+    keys %{ $self->{site} };
 }
 
 sub ncpus {
@@ -200,9 +200,9 @@ sub ncpus {
     my $self = shift;
     my $site = shift || croak $prefix, "need a site handle";
     my $oldv;
-    if ( exists $self->{pool}->{$site} ) {    
-	$oldv = $self->{pool}->{$site}->{ncpus} || 0;
-	$self->{pool}->{$site}->{ncpus} = $_[0] if ( @_ );
+    if ( exists $self->{site}->{$site} ) {    
+	$oldv = $self->{site}->{$site}->{ncpus} || 0;
+	$self->{site}->{$site}->{ncpus} = $_[0] if ( @_ );
     } else {
 	GriPhyN::Log::log( $prefix, 'ERROR: site ', $site, ' is not in catalog!' );
     }
@@ -217,9 +217,9 @@ sub sysinfo {
     my $self = shift;
     my $site = shift || croak $prefix, "need a site handle";
     my $oldv;
-    if ( exists $self->{pool}->{$site} ) {
-	$oldv = $self->{pool}->{$site}->{sysinfo} || '';
-	$self->{pool}->{$site}->{sysinfo} = $_[0] if ( @_ );
+    if ( exists $self->{site}->{$site} ) {
+	$oldv = $self->{site}->{$site}->{sysinfo} || '';
+	$self->{site}->{$site}->{sysinfo} = $_[0] if ( @_ );
     } else {
 	GriPhyN::Log::log( $prefix, 'ERROR: site ', $site, ' is not in catalog!' );
     }
@@ -234,9 +234,9 @@ sub gridshell {
     my $self = shift;
     my $site = shift || croak $prefix, "need a site parameter";
     my $oldv;
-    if ( exists $self->{pool}->{$site} ) {    
-	$oldv = $self->{pool}->{$site}->{gridshell};
-	$self->{pool}->{$site}->{gridshell} = shift if ( @_ );
+    if ( exists $self->{site}->{$site} ) {    
+	$oldv = $self->{site}->{$site}->{gridshell};
+	$self->{site}->{$site}->{gridshell} = shift if ( @_ );
     } else {
 	GriPhyN::Log::log( $prefix, 'ERROR: site ', $site, ' is not in catalog!' );
     }
@@ -250,9 +250,9 @@ sub workdir {
     my $self = shift;
     my $site = shift || croak $prefix, "need a site parameter";
     my $oldv;
-    if ( exists $self->{pool}->{$site} ) {
-	$oldv = $self->{pool}->{$site}->{workdir};
-	$self->{pool}->{$site}->{workdir} = shift if ( @_ );
+    if ( exists $self->{site}->{$site} ) {
+	$oldv = $self->{site}->{$site}->{workdir};
+	$self->{site}->{$site}->{workdir} = shift if ( @_ );
     } else { 
 	GriPhyN::Log::log( $prefix, 'ERROR: site ', $site, ' is not in catalog!' );
     }
@@ -274,9 +274,9 @@ sub contact {
 	if ( ($main::DEBUG & 0x200) );
 
     my @oldv = ();
-    if ( exists $self->{pool}->{$site} ) {
-	@oldv = @{ $self->{pool}->{$site}->{contact}->{$sched} };
-	$self->{pool}->{$site}->{contact}->{$sched} = [ @_ ] if ( @_ );
+    if ( exists $self->{site}->{$site} ) {
+	@oldv = @{ $self->{site}->{$site}->{contact}->{$sched} };
+	$self->{site}->{$site}->{contact}->{$sched} = [ @_ ] if ( @_ );
     } else { 
 	GriPhyN::Log::log( $prefix, 'ERROR: site ', $site, ' is not in catalog!' );
     }
@@ -303,14 +303,14 @@ sub gridftp {
     my @oldv = ();
     if ( defined $site ) {
 	# regular case $self->gridftp($site)
-	@oldv = @{$self->{pool}->{$site}->{gridftp}}
-	    if exists $self->{pool}->{$site}->{gridftp};
-	@{$self->{pool}->{$site}->{gridftp}} = @_ if ( @_ );
+	@oldv = @{$self->{site}->{$site}->{gridftp}}
+	    if exists $self->{site}->{$site}->{gridftp};
+	@{$self->{site}->{$site}->{gridftp}} = @_ if ( @_ );
     } else {
 	# irregular case: query all gridftp for all sites
-	foreach my $site ( keys %{$self->{pool}} ) {
-	    @oldv = ( @oldv, @{$self->{pool}->{$site}->{gridftp}} )
-		if exists $self->{pool}->{$site}->{gridftp};
+	foreach my $site ( keys %{$self->{site}} ) {
+	    @oldv = ( @oldv, @{$self->{site}->{$site}->{gridftp}} )
+		if exists $self->{site}->{$site}->{gridftp};
 	}
     }
     wantarray ? 
@@ -329,16 +329,16 @@ sub profile {
     GriPhyN::Log::log( $prefix, 'profile(', $site, (defined $ns ? ",$ns" : ''), ')' )
 	if ( ($main::DEBUG & 0x200) );
     
-    return () unless exists $self->{pool}->{$site} &&
-	exists $self->{pool}->{$site}->{profile};
+    return () unless exists $self->{site}->{$site} &&
+	exists $self->{site}->{$site}->{profile};
 
     if ( defined $ns ) {
 	# all keys from the profiles namespace
-	return () unless exists $self->{pool}->{$site}->{profile}->{$ns};
-	return %{ $self->{pool}->{$site}->{profile}->{$ns} };
+	return () unless exists $self->{site}->{$site}->{profile}->{$ns};
+	return %{ $self->{site}->{$site}->{profile}->{$ns} };
     } else {
 	# all namespaces
-	return %{ $self->{pool}->{$site}->{profile} };
+	return %{ $self->{site}->{$site}->{profile} };
     }
 }
 
@@ -357,7 +357,7 @@ sub resolve {
 	    push( @result, $site ) 
 		if ( (grep( /^$gftp/, 
 			    map { $_->[0] }
-			    @{$self->{pool}->{$site}->{gridftp}} )) > 0 );
+			    @{$self->{site}->{$site}->{gridftp}} )) > 0 );
 	}
     } else {
 	# full path prefix matches, sigh, this is expensive
@@ -365,7 +365,7 @@ sub resolve {
 	    push( @result, $site ) 
 		if ( (grep( /^$gftp/,
 			    map { File::Spec->catfile($_->[0],$_->[1]) }
-			    @{$self->{pool}->{$site}->{gridftp}} )) > 0 );
+			    @{$self->{site}->{$site}->{gridftp}} )) > 0 );
 	}
     }
     wantarray ? @result : $result[0];
@@ -401,11 +401,11 @@ sub add {
     my $self = shift;
     my $site = shift || croak ref($self), "need a site parameter";
 
-    if ( exists $self->{pool}->{$site} ) {
+    if ( exists $self->{site}->{$site} ) {
 	warn ref($self), "Warning: overwriting existing site $site\n";
-	delete $self->{pool}->{$site};
+	delete $self->{site}->{$site};
     }
-    $self->{pool}->{$site} = { @_ };
+    $self->{site}->{$site} = { @_ };
 }
 
 sub delete {
@@ -416,8 +416,8 @@ sub delete {
     my $site = shift || croak $prefix, "need a site parameter";
 
     my $result = undef;
-    $result = delete( $self->{pool}->{$site} )
-	if ( exists $self->{pool}->{$site} );
+    $result = delete( $self->{site}->{$site} )
+	if ( exists $self->{site}->{$site} );
     $result;
 }
 
@@ -449,7 +449,7 @@ sub show ($[*$];@) {
 			   $self->sites) {
 	    $self->show_site( $fh, $site );
 	}
-	$self->show_site( $fh, 'local' ) if exists $self->{pool}->{local};
+	$self->show_site( $fh, 'local' ) if exists $self->{site}->{local};
 	$self->show_postamble($fh);
     }
 }
