@@ -41,7 +41,11 @@ import org.griphyn.cPlanner.parser.pdax.PDAXCallbackFactory;
 import org.griphyn.cPlanner.parser.DaxParser;
 import org.griphyn.cPlanner.parser.PDAXParser;
 
+import org.griphyn.common.catalog.work.WorkFactory;
+import org.griphyn.common.catalog.WorkCatalog;
+
 import org.griphyn.common.util.Version;
+import org.griphyn.common.util.Currently;
 import org.griphyn.common.util.FactoryException;
 
 import gnu.getopt.Getopt;
@@ -108,6 +112,10 @@ public class CPlanner extends Executable{
      */
     private NumberFormat mNumFormatter;
 
+    /**
+     * The user name of the user running Pegasus.
+     */
+    private String mUser;
 
     /**
      * Default constructor.
@@ -122,6 +130,10 @@ public class CPlanner extends Executable{
         mPOptions.setSubmitDirectory(".");
         mPOptions.setExecutionSites(new java.util.HashSet());
         mPOptions.setOutputSite("");
+
+        mUser = mProps.getProperty( "user.name" ) ;
+        if ( mUser == null ){ mUser = "user"; }
+
     }
 
     /**
@@ -276,7 +288,7 @@ public class CPlanner extends Executable{
             String relativeDir; //the submit directory relative to the base specified
             try{
                 //create the base directory if required
-                relativeDir = createSubmitDirectory( submitDir, "ligo", orgDag.getLabel() );
+                relativeDir = createSubmitDirectory( submitDir, mUser, "ligo", orgDag.getLabel() );
                 mPOptions.setSubmitDirectory( new File ( submitDir, relativeDir ) );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
@@ -360,6 +372,25 @@ public class CPlanner extends Executable{
                 }
 
                 mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
+            }
+
+            //connect to the work catalog and populate
+            //an entry in it for the current workflow
+            WorkCatalog wc = null;
+            try{
+                wc = WorkFactory.loadInstance( mProps );
+            }
+            catch( Exception e ) {
+                //just log and proceed
+                mLogger.log( "Ignoring: " + convertException( e ),  LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+            if ( wc != null ) {
+                wc.insert( submitDir, "ligo", finalDag.getLabel(),
+                           new File( relativeDir ).getName(),
+                           mUser,
+                           Currently.parse( finalDag.getMTime() ),
+                           Currently.parse( finalDag.dagInfo.getFlowTimestamp() ),
+                          -2  );
             }
 
             if(mPOptions.submitToScheduler()){//submit the jobs
@@ -676,13 +707,16 @@ public class CPlanner extends Executable{
      * Creates the submit directory for the workflow. This is not thread safe.
      *
      * @param dir     the base directory specified by the user.
+     * @param user    the username of the user.
      * @param vogroup the vogroup to which the user belongs to.
      * @param label   the label in the DAX.
      *
      * @return  the directory name created relative to the base directory passed
      *          as input.
+     *
+     * @throws IOException in case of unable to create submit directory.
      */
-    protected String createSubmitDirectory( String dir, String vogroup, String label ) throws IOException {
+    protected String createSubmitDirectory( String dir, String user, String vogroup, String label ) throws IOException {
         File base = new File( dir );
         StringBuffer result = new StringBuffer();
 
@@ -690,8 +724,6 @@ public class CPlanner extends Executable{
         sanityCheck( base );
 
         //add the user name if possible
-        String user = mProps.getProperty( "user.name" ) ;
-        if ( user == null ){ user = "user"; }
         base = new File( base, user );
         result.append( user ).append( File.separator );
 
