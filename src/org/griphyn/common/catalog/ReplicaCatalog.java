@@ -47,7 +47,7 @@ public interface ReplicaCatalog extends Catalog
   /**
     * The  DB Driver properties prefix.
     */
-   public static final String DBDRIVER_PREFIX = "pegasus.catalog.replica.db.driver";
+   public static final String DB_PREFIX = "pegasus.catalog.replica.db";
 
 
   /**

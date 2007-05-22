@@ -298,7 +298,7 @@ public class Database
         boolean result = false;
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
-        Properties localProps = VDSProperties.matchingSubset( (Properties)props.clone(), "db.driver", false );
+        Properties localProps = VDSProperties.matchingSubset( (Properties)props.clone(), "db", false );
 
         String url = (String) localProps.remove("url");
         if (url == null || url.length() == 0) {

@@ -48,6 +48,10 @@ public class ChimeraProperties
   public static final String IVR_SCHEMA_LOCATION =
     "http://pegasus.isi.edu/schema/iv-2.0.xsd";
 
+
+public static final String DB_ALL_PREFIX =
+    "pegasus.catalog.*.db";
+
   public static final String DBDRIVER_ALL_PREFIX =
     "pegasus.catalog.*.db.driver";
 
@@ -363,9 +367,9 @@ public class ChimeraProperties
   public String getDatabaseURL( String dbDriverPrefix )
   {
     return ( dbDriverPrefix == null ?
-	     m_props.getProperty( DBDRIVER_ALL_PREFIX + ".url" ) :
+	     m_props.getProperty( DB_ALL_PREFIX + ".url" ) :
 	     m_props.getProperty( dbDriverPrefix + ".url",
-		  m_props.getProperty( DBDRIVER_ALL_PREFIX + ".url" ) )
+		  m_props.getProperty( DB_ALL_PREFIX + ".url" ) )
 	   );
   }
 
@@ -392,7 +396,7 @@ public class ChimeraProperties
    */
   public Properties getDatabaseDriverProperties( String dbDriverPrefix )
   {
-    Properties result = new Properties( matchingSubset(DBDRIVER_ALL_PREFIX) );
+    Properties result = new Properties( matchingSubset(DB_ALL_PREFIX) );
     if (dbDriverPrefix != null)
        result.putAll( matchingSubset( dbDriverPrefix ) );
     result.remove("url"); // must not be passed to the JDBC driver

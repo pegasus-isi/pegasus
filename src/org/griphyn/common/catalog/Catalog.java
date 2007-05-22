@@ -31,7 +31,7 @@ public interface Catalog{
     /**
      * The default DB Driver properties prefix.
      */
-    public static final String DBDRIVER_ALL_PREFIX = "pegasus.catalog.*.db.driver";
+    public static final String DB_ALL_PREFIX = "pegasus.catalog.*.db";
 
 
   /**

@@ -106,23 +106,23 @@ public class WorkFactory{
         Properties connect = props.matchingSubset( WorkCatalog.c_prefix, false );
 
         //get the default db driver properties in first pegasus.catalog.*.db.driver.*
-        Properties db = props.matchingSubset( WorkCatalog.DBDRIVER_ALL_PREFIX, false );
+        Properties db = props.matchingSubset( WorkCatalog.DB_ALL_PREFIX, false );
         //now overload with the work catalog specific db properties.
         //pegasus.catalog.work.db.driver.*
-        db.putAll( props.matchingSubset( WorkCatalog.DBDRIVER_PREFIX , false ) );
+        db.putAll( props.matchingSubset( WorkCatalog.DB_PREFIX , false ) );
 
 
         //to make sure that no confusion happens.
         //add the db prefix to all the db properties
         for( Enumeration e = db.propertyNames(); e.hasMoreElements(); ){
             String key = (String)e.nextElement();
-            connect.put( "db.driver." + key, db.getProperty( key ));
+            connect.put( "db." + key, db.getProperty( key ));
         }
 
         //put the driver property back into the DB property
-        String driver = props.getProperty( WorkCatalog.DBDRIVER_PREFIX );
-        if( driver == null ){ driver = props.getProperty( WorkCatalog.DBDRIVER_ALL_PREFIX ); }
-        connect.put( "db.driver", driver );
+ //       String driver = props.getProperty( WorkCatalog.DBDRIVER_PREFIX );
+ //       if( driver == null ){ driver = props.getProperty( WorkCatalog.DBDRIVER_ALL_PREFIX ); }
+ //       connect.put( "db.driver", driver );
 
 
 

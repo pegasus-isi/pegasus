@@ -35,7 +35,7 @@ public interface WorkCatalog extends Catalog {
     /**
      * The  DB Driver properties prefix.
      */
-    public static final String DBDRIVER_PREFIX = "pegasus.catalog.work.db.driver";
+    public static final String DB_PREFIX = "pegasus.catalog.work.db";
 
 
 
