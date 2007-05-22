@@ -593,10 +593,21 @@ public class PlannerOptions extends Data implements Cloneable{
      * Sets the path to the directory where the submit files are to be
      * generated.
      *
-     * @param path the path to the directory.
+     * @param dir the path to the directory.
      */
-    public void setSubmitDirectory(String path){
-        mSubmitFileDir = sanitizePath(path);
+    public void setSubmitDirectory( File dir ){
+        this.setSubmitDirectory( dir.getAbsolutePath() );
+    }
+
+
+    /**
+     * Sets the path to the directory where the submit files are to be
+     * generated.
+     *
+     * @param dir the path to the directory.
+     */
+    public void setSubmitDirectory( String dir ){
+        mSubmitFileDir = sanitizePath( dir );
     }
 
     /**
