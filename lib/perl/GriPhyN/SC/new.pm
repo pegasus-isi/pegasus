@@ -1,6 +1,6 @@
 package GriPhyN::SC::new;
 #
-# new-style multi-line formatted pool.config file
+# new-style multi-line formatted Site Catalog file
 #
 # This file or a portion of this file is licensed under the terms of
 # the Globus Toolkit Public License, found in file GTPL, or at
@@ -50,7 +50,7 @@ sub parse_pool($) {
 
     if ( $token{class} ne $classes{IDENTIFIER} ) {
 	carp( $prefix, 'line ', $scanner->lineno,
-	      ": Expected identifier after keyword \"pool\", got ", 
+	      ": Expected identifier after keyword \"site\", got ", 
 	      $token{class}, "/", $token{value} );
 	return undef;
     }
@@ -59,7 +59,7 @@ sub parse_pool($) {
     %token = $scanner->next();
     if ( ! ( $token{class} == $classes{VERBATIM} && $token{value} eq '{' ) ) {
 	carp( $prefix, 'line ', $scanner->lineno,
-	      ": Expected open brace to introduce pool $poolid" );
+	      ": Expected open brace to introduce site $poolid" );
 	return undef;
     }
 
@@ -70,7 +70,7 @@ sub parse_pool($) {
 	    last;
 	} elsif ( ! $token{class} == $classes{IDENTIFIER} ) {
 	    carp( $prefix, 'line ', $scanner->lineno,
-		  ": Expected keyword inside pool body of $poolid" );
+		  ": Expected keyword inside site body of $poolid" );
 	    next;
 	}
 
@@ -138,12 +138,12 @@ sub parse_pool($) {
 				     version => $token{value} } );
 	} else {
 	    carp( $prefix, 'line ', $scanner->lineno,
-		  ": Unknown keyword $what in pool $poolid" );
+		  ": Unknown keyword $what in site $poolid" );
 	}
     }
 
     # done
-    { poolid => $poolid, pool => { %pool } };
+    { poolid => $poolid, site => { %pool } };
 }
 
 sub sanitize {
@@ -158,13 +158,13 @@ sub sanitize {
 sub forward($) {
     # purpose: resynch input stream after error
     # paramtr: $scanner
-    # returns: token of EOF or IDENTIFIER/pool
+    # returns: token of EOF or IDENTIFIER/site
     my $scanner = shift || die;
     for (;;) {
 	my %token = $scanner->next;
 	return %token if ( ( $token{class} == $classes{EOF} ) ||
 			   ( $token{class} == $classes{IDENTIFIER} && 
-			     lc($token{value}) eq 'pool' ) );
+			     lc($token{value}) eq 'site' ) );
     }
 }
 
@@ -188,18 +188,18 @@ sub parse_new($) {
 	}
 
 	if ( $token{class} == $classes{IDENTIFIER} &&
-	     lc($token{value}) eq 'pool' ) {
+	     lc($token{value}) eq 'site' ) {
 	    my $temp = parse_pool($scanner);
-	    if ( defined $temp && scalar %{$temp->{pool}} ) {
+	    if ( defined $temp && scalar %{$temp->{site}} ) {
 		my $id = $temp->{poolid};
 		log( $prefix, "Adding entry for $id" ) 
 		    if ( $main::DEBUG & 0x10 );
 		
-		$result{$id}->{gridshell} = $temp->{pool}->{gridlaunch};
-		$result{$id}->{lrc} = sanitize($temp->{pool}->{lrc});
-		$result{$id}->{workdir} = $temp->{pool}->{workdir};
+		$result{$id}->{gridshell} = $temp->{site}->{gridlaunch};
+		$result{$id}->{lrc} = sanitize($temp->{site}->{lrc});
+		$result{$id}->{workdir} = $temp->{site}->{workdir};
 		my @gftp = ();
-		foreach my $x ( @{$temp->{pool}->{gridftp}} ) {
+		foreach my $x ( @{$temp->{site}->{gridftp}} ) {
 		    if ( (grep { /$x->{uri}/ } @gftp) == 0 ) {
 			push( @gftp, $x->{uri} );
 			push( @{$result{$id}->{gridftp}},
@@ -208,26 +208,26 @@ sub parse_new($) {
 		    }
 		}
 
-		foreach my $x ( @{$temp->{pool}->{universe}} ) {
+		foreach my $x ( @{$temp->{site}->{universe}} ) {
 		    push( @{$result{$id}->{contact}->{$x->{universe}}},
 			  [ $x->{jobmanager}, undef, 
 			    (split(/\./,$x->{version}))[0..2] ] );
 		}
 
-		foreach my $x ( @{$temp->{pool}->{profile}} ) {
+		foreach my $x ( @{$temp->{site}->{profile}} ) {
 		    # universe=>namespace, jobmanager=>key, version=>value
 		    $result{$id}->{profile}->{$x->{universe}}->{$x->{jobmanager}} =
 			$x->{version};
 		}
 	    } else {
 		carp( $prefix, 'line ', $scanner->lineno, 
-		      ": Illegal entry for pool\n" );
+		      ": Illegal entry for site\n" );
 		%token=forward($scanner);
 		goto RESYNC;
 	    }
 	} else {
 	    carp( $prefix, 'line ', $scanner->lineno, 
-		  ": Illegal token $token{class}, expected resword \"pool\"\n" );
+		  ": Illegal token $token{class}, expected resword \"site\"\n" );
 	    %token = forward($scanner);
 	    goto RESYNC;
 	}
@@ -249,11 +249,11 @@ sub new {
 
     if ( exists $self->{file} && ! defined $self->{file} ) {
 	# special case file => undef
-	$self->{pool} = { };
+	$self->{site} = { };
     } else {
 	my $file = $self->file || 
 	    croak $prefix, "no location specified (missing property ...file)"; 
-	$self->{pool} = { parse_new($file) };
+	$self->{site} = { parse_new($file) };
     }
 
     # return handle to self
@@ -277,8 +277,8 @@ sub show_site {
     my $fh = shift || croak $prefix, "need an open filehandle";
     croak $prefix, "need an open filehandle" unless ref $fh;
     my $site = shift || croak $prefix, "need a site parameter";
-    return unless exists $self->{pool}->{$site};
-    my $sref = $self->{pool}->{$site};
+    return unless exists $self->{site}->{$site};
+    my $sref = $self->{site}->{$site};
 
     # preamble
     if ( exists $sref->{special} ) {
@@ -288,7 +288,7 @@ sub show_site {
     }
 
     # site entry
-    print $fh "pool $site {\n";
+    print $fh "site $site {\n";
     foreach my $ns ( sort keys %{ $sref->{profile} } ) {
 	foreach my $key ( sort keys %{ $sref->{profile}->{$ns} } ) {
 	    print $fh "  profile $ns \"$key\" \"";
