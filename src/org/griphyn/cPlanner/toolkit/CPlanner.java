@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.FilenameFilter;
 
 import java.util.Collection;
 import java.util.List;
@@ -61,6 +62,11 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.HashSet;
 import java.util.Iterator;
+
+import java.util.regex.Pattern;
+
+import java.text.NumberFormat;
+import java.text.DecimalFormat;
 
 /**
  * This is the main program for the Pegasus. It parses the options specified
@@ -81,6 +87,11 @@ public class CPlanner extends Executable{
     public static final String DEFAULT_MEGADAG_MODE = "dag";
 
     /**
+     * The prefix for the submit directory.
+     */
+    public static final String SUBMIT_DIRECTORY_PREFIX = "run";
+
+    /**
      * The basename of the directory that contains the submit files for the
      * cleanup DAG that for the concrete dag generated for the workflow.
      */
@@ -92,6 +103,10 @@ public class CPlanner extends Executable{
     private PlannerOptions mPOptions;
 
 
+    /**
+     * The number formatter to format the run submit dir entries.
+     */
+    private NumberFormat mNumFormatter;
 
 
     /**
@@ -101,6 +116,7 @@ public class CPlanner extends Executable{
         super();
         mLogMsg = new String();
         mVersion = Version.instance().toString();
+        mNumFormatter = new DecimalFormat( "0000" );
 
         this.mPOptions        = new PlannerOptions();
         mPOptions.setSubmitDirectory(".");
@@ -197,15 +213,14 @@ public class CPlanner extends Executable{
         mPOptions.setVDSProperties(mProps.getMatchingProperties("pegasus.",false));
 
         List allVDSProps = mProps.getMatchingProperties("pegasus.",false);
-        mLogger.log("VDS Properties set by the user",LogManager.CONFIG_MESSAGE_LEVEL );
+        mLogger.log("Pegasus Properties set by the user",LogManager.CONFIG_MESSAGE_LEVEL );
         for(java.util.Iterator it = allVDSProps.iterator(); it.hasNext();){
             NameValue nv = (NameValue)it.next();
             mLogger.log(nv.toString(),LogManager.CONFIG_MESSAGE_LEVEL);
 
         }
 
-        //sanitize the transfer mode on the basis of megadag mode
-        sanitizeTransferMode();
+
 
         String dax         = mPOptions.getDAX();
         String pdax        = mPOptions.getPDAX();
@@ -255,15 +270,22 @@ public class CPlanner extends Executable{
 
             ADag orgDag = (ADag)cb.getConstructedObject();
 
-            //check if the submit file dir exists or not
-            File wdir = new File(submitDir);
-            wdir.mkdirs();
+
             //write out a the relevant properties to submit directory
+            int state = 0;
+            String relativeDir; //the submit directory relative to the base specified
             try{
-                mProps.writeOutProperties(submitDir);
+                //create the base directory if required
+                relativeDir = createSubmitDirectory( submitDir, "ligo", orgDag.getLabel() );
+                mPOptions.setSubmitDirectory( new File ( submitDir, relativeDir ) );
+                state++;
+                mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
             }
-            catch( IOException e ){
-                throw new RuntimeException( "Unable to write out properties to directory " + submitDir );
+            catch( IOException ioe ){
+                String error = ( state == 0 ) ?
+                               "Unable to write  to directory" :
+                               "Unable to write out properties to directory";
+                throw new RuntimeException( error + submitDir , ioe );
 
             }
 
@@ -272,8 +294,12 @@ public class CPlanner extends Executable{
                 //user has specified the random dir name but wants
                 //to go with default name which is the flow id
                 //for the workflow unless a basename is specified.
-                //mPOptions.setRandomDir(orgDag.dagInfo.flowID);
                 mPOptions.setRandomDir(getRandomDirectory(orgDag));
+            }
+            else{
+                //the relative directory constructed on the submit host
+                //is the one required for remote sites
+                mPOptions.setRandomDir( relativeDir );
             }
 
             //populate the singleton instance for user options
@@ -293,11 +319,18 @@ public class CPlanner extends Executable{
             log( message, LogManager.INFO_MESSAGE_LEVEL );
             try{
                 codeGenerator.generateCode(finalDag);
+
+                //generate only the braindump file that is required.
+                //no spawning off the tailstatd for time being
+                codeGenerator.startMonitoring();
+
+                /*
                 if (mPOptions.monitorWorkflow()) {
                     //submit files successfully generated.
                     //spawn off the monitoring daemon
                     codeGenerator.startMonitoring();
                 }
+               */
             }
             catch ( Exception e ){
                 throw new RuntimeException( "Unable to generate code", e );
@@ -311,7 +344,7 @@ public class CPlanner extends Executable{
 
                 //submit files are generated in a subdirectory
                 //of the submit directory
-                File f = new File(submitDir,this.CLEANUP_DIR);
+                File f = new File( mPOptions.getSubmitDirectory(), this.CLEANUP_DIR );
                 message = "Generating code for the cleanup workflow";
                 mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
                 //set the submit directory in the planner options for cleanup wf
@@ -638,6 +671,64 @@ public class CPlanner extends Executable{
 
     }
 
+
+    /**
+     * Creates the submit directory for the workflow. This is not thread safe.
+     *
+     * @param dir     the base directory specified by the user.
+     * @param vogroup the vogroup to which the user belongs to.
+     * @param label   the label in the DAX.
+     *
+     * @return  the directory name created relative to the base directory passed
+     *          as input.
+     */
+    protected String createSubmitDirectory( String dir, String vogroup, String label ) throws IOException {
+        File base = new File( dir );
+        StringBuffer result = new StringBuffer();
+
+        //do a sanity check on the base
+        sanityCheck( base );
+
+        //add the user name if possible
+        String user = mProps.getProperty( "user.name" ) ;
+        if ( user == null ){ user = "user"; }
+        base = new File( base, user );
+        result.append( user ).append( File.separator );
+
+        //add the vogroup
+        base = new File( base, vogroup );
+        sanityCheck( base );
+        result.append( vogroup ).append( File.separator );
+
+        //add the label of the DAX
+        base = new File( base, label );
+        sanityCheck( base );
+        result.append( label ).append( File.separator );
+
+
+        //get all the files in this directory
+        String[] files = base.list( new RunDirectoryFilenameFilter() );
+        //find the maximum run directory
+        int num, max = 1;
+        for( int i = 0; i < files.length ; i++ ){
+            num = Integer.parseInt( files[i].substring( SUBMIT_DIRECTORY_PREFIX.length() ) );
+            if ( num + 1 > max ){ max = num + 1; }
+        }
+
+        //create the directory name
+        StringBuffer leaf = new StringBuffer();
+        leaf.append( SUBMIT_DIRECTORY_PREFIX ).append( mNumFormatter.format( max ) );
+
+        result.append( leaf.toString() );
+        base = new File( base, leaf.toString() );
+        mLogger.log( "Directory to be created is " + base.getAbsolutePath(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        sanityCheck( base );
+
+        return result.toString();
+    }
+
+
     /**
      * This generates a Vector from a string with the constituents being the
      * words making up the string.The String is comma separated.
@@ -660,45 +751,84 @@ public class CPlanner extends Executable{
 
 
     /**
-     * A small helper utility to sanitize the transfer mode settings. Currently
-     * the daglite mode for the megadag expansion does not work in case of using
-     * g-u-c straight out of the box. We need to set it to a transfer mode, that
-     * ensures there is only one stagein node and one stageout node created for
-     * a job.
-     * We set the mode to multiple, that ends up using the transfer executable
-     * underneath.
+     * Checks the destination location for existence, if it can
+     * be created, if it is writable etc.
+     *
+     * @param dir is the new base directory to optionally create.
+     *
+     * @throws IOException in case of error while writing out files.
      */
-    private void sanitizeTransferMode(){
-        //check if we need the sanitization in the first place
-        if( mPOptions.getMegaDAGMode() != null &&
-            mPOptions.getMegaDAGMode().equalsIgnoreCase("daglite")){
-
-	    /*Commented out for time being with new transfer refiners in
-	     * Karan Dec 15,2005
-            //ok so we need to peek at the transfer mode
-            if(mProps.getTransferMode().equalsIgnoreCase(
-                org.griphyn.cPlanner.transfer.TransferMechanism.SINGLE_MODE)){
-                //we need to change the transfer mode to multiple
-                mProps.setProperty("vds.transfer.mode",
-                                   org.griphyn.cPlanner.transfer.TransferMechanism.MULTIPLE_MODE);
-
-                //print out a warning on as to what is being done
-                mLogMsg = "Daglite Mode only works with transfer mechanisms that " +
-                          "result in one stage in and one stage out node for a job. " +
-                          "\nSetting the transfer mode (vds.transfer.mode) to " +
-                          org.griphyn.cPlanner.transfer.TransferMechanism.MULTIPLE_MODE +
-                          ". Ensure your TC is populated with entry " +
-                          org.griphyn.cPlanner.transfer.TransferMechanism.MULTIPLE_MODE_TRANSFORMATION +
-                          " for your execution pools." ;
-                mLogger.log(mLogMsg,LogManager.WARNING_MESSAGE_LEVEL);
-
+    protected static void sanityCheck( File dir ) throws IOException{
+        if ( dir.exists() ) {
+            // location exists
+            if ( dir.isDirectory() ) {
+                // ok, isa directory
+                if ( dir.canWrite() ) {
+                    // can write, all is well
+                    return;
+                } else {
+                    // all is there, but I cannot write to dir
+                    throw new IOException( "Cannot write to existing directory " +
+                                           dir.getPath() );
+                }
+            } else {
+                // exists but not a directory
+                throw new IOException( "Destination " + dir.getPath() + " already " +
+                                       "exists, but is not a directory." );
             }
-	    */
+        } else {
+            // does not exist, try to make it
+            if ( ! dir.mkdirs() ) {
+                throw new IOException( "Unable to create base directory " +
+                                       dir.getPath() );
+            }
         }
     }
+
 
 }
 
 
+/**
+ * A filename filter for identifying the run directory
+ *
+ * @author Karan Vahi vahi@isi.edu
+ */
+class RunDirectoryFilenameFilter implements FilenameFilter {
+
+    /**
+     * Store the regular expressions necessary to parse kickstart output files
+     */
+    private static final String mRegexExpression =
+                                     "(" + CPlanner.SUBMIT_DIRECTORY_PREFIX + ")([0-9][0-9][0-9][0-9])";
+
+    /**
+     * Stores compiled patterns at first use, quasi-Singleton.
+     */
+    private static Pattern mPattern = null;
+
+
+
+    /***
+     * Tests if a specified file should be included in a file list.
+     *
+     * @param dir the directory in which the file was found.
+     * @param name - the name of the file.
+     *
+     * @return  true if and only if the name should be included in the file list
+     *          false otherwise.
+     *
+     *
+     */
+     public boolean accept( File dir, String name) {
+         //compile the pattern only once.
+         if( mPattern == null ){
+             mPattern = Pattern.compile( mRegexExpression );
+         }
+         return mPattern.matcher( name ).matches();
+     }
+
+
+}
 
 

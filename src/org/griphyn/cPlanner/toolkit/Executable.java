@@ -156,7 +156,7 @@ public abstract class Executable {
      */
     public String getGVDSVersion() {
         StringBuffer sb = new StringBuffer();
-        sb.append( "GVDS Release Version " ).append(mVersion);
+        sb.append( "Pegasus Release Version " ).append(mVersion);
         return sb.toString();
     }
 
