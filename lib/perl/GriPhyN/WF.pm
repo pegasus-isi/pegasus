@@ -105,7 +105,7 @@ BEGIN {
     $system{'user.timezone'} = $ENV{TZ}; # can be undef'd
 
     # non-standard, but useful and requirable
-    $system{'vds.home'} = $ENV{'VDS_HOME'};
+    $system{'pegasus.home'} = $ENV{'PEGASUS_HOME'};
 }
 
 #
