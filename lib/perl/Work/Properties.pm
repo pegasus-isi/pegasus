@@ -210,7 +210,6 @@ sub new {
 #	# asked not to parse
 #	$flag++;
 
-
 ## TODO : Delete this section when everything works fine in pegasus-run
 
     # load wfrc user properties before pegasus user properties
@@ -247,8 +246,7 @@ sub new {
 #	$flag++;
 #    }
 
-    # user properties go last
-
+	# user properties go last
 	if ( exists $system{'pegasus.user.properties'} ) {
 	    # overwrite for user property location from CLI property
 	    my $usr = $system{'pegasus.user.properties'};
@@ -271,7 +269,7 @@ sub new {
 	    if ( -r $usr2 ) {
 		# prefer new property definition
 		%config = ( %config, parse_properties($usr2) );
-	    } else
+	    } else {
 		$flag++;
 	    }
 	} else {
