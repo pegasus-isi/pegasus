@@ -36,7 +36,7 @@ public interface PTC extends Catalog
   /**
    * Names the property key prefix employed for schemas dealing with the PTC.
    */
-  public static final String PROPERTY_PREFIX = "pegasus.db.ptc.schema";
+  public static final String PROPERTY_PREFIX = "pegasus.catalog.provenance.schema";
 
   /**
    * Checks the existence of an invocation record in the database.

@@ -49,7 +49,7 @@ public class ChimeraProperties
     "http://pegasus.isi.edu/schema/iv-2.0.xsd";
 
   public static final String DBDRIVER_ALL_PREFIX =
-    "pegasus.db.*.driver";
+    "pegasus.catalog.*.db.driver";
 
   /**
    * Implements the Singleton access.
@@ -204,7 +204,7 @@ public class ChimeraProperties
     // load the default schema name - default is to use the file based
     // schema.
     String schemaName =
-      m_props.getProperty( "pegasus.db.ptc.schema" );
+      m_props.getProperty( "pegasus.catalog.provenance.db.driver" );
     if ( schemaName != null && schemaName.indexOf('.') == -1 )
       schemaName = "org.griphyn.vdl.dbschema." + schemaName;
 
