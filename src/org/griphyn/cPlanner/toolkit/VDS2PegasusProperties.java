@@ -346,6 +346,14 @@ public class VDS2PegasusProperties extends Executable {
 //        associate( "vds.partitioner.horizontal.bundle.", "pegasus.partitioner.horizontal.bundle." );
 //        associate( "vds.partitioner.horizontal.collapse.", "pegasus.partitioner.horizontal.collapse." );
 
+        //WORK DB PROPERTIES
+        associate( "work.db",             "pegasus.catalog.work.db.driver" );
+        associate( "work.db.hostname",    "pegasus.catalog.work.db.driver.hostname" );
+        associate( "work.db.database",    "pegasus.catalog.work.db.driver.database" );
+        associate( "work.db.user",        "pegasus.catalog.work.db.driver.user" );
+        associate( "work.db.password",    "pegasus.catalog.work.db.driver.password" );
+
+
         return mVDSToPegasusPropertiesTable;
     }
 
@@ -484,6 +492,8 @@ public class VDS2PegasusProperties extends Executable {
 
     /**
      * The main test program.
+     *
+     * @param args the arguments to the program.
      */
     public static void main( String[] args ){
         VDS2PegasusProperties me = new VDS2PegasusProperties();
