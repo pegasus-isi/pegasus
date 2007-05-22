@@ -93,7 +93,7 @@ public class FactoryException
         int i = index;
         //append all the causes
         for(Throwable cause = e; cause != null ; cause  = cause.getCause()){
-            message.append(" [").append(Integer.toString(++i) ).append(  "]: ");
+            message.append("\n [").append(Integer.toString(++i) ).append(  "]: ");
             if ( cause instanceof FactoryException ){
                 message.append( cause.getMessage() );
                 classname = ((FactoryException)cause).getClassname();
