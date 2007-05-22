@@ -92,7 +92,10 @@ public class VDS2PegasusProperties extends Executable {
                                      "(vds.partitioner.horizontal.collapse.)([a-zA-Z_0-9]*[-]*)+",
                                      "(vds.transfer.rft.)([a-zA-Z_0-9]*[-]*)+",
                                      "(vds.transfer.crft.)([a-zA-Z_0-9]*[-]*)+",
-                                     "(vds.db.)([a-zA-Z_0-9]*[-]*)+(.)([a-zA-Z_0-9.]*[-]*)+"
+                                     //"(vds.db.)([a-zA-Z_0-9]*[-]*)+(.)([a-zA-Z_0-9.]*[-]*)+"
+                                     "(vds.db.tc.driver)[.]*([a-zA-Z_0-9]*[-]*)+",
+                                     "(vds.db.ptc.driver)[.]*([a-zA-Z_0-9]*[-]*)+",
+                                     "(vds.db.*.driver)[.]*([a-zA-Z_0-9]*[-]*)+",
                                      };
 
 
@@ -108,7 +111,10 @@ public class VDS2PegasusProperties extends Executable {
                                      { "vds.partitioner.horizontal.collapse", "pegasus.partitioner.horizontal.collapse."},
                                      { "vds.transfer.rft.", "pegasus.transfer.rft."},
                                      { "vds.transfer.crft.", "pegasus.transfer.crft."},
-                                     { "vds.db.", "pegasus.db." }
+                                     //{ "vds.db.", "pegasus.db." }
+                                     { "vds.db.tc.driver", "pegasus.catalog.transformation.db.driver" },
+                                     { "vds.db.ptc.driver", "pegasus.catalog.provenance.db.driver" },
+                                     { "vds.db.*.driver", "pegasus.catalog.*.db.driver" },
                                  };
 
 
@@ -135,7 +141,7 @@ public class VDS2PegasusProperties extends Executable {
         // initialize the compiled expressions once
         if ( mCompiledPatterns == null ) {
             mCompiledPatterns = new Pattern[ mRegexExpression.length ];
-            for (int i = 0; i < mRegexExpression.length; ++i)
+            for (int i = 0; i < mRegexExpression.length; i++)
                 mCompiledPatterns[i] = Pattern.compile( mRegexExpression[i] );
         }
     }
@@ -219,6 +225,7 @@ public class VDS2PegasusProperties extends Executable {
         associate( "vds.schema.pdax", "pegasus.schema.pdax" );
         associate( "vds.schema.poolconfig", "pegasus.schema.sc" );
         associate( "vds.schema.sc",   "pegasus.schema.sc" );
+        associate( "vds.db.ptc.schema", "pegasus.schema.ptc" );
 
         //PROPERTIES RELATED TO DIRECTORIES
         associate( "vds.dir.exec", "pegasus.dir.exec" );
@@ -345,6 +352,9 @@ public class VDS2PegasusProperties extends Executable {
         associate( "vds.partition.parser.mode", "pegasus.partitioner.parser.load" );
 //        associate( "vds.partitioner.horizontal.bundle.", "pegasus.partitioner.horizontal.bundle." );
 //        associate( "vds.partitioner.horizontal.collapse.", "pegasus.partitioner.horizontal.collapse." );
+
+
+
 
         //WORK DB PROPERTIES
         associate( "work.db",             "pegasus.catalog.work.db.driver" );
@@ -482,7 +492,7 @@ public class VDS2PegasusProperties extends Executable {
             if( mCompiledPatterns[i].matcher( vds ).matches() ){
                 //get the replacement value
                 pgs = vds.replaceFirst( mStarReplacements[i][0], mStarReplacements[i][1] );
-                System.out.println( "The matching pgs * property for " + vds + " is " + pgs );
+                System.out.println( "The matching pegasus * property for " + vds + " is " + pgs );
                 break;
             }
         }
