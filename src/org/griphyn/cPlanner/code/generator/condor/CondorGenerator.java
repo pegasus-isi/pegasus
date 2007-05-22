@@ -17,12 +17,10 @@ package org.griphyn.cPlanner.code.generator.condor;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
-import org.griphyn.cPlanner.classes.Data;
 import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.TransferJob;
 
 import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.code.CodeGeneratorException;
@@ -30,14 +28,11 @@ import org.griphyn.cPlanner.code.GridStart;
 import org.griphyn.cPlanner.code.POSTScript;
 
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
-import org.griphyn.cPlanner.code.gridstart.GridStartFactoryException;
 
 import org.griphyn.cPlanner.code.generator.Abstract;
-import org.griphyn.cPlanner.code.generator.Stork;
 import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 
 import org.griphyn.cPlanner.code.generator.condor.style.CondorStyleFactory;
-import org.griphyn.cPlanner.code.generator.condor.style.CondorStyleFactoryException;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -435,6 +430,7 @@ public class CondorGenerator extends Abstract {
                                            this.getDAGFilename( mConcreteWorkflow, ".dag" ));
 
             mLogger.log("Written out braindump to " + bdump, LogManager.DEBUG_MESSAGE_LEVEL);
+            return true;
         }
         catch(IOException ioe){
             //log the message and return
@@ -443,6 +439,9 @@ public class CondorGenerator extends Abstract {
             return false;
         }
 
+	//No longer launching tailstatd directly for the time being
+        //Karan May 21, 2007
+	/*
         //construct the default path to the tailstatd
         char sep = File.separatorChar;
         StringBuffer tsd = new StringBuffer();
@@ -494,6 +493,7 @@ public class CondorGenerator extends Abstract {
            //ignore
        }
        return result;
+	*/
 
     }
 
