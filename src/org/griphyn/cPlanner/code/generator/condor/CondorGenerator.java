@@ -737,7 +737,7 @@ public class CondorGenerator extends Abstract {
                  append("vogroup vds").append("\n").//for time being
                  append("label " + workflow.getLabel()).append("\n").
                  append("planner ").append(mProps.getPegasusHome()).append(sep).
-                                    append("bin").append(sep).append("gencdag");
+                                    append("bin").append(sep).append("pegasus-plan");
 
         writer.write( contents.toString());
         writer.close();

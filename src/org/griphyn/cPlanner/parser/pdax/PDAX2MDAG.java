@@ -103,12 +103,12 @@ public class PDAX2MDAG implements Callback {
      * The logical name with which to query the transformation catalog for
      * cPlanner executable.
      */
-    public static final String CPLANNER_LOGICAL_NAME = "gencdag";
+    public static final String CPLANNER_LOGICAL_NAME = "pegasus-plan";
 
     /**
      * The namespace to use for condor dagman.
      */
-    public static final String CONDOR_DAGMAN_NAMESPACE = "condor";
+    public static final String CONDOR_DAGMAN_NAMESPACE = "pegasus-plan";
 
     /**
      * The logical name with which to query the transformation catalog for the
