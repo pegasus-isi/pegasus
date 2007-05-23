@@ -107,7 +107,7 @@ GetOptions( "help|h" => \&usage,
 	    "check|c=i" => \$job_check_interval,
 	    "config|C=s" => \%config, 
 	    "show" => sub { $doplot=1 },
-	    "database!|D"=>\$database,
+	    "database!"=>\$database,
 	    "fuse=i" => \$fuse,
 	    "no-daemon|n" => sub { $nodaemon=1 },
 	    "foreground|N" => sub { $nodaemon=2 } );

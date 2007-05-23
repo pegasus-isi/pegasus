@@ -50,7 +50,7 @@ my $vdd = $props->property('pegasus.delegationd');
 my $database=1;
 GetOptions( "help|h" => \&usage,
 	    "monitor|tsd|m=s" => \$tsd,
-	    "database!|D"=>\$database,
+	    "database!"=>\$database,
 	    "condor" => \$condor,
 	    "vdd=s" => \$vdd,
 	    "debug|d=o" => \$main::DEBUG,
