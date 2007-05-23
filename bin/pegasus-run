@@ -17,7 +17,8 @@
 # Copyright 1999-2004 University of Chicago and The University of
 # Southern California. All rights reserved.
 #
-# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
+# Author: Jens-S. Vöckler voeckler@isi.edu
+# Author: Gaurang Mehta gmehta@isi.edu
 # Revision : $Revision$
 #
 use 5.006;
@@ -31,7 +32,7 @@ use Getopt::Long qw(:config bundling no_ignore_case);
 use Work::Common;
 use Work::Properties qw(%initial); # parses -Dprop=val from @ARGV
 use Work::Workflow;
-use Euryale::Delegation;	# GT4 delegation cache daemon client
+#use Euryale::Delegation;	# GT4 delegation cache daemon client
 
 # constants
 sub usage(;$);			# { }
@@ -46,8 +47,10 @@ my $default_vdd =
     File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'libexec', 'pegasus-delegationd' );
 my $vdd = $props->property('pegasus.delegationd');
     
+my $database=1;
 GetOptions( "help|h" => \&usage,
 	    "monitor|tsd|m=s" => \$tsd,
+	    "database!|D"=>\$database,
 	    "condor" => \$condor,
 	    "vdd=s" => \$vdd,
 	    "debug|d=o" => \$main::DEBUG,
@@ -290,7 +293,11 @@ system(@args) == 0
 print STDERR "# dagman is running\n" if $main::DEBUG;
 
 # run tailstatd to update job stats until DAGMan finishes
+if(!$database){
+@args = create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
+}else {
 @args = create_args( $tsd, $config{dag} . '.dagman.out' );
+}
 print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
 system(@args) == 0 
     or die( "ERROR: Running @{[basename($args[0])]} failed with ", 
@@ -316,11 +323,13 @@ if ( defined $vdd && length($vdd) ) {
 
 # update workflow in work db -- late connect
 eval {
-    my $workdb = Work::Workflow->new($props); # fail late
-    my $workid = $workdb->work_id( $config{basedir}, $config{vogroup}, 
-				   $config{label}, $config{rundir} );
-    $workdb->update_work( $workid, -1 );
-    undef $workdb;
+    if($database) {
+	my $workdb = Work::Workflow->new($props); # fail late
+	my $workid = $workdb->work_id( $config{basedir}, $config{vogroup}, 
+				       $config{label}, $config{rundir} );
+	$workdb->update_work( $workid, -1 );
+	undef $workdb;
+    }
 };
 warn "Warning: While trying to access work database\n$@\n" if $@;
 
@@ -332,14 +341,26 @@ if ( @rescue > 0 ) {
 	   $config{dag}, "\ninstead of\n", $original, "\n" );
 }
 
+my $workflow="xyz";
+my $time="abc";
+
 print << "EOF";
+
 
 I have started your workflow, committed it to DAGMan, and updated its
 state in the work database. A separate daemon was started to collect
 information about the progress of the workflow. The job state will soon
-be visible. Your workflow runs in base directory
+be visible. Your workflow runs in base directory. 
 
 cd $run
+
+*** To monitor the workflow you can run ***
+
+pegasus-status -w $workflow -t $time
+
+*** To remove your workflow run ***
+
+pegasus-remove $run
 
 EOF
 
