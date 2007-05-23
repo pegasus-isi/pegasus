@@ -80,7 +80,7 @@ sub make_boolean($);		# { }
 my $props = Work::Properties->new( PARSE_ALL );
 my $workdb = undef;
 my $doplot = make_boolean( $props->property('pegasus.tailstatd.show') );
-my $database=true;
+my $database=1;
 my $fuse = $props->property('pegasus.tailstatd.fuse') || 300;
 $fuse = 60 if $fuse < 60;
 
@@ -107,7 +107,7 @@ GetOptions( "help|h" => \&usage,
 	    "check|c=i" => \$job_check_interval,
 	    "config|C=s" => \%config, 
 	    "show" => sub { $doplot=1 },
-	    "database!|D"=>\$database
+	    "database!|D"=>\$database,
 	    "fuse=i" => \$fuse,
 	    "no-daemon|n" => sub { $nodaemon=1 },
 	    "foreground|N" => sub { $nodaemon=2 } );
