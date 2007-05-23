@@ -1314,16 +1314,16 @@ if ($database){
 	$msg .= ": $@" if ( $@ );
 	warn "$msg\n";
     }
-}
-
-$main::workid = ( %config ?
+    
+    $main::workid = ( %config ?
 		  infer_from_config(%config) :
-		  infer_from_directory($run) ) ||
-    die( "FATAL: Workflow was not entered in wf_work database\n" );
-END {
-    if ( defined $workdb ) {
-	#### finally_siteinfo();
-	$workdb->commit unless $workdb->handle->{AutoCommit};
+		      infer_from_directory($run) ) ||
+		      die( "FATAL: Workflow was not entered in wf_work database\n" );
+    END {
+	if ( defined $workdb ) {
+	    #### finally_siteinfo();
+	    $workdb->commit unless $workdb->handle->{AutoCommit};
+	}
     }
 }
 
