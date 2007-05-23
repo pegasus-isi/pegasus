@@ -392,6 +392,7 @@ public class CPlanner extends Executable{
                            Currently.parse( finalDag.dagInfo.getFlowTimestamp() ),
                           -2  );
             }
+            wc.close();
 
             if(mPOptions.submitToScheduler()){//submit the jobs
                 throw new RuntimeException( "Direct submission is not supported at present" );
