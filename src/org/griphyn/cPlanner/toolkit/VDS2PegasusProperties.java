@@ -95,7 +95,7 @@ public class VDS2PegasusProperties extends Executable {
                                      //"(vds.db.)([a-zA-Z_0-9]*[-]*)+(.)([a-zA-Z_0-9.]*[-]*)+"
                                      "(vds.db.tc.driver)[.]+([a-zA-Z_0-9]*[-]*)+",
                                      "(vds.db.ptc.driver)[.]+([a-zA-Z_0-9]*[-]*)+",
-                                     "(vds.db.*.driver)[.]+([a-zA-Z_0-9]*[-]*)+",
+                                     "(vds.db.\\*.driver)[.]+([a-zA-Z_0-9]*[-]*)+",
                                      };
 
 
@@ -114,7 +114,7 @@ public class VDS2PegasusProperties extends Executable {
                                      //{ "vds.db.", "pegasus.db." }
                                      { "vds.db.tc.driver.", "pegasus.catalog.transformation.db." },
                                      { "vds.db.ptc.driver.", "pegasus.catalog.provenance.db." },
-                                     { "vds.db.*.driver.", "pegasus.catalog.*.db." },
+                                     { "vds.db.\\*.driver.", "pegasus.catalog.*.db." },
                                  };
 
 
