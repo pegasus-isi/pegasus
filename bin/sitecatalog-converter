@@ -1,1 +1,5 @@
-perl -pi.bak -e 's{<config}{<sitecatalog};s{</config>}{</sitecatalog>};s{<pool}{<site};s{</pool>}{</site>}' sites.xml
+#!/bin/sh
+
+oldfile=shift
+
+perl -pi.bak -e 's{<config}{<sitecatalog};s{</config>}{</sitecatalog>};s{<pool}{<site};s{</pool>}{</site>}' $oldfile
