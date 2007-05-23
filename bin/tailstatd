@@ -18,7 +18,8 @@
 # Copyright 1999-2004 University of Chicago and The University of
 # Southern California. All rights reserved.
 #
-# Author: Jens-S. V�ckler voeckler@cs.uchicago.edu
+# Author: Jens-S. Vöckler voeckler@isi.edu
+# Author: Gaurang Mehta gmehta@isi.edu
 # Revision : $Revision$
 #
 use 5.006;
@@ -38,7 +39,7 @@ use Time::Local;
 
 # load our own local modules
 use Work::Common;
-use Work::Properties qw(PARSE_GVDS);
+use Work::Properties qw(PARSE_ALL);
 use Work::Workflow;
 use Site::Intent;
 
@@ -76,9 +77,10 @@ sub make_boolean($);		# { }
 
 # parse properties -Dkey=value
 #warn( "# ", join( "\n# ", @ARGV ), "\n" );
-my $props = Work::Properties->new( PARSE_GVDS );
+my $props = Work::Properties->new( PARSE_ALL );
 my $workdb = undef;
 my $doplot = make_boolean( $props->property('pegasus.tailstatd.show') );
+my $database=true;
 my $fuse = $props->property('pegasus.tailstatd.fuse') || 300;
 $fuse = 60 if $fuse < 60;
 
@@ -105,6 +107,7 @@ GetOptions( "help|h" => \&usage,
 	    "check|c=i" => \$job_check_interval,
 	    "config|C=s" => \%config, 
 	    "show" => sub { $doplot=1 },
+	    "database!|D"=>\$database
 	    "fuse=i" => \$fuse,
 	    "no-daemon|n" => sub { $nodaemon=1 },
 	    "foreground|N" => sub { $nodaemon=2 } );
@@ -214,7 +217,7 @@ Optional arguments:
  -C|--config k=v defines configurations instead of reading from braindump.txt.
                  Required keys include @{[join(", ",@{$main::brainkeys{required}})]}. 
                  Suggested keys include @{[join(", ",@{$main::brainkeys{optional}})]}. 
-
+ -D| --database  Turn on Database entries for work DB.
 Developer arguments: 
  -Dprop=val      Overrides for properties, must be initial (multi-option). 
  -S|--sim ms     simulate delays between reads by sleeping ms milliseconds.
@@ -1302,12 +1305,17 @@ if ( $nodaemon == 0 ) {
 }
 
 # NOW -- after most fork() calls -- connect to the database
-$workdb = eval { Work::Workflow->new($props,0) }; # fire-proofing
-unless ( defined $workdb ) {
-    my $msg = 'ERROR: Your database handle is undefined';
-    $msg .= ": $@" if ( $@ );
-    die "$msg\n";
+## TODO FIX THIS TO ignore the database errors.
+
+if ($database){
+    $workdb = eval { Work::Workflow->new($props,0) }; # fire-proofing
+    unless ( defined $workdb ) {
+	my $msg = 'ERROR: Your database handle is undefined';
+	$msg .= ": $@" if ( $@ );
+	warn "$msg\n";
+    }
 }
+
 $main::workid = ( %config ?
 		  infer_from_config(%config) :
 		  infer_from_directory($run) ) ||
