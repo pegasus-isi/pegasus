@@ -33,7 +33,6 @@ use Fcntl;
 use Errno qw(EEXIST);
 use Digest::MD5;
 
-# Euryale modules
 use GriPhyN::WF;		# dummy module, but required
 use GriPhyN::SC;		# site catalog (SC) 
 use GriPhyN::TC;		# transformation catalog (TC)
@@ -161,33 +160,31 @@ my %app =
 
 
 # defaults for the remote vors host
-my $default_user_vo = 'ivdgl';
+my $default_user_vo = 'pegasus';
 my $user_vo = $default_user_vo;
 my $default_vors_host = 'vors.grid.iu.edu';
 my $default_vors_port = '80';
 
-my $p = Work::Properties->new( PARSE_GVDS );
+my $p = Work::Properties->new();
 
 my %tcstyle = ( old => 0, new => 1, pegasus => 2 );
 my %tcxlate = ( OldFile => 'old', single => 'old', multiple => 'old',
 		File => 'new', Database => 'pegasus' );
-my $tcstyle = $tcxlate{$p->property('pegasus.tc')} ||
-    $tcxlate{$p->property('pegasus.tc.mode')} ||
+my $tcstyle = $tcxlate{$p->property('pegasus.catalog.transformation')} ||
     'new'; # default TC style
 my $def_tcfn = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'var', 'tc.data' );
-my $tcfn = $p->property('pegasus.tc.file') || $def_tcfn;
+my $tcfn = $p->property('pegasus.catalog.transformation.file') || $def_tcfn;
 
 my %scstyle = ( old => 0, new => 1, xml => 2 );
 my %scxlate = ( single => 'old', multiple => 'old',, Text => 'new',
 		XML => 'xml' );
-my $scstyle = $scxlate{$p->property('pegasus.sc')} ||
-    $scxlate{$p->property('pegasus.pool.mode')} ||
+my $scstyle = $scxlate{$p->property('pegasus.catalog.site')} ||
     'xml'; # default SC style is XML
 my %scfiles = ( old => 'sites.txt', new => 'sites.txt', xml => 'sites.xml' );
 my $def_scfn = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'var', 
 				    $scfiles{$scstyle} );
-my $scfn = $p->property('pegasus.sc.file') || 
-    $p->property('pegasus.pool.file') || $def_scfn;
+my $scfn = $p->property('pegasus.catalog.site.file') || 
+     $def_scfn;
 
 my $kickstart = '$pegasus/kickstart';
 my $workdir = '$tmp';
@@ -222,7 +219,6 @@ GetOptions( 'help' => \&usage,
 	    'debug|d+' => \$main::DEBUG,
 	    'app|a=s' => \@appfn,
 	    'keep' => \$keep_defaults,
-	    'euryale' => \$euryale,
 	    'kickstart|kick|k=s' => \$kickstart,
 	    'pegasushome|v=s' => \$pegasusbin,
 	    'workdir|w=s' => \$workdir,
