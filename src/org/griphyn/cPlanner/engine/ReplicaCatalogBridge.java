@@ -43,25 +43,19 @@ import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.classes.TCType;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import org.griphyn.common.util.Separator;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileWriter;
+
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
-import java.util.Vector;
 
 /**
  * This coordinates the look up to the Replica Location Service, to determine
@@ -212,6 +206,20 @@ public class ReplicaCatalogBridge
 
 
     /**
+     * The default tc entry.
+     */
+    private TransformationCatalogEntry mDefaultTCRCEntry;
+
+    /**
+     * A boolean indicating whether the attempt to create a default tc entry
+     * has happened or not.
+     */
+    private boolean mDefaultTCRCCreated;
+
+
+
+
+    /**
      * The overloaded constructor.
      *
      * @param dag         the workflow that is being worked on.
@@ -244,6 +252,7 @@ public class ReplicaCatalogBridge
         mRCDown = false;
         mCacheStore = new ReplicaStore();
         mTreatCacheAsRC = mProps.treatCacheAsRC();
+        mDefaultTCRCCreated = false;
 
         //converting the Vector into vector of
         //strings just containing the logical
@@ -351,7 +360,7 @@ public class ReplicaCatalogBridge
     /**
      * Returns all the locations as returned from the Replica Lookup Mechanism.
      *
-     * @param logicalFile   The name of the logical file whose PFN mappings are
+     * @param lfn   The name of the logical file whose PFN mappings are
      *                      required.
      *
      * @return ReplicaLocation containing all the locations for that LFN
@@ -446,6 +455,8 @@ public class ReplicaCatalogBridge
                               this.RC_DERIVATION_NAME,
                               this.RC_DERIVATION_VERSION );
 
+        SiteInfo site = mPoolHandle.getPoolEntry( mOutputPool, "vanilla" );
+
         //change this function
         List tcentries = null;
         try {
@@ -459,13 +470,26 @@ public class ReplicaCatalogBridge
             mLogger.log( "While retrieving entries from TC " + e.getMessage(),
                          LogManager.ERROR_MESSAGE_LEVEL);
         }
-        if ( tcentries == null || tcentries.isEmpty() ) {
-            throw new RuntimeException( "Unable to find " + newJob.getCompleteTCName() +                             " on site local");
-        }
 
-        TransformationCatalogEntry tc = ( TransformationCatalogEntry ) tcentries.get( 0 );
+        TransformationCatalogEntry tc;
+
+        if ( tcentries == null || tcentries.isEmpty() ) {
+
+            mLogger.log( "Unable to find in entry for " + newJob.getCompleteTCName() +  " in transformation catalog on site local",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log( "Constructing a default entry for it " , LogManager.DEBUG_MESSAGE_LEVEL );
+            tc = defaultTCRCEntry(  );
+
+            if( tc == null ){
+                throw new RuntimeException( "Unable to create an entry for " +
+                                            newJob.getCompleteTCName() +  " on site local");
+            }
+        }
+        else{
+            tc = (TransformationCatalogEntry) tcentries.get(0);
+        }
         newJob.setRemoteExecutable( tc.getPhysicalTransformation() );
-        newJob.setArguments( this.generateRepJobArgumentString( regJobName, files ) );
+        newJob.setArguments( this.generateRepJobArgumentString( site, regJobName, files ) );
         newJob.setUniverse( Engine.REGISTRATION_UNIVERSE );
         newJob.setSiteHandle( tc.getResourceId() );
         newJob.setJobType( SubInfo.REPLICA_REG_JOB );
@@ -489,22 +513,124 @@ public class ReplicaCatalogBridge
     }
 
     /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCRCEntry( ){
+        String site = "local";
+        //generate only once.
+        if( !mDefaultTCRCCreated ){
+            //check if PEGASUS_HOME is set
+            String home = mProps.getPegasusHome(  );
+            //if PEGASUS_HOME is not set, use VDS_HOME
+            //home = ( home == null )? mPoolHandle.getVDS_HOME( site ): home;
+
+            //if home is still null
+            if ( home == null ){
+                //cannot create default TC
+                mLogger.log( "Unable to create a default entry for " +
+                             Separator.combine( this.RC_TRANSFORMATION_NS,
+                                                this.RC_TRANSFORMATION_NAME,
+                                                this.RC_TRANSFORMATION_VERSION ),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                //set the flag back to true
+                mDefaultTCRCCreated = true;
+                return mDefaultTCRCEntry;
+            }
+            //remove trailing / if specified
+            home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
+                     home.substring( 0, home.length() - 1 ):
+                     home;
+
+            //construct the path to it
+            StringBuffer path = new StringBuffer();
+            path.append( home ).append( File.separator ).append( "bin" ).
+                 append( "rc-client" );
+
+            Profile classpath = this.getClassPath( home );
+            if( classpath == null ){ return mDefaultTCRCEntry ; }
+
+            mDefaultTCRCEntry = new TransformationCatalogEntry( this.RC_TRANSFORMATION_NS,
+                                                                this.RC_TRANSFORMATION_NAME,
+                                                                this.RC_TRANSFORMATION_VERSION );
+
+            mDefaultTCRCEntry.setPhysicalTransformation( path.toString() );
+            mDefaultTCRCEntry.setResourceId( site );
+            mDefaultTCRCEntry.setProfile( classpath );
+
+            //set the flag back to true
+            mDefaultTCRCCreated = true;
+        }
+        return mDefaultTCRCEntry;
+    }
+
+
+    /**
+     * Returns the classpath for the default rc-client entry.
+     *
+     * @param home   the home directory where we need to check for lib directory.
+     *
+     * @return the classpath in an environment profile.
+     */
+    private Profile getClassPath( String home ){
+        Profile result = null ;
+
+        //create the CLASSPATH from home
+        String classpath = mProps.getProperty( "java.class.path" );
+        if( classpath == null || classpath.trim().length() == 0 ){
+            return result;
+        }
+
+        mLogger.log( "JAVA CLASSPATH SET IS " + classpath , LogManager.DEBUG_MESSAGE_LEVEL );
+
+        StringBuffer cp = new StringBuffer();
+        String prefix = home + File.separator + "lib";
+        for( StringTokenizer st = new StringTokenizer( classpath, ":" ); st.hasMoreTokens(); ){
+            String token = st.nextToken();
+            if( token.startsWith( prefix ) ){
+                //this is a valid lib jar to put in
+                cp.append( token ).append( ":" );
+            }
+        }
+
+        if ( cp.length() == 0 ){
+            //unable to create a valid classpath
+            mLogger.log( "Unable to create a sensible classpath from " + home,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            return result;
+        }
+
+        //we have everything now
+        result = new Profile( Profile.ENV, "CLASSPATH", cp.toString() );
+
+        return result;
+    }
+
+
+    /**
      * Generates the argument string to be given to the replica registration job.
      * At present by default it would be picking up the file containing the
      * mappings.
      *
+     * @param site     the <code>SiteInfo</code> object/
      * @param regJob   The name of the registration job.
      *
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *                 information about source and destURLs. The destination
      *                 URLs would be our PFNs.
+     *
+     * @return the argument string.
      */
-    private String generateRepJobArgumentString( String regJob, Collection files ) {
+    private String generateRepJobArgumentString( SiteInfo site, String regJob, Collection files ) {
         StringBuffer arguments = new StringBuffer();
 
         //select a LRC. disconnect here. It should be select a RC.
-        SiteInfo pool = mPoolHandle.getPoolEntry( mOutputPool, "vanilla" );
-        LRC lrc = (pool == null) ? null : pool.selectLRC(true);
+
+        LRC lrc = (site == null) ? null : site.selectLRC(true);
         if (lrc  == null || lrc.getURL() == null || lrc.getURL().length() == 0) {
             throw new RuntimeException(
                 "The LRC URL is not specified in site catalog for site " + mOutputPool );
