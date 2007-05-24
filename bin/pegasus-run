@@ -25,6 +25,7 @@ use 5.006;
 use strict;
 use Carp;
 use File::Spec;
+#use File::Glob ':globally';
 use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
 
@@ -184,6 +185,8 @@ sub log10($) {
 
 # sanity check: lower umask
 umask 0002;
+my $fin=$config{jsd};
+open( F, ">>$fin" ) && close F;
 
 # if brain-dump failed, this will be undefined
 # if the user corrupted things, this will not be readable
@@ -341,11 +344,43 @@ if ( @rescue > 0 ) {
 	   $config{dag}, "\ninstead of\n", $original, "\n" );
 }
 
-my $workflow="xyz";
-my $time="abc";
+# find the workflow name and timestamp for pegasus-status
+my $workflow="";
+my $time="";
+
+my @listoffiles=glob "$run/*cdir.sub";
+
+if (scalar(@listoffiles) >0) {
+    my $subfile=$listoffiles[0];
+    warn "Opening file $subfile\n" if $main::DEBUG;
+    open(FI, "<$subfile") || die "Error: Cannot open file $subfile : $!\n";
+    while(<FI>){
+	if ( $_ =~ "pegasus_wf_name "){
+	    $workflow= (split "=",  $_,  2 )[1];
+	    $workflow =~ s/^\s+//;
+	    $workflow =~ s/\s+$//;
+	}
+	if ($_ =~ "pegasus_wf_time"){
+	    $time=(split "=", $_, 2)[1];
+	    $time =~ s/^\s+//;
+	    $time =~ s/\s+$//;
+	}
+    }
+close(FI);
+}
+
+my $did=undef;
+
+my $daglogfile=$config{dag}.".dagman.out";
+open(DID,"<$daglogfile") || die "Error: Cannot open file $daglogfile: $! \n";
+while (<DID>) {
+    if($_ =~ "condor_scheduniv_exec"){
+	$did=(split /\./,  (split)[3],2)[1];
+	last;
+    }
+}
 
 print << "EOF";
-
 
 I have started your workflow, committed it to DAGMan, and updated its
 state in the work database. A separate daemon was started to collect
@@ -356,11 +391,15 @@ cd $run
 
 *** To monitor the workflow you can run ***
 
-pegasus-status -w $workflow -t $time
+pegasus-status -w $workflow -t $time 
+or
+pegasus-status $run
 
 *** To remove your workflow run ***
 
-pegasus-remove $run
+pegasus-remove -d $did
+or 
+pegasus-remove $run 
 
 EOF
 
