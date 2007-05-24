@@ -548,7 +548,8 @@ public class ReplicaCatalogBridge
 
             //construct the path to it
             StringBuffer path = new StringBuffer();
-            path.append( home ).append( File.separator ).append( "bin" ).
+            path.append( home ).append( File.separator ).
+                 append( "bin" ).append( File.separator ).
                  append( "rc-client" );
 
             Profile classpath = this.getClassPath( home );
