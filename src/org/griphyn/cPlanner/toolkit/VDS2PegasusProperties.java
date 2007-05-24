@@ -671,13 +671,13 @@ public class VDS2PegasusProperties extends Executable {
         String text =
            "\n $Id$ " +
            "\n " + getGVDSVersion() +
-           "\n properties-converter - A tool that converts the VDS properties file to the corresponding"  +
-           "\n                        Pegasus properties file " +
-           "\n Usage: properties-converter [-Dprop  [..]] --input <input directory> [--output output directory]" +
-           "\n [--help] " +
+           "\n properties-converter - A tool that converts the VDS properties file to " +
+           "\n                         the corresponding Pegasus properties file " +
+           "\n Usage: properties-converter [-Dprop  [..]] --input <input file> " +
+           "\n        [--output output directory] [--help] " +
            "\n" +
            "\n Mandatory Options " +
-           "\n --input              the directory where the kickstart records reside." +
+           "\n --input              the path to the VDS properties file." +
            "\n Other Options  " +
            "\n -o |--output        the output directory where to generate the pegasus property file." +
            "\n -h |--help          generates this help." +
