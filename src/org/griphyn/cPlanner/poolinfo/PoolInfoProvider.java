@@ -60,6 +60,18 @@ import java.util.Set;
 public abstract class PoolInfoProvider {
 
     /**
+     * The name of the environment variable PEGASUS_HOME.
+     */
+    public static final String PEGASUS_HOME = "PEGASUS_HOME";
+
+
+    /**
+     * The name of the environment variable VDS_HOME.
+     */
+    public static final String VDS_HOME = "VDS_HOME";
+
+
+    /**
      * The LogManager object which is used to log all the messages. It's values
      * are set in the CPlanner class.
      */
@@ -373,7 +385,55 @@ public abstract class PoolInfoProvider {
         return ( GridFTPServer ) ( ftp.get( sel ) );
     }
 
+    /**
+     * Returns the value of VDS_HOME for a site.
+     *
+     * @param siteID   the name of the site.
+     * @return value if set else null.
+     */
+    public String getVDS_HOME( String siteID ){
+        return this.getEnvironmentVariable( siteID, VDS_HOME );
+    }
 
+
+    /**
+     * Returns the value of PEGASUS_HOME for a site.
+     *
+     * @param siteID   the name of the site.
+     * @return value if set else null.
+     */
+    public String getPegasusHome( String siteID ){
+        return this.getEnvironmentVariable( siteID, PEGASUS_HOME );
+    }
+
+
+    /**
+     * Returns an environment variable for a particular site set in the
+     * Site Catalog.
+     *
+     * @param siteID       the name of the site.
+     * @param envVariable  the environment variable whose value is required.
+     *
+     * @return value of the environment variable if found, else null
+     */
+    public String getEnvironmentVariable( String siteID, String envVariable ){
+        String result = null;
+
+        //get all environment variables
+        List envs = this.getPoolProfile( siteID, Profile.ENV );
+        if ( envs == null ) { return result; }
+
+        //traverse through all the environment variables
+        for( Iterator it = envs.iterator(); it.hasNext(); ){
+            Profile p = ( Profile ) it.next();
+            if( p.getProfileKey().equals( envVariable ) ){
+                result = p.getProfileValue();
+                break;
+            }
+        }
+
+        return result;
+    }
 
 
     /**
