@@ -69,6 +69,10 @@ public class SCClient
      */
     private PoolConfig mConfig;
 
+    private static final String XML_NAMESPACE="http://pegasus.isi.edu/schema";
+    private static final String XML_VERSION="2.0";
+
+
     private boolean mLocalPrec;
 
     public SCClient() {
@@ -192,7 +196,7 @@ public class SCClient
                 mLogger.log("Provide thepool config file with --files option",
                             LogManager.ERROR_MESSAGE_LEVEL);
 	}
-      
+
         if ( mConfig != null ) {
             if ( mText && mOutputXML == null ) {
                 //not sure about this
@@ -307,7 +311,7 @@ public class SCClient
     /**
      * Returns the XML description of the  contents of <code>PoolConfig</code>
      * object passed, conforming to pool config schema found at
-     * http://www.griphyn.org/chimera/gvds-poolcfg-1.5.xsd.
+     * http://pegasus.isi.edu/schema/sc-2.0.xsd.
      *
      * @param cfg the <code>PoolConfig</code> object whose xml description is
      *            desired.
@@ -321,12 +325,12 @@ public class SCClient
             " [" +
             System.getProperty( "user.country" ) + "] " + "-->\n";
         output += "<sitecatalog";
-        output += " xmlns=\"http://pegasus.isi.edu/schema/sitecatalog\"";
+        output += " xmlns=\""+XML_NAMESPACE+"/sitecatalog\"";
         output +=
-            " xsi:schemaLocation=\"http://pegasus.isi.edu/schema/sitecatalog " +
-            " http://pegasus.isi.edu/schema/sc-2.0.xsd\"";
+            " xsi:schemaLocation=\""+XML_NAMESPACE+"/sitecatalog " +
+            XML_NAMESPACE+"/sc-"+XML_VERSION+".xsd\"";
         output += " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"";
-        output += " version=\"2.0\">\n";
+        output += " version=\""+XML_VERSION+"\">\n";
         output += cfg.toXML();
         output += "</sitecatalog>";
 
