@@ -16,13 +16,9 @@
 
 package org.griphyn.common.catalog.transformation;
 
-
-import org.griphyn.common.catalog.TransformationCatalog;
-
-import org.griphyn.common.util.DynamicLoader;
-
-import org.griphyn.cPlanner.common.PegasusProperties;
-
+import org.griphyn.cPlanner.common.*;
+import org.griphyn.common.catalog.*;
+import org.griphyn.common.util.*;
 
 /**
  * A factory class to load the appropriate implementation of Transformation
@@ -36,22 +32,14 @@ public class TransformationFactory {
     /**
      * Some Constants for backward compatibility.
      */
-    public static final String SINGLE_READ = "single";
-
-    public static final String MULTIPLE_READ = "multiple";
-
-    public static final String OLDFILE_TC_CLASS = "OldFile";
 
     public static final String DEFAULT_TC_CLASS = "File";
-
 
     /**
      * The default package where all the implementations reside.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-                                   "org.griphyn.common.catalog.transformation";
-
-
+        "org.griphyn.common.catalog.transformation";
 
     /**
      * Connects the interface with the transformation catalog implementation. The
@@ -65,11 +53,10 @@ public class TransformationFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static TransformationCatalog loadInstance(  )
-                             throws TransformationFactoryException{
-        return loadInstance( PegasusProperties.getInstance() );
+    public static TransformationCatalog loadInstance() throws
+        TransformationFactoryException {
+        return loadInstance(PegasusProperties.getInstance());
     }
-
 
     /**
      * Connects the interface with the transformation catalog implementation. The
@@ -86,8 +73,9 @@ public class TransformationFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static TransformationCatalog loadInstance( PegasusProperties properties )
-                                                 throws TransformationFactoryException{
+    public static TransformationCatalog loadInstance(PegasusProperties
+        properties) throws
+        TransformationFactoryException {
 
         TransformationCatalog tc = null;
         String methodName = "getInstance";
@@ -95,38 +83,35 @@ public class TransformationFactory {
         /* get the implementor from properties */
         String catalogImplementor = properties.getTCMode().trim();
 
-        /* determine the catalog implementor for backward compatibility */
-        catalogImplementor = ( catalogImplementor.equalsIgnoreCase( SINGLE_READ ) ||
-                               catalogImplementor.equalsIgnoreCase( MULTIPLE_READ ) )?
-                              OLDFILE_TC_CLASS:
-                              catalogImplementor ;
-
         /* prepend the package name if required */
-        catalogImplementor = ( catalogImplementor.indexOf('.') == -1 )?
-                             //pick up from the default package
-                             DEFAULT_PACKAGE_NAME + "." + catalogImplementor:
-                             //load directly
-                             catalogImplementor;
-
+        catalogImplementor = (catalogImplementor.indexOf('.') == -1) ?
+            //pick up from the default package
+            DEFAULT_PACKAGE_NAME + "." + catalogImplementor :
+            //load directly
+            catalogImplementor;
 
         TransformationCatalog catalog;
 
         /* try loading the catalog implementation dynamically */
-        try{
-            DynamicLoader dl = new DynamicLoader( catalogImplementor );
-            catalog = ( TransformationCatalog ) dl.static_method( methodName, new String[0] );
-        }
-        catch ( Exception e ){
-            throw new TransformationFactoryException(
-                                                 " Unable to instantiate Transformation Catalog ",
-                                                 catalogImplementor,
-                                                 e );
-        }
+        try {
+            DynamicLoader dl = new DynamicLoader(catalogImplementor);
+            catalog = (TransformationCatalog) dl.static_method(methodName,
+                new String[0]);
 
+        }
+        catch (Exception e) {
+            throw new TransformationFactoryException(
+                " Unable to instantiate Transformation Catalog ",
+                catalogImplementor,
+                e);
+        }
+        if (catalog == null) {
+            throw new TransformationFactoryException(
+                " Unable to instantiate Transformation Catalog ",
+                catalogImplementor);
+        }
         return catalog;
 
     }
-
-
 
 }
