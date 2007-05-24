@@ -44,7 +44,7 @@ public class Profile
 
     public static final String GLOBUS = "globus";
 
-    public static final String VDS    = "vds";
+    public static final String VDS    = "pegasus";
 
     public static final String DAGMAN = "dagman";
 
@@ -57,6 +57,21 @@ public class Profile
     private String mKey ;
 
     private String mValue;
+
+
+    /**
+     * Returns a comma separated string containing the valid namespace types.
+     *
+     * @return  comma separated list.
+     */
+    public static String validTypesToString( ){
+        StringBuffer sb = new StringBuffer();
+        sb.append( CONDOR ).append( ',' ).append( GLOBUS ).append( ',' ).
+           append( VDS ).append( ',' ).append( DAGMAN ).append( ',' ).
+           append( HINTS ).append( ',' ).append( ENV );
+       return sb.toString();
+    }
+
 
     /**
      *
@@ -89,8 +104,8 @@ public class Profile
             mKey = new String( key );
             mValue = new String( value );
         } else {
-            throw new RuntimeException( "Unknown namespace type. Please check that " +
-                                        "you have specified one of the valid namespace types." );
+            throw new RuntimeException( "Unknown namespace type " + namespace +
+                                        " . Valid types are " + validTypesToString());
         }
     }
 
@@ -206,4 +221,6 @@ public class Profile
         }
         return newprofile;
     }
+
+
 }

@@ -350,8 +350,7 @@ public class SiteInfo {
      * @see #SYSINFO
      * @see #WORKDIR
      */
-    public void setInfo(int key, Object object) throws RuntimeException,
-        Exception {
+    public void setInfo(int key, Object object) throws RuntimeException {
 
         //to denote if object is of valid type or not.
         boolean valid = true;
@@ -429,7 +428,7 @@ public class SiteInfo {
 
 
             default:
-                throw new Exception(
+                throw new RuntimeException(
                 " Wrong site key. Please use one of the predefined key types");
         }
 

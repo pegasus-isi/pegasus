@@ -128,7 +128,7 @@ public class WorkDir {
      *
      * @throws Exception if illegal key defined.
      */
-    public void setInfo( int key, String value ) throws Exception {
+    public void setInfo( int key, String value ) throws RuntimeException {
         switch ( key ) {
             case 0:
                 mWorkDir = value == null ? null : new String( value );
@@ -143,7 +143,7 @@ public class WorkDir {
                 break;
 
             default:
-                throw new Exception( "Illegal workdir key type=" +
+                throw new RuntimeException( "Illegal workdir key type=" +
                     key + ". Use on of the predefined types" );
         }
     }
