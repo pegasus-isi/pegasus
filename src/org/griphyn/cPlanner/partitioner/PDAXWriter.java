@@ -34,7 +34,9 @@ public class PDAXWriter {
      * The version of the associated xml schema, to which the pdax files being
      * written conform to.
      */
-    public static final String VERSION = "1.1";
+    public static final String XML_VERSION = "2.0";
+
+    public static final String XML_NAMESPACE="http://pegasus.isi.edu/schema";
 
     /**
      * The write handle to the xml file being written.
@@ -86,12 +88,12 @@ public class PDAXWriter {
 
         writeln("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         writeln("<!-- generated: " + mLogger.getTimeStamp() + "-->");
-        writeln("<pdag xmlns=\"http://pegasus.isi.edu/schema/PDAX\"" +
+        writeln("<pdag xmlns=\""+XML_NAMESPACE+"/PDAX\"" +
                 " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
-                " xsi:schemaLocation=\"http://pegasus.isi.edu/schema/PDAX " +
-                " http://pegasus.isi.edu/schema/pdax-2.0.xsd\" " +
+                " xsi:schemaLocation=\""+XML_NAMESPACE+"/PDAX " +
+                XML_NAMESPACE+"/pdax-"+XML_VERSION+".xsd\" " +
                 "name=\"" + mName + "\" " + "index=\"0\" count=\"1\"" +
-                " version=\"" + this.VERSION + "\" " + ">");
+                " version=\"" + XML_VERSION + "\" " + ">");
 
     }
 
@@ -108,6 +110,7 @@ public class PDAXWriter {
 
     /**
      * Writes out to the file.
+     * @param st String
      */
     public void write(String st){
         mWriteHandle.write(st);
@@ -115,6 +118,7 @@ public class PDAXWriter {
 
     /**
      * Writes out to the file.
+     * @param st String
      */
     public void writeln(String st){
         mWriteHandle.println(st);
