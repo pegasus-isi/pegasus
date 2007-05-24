@@ -89,8 +89,8 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   struct group* group = wrap_getgrgid( getgid() );
 
   size_t len = 0;
-#define XML_SCHEMA_URI "http://vds.isi.edu/invocation"
-#define XML_SCHEMA_VERSION "1.10"
+#define XML_SCHEMA_URI "http://pegasus.isi.edu/invocation"
+#define XML_SCHEMA_VERSION "2.0"
 
   /* default is to produce XML preamble */
   if ( ! run->noHeader )
@@ -101,7 +101,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
 	  "<invocation xmlns=\"" XML_SCHEMA_URI "\""
 	  " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
 	  " xsi:schemaLocation=\"" XML_SCHEMA_URI
-	  " http://vds.isi.edu/schemas/iv-" XML_SCHEMA_VERSION ".xsd\""
+	  " http://pegasus.isi.edu/schema/iv-" XML_SCHEMA_VERSION ".xsd\""
 	  " version=\"" XML_SCHEMA_VERSION "\""
 	  " start=\"" );
 
