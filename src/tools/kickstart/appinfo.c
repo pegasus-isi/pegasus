@@ -89,7 +89,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   struct group* group = wrap_getgrgid( getgid() );
 
   size_t len = 0;
-#define XML_SCHEMA_URI "http://pegasus.isi.edu/invocation"
+#define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.0"
 
   /* default is to produce XML preamble */
