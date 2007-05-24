@@ -634,7 +634,7 @@ public class CPlanner extends Executable{
            "\n -g |--group        the VO Group to which the user belongs " +
            "\n -m |--megadag      type of style to use while generating the megadag in deferred planning." +
            "\n -o |--output       the output site where the data products during workflow execution are transferred to." +
-           "\n -p |--sites        comma separated list of executions sites on which to map the workflow." +
+           "\n -s |--sites        comma separated list of executions sites on which to map the workflow." +
            "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed" +
            "\n                    can optionally specify the basename of the remote directories" +
            "\n     --monitor      monitor the execution of the workflow, using workflow monitor daemon like tailstatd." +
