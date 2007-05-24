@@ -258,12 +258,22 @@ public class Database
                     namespace, name, version, pfnresult[ 0 ],
                     pfnresult[ 1 ],
                     TCType.fromString( pfnresult[ 2 ] ), null, qsysinfo );
-                if ( lfnprofiles != null ) {
-                    tc.setProfiles( lfnprofiles );
+
+                try{
+                    if (lfnprofiles != null) {
+                        tc.setProfiles(lfnprofiles);
+                    }
+                    if (pfnprofiles != null) {
+                        tc.setProfiles(pfnprofiles);
+                    }
                 }
-                if ( pfnprofiles != null ) {
-                    tc.setProfiles( pfnprofiles );
+                catch( RuntimeException e ){
+                    mLogger.log( "Ignoring errors while parsing profile in Transformation Catalog DB" +
+                                 " for " + Separator.combine( namespace, name, version ), e,
+                                 LogManager.WARNING_MESSAGE_LEVEL );
+
                 }
+
                 resultEntries.add( tc );
             }
         }

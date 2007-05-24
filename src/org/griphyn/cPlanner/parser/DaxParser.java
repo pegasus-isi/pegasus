@@ -747,7 +747,7 @@ public class DaxParser extends Parser {
             //check if namespace is valid
             mNamespace = mNamespace.toLowerCase();
             if(!Namespace.isNamespaceValid(mNamespace)){
-                mLogger.log("Namespace not supported. ignoring "+ mNamespace,
+                mLogger.log("Namespace specified in the DAX not supported. ignoring "+ mNamespace,
                             LogManager.WARNING_MESSAGE_LEVEL);
                 return;
             }

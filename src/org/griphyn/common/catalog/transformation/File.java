@@ -1131,6 +1131,11 @@ public class File
                                             LogManager.ERROR_MESSAGE_LEVEL );
 
                                     }
+                                    catch( RuntimeException e ){
+                                        mLogger.log( "Ignoring errors while parsing profile in Transformation Catalog on line " +
+                                            linecount , e,
+                                            LogManager.WARNING_MESSAGE_LEVEL );
+                                    }
                                 }
                                 break;
                             default:

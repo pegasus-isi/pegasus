@@ -34,6 +34,7 @@ import java.io.IOException;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.griphyn.cPlanner.namespace.Namespace;
 
 /**
  * This is the parsing class, used to parse the pool config file in xml format.
@@ -122,7 +123,6 @@ public class ConfigXmlParser extends Parser {
     }
 
     public void endElement( String uri, String localName, String qName ) {
-        try {
             if ( localName.trim().equalsIgnoreCase( "sitecatalog" ) ) {
                 handleConfigTagEnd();
             } else if ( localName.trim().equalsIgnoreCase( "site" ) ) {
@@ -148,9 +148,7 @@ public class ConfigXmlParser extends Parser {
                     "***********", LogManager.ERROR_MESSAGE_LEVEL );
                 mTextContent.setLength( 0 );
             }
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
+
     }
 
     public void startElement( String uri, String localName, String qName,
@@ -490,8 +488,19 @@ public class ConfigXmlParser extends Parser {
      * @throws java.lang.Exception
      * @see org.griphyn.cPlanner.classes.SiteInfo
      */
-    private void handleProfileTagEnd( SiteInfo pinfo ) throws Exception {
+    private void handleProfileTagEnd( SiteInfo pinfo ) throws RuntimeException {
         if ( mTextContent != null && m_namespace != null && m_key != null ) {
+
+            //check if namespace is valid
+            m_namespace = m_namespace.toLowerCase();
+            if( !Namespace.isNamespaceValid( m_namespace ) ){
+                mLogger.log("Namespace specified in Site Catalog not supported. ignoring "+ m_namespace,
+                            LogManager.WARNING_MESSAGE_LEVEL);
+                return;
+            }
+
+
+
             Profile profile = new Profile( m_namespace, m_key,
                 mTextContent.toString().trim() );
             pinfo.setInfo( SiteInfo.PROFILE, profile );
@@ -508,10 +517,9 @@ public class ConfigXmlParser extends Parser {
     /**
      * sk made changes to the following function to set GRIDFTPServer instead of
      * setting it in fn handleGridFtpTagStart()
-     * @throws java.lang.Exception
+     * @throws java.lang.RuntimeException
      */
-    private void handleGridFtpTagEnd() throws
-        Exception {
+    private void handleGridFtpTagEnd() throws      RuntimeException {
         m_pool_info.setInfo( SiteInfo.GRIDFTP, gftp );
     }
 
@@ -530,8 +538,7 @@ public class ConfigXmlParser extends Parser {
      * @throws java.lang.Exception
      * @see org.griphyn.cPlanner.classes.SiteInfo
      */
-    private void handleWorkDirectoryTagEnd( SiteInfo pinfo ) throws
-        Exception {
+    private void handleWorkDirectoryTagEnd( SiteInfo pinfo ) throws RuntimeException {
         if ( mTextContent != null ) {
             WorkDir gdw = ( WorkDir ) pinfo.getInfo(
                 SiteInfo.WORKDIR );
