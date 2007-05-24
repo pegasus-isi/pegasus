@@ -35,13 +35,13 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * The "official" namespace URI of the invocation record schema.
    */
   public static final String SCHEMA_NAMESPACE =
-    "http://vds.isi.edu/invocation";
+    "http://pegasus.isi.edu/schema/invocation";
 
   /**
    * The "not-so-official" location URL of the invocation record definition.
    */
   public static final String SCHEMA_LOCATION =
-    "http://vds.isi.edu/schemas/iv-1.10.xsd";
+    "http://pegasus.isi.edu/schema/iv-2.0.xsd";
 
 
 
@@ -90,7 +90,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
    */
   private int m_uid;
 
-  /** 
+  /**
    * symbolical user name of the effective user.
    */
   private String m_user;
@@ -126,7 +126,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
   private List m_job;
 
   /**
-   * Array with stat() and fstat() information about various files. 
+   * Array with stat() and fstat() information about various files.
    */
   private List m_stat;
 
@@ -148,12 +148,12 @@ public class InvocationRecord extends Invocation // implements Cloneable
   /**
    * Environment settings.
    */
-  private Environment m_environment; 
+  private Environment m_environment;
 
   /**
    * Currently active umask while kickstart was executing. This
    * is available with new kickstart, older version will have -1
-   * at this API point. 
+   * at this API point.
    */
   private int m_umask = -1;
 
@@ -492,7 +492,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
   { this.m_environment = environment; }
 
 //   /**
-//    * Parses an ISO 8601 timestamp? 
+//    * Parses an ISO 8601 timestamp?
 //    *
 //    * @param stamp
 //    * @see #getResource()
@@ -523,7 +523,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
 
   /**
    * Accessor: Obtains a job at a certain position in the job list.
-   * 
+   *
    * @param index is the position in the list to obtain a job from
    * @return the job at that position.
    * @throws IndexOutOfBoundsException if the index points to an element
@@ -533,7 +533,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
     throws IndexOutOfBoundsException
   {
     //-- check bound for index
-    if ((index < 0) || (index >= this.m_job.size())) 
+    if ((index < 0) || (index >= this.m_job.size()))
       throw new IndexOutOfBoundsException();
 
     return (Job) this.m_job.get(index);
@@ -546,12 +546,12 @@ public class InvocationRecord extends Invocation // implements Cloneable
    */
   public int getJobCount()
   {
-    return this.m_job.size(); 
+    return this.m_job.size();
   }
 
   /**
    * Accessor: Gets an array of all values that constitute the current
-   * content. This list is read-only. 
+   * content. This list is read-only.
    *
    * @return a list of jobs.
    */
@@ -567,8 +567,8 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * @return an iterator to walk the list with.
    */
   public Iterator iterateJob()
-  { 
-    return this.m_job.iterator(); 
+  {
+    return this.m_job.iterator();
   }
 
   /**
@@ -578,8 +578,8 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * @return a list iterator to walk the list with.
    */
   public ListIterator listIterateJob()
-  { 
-    return this.m_job.listIterator(); 
+  {
+    return this.m_job.listIterator();
   }
 
   /**
@@ -587,7 +587,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
    */
   public void removeAllJob()
   {
-    this.m_job.clear(); 
+    this.m_job.clear();
   }
 
 
@@ -603,7 +603,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
 
   /**
    * Accessor: Overwrites a job at a certain position.
-   * 
+   *
    * @param index position to overwrite an elment in.
    * @param job is the Job to replace with.
    * @throws IndexOutOfBoundsException if the position pointed to is invalid.
@@ -653,7 +653,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
 
   /**
    * Accessor: Obtains a stat at a certain position in the stat list.
-   * 
+   *
    * @param index is the position in the list to obtain a stat from
    * @return the stat at that position.
    * @throws IndexOutOfBoundsException if the index points to an element
@@ -663,7 +663,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
     throws IndexOutOfBoundsException
   {
     //-- check bound for index
-    if ((index < 0) || (index >= this.m_stat.size())) 
+    if ((index < 0) || (index >= this.m_stat.size()))
       throw new IndexOutOfBoundsException();
 
     return (StatCall) this.m_stat.get(index);
@@ -676,12 +676,12 @@ public class InvocationRecord extends Invocation // implements Cloneable
    */
   public int getStatCount()
   {
-    return this.m_stat.size(); 
+    return this.m_stat.size();
   }
 
   /**
    * Accessor: Gets an array of all values that constitute the current
-   * content. This list is read-only. 
+   * content. This list is read-only.
    *
    * @return a list of stats.
    */
@@ -697,8 +697,8 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * @return an iterator to walk the list with.
    */
   public Iterator iterateStatCall()
-  { 
-    return this.m_stat.iterator(); 
+  {
+    return this.m_stat.iterator();
   }
 
   /**
@@ -708,8 +708,8 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * @return a list iterator to walk the list with.
    */
   public ListIterator listIterateStatCall()
-  { 
-    return this.m_stat.listIterator(); 
+  {
+    return this.m_stat.listIterator();
   }
 
   /**
@@ -717,7 +717,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
    */
   public void removeAllStatCall()
   {
-    this.m_stat.clear(); 
+    this.m_stat.clear();
   }
 
 
@@ -733,7 +733,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
 
   /**
    * Accessor: Overwrites a stat at a certain position.
-   * 
+   *
    * @param index position to overwrite an elment in.
    * @param stat is the StatCall to replace with.
    * @throws IndexOutOfBoundsException if the position pointed to is invalid.
@@ -792,21 +792,21 @@ public class InvocationRecord extends Invocation // implements Cloneable
   /**
    * Converts the active state into something meant for human consumption.
    * The method will be called when recursively traversing the instance
-   * tree. 
+   * tree.
    *
    * @param stream is a stream opened and ready for writing. This can also
    * be a string stream for efficient output.
    */
   public void toString( Writer stream )
     throws IOException
-  { 
+  {
     throw new IOException( "method not implemented, please contact vds-support@griphyn.org" );
   }
 
   /**
    * Writes the header of the XML output. The output contains the special
    * strings to start an XML document, some comments, and the root element.
-   * The latter points to the XML schema via XML Instances. 
+   * The latter points to the XML schema via XML Instances.
    *
    * @param stream is a stream opened and ready for writing. This can also
    * be a string stream for efficient output.
@@ -815,9 +815,9 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * The parameter is used internally for the recursive traversal.
    * @param namespace is the XML schema namespace prefix. If neither
    * empty nor null, each element will be prefixed with this prefix,
-   * and the root element will map the XML namespace. 
+   * and the root element will map the XML namespace.
    * @exception IOException if something fishy happens to the stream.
-   */ 
+   */
   public void writeXMLHeader( Writer stream, String indent, String namespace )
     throws IOException
   {
@@ -865,29 +865,29 @@ public class InvocationRecord extends Invocation // implements Cloneable
     stream.write( "\"");
 
     writeAttribute( stream, " version=\"", this.m_version );
-    writeAttribute( stream, " start=\"", 
-		    Currently.iso8601(false,true,true,this.m_start) ); 
+    writeAttribute( stream, " start=\"",
+		    Currently.iso8601(false,true,true,this.m_start) );
     writeAttribute( stream, " duration=\"", Double.toString(this.m_duration) );
     if ( this.m_transformation != null && this.m_transformation.length() > 0 )
       writeAttribute( stream, " transformation=\"", this.m_transformation );
     if ( this.m_derivation != null && this.m_derivation.length() > 0 )
       writeAttribute( stream, " derivation=\"", this.m_derivation );
     writeAttribute( stream, " pid=\"", Integer.toString( this.m_pid ) );
-    if ( this.m_resource != null && this.m_resource.length() > 0 ) 
+    if ( this.m_resource != null && this.m_resource.length() > 0 )
       writeAttribute( stream, " resource=\"", this.m_resource );
     if ( this.m_wf_label != null && this.m_wf_label.length() > 0 )
       writeAttribute( stream, " wf-label=\"", this.m_wf_label );
     if ( this.m_wf_stamp != null )
-      writeAttribute( stream, " wf-stamp=\"", 
+      writeAttribute( stream, " wf-stamp=\"",
 		      Currently.iso8601(false,true,true,this.m_wf_stamp) );
     writeAttribute( stream, " hostaddr=\"", this.m_hostaddr.getHostAddress() );
-    if ( this.m_hostname != null && this.m_hostname.length() > 0 ) 
+    if ( this.m_hostname != null && this.m_hostname.length() > 0 )
       writeAttribute( stream, " hostname=\"", this.m_hostname );
     writeAttribute( stream, " uid=\"", Integer.toString( this.m_uid ) );
-    if ( this.m_user != null && this.m_user.length() > 0 ) 
+    if ( this.m_user != null && this.m_user.length() > 0 )
       writeAttribute( stream, " user=\"", this.m_user );
-    writeAttribute( stream, " gid=\"", Integer.toString( this.m_gid ) ); 
-    if ( this.m_group != null && this.m_group.length() > 0 ) 
+    writeAttribute( stream, " gid=\"", Integer.toString( this.m_gid ) );
+    if ( this.m_group != null && this.m_group.length() > 0 )
       writeAttribute( stream, " group=\"", this.m_group );
 
     stream.write( '>' );
@@ -907,7 +907,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * The parameter is used internally for the recursive traversal.
    * @param namespace is the XML schema namespace prefix. If neither
    * empty nor null, each element will be prefixed with this prefix,
-   * and the root element will map the XML namespace. 
+   * and the root element will map the XML namespace.
    * @exception IOException if something fishy happens to the stream.
    */
   public void toXML( Writer stream, String indent, String namespace )
@@ -933,7 +933,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
     }
 
     // part 4: environment and resourcs
-    if ( m_environment != null ) 
+    if ( m_environment != null )
       m_environment.toXML( stream, newindent, namespace );
 
     // close tag
