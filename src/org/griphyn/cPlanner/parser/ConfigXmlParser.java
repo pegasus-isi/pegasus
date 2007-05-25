@@ -494,6 +494,7 @@ public class ConfigXmlParser extends Parser {
             //check if namespace is valid
             m_namespace = m_namespace.toLowerCase();
             if( !Namespace.isNamespaceValid( m_namespace ) ){
+                mTextContent.setLength( 0 );
                 mLogger.log("Namespace specified in Site Catalog not supported. ignoring "+ m_namespace,
                             LogManager.WARNING_MESSAGE_LEVEL);
                 return;
