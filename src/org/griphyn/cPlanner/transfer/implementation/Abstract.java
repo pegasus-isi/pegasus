@@ -55,6 +55,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.StringTokenizer;
+import org.griphyn.common.util.Separator;
 
 /**
  * An abstract implementation that implements some of the common functions in
@@ -74,22 +75,22 @@ public abstract class Abstract implements Implementation{
     /**
      * The transformation namespace for the setXBit jobs.
      */
-    public static final String XBIT_TRANSFORMATION_NS = "VDS";
+    public static final String XBIT_TRANSFORMATION_NS = "pegasus";
 
     /**
      * The version number for the derivations for setXBit  jobs.
      */
-    public static final String XBIT_TRANSFORMATION_VERSION = "1.0";
+    public static final String XBIT_TRANSFORMATION_VERSION = null;
 
     /**
      * The derivation namespace for the setXBit  jobs.
      */
-    public static final String XBIT_DERIVATION_NS = "VDS";
+    public static final String XBIT_DERIVATION_NS = "pegasus";
 
     /**
      * The version number for the derivations for setXBit  jobs.
      */
-    public static final String XBIT_DERIVATION_VERSION = "1.7";
+    public static final String XBIT_DERIVATION_VERSION = null;
 
     /**
      * The prefix for the jobs which are added to set X bit for the staged
@@ -477,29 +478,39 @@ public abstract class Abstract implements Implementation{
         JobManager jobManager = null;
         NameValue destURL  = (NameValue)file.getDestURL();
         String eSiteHandle = destURL.getKey();
+
+        List entries;
         try {
-            List entries= mTCHandle.getTCEntries(null,
-                                                 this.CHANGE_XBIT_TRANSFORMATION, null,
-                                                 eSiteHandle, TCType.INSTALLED);
-
-            if(entries == null || entries.isEmpty()){
-                //log a message and return null
-                mLogger.log("Unable to map transformation " +
-                            this.CHANGE_XBIT_TRANSFORMATION +
-                            " on site " + eSiteHandle,
-                            LogManager.ERROR_MESSAGE_LEVEL);
-                return null;
-            }
-            else{
-                entry = (TransformationCatalogEntry) entries.get(0);
-            }
-
+            entries= mTCHandle.getTCEntries( this.XBIT_TRANSFORMATION_NS,
+                                             this.CHANGE_XBIT_TRANSFORMATION,
+                                             this.XBIT_TRANSFORMATION_VERSION,
+                                             eSiteHandle, TCType.INSTALLED);
         } catch (Exception e) {
             //non sensical catching
             mLogger.log("Unable to retrieve entries from TC " +
                         e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
             return null;
         }
+
+        entry = ( entries == null ) ?
+            this.defaultXBitTCEntry( eSiteHandle ): //try using a default one
+            (TransformationCatalogEntry) entries.get(0);
+
+        if( entry == null ){
+            //NOW THROWN AN EXCEPTION
+
+            //should throw a TC specific exception
+            StringBuffer error = new StringBuffer();
+            error.append("Could not find entry in tc for lfn ").
+                append( Separator.combine( this.XBIT_TRANSFORMATION_NS,
+                                           this.CHANGE_XBIT_TRANSFORMATION,
+                                           this.XBIT_TRANSFORMATION_VERSION )).
+                append(" at site ").append( eSiteHandle );
+
+            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( error.toString() );
+        }
+
 
         SiteInfo eSite = mSCHandle.getPoolEntry(eSiteHandle, "transfer");
         jobManager     = eSite.selectJobManager("transfer",true);
@@ -536,6 +547,74 @@ public abstract class Abstract implements Implementation{
 
         return xBitJob;
     }
+
+
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultXBitTCEntry( String site ){
+        TransformationCatalogEntry defaultTCEntry = null;
+        //check if PEGASUS_HOME is set
+        String home = mSCHandle.getPegasusHome( site );
+        //if PEGASUS_HOME is not set, use VDS_HOME
+        home = ( home == null )? mSCHandle.getVDS_HOME( site ): home;
+
+        //if home is still null
+        if ( home == null ){
+            //cannot create default TC
+            mLogger.log( "Unable to create a default entry for " +
+                         Separator.combine( this.XBIT_TRANSFORMATION_NS,
+                                           this.CHANGE_XBIT_TRANSFORMATION,
+                                           this.XBIT_TRANSFORMATION_VERSION  ),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            //set the flag back to true
+            return defaultTCEntry;
+        }
+
+        //remove trailing / if specified
+        home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
+            home.substring( 0, home.length() - 1 ):
+            home;
+
+        //construct the path to it
+        StringBuffer path = new StringBuffer();
+        path.append( home ).append( File.separator ).
+            append( "bin" ).append( File.separator ).
+            append( this.CHANGE_XBIT_TRANSFORMATION );
+
+
+        defaultTCEntry = new TransformationCatalogEntry( this.XBIT_TRANSFORMATION_NS,
+                                                         this.CHANGE_XBIT_TRANSFORMATION,
+                                                         this.XBIT_TRANSFORMATION_VERSION
+                                                         );
+
+        defaultTCEntry.setPhysicalTransformation( path.toString() );
+        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setType( TCType.INSTALLED );
+
+        //register back into the transformation catalog
+        //so that we do not need to worry about creating it again
+        try{
+            mTCHandle.addTCEntry( defaultTCEntry , false );
+        }
+        catch( Exception e ){
+            //just log as debug. as this is more of a performance improvement
+            //than anything else
+            mLogger.log( "Unable to register in the TC the default entry " +
+                          defaultTCEntry.getLogicalTransformation() +
+                          " for site " + site, e,
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        return defaultTCEntry;
+    }
+
 
     /**
      * Builds up a set of disabled chmod sites

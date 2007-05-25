@@ -15,7 +15,6 @@
 package org.griphyn.cPlanner.engine;
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.Data;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -27,6 +26,8 @@ import org.griphyn.common.catalog.TransformationCatalogEntry;
 import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.classes.TCType;
+
+import org.griphyn.common.util.Separator;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -58,6 +59,33 @@ public class RemoveDirectory extends Engine {
      * Constant suffix for the names of the remote directory nodes.
      */
     public static final String REMOVE_DIR_SUFFIX = "_rdir";
+
+    /**
+     * The logical name of the transformation that removes directories on the
+     * remote execution pools.
+     */
+    public static final String TRANSFORMATION_NAME = "dirmanager";
+
+    /**
+     * The transformation namespace for the create dir jobs.
+     */
+    public static final String TRANSFORMATION_NS = "pegasus";
+
+    /**
+     * The version number for the derivations for create dir  jobs.
+     */
+    public static final String TRANSFORMATION_VERSION = null;
+
+    /**
+     * The derivation namespace for the create dir  jobs.
+     */
+    public static final String DERIVATION_NS = "pegasus";
+
+    /**
+     * The version number for the derivations for create dir  jobs.
+     */
+    public static final String DERIVATION_VERSION = "1.0";
+
 
     /**
      * The concrete dag so far, for which the clean up dag needs to be generated.
@@ -189,15 +217,18 @@ public class RemoveDirectory extends Engine {
         JobManager jm   = null;
 
         try {
-            entries = mTCHandle.getTCEntries(null,
-                                               CreateDirectory.CREATE_DIR_TRANSFORMATION, null,
-                                               execPool, TCType.INSTALLED);
+            entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NS,
+                                              this.TRANSFORMATION_NAME,
+                                              this.TRANSFORMATION_VERSION,
+                                              execPool, TCType.INSTALLED);
 
             if(entries == null){
                 StringBuffer error = new StringBuffer();
                 error.append( "Unable to map transformation " ).
-                      append( CreateDirectory.CREATE_DIR_TRANSFORMATION ).append( " on site " ).
-                      append( execPool );
+                      append( Separator.combine( this.TRANSFORMATION_NS,
+                                                 this.TRANSFORMATION_NAME,
+                                                 this.TRANSFORMATION_VERSION ) )
+                      .append( " on site " ).append( execPool );
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }

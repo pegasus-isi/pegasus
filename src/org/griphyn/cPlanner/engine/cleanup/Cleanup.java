@@ -18,13 +18,10 @@ package org.griphyn.cPlanner.engine.cleanup;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.JobManager;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 
-import org.griphyn.cPlanner.engine.Engine;
 
 import org.griphyn.cPlanner.namespace.Condor;
 
@@ -45,6 +42,7 @@ import org.griphyn.common.util.Separator;
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashSet;
+import java.util.ArrayList;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -287,25 +285,93 @@ public class Cleanup implements Implementation{
                                                 TCType.INSTALLED );
         } catch (Exception e) { /* empty catch */ }
 
-        if( tcentries == null ){
+
+        entry = ( tcentries == null ) ?
+                 this.defaultTCEntry( site ): //try using a default one
+                 (TransformationCatalogEntry) tcentries.get(0);
+
+        if( entry == null ){
+            //NOW THROWN AN EXCEPTION
+
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
-            error.append( "Could not find entry in tc for lfn " ).append(
-                Separator.combine( this.TRANSFORMATION_NAMESPACE, this.TRANSFORMATION_NAME,
-                                   this.TRANSFORMATION_VERSION )).
-                  append(" at site " ).append( site );
+            error.append("Could not find entry in tc for lfn ").
+                  append( Separator.combine(this.TRANSFORMATION_NAMESPACE,
+                                            this.TRANSFORMATION_NAME,
+                                           this.TRANSFORMATION_VERSION)).
+                  append(" at site ").append(site);
 
-            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( error.toString() );
-        }
+              mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+              throw new RuntimeException( error.toString() );
 
+          }
 
-
-        entry = (TransformationCatalogEntry) tcentries.get(0);
 
         return entry;
 
     }
 
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCEntry( String site ){
+        TransformationCatalogEntry defaultTCEntry = null;
+        //check if PEGASUS_HOME is set
+        String home = mSiteHandle.getPegasusHome( site );
+
+        //if home is still null
+        if ( home == null ){
+            //cannot create default TC
+            mLogger.log( "Unable to create a default entry for " +
+                         Separator.combine( this.TRANSFORMATION_NAMESPACE,
+                                            this.TRANSFORMATION_NAME,
+                                            this.TRANSFORMATION_VERSION ),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            //set the flag back to true
+            return defaultTCEntry;
+        }
+
+        //remove trailing / if specified
+        home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
+            home.substring( 0, home.length() - 1 ):
+            home;
+
+        //construct the path to it
+        StringBuffer path = new StringBuffer();
+        path.append( home ).append( File.separator ).
+            append( "bin" ).append( File.separator ).
+            append( this.TRANSFORMATION_NAME );
+
+
+        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NAMESPACE,
+                                                           this.TRANSFORMATION_NAME,
+                                                           this.TRANSFORMATION_VERSION );
+
+        defaultTCEntry.setPhysicalTransformation( path.toString() );
+        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setType( TCType.INSTALLED );
+
+        //register back into the transformation catalog
+        //so that we do not need to worry about creating it again
+        try{
+            mTCHandle.addTCEntry( defaultTCEntry , false );
+        }
+        catch( Exception e ){
+            //just log as debug. as this is more of a performance improvement
+            //than anything else
+            mLogger.log( "Unable to register in the TC the default entry " +
+                          defaultTCEntry.getLogicalTransformation() +
+                          " for site " + site, e,
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        return defaultTCEntry;
+    }
 
 }

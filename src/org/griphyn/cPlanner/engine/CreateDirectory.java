@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
+import java.io.File;
+import org.griphyn.common.util.Separator;
 
 /**
  * This common interface that identifies the basic functions that need to be
@@ -75,12 +77,12 @@ public abstract class CreateDirectory
     /**
      * The transformation namespace for the create dir jobs.
      */
-    public static final String TRANSFORMATION_NS = null;
+    public static final String TRANSFORMATION_NS = "pegasus";
 
     /**
      * The derivation namespace for the create dir  jobs.
      */
-    public static final String DERIVATION_NS = "Pegasus";
+    public static final String DERIVATION_NS = "pegasus";
 
     /**
      * The version number for the derivations for create dir  jobs.
@@ -111,8 +113,10 @@ public abstract class CreateDirectory
      * @param className  The name of the class that implements the mode. It is the
      *                   name of the class, not the complete name with package.
      *                   That is added by itself.
-     * @param dag        the workflow.
+     * @param concDag        the workflow.
      * @param properties the <code>PegasusProperties</code> to be used.
+     *
+     * @return instance of a CreateDirecctory implementation
      *
      * @throws FactoryException that nests any error that
      *         might occur during the instantiation of the implementation.
@@ -239,6 +243,8 @@ public abstract class CreateDirectory
      * @param execPool  the execution pool for which the create dir job is to be
      *                  created.
      * @param jobName   the name that is to be assigned to the job.
+     *
+     * @return create dir job.
      */
     protected SubInfo makeCreateDirJob(String execPool, String jobName) {
         SubInfo newJob  = new SubInfo();
@@ -248,29 +254,38 @@ public abstract class CreateDirectory
         JobManager jobManager = null;
 
         try {
-            entries = mTCHandle.getTCEntries(null,
-                                               this.CREATE_DIR_TRANSFORMATION, null,
-                                               execPool, TCType.INSTALLED);
-
-            if(entries == null){
-                //log a message and exit
-                StringBuffer error = new StringBuffer();
-                error.append( "Unable to map transformation " ).
-                      append( this.CREATE_DIR_TRANSFORMATION ).append( " on site " ).
-                      append( execPool );
-                mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-                throw new RuntimeException( error.toString() );
-            }
-            else{
-                entry = (TransformationCatalogEntry) entries.get(0);
-                execPath = entry.getPhysicalTransformation();
-            }
-
-        } catch (Exception e) {
+            entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NS,
+                                              this.CREATE_DIR_TRANSFORMATION,
+                                              null,
+                                              execPool, TCType.INSTALLED);
+        }
+        catch (Exception e) {
             //non sensical catching
             mLogger.log("Unable to retrieve entries from TC " +
-                        e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
+                        e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL );
         }
+
+        entry = ( entries == null ) ?
+            this.defaultTCEntry( execPool ): //try using a default one
+            (TransformationCatalogEntry) entries.get(0);
+
+        if( entry == null ){
+            //NOW THROWN AN EXCEPTION
+
+            //should throw a TC specific exception
+            StringBuffer error = new StringBuffer();
+            error.append("Could not find entry in tc for lfn ").
+                append( Separator.combine(this.TRANSFORMATION_NS,
+                                          this.CREATE_DIR_TRANSFORMATION,
+                                          null )).
+                append(" at site ").append( execPool );
+
+            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( error.toString() );
+        }
+
+        execPath = entry.getPhysicalTransformation();
+
 
         SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
         jobManager = ePool.selectJobManager("transfer",true);
@@ -308,6 +323,72 @@ public abstract class CreateDirectory
 
         return newJob;
 
+    }
+
+
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCEntry( String site ){
+        TransformationCatalogEntry defaultTCEntry = null;
+        //check if PEGASUS_HOME is set
+        String home = mPoolHandle.getPegasusHome( site );
+        //if PEGASUS_HOME is not set, use VDS_HOME
+        home = ( home == null )? mPoolHandle.getVDS_HOME( site ): home;
+
+        //if home is still null
+        if ( home == null ){
+            //cannot create default TC
+            mLogger.log( "Unable to create a default entry for " +
+                         Separator.combine( this.TRANSFORMATION_NS,
+                                            this.CREATE_DIR_TRANSFORMATION,
+                                            null ),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            //set the flag back to true
+            return defaultTCEntry;
+        }
+
+        //remove trailing / if specified
+        home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
+            home.substring( 0, home.length() - 1 ):
+            home;
+
+        //construct the path to it
+        StringBuffer path = new StringBuffer();
+        path.append( home ).append( File.separator ).
+            append( "bin" ).append( File.separator ).
+            append( this.CREATE_DIR_TRANSFORMATION );
+
+
+        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NS,
+                                                         this.CREATE_DIR_TRANSFORMATION,
+                                                         null );
+
+        defaultTCEntry.setPhysicalTransformation( path.toString() );
+        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setType( TCType.INSTALLED );
+
+        //register back into the transformation catalog
+        //so that we do not need to worry about creating it again
+        try{
+            mTCHandle.addTCEntry( defaultTCEntry , false );
+        }
+        catch( Exception e ){
+            //just log as debug. as this is more of a performance improvement
+            //than anything else
+            mLogger.log( "Unable to register in the TC the default entry " +
+                          defaultTCEntry.getLogicalTransformation() +
+                          " for site " + site, e,
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        return defaultTCEntry;
     }
 
 
