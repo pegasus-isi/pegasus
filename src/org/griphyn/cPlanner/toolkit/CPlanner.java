@@ -17,11 +17,9 @@ package org.griphyn.cPlanner.toolkit;
 
 
 import org.griphyn.cPlanner.code.CodeGenerator;
-import org.griphyn.cPlanner.code.CodeGeneratorException;
 import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.DagInfo;
+import org.griphyn.cPlanner.classes.ADag;import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
@@ -51,10 +49,7 @@ import org.griphyn.common.util.FactoryException;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.FilenameFilter;
 
@@ -100,6 +95,20 @@ public class CPlanner extends Executable{
      * cleanup DAG that for the concrete dag generated for the workflow.
      */
     public static final String CLEANUP_DIR  = "cleanup";
+
+
+    /**
+     * The final successful message that is to be logged.
+     */
+    private static final String SUCCESS_MESSAGE =
+        "\n\n\n" +
+        "I have concretized your abstract workflow. The workflow has been entered \n" +
+        "into the workflow database with a state of \"planned\". The next step is \n" +
+        "to start or execute your workflow. The invocation required is" +
+        "\n\n\n";
+
+
+
 
     /**
      * The object containing all the options passed to the Concrete Planner.
@@ -288,7 +297,7 @@ public class CPlanner extends Executable{
             String relativeDir; //the submit directory relative to the base specified
             try{
                 //create the base directory if required
-                relativeDir = createSubmitDirectory( submitDir, mUser, "ligo", orgDag.getLabel() );
+                relativeDir = createSubmitDirectory( submitDir, mUser, mPOptions.getVOGroup(), orgDag.getLabel() );
                 mPOptions.setSubmitDirectory( new File ( submitDir, relativeDir ) );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
@@ -353,16 +362,17 @@ public class CPlanner extends Executable{
             //random dir option specified
             if(mPOptions.generateRandomDirectory()){
                 ADag cleanupDAG = cwmain.getCleanupDAG();
+                PlannerOptions cleanupOptions = (PlannerOptions)mPOptions.clone();
 
                 //submit files are generated in a subdirectory
                 //of the submit directory
-                File f = new File( mPOptions.getSubmitDirectory(), this.CLEANUP_DIR );
+                File f = new File( cleanupOptions.getSubmitDirectory(), this.CLEANUP_DIR );
                 message = "Generating code for the cleanup workflow";
-                mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
+                mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
                 //set the submit directory in the planner options for cleanup wf
-                mPOptions.setSubmitDirectory(f.getAbsolutePath());
+                cleanupOptions.setSubmitDirectory(f.getAbsolutePath());
                 codeGenerator = CodeGeneratorFactory.
-                              loadInstance( mProps, mPOptions, mPOptions.getSubmitDirectory() );
+                              loadInstance( mProps, cleanupOptions, cleanupOptions.getSubmitDirectory() );
 
                 try{
                     codeGenerator.generateCode(cleanupDAG);
@@ -391,12 +401,20 @@ public class CPlanner extends Executable{
                            Currently.parse( finalDag.getMTime() ),
                            Currently.parse( finalDag.dagInfo.getFlowTimestamp() ),
                           -2  );
+                try{
+                    wc.close();
+                } catch( Exception e ) {
+                    /*ignore */
+                }
             }
-            wc.close();
+
 
             if(mPOptions.submitToScheduler()){//submit the jobs
                 throw new RuntimeException( "Direct submission is not supported at present" );
             }
+
+            //log the success message
+            this.logSuccessfulCompletion( );
         }
         else{
             printShortVersion();
@@ -771,27 +789,6 @@ public class CPlanner extends Executable{
 
 
     /**
-     * This generates a Vector from a string with the constituents being the
-     * words making up the string.The String is comma separated.
-     *
-     * @param tokString   the string which is tokenized in to the Vector
-     *
-     * @return Vector
-     */
-    private Vector generateVector(String tokString){
-        Vector vFiles = new Vector();
-        int noOfFiles = 0;
-        StringTokenizer st = new StringTokenizer(tokString,",");
-        while(st.hasMoreElements()){
-            noOfFiles++;
-            vFiles.addElement(st.nextToken().trim());
-        }
-
-        return vFiles;
-    }
-
-
-    /**
      * Checks the destination location for existence, if it can
      * be created, if it is writable etc.
      *
@@ -824,6 +821,22 @@ public class CPlanner extends Executable{
                                        dir.getPath() );
             }
         }
+    }
+
+
+    /**
+     * Logs the successful completion message.
+     *
+     */
+    private void logSuccessfulCompletion(){
+        StringBuffer message = new StringBuffer();
+        message.append( this.SUCCESS_MESSAGE ).
+                append( "" ).append( "pegasus-run ").
+                append( "-Dpegasus.user.properties=" ).append( mProps.getPropertiesInSubmitDirectory() ).
+                append( " " ).append( mPOptions.getSubmitDirectory() )
+                .append( "\n\n" );
+        mLogger.log( message.toString(), LogManager.INFO_MESSAGE_LEVEL );
+
     }
 
 
