@@ -24,7 +24,7 @@ import java.io.Reader;
 import java.util.StringTokenizer;
 
 /**
- * Parses the input stream and generates pool configuration map as
+ * Parses the input stream and generates site configuration map as
  * output.
  *
  * @author Jens Vöckler
@@ -70,7 +70,7 @@ public class PoolConfigParser2 {
      * Parses the complete input stream, into the PoolConfig data object that
      * holds the contents of all the sites referred to in the stream.
      *
-     * @return a map indexed by the pool handle strings.
+     * @return a map indexed by the site handle strings.
      * @throws IOException
      * @throws PoolConfigException
      * @throws Exception
@@ -339,7 +339,7 @@ public class PoolConfigParser2 {
         String handle = null;
         if (! (m_lookAhead instanceof PoolConfigReservedWord) ||
             ( (PoolConfigReservedWord) m_lookAhead).getValue() !=
-            PoolConfigReservedWord.POOL) {
+            PoolConfigReservedWord.SITE) {
             throw new PoolConfigException(m_scanner.getLineNumber(),
                                           "expecting reserved word \"pool\"");
         }

@@ -24,9 +24,9 @@ class PoolConfigReservedWord
   implements PoolConfigToken
 {
   /**
-   * token value for the reserved word "pool".
+   * token value for the reserved word "site".
    */
-  public static final int POOL = 0;
+  public static final int SITE = 0;
 
   /**
    * token value for the reserved word "version".
@@ -84,8 +84,8 @@ class PoolConfigReservedWord
     if ( m_symbolTable == null ) {
       // only initialize once and only once, as needed.
       m_symbolTable = new java.util.TreeMap();
-      m_symbolTable.put( "pool",
-	 new PoolConfigReservedWord(PoolConfigReservedWord.POOL) );
+      m_symbolTable.put( "site",
+	 new PoolConfigReservedWord(PoolConfigReservedWord.SITE) );
       m_symbolTable.put( "version",
 	 new PoolConfigReservedWord(PoolConfigReservedWord.VERSION) );
       m_symbolTable.put( "lrc",
