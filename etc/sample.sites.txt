@@ -1,4 +1,4 @@
-pool local {
+site local {
   lrc "rlsn://smarty.isi.edu"
   gridftp "gsiftp://smarty.isi.edu/smarty/storage" "4.0.4"
   gridlaunch "/smarty/software/pegasus/bin/kickstart"
@@ -7,7 +7,7 @@ pool local {
   universe transfer "smarty.isi.edu/jobmanager-fork"  "4.0.4"
 }
 
-pool isi {
+site isi {
   lrc "rlsn://smarty.isi.edu"
   gridftp "gsiftp://skynet-data.isi.edu/exports/storage01" "4.0.4"
   gridlaunch "/nfs/software/pegasus/default/bin/kickstart"
