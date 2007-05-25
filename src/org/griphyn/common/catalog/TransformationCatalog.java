@@ -169,6 +169,29 @@ public interface TransformationCatalog
      */
     boolean addTCEntry( List tcentry ) throws Exception;
 
+
+    /**
+     * Add single TCEntry to the Catalog.
+     * @param tcentry Takes a single TransformationCatalogEntry object as input
+     * @throws Exception
+     * @return boolean Return true if succesful, false if error. Exception is thrown when error occurs.
+     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     */
+    boolean addTCEntry( TransformationCatalogEntry tcentry ) throws Exception;
+
+
+    /**
+     * Add single TCEntry object temporarily to the in memory Catalog.
+     *
+     *@todo This is a hack to get around for adding soft state entries to the TC
+     * @param tcentry Takes a single TransformationCatalogEntry object as input
+     * @param write boolean enable write commits to backed catalog or not.
+     * @throws Exception
+     * @return boolean Return true if succesful, false if error. Exception is thrown when error occurs.
+     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     */
+    boolean addTCEntry( List tcentry,boolean write) throws Exception;
+
     /**
      * Add an single entry into the transformation catalog.
      *
