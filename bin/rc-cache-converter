@@ -2,7 +2,7 @@
 #
 # Script to convert old rc cache file to the new rc cache format
 # Author: Gaurang Mehta gmehta at isi dot edu
-# $Id:$
+# $Id$
 
 use strict;
 require 5.006;
@@ -27,7 +27,7 @@ while (<O>){
 	push @entry,$_; # get the pfn
 	$first=1;
 	if(@entry==3){
-	    print N $entry[0], "\t", $entry[2], "\t", $entry[1], "\n"; # entries are lfn,pfn,pool=value
+	    print N $entry[0], "\t", $entry[2], "\tpool=", $entry[1], "\n"; # entries are lfn,pfn,pool=value
 	} elsif(@entry==2) {
 	    print N $entry[0], "\t", $entry[1], "\n"; # entries are lfn,pfn only
 	} else {
