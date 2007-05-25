@@ -5,6 +5,8 @@ site local {
   workdir "/smarty/scratch/"
   universe vanilla "smarty.isi.edu/jobmanager-fork"  "4.0.4"
   universe transfer "smarty.isi.edu/jobmanager-fork"  "4.0.4"
+  profile vds "group" "local"
+  profile env "PEGASUS_HOME" "/usr/local/pegasus"
 }
 
 site isi {
