@@ -64,12 +64,6 @@ public abstract class CreateDirectory
     public static final String CREATE_DIR_SUFFIX = "_cdir";
 
     /**
-     * The logical name of the transformation that creates directories on the
-     * remote execution pools.
-     */
-    public static final String CREATE_DIR_TRANSFORMATION = "dirmanager";
-
-    /**
      * The name of the package in which all the implementing classes are.
      */
     public static final String PACKAGE_NAME = "org.griphyn.cPlanner.engine.";
@@ -77,12 +71,30 @@ public abstract class CreateDirectory
     /**
      * The transformation namespace for the create dir jobs.
      */
-    public static final String TRANSFORMATION_NS = "pegasus";
+    public static final String TRANSFORMATION_NAMESPACE = "pegasus";
+
+    /**
+     * The logical name of the transformation that creates directories on the
+     * remote execution pools.
+     */
+    public static final String TRANSFORMATION_NAME = "dirmanager";
+
+    /**
+     * The version number for the derivations for create dir  jobs.
+     */
+    public static final String TRANSFORMATION_VERSION = null;
 
     /**
      * The derivation namespace for the create dir  jobs.
      */
-    public static final String DERIVATION_NS = "pegasus";
+    public static final String DERIVATION_NAMESPACE = "pegasus";
+
+    /**
+     * The logical name of the transformation that creates directories on the
+     * remote execution pools.
+     */
+    public static final String DERIVATION_NAME = "dirmanager";
+
 
     /**
      * The version number for the derivations for create dir  jobs.
@@ -104,6 +116,19 @@ public abstract class CreateDirectory
      * The handle to the logging object, that is used to log the messages.
      */
     protected LogManager mLogger;
+
+
+    /**
+     * A convenience method to return the complete transformation name being
+     * used to construct jobs in this class.
+     *
+     * @return the complete transformation name
+     */
+    public static String getCompleteTranformationName(){
+        return Separator.combine( TRANSFORMATION_NAMESPACE,
+                                  TRANSFORMATION_NAME,
+                                  TRANSFORMATION_VERSION );
+    }
 
 
     /**
@@ -254,9 +279,9 @@ public abstract class CreateDirectory
         JobManager jobManager = null;
 
         try {
-            entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NS,
-                                              this.CREATE_DIR_TRANSFORMATION,
-                                              null,
+            entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
+                                              this.TRANSFORMATION_NAME,
+                                              this.TRANSFORMATION_VERSION,
                                               execPool, TCType.INSTALLED);
         }
         catch (Exception e) {
@@ -275,9 +300,7 @@ public abstract class CreateDirectory
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
-                append( Separator.combine(this.TRANSFORMATION_NS,
-                                          this.CREATE_DIR_TRANSFORMATION,
-                                          null )).
+                append( this.getCompleteTranformationName() ).
                 append(" at site ").append( execPool );
 
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
@@ -293,12 +316,12 @@ public abstract class CreateDirectory
             mPoolHandle.getExecPoolWorkDir(execPool);
 
         newJob.jobName = jobName;
-        newJob.logicalName = this.CREATE_DIR_TRANSFORMATION;
-        newJob.namespace = this.TRANSFORMATION_NS;
-        newJob.version = null;
-        newJob.dvName = this.CREATE_DIR_TRANSFORMATION;
-        newJob.dvNamespace = this.DERIVATION_NS;
-        newJob.dvVersion = this.DERIVATION_VERSION;
+        newJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
+                                  this.TRANSFORMATION_NAME,
+                                  this.TRANSFORMATION_VERSION );
+        newJob.setDerivation( this.DERIVATION_NAMESPACE,
+                              this.DERIVATION_NAME,
+                              this.DERIVATION_VERSION );
         newJob.condorUniverse = "vanilla";
         newJob.globusScheduler = jobManager.getInfo(JobManager.URL);
         newJob.executable = execPath;
@@ -342,13 +365,16 @@ public abstract class CreateDirectory
         //if PEGASUS_HOME is not set, use VDS_HOME
         home = ( home == null )? mPoolHandle.getVDS_HOME( site ): home;
 
+        mLogger.log( "Creating a default TC entry for " +
+                     this.getCompleteTranformationName() +
+                     " at site " + site,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
         //if home is still null
         if ( home == null ){
             //cannot create default TC
             mLogger.log( "Unable to create a default entry for " +
-                         Separator.combine( this.TRANSFORMATION_NS,
-                                            this.CREATE_DIR_TRANSFORMATION,
-                                            null ),
+                         this.getCompleteTranformationName(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
             //set the flag back to true
             return defaultTCEntry;
@@ -363,12 +389,12 @@ public abstract class CreateDirectory
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( this.CREATE_DIR_TRANSFORMATION );
+            append( this.TRANSFORMATION_NAME );
 
 
-        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NS,
-                                                         this.CREATE_DIR_TRANSFORMATION,
-                                                         null );
+        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NAMESPACE,
+                                                         this.TRANSFORMATION_NAME,
+                                                         this.TRANSFORMATION_VERSION );
 
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );

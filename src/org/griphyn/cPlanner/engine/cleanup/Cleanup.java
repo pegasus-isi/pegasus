@@ -128,6 +128,19 @@ public class Cleanup implements Implementation{
     private LogManager mLogger;
 
     /**
+     * A convenience method to return the complete transformation name being
+     * used to construct jobs in this class.
+     *
+     * @return the complete transformation name
+     */
+    public static String getCompleteTranformationName(){
+        return Separator.combine( TRANSFORMATION_NAMESPACE,
+                                  TRANSFORMATION_NAME,
+                                  TRANSFORMATION_VERSION );
+    }
+
+
+    /**
      * Creates a new instance of InPlace
      *
      * @param properties  the properties passed to the planner.
@@ -324,6 +337,12 @@ public class Cleanup implements Implementation{
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
         String home = mSiteHandle.getPegasusHome( site );
+
+        mLogger.log( "Creating a default TC entry for " +
+                     this.getCompleteTranformationName() +
+                     " at site " + site,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
 
         //if home is still null
         if ( home == null ){

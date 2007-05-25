@@ -69,7 +69,7 @@ public class RemoveDirectory extends Engine {
     /**
      * The transformation namespace for the create dir jobs.
      */
-    public static final String TRANSFORMATION_NS = "pegasus";
+    public static final String TRANSFORMATION_NAMESPACE = "pegasus";
 
     /**
      * The version number for the derivations for create dir  jobs.
@@ -79,7 +79,14 @@ public class RemoveDirectory extends Engine {
     /**
      * The derivation namespace for the create dir  jobs.
      */
-    public static final String DERIVATION_NS = "pegasus";
+    public static final String DERIVATION_NAMESPACE = "pegasus";
+
+    /**
+     * The logical name of the transformation that removes directories on the
+     * remote execution pools.
+     */
+    public static final String DERIVATION_NAME = "dirmanager";
+
 
     /**
      * The version number for the derivations for create dir  jobs.
@@ -91,6 +98,20 @@ public class RemoveDirectory extends Engine {
      * The concrete dag so far, for which the clean up dag needs to be generated.
      */
     private ADag mConcDag;
+
+
+    /**
+     * A convenience method to return the complete transformation name being
+     * used to construct jobs in this class.
+     *
+     * @return the complete transformation name
+     */
+    public static String getCompleteTranformationName(){
+        return Separator.combine( TRANSFORMATION_NAMESPACE,
+                                  TRANSFORMATION_NAME,
+                                  TRANSFORMATION_VERSION );
+    }
+
 
     /**
      * The overloaded constructor that sets the dag for which we have to
@@ -208,6 +229,8 @@ public class RemoveDirectory extends Engine {
      * @param execPool  the execution pool for which the create dir job is to be
      *                  created.
      * @param jobName   the name that is to be assigned to the job.
+     *
+     * @return the remove dir job.
      */
     private SubInfo makeRemoveDirJob(String execPool, String jobName) {
         SubInfo newJob  = new SubInfo();
@@ -217,7 +240,7 @@ public class RemoveDirectory extends Engine {
         JobManager jm   = null;
 
         try {
-            entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NS,
+            entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
                                               this.TRANSFORMATION_NAME,
                                               this.TRANSFORMATION_VERSION,
                                               execPool, TCType.INSTALLED);
@@ -225,9 +248,7 @@ public class RemoveDirectory extends Engine {
             if(entries == null){
                 StringBuffer error = new StringBuffer();
                 error.append( "Unable to map transformation " ).
-                      append( Separator.combine( this.TRANSFORMATION_NS,
-                                                 this.TRANSFORMATION_NAME,
-                                                 this.TRANSFORMATION_VERSION ) )
+                      append( this.getCompleteTranformationName() )
                       .append( " on site " ).append( execPool );
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
@@ -249,12 +270,14 @@ public class RemoveDirectory extends Engine {
             mPoolHandle.getExecPoolWorkDir(execPool);
 
         newJob.jobName = jobName;
-        newJob.logicalName = CreateDirectory.CREATE_DIR_TRANSFORMATION;
-        newJob.namespace = CreateDirectory.TRANSFORMATION_NS;
-        newJob.version = null;
-        newJob.dvName = CreateDirectory.CREATE_DIR_TRANSFORMATION;
-        newJob.dvNamespace = CreateDirectory.DERIVATION_NS;
-        newJob.dvVersion = CreateDirectory.DERIVATION_VERSION;
+        newJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
+                                  this.TRANSFORMATION_NAME,
+                                  this.TRANSFORMATION_VERSION );
+
+        newJob.setDerivation( this.DERIVATION_NAMESPACE,
+                              this.DERIVATION_NAME,
+                              this.DERIVATION_VERSION  );
+
         newJob.condorUniverse = "vanilla";
         newJob.globusScheduler = jm.getInfo(JobManager.URL);
         newJob.executable = execPath;

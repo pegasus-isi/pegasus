@@ -155,12 +155,14 @@ public class HourGlass
         //jobs for deferred planning
         newJob.jobName = mCurrentDag.dagInfo.nameOfADag + "_" +
                          mCurrentDag.dagInfo.index + "_" +  this.DUMMY_CONCAT_JOB;
-        newJob.logicalName = this.CREATE_DIR_TRANSFORMATION;
-        newJob.namespace = this.TRANSFORMATION_NS;
-        newJob.version = null;
-        newJob.dvName = this.CREATE_DIR_TRANSFORMATION;
-        newJob.dvNamespace = this.DERIVATION_NS;
-        newJob.dvVersion = this.DERIVATION_VERSION;
+
+        newJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
+                                  this.TRANSFORMATION_NAME,
+                                  this.TRANSFORMATION_VERSION );
+        newJob.setDerivation( this.DERIVATION_NAMESPACE,
+                              this.DERIVATION_NAME,
+                              this.DERIVATION_VERSION );
+
         newJob.condorUniverse = Engine.REGISTRATION_UNIVERSE;
         //the noop job does not get run by condor
         //even if it does, giving it the maximum
