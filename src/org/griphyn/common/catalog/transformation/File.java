@@ -106,6 +106,7 @@ public class File
      * Returns a non singleton instance to the file transformation catalog.
      * The path to the file containing the transformation catalog is automatically
      * picked up from the properties file.
+     * @return TransformatinCatalog
      */
     public static TransformationCatalog getNonSingletonInstance() {
         return new File();
@@ -115,7 +116,8 @@ public class File
      * Returns a non singleton instance to the file transformation catalog.
      *
      * @param path the path to the file containing the transformation
-     * catalog in ths six column format.
+     * catalog in ths six column format
+     * @return TransformationCatalog
      */
     public static TransformationCatalog getNonSingletonInstance( String path ) {
         return new File( path );
@@ -128,6 +130,7 @@ public class File
      *
      * @param reader  the <code>InputStrean</code> containing the bytes to be
      *                read.
+     * @return TransformationCatalog
      */
     public static TransformationCatalog getNonSingletonInstance( InputStream
         reader ) {
@@ -596,7 +599,7 @@ public class File
      * @return List      Returns a list of Profile Objects containing profiles
      *                   assocaited with the transformation.
      *                   Returns <B>NULL</B> if no profiles found.
-     *
+     * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
     public List getTCLfnProfiles( String namespace, String name,
@@ -730,14 +733,55 @@ public class File
         for ( int i = 0; i < entries.size(); i++ ) {
             TransformationCatalogEntry entry = ( ( TransformationCatalogEntry )
                 entries.get( i ) );
-            this.addTCEntry( entry.getLogicalNamespace(),
-                entry.getLogicalName(), entry.getLogicalVersion(),
-                entry.getPhysicalTransformation(),
-                entry.getType(), entry.getResourceId(), null,
-                entry.getProfiles(), entry.getSysInfo() );
+            this.addTCEntry( entry);
         }
         return true;
 
+    }
+
+    /**
+     * Add a single TCEntry to the Catalog. Exception is thrown when error
+     * occurs.
+     *
+     * @param entry a single {@link org.griphyn.common.catalog.TransformationCatalogEntry}
+     * object as input.
+     *
+     * @return boolean Return true if succesful, false if error.
+     *
+     * @throws Exception
+     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     */
+    public boolean addTCEntry( TransformationCatalogEntry entry ) throws
+        Exception {
+        this.addTCEntry( entry.getLogicalNamespace(),
+                         entry.getLogicalName(), entry.getLogicalVersion(),
+                         entry.getPhysicalTransformation(),
+                         entry.getType(), entry.getResourceId(), null,
+                         entry.getProfiles(), entry.getSysInfo() );
+        return true;
+    }
+
+    /**
+         * Add a single TCEntry to the Catalog. Exception is thrown when error
+         * occurs. This method is a hack and wont commit the additions to the
+         * backend catalog
+         *
+         * @param entry a single {@link org.griphyn.common.catalog.TransformationCatalogEntry}
+         * object as input.
+         * @param write boolean to commit additions to backend catalog.
+         * @return boolean Return true if succesful, false if error.
+         *
+         * @throws Exception
+         * @see org.griphyn.common.catalog.TransformationCatalogEntry
+         */
+        public boolean addTCEntry( TransformationCatalogEntry entry,boolean write) throws
+            Exception {
+            this.addTCEntry( entry.getLogicalNamespace(),
+                             entry.getLogicalName(), entry.getLogicalVersion(),
+                             entry.getPhysicalTransformation(),
+                             entry.getType(), entry.getResourceId(), null,
+                             entry.getProfiles(), entry.getSysInfo(),write );
+            return true;
     }
 
     /**
@@ -770,6 +814,41 @@ public class File
         String resourceid,
         List pfnprofiles, List lfnprofiles,
         SysInfo system ) throws
+        Exception {
+        return this.addTCEntry(namespace,name,version,physicalname,type,resourceid,pfnprofiles,lfnprofiles,system,true);
+    }
+
+    /**
+     * Add an single entry into the transformation catalog.
+     *
+     * @param namespace    the namespace of the transformation to be added (Can be null)
+     * @param name         the name of the transformation to be added.
+     * @param version      the version of the transformation to be added. (Can be null)
+     * @param physicalname the physical name/location of the transformation to be added.
+     * @param type         the type of the physical transformation.
+     * @param resourceid   the resource location id where the transformation is located.
+     * @param lfnprofiles  the List of <code>Profile</code> objects associated
+     *                     with a Logical Transformation. (can be null)
+     * @param pfnprofiles  the list of <code>Profile</code> objects associated
+     *                     with a Physical Transformation. (can be null)
+     * @param system       the System information associated with a physical
+     *                     transformation.
+     * @param write        boolean to commit changes to backend catalog
+     * @return boolean     true if succesfully added, returns false if error and
+     *                     throws exception.
+     *
+     * @throws Exception
+     *
+     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.cPlanner.classes.Profile
+     */
+    public boolean addTCEntry( String namespace, String name,
+        String version,
+        String physicalname, TCType type,
+        String resourceid,
+        List pfnprofiles, List lfnprofiles,
+        SysInfo system,boolean write ) throws
         Exception {
 
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
@@ -806,9 +885,11 @@ public class File
                 add = false;
             }
         }
-        if ( add ) {
+        if ( add) {
             pfnList.add( entry );
-            writeTC();
+            if(write){
+                writeTC();
+            }
         } else {
             mLogger.log( "TC Entry already exists. Skipping",
                 LogManager.DEBUG_MESSAGE_LEVEL );
@@ -827,7 +908,7 @@ public class File
      *                  added to the transformation.
      *
      * @return boolean
-     * @throws UnsupportedOperationException as function not implemented.
+     * @throws Exception as function not implemented.
      */
     public boolean addTCLfnProfile( String namespace, String name,
         String version,
@@ -847,7 +928,7 @@ public class File
      *                     be added to the transformation.
      *
      * @return boolean
-     * @throws UnsupportedOperationException as function not implemented.
+     * @throws Exception as function not implemented.
      */
     public boolean addTCPfnProfile( String pfn, TCType type,
         String resourcename,
@@ -897,7 +978,7 @@ public class File
      *                    If null then that type of transformation is deleted
      *                    from all the resources.
      *
-     * @throws UnsupportedOperationException as function not implemented.
+     * @throws Exception as function not implemented.
      * @return boolean
      */
     public boolean deleteTCbyType( TCType type, String resourceid ) throws
@@ -910,7 +991,7 @@ public class File
      *
      * @param sysinfo SysInfo
      *
-     * @throws UnsupportedOperationException as function not implemented.
+     * @throws Exception as function not implemented.
      * @return boolean
      */
     public boolean deleteTCbySysInfo( SysInfo sysinfo ) throws
@@ -923,7 +1004,7 @@ public class File
      * @param resourceid String
      *
      * @return boolean
-     * @throws UnsupportedOperationException as function not implemented.
+     * @throws Exception as function not implemented.
      */
     public boolean deleteTCbyResourceId( String resourceid ) throws Exception {
 
@@ -1032,6 +1113,7 @@ public class File
      *
      * @param reader  the <code>InputStrean</code> containing the bytes to be
      *                read.
+     * @return boolean
      */
     private boolean populateTC( InputStream reader ) {
         return populateTC( new InputStreamReader( reader ) );
