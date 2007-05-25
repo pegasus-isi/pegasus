@@ -66,10 +66,6 @@ public class NodeCollapser extends Engine {
      */
     protected LogManager mLogger;
 
-    /**
-     * The handle to the properties object holding all the properties.
-     */
-    protected PegasusProperties mProps;
 
     /**
      * The directory, where the stdin file of the fat jobs are created.
