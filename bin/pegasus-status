@@ -16,7 +16,7 @@
 # Author  Gaurang Mehta gmehta@isi.edu
 # Revision : $Revision$
 
-require 5.006;
+use 5.006;
 use strict;
 
 use File::Basename; 		# standard module since 5.005
@@ -43,8 +43,9 @@ sub usage(;$) {
     print "ERROR: $msg\n" if defined $msg && lc($msg) ne 'help';
 
     print << "EOF";
-Usage: @{[basename($0)]} [options]
- Pegasus_status helps monitor your jobs by querying condor. 
+Usage: @{[basename($0)]} [options ] [dagdir]
+ Pegasus_status helps monitor your jobs by querying condor.
+ Options:
  -w|--workflow wf    The workflow to monitor.Default is all
  -t|--time t         The workflow planned time.
  -s|--site site     Montior jobs only on this site. Default is all sites
@@ -165,6 +166,9 @@ GetOptions( "workflow|w=s"    => \$workflow,
 	    "verbose|v" => \$main::debug,
 	    "help|h|?" => \&usage );
 
+
+my $run=shift || undef;
+warn "# Got run dir $run\n" if $main::DEBUG;
 #  
 # JOBTYPE to num mappings
 my %jobtypes=("compute",1,
@@ -175,6 +179,31 @@ my %jobtypes=("compute",1,
 	      "createdir",6,
 	      "computestaged",7,
 	      "cleanup",8);
+
+
+if(defined $run){
+    my @listoffiles=glob "$run/*cdir.sub";
+    
+    if (scalar(@listoffiles) >0) {
+	my $subfile=$listoffiles[0];
+	warn "#Opening file $subfile\n" if $main::DEBUG;
+	open(FI, "<$subfile") || die "Error: Cannot open file $subfile : $!\n";
+	while(<FI>){
+	    if ( $_ =~ "pegasus_wf_name "){
+		$workflow= (split "=",  $_,  2 )[1];
+		$workflow =~ s/^\s+//;
+		$workflow =~ s/\s+$//;
+	    }
+	    if ($_ =~ "pegasus_wf_time"){
+		$time=(split "=", $_, 2)[1];
+		$time =~ s/^\s+//;
+		$time =~ s/\s+$//;
+	    }
+	    warn "#Got workflow = $workflow, time =$time from rundir\n" if $main::DEBUG;
+	}
+	close(FI);
+    }
+}
 
 my ($rc,$errors,@result);
 
