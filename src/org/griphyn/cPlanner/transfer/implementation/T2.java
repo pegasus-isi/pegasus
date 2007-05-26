@@ -15,7 +15,7 @@
 package org.griphyn.cPlanner.transfer.implementation;
 
 import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.NameValue;
+import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.FileTransfer;
 
@@ -35,6 +35,11 @@ import java.io.FileWriter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
+
+import java.io.File;
+
+
 
 /**
  * The implementation that creates transfer jobs referring to the T2
@@ -113,7 +118,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
     /**
      * A short description of the transfer implementation.
      */
-    public static final String DESCRIPTION = "VDS T2";
+    public static final String DESCRIPTION = "Pegasus T2";
 
     /**
      * The number of g-u-c processes that are spawned to transfer the files in
@@ -206,13 +211,18 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
         } catch (Exception e) {
             mLogger.log(
                 "Unable to retrieve entry from TC for " + getCompleteTCName()
-                + " :" + e.getMessage(),LogManager.ERROR_MESSAGE_LEVEL);
+                + " Cause:" + e, LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
-        //see if any record is returned or not
-        return(tcentries == null)?
-               null:
-              (TransformationCatalogEntry) tcentries.get(0);
+        return ( tcentries == null ) ?
+                 this.defaultTCEntry( this.TRANSFORMATION_NAMESPACE,
+                                      this.TRANSFORMATION_NAME,
+                                      this.TRANSFORMATION_VERSION,
+                                      siteHandle ): //try using a default one
+                 (TransformationCatalogEntry) tcentries.get(0);
+
+
+
     }
 
     /**
@@ -283,6 +293,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      *                 the information about sourceam fin and destURL's.
      *
      * @see org.griphyn.cPlanner.classes.FileTransfer#toString()
+     * @throws java.lang.Exception
      */
     protected void writeJumboStdIn(FileWriter writer, Collection files) throws
         Exception {
@@ -306,4 +317,50 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
                                  this.TRANSFORMATION_NAME,
                                  this.TRANSFORMATION_VERSION);
     }
+
+    /**
+     * Returns the environment profiles that are required for the default
+     * entry to sensibly work.
+     *
+     * @param site the site where the job is going to run.
+     *
+     * @return List of environment variables, else null in case where the
+     *         required environment variables could not be found.
+     */
+    protected List getEnvironmentVariables( String site ){
+        List result = new ArrayList(2) ;
+
+        //create the CLASSPATH from home
+        String globus = mSCHandle.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
+        if( globus == null ){
+            mLogger.log( "GLOBUS_LOCATION not set in site catalog for site " + site,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            return null;
+        }
+
+
+
+        //check for LD_LIBRARY_PATH
+        String ldpath = mSCHandle.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
+        if ( ldpath == null ){
+            //construct a default LD_LIBRARY_PATH
+            ldpath = globus;
+            //remove trailing / if specified
+            ldpath = ( ldpath.charAt( ldpath.length() - 1 ) == File.separatorChar )?
+                                ldpath.substring( 0, ldpath.length() - 1 ):
+                                ldpath;
+
+            ldpath = ldpath + File.separator + "lib";
+            mLogger.log( "Constructed default LD_LIBRARY_PATH " + ldpath,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        //we have both the environment variables
+        result.add( new Profile( Profile.ENV, "GLOBUS_LOCATION", globus) );
+        result.add( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ldpath) );
+
+        return result;
+    }
+
+
 }

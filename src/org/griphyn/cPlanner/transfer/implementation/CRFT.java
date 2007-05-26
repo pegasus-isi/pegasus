@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.ArrayList;
 
 /**
  * The implementation that creates transfer jobs referring to the c rft client
@@ -294,6 +295,20 @@ public class CRFT extends AbstractMultipleFTPerXFERJob {
         txJob.condorVariables.removeKey("remote_initialdir");
 
         return txJob;
+    }
+
+
+    /**
+     * Returns the environment profiles that are required for the default
+     * entry to sensibly work. Returns an empty list.
+     *
+     * @param site the site where the job is going to run.
+     *
+     * @return List of environment variables, else null in case where the
+     *         required environment variables could not be found.
+     */
+    protected List getEnvironmentVariables( String site ){
+        return new ArrayList();
     }
 
     /**

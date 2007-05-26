@@ -37,6 +37,7 @@ import java.util.Iterator;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
 
 /**
  * The implementation that is used to create transfer jobs that callout to
@@ -256,6 +257,20 @@ public class SRM extends AbstractMultipleFTPerXFERJob {
         return(tcentries == null)?
                null:
               (TransformationCatalogEntry) tcentries.get(0);
+    }
+
+
+    /**
+     * Returns the environment profiles that are required for the default
+     * entry to sensibly work. Returns an empty list.
+     *
+     * @param site the site where the job is going to run.
+     *
+     * @return List of environment variables, else null in case where the
+     *         required environment variables could not be found.
+     */
+    protected List getEnvironmentVariables( String site ){
+        return new ArrayList();
     }
 
 
