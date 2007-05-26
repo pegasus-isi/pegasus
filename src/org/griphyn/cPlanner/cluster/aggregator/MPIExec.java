@@ -109,7 +109,10 @@ public class MPIExec extends Abstract {
      * @return boolean  true if an entry does not exists, false otherwise.
      */
     public boolean entryNotInTC(String site) {
-        return this.entryNotInTC(null,COLLAPSE_LOGICAL_NAME,null,site);
+        return this.entryNotInTC( this.TRANSFORMATION_NAMESPACE,
+                                  COLLAPSE_LOGICAL_NAME,
+                                  this.TRANSFORMATION_VERSION,
+                                  site);
     }
 
 

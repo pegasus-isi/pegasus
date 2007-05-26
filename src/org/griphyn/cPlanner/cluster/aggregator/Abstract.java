@@ -463,18 +463,6 @@ public abstract class Abstract implements JobAggregator {
           }
 
 
-        //see if any record is returned or not
-        entry = (tcentries == null)?
-                 null:
-                 (TransformationCatalogEntry) tcentries.get(0);
-        if(entry == null){
-            //should throw a TC specific exception
-            StringBuffer error = new StringBuffer();
-            error.append( "Could not find entry in tc for lfn " ).append( job.getCompleteTCName() ).
-                  append(" at site " ).append( job.getSiteHandle());
-            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( error.toString() );
-        }
         return entry;
 
     }
@@ -577,7 +565,10 @@ public abstract class Abstract implements JobAggregator {
                 LogManager.ERROR_MESSAGE_LEVEL);
         }
 
-        return ((l == null) || l.isEmpty());
+
+        return ( l == null || l.isEmpty() ) ?
+               (( this.defaultTCEntry( name,  site ) ) == null ) ://construct a default tc entry
+               true;
     }
 
 
