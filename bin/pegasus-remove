@@ -16,12 +16,13 @@
 # Author  Gaurang Mehta gmehta@isi.edu
 # Revision : $Revision$
 
-require 5.006;
+use 5.006;
 use strict;
-
+use Carp;
 use File::Basename; 		# standard module since 5.005
 use File::Spec;			# standard module since 5.005 or 5.6.0
 use Getopt::Long qw(:config bundling no_ignore_case);
+use Work::Common;
 
 # debug off
 $main::debug = 0;
@@ -30,9 +31,8 @@ $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
 
 
 
-sub version() {
-    my $version = `pegasus-version`;
-    chomp($version);
+sub myversion() {
+    my $version = version();
     print "Pegasus $version, @{[basename($0)]} $main::revision\n";
     exit 0;
 }
@@ -43,89 +43,17 @@ sub usage(;$) {
     print "ERROR: $msg\n" if defined $msg && lc($msg) ne 'help';
 
     print << "EOF";
-Usage: @{[basename($0)]} [options]
- Pegasus_status helps monitor your jobs by querying condor. 
- -w|--workflow wf    The workflow to monitor.Default is all
- -t|--time t         The workflow planned time.
- -s|--site site     Montior jobs only on this site. Default is all sites
- -u|--user user      Monitor jobs for user x. Default is \$USER
- -j|--jobtype type  Monitor jobs of one of these types [compute, stagein, stageout, replica,cleanup,intersitetx,computestaged, createdir] . Default is all types.
+Usage: @{[basename($0)]} [options | dagdir]
+ Pegasus_remove helps remove your your entire workflow.. 
+ -d|--dagid N    The id of the dag to be removed
  -v|--verbose   Enter verbose mode, default is not
  -V|--version   Print version number and exit.
+ dagdir         The directory for the dag that you want removed
 EOF
     exit(1);
 }
 
-sub find_exec ($) {
-    # purpose: determine location of a binary
-    # paramtr: $program (IN): basename of the executable to look for
-    # returns: fully qualified path to binary, undef if not found
-    my $program = shift;
-    local($_);
-    foreach ( File::Spec->path ) {
-        my $fs = File::Spec->catfile( $_, $program );
-        return $fs if -x $fs;
-    }
-    undef;
-}
 
-sub exit_code ($$) {
-    # purpose: check the exit code of a process
-    # paramtr: $rc (IN): the raw exitcode
-    #          $id (IN): some name to use in the generated messages
-    # returns: undef: should not happen
-    #          0: all is well
-    #          1: non-zero exitcode
-    #          2: died on signal
-    my $rc = shift;
-    my $id = shift;
-
-    printf STDERR "# jobid=%s, exitcode=0x%04X\n", $id, $rc if $main::debug;
-    if ( $rc == 0 ) {
-	warn "$id finished successfully.\n" if $main::debug;
-	return 0;
-    } elsif ( ($rc >> 8) ) {
-	print "$id exited with exitcode ", $rc>>8, "\n";
-	return 1;
-    } elsif ( ($rc & 127) > 0 ) {
-	print "$id died on signal ", $rc & 127, "\n";
-	return 2;
-    }
-
-    undef;
-}
-sub pipe_out_cmd {
-    # purpose: Runs a cmd w/o invoking a shell, and captures stdout+stderr
-    # warning: DO NOT use shell meta characters in the argument string.
-    # paramtr: @arg (IN): argument string, executable first
-    # returns: failed: undef
-    #          scalar: first line of output
-    #          vector: all lines of output
-    local(*READ);               # must use type glob and local for FDs
-
-    my $pid = open( READ, '-|' );
-    return undef unless defined $pid;
-
-    my @result;
-    if ( $pid ) {
-        # parent
-        while ( <READ> ) {
-            chomp;
-            warn "# << $_\n" if $main::debug;
-            push( @result, $_ );
-        }
-        close READ;
-    } else {
-        # child
-        open( STDERR, '>&STDOUT');
-        select(STDERR); $|=1;
-        select(STDOUT); $|=1;
-        exec { $_[0] } @_;      # lotsa magic :-)
-        exit 127;               # no such exe :-(
-    }
-
-    wantarray ? @result : $result[0];
-}
 
 sub handler {
     # purpose: generic signal handler
@@ -135,6 +63,31 @@ sub handler {
     # you should not do this in signal handler, but what the heck
     warn "# Signal $sig found\n" if $main::debug;
     die "ERROR: Killed by SIG$sig\n";
+}
+
+
+sub check_rescue($$) {
+    # purpose: Check for the existence of (multiple levels of) rescue DAGs.
+    # paramtr: $dir (IN): directory to check for the presence of rescue DAGs.
+    #          $dag (IN): filename of regular DAG file.
+    # returns: List of rescue DAGs, may be empty, if none found
+    my $dir = shift || croak "Need a directory to check";
+    my $dag = shift || croak "Need a dag filename";
+    my $base = basename($dag);
+    my @result = ();
+
+    local(*DIR);
+    if ( opendir( DIR, $dir ) ) {
+	while ( defined ($_ = readdir(DIR)) ) {
+	    next unless /^$base/o; # only pegasus-planned DAGs
+	    next unless /\.rescue$/; # that have a rescue DAG.
+	    push( @result, File::Spec->catfile( $dir, $_ ) );
+	}
+	@result = sort @result;
+	closedir DIR;
+    }
+
+    wantarray ? @result : $result[$#result];
 }
 
 #
@@ -147,69 +100,69 @@ $SIG{TERM} = \&handler;
 $SIG{QUIT} = \&handler;
 
 
-my $workflow=undef;
-my $time=undef;
-my $site=undef;
-my $jobtype=undef;
-my $user=$ENV{'USER'};
-my $notify=undef;
-my $condor_q=find_exec('condor_q');
+my $dagid=undef;
+my $condor_rm=find_exec('condor_rm');
 
-GetOptions( "workflow|w=s"    => \$workflow,
-	    "time|t=s"   => \$time,
-	    "user|u=s"  => \$user,
-	    "sites|s=s" => \$site, 
-	    "jobtype|j=s" => \$jobtype,
-	    "notify|n=s" => \$notify,
-	    "version|V" => \&version,
+GetOptions( "dagid|d=s"    => \$dagid,
+	    "version|V" => \&myversion,
 	    "verbose|v" => \$main::debug,
 	    "help|h|?" => \&usage );
 
-#  
-# JOBTYPE to num mappings
-my %jobtypes=("compute",1,
-	      "stagein",2,
-	      "stageout",3,
-	      "replica",4,
-	      "intersitetx",5,
-	      "createdir",6,
-	      "computestaged",7,
-	      "cleanup",8);
 
-my ($rc,$errors,@result);
+my $run = shift;
+my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 
-my $arg1="-constraint";
+if (defined $run){
+    my $original;
+    my @rescue = check_rescue($run,$config{dag});
+    if ( @rescue > 0 ) {
+	my (@stat,%rescue,$maxsize);
+	foreach my $fn ( @rescue ) {
+	    if ( (@stat = stat($fn)) > 0 ) {
+		$rescue{$fn} = [ @stat ];
+		$maxsize = $stat[7] if $maxsize < $stat[7];
+	    }
+	}
+	
+	print "\n\nDetected the presence of Rescue DAGs:\n";
+	my $width = log10($maxsize);
+	foreach my $fn ( @rescue ) {
+	    printf( " %s %*u %s\n", 
+		    isodate($rescue{$fn}[9]), 
+		    $width, $rescue{$fn}[7], 
+		    basename($fn) );
+	}
+	
+	# overwrite with "latest" (read: longest basename) rescue DAG
+	$original = $config{dag};
+	$config{dag} = $rescue[$#rescue];
+	print "\nWILL USE ", $config{dag}, "\n\n";
+    }
+
+    my $daglogfile=$config{dag}.".dagman.out";
+    
+    open(DID,"<$daglogfile") || die "Error: Cannot open file $daglogfile: $! \n";
+    while (<DID>) {
+	if($_ =~ "condor_scheduniv_exec"){
+	    $dagid=(split /\./,  (split)[3],2)[1];
+	    last;
+	}
+    }
+}
+
+
+my @result;
 my $args=undef;
 
 ## construct the command line string
-my @arg=($condor_q);
-push(@arg, '-constraint') if defined $workflow || defined $time || defined $site || defined $jobtype;
-$args = "(pegasus_wf_name==\"$workflow\")" if defined $workflow;
-
-if (defined $time) {
-    $args.="$$" if defined $args;
-    $args.= "(pegasus_wf_time==\"$time\")";
-}
-if (defined $site) {
-    $args.="$$" if defined $args;
-    $args.= "(pegasus_site==\"$site\")";
-}
-
-if (defined $jobtype) {
-    $args.="$$" if defined $args;
-    $args.= "(pegasus_job_class==$jobtypes{$jobtype})";
-}
-
-push(@arg,"$args") if defined $args;
-
-push(@arg,$user);
-
-warn "# Running @arg \n" if $main::debug;
-
+if(defined $dagid){
+    my @arg=($condor_rm,$dagid);
+    warn "# Running @arg \n" if $main::debug;
 ## Run the command 
-@result=pipe_out_cmd(@arg);
-
+    @result=pipe_out_cmd(@arg);
 ## Print the output result
- print "$_\n" foreach ( @result );
-
-exit(exit_code($?,"condor_q"));
+    print "$_\n" foreach ( @result );
+    exit(parse_exit($?));
+} else {
+    die "Error: Cannot find dagid to remove the workflow\n";
+}

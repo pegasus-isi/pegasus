@@ -22,6 +22,7 @@ use strict;
 use File::Basename; 		# standard module since 5.005
 use File::Spec;			# standard module since 5.005 or 5.6.0
 use Getopt::Long qw(:config bundling no_ignore_case);
+use Work::Common;
 
 # debug off
 $main::debug = 0;
@@ -30,9 +31,8 @@ $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
 
 
 
-sub version() {
-    my $version = `pegasus-version`;
-    chomp($version);
+sub myversion() {
+    my $version = version();
     print "Pegasus $version, @{[basename($0)]} $main::revision\n";
     exit 0;
 }
@@ -57,76 +57,6 @@ EOF
     exit(1);
 }
 
-sub find_exec ($) {
-    # purpose: determine location of a binary
-    # paramtr: $program (IN): basename of the executable to look for
-    # returns: fully qualified path to binary, undef if not found
-    my $program = shift;
-    local($_);
-    foreach ( File::Spec->path ) {
-        my $fs = File::Spec->catfile( $_, $program );
-        return $fs if -x $fs;
-    }
-    undef;
-}
-
-sub exit_code ($$) {
-    # purpose: check the exit code of a process
-    # paramtr: $rc (IN): the raw exitcode
-    #          $id (IN): some name to use in the generated messages
-    # returns: undef: should not happen
-    #          0: all is well
-    #          1: non-zero exitcode
-    #          2: died on signal
-    my $rc = shift;
-    my $id = shift;
-
-    printf STDERR "# jobid=%s, exitcode=0x%04X\n", $id, $rc if $main::debug;
-    if ( $rc == 0 ) {
-	warn "$id finished successfully.\n" if $main::debug;
-	return 0;
-    } elsif ( ($rc >> 8) ) {
-	print "$id exited with exitcode ", $rc>>8, "\n";
-	return 1;
-    } elsif ( ($rc & 127) > 0 ) {
-	print "$id died on signal ", $rc & 127, "\n";
-	return 2;
-    }
-
-    undef;
-}
-sub pipe_out_cmd {
-    # purpose: Runs a cmd w/o invoking a shell, and captures stdout+stderr
-    # warning: DO NOT use shell meta characters in the argument string.
-    # paramtr: @arg (IN): argument string, executable first
-    # returns: failed: undef
-    #          scalar: first line of output
-    #          vector: all lines of output
-    local(*READ);               # must use type glob and local for FDs
-
-    my $pid = open( READ, '-|' );
-    return undef unless defined $pid;
-
-    my @result;
-    if ( $pid ) {
-        # parent
-        while ( <READ> ) {
-            chomp;
-            warn "# << $_\n" if $main::debug;
-            push( @result, $_ );
-        }
-        close READ;
-    } else {
-        # child
-        open( STDERR, '>&STDOUT');
-        select(STDERR); $|=1;
-        select(STDOUT); $|=1;
-        exec { $_[0] } @_;      # lotsa magic :-)
-        exit 127;               # no such exe :-(
-    }
-
-    wantarray ? @result : $result[0];
-}
 
 sub handler {
     # purpose: generic signal handler
@@ -162,7 +92,7 @@ GetOptions( "workflow|w=s"    => \$workflow,
 	    "sites|s=s" => \$site, 
 	    "jobtype|j=s" => \$jobtype,
 	    "notify|n=s" => \$notify,
-	    "version|V" => \&version,
+	    "version|V" => \&myversion,
 	    "verbose|v" => \$main::debug,
 	    "help|h|?" => \&usage );
 
@@ -241,4 +171,4 @@ warn "# Running @arg \n" if $main::debug;
 ## Print the output result
  print "$_\n" foreach ( @result );
 
-exit(exit_code($?,"condor_q"));
+exit(parse_exit($?));
