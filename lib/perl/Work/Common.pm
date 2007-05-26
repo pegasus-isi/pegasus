@@ -31,7 +31,7 @@ sub find_exec($;$);		# { }
 sub pipe_out_cmd;		# { }
 sub parse_exit(;$);		# { }
 sub slurp_braindb($);		# { }
-
+sub version();                  # { }
 our $jobbase = 'jobstate.log';	# basename of the job state logfile
 our $brainbase = 'braindump.txt'; # basename of brain dump file
 
@@ -41,7 +41,7 @@ our $brainbase = 'braindump.txt'; # basename of brain dump file
 our $VERSION = '0.1';
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = qw($VERSION $brainbase $jobbase);
-our @EXPORT = qw(isodate find_exec pipe_out_cmd parse_exit slurp_braindb);
+our @EXPORT = qw(isodate find_exec pipe_out_cmd parse_exit slurp_braindb version);
 
 # Preloaded methods go here.
 use POSIX qw(strftime);
@@ -149,6 +149,14 @@ sub slurp_braindb($) {
     wantarray ? %config : croak "wrong context";
 }
 
+
+sub version() {
+    #obtain pegasus version
+    my $version = `pegasus-version`;
+    chomp($version);
+    $version;
+}
+
 sub parse_exit(;$) {
     # purpose: parse an exit code any way possible
     # paramtr: $ec (IN): exit code from $?
@@ -186,6 +194,8 @@ Work::Common - generally useful collection of methods.
     $when = isodate( $then );
     $zulu = isodate( time(), 1 );
     $short = isodate( $then, 0, 1 );
+
+    $version = version();
 
     my $app = find_exec( 'ls' );
     my $gpi = find_exec( 'grid-proxy-info', $ENV{'GLOBUS_LOCATION'} );
@@ -251,6 +261,10 @@ The C<slurp_braindb> function reads the contents of the file
 C<braindb.txt> in the specified run directory. This is a workflow helper
 function of less general applicability. 
 
+=item %ver = version();
+
+The C<version> function runs the C<pegasus-version> command and returns the version of Pegasus being used. 
+
 =back
 
 =head1 SEE ALSO
@@ -260,6 +274,7 @@ L<http://www.griphyn.org/>
 =head1 AUTHOR
 
 Jens-S. VE<ouml>ckler, C<voeckler at cs dot uchicago dot edu>
+Gaurang Mehta, C<gmehta at isi dot edu>
 
 =head1 COPYRIGHT AND LICENSE
 
