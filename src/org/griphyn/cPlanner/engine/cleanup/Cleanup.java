@@ -309,9 +309,7 @@ public class Cleanup implements Implementation{
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
-                  append( Separator.combine(this.TRANSFORMATION_NAMESPACE,
-                                            this.TRANSFORMATION_NAME,
-                                           this.TRANSFORMATION_VERSION)).
+                  append( this.getCompleteTranformationName()).
                   append(" at site ").append(site);
 
               mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);

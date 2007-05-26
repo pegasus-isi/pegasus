@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.Iterator;
+import org.griphyn.common.util.Separator;
 
 /**
  * An abstract implementation of the JobAggregator interface, which the other
@@ -75,6 +76,27 @@ public abstract class Abstract implements JobAggregator {
      * get the jobname for the fat job.
      */
     public static final String FAT_JOB_PREFIX  = "merge_";
+
+    /**
+     * The transformation namespace for the cluster jobs.
+     */
+    public static final String TRANSFORMATION_NAMESPACE = "pegasus";
+
+    /**
+     * The version number for the derivations for cluster jobs
+     */
+    public static final String TRANSFORMATION_VERSION = null;
+
+    /**
+     * The derivation namespace for the cluster  jobs.
+     */
+    public static final String DERIVATION_NAMESPACE = "pegasus";
+
+    /**
+     * The version number for the derivations for cluster jobs.
+     */
+    public static final String DERIVATION_VERSION = "1.0";
+
 
 
     /**
@@ -104,7 +126,6 @@ public abstract class Abstract implements JobAggregator {
      */
     protected PoolInfoProvider mSiteHandle;
 
-
     /**
      * The handle to the ADag object that contains the workflow being
      * clustered.
@@ -115,6 +136,21 @@ public abstract class Abstract implements JobAggregator {
      * The handle to the GridStart Factory.
      */
     protected GridStartFactory mGridStartFactory;
+
+
+    /**
+     * A convenience method to return the complete transformation name being
+     * used to construct jobs in this class.
+     *
+     * @param name  the name of the transformation
+     *
+     * @return the complete transformation name
+     */
+    public static String getCompleteTranformationName( String name ){
+        return Separator.combine( TRANSFORMATION_NAMESPACE,
+                                  name,
+                                  TRANSFORMATION_VERSION );
+    }
 
 
     /**
@@ -303,10 +339,14 @@ public abstract class Abstract implements JobAggregator {
 
         //inconsistency between job name and logical name for now
         mergedJob.setName( mergedJobName );
-        mergedJob.setTXVersion( null );
-        mergedJob.setTXName( mergeLFN );
-        mergedJob.setDVName( mergeLFN );
-        mergedJob.setTXNamespace( null );
+
+        mergedJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
+                                     mergeLFN,
+                                     this.TRANSFORMATION_VERSION  );
+        mergedJob.setDerivation( this.DERIVATION_NAMESPACE,
+                                 mergeLFN,
+                                 this.DERIVATION_VERSION);
+
         mergedJob.setLogicalID( id );
 
         mergedJob.setSiteHandle( firstJob.getSiteHandle() );
@@ -401,8 +441,28 @@ public abstract class Abstract implements JobAggregator {
            mLogger.log(
                 "Unable to retrieve entry from TC for transformation " +
                 job.getCompleteTCName() + " " +
-                e.getMessage(),LogManager.ERROR_MESSAGE_LEVEL);
+                e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL );
         }
+
+        entry = ( tcentries == null ) ?
+                 this.defaultTCEntry( job.getTXName(), job.getSiteHandle() ): //try using a default one
+                 (TransformationCatalogEntry) tcentries.get(0);
+
+        if( entry == null ){
+            //NOW THROWN AN EXCEPTION
+
+            //should throw a TC specific exception
+            StringBuffer error = new StringBuffer();
+            error.append("Could not find entry in tc for lfn ").
+                  append( job.getCompleteTCName() ).
+                  append(" at site ").append( job.getSiteHandle() );
+
+              mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+              throw new RuntimeException( error.toString() );
+
+          }
+
+
         //see if any record is returned or not
         entry = (tcentries == null)?
                  null:
@@ -418,6 +478,77 @@ public abstract class Abstract implements JobAggregator {
         return entry;
 
     }
+
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param name  the logical name of the clustering executable.
+     * @param site  the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCEntry( String name, String site ){
+        TransformationCatalogEntry defaultTCEntry = null;
+        //check if PEGASUS_HOME is set
+        String home = mSiteHandle.getPegasusHome( site );
+        //if PEGASUS_HOME is not set, use VDS_HOME
+        home = ( home == null )? mSiteHandle.getVDS_HOME( site ): home;
+
+        mLogger.log( "Creating a default TC entry for " +
+                     this.getCompleteTranformationName( name ) +
+                     " at site " + site,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        //if home is still null
+        if ( home == null ){
+            //cannot create default TC
+            mLogger.log( "Unable to create a default entry for " +
+                         this.getCompleteTranformationName( name ),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            //set the flag back to true
+            return defaultTCEntry;
+        }
+
+        //remove trailing / if specified
+        home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
+            home.substring( 0, home.length() - 1 ):
+            home;
+
+        //construct the path to it
+        StringBuffer path = new StringBuffer();
+        path.append( home ).append( File.separator ).
+            append( "bin" ).append( File.separator ).
+            append( name );
+
+
+        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NAMESPACE,
+                                                         name,
+                                                         this.TRANSFORMATION_VERSION );
+
+        defaultTCEntry.setPhysicalTransformation( path.toString() );
+        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setType( TCType.INSTALLED );
+
+        //register back into the transformation catalog
+        //so that we do not need to worry about creating it again
+        try{
+            mTCHandle.addTCEntry( defaultTCEntry , false );
+        }
+        catch( Exception e ){
+            //just log as debug. as this is more of a performance improvement
+            //than anything else
+            mLogger.log( "Unable to register in the TC the default entry " +
+                          defaultTCEntry.getLogicalTransformation() +
+                          " for site " + site, e,
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        return defaultTCEntry;
+    }
+
+
 
     /**
      * Determines whether there is NOT an entry in the transformation catalog
