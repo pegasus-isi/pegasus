@@ -33,7 +33,7 @@ import org.griphyn.vdl.util.Logging;
  * @author Yong Zhao
  * @version $Revision$
  */
-public class InvocationSchema extends DatabaseSchema 
+public class InvocationSchema extends DatabaseSchema
   implements PTC
 {
   /**
@@ -41,22 +41,22 @@ public class InvocationSchema extends DatabaseSchema
    *
    * @param dbDriverName is the database driver name
    */
-  public InvocationSchema( String dbDriverName ) 
-    throws ClassNotFoundException, 
-	   NoSuchMethodException, InstantiationException, 
+  public InvocationSchema( String dbDriverName )
+    throws ClassNotFoundException,
+	   NoSuchMethodException, InstantiationException,
 	   IllegalAccessException, InvocationTargetException,
 	   SQLException, IOException
   {
     // load the driver from the properties
-    super( dbDriverName, PROPERTY_PREFIX ); 
+    super( dbDriverName, PROPERTY_PREFIX );
     Logging.instance().log( "dbschema", 3, "done with parent schema c'tor" );
 
     // Note: Does not rely on optional JDBC3 features
     this.m_dbdriver.insertPreparedStatement( "stmt.save.uname",
-	"INSERT INTO ptc_uname(id,archmode,sysname,release,machine) " +
+	"INSERT INTO ptc_uname(id,archmode,sysname,os_release,machine) " +
 	"VALUES (?,?,?,?,?)" );
     this.m_dbdriver.insertPreparedStatement( "stmt.save.rusage",
-	"INSERT INTO ptc_rusage(id,utime,stime,minflt,majflt,nswaps," + 
+	"INSERT INTO ptc_rusage(id,utime,stime,minflt,majflt,nswaps," +
 	"nsignals,nvcsw,nivcsw) VALUES (?,?,?,?,?,?,?,?,?)" );
     this.m_dbdriver.insertPreparedStatement( "stmt.save.stat",
 	"INSERT INTO ptc_stat(id,errno,fname,fdesc,size,mode,inode,atime," +
@@ -64,7 +64,7 @@ public class InvocationSchema extends DatabaseSchema
     this.m_dbdriver.insertPreparedStatement( "stmt.save.ivr",
 	"INSERT INTO ptc_invocation(id,creator,creationtime,wf_label," +
 	"wf_time,version,start,duration,tr_namespace,tr_name,tr_version," +
-	"dv_namespace,dv_name,dv_version,resource,host,pid," + 
+	"dv_namespace,dv_name,dv_version,resource,host,pid," +
 	"uid,gid,cwd,arch,total)" +
 	"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)" );
 
@@ -78,10 +78,10 @@ public class InvocationSchema extends DatabaseSchema
 	"SELECT id FROM ptc_invocation WHERE start=? AND host=? AND pid=?" );
     this.m_dbdriver.insertPreparedStatement( "stmt.select.uname.sk",
 	"SELECT id FROM ptc_uname WHERE archmode=? AND sysname=? " +
-	"AND release=? AND machine=?" );
+	"AND os_release=? AND machine=?" );
   }
 
-  /** 
+  /**
    * Converts a regular datum into an SQL timestamp.
    * @param date is a regular Java date
    * @return a SQL timestamp obtained from the Date.
@@ -90,17 +90,17 @@ public class InvocationSchema extends DatabaseSchema
   {
     return new java.sql.Timestamp( date.getTime() );
   }
-  
+
   /**
    * Checks the existence of an invocation record in the database.
    * The information is based on the (start,host,pid) tuple, although
    * with private networks, cases may arise that have this tuple
-   * identical, yet are different. 
+   * identical, yet are different.
    *
    * @param start is the start time of the grid launcher
    * @param host is the address of the host it ran upon
-   * @param pid is the process id of the grid launcher itself. 
-   * @return the id of the existing record, or -1 
+   * @param pid is the process id of the grid launcher itself.
+   * @return the id of the existing record, or -1
    */
   public long
     getInvocationID( java.util.Date start, InetAddress host, int pid )
@@ -108,8 +108,8 @@ public class InvocationSchema extends DatabaseSchema
   {
     long result = -1;
     Logging.instance().log("xaction", 1, "START select invocation id" );
-    
-    PreparedStatement ps = 
+
+    PreparedStatement ps =
       m_dbdriver.getPreparedStatement("stmt.select.ivr.sk");
 
     int i=1;
@@ -127,7 +127,7 @@ public class InvocationSchema extends DatabaseSchema
 
   /**
    * Determines the id of an existing identical architecture, or creates
-   * a new entry. 
+   * a new entry.
    *
    * @param arch is the architecture description
    * @return the id of the architecture, either new or existing.
@@ -138,21 +138,21 @@ public class InvocationSchema extends DatabaseSchema
   {
     long result = -1;
     Logging.instance().log("xaction", 1, "START select uname id" );
-    
+
     int i=1;
-    PreparedStatement ps = 
+    PreparedStatement ps =
       m_dbdriver.getPreparedStatement("stmt.select.uname.sk");
     stringOrNull( ps, i++, arch.getArchMode() );
     stringOrNull( ps, i++, arch.getSystemName() );
     stringOrNull( ps, i++, arch.getRelease() );
     stringOrNull( ps, i++, arch.getMachine() );
-    
+
     Logging.instance().log( "chunk", 2, "SELECT id FROM uname" );
     ResultSet rs = ps.executeQuery();
     if ( rs.next() ) result = rs.getLong(1);
     rs.close();
     Logging.instance().log("xaction", 1, "FINAL select uname id" );
-    
+
     if ( result == -1 ) {
       // nothing found, need to really insert things
       Logging.instance().log("xaction", 1, "START save uname" );
@@ -172,7 +172,7 @@ public class InvocationSchema extends DatabaseSchema
       ps = m_dbdriver.getPreparedStatement("stmt.save.uname");
       i=1;
       longOrNull( ps, i++, result );
-      
+
       stringOrNull( ps, i++, arch.getArchMode() );
       stringOrNull( ps, i++, arch.getSystemName() );
       stringOrNull( ps, i++, arch.getRelease() );
@@ -182,10 +182,10 @@ public class InvocationSchema extends DatabaseSchema
       Logging.instance().log( "chunk", 2, "INSERT INTO uname" );
       try {
 	int rc = ps.executeUpdate();
-	if ( result == -1 ) 
+	if ( result == -1 )
 	  result = m_dbdriver.sequence2( ps, "uname_id_seq", 1 );
       } catch ( SQLException e ) {
-	// race condition possibility: try once more to find info 
+	// race condition possibility: try once more to find info
 	result = -1;
 	Logging.instance().log("xaction", 1, "START select uname id" );
 
@@ -212,7 +212,7 @@ public class InvocationSchema extends DatabaseSchema
       }
       Logging.instance().log("xaction", 1, "FINAL save uname: ID=" + result );
     }
-    
+
     // done
     return result;
   }
@@ -221,7 +221,7 @@ public class InvocationSchema extends DatabaseSchema
    * Inserts an invocation record into the database.
    *
    * @param ivr is the invocation record to store.
-   * @return true, if insertion was successful, false otherwise. 
+   * @return true, if insertion was successful, false otherwise.
    */
   public boolean
     saveInvocation( InvocationRecord ivr )
@@ -246,7 +246,7 @@ public class InvocationSchema extends DatabaseSchema
 
       // current_user()
       stringOrNull( ps, i++, System.getProperty("user.name") );
-      
+
       // now()
       ps.setTimestamp( i++, toStamp(new java.util.Date()) );
 
@@ -256,48 +256,48 @@ public class InvocationSchema extends DatabaseSchema
       else
 	ps.setString( i++, ivr.getWorkflowLabel() );
 
-      if ( ivr.getWorkflowTimestamp() == null ) 
+      if ( ivr.getWorkflowTimestamp() == null )
 	ps.setNull( i++, Types.TIMESTAMP );
-      else 
+      else
 	ps.setTimestamp( i++, toStamp(ivr.getWorkflowTimestamp()) );
-      
+
       // version
       ps.setString( i++, ivr.getVersion() );
-      
+
       // start, duration
       ps.setTimestamp( i++, toStamp(ivr.getStart()) );
       ps.setDouble( i++,ivr.getDuration() );
 
       // TR
       i = splitDefinition( ps, ivr.getTransformation(), i );
-      
+
       // DV: not available at the moment
       i = splitDefinition( ps, ivr.getDerivation(), i );
-      
+
       // resource (site handle)
       if ( ivr.getResource() == null ) ps.setNull( i++, Types.VARCHAR );
       else ps.setString( i++, ivr.getResource() );
 
       // host
       ps.setString( i++, ivr.getHostAddress().getHostAddress() );
-      
+
       // [pug]id
       ps.setInt( i++, ivr.getPID() );
       ps.setInt( i++, ivr.getUID() );
       ps.setInt( i++, ivr.getGID() );
-      
+
       // cwd
-      stringOrNull( ps, i++, ivr.getWorkingDirectory().getValue() ); 
-      
+      stringOrNull( ps, i++, ivr.getWorkingDirectory().getValue() );
+
       // uname
       ps.setLong( i++, saveArchitecture( ivr.getArchitecture() ) );
-      
+
       // save usage and remember id
       ps.setLong( i++, saveUsage( ivr.getUsage() ) );
-      
+
       // save prepared values
       Logging.instance().log( "chunk", 2, "INSERT INTO invocation" );
-      
+
       int rc = ps.executeUpdate();
       if ( id == -1 ) id = m_dbdriver.sequence2( ps, "invocation_id_seq", 1 );
       Logging.instance().log("xaction", 1, "FINAL save invocation: ID=" + id );
@@ -315,7 +315,7 @@ public class InvocationSchema extends DatabaseSchema
 	  saveLFN( id, s );
 	}
       }
-      
+
       // done
       m_dbdriver.commit();
       return true;
@@ -323,7 +323,7 @@ public class InvocationSchema extends DatabaseSchema
       // show complete exception chain
       for ( SQLException walk=e; walk != null; walk=walk.getNextException() ) {
 	Logging.instance().log( "app", 0, walk.getSQLState() + ": " +
-				walk.getErrorCode() + ": " + 
+				walk.getErrorCode() + ": " +
 				walk.getMessage().trim() );
 
 	StackTraceElement[] ste = walk.getStackTrace();
@@ -331,7 +331,7 @@ public class InvocationSchema extends DatabaseSchema
 	  Logging.instance().log( "app", 0, ste[n].toString() );
 	}
       }
-      
+
       Logging.instance().log("xaction", 1, "START rollback" );
       m_dbdriver.cancelPreparedStatement( "stmt.save.ivr" );
       m_dbdriver.rollback();
@@ -360,7 +360,7 @@ public class InvocationSchema extends DatabaseSchema
       // there is input after all, insert appropriate values
       String ns = null;
       String vs = null;
-      
+
       // separate namespace
       int p1 = in.indexOf( Separator.NAMESPACE );
       if ( p1 == -1 ) {
@@ -377,10 +377,10 @@ public class InvocationSchema extends DatabaseSchema
       if ( p2 == -1 ) {
 	// no version attached
 	p2 = in.length();
-      } else { 
+      } else {
 	vs = in.substring( p2 + Separator.NAME.length() );
       }
-    
+
       // separate identifier -- this is a must-have
       String nm = in.substring( p1, p2 );
 
@@ -399,12 +399,12 @@ public class InvocationSchema extends DatabaseSchema
    *
    * @param u is the usage record to insert into the database
    * @return the sequence number under which it was inserted.
-   * @exception SQLException if something goes awry during insertion. 
+   * @exception SQLException if something goes awry during insertion.
    */
   protected long saveUsage( Usage u )
     throws SQLException
   {
-    if ( u == null ) 
+    if ( u == null )
       throw new RuntimeException( "usage record is null" );
 
     long id = -1;
@@ -418,7 +418,7 @@ public class InvocationSchema extends DatabaseSchema
       Logging.instance().log("xaction", 1, "FINAL rollback" );
       throw e; // re-throw
     }
-      
+
     // add ID explicitely from sequence to insertion
     Logging.instance().log("xaction", 1, "START save rusage" );
     PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.save.rusage");
@@ -434,7 +434,7 @@ public class InvocationSchema extends DatabaseSchema
     ps.setInt( i++, u.getSignals() );
     ps.setInt( i++, u.getVoluntarySwitches() );
     ps.setInt( i++, u.getInvoluntarySwitches() );
-    
+
     // save prepared values
     Logging.instance().log( "chunk", 2, "INSERT INTO rusage" );
     try {
@@ -447,7 +447,7 @@ public class InvocationSchema extends DatabaseSchema
       this.m_dbdriver.cancelPreparedStatement( "stmt.save.rusage" );
       throw e; // re-throw
     }
-    
+
     // done
     Logging.instance().log("xaction", 1, "FINAL save rusage: ID=" + id );
     return id;
@@ -459,12 +459,12 @@ public class InvocationSchema extends DatabaseSchema
    *
    * @param s is the stat record to insert into the database
    * @return the sequence number under which it was inserted.
-   * @exception SQLException if something goes awry during insertion. 
+   * @exception SQLException if something goes awry during insertion.
    */
   protected long saveStat( StatCall s )
     throws SQLException
   {
-    
+
     long id = -1;
     try {
       id = m_dbdriver.sequence1( "stat_id_seq" );
@@ -492,8 +492,8 @@ public class InvocationSchema extends DatabaseSchema
 	ps.setString( i++, ((HasFilename) f).getFilename() );
       else
 	ps.setNull( i++, Types.VARCHAR );
-      
-      if ( f instanceof HasDescriptor && ((HasDescriptor) f).getDescriptor() != -1 ) 
+
+      if ( f instanceof HasDescriptor && ((HasDescriptor) f).getDescriptor() != -1 )
 	ps.setInt( i++, ((HasDescriptor) f).getDescriptor() );
       else
 	ps.setNull( i++, Types.INTEGER );
@@ -506,17 +506,17 @@ public class InvocationSchema extends DatabaseSchema
       ps.setLong( i++, si.getSize() );
       ps.setInt( i++, si.getMode() );
       ps.setLong( i++, si.getINode() );
-      
+
       ps.setTimestamp( i++, toStamp( si.getAccessTime() ) );
       ps.setTimestamp( i++, toStamp( si.getCreationTime() ) );
       ps.setTimestamp( i++, toStamp( si.getModificationTime() ) );
-      
+
       ps.setInt( i++, si.getUID() );
       ps.setInt( i++, si.getGID() );
     } else {
-      // bug fixed 20040908 jsv: 
+      // bug fixed 20040908 jsv:
       // we don't know anything about those, so fill in NULL for rDBMS
-      // that don't automagically default empty columns to NULL (sigh). 
+      // that don't automagically default empty columns to NULL (sigh).
       ps.setNull( i++, Types.BIGINT );
       ps.setNull( i++, Types.INTEGER );
       ps.setNull( i++, Types.BIGINT );
@@ -528,7 +528,7 @@ public class InvocationSchema extends DatabaseSchema
       ps.setNull( i++, Types.INTEGER );
       ps.setNull( i++, Types.INTEGER );
     }
-    
+
     // save prepared values
     Logging.instance().log( "chunk", 2, "INSERT INTO stat" );
     try {
@@ -541,7 +541,7 @@ public class InvocationSchema extends DatabaseSchema
       this.m_dbdriver.cancelPreparedStatement( "stmt.save.stat" );
       throw e; // re-throw
     }
-    
+
     // done
     Logging.instance().log("xaction", 1, "FINAL save stat: ID=" + id );
     return id;
@@ -549,7 +549,7 @@ public class InvocationSchema extends DatabaseSchema
 
   /**
    * Helper function to insert a LFN PFN mapping stat call into the
-   * stat information records. 
+   * stat information records.
    *
    * @param iid is the invocation record id to which this job belongs.
    * @param s is an instance of a stat call from the initial or final list
@@ -562,7 +562,7 @@ public class InvocationSchema extends DatabaseSchema
 
     PreparedStatement ps = m_dbdriver.getPreparedStatement( "stmt.save.lfn" );
     int i=1;
-    
+
     // add foreign ID explicitely
     ps.setLong( i++, iid );
 
@@ -579,7 +579,7 @@ public class InvocationSchema extends DatabaseSchema
 
     // set the LFN
     stringOrNull( ps, i++, s.getLFN() );
-    
+
     // save prepared values
     Logging.instance().log( "chunk", 2, "INSERT INTO lfn" );
     try {
@@ -589,9 +589,9 @@ public class InvocationSchema extends DatabaseSchema
 			      e.toString().trim() );
       // rollback in safeInvocation()
       m_dbdriver.cancelPreparedStatement( "stmt.save.lfn" );
-      throw e; // re-throw 
+      throw e; // re-throw
     }
-    
+
     // done
     Logging.instance().log("xaction", 1, "FINAL save lfn" );
   }
@@ -602,7 +602,7 @@ public class InvocationSchema extends DatabaseSchema
    *
    * @param iid is the invocation record id to which this job belongs.
    * @param job is the job to insert.
-   * @exception SQLException if something goes awry during insertion. 
+   * @exception SQLException if something goes awry during insertion.
    */
   protected void saveJob( long iid, Job job )
     throws SQLException
@@ -611,7 +611,7 @@ public class InvocationSchema extends DatabaseSchema
 
     PreparedStatement ps = m_dbdriver.getPreparedStatement( "stmt.save.job" );
     int i=1;
-    
+
     // add foreign ID explicitely
     ps.setLong( i++, iid );
 
@@ -630,7 +630,7 @@ public class InvocationSchema extends DatabaseSchema
     } else {
       throw new SQLException( "illegal job type \"" + tag + "\"" );
     }
-    
+
     // start, duration
     ps.setTimestamp( i++, toStamp( job.getStart() ) );
     ps.setDouble( i++, job.getDuration() );
@@ -648,14 +648,14 @@ public class InvocationSchema extends DatabaseSchema
     Status status = job.getStatus();
     ps.setInt( i++, status.getStatus() );
     JobStatus js = status.getJobStatus();
-    String msg = null; 
+    String msg = null;
     if ( js instanceof HasText ) msg = ((HasText) js).getValue();
     stringOrNull( ps, i++, msg );
-    
+
     // args
     Arguments args = job.getArguments();
     stringOrNull( ps, i++, args.getValue() );
-    
+
     // save prepared values
     Logging.instance().log( "chunk", 2, "INSERT INTO job" );
     try {
@@ -665,9 +665,9 @@ public class InvocationSchema extends DatabaseSchema
 			      e.toString().trim() );
       // rollback in safeInvocation()
       m_dbdriver.cancelPreparedStatement( "stmt.save.job" );
-      throw e; // re-throw 
+      throw e; // re-throw
     }
-    
+
     // done
     Logging.instance().log("xaction", 1, "FINAL save job" );
   }
