@@ -35,8 +35,6 @@ import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * A Central Properties class that keeps track of all the properties used by
@@ -1277,11 +1275,11 @@ public class PegasusProperties {
      * Referred to by the "pegasus.gridstart.kickstart.stat" property.
      *
      * @return the boolean value specified in the property file,
-     *         else true if not specified or non boolean specified.
+     *         else false if not specified or non boolean specified.
      */
     public boolean doStatWithKickstart(){
         return Boolean.parse( mProps.getProperty( "pegasus.gridstart.kickstart.stat"),
-                              true );
+                              false );
     }
 
     /**
