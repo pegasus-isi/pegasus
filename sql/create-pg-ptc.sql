@@ -19,20 +19,20 @@ CREATE TABLE ptc_uname (
         -- uname data (unique quadruples)
         archmode        VARCHAR(16), -- IA32, IA64, ILP32, LP64, ...
         sysname         VARCHAR(64), -- linux, sunos, ...
-        release         VARCHAR(64), -- 2.4.12, 5.8, ...
+        os_release         VARCHAR(64), -- 2.4.12, 5.8, ...
         machine         VARCHAR(64), -- i686, sun4u, ...
 
-        CONSTRAINT      sk_ptc_uname UNIQUE(archmode,sysname,release,machine)
+        CONSTRAINT      sk_ptc_uname UNIQUE(archmode,sysname,os_release,machine)
 );
 
 -- CREATE FUNCTION roi_uname( VARCHAR, VARCHAR, VARCHAR, VARCHAR )
 --   RETURNS BIGINT AS '
 -- DECLARE result BIGINT DEFAULT -1;
 -- BEGIN
---   SELECT INTO result id FROM uname WHERE archmode=$1 AND sysname=$2 AND release=$3 AND machine=$4;
+--   SELECT INTO result id FROM uname WHERE archmode=$1 AND sysname=$2 AND os_release=$3 AND machine=$4;
 --   IF NOT FOUND THEN
 --     SELECT INTO result nextval(''uname_id_seq'');
---     INSERT INTO uname(id,archmode,sysname,release,machine) VALUES(result,$1,$2,$3,$4);
+--     INSERT INTO uname(id,archmode,sysname,os_release,machine) VALUES(result,$1,$2,$3,$4);
 --   END IF;
 --   RETURN result;
 -- END;
