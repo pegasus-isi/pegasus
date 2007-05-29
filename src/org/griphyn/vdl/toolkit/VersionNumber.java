@@ -37,7 +37,7 @@ public class VersionNumber
    * ctor: Constructs a new instance with the given application name.
    * @param appName is the name of the application
    */
-  public VersionNumber( String appName ) 
+  public VersionNumber( String appName )
   {
     m_application = appName;
   }
@@ -49,9 +49,9 @@ public class VersionNumber
   {
     String linefeed = System.getProperty( "line.separator", "\r\n" );
 
-    System.out.println( 
+    System.out.println(
 "$Id$" + linefeed +
-"VDS version " + Version.instance().toString() + linefeed );
+"PEGASUS version " + Version.instance().toString() + linefeed );
 
     System.out.println( "Usage: " + m_application + " [-f | -V | -m]" );
     System.out.println( linefeed +
@@ -68,7 +68,7 @@ linefeed +
 " 2  :-(  Runtime error detected, please read the message." + linefeed +
 " 3  8-O  Fatal error merits a program abortion." + linefeed );
   }
-  
+
   /**
    * Creates a set of options.
    * @return the assembled long option list
@@ -85,20 +85,20 @@ linefeed +
     lo[4] = new LongOpt( "build", LongOpt.NO_ARGUMENT, null, 'f' );
     lo[5] = new LongOpt( "match", LongOpt.NO_ARGUMENT, null, 'm' );
     lo[6] = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
-    
+
 
     return lo;
   }
 
-  public static void main( String args[] ) 
+  public static void main( String args[] )
   {
     int result = 0;
     VersionNumber me = null;
 
-    try { 
+    try {
       me = new VersionNumber("vds-version");
-      Getopt opts = new Getopt( me.m_application, args, 
-				"Vfhmq", 
+      Getopt opts = new Getopt( me.m_application, args,
+				"Vfhmq",
 				me.generateValidOptions() );
       opts.setOpterr(false);
       String installed = null;
@@ -115,18 +115,18 @@ linefeed +
 
 	case 'V':
 	  System.out.println( "$Id$" );
-	  System.out.println( "VDS version " + v.toString() );
+	  System.out.println( "PEGASUS version " + v.toString() );
 	  return;
 
 	case 'f':
 	  build = true;
 	  break;
 
-	case 'm': 
+	case 'm':
 	  installed = v.determineInstalled();
 	  internal  = v.determineBuilt() + " " + v.determinePlatform();
 	  if ( ! quiet ) {
-	    System.out.println( "Compiled into VDS: " + internal );
+	    System.out.println( "Compiled into PEGASUS: " + internal );
 	    System.out.println( "Provided by inst.: " + installed );
 	  }
 
@@ -153,7 +153,7 @@ linefeed +
 
       // action
       System.out.print( v.toString() );
-      if ( build ) System.out.print( '-' + v.determinePlatform() + 
+      if ( build ) System.out.print( '-' + v.determinePlatform() +
 				     '-' + v.determineBuilt() );
       System.out.println();
 
