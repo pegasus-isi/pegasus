@@ -387,12 +387,14 @@ public class CPlanner extends Executable{
             //connect to the work catalog and populate
             //an entry in it for the current workflow
             WorkCatalog wc = null;
+            boolean nodatabase = false;
             try{
                 wc = WorkFactory.loadInstance( mProps );
             }
             catch( Exception e ) {
                 //just log and proceed
                 mLogger.log( "Ignoring: " + convertException( e ),  LogManager.DEBUG_MESSAGE_LEVEL );
+                nodatabase = true;
             }
             if ( wc != null ) {
                 wc.insert( submitDir, mPOptions.getVOGroup(), finalDag.getLabel(),
@@ -405,6 +407,7 @@ public class CPlanner extends Executable{
                     wc.close();
                 } catch( Exception e ) {
                     /*ignore */
+                    nodatabase = true;
                 }
             }
 
@@ -414,7 +417,7 @@ public class CPlanner extends Executable{
             }
 
             //log the success message
-            this.logSuccessfulCompletion( );
+            this.logSuccessfulCompletion( nodatabase );
         }
         else{
             printShortVersion();
@@ -827,14 +830,16 @@ public class CPlanner extends Executable{
     /**
      * Logs the successful completion message.
      *
+     * @param nodatabase boolean indicating whether to add a nodatabase option or not.
      */
-    private void logSuccessfulCompletion(){
+    private void logSuccessfulCompletion( boolean nodatabase ){
         StringBuffer message = new StringBuffer();
         message.append( this.SUCCESS_MESSAGE ).
                 append( "" ).append( "pegasus-run ").
                 append( "-Dpegasus.user.properties=" ).append( mProps.getPropertiesInSubmitDirectory() ).
-                append( " " ).append( mPOptions.getSubmitDirectory() )
-                .append( "\n\n" );
+                append( nodatabase ? " --nodatabase"  : "" ).
+                append( " " ).append( mPOptions.getSubmitDirectory() ).
+                append( "\n\n" );
         mLogger.log( message.toString(), LogManager.INFO_MESSAGE_LEVEL );
 
     }
