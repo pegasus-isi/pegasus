@@ -552,6 +552,12 @@ public class ReplicaCatalogBridge
                  append( "bin" ).append( File.separator ).
                  append( "rc-client" );
 
+            //create Profiles for JAVA_HOME and CLASSPATH
+            String jh = mProps.getProperty( "java.home" );
+            mLogger.log( "JAVA_HOME set to " + jh,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            Profile javaHome = new Profile( Profile.ENV, "JAVA_HOME", jh );
+
             Profile classpath = this.getClassPath( home );
             if( classpath == null ){ return mDefaultTCRCEntry ; }
 
@@ -562,6 +568,7 @@ public class ReplicaCatalogBridge
             mDefaultTCRCEntry.setPhysicalTransformation( path.toString() );
             mDefaultTCRCEntry.setResourceId( site );
             mDefaultTCRCEntry.setProfile( classpath );
+            mDefaultTCRCEntry.setProfile( javaHome );
 
             //set the flag back to true
             mDefaultTCRCCreated = true;
