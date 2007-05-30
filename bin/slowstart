@@ -35,7 +35,7 @@ use Site::Selector qw(%multikeys);
 use Site::Intent qw(:lock);
 
 # globals
-$main::DEBUG = 1;		# for now
+$main::DEBUG = 0;		# for now
 $main::window = 3;		# starting window size
 
 # revision handling

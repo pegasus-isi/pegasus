@@ -44,7 +44,7 @@ use Work::Workflow;
 use Site::Intent;
 
 # constants
-$main::DEBUG = 1;		# for now
+$main::DEBUG = 0;		# for now
 my $logbase = 'tailstatd.log'; 	# basename of daemon logfile
 %main::brainkeys = ( required => [ qw(basedir vogroup label rundir) ],
 		     optional => [ qw(dax dag jsd run pegasushome) ] );

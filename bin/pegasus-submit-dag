@@ -37,7 +37,7 @@ my $notify = 'NEVER';
 my $verbose;
 my %props = ();
 
-$main::DEBUG = 1;		# for now
+$main::DEBUG = 0;		# for now
 $main::revision = 'unknown';
 $_ = '$Revision$';      # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
