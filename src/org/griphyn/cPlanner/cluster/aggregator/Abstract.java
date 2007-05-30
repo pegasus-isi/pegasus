@@ -565,10 +565,11 @@ public abstract class Abstract implements JobAggregator {
                 LogManager.ERROR_MESSAGE_LEVEL);
         }
 
-
-        return ( l == null || l.isEmpty() ) ?
-               (( this.defaultTCEntry( name,  site ) ) == null ) ://construct a default tc entry
-               true;
+        //a double negative
+        return !( ( l == null || l.isEmpty() ) ?
+                  (( this.defaultTCEntry( name,  site ) ) == null ) ://construct a default tc entry
+                  true
+                );
     }
 
 
