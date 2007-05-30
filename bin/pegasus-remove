@@ -90,6 +90,21 @@ sub check_rescue($$) {
     wantarray ? @result : $result[$#result];
 }
 
+sub log10($) {
+    # purpose: Simpler than ceil(log($x) / log(10))
+    # paramtr: $x (IN): non-negative number
+    # returns: approximate width of number
+    use integer;
+    my $x = shift;
+    my $result = 0;
+    while ( $x > 1 ) {
+	$result++;
+	$x /= 10;
+    }
+    $result || 1;
+}
+
+
 #
 # --- main
 #
