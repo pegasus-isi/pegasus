@@ -110,9 +110,10 @@ GetOptions( "dagid|d=s"    => \$dagid,
 
 
 my $run = shift;
-my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 
 if (defined $run){
+my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
+
     my $original;
     my @rescue = check_rescue($run,$config{dag});
     if ( @rescue > 0 ) {
