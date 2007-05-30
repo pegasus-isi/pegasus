@@ -10,4 +10,4 @@ DROP INDEX ix_rc_lfn;
 DROP TABLE rc_lfn;
 DROP SEQUENCE rc_lfn_id;
 
-DELETE FROM vds_schema WHERE name='JDBCRC';
+DELETE FROM pegasus_schema WHERE name='JDBCRC';

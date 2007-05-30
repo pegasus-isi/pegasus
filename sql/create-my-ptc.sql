@@ -5,7 +5,7 @@
 --
 
 -- if the next step fails, you forgot to run "create-init-my.sql"
-INSERT INTO vds_schema VALUES('InvocationSchema','ptc','1.5',current_user(),current_timestamp(0));
+INSERT INTO pegasus_schema VALUES('InvocationSchema','ptc','1.5',current_user(),current_timestamp(0));
 
 INSERT INTO sequences VALUES( 'uname_id_seq', 0 );
 INSERT INTO sequences VALUES( 'rusage_id_seq', 0 );

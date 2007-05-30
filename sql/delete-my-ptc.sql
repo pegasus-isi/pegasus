@@ -16,4 +16,4 @@ DELETE FROM sequences WHERE name='rusage_id_seq';
 DELETE FROM sequences WHERE name='stat_id_seq';
 DELETE FROM sequences WHERE name='invocation_id_seq';
 
-DELETE FROM vds_schema WHERE name='InvocationSchema' AND catalog='ptc';
+DELETE FROM pegasus_schema WHERE name='InvocationSchema' AND catalog='ptc';

@@ -4,7 +4,7 @@
 -- $Revision$
 --
 
-INSERT INTO vds_schema(name,catalog,version) VALUES ('JDBCRC','rc','1.2');
+INSERT INTO pegasus_schema(name,catalog,version) VALUES ('JDBCRC','rc','1.2');
 
 CREATE SEQUENCE rc_lfn_id;
 

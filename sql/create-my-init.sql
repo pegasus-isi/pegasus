@@ -11,12 +11,12 @@ CREATE TABLE sequences (
 	CONSTRAINT      pk_sequences PRIMARY KEY(name)
 ) type=InnoDB;
 
-CREATE TABLE vds_schema (
+CREATE TABLE pegasus_schema (
 	name		VARCHAR(64) NOT NULL,
 	catalog		VARCHAR(16),
 	version		FLOAT,
 	creator		VARCHAR(32),
 	creation	DATETIME,
 
-	CONSTRAINT	pk_vds_schema PRIMARY KEY(name)
+	CONSTRAINT	pk_pegasus_schema PRIMARY KEY(name)
 ) type=InnoDB;

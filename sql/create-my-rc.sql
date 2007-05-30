@@ -3,7 +3,7 @@
 -- driver: MySQL 4.*
 -- $Revision$
 --
-INSERT INTO vds_schema VALUES ('JDBCRC','rc','1.2',current_user(),current_timestamp(0));
+INSERT INTO pegasus_schema VALUES ('JDBCRC','rc','1.2',current_user(),current_timestamp(0));
 
 CREATE TABLE rc_lfn (
    id      BIGINT DEFAULT NULL auto_increment,

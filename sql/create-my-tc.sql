@@ -17,7 +17,7 @@ DROP TABLE IF EXISTS tc_physicaltx;
 DROP TABLE IF EXISTS tc_logicaltx;
 DROP TABLE IF EXISTS tc_sysinfo;
 
-INSERT INTO vds_schema VALUES ('Database','tc','1.3',current_user(),current_timestamp(0));
+INSERT INTO pegasus_schema VALUES ('Database','tc','1.3',current_user(),current_timestamp(0));
 
 --
 -- Table structure for table `tc_sysinfo`

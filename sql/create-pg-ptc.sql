@@ -5,7 +5,7 @@
 --
 
 -- if the next step fails, you forgot to run "create-init-pg.sql"
-INSERT INTO vds_schema(name,catalog,version) VALUES('InvocationSchema','ptc','1.5');
+INSERT INTO pegasus_schema(name,catalog,version) VALUES('InvocationSchema','ptc','1.5');
 
 CREATE SEQUENCE uname_id_seq MINVALUE 0 MAXVALUE 9223372036854775807 INCREMENT 1;
 CREATE SEQUENCE rusage_id_seq MINVALUE 0 MAXVALUE 9223372036854775807 INCREMENT 1;

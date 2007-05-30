@@ -7,7 +7,7 @@
 --
 -- Table structure for table `tc_sysinfo`
 --
-INSERT INTO vds_schema(name,catalog,version) VALUES ('Database','tc','1.3');
+INSERT INTO pegasus_schema(name,catalog,version) VALUES ('Database','tc','1.3');
 
 CREATE TABLE tc_sysinfo (
 	id		BIGSERIAL PRIMARY KEY,

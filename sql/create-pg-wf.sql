@@ -4,7 +4,7 @@
 --
 
 -- if the next step fails, you forgot to run "create-init-pg.sql"
-INSERT INTO vds_schema(name,catalog,version) 
+INSERT INTO pegasus_schema(name,catalog,version) 
 VALUES('WorkflowSchema','wf','1.1');
 
 CREATE TABLE wf_work ( 

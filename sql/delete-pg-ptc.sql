@@ -16,4 +16,4 @@ DROP SEQUENCE rusage_id_seq;
 DROP SEQUENCE stat_id_seq;
 DROP SEQUENCE uname_id_seq;
 
-DELETE FROM vds_schema WHERE name='InvocationSchema' AND catalog='ptc';
+DELETE FROM pegasus_schema WHERE name='InvocationSchema' AND catalog='ptc';

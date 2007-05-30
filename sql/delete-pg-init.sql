@@ -4,5 +4,5 @@
 --- $Revision$
 ---
 
-DROP TABLE vds_schema;
+DROP TABLE pegasus_schema;
 

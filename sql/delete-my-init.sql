@@ -4,5 +4,5 @@
 --- $Revision$
 ---
 
-DROP TABLE vds_schema CASCADE;
+DROP TABLE pegasus_schema CASCADE;
 DROP TABLE sequences;
