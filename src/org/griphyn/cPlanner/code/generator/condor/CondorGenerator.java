@@ -608,6 +608,7 @@ public class CondorGenerator extends Abstract {
      *
      * @param dinfo   object containing daginfo of type DagInfo.
      *
+     * @throws CodeGeneratorException
      */
     protected void writeDagFileTail(DagInfo dinfo) throws CodeGeneratorException{
         try {
@@ -640,6 +641,8 @@ public class CondorGenerator extends Abstract {
      * file handle to file is already initialized.
      *
      * @param  str   The String to be printed to the dag file.
+     *
+     * @throws CodeGeneratorException
      */
     protected void printDagString(String str) throws CodeGeneratorException{
         try {
@@ -727,19 +730,25 @@ public class CondorGenerator extends Abstract {
 
         //assemble all the contents in a buffer before writing out
         StringBuffer contents = new StringBuffer();
-        contents.append("dax ").append(dax).append("\n").
-                 append("dag ").append(dagFile).append("\n").
-                 append("basedir ").append(absPath).append("\n").
-                 append("run ").append(absPath).append("\n").
-                 append("jsd ").append(absPath).append(sep).append("jobstate.log").append("\n").
-                 append("rundir ").append(directory.getName()).append("\n").
-                 append("pegasushome ").append(mProps.getPegasusHome()).append("\n").
-                 append("vogroup vds").append("\n").//for time being
-                 append("label " + workflow.getLabel()).append("\n").
-                 append("planner ").append(mProps.getPegasusHome()).append(sep).
-                                    append("bin").append(sep).append("pegasus-plan");
+        contents.append( "dax " ).append(dax).append("\n").
+                 append( "dag " ).append(dagFile).append("\n").
+                 append( "basedir ").append(absPath).append("\n").
+                 append( "run ").append(absPath).append("\n").
+                 append( "jsd ").append(absPath).append(sep).append("jobstate.log").append("\n").
+                 append( "rundir ").append(directory.getName()).append("\n").
+                 append( "pegasushome ").append(mProps.getPegasusHome()).append("\n").
+                 append( "vogroup ").append( mPOptions.getVOGroup()).append("\n").//for time being
+                 append( "label " + workflow.getLabel()).append("\n").
+                 append( "planner " ).append(mProps.getPegasusHome()).append(sep).
+                                    append("bin").append(sep).append("pegasus-plan").
+                 append( "\n" );
 
         writer.write( contents.toString());
+
+        //write out the classads that are required to be
+        //inserted in the dagman condor submit file
+        ClassADSGenerator.generateBraindumpEntries( writer, workflow );
+
         writer.close();
 
         return f.getAbsolutePath();
@@ -896,6 +905,9 @@ public class CondorGenerator extends Abstract {
      * file and then dax.
      *
      * @param sinfo  The SubInfo object containing the information about the job.
+     *
+     *
+     * @throws CodeGeneratorException
      */
     protected void handleCondorVarForJob(SubInfo sinfo) throws CodeGeneratorException{
         Condor cvar = sinfo.condorVariables;
@@ -998,6 +1010,8 @@ public class CondorGenerator extends Abstract {
      * the local pool, so that it can be shipped.
      *
      * @param sinfo the <code>SubInfo</code> containing the job description.
+     *
+     * @throws CodeGeneratorException
      */
     protected void handleTransferOfExecutable(SubInfo sinfo) throws CodeGeneratorException{
         Condor cvar = sinfo.condorVariables;

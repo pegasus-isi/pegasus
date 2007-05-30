@@ -93,6 +93,91 @@ public class ClassADSGenerator {
     public static final String RESOURCE_AD_KEY = "pegasus_site";
 
 
+    /**
+     * Writes out the classads for a workflow to corresponding writer stream.
+     *
+     * @param writer is an open stream for the Condor submit file.
+     * @param dag    the workflow object containing metadata about the workflow
+     *               like the workflow id and the release version.
+     */
+    public static void generate( PrintWriter writer, ADag dag ) {
+        //get hold of the object holding the metadata
+        //information about the workflow
+        DagInfo dinfo = dag.dagInfo;
+
+        //pegasus is the generator
+        writer.println(generateClassAdAttribute(GENERATOR_AD_KEY, GENERATOR));
+
+        //the vds version
+        if (dinfo.releaseVersion != null) {
+            writer.println(
+                generateClassAdAttribute(VERSION_AD_KEY, dinfo.releaseVersion));
+        }
+
+        //the workflow name
+        if (dinfo.flowIDName != null) {
+            writer.println(
+                generateClassAdAttribute(WF_NAME_AD_KEY, dinfo.flowIDName));
+        }
+        //the workflow time
+        if (dinfo.getMTime() != null) {
+            writer.println(
+                generateClassAdAttribute(WF_TIME_AD_KEY, dinfo.getFlowTimestamp()));
+        }
+    }
+
+    /**
+     * Writes out the classads for a workflow to corresponding writer stream.
+     *
+     * @param writer is an open stream for the Condor submit file.
+     * @param dag    the workflow object containing metadata about the workflow
+     *               like the workflow id and the release version.
+     */
+    public static void generateBraindumpEntries( PrintWriter writer, ADag dag ) {
+        //get hold of the object holding the metadata
+        //information about the workflow
+        DagInfo dinfo = dag.dagInfo;
+
+        //pegasus is the generator
+        writer.println(generateBraindumpEntry(GENERATOR_AD_KEY, GENERATOR));
+
+        //the vds version
+        if (dinfo.releaseVersion != null) {
+            writer.println(
+                generateBraindumpEntry(VERSION_AD_KEY, dinfo.releaseVersion));
+        }
+
+        //the workflow name
+        if (dinfo.flowIDName != null) {
+            writer.println(
+                generateBraindumpEntry(WF_NAME_AD_KEY, dinfo.flowIDName));
+        }
+        //the workflow time
+        if (dinfo.getMTime() != null) {
+            writer.println(
+                generateBraindumpEntry(WF_TIME_AD_KEY, dinfo.getFlowTimestamp()));
+        }
+    }
+
+
+    /**
+     * Generates a braindump entry given the name and the value. It by default
+     * adds a new line character at start of each attribute.
+     *
+     * @param name  the attribute name.
+     * @param value the value/expression making the classad attribute.
+     *
+     * @return  the classad attriubute.
+     */
+    private static String generateBraindumpEntry(String name, String value) {
+        StringBuffer sb = new StringBuffer(10);
+
+        sb.append(name).append("  ");
+        sb.append(value);
+        return sb.toString();
+    }
+
+
 
     /**
      * Writes out the classads for a job to corresponding writer stream.
@@ -105,37 +190,20 @@ public class ClassADSGenerator {
      *               is passed.
      **/
     public static void generate( PrintWriter writer, ADag dag, SubInfo job ) {
-        //get hold of the object holding the metadata
-        //information about the workflow
-        DagInfo dinfo = dag.dagInfo;
 
-        //pegasus is the generator
-        writer.println(generateClassAdAttribute( GENERATOR_AD_KEY, GENERATOR ) );
+        //get all the workflow classads
+        generate( writer, dag );
 
-        //the vds version
-        if ( dinfo.releaseVersion != null ) {
-            writer.println(
-                generateClassAdAttribute( VERSION_AD_KEY, dinfo.releaseVersion ) );
-        }
+        //get the job classads
 
-        //the workflow name
-        if (dinfo.flowIDName != null) {
-            writer.println(
-                generateClassAdAttribute( WF_NAME_AD_KEY, dinfo.flowIDName ) );
-        }
-        //the workflow time
-        if (dinfo.getMTime() != null) {
-            writer.println(
-                generateClassAdAttribute( WF_TIME_AD_KEY, dinfo.getFlowTimestamp() ) );
-        }
         //the tranformation name
         writer.println(
             generateClassAdAttribute( XFORMATION_AD_KEY, job.getCompleteTCName() ) );
+
         //the derivation name
         writer.println(
             generateClassAdAttribute( DERIVATION_AD_KEY, job.getCompleteDVName() ) );
 
-        //the job class ads
         //the class of the job
         writer.println(generateClassAdAttribute( JOB_CLASS_AD_KEY, job.getJobType() ) );
 
@@ -146,6 +214,9 @@ public class ClassADSGenerator {
         writer.println(generateClassAdAttribute( RESOURCE_AD_KEY, job.getSiteHandle() ) );
 
     }
+
+
+
 
     /**
      * Generates a classad attribute given the name and the value.
