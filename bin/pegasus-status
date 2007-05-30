@@ -121,19 +121,21 @@ if(defined $run){
 	while(<FI>){
 	    if ( $_ =~ "pegasus_wf_name "){
 		$workflow= (split "=",  $_,  2 )[1];
-		$workflow =~ s/^\s+//;
-		$workflow =~ s/\s+$//;
+		$workflow =~ s/^\s+//g;
+		$workflow =~ s/\s+$//g;
+		$workflow =~ s/\"//g;
 	    }
 	    if ($_ =~ "pegasus_wf_time"){
 		$time=(split "=", $_, 2)[1];
-		$time =~ s/^\s+//;
-		$time =~ s/\s+$//;
+		$time =~ s/^\s+//g;
+		$time =~ s/\s+$//g;
+                $time =~ s/\"//g;
 	    }
 	    warn "#Got workflow = $workflow, time =$time from rundir\n" if $main::DEBUG;
 	}
 	close(FI);
     }
-}
+} 
 
 my ($rc,$errors,@result);
 
@@ -146,16 +148,16 @@ push(@arg, '-constraint') if defined $workflow || defined $time || defined $site
 $args = "(pegasus_wf_name==\"$workflow\")" if defined $workflow;
 
 if (defined $time) {
-    $args.="$$" if defined $args;
+    $args.="&&" if defined $args;
     $args.= "(pegasus_wf_time==\"$time\")";
 }
 if (defined $site) {
-    $args.="$$" if defined $args;
+    $args.="&&" if defined $args;
     $args.= "(pegasus_site==\"$site\")";
 }
 
 if (defined $jobtype) {
-    $args.="$$" if defined $args;
+    $args.="&&" if defined $args;
     $args.= "(pegasus_job_class==$jobtypes{$jobtype})";
 }
 
