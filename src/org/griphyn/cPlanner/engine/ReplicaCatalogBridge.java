@@ -27,15 +27,12 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegRandom;
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.Utility;
 
 import org.griphyn.cPlanner.namespace.ENV;
 
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
 import org.griphyn.common.catalog.replica.ReplicaFactory;
 
@@ -49,7 +46,6 @@ import java.io.File;
 import java.io.FileWriter;
 
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -121,26 +117,6 @@ public class ReplicaCatalogBridge
     public static final String REPLICA_CATALOG_URL_KEY = "url";
 
     /**
-     * The LRC query state indicating that LRC needs to queried fully. The LRC
-     * returns all PFNs irrespective of whether they have a site attribute or
-     * not.
-     */
-    public static final int LRC_QUERY_NORMAL = 0;
-
-    /**
-     * The LRC query state indicating that LRC has to be restricted query.
-     * LRC should return only PFNs with site attributes tagged.
-     */
-    public static final int LRC_QUERY_RESTRICT = 1;
-
-    /**
-     * The LRC query state indicating that LRC has to be ignored.
-     */
-    public static final int LRC_QUERY_IGNORE = 2;
-
-
-
-    /**
      * The handle to the main Replica Catalog.
      */
     private ReplicaCatalog mReplicaCatalog;
@@ -193,19 +169,6 @@ public class ReplicaCatalogBridge
     private ENV mLocalEnv;
 
     /**
-     * A String array contains the LRC URLs that have to be ignored for querying.
-     */
-    private String[] mLRCIgnoreList;
-
-    /**
-     * A String array contains the LRC URLs that have to be restricted for querying.
-     * Only those entries are returned that have a site attribute associated
-     * with them.
-     */
-    private String[] mLRCRestrictList;
-
-
-    /**
      * The default tc entry.
      */
     private TransformationCatalogEntry mDefaultTCRCEntry;
@@ -215,8 +178,6 @@ public class ReplicaCatalogBridge
      * has happened or not.
      */
     private boolean mDefaultTCRCCreated;
-
-
 
 
     /**
@@ -292,8 +253,6 @@ public class ReplicaCatalogBridge
 
 
         mTCHandle = TCMode.loadInstance();
-        mLRCIgnoreList   = mProps.getRLSLRCIgnoreURLs();
-        mLRCRestrictList = mProps.getRLSLRCRestrictURLs();
 
         //incorporate the caching if any
         if ( !options.getCacheFiles().isEmpty() ) {
@@ -838,36 +797,6 @@ public class ReplicaCatalogBridge
         return env;
     }
 
-    /**
-     * Returns a tri state indicating what type of query needs to be done to
-     * a particular LRC.
-     *
-     * @param url   the LRC url.
-     *
-     * @return tristate
-     */
-    private int determineQueryType(String url){
-        int type = this.LRC_QUERY_NORMAL;
 
-        if(mLRCRestrictList != null){
-            for ( int j = 0; j < mLRCRestrictList.length; j++ ) {
-                if ( url.indexOf( mLRCRestrictList[ j ] ) != -1 ) {
-                    type = this.LRC_QUERY_RESTRICT;
-                    break;
-                }
-            }
-        }
-        if(mLRCIgnoreList != null){
-            for ( int j = 0; j < mLRCIgnoreList.length; j++ ) {
-                if ( url.indexOf( mLRCIgnoreList[ j ] ) != -1 ) {
-                    type = this.LRC_QUERY_IGNORE;
-                    break;
-                }
-            }
-        }
-
-
-        return type;
-    }
 
 }

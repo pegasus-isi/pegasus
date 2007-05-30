@@ -84,6 +84,18 @@ public class RLI implements ReplicaCatalog {
     public static final String RLI_TIMEOUT_KEY = "rli.timeout";
 
     /**
+     * The key that is used to designate the LRC whose results are to be
+     * ignored.
+     */
+    public static final String LRC_IGNORE_KEY = "lrc.ignore";
+
+    /**
+     * The key that is used to designate the LRC whose results are to be
+     * restricted.
+     */
+    public static final String LRC_RESTRICT_KEY = "lrc.restrict";
+
+    /**
      * The attribute in RLS that maps to a site handle.
      */
     public static final String SITE_ATTRIBUTE = "pool";
@@ -117,6 +129,25 @@ public class RLI implements ReplicaCatalog {
 
 
     /**
+     * The LRC query state indicating that LRC needs to queried fully. The LRC
+     * returns all PFNs irrespective of whether they have a site attribute or
+     * not.
+     */
+    public static final int LRC_QUERY_NORMAL = 0;
+
+    /**
+     * The LRC query state indicating that LRC has to be restricted query.
+     * LRC should return only PFNs with site attributes tagged.
+     */
+    public static final int LRC_QUERY_RESTRICT = 1;
+
+    /**
+     * The LRC query state indicating that LRC has to be ignored.
+     */
+    public static final int LRC_QUERY_IGNORE = 2;
+
+
+    /**
      * The handle to the client that allows access to both the RLI and the LRC
      * running at the url specified while connecting.
      */
@@ -132,6 +163,18 @@ public class RLI implements ReplicaCatalog {
      * The url to the RLI to which this instance implementation talks to.
      */
     private String mRLIURL;
+
+    /**
+     * A String array contains the LRC URLs that have to be ignored for querying.
+     */
+    private String[] mLRCIgnoreList;
+
+    /**
+     * A String array contains the LRC URLs that have to be restricted for querying.
+     * Only those entries are returned that have a site attribute associated
+     * with them.
+     */
+    private String[] mLRCRestrictList;
 
 
     /**
@@ -173,6 +216,7 @@ public class RLI implements ReplicaCatalog {
         mConnectProps = new Properties();
         mBatchSize = this.RLS_BULK_QUERY_SIZE;
         mTimeout   = Integer.parseInt(DEFAULT_RLI_TIMEOUT);
+
     }
 
    /**
@@ -211,10 +255,14 @@ public class RLI implements ReplicaCatalog {
         String proxy = props.getProperty(PROXY_KEY);
         mConnectProps = props;//??
 
+        mLRCIgnoreList   = this.getRLSLRCIgnoreURLs( props );
+        mLRCRestrictList = this.getRLSLRCRestrictURLs( props );
+
+
         //determine timeout
         mTimeout = getTimeout(props);
 
-        //set the batch size for querie
+        //set the batch size for queries
         setBatchSize(props);
 
         return connect(mRLIURL, proxy);
@@ -533,17 +581,45 @@ public class RLI implements ReplicaCatalog {
             //query the lrc
             try{
                 Map m = lrc.lookup((Set)entry.getValue());
+
+                //figure out if we need to restrict our queries or not.
+                //restrict means only include results if they have a site
+                //handle associated
+                boolean restrict = ( this.determineQueryType(key) == this.LRC_QUERY_RESTRICT );
+
                 for(Iterator mit = m.entrySet().iterator();mit.hasNext();){
                     entry = (Map.Entry)mit.next();
+                    List pfns = (( List )entry.getValue());
+                    if ( restrict ){
+                        //traverse through all the PFN's and check for resource handle
+                        for ( Iterator pfnIterator = pfns.iterator(); pfnIterator.hasNext();  ){
+                            ReplicaCatalogEntry pfn = (ReplicaCatalogEntry) pfnIterator.next();
+                            if ( pfn.getResourceHandle() == null ){
+                                //do not include in the results if the entry does not have
+                                //a pool attribute associated with it.
+                                mLogger.log("Ignoring entry " + entry.getValue() +
+                                            " from  LRC " + key,
+                                            LogManager.DEBUG_MESSAGE_LEVEL);
+                                pfnIterator.remove();
+                            }
+                        }
+
+                    }
+
+                    //if pfns are empty which could be due to
+                    //restriction case taking away all pfns
+                    //do not merge in result
+                    if( pfns.isEmpty() ){ continue; }
+
                     //merge the entries into the main result
                     key   = (String)entry.getKey(); //the lfn
-                    if(result.containsKey(key)){
+                    if( result.containsKey(key) ){
                         //right now no merging of RCE being done on basis
                         //on them having same pfns. duplicate might occur.
-                        ((List)result.get(key)).addAll((List)entry.getValue());
+                        ((List)result.get(key)).addAll( pfns );
                     }
                     else{
-                        result.put(key,entry.getValue());
+                        result.put( key, pfns );
                     }
                 }
             }
@@ -1576,6 +1652,8 @@ public class RLI implements ReplicaCatalog {
      *
      * Referred to by the "rli.timeout" property.
      *
+     * @param properties   the properties passed in the connect method.
+     *
      * @return the timeout value if specified else,
      *         the value specified by "rls.timeout" property, else
      *         DEFAULT_RLI_TIMEOUT.
@@ -1676,6 +1754,7 @@ public class RLI implements ReplicaCatalog {
                 RLSString2Bulk s2b = (RLSString2Bulk) lit.next();
                 lfn = s2b.s1;//s1 is the lfn
                 lrc = s2b.s2;//s2 denotes the lrc which contains the mapping
+
                 //rc is the exit status returned by the RLI
                 if (s2b.rc == RLSClient.RLS_SUCCESS) {
                     //we are really only concerned with success
@@ -1693,8 +1772,100 @@ public class RLI implements ReplicaCatalog {
             }
         }
 
+        //match LRC's just once against ingore and restrict lists
+        for( Iterator it = lrc2lfn.keySet().iterator(); it.hasNext(); ){
+            String lrc = ( String ) it.next();
+            int state = this.determineQueryType(lrc);
+
+            //do the query on the basis of the state
+            if (state == LRC_QUERY_IGNORE) {
+                mLogger.log("Skipping LRC " + lrc,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                it.remove();
+            }
+        }
+
+
+
         return lrc2lfn;
     }
+
+
+    /**
+     * Returns a tri state indicating what type of query needs to be done to
+     * a particular LRC.
+     *
+     * @param url   the LRC url.
+     *
+     * @return tristate
+     */
+    private int determineQueryType(String url){
+        int type = this.LRC_QUERY_NORMAL;
+
+        if(mLRCRestrictList != null){
+            for ( int j = 0; j < mLRCRestrictList.length; j++ ) {
+                if ( url.indexOf( mLRCRestrictList[ j ] ) != -1 ) {
+                    type = this.LRC_QUERY_RESTRICT;
+                    break;
+                }
+            }
+        }
+        if(mLRCIgnoreList != null){
+            for ( int j = 0; j < mLRCIgnoreList.length; j++ ) {
+                if ( url.indexOf( mLRCIgnoreList[ j ] ) != -1 ) {
+                    type = this.LRC_QUERY_IGNORE;
+                    break;
+                }
+            }
+        }
+
+
+        return type;
+    }
+
+
+    /**
+     * Returns the rls LRC urls to ignore for querying (requested by LIGO).
+     *
+     * Referred to by the "pegasus.catalog.replica.lrc.ignore" property.
+     *
+     * @param properties  the properties passed in the connect method.
+     *
+     * @return String[] if a comma separated list supplied as the property value,
+     *         else null
+     */
+    protected String[] getRLSLRCIgnoreURLs( Properties properties ) {
+        String urls =  properties.getProperty( this.LRC_IGNORE_KEY,
+                                               null );
+        if ( urls != null ) {
+            String[] urllist = urls.split( "," );
+            return urllist;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the rls LRC urls to restrict for querying (requested by LIGO).
+     *
+     * Referred to by the "pegasus.catalog.replica.lrc.restrict" property.
+     *
+     * @param properties  the properties passed in the connect method.
+     *
+     * @return String[] if a comma separated list supplied as the property value,
+     *         else null
+     */
+    protected String[] getRLSLRCRestrictURLs( Properties properties ) {
+        String urls = properties.getProperty( this.LRC_RESTRICT_KEY,
+                                              null );
+        if ( urls != null ) {
+            String[] urllist = urls.split( "," );
+            return urllist;
+        } else {
+            return null;
+        }
+    }
+
 
     /**
      * Retrieves the URLs of all the LRCs that report to the RLI.
@@ -1725,6 +1896,8 @@ public class RLI implements ReplicaCatalog {
 
         return result;
     }
+
+
 
 
     /**
@@ -1800,6 +1973,11 @@ public class RLI implements ReplicaCatalog {
     }
 
 */
+    /**
+     * The main program, for some unit testing.
+     *
+     * @param args String[]
+     */
     public static void main(String[] args) {
         RLI rli = new RLI();
         String lfn = "test";

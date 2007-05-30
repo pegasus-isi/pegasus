@@ -666,43 +666,6 @@ public class PegasusProperties {
         return mProps.getProperty( "pegasus.catalog.replica.url", DEFAULT_RLI_URL );
     }
 
-    /**
-     * Returns the rls LRC urls to ignore for querying (requested by LIGO).
-     *
-     * Referred to by the "pegasus.catalog.replica.lrc.ignore" property.
-     *
-     * @return String[] if a comma separated list supplied as the property value,
-     *         else null
-     */
-    public String[] getRLSLRCIgnoreURLs() {
-        String urls = mProps.getProperty( "pegasus.catalog.replica.lrc.ignore",
-            DEFAULT_LRC_IGNORE_URL );
-        if ( urls != null ) {
-            String[] urllist = urls.split( "," );
-            return urllist;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Returns the rls LRC urls to restrict for querying (requested by LIGO).
-     *
-     * Referred to by the "pegasus.catalog.replica.lrc.restrict" property.
-     *
-     * @return String[] if a comma separated list supplied as the property value,
-     *         else null
-     */
-    public String[] getRLSLRCRestrictURLs() {
-        String urls = mProps.getProperty( "pegasus.catalog.replica.lrc.restrict",
-            DEFAULT_LRC_IGNORE_URL );
-        if ( urls != null ) {
-            String[] urllist = urls.split( "," );
-            return urllist;
-        } else {
-            return null;
-        }
-    }
 
 
 
