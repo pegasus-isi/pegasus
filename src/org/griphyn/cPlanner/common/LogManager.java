@@ -453,6 +453,7 @@ public class LogManager {
      * is set to true always.
      *
      * @param message  the message to be logged.
+     * @param e        the exception to be logged
      * @param level    the level on which the message has to be logged.
      *
      * @see #setLevel(int)
@@ -460,7 +461,7 @@ public class LogManager {
      */
     public void log(String message, Exception e,int level){
         StringBuffer msg = new StringBuffer();
-        msg.append(message).append(": ").append(e.getMessage());
+        msg.append(message).append(" ").append( e.getClass() ).append( ": ").append(e.getMessage());
         log(msg.toString(),level);
     }
 
@@ -602,6 +603,8 @@ public class LogManager {
      * message type, when a message is being logged.
      * Should be returning an enumerated data type.
      *
+     * @param type   the type for which prefix is required.
+     *
      * @return the message type
      */
     private String getPrefix(int type){
@@ -668,6 +671,8 @@ public class LogManager {
      * Returns a PrintWriter stream on which to log the message. Later on
      * this, function would return the appropriate LOG4J queue on which
      * the message needs to be logged.
+     *
+     * @param level  the level
      *
      * @return PrintWriter for logging the message.
      */
