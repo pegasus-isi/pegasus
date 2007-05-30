@@ -38,7 +38,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +94,7 @@ public class File
      * @return TransformationCatalog
      */
     public static TransformationCatalog getInstance() {
-        if ( mTCFileHandle == null ) {
+        if (mTCFileHandle == null) {
             mTCFileHandle = new File();
         }
         return mTCFileHandle;
@@ -119,8 +118,8 @@ public class File
      * catalog in ths six column format
      * @return TransformationCatalog
      */
-    public static TransformationCatalog getNonSingletonInstance( String path ) {
-        return new File( path );
+    public static TransformationCatalog getNonSingletonInstance(String path) {
+        return new File(path);
     }
 
     /**
@@ -132,8 +131,8 @@ public class File
      *                read.
      * @return TransformationCatalog
      */
-    public static TransformationCatalog getNonSingletonInstance( InputStream
-        reader ) {
+    public static TransformationCatalog getNonSingletonInstance(InputStream
+        reader) {
         return new File();
     }
 
@@ -142,7 +141,7 @@ public class File
      *
      */
     private File() {
-        initialize( null );
+        initialize(null);
         populateTC();
     }
 
@@ -152,8 +151,8 @@ public class File
      * @param path  the path to the file containing the transformation catalog
      *              in six column format.
      */
-    private File( String path ) {
-        initialize( path );
+    private File(String path) {
+        initialize(path);
         populateTC();
     }
 
@@ -164,9 +163,9 @@ public class File
      * @param reader  the <code>InputStrean</code> containing the bytes to be
      *                read.
      */
-    private File( InputStream reader ) {
-        initialize( null );
-        populateTC( reader );
+    private File(InputStream reader) {
+        initialize(null);
+        populateTC(reader);
     }
 
     /**
@@ -175,20 +174,20 @@ public class File
      * @param path the path to file containing the transformation
      * catalog. can be null.
      */
-    private void initialize( String path ) {
+    private void initialize(String path) {
         mProps = PegasusProperties.nonSingletonInstance();
-        mTCFile = ( path == null ) ? mProps.getTCPath() : path;
+        mTCFile = (path == null) ? mProps.getTCPath() : path;
         mLogger = LogManager.getInstance();
         mTreeMap = new TreeMap();
-        mLogger.log( "TC Mode being used is " + this.getTCMode(),
-            LogManager.CONFIG_MESSAGE_LEVEL );
-        mLogger.log( "TC File being used is " + mTCFile,
-            LogManager.CONFIG_MESSAGE_LEVEL );
-        if ( mTCFile == null ) {
-            mLogger.log( "The File to be used as TC should be " +
-                "defined with the property pegasus.catalog.transformation.file",
-                LogManager.FATAL_MESSAGE_LEVEL );
-            System.exit( 1 );
+        mLogger.log("TC Mode being used is " + this.getTCMode(),
+                    LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log("TC File being used is " + mTCFile,
+                    LogManager.CONFIG_MESSAGE_LEVEL);
+        if (mTCFile == null) {
+            mLogger.log("The File to be used as TC should be " +
+                        "defined with the property pegasus.catalog.transformation.file",
+                        LogManager.FATAL_MESSAGE_LEVEL);
+            System.exit(1);
         }
     }
 
@@ -222,31 +221,32 @@ public class File
      * @see org.griphyn.common.classes.TCType
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public List getTCEntries( String namespace, String name, String version,
-        List resourceids, TCType type ) throws Exception {
-        logMessage( "getTCEntries(String namespace,String name,String version," +
-            "List resourceids, TCType type" );
-        logMessage( "\tgetTCEntries(" + namespace + ", " + name + ", " +
-            version + ", " +
-            resourceids + ", " + type );
+    public List getTCEntries(String namespace, String name, String version,
+                             List resourceids, TCType type) throws Exception {
+        logMessage("getTCEntries(String namespace,String name,String version," +
+                   "List resourceids, TCType type");
+        logMessage("\tgetTCEntries(" + namespace + ", " + name + ", " +
+                   version + ", " +
+                   resourceids + ", " + type);
         List results = null;
-        if ( resourceids != null ) {
-            for ( Iterator i = resourceids.iterator(); i.hasNext(); ) {
-                List tempresults = getTCEntries( namespace, name, version,
-                    ( String ) i.next(), type );
-                if ( tempresults != null ) {
-                    if ( results == null ) {
+        if (resourceids != null) {
+            for (Iterator i = resourceids.iterator(); i.hasNext(); ) {
+                List tempresults = getTCEntries(namespace, name, version,
+                                                (String) i.next(), type);
+                if (tempresults != null) {
+                    if (results == null) {
                         results = new ArrayList();
                     }
-                    results.addAll( tempresults );
+                    results.addAll(tempresults);
                 }
             }
-        } else {
-            List tempresults = getTCEntries( namespace, name, version, ( String )null,
-                type );
-            if ( tempresults != null ) {
-                results = new ArrayList( tempresults.size() );
-                results.addAll( tempresults );
+        }
+        else {
+            List tempresults = getTCEntries(namespace, name, version, (String)null,
+                                            type);
+            if (tempresults != null) {
+                results = new ArrayList(tempresults.size());
+                results.addAll(tempresults);
             }
 
         }
@@ -273,70 +273,73 @@ public class File
      * @see org.griphyn.common.classes.TCType
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public List getTCEntries( String namespace, String name, String version,
-        String resourceid, TCType type ) throws Exception {
+    public List getTCEntries(String namespace, String name, String version,
+                             String resourceid, TCType type) throws Exception {
         logMessage(
             "getTCEntries(String namespace, String name, String version, " +
-            "String resourceId, TCType type)" );
-        logMessage( "\t getTCEntries(" + namespace + ", " + name + ", " +
-            version +
-            "," + resourceid + ", " + type );
+            "String resourceId, TCType type)");
+        logMessage("\t getTCEntries(" + namespace + ", " + name + ", " +
+                   version +
+                   "," + resourceid + ", " + type);
         List results = null;
-        String lfn = Separator.combine( namespace, name, version );
-        mLogger.log( "Trying to get TCEntries for " +
-            lfn +
-            " on resource " + ( ( resourceid == null ) ? "ALL" :
-            resourceid ) + " of type " +
-            ( ( type == null ) ? "ALL" : type.toString() ),
-            LogManager.DEBUG_MESSAGE_LEVEL );
-        if ( resourceid != null ) {
-            if ( mTreeMap.containsKey( resourceid ) ) {
-                Map lfnMap = ( Map ) mTreeMap.get( resourceid );
-                if ( lfnMap.containsKey( lfn ) ) {
-                    List l = ( List ) lfnMap.get( lfn );
-                    if ( type != null && l != null ) {
-                        for ( Iterator i = l.iterator(); i.hasNext(); ) {
+        String lfn = Separator.combine(namespace, name, version);
+        mLogger.log("Trying to get TCEntries for " +
+                    lfn +
+                    " on resource " + ( (resourceid == null) ? "ALL" :
+                                       resourceid) + " of type " +
+                    ( (type == null) ? "ALL" : type.toString()),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+        if (resourceid != null) {
+            if (mTreeMap.containsKey(resourceid)) {
+                Map lfnMap = (Map) mTreeMap.get(resourceid);
+                if (lfnMap.containsKey(lfn)) {
+                    List l = (List) lfnMap.get(lfn);
+                    if (type != null && l != null) {
+                        for (Iterator i = l.iterator(); i.hasNext(); ) {
                             TransformationCatalogEntry tc = (
-                                TransformationCatalogEntry ) i.next();
-                            if ( tc.getType().equals( type ) ) {
-                                if ( results == null ) {
+                                TransformationCatalogEntry) i.next();
+                            if (tc.getType().equals(type)) {
+                                if (results == null) {
                                     results = new ArrayList();
                                 }
-                                results.add( tc );
+                                results.add(tc);
                             }
                         }
-                    } else {
+                    }
+                    else {
                         results = l;
                     }
                 }
             }
-        } else {
+        }
+        else {
             //since resourceid is null return entries for all sites
-            if ( !mTreeMap.isEmpty() ) {
+            if (!mTreeMap.isEmpty()) {
 
-                for ( Iterator j = mTreeMap.values().iterator(); j.hasNext(); ) {
+                for (Iterator j = mTreeMap.values().iterator(); j.hasNext(); ) {
                     //check all maps for the executable.
-                    Map lfnMap = ( Map ) j.next();
-                    if ( lfnMap.containsKey( lfn ) ) {
-                        List l = ( List ) lfnMap.get( lfn );
-                        if ( type != null && l != null ) {
-                            for ( Iterator i = l.iterator(); i.hasNext(); ) {
+                    Map lfnMap = (Map) j.next();
+                    if (lfnMap.containsKey(lfn)) {
+                        List l = (List) lfnMap.get(lfn);
+                        if (type != null && l != null) {
+                            for (Iterator i = l.iterator(); i.hasNext(); ) {
                                 TransformationCatalogEntry tc = (
-                                    TransformationCatalogEntry ) i.next();
-                                if ( tc.getType().equals( type ) ) {
-                                    if ( results == null ) {
+                                    TransformationCatalogEntry) i.next();
+                                if (tc.getType().equals(type)) {
+                                    if (results == null) {
                                         results = new ArrayList();
                                     }
-                                    results.add( tc );
+                                    results.add(tc);
                                 }
                             }
-                        } else {
+                        }
+                        else {
                             //if the list returned is not empty keep adding to the result list.
-                            if ( l != null ) {
-                                if ( results == null ) {
+                            if (l != null) {
+                                if (results == null) {
                                     results = new ArrayList();
                                 }
-                                results.addAll( l );
+                                results.addAll(l);
                             }
                         }
                     }
@@ -363,66 +366,68 @@ public class File
      * @throws Exception
      * @see org.griphyn.common.classes.TCType
      */
-    public List getTCResourceIds( String namespace, String name,
-        String version,
-        TCType type ) throws Exception {
+    public List getTCResourceIds(String namespace, String name,
+                                 String version,
+                                 TCType type) throws Exception {
         logMessage(
             "List getTCResourceIds(String namespace, String name, String " +
-            "version, TCType type" );
-        logMessage( "\t getTCResourceIds(" + namespace + ", " + name + ", " +
-            version +
-            ", " + type );
+            "version, TCType type");
+        logMessage("\t getTCResourceIds(" + namespace + ", " + name + ", " +
+                   version +
+                   ", " + type);
         List results = null;
         List lfnList = new ArrayList();
-        if ( name == null ) {
-            if ( type == null ) {
+        if (name == null) {
+            if (type == null) {
                 //return all the resources only
-                results = new ArrayList( mTreeMap.keySet() );
+                results = new ArrayList(mTreeMap.keySet());
                 return results;
             }
         }
         //return all the entries to search for type
-        lfnList.addAll( mTreeMap.values() );
+        lfnList.addAll(mTreeMap.values());
 
         List entries = null;
-        for ( Iterator i = lfnList.iterator(); i.hasNext(); ) {
-            Map lfnMap = ( Map ) i.next();
-            if ( entries == null ) {
+        for (Iterator i = lfnList.iterator(); i.hasNext(); ) {
+            Map lfnMap = (Map) i.next();
+            if (entries == null) {
                 entries = new ArrayList();
             }
-            if ( name == null ) {
-                for ( Iterator j = lfnMap.values().iterator(); j.hasNext(); ) {
-                    entries.addAll( ( List ) j.next() );
+            if (name == null) {
+                for (Iterator j = lfnMap.values().iterator(); j.hasNext(); ) {
+                    entries.addAll( (List) j.next());
                 }
-            } else {
-                if ( lfnMap.containsKey( Separator.combine( namespace, name,
-                    version ) ) ) {
-                    entries.addAll( ( List ) lfnMap.get( Separator.combine(
+            }
+            else {
+                if (lfnMap.containsKey(Separator.combine(namespace, name,
+                    version))) {
+                    entries.addAll( (List) lfnMap.get(Separator.combine(
                         namespace,
                         name,
-                        version ) ) );
+                        version)));
                 }
             }
         }
         TreeSet rset = null;
-        for ( Iterator i = entries.iterator(); i.hasNext(); ) {
-            if ( rset == null ) {
+        for (Iterator i = entries.iterator(); i.hasNext(); ) {
+            if (rset == null) {
                 rset = new TreeSet();
             }
-            TransformationCatalogEntry entry = ( TransformationCatalogEntry ) i.
+            TransformationCatalogEntry entry = (TransformationCatalogEntry) i.
                 next();
-            if ( type == null ) {
-                rset.add( entry.getResourceId() );
-            } else {
-                if ( entry.getType().equals( type ) ) {
-                    rset.add( entry.getResourceId() );
+            if (type == null) {
+                rset.add(entry.getResourceId());
+            }
+            else {
+                if (entry.getType().equals(type)) {
+                    rset.add(entry.getResourceId());
                 }
             }
         }
-        if ( rset != null ) {
+        if (rset != null) {
             results = new ArrayList();
-            for ( Iterator i = rset.iterator(); i.hasNext(); ) {
-                results.add( ( String ) i.next() );
+            for (Iterator i = rset.iterator(); i.hasNext(); ) {
+                results.add( (String) i.next());
             }
         }
         return results;
@@ -454,54 +459,58 @@ public class File
      * @see org.griphyn.common.classes.TCType
      * @see org.griphyn.common.classes.SysInfo
      */
-    public List getTCPhysicalNames( String namespace, String name,
-        String version,
-        String resourceid, TCType type ) throws
+    public List getTCPhysicalNames(String namespace, String name,
+                                   String version,
+                                   String resourceid, TCType type) throws
         Exception {
-        logMessage( "List getTCPhysicalNames(String namespace, String name," +
-            "String version, String resourceid,TCType type)" );
-        logMessage( "\t getTCPhysicalNames(" + namespace + ", " + name + ", " +
-            version + ", " + resourceid + ", " + type + ")" );
+        logMessage("List getTCPhysicalNames(String namespace, String name," +
+                   "String version, String resourceid,TCType type)");
+        logMessage("\t getTCPhysicalNames(" + namespace + ", " + name + ", " +
+                   version + ", " + resourceid + ", " + type + ")");
         List results = null;
         List lfnMap = new ArrayList();
-        int count[] = {0, 0, 0};
-        if ( resourceid == null ) {
-            lfnMap.addAll( mTreeMap.values() );
-        } else {
-            if ( mTreeMap.containsKey( resourceid ) ) {
-                lfnMap.add( mTreeMap.get( resourceid ) );
-            } else {
+        int count[] = {
+            0, 0, 0};
+        if (resourceid == null) {
+            lfnMap.addAll(mTreeMap.values());
+        }
+        else {
+            if (mTreeMap.containsKey(resourceid)) {
+                lfnMap.add(mTreeMap.get(resourceid));
+            }
+            else {
                 return null;
             }
         }
 
-        for ( Iterator i = lfnMap.iterator(); i.hasNext(); ) {
-            Map lMap = ( Map ) i.next();
-            if ( lMap.containsKey( Separator.combine( namespace, name, version ) ) ) {
-                for ( Iterator j = ( ( List ) lMap.get( Separator.combine(
+        for (Iterator i = lfnMap.iterator(); i.hasNext(); ) {
+            Map lMap = (Map) i.next();
+            if (lMap.containsKey(Separator.combine(namespace, name, version))) {
+                for (Iterator j = ( (List) lMap.get(Separator.combine(
                     namespace,
-                    name, version ) ) ).iterator(); j.hasNext(); ) {
+                    name, version))).iterator(); j.hasNext(); ) {
                     TransformationCatalogEntry entry = (
-                        TransformationCatalogEntry ) j.next();
-                    if ( type != null ) {
-                        if ( !entry.getType().equals( type ) ) {
+                        TransformationCatalogEntry) j.next();
+                    if (type != null) {
+                        if (!entry.getType().equals(type)) {
                             break;
                         }
                     }
-                    String[] s = {entry.getResourceId(),
+                    String[] s = {
+                        entry.getResourceId(),
                         entry.getPhysicalTransformation(),
                         entry.getType().toString(),
                         entry.getSysInfo().toString()};
-                    columnLength( s, count );
-                    if ( results == null ) {
+                    columnLength(s, count);
+                    if (results == null) {
                         results = new ArrayList();
                     }
-                    results.add( s );
+                    results.add(s);
                 }
             }
         }
-        if ( results != null ) {
-            results.add( count );
+        if (results != null) {
+            results.add(count);
         }
         return results;
     }
@@ -523,66 +532,71 @@ public class File
      *                   specifying the column length for pretty print.
      *                   Returns <B>NULL</B> if no results found.
      */
-    public List getTCLogicalNames( String resourceid, TCType type ) throws
+    public List getTCLogicalNames(String resourceid, TCType type) throws
         Exception {
-        logMessage( "List getTCLogicalNames(String resourceid, TCType type)" );
-        logMessage( "\t getTCLogicalNames(" + resourceid + "," + type + ")" );
+        logMessage("List getTCLogicalNames(String resourceid, TCType type)");
+        logMessage("\t getTCLogicalNames(" + resourceid + "," + type + ")");
         List result = null;
-        int[] length = {0, 0};
+        int[] length = {
+            0, 0};
         List lfnMap = new ArrayList();
         String lfn = null, resource = null, tctype = null;
-        if ( resourceid == null ) {
-            lfnMap.addAll( mTreeMap.values() );
-        } else {
-            if ( mTreeMap.containsKey( resourceid ) ) {
-                lfnMap.add( ( Map ) mTreeMap.get( resourceid ) );
-            } else {
+        if (resourceid == null) {
+            lfnMap.addAll(mTreeMap.values());
+        }
+        else {
+            if (mTreeMap.containsKey(resourceid)) {
+                lfnMap.add( (Map) mTreeMap.get(resourceid));
+            }
+            else {
                 lfnMap = null;
             }
         }
-        if ( lfnMap != null ) {
-            for ( Iterator i = lfnMap.iterator(); i.hasNext(); ) {
-                for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
-                    j.hasNext(); ) {
-                    for ( Iterator k = ( ( List ) j.next() ).iterator();
-                        k.hasNext(); ) {
+        if (lfnMap != null) {
+            for (Iterator i = lfnMap.iterator(); i.hasNext(); ) {
+                for (Iterator j = ( (Map) i.next()).values().iterator();
+                     j.hasNext(); ) {
+                    for (Iterator k = ( (List) j.next()).iterator();
+                         k.hasNext(); ) {
                         TransformationCatalogEntry tc = (
-                            TransformationCatalogEntry ) k.next();
+                            TransformationCatalogEntry) k.next();
                         String l = null, r = null, t = null;
-                        if ( type == null ) {
+                        if (type == null) {
                             l = tc.getLogicalTransformation();
                             r = tc.getResourceId();
                             t = tc.getType().toString();
 
-                        } else {
-                            if ( tc.getType().equals( type ) ) {
+                        }
+                        else {
+                            if (tc.getType().equals(type)) {
                                 l = tc.getLogicalTransformation();
                                 r = tc.getResourceId();
                                 t = tc.getType().toString();
                             }
                         }
-                        if ( l != null && r != null && t != null ) {
-                            if ( lfn == null ||
-                                ! ( lfn.equalsIgnoreCase( l ) &&
-                                resource.equalsIgnoreCase( r ) &&
-                                tctype.equalsIgnoreCase( t ) ) ) {
+                        if (l != null && r != null && t != null) {
+                            if (lfn == null ||
+                                ! (lfn.equalsIgnoreCase(l) &&
+                                   resource.equalsIgnoreCase(r) &&
+                                   tctype.equalsIgnoreCase(t))) {
                                 lfn = l;
                                 resource = r;
                                 tctype = t;
-                                String[] s = {l, r, t};
-                                columnLength( s, length );
-                                if ( result == null ) {
-                                    result = new ArrayList( 5 );
+                                String[] s = {
+                                    l, r, t};
+                                columnLength(s, length);
+                                if (result == null) {
+                                    result = new ArrayList(5);
                                 }
-                                result.add( s );
+                                result.add(s);
                             }
                         }
                     }
                 }
             }
         }
-        if ( result != null ) {
-            result.add( length );
+        if (result != null) {
+            result.add(length);
         }
         return result;
     }
@@ -602,10 +616,10 @@ public class File
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public List getTCLfnProfiles( String namespace, String name,
-        String version ) throws
+    public List getTCLfnProfiles(String namespace, String name,
+                                 String version) throws
         Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
@@ -623,34 +637,34 @@ public class File
      *
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public List getTCPfnProfiles( String pfn, String resourceid, TCType type ) throws
+    public List getTCPfnProfiles(String pfn, String resourceid, TCType type) throws
         Exception {
         logMessage(
-            "getTCPfnProfiles(String pfn, String resourceid, TCType type)" );
-        logMessage( "\t getTCPfnProfiles(" + pfn + "," + resourceid + "," +
-            type + ")" );
+            "getTCPfnProfiles(String pfn, String resourceid, TCType type)");
+        logMessage("\t getTCPfnProfiles(" + pfn + "," + resourceid + "," +
+                   type + ")");
 
         List result = null;
         List lfnMap = new ArrayList();
-        if ( mTreeMap.containsKey( resourceid ) ) {
-            lfnMap.add( ( Map ) mTreeMap.get( resourceid ) );
+        if (mTreeMap.containsKey(resourceid)) {
+            lfnMap.add( (Map) mTreeMap.get(resourceid));
         }
-        for ( Iterator i = lfnMap.iterator(); i.hasNext(); ) {
-            for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
-                j.hasNext(); ) {
-                for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
+        for (Iterator i = lfnMap.iterator(); i.hasNext(); ) {
+            for (Iterator j = ( (Map) i.next()).values().iterator();
+                 j.hasNext(); ) {
+                for (Iterator k = ( (List) j.next()).iterator(); k.hasNext(); ) {
                     TransformationCatalogEntry tc = (
-                        TransformationCatalogEntry ) k.next();
+                        TransformationCatalogEntry) k.next();
                     List profiles = null;
-                    if ( tc.getPhysicalTransformation().equals( pfn ) ) {
-                        if ( type == null || tc.getType().equals( type ) ) {
+                    if (tc.getPhysicalTransformation().equals(pfn)) {
+                        if (type == null || tc.getType().equals(type)) {
                             profiles = tc.getProfiles();
                         }
-                        if ( profiles != null ) {
-                            if ( result == null ) {
-                                result = new ArrayList( 10 );
+                        if (profiles != null) {
+                            if (result == null) {
+                                result = new ArrayList(10);
                             }
-                            result.addAll( profiles );
+                            result.addAll(profiles);
                         }
                     }
                 }
@@ -671,44 +685,44 @@ public class File
      */
 
     public List getTC() throws Exception {
-        List result=new ArrayList();
-        for ( Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
-            for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
-                j.hasNext(); ) {
-                for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
+        List result = new ArrayList();
+        for (Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
+            for (Iterator j = ( (Map) i.next()).values().iterator();
+                 j.hasNext(); ) {
+                for (Iterator k = ( (List) j.next()).iterator(); k.hasNext(); ) {
                     TransformationCatalogEntry tc = (
-                        TransformationCatalogEntry ) k.next();
+                        TransformationCatalogEntry) k.next();
                     result.add(tc);
                 }
 
             }
         }
-   /*     List result = null;
-        int[] length = {0, 0, 0, 0, 0};
-        for ( Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
-            for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
-                j.hasNext(); ) {
-                for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
-                    TransformationCatalogEntry tc = (
-                        TransformationCatalogEntry ) k.next();
-                    if ( result == null ) {
-                        result = new ArrayList( 10 );
-                    }
-                    String[] s = {tc.getResourceId(),
-                        tc.getLogicalTransformation(),
-                        tc.getPhysicalTransformation(),
-                        tc.getType().toString(), tc.getSysInfo().toString(),
-                        ( ( tc.getProfiles() != null ) ?
-                        ProfileParser.combine( tc.getProfiles() ) : "NULL" )};
-                    columnLength( s, length );
-                    result.add( s );
-                }
-            }
-        }
-        if ( result != null ) {
-            result.add( length );
-        }
-    */
+        /*     List result = null;
+             int[] length = {0, 0, 0, 0, 0};
+             for ( Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
+                 for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
+                     j.hasNext(); ) {
+         for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
+                         TransformationCatalogEntry tc = (
+                             TransformationCatalogEntry ) k.next();
+                         if ( result == null ) {
+                             result = new ArrayList( 10 );
+                         }
+                         String[] s = {tc.getResourceId(),
+                             tc.getLogicalTransformation(),
+                             tc.getPhysicalTransformation(),
+         tc.getType().toString(), tc.getSysInfo().toString(),
+                             ( ( tc.getProfiles() != null ) ?
+         ProfileParser.combine( tc.getProfiles() ) : "NULL" )};
+                         columnLength( s, length );
+                         result.add( s );
+                     }
+                 }
+             }
+             if ( result != null ) {
+                 result.add( length );
+             }
+         */
         return result;
     }
 
@@ -728,12 +742,12 @@ public class File
      * @throws Exception
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry( List entries ) throws
+    public boolean addTCEntry(List entries) throws
         Exception {
-        for ( int i = 0; i < entries.size(); i++ ) {
-            TransformationCatalogEntry entry = ( ( TransformationCatalogEntry )
-                entries.get( i ) );
-            this.addTCEntry( entry);
+        for (int i = 0; i < entries.size(); i++) {
+            TransformationCatalogEntry entry = ( (TransformationCatalogEntry)
+                                                entries.get(i));
+            this.addTCEntry(entry);
         }
         return true;
 
@@ -751,37 +765,37 @@ public class File
      * @throws Exception
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry( TransformationCatalogEntry entry ) throws
+    public boolean addTCEntry(TransformationCatalogEntry entry) throws
         Exception {
-        this.addTCEntry( entry.getLogicalNamespace(),
-                         entry.getLogicalName(), entry.getLogicalVersion(),
-                         entry.getPhysicalTransformation(),
-                         entry.getType(), entry.getResourceId(), null,
-                         entry.getProfiles(), entry.getSysInfo() );
+        this.addTCEntry(entry.getLogicalNamespace(),
+                        entry.getLogicalName(), entry.getLogicalVersion(),
+                        entry.getPhysicalTransformation(),
+                        entry.getType(), entry.getResourceId(), null,
+                        entry.getProfiles(), entry.getSysInfo());
         return true;
     }
 
     /**
-         * Add a single TCEntry to the Catalog. Exception is thrown when error
-         * occurs. This method is a hack and wont commit the additions to the
-         * backend catalog
-         *
-         * @param entry a single {@link org.griphyn.common.catalog.TransformationCatalogEntry}
-         * object as input.
-         * @param write boolean to commit additions to backend catalog.
-         * @return boolean Return true if succesful, false if error.
-         *
-         * @throws Exception
-         * @see org.griphyn.common.catalog.TransformationCatalogEntry
-         */
-        public boolean addTCEntry( TransformationCatalogEntry entry,boolean write) throws
-            Exception {
-            this.addTCEntry( entry.getLogicalNamespace(),
-                             entry.getLogicalName(), entry.getLogicalVersion(),
-                             entry.getPhysicalTransformation(),
-                             entry.getType(), entry.getResourceId(), null,
-                             entry.getProfiles(), entry.getSysInfo(),write );
-            return true;
+     * Add a single TCEntry to the Catalog. Exception is thrown when error
+     * occurs. This method is a hack and wont commit the additions to the
+     * backend catalog
+     *
+     * @param entry a single {@link org.griphyn.common.catalog.TransformationCatalogEntry}
+     * object as input.
+     * @param write boolean to commit additions to backend catalog.
+     * @return boolean Return true if succesful, false if error.
+     *
+     * @throws Exception
+     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     */
+    public boolean addTCEntry(TransformationCatalogEntry entry, boolean write) throws
+        Exception {
+        this.addTCEntry(entry.getLogicalNamespace(),
+                        entry.getLogicalName(), entry.getLogicalVersion(),
+                        entry.getPhysicalTransformation(),
+                        entry.getType(), entry.getResourceId(), null,
+                        entry.getProfiles(), entry.getSysInfo(), write);
+        return true;
     }
 
     /**
@@ -808,14 +822,15 @@ public class File
      * @see org.griphyn.common.classes.SysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCEntry( String namespace, String name,
-        String version,
-        String physicalname, TCType type,
-        String resourceid,
-        List pfnprofiles, List lfnprofiles,
-        SysInfo system ) throws
+    public boolean addTCEntry(String namespace, String name,
+                              String version,
+                              String physicalname, TCType type,
+                              String resourceid,
+                              List pfnprofiles, List lfnprofiles,
+                              SysInfo system) throws
         Exception {
-        return this.addTCEntry(namespace,name,version,physicalname,type,resourceid,pfnprofiles,lfnprofiles,system,true);
+        return this.addTCEntry(namespace, name, version, physicalname, type,
+                               resourceid, lfnprofiles, pfnprofiles, system, true);
     }
 
     /**
@@ -843,56 +858,59 @@ public class File
      * @see org.griphyn.common.classes.SysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCEntry( String namespace, String name,
-        String version,
-        String physicalname, TCType type,
-        String resourceid,
-        List pfnprofiles, List lfnprofiles,
-        SysInfo system,boolean write ) throws
+    public boolean addTCEntry(String namespace, String name,
+                              String version,
+                              String physicalname, TCType type,
+                              String resourceid,
+                              List pfnprofiles, List lfnprofiles,
+                              SysInfo system, boolean write) throws
         Exception {
 
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
-        entry.setLogicalNamespace( namespace );
-        entry.setLogicalName( name );
-        entry.setLogicalVersion( version );
-        entry.setPhysicalTransformation( physicalname );
-        entry.setType( type );
-        entry.setResourceId( resourceid );
-        entry.setProfiles( lfnprofiles );
-        entry.setProfiles( pfnprofiles );
-        entry.setSysInfo( system );
+        entry.setLogicalNamespace(namespace);
+        entry.setLogicalName(name);
+        entry.setLogicalVersion(version);
+        entry.setPhysicalTransformation(physicalname);
+        entry.setType(type);
+        entry.setResourceId(resourceid);
+        entry.setProfiles(lfnprofiles);
+        entry.setProfiles(pfnprofiles);
+        entry.setSysInfo(system);
 
         Map lfnMap = null;
-        if ( mTreeMap.containsKey( resourceid ) ) {
-            lfnMap = ( Map ) mTreeMap.get( resourceid );
-        } else {
+        if (mTreeMap.containsKey(resourceid)) {
+            lfnMap = (Map) mTreeMap.get(resourceid);
+        }
+        else {
             lfnMap = new TreeMap();
-            mTreeMap.put( resourceid, lfnMap );
+            mTreeMap.put(resourceid, lfnMap);
         }
 
         List pfnList = null;
-        if ( lfnMap.containsKey( entry.getLogicalTransformation() ) ) {
-            pfnList = ( List ) lfnMap.get( entry.getLogicalTransformation() );
-        } else {
-            pfnList = new ArrayList( 2 );
-            lfnMap.put( entry.getLogicalTransformation(), pfnList );
+        if (lfnMap.containsKey(entry.getLogicalTransformation())) {
+            pfnList = (List) lfnMap.get(entry.getLogicalTransformation());
+        }
+        else {
+            pfnList = new ArrayList(2);
+            lfnMap.put(entry.getLogicalTransformation(), pfnList);
         }
         boolean add = true;
-        for ( Iterator i = pfnList.iterator(); i.hasNext(); ) {
-            TransformationCatalogEntry test = ( TransformationCatalogEntry ) i.
+        for (Iterator i = pfnList.iterator(); i.hasNext(); ) {
+            TransformationCatalogEntry test = (TransformationCatalogEntry) i.
                 next();
-            if ( test.equals( entry ) ) {
+            if (test.equals(entry)) {
                 add = false;
             }
         }
-        if ( add) {
-            pfnList.add( entry );
-            if(write){
+        if (add) {
+            pfnList.add(entry);
+            if (write) {
                 writeTC();
             }
-        } else {
-            mLogger.log( "TC Entry already exists. Skipping",
-                LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        else {
+            mLogger.log("TC Entry already exists. Skipping",
+                        LogManager.DEBUG_MESSAGE_LEVEL);
         }
         return true;
 
@@ -910,10 +928,10 @@ public class File
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean addTCLfnProfile( String namespace, String name,
-        String version,
-        List profiles ) throws Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+    public boolean addTCLfnProfile(String namespace, String name,
+                                   String version,
+                                   List profiles) throws Exception {
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
@@ -930,10 +948,10 @@ public class File
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean addTCPfnProfile( String pfn, TCType type,
-        String resourcename,
-        List profiles ) throws Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+    public boolean addTCPfnProfile(String pfn, TCType type,
+                                   String resourcename,
+                                   List profiles) throws Exception {
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
@@ -955,18 +973,18 @@ public class File
      * @throws Exception
      * @return boolean
      */
-    public boolean deleteTCbyLogicalName( String namespace, String name,
-        String version, String resourceid,
-        TCType type ) throws Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+    public boolean deleteTCbyLogicalName(String namespace, String name,
+                                         String version, String resourceid,
+                                         TCType type) throws Exception {
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean deleteTCbyPhysicalName( String physicalname,
-        String namespace,
-        String name, String version,
-        String resourceid, TCType type ) throws
+    public boolean deleteTCbyPhysicalName(String physicalname,
+                                          String namespace,
+                                          String name, String version,
+                                          String resourceid, TCType type) throws
         Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
@@ -981,9 +999,9 @@ public class File
      * @throws Exception as function not implemented.
      * @return boolean
      */
-    public boolean deleteTCbyType( TCType type, String resourceid ) throws
+    public boolean deleteTCbyType(TCType type, String resourceid) throws
         Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
@@ -994,9 +1012,9 @@ public class File
      * @throws Exception as function not implemented.
      * @return boolean
      */
-    public boolean deleteTCbySysInfo( SysInfo sysinfo ) throws
+    public boolean deleteTCbySysInfo(SysInfo sysinfo) throws
         Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
@@ -1006,10 +1024,10 @@ public class File
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean deleteTCbyResourceId( String resourceid ) throws Exception {
+    public boolean deleteTCbyResourceId(String resourceid) throws Exception {
 
-        if ( mTreeMap.containsKey( resourceid ) ) {
-            mTreeMap.remove( resourceid );
+        if (mTreeMap.containsKey(resourceid)) {
+            mTreeMap.remove(resourceid);
         }
         writeTC();
         return true;
@@ -1026,19 +1044,19 @@ public class File
         return true;
     }
 
-    public boolean deleteTCPfnProfile( String physicalname, TCType type,
-        String resourceid, List profiles ) throws
+    public boolean deleteTCPfnProfile(String physicalname, TCType type,
+                                      String resourceid, List profiles) throws
         Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean deleteTCLfnProfile( String namespace, String name,
-        String version, List profiles ) throws
+    public boolean deleteTCLfnProfile(String namespace, String name,
+                                      String version, List profiles) throws
         Exception {
-        throw new UnsupportedOperationException( "Not Implemented" );
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean connect( java.util.Properties props ) {
+    public boolean connect(java.util.Properties props) {
         //not implemented
         return true;
     }
@@ -1055,41 +1073,41 @@ public class File
     private void writeTC() {
         PrintWriter writer = null;
         try {
-            mLogger.log( "Starting to write the TC file",
-                LogManager.DEBUG_MESSAGE_LEVEL );
-            writer = new PrintWriter( new BufferedWriter( new FileWriter(
-                mTCFile, false ) ) );
+            mLogger.log("Starting to write the TC file",
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(
+                mTCFile, false)));
 
-        } catch ( IOException e ) {
+        }
+        catch (IOException e) {
             mLogger.log(
                 "Unable to open TC File for writing\"" + mTCFile, e,
-                LogManager.ERROR_MESSAGE_LEVEL );
+                LogManager.ERROR_MESSAGE_LEVEL);
         }
         int count = 0;
-        for ( Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
+        for (Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
             //get all the values from the main map
-            for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
-                j.hasNext(); ) {
+            for (Iterator j = ( (Map) i.next()).values().iterator();
+                 j.hasNext(); ) {
                 //for each resource and each logical transformatino get the arraylist.
-                for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
+                for (Iterator k = ( (List) j.next()).iterator(); k.hasNext(); ) {
                     //start printing each entry
-                    writer.println( ( ( TransformationCatalogEntry ) k.next() ).
-                        toTCString() );
+                    writer.println( ( (TransformationCatalogEntry) k.next()).
+                                   toTCString());
                     count++;
 
                 }
 
             }
         }
-        mLogger.log( "Written " + count +
-            " entries back to the TC file", LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.log("Written " + count +
+                    " entries back to the TC file",
+                    LogManager.DEBUG_MESSAGE_LEVEL);
         writer.flush();
         writer.close();
-        mLogger.logCompletion( "Starting to write the TC file",
-            LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.logCompletion("Starting to write the TC file",
+                              LogManager.DEBUG_MESSAGE_LEVEL);
     }
-
-
 
     /**
      * Computes the maximum column lenght for pretty printing.
@@ -1097,10 +1115,10 @@ public class File
      * @param s String[]
      * @param count int[]
      */
-    private static void columnLength( String[] s, int[] count ) {
-        for ( int i = 0; i < count.length; i++ ) {
-            if ( s[ i ].length() > count[ i ] ) {
-                count[ i ] = s[ i ].length();
+    private static void columnLength(String[] s, int[] count) {
+        for (int i = 0; i < count.length; i++) {
+            if (s[i].length() > count[i]) {
+                count[i] = s[i].length();
             }
         }
 
@@ -1115,8 +1133,8 @@ public class File
      *                read.
      * @return boolean
      */
-    private boolean populateTC( InputStream reader ) {
-        return populateTC( new InputStreamReader( reader ) );
+    private boolean populateTC(InputStream reader) {
+        return populateTC(new InputStreamReader(reader));
     }
 
     /**
@@ -1129,16 +1147,18 @@ public class File
         boolean result = false;
 
         try {
-            result = populateTC( new FileReader( mTCFile ) );
-        } catch ( FileNotFoundException ex ) {
-            mLogger.log( "The tc text file " + mTCFile +
-                " was not found", LogManager.ERROR_MESSAGE_LEVEL );
-            mLogger.log( "Considering it as Empty TC",
-                LogManager.ERROR_MESSAGE_LEVEL );
+            result = populateTC(new FileReader(mTCFile));
+        }
+        catch (FileNotFoundException ex) {
+            mLogger.log("The tc text file " + mTCFile +
+                        " was not found", LogManager.ERROR_MESSAGE_LEVEL);
+            mLogger.log("Considering it as Empty TC",
+                        LogManager.ERROR_MESSAGE_LEVEL);
             return true;
-        } catch ( IOException e ) {
-            mLogger.log( "Unable to open the file " +
-                mTCFile, e, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        catch (IOException e) {
+            mLogger.log("Unable to open the file " +
+                        mTCFile, e, LogManager.ERROR_MESSAGE_LEVEL);
             return false;
         }
         return result;
@@ -1151,79 +1171,81 @@ public class File
      *                transformation catalog.
      * @return boolean
      */
-    private boolean populateTC( Reader reader ) {
-        BufferedReader buf = new BufferedReader( reader );
+    private boolean populateTC(Reader reader) {
+        BufferedReader buf = new BufferedReader(reader);
         // String profilestring = null;
         int linecount = 0;
         int count = 0;
         try {
             String line = null;
             //buf = new BufferedReader( new FileReader( mTCFile ) );
-            while ( ( line = buf.readLine() ) != null ) {
+            while ( (line = buf.readLine()) != null) {
                 linecount++;
-                if ( ! ( line.startsWith( "#" ) ||
-                    line.trim().equalsIgnoreCase( "" ) ) ) {
+                if (! (line.startsWith("#") ||
+                       line.trim().equalsIgnoreCase(""))) {
                     TransformationCatalogEntry tc = new
                         TransformationCatalogEntry();
-                    String[] tokens = line.split( "[ \t]+", 6 );
-                    for ( int i = 0; i < tokens.length; i++ ) {
-                        switch ( i ) {
+                    String[] tokens = line.split("[ \t]+", 6);
+                    for (int i = 0; i < tokens.length; i++) {
+                        switch (i) {
                             case 0: //poolname
-                                tc.setResourceId( tokens[ i ] );
+                                tc.setResourceId(tokens[i]);
                                 break;
                             case 1: //logical transformation name
-                                if ( tokens[ i ].indexOf( "__" ) != -1 ) {
+                                if (tokens[i].indexOf("__") != -1) {
                                     mLogger.log(
                                         "Logical Transformations in the new File TC " +
                                         "are represented as NS::NAME:VER",
-                                        LogManager.ERROR_MESSAGE_LEVEL );
-                                    mLogger.log( "Assuming " + tokens[ i ] +
-                                        " as just the transformation NAME.",
-                                        LogManager.DEBUG_MESSAGE_LEVEL );
+                                        LogManager.ERROR_MESSAGE_LEVEL);
+                                    mLogger.log("Assuming " + tokens[i] +
+                                                " as just the transformation NAME.",
+                                                LogManager.DEBUG_MESSAGE_LEVEL);
                                 }
-                                tc.setLogicalTransformation( tokens[ i ] );
+                                tc.setLogicalTransformation(tokens[i]);
                                 break;
                             case 2: //pfn
-                                tc.setPhysicalTransformation( tokens[ i ] );
+                                tc.setPhysicalTransformation(tokens[i]);
                                 break;
                             case 3: //type
-                                tc.setType( ( tokens[ i ].equalsIgnoreCase(
-                                    "null" ) ) ?
-                                    TCType.INSTALLED :
-                                    TCType.fromString( tokens[ i ] ) );
+                                tc.setType( (tokens[i].equalsIgnoreCase(
+                                    "null")) ?
+                                           TCType.INSTALLED :
+                                           TCType.fromString(tokens[i]));
                                 break;
                             case 4: //systeminfo
-                                tc.setSysInfo( ( tokens[ i ].equalsIgnoreCase(
-                                    "null" ) ) ?
-                                    new SysInfo( null ) :
-                                    new SysInfo( tokens[ i ] ) );
+                                tc.setSysInfo( (tokens[i].equalsIgnoreCase(
+                                    "null")) ?
+                                              new SysInfo(null) :
+                                              new SysInfo(tokens[i]));
                                 break;
                             case 5: //profile string
-                                if ( !tokens[ i ].equalsIgnoreCase( "null" ) ) {
+                                if (!tokens[i].equalsIgnoreCase("null")) {
                                     try {
-                                        tc.setProfiles( ProfileParser.parse(
+                                        tc.setProfiles(ProfileParser.parse(
                                             tokens[
-                                            i ] ) );
-                                    } catch ( ProfileParserException ppe ) {
+                                            i]));
+                                    }
+                                    catch (ProfileParserException ppe) {
                                         mLogger.log(
                                             "Parsing profiles on line " +
                                             linecount + " " + ppe.getMessage() +
                                             "at position " +
                                             ppe.getPosition(), ppe,
-                                            LogManager.ERROR_MESSAGE_LEVEL );
+                                            LogManager.ERROR_MESSAGE_LEVEL);
 
                                     }
-                                    catch( RuntimeException e ){
-                                        mLogger.log( "Ignoring errors while parsing profile in Transformation Catalog on line " +
-                                            linecount , e,
-                                            LogManager.WARNING_MESSAGE_LEVEL );
+                                    catch (RuntimeException e) {
+                                        mLogger.log(
+                                            "Ignoring errors while parsing profile in Transformation Catalog on line " +
+                                            linecount, e,
+                                            LogManager.WARNING_MESSAGE_LEVEL);
                                     }
                                 }
                                 break;
                             default:
-                                mLogger.log( "Line " + linecount +
-                                    " : Humm no need to be in default",
-                                    LogManager.ERROR_MESSAGE_LEVEL );
+                                mLogger.log("Line " + linecount +
+                                            " : Humm no need to be in default",
+                                            LogManager.ERROR_MESSAGE_LEVEL);
                         } //end of switch
                     } //end of for loop
                     // if (count > 0) {
@@ -1231,46 +1253,52 @@ public class File
                     //   mLogger.logMessage("Loading line number" + linecount +
                     //                    " to the map", 1);
                     Map lfnMap = null;
-                    if ( !mTreeMap.containsKey( tc.getResourceId() ) ) {
+                    if (!mTreeMap.containsKey(tc.getResourceId())) {
                         lfnMap = new TreeMap();
-                    } else {
-                        lfnMap = ( Map ) mTreeMap.get( tc.getResourceId() );
+                    }
+                    else {
+                        lfnMap = (Map) mTreeMap.get(tc.getResourceId());
                     }
                     List entries = null;
-                    if ( !lfnMap.containsKey( tc.getLogicalTransformation() ) ) {
-                        entries = new ArrayList( 3 );
-                    } else {
-                        entries = ( List ) lfnMap.get( tc.
-                            getLogicalTransformation() );
+                    if (!lfnMap.containsKey(tc.getLogicalTransformation())) {
+                        entries = new ArrayList(3);
                     }
-                    entries.add( tc );
-                    lfnMap.put( tc.getLogicalTransformation(), entries );
-                    mTreeMap.put( tc.getResourceId(), lfnMap );
+                    else {
+                        entries = (List) lfnMap.get(tc.
+                            getLogicalTransformation());
+                    }
+                    entries.add(tc);
+                    lfnMap.put(tc.getLogicalTransformation(), entries);
+                    mTreeMap.put(tc.getResourceId(), lfnMap);
                     count++;
                 } //end of if "#"
             } //end of while line
-            mLogger.log( "Loaded " + count + " entries to the TC Map",
-                LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log("Loaded " + count + " entries to the TC Map",
+                        LogManager.DEBUG_MESSAGE_LEVEL);
             buf.close();
             return true;
-        } catch ( FileNotFoundException ex ) {
-            mLogger.log( "The tc text file " + mTCFile +
-                " was not found", LogManager.ERROR_MESSAGE_LEVEL );
-            mLogger.log( "Considering it as Empty TC",
-                LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        catch (FileNotFoundException ex) {
+            mLogger.log("The tc text file " + mTCFile +
+                        " was not found", LogManager.ERROR_MESSAGE_LEVEL);
+            mLogger.log("Considering it as Empty TC",
+                        LogManager.ERROR_MESSAGE_LEVEL);
             return true;
-        } catch ( IOException e ) {
-            mLogger.log( "Unable to open the file " +
-                mTCFile, e, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        catch (IOException e) {
+            mLogger.log("Unable to open the file " +
+                        mTCFile, e, LogManager.ERROR_MESSAGE_LEVEL);
             return false;
-        } catch ( IllegalStateException e ) {
-            mLogger.log( "On line " + linecount + "in File " +
-                mTCFile + "\n", e, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        catch (IllegalStateException e) {
+            mLogger.log("On line " + linecount + "in File " +
+                        mTCFile + "\n", e, LogManager.ERROR_MESSAGE_LEVEL);
             return false;
-        } catch ( Exception e ) {
+        }
+        catch (Exception e) {
             mLogger.log(
                 "While loading entries into the map on line " + linecount +
-                "\n", e, LogManager.ERROR_MESSAGE_LEVEL );
+                "\n", e, LogManager.ERROR_MESSAGE_LEVEL);
             return false;
         }
     }
@@ -1280,7 +1308,7 @@ public class File
      *
      * @param msg  the message to be logged.
      */
-    protected void logMessage( String msg ) {
+    protected void logMessage(String msg) {
         //mLogger.logMessage("[Shishir] Transformation Catalog : " + msg);
     }
 
