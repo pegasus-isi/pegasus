@@ -65,6 +65,7 @@ sub parse_properties($;\%) {
         next if /^[!\#]/;       # comments are skipped
         s/[\r\n]*$//;           # safe chomp
         s/\#(.*)$//;            # NEW: chop in-line comments to EOLN
+	s/\\(.)/$1/g;           # replace java properties escaped special characters #!=:
         s/^\s*//;               # replace all starting whitespace
         s/\s*$//;               # replace all trailing whitespace
         next unless length($_); # skip empty lines
@@ -77,8 +78,11 @@ sub parse_properties($;\%) {
             # regular line
             $_ = $save . $_ if defined $save;
             undef $save;
-            if ( /(\S+)\s*[:=]?\s*(.*)/ ) {
+	    print "#Property being parsed is # $_\n" if $main::DEBUG;
+		if ( /([^:= \t]+)\s*[:=]?\s*(.*)/ ) {   # new fix for auto gen properties
+#		if ( /(\S+)\s*[:=]?\s*(.*)/ ) {
 		my ($k,$v) = ($1,$2);
+			    print "#Property being stored is # $k ==> $v \n" if $main::DEBUG;
 		# substitutions
 		while ( $v =~ /(\$\{([A-Za-z0-9._]+)\})/g ) {
 		    my $newval = $hashref->{$2} || $system{$2} || '';
@@ -361,9 +365,9 @@ sub jdbc2perl {
 	      $self->propertyset( "pegasus.catalog.$cat.db.", 1 ) );
 
     # turn JDBC to DBI uri
-    my $dbuser = $x{'driver.user'};
-    my $dbpass = $x{'driver.password'};
-    my $juri = $x{'driver.url'};
+    my $dbuser = $x{'user'};
+    my $dbpass = $x{'password'};
+    my $juri = $x{'url'};
     my @x = split /:/, $juri, 3;
     die "ERROR: Is the JDBC URI \"$juri\" valid?" unless $x[0] eq 'jdbc';
     delete @x{'driver.url','driver.user','driver.password'};

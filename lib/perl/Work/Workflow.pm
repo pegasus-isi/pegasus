@@ -101,7 +101,7 @@ sub determine_connection($$) {
     my $driver = shift;
 
    
-    my %driverprops=jdbc2perl('work');
+    my %driverprops=$props->jdbc2perl('work');
     my $dburi = $driverprops{'uri'};
     my $dbuser = $driverprops{'dbuser'};
     my $dbpass = $driverprops{'dbpass'};
