@@ -112,29 +112,11 @@ my %jobtypes=("compute",1,
 
 
 if(defined $run){
-    my @listoffiles=glob "$run/*cdir.sub";
-    
-    if (scalar(@listoffiles) >0) {
-	my $subfile=$listoffiles[0];
-	warn "#Opening file $subfile\n" if $main::DEBUG;
-	open(FI, "<$subfile") || die "Error: Cannot open file $subfile : $!\n";
-	while(<FI>){
-	    if ( $_ =~ "pegasus_wf_name "){
-		$workflow= (split "=",  $_,  2 )[1];
-		$workflow =~ s/^\s+//g;
-		$workflow =~ s/\s+$//g;
-		$workflow =~ s/\"//g;
-	    }
-	    if ($_ =~ "pegasus_wf_time"){
-		$time=(split "=", $_, 2)[1];
-		$time =~ s/^\s+//g;
-		$time =~ s/\s+$//g;
-                $time =~ s/\"//g;
-	    }
-	    warn "#Got workflow = $workflow, time =$time from rundir\n" if $main::DEBUG;
-	}
-	close(FI);
-    }
+    my %config=slurp_braindb($run) || die "ERROR: open braindb: $!\n";
+    $workflow=$config{pegasus_wf_name};
+    $time=$config{pegasus_wf_time};
+
+    warn "#Got workflow = $workflow, time =$time from rundir\n" if $main::DEBUG;  
 } 
 
 my ($rc,$errors,@result);
