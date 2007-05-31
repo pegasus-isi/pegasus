@@ -43,7 +43,7 @@ our $brainbase = 'braindump.txt'; # basename of brain dump file
 our $VERSION = '0.1';
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = qw($VERSION $brainbase $jobbase);
-our @EXPORT = qw(isodate find_exec pipe_out_cmd parse_exit slurp_braindb version);
+our @EXPORT = qw(isodate find_exec pipe_out_cmd parse_exit slurp_braindb version check_rescue log10);
 
 # Preloaded methods go here.
 use POSIX qw(strftime);
