@@ -21,18 +21,20 @@
 use 5.006;
 use strict;
 use File::Spec;
-use File::Basename qw(basename);
+use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use Data::Dumper;
 
 # load our own local modules, see PERL5LIB settings
 use Work::Properties;		# parses -Dprop=val from @ARGV
+use Work::Common;
 
 # some reasonable defaults
 my $maxpre = 20;
 my $maxpost = 20;
 my $maxjobs = 0;
 my $dagman;
+my $submit=1;
 my $notify = 'NEVER';
 my $verbose;
 my %props = ();
@@ -42,9 +44,8 @@ $main::revision = 'unknown';
 $_ = '$Revision$';      # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
 
-sub version() {
-    my $version = `pegasus-version`;
-    chomp($version);
+sub myversion() {
+    my $version = version();
     print "Pegasus $version, @{[basename($0)]} $main::revision\n";
     exit 0;
 }
@@ -71,16 +72,6 @@ EOF
     exit(1);
 }
 
-sub find_exec($) {
-    # purpose: determine location of given binary in $PATH
-    # returns: fully qualified path to binary, undef if not found
-    my $program = shift;
-    foreach my $dir ( File::Spec->path ) {
-        my $fs = File::Spec->catfile( $dir, $program );
-        return $fs if -x $fs;
-    }
-    undef;
-}
 
 sub proxy_duration {
     # purpose: determine remaining time on grid user proxy
@@ -205,17 +196,21 @@ $verbose = 1 if lc($props->property('pegasus.dagman.verbose')) =~ /(true|on|1)/;
 GetOptions( "debug|d=i"    => \$main::DEBUG,
 	    "maxpre|P=i"   => \$maxpre,
 	    "maxpost|p=i"  => \$maxpost,
-	    'dagman|e=s' => \$dagman, 
+	    'dagman|e=s' => \$dagman,
+	    "submit!" =>\$submit,
 	    "maxjob|maxjobs|j=i" => \$maxjobs,
 	    "notify|n=s" => \$notify,
-	    "version|V" => \&version,
+	    "version|V" => \&myversion,
 	    "verbose|v" => \$verbose,
 	    "help|h|?" => \&usage );
 
 my $dag = shift || usage("Need the name of a .dag file\n");
 my $c_s_d = find_exec( 'condor_submit_dag' ) ||
     die "Unable to locate condor_submit_dag\n";
+my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
 salvage_logfile($dag);
+my $run=dirname($dag);
+my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 
 # construct commandline
 my @arg = ( $c_s_d );
@@ -225,7 +220,16 @@ push( @arg, '-MaxPost', $maxpost ) if $maxpost > 0;
 push( @arg, '-maxjobs', $maxjobs ) if $maxjobs > 0;
 push( @arg, '-notification', $notify );
 push( @arg, '-verbose' ) if $verbose;
+push( @arg, '-no_submit') if $submit==0;
 push( @arg, $dag );
 print STDERR "# @arg\n" if $main::DEBUG;
-exec { $arg[0] } @arg;
-exit 127;			# if exec didn't work
+exec { $arg[0] } @arg or die "Cannot execute @arg : $!\n";
+if($submit==0){
+    my @carg= ($c_s);
+    push (@carg,'-a +pegasus_wf_name=',$config{pegasus_wf_name});
+    push (@carg,'-a +pegasus_wf_time=',$config{pegasus_wf_time});
+    push (@carg, $dag.".condor.sub");
+    print STDERR "# @carg\n" if $main::DEBUG;
+    exec { $carg[0] } @carg or die "Cannot execut @carg: $!\n";
+    exit 127;
+}
