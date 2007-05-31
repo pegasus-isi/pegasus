@@ -25,7 +25,7 @@ use Getopt::Long qw(:config bundling no_ignore_case);
 use Work::Common;
 
 # debug off
-$main::debug = 0;
+$main::DEBUG = 0;
 $_ = '$Revision$';      # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
 
@@ -64,7 +64,7 @@ sub handler {
     # returns: dies
     my $sig = shift;
     # you should not do this in signal handler, but what the heck
-    warn "# Signal $sig found\n" if $main::debug;
+    warn "# Signal $sig found\n" if $main::DEBUG;
     die "ERROR: Killed by SIG$sig\n";
 }
 
@@ -93,7 +93,7 @@ GetOptions( "workflow|w=s"    => \$workflow,
 	    "jobtype|j=s" => \$jobtype,
 	    "notify|n=s" => \$notify,
 	    "version|V" => \&myversion,
-	    "verbose|v" => \$main::debug,
+	    "verbose|v" => \$main::DEBUG,
 	    "help|h|?" => \&usage );
 
 
@@ -112,7 +112,7 @@ my %jobtypes=("compute",1,
 
 
 if(defined $run){
-    my %config=slurp_braindb($run) || die "ERROR: open braindb: $!\n";
+    my %config=slurp_braindb($run) or die "ERROR: open braindb: $!\n";
     $workflow=$config{pegasus_wf_name};
     $time=$config{pegasus_wf_time};
 
@@ -125,7 +125,7 @@ my $arg1="-constraint";
 my $args=undef;
 
 ## construct the command line string
-my @arg=($condor_q);
+my @arg=($condor_q,'-dag');
 push(@arg, '-constraint') if defined $workflow || defined $time || defined $site || defined $jobtype;
 $args = "(pegasus_wf_name==\"$workflow\")" if defined $workflow;
 
@@ -147,7 +147,7 @@ push(@arg,"$args") if defined $args;
 
 push(@arg,$user);
 
-warn "# Running @arg \n" if $main::debug;
+warn "# Running @arg \n" if $main::DEBUG;
 
 ## Run the command 
 @result=pipe_out_cmd(@arg);

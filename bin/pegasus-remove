@@ -88,8 +88,17 @@ GetOptions( "dagid|d=s"    => \$dagid,
 
 my $run = shift;
 
+
+
 if (defined $run){
-my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
+# where were we...
+    my $here = File::Spec->curdir();
+    $SIG{'__DIE__'} = sub {
+	chdir($here) if defined $here;
+    };
+    chdir($run) || die "ERROR: chdir $run: $!\n";
+
+    my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 
     my $original;
     my @rescue = check_rescue($run,$config{dag});
@@ -118,7 +127,7 @@ my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
     }
 
     my $daglogfile=$config{dag}.".dagman.out";
-    
+
     open(DID,"<$daglogfile") || die "Error: Cannot open file $daglogfile: $! \n";
     while (<DID>) {
 	if($_ =~ "condor_scheduniv_exec"){
@@ -126,6 +135,7 @@ my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 	    last;
 	}
     }
+    chdir($here);
 }
 
 
