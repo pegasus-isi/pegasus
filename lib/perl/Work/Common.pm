@@ -21,7 +21,7 @@ package Work::Common;
 use 5.006;
 use strict;
 use warnings;
-
+use File::Basename qw(basename dirname);
 require Exporter;
 our @ISA = qw(Exporter);
 
