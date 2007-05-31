@@ -15,7 +15,8 @@
 # Copyright 1999-2004 University of Chicago and The University of
 # Southern California. All rights reserved.
 #
-# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
+# Author: Jens-S. Vï¿½ckler voeckler@cs.uchicago.edu
+# Author: Gaurang Mehta gmehta at isi dot edu
 # Revision : $Revision$
 #
 use 5.006;
@@ -223,11 +224,12 @@ push( @arg, '-verbose' ) if $verbose;
 push( @arg, '-no_submit') if $submit==0;
 push( @arg, $dag );
 print STDERR "# @arg\n" if $main::DEBUG;
-exec { $arg[0] } @arg or die "Cannot execute @arg : $!\n";
-if($submit==0){
+system(@arg);
+print STDERR "# submit value is $submit" if $main::DEBUG;
+if($submit < 1){
     my @carg= ($c_s);
-    push (@carg,'-a +pegasus_wf_name=',$config{pegasus_wf_name});
-    push (@carg,'-a +pegasus_wf_time=',$config{pegasus_wf_time});
+    push (@carg,'-append', '+pegasus_wf_name="'.$config{pegasus_wf_name}.'"');
+    push (@carg,'-append', '+pegasus_wf_time="'.$config{pegasus_wf_time}.'"');
     push (@carg, $dag.".condor.sub");
     print STDERR "# @carg\n" if $main::DEBUG;
     exec { $carg[0] } @carg or die "Cannot execut @carg: $!\n";
