@@ -32,6 +32,8 @@ sub pipe_out_cmd;		# { }
 sub parse_exit(;$);		# { }
 sub slurp_braindb($);		# { }
 sub version();                  # { }
+sub check_rescue($$);           # { }
+sub log10($);                   # { } 
 our $jobbase = 'jobstate.log';	# basename of the job state logfile
 our $brainbase = 'braindump.txt'; # basename of brain dump file
 
@@ -175,6 +177,45 @@ sub parse_exit(;$) {
 	$result = "OK";
     }
     $result;
+}
+
+
+sub check_rescue($$) {
+    # purpose: Check for the existence of (multiple levels of) rescue DAGs.
+    # paramtr: $dir (IN): directory to check for the presence of rescue DAGs.
+    #          $dag (IN): filename of regular DAG file.
+    # returns: List of rescue DAGs, may be empty, if none found
+    my $dir = shift || croak "Need a directory to check";
+    my $dag = shift || croak "Need a dag filename";
+    my $base = basename($dag);
+    my @result = ();
+
+    local(*DIR);
+    if ( opendir( DIR, $dir ) ) {
+	while ( defined ($_ = readdir(DIR)) ) {
+	    next unless /^$base/o; # only pegasus-planned DAGs
+	    next unless /\.rescue$/; # that have a rescue DAG.
+	    push( @result, File::Spec->catfile( $dir, $_ ) );
+	}
+	@result = sort @result;
+	closedir DIR;
+    }
+
+    wantarray ? @result : $result[$#result];
+}
+
+sub log10($) {
+    # purpose: Simpler than ceil(log($x) / log(10))
+    # paramtr: $x (IN): non-negative number
+    # returns: approximate width of number
+    use integer;
+    my $x = shift;
+    my $result = 0;
+    while ( $x > 1 ) {
+	$result++;
+	$x /= 10;
+    }
+    $result || 1;
 }
 
 # must
