@@ -17,7 +17,7 @@
 # Copyright 1999-2004 University of Chicago and The University of
 # Southern California. All rights reserved.
 #
-# Author: Jens-S. Vöckler voeckler@isi.edu
+# Author: Jens-S. Vï¿½ckler voeckler@isi.edu
 # Author: Gaurang Mehta gmehta@isi.edu
 # Revision : $Revision$
 #
@@ -261,7 +261,8 @@ foreach my $k ( keys %initial ) {
 
 my @args = ( $vsd );
 push( @args, @extra ) if @extra > 0;
-push( @args, '-d', 0+$main::DEBUG, $config{dag} );
+push( @args, '-d', 0+$main::DEBUG);
+push( @args, '--nosubmit', $config{dag} );
 print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
 system(@args) == 0 
     or die( "ERROR: Running pegasus-submit-dag failed with ", $? >> 8 );
