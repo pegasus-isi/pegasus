@@ -142,6 +142,8 @@ sub slurp_braindb($) {
 		$config{$k} = $run;
 		next;
 	    }
+	    $v =~ s/^\s*//;
+	    $v =~ s/\s*$//;
 	    $config{$k} = $v;
 	}
 	close DB;
