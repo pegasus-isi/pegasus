@@ -86,6 +86,7 @@ Optional arguments:
  -d|--debug lvl     sets the debug level (verbosity), default is $main::DEBUG. 
  -v|--verbose       raises debug level by 1, see --debug. 
  --condor           uses Condor to submit daemons (prototype).
+ --database|--nodatabase Make tailstad log events in the workflow database (default yes)         
  --vdd l            uses GT4 delegation cache daemon installed as l, default
                     is $default_vdd.
 EOF
@@ -141,43 +142,6 @@ sub create_args {
     @result;
 }
 
-sub check_rescue($$) {
-    # purpose: Check for the existence of (multiple levels of) rescue DAGs.
-    # paramtr: $dir (IN): directory to check for the presence of rescue DAGs.
-    #          $dag (IN): filename of regular DAG file.
-    # returns: List of rescue DAGs, may be empty, if none found
-    my $dir = shift || croak "Need a directory to check";
-    my $dag = shift || croak "Need a dag filename";
-    my $base = basename($dag);
-    my @result = ();
-
-    local(*DIR);
-    if ( opendir( DIR, $dir ) ) {
-	while ( defined ($_ = readdir(DIR)) ) {
-	    next unless /^$base/o; # only pegasus-planned DAGs
-	    next unless /\.rescue$/; # that have a rescue DAG.
-	    push( @result, File::Spec->catfile( $dir, $_ ) );
-	}
-	@result = sort @result;
-	closedir DIR;
-    }
-
-    wantarray ? @result : $result[$#result];
-}
-
-sub log10($) {
-    # purpose: Simpler than ceil(log($x) / log(10))
-    # paramtr: $x (IN): non-negative number
-    # returns: approximate width of number
-    use integer;
-    my $x = shift;
-    my $result = 0;
-    while ( $x > 1 ) {
-	$result++;
-	$x /= 10;
-    }
-    $result || 1;
-}
 
 #
 # --- main ------------------------------------------------------
@@ -281,6 +245,14 @@ if ( @rescue > 0 ) {
     print "\nWILL USE ", $config{dag}, "\n\n";
 }
 
+
+
+# find the workflow name and timestamp for pegasus-status
+my $workflow=$config{pegasus_wf_name};
+my $time=$config{pegasus_wf_time};
+
+
+
 # start DAGMan with default throttles
 my @extra = ();
 foreach my $k ( keys %initial ) {
@@ -325,16 +297,17 @@ if ( defined $vdd && length($vdd) ) {
 }
 
 # update workflow in work db -- late connect
-eval {
-    if($database) {
+if($database) {
+    eval {
 	my $workdb = Work::Workflow->new($props); # fail late
 	my $workid = $workdb->work_id( $config{basedir}, $config{vogroup}, 
 				       $config{label}, $config{rundir} );
+	warn "#Workid is $workid\n" if $main::DEBUG;
 	$workdb->update_work( $workid, -1 );
 	undef $workdb;
-    }
-};
+    };
 warn "Warning: While trying to access work database\n$@\n" if $@;
+}
 
 # next step
 if ( @rescue > 0 ) {
@@ -342,31 +315,6 @@ if ( @rescue > 0 ) {
     print( "\nI found $n rescue DAG", ( $n>1 ? 's' : '' ), 
 	   ". I submitted the rescue DAG\n", 
 	   $config{dag}, "\ninstead of\n", $original, "\n" );
-}
-
-# find the workflow name and timestamp for pegasus-status
-my $workflow="";
-my $time="";
-
-my @listoffiles=glob "$run/*cdir.sub";
-
-if (scalar(@listoffiles) >0) {
-    my $subfile=$listoffiles[0];
-    warn "Opening file $subfile\n" if $main::DEBUG;
-    open(FI, "<$subfile") || die "Error: Cannot open file $subfile : $!\n";
-    while(<FI>){
-	if ( $_ =~ "pegasus_wf_name "){
-	    $workflow= (split "=",  $_,  2 )[1];
-	    $workflow =~ s/^\s+//;
-	    $workflow =~ s/\s+$//;
-	}
-	if ($_ =~ "pegasus_wf_time"){
-	    $time=(split "=", $_, 2)[1];
-	    $time =~ s/^\s+//;
-	    $time =~ s/\s+$//;
-	}
-    }
-close(FI);
 }
 
 my $did=undef;
