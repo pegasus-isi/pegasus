@@ -112,7 +112,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
 
         //to prevent duplicate dependencies
         java.util.HashSet tempSet = new java.util.HashSet();
-
+        int staged = 0;
         for (Iterator it = files.iterator();it.hasNext();) {
             FileTransfer ft = (FileTransfer) it.next();
             String lfn = ft.getLFN();
@@ -157,7 +157,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                     }
                     else{
                         mFileTable.put(key,
-                                       mTXStageInImplementation.getSetXBitJobName(jobName,0));
+                                       mTXStageInImplementation.getSetXBitJobName(jobName,staged++));
                     }
                 }
                 else{
