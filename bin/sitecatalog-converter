@@ -4,8 +4,8 @@
 #
 #
 
-oldfile=$1
-newfile=`mktemp -p /tmp sc.XXXXX`
+oldfile = $1
+newfile=`mktemp /tmp/sc.XXXXXX` || exit 1
 
 echo
 echo "Changing $oldfile";
