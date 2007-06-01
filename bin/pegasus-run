@@ -267,7 +267,7 @@ print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
 system(@args) == 0 
     or die( "ERROR: Running pegasus-submit-dag failed with ", $? >> 8 );
 print STDERR "# dagman is running\n" if $main::DEBUG;
-
+sleep 5;
 # run tailstatd to update job stats until DAGMan finishes
 if(!$database){
 @args = create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
@@ -307,7 +307,7 @@ if($database) {
 	$workdb->update_work( $workid, -1 );
 	undef $workdb;
     };
-warn "Warning: While trying to access work database\n$@\n" if $@;
+    warn "Warning: While trying to access work database\n$@\n" if $@;
 }
 
 # next step
@@ -321,14 +321,15 @@ if ( @rescue > 0 ) {
 my $did=undef;
 
 my $daglogfile=$config{dag}.".dagman.out";
-open(DID,"<$daglogfile") || die "Error: Cannot open file $daglogfile: $! \n";
-while (<DID>) {
-    if($_ =~ "condor_scheduniv_exec"){
-	$did=(split /\./,  (split)[3],2)[1];
-	last;
+if (open(DID,"<$daglogfile")){
+    while (<DID>) {
+	if($_ =~ "condor_scheduniv_exec"){
+	    $did=(split /\./,  (split)[3],2)[1];
+	    last;
+	}
     }
+    close(DID);
 }
-
 print << "EOF";
 
 I have started your workflow, committed it to DAGMan, and updated its
@@ -346,11 +347,9 @@ pegasus-status $run
 
 *** To remove your workflow run ***
 
-pegasus-remove -d $did
-or 
-pegasus-remove $run 
-
 EOF
 
+print "pegasus-remove -d $did\nor\n" if defined $did; 
+print "pegasus-remove $run\n\n";
 chdir($here);
 exit 0;
