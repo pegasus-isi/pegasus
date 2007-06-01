@@ -528,7 +528,9 @@ public class ReplicaCatalogBridge
             mDefaultTCRCEntry.setResourceId( site );
             mDefaultTCRCEntry.setProfile( classpath );
             mDefaultTCRCEntry.setProfile( javaHome );
-
+            mDefaultTCRCEntry.setProfile( new Profile( Profile.ENV,
+                                                       "PEGASUS_HOME",
+                                                       mProps.getPegasusHome() ));
             //set the flag back to true
             mDefaultTCRCCreated = true;
         }
