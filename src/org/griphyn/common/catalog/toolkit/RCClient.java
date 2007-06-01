@@ -261,6 +261,8 @@ public class RCClient extends Toolkit
    * class it not publicly accessible to this package.
    * @exception InvocationTargetException if the constructor of the schema
    * throws an exception while being dynamically loaded.
+   * @exception IOException
+   * @exception MissingResourceException
    *
    * @see org.griphyn.vdl.util.ChimeraProperties
    */
@@ -620,6 +622,7 @@ public class RCClient extends Toolkit
    * Consumes commands that control the replica management.
    *
    * @param filename is the file to read from. If null, use stdin.
+   * @exception IOException
    */
   public void parse( String filename )
     throws IOException
@@ -690,6 +693,8 @@ public class RCClient extends Toolkit
    *
    * @param filename is the file to read from.
    * @param command  is the command that needs to be applied to the file contents
+   *
+   * @exception IOException
    */
   public void parse( String filename,String command)
     throws IOException
