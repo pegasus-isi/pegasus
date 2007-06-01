@@ -9,7 +9,6 @@ HTML	= -Thtml
 INSTALL	= install
 
 SRC	= exitcode.1 \
-	gencdag.1 \
 	sc-client.1 \
 	rc-client.1 \
 	show-properties.1 \
@@ -43,11 +42,11 @@ all-txt : $(OUTTXT)
 all-html : $(OUTHTML)
 
 install: all
-	@test "$VDS_HOME" || exit 1
-#	$(INSTALL) -m 0644 $(SRC) $(VDS_HOME)/man/man1
-	$(INSTALL) -m 0644 $(OUTPS) $(VDS_HOME)/man
-	$(INSTALL) -m 0644 $(OUTTXT) $(VDS_HOME)/man
-	$(INSTALL) -m 0644 $(OUTHTML) $(VDS_HOME)/man
+	@test "$PEGASUS_HOME" || exit 1
+#	$(INSTALL) -m 0644 $(SRC) $(PEGASUS_HOME)/man/man1
+	$(INSTALL) -m 0644 $(OUTPS) $(PEGASUS_HOME)/man
+	$(INSTALL) -m 0644 $(OUTTXT) $(PEGASUS_HOME)/man
+	$(INSTALL) -m 0644 $(OUTHTML) $(PEGASUS_HOME)/man
 
 clean : 
 	rm -f $(OUTPS) $(OUTTXT) $(OUTHTML)

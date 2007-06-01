@@ -32,7 +32,7 @@ users are allowed to adjust certain properties.
 .B \-Dprop
 The -D options allows an experienced user to override certain properties
 which influence the program execution, among them the default location of
-the user's properties file and the VDS home location. One may set several
+the user's properties file and the PEGASUS home location. One may set several
 CLI properties by giving this option multiple times.
 .I The -D option(s) must be the first option on the command line. 
 A CLI property take precedence over the properties file property 
@@ -51,7 +51,7 @@ files.
 .B
 .SH "ENVIRONMENT VARIABLES"
 .TP
-.B $VDS_HOME
+.B $PEGASUS_HOME
 is the suggested base directory of your the execution environment.
 .TP
 .B $JAVA_HOME
@@ -64,8 +64,8 @@ should be set to contain all necessary files for the execution environment.
 Please make sure that your 
 .I CLASSPATH
 includes pointer to the Xerces 2.6.0 classes and, potentially, the
-.I gvds.jar
-file. It is not a bug, if you are mising the gvds.jar, but do
+.I pegasus.jar
+file. It is not a bug, if you are mising the pegasus.jar, but do
 have the sources available and configured in your 
 .IR CLASSPATH .
 .SH "SEE ALSO"
@@ -80,26 +80,26 @@ have the sources available and configured in your
 $ test-version
 # checking for JAVA_HOME
 # checking for CLASSPATH
-# checking for VDS_HOME
+# checking for PEGASUS_HOME
 # starting java
 # Using recommended version of Java, OK
 # looking for Xerces
-# found /home/voeckler/vds/lib/xercesImpl.jar, OK for now
-# found /home/voeckler/vds/lib/xmlParserAPIs.jar, OK for now
+# found /home/voeckler/pegasus/lib/xercesImpl.jar, OK for now
+# found /home/voeckler/pegasus/lib/xmlParserAPIs.jar, OK for now
 # looking for GNU getopt
-# found /home/voeckler/vds/lib/java-getopt-1.0.9.jar, OK for now
+# found /home/voeckler/pegasus/lib/java-getopt-1.0.9.jar, OK for now
 # looking for JDBC drivers
-# found /home/voeckler/vds/lib/postgresql-8.1dev-400.jdbc3.jar, OK for now
-# found /home/voeckler/vds/lib/mysql-connector-java-3.0.11-stable-bin.jar, OK for now
+# found /home/voeckler/pegasus/lib/postgresql-8.1dev-400.jdbc3.jar, OK for now
+# found /home/voeckler/pegasus/lib/mysql-connector-java-3.0.11-stable-bin.jar, OK for now
 # looking for my replica catalogs
-# found /home/voeckler/vds/lib/rls.jar, OK for now
+# found /home/voeckler/pegasus/lib/rls.jar, OK for now
 # looking for myself
-# in developer mode, ignore not finding gvds.jar
-# found gvds.jar, OK for now
+# in developer mode, ignore not finding pegasus.jar
+# found pegasus.jar, OK for now
 \fP
 .fi
 .PP
-Please note that an error while searching for gvds.jar is not fatal,
+Please note that an error while searching for pegasus.jar is not fatal,
 if you have access to the sources, 
 .I and
 your sources are configured in your
@@ -116,7 +116,7 @@ Mike Wilde <wilde at mcs dot anl dot gov>,
 Yong Zhao <yongzh at cs dot uchicago dot edu>.
 .PP
 Chimera
-.B http://www.griphyn.org/chimera/
+.B http://pegasus.isi.edu
 .br
 GriPhyN
 .BR http://www.griphyn.org/

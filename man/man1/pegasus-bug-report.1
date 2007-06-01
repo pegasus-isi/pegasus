@@ -12,17 +12,17 @@
 .\" Southern California. All rights reserved.
 .\" 
 .\" $Id$
-.TH "vds-bug-report" "1" "1.3.10" "GriPhyN Virtual Data System"
+.TH "pegasus-bug-report" "1" "1.3.10" "GriPhyN PEGASUS Planner"
 .SH "NAME"
 .LP 
-vds\-bug\-report \- aide the support to collect a workflow for bug reports
+pegasus\-bug\-report \- aide the support to collect a workflow for bug reports
 .SH "SYNTAX"
 .LP 
-.B vds\-bug\-report \-\-help
+.B pegasus\-bug\-report \-\-help
 .LP
-.B vds\-bug\-report \-\-version
+.B pegasus\-bug\-report \-\-version
 .LP 
-.B vds\-bug\-report [\-Dprops] [\-v] \-d dax rundir [file [..]]
+.B pegasus\-bug\-report [\-Dprops] [\-v] \-d dax rundir [file [..]]
 .SH "DESCRIPTION"
 .LP 
 This script aides a user to provide all interesting information to the
@@ -36,7 +36,7 @@ the command-line.
 .B \-Dprop
 The -D options allows an experienced user to override certain properties
 which influence the program execution, among them the default location of
-the user's properties file and the VDS home location. One may set several
+the user's properties file and the PEGASUS home location. One may set several
 CLI properties by giving this option multiple times.
 .I The -D option(s) must be the first option on the command line. 
 CLI properties take precedence over the file-based properties of the
@@ -93,17 +93,17 @@ files and directories are listed on the command-line after the run
 directory. 
 .SH "RETURN VALUE"
 If the tar ball could be created, 
-.I vds\-bug\-report
+.I pegasus\-bug\-report
 returns with an exit code of 0. However, in case of error, a non-zero
 exit code indicates problems. An error message clearly marks the cause. 
 .SH "ENVIRONMENT VARIABLES"
 .TP
-.B VDS_HOME
-points to the installation base directory of your the VDS execution
+.B PEGASUS_HOME
+points to the installation base directory of your the PEGASUS execution
 environment. 
 .TP
 .B PERL5LIB
-is a path-like variable. It must include to the VDS perl module
+is a path-like variable. It must include to the PEGASUS perl module
 installation. 
 .TP
 .B PATH
@@ -113,18 +113,18 @@ should include the Condor binaries.
 The following example has many messages removed:
 .nf 
 \f(CB
-$ vds-bug-report -d blackdiamond.dax ivdgl1/black-diamond/run0001
+$ pegasus-bug-report -d blackdiamond.dax ivdgl1/black-diamond/run0001
 #
-# VDS basics
+# PEGASUS basics
 #
-vds-bug-report 1.11
+pegasus-bug-report 1.11
 
  [...]
 
 I have collected information about the directory and your system.
 Please send bug.jcl4nt.tar.gz as a proper binary attachment to
 
-	vds-support@griphyn.org
+	pegasus-support@griphyn.org
 
 Remember to include your bug description in the regular email body.
 
@@ -134,8 +134,8 @@ Remember to include your bug description in the regular email body.
 .LP 
 Jens\-S. Vöckler <voeckler at cs dot uchicago dot edu>
 .PP 
-GVDS
-.B http://www.griphyn.org/vds/
+PEGASUS
+.B http://pegasus.isi.edu
 .br 
 GriPhyN
 .BR http://www.griphyn.org/

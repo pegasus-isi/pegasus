@@ -12,13 +12,13 @@
 .\" Southern California. All rights reserved.
 .\" 
 .\" $Id$
-.TH "vds-get-sites" "1" "1.3.9" "Jens-S. Vöckler" "GriPhyN Virtual Data System"
+.TH "pegasus-get-sites" "1" "1.3.9" "Jens-S. Vöckler" "GriPhyN PEGASUS Planner"
 .SH "NAME"
 .LP 
-vds\-get\-sites \- generates a site catalog from gridcat sources.
+pegasus\-get\-sites \- generates a site catalog from gridcat sources.
 .SH "SYNTAX"
 .LP 
-.B vds\-get\-sites [\-Dprops] [\-\-grid gid] [\-\-euryale] [\-\-cutoff|\-C n] [\-\-debug|\-d] [\-\-globus] [\-\-with\-mis] [\-\-tc|\-t fn] [\-\-sc|\-s fn] [\-\-tc\-style mode] [\-\-sc\-style mode] [\-\-app|\-a ttc [\-\-keep]] [\-\-default\-rls rls] [\-\-default\-arch a::os] [\-\-default\-inst inst] [\-\-default\-version m.m.p]
+.B pegasus\-get\-sites [\-Dprops] [\-\-grid gid] [\-\-euryale] [\-\-cutoff|\-C n] [\-\-debug|\-d] [\-\-globus] [\-\-with\-mis] [\-\-tc|\-t fn] [\-\-sc|\-s fn] [\-\-tc\-style mode] [\-\-sc\-style mode] [\-\-app|\-a ttc [\-\-keep]] [\-\-default\-rls rls] [\-\-default\-arch a::os] [\-\-default\-inst inst] [\-\-default\-version m.m.p]
 .LP 
 The following options modify each \fI\-\-grid\fR option they were
 specified after:
@@ -30,27 +30,27 @@ The following options override defaults derived from gridcat\-specific
 variables like $data etc.:
 .LP 
 .B 
-[\-\-workdir|\-w rdir] [\-\-vds|\-v rdir] [\-\-kick|\-k rks]
+[\-\-workdir|\-w rdir] [\-\-pegasus|\-v rdir] [\-\-kick|\-k rks]
 .LP 
-.B vds\-get\-sites \-\-help
+.B pegasus\-get\-sites \-\-help
 .SH "DESCRIPTION"
 .LP 
 Each grid has its own grid handle, currently an identifier chosen by
-vds\-get\-sites. Each grid hosts its own gridcat. Each gridcat contains
+pegasus\-get\-sites. Each grid hosts its own gridcat. Each gridcat contains
 the configuration of all clusters associated with that grid.
 .LP 
 Gridcat provides in its tables \fIsites\fR and \fIsiteinfo\fR the
 necessary configuration information to describe a remote cluster. The
-\fBvds\-get\-sites\fR software extracts the configuration information
+\fBpegasus\-get\-sites\fR software extracts the configuration information
 about the special directories $app, $data, $grid3, $tmp and $wntmp, the
 addresses of gatekeeper and gridftp services, the jobmanagers available,
 the number of CPUs at the site, and the \fIsite handle\fR assigned to
 the site. The site handle is a unique identifier for the site. At the
 moment, it has to be globally unique, too.
 .LP 
-\fBvds\-get\-sites\fR queries one or more remote gridcat databases. It
+\fBpegasus\-get\-sites\fR queries one or more remote gridcat databases. It
 produces a site catalog (SC) and transformation catalog (TC) for all
-valid sites found on all chosen grids. \fBvds\-get\-sites\fR permits to
+valid sites found on all chosen grids. \fBpegasus\-get\-sites\fR permits to
 query multiple gridcats, modifying information pertaining to the gridcat
 in the process.
 .SH "OPTIONS"
@@ -107,7 +107,7 @@ level by 1.
 The default debug level is 0.
 .TP 
 .B \-\-globus
-This option triggers the deprecated generation of VDS
+This option triggers the deprecated generation of PEGASUS
 .I globus
 universe jobmanager entries into the site catalog.
 .IP 
@@ -134,9 +134,9 @@ This option permits overriding of the location of the transformation
 catalog. Existing files will be backed up.
 .IP 
 The default is to read the location from property
-.IR vds.tc.file .
+.IR pegasus.tc.file .
 If it does not exist, the default location 
-.I $VDS_HOME/var/tc.data
+.I $PEGASUS_HOME/var/tc.data
 is assumed.
 .TP 
 .B \-\-sc fn
@@ -148,11 +148,11 @@ This option permits overriding the location of the site catalog.
 Existing files will be backed up.
 .IP 
 The defualt is to read the location from property
-.IR vds.sc.file .
+.IR pegasus.sc.file .
 If it does not exist, the default location
-.I $VDS_HOME/var/sites.txt
+.I $PEGASUS_HOME/var/sites.txt
 or
-.I $VDS_HOME/var/sites.xml 
+.I $PEGASUS_HOME/var/sites.xml 
 is assumed, depending on the site catalog mode.
 .TP 
 .B \-\-tc\-style mode
@@ -162,13 +162,13 @@ Available styles include
 for the deprecated 4\-column textual format,
 .I new
 for the 6\-column textual format, and 
-.I vds
+.I pegasus
 for the database\-driven format.
 .IP 
 Default is to read the format option from the property
-.I vds.tc
+.I pegasus.tc
 or
-.IR vds.tc.mode .
+.IR pegasus.tc.mode .
 The Pegasus modes 
 .IR single ,
 .I multiple
@@ -183,7 +183,7 @@ translates into Euryale style
 The Pegasus mode
 .I Database
 translates into Euryale style
-.IR vds .
+.IR pegasus .
 Default style in the absence of properties is
 .IR new .
 .TP 
@@ -198,9 +198,9 @@ for the multi\-line site catalog, and
 for the XML site catalog.
 .IP 
 Default is to read the format option from the property
-.I  vds.sc
+.I  pegasus.sc
 or 
-.IR vds.pool.mode .
+.IR pegasus.pool.mode .
 The dysfunctional Pegasus modes
 .I single
 and
@@ -393,8 +393,8 @@ The global default can be changed using the
 option described below.
 .LP 
 The following options permit the variables $app, $data, $grid3, $tmp and
-$wntmp to be set. One additional variable $vds is set to the assumed location of
-the remotely installed VDS worker tools directory. Variables are
+$wntmp to be set. One additional variable $pegasus is set to the assumed location of
+the remotely installed PEGASUS worker tools directory. Variables are
 replaced by their site\-specific values:
 .TP 
 .B \-\-app ttc
@@ -440,21 +440,21 @@ Default is to use the remote shared
 .I $tmp 
 as working directory.
 .TP 
-.B \-\-vds rdir
+.B \-\-pegasus rdir
 .PD 0
 .TP 
 .PD 1
 .B \-v rdir
-This option sets the variable $vds to a different value. It specifies
-the location where on the remote site the VDS worker tools are
-installed. For sites installed with VDS < 1.3.5 you need to override the
-default with '$grid3/vds/linux/bin'. Please note that you will have to
+This option sets the variable $pegasus to a different value. It specifies
+the location where on the remote site the PEGASUS worker tools are
+installed. For sites installed with PEGASUS < 1.3.5 you need to override the
+default with '$grid3/pegasus/linux/bin'. Please note that you will have to
 protect the dollar sign from the shell, e.g. using single quotes around
 your values.
 .IP 
 Default is to use 
-.I '$grid3/vds/bin' 
-as VDS worker tools directory.
+.I '$grid3/pegasus/bin' 
+as PEGASUS worker tools directory.
 .TP 
 .B \-\-kick ks
 .PD 0
@@ -463,11 +463,11 @@ as VDS worker tools directory.
 .B \-k ks
 This option permits specifying an alternate location for the remote
 kickstart. This is useful, if you are using a fresher version of
-kickstart than the site administrator installed as part of the VDS
+kickstart than the site administrator installed as part of the PEGASUS
 worker tools package.
 .IP 
-Default is to use the VDS worker tools 
-.IR $vds/kickstart .
+Default is to use the PEGASUS worker tools 
+.IR $pegasus/kickstart .
 .TP
 .B \-\-default\-rls rls
 This option overwrites the initial default to chose as RLS server for
@@ -519,57 +519,57 @@ option above.
 .SH "FILES"
 .LP 
 .TP 
-.B $VDS_HOME/var/sites.xml
+.B $PEGASUS_HOME/var/sites.xml
 is the default location where the default site catalog will be produced,
 using the default style 
 .IR xml .
 .TP 
-.B $VDS_HOME/var/sites.txt
+.B $PEGASUS_HOME/var/sites.txt
 is the alternative location for the produced site catalog, if the style
 is not
 .IR xml .
 .TP 
-.B $VDS_HOME/var/tc.data
+.B $PEGASUS_HOME/var/tc.data
 is the default location for the transformation catalog, unless the
 database style
-.I vds
+.I pegasus
 was chosen.
 .SH "PROPERTIES"
 .LP 
-Properties are read and evaluated according to the VDS property
+Properties are read and evaluated according to the PEGASUS property
 precedence rules. Please refer to the property documentation for
 in\-depth description of properties and their effects.
 .TP 
-.B vds.sc
+.B pegasus.sc
 .PD 0
 .TP
 .PD 1
-.B vds.pool.mode
+.B pegasus.pool.mode
 This property determines the default formatting in which the site
 catalog is generated. Its effect can be overwritten with the
 \-\-sc\-style command\-line option. The alternatives are ordered by
 preference. 
 .TP 
-.B vds.sc.file
+.B pegasus.sc.file
 .PD 0
 .TP
 .PD 1
-.B vds.pool.file
+.B pegasus.pool.file
 This property determines the default location where a file\-based site
 catalog is generated. Its effect can be overwritten with the \-\-sc
 command\-line option. The alternatives are ordered by preference.
 .TP 
-.B vds.tc
+.B pegasus.tc
 .PD 0
 .TP
 .PD 1
-.B vds.tc.mode
+.B pegasus.tc.mode
 This property determines the default formatting in which the
 transformation catalog is generated. Its effect can be overwritten with
 the \-\-sc\-style command\-line option. The alternatives are ordered by
 preference.
 .TP 
-.B vds.tc.file
+.B pegasus.tc.file
 This property determines the default location in where a file\-based
 transformation catalog is generated. Its value is unused, if database
 access is chosen. The effect can be overwritten using the \-\-tc
@@ -577,11 +577,11 @@ command\-line option.
 .SH "ENVIRONMENT VARIABLES"
 .LP 
 .TP 
-\fBVDS_HOME\fP
-points to the base of the Virtual Data System (VDS) installation.
+\fBPEGASUS_HOME\fP
+points to the base of the PEGASUS Planner (PEGASUS) installation.
 .TP 
 \fBPERL5LIB\fP
-contains the VDS Perl modules required to access the various catalogs. 
+contains the PEGASUS Perl modules required to access the various catalogs. 
 
 .SH "EXAMPLES"
 .LP 
@@ -589,19 +589,19 @@ This first example queries just for one grid. It is always a good idea
 to explicitely specify the grid you are querying. The example uses
 default locations for the site catalog (SC) and transformation catalog
 (TC). \fBWarning:\fR The default location is derived from settings in
-your VDS properties file. The example supplies its own template
+your PEGASUS properties file. The example supplies its own template
 transformation catalog and chooses not to keep the example
 transformations:
 .nf 
 \f(CB
-$ vds\-get\-sites \-\-grid osg\-itb \-\-app my.ttc 
+$ pegasus\-get\-sites \-\-grid osg\-itb \-\-app my.ttc 
 # local hostname "griodine.uchicago.edu"
 # reading transformation mappings from /dev/null
 # assembling information for grid "osg\-itb".
 ...
 # adding myself as local site
 # dumping /home/voeckler/work/pool.gt2...
-# dumping /home/voeckler/vds/contrib/Euryale/Grid3/tc.new.data...
+# dumping /home/voeckler/pegasus/contrib/Euryale/Grid3/tc.new.data...
 \fP
 .fi 
 .LP 
@@ -615,7 +615,7 @@ files. Only sites with 10 or more CPUs are included. Please note that
 the RLS override will also affect the local site: 
 .nf 
 \f(CB
-$ vds\-get\-sites \-\-default\-rls rls://griodine.uchicago.edu \-\-cutoff 10 \\
+$ pegasus\-get\-sites \-\-default\-rls rls://griodine.uchicago.edu \-\-cutoff 10 \\
  \-\-sc\-style xml \-\-sc sites.xml \-\-tc\-style new \-\-tc tc.data \\
  \-\-grid osg \-\-grid osg\-itb
 ...
@@ -632,12 +632,12 @@ Note, it is a bad idea to mix grids OSG and OSG-ITB.
 .LP 
 Jens\-S. V�ckler <voeckler at cs dot uchicago dot edu>
 .PP 
-GVDS
-.B http://www.griphyn.org/vds/
+PEGASUS
+.B http://pegasus.isi.edu
 .br 
 GriPhyN
 .BR http://www.griphyn.org/
 .SH "SEE ALSO"
 .LP 
-vds\-check\-sites(1)
+pegasus\-check\-sites(1)
 

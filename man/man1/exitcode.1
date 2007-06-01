@@ -34,7 +34,7 @@ provenance of job executions, when inserted back into the VDC.
 .B \-Dprop
 The -D options allows an experienced user to override certain properties
 which influence the program execution, among them the default location of
-the user's properties file and the VDS home location. One may set several
+the user's properties file and the PEGASUS home location. One may set several
 CLI properties by giving this option multiple times.
 .I The -D option(s) must be the first option on the command line. 
 A CLI property take precedence over the properties file property 
@@ -48,13 +48,13 @@ of the same key.
 The database prefix is currently unused.
 .IP
 Default is to use the VDC pointed to by the
-.I vds.db.schema
+.I pegasus.db.schema
 property. If this property is unset, the 
 .I SingleFileSchema
 becomes the chosen schema, and the property
-.I vds.db.schema.file.store
+.I pegasus.db.schema.file.store
 defaults to
-.IR $VDS_HOME/var/vds.db ,
+.IR $PEGASUS_HOME/var/pegasus.db ,
 the eventual default database file. 
 .IP
 .B exitcode
@@ -77,7 +77,7 @@ success, if file exists, even if it is of size zero.
 .PD 1
 .B \-\-verbose
 activates the verbose mode. This is equivalent to setting the property
-.I vds.log.app
+.I pegasus.log.app
 to 
 .IR stdout .
 More details about the program execution will become visible at the 
@@ -151,7 +151,7 @@ option.
 .TP
 .PD 1
 .B \-\-version
-displays the version of the GriPhyN Virtual Data System you are using.
+displays the version of the GriPhyN PEGASUS Planner you are using.
 .TP
 .B file [..]
 The given invocation record will be added to the database. One or more
@@ -188,12 +188,12 @@ parsable, or is simply non-existent.
 .TP
 .B 6
 denotes an illegal state. Please inform 
-.I vds-support@griphyn.org .
+.I pegasus-support@griphyn.org .
 .TP
 .B 7
 denotes that an exception was caught during the execution. This is
 always bad. You may want to run in verbose mode to obtain more
-information about the cause (stack trace), and provide the GVDS team
+information about the cause (stack trace), and provide the PEGASUS team
 with the file (typically the .out file) you run with. 
 .TP
 .B 10
@@ -205,7 +205,7 @@ executable cannot be found and invoked.
 .TP
 .B 11
 is an error message from the shell wrapper: The environment variable
-.I VDS_HOME
+.I PEGASUS_HOME
 was not set.
 .TP
 .B 12
@@ -226,20 +226,20 @@ are given, the latter may be turned on implicitely, the command degenerates
 into a no-operation.
 .SH FILES
 .TP
-.B $VDS_HOME/etc/iv-1.5.xsd
+.B $PEGASUS_HOME/etc/iv-1.5.xsd
 is the suggested location of the latest XML schema to read the database.
 .TP
-.B $VDS_HOME/etc/properties
+.B $PEGASUS_HOME/etc/properties
 contains the system properties with all configurable options.
 .TP
-.B $HOME/.vdsrc
+.B $HOME/.pegasusrc
 contains the user properties with all configurable options.
 .TP
-.B gvds.jar
-contains all compiled Java bytecode to run the GriPhyN Virtual Data System.
+.B pegasus.jar
+contains all compiled Java bytecode to run the GriPhyN PEGASUS Planner.
 .SH "ENVIRONMENT VARIABLES"
 .TP
-.B $VDS_HOME
+.B $PEGASUS_HOME
 must be set to the base directory of your the execution environment.
 .TP
 .B $JAVA_HOME
@@ -263,7 +263,7 @@ $ echo $?
 0
 
 $ exitcode -vvv date.out
-2005.08.16 13:10:52.816 CDT: [app] will use /home/voeckler/vds/etc/iv-1.5.xsd
+2005.08.16 13:10:52.816 CDT: [app] will use /home/voeckler/pegasus/etc/iv-1.5.xsd
 2005.08.16 13:10:52.823 CDT: [app] starting to parse invocation
 2005.08.16 13:10:53.470 CDT: [app] invocation 1 was parsed successfully
 2005.08.16 13:10:53.575 CDT: [app] invocation already exists, skipping!
@@ -283,7 +283,7 @@ Mike Wilde <wilde at mcs dot anl dot gov>,
 Yong Zhao <yongzh at cs dot uchicago dot edu>.
 .PP
 Chimera
-.B http://www.griphyn.org/chimera/
+.B http://pegasus.isi.edu
 .br
 GriPhyN
 .BR http://www.griphyn.org/

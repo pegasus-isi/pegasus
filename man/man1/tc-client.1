@@ -1,5 +1,5 @@
 .\" This file or a portion of this file is licensed under the terms of
-.\" Globus Toolkit Public License, found at $VDS_HOME/GTPL or
+.\" Globus Toolkit Public License, found at $PEGASUS_HOME/GTPL or
 .\" http://www.globus.org/toolkit/download/license.html.
 .\" These notices must appear in redistibutions of this file
 .\" or without modification.
@@ -91,7 +91,7 @@ The profiles for the transformation. Mulitple profiles of same namespace can be 
 .br 
 \fBNAMESPACE::KEY=VALUE,KEY2=VALUE2\fR
 .br 
-\fIe.g.\fR ENV::JAVA_HOME=/usr/bin/java2,VDS_HOME=/usr/local/vds. To add muliple namespaces you need to repeat the \-e option for each namespace. \fIe.g.\fR 
+\fIe.g.\fR ENV::JAVA_HOME=/usr/bin/java2,PEGASUS_HOME=/usr/local/pegasus. To add muliple namespaces you need to repeat the \-e option for each namespace. \fIe.g.\fR 
 .br 
 \-e ENV::JAVA_HOME=/usr/bin/java \-e GLOBUS::JobType=MPI,COUNT=10
 .TP 
@@ -102,7 +102,7 @@ The architecture, os, osversion and glibc if any for the executable. Each system
 Displays the output in verbose mode (Lots of Debugging info).
 .TP 
 \fB\-V , \-\-version\fR
-Displays the version number of the Griphyn Virtual Data System software.
+Displays the version number of the Griphyn PEGASUS Planner software.
 .TP 
 \fB\-h , \-\-help\fR
 Generates help
@@ -215,55 +215,55 @@ Queries for profiles associated with a particular physical transformation
 .SH "PROPERTIES"
 This are the properties you will need to set to use either the \fBFile\fR or \fBDatabase\fR TC.
 .br 
-For more details please check the \fB$VDS_HOME/etc/sample.properties\fR file.
+For more details please check the \fB$PEGASUS_HOME/etc/sample.properties\fR file.
 .TP 
-\fBvds.tc
+\fBpegasus.tc
 Identifies what impelemntation of TC will be used. If relative name is used then the path org.griphyn.cPlanner.tc is prefixed to the name and used as the class name to load. The default value if \fBFile\fR. Other supported mode is \fBDatabase\fR
 .TP 
-\fBvds.tc.file
-The file path where the text based TC is located. By default the path \fB$VDS_HOME/var/tc.data\fR is used.
+\fBpegasus.tc.file
+The file path where the text based TC is located. By default the path \fB$PEGASUS_HOME/var/tc.data\fR is used.
 .TP 
-.B vds.db.tc.driver
+.B pegasus.db.tc.driver
 Specifies which db driver to use. No defaults. Currently TC is only implemented on MySQL
 .TP 
-.B vds.db.tc.driver.url
+.B pegasus.db.tc.driver.url
 Specifies the url of the database to connect to. E.g. jdbc://mysql:hostname.foo.com/tc
 .TP 
-.B vds.db.tc.driver.user
+.B pegasus.db.tc.driver.user
 Specifies the username to use to connect to the Database.
 .TP 
-.B vds.db.tc.driver.password
+.B pegasus.db.tc.driver.password
 Specifies the password to use to connect to the Database.
 .TP 
-.B vds.db.*.driver.*.
-Specified other database driver specific properties. See the \fB$VDS_HOME/etc/sample.properties\fR file for more information.
+.B pegasus.db.*.driver.*.
+Specified other database driver specific properties. See the \fB$PEGASUS_HOME/etc/sample.properties\fR file for more information.
 .SH "FILES"
 .TP 
-\fB$VDS_HOME/var/tc.data\fR is the suggested location for the file corresponding to the \fITransformation Catalog
+\fB$PEGASUS_HOME/var/tc.data\fR is the suggested location for the file corresponding to the \fITransformation Catalog
 .TP 
-\fB$VDS_HOME/etc/properties\fR is the location to specify properties to change what Tranformation Catalog Implementation to use and the implementation related \fBPROPERTIES\fR.
+\fB$PEGASUS_HOME/etc/properties\fR is the location to specify properties to change what Tranformation Catalog Implementation to use and the implementation related \fBPROPERTIES\fR.
 .TP 
-\fBgvds.jar\fR contains all compiled Java bytecode to run the Griphyn Virtual Data System.
+\fBpegasus.jar\fR contains all compiled Java bytecode to run the Griphyn PEGASUS Planner.
 
 .SH "ENVIRONMENT VARIABLES"
 .TP 
-\fB$VDS_HOME\fR 
-Path to the VDS installation directory.
+\fB$PEGASUS_HOME\fR 
+Path to the PEGASUS installation directory.
 .TP 
 \fB$JAVA_HOME
 Path to the JAVA 1.4.x installation directory.
 .TP 
 \fB$CLASSPATH
-The classpath should be set to contain all necessary VDS files for the execution environment.
-To automatically add the \fICLASSPATH\fR to you environment, in the \fI$VDS_HOME\fR directory run the script \fIsource setup\-user\-env.csh\fR or \fIsource setup\-user\-env.sh\fR.
+The classpath should be set to contain all necessary PEGASUS files for the execution environment.
+To automatically add the \fICLASSPATH\fR to you environment, in the \fI$PEGASUS_HOME\fR directory run the script \fIsource setup\-user\-env.csh\fR or \fIsource setup\-user\-env.sh\fR.
 .SH "AUTHORS"
 Gaurang Mehta <gmehta at isi dot edu>,
 .PP 
 Pegasus
 .B http://pegasus.isi.edu
 .br 
-Virtual Data System
-.B http://www.griphyn.org/vds/
+PEGASUS Planner
+.B http://pegasus.isi.edu
 .br 
 GriPhyN
 .BR http://www.griphyn.org/

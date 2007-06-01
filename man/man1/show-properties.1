@@ -17,9 +17,9 @@
 .\" Authors: Jens-S. Vöckler, Yong Zhao
 .\"
 .\"
-.TH "show\-properties" "1" "1.3.9" "GriPhyN Virtual Data System"
+.TH "show\-properties" "1" "1.3.9" "GriPhyN PEGASUS Planner"
 .SH NAME
-show\-properties \- show VDS properties after everything was parsed
+show\-properties \- show PEGASUS properties after everything was parsed
 .SH SYNOPSIS
 .B show\-properties
 [\-Dprop [..]] [\-c] [\-u]
@@ -28,14 +28,14 @@ show\-properties \- show VDS properties after everything was parsed
 [\-Dprop [..]] \-V
 .SH DESCRIPTION
 The property testing permits to show the effective property settings
-after all property sources were parsed. This permits debugging of VDS
+after all property sources were parsed. This permits debugging of PEGASUS
 properties, as it shows the effective properties. 
 .SH ARGUMENTS
 .TP
 .B \-Dprop
 The -D options allows an experienced user to override certain properties
 which influence the program execution, among them the default location of
-the user's properties file and the VDS home location. One may set several
+the user's properties file and the PEGASUS home location. One may set several
 CLI properties by giving this option multiple times.
 .I The -D option(s) must be the first option on the command line. 
 A CLI property take precedence over the properties file property 
@@ -69,7 +69,7 @@ Default is sort the output by the property key.
 .TP
 .PD 1
 .B \-\-version
-displays the version of the GriPhyN Virtual Data System you are using.
+displays the version of the GriPhyN PEGASUS Planner you are using.
 .TP
 .B \-\-verbose
 increases the verbosity of messages about what is going on. This option
@@ -80,17 +80,17 @@ Regular program terminations will result in an exit code of 0.
 Abnormal termination will result in a non-zero exit code.
 .SH FILES
 .TP
-.B $VDS_HOME/etc/properties
+.B $PEGASUS_HOME/etc/properties
 contains the basic system properties with all configurable options.
 .TP
-.B $HOME/.vdsrc
+.B $HOME/.pegasusrc
 contains the basic user properties with all configurable options.
 .TP
-.B gvds.jar
+.B pegasus.jar
 contains all compiled Java bytecode to run the GriPhyN virtual data system.
 .SH "ENVIRONMENT VARIABLES"
 .TP
-.B $VDS_HOME
+.B $PEGASUS_HOME
 is the suggested base directory of your the execution environment.
 .TP
 .B $JAVA_HOME
@@ -104,7 +104,7 @@ Please make sure that your
 .I CLASSPATH
 includes the Xerces 2.6 classes.
 .SH "SEE ALSO"
-.BR vds-bug-report (1).
+.BR pegasus-bug-report (1).
 .SH AUTHORS
 Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
 .\"Jens-S. V\*:ockler 
@@ -114,7 +114,7 @@ Mike Wilde <wilde at mcs dot anl dot gov>,
 Yong Zhao <yongzh at cs dot uchicago dot edu>.
 .PP
 Chimera
-.B http://www.griphyn.org/chimera/
+.B http://pegasus.isi.edu
 .br
 GriPhyN
 .BR http://www.griphyn.org/

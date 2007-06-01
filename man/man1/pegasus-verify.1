@@ -16,13 +16,13 @@
 .\" Authors: Jens-S. Vöckler
 .\"
 .\"
-.TH vds-verify 1 "August, 11th 2005"
+.TH pegasus-verify 1 "August, 11th 2005"
 .SH NAME
-vds-verify \- checks for foreseeable pitfalls before you trip. 
+pegasus-verify \- checks for foreseeable pitfalls before you trip. 
 .SH SYNOPSIS
-.B vds-verify [-Dprops] [--debug | --quiet] (--pegasus | --euryale) daxfile
+.B pegasus-verify [-Dprops] [--debug | --quiet] (--pegasus | --euryale) daxfile
 .br
-.B vds-verify --help
+.B pegasus-verify --help
 .SH DESCRIPTION
 The verify program checks for pitfalls that frequently occur when
 attempting to plan, or even run, a large workflow. The current check
@@ -34,7 +34,7 @@ list includes, albeit all local to the submit host:
 .TP
 * property file parsing and sanity
 .TP
-* VDS catalog sanity checks
+* PEGASUS catalog sanity checks
 .TP
 * Perl module availability and version check
 .TP
@@ -50,7 +50,7 @@ list includes, albeit all local to the submit host:
 .B \-Dprop
 The -D options allows an experienced user to override certain properties
 which influence the program execution, among them the default location of
-the user's properties file and the VDS home location. One may set several
+the user's properties file and the PEGASUS home location. One may set several
 CLI properties by giving this option multiple times.
 .I The -D option(s) must be the first option on the command line. 
 CLI properties take precedence over the file-based properties of the
@@ -119,7 +119,7 @@ exit code of 1 will follow the error message.
 The following invocation checks a setup for a subsequent Euryale run.
 .nf
 \f(CB
-$ vds-verify --euryale ~/work/blackdiamond.dax 
+$ pegasus-verify --euryale ~/work/blackdiamond.dax 
 WARNING [pro]: transformation catalog style old is deprecated
 
 All is well that ends well.
@@ -132,16 +132,16 @@ when attempting the workflow. A significantly more verbose output can be
 gained using the debug option.
 .SH "ENVIRONMENT VARIABLES"
 .TP
-.B VDS_HOME
-points to the installation base directory of your the VDS execution
+.B PEGASUS_HOME
+points to the installation base directory of your the PEGASUS execution
 environment. 
 .TP
 .B PERL5LIB
-is a path-like variable. It must include to the VDS perl module
+is a path-like variable. It must include to the PEGASUS perl module
 installation. 
 .TP
 .B PATH
-should include the Condor, Globus and VDS binaries. 
+should include the Condor, Globus and PEGASUS binaries. 
 .TP
 .B GLOBUS_LOCATION
 should point to the root of your Globus installation.
@@ -153,8 +153,8 @@ Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
 .br
 Gaurang Mehta <gmehta at isi dot edu>,
 .PP
-GVDS
-.B http://www.griphyn.org/vds/
+PEGASUS
+.B http://pegasus.isi.edu
 .br
 GriPhyN
 .BR http://www.griphyn.org/

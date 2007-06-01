@@ -129,18 +129,18 @@
 .\" Authors: Gaurang Mehta
 .\" 
 .\" 
-.TH "gvdspoolconfig" "1" "June, 2ndd 2003" "" ""
+.TH "pegasuspoolconfig" "1" "June, 2ndd 2003" "" ""
 .SH "NAME"
-gvdspoolconfig \- Client program to generate xml based poolconfig file from
+pegasuspoolconfig \- Client program to generate xml based poolconfig file from
 MDS and|or local multiline config file.
 .SH "SYNOPSIS"
-.B gvdspoolconfig
+.B pegasuspoolconfig
 \-\-localconfig <comma seperated config files>
 \-\-[text]  \-\-output <output xml file>
 .SH "DESCRIPTION"
-The gvdspoolconfig client program is used to generate the new XML based config file
-It gets its information from either MDS configured with the Gvds\-information provider and or
-local text based multiline format config files. The output can be view either on stdout or written to a file using the output option. A user friendly text based output is also generated if text option is specified.For Mds provided information the properties vds.mds.host and vds.mds.dn need to be set.At any given time atleast one of the two mode options have to be provided, MDS based, local config based or both.
+The pegasuspoolconfig client program is used to generate the new XML based config file
+It gets its information from either MDS configured with the Gpegasus\-information provider and or
+local text based multiline format config files. The output can be view either on stdout or written to a file using the output option. A user friendly text based output is also generated if text option is specified.For Mds provided information the properties pegasus.mds.host and pegasus.mds.dn need to be set.At any given time atleast one of the two mode options have to be provided, MDS based, local config based or both.
 .SH "ARGUMENTS"
 .TP 
 .B \-\-localconfig <local text based config file>
@@ -157,21 +157,21 @@ This is a optional. There are no defaults.
 This option writes a file with the pool config output.
 .IP 
 This argument is optional.
-.SH "PROPERTIES THAT GO in VDS PROPERTIES FILE"
+.SH "PROPERTIES THAT GO in PEGASUS PROPERTIES FILE"
 .TP 
-.B vds.sc=XML|File 
+.B pegasus.sc=XML|File 
 The file format of the Site catalog to use.
 .IP 
 .TP 
-.B vds.mds.host=<giis.hostname:giis.port>
+.B pegasus.mds.host=<giis.hostname:giis.port>
 This option enables the information to be obtained from MDS.
 .IP 
 This is optional. There are no defaults
 .TP 
-.B vds.mds.dn=<DN for the MDS giis >
+.B pegasus.mds.dn=<DN for the MDS giis >
 The dn needs to be provided if you need the config file to be constructed from MDS.
 .IP 
-This is not optional if vds.mds.host is enabled
+This is not optional if pegasus.mds.host is enabled
 .SH "EXAMPLE"
 .nf 
 \f(CB
@@ -182,8 +182,8 @@ genpoolconfig \-\-localconfig local.pool.config,local.pool.config2 \-\-output po
 Gaurang Mehta <gmehta at isi dot edu>
 .PP 
 .br 
-VDS
-.B http://www.griphyn.org/vds/
+PEGASUS
+.B http://pegasus.isi.edu
 .br 
 Pegasus
 .B http://pegasus.isi.edu

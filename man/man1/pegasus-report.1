@@ -1,34 +1,34 @@
-.TH vds-report 1 "August 23, 2005"
+.TH pegasus-report 1 "August 23, 2005"
 .SH NAME 
-vds-report \- a simple method to search through your workflow records to find warning and errors and present them in an organized fashion.
+pegasus-report \- a simple method to search through your workflow records to find warning and errors and present them in an organized fashion.
 .SH SYNOPSIS
-.B vds-report
+.B pegasus-report
 [\-p path/to/dir] [\-o output file] [\-e error file] [\-l lines] [\-t sort by time] [\-i sort by job ID]
 .SH DESCRIPTION
-.B vds-report 
+.B pegasus-report 
 searches through the directories of the workflow and uses various techniques to find errors and warnings in the records that occur during the run of a workflow on the grid.  If an error or warning is found, it is collected to later be sent to STDOUT or the user has the option of output to a text file using a command line argument.  The error and warning message output can be organized by time or by job ID.  The default method is to list the error and warning messages by file in the order they are found.
 .PP
 The files are searched in the following methods:
 .PP
 dbg files \- the method in which 
-.B vds-report
-looks through the .dbg files is via pattern matching from the list of patterns and keywords found in $VDS_HOME/share/errors.txt.  The user can also use their own error file via the -e command line argument.  One requirement for this is to use the headings of the sections found in the default errors.txt file.  
+.B pegasus-report
+looks through the .dbg files is via pattern matching from the list of patterns and keywords found in $PEGASUS_HOME/share/errors.txt.  The user can also use their own error file via the -e command line argument.  One requirement for this is to use the headings of the sections found in the default errors.txt file.  
 .PP
 out files \- 
-.B vds-report 
+.B pegasus-report 
 looks for the exit codes found in the kickstart records.  If the exitcode is not equal to 0, then the <data/> and other statistics of the file will be collected added to the list of messages for output.  In the case of .out files generated from a workflow using the Pegasus workflow planner that are not kickstart records, the file will be searched via the .dbg method.
 .PP
 err files - if any of the .err files contain messages or errors, they will be collected and added to the list of messages for output.
-dag.dagman.out - the search is identical to the .dbg files except that, vds-report is also looking for the list of jobs that failed at the end of the .dag.dagman.out file
+dag.dagman.out - the search is identical to the .dbg files except that, pegasus-report is also looking for the list of jobs that failed at the end of the .dag.dagman.out file
 .PP
 euryale.log - for the Euryale workflow planner, 
-.B vds-report
+.B pegasus-report
 is searching via .dbg file method and for specific keywords that have been added into the euryale code indicating an error or a warning.  
-.B vds-report
+.B pegasus-report
 also looks for what grid sites the workflow jobs are sent to and their error status upon job completion.  If the error status is greater than 0, the error is collected.
 .PP
 <name_of_workflow generated through Pegasus>.log - in the case of the Pegasus workflow planner, 
-.B vds-report 
+.B pegasus-report 
 is searching via the .dbg file method.
 .PP
 .SH ARGUMENTS
@@ -40,19 +40,19 @@ The
 and
 .BR \-i
 arguments are optional and allow for more customized control and amount of information about the errors and warnings that is found in the files.  The -p argument is the path to the directory that contains the .dag file is mandatory for 
-.B vds-report
+.B pegasus-report
 to work properly.
 .TP
 .B \-p path 
 This mandatory option is the path to the directory that contains the .dag file.  If the .dag file is not found, 
-.B vds-report
+.B pegasus-report
 will exit with a return code of 1.  Always use the absolute path to the directory.
 .TP
 .B \-o output file
 This option is in case the user wants to output all of the collected messages to a file rather than sending them to STDOUT.  If -o is not included in the command line argument, the default option is to output the messages to STDOUT
 .TP
 .B \-e error file
-This option can be used to specify a specific list of errors that the user is looking for.  The one caveat is the format and headers of the user's list of errors must be identical to the default errors.txt found at $VDS_HOME/share
+This option can be used to specify a specific list of errors that the user is looking for.  The one caveat is the format and headers of the user's list of errors must be identical to the default errors.txt found at $PEGASUS_HOME/share
 .TP
 .B \-l lines
 This option will allow the user to include n number of lines before or after the found error to include any ancillary information.
@@ -67,7 +67,7 @@ Execution as planned will return 0.  Any failure will return 1.
 .SH EXAMPLE
 .nf
 \f(CB
-$ vds-report -d /failed/workflow \-o Error_output \-e /path/to/list/of/errors.txt \-t
+$ pegasus-report -d /failed/workflow \-o Error_output \-e /path/to/list/of/errors.txt \-t
 \fP
 .SH RESTRICTIONS
 The input files must be textual files.

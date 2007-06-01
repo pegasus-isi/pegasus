@@ -16,11 +16,11 @@
 .\" Authors: Jens-S. Vöckler, Yong Zhao
 .\"
 .\"
-.TH vds-version 1 "July, 15th 2005"
+.TH pegasus-version 1 "July, 15th 2005"
 .SH NAME
-vds-version \- print the version of the toolkit.
+pegasus-version \- print the version of the toolkit.
 .SH SYNOPSIS
-.B vds-version [ [-q] -m | -V | -f ]
+.B pegasus-version [ [-q] -m | -V | -f ]
 .SH DESCRIPTION
 This small program just invokes Java to print the version string on
 .IR stdout .
@@ -29,7 +29,7 @@ This small program just invokes Java to print the version string on
 .B \-Dprop
 The -D options allows an experienced user to override certain properties
 which influence the program execution, among them the default location of
-the user's properties file and the VDS home location. One may set several
+the user's properties file and the PEGASUS home location. One may set several
 CLI properties by giving this option multiple times.
 .I The -D option(s) must be the first option on the command line. 
 CLI properties take precedence over the file-based properties of the same key.
@@ -67,7 +67,7 @@ mismatch, it will only print the error and exit with status 1.
 .TP
 .PD 1
 .B \-\-version
-displays the version of the GriPhyN Virtual Data System you are using.
+displays the version of the GriPhyN PEGASUS Planner you are using.
 .TP
 .B \-\-verbose
 is ignore in this tool. However, to provide a uniform interface for all
@@ -79,7 +79,7 @@ of 1 is returned. If run-time errors are detected, an exit code of 2 is
 returned, 3 for fatal errors.
 .SH "ENVIRONMENT VARIABLES"
 .TP
-.B $VDS_HOME
+.B $PEGASUS_HOME
 is the suggested base directory of your the execution environment.
 .TP
 .B $JAVA_HOME
@@ -92,14 +92,14 @@ should be set to contain all necessary files for the execution environment.
 .SH EXAMPLE
 .nf
 \f(CB
-$ vds-version   
+$ pegasus-version   
 1.3.8
 
-$ vds-version -f
+$ pegasus-version -f
 1.3.8-20050715180634Z
 
-$ vds-version -m 
-Timestamp internal in VDS: 20050715180634Z
+$ pegasus-version -m 
+Timestamp internal in PEGASUS: 20050715180634Z
 Timestamp of installation: 20050715180634Z
 OK: Internal version matches installation.
 \fP
@@ -114,7 +114,7 @@ Mike Wilde <wilde at mcs dot anl dot gov>,
 Yong Zhao <yongzh at cs dot uchicago dot edu>.
 .PP
 Chimera
-.B http://www.griphyn.org/chimera/
+.B http://pegasus.isi.edu
 .br
 GriPhyN
 .BR http://www.griphyn.org/

@@ -16,7 +16,7 @@
 .\"
 .\" Authors: Jens-S. Vöckler, Yong Zhao, Karan Vahi
 .\"
-.TH "rc\-client" "1" "1.4.5" "GriPhyN Virtual Data System"
+.TH "rc\-client" "1" "1.4.5" "GriPhyN PEGASUS Planner"
 .SH NAME
 rc\-client \- shell client for replica implementations
 .SH SYNOPSIS
@@ -37,7 +37,7 @@ Any option will be displayed with its long options synonym(s).
 .B \-Dprop
 The -D options allows an experienced user to override certain properties
 which influence the program execution, among them the default location of
-the user's properties file and the VDS home location. One may set several
+the user's properties file and the PEGASUS home location. One may set several
 CLI properties by giving this option multiple times.
 .I The -D option(s) must be the first option on the command line. 
 A CLI property take precedence over the properties file property 
@@ -114,23 +114,23 @@ Default is to use interactive mode.
 .TP
 .PD 1
 .B \-\-version
-displays the version of the GriPhyN Virtual Data System you are using.
+displays the version of the GriPhyN PEGASUS Planner you are using.
 .SH "RETURN VALUE"
 Regular and planned program terminations will result in an exit code of 0.
 Abnormal termination will result in a non-zero exit code.
 .SH FILES
 .TP
-.B $VDS_HOME/etc/properties
+.B $PEGASUS_HOME/etc/properties
 contains the basic properties with all configurable options.
 .TP
-.B $HOME/.vdsrc
+.B $HOME/.pegasusrc
 contains the basic properties with all configurable options.
 .TP
-.B gvds.jar
+.B pegasus.jar
 contains all compiled Java bytecode to run the replica manager. 
 .SH "ENVIRONMENT VARIABLES"
 .TP
-.B $VDS_HOME
+.B $PEGASUS_HOME
 is the suggested base directory of your the execution environment.
 .TP
 .B $JAVA_HOME
@@ -145,30 +145,30 @@ Please make sure that your
 includes pointer to the replica implementation required jar files.
 .SH "PROPERTIES"
 The complete branch of properties 
-.I vds.rc
+.I pegasus.rc
 including itself are interpreted by the prototype. While the 
-.I vds.rc
+.I pegasus.rc
 property itself steers the backend to connect to, any meaning of
 branched keys is dependent on the backend. The same key may have
 different meanings for different backends. 
 .TP
-.B vds.rc
+.B pegasus.rc
 determines the name of the implementing class to load at run-time. If
 the class resides in 
 .I org.griphyn.common.catalog
 no prefix is required. Otherwise, the fully qualified class name must be
 specified. 
 .TP
-.B vds.rc.driver
+.B pegasus.rc.driver
 is used by a simple rDBMs implementation. The string is the
 fully-qualified class name of the JDBC driver used by the rDBMS
 implementer. 
 .TP
-.B vds.rc.url
+.B pegasus.rc.url
 is used by a simple rDBMS implementation. The string determines the JDBC
 contact URI to use. 
 .TP
-.B vds.rc.user
+.B pegasus.rc.user
 is used by a simple rDBMS implementation. It constitutes the database
 user account that contains the 
 .I RC_LFN
@@ -176,7 +176,7 @@ and
 .I RC_ATTR
 tables.
 .TP
-.B vds.rc.password
+.B pegasus.rc.password
 is used by a simple rDBMS implementation. It constitutes the database
 user account that contains the 
 .I RC_LFN
@@ -184,12 +184,12 @@ and
 .I RC_ATTR
 tables.
 .TP
-.B vds.rc.chunk.size
+.B pegasus.rc.chunk.size
 is used by the rc-client for the bulk insert and delete
 operations. The value determines the number of lines that are read in
 at a time, and worked upon at together.
 .TP
-.B vds.rc.*
+.B pegasus.rc.*
 are other keys a JDBC driver may make use of. The keys are
 driver-specific. 
 .SH "COMMANDS"
@@ -274,7 +274,7 @@ to be done
 .fi
 .SH "DATABASE SCHEMA"
 .LP
-The tables are set up as part of the VDS database setup. The files
+The tables are set up as part of the PEGASUS database setup. The files
 concerned with the database have a suffix
 .BR -rc.sql .
 .SH "RESTRICTIONS"
@@ -289,8 +289,8 @@ Jens-S. V\(:ockler    <voeckler at cs dot uchicago dot edu>
 .br
 Yong Zhao           <yongzh at cs dot uchicago dot edu>
 .PP
-VDS     -
-.BR http://vds.isi.edu/
+PEGASUS     -
+.BR http://pegasus.isi.edu/
 .br
 GriPhyN -
 .BR http://www.griphyn.org/
