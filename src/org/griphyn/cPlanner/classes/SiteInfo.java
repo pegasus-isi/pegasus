@@ -603,7 +603,7 @@ public class SiteInfo {
      * @return the textual description in multiline format.
      */
     public String toMultiLine() {
-        String output =  "pool " + mHandle + "{\n";
+        String output =  "site " + mHandle + "{\n";
         if(mSysInfo !=null) {
             output+="sysinfo \""+mSysInfo+"\"\n";
         }

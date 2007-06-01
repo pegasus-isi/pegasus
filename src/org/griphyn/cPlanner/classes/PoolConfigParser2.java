@@ -166,7 +166,7 @@ public class PoolConfigParser2 {
 
         if (! (m_lookAhead instanceof PoolConfigReservedWord)) {
             throw new PoolConfigException(m_scanner.getLineNumber(),
-                "expecting a reserved word describing a pool attribute instead of "+
+                "expecting a reserved word describing a site attribute instead of "+
                 m_lookAhead);
         }
         int word = ( (PoolConfigReservedWord) m_lookAhead).getValue();
@@ -322,7 +322,7 @@ public class PoolConfigParser2 {
 
             default:
                 throw new PoolConfigException(m_scanner.getLineNumber(),
-                    "invalid reserved word used to configure a pool entry");
+                    "invalid reserved word used to configure a site entry");
         }
     }
 
@@ -341,7 +341,7 @@ public class PoolConfigParser2 {
             ( (PoolConfigReservedWord) m_lookAhead).getValue() !=
             PoolConfigReservedWord.SITE) {
             throw new PoolConfigException(m_scanner.getLineNumber(),
-                                          "expecting reserved word \"pool\"");
+                                          "expecting reserved word \"site\"");
         }
         m_lookAhead = m_scanner.nextToken();
 
