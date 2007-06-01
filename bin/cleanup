@@ -17,6 +17,10 @@ DIR=`mktemp -d ../temp.XXXXXXX`
 
 while read i
 do
+dir=`dirname $i`
+if [ $dir != "." ]; then
+    `mkdir -p $DIR/$dir`
+fi
 mv $i $DIR/$i
 exitcode $?
 done
