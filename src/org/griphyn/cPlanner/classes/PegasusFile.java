@@ -198,7 +198,7 @@ public class PegasusFile extends Data {
     }
 
     /**
-     * Sets the transient transfer flag to value passed.
+     * Sets the type flag to value passed.
      *
      * @param type valid transfer value.
      * @exception IllegalArgumentException if the transfer mode is outside
@@ -216,6 +216,33 @@ public class PegasusFile extends Data {
             throw new IllegalArgumentException();
         }
     }
+
+    /**
+     * Sets the transient transfer flag to value passed.
+     *
+     * @param type valid transfer value.
+     * @exception IllegalArgumentException if the transfer mode is outside
+     * its legal range.
+     *
+     * @see #DATA_FILE
+     * @see #EXECUTABLE_FILE
+     */
+    public void setType( String type) throws IllegalArgumentException{
+
+        if( type == null || type.length() == 0)
+            throw new IllegalArgumentException( "Invalid Type passed " + type );
+
+        if( type.equals( this.DATA_TYPE )){
+            mType = this.DATA_FILE;
+        }
+        else if( type.equals( this.EXECUTABLE_TYPE )){
+            mType = this.EXECUTABLE_FILE;
+        }
+        else{
+            throw new IllegalArgumentException( "Invalid Type passed " + type );
+        }
+    }
+
 
     /**
      * Sets the transient transfer flag to value passed.
@@ -446,4 +473,5 @@ public class PegasusFile extends Data {
 
         return st;
     }
-}
+
+    }

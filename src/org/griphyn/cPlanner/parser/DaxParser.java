@@ -582,7 +582,7 @@ public class DaxParser extends Parser {
         String fileName = attrs.getValue("", "file");
         String linkType = attrs.getValue("", "link");
         String isTemp   = attrs.getValue("", "isTemporary");
-
+        String type     = attrs.getValue("", "type");
         //since dax 1.6, the isTemporary
         //is broken into two transient
         //attributes dontTransfer and dontRegister
@@ -617,6 +617,10 @@ public class DaxParser extends Parser {
         //handling the optional attribute
         if(optionalFile)
             pf.setFileOptional();
+
+        //handle type of file
+        if( type != null )
+            pf.setType( type );
 
         //adding the file to input vector or the output vector
         if (linkType.trim().equalsIgnoreCase("input")) {

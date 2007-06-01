@@ -20,6 +20,7 @@ package org.griphyn.cPlanner.engine;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
+import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SiteInfo;
@@ -39,10 +40,14 @@ import org.griphyn.common.classes.TCType;
 
 import org.griphyn.common.catalog.transformation.Mapper;
 
+import org.griphyn.common.util.Separator;
+
+
 import java.io.File;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.Vector;
 
@@ -257,12 +262,14 @@ public class InterPoolEngine extends Engine {
         //assimilated into the job.
         job.updateProfiles(mPoolHandle.getPoolProfile(siteHandle));
 
+
         //query the TCMapper and get hold of all the valid TC
         //entries for that site
         tcEntries = mTCMapper.getTCList(job.namespace,job.logicalName,
                                         job.version,siteHandle);
 
         StringBuffer error;
+        FileTransfer fTx = null;
         if(tcEntries != null && tcEntries.size() > 0){
             //select a tc entry calling out to
             //the transformation selector
@@ -275,6 +282,7 @@ public class InterPoolEngine extends Engine {
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
+
             //something seriously wrong in this code line below.
             //Need to verify further after more runs. (Gaurang 2-7-2006).
 //            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
@@ -282,7 +290,7 @@ public class InterPoolEngine extends Engine {
                 SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,"vanilla");
                 //construct a file transfer object and add it
                 //as an input file to the job in the dag
-                FileTransfer fTx = new FileTransfer(job.getStagedExecutableBaseName(),
+                fTx = new FileTransfer(job.getStagedExecutableBaseName(),
                                                     job.jobName);
                 fTx.setType(FileTransfer.EXECUTABLE_FILE);
                 //the physical transformation points to
@@ -298,7 +306,11 @@ public class InterPoolEngine extends Engine {
                     + File.separator + job.getStagedExecutableBaseName();
                 fTx.addDestination(siteHandle,
                                    site.getURLPrefix(false) + stagedPath);
-                job.addInputFile(fTx);
+
+                //added in the end now after dependant executables
+                //have been handled Karan May 31 2007
+                //job.addInputFile(fTx);
+
                 //the jobs executable is the path to where
                 //the executable is going to be staged
                 job.executable = stagedPath;
@@ -333,14 +345,117 @@ public class InterPoolEngine extends Engine {
         //is assimilated overidding the one from transformation
         //catalog.
         job.updateProfiles(mProps);
+
+        //handle dependant executables
+        handleDependantExecutables( job );
+        if( fTx != null ){
+            //add the main executable back as input
+            job.addInputFile( fTx);
+        }
+
         return true;
     }
 
+    /**
+     * Handles the dependant executables that need to be staged.
+     *
+     * @param job SubInfo
+     *
+     */
+    private void handleDependantExecutables( SubInfo job ){
+        String siteHandle = job.getSiteHandle();
+        boolean installedTX =  !(job.getJobType() == SubInfo.STAGED_COMPUTE_JOB );
+
+        List dependantExecutables = new ArrayList();
+        for (Iterator it = job.getInputFiles().iterator(); it.hasNext(); ) {
+            PegasusFile input = (PegasusFile) it.next();
+
+            if (input.getType() == PegasusFile.EXECUTABLE_FILE) {
+
+                //if the main executable is installed, just remove the executable
+                //file requirement from the input files
+                if( installedTX ){
+                    it.remove();
+                    continue;
+                }
+
+                //query the TCMapper and get hold of all the valid TC
+                //entries for that site
+                String lfn[] = Separator.split( input.getLFN() );
+                List tcEntries = mTCMapper.getTCList( lfn[0], lfn[1], lfn[2],
+                                                     siteHandle);
+
+                StringBuffer error;
+                if (tcEntries != null && tcEntries.size() > 0) {
+                    //select a tc entry calling out to
+                    //the transformation selector , we only should stage
+                    //never pick any installed one.
+                    TransformationCatalogEntry tcEntry = selectTCEntry(tcEntries, job,
+                                            "Staged" );
+                    if (tcEntry == null) {
+                        error = new StringBuffer();
+                        error.append("Transformation selection operation for job  ").
+                            append(job.getCompleteTCName()).append(" for site ").
+                            append(job.getSiteHandle()).append(" unsuccessful.");
+                        mLogger.log(error.toString(),
+                                    LogManager.ERROR_MESSAGE_LEVEL);
+                        throw new RuntimeException(error.toString());
+                    }
+
+                    //            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
+                    if (tcEntry.getType().equals(TCType.STATIC_BINARY)) {
+                        SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,
+                            "vanilla");
+                        //construct a file transfer object and add it
+                        //as an input file to the job in the dag
+                        FileTransfer fTx = new FileTransfer( input.getLFN(),
+                                                             job.jobName );
+                        fTx.setType(FileTransfer.EXECUTABLE_FILE);
+                        //the physical transformation points to
+                        //guc or the user specified transfer mechanism
+                        //accessible url
+                        fTx.addSource(tcEntry.getResourceId(),
+                                      tcEntry.getPhysicalTransformation());
+                        //the destination url is the working directory for
+                        //pool where it needs to be staged to
+                        //always creating a third party transfer URL
+                        //for the destination.
+                        String stagedPath = mPoolHandle.getExecPoolWorkDir(job)
+                            + File.separator + SubInfo.getStagedExecutableBaseName(  lfn[0], lfn[1], lfn[2] );
+                        fTx.addDestination(siteHandle,
+                                           site.getURLPrefix(false) + stagedPath);
+
+                        dependantExecutables.add( fTx );
+
+                        //the jobs executable is the path to where
+                        //the executable is going to be staged
+                        //job.executable = stagedPath;
+                        mLogger.log( "Dependant Executable " + input.getLFN() + " being staged from " +
+                                     fTx.getSourceURL(), LogManager.DEBUG_MESSAGE_LEVEL );
+
+                    }
+
+                }
+                it.remove();
+            } //end of if file is exectuable
+        }
+
+        //add all the dependant executable FileTransfers back as input files
+        for( Iterator it = dependantExecutables.iterator(); it.hasNext(); ){
+            FileTransfer file = (FileTransfer)it.next();
+            job.addInputFile( file );
+        }
+    }
 
     /**
-     * Recursively ends up calling the transformation selector according to
+     * Recursively ends up calling the transformation selector accordxing to
      * a chain of selections that need to be performed on the list of valid
      * transformation catalog
+     *
+     * @param entries    list of <code>TransformationCatalogEntry</code> objects.
+     * @param job        the job.
+     * @param selectors  comma separated list of selectors.
+     *
      * @return the selected <code>TransformationCatalogEntry</code> object
      *         null when transformation selector is unable to select any
      *         transformation

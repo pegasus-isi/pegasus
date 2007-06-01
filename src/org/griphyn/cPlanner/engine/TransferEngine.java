@@ -43,7 +43,6 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
 import org.griphyn.common.catalog.transformation.TCMode;
 
-import org.griphyn.common.util.DynamicLoader;
 import org.griphyn.common.util.FactoryException;
 
 import java.io.BufferedWriter;
@@ -57,7 +56,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
 /**
@@ -139,9 +137,10 @@ public class TransferEngine extends Engine {
     private boolean mCacheFiles;
 
     /**
-     * overloaded constructor
+     * Overloaded constructor.
      *
-     *
+     * @param reducedDag  the reduced workflow.
+     * @param vDelLJobs    list of deleted jobs.
      * @param properties the <code>PegasusProperties</code> to be used.
      * @param options   The options specified by the user to run the planner.
      */
@@ -202,6 +201,8 @@ public class TransferEngine extends Engine {
      * Returns the SubInfo object for the job specified.
      *
      * @param jobName  the name of the job
+     *
+     * @return  the SubInfo object for a job.
      */
     private SubInfo getSubInfo(String jobName) {
         return mDag.getSubInfo(jobName);
@@ -552,6 +553,8 @@ public class TransferEngine extends Engine {
      * config file.
      *
      * @param poolName  the name of pool that is not found.
+     * @param universe  the condor universe
+     *
      * @return the message.
      */
     private String poolNotFoundMsg(String poolName, String universe) {
@@ -814,7 +817,12 @@ public class TransferEngine extends Engine {
             //the transfer mode for the file needs to be
             //propogated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
-            ft.addSource( selLoc.getResourceHandle(), sourceURL);
+
+            //to prevent duplicate source urls
+            if(ft.getSourceURL() == null){
+                ft.addSource( selLoc.getResourceHandle(), sourceURL);
+            }
+
             //to prevent duplicate destination urls
             if(ft.getDestURL() == null)
                 ft.addDestination(ePool,destURL);
@@ -876,18 +884,6 @@ public class TransferEngine extends Engine {
         }
     }
 
-    /**
-     * It writes out to a cache file.
-     */
-    private void writeToCache(String lfn, String url){
-
-        //check if the cache handle is initialized
-        if(mCacheHandle == null)
-            initializeCacheHandle();
-
-        mCacheHandle.println(lfn);
-        mCacheHandle.println(url);
-    }
 
     /**
      * It writes out to a cache file.

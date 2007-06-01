@@ -33,7 +33,6 @@ import org.griphyn.common.util.Separator;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -948,15 +947,33 @@ public class SubInfo extends Data implements GraphNodeContent{
                Separator.combine(dvNamespace,dvName,dvVersion);
     }
 
+
+
     /**
      * Returns the basename for the staged executable corresponding to the
      * job.
      *
      * @return the staged executable basename
      */
-    public String getStagedExecutableBaseName(){
-        return combine(namespace,logicalName,version);
+    public  String getStagedExecutableBaseName(){
+        return getStagedExecutableBaseName( namespace, logicalName, version );
     }
+
+
+    /**
+     * Returns the basename for the staged executable corresponding to the
+     * job.
+     *
+     * @param txNamespace is the namespace in which the TR resides, may be null.
+     * @param txName      is the base name of the transformation, must not be null.
+     * @param txVersion   is the version of the TR, may be null
+     *
+     * @return the staged executable basename
+     */
+    public static String getStagedExecutableBaseName( String txNamespace, String txName, String txVersion ){
+        return combine( txNamespace, txName, txVersion);
+    }
+
 
     /**
      * Returns the submit directory path relative to the workflow submit
@@ -1007,16 +1024,16 @@ public class SubInfo extends Data implements GraphNodeContent{
      *
      * @return the concatenated form .
      */
-    private String combine(String namespace,
-                          String name,
-                          String version) {
+    private static String combine(String namespace,
+                                  String name,
+                                  String version) {
         StringBuffer result = new StringBuffer(32);
-        if (namespace != null) {
-            result.append(namespace).append(this.DELIMITER);
+        if ( namespace != null ) {
+            result.append( namespace ).append( DELIMITER);
         }
         result.append(name);
         if (version != null) {
-            result.append(this.DELIMITER).append(version);
+            result.append( DELIMITER ).append( version );
         }
         return result.toString();
     }
