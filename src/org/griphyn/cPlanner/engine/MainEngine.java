@@ -116,7 +116,7 @@ public class MainEngine
      * This constructor initialises the class variables to the variables
      * passed. The pool names specified should be present in the pool.config file
      *
-     * @param orgDAG    the dag to be worked on.
+     * @param orgDag    the dag to be worked on.
      * @param props   the properties to be used.
      * @param options   The options specified by the user to run the planner.
      */
@@ -138,6 +138,8 @@ public class MainEngine
 
     /**
      * The main function which calls the other engines and does the necessary work.
+     *
+     * @return the planned worflow.
      */
     public ADag runPlanner() {
         //do the authentication against the pools
@@ -271,19 +273,20 @@ public class MainEngine
     /**
      * A small helper method that displays the contents of a Set in a String.
      *
+     * @param s      the Set whose contents need to be displayed
      * @param delim  The delimited between the members of the set.
      * @return  String
      */
     public String setToString(Set s, String delim) {
-        Iterator it = s.iterator();
-        String st = new String();
-        while (it.hasNext()) {
-            st += (String) it.next() + delim;
+        StringBuffer sb = new StringBuffer();
+        for( Iterator it = s.iterator(); it.hasNext(); ) {
+            sb.append( (String) it.next() ).append( delim );
         }
-        st = (st.length() > 0) ?
-            st.substring(0, st.lastIndexOf(delim)) :
-            st;
-        return st;
+        String result = sb.toString();
+        result = (result.length() > 0) ?
+                 result.substring(0, result.lastIndexOf(delim)) :
+                 result;
+        return result;
     }
 
 }

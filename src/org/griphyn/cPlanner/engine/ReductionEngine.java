@@ -136,6 +136,8 @@ public class ReductionEngine extends Engine{
      *
      * @param rcb instance of the replica catalog bridge.
      *
+     * @return the reduced dag
+     *
      */
     public ADag reduceDag( ReplicaCatalogBridge rcb ){
 
@@ -412,22 +414,19 @@ public class ReductionEngine extends Engine{
      * leaf jobs it refers the original
      * dag, not the reduced dag.
      *
-     * @return  Vector containing the
-     *          names of the deleted
-     *          leaf jobs.
+     * @return  Vector containing the <code>SubInfo</code> of deleted leaf jobs.
      */
     public Vector getDeletedLeafJobs(){
         Vector delLeafJobs = new Vector();
 
-        Enumeration e = mAllDeletedJobs.elements();
         mLogger.log("Finding deleted leaf jobs",LogManager.DEBUG_MESSAGE_LEVEL);
-        while(e.hasMoreElements()){
-            String job = (String)e.nextElement();
+        for( Iterator it = mAllDeletedJobs.iterator(); it.hasNext(); ){
+            String job = (String)it.next();
             if(getChildren(job).isEmpty()){
                 //means a leaf job
                 String msg = "Found deleted leaf job :" + job;
                 mLogger.log(msg,LogManager.DEBUG_MESSAGE_LEVEL);
-                delLeafJobs.addElement(job);
+                delLeafJobs.addElement( mOriginalDag.getSubInfo(job) );
 
             }
         }

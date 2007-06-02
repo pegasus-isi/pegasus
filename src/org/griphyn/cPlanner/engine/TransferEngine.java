@@ -89,7 +89,7 @@ public class TransferEngine extends Engine {
      * required to transfer files to the output pool for any leaf jobs that may
      * have been deleted.
      */
-    private ADag mOriginalDag;
+//    private ADag mOriginalDag;
 
     /**
      * The Vector of Dags subinfo objects.
@@ -260,10 +260,11 @@ public class TransferEngine extends Engine {
         //should be moved upwards in the pool. redundancy at present
         if (outputSite != null &&
             outputSite.trim().length() > 0) {
-            Enumeration e = this.mvDelLeafJobs.elements();
-            while (e.hasMoreElements()) {
-                currentJobName = (String) e.nextElement();
-                currentJob = mOriginalDag.getSubInfo(currentJobName);
+
+            for ( Enumeration e = this.mvDelLeafJobs.elements(); e.hasMoreElements(); ) {
+//                currentJobName = (String) e.nextElement();
+//                currentJob = mOriginalDag.getSubInfo(currentJobName);
+                currentJob = (SubInfo)e.nextElement();
 
                 //for a deleted node, to transfer it's output
                 //the execution pool should be set to local i.e submit host

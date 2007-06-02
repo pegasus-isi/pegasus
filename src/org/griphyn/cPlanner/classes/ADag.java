@@ -139,6 +139,14 @@ public class ADag extends Data {
     }
 
     /**
+     * Returns whether the workflow is empty or not.
+     * @return boolean
+     */
+    public boolean isEmpty(){
+        return vJobSubInfos.isEmpty();
+    }
+
+    /**
      * Removes a particular job from the workflow. It however does not
      * delete the relations the edges that refer to the job.
      *

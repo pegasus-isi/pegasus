@@ -100,13 +100,21 @@ public class CPlanner extends Executable{
     /**
      * The final successful message that is to be logged.
      */
-    private static final String SUCCESS_MESSAGE =
+    private static final String EMPTY_FINAL_WORKFLOW_MESSAGE =
         "\n\n\n" +
-        "I have concretized your abstract workflow. The workflow has been entered \n" +
-        "into the workflow database with a state of \"planned\". The next step is \n" +
-        "to start or execute your workflow. The invocation required is" +
+        "The executable workflow generated contains no nodes.\n" +
+        "It seems that the output files are already at the output site"+
         "\n\n\n";
 
+   /**
+    * The message to be logged in case of empty executable workflow.
+    */
+   private static final String SUCCESS_MESSAGE =
+       "\n\n\n" +
+       "I have concretized your abstract workflow. The workflow has been entered \n" +
+       "into the workflow database with a state of \"planned\". The next step is \n" +
+       "to start or execute your workflow. The invocation required is" +
+       "\n\n\n";
 
 
 
@@ -335,6 +343,14 @@ public class CPlanner extends Executable{
             codeGenerator = CodeGeneratorFactory.
                                      loadInstance( mProps, mPOptions, mPOptions.getSubmitDirectory());
 
+
+            //before generating the codes for the workflow check
+            //for emtpy workflows
+            if( finalDag.isEmpty() ){
+
+               mLogger.log( EMPTY_FINAL_WORKFLOW_MESSAGE, LogManager.INFO_MESSAGE_LEVEL );
+               return;
+            }
 
             message = "Generating codes for the concrete workflow";
             log( message, LogManager.INFO_MESSAGE_LEVEL );
