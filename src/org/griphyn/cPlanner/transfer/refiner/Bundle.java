@@ -130,7 +130,9 @@ public class Bundle extends Default {
         //to prevent duplicate dependencies
         Set tempSet = new HashSet();
 
-
+        int staged = 0;
+        Collection stagedFiles = new ArrayList();
+        Collection stageInExecJobs = new ArrayList();//store list of jobs that are transferring the stage file
         for(Iterator it = files.iterator();it.hasNext();) {
             FileTransfer ft = (FileTransfer) it.next();
             String lfn = ft.getLFN();
@@ -184,16 +186,21 @@ public class Bundle extends Default {
                 if(ft.isTransferringExecutableFile()){
                     //currently we have only one file to be staged per
                     //compute job
-                    Collection execFiles = new ArrayList(1);
-                    execFiles.add(ft);
-                    mTXStageInImplementation.addSetXBitJobs(job, newJobName,
-                                                            execFiles,
-                                                            SubInfo.STAGE_IN_JOB);
+//                    Collection execFiles = new ArrayList(1);
+//                    execFiles.add(ft);
+                    //add both the name of the stagein job and the executable file
+                    stageInExecJobs.add( newJobName );
+                    stagedFiles.add( ft );
+
+//                    mTXStageInImplementation.addSetXBitJobs(job, newJobName,
+//                                                            execFiles,
+//                                                            SubInfo.STAGE_IN_JOB);
                     mLogger.log("Entered " + key + "->" +
-                                mTXStageInImplementation.getSetXBitJobName(job.getName(),0),
+                                mTXStageInImplementation.getSetXBitJobName(job.getName(),staged),
                                 LogManager.DEBUG_MESSAGE_LEVEL);
                     mSetupMap.put(key,
-                                  mTXStageInImplementation.getSetXBitJobName(job.getName(),0));
+                                  mTXStageInImplementation.getSetXBitJobName(job.getName(),staged));
+                    staged++;
                 }
 
                 //make a new entry into the table
@@ -208,6 +215,19 @@ public class Bundle extends Default {
             }
         }
 
+        //if there were any staged files
+        //add the setXBitJobs for them
+        int index = 0;
+        Iterator jobIt= stageInExecJobs.iterator();
+        for( Iterator it = stagedFiles.iterator(); it.hasNext(); index++){
+            Collection execFiles = new ArrayList(1);
+            execFiles.add( it.next() );
+            mTXStageInImplementation.addSetXBitJobs(job, (String)jobIt.next(),
+                                                         execFiles,
+                                                         SubInfo.STAGE_IN_JOB,
+                                                         index);
+
+        }
 
 
         //add the temp set to the relations

@@ -38,7 +38,7 @@ public interface Implementation {
     /**
      * The version number associated with this API of Code Generator.
      */
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.3";
 
 
     /**
@@ -116,6 +116,27 @@ public interface Implementation {
                                    String txJobName,
                                    Collection execFiles,
                                    int transferClass );
+
+
+    /**
+     * Adds the dirmanager job to the workflow, that do a chmod on the files
+     * being staged.
+     *
+     * @param computeJob     the computeJob for which the files are
+     *                       being staged.
+     * @param txJobName      the name of the transfer job that is staging the files.
+     * @param execFiles      the executable files that are being staged.
+     * @param transferClass  the class of transfer job
+     * @param xbitIndex      index to be used for creating the name of XBitJob.
+     *
+     * @return boolean indicating whether any XBitJobs were succesfully added or
+     *         not.
+     */
+    public boolean addSetXBitJobs( SubInfo computeJob,
+                                   String txJobName,
+                                   Collection execFiles,
+                                   int transferClass,
+                                   int xbitIndex  );
 
 
 
