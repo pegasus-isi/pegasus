@@ -86,7 +86,10 @@ public class ReplicaStore
             entry = ( Map.Entry )it.next();
             lfn = ( String )entry.getKey();
             values = ( Collection )entry.getValue();
-            put( lfn, new ReplicaLocation(lfn, values) );
+            //only put in if the values are not empty
+            if( !values.isEmpty() ){
+                put(lfn, new ReplicaLocation(lfn, values));
+            }
         }
     }
 
