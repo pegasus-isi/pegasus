@@ -401,6 +401,7 @@
       <fileset dir="bin">
         <exclude name="*-free"/>
         <exclude name="CVS"/>
+	<exclude name=".svn"/>
         <exclude name="Archive"/>
         <exclude name="Archive/*"/>
       </fileset>
