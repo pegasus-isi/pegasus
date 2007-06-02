@@ -566,10 +566,9 @@ public abstract class Abstract implements JobAggregator {
         }
 
         //a double negative
-        return !( ( l == null || l.isEmpty() ) ?
+        return  ( l == null || l.isEmpty() ) ?
                   (( this.defaultTCEntry( name,  site ) ) == null ) ://construct a default tc entry
-                  true
-                );
+                  false ;
     }
 
 
