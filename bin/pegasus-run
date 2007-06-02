@@ -267,7 +267,6 @@ print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
 system(@args) == 0 
     or die( "ERROR: Running pegasus-submit-dag failed with ", $? >> 8 );
 print STDERR "# dagman is running\n" if $main::DEBUG;
-sleep 5;
 # run tailstatd to update job stats until DAGMan finishes
 if(!$database){
 @args = create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
