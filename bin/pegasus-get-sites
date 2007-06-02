@@ -41,15 +41,6 @@ use Work::Properties qw(:parse);# parse properties
 use GriPhyN::VORS;
 
 my %db = (
-#    'grid3' => {
-#	xmlrpc => 'http://www.ivdgl.org/grid3/catalog/services.php',
-#	comment => 'Grid3 layout database',
-#	type => 'mysql',
-#	host => 'butternut.ucs.indiana.edu',
-#	port => '3306',
-#	name => 'grid3v8',
-#	user => undef,
-#	pass => undef },
     'osg' => {
 	xmlrpc => undef,
 	comment => 'OSG production layout database',
@@ -103,6 +94,15 @@ my %db = (
 	port => undef,
 	name => File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'contrib', 'OurGrids', 'isi.db' ),
 	user => undef,
+	pass => undef },
+      'tg' => {
+	xmlrpc => undef,
+	comment => 'Teragrid Clusters',
+	type => 'SQLite2',
+	host => undef,
+	port => undef,
+	name => File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'contrib', 'OurGrids', 'tg.db' ),
+	user => undef,
 	pass => undef }  
 );
 
@@ -113,8 +113,8 @@ my %quirks = ( 'mysql' => 'database',
 	       'SQLite2' => 'dbname' );
 my $user = $ENV{LOGNAME} || $ENV{USER} || scalar getpwuid($<);
 my $default = 'osg';		# which default database
-my $default_rls = 'rls://evitable.uchicago.edu';
-my $default_version = '2.4.3';
+my $default_rls = 'rlsn://smarty.isi.edu';
+my $default_version = '4.0.4';
 my $default_arch = 'INTEL32::LINUX';
 my $default_inst = 'INSTALLED';
 
@@ -419,7 +419,6 @@ Standard options:
  --cutoff|-C n Requires a minimum number n of CPUs, default is $cutoff.
  --debug|-d    raises debug level (verbosity), default $main::DEBUG. 
  --globus      if set, generates PEGASUS universe \"globus\" entries (deprecated).
- --euryale     if set, makes the gridftp storage dir identical to workdir.
  --with-mis    if set, permits the OSG jobmanager-mis to be included.
  --source      selects the source to query for site information, supported sources are
                @{[showstyle(%supp_sources)]}; default source \"$default_source\".
