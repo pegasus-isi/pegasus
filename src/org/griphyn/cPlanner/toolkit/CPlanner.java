@@ -136,7 +136,7 @@ public class CPlanner extends Executable{
         mNumFormatter = new DecimalFormat( "0000" );
 
         this.mPOptions        = new PlannerOptions();
-        mPOptions.setSubmitDirectory(".");
+        mPOptions.setSubmitDirectory( ".", null );
         mPOptions.setExecutionSites(new java.util.HashSet());
         mPOptions.setOutputSite("");
 
@@ -298,7 +298,7 @@ public class CPlanner extends Executable{
             try{
                 //create the base directory if required
                 relativeDir = createSubmitDirectory( submitDir, mUser, mPOptions.getVOGroup(), orgDag.getLabel() );
-                mPOptions.setSubmitDirectory( new File ( submitDir, relativeDir ) );
+                mPOptions.setSubmitDirectory( submitDir, relativeDir  );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
             }
@@ -366,11 +366,10 @@ public class CPlanner extends Executable{
 
                 //submit files are generated in a subdirectory
                 //of the submit directory
-                File f = new File( cleanupOptions.getSubmitDirectory(), this.CLEANUP_DIR );
                 message = "Generating code for the cleanup workflow";
                 mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
                 //set the submit directory in the planner options for cleanup wf
-                cleanupOptions.setSubmitDirectory(f.getAbsolutePath());
+                cleanupOptions.setSubmitDirectory( cleanupOptions.getSubmitDirectory(), this.CLEANUP_DIR );
                 codeGenerator = CodeGeneratorFactory.
                               loadInstance( mProps, cleanupOptions, cleanupOptions.getSubmitDirectory() );
 
@@ -475,7 +474,7 @@ public class CPlanner extends Executable{
                     break;
 
                 case 'D': //dir
-                    options.setSubmitDirectory(g.getOptarg());
+                    options.setSubmitDirectory( g.getOptarg(), null );
                     break;
 
                 case 'f'://force

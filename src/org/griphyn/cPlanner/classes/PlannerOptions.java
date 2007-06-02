@@ -36,6 +36,11 @@ import java.util.StringTokenizer;
 public class PlannerOptions extends Data implements Cloneable{
 
     /**
+     * The base submit directory.
+     */
+    private String mBaseDir;
+
+    /**
      * This is the directory where the submit files are generated on the submit
      * host (the site running the concrete planner).
      */
@@ -159,6 +164,7 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public PlannerOptions(){
         mSubmitFileDir    = ".";
+        mBaseDir          = ".";
         mDAXFile          = null;
         mPDAXFile         = null;
         mvExecPools       = new java.util.HashSet();
@@ -366,6 +372,16 @@ public class PlannerOptions extends Data implements Cloneable{
     public String getVOGroup( ){
         return mVOGroup;
     }
+
+    /**
+     * Returns the base submit directory
+     *
+     * @return the path to the directory.
+     */
+    public String getBaseSubmitDirectory(){
+        return mBaseDir;
+    }
+
 
     /**
      * Returns the path to the directory where the submit files are to be
@@ -604,16 +620,6 @@ public class PlannerOptions extends Data implements Cloneable{
         mSubmit = submit;
     }
 
-    /**
-     * Sets the path to the directory where the submit files are to be
-     * generated.
-     *
-     * @param dir the path to the directory.
-     */
-    public void setSubmitDirectory( File dir ){
-        this.setSubmitDirectory( dir.getAbsolutePath() );
-    }
-
 
     /**
      * Sets the path to the directory where the submit files are to be
@@ -622,8 +628,38 @@ public class PlannerOptions extends Data implements Cloneable{
      * @param dir the path to the directory.
      */
     public void setSubmitDirectory( String dir ){
-        mSubmitFileDir = sanitizePath( dir );
+        this.setSubmitDirectory( dir, null );
     }
+
+
+    /**
+     * Sets the path to the directory where the submit files are to be
+     * generated.
+     *
+     * @param dir the path to the directory.
+     */
+    public void setSubmitDirectory( File dir ){
+        this.setSubmitDirectory( dir.getAbsolutePath() , null );
+    }
+
+
+    /**
+     * Sets the path to the directory where the submit files are to be
+     * generated.
+     *
+     * @param base       the path to the base directory.
+     * @param relative   the directory relative to the base where submit files are generated.
+     */
+    public void setSubmitDirectory( String base, String relative ){
+        base = sanitizePath( base );
+        mSubmitFileDir = ( relative == null )?
+                         new File( base ).getAbsolutePath():
+                         new File( base, relative ).getAbsolutePath();
+        mBaseDir  = base;
+    }
+
+
+
 
     /**
      * Sets the VDS properties specifed by the user at the command line.
@@ -654,6 +690,7 @@ public class PlannerOptions extends Data implements Cloneable{
     public String toString(){
         String st = "\n" +
                     "\n Concrete Planner Options" +
+                    "\n Base Submit Directory " + mBaseDir +
                     "\n SubmitFile Directory " + mSubmitFileDir +
                     "\n Basename Prefix      " + mBasenamePrefix +
                     "\n Abstract Dag File    " + mDAXFile +
@@ -818,6 +855,7 @@ public class PlannerOptions extends Data implements Cloneable{
             pOpt = new PlannerOptions();
         }
         pOpt.mSubmitFileDir  = this.mSubmitFileDir;
+        pOpt.mBaseDir        = this.mBaseDir;
         pOpt.mDAXFile        = this.mDAXFile;
         pOpt.mPDAXFile       = this.mPDAXFile;
         pOpt.mvExecPools     = cloneSet(this.mvExecPools);

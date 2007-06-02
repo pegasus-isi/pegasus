@@ -732,7 +732,7 @@ public class CondorGenerator extends Abstract {
         StringBuffer contents = new StringBuffer();
         contents.append( "dax " ).append(dax).append("\n").
                  append( "dag " ).append(dagFile).append("\n").
-                 append( "basedir ").append(absPath).append("\n").
+                 append( "basedir ").append( mPOptions.getBaseSubmitDirectory() ).append("\n").
                  append( "run ").append(absPath).append("\n").
                  append( "jsd ").append(absPath).append(sep).append("jobstate.log").append("\n").
                  append( "rundir ").append(directory.getName()).append("\n").
