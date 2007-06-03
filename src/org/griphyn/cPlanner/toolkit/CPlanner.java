@@ -103,7 +103,8 @@ public class CPlanner extends Executable{
     private static final String EMPTY_FINAL_WORKFLOW_MESSAGE =
         "\n\n\n" +
         "The executable workflow generated contains no nodes.\n" +
-        "It seems that the output files are already at the output site"+
+        "It seems that the output files are already at the output site. \n"+
+        "To regenerate the output data from scratch specify --force option." +
         "\n\n\n";
 
    /**
@@ -229,6 +230,18 @@ public class CPlanner extends Executable{
         //print help if asked for
         if( mPOptions.getHelp() ) { printLongVersion(); return; }
 
+        //do sanity check on dax file
+        String dax         = mPOptions.getDAX();
+        String pdax        = mPOptions.getPDAX();
+        String submitDir   = mPOptions.getSubmitDirectory();
+
+        if( dax == null && pdax == null ){
+            mLogger.log( "\nNeed to specify either a dax file ( using --dax )  or a pdax file (using --pdax) to plan",
+                         LogManager.INFO_MESSAGE_LEVEL);
+            this.printShortVersion();
+            return;
+        }
+
         //set the logging level only if -v was specified
         //else bank upon the the default logging level
         if(mPOptions.getLoggingLevel() > 0){
@@ -251,9 +264,6 @@ public class CPlanner extends Executable{
 
 
 
-        String dax         = mPOptions.getDAX();
-        String pdax        = mPOptions.getPDAX();
-        String submitDir   = mPOptions.getSubmitDirectory();
 
         //check if sites set by user. If user has not specified any sites then
         //load all sites from site catalog.
