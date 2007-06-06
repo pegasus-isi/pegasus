@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Cron script to automagically do nightly builds of GVDS
+# Cron script to automagically do nightly builds of PEGASUS
 #
 # $Revision: 50 $
 # Authors : gmehta@isi.edu, voeckler@cs.uchicago.edu
@@ -159,7 +159,7 @@ else
 fi
 
 cd ..
-gtar --exclude=\.svn -czvf $DST/pegasus-source-$VERSION-$DATE.tar.gz vds >> $LOG 2>&1
+gtar --exclude=\.svn -czvf $DST/pegasus-source-$VERSION-$DATE.tar.gz pegasus >> $LOG 2>&1
 if [ $? -eq 0 ]; then
     chmod a+r,g+w $DST/pegasus-source-$VERSION-$DATE.tar.gz
 else 
