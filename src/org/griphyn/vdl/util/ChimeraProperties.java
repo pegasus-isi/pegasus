@@ -296,7 +296,7 @@ public static final String DB_ALL_PREFIX =
       new File( m_props.getSysConfDir(), uri.getName() );
 
     // Nota bene: vds.schema.ptc may be a networked URI...
-    return m_props.getProperty( "pegasus.schema.ptc", ptc.getAbsolutePath() );
+    return m_props.getProperty( "pegasus.catalog.provenance", ptc.getAbsolutePath() );
   }
 
   /**
