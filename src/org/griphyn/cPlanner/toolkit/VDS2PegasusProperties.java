@@ -225,7 +225,7 @@ public class VDS2PegasusProperties extends Executable {
         associate( "vds.schema.pdax", "pegasus.schema.pdax" );
         associate( "vds.schema.poolconfig", "pegasus.schema.sc" );
         associate( "vds.schema.sc",   "pegasus.schema.sc" );
-        associate( "vds.db.ptc.schema", "pegasus.schema.ptc" );
+        associate( "vds.db.ptc.schema", "pegasus.catalog.provenance" );
 
         //PROPERTIES RELATED TO DIRECTORIES
         associate( "vds.dir.exec", "pegasus.dir.exec" );
