@@ -147,11 +147,6 @@
 	  failonerror="true">
       <arg file="${dist.doc}/properties.pdf"/>
     </exec>
-    <exec executable="libexec/assemble-sample-props"
-	  failonerror="true"> <arg
-	  file="${env.PEGASUS_HOME}/etc/sample.dot.wfrc"/> <arg
-	  file="${dist.doc}/wfrc.pdf"/>
-    </exec>
   </target>
 
   <target name="javadoc-pre" depends="version">
