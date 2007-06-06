@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
+import java.io.File;
 /**
  * Ends up creating a cleanup dag that deletes the remote directories that
  * were created by the create dir jobs. The cleanup dag is generated in a
@@ -245,24 +246,29 @@ public class RemoveDirectory extends Engine {
                                               this.TRANSFORMATION_VERSION,
                                               execPool, TCType.INSTALLED);
 
-            if(entries == null){
-                StringBuffer error = new StringBuffer();
-                error.append( "Unable to map transformation " ).
-                      append( this.getCompleteTranformationName() )
-                      .append( " on site " ).append( execPool );
-                mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-                throw new RuntimeException( error.toString() );
-            }
-            else{
-                entry = (TransformationCatalogEntry) entries.get(0);
-                execPath = entry.getPhysicalTransformation();
-            }
-
-        } catch (Exception e) {
+            entry = ( entries == null ) ?
+                     this.defaultTCEntry( execPool ): //try using a default one
+                     (TransformationCatalogEntry) entries.get(0);
+        }
+        catch (Exception e) {
             //non sensical catching
             mLogger.log("Unable to retrieve entry from TC " + e.getMessage(),
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
+
+        if( entry == null ){
+            //NOW THROWN AN EXCEPTION
+
+            //should throw a TC specific exception
+            StringBuffer error = new StringBuffer();
+            error.append("Could not find entry in tc for lfn ").
+                  append( this.getCompleteTranformationName() ).
+                  append(" at site ").append( execPool );
+
+            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( error.toString() );
+        }
+        execPath = entry.getPhysicalTransformation();
 
         SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
         jm = ePool.selectJobManager("transfer",true);
@@ -304,6 +310,77 @@ public class RemoveDirectory extends Engine {
         return newJob;
 
     }
+
+
+
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCEntry( String site ){
+        TransformationCatalogEntry defaultTCEntry = null;
+        //check if PEGASUS_HOME is set
+        String home = mPoolHandle.getPegasusHome( site );
+        //if PEGASUS_HOME is not set, use VDS_HOME
+        home = ( home == null )? mPoolHandle.getVDS_HOME( site ): home;
+
+        mLogger.log( "Creating a default TC entry for " +
+                     this.getCompleteTranformationName() +
+                     " at site " + site,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        //if home is still null
+        if ( home == null ){
+            //cannot create default TC
+            mLogger.log( "Unable to create a default entry for " +
+                         this.getCompleteTranformationName(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            //set the flag back to true
+            return defaultTCEntry;
+        }
+
+        //remove trailing / if specified
+        home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
+            home.substring( 0, home.length() - 1 ):
+            home;
+
+        //construct the path to it
+        StringBuffer path = new StringBuffer();
+        path.append( home ).append( File.separator ).
+            append( "bin" ).append( File.separator ).
+            append( this.TRANSFORMATION_NAME );
+
+
+        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NAMESPACE,
+                                                         this.TRANSFORMATION_NAME,
+                                                         this.TRANSFORMATION_VERSION );
+
+        defaultTCEntry.setPhysicalTransformation( path.toString() );
+        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setType( TCType.INSTALLED );
+
+        //register back into the transformation catalog
+        //so that we do not need to worry about creating it again
+        try{
+            mTCHandle.addTCEntry( defaultTCEntry , false );
+        }
+        catch( Exception e ){
+            //just log as debug. as this is more of a performance improvement
+            //than anything else
+            mLogger.log( "Unable to register in the TC the default entry " +
+                          defaultTCEntry.getLogicalTransformation() +
+                          " for site " + site, e,
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        return defaultTCEntry;
+    }
+
 
 
 }
