@@ -16,8 +16,7 @@ export PATH=${JAVA_HOME}/bin:${ANT_HOME}/bin:/opt/condor/bin:${PATH}
 export PATH=${PATH}:/bin:/usr/bin
 export CONDOR_CONFIG=/opt/condor/etc/condor_config
 
-GETSYSTEM=/nfs/asd2/gmehta/SCRIPTS/perl/getsystem
-CVSROOT=':local:/nfs/asd2/gmehta/GRIPHYN/CVS/cvsroot'
+SVNROOT='https://smarty.isi.edu/svn/repo1/pegasus/trunk'
 
 BUILDDIR=$1
 DST=$2
@@ -27,8 +26,7 @@ if [ "X$BUILDDIR" = "X" -o "X$DST" = "X" ]; then
 fi
 
 DATE=`date +'%Y%m%d'`
-#SYSTEM=`$GETSYSTEM`
-LOG=$DST/vds-logger-$HOST-$DATE.txt
+LOG=$DST/pegasus-logger-$HOST-$DATE.txt
 
 # extra message for uncaught errors, see "man 1 trap"
 trap 'echo "ERROR: Detected a failure..." >> $LOG' ERR
@@ -50,43 +48,43 @@ elif [ "$here" != "$BUILDDIR" ]; then
     echo "Warning: Not quite the expected destination directory" 1>&2
 fi
 
-# rotate dirs and use cvs, unless called with 3 args
+# rotate dirs and use svn, unless called with 3 args
 if [ "X$3" = "X" ]; then
     # shift previous runs
-    if [ -d vds.old  ]; then
-	if ! rm -rf vds.old; then
-	    echo "Warning: Unable to remove vds.old" 1>&2
+    if [ -d pegasus.old  ]; then
+	if ! rm -rf pegasus.old; then
+	    echo "Warning: Unable to remove pegasus.old" 1>&2
 	fi
     fi
-    if [ -d vds ]; then
-	if ! mv vds vds.old; then
-	    echo "ERROR: Unable to rename vds to vds.old" 1>&2
+    if [ -d pegasus ]; then
+	if ! mv pegasus pegasus.old; then
+	    echo "ERROR: Unable to rename pegasus to pegasus.old" 1>&2
 	    exit 4
 	fi
     fi
 
     # grab latest and greatest
-    echo "##### CVS CHECKOUT #####" > $LOG
-    cvs -d $CVSROOT co -P vds >> $LOG 2>&1
+    echo "##### SVN CHECKOUT #####" > $LOG
+    svn  co  $SVNROOT pegasus >> $LOG 2>&1
     if [ $? -ne 0 ]; then
-	echo "ERROR: cvs check-out failed, aborting" 1>&2
+	echo "ERROR: svn check-out failed, aborting" 1>&2
 	exit 5
     fi
 else
     echo "##### Using pre-select #####" > $LOG
 fi
 
-# enter GVDS
-if ! cd vds; then
-    echo "ERROR: Unable to chdir into $BUILDDIR/vds" 1>&2
+# enter Pegasus
+if ! cd pegasus; then
+    echo "ERROR: Unable to chdir into $BUILDDIR/pegasus" 1>&2
     exit 6
 fi
-VDS_HOME=`pwd`
-export VDS_HOME
+PEGASUS_HOME=`pwd`
+export PEGASUS_HOME
 unset CLASSPATH
-source setup-devel-env.sh
+source setup-devel.sh
 if [ $? -ne 0 ]; then
-    echo "ERROR: Unable to source VDS developer setup script" 1>&2
+    echo "ERROR: Unable to source PEGASUS developer setup script" 1>&2
     exit 7
 fi
 
@@ -96,46 +94,31 @@ java -version 2>&1 | sed -e 's/^/# /' >> $LOG
 ant  -version 2>&1 | sed -e 's/^/# /' >> $LOG
 echo "#" >> $LOG
 
-# temporary file to get version
-#TMP=`mktemp -q /tmp/cvs-nightly-XXXXXX`
-#if [ $? -ne 0 ]; then 
-#    echo "ERROR: Unable to create temporary file, aborting" 1>&2
-#    exit 8
-#fi
-
-# version magic -- cross dependencies force us to compile all, grrr
-#ant jar 2>&1 | tee $TMP >> $LOG
-#if [ $? -ne 0 ]; then
-#    echo "ERROR: ant version failed, aborting" 1>&2
-#    cat $TMP 1>&2
-#    rm -f $TMP
-#    exit 9
-#else 
-    VERSION=`ant version | gawk '/.echo. [0-9]+\.[0-9]+\.[-0-9a-z]+/ { print $2 }'`
-    if [ "X$VERSION" = "X" ]; then
-	echo 'ERROR: Unable to obtain a version number' 2>&1
-	exit 9
-    else 
-	echo "# detected VDS version $VERSION" >> $LOG
-    fi
+VERSION=`ant version | gawk '/.echo. [0-9]+\.[0-9]+\.[-0-9a-z]+/ { print $2 }'`
+if [ "X$VERSION" = "X" ]; then
+    echo 'ERROR: Unable to obtain a version number' 2>&1
+    exit 9
+else 
+    echo "# detected PEGASUS version $VERSION" >> $LOG
+fi
 #    rm -f $TMP
 #fi
-    SYSTEM=`ant version | gawk '/.echo. Architect/ { print $3 }'`
-    if [ "X$SYSTEM" = "X" ]; then
-	echo 'ERROR: Unable to obtain a system info' 2>&1
-	exit 10
-    else 
-	echo "# detected System Info : $SYSTEM" >> $LOG
-    fi
+SYSTEM=`ant version | gawk '/.echo. Architect/ { print $3 }'`
+if [ "X$SYSTEM" = "X" ]; then
+    echo 'ERROR: Unable to obtain a system info' 2>&1
+    exit 10
+else 
+    echo "# detected System Info : $SYSTEM" >> $LOG
+fi
 
 # create binary
 echo "##### ANT DIST #####" >> $LOG
-BLOG="$DST/vds-binary-$VERSION-$SYSTEM-$DATE.txt"
+BLOG="$DST/pegasus-binary-$VERSION-$SYSTEM-$DATE.txt"
 ant clean dist 2>&1 | tee "$BLOG" >> $LOG;
-# ant dist 2>&1 | tee "$BLOG" >> $LOG;
+
 if [ $? -eq 0 ]; then
-    src="dist/vds-binary-$VERSION-$SYSTEM.tar.gz"
-    dst="$DST/vds-binary-$VERSION-$SYSTEM-$DATE.tar.gz"
+    src="dist/pegasus-binary-$VERSION-$SYSTEM.tar.gz"
+    dst="$DST/pegasus-binary-$VERSION-$SYSTEM-$DATE.tar.gz"
     if cp "$src" "$dst"; then
 	chmod a+r,g+w "$dst" "$BLOG"
     else
@@ -148,11 +131,11 @@ fi
 
 # create worker
 echo "##### ANT DIST-WORKER #####" >> $LOG
-WLOG="$DST/vds-worker-$VERSION-$SYSTEM-$DATE.txt"
+WLOG="$DST/pegasus-worker-$VERSION-$SYSTEM-$DATE.txt"
 ant clean dist-worker 2>&1 | tee "$WLOG" >> $LOG
 if [ $? -eq 0 ]; then
-    src="dist/vds-worker-$VERSION-$SYSTEM.tar.gz"
-    dst="$DST/vds-worker-$VERSION-$SYSTEM-$DATE.tar.gz"
+    src="dist/pegasus-worker-$VERSION-$SYSTEM.tar.gz"
+    dst="$DST/pegasus-worker-$VERSION-$SYSTEM-$DATE.tar.gz"
     if cp "$src" "$dst"; then
 	chmod a+r,g+w "$dst" "$WLOG"
     else
@@ -176,16 +159,16 @@ else
 fi
 
 cd ..
-gtar czvf $DST/vds-source-$VERSION-$DATE.tar.gz vds >> $LOG 2>&1
+gtar --exclude=\.svn -czvf $DST/pegasus-source-$VERSION-$DATE.tar.gz vds >> $LOG 2>&1
 if [ $? -eq 0 ]; then
-    chmod a+r,g+w $DST/vds-source-$VERSION-$DATE.tar.gz
+    chmod a+r,g+w $DST/pegasus-source-$VERSION-$DATE.tar.gz
 else 
     echo "ERROR: gtar source failed, removing source" 1>&2
-    rm -f $DST/vds-source-$VERSION-$DATE.tar.gz >> /dev/null 2>&1
+    rm -f $DST/pegasus-source-$VERSION-$DATE.tar.gz >> /dev/null 2>&1
     exit 45
 fi
 
-NLOG=$DST/vds-logger-$SYSTEM-$DATE.txt
+NLOG=$DST/pegasus-logger-$SYSTEM-$DATE.txt
 mv $LOG $NLOG 
 # done
 trap - ERR
