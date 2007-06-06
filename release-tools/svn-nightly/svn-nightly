@@ -2,7 +2,7 @@
 #
 # Cron script to automagically do nightly builds of GVDS
 #
-# $Revision$
+# $Revision: 50 $
 # Authors : gmehta@isi.edu, voeckler@cs.uchicago.edu
 
 # setup env
