@@ -772,7 +772,7 @@ public class Database
                               List lfnprofiles, List pfnprofiles,
                               SysInfo system, boolean write) throws
         Exception {
-
+if(!write) return false;
         //ADD LFN
         //try to add the logical name of the transformation
         long lfnid = -1;
@@ -864,12 +864,9 @@ public class Database
         }
         //everything seems to have gone ok.
         //so lets commit
-        if (write) {
+
             m_dbdriver.commit();
-        }
-        else {
-            m_dbdriver.rollback();
-        }
+
         mLogger.log("Added TC entry", LogManager.DEBUG_MESSAGE_LEVEL);
         return true;
     }
