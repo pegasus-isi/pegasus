@@ -344,7 +344,7 @@
     <!-- creates the worker tarball -->
     <exec executable="sh" dir="dist">
       <arg value="-c"/>
-      <arg value="tar cf pegasus-worker-${pegasus.version}.tar pegasus-${pegasus.version}"/>
+      <arg value="tar --exclude=\.svn -cf pegasus-worker-${pegasus.version}.tar pegasus-${pegasus.version}"/>
     </exec>
     <gzip src="dist/pegasus-worker-${pegasus.version}.tar" 
 	  destfile="dist/pegasus-worker-${pegasus.version}-${dist.arch}.tar.gz"/>
@@ -508,7 +508,7 @@
     <!-- creates the binary tarball -->
     <exec executable="sh" dir="dist">
       <arg value="-c"/>
-      <arg value="tar cf pegasus-binary-${pegasus.version}.tar pegasus-${pegasus.version}"/>
+      <arg value="tar --exclude=\.svn -cf pegasus-binary-${pegasus.version}.tar pegasus-${pegasus.version}"/>
     </exec>
     <gzip src="dist/pegasus-binary-${pegasus.version}.tar" 
 	  destfile="dist/pegasus-binary-${pegasus.version}-${dist.arch}.tar.gz"/>
