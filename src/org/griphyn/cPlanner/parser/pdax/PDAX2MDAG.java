@@ -108,14 +108,14 @@ public class PDAX2MDAG implements Callback {
     /**
      * The namespace to use for condor dagman.
      */
-    public static final String CONDOR_DAGMAN_NAMESPACE = "pegasus-plan";
+    public static final String CONDOR_DAGMAN_NAMESPACE = "condor";
 
     /**
      * The logical name with which to query the transformation catalog for the
      * condor_dagman executable, that ends up running the mini dag as one
      * job.
      */
-    public static final String CONDOR_DAGMAN_LOGICAL_NAME = "condor_dagman";
+    public static final String CONDOR_DAGMAN_LOGICAL_NAME = "dagman";
 
     /**
      * The namespace to which the job in the MEGA DAG being created refer to.
@@ -125,7 +125,7 @@ public class PDAX2MDAG implements Callback {
     /**
      * The planner utility that needs to be called as a prescript.
      */
-    public static final String RETRY_LOGICAL_NAME = "gencdag";
+    public static final String RETRY_LOGICAL_NAME = "pegasus-plan";
 
     /**
      * The file Separator to be used on the submit host.

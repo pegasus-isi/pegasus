@@ -127,9 +127,10 @@ public class PDAXCallbackFactory {
 
             //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader(className);
-            Object argList[] = new Object[2];
+            Object argList[] = new Object[3];
             argList[0] = directory;
-            argList[1] = options;
+            argList[1] = properties;
+            argList[2] = options;
             callback = (Callback) dl.instantiate(argList);
         }
         catch( Exception e ){
