@@ -275,7 +275,7 @@ public class SimpleFile implements ReplicaCatalog
     // sanity check
     if ( filename == null ) return false;
     m_filename = filename;
-    m_lfn = new HashMap();
+    m_lfn = new LinkedHashMap();
 
     try {
       File f = new File(filename);

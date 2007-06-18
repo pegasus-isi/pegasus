@@ -331,7 +331,7 @@ public class ReplicaCatalogBridge
         ReplicaLocation rl = retrieveFromCache( lfn );
         //first check from cache
         if(rl != null && !mTreatCacheAsRC){
-            mLogger.log( "Location of file " + lfn +
+            mLogger.log( "Location of file " + rl +
                          " retrieved from cache" , LogManager.DEBUG_MESSAGE_LEVEL);
             return rl;
         }

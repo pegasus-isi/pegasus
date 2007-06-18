@@ -17,7 +17,6 @@ package org.griphyn.cPlanner.engine;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.GridFTPServer;
-import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.PlannerOptions;
@@ -31,19 +30,23 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-
 import org.griphyn.cPlanner.selector.ReplicaSelector;
 import org.griphyn.cPlanner.selector.replica.ReplicaSelectorFactory;
 
 import org.griphyn.cPlanner.transfer.Refiner;
 import org.griphyn.cPlanner.transfer.refiner.RefinerFactory;
 
-
+import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
+
+import org.griphyn.common.catalog.replica.SimpleFile;
+import org.griphyn.common.catalog.replica.ReplicaFactory;
 
 import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.util.FactoryException;
+
+
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -57,6 +60,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
+import java.util.Properties;
+import java.util.Map;
 
 /**
  * The transfer engine, which on the basis of the pools on which the jobs are to
@@ -68,6 +73,19 @@ import java.util.Vector;
  *
  */
 public class TransferEngine extends Engine {
+
+    /**
+     * The name of the source key for Replica Catalog Implementer that serves as
+     * cache
+     */
+    public static final String TRANSIENT_REPLICA_CATALOG_KEY = "file";
+
+    /**
+     * The name of the Replica Catalog Implementer that serves as the source for
+     * cache files.
+     */
+    public static final String TRANSIENT_REPLICA_CATALOG_IMPLEMENTER = "SimpleFile";
+
 
     /**
      * The classname of the class that stores the file transfer information for
@@ -119,17 +137,12 @@ public class TransferEngine extends Engine {
      */
     private Vector mvDelLeafJobs;
 
-    /**
-     * The interpool engine object to determine where a job should be run in case
-     * of reduction engine deleting a leaf node.
-     */
-    private InterPoolEngine mIPEng;
 
     /**
-     * The write handle to the temporary cache file that maybe written to hold
-     * the locations of the transient files in case of deferred planning.
+     * A SimpleFile Replica Catalog, that tracks all the files that are being
+     * materialized as part of workflow executaion.
      */
-    private PrintWriter mCacheHandle;
+    private ReplicaCatalog mTransientRC;
 
     /**
      * A boolean flag indicating if a cache file needs to be written.
@@ -164,7 +177,6 @@ public class TransferEngine extends Engine {
             mTXRefiner = RefinerFactory.loadInstance(mProps, reducedDag,
                                                      options);
             mReplicaSelector = ReplicaSelectorFactory.loadInstance(mProps);
-            mIPEng = new InterPoolEngine( reducedDag, properties, options);
         }
         catch(Exception e){
             //wrap all the exceptions into a factory exception
@@ -278,7 +290,7 @@ public class TransferEngine extends Engine {
 
 
         //close the handle to the cache file if it is written
-        closeCacheHandle();
+        closeTransientRC();
     }
 
     /**
@@ -467,8 +479,7 @@ public class TransferEngine extends Engine {
             lfn;
 
         //write out the exec url to the cache file
-        //System.out.println(" ---CACHE--- " + pf + "---" + execDirURL);
-        writeToCache(lfn,execURL,execPool);
+        trackInTransientRC(lfn,execURL,execPool);
 
         //if both transfer and registration
         //are transient return null
@@ -868,50 +879,57 @@ public class TransferEngine extends Engine {
     }
 
     /**
-     * It initializes the handle to temporary cache file , that holds the mappings
-     * for the transient files.
+     * Initializes the transient replica catalog.
      */
-    private void initializeCacheHandle(){
+    private void initializeTransientRC(){
+        mLogger.log("Initialising Transient Replica Catalog",
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+        Properties cacheProps = mProps.getVDSProperties().matchingSubset(
+                                                              ReplicaCatalog.c_prefix,
+                                                              false );
         String file = mPOptions.getSubmitDirectory() + File.separatorChar +
                           getCacheFileName(mDag);
-        try {
-            mCacheHandle = (mCacheFiles) ?
-                new PrintWriter(new BufferedWriter(new FileWriter(file))) :
-                null;
+
+        //set the appropriate property to designate path to file
+        cacheProps.setProperty( this.TRANSIENT_REPLICA_CATALOG_KEY, file );
+
+        try{
+            mTransientRC = ReplicaFactory.loadInstance(
+                                          TRANSIENT_REPLICA_CATALOG_IMPLEMENTER,
+                                          cacheProps);
         }
-        catch (IOException e) {
-            throw new RuntimeException(  "Unable to initialize cache file " + file
-                                         + " for writing ", e );
+        catch( Exception e ){
+            throw new RuntimeException( "Unable to initialize the transient replica catalog  " + file,
+                                         e );
         }
     }
 
 
     /**
-     * It writes out to a cache file.
+     * Inserts an entry into the Transient RC.
+     *
+     * @param lfn  the logical name of the file.
+     * @param pfn  the pfn
+     * @param site the site handle
      */
-    private void writeToCache(String lfn, String url, String pool){
+    private void trackInTransientRC( String lfn, String pfn, String site){
 
         //check if the cache handle is initialized
-        if(mCacheHandle == null)
-            initializeCacheHandle();
+        if( mTransientRC == null)
+            this.initializeTransientRC();
 
-        mCacheHandle.print(lfn);
-        if(pool != null && pool.length() > 0){
-            mCacheHandle.print(" ");
-            mCacheHandle.print(pool);
-        }
-        mCacheHandle.print("\n");
-        mCacheHandle.println(url);
+        mTransientRC.insert( lfn, pfn, site );
     }
 
 
     /**
-     * It closes the handle to the cache file that is being written.
-     * If the cache handle is uninitialized it does nothing.
+     * Closes and writes out to the Transient Replica Catalog.
      */
-    private void  closeCacheHandle(){
-        if(mCacheHandle != null)
-            mCacheHandle.close();
+    private void  closeTransientRC(){
+        if( mTransientRC != null)
+            mTransientRC.close();
     }
 
 
@@ -922,6 +940,8 @@ public class TransferEngine extends Engine {
      *
      * @param adag  the ADag object containing the workflow that is being
      *              concretized.
+     *
+     * @return the name of the cache file
      */
     private String getCacheFileName(ADag adag){
         StringBuffer sb = new StringBuffer();
