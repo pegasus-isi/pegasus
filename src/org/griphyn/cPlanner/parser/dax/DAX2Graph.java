@@ -21,6 +21,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
+import org.griphyn.cPlanner.common.LogManager;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -74,6 +75,11 @@ public class DAX2Graph implements Callback {
     protected PegasusProperties mProps;
 
     /**
+     * The logging object.
+     */
+    protected LogManager mLogger;
+
+    /**
      * The overloaded constructor.
      *
      * @param properties  the properties passed to the planner.
@@ -82,6 +88,7 @@ public class DAX2Graph implements Callback {
     public DAX2Graph(PegasusProperties properties, String dax){
         mProps = properties;
         mAbstractGraph = new java.util.HashMap();
+        mLogger        = LogManager.getInstance();
         mDone          = false;
         mLabel         = null;
         mRoot          = null;
@@ -124,6 +131,8 @@ public class DAX2Graph implements Callback {
      */
     public void cbJob( SubInfo job ) {
         GraphNode gn = new GraphNode( job.getLogicalID(), job.getTXName() );
+        mLogger.log( "Adding job to graph " + job.getName() ,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         put( job.logicalId, gn );
     }
 
@@ -157,6 +166,8 @@ public class DAX2Graph implements Callback {
 
     /**
      * Returns the name of the dax.
+     *
+     * @return name of dax
      */
     public String getNameOfDAX(){
         return mLabel;
@@ -210,6 +221,8 @@ public class DAX2Graph implements Callback {
      * It returns the value associated with the key in the map.
      *
      * @param key  the key to the entry in the map.
+     *
+     * @return the object
      */
     public Object get(Object key){
         return mAbstractGraph.get(key);

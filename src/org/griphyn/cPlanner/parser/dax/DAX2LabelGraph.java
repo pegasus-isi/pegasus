@@ -22,6 +22,7 @@ import org.griphyn.cPlanner.partitioner.graph.LabelBag;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
+import org.griphyn.cPlanner.common.LogManager;
 
 /**
  * The callback, that ends up building a label graph. With each GraphNode a label
@@ -99,6 +100,8 @@ public class DAX2LabelGraph extends DAX2Graph {
      * @param job  the job that was parsed.
      */
     public void cbJob(SubInfo job) {
+        mLogger.log( "Adding job to graph " + job.getName() ,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         GraphNode gn = new GraphNode(job.logicalId,job.logicalName);
         String label = (String)job.vdsNS.get(mLabelKey);
 //        label = (label == null)? DEFAULT_LABEL_VALUE : label;
