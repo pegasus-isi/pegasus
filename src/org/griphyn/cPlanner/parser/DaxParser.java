@@ -780,7 +780,7 @@ public class DaxParser extends Parser {
                     mHintNS.checkKeyInNS(mProfileKey,mTextContent.toString().trim());
                     break;
 
-                case 'v'://vds
+                case 'p'://pegasus
                     mVdsNS.checkKeyInNS(mProfileKey,mTextContent.toString().trim());
                     break;
 
