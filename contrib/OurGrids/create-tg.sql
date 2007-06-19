@@ -83,5 +83,5 @@ values( 3, 'tg_uc', 'fork,pbs', 'teragrid', 10,
 
 insert into site_info(id,site_name,ncpus,appdir,datadir,tmpdir,wntmpdir,grid3dir)
 values( 3, 'tg_uc', 10, -- vCPUs
-        '/soft/community/pegasus/VDS', '/disks/scratchgpfs1','/disks/scratchgpfs1','/tmp','/soft/community/pegasus/SOFTWARE/pegasus/default' );
+        '/soft/community/pegasus', '/disks/scratchgpfs1','/disks/scratchgpfs1','/tmp','/soft/community/pegasus/SOFTWARE/pegasus/default' );
 
