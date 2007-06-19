@@ -727,6 +727,9 @@ public class PDAX2MDAG implements Callback {
      *
      * @param directory   the directory in which the braindump file needs to
      *                    be written to.
+     * @param partition   the partition for which the braindump is to be written out.
+     * @param dax         the dax file
+     * @param dag         the dag file
      *
      * @return the absolute path to the braindump file.txt written in the directory.
      *
@@ -888,6 +891,14 @@ public class PDAX2MDAG implements Callback {
         //set the basename for the nested dag as the ID of the job.
         //which is actually the basename of the deep lfn job name!!
         mClonedPOptions.setBasenamePrefix( getBasenamePrefix(job));
+
+        //set the flag designating that the planning invocation is part
+        //of a deferred planning run
+        mClonedPOptions.setPartOfDeferredRun( true );
+
+        //in case of deferred planning cleanup wont work
+        //explicitly turn it off
+        mClonedPOptions.setCleanup( false );
 
         //construct the argument string.
         //add the jvm options and the pegasus options if any

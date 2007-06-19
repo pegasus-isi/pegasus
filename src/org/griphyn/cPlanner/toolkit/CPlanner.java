@@ -57,8 +57,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Date;
 import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -315,7 +313,9 @@ public class CPlanner extends Executable{
             String relativeDir; //the submit directory relative to the base specified
             try{
                 //create the base directory if required
-                relativeDir = createSubmitDirectory( submitDir, mUser, mPOptions.getVOGroup(), orgDag.getLabel() );
+                relativeDir = ( mPOptions.partOfDeferredRun() )?
+                              null:
+                              createSubmitDirectory( submitDir, mUser, mPOptions.getVOGroup(), orgDag.getLabel() );
                 mPOptions.setSubmitDirectory( submitDir, relativeDir  );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
@@ -335,7 +335,10 @@ public class CPlanner extends Executable{
                 //for the workflow unless a basename is specified.
                 mPOptions.setRandomDir(getRandomDirectory(orgDag));
             }
-            else{
+            else if( mPOptions.getRandomDir() != null ){
+                //keep the name that the user passed
+            }
+            else if( relativeDir != null ){
                 //the relative directory constructed on the submit host
                 //is the one required for remote sites
                 mPOptions.setRandomDir( relativeDir );
@@ -423,7 +426,7 @@ public class CPlanner extends Executable{
             }
             if ( wc != null ) {
                 wc.insert( submitDir, mPOptions.getVOGroup(), finalDag.getLabel(),
-                           new File( relativeDir ).getName(),
+                           new File( relativeDir == null ? "." : relativeDir  ).getName(),
                            mUser,
                            Currently.parse( finalDag.getMTime() ),
                            Currently.parse( finalDag.dagInfo.getFlowTimestamp() ),
@@ -464,7 +467,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfRnVr::aD:d:s:o:P:c:C:b:g:",
+                              "vhfRnzVr::aD:d:s:o:P:c:C:b:g:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -477,6 +480,10 @@ public class CPlanner extends Executable{
 
                 case 1://monitor
                     options.setMonitoring( true );
+                    break;
+
+                case 'z'://deferred
+                    options.setPartOfDeferredRun( true );
                     break;
 
                 case 'a'://authenticate
@@ -557,7 +564,7 @@ public class CPlanner extends Executable{
                 default: //same as help
                     printShortVersion();
                     throw new RuntimeException("Incorrect option or option usage " +
-                                               (char)option);
+                                               option);
 
             }
         }
@@ -606,7 +613,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[19];
+        LongOpt[] longopts = new LongOpt[20];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -630,6 +637,7 @@ public class CPlanner extends Executable{
         longopts[16]  = new LongOpt( "monitor", LongOpt.NO_ARGUMENT, null , 1 );
         longopts[17]  = new LongOpt( "nocleanup", LongOpt.NO_ARGUMENT, null, 'n' );
         longopts[18]  = new LongOpt( "group",   LongOpt.REQUIRED_ARGUMENT, null, 'g' );
+        longopts[19]  = new LongOpt( "deferred", LongOpt.NO_ARGUMENT, null, 'z');
         return longopts;
     }
 

@@ -149,6 +149,12 @@ public class PlannerOptions extends Data implements Cloneable{
     private String mBasenamePrefix;
 
     /**
+     * A boolean indicating whether the planner invocation is part of a larger
+     * deferred planning run.
+     */
+    private boolean mDeferredRun;
+
+    /**
      * Boolean indicating whether to spawn off a monitoring process or not
      * for the workflow.
      */
@@ -185,6 +191,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mMonitor          = false;
         mCleanup          = true;
         mVOGroup          = "pegasus";
+        mDeferredRun      = false;
     }
 
     /**
@@ -450,6 +457,26 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public boolean monitorWorkflow(){
         return this.mMonitor;
+    }
+
+
+    /**
+     * Sets the flag to denote that the run is part of a larger deferred run.
+     *
+     * @param value the value
+     */
+    public void setPartOfDeferredRun( boolean value ){
+        mDeferredRun = value;
+    }
+
+    /**
+     * Returns a boolean indicating whether this invocation is part of a
+     * deferred execution or not.
+     *
+     * @return boolean
+     */
+    public boolean partOfDeferredRun( ){
+        return mDeferredRun;
     }
 
     /**
@@ -765,6 +792,9 @@ public class PlannerOptions extends Data implements Cloneable{
         //the monitor option
         if( mMonitor ) { sb.append(" --monitor "); }
 
+        //the deferred run option
+        if( mDeferredRun ) { sb.append( " --deferred "); }
+
         //the random directory
         if(mGenRandomDir){
             //an optional argument
@@ -874,6 +904,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mClusterer      = this.mClusterer;
         pOpt.mBasenamePrefix = this.mBasenamePrefix;
         pOpt.mVOGroup        = this.mVOGroup;
+        pOpt.mDeferredRun    = this.mDeferredRun;
         //Note not cloning the vdsProps
         pOpt.mVDSProps       = null;
         return pOpt;
