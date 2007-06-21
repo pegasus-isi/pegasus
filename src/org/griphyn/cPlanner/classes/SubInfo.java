@@ -936,6 +936,24 @@ public class SubInfo extends Data implements GraphNodeContent{
 
 
     /**
+     * Returns the level associated with the job.
+     *
+     * @return  int designating the level
+     */
+    public int getLevel( ){
+        return level;
+    }
+
+    /**
+     * Sets the level for the job.
+     *
+     * @param value the level
+     */
+    public void setLevel( int value ){
+        level = value;
+    }
+
+    /**
      * Constructs the fully qualified name of the corresponding derivation used
      * to generate this job in Chimera including the namespace and version.
      *

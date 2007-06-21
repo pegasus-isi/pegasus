@@ -120,6 +120,13 @@ public class VDS extends Namespace {
     public static final String BUNDLE_STAGE_IN_KEY = "bundle.stagein";
 
     /**
+     * The name of the key that determines the bundling parameter for the
+     * stageout transfer node.
+     */
+    public static final String BUNDLE_STAGE_OUT_KEY = "bundle.stageout";
+
+
+    /**
      * The name of the key that determines the number of chains of stagein
      * nodes that are to be created per site.
      */
@@ -191,6 +198,8 @@ public class VDS extends Namespace {
 
     /**
      * The overloaded constructor.
+     *
+     * @param mp  the initial map.
      */
     public VDS(Map mp) {
         mProfileMap = new TreeMap(mp);
@@ -250,7 +259,8 @@ public class VDS extends Namespace {
 
             case 'b':
                 if ( (key.compareTo(BUNDLE_KEY) == 0) ||
-                     (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0)) {
+                     (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
+                     (key.compareTo(BUNDLE_STAGE_OUT_KEY) == 0 )) {
                     res = VALID_KEY;
                 }
                 else if( key.compareTo(DEPRECATED_BUNDLE_STAGE_IN_KEY) == 0){
@@ -477,6 +487,8 @@ public class VDS extends Namespace {
      *
      * @param key   The key that you want to search for
      *              in the namespace.
+     *
+     * @return boolean
      */
     public boolean containsKey(Object key){
         return (mProfileMap == null)? false : mProfileMap.containsKey(key);
@@ -491,6 +503,8 @@ public class VDS extends Namespace {
      * The containsKey operation may be used to distinguish these two cases.
      *
      * @param key The key whose value you want.
+     *
+     * @return the object
      */
     public Object get(Object key){
         return (mProfileMap == null) ? null : mProfileMap.get(key);

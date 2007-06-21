@@ -151,6 +151,7 @@ public class DAX2Graph implements Callback {
         String parentId;
         ArrayList parentList = new ArrayList(parents.size());
 
+        mLogger.log( "Adding parents for child " + child, LogManager.DEBUG_MESSAGE_LEVEL );
         //construct the references to the parent nodes
         while(it.hasNext()){
             parentId = (String)it.next();

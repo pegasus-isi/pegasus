@@ -39,10 +39,11 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
+import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
 /**
  * An extension of the default refiner, that allows the user to specify
- * the number of transfer nodes per execution pool.
+ * the number of transfer nodes per execution site for stagein and stageout.
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -59,9 +60,17 @@ public class Bundle extends Default {
 
     /**
      * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool for the workflow.
+     * that are being created per execution pool for stageing in data for
+     * the workflow.
      */
-    public static final String DEFAULT_BUNDLE_FACTOR = "1";
+    public static final String DEFAULT_STAGE_IN_BUNDLE_FACTOR = "1";
+
+    /**
+     * The default bundling factor that identifies the number of transfer jobs
+     * that are being created per execution pool while stageing data out.
+     */
+    public static final String DEFAULT_STAGE_OUT_BUNDLE_FACTOR = "1";
+
 
     /**
      * The map containing the list of stage in transfer jobs that are being
@@ -92,6 +101,18 @@ public class Bundle extends Default {
 
 
     /**
+     * A map indexed by site name, that contains the pointer to the stage out
+     * PoolTransfer objects for that site. This is per level of the workflow.
+     */
+    private Map mStageOutMapPerLevel;
+
+
+    /**
+     * The current level of the jobs being traversed.
+     */
+    private int mCurrentLevel;
+
+    /**
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
@@ -106,7 +127,7 @@ public class Bundle extends Default {
         mSIBundleMap  = new HashMap();
         mRelationsMap = new HashMap();
         mSetupMap     = new HashMap();
-
+        mCurrentLevel = -1;
     }
 
     /**
@@ -170,7 +191,7 @@ public class Bundle extends Default {
                 boolean contains = mStageInMap.containsKey(siteHandle);
                 //following pieces need rearragnement!
                 if(!contains){
-                    bundle = getSiteBundleValue(siteHandle,VDS.BUNDLE_STAGE_IN_KEY,
+                    bundle = getSISiteBundleValue(siteHandle,
                                                 job.vdsNS.getStringValue(VDS.BUNDLE_STAGE_IN_KEY));
                     mSIBundleMap.put(siteHandle,Integer.toString(bundle));
                 }
@@ -239,6 +260,93 @@ public class Bundle extends Default {
 
 
     /**
+     * Adds the stageout transfer nodes, that stage data to an output site
+     * specified by the user.
+     *
+     * @param job   <code>SubInfo</code> object corresponding to the node to
+     *              which the files are to be transferred to.
+     * @param files Collection of <code>FileTransfer</code> objects containing the
+     *              information about source and destURL's.
+     * @param rcb   bridge to the Replica Catalog. Used for creating registration
+     *              nodes in the workflow.
+     * @param deletedLeaf to specify whether the node is being added for
+     *                      a deleted node by the reduction engine or not.
+     *                      default: false
+     */
+    public  void addStageOutXFERNodes(SubInfo job,
+                                      Collection files,
+                                      ReplicaCatalogBridge rcb,
+                                      boolean deletedLeaf){
+
+        //sanity check
+        if( files.isEmpty() ){
+            return;
+        }
+
+        String jobName = job.getName();
+        String regJob = this.REGISTER_PREFIX + jobName;
+
+        mLogMsg = "Adding output pool nodes for job " + jobName;
+
+        //separate the files for transfer
+        //and for registration
+        List txFiles = new ArrayList();
+        List regFiles = new ArrayList();
+        for (Iterator it = files.iterator(); it.hasNext(); ) {
+            FileTransfer ft = (FileTransfer) it.next();
+            if (!ft.getTransientTransferFlag()) {
+                txFiles.add(ft);
+            }
+            if (!ft.getTransientRegFlag()) {
+                regFiles.add(ft);
+            }
+        }
+
+        boolean makeTNode = !txFiles.isEmpty();
+        boolean makeRNode = !regFiles.isEmpty();
+
+        int level   = job.getLevel();
+        String site = job.getSiteHandle();
+        int bundleValue = getSOSiteBundleValue( site,
+                                                job.vdsNS.getStringValue( VDS.BUNDLE_STAGE_OUT_KEY) );
+
+        if ( level != mCurrentLevel ){
+            mCurrentLevel = level;
+            //we are starting on a new level of the workflow.
+            //reinitialize stuff
+            this.resetStageOutMap();
+        }
+
+
+        if (makeTNode) {
+
+            //get the appropriate pool transfer object for the site
+            PoolTransfer pt = this.getStageOutPoolTransfer(  site, bundleValue );
+            //we add all the file transfers to the pool transfer
+            String soJob = pt.addTransfer( txFiles, level, SubInfo.STAGE_OUT_JOB );
+
+            if (!deletedLeaf) {
+                addRelation( jobName, soJob );
+            }
+            if (makeRNode) {
+                addRelation( soJob, regJob );
+            }
+        }
+        else if (!makeTNode && makeRNode) {
+            addRelation( jobName, regJob );
+
+        }
+        if ( makeRNode ) {
+            //call to make the reg subinfo
+            //added in make registration node
+            addJob(createRegistrationJob(regJob, job, regFiles, rcb));
+        }
+
+
+    }
+
+
+    /**
      * Signals that the traversal of the workflow is done. At this point the
      * transfer nodes are actually constructed traversing through the transfer
      * containers and the stdin of the transfer jobs written.
@@ -265,7 +373,7 @@ public class Bundle extends Default {
                     //break out
                     break;
                 }
-                mLogger.log("Adding transfer node " + tc.getName(),
+                mLogger.log("Adding stagein transfer node " + tc.getName(),
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 //added in make transfer node
                 //mDag.addNewJob(tc.getName());
@@ -294,6 +402,9 @@ public class Bundle extends Default {
                 addRelation(value,key);
             }
         }
+
+        //reset the stageout map too
+        this.resetStageOutMap();
     }
 
     /**
@@ -314,30 +425,119 @@ public class Bundle extends Default {
      * null the global default is returned.
      *
      * @param site    the site at which the value is desired.
-     * @param key     the bundle key whose value needs to be searched.
      * @param deflt   the default value.
      *
      * @return the bundle factor.
      *
-     * @see #DEFAULT_BUNDLE_FACTOR
+     * @see #DEFAULT_BUNDLE_STAGE_IN_FACTOR
      */
-    protected int getSiteBundleValue(String site, String key, String deflt){
+    protected int getSISiteBundleValue(String site,  String deflt){
         //this should be parameterised Karan Dec 20,2005
         TransformationCatalogEntry entry  =
             mTXStageInImplementation.getTransformationCatalogEntry(site);
         SubInfo sub = new SubInfo();
         String value = (deflt == null)?
-                        this.DEFAULT_BUNDLE_FACTOR:
+                        this.DEFAULT_STAGE_IN_BUNDLE_FACTOR:
                         deflt;
 
         if(entry != null){
             sub.updateProfiles(entry);
-            value = (sub.vdsNS.containsKey(key))?
-                     sub.vdsNS.getStringValue(key):
+            value = (sub.vdsNS.containsKey( VDS.BUNDLE_STAGE_IN_KEY ))?
+                     sub.vdsNS.getStringValue( VDS.BUNDLE_STAGE_IN_KEY ):
                      value;
         }
 
         return Integer.parseInt(value);
+    }
+
+
+    /**
+     * Determines the bundle factor for a particular site on the basis of the
+     * stage out bundle value associcated with the underlying transfer
+     * transformation in the transformation catalog. If the key is not found,
+     * then the default value is returned. In case of the default value being
+     * null the global default is returned.
+     *
+     * @param site    the site at which the value is desired.
+     * @param deflt   the default value.
+     *
+     * @return the bundle factor.
+     *
+     * @see #DEFAULT_STAGE_OUT_BUNDLE_FACTOR
+     */
+    protected int getSOSiteBundleValue( String site,  String deflt ){
+        //this should be parameterised Karan Dec 20,2005
+        TransformationCatalogEntry entry  =
+            mTXStageInImplementation.getTransformationCatalogEntry(site);
+        SubInfo sub = new SubInfo();
+        String value = (deflt == null)?
+                        this.DEFAULT_STAGE_OUT_BUNDLE_FACTOR:
+                        deflt;
+
+        if(entry != null){
+            sub.updateProfiles(entry);
+            value = (sub.vdsNS.containsKey( VDS.BUNDLE_STAGE_OUT_KEY ))?
+                     sub.vdsNS.getStringValue( VDS.BUNDLE_STAGE_OUT_KEY ):
+                     value;
+        }
+
+        return Integer.parseInt(value);
+    }
+
+
+    /**
+     * Returns the appropriate pool transfer for a particular site.
+     *
+     * @param site  the site for which the PT is reqd.
+     * @param num   the number of Stageout jobs required for that Pool.
+     *
+     * @return the PoolTransfer
+     */
+    public PoolTransfer getStageOutPoolTransfer( String site, int num  ){
+
+        if ( this.mStageOutMapPerLevel.containsKey( site ) ){
+            return ( PoolTransfer ) this.mStageOutMapPerLevel.get( site );
+        }
+        else{
+            PoolTransfer pt = new PoolTransfer( site, num );
+            this.mStageOutMapPerLevel.put( site, pt );
+            return pt;
+        }
+    }
+
+    /**
+     * Resets the stage out map.
+     */
+    private void resetStageOutMap(){
+        if ( this.mStageOutMapPerLevel != null ){
+            //before flushing add the stageout nodes to the workflow
+            SubInfo job = new SubInfo();
+
+            for( Iterator it = mStageOutMapPerLevel.values().iterator(); it.hasNext(); ){
+                PoolTransfer pt = ( PoolTransfer ) it.next();
+                job.setSiteHandle( pt.mPool );
+
+                mLogger.log( "Adding jobs for staging out data from site " + pt.mPool,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+
+                //traverse through all the TransferContainers
+                for( Iterator tcIt = pt.getTransferContainerIterator(); tcIt.hasNext(); ){
+                    TransferContainer tc = ( TransferContainer ) tcIt.next();
+                    if(tc == null){
+                        //break out
+                        break;
+                    }
+
+                    mLogger.log( "Adding stage-out job " + tc.getName(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    addJob ( mTXStageOutImplementation.createTransferJob( job, tc.getFileTransfers(), null,
+                                                                          tc.getName(), SubInfo.STAGE_OUT_JOB ));
+
+                }
+            }
+        }
+
+        mStageOutMapPerLevel = new HashMap();
     }
 
     /**
@@ -390,6 +590,16 @@ public class Bundle extends Default {
         public void addTransfer(FileTransfer transfer){
             mFileTXList.add(transfer);
         }
+
+        /**
+         * Adds a file transfer to the underlying collection.
+         *
+         * @param files   collection of <code>FileTransfer</code>.
+         */
+        public void addTransfer( Collection files ){
+            mFileTXList.addAll( files );
+        }
+
 
         /**
          * Sets the transfer type for the transfers associated.
@@ -478,6 +688,45 @@ public class Bundle extends Default {
             }
         }
 
+      /**
+        * Adds a a collection of <code>FileTransfer</code> objects to the
+        * appropriate TransferContainer. The collection is added to a single
+        * TransferContainer, and the pointer is then updated to the next container.
+        *
+        * @param files  the collection <code>FileTransfer</code> to be added.
+        * @param level  the level of the workflow
+        * @param type   the type of transfer job
+        *
+        * @return  the name of the transfer job to which the transfer is added.
+        */
+       public String addTransfer( Collection files, int level, int type ){
+           //we add the transfer to the container pointed
+           //by next
+           Object obj = mTXContainers.get(mNext);
+           TransferContainer tc = null;
+           if(obj == null){
+               //on demand add a new transfer container to the end
+               //is there a scope for gaps??
+               tc = new TransferContainer();
+               tc.setName( getTXJobName(  mNext,  type, level ) );
+               mTXContainers.set(mNext,tc);
+           }
+           else{
+               tc = (TransferContainer)obj;
+           }
+           tc.addTransfer( files );
+
+           //update the next pointer to maintain
+           //round robin status
+           mNext = (mNext < (mCapacity -1))?
+                    mNext + 1 :
+                    0;
+
+           return tc.getName();
+       }
+
+
+
         /**
          * Adds a file transfer to the appropriate TransferContainer.
          * The file transfers are added in a round robin manner underneath.
@@ -496,7 +745,7 @@ public class Bundle extends Default {
                 //on demand add a new transfer container to the end
                 //is there a scope for gaps??
                 tc = new TransferContainer();
-                tc.setName(getTXJobName(mNext));
+                tc.setName( getTXJobName( mNext, SubInfo.STAGE_IN_JOB ) );
                 mTXContainers.set(mNext,tc);
             }
             else{
@@ -528,16 +777,61 @@ public class Bundle extends Default {
          * workflow.
          *
          * @param counter  the index for the transfer job.
+         * @param type     the type of transfer job.
+         * @param level    the level of the workflow.
          *
          * @return the name of the transfer job.
          */
-        private String getTXJobName(int counter){
+        private String getTXJobName( int counter, int type, int level ){
             StringBuffer sb = new StringBuffer();
-            sb.append(Refiner.STAGE_IN_PREFIX).append(mPool).
-               append("_").append(counter);
+            switch ( type ){
+                case SubInfo.STAGE_IN_JOB:
+                    sb.append( Refiner.STAGE_IN_PREFIX );
+                    break;
+
+                case SubInfo.STAGE_OUT_JOB:
+                    sb.append( Refiner.STAGE_OUT_PREFIX );
+                    break;
+
+                default:
+                    throw new RuntimeException( "Wrong type specified " + type );
+            }
+
+            sb.append( mPool ).append( "_" ).append( level ).
+               append( "_" ).append( counter );
 
            return sb.toString();
         }
+
+
+        /**
+         * Generates the name of the transfer job, that is unique for the given
+         * workflow.
+         *
+         * @param counter  the index for the transfer job.
+         * @param type     the type of transfer job.
+         *
+         * @return the name of the transfer job.
+         */
+        private String getTXJobName( int counter, int type ){
+            StringBuffer sb = new StringBuffer();
+            switch ( type ){
+                case SubInfo.STAGE_IN_JOB:
+                    sb.append( Refiner.STAGE_IN_PREFIX );
+                    break;
+
+                case SubInfo.STAGE_OUT_JOB:
+                    sb.append( Refiner.STAGE_OUT_PREFIX );
+                    break;
+
+                default:
+                    throw new RuntimeException( "Wrong type specified " + type );
+            }
+            sb.append(mPool).append("_").append(counter);
+
+           return sb.toString();
+        }
+
 
     }
 

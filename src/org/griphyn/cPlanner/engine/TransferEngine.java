@@ -30,6 +30,10 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
+import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import org.griphyn.cPlanner.partitioner.graph.Graph;
+import org.griphyn.cPlanner.partitioner.graph.Adapter;
+
 import org.griphyn.cPlanner.selector.ReplicaSelector;
 import org.griphyn.cPlanner.selector.replica.ReplicaSelectorFactory;
 
@@ -39,20 +43,13 @@ import org.griphyn.cPlanner.transfer.refiner.RefinerFactory;
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
-import org.griphyn.common.catalog.replica.SimpleFile;
 import org.griphyn.common.catalog.replica.ReplicaFactory;
 
 import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.util.FactoryException;
 
-
-
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -61,7 +58,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import java.util.Properties;
-import java.util.Map;
 
 /**
  * The transfer engine, which on the basis of the pools on which the jobs are to
@@ -227,7 +223,7 @@ public class TransferEngine extends Engine {
      */
     public void addTransferNodes( ReplicaCatalogBridge rcb ) {
         mRCBridge = rcb;
-        Enumeration eSubs = mDagSubInfos.elements();
+
         SubInfo currentJob;
         String currentJobName;
         Vector vOutPoolTX;
@@ -236,11 +232,23 @@ public class TransferEngine extends Engine {
         String msg;
         String outputSite = mPOptions.getOutputSite();
 
+
+        //convert the dag to a graph representation and walk it
+        //in a top down manner
+        Graph workflow = Adapter.convert( mDag );
+
         //go through each job in turn
-        while (eSubs.hasMoreElements() && counter < noOfJobs) {
-            counter++;
-            currentJob = (SubInfo) eSubs.nextElement();
-            currentJobName = currentJob.jobName;
+//        Enumeration eSubs = mDagSubInfos.elements();
+//        while (eSubs.hasMoreElements() && counter < noOfJobs) {
+//            counter++;
+//            currentJob = (SubInfo) eSubs.nextElement();
+
+        for( Iterator it = workflow.iterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            currentJob = (SubInfo)node.getContent();
+            //set the node depth as the level
+            currentJob.setLevel( node.getDepth() );
+            currentJobName = currentJob.getName();
 
             mLogger.log("",LogManager.DEBUG_MESSAGE_LEVEL);
             msg = "Job being traversed is " + currentJobName;
