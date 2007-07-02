@@ -113,6 +113,11 @@ public class Bundle extends Default {
     private int mCurrentLevel;
 
     /**
+     * The handle to the replica catalog bridge.
+     */
+    private ReplicaCatalogBridge mRCB;
+
+    /**
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
@@ -278,13 +283,17 @@ public class Bundle extends Default {
                                       ReplicaCatalogBridge rcb,
                                       boolean deletedLeaf){
 
+        //initializing rcb till the change in function signature happens
+        //needs to be passed during refiner initialization
+        mRCB = rcb;
+
         //sanity check
         if( files.isEmpty() ){
             return;
         }
 
         String jobName = job.getName();
-        String regJob = this.REGISTER_PREFIX + jobName;
+//        String regJob = this.REGISTER_PREFIX + jobName;
 
         mLogMsg = "Adding output pool nodes for job " + jobName;
 
@@ -318,28 +327,42 @@ public class Bundle extends Default {
         }
 
 
+        TransferContainer soTC = null;
         if (makeTNode) {
 
             //get the appropriate pool transfer object for the site
             PoolTransfer pt = this.getStageOutPoolTransfer(  site, bundleValue );
             //we add all the file transfers to the pool transfer
-            String soJob = pt.addTransfer( txFiles, level, SubInfo.STAGE_OUT_JOB );
+            soTC = pt.addTransfer( txFiles, level, SubInfo.STAGE_OUT_JOB );
+            String soJob = soTC.getTXName();
 
             if (!deletedLeaf) {
+                //need to add a relation between a compute and stage-out
+                //job only if the compute job was not reduced.
                 addRelation( jobName, soJob );
             }
-            if (makeRNode) {
-                addRelation( soJob, regJob );
-            }
+            //moved to the resetStageOut method
+//            if (makeRNode) {
+//                addRelation( soJob, soTC.getRegName() );
+//            }
         }
-        else if (!makeTNode && makeRNode) {
-            addRelation( jobName, regJob );
+        else if ( makeRNode ) {
+            //add an empty file transfer
+            //get the appropriate pool transfer object for the site
+            PoolTransfer pt = this.getStageOutPoolTransfer(  site, bundleValue );
+            //we add all the file transfers to the pool transfer
+            soTC = pt.addTransfer( new Vector(), level, SubInfo.STAGE_OUT_JOB );
+
+
+            //direct link between compute job and registration job
+            addRelation( jobName, soTC.getRegName() );
 
         }
         if ( makeRNode ) {
+            soTC.addRegistrationFiles( regFiles );
             //call to make the reg subinfo
             //added in make registration node
-            addJob(createRegistrationJob(regJob, job, regFiles, rcb));
+ //           addJob(createRegistrationJob(regJob, job, regFiles, rcb));
         }
 
 
@@ -373,14 +396,14 @@ public class Bundle extends Default {
                     //break out
                     break;
                 }
-                mLogger.log("Adding stagein transfer node " + tc.getName(),
+                mLogger.log("Adding stagein transfer node " + tc.getTXName(),
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 //added in make transfer node
                 //mDag.addNewJob(tc.getName());
                 //we just need the execution pool in the job object
                 job.executionPool = key;
                 addJob(mTXStageInImplementation.createTransferJob(job,tc.getFileTransfers(),
-                                                           null,tc.getName(),
+                                                           null,tc.getTXName(),
                                                            SubInfo.STAGE_IN_JOB));
 
             }
@@ -528,10 +551,32 @@ public class Bundle extends Default {
                         break;
                     }
 
-                    mLogger.log( "Adding stage-out job " + tc.getName(),
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                    addJob ( mTXStageOutImplementation.createTransferJob( job, tc.getFileTransfers(), null,
-                                                                          tc.getName(), SubInfo.STAGE_OUT_JOB ));
+                    //add the stageout job if required
+                    SubInfo soJob = null;
+                    if( !tc.getFileTransfers().isEmpty() ){
+                        mLogger.log( "Adding stage-out job " + tc.getTXName(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL);
+                        soJob = mTXStageOutImplementation.createTransferJob(
+                                                             job, tc.getFileTransfers(), null,
+                                                             tc.getTXName(), SubInfo.STAGE_OUT_JOB );
+                        addJob( soJob );
+                    }
+
+                    //add registration job if required
+                    if( !tc.getRegistrationFiles().isEmpty() ){
+
+                        //add relation to stage out if the stageout job was created
+                        if( soJob != null ){
+                            //make the stageout job the super node for the registration job
+                            job.setName( soJob.getName() );
+                            addRelation( tc.getTXName(), tc.getRegName() );
+                        }
+
+                        mLogger.log( "Adding registration job " + tc.getRegName(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                        addJob(createRegistrationJob( tc.getRegName(), job, tc.getRegistrationFiles(), mRCB));
+
+                    }
 
                 }
             }
@@ -549,13 +594,26 @@ public class Bundle extends Default {
         /**
          * The name of the transfer job.
          */
-        private String mName;
+        private String mTXName;
+
+        /**
+         * The name of the registration job.
+         */
+        private String mRegName;
+
 
         /**
          * The collection of <code>FileTransfer</code> objects containing the
          * transfers the job is responsible for.
          */
         private Collection mFileTXList;
+
+        /**
+         * The collection of <code>FileTransfer</code> objects containing the
+         * files that need to be registered.
+         */
+        private Collection mRegFiles;
+
 
         /**
          * The type of the transfers the job is responsible for.
@@ -567,8 +625,10 @@ public class Bundle extends Default {
          * The default constructor.
          */
         public TransferContainer(){
-            mName         = null;
+            mTXName       = null;
+            mRegName      = null;
             mFileTXList   = new Vector();
+            mRegFiles     = new Vector();
             mTransferType = SubInfo.STAGE_IN_JOB;
         }
 
@@ -577,9 +637,19 @@ public class Bundle extends Default {
          *
          * @param name  the name of the transfer job.
          */
-        public void setName(String name){
-            mName = name;
+        public void setTXName(String name){
+            mTXName = name;
         }
+
+        /**
+         * Sets the name of the registration job.
+         *
+         * @param name  the name of the transfer job.
+         */
+        public void setRegName(String name){
+            mRegName = name;
+        }
+
 
         /**
          * Adds a file transfer to the underlying collection.
@@ -600,6 +670,17 @@ public class Bundle extends Default {
             mFileTXList.addAll( files );
         }
 
+        /**
+         * Adds a Collection of File transfer to the underlying collection of
+         * files to be registered.
+         *
+         * @param files   collection of <code>FileTransfer</code>.
+         */
+        public void addRegistrationFiles( Collection files ){
+            mRegFiles.addAll( files );
+        }
+
+
 
         /**
          * Sets the transfer type for the transfers associated.
@@ -615,9 +696,20 @@ public class Bundle extends Default {
          *
          * @return name of the transfer job.
          */
-        public String getName(){
-            return mName;
+        public String getTXName(){
+            return mTXName;
         }
+
+        /**
+         * Returns the name of the registration job.
+         *
+         * @return name of the registration job.
+         */
+        public String getRegName(){
+            return mRegName;
+        }
+
+
 
         /**
          * Returns the collection of transfers associated with this transfer
@@ -628,6 +720,17 @@ public class Bundle extends Default {
         public Collection getFileTransfers(){
             return mFileTXList;
         }
+
+        /**
+         * Returns the collection of registration files associated with this transfer
+         * container.
+         *
+         * @return a collection of <code>FileTransfer</code> objects.
+         */
+        public Collection getRegistrationFiles(){
+            return mRegFiles;
+        }
+
     }
 
     /**
@@ -697,9 +800,9 @@ public class Bundle extends Default {
         * @param level  the level of the workflow
         * @param type   the type of transfer job
         *
-        * @return  the name of the transfer job to which the transfer is added.
+        * @return  the Transfer Container to which the job file transfers were added.
         */
-       public String addTransfer( Collection files, int level, int type ){
+       public TransferContainer addTransfer( Collection files, int level, int type ){
            //we add the transfer to the container pointed
            //by next
            Object obj = mTXContainers.get(mNext);
@@ -708,7 +811,9 @@ public class Bundle extends Default {
                //on demand add a new transfer container to the end
                //is there a scope for gaps??
                tc = new TransferContainer();
-               tc.setName( getTXJobName(  mNext,  type, level ) );
+               tc.setTXName( getTXJobName(  mNext,  type, level ) );
+               //add the name for the registration job that maybe associated
+               tc.setRegName( getRegJobName( mNext, level) );
                mTXContainers.set(mNext,tc);
            }
            else{
@@ -722,7 +827,7 @@ public class Bundle extends Default {
                     mNext + 1 :
                     0;
 
-           return tc.getName();
+           return tc;
        }
 
 
@@ -745,7 +850,7 @@ public class Bundle extends Default {
                 //on demand add a new transfer container to the end
                 //is there a scope for gaps??
                 tc = new TransferContainer();
-                tc.setName( getTXJobName( mNext, SubInfo.STAGE_IN_JOB ) );
+                tc.setTXName( getTXJobName( mNext, SubInfo.STAGE_IN_JOB ) );
                 mTXContainers.set(mNext,tc);
             }
             else{
@@ -759,7 +864,7 @@ public class Bundle extends Default {
                      mNext + 1 :
                      0;
 
-            return tc.getName();
+            return tc.getTXName();
         }
 
         /**
@@ -796,6 +901,25 @@ public class Bundle extends Default {
                 default:
                     throw new RuntimeException( "Wrong type specified " + type );
             }
+
+            sb.append( mPool ).append( "_" ).append( level ).
+               append( "_" ).append( counter );
+
+           return sb.toString();
+        }
+
+        /**
+         * Generates the name of the transfer job, that is unique for the given
+         * workflow.
+         *
+         * @param counter  the index for the registration job.
+         * @param level    the level of the workflow.
+         *
+         * @return the name of the transfer job.
+         */
+        private String getRegJobName( int counter,  int level ){
+            StringBuffer sb = new StringBuffer();
+            sb.append( Refiner.REGISTER_PREFIX );
 
             sb.append( mPool ).append( "_" ).append( level ).
                append( "_" ).append( counter );
