@@ -408,7 +408,11 @@ public class InterPoolEngine extends Engine {
                             "vanilla");
                         //construct a file transfer object and add it
                         //as an input file to the job in the dag
-                        FileTransfer fTx = new FileTransfer( input.getLFN(),
+
+                        //a disconnect between the basename and the input lfn.
+                        String basename = SubInfo.getStagedExecutableBaseName(  lfn[0], lfn[1], lfn[2] );
+
+                        FileTransfer fTx = new FileTransfer( basename,
                                                              job.jobName );
                         fTx.setType(FileTransfer.EXECUTABLE_FILE);
                         //the physical transformation points to
@@ -421,7 +425,7 @@ public class InterPoolEngine extends Engine {
                         //always creating a third party transfer URL
                         //for the destination.
                         String stagedPath = mPoolHandle.getExecPoolWorkDir(job)
-                            + File.separator + SubInfo.getStagedExecutableBaseName(  lfn[0], lfn[1], lfn[2] );
+                            + File.separator + basename;
                         fTx.addDestination(siteHandle,
                                            site.getURLPrefix(false) + stagedPath);
 
