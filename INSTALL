@@ -21,14 +21,26 @@ o Source $PEGASUS_HOME/setup-devel.csh or setup-devel.sh
 
 BUILD BINARY Package
 ====================
-o ant clean dist
-o cd dist
+o cd $PEGASUS_HOME
+o ant dist
+The binary tarball is in the $PEGASUS_HOME/dist directory.
 
 BUILD WORKER Package
 =========================
+o cd $PEGASUS_HOME
+o ant dist-worker
+The worker tarball is in the $PEGASUS_HOME/dist directory.
 
-o ant clean dist-worker
-o cd dist
+Clean build area
+====================
+o cd $PEGASUS_HOME
+o ant clean
+
+BUILD Binary and WORKER Package
+=========================
+o cd $PEGASUS_HOME
+o ant dist-worker dist
+The worker and binary tarball is in the $PEGASUS_HOME/dist directory.
 
 The PEGASUS binary or worker tar ball should be available in the dist directory
 
