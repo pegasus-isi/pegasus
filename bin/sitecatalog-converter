@@ -10,7 +10,9 @@ newfile=`mktemp /tmp/sc.XXXXXX` || exit 1
 echo
 echo "Changing $oldfile";
 echo
-perl -p -e 's{<config.*?>}{<sitecatalog  xmlns="http://pegasus.isi.edu/schema/sitecatalog" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog  http://pegasus.isi.edu/schema/sc-2.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0">};s{</config>}{</sitecatalog>};s{<pool}{<site};s{</pool>}{</site>};' $oldfile >$newfile
+perl -p -e 's{<config.*?>}{<sitecatalog  xmlns="http://pegasus.isi.edu/schema/sitecatalog" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog  http://pegasus.isi.edu/schema/sc-2.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0">};s{</config>}{</sitecatalog>};s{<pool}{<site};s{</pool>}{</site>}{<profile namespace="vds"}{<profile namespace="pegasus"};' $oldfile >$newfile
+
+
 
 diff -s $oldfile $newfile 2>&1 >/dev/null
 if [ $? == 0 ]; then
