@@ -11,4 +11,20 @@ $Id$
 - The developers changelog can be found at
   http://pegasus.isi.edu/Changelog
 
+New Features
+--------------
+
+pegasus-plan.
+	This is the main client for invoking pegasus. The earlier gencdag command is now called pegasus-plan
+
+pegasus-run
+	This is the client that submits the planned workflow to Condor and starts a monitoring tailstatd daemon
+
+pegasus-status
+	This client lets you monitor a particular workflow. Its a wrapper around condor-q
+
+pegasus-remove.
+	This client lets you remove a running workflow from the condor queue.
+        A rescue dag will be generated which can be submitted by just running pegasus-run on the dag directory.
+
 
