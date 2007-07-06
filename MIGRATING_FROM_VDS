@@ -8,6 +8,14 @@ Notes for users migrating from the VDS to Pegasus
    - The environment variables to set the JAVA heap parameters are 
 	 JAVA_HEAPMAX : sets the maximum heap for java to use
 	 JAVA_HEAPMIN : sets the minimum heap for java to use
+
+   - Please make sure that your environment does not have VDS_HOME
+     set. Additionally, make sure that gvds.jar is not in your
+     CLASSPATH. 
+
+     One recommended way is to unset your CLASSPATH before sourcing
+     the file $PEGASUS_HOME/setup.sh|csh
+
    
 
 2) Properties
@@ -83,4 +91,23 @@ Notes for users migrating from the VDS to Pegasus
    in the transformation catalog specify entry for pegasus::rc-client
    for site local.
   
-   
+ 
+6) Planning a workflow
+   To plan a workflow, you know need to run pegasus-plan. In VDS, you
+   could either use vds-plan or gencdag to create the executable
+   workflow.
+
+   The semantics of pegasus-plan are largely similar as vds-plan in
+   terms of how the submit directories are organized.
+
+7) Submitting/Running a workflow
+   To submit a workflow you can either use 
+   1) pegasus-run
+     Copy paste the pegasus-run invocation that appears  in the log
+     when you run pegasus-plan. 
+
+   2) condor_submit_dag
+      You can choose to submit the workflow yourself using
+      condor_submit_dag on the dag file created during the planning
+      process. However, this is not recommended, as certain monitoring
+      daemons like tailstatd are not invoked in this case.  
