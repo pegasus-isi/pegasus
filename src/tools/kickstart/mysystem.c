@@ -36,38 +36,67 @@ static const char* RCS_ID =
 
 typedef struct {
   volatile sig_atomic_t count;   /* OUT: number of signals seen */
-  volatile sig_atomic_t done;    /* OUT: 0: to be done, 1: signal received */
+  volatile sig_atomic_t done;    /* OUT: 0: to be done, 1: child reaped */
   volatile int          error;   /* OUT: errno when something went bad */
   JobInfo*       	job;     /*  IO: data repository */
 } SignalHandlerCommunication;
 
 static SignalHandlerCommunication child;
 
+
+#ifdef DEBUG_WAIT
+static
+pid_t
+mywait4( pid_t wpid, int* status, int options, struct rusage* rusage )
+{
+  pid_t result = wait4( wpid, status, options, rusage );
+  fprintf( stderr, "# wait4(%d,%p=%d,%d,%p) = %d\n",
+	   wpid, status, *status, options, rusage, result );
+  return result;
+}
+#else
+#define mywait4(a,b,c,d) wait4(a,b,c,d)
+#endif /* DEBUG_WAIT */
+
 static
 SIGRETTYPE
 sig_child( SIGPARAM signo )
 {
-  if ( ++child.count == 1 ) {
-    /* There have been known cases where Linux delivers signals twice
-     * that may have been sent only once, grrrr. 
-     */
-    if ( child.job != NULL ) {
-      int saverr = errno;
-      errno = 0;
+  int rc = -1;
 
-      /* WARN: wait4 is not POSIX.1 reentrant safe */
-      while ( wait4( child.job->child, &child.job->status, 0, 
-		     &child.job->use ) < 0 ) {
-	if ( errno != EINTR ) {
-	  child.error = errno;
-	  child.job->status = -42;
-	  break;
-	}
+  ++child.count;
+  /* There have been known cases where Linux delivers signals twice
+   * that may have been sent only once, grrrr. 
+   */
+#ifdef DEBUG_WAIT
+  fprintf( stderr, "# child.count == %d\n", child.count );
+#endif /* DEBUG_WAIT */
+
+  if ( child.job != NULL ) {
+    int saverr = errno;
+    errno = 0;
+#ifdef DEBUG_WAIT
+    fputs( "# child.job != NULL\n", stderr );
+#endif /* DEBUG_WAIT */
+
+    /* WARN: wait4 is not POSIX.1 reentrant safe */
+    while ( (rc=mywait4( child.job->child, &child.job->status, 
+			 WNOHANG, &child.job->use )) < 0 ) {
+      if ( errno != EINTR ) {
+	child.error = errno;
+	child.job->status = -42;
+	break;
       }
-      errno = saverr;
     }
-    child.done = 1;
+    errno = saverr;
   }
+
+#ifdef DEBUG_WAIT
+  fprintf( stderr, "# child.done := (%d != 0) => %d\n", rc, (rc != 0) );
+#endif /* DEBUG_WAIT */
+
+  /* once set, never reset */
+  if ( ! child.done ) child.done = ( rc != 0 );
 }
 
 static
@@ -169,8 +198,10 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
 
     /* sanity check */
     saverr = errno;
-    if ( kill( 0, jobinfo->child ) == 0 )
-      fprintf( stderr, "Warning: job %d is still running!\n", jobinfo->child );
+    if ( kill( 0, jobinfo->child ) == 0 ) {
+      fprintf( stderr, "ERROR: job %d is still running!\n", jobinfo->child );
+      if ( ! child.error ) child.error = EINPROGRESS;
+    }
     errno = child.error ? child.error : saverr;
   }
 

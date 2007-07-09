@@ -115,7 +115,7 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
  *          -3 for a severe interruption of poll()
  */
 {
-  size_t bufsize = getpagesize();
+  size_t count, bufsize = getpagesize();
   int timeout = 30000;
   int result = 0;
   int status = 0;
@@ -149,11 +149,21 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
     return -1;
 
   /* poll (may have been interrupted by SIGCHLD) */
-  for (;;) {
+  for ( count=0; 1; count++ ) {
     /* race condition possible, thus we MUST time out */
     /* However, we MUST transfer everything that is waiting */
-    timeout = ( (*terminate || seen_sigpipe) ? 0 : 30000 );
-    if ( (status=poll( &pfds, 1, timeout )) == -1 ) {
+    if ( *terminate || seen_sigpipe ) {
+      timeout = 0;
+    } else if ( count < 5 ) {
+      timeout = 200; 
+    } else if ( count < 15 ) {
+      timeout = 1000;
+    } else {
+      timeout = 30000;
+    }
+    status = poll( &pfds, 1, timeout );
+
+    if ( status == -1 ) {
       /* poll ERR */
       if ( errno != EINTR ) {
 	/* not an interruption */
