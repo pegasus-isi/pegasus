@@ -28,13 +28,13 @@ use Socket;
 
 our @ISA = qw(Exporter);
 #our @EXPORT = qw();
-our @EXPORT = qw($VERSION convert_siteinfo_to_vds get_site_information get_sites_in_grid);
+our @EXPORT = qw($VERSION convert_siteinfo_to_pegasus get_site_information get_sites_in_grid);
 
-sub convert_siteinfo_to_vds(%);
+sub convert_siteinfo_to_pegasus(%);
 sub get_site_information($$$$$);
 sub get_sites_in_grid($$$$);
 
-#our @EXPORT_OK = qw($VERSION convert_siteinfo_to_vds get_site_information get_sites_in_grid);
+#our @EXPORT_OK = qw($VERSION convert_siteinfo_to_pegasus get_site_information get_sites_in_grid);
 our @EXPORT_OK = qw();
 $VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
@@ -61,7 +61,7 @@ my %keys_vds_to_vors_adapter = (
 
 
 
-sub convert_siteinfo_to_vds(%){
+sub convert_siteinfo_to_pegasus(%){
     #purpose: an adapter function to translate site information from
     #         vors to vds-get-sites format.
     #paramtr: $vors_site information about site in the VORS format.
