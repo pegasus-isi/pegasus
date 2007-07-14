@@ -26,12 +26,18 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
+import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
+import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
+
+import org.griphyn.cPlanner.provenance.pasoa.PPS;
+import org.griphyn.cPlanner.provenance.pasoa.pps.PPSFactory;
+
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Vector;
 import java.util.Iterator;
+
 
 /**
  *
@@ -47,7 +53,7 @@ import java.util.Iterator;
  *
  */
 
-public class ReductionEngine extends Engine{
+public class ReductionEngine extends Engine implements Refiner{
 
 
 
@@ -108,6 +114,16 @@ public class ReductionEngine extends Engine{
     private Set mFilesInRC;
 
     /**
+     * The XML Producer object that records the actions.
+     */
+    private XMLProducer mXMLStore;
+
+    /**
+     * The workflow object being worked upon.
+     */
+    private ADag mWorkflow;
+
+    /**
      * The constructor
      *
      * @param orgDag    The original Dag object
@@ -124,9 +140,32 @@ public class ReductionEngine extends Engine{
         mOrgJobsInRC     = new Vector();
         mAddJobsDeleted  = new Vector();
         mAllDeletedJobs  = new Vector();
-
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( properties );
+        mWorkflow        = orgDag;
     }
 
+
+
+    /**
+     * Returns a reference to the workflow that is being refined by the refiner.
+     *
+     *
+     * @return ADAG object.
+     */
+    public ADag getWorkflow(){
+        return this.mWorkflow;
+    }
+
+    /**
+     * Returns a reference to the XMLProducer, that generates the XML fragment
+     * capturing the actions of the refiner. This is used for provenace
+     * purposes.
+     *
+     * @return XMLProducer
+     */
+    public XMLProducer getXMLProducer(){
+        return this.mXMLStore;
+    }
 
 
 
@@ -152,6 +191,24 @@ public class ReductionEngine extends Engine{
         if(mPOptions.getForce())
             return mOriginalDag;
 
+        //load the PPS implementation
+        PPS pps = PPSFactory.loadPPS( this.mProps );
+
+        //mXMLStore.add( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
+        mXMLStore.add( "<workflow url=\"" + mPOptions.getDAX() + "\">" );
+
+        //call the begin workflow method
+        try{
+            pps.beginWorkflowRefinementStep(this, "REDUCTION", true);
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception", e );
+        }
+
+        //clear the XML store
+        mXMLStore.clear();
+
+
         mLogger.log("Reducing the workflow",LogManager.DEBUG_MESSAGE_LEVEL);
         mOrgJobsInRC =
             getJobsInRC(mOriginalDag.vJobSubInfos,mFilesInRC);
@@ -163,10 +220,30 @@ public class ReductionEngine extends Engine{
         mLogMsg = "Nodes/Jobs Deleted from the Workflow during reduction ";
         mLogger.log(mLogMsg,LogManager.DEBUG_MESSAGE_LEVEL);
         for(Enumeration e = mAllDeletedJobs.elements();e.hasMoreElements();){
-            mLogger.log("\t" + e.nextElement(),LogManager.DEBUG_MESSAGE_LEVEL);
+            String deletedJob = (String) e.nextElement();
+            mLogger.log("\t" + deletedJob, LogManager.DEBUG_MESSAGE_LEVEL);
+            mXMLStore.add( "<removed job = \"" + deletedJob + "\">" );
+            mXMLStore.add( "\n" );
         }
-        mLogger.logCompletion(mLogMsg,LogManager.DEBUG_MESSAGE_LEVEL);
-        mReducedDag = makeRedDagObject(mOriginalDag,mAllDeletedJobs);
+        mLogger.logCompletion( mLogMsg, LogManager.DEBUG_MESSAGE_LEVEL );
+        mReducedDag = makeRedDagObject( mOriginalDag, mAllDeletedJobs );
+
+
+        //call the end workflow method for pasoa interactions
+        try{
+            mWorkflow = mReducedDag;
+
+            for( Iterator it = mWorkflow.jobIterator(); it.hasNext(); ){
+                SubInfo job = ( SubInfo )it.next();
+                pps.isIdenticalTo( job.getName(), job.getName() );
+            }
+
+            pps.endWorkflowRefinementStep( this );
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception", e );
+        }
+
 
         mLogger.logCompletion("Reducing the workflow",
                               LogManager.DEBUG_MESSAGE_LEVEL);

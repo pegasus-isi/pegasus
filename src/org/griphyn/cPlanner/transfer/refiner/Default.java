@@ -19,6 +19,7 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.NameValue;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
@@ -26,6 +27,13 @@ import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
 import org.griphyn.cPlanner.transfer.MultipleFTPerXFERJobRefiner;
+
+import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
+import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
+
+import org.griphyn.cPlanner.provenance.pasoa.PPS;
+import org.griphyn.cPlanner.provenance.pasoa.pps.PPSFactory;
+
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -72,6 +80,10 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      */
     protected Map mFileTable;
 
+    /**
+     * The handle to the provenance store implementation.
+     */
+    protected PPS mPPS;
 
     /**
      * The overloaded constructor.
@@ -82,10 +94,29 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * @param options    the options passed to the planner.
      *
      */
-    public Default(ADag dag,PegasusProperties properties,PlannerOptions options){
-        super(dag,properties,options);
+    public Default( ADag dag,
+                    PegasusProperties properties,
+                    PlannerOptions options ){
+        super( dag, properties, options );
         mLogMsg = null;
         mFileTable = new TreeMap();
+
+        //load the PPS implementation
+        mPPS = PPSFactory.loadPPS( this.mProps );
+
+        mXMLStore.add( "<workflow url=\"" + mPOptions.getDAX() + "\">" );
+
+        //call the begin workflow method
+        try{
+            mPPS.beginWorkflowRefinementStep( this, "Transfer and Registration Refiner", false );
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception", e );
+        }
+
+        //clear the XML store
+        mXMLStore.clear();
+
     }
 
 
@@ -183,16 +214,24 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             if(stagedFiles.isEmpty()){
                 //add the direct relation
                 addRelation(newJobName, jobName, pool, true);
-                addJob(mTXStageInImplementation.createTransferJob(job, files,null,
+                SubInfo siJob = mTXStageInImplementation.createTransferJob(job, files,null,
                                                                   newJobName,
-                                                                  SubInfo.STAGE_IN_JOB));
+                                                                  SubInfo.STAGE_IN_JOB);
+                addJob( siJob );
+
+                //record the action in the provenance store.
+                logRefinerAction( job, siJob, files , "stage-in" );
             }
             else{
                 //the dependency to stage in job is added via the
                 //the setup job that does the chmod
-                addJob(mTXStageInImplementation.createTransferJob(job,files,stagedFiles,
+                SubInfo siJob = mTXStageInImplementation.createTransferJob(job,files,stagedFiles,
                                                                   newJobName,
-                                                                  SubInfo.STAGE_IN_JOB));
+                                                                  SubInfo.STAGE_IN_JOB);
+
+                addJob( siJob );
+                //record the action in the provenance store.
+                logRefinerAction( job, siJob, files , "stage-in" );
             }
 
         }
@@ -327,9 +366,13 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                 mLogger.log(msg,LogManager.DEBUG_MESSAGE_LEVEL);
 
                 //added in make transfer node
-                addJob(mTXInterImplementation.createTransferJob(job, files,null,
+                SubInfo interJob = mTXInterImplementation.createTransferJob(job, files,null,
                                                            newJobName,
-                                                           SubInfo.INTER_POOL_JOB));
+                                                           SubInfo.INTER_POOL_JOB);
+
+                addJob( interJob );
+
+                this.logRefinerAction( job, interJob, files, "inter-site" );
             }
 
         }
@@ -406,15 +449,19 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             if (makeTNode) {
                 //added in make transfer node
                 //mDag.addNewJob(newJobName);
-                addJob(mTXStageOutImplementation.createTransferJob(job, txFiles,null,
+                SubInfo soJob = mTXStageOutImplementation.createTransferJob(job, txFiles,null,
                                                                    newJobName,
-                                                                   SubInfo.STAGE_OUT_JOB));
+                                                                   SubInfo.STAGE_OUT_JOB);
+                addJob( soJob );
                 if (!deletedLeaf) {
                     addRelation(jobName, newJobName);
                 }
                 if (makeRNode) {
                     addRelation(newJobName, regJob);
                 }
+
+                //log the refiner action
+                this.logRefinerAction( job, soJob, txFiles, "stage-out" );
             }
             else if (!makeTNode && makeRNode) {
                 addRelation(jobName, regJob);
@@ -452,16 +499,83 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                                             Collection files,
                                             ReplicaCatalogBridge rcb ) {
 
-        return rcb.makeRCRegNode( regJobName, job, files);
+        SubInfo regJob = rcb.makeRCRegNode( regJobName, job, files );
+
+        //log the registration action for provenance purposes
+        StringBuffer sb = new StringBuffer();
+        String indent = "\t";
+        sb.append( indent );
+        sb.append( "<register job=\"" ).append( regJobName ).append( "\"> ");
+        sb.append( "\n" );
+
+        //traverse through all the files
+        NameValue dest;
+        String newIndent = indent + "\t";
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            FileTransfer ft = (FileTransfer)it.next();
+            dest   = ft.getDestURL();
+            sb.append( newIndent );
+            sb.append( "<file " );
+            appendAttribute( sb, "lfn", ft.getLFN() );
+            appendAttribute( sb, "site", dest.getKey() );
+            sb.append( ">" );
+            sb.append( "\n" );
+            sb.append( newIndent ).append( indent );
+            sb.append( dest.getValue() );
+            sb.append( "\n" );
+            sb.append( newIndent );
+            sb.append( "</file>" ).append( "\n" );
+        }
+        sb.append( indent );
+        sb.append( "</register>" ).append( "\n" );
+
+        //log the graph relationship
+        String parent = job.getName ();
+        String child = regJob.getName();
+
+        sb.append( indent );
+        sb.append( "<child " );
+        appendAttribute( sb, "ref", child );
+        sb.append( ">" ).append( "\n" );
+
+        sb.append( newIndent );
+        sb.append( "<parent " );
+        appendAttribute( sb, "ref", parent );
+        sb.append( "/>" ).append( "\n" );
+
+        sb.append( indent );
+        sb.append( "</child>" ).append( "\n" );
+
+        mXMLStore.add( sb.toString() );
+
+        //log the action for creating the relationship assertions
+        try{
+            mPPS.registrationIntroducedFor( regJob.getName(),job.getName() );
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception while logging relationship assertion for registration",
+                                         e );
+        }
+
+
+
+        return regJob;
     }
 
 
     /**
-     * Signals that the traversal of the workflow is done. This would allow
-     * the transfer mechanisms to clean up any state that they might be keeping
-     * that needs to be explicitly freed.
+     * Signals that the traversal of the workflow is done. It signals to the
+     * Provenace Store, that refinement is complete.
      */
     public void done(){
+
+        try{
+            mPPS.endWorkflowRefinementStep( this );
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception", e );
+        }
+
 
     }
 
@@ -523,6 +637,101 @@ public class Default extends MultipleFTPerXFERJobRefiner {
     public  String getDescription(){
         return this.DESCRIPTION;
     }
+
+    /**
+     * Records the refiner action into the Provenace Store as a XML fragment.
+     *
+     * @param computeJob   the compute job.
+     * @param txJob        the associated transfer job.
+     * @param files        list of <code>FileTransfer</code> objects containing file transfers.
+     * @param type         the type of transfer job
+     */
+    protected void logRefinerAction( SubInfo computeJob, SubInfo txJob, Collection files , String type ){
+        StringBuffer sb = new StringBuffer();
+        String indent = "\t";
+        sb.append( indent );
+        sb.append( "<transfer job=\"" ).append( txJob.getName() ).append( "\" ").
+           append( "type=\"" ).append( type ).append( "\">" );
+        sb.append( "\n" );
+
+        //traverse through all the files
+        NameValue source;
+        NameValue dest;
+        String newIndent = indent + "\t";
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            FileTransfer ft = (FileTransfer)it.next();
+            source = ft.getSourceURL();
+            dest   = ft.getDestURL();
+            sb.append( newIndent );
+            sb.append( "<from " );
+            appendAttribute( sb, "site", source.getKey() );
+            appendAttribute( sb, "lfn", ft.getLFN() );
+            appendAttribute( sb, "url", source.getValue() );
+            sb.append( "/>" );
+            sb.append( "\n" );
+
+            sb.append( newIndent );
+            sb.append( "<to " );
+            appendAttribute( sb, "site", dest.getKey() );
+            appendAttribute( sb, "lfn", ft.getLFN() );
+            appendAttribute( sb, "url", dest.getValue() );
+            sb.append( "/>" );
+            sb.append( "\n" );
+        }
+        sb.append( indent );
+        sb.append( "</transfer>" );
+        sb.append( "\n" );
+
+        //log the graph relationship
+        String parent = ( txJob.getJobType() == SubInfo.STAGE_IN_JOB )?
+                  txJob.getName():
+                  computeJob.getName();
+
+        String child = ( txJob.getJobType() == SubInfo.STAGE_IN_JOB )?
+                        computeJob.getName():
+                        txJob.getName();
+
+        sb.append( indent );
+        sb.append( "<child " );
+        appendAttribute( sb, "ref", child );
+        sb.append( ">" ).append( "\n" );
+
+        sb.append( newIndent );
+        sb.append( "<parent " );
+        appendAttribute( sb, "ref", parent );
+        sb.append( "/>" ).append( "\n" );
+
+        sb.append( indent );
+        sb.append( "</child>" ).append( "\n" );
+
+
+        //log the action for creating the relationship assertions
+        try{
+            List stagingNodes = new java.util.ArrayList(1);
+            stagingNodes.add(txJob.getName());
+            mPPS.stagingIntroducedFor(stagingNodes, computeJob.getName());
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception while logging relationship assertion for staging ",
+                                         e );
+        }
+
+        mXMLStore.add( sb.toString() );
+
+    }
+
+    /**
+     * Appends an xml attribute to the xml feed.
+     *
+     * @param xmlFeed  the xmlFeed to which xml is being written
+     * @param key   the attribute key
+     * @param value the attribute value
+     */
+    protected void appendAttribute( StringBuffer xmlFeed, String key, String value ){
+        xmlFeed.append( key ).append( "=" ).append( "\"" ).append( value ).
+                append( "\" " );
+    }
+
 
 
     /**

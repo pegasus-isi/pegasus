@@ -32,6 +32,13 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.selector.SiteSelector;
 import org.griphyn.cPlanner.selector.TransformationSelector;
 
+import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
+import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
+
+import org.griphyn.cPlanner.provenance.pasoa.PPS;
+import org.griphyn.cPlanner.provenance.pasoa.pps.PPSFactory;
+
+
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
 import org.griphyn.common.catalog.transformation.TCMode;
@@ -41,6 +48,7 @@ import org.griphyn.common.classes.TCType;
 import org.griphyn.common.catalog.transformation.Mapper;
 
 import org.griphyn.common.util.Separator;
+
 
 
 import java.io.File;
@@ -60,7 +68,7 @@ import java.util.Vector;
  * @version $Revision$
  *
  */
-public class InterPoolEngine extends Engine {
+public class InterPoolEngine extends Engine implements Refiner {
 
     /**
      * ADag object corresponding to the Dag whose jobs we want to schedule.
@@ -98,6 +106,12 @@ public class InterPoolEngine extends Engine {
     private Mapper mTCMapper;
 
     /**
+     * The XML Producer object that records the actions.
+     */
+    private XMLProducer mXMLStore;
+
+
+    /**
      * Default constructor.
      *
      *
@@ -109,6 +123,7 @@ public class InterPoolEngine extends Engine {
         mExecPools  = new java.util.HashSet();
         mTCMapper   = Mapper.loadTCMapper(mProps.getTCMapperMode());
         mTXSelector = null;
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( props );
     }
 
     /**
@@ -138,7 +153,30 @@ public class InterPoolEngine extends Engine {
         mSiteSelector.setTCMapper(mTCMapper);
 
         mTXSelector = null;
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( props );
     }
+
+    /**
+     * Returns a reference to the workflow that is being refined by the refiner.
+     *
+     *
+     * @return ADAG object.
+     */
+    public ADag getWorkflow(){
+        return this.mDag;
+    }
+
+    /**
+     * Returns a reference to the XMLProducer, that generates the XML fragment
+     * capturing the actions of the refiner. This is used for provenace
+     * purposes.
+     *
+     * @return XMLProducer
+     */
+    public XMLProducer getXMLProducer(){
+        return this.mXMLStore;
+    }
+
 
     /**
      * This is where the callout to the Partitioner should take place, that
@@ -170,6 +208,23 @@ public class InterPoolEngine extends Engine {
         String[] mappings = mSiteSelector.mapJob2ExecPool(jobs, pools);
         int i = 0;
         StringBuffer error;
+
+        //load the PPS implementation
+        PPS pps = PPSFactory.loadPPS( this.mProps );
+
+        mXMLStore.add( "<workflow url=\"" + mPOptions.getDAX() + "\">" );
+
+        //call the begin workflow method
+        try{
+            pps.beginWorkflowRefinementStep( this, "Site Selection", false );
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception", e );
+        }
+
+        //clear the XML store
+        mXMLStore.clear();
+
 
         //Iterate through the jobs and hand them to
         //the site selector if required
@@ -237,7 +292,24 @@ public class InterPoolEngine extends Engine {
 
             }
 
+            //log actions as XML fragment
+            try{
+                logRefinerAction(job);
+                pps.siteSelectionFor( job.getName(), job.getName() );
+            }
+            catch( Exception e ){
+                throw new RuntimeException( "PASOA Exception", e );
+            }
+
+        }//end of mapping all jobs
+
+        try{
+            pps.endWorkflowRefinementStep( this );
         }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception", e );
+        }
+
     }
 
     /**
@@ -568,13 +640,7 @@ public class InterPoolEngine extends Engine {
      * @return a ArrayList
      */
     public List convertToList(Vector v) {
-//        Iterator it = v.iterator();
         return  new java.util.ArrayList(v);
-
-  //      while (it.hasNext()) {
-      //      l.add(it.next());
-    //    }
-//        return l;
     }
 
     /**
@@ -583,13 +649,28 @@ public class InterPoolEngine extends Engine {
      * @return a ArrayList
      */
     public List convertToList(Set s) {
-//        Iterator it = s.iterator();
         return new java.util.ArrayList(s);
+    }
 
-  //      while (it.hasNext()) {
-      //      l.add(it.next());
-    //    }
-  //      return l;
+
+    /**
+     * Logs the action taken by the refiner on a job as a XML fragment in
+     * the XML Producer.
+     *
+     * @param job  the <code>SubInfo</code> containing the job that was mapped
+     *             to a site.
+     */
+    protected void logRefinerAction( SubInfo job ){
+        StringBuffer sb = new StringBuffer();
+        sb.append( "\t<siteselection job=\"" ).append( job.getName() ).append( "\">" );
+        sb.append( "\n" ).append( "\t\t" );
+        sb.append( "<logicalsite>" ).append( job.getName() ).append( "</logicalsite>" );
+        sb.append( "\n" ).append( "\t\t" );
+        sb.append( "<jobmanager>" ).append( job.getJobManager() ).append( "</jobmanager>" );
+        sb.append( "\n" );
+        sb.append( "\t</siteselection>" );
+        sb.append( "\n" );
+        mXMLStore.add( sb.toString() );
     }
 
 }

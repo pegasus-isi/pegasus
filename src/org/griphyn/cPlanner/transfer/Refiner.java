@@ -37,7 +37,8 @@ import java.lang.reflect.InvocationTargetException;
  *
  * @version $Revision$
  */
-public interface Refiner {
+public interface Refiner
+    extends org.griphyn.cPlanner.engine.Refiner {//need to extend it for the PASOA integration
 
     /**
      * The prefix for the jobs which are added to transfer the files to a job's

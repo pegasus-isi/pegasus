@@ -27,7 +27,6 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 import org.griphyn.cPlanner.poolinfo.PoolMode;
 
-
 import org.griphyn.common.catalog.TransformationCatalog;
 
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ import java.util.Vector;
  * @version $Revision$
  *
  */
-public class Engine {
+public abstract  class Engine {
 
     //constants
     public static final String REGISTRATION_UNIVERSE = "registration";
@@ -156,6 +155,9 @@ public class Engine {
 
     }
 
+
+
+
     /**
      * Returns true if a particular String is in the Vector of strings.
      *
@@ -208,6 +210,9 @@ public class Engine {
      * Adds elements (PegasusFile type) in a Vector to another Vector and
      * returns the new Vector.
      *
+     * @param from_vector  the source
+     * @param to_vector    the destination
+     *
      * @return   Vector of PegasusFile objects
      */
     public Vector addVector(Vector from_vector, Vector to_vector) {
@@ -245,6 +250,8 @@ public class Engine {
      *
      * @param heading   The heading you want to give to the text which is printed.
      * @param vector    The <code>Vector</code> whose elements you want to print.
+     *
+     * @return String
      */
     public String vectorToString(String heading, Vector vector) {
         Enumeration e = vector.elements();

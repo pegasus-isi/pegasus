@@ -18,6 +18,7 @@ package org.griphyn.cPlanner.cluster;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PCRelation;
+import org.griphyn.cPlanner.classes.AggregatedJob;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
@@ -27,6 +28,13 @@ import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorInstanceFactory;
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.partitioner.Partition;
+
+import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
+import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
+
+import org.griphyn.cPlanner.provenance.pasoa.PPS;
+import org.griphyn.cPlanner.provenance.pasoa.pps.PPSFactory;
+
 
 import java.util.Collections;
 import java.util.List;
@@ -38,15 +46,16 @@ import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.HashSet;
 
 /**
+ * The horizontal clusterer, that clusters jobs on the same level.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
 
-public class Horizontal implements Clusterer {
+public class Horizontal implements Clusterer,
+                                   org.griphyn.cPlanner.engine.Refiner{//reqd for PASOA integration
 
     /**
      * The default collapse factor for collapsing jobs with same logical name
@@ -114,6 +123,15 @@ public class Horizontal implements Clusterer {
      */
     private Map mReplacementTable;
 
+    /**
+     * The XML Producer object that records the actions.
+     */
+    private XMLProducer mXMLStore;
+
+    /**
+     * The handle to the provenance store implementation.
+     */
+    private PPS mPPS;
 
 
     /**
@@ -135,6 +153,29 @@ public class Horizontal implements Clusterer {
         mLogger = LogManager.getInstance();
         mJobAggregatorFactory = new JobAggregatorInstanceFactory();
     }
+
+
+    /**
+     * Returns a reference to the workflow that is being refined by the refiner.
+     *
+     *
+     * @return ADAG object.
+     */
+    public ADag getWorkflow(){
+        return this.mScheduledDAG;
+    }
+
+    /**
+     * Returns a reference to the XMLProducer, that generates the XML fragment
+     * capturing the actions of the refiner. This is used for provenace
+     * purposes.
+     *
+     * @return XMLProducer
+     */
+    public XMLProducer getXMLProducer(){
+        return this.mXMLStore;
+    }
+
 
     /**
      *Initializes the Clusterer impelementation
@@ -161,6 +202,23 @@ public class Horizontal implements Clusterer {
             SubInfo job = (SubInfo)it.next();
             mSubInfoMap.put(job.getLogicalID(), job );
         }
+
+        //load the PPS implementation
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( properties );
+        mPPS = PPSFactory.loadPPS( this.mProps );
+
+        mXMLStore.add( "<workflow url=\"" + null + "\">" );
+
+        //call the begin workflow method
+        try{
+            mPPS.beginWorkflowRefinementStep( this, "Horizontal Clustering Refiner", false );
+        }
+        catch( Exception e ){
+            throw new ClustererException( "PASOA Exception", e );
+        }
+
+        //clear the XML store
+        mXMLStore.clear();
 
 
     }
@@ -264,7 +322,7 @@ public class Horizontal implements Clusterer {
         int[] cFactor  = new int[2]; //the collapse factor for collapsing the jobs
         cFactor[0]     = 0;
         cFactor[1]     = 0;
-        SubInfo fatJob = null;
+        AggregatedJob fatJob = null;
 
         mLogger.log("Collapsing jobs of type " + name,
                     LogManager.DEBUG_MESSAGE_LEVEL);
@@ -351,6 +409,9 @@ public class Horizontal implements Clusterer {
                 //add the fat job to the dag
                 //use the method to add, else add explicitly to DagInfo
                 mScheduledDAG.add(fatJob);
+
+                //log the refiner action capturing the creation of the job
+                this.logRefinerAction( fatJob, aggregator );
             }
             else{
                 //do collapsing in chunks of cFactor
@@ -385,6 +446,9 @@ public class Horizontal implements Clusterer {
                     //add the fat job to the dag
                     //use the method to add, else add explicitly to DagInfo
                     mScheduledDAG.add(fatJob);
+
+                    //log the refiner action capturing the creation of the job
+                    this.logRefinerAction( fatJob, aggregator );
                 }
             }
 
@@ -409,6 +473,16 @@ public class Horizontal implements Clusterer {
         replaceJobs();
 
 
+        //should be in the done method. which is currently not htere in the
+        //Clusterer API
+        try{
+            mPPS.endWorkflowRefinementStep( this );
+        }
+        catch( Exception e ){
+            throw new ClustererException( "PASOA Exception while logging end of clustering refinement", e );
+        }
+
+
         return mScheduledDAG;
     }
 
@@ -421,6 +495,62 @@ public class Horizontal implements Clusterer {
         return this.DESCRIPTION;
     }
 
+    /**
+     * Records the refiner action into the Provenace Store as a XML fragment.
+     *
+     * @param clusteredJob  the clustered job
+     * @param aggregator    the aggregator that was used to create this clustered job
+     */
+    protected void logRefinerAction( AggregatedJob clusteredJob, JobAggregator aggregator ){
+        StringBuffer sb = new StringBuffer();
+        String indent = "\t";
+        sb.append( indent );
+        sb.append( "<clustered ");
+        appendAttribute( sb, "job", clusteredJob.getName() );
+        appendAttribute( sb, "type", aggregator.getCollapserLFN() );
+        sb.append( ">" ).append( "\n" );
+
+        //traverse through all the files
+        String newIndent = indent + "\t";
+        List jobs = new ArrayList();
+        for( Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext(); ){
+            SubInfo job = ( SubInfo )it.next();
+            jobs.add( job.getName() );
+            sb.append( newIndent );
+            sb.append( "<constitutent " );
+            appendAttribute( sb, "job", job.getName() );
+            sb.append( "/>" );
+            sb.append( "\n" );
+        }
+        sb.append( indent );
+        sb.append( "</clustered>" );
+        sb.append( "\n" );
+
+        //log the action for creating the relationship assertions
+        try{
+            mPPS.clusteringOf( clusteredJob.getName(), jobs );
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "PASOA Exception while logging relationship assertion for clustering ",
+                                         e );
+        }
+
+        mXMLStore.add( sb.toString() );
+
+    }
+
+    /**
+     * Appends an xml attribute to the xml feed.
+     *
+     * @param xmlFeed  the xmlFeed to which xml is being written
+     * @param key   the attribute key
+     * @param value the attribute value
+     */
+    protected void appendAttribute( StringBuffer xmlFeed, String key, String value ){
+        xmlFeed.append( key ).append( "=" ).append( "\"" ).append( value ).
+                append( "\" " );
+    }
+
 
 
     /**
@@ -429,6 +559,7 @@ public class Horizontal implements Clusterer {
      * @param partition the partition that needs to be collapsed.
      *
      */
+    /*
     private void collapseJobs(Partition partition){
         Set s = partition.getNodeIDs();
         List l = new ArrayList(s.size());
@@ -469,7 +600,7 @@ public class Horizontal implements Clusterer {
        //collapse the jobs in list l
 //       collapseJobs(job.logicalName,l,partition.getID());
     }
-
+*/
 
 
 
@@ -526,14 +657,16 @@ public class Horizontal implements Clusterer {
 
 
     /**
-     * Given an integer id, returns a string id that is used for the fat node
-     * construction.
+     * Given an integer id, returns a string id that is used for the clustered
+     * job.
      *
      * @param partitionID  the id of the partition.
      * @param id           the integer id from which the string id has to be
      *                     constructed. The id should be unique for all the
      *                     clustered jobs that are formed for a particular
      *                     partition.
+     *
+     * @return the id of the clustered job
      */
     public String constructID(String partitionID, int id){
         StringBuffer sb = new StringBuffer(8);

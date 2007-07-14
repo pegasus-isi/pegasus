@@ -282,8 +282,6 @@ public class TransferEngine extends Engine {
             outputSite.trim().length() > 0) {
 
             for ( Enumeration e = this.mvDelLeafJobs.elements(); e.hasMoreElements(); ) {
-//                currentJobName = (String) e.nextElement();
-//                currentJob = mOriginalDag.getSubInfo(currentJobName);
                 currentJob = (SubInfo)e.nextElement();
 
                 //for a deleted node, to transfer it's output

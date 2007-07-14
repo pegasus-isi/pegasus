@@ -157,8 +157,6 @@ public class PegasusProperties {
     private static PegasusProperties pegProperties = null;
 
 
-
-
     /**
      * The value of the PEGASUS_HOME environment variable.
      */
@@ -667,8 +665,6 @@ public class PegasusProperties {
     }
 
 
-
-
     /**
      * It returns the timeout value in seconds after which to timeout in case of
      * no activity from the RLS.
@@ -751,6 +747,18 @@ public class PegasusProperties {
        return mProps.getProperty("pegasus.schema.sc",
                                  defaultLocation );
    }
+
+    //PROVENANCE CATALOG PROPERTIES
+    /**
+     * Returns the provenance store to use to log the refiner actions.
+     *
+     * Referred to by the "pegasus.catalog.provenance.refinement" property.
+     *
+     * @return the value set in the properties, else null if not set.
+     */
+    public String getRefinementProvenanceStore( ){
+        return mProps.getProperty( "pegasus.catalog.provenance.refinement" );
+    }
 
     //TRANSFER MECHANISM PROPERTIES
 
