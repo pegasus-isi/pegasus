@@ -24,8 +24,11 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.TPT;
 
-import java.util.Set;
-import java.util.StringTokenizer;
+import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
+import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
+
+
+
 
 
 /**
@@ -85,6 +88,10 @@ public abstract class AbstractRefiner implements Refiner{
      */
     protected TPT mTPT;
 
+    /**
+     * The XML Producer object that records the actions.
+     */
+    protected XMLProducer mXMLStore;
 
 
     /**
@@ -104,7 +111,31 @@ public abstract class AbstractRefiner implements Refiner{
         mPOptions = options;
         mTPT = new TPT(properties);
         mTPT.buildState();
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( properties );
     }
+
+
+    /**
+     * Returns a reference to the workflow that is being refined by the refiner.
+     *
+     *
+     * @return ADAG object.
+     */
+    public ADag getWorkflow(){
+        return this.mDAG;
+    }
+
+    /**
+     * Returns a reference to the XMLProducer, that generates the XML fragment
+     * capturing the actions of the refiner. This is used for provenace
+     * purposes.
+     *
+     * @return XMLProducer
+     */
+    public XMLProducer getXMLProducer(){
+        return this.mXMLStore;
+    }
+
 
     /**
      * Returns whether a Site is third party enabled or not.
