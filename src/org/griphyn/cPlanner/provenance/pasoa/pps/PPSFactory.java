@@ -45,6 +45,11 @@ public class PPSFactory {
     public static final String PASOA_PPS_PROVIDER = "Pasoa";
 
 
+    /**
+     * The singleton instance of the PPS implementation that is returned.
+     */
+    private static PPS mInstance = null;
+
 
     /**
      * Loads the appropriate PPS implementation on the basis of the property set in the
@@ -64,11 +69,17 @@ public class PPSFactory {
     public static PPS loadPPS( PegasusProperties properties )
                                               throws PPSFactoryException{
 
-
         //sanity check
         if( properties == null ){
             throw new PPSFactoryException( "No properties passed to factory " );
         }
+
+
+        //check for singleton
+        if( mInstance != null ){
+            return mInstance;
+        }
+
 
         String className = properties.getRefinementProvenanceStore();
         if( className == null ){
@@ -96,6 +107,7 @@ public class PPSFactory {
                                                  className,
                                                  e );
         }
+        mInstance = pps;
         return pps;
     }
 

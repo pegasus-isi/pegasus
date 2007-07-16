@@ -63,7 +63,7 @@ public class Pasoa implements PPS {
      */
     public Pasoa () throws Exception {
         _storeProxy     = new ClientLib ();
-        String storeURL = "http://localhost:8080/preserv";
+        String storeURL = "http://localhost:8080/preserv-1.0";
 
         _storeRecordURL = new URL (storeURL + "/record");
 
@@ -109,7 +109,6 @@ public class Pasoa implements PPS {
         _refinement = refinementStepName;
         _relationshipPAssertionCounter = 0;
 
-        System.out.println( "XML is " + _workflowXML + _xmlFooter );
 
         // Record the initial invocation of the refiner
         recordInteraction (_workflowXML + _xmlFooter, _causeKey, _refinement, true);
