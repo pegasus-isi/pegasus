@@ -664,7 +664,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         StringBuffer sb = new StringBuffer();
         sb.append( "\t<siteselection job=\"" ).append( job.getName() ).append( "\">" );
         sb.append( "\n" ).append( "\t\t" );
-        sb.append( "<logicalsite>" ).append( job.getName() ).append( "</logicalsite>" );
+        sb.append( "<logicalsite>" ).append( job.getSiteHandle() ).append( "</logicalsite>" );
         sb.append( "\n" ).append( "\t\t" );
         sb.append( "<jobmanager>" ).append( job.getJobManager() ).append( "</jobmanager>" );
         sb.append( "\n" );
