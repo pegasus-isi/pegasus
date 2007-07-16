@@ -222,7 +222,7 @@ public class ReductionEngine extends Engine implements Refiner{
         for(Enumeration e = mAllDeletedJobs.elements();e.hasMoreElements();){
             String deletedJob = (String) e.nextElement();
             mLogger.log("\t" + deletedJob, LogManager.DEBUG_MESSAGE_LEVEL);
-            mXMLStore.add( "<removed job = \"" + deletedJob + "\">" );
+            mXMLStore.add( "<removed job = \"" + deletedJob + "\"/>" );
             mXMLStore.add( "\n" );
         }
         mLogger.logCompletion( mLogMsg, LogManager.DEBUG_MESSAGE_LEVEL );
