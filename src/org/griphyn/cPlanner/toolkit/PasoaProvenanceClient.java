@@ -86,6 +86,7 @@ public class PasoaProvenanceClient {
         String url=null;
         if(args.length<3){
             System.err.println("Usage: Client outfile daxfile dagfile");
+            System.err.println("Usage: Client outfile daxfile dagfile preservurl");
             System.exit(1);
 
         }else if(args.length==3){
