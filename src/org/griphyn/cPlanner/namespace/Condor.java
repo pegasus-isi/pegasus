@@ -42,6 +42,12 @@ public class Condor extends Namespace{
     public static final String NAMESPACE_NAME = Profile.CONDOR;
 
     /**
+     * The name of the key that denotes the arguments of the job.
+     */
+    public static final String ARGUMENTS_KEY = "arguments";
+
+
+    /**
      * The name of the key that denotes the requirements of the job.
      */
     public static final String REQUIREMENTS_KEY = "requirements";
@@ -533,6 +539,11 @@ public class Condor extends Namespace{
             if( key.equals( this.TRANSFER_IP_FILES_KEY )){
                 //add to existing
                 this.addIPFileForTransfer( value );
+            }
+
+            //overriding the arguments makes no sense.
+            if( key.equals( this.ARGUMENTS_KEY )){
+                continue;
             }
             else{
                 this.construct(key, value );

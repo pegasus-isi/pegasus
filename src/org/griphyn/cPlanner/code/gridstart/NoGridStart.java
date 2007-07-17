@@ -109,6 +109,12 @@ public class NoGridStart implements GridStart {
      * @see #enable(SubInfo,boolean)
      */
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
+        //sanity check for the arguments
+        if( aggJob.strargs != null && aggJob.strargs.length() > 0){
+            construct( aggJob, "arguments", aggJob.strargs);
+        }
+
+
         for (Iterator it = jobs.iterator(); it.hasNext(); ) {
             SubInfo job = (SubInfo)it.next();
             //always pass isGlobus true as always

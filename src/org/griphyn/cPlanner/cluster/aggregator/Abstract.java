@@ -198,6 +198,16 @@ public abstract class Abstract implements JobAggregator {
     public abstract String aggregatedJobArguments( AggregatedJob job );
 
 
+    /**
+     * Enables the constitutent jobs that make up a aggregated job.
+     *
+     * @param mergedJob   the clusteredJob
+     * @param jobs         the constitutent jobs
+     *
+     * @return AggregatedJob
+     */
+    protected abstract AggregatedJob enable(  AggregatedJob mergedJob, List jobs  );
+
      /**
      * Constructs a new aggregated job that contains all the jobs passed to it.
      * The new aggregated job, appears as a single job in the workflow and
@@ -259,10 +269,7 @@ public abstract class Abstract implements JobAggregator {
         SubInfo firstJob = (SubInfo)jobs.get(0);
         AggregatedJob mergedJob = new AggregatedJob( /*(SubInfo)jobs.get(0),*/
                                                      jobs.size() );
-        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
-                                                  Condor.VANILLA_UNIVERSE);
-        String gridStartPath = site.getKickstartPath();
-        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,  gridStartPath );
+
 
         SubInfo job    = null;
         String mergedJobName = this.FAT_JOB_PREFIX + name + "_" + id;
@@ -281,7 +288,11 @@ public abstract class Abstract implements JobAggregator {
 
         //enable the jobs that need to be merged
         //before writing out the stdin file
-        mergedJob = gridStart.enable( mergedJob, jobs );
+//        String gridStartPath = site.getKickstartPath();
+//        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,  gridStartPath );
+//        mergedJob = gridStart.enable( mergedJob, jobs );
+
+        mergedJob = enable( mergedJob, jobs  );
 
         try {
             BufferedWriter writer;
@@ -353,11 +364,6 @@ public abstract class Abstract implements JobAggregator {
         mergedJob.setUniverse( firstJob.getUniverse() );
         mergedJob.setJobManager( firstJob.getJobManager() );
         mergedJob.setJobType( SubInfo.COMPUTE_JOB );
-
-        //explicitly set the gridstart key why? Karan Apr 27 2007
-        firstJob.vdsNS.construct( VDS.GRIDSTART_KEY,
-                                  gridStart.getVDSKeyValue() );
-
 
         //the compute job of the VDS supernode is this job itself
         mergedJob.setVDSSuperNode( mergedJobName );

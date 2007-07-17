@@ -33,6 +33,9 @@ import org.griphyn.cPlanner.namespace.Dagman;
 import java.util.List;
 
 import java.io.File;
+import org.griphyn.cPlanner.namespace.Condor;
+import org.griphyn.cPlanner.code.GridStart;
+import org.griphyn.cPlanner.classes.SiteInfo;
 
 /**
  * This class aggregates the smaller jobs in a manner such that
@@ -142,6 +145,32 @@ public class SeqExec extends Abstract {
         mLogger.log( message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
 
         return mergedJob;
+    }
+
+
+    /**
+     * Enables the constitutent jobs that make up a aggregated job.
+     *
+     * @param mergedJob   the clusteredJob
+     * @param jobs         the constitutent jobs
+     *
+     * @return AggregatedJob
+     */
+    protected AggregatedJob  enable(  AggregatedJob mergedJob, List jobs  ){
+        SubInfo firstJob = (SubInfo)jobs.get(0);
+        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
+                                                  Condor.VANILLA_UNIVERSE);
+        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,
+                                                               site.getKickstartPath() );
+
+        //explicitly set the gridstart key
+        //so as to enable the correct generation of the postscript for
+        //the aggregated job
+        firstJob.vdsNS.construct( VDS.GRIDSTART_KEY,
+                                  gridStart.getVDSKeyValue() );
+
+
+        return gridStart.enable( mergedJob, jobs );
     }
 
 

@@ -22,7 +22,15 @@ import org.griphyn.cPlanner.classes.AggregatedJob;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
+import org.griphyn.cPlanner.namespace.VDS;
+
+import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+
 import java.util.List;
+import java.util.Iterator;
+import org.griphyn.cPlanner.code.GridStart;
+import org.griphyn.cPlanner.namespace.Condor;
+import org.griphyn.cPlanner.classes.SiteInfo;
 
 /**
  * This class aggregates the smaller jobs in a manner such that
@@ -86,8 +94,42 @@ public class MPIExec extends Abstract {
         AggregatedJob mergedJob = super.construct(jobs,name,id);
         //also put in jobType as mpi
         mergedJob.globusRSL.checkKeyInNS("jobtype","mpi");
+
+        //ensure that AggregatedJob is invoked via NoGridStart
+        mergedJob.vdsNS.construct( VDS.GRIDSTART_KEY,
+                                   GridStartFactory.GRIDSTART_SHORT_NAMES[
+                                                          GridStartFactory.NO_GRIDSTART_INDEX] );
+
         return mergedJob;
     }
+
+    /**
+     * Enables the constitutent jobs that make up a aggregated job. Makes sure
+     * that they all are enabled via no kickstart
+     *
+     * @param mergedJob   the clusteredJob
+     * @param jobs         the constitutent jobs
+     *
+     * @return AggregatedJob
+     */
+    protected AggregatedJob enable(  AggregatedJob mergedJob, List jobs  ){
+        //we cannot invoke any of clustered jobs also via kickstart
+        //as the output will be clobbered
+        SubInfo firstJob = (SubInfo)jobs.get(0);
+        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
+                                                  Condor.VANILLA_UNIVERSE);
+
+        firstJob.vdsNS.construct( VDS.GRIDSTART_KEY,
+                                   GridStartFactory.GRIDSTART_SHORT_NAMES[
+                                                          GridStartFactory.NO_GRIDSTART_INDEX] );
+
+        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,
+                                                               site.getKickstartPath() );
+
+
+        return gridStart.enable( mergedJob, jobs );
+    }
+
 
     /**
      * Returns the logical name of the transformation that is used to

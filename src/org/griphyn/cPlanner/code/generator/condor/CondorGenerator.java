@@ -362,7 +362,7 @@ public class CondorGenerator extends Abstract {
         handleGlobusRSLForJob( job );
 
         writer.println(this.mSeparator);
-        writer.println("# GRIPHYN VDS SUBMIT FILE GENERATOR");
+        writer.println("# PEGASUS GENERATED SUBMIT FILE");
         writer.println("# DAG : " + dagname + ", Index = " + dagindex +
                        ", Count = " + dagcount);
         writer.println("# SUBMIT FILE NAME : " + subfilename);
@@ -561,7 +561,7 @@ public class CondorGenerator extends Abstract {
                 FileWriter(dag)));
 
             printDagString(this.mSeparator);
-            printDagString("# GRIPHYN VDS CONCRETE DAG GENERATOR");
+            printDagString("# PEGASUS GENERATED SUBMIT FILE");
             printDagString("# DAG " + dinfo.nameOfADag);
             printDagString("# Index = " + dinfo.index + ", Count = " +
                            dinfo.count);
