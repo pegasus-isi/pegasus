@@ -207,10 +207,10 @@ public static final String DB_ALL_PREFIX =
   {
     // load the default schema name - default is to use the file based
     // schema.
+    //this should not have a default value because if this property is not set
+    // the invocation records should not be populated to DB.
     String schemaName =
-             m_props.getProperty( "pegasus.catalog.provenance",
-                                  m_props.getProperty(DBDRIVER_ALL_PREFIX) );
-
+             m_props.getProperty( "pegasus.catalog.provenance");
     if ( schemaName != null && schemaName.indexOf('.') == -1 )
       schemaName = "org.griphyn.vdl.dbschema." + schemaName;
 
