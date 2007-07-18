@@ -85,27 +85,27 @@ public class PasoaProvenanceClient {
         String dagfile=null;
         String url=null;
         if(args.length<3){
-            System.err.println("Usage: Client outfile daxfile dagfile");
-            System.err.println("Usage: Client outfile daxfile dagfile preservurl");
+            System.err.println("Usage: Client daxfile dagfile outfile");
+           // System.err.println("Usage: Client daxfile dagfile preservurl");
             System.exit(1);
 
         }else if(args.length==3){
-            jobfile=args[0];
-            daxfile=args[1];
-            dagfile=args[2];
+            jobfile=args[2];
+            daxfile=args[0];
+            dagfile=args[1];
             cle = new PasoaProvenanceClient();
 
-
-	}else {
+        }
+	/*}else {
 	    jobfile=args[0];
-	    daxfile=args[1];
+	    daxfile=args[0];
 	    dagfile=args[2];
 	    url=args[3];
             cle = new PasoaProvenanceClient(url);
 
-	}
+	}*/
 	try{
-	   	    cle.jobname=jobfile.split("\\.")[0];
+	   	    cle.jobname=(new File(jobfile)).getName().split("\\.out")[0];
 	    System.out.println("Processing job --- "+ cle.jobname);
 	    cle.parseKickstartRecord(jobfile);
             cle.parseDag(dagfile);
