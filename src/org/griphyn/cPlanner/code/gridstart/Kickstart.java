@@ -128,6 +128,11 @@ public class Kickstart implements GridStart {
     private boolean mDoStat;
 
     /**
+     * A boolean indicating whether to generate lof files or not.
+     */
+    private boolean mGenerateLOF;
+
+    /**
      * The invoke limit trigger.
      */
     private long mInvokeLength;
@@ -147,7 +152,8 @@ public class Kickstart implements GridStart {
         mProps        = properties;
         mInvokeAlways = properties.useInvokeInGridStart();
         mInvokeLength = properties.getGridStartInvokeLength();
-        mDoStat    = properties.doStatWithKickstart();
+        mDoStat       = properties.doStatWithKickstart();
+        mGenerateLOF  = properties.generateLOFFiles();
         mLogger       = LogManager.getInstance();
         mConcDAG      = dag;
 
@@ -386,47 +392,67 @@ public class Kickstart implements GridStart {
         //add the stat options to kickstart only for certain jobs for time being
         //and if the input variable is true
         if ( stat ){
-          if (job.getJobType() == SubInfo.COMPUTE_JOB ||
-              job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ||
-              job.getJobType() == SubInfo.CLEANUP_JOB ||
-              job.getJobType() == SubInfo.STAGE_IN_JOB ||
-              job.getJobType() == SubInfo.INTER_POOL_JOB) {
+            if (job.getJobType() == SubInfo.COMPUTE_JOB ||
+                job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ||
+                job.getJobType() == SubInfo.CLEANUP_JOB ||
+                job.getJobType() == SubInfo.STAGE_IN_JOB ||
+                job.getJobType() == SubInfo.INTER_POOL_JOB) {
 
-            String lof;
-            List files = new ArrayList(2);
+                String lof;
+                List files = new ArrayList(2);
+
+                //inefficient check here again. just a prototype
+                //we need to generate -S option only for non transfer jobs
+                //generate the list of filenames file for the input and output files.
+                if (! (job instanceof TransferJob)) {
+                    lof = generateListofFilenamesFile(job.getInputFiles(),
+                                                      job.getID() + ".in.lof");
+                    if (lof != null) {
+                        File file = new File(lof);
+                        job.condorVariables.addIPFileForTransfer(lof);
+                        //arguments just need basename . no path component
+                        gridStartArgs.append("-S @").append(file.getName()).
+                            append(" ");
+                        files.add(file.getName());
+                    }
+                }
+
+                //for cleanup jobs no generation of stats for output files
+                if (job.getJobType() != SubInfo.CLEANUP_JOB) {
+                    lof = generateListofFilenamesFile(job.getOutputFiles(),
+                                                      job.getID() + ".out.lof");
+                    if (lof != null) {
+                        File file = new File(lof);
+                        job.condorVariables.addIPFileForTransfer(lof);
+                        //arguments just need basename . no path component
+                        gridStartArgs.append("-s @").append(file.getName()).append(" ");
+                        files.add(file.getName());
+                    }
+                }
+                //add kickstart postscript that removes these files
+                if( addPostScript ) {addCleanupPostScript(job, files); }
+            }
+        }//end of if ( stat )
+        else if( mGenerateLOF ){
+            //dostat is false. so no generation of stat option
+            //but generate lof files nevertheless
+
 
             //inefficient check here again. just a prototype
             //we need to generate -S option only for non transfer jobs
             //generate the list of filenames file for the input and output files.
             if (! (job instanceof TransferJob)) {
-              lof = generateListofFilenamesFile(job.getInputFiles(),
-                                                job.getID() + ".in.lof");
-              if (lof != null) {
-                File file = new File(lof);
-                job.condorVariables.addIPFileForTransfer(lof);
-                //arguments just need basename . no path component
-                gridStartArgs.append("-S @").append(file.getName()).
-                    append(" ");
-                files.add(file.getName());
-              }
+                 generateListofFilenamesFile( job.getInputFiles(),
+                                              job.getID() + ".in.lof");
             }
 
             //for cleanup jobs no generation of stats for output files
             if (job.getJobType() != SubInfo.CLEANUP_JOB) {
-              lof = generateListofFilenamesFile(job.getOutputFiles(),
-                                                job.getID() + ".out.lof");
-              if (lof != null) {
-                File file = new File(lof);
-                job.condorVariables.addIPFileForTransfer(lof);
-                //arguments just need basename . no path component
-                gridStartArgs.append("-s @").append(file.getName()).append(" ");
-                files.add(file.getName());
-              }
+                generateListofFilenamesFile(job.getOutputFiles(),
+                                            job.getID() + ".out.lof");
+
             }
-            //add kickstart postscript that removes these files
-            if( addPostScript ) {addCleanupPostScript(job, files); }
-          }
-        }//end of if ( stat )
+        }///end of mGenerateLOF
 
         //append any arguments that need to be passed
         //kickstart directly, set elsewhere

@@ -31,6 +31,11 @@ import java.io.File;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
+import java.io.IOException;
+import java.io.FileWriter;
+import org.griphyn.cPlanner.classes.PegasusFile;
+import org.griphyn.cPlanner.classes.TransferJob;
 
 /**
  * This class ends up running the job directly on the grid, without wrapping
@@ -80,6 +85,12 @@ public class NoGridStart implements GridStart {
     private String mExitParserArguments;
 
     /**
+     * A boolean indicating whether to generate lof files or not.
+     */
+    private boolean mGenerateLOF;
+
+
+    /**
      * Initializes the GridStart implementation.
      *
      * @param properties the <code>PegasusProperties</code> object containing all
@@ -91,6 +102,7 @@ public class NoGridStart implements GridStart {
     public void initialize( PegasusProperties properties, String submitDir, ADag dag ){
         mSubmitDir = submitDir;
         mProps     = properties;
+        mGenerateLOF  = properties.generateLOFFiles();
         mLogger    = LogManager.getInstance();
         mExitParserArguments = getExitCodeArguments();
     }
@@ -201,6 +213,26 @@ public class NoGridStart implements GridStart {
             }
         }
 
+        if( mGenerateLOF ){
+            //but generate lof files nevertheless
+
+
+            //inefficient check here again. just a prototype
+            //we need to generate -S option only for non transfer jobs
+            //generate the list of filenames file for the input and output files.
+            if (! (job instanceof TransferJob)) {
+                generateListofFilenamesFile( job.getInputFiles(),
+                                             job.getID() + ".in.lof");
+            }
+
+            //for cleanup jobs no generation of stats for output files
+            if (job.getJobType() != SubInfo.CLEANUP_JOB) {
+                generateListofFilenamesFile(job.getOutputFiles(),
+                                           job.getID() + ".out.lof");
+
+            }
+        }///end of mGenerateLOF
+
         return true;
     }
 
@@ -296,5 +328,44 @@ public class NoGridStart implements GridStart {
         return mProps.getPOSTScriptArguments();
     }
 
+    /**
+     * Writes out the list of filenames file for the job.
+     *
+     * @param files  the list of <code>PegasusFile</code> objects contains the files
+     *               whose stat information is required.
+     *
+     * @param basename   the basename of the file that is to be created
+     *
+     * @return the full path to lof file created, else null if no file is written out.
+     */
+     public String generateListofFilenamesFile( Set files, String basename ){
+         //sanity check
+         if ( files == null || files.isEmpty() ){
+             return null;
+         }
+
+         String result = null;
+         //writing the stdin file
+        try {
+            File f = new File( mSubmitDir, basename );
+            FileWriter input;
+            input = new FileWriter( f );
+            PegasusFile pf;
+            for( Iterator it = files.iterator(); it.hasNext(); ){
+                pf = ( PegasusFile ) it.next();
+                input.write( pf.getLFN() );
+                input.write( "\n" );
+            }
+            //close the stream
+            input.close();
+            result = f.getAbsolutePath();
+
+        } catch ( IOException e) {
+            mLogger.log("Unable to write the lof file " + basename, e ,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+        }
+
+        return result;
+     }
 
 }

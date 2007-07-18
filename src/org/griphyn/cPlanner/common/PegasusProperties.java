@@ -1254,6 +1254,21 @@ public class PegasusProperties {
     }
 
     /**
+     * Return a boolean indicating whether to generate the LOF files for the jobs
+     * or not. This is used to generate LOF files, but not trigger the stat option
+     *
+     * Referred to by the "pegasus.gridstart.kickstart.generate.loft" property.
+     *
+     * @return the boolean value specified in the property file,
+     *         else false if not specified or non boolean specified.
+     */
+    public boolean generateLOFFiles(){
+        return Boolean.parse( mProps.getProperty( "pegasus.gridstart.generate.lof"),
+                                                   false );
+    }
+
+
+    /**
      * Returns a boolean indicating whether to use invoke in kickstart always
      * or not.
      *
