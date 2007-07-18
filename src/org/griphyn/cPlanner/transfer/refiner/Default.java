@@ -108,7 +108,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
 
         //call the begin workflow method
         try{
-            mPPS.beginWorkflowRefinementStep( this, "Transfer and Registration Refiner", false );
+            mPPS.beginWorkflowRefinementStep( this, PPS.REFINEMENT_STAGE, false );
         }
         catch( Exception e ){
             throw new RuntimeException( "PASOA Exception", e );

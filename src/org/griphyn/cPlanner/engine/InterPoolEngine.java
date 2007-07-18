@@ -216,7 +216,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         //call the begin workflow method
         try{
-            pps.beginWorkflowRefinementStep( this, "Site Selection", false );
+            pps.beginWorkflowRefinementStep( this, PPS.REFINEMENT_SITE_SELECT, false );
         }
         catch( Exception e ){
             throw new RuntimeException( "PASOA Exception", e );

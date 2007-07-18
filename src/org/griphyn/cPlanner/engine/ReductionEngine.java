@@ -199,7 +199,7 @@ public class ReductionEngine extends Engine implements Refiner{
 
         //call the begin workflow method
         try{
-            pps.beginWorkflowRefinementStep(this, "REDUCTION", true);
+            pps.beginWorkflowRefinementStep(this, PPS.REFINEMENT_REDUCE , true);
         }
         catch( Exception e ){
             throw new RuntimeException( "PASOA Exception", e );

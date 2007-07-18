@@ -211,7 +211,7 @@ public class Horizontal implements Clusterer,
 
         //call the begin workflow method
         try{
-            mPPS.beginWorkflowRefinementStep( this, "Horizontal Clustering Refiner", false );
+            mPPS.beginWorkflowRefinementStep( this, PPS.REFINEMENT_CLUSTER, false );
         }
         catch( Exception e ){
             throw new ClustererException( "PASOA Exception", e );

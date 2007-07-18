@@ -351,7 +351,7 @@ public class Pasoa implements PPS {
      * Convenience method to parse string represented XML into a DOM XML fragment representation
      */
     public Element toElement (String xmlAsString) throws IOException, SAXException {
-        System.out.println( "XML as string is " + xmlAsString );
+        //System.out.println( "XML as string is " + xmlAsString );
         return _builder.parse (new InputSource (new StringReader (xmlAsString))).getDocumentElement ();
     }
 }
