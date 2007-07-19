@@ -1,17 +1,34 @@
-Release Notes for PEGASUS 2.0
 $Id$
 -------------------------------
-- Start using the new properties outlined in the release notes, in
-  lieu of the properties deprecated in this release. Though, the
-  properties are backward compatible,it will save pain later on.
+Release Notes for PEGASUS 2.0.1
+================================
 
-  Detailed description of the new properties can be found in the
-  properties file available at $VDS_HOME/etc/properties.pdf.
+NEW FEATURES
+------------
 
-- The developers changelog can be found at
-  http://pegasus.isi.edu/Changelog
 
-New Features
+BUGS FIXED
+----------
+sitecatalog-converter 
+	patch to fix pegasus profile conversion
+
+pegasus-submit-dag
+	added --maxidle option to allow setting number of idle jobs on the remote site.
+
+VORS.pm 
+
+pegasus-get-sites
+	Removed local tc entries and added environments 
+	for PEGASUS_HOME, GLOBUS_LOCATION and LD_LIBRARY_PATH to local site
+
+
+KNOWN BUGS
+-----------
+
+Release Notes for PEGASUS 2.0.0
+===============================
+
+NEW FEATURES
 --------------
 
 pegasus-plan.
