@@ -45,12 +45,12 @@ public class Version
   /**
    * This constant defines the minor version number.
    */
-  public static final int MINOR = 1;
+  public static final int MINOR = 0;
 
   /**
    * This constant defines the patch level version.
    */
-  public static final int PLEVEL = 0;
+  public static final int PLEVEL = 1;
 
   /**
    * Instance variable keeping track of the Singleton.
@@ -84,7 +84,7 @@ public class Version
   public String toString()
   {
     return ( Integer.toString(MAJOR) + '.' + Integer.toString(MINOR) + 
-	     '.' + Integer.toString(PLEVEL) + "cvs" ); // !! HERE !!
+	     '.' + Integer.toString(PLEVEL) + "" ); // !! HERE !!
   }
 
   /**
