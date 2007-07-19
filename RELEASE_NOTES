@@ -3,6 +3,10 @@ $Id$
 Release Notes for PEGASUS 2.0.1
 ================================
 
+There is new documentation in the form of a quick start guide and glossary
+in the docs directory. More documentation will be coming soon and will be available
+in the release as well as on the pegasus website under documentation.
+
 NEW FEATURES
 ------------
 1) Pegasus now can store provenance data into PASOA. The actions taken
@@ -12,7 +16,13 @@ NEW FEATURES
    pegasus.catalog.provenance.refinement  pasoa
 
    The PASOA store needs to run on localhost on port 8080
-   https://localhost:8080/prserv-1.0
+   https://localhost:8080/preserv-1.0
+
+2) You can also use Pegasus to store execution provenance in PASOA.
+   To use set the properties
+   pegasus.exitcode.impl=pasoa
+   pegasus.exitcode.path.pasoa=${pegasus.home}/bin/pasoa-client
+   pegasus.exitcode.arguments=<dax file> <dag file>
 
 BUGS FIXED
 ----------
@@ -35,6 +45,10 @@ BUGS FIXED
 5) mpiexec 
    The execution of clustered jobs via mpiexec was broken in 2.0
    release. That is now fixed.
+
+6) exitcode/exitpost
+   Fixed a bug in exitcode that caused a call to the DB PTC even though
+   the property pegasus.catalog.provenance was not set.
 
 KNOWN BUGS
 -----------
