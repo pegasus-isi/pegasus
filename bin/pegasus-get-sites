@@ -624,13 +624,13 @@ sub get_sites_from_vors($$$){
     #get the first level of information about the sites in this grid.
     my %sites = get_sites_in_grid( $host, $port, $grid, $user_vo );
     
-    #print out the information about each site
-    #foreach my $site_id (keys %sites){
-    #	print "\nSITE ID IS $site_id";
-    #	foreach my $key( keys %{$sites{$site_id}} ){
-    #	    print "\n$key => $sites{$site_id}{$key}";
-    #	}
-    #}
+#    #print out the information about each site
+#    foreach my $site_id (keys %sites){
+#    	print "\nSITE ID IS $site_id";
+#    	foreach my $key( keys %{$sites{$site_id}} ){
+#    	    print "\n$key => $sites{$site_id}{$key}";
+#    	}
+#    }
 
     #go through each site, and check status before
     #proceeding to get more detailed information
@@ -1087,6 +1087,18 @@ if ( $globus_universe ) {
     $contact{globus} =  [ [ "$local{gatekeeper}/jobmanager-condor", undef
 			    @globus_version ] ];
 }
+
+my $gl = $ENV{'GLOBUS_LOCATION'} || die "Hey, will you set GLOBUS_LOCATION!\n";
+my $llp = File::Spec->catfile( $gl, 'lib' );
+
+
+#construct default profiles for site local
+my %mprofiles= ( pegasus => {grid => 'local'},
+		 env => ({GLOBUS_LOCATION => "$gl",
+			 PEGASUS_HOME => "$vl",
+			 LD_LIBRARY_PATH => "$llp"})
+		 );
+
 $sc->add( 'local', 
 	  lrc => [ $local{rls} ],
 	  gridshell => "$vl/bin/kickstart",
@@ -1096,47 +1108,51 @@ $sc->add( 'local',
 	  sysinfo => $sysinfo,
 	  gridftp => [ [ $local{gridftp}, $vdldemo, @globus_version ] ],
 	  contact => { %contact },
-	  profile => { pegasus => { grid => 'local' } }
+	  profile => { %mprofiles}
 	  );
 
-my $gl = $ENV{'GLOBUS_LOCATION'} || die "Hey, will you set GLOBUS_LOCATION!\n";
-my $llp = File::Spec->catfile( $gl, 'lib' );
 my $cp = join( ':', File::Spec->catfile( $gl, 'lib', 'rls.jar' ),
 	       File::Spec->catfile( $vl, 'lib', 'rls.jar' ),
 	       File::Spec->catfile( $vl, 'lib', 'java-getopt-1.0.9.jar' ),
 	       File::Spec->catfile( $vl, 'lib', 'gpegasus.jar' ) );
+
+#
+#  WE DONT NEED THE LOCAL TC ENTRIES ANY MORE because of PEGASUS 2.0 support.
+#
+
+
 #
 # transformation catalog (TC) for "local"
 #
-$tc->add( 'local', 'RLS_Client', 
-	  File::Spec->catfile( $vl, 'bin', 'rls-client' ),
-	  { env => { 'JAVA_HOME' => $ENV{'JAVA_HOME'},
-		     'PEGASUS_HOME' => $vl,
-		     'CLASSPATH' => $cp, 
-		     'GLOBUS_LOCATION' => $gl,
-		     'LD_LIBRARY_PATH' => File::Spec->catfile($gl,'lib') } }, 
-	  'INSTALLED', $sysinfo );
-$tc->add( 'local', 'globus-url-copy', 
-	  File::Spec->catfile( $gl, 'bin', 'globus-url-copy' ),
-	  { env => { 'GLOBUS_LOCATION' => $gl,
-		     'LD_LIBRARY_PATH' => File::Spec->catfile($gl,'lib') } }, 
-	  'INSTALLED', $sysinfo );
-$tc->add( 'local', 'transfer', 
-	  File::Spec->catfile( $vl, 'bin', 'transfer' ),
-	  { env => { 'GLOBUS_LOCATION' => $gl,
-		     'LD_LIBRARY_PATH' => File::Spec->catfile($gl,'lib') } }, 
-	  'INSTALLED', $sysinfo );
-$tc->add( 'local', 'T2', 
-	  File::Spec->catfile( $vl, 'bin', 'T2' ),
-	  { env => { 'GLOBUS_LOCATION' => $gl,
-		     'LD_LIBRARY_PATH' => File::Spec->catfile($gl,'lib') } }, 
-	  'INSTALLED', $sysinfo );
-$tc->add( 'local', 'dirmanager', 
-	  File::Spec->catfile( $vl, 'bin', 'dirmanager' ), 
-	  { }, 'INSTALLED', $sysinfo );
-
-# add syntactic sugar
-$tc->add_special( 'local', @special );
+#$tc->add( 'local', 'RLS_Client', 
+#	  File::Spec->catfile( $vl, 'bin', 'rls-client' ),
+#	  { env => { 'JAVA_HOME' => $ENV{'JAVA_HOME'},
+#		     'PEGASUS_HOME' => $vl,
+#		     'CLASSPATH' => $cp, 
+#		     'GLOBUS_LOCATION' => $gl,
+#		     'LD_LIBRARY_PATH' => File::Spec->catfile($gl,'lib') } }, 
+#	  'INSTALLED', $sysinfo );
+#$tc->add( 'local', 'globus-url-copy', 
+#	  File::Spec->catfile( $gl, 'bin', 'globus-url-copy' ),
+#	  { env => { 'GLOBUS_LOCATION' => $gl,
+#		     'LD_LIBRARY_PATH' => File::Spec->catfile($gl,'lib') } }, 
+#	  'INSTALLED', $sysinfo );
+#$tc->add( 'local', 'transfer', 
+#	  File::Spec->catfile( $vl, 'bin', 'transfer' ),
+#	  { env => { 'GLOBUS_LOCATION' => $gl,
+#		     'LD_LIBRARY_PATH' => File::Spec->catfile($gl,'lib') } }, 
+#	  'INSTALLED', $sysinfo );
+#$tc->add( 'local', 'T2', 
+#	  File::Spec->catfile( $vl, 'bin', 'T2' ),
+#	  { env => { 'GLOBUS_LOCATION' => $gl,
+#		     'LD_LIBRARY_PATH' => File::Spec->catfile($gl,'lib') } }, 
+#	  'INSTALLED', $sysinfo );
+#$tc->add( 'local', 'dirmanager', 
+#	  File::Spec->catfile( $vl, 'bin', 'dirmanager' ), 
+#	  { }, 'INSTALLED', $sysinfo );
+#
+## add syntactic sugar
+#$tc->add_special( 'local', @special );
 
 # dump catalogs
 warn "# dumping catalogs...\n";
