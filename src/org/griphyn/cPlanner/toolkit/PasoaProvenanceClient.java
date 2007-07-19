@@ -32,11 +32,15 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 
 import org.xml.sax.InputSource;
+import java.io.StringWriter;
+import java.io.IOException;
+import java.io.Reader;
+import org.xml.sax.InputSource;
 public class PasoaProvenanceClient {
 
     /** change this to connect to the preserv server **/
     public static String URL = "http://localhost:8080/preserv-1.0";
-
+    public static String XMLHEADER ="<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>";
     public static String CONDOR= "www.cs.wisc.edu/condor";
     public long filecount=0;
     public static String documentationStyle = "http://www.pasoa.org/schemas/pegasus";
@@ -122,9 +126,9 @@ public class PasoaProvenanceClient {
 
             newlist.add(cle.jobname);
             System.out.println("Job List is  "+ newlist);
-
-            cle.parseDaxFile(daxfile,newlist);
-            cle.parseInput();
+            cle.parseFiles(newlist);
+//            cle.parseDaxFile(daxfile,newlist);
+ //           cle.parseInput();
             System.out.println("Inputs == "+cle.input);
             System.out.println("Outputs == "+cle.output);
 
@@ -136,8 +140,11 @@ public class PasoaProvenanceClient {
                 cle.registerCompletionInteraction(ik);
             } else if(cle.jobname.endsWith("cdir")) {
                 //write this handler
-            } else{
-
+            } else if(cle.jobname.startsWith("cln_")){
+                //write this handler
+            }else if(cle.jobname.endsWith("concat")){
+                //write this handler
+            }else{
                 InteractionKey ik = cle.jobInvocationInteraction();
                 cle.jobCompletionInteraction(ik);
             }
@@ -176,14 +183,252 @@ public class PasoaProvenanceClient {
     private void parseKickstartRecord(String file) throws Exception{
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
-        Document msgDoc = db.parse(new File(file));
+        List records=extractToMemory(new File(file));
+        if(records!=null){
+            for (Iterator i=records.iterator();i.hasNext();){
 
-        docelement = msgDoc.getDocumentElement();
-        transformation = docelement.getAttribute("transformation");
-        wf_label=docelement.getAttribute("wf-label");
-        wf_planned_time=docelement.getAttribute("wf-stamp");
+                Document msgDoc = db.parse(new InputSource(new StringReader((String)i.next())));
+                docelement = msgDoc.getDocumentElement();
+                transformation = docelement.getAttribute("transformation");
+                wf_label=docelement.getAttribute("wf-label");
+                wf_planned_time=docelement.getAttribute("wf-stamp");
 
+            }
+        }
     }
+
+    public List extractToMemory( java.io.File input )
+      throws Exception
+    {
+        List result = new ArrayList();
+           StringWriter out = null;
+           // open the files
+           int p1, p2, state = 0;
+           try {
+             BufferedReader in = new BufferedReader( new FileReader(input) );
+             out = new StringWriter(4096);
+             String line = null;
+             while ( (line = in.readLine()) != null ) {
+               if ( (state & 1) == 0 ) {
+                 // try to copy the XML line in any case
+                 if ( (p1 = line.indexOf( "<?xml" )) > -1 )
+                   if ( (p2 = line.indexOf( "?>", p1 )) > -1 ) {
+ //                    out.write( line, p1, p2+2 );
+                     System.out.println( "state=" + state + ", seen <?xml ...?>" );
+                   }
+                 // start state with the correct root element
+                 if ( (p1 = line.indexOf( "<invocation")) > -1 ) {
+                   if ( p1 > 0 ) line = line.substring( p1 );
+                   System.out.println( "state=" + state + ", seen <invocation>" );
+                   out.write(XMLHEADER);
+                   ++state;
+                 }
+               }
+               if ( (state & 1) == 1 ) {
+                 out.write( line );
+                 if ( (p1 = line.indexOf("</invocation>")) > -1 ) {
+                   System.out.println( "state=" + state + ", seen </invocation>" );
+                   ++state;
+
+                   out.flush();
+                   out.close();
+                   result.add( out.toString() );
+                   out = new StringWriter(4096);
+                 }
+               }
+             }
+
+             in.close();
+             out.close();
+           } catch ( IOException ioe ) {
+             throw new Exception( "While copying " + input.getPath() +
+                                      " into temp. file: " + ioe.getMessage() );
+         }
+
+
+      // some sanity checks
+      if ( state == 0 )
+        throw new Exception( "File " + input.getPath() +
+                                 " does not contain invocation records," +
+                                 " assuming failure");
+      if ( (state & 1) == 1 )
+        throw new Exception( "File " + input.getPath() +
+                                 " contains an incomplete invocation record," +
+                                 " assuming failure" );
+
+      // done
+      return result;
+  }
+
+private void parseFiles(List jobs)throws Exception{
+    File infile = null;
+    File outfile = null;
+    List ilist = null;
+    List temp = new ArrayList(jobs);
+    for (Iterator i = temp.iterator(); i.hasNext(); ) {
+        String job = (String) i.next();
+        if (job.startsWith("rc_tx_")) {
+            //this is for stagein jobs
+            outfile = new File(job + ".out.lof");
+            if (outfile.exists() && outfile.canRead() && outfile.length() != 0) {
+                try {
+                    BufferedReader in = new BufferedReader(new FileReader(outfile));
+                    String str;
+                    while ( (str = in.readLine()) != null) {
+                        if (output == null) {
+                            output = new HashMap();
+                        }
+                        if (!output.containsKey(job)) {
+                            output.put(job, new ArrayList());
+                        }
+                        ilist = (List) output.get(job);
+                        ilist.add(str);
+                    }
+                    in.close();
+                }
+                catch (IOException e) {
+                }
+            }
+
+        }else if (job.startsWith("new_rc_tx_")) {
+            //this is for stageout/inter tx jobs
+            outfile = new File(job + ".out.lof");
+            if (outfile.exists() && outfile.canRead() && outfile.length() != 0) {
+                try {
+                    BufferedReader in = new BufferedReader(new FileReader(outfile));
+                    String str;
+                    while ( (str = in.readLine()) != null) {
+                        if (input == null) {
+                            input = new HashMap();
+                        }
+                        if (!input.containsKey(job)) {
+                            input.put(job, new ArrayList());
+                        }
+                        ilist = (List) input.get(job);
+                        ilist.add(str);
+                    }
+                    in.close();
+                }
+                catch (IOException e) {
+                }
+            }
+
+        }else if(job.startsWith("inter_tx_")){
+            outfile = new File(job + ".out.lof");
+            if (outfile.exists() && outfile.canRead() && outfile.length() != 0) {
+                try {
+                    BufferedReader in = new BufferedReader(new FileReader(outfile));
+                    String str;
+                    while ( (str = in.readLine()) != null) {
+                        if (output == null) {
+                            output = new HashMap();
+                        }
+                        if (!output.containsKey(job)) {
+                            output.put(job, new ArrayList());
+                        }
+                        ilist = (List) output.get(job);
+                        ilist.add(str);
+                        if (input == null) {
+                            input = new HashMap();
+                        }
+                        if (!input.containsKey(job)) {
+                            input.put(job, new ArrayList());
+                        }
+                        ilist = (List) input.get(job);
+                        ilist.add(str);
+                    }
+                    in.close();
+                }
+                catch (IOException e) {
+                }
+            }
+
+        } else if(job.startsWith("new_rc_register")){
+            BufferedReader bf =new BufferedReader(new FileReader(new File(job+".in")));
+            String line = null;
+            while((line=bf.readLine())!=null){
+                String lfn=null;
+                lfn= line.split(" ")[0];
+                if(input==null){
+                    input=new HashMap();
+                }
+                if(!input.containsKey(job)){
+                    input.put(job, new ArrayList());
+                }
+                ilist=(List)input.get(job);
+                ilist.add(lfn);
+            }
+            bf.close();
+        }else if (job.startsWith("cln_")) {
+            //this is for cleanup jobs
+            infile = new File(job + ".in.lof");
+            if (infile.exists() && infile.canRead() && infile.length() != 0) {
+                try {
+                    BufferedReader in = new BufferedReader(new FileReader(infile));
+                    String str;
+                    while ( (str = in.readLine()) != null) {
+
+                        if (input == null) {
+                            input = new HashMap();
+                        }
+                        if (!input.containsKey(job)) {
+                            input.put(job, new ArrayList());
+                        }
+                        ilist = (List) input.get(job);
+                        ilist.add(str);
+                    }
+                    in.close();
+                }
+                catch (IOException e) {
+                }
+            }
+        } else if (!job.endsWith("_cdir")) {
+            //this is a regular job
+            outfile = new File(job + ".out.lof");
+            if (outfile.exists() && outfile.canRead() && outfile.length() != 0) {
+                try {
+                    BufferedReader in = new BufferedReader(new FileReader(outfile));
+                    String str;
+                    while ( (str = in.readLine()) != null) {
+                        if (output == null) {
+                            output = new HashMap();
+                        }
+                        if (!output.containsKey(job)) {
+                            output.put(job, new ArrayList());
+                        }
+                        ilist = (List) output.get(job);
+                        ilist.add(str);
+                    }
+                    in.close();
+                }
+                catch (IOException e) {
+                }
+            }
+
+            infile = new File(job + ".in.lof");
+            if (infile.exists() && infile.canRead() && infile.length() != 0) {
+                try {
+                    BufferedReader in = new BufferedReader(new FileReader(infile));
+                    String str;
+                    while ( (str = in.readLine()) != null) {
+
+                        if (input == null) {
+                            input = new HashMap();
+                        }
+                        if (!input.containsKey(job)) {
+                            input.put(job, new ArrayList());
+                        }
+                        ilist = (List) input.get(job);
+                        ilist.add(str);
+                    }
+                    in.close();
+                }
+                catch (IOException e) {
+                }
+            }
+        }
+    }
+}
 
     private void parseDaxFile(String file, List jobs)throws Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -825,6 +1070,37 @@ public class PasoaProvenanceClient {
 
     }
 
+    //will have to do for handling merged jobs correctly.
+    private InteractionPAssertion createMergedJobInvocationInteractionPAssertion() throws Exception{
+
+      String localPAssertionId = "1";
+
+      // this message content will be obtained by parsing the transfer input files <jobid.in> and obtaining the source urls
+      StringBuffer  message = new StringBuffer("<files link=\"input\" xmlns=\"http://pegasus.isi.edu/schema/pasoa/content/files\">");
+      if(input!=null){
+           if(input.containsKey(jobname)){
+               List inputs = (List) input.get(jobname);
+               for (Iterator i = inputs.iterator(); i.hasNext(); ) {
+                   message.append("<filename>" + (String) i.next() +
+                                  "</filename>");
+               }
+           }
+      }
+      message.append("</files>");
+
+      // Convert it into a DOM Element
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      DocumentBuilder db = dbf.newDocumentBuilder();
+      Document msgDoc = db.parse(new InputSource(new StringReader(message.toString())));
+      Element messageBody = msgDoc.getDocumentElement();
+
+      InteractionPAssertion ipa = new InteractionPAssertion(localPAssertionId, documentationStyle, messageBody);
+
+      return ipa;
+
+  }
+
+
     private InteractionPAssertion createJobInvocationInteractionPAssertion() throws Exception{
 
         String localPAssertionId = "1";
@@ -854,6 +1130,8 @@ public class PasoaProvenanceClient {
         return ipa;
 
     }
+
+
 
     private InteractionPAssertion createJobCompletionInteractionPAssertion() throws Exception{
 
@@ -1089,7 +1367,7 @@ public class PasoaProvenanceClient {
 
     public void registerCompletionInteraction(InteractionKey invocationinteractionkey) throws Exception{
 
-        System.out.println("We now create the transfer Completion interaction key");
+        System.out.println("We now create the register Completion interaction key");
 
         // Create addresses for the source and sink of the
         // interaction.
