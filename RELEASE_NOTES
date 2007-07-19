@@ -5,22 +5,36 @@ Release Notes for PEGASUS 2.0.1
 
 NEW FEATURES
 ------------
+1) Pegasus now can store provenance data into PASOA. The actions taken
+   by the various refiners are logged into the store. It is still an 
+   experimental feature. To turn it on, set the property 
 
+   pegasus.catalog.provenance.refinement  pasoa
+
+   The PASOA store needs to run on localhost on port 8080
+   https://localhost:8080/prserv-1.0
 
 BUGS FIXED
 ----------
-sitecatalog-converter 
-	patch to fix pegasus profile conversion
+1) sitecatalog-converter 
+   patch to fix pegasus profile conversion
 
-pegasus-submit-dag
-	added --maxidle option to allow setting number of idle jobs on the remote site.
+2) pegasus-submit-dag
+   added --maxidle option to allow setting number of idle jobs on
+   the remote site. 
 
-VORS.pm 
+3) VORS.pm 
+   Fixed a small typo in there, that lead to perl compilation
+   errors. 
 
-pegasus-get-sites
-	Removed local tc entries and added environments 
-	for PEGASUS_HOME, GLOBUS_LOCATION and LD_LIBRARY_PATH to local site
+4) pegasus-get-sites
+   Removed local tc entries and added environments 
+   for PEGASUS_HOME, GLOBUS_LOCATION and LD_LIBRARY_PATH to local
+   site.
 
+5) mpiexec 
+   The execution of clustered jobs via mpiexec was broken in 2.0
+   release. That is now fixed.
 
 KNOWN BUGS
 -----------
