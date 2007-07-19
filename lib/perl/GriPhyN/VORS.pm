@@ -56,7 +56,8 @@ my %keys_vds_to_vors_adapter = (
     ss_gatekeeper_port     => 'gk_port',
     ss_gsiftp_hostname     => 'gatekeeper',
     ss_gsiftp_port         => 'gsiftp_port',
-    vo                     => 'sponsor_vo'				
+    vo                     => 'sponsor_vo',
+    vdt_version => 'vdt_version'
 );
 
 
