@@ -555,6 +555,20 @@ public class PegasusProperties {
                              false );
     }
 
+
+    /**
+     * Returns a boolean indicating whether to use timestamp for directory
+     * name creation or not.
+     *
+     * Referred to by "pegasus.dir.useTimestamp" property.
+     *
+     * @return  the boolean value specified in the properties files, else false.
+     */
+    public boolean useTimestampForDirectoryStructure(){
+        return Boolean.parse( mProps.getProperty( "pegasus.dir.useTimestamp" ),
+                              false );
+    }
+
     /**
      * Returns the execution directory suffix or absolute specified
      * that is appended/replaced to the exec-mount-point specified in the
@@ -585,6 +599,19 @@ public class PegasusProperties {
      */
     public String getStorageDirectory() {
         return mProps.getProperty( "pegasus.dir.storage", DEFAULT_STORAGE_DIR );
+    }
+
+    /**
+     * Returns a boolean indicating whether to have a deep storage directory
+     * structure or not while staging out data to the output site.
+     *
+     * Referred to by the "pegasus.dir.storage.deep" property.
+     *
+     * @return  the boolean value specified in the properties files, else false.
+     */
+    public boolean useDeepStorageDirectoryStructure(){
+        return Boolean.parse( mProps.getProperty( "pegasus.dir.storage.deep" ),
+                              false );
     }
 
 

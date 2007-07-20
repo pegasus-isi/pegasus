@@ -389,6 +389,21 @@ public class PlannerOptions extends Data implements Cloneable{
         return mBaseDir;
     }
 
+    /**
+     * Returns the relative submit directory.
+     *
+     * @return the relative submit directory
+     */
+    public String getRelativeSubmitDirectory(){
+        if( mBaseDir == null ){
+            return mSubmitFileDir;
+        }
+        else{
+            return mSubmitFileDir.substring( mBaseDir.length() );
+        }
+    }
+
+
 
     /**
      * Returns the path to the directory where the submit files are to be

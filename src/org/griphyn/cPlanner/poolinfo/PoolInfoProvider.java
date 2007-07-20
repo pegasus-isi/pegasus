@@ -114,6 +114,11 @@ public abstract class PoolInfoProvider {
      */
     protected UserOptions mUserOpts;
 
+    /**
+     * A boolean indicating whether to have a deep directory structure for
+     * the storage directory or not.
+     */
+    protected boolean mDeepStorageStructure;
 
     /**
      *
@@ -173,6 +178,7 @@ public abstract class PoolInfoProvider {
         mUserOpts = UserOptions.getInstance();
         mWorkDir = mProps.getExecDirectory();
         mStorageDir = mProps.getStorageDirectory();
+        mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
     }
 
 
@@ -204,6 +210,7 @@ public abstract class PoolInfoProvider {
 
         mWorkDir = mProps.getExecDirectory();
         mStorageDir = mProps.getStorageDirectory();
+        mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
     }
 
 
@@ -653,6 +660,12 @@ public abstract class PoolInfoProvider {
             File f = new File( mount_point, mStorageDir );
             mount_point = f.getAbsolutePath();
 
+        }
+
+        //check if we need to replicate the submit directory
+        //structure on the storage directory
+        if( mDeepStorageStructure ){
+            mount_point += this.mUserOpts.getOptions().getRelativeSubmitDirectory();
         }
 
         return mount_point;

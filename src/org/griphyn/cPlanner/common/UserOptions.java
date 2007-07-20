@@ -232,6 +232,15 @@ public class UserOptions {
     }
 
     /**
+     * Returns the options passed to the planner.
+     *
+     * @return PlannerOptions
+     */
+    public PlannerOptions getOptions(){
+        return this.mPlannerOpts;
+    }
+
+    /**
      * Returns the directory where the
      * user wants the submit files to be
      * generated.

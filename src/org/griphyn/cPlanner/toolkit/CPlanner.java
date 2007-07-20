@@ -19,7 +19,8 @@ package org.griphyn.cPlanner.toolkit;
 import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 
-import org.griphyn.cPlanner.classes.ADag;import org.griphyn.cPlanner.classes.DagInfo;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
@@ -314,7 +315,11 @@ public class CPlanner extends Executable{
                 //create the base directory if required
                 relativeDir = ( mPOptions.partOfDeferredRun() )?
                               null:
-                              createSubmitDirectory( submitDir, mUser, mPOptions.getVOGroup(), orgDag.getLabel() );
+                              createSubmitDirectory( orgDag,
+                                                     submitDir,
+                                                     mUser,
+                                                     mPOptions.getVOGroup(),
+                                                     mProps.useTimestampForDirectoryStructure() );
                 mPOptions.setSubmitDirectory( submitDir, relativeDir  );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
@@ -768,17 +773,22 @@ public class CPlanner extends Executable{
     /**
      * Creates the submit directory for the workflow. This is not thread safe.
      *
+     * @param dag     the workflow being worked upon.
      * @param dir     the base directory specified by the user.
      * @param user    the username of the user.
      * @param vogroup the vogroup to which the user belongs to.
-     * @param label   the label in the DAX.
+     * @param timestampBased boolean indicating whether to have a timestamp based dir or not
      *
      * @return  the directory name created relative to the base directory passed
      *          as input.
      *
      * @throws IOException in case of unable to create submit directory.
      */
-    protected String createSubmitDirectory( String dir, String user, String vogroup, String label ) throws IOException {
+    protected String createSubmitDirectory( ADag dag,
+                                            String dir,
+                                            String user,
+                                            String vogroup,
+                                            boolean timestampBased ) throws IOException {
         File base = new File( dir );
         StringBuffer result = new StringBuffer();
 
@@ -795,24 +805,29 @@ public class CPlanner extends Executable{
         result.append( vogroup ).append( File.separator );
 
         //add the label of the DAX
+        String label = dag.getLabel();
         base = new File( base, label );
         sanityCheck( base );
         result.append( label ).append( File.separator );
 
-
-        //get all the files in this directory
-        String[] files = base.list( new RunDirectoryFilenameFilter() );
-        //find the maximum run directory
-        int num, max = 1;
-        for( int i = 0; i < files.length ; i++ ){
-            num = Integer.parseInt( files[i].substring( SUBMIT_DIRECTORY_PREFIX.length() ) );
-            if ( num + 1 > max ){ max = num + 1; }
-        }
-
         //create the directory name
         StringBuffer leaf = new StringBuffer();
-        leaf.append( SUBMIT_DIRECTORY_PREFIX ).append( mNumFormatter.format( max ) );
+        if( timestampBased ){
+            leaf.append( dag.dagInfo.getFlowTimestamp() );
+        }
+        else{
+            //get all the files in this directory
+            String[] files = base.list( new RunDirectoryFilenameFilter() );
+            //find the maximum run directory
+            int num, max = 1;
+            for( int i = 0; i < files.length ; i++ ){
+                num = Integer.parseInt( files[i].substring( SUBMIT_DIRECTORY_PREFIX.length() ) );
+                if ( num + 1 > max ){ max = num + 1; }
+            }
 
+            //create the directory name
+            leaf.append( SUBMIT_DIRECTORY_PREFIX ).append( mNumFormatter.format( max ) );
+        }
         result.append( leaf.toString() );
         base = new File( base, leaf.toString() );
         mLogger.log( "Directory to be created is " + base.getAbsolutePath(),
