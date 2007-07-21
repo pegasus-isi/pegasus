@@ -268,6 +268,8 @@ public class DagInfo extends Data {
         return mDAXMTime;
     }
 
+
+
     /**
      * Returns the flow timestamp for the workflow.
      *
@@ -275,6 +277,15 @@ public class DagInfo extends Data {
      */
     public String getFlowTimestamp(){
         return mFlowTimestamp;
+    }
+
+    /**
+     * Sets the flow timestamp for the workflow.
+     *
+     * @param timestamp the flowtimestamp
+     */
+    public void setFlowTimestamp( String timestamp ){
+        mFlowTimestamp = timestamp;
     }
 
 
@@ -434,6 +445,8 @@ public class DagInfo extends Data {
     }
 
 
+
+
     /**
      * Generates the flow id for this current run. It is made of the name of the
      * dag and a timestamp. This is a simple concat of the mFlowTimestamp and the
@@ -495,22 +508,7 @@ public class DagInfo extends Data {
     }
 
 
-    /**
-     * Generates the timestamp at which this particular run of Pegasus was
-     * invoked.
-     *
-     * @param extendedFormat  will use the extended ISO 8601 format which
-     * separates the different timestamp items. If false, the basic
-     * format will be used. In UTC and basic format, the 'T' separator
-     * will be omitted.
-     */
-    public void generateFlowTimestamp(boolean extendedFormat){
 
-        StringBuffer sb = new StringBuffer();
-        sb.append(Currently.iso8601(false,extendedFormat,false,new java.util.Date()));
-        mFlowTimestamp = sb.toString();
-
-    }
 
     /**
      * Grabs the release version from VDS.Properties file.

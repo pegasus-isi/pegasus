@@ -665,8 +665,15 @@ public abstract class PoolInfoProvider {
         //check if we need to replicate the submit directory
         //structure on the storage directory
         if( mDeepStorageStructure ){
-            mount_point += this.mUserOpts.getOptions().getRelativeSubmitDirectory();
+            String leaf = ( this.mUserOpts.getOptions().partOfDeferredRun() )?
+                             //if a deferred run then pick up the relative random directory
+                             this.mUserOpts.getOptions().getRandomDir():
+                             //for a normal run add the relative submit directory
+                             this.mUserOpts.getOptions().getRelativeSubmitDirectory();
+            File f = new File( mount_point, leaf );
+            mount_point = f.getAbsolutePath();
         }
+
 
         return mount_point;
 

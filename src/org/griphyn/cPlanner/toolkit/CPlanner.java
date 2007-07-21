@@ -307,6 +307,13 @@ public class CPlanner extends Executable{
 
             ADag orgDag = (ADag)cb.getConstructedObject();
 
+            //generate the flow ids for the classads information
+            orgDag.dagInfo.generateFlowName();
+            orgDag.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
+            orgDag.dagInfo.setDAXMTime( dax );
+            orgDag.dagInfo.generateFlowID();
+            orgDag.dagInfo.setReleaseVersion();
+
 
             //write out a the relevant properties to submit directory
             int state = 0;
@@ -416,32 +423,8 @@ public class CPlanner extends Executable{
                 mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
             }
 
-            //connect to the work catalog and populate
-            //an entry in it for the current workflow
-            WorkCatalog wc = null;
-            boolean nodatabase = false;
-            try{
-                wc = WorkFactory.loadInstance( mProps );
-            }
-            catch( Exception e ) {
-                //just log and proceed
-                mLogger.log( "Ignoring: " + convertException( e ),  LogManager.DEBUG_MESSAGE_LEVEL );
-                nodatabase = true;
-            }
-            if ( wc != null ) {
-                wc.insert( submitDir, mPOptions.getVOGroup(), finalDag.getLabel(),
-                           new File( relativeDir == null ? "." : relativeDir  ).getName(),
-                           mUser,
-                           Currently.parse( finalDag.getMTime() ),
-                           Currently.parse( finalDag.dagInfo.getFlowTimestamp() ),
-                          -2  );
-                try{
-                    wc.close();
-                } catch( Exception e ) {
-                    /*ignore */
-                    nodatabase = true;
-                }
-            }
+            //log entry in to the work catalog
+            boolean nodatabase = logEntryInWorkCatalog( finalDag, submitDir, relativeDir );
 
 
             if(mPOptions.submitToScheduler()){//submit the jobs
@@ -577,7 +560,35 @@ public class CPlanner extends Executable{
     }
 
 
-
+    protected boolean logEntryInWorkCatalog( ADag dag, String baseDir, String relativeDir ){
+        //connect to the work catalog and populate
+        //an entry in it for the current workflow
+        WorkCatalog wc = null;
+        boolean nodatabase = false;
+        try{
+            wc = WorkFactory.loadInstance( mProps );
+        }
+        catch( Exception e ) {
+            //just log and proceed
+            mLogger.log( "Ignoring: " + convertException( e ),  LogManager.DEBUG_MESSAGE_LEVEL );
+            nodatabase = true;
+        }
+        if ( wc != null ) {
+            wc.insert( baseDir, mPOptions.getVOGroup(), dag.getLabel(),
+                       new File( relativeDir == null ? "." : relativeDir  ).getName(),
+                       mUser,
+                       Currently.parse( dag.getMTime() ),
+                       Currently.parse( dag.dagInfo.getFlowTimestamp() ),
+                       -2  );
+            try{
+                wc.close();
+            } catch( Exception e ) {
+                /*ignore */
+                nodatabase = true;
+            }
+        }
+        return nodatabase;
+    }
 
 
      /**
@@ -730,6 +741,7 @@ public class CPlanner extends Executable{
         //System.out.println("Directory in which partitioned daxes are " + directory);
 
         int errorStatus = 1;
+        ADag megaDAG = null;
         try{
             //load the correct callback handler
             org.griphyn.cPlanner.parser.pdax.Callback c =
@@ -743,6 +755,8 @@ public class CPlanner extends Executable{
             PDAXParser p = new PDAXParser( file , mProps );
             p.setCallback(c);
             p.startParser(file);
+
+            megaDAG = (ADag)c.getConstructedObject();
         }
         catch(FactoryException fe){
             //just rethrow for time being. we need error status as 2
@@ -766,6 +780,12 @@ public class CPlanner extends Executable{
             }
             throw new RuntimeException(message, e);
         }
+
+
+
+        this.logSuccessfulCompletion( this.logEntryInWorkCatalog( megaDAG,
+                                                                  mPOptions.getBaseSubmitDirectory(),
+                                                                  mPOptions.getRelativeSubmitDirectory() ));
 
     }
 
@@ -813,7 +833,7 @@ public class CPlanner extends Executable{
         //create the directory name
         StringBuffer leaf = new StringBuffer();
         if( timestampBased ){
-            leaf.append( dag.dagInfo.getFlowTimestamp() );
+            leaf.append( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ) );
         }
         else{
             //get all the files in this directory

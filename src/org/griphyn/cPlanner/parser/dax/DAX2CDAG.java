@@ -67,10 +67,6 @@ public class DAX2CDAG implements Callback {
      */
     private boolean mDone;
 
-    /**
-     * The path to the DAX file.
-     */
-    private String mDAXPath;
 
     /**
      * The overloaded constructor.
@@ -79,7 +75,7 @@ public class DAX2CDAG implements Callback {
      * @param dax         the path to the DAX file.
      */
     public DAX2CDAG( PegasusProperties properties, String dax ) {
-        mDAXPath      = dax;
+//        mDAXPath      = dax;
         mDagInfo      = new DagInfo();
         mVSubInfo     = new Vector();
         mJobMap       = new HashMap();
@@ -176,12 +172,6 @@ public class DAX2CDAG implements Callback {
                                        " for the partition was fully generated");
 
 
-        //generate the flow ids for the classads information
-        mDagInfo.generateFlowName();
-        mDagInfo.generateFlowTimestamp(mProps.useExtendedTimeStamp());
-        mDagInfo.setDAXMTime(mDAXPath);
-        mDagInfo.generateFlowID();
-        mDagInfo.setReleaseVersion();
 
 
         return new ADag(mDagInfo,mVSubInfo);

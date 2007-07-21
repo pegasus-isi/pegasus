@@ -58,4 +58,19 @@ public interface Callback {
      */
     public void cbDone();
 
+    /**
+     * Return a object that is constructed during the parsing of the object.
+     * The type of the object that is constructed is determined by the
+     * implementing callback handler. For example, it could be an Adag object
+     * used by Pegasus or a map containing the graph structure of the dax.
+     * The implementing classes should keep a boolean flag that signifies whether
+     * the corresponding object has been created by the implementing class or
+     * not. The variable should be set when the implementing callback handler
+     * deems that it has enough data to construct that object.
+     *
+     * @return the constructed object
+     */
+    public Object getConstructedObject();
+
+
 }

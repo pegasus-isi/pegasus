@@ -19,11 +19,13 @@ import org.griphyn.cPlanner.common.LogManager;
 import java.io.File;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.StringTokenizer;
+import org.griphyn.common.util.Currently;
 
 /**
  * Holds the information about thevarious options which user specifies to
@@ -166,6 +168,11 @@ public class PlannerOptions extends Data implements Cloneable{
     private String mVOGroup;
 
     /**
+     * Stores the time at which the planning process started.
+     */
+    private Date mDate;
+
+    /**
      * Default Constructor.
      */
     public PlannerOptions(){
@@ -192,6 +199,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mCleanup          = true;
         mVOGroup          = "pegasus";
         mDeferredRun      = false;
+        mDate             = new Date();
     }
 
     /**
@@ -277,6 +285,27 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public boolean getCleanup(){
         return mCleanup;
+    }
+
+
+    /**
+     * Returns the time at which planning started in a ISO 8601 format.
+     *
+     * @param extendedFormat  will use the extended ISO 8601 format which
+     * separates the different timestamp items. If false, the basic
+     * format will be used. In UTC and basic format, the 'T' separator
+     * will be omitted.
+     *
+     * @return String
+     */
+    public String getDateTime( boolean extendedFormat ){
+
+        StringBuffer sb = new StringBuffer();
+        sb.append( Currently.iso8601( false, extendedFormat, false,
+                                      mDate )
+                  );
+        return sb.toString();
+
     }
 
 
@@ -395,12 +424,9 @@ public class PlannerOptions extends Data implements Cloneable{
      * @return the relative submit directory
      */
     public String getRelativeSubmitDirectory(){
-        if( mBaseDir == null ){
-            return mSubmitFileDir;
-        }
-        else{
-            return mSubmitFileDir.substring( mBaseDir.length() );
-        }
+        return ( mBaseDir == null ) ?
+                 mSubmitFileDir:
+                 mSubmitFileDir.substring( mBaseDir.length() );
     }
 
 
@@ -920,6 +946,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mBasenamePrefix = this.mBasenamePrefix;
         pOpt.mVOGroup        = this.mVOGroup;
         pOpt.mDeferredRun    = this.mDeferredRun;
+        pOpt.mDate           = (Date)this.mDate.clone();
         //Note not cloning the vdsProps
         pOpt.mVDSProps       = null;
         return pOpt;

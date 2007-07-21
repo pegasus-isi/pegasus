@@ -49,7 +49,6 @@ import org.griphyn.common.classes.TCType;
 
 import org.griphyn.common.util.Version;
 import org.griphyn.common.util.FactoryException;
-import org.griphyn.common.util.Currently;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +57,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.BufferedWriter;
+import java.io.FilenameFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,6 +65,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import java.util.regex.Pattern;
+
+import java.text.NumberFormat;
+import java.text.DecimalFormat;
 
 /**
  * This callback ends up creating the megadag that contains the smaller dags
@@ -81,6 +86,11 @@ public class PDAX2MDAG implements Callback {
      */
     public static final String CODE_GENERATOR_CLASS =
                                 CodeGeneratorFactory.CONDOR_CODE_GENERATOR_CLASS;
+
+    /**
+     * The prefix for the submit directory.
+     */
+    public static final String SUBMIT_DIRECTORY_PREFIX = "run";
 
 
     /**
@@ -208,6 +218,20 @@ public class PDAX2MDAG implements Callback {
      */
     private StreamGobblerCallback mDefaultCallback;
 
+    /**
+     * The number formatter to format the run submit dir entries.
+     */
+    private NumberFormat mNumFormatter;
+
+    /**
+     * The user name of the user running Pegasus.
+     */
+    private String mUser;
+
+    /**
+     * A flag to store whether the parsing is complete or not.
+     */
+    private boolean mDone;
 
     /**
      * The overloaded constructor.
@@ -225,20 +249,18 @@ public class PDAX2MDAG implements Callback {
         mClonedPOptions  = (options == null)? null : (PlannerOptions)options.clone();
         mTCHandle  = TCMode.loadInstance();
         mMDAGPropertiesFile = null;
+        mNumFormatter = new DecimalFormat( "0000" );
+
+        mDone = false;
+        mUser = mProps.getProperty( "user.name" ) ;
+        if ( mUser == null ){ mUser = "user"; }
+
 
         //the default gobbler callback always log to debug level
         mDefaultCallback =
                new DefaultStreamGobblerCallback(LogManager.DEBUG_MESSAGE_LEVEL);
 
-        mSubmitDirectory = options.getSubmitDirectory();
 
-        // create files in the directory, unless anything else is known.
-        try {
-            mFactory = new FlatFileFactory(mSubmitDirectory); // minimum default
-        } catch ( IOException ioe ) {
-            throw new RuntimeException( "Unable to generate files in the submit directory " ,
-                                        ioe );
-        }
     }
 
 
@@ -297,6 +319,29 @@ public class PDAX2MDAG implements Callback {
         mMegaDAG.dagInfo.count      = (String)attributes.get("count");
         mMegaDAG.dagInfo.index      = (String)attributes.get("index");
 
+        // create files in the directory, unless anything else is known.
+        try {
+            //create a submit directory structure if required
+            String relativeDir = this.createSubmitDirectory( mMegaDAG.getLabel(),
+                                                             mPOptions.getSubmitDirectory(),
+                                                             mUser,
+                                                             mPOptions.getVOGroup(),
+                                                             mProps.useTimestampForDirectoryStructure() );
+            //set the directory structure
+            mPOptions.setSubmitDirectory( mPOptions.getSubmitDirectory(), relativeDir);
+            mSubmitDirectory = mPOptions.getSubmitDirectory();
+
+            //we want to set the relative directory as the base working
+            //directory for all the partition on the remote sites.
+            mPOptions.setRandomDir( relativeDir );
+
+            mFactory = new FlatFileFactory(mSubmitDirectory); // minimum default
+        } catch ( IOException ioe ) {
+            throw new RuntimeException( "Unable to generate files in the submit directory " ,
+                                        ioe );
+        }
+
+
         // not in the PDAX format currently
         String s = (String) attributes.get("partitionCount");
 
@@ -333,7 +378,8 @@ public class PDAX2MDAG implements Callback {
 
             //write out all the properties into a temp file
             //in the root submit directory
-            mMDAGPropertiesFile = writeOutProperties( mSubmitDirectory );
+            //mMDAGPropertiesFile = writeOutProperties( mSubmitDirectory );
+            mMDAGPropertiesFile = mProps.writeOutProperties( mSubmitDirectory );
 
         }
         catch ( NumberFormatException nfe ) {
@@ -496,10 +542,12 @@ public class PDAX2MDAG implements Callback {
      * mega dag.
      */
     public void cbDone() {
+        mDone = true;
+
         //generate the classad's options
         //for the Mega DAG
         mMegaDAG.dagInfo.generateFlowName();
-        mMegaDAG.dagInfo.generateFlowTimestamp(mProps.useExtendedTimeStamp());
+        mMegaDAG.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
         mMegaDAG.dagInfo.setDAXMTime(mPOptions.getPDAX());
         mMegaDAG.dagInfo.generateFlowID();
         mMegaDAG.dagInfo.setReleaseVersion();
@@ -515,6 +563,11 @@ public class PDAX2MDAG implements Callback {
                                                                CODE_GENERATOR_CLASS );
             state = 1;
             codeGenerator.generateCode( mMegaDAG );
+
+            //generate only the braindump file that is required.
+            //no spawning off the tailstatd for time being
+            codeGenerator.startMonitoring();
+
         }
         catch( FactoryException fe ){
             throw new FactoryException("PDAX2MDAG",fe);
@@ -525,6 +578,23 @@ public class PDAX2MDAG implements Callback {
 
 
     }
+
+
+
+   /**
+    * Returns the MEGADAG that is generated
+    *
+    * @return  ADag object containing the mega daga
+    */
+   public Object getConstructedObject(){
+       if(!mDone)
+           throw new RuntimeException("Method called before the megadag " +
+                                      " was fully generated");
+
+
+
+       return mMegaDAG;
+   }
 
 
     /**
@@ -795,7 +865,7 @@ public class PDAX2MDAG implements Callback {
 
         //the header of the file
         StringBuffer header = new StringBuffer(64);
-        header.append("VDS USER PROPERTIES AT RUNTIME \n")
+        header.append("PEGASUS USER PROPERTIES AT RUNTIME \n")
               .append("#ESCAPES IN VALUES ARE INTRODUCED");
 
         //create an output stream to this file and write out the properties
@@ -887,6 +957,15 @@ public class PDAX2MDAG implements Callback {
         //the output of the prescript i.e submit files should be created
         //in the directory where the job is being run.
         mClonedPOptions.setSubmitDirectory( (String)job.condorVariables.get("initialdir"));
+
+        //generate the remote working directory for the paritition
+        String submit        = mClonedPOptions.getSubmitDirectory(); // like /tmp/vahi/pegasus/blackdiamond/run0001/00/PID1
+        String remoteBase    = mPOptions.getRandomDir(); // like vahi/pegasus/blackdiamond/run0001
+        String remoteWorkDir = submit.substring( submit.indexOf( remoteBase) ); //gets us vahi/pegasus/blackdiamond/run0001/00/PID1
+        mClonedPOptions.setRandomDir( remoteWorkDir );
+        mLogger.log( "Remote working directory set to " + remoteWorkDir +
+                     " for partition " + job.getID() ,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
 
         //set the basename for the nested dag as the ID of the job.
         //which is actually the basename of the deep lfn job name!!
@@ -1153,227 +1232,71 @@ public class PDAX2MDAG implements Callback {
     }
 
     /**
-     * It returns the name for the ADag object that contains the meta dag
-     * to kickstart the other partitions.
+     * Creates the submit directory for the workflow. This is not thread safe.
      *
-     * @param name    the name.
-     * @param index   the index.
+     * @param label   the label of the workflow being worked upon.
+     * @param dir     the base directory specified by the user.
+     * @param user    the username of the user.
+     * @param vogroup the vogroup to which the user belongs to.
+     * @param timestampBased boolean indicating whether to have a timestamp based dir or not
      *
-     * @return String
+     * @return  the directory name created relative to the base directory passed
+     *          as input.
+     *
+     * @throws IOException in case of unable to create submit directory.
      */
-    private String getMetaDAGName(String name, String index){
-        return null;
+    protected String createSubmitDirectory( String label,
+                                            String dir,
+                                            String user,
+                                            String vogroup,
+                                            boolean timestampBased ) throws IOException {
+        File base = new File( dir );
+        StringBuffer result = new StringBuffer();
+
+        //do a sanity check on the base
+        sanityCheck( base );
+
+        //add the user name if possible
+        base = new File( base, user );
+        result.append( user ).append( File.separator );
+
+        //add the vogroup
+        base = new File( base, vogroup );
+        sanityCheck( base );
+        result.append( vogroup ).append( File.separator );
+
+        //add the label of the DAX
+        base = new File( base, label );
+        sanityCheck( base );
+        result.append( label ).append( File.separator );
+
+        //create the directory name
+        StringBuffer leaf = new StringBuffer();
+        if( timestampBased ){
+            leaf.append( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ) );
+        }
+        else{
+            //get all the files in this directory
+            String[] files = base.list( new RunDirectoryFilenameFilter() );
+            //find the maximum run directory
+            int num, max = 1;
+            for( int i = 0; i < files.length ; i++ ){
+                num = Integer.parseInt( files[i].substring( SUBMIT_DIRECTORY_PREFIX.length() ) );
+                if ( num + 1 > max ){ max = num + 1; }
+            }
+
+            //create the directory name
+            leaf.append( SUBMIT_DIRECTORY_PREFIX ).append( mNumFormatter.format( max ) );
+        }
+        result.append( leaf.toString() );
+        base = new File( base, leaf.toString() );
+        mLogger.log( "Directory to be created is " + base.getAbsolutePath(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        sanityCheck( base );
+
+        return result.toString();
     }
 
-    /**
-     * Returns the name for the pegasus job that is used to generate the submit
-     * files for the jobs in the partition.
-     *
-     * @param name  the name attribute in the adag element of the dax.
-     * @param index the partition number of the partition.
-     *
-     * @return the name of the Pegasus job.
-     */
-    private String getPegasusJobName(String name, int index){
-        StringBuffer sb = new StringBuffer();
-        sb.append(name).append("_").append(index);
-        return sb.toString();
-    }
-
-    /**
-     * Constructs a condor job that runs Pegasus on a dax corresponding to a
-     * particular level of dax.
-     *
-     * @param jobName  the logical name that you want to assign to the job
-     *                 that is being constructed.
-     * @param daxURL   the path to the dax file on the filesystem.
-     *
-     * @return the constructed Pegasus Job.
-     */
-    private SubInfo constructPegasusJob(String jobName, String daxURL){
-        String pool = "local";
-        List entries;
-        TransformationCatalogEntry entry = null;
-
-        String dagName = mMegaDAG.dagInfo.nameOfADag;
-        String dagIndex= mMegaDAG.dagInfo.index;
-
-
-        SubInfo job = new SubInfo();
-        job.jobName = jobName;
-
-        //we want the job to run on the submit host
-        job.executionPool = pool;
-
-        //job runs in scheduler universe
-        //job.condorUniverse = "scheduler";
-
-        //set the logical transformation attributes of the job.
-        job.namespace   = NAMESPACE;
-        job.logicalName = CPLANNER_LOGICAL_NAME;
-        job.version     = Version.instance().toString();
-
-        //set the logical derivation attributes of the job.
-        job.dvNamespace = NAMESPACE;
-        job.dvName      = CPLANNER_LOGICAL_NAME;
-        job.dvVersion   = Version.instance().toString();
-
-        //get the path to Pegasus
-        try{
-            entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
-                                             job.version, pool,
-                                             TCType.INSTALLED);
-            entry = (entries == null) ?
-                null :
-                //Gaurang assures that if no record is found then
-                //TC Mechanism returns null
-                (TransformationCatalogEntry) entries.get(0);
-        }
-        catch(Exception e){
-            //non sensical catching
-            mLogger.log(e.getMessage(),LogManager.ERROR_MESSAGE_LEVEL);
-        }
-
-
-  //set the path to the executable and environment string
-  job.executable = (entry==null) ?   mProps.getPegasusHome()+File.separator+ "bin" + File.separator +
-                          CPLANNER_LOGICAL_NAME : entry.getPhysicalTransformation();
-        //the environment variable are set later automatically from the tc
-        //job.envVariables = entry.envString;
-
-        //the job itself is the main job of the super node
-        //construct the classad specific information
-        job.jobID = jobName;
-        job.jobClass = SubInfo.COMPUTE_JOB;
-
-        //construct the argument string.
-        //add the jvm options if any
-        job.strargs = mPOptions.toJVMOptions();
-        job.strargs += " --dax " + daxURL + mPOptions.toOptions();
-
-        //the log file also needs to be created
-       //in the pdax directory. using condor env.
-       //This is due to Condor bug where if one submit
-       //file has fully qualified path to log file , rest must have!!!!
-       job.condorVariables.construct("log",mPDAXDirectory + File.separator +
-                                     dagName + "_" + dagIndex + ".log");
-
-        return job;
-    }
-
-
-    /**
-     * Constructs a condor job that ends up submitting the mini dag whose
-     * condor submit files have been created by Pegasus.
-     *
-     * @param jobName  the logical name that you want to assign to the job
-     *                 that is being constructed.
-     * @param name  the name attribute in the partition element of the pdax.
-     * @param index the partition number of the partition.
-     *
-     * @return the condor submit job.
-     */
-    private SubInfo constructCondorSubmitJob(String jobName, String name,
-                                             int index){
-        //we want the job to run on the submit host
-        String pool = "local";
-
-        String dagName = mMegaDAG.dagInfo.nameOfADag;
-        String dagIndex= mMegaDAG.dagInfo.index;
-        List entries;
-        TransformationCatalogEntry entry = null;
-
-
-        SubInfo job = new SubInfo();
-        job.jobName = jobName;
-
-        //we want the job to run on the submit host
-        job.executionPool = pool;
-
-        //job runs in scheduler universe
-        //job.condorUniverse = "scheduler";
-
-        //set the logical transformation attributes of the job.
-        job.namespace   = null;
-        job.logicalName = CONDOR_DAGMAN_LOGICAL_NAME;
-        job.version     = null;
-
-        //set the logical derivation attributes of the job.
-        job.dvNamespace = NAMESPACE;
-        job.dvName      = CONDOR_DAGMAN_LOGICAL_NAME;
-        job.dvVersion   = null;
-
-        //get the path to Pegasus
-        try{
-            entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
-                                             job.version, pool,
-                                             TCType.INSTALLED);
-            entry = (entries == null) ?
-                null :
-                //Gaurang assures that if no record is found then
-                //TC Mechanism returns null
-                (TransformationCatalogEntry) entries.get(0);
-        }
-        catch(Exception e){
-            mLogger.log(e.getMessage(),LogManager.ERROR_MESSAGE_LEVEL);
-        }
-
-
-        if(entry == null){
-            //log an error and exit and record is not in TC
-            StringBuffer error = new StringBuffer();
-            error.append( "Entry not found in tc for job ").append( job.getCompleteTCName() ).
-                  append( " on site ").append( pool );
-            mLogger.log( error.toString(), LogManager.FATAL_MESSAGE_LEVEL );
-            throw new RuntimeException( error.toString() );
-        }
-
-        //set the path to the executable and environment string
-        job.executable = entry.getPhysicalTransformation();
-        //the environment variable are set later automatically from the tc
-        //job.envVariables = entry.envString;
-
-        //the job itself is the main job of the super node
-        //construct the classad specific information
-        job.jobID = jobName;
-        job.jobClass = SubInfo.COMPUTE_JOB;
-
-        //construct the argument string.
-        StringBuffer sb = new StringBuffer();
-        sb.append(" -f -l . -Debug 3").
-           append(" -Lockfile ").append(getCondorFileName(name,index,".dag.lock")).
-           append(" -Dag ").append(getCondorFileName(name,index,".dag","-")).
-           append(" -Rescue ").append(getCondorFileName(name,index,".dag.rescue")).
-           append(" -Condorlog ").append(getCondorFileName(name,index,".log"));
-
-       //put in the environment variables that are required
-       job.envVariables.construct("_CONDOR_DAGMAN_LOG",
-                                  getCondorFileName(name,index,".dag.dagman.out"));
-       job.envVariables.construct("_CONDOR_MAX_DAGMAN_LOG","0");
-
-       job.strargs = sb.toString();
-
-       //the environment need to be propogated for exitcode to be picked up
-       job.condorVariables.construct("getenv","TRUE");
-
-       //make the initial dir point to the submit file dir
-       //bypassing the check for valid key in condor namespace
-       //straightaway constructing the key
-       job.condorVariables.construct("initialdir",mPOptions.getSubmitDirectory());
-       job.condorVariables.construct("remove_kill_sig","SIGUSR1");
-
-       //the stdout and stderr need to be directed to
-       //pdax directory
-       job.stdErr = mPDAXDirectory + File.separator + job.jobName + "_defer.err";
-       job.stdOut = mPDAXDirectory + File.separator + job.jobName + "_defer.out";
-       //the log file also needs to be created
-       //in the pdax directory. using condor env.
-       job.condorVariables.construct("log",mPDAXDirectory + File.separator +
-                                     dagName + "_" + dagIndex + ".log");
-
-       return job;
-
-    }
 
     /**
      * A small utility method that constructs the name of the Condor files
@@ -1485,4 +1408,46 @@ public class PDAX2MDAG implements Callback {
         }
 
     }
+}
+
+/**
+ * A filename filter for identifying the run directory
+ *
+ * @author Karan Vahi vahi@isi.edu
+ */
+class RunDirectoryFilenameFilter implements FilenameFilter {
+
+    /**
+     * Store the regular expressions necessary to parse kickstart output files
+     */
+    private static final String mRegexExpression =
+                                     "(" + PDAX2MDAG.SUBMIT_DIRECTORY_PREFIX + ")([0-9][0-9][0-9][0-9])";
+
+    /**
+     * Stores compiled patterns at first use, quasi-Singleton.
+     */
+    private static Pattern mPattern = null;
+
+
+
+    /***
+     * Tests if a specified file should be included in a file list.
+     *
+     * @param dir the directory in which the file was found.
+     * @param name - the name of the file.
+     *
+     * @return  true if and only if the name should be included in the file list
+     *          false otherwise.
+     *
+     *
+     */
+     public boolean accept( File dir, String name) {
+         //compile the pattern only once.
+         if( mPattern == null ){
+             mPattern = Pattern.compile( mRegexExpression );
+         }
+         return mPattern.matcher( name ).matches();
+     }
+
+
 }
