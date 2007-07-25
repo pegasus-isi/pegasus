@@ -138,6 +138,17 @@ public class PDAX2MDAG implements Callback {
     public static final String RETRY_LOGICAL_NAME = "pegasus-plan";
 
     /**
+     * The dagman knobs controlled through property. They map the property name to
+     * the corresponding dagman option.
+     */
+    public static final String DAGMAN_KNOBS[][]={
+        { "pegasus.dagman.maxpre",  " -MaxPre " },
+        { "pegasus.dagman.maxpost", " -MaxPost " },
+        { "pegasus.dagman.maxjobs", " -MaxJobs " },
+        { "pegasus.dagman.maxidle", " -MaxIdle " },
+    };
+
+    /**
      * The file Separator to be used on the submit host.
      */
     protected static char mSeparator = File.separatorChar;
@@ -234,6 +245,12 @@ public class PDAX2MDAG implements Callback {
     private boolean mDone;
 
     /**
+     * Any extra arguments that need to be passed to dagman, as determined
+     * from the properties file.
+     */
+    private String mDAGManKnobs;
+
+    /**
      * The overloaded constructor.
      *
      * @param directory the directory where the pdax and all the daxes
@@ -260,7 +277,7 @@ public class PDAX2MDAG implements Callback {
         mDefaultCallback =
                new DefaultStreamGobblerCallback(LogManager.DEBUG_MESSAGE_LEVEL);
 
-
+        mDAGManKnobs = constructDAGManKnobs( properties );
     }
 
 
@@ -723,6 +740,9 @@ public class PDAX2MDAG implements Callback {
            append(" -Dag ").append( getBasename( partition, ".dag")).
            append(" -Rescue ").append(getBasename( partition, ".dag.rescue")).
            append(" -Condorlog ").append(getBasename( partition, ".log"));
+
+       //pass any dagman knobs that were specified in properties file
+       sb.append( this.mDAGManKnobs );
 
        //put in the environment variables that are required
        job.envVariables.construct("_CONDOR_DAGMAN_LOG",
@@ -1297,6 +1317,48 @@ public class PDAX2MDAG implements Callback {
         return result.toString();
     }
 
+    /**
+     * Constructs Any extra arguments that need to be passed to dagman, as determined
+     * from the properties file.
+     *
+     * @param properties   the <code>PegasusProperties</code>
+     *
+     * @return any arguments to be added, else empty string
+     */
+    protected String constructDAGManKnobs( PegasusProperties properties ){
+        StringBuffer sb = new StringBuffer();
+
+        //get all the values for the dagman knows
+        int value;
+        for( int i = 0; i < this.DAGMAN_KNOBS.length; i++ ){
+            value = parseInt( properties.getProperty( this.DAGMAN_KNOBS[i][0] ) );
+            if ( value > 0 ){
+                //add the option
+                sb.append( this.DAGMAN_KNOBS[i][1] );
+                sb.append( value );
+            }
+        }
+        return sb.toString();
+
+    }
+
+    /**
+     * Parses a string into an integer. Non valid values returned as -1
+     *
+     * @param s  the String to be parsed as integer
+     *
+     * @return the int value if valid, else -1
+     */
+    protected int parseInt( String s ){
+        int value = -1;
+        try{
+            value = Integer.parseInt( s );
+        }
+        catch( Exception e ){
+            //ignore
+        }
+        return value;
+    }
 
     /**
      * A small utility method that constructs the name of the Condor files
