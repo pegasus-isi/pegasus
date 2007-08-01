@@ -237,54 +237,58 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   if ( run->fcount && run->final )
     for ( i=0; i<run->fcount; ++i )
       printXMLStatInfo( buffer, size, &len, 2, "statcall", "final", &run->final[i] );
-  
-  /* <environment> */
-  if ( run->envp && run->envc ) {
-    char* s; 
+
+  if ( ! run->noHeader ) {
+
+    /* <environment> */
+    if ( run->envp && run->envc ) {
+      char* s; 
 
 #if 1
-    /* attempt a sorted version */
-    char** keys = malloc( sizeof(char*) * run->envc );
-    for ( i=0; i < run->envc; ++i ) {
-      keys[i] = run->envp[i] ? strdup(run->envp[i]) : "";
-    }
-    qsort( (void*) keys, run->envc, sizeof(char*), mycompare );
-
-    append( buffer, size, &len, "  <environment>\n" );
-    for ( i=0; i < run->envc; ++i ) {
-      if ( keys[i] && (s = strchr( keys[i], '=' )) ) {
-	*s = '\0'; /* temporarily cut string here */
-	append( buffer, size, &len, "    <env key=\"" );
-	append( buffer, size, &len, keys[i] );
-	append( buffer, size, &len, "\">" );
-	xmlquote( buffer, size, &len, s+1, strlen(s+1) );
-	append( buffer, size, &len, "</env>\n" );
-	*s = '='; /* reset string to original */
+      /* attempt a sorted version */
+      char** keys = malloc( sizeof(char*) * run->envc );
+      for ( i=0; i < run->envc; ++i ) {
+	keys[i] = run->envp[i] ? strdup(run->envp[i]) : "";
       }
-    }
-    free((void*) keys);
+      qsort( (void*) keys, run->envc, sizeof(char*), mycompare );
+
+      append( buffer, size, &len, "  <environment>\n" );
+      for ( i=0; i < run->envc; ++i ) {
+	if ( keys[i] && (s = strchr( keys[i], '=' )) ) {
+	  *s = '\0'; /* temporarily cut string here */
+	  append( buffer, size, &len, "    <env key=\"" );
+	  append( buffer, size, &len, keys[i] );
+	  append( buffer, size, &len, "\">" );
+	  xmlquote( buffer, size, &len, s+1, strlen(s+1) );
+	  append( buffer, size, &len, "</env>\n" );
+	  *s = '='; /* reset string to original */
+	}
+      }
+      free((void*) keys);
 
 #else
-    /* unsorted version */
-    append( buffer, size, &len, "  <environment>\n" );
+      /* unsorted version */
+      append( buffer, size, &len, "  <environment>\n" );
 
-    for ( i=0; i < run->envc; ++i ) {
-      if ( run->envp[i] && (s = strchr( run->envp[i], '=' )) ) {
-	*s = '\0'; /* temporarily cut string here */
-	append( buffer, size, &len, "    <env key=\"" );
-	append( buffer, size, &len, run->envp[i] );
-	append( buffer, size, &len, "\">" );
-	xmlquote( buffer, size, &len, s+1, strlen(s+1) );
-	append( buffer, size, &len, "</env>\n" );
-	*s = '='; /* reset string to original */
+      for ( i=0; i < run->envc; ++i ) {
+	if ( run->envp[i] && (s = strchr( run->envp[i], '=' )) ) {
+	  *s = '\0'; /* temporarily cut string here */
+	  append( buffer, size, &len, "    <env key=\"" );
+	  append( buffer, size, &len, run->envp[i] );
+	  append( buffer, size, &len, "\">" );
+	  xmlquote( buffer, size, &len, s+1, strlen(s+1) );
+	  append( buffer, size, &len, "</env>\n" );
+	  *s = '='; /* reset string to original */
+	}
       }
-    }
 #endif
-    append( buffer, size, &len, "  </environment>\n" );
-  }
+      append( buffer, size, &len, "  </environment>\n" );
+    }
 
-  /* <resource>  limits */
-  printXMLLimitInfo( buffer, size, &len, 2, &run->limits );
+    /* <resource>  limits */
+    printXMLLimitInfo( buffer, size, &len, 2, &run->limits );
+
+  } /* ! run->noHeader */
 
   /* finish root element */
   append( buffer, size, &len, "</invocation>\n" );

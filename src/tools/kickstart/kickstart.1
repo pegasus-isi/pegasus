@@ -98,6 +98,10 @@ There is no default. If no value is given, "null" will be reported.
 .B \-H 
 This option avoids kickstart writing the XML preamble (entity), if you 
 need to combine multiple kickstart records into one document. 
+.IP
+Additionally, if specified, the environment and the resource usage
+segments will not be written, assuming that a in a concatinated
+record version, the initial run will have captured those settings. 
 .TP
 .B \-R site
 In order to provide the greater picture, kickstart can reflect the

@@ -573,7 +573,8 @@ main( int argc, char* argv[] )
   mylist_done( &initial );
 
   /* remember environment that all jobs will see */
-  envIntoAppInfo( &appinfo, environ );
+  if ( ! appinfo.noHeader ) 
+    envIntoAppInfo( &appinfo, environ );
 
   /* Our own initially: an independent setup job */
   if ( prepareSideJob( &appinfo.setup, getenv("GRIDSTART_SETUP") ) )
