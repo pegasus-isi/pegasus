@@ -62,6 +62,7 @@
 use 5.006;
 use strict;
 use File::Spec;
+use File::Temp qw(tempfile);
 use POSIX qw(strftime);
 
 die "Set your PEGASUS_HOME environment variable\n" 
@@ -138,9 +139,29 @@ sub regular($) {
     }
 }
 
+#
+# --- main ---
+#
+my $tmp = $ENV{'MY_TMP'} ||     # Wei likes MY_TMP, so try that first
+    $ENV{TMP} ||                # standard
+    $ENV{TEMP} ||               # windows standard
+    $ENV{TMPDIR} ||             # also somewhat used
+    File::Spec->tmpdir() ||     # OK, this gets used if all above fail
+    '/tmp';                     # last resort
+
+# which version 
+my $v_v = File::Spec->catfile($ENV{'PEGASUS_HOME'},'bin','pegasus-version');
+my $version = `$v_v`;
+chomp($version);
+
+my ($tmpfh,$tmpfn) = tempfile( 'tmp-XXXXXX', DIR => $tmp, UNLINK => 1 );
+die "FATAL: Unable to create files in $tmp\n" unless defined $tmpfh;
+warn "# toc into $tmpfn\n";
+
 # open file (and fail) before print LaTeX preambles
 $/ = '';                        # activate paragraph mode
 open( SP, '<' . $fn ) || die "open $fn: $!\n";
+
 
 #
 # print LaTeX preamble -- do not interpolate anything here
@@ -199,11 +220,6 @@ table tr th {
 <h1>The Pegasus Workflow Planner Properties</h1>
 EOF
 
-# which version 
-my $v_v = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'pegasus-version' );
-my $version = `$v_v`;
-chomp($version);
-
 #
 # print LaTeX preamble, 2nd part, now with interpolation
 #
@@ -214,7 +230,11 @@ print << "EOF";
 <p><b>Note:</b> For printing, we highly recommend to use the PDF file
 instead.</p>
 
+<h2>Table Of Contents</h2>
+
 EOF
+
+select $tmpfh;			# write all regular prints to tmpfh
 
 my %index = ();
 my (@line,%line,$k,$v,$i);
@@ -229,6 +249,7 @@ while ( <SP> ) {
 	    $count[2]++;
 	    $secmark = join('.',@count[0,1,2]);
 	    print "\n\n\n<h4 id=\"$title\">$secmark&nbsp;$title</h4>\n\n";
+	    print STDOUT "&nbsp;";
 	} else {
 #	    print "\\subsection{$title}\n";
 	    $count[1]++;
@@ -238,6 +259,7 @@ while ( <SP> ) {
 	}
 #        print '\label{sec:', $title, "}\n";
 #        print '\index{', $title, "}\n"; 
+	print STDOUT "&nbsp;$secmark&nbsp;<a href=\"#$title\">$title</a><br>\n";
 	$index{$title} = defined $secmark ? $secmark : 42;
         print "\n";
 
@@ -291,6 +313,8 @@ while ( <SP> ) {
 		$count[1] = $count[2] = 0;
 		my $title = join('',@title);
 		print "\n\n\n<h2 id=\"$title\">$count[0]&nbsp;@title</h2>\n\n";
+		print STDOUT "$count[0]&nbsp;<a href=\"#$title\">@title</a><br>\n";
+
                 $flag = 1;
 		$depth = 1;
             } elsif ( $line[$i] =~ /^SUBSECTION "([^\"]+)"/ ) {
@@ -302,6 +326,7 @@ while ( <SP> ) {
 		$count[2] = 0;
 		my $mark = join('.',@count[0,1]);
 		print "\n\n\n<h3 id=\"$title\">$mark&nbsp;@title</h3>\n\n";
+		print STDOUT "&nbsp;$mark&nbsp;<a href=\"#$title\">@title</a><br>\n";
                 $flag = 1;
 		$depth = 2;
             } elsif ( $line[$i] =~ /^TITLE "([^\"]+)"/ ) {
@@ -333,6 +358,15 @@ while ( <SP> ) {
     }
 }
 close SP;
+
+select STDOUT;
+$/="\n";
+seek( $tmpfh, 0, 0 ) || die "FATAL: seek $tmpfn: $!\n";
+while ( <$tmpfh> ) {
+    print STDOUT $_ ;
+}
+close $tmpfh;
+unlink $tmpfn if -e $tmpfn;
 
 # 
 # index
