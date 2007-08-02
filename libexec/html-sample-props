@@ -167,7 +167,8 @@ open( SP, '<' . $fn ) || die "open $fn: $!\n";
 # print LaTeX preamble -- do not interpolate anything here
 #
 my $now = POSIX::strftime("%Y-%m-%dT%H:%M:%S%z", localtime());
-print << 'EOF';
+my $then = POSIX::strftime("%Y-%m-%d %H:%M", localtime());
+print << "EOF";
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
         "http://www.w3.org/TR/html4/strict.dtd">
 <html>
@@ -218,14 +219,9 @@ table tr th {
 </head>
 <body>
 <h1>The Pegasus Workflow Planner Properties</h1>
-EOF
 
-#
-# print LaTeX preamble, 2nd part, now with interpolation
-#
-print << "EOF";
 <p>V&nbsp;$version</p>
-<p>$now</p>
+<p>$then</p>
 
 <p><b>Note:</b> For printing, we highly recommend to use the PDF file
 instead.</p>
