@@ -255,7 +255,7 @@ while ( <SP> ) {
 	}
 #        print '\label{sec:', $title, "}\n";
 #        print '\index{', $title, "}\n"; 
-	print STDOUT "&nbsp;$secmark&nbsp;<a href=\"#$title\">$title</a><br>\n";
+#remove	print STDOUT "&nbsp;$secmark&nbsp;<a href=\"#$title\">$title</a><br>\n";
 	$index{$title} = defined $secmark ? $secmark : 42;
         print "\n";
 
