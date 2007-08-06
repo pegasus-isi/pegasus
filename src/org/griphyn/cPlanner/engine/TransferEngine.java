@@ -49,6 +49,10 @@ import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.util.FactoryException;
 
+import org.griphyn.vdl.euryale.FileFactory;
+import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
+import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
+
 import java.io.File;
 
 import java.util.Enumeration;
@@ -58,6 +62,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import java.util.Properties;
+import java.io.IOException;
+
+
+
 
 /**
  * The transfer engine, which on the basis of the pools on which the jobs are to
@@ -105,10 +113,7 @@ public class TransferEngine extends Engine {
      */
 //    private ADag mOriginalDag;
 
-    /**
-     * The Vector of Dags subinfo objects.
-     */
-    private Vector mDagSubInfos;
+
 
     /**
      * The bridge to the Replica Catalog.
@@ -140,10 +145,18 @@ public class TransferEngine extends Engine {
      */
     private ReplicaCatalog mTransientRC;
 
+
     /**
-     * A boolean flag indicating if a cache file needs to be written.
+     * The handle to the file factory, that is  used to create the top level
+     * directories for each of the partitions.
      */
-    private boolean mCacheFiles;
+    private FileFactory mFactory;
+
+    /**
+     * The base path for the stageout directory on the output site where all
+     * the files are staged out.
+     */
+    private String mStageOutBaseDirectory;
 
     /**
      * Overloaded constructor.
@@ -163,12 +176,8 @@ public class TransferEngine extends Engine {
         mDag = reducedDag;
         mvDelLeafJobs = vDelLJobs;
         mPOptions = options;
-        mDagSubInfos = mDag.vJobSubInfos;
         mTCHandle = TCMode.loadInstance();
 
-        //get the cache boolean flag and intialize
-        //the file handle accordingly
-        mCacheFiles = true;
         try{
             mTXRefiner = RefinerFactory.loadInstance(mProps, reducedDag,
                                                      options);
@@ -179,6 +188,7 @@ public class TransferEngine extends Engine {
             throw new FactoryException("Transfer Engine ", e);
         }
 
+        this.initializeStageOutSiteDirectoryFactory( reducedDag );
 
         //log some configuration messages
         mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
@@ -227,8 +237,8 @@ public class TransferEngine extends Engine {
         SubInfo currentJob;
         String currentJobName;
         Vector vOutPoolTX;
-        int noOfJobs = mDag.getNoOfJobs();
-        int counter = 0;
+//        int noOfJobs = mDag.getNoOfJobs();
+//        int counter = 0;
         String msg;
         String outputSite = mPOptions.getOutputSite();
 
@@ -243,6 +253,7 @@ public class TransferEngine extends Engine {
 //            counter++;
 //            currentJob = (SubInfo) eSubs.nextElement();
 
+        boolean stageOut = (( outputSite != null ) && ( outputSite.trim().length() > 0 ));
         for( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
             currentJob = (SubInfo)node.getContent();
@@ -264,9 +275,7 @@ public class TransferEngine extends Engine {
 
             //transfer the nodes output files
             //to the output pool
-            if (outputSite != null &&
-                outputSite.trim().length() > 0
-                /*&& !currentJob.isTemp*/) {
+            if ( stageOut    /*&& !currentJob.isTemp*/) {
                 vOutPoolTX = getFileTX(outputSite, currentJob);
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb );
             }
@@ -334,8 +343,8 @@ public class TransferEngine extends Engine {
                 String sourceURL = selLoc.getPFN();
                 //definite inconsitency as url prefix and mount point
                 //are not picked up from the same server
-                String destURL = p.getURLPrefix(true) + mPoolHandle.getSeMountPoint(p) +
-                                 File.separator + lfn;
+                String destURL = p.getURLPrefix(true) + this.getPathOnStageoutSite( lfn );
+                //+                                 File.separator + lfn;
 
                 //check if the URL's match
                 if (sourceURL.trim().equalsIgnoreCase(destURL.trim())){
@@ -543,8 +552,7 @@ public class TransferEngine extends Engine {
 
 
                 //assumption of same se mount point for each gridftp server
-                destURL += mPoolHandle.getSeMountPoint(dPool)
-                           + File.separator + lfn;
+                destURL += this.getPathOnStageoutSite( lfn );//  + File.separator + lfn;
 
                 //if the paths match of dest URI
                 //and execDirURL we return null
@@ -871,7 +879,6 @@ public class TransferEngine extends Engine {
      */
     private Set getOutputFiles(Vector nodes, Vector parentSubs) {
 
-        Enumeration e = nodes.elements();
         Set files = new HashSet();
 
         for( Iterator it = nodes.iterator(); it.hasNext(); ){
@@ -910,6 +917,92 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( "Unable to initialize the transient replica catalog  " + file,
                                          e );
         }
+    }
+
+
+    /**
+     * Returns the full path on remote output site, where the lfn will reside.
+     * Each call to this function could trigger a change in the directory
+     * returned depending upon the file factory being used.
+     *
+     * @param lfn   the logical filename of the file.
+     *
+     * @return the storage mount point.
+     */
+    protected String getPathOnStageoutSite( String lfn ){
+        String file;
+        try{
+            file = mFactory.createFile( lfn ).toString();
+         }
+         catch( IOException e ){
+             throw new RuntimeException( "IOException " , e );
+         }
+         return file;
+    }
+
+    /**
+     * Initialize the Stageout Site Directory factory.
+     * The factory is used to returns the relative directory that a particular
+     * file needs to be staged to on the output site.
+     *
+     * @param workflow  the workflow to which the transfer nodes need to be
+     *                  added.
+     *
+     */
+    protected void initializeStageOutSiteDirectoryFactory( ADag workflow ){
+        String outputSite = mPOptions.getOutputSite();
+        boolean stageOut = (( outputSite != null ) && ( outputSite.trim().length() > 0 ));
+
+        if (!stageOut ){
+            //no initialization and return
+            mLogger.log( "No initialization of StageOut Site Directory Factory",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            return;
+        }
+
+        // create files in the directory, unless anything else is known.
+        mStageOutBaseDirectory = mPoolHandle.getSeMountPoint( mPoolHandle.getPoolEntry( outputSite, "vanilla") );
+
+        if( mProps.useDeepStorageDirectoryStructure() ){
+            // create hashed, and levelled directories
+            try {
+                VirtualDecimalHashedFileFactory temp = null;
+
+                //get the total number of files that need to be stageout
+                int totalFiles = 0;
+                for ( Iterator it = workflow.jobIterator(); it.hasNext(); ){
+                    SubInfo job = ( SubInfo )it.next();
+
+                    //traverse through all the job output files
+                    for( Iterator opIt = job.getOutputFiles().iterator(); opIt.hasNext(); ){
+                        if( !((PegasusFile)opIt.next()).getTransientTransferFlag() ){
+                            //means we have to stage to output site
+                            totalFiles++;
+                        }
+                    }
+                }
+
+                temp = new VirtualDecimalHashedFileFactory( mStageOutBaseDirectory, totalFiles );
+
+                //each stageout file  has only 1 file associated with it
+                temp.setMultiplicator( 1 );
+                mFactory = temp;
+            }
+            catch (IOException e) {
+                //wrap into runtime and throw
+                throw new RuntimeException( "While initializing HashedFileFactory", e );
+            }
+        }
+        else{
+            try {
+                //Create a flat file factory
+                mFactory = new VirtualFlatFileFactory( mStageOutBaseDirectory ); // minimum default
+            } catch ( IOException ioe ) {
+                throw new RuntimeException( "Unable to generate files in the submit directory " ,
+                                            ioe );
+            }
+        }
+
     }
 
 
