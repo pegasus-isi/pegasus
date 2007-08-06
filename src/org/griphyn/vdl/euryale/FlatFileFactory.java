@@ -21,7 +21,7 @@ import java.util.*;
 
 /**
  * This file factory generates a stream of submit files within the same
- * toplevel directory. There is no subdirectory structuring. 
+ * toplevel directory. There is no subdirectory structuring.
  *
  * @author Kavitha Ranganathan
  * @author Jens-S. Vöckler
@@ -93,7 +93,7 @@ public class FlatFileFactory implements FileFactory
   }
 
   /**
-   * Virtual constructor: Creates the next file with the given basename. 
+   * Virtual constructor: Creates the next file with the given basename.
    * @param basename is the filename to create. Don't specify dirs here.
    * @return a File structure which points to the new file. Nothing is
    * created through this method, and creation may still fail.
@@ -106,7 +106,7 @@ public class FlatFileFactory implements FileFactory
   }
 
   /**
-   * Virtual constructor: Creates the next file with the given basename. 
+   * Virtual constructor: Creates the next file with the given basename.
    * @param basename is the filename to create. Don't specify dirs here.
    * @return a File structure which points to the new file. Nothing is
    * created through this method, and creation may still fail.
@@ -115,7 +115,7 @@ public class FlatFileFactory implements FileFactory
   public File createFlatFile( String basename )
     throws IOException
   {
-    m_count++;    
+    m_count++;
     return new File( m_directory, basename );
   }
 
@@ -152,10 +152,10 @@ public class FlatFileFactory implements FileFactory
 
   /**
    * Checks the destination location for existence, if it can
-   * be created, if it is writable etc. 
+   * be created, if it is writable etc.
    * @param dir is the new base directory to optionally create
    */
-  static protected void sanityCheck( File dir )
+  protected void sanityCheck( File dir )
     throws IOException
   {
     if ( dir.exists() ) {
@@ -167,12 +167,12 @@ public class FlatFileFactory implements FileFactory
 	  return;
 	} else {
 	  // all is there, but I cannot write to dir
-	  throw new IOException( "Cannot write to existing directory " + 
+	  throw new IOException( "Cannot write to existing directory " +
 				 dir.getPath() );
 	}
       } else {
 	// exists but not a directory
-	throw new IOException( "Destination " + dir.getPath() + " already " + 
+	throw new IOException( "Destination " + dir.getPath() + " already " +
 			       "exists, but is not a directory." );
       }
     } else {
@@ -180,11 +180,11 @@ public class FlatFileFactory implements FileFactory
       if ( ! dir.mkdirs() ) {
 	throw new IOException( "Unable to create directory destination " +
 			       dir.getPath() );
-      } 
+      }
     }
   }
 
-  /** 
+  /**
    * Accessor to set a different base directory. Note that this accessor
    * may only be called before any of the virtual constructors were
    * invoked the first time.
@@ -197,7 +197,7 @@ public class FlatFileFactory implements FileFactory
   public void setBaseDirectory( File base )
     throws IOException, VTorInUseException
   {
-    if ( m_count != 0 ) 
+    if ( m_count != 0 )
       throw new VTorInUseException();
     sanityCheck( base );
     m_directory = base;
@@ -211,12 +211,12 @@ public class FlatFileFactory implements FileFactory
    * in order to assemble relative pathnames to the base directory.
    *
    * @param file is an arbitrary file, should have been constructed using
-   * the virtual constructor. 
-   * @return a relative pathname with the base directory removed. Note 
+   * the virtual constructor.
+   * @return a relative pathname with the base directory removed. Note
    * that may will still contain directories. In case of an arbitrary
    * file, the full filename may be returned.
    */
-  public String getName( File file ) 
+  public String getName( File file )
   {
     String path = file.getPath();
     if ( path.startsWith( mh_directory ) ) {
