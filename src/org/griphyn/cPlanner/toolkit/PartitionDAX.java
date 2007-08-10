@@ -231,7 +231,7 @@ public class PartitionDAX extends Executable {
                     break;
 
                 case 1:
-                    mLogger.log( "Error while parsing the DAX file",
+                    mLogger.log( "Error while parsing the DAX file", e ,
                                  LogManager.FATAL_MESSAGE_LEVEL );
                     errorStatus = 1;
                     break;
