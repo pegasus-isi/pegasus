@@ -100,7 +100,7 @@ mysystem( const char* tag, char* argv[], char* envp[],
 
     /* sanity check */
     saverr = errno;
-    if ( kill( 0, child ) == 0 )
+    if ( kill( child, 0 ) == 0 )
       fprintf( stderr, "Warning: %s's job %d is still running!\n", tag, child );
     errno = saverr;
   }

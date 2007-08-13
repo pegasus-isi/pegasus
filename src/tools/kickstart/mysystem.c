@@ -198,7 +198,7 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
 
     /* sanity check */
     saverr = errno;
-    if ( kill( 0, jobinfo->child ) == 0 ) {
+    if ( kill( jobinfo->child, 0 ) == 0 ) {
       fprintf( stderr, "ERROR: job %d is still running!\n", jobinfo->child );
       if ( ! child.error ) child.error = EINPROGRESS;
     }

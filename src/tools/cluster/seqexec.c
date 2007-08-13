@@ -692,7 +692,7 @@ mysystem( char* argv[], char* envp[] )
     saverr = errno;
     
     /* sanity check */
-    if ( kill( 0, child ) == 0 )
+    if ( kill( child, 0 ) == 0 )
       showerr( "Warning: job %d (%s) is still running!\n", 
 	       child, argv[0] );
   }
