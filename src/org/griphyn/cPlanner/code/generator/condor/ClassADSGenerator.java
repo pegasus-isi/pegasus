@@ -18,6 +18,8 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 
+import org.griphyn.common.util.Version;
+
 import java.io.PrintWriter;
 
 /**
@@ -48,6 +50,11 @@ public class ClassADSGenerator {
     public static final String VERSION_AD_KEY  = "pegasus_version";
 
     /**
+     * The classad key for the pegasus build.
+     */
+    public static final String BUILD_AD_KEY = "pegasus_build";
+
+    /**
      * The classad for the flow id.
      *
      * @see org.griphyn.cPlanner.classes.DagInfo#flowIDName
@@ -69,7 +76,7 @@ public class ClassADSGenerator {
     /**
      * The classad for the corresponding vdl derivation.
      */
-    public static final String DERIVATION_AD_KEY = "pegasus_wf_derivation";
+//    public static final String DERIVATION_AD_KEY = "pegasus_wf_derivation";
 
     /**
      * The class ad for job Class.
@@ -139,23 +146,29 @@ public class ClassADSGenerator {
         DagInfo dinfo = dag.dagInfo;
 
         //pegasus is the generator
-        writer.println(generateBraindumpEntry(GENERATOR_AD_KEY, GENERATOR));
+        writer.println(generateBraindumpEntry( GENERATOR_AD_KEY, GENERATOR ));
 
-        //the vds version
-        if (dinfo.releaseVersion != null) {
-            writer.println(
-                generateBraindumpEntry(VERSION_AD_KEY, dinfo.releaseVersion));
-        }
+        //the pegasus version
+        writer.println( generateBraindumpEntry( VERSION_AD_KEY,
+                                                Version.instance().toString() ));
+
+        //determine built
+        writer.println( generateBraindumpEntry( BUILD_AD_KEY,
+                                                Version.instance().determineBuilt() ));
+//        if (dinfo.releaseVersion != null) {
+//            writer.println(
+//                generateBraindumpEntry( VERSION_AD_KEY, dinfo.releaseVersion ));
+//        }
 
         //the workflow name
         if (dinfo.flowIDName != null) {
             writer.println(
-                generateBraindumpEntry(WF_NAME_AD_KEY, dinfo.flowIDName));
+                generateBraindumpEntry( WF_NAME_AD_KEY, dinfo.flowIDName ));
         }
         //the workflow time
         if (dinfo.getMTime() != null) {
             writer.println(
-                generateBraindumpEntry(WF_TIME_AD_KEY, dinfo.getFlowTimestamp()));
+                generateBraindumpEntry( WF_TIME_AD_KEY, dinfo.getFlowTimestamp() ));
         }
     }
 
@@ -201,8 +214,9 @@ public class ClassADSGenerator {
             generateClassAdAttribute( XFORMATION_AD_KEY, job.getCompleteTCName() ) );
 
         //the derivation name
-        writer.println(
-            generateClassAdAttribute( DERIVATION_AD_KEY, job.getCompleteDVName() ) );
+// No longer required. As we do not have to worry about VDL
+//        writer.println(
+//            generateClassAdAttribute( DERIVATION_AD_KEY, job.getCompleteDVName() ) );
 
         //the class of the job
         writer.println(generateClassAdAttribute( JOB_CLASS_AD_KEY, job.getJobType() ) );
