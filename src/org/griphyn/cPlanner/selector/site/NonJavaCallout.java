@@ -15,6 +15,17 @@
 
 package org.griphyn.cPlanner.selector.site;
 
+
+import org.griphyn.cPlanner.classes.GridFTPServer;
+import org.griphyn.cPlanner.classes.PegasusFile;
+import org.griphyn.cPlanner.classes.SubInfo;
+
+import org.griphyn.cPlanner.common.LogManager;
+import org.griphyn.cPlanner.common.PegasusProperties;
+
+import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -22,22 +33,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import org.griphyn.cPlanner.classes.GridFTPServer;
-import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
-
-
-import org.griphyn.cPlanner.selector.SiteSelector;
+import org.griphyn.cPlanner.partitioner.graph.Adapter;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This is the class that implements a call-out to a site selector which
@@ -174,7 +178,7 @@ import org.griphyn.cPlanner.selector.SiteSelector;
  * @see java.lang.Runtime
  * @see java.lang.Process
  */
-public class NonJavaCallout extends SiteSelector {
+public class NonJavaCallout extends AbstractPerJob {
 
     /**
      * The prefix to be used while creating a temporary file to pass to
@@ -231,16 +235,6 @@ public class NonJavaCallout extends SiteSelector {
     private static final String mDescription =
         "External call-out to a site-selector application";
 
-    /**
-     * The handle to the internal logger, that Pegasus uses to log all the
-     * stdout and stderr it generates.
-     */
-    private LogManager mLogger;
-
-    /**
-     * The string holding the logging messages.
-     */
-    private String mLogMsg;
 
     /**
      * The map that contains the environment variables including the
@@ -250,15 +244,6 @@ public class NonJavaCallout extends SiteSelector {
      */
     private Map mEnvVar;
 
-    /**
-     * The handle to the properties object.
-     */
-    private PegasusProperties mProps;
-
-    /**
-     * The handle to the pool configuration files.
-     */
-    private PoolInfoProvider mPoolHandle;
 
     /**
      * The timeout value in seconds after which to timeout, in the case
@@ -274,14 +259,20 @@ public class NonJavaCallout extends SiteSelector {
     private int mKeepTMP;
 
     /**
+     * The path to the site selector.
+     */
+    private String mSiteSelectorPath;
+
+    /**
+     * The abstract DAG.
+     */
+    private ADag mAbstractDag;
+
+    /**
      * The default constructor.
      */
     public NonJavaCallout(){
         super();
-        mLogger = LogManager.getInstance();
-        mLogMsg = new String();
-        mPoolHandle = null;
-        mEnvVar = null;
         // set the default timeout to 60 seconds
         mTimeout = 60;
         //default would be onerror
@@ -289,28 +280,38 @@ public class NonJavaCallout extends SiteSelector {
     }
 
     /**
-     * Initializes a site selector to call an external application.
+     * Initializes the site selector.
      *
-     * @param path the path to the executable that invokes the SiteSelector on
-     *             the command line.
+     * @param bag   the bag of objects that is useful for initialization.
+     *
      */
-    public NonJavaCallout(String path){
-        super(path);
-
-        mLogger = LogManager.getInstance();
-        mLogMsg = new String();
-        mProps   = PegasusProperties.nonSingletonInstance();
+    public void initialize( PegasusBag bag ){
+        super.initialize( bag );
         mTimeout = mProps.getSiteSelectorTimeout();
+        mSiteSelectorPath = mProps.getSiteSelectorPath();
 
-        String poolClass = PoolMode.getImplementingClass(mProps.getPoolMode());
-        mPoolHandle      = PoolMode.loadPoolInstance(poolClass, mProps.getPoolFile(),
-            PoolMode.SINGLETON_LOAD);
         // load the environment variables from the properties file
         // and the default values.
         this.loadEnvironmentVariables();
         //get the value from the properties file.
         mKeepTMP = getKeepTMPValue(mProps.getSiteSelectorKeep());
     }
+
+
+    /**
+     * Maps the jobs in the workflow to the various grid sites.
+     * The jobs are mapped by setting the site handle for the jobs.
+     *
+     * @param workflow   the workflow.
+     *
+     * @param sites     the list of <code>String</code> objects representing the
+     *                  execution sites that can be used.
+     */
+    public void mapWorkflow( ADag workflow, List sites ){
+        mAbstractDag = workflow;
+        mapWorkflow( Adapter.convert( workflow ), sites );
+    }
+
 
     /**
      * Returns a brief description of the site selection technique
@@ -333,30 +334,28 @@ public class NonJavaCallout extends SiteSelector {
      * @param job is a representation of the DAX compute job whose site of
      * execution need to be determined.
      *
-     * @param pools is a list of site candidates. The items of the list are
-     * <code>String</code> objects.
+     * @param sites  the list of <code>String</code> objects representing the
+     *               execution sites that can be used.
      *
-     * @return <code>null</code> in case an error with the site selection
-     * occurred. Otherwise, a string that is either solely the site handle,
-     * or the site handle and a job manager, separated by a colon. If no
-     * pool is found, the result will be <code>NONE</code>.
+     *
      *
      * FIXME: Some site selector return an empty string on failures. Also:
      * NONE could be a valid site name.
      *
      * @see org.griphyn.cPlanner.classes.SubInfo
      */
-    public String mapJob2ExecPool( SubInfo job, List pools ){
-        String execPool = null;
+    public void mapJob( SubInfo job, List sites ){
         Runtime rt = Runtime.getRuntime();
 
         // prepare the temporary file that needs to be sent to the
         // Site Selector via command line.
-        File ipFile = prepareInputFile(job,pools);
+        File ipFile = prepareInputFile( job, sites );
 
         // sanity check
-        if(ipFile == null)
-            return null;
+        if(ipFile == null){
+            job.setSiteHandle( null );
+            return;
+        }
 
         // prepare the environment to call out the site selector
         String command = this.mSiteSelectorPath;
@@ -372,9 +371,9 @@ public class NonJavaCallout extends SiteSelector {
 
             // get hold of all the environment variables that are to be set
             String[] envArr = this.getEnvArrFromMap();
-            mLogger.log("Calling out to site selector " + command,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            Process p = rt.exec(command , envArr);
+            mLogger.log( "Calling out to site selector " + command,
+                         LogManager.DEBUG_MESSAGE_LEVEL);
+            Process p = rt.exec( command , envArr );
 
             // set up to read subprogram output
             InputStream is = p.getInputStream();
@@ -426,9 +425,9 @@ public class NonJavaCallout extends SiteSelector {
                                     LogManager.DEBUG_MESSAGE_LEVEL);
 
                         // parse the string to get the output
-                        execPool = parseStdOut(s);
-                        if(execPool != null)
+                        if ( parseStdOut( job, s ) ){
                             break;
+                        }
 
                     }
 
@@ -445,11 +444,12 @@ public class NonJavaCallout extends SiteSelector {
             ebr.close();
 
             if ( time >= mTimeout ) {
-                mLogger.log("External Site Selector timeout after " +
-                            mTimeout + " seconds", LogManager.ERROR_MESSAGE_LEVEL);
+                mLogger.log( "External Site Selector timeout after " +
+                             mTimeout + " seconds", LogManager.ERROR_MESSAGE_LEVEL);
                 p.destroy();
                 // no use closing the streams as it would be probably hung
-                return null;
+                job.setSiteHandle( null );
+                return;
             }
 
             // the site selector seems to have worked without any errors
@@ -479,7 +479,7 @@ public class NonJavaCallout extends SiteSelector {
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
 
-        return execPool;
+        return;
     }
 
 
@@ -545,7 +545,7 @@ public class NonJavaCallout extends SiteSelector {
                     st = "resource.id=" + pool + " ";
 
                     // get handle to pool config
-                    List l = mPoolHandle.getGridFTPServers(pool);
+                    List l = mSCHandle.getGridFTPServers(pool);
                     if (l == null || l.isEmpty()) {
                         // FIXME: How hard should this error be?
                         mLogger.log("Site " + pool +
@@ -607,32 +607,36 @@ public class NonJavaCallout extends SiteSelector {
      * the <i>stdout</i> sent by the selector, to see, if the execution
      * pool and the jobmanager were sent or not.
      *
+     * @param job  the job that has to be mapped.
      * @param s is the stdout received from the site selector.
-     * @return if the pool is found, a string of the form
-     * <code>executionpool:jobmanager</code>. The portion of colon and
-     * jobmanager do not need to exist. In case of an error,
-     * <code>null</code> is returned.
+     *
+     * @return boolean indicating if the stdout was succesfully parsed and
+     *         job populated.
+     *
+     *
      */
-    private String parseStdOut(String s){
+    private boolean parseStdOut( SubInfo job, String s ){
         String val = null;
 
         s = s.trim();
+        boolean result = false;
         if(s.startsWith(SOLUTION_PREFIX)){
             s = s.substring(SOLUTION_PREFIX.length());
 
             StringTokenizer st = new StringTokenizer(s,":");
 
            while(st.hasMoreTokens()){
-               val = (String)st.nextToken() + ":";
+               result = true;
+               job.setSiteHandle( (String)st.nextToken() );
 
-               val += (st.hasMoreTokens())?
-                       st.nextToken():
-                       "null";
+               job.setJobManager( st.hasMoreTokens() ?
+                                  st.nextToken():
+                                  null );
            }
         }
 
         // HMMM: String.indexOf() functions can be used in Jens HO.
-        return val;
+        return result;
     }
 
     /**
@@ -758,12 +762,13 @@ public class NonJavaCallout extends SiteSelector {
    * The main program that allows you to test.
    * FIXME: Test programs should have prefix Test.....java
    *
+   * @param args the arguments
+   *
    */
   public static void main( String[] args ){
       LogManager.getInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
 
-      NonJavaCallout nj = new NonJavaCallout(
-            PegasusProperties.nonSingletonInstance().getSiteSelectorPath());
+      NonJavaCallout nj = new NonJavaCallout( );
 
       SubInfo s = new SubInfo();
       s.logicalName = "test";
@@ -774,8 +779,8 @@ public class NonJavaCallout extends SiteSelector {
       List pools = new java.util.ArrayList();
       pools.add("isi-condor");pools.add("isi-lsf");
 
-      String execPool = nj.mapJob2ExecPool(s,pools);
-      System.out.println("Exec Pool return by site selector is " + execPool);
+      nj.mapJob( s,pools );
+      System.out.println("Exec Pool return by site selector is " + s.getSiteHandle() );
   }
 
 }

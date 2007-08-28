@@ -24,6 +24,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.JobManager;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
@@ -33,29 +34,44 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 import org.griphyn.cPlanner.partitioner.graph.Bag;
 
-import org.griphyn.cPlanner.selector.SiteSelector;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
 import org.griphyn.common.catalog.transformation.Mapper;
 
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+
+import org.griphyn.cPlanner.namespace.VDS;
 
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Collections;
 
 /**
- * The HEFT based site selector.
+ * The HEFT based site selector. The runtime for the job in seconds is picked
+ * from the pegasus profile key runtime in the transformation catalog for a
+ * transformation.
+ *
+ * The data communication costs between jobs if scheduled on different sites
+ * is assumed to be fixed. Later on if required, the ability to specify this
+ * value will be exposed via properties.
+ *
+ * The number of processors in a site is picked by the attribute idle-nodes
+ * associated with the vanilla jobmanager for a site in the site catalog.
  *
  * @author Karan Vahi
  * @version $Revision$
+ *
+ * @see #AVERAGE_BANDWIDTH
+ * @see #RUNTIME_PROFILE_KEY
+ * @see #DEFAULT_NUMBER_OF_FREE_NODES
+ * @see #AVERAGE_DATA_SIZE_BETWEEN_JOBS
+ * @see org.griphyn.cPlanner.classes.JobManager.IDLE_NODES
+ *
  */
 public class Algorithm {
 
@@ -63,7 +79,7 @@ public class Algorithm {
     /**
      * The pegasus profile key that gives us the expected runtime.
      */
-    public static final String RUNTIME_PROFILE_KEY = "runtime";
+    public static final String RUNTIME_PROFILE_KEY = VDS.RUNTIME_KEY;
 
     /**
      * The average bandwidth between the sites. In mega bytes/per second.
@@ -125,37 +141,35 @@ public class Algorithm {
     private LogManager mLogger;
 
     /**
+     * The handle to the properties.
+     */
+    private PegasusProperties mProps;
+
+    /**
      * The default constructor.
      *
-     * @param mapper  the tcmapper object.
+     * @param bag  the bag of Pegasus related objects.
      */
-    public Algorithm( Mapper mapper ) {
-        mTCMapper = mapper;
+    public Algorithm(  PegasusBag bag ) {
+        mProps      = ( PegasusProperties ) bag.get( PegasusBag.PEGASUS_PROPERTIES );
+        mTCMapper   = ( Mapper )bag.get( PegasusBag.TRANSFORMATION_MAPPER );
+        mLogger     = ( LogManager )bag.get( PegasusBag.PEGASUS_LOGMANAGER );
+        mSiteHandle = ( PoolInfoProvider )bag.get( PegasusBag.SITE_CATALOG );
         mAverageCommunicationCost = (this.AVERAGE_BANDWIDTH / this.AVERAGE_DATA_SIZE_BETWEEN_JOBS);
-        //load the SiteHandle
-        PegasusProperties props = PegasusProperties.getInstance();
-        mLogger = LogManager.getInstance();
-
-        String poolClass = PoolMode.getImplementingClass( props.getPoolMode() );
-        mSiteHandle = PoolMode.loadPoolInstance( poolClass,
-                                                 props.getPoolFile(),
-                                                 PoolMode.SINGLETON_LOAD);
-
-
-
-        populateSiteMap( );
     }
 
 
     /**
      * Schedules the workflow using the heft.
      *
-     * @param dag  the <code>ADag</code> object containing the abstract workflow
-     *             that needs to be mapped.
+     * @param dag   the <code>ADag</code> object containing the abstract workflow
+     *              that needs to be mapped.
+     * @param sites the list of candidate sites where the workflow can potentially
+     *              execute.
      */
-    public void schedule( ADag dag ){
+    public void schedule( ADag dag , List sites ){
         //convert the dag into a graph representation
-        schedule( Adapter.convert( dag ) );
+        schedule( Adapter.convert( dag ), sites );
     }
 
 
@@ -164,9 +178,13 @@ public class Algorithm {
      * Schedules the workflow according to the HEFT algorithm.
      *
      * @param workflow  the workflow that has to be scheduled.
+     * @param sites the list of candidate sites where the workflow can potentially
+     *              execute.
+
      */
-    public void schedule( Graph workflow ){
+    public void schedule( Graph workflow , List sites ){
         mWorkflow = workflow;
+        populateSiteMap( sites );
 
         //compute weighted execution times for each job
         for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
@@ -472,14 +490,14 @@ public class Algorithm {
     /**
      * Populates the number of free nodes for each site, by querying the
      * Site Catalog.
+     *
+     * @param sites   list of sites.
      */
-    protected void populateSiteMap(){
+    protected void populateSiteMap( List sites ){
         mSiteMap = new HashMap();
 
         //for testing purposes
-        mSites = new ArrayList();
-        mSites.add( "isi_viz" );
-        mSites.add( "isi_skynet" );
+        mSites = sites;
 
         String value = null;
         int nodes = 0;

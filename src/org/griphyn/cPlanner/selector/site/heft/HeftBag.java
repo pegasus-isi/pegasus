@@ -34,7 +34,8 @@ public class HeftBag
      * site.
      */
     public static final String HEFTINFO[] = {
-        "avg-compute-time", "downward-rank", "upward-rank", "start-time", "end-time"
+        "avg-compute-time", "downward-rank", "upward-rank", "start-time",
+        "end-time", "scheduled-site"
     };
 
 

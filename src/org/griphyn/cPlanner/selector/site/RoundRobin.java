@@ -38,7 +38,7 @@ import java.util.ListIterator;
  */
 
 public class RoundRobin
-    extends SiteSelector {
+    extends AbstractPerJob {
 
     /**
      * The current level in the abstract workflow. It is level that is designated
@@ -53,20 +53,6 @@ public class RoundRobin
      */
     private java.util.LinkedList mExecPools;
 
-    /**
-     * The handle to the pool configuration file.
-     */
-    private PoolInfoProvider mPoolHandle;
-
-    /**
-     * The handle to the properties file.
-     */
-    private PegasusProperties mProps;
-
-    /**
-     * The handle to the logger.
-     */
-    private LogManager mLogger;
 
     /**
      * The default constructor. Not to be used.
@@ -75,26 +61,11 @@ public class RoundRobin
         mCurrentLevel = -1;
     }
 
-    /**
-     * The overloaded constructor.
-     * @param path String
-     */
-    public RoundRobin( String path ) {
-        super( path );
-        mCurrentLevel = -1;
-
-        mProps = PegasusProperties.nonSingletonInstance();
-        mLogger = LogManager.getInstance();
-
-        String poolClass = PoolMode.getImplementingClass( mProps.getPoolMode() );
-        mPoolHandle = PoolMode.loadPoolInstance( poolClass, mProps.getPoolFile(),
-            PoolMode.SINGLETON_LOAD );
-
-    }
 
     /**
      * Returns a brief description of the site selection techinque implemented by
      * this class.
+     *
      * @return String
      */
     public String description() {
@@ -102,26 +73,22 @@ public class RoundRobin
         return st;
     }
 
+
     /**
-     * The main function that performs the round robin scheduling on the job.
+     * Maps a job in the workflow to an execution site.
      *
-     * @param job   the <code>SubInfo</code> object  corresponding to the
-     *                  job whose execution pool we want to determine.
-     * @param pools     the list of <code>String</code> objects representing the
-     *                  execution pools that can be used.
+     * @param job    the job to be mapped.
+     * @param sites  the list of <code>String</code> objects representing the
+     *               execution sites that can be used.
      *
-     * @return if the pool is found to which the job can be mapped, a string of the
-     *         form <code>executionpool:jobmanager</code> where the jobmanager can
-     *          be null. If the pool is not found, then set poolhandle to NONE.
-     *          null - if some error occured .
      */
-    public String mapJob2ExecPool( SubInfo job, List pools ) {
+    public void mapJob( SubInfo job, List sites ){
         ListIterator it;
         NameValue current;
         NameValue next;
 
         if ( mExecPools == null ) {
-            initialiseList( pools );
+            initialiseList( sites );
         }
 
         if ( job.level != mCurrentLevel ) {
@@ -135,13 +102,13 @@ public class RoundRobin
 
         //go around the list and schedule it to the first one where it can
         it = mExecPools.listIterator();
+        String mapping = null;
         while ( it.hasNext() ) {
             current = ( NameValue ) it.next();
             //check if job can run on pool
             if ( mTCMapper.isSiteValid( job.namespace, job.logicalName,
                 job.version, current.getName() ) ) {
-                String mapping = constructResult( current.getName(),
-                    job.condorUniverse );
+                mapping = current.getName();
                 //update the the number of times used and place it at the
                 //correct position in the list
                 current.increment();
@@ -151,7 +118,7 @@ public class RoundRobin
                 if ( it.hasNext() ) {
                     next = ( NameValue ) it.next();
                     if ( current.getValue() <= next.getValue() ) {
-                        return mapping;
+                        break;
                     } else {
                         current = ( NameValue ) it.previous();
                         current = ( NameValue ) it.previous();
@@ -168,47 +135,26 @@ public class RoundRobin
                         //current has to be inserted before next
                         next = ( NameValue ) it.previous();
                         it.add( current );
-                        return mapping;
+                        break;
                     }
                 }
                 //current goes to the end of the list
                 it.add( current );
-                return mapping;
+                break;
             }
         }
 
         //means no pool has been found to which the job could be mapped to.
-        return ( SiteSelector.POOL_NOT_FOUND + ":null" );
+        job.setSiteHandle(  mapping );
     }
 
-    /**
-     * This helper method constructs the result in the format required by the
-     * SiteSelector API.
-     *
-     * @param siteid  The siteid selected by the selector.
-     * @param universe  The universe in which the job has to run.
-     *
-     * @return  the formatted result.
-     */
-    private String constructResult( String siteid, String universe ) {
-        String mapping = siteid + ":";
 
-        //Let Interpool Engine take care of determining
-        //the jobmanager for the time being. Karan Apr 12, 2005
-        /*
-        Pool pool = mPoolHandle.getPoolEntry( siteid, universe );
-        mapping += ( pool == null || pool.job_mgr_string == null ) ? "null" :
-            pool.job_mgr_string;
-        */
-        mapping += null;
-        return mapping;
-
-    }
 
     /**
      * It initialises the internal list. A node in the list corresponds to a pool
      * that can be used, and has the value associated with it which is the
      * number of jobs in the current level have been scheduled to it.
+     *
      * @param pools List
      */
     private void initialiseList( List pools ) {

@@ -16,21 +16,21 @@
 package org.griphyn.cPlanner.selector.site;
 
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.cPlanner.selector.SiteSelector;
+import org.griphyn.cPlanner.partitioner.graph.Graph;
+import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
-import org.griphyn.common.catalog.transformation.Mapper;
-
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
 
 /**
  * A site selector than ends up doing grouping jobs together on the basis of
@@ -52,14 +52,14 @@ import java.util.TreeMap;
  * @version $Revision$
  */
 
-public class Group extends SiteSelector {
+public class Group extends Abstract {
 
 
     /**
      * The description of the site selector.
      */
     private static final String mDescription =
-        "Site selector doing clustering on the basis of key group in vds namespace";
+        "Site selector doing clustering on the basis of key group in pegasus namespace";
 
     /**
      * The name of the group into which jobs are grouped if no group is
@@ -72,46 +72,36 @@ public class Group extends SiteSelector {
      */
     private Map mGroupMap;
 
-    /**
-     * An index map containing the index of the jobs in the list passed with
-     * the name of the job.
-     */
-    private Map mIndexMap;
 
     /**
      * The handle to the internal site selector that is used to schedule jobs
      * amongst the groups.
      */
-    private SiteSelector mSelector;
+    private AbstractPerJob mSelector;
 
-    /**
-     * The handle to the logger.
-     */
-    private LogManager mLogger;
+
 
     /**
      * The default constructor.
      */
     public Group() {
         mGroupMap = new TreeMap();
-        mIndexMap = new HashMap();
         mSelector = new Random();
         mLogger   = LogManager.getInstance();
     }
 
     /**
-     * The overloaded constructor.
-     * The path is null in this case.
+     * Initializes the site selector.
      *
-     * @param path  the path to the site selector.
+     * @param bag   the bag of objects that is useful for initialization.
+     *
      */
-    public Group(String path) {
-        super(path);
-        mGroupMap = new TreeMap();
-        mIndexMap = new HashMap();
-        mSelector = new Random(path);
-        mLogger   = LogManager.getInstance();
+    public void initialize( PegasusBag bag ){
+        super.initialize( bag );
+        mSelector.initialize( bag );
     }
+
+
 
     /**
      * Returns the description of the site selector.
@@ -125,7 +115,7 @@ public class Group extends SiteSelector {
     /**
      * The call out to map a list of jobs on to the execution pools. A default
      * implementation is provided that internally calls mapJob2ExecPool(SubInfo,
-     * String,String,String) to map each of the jobs sequentially to an execution pool.
+     * String,String,String) to map each of the jobs sequentially to an execution site.
      * The reason for this method is to support site selectors that
      * make their decision on a group of jobs i.e use backtracking to reach a good
      * decision.
@@ -133,38 +123,28 @@ public class Group extends SiteSelector {
      * implement this method, but relies on the default implementation defined
      * here.
      *
-     * @param jobs      the list of <code>SubInfo</code> objects representing the
-     *                  jobs that are to be scheduled.
-     * @param pools     the list of <code>String</code> objects representing the
+     * @param workflow  the workflow that needs to be scheduled.
+     * @param sites     the list of <code>String</code> objects representing the
      *                  execution pools that can be used.
      *
-     * @return an Array of String objects, corresponding to the jobs list and each
-     *         String of the form <code>executionpool:jobmanager</code> where the
-     *         jobmanager can be null.
-     *         null - if some error occured .
-     *
      */
-    public String[] mapJob2ExecPool(List jobs, List pools){
+    public void mapWorkflow( Graph workflow, List sites) {
           SubInfo job;
-          String res[] = new String[jobs.size()];
-          String pool  = null;
-          String jm    = null;
           List l = null;
 
           int i = 0;
-          for(Iterator it = jobs.iterator();it.hasNext(); i++){
-              job = (SubInfo)it.next();
+          for(Iterator it = workflow.nodeIterator();it.hasNext(); ){
+              GraphNode node = ( GraphNode )it.next();
+              job = ( SubInfo )node.getContent();
               //put the jobs into the map grouped by key VDS_GROUP_KEY
               insert(job);
-              //associate in the index map the jobname with the index
-              mIndexMap.put(job.jobName,new Integer(i));
           }
 
           //traverse through the group map and send off the first job
           //in each group to the internal site selector.
           for(Iterator it = mGroupMap.entrySet().iterator();it.hasNext();){
               Map.Entry entry = (Map.Entry)it.next();
-              boolean defaultGroup = entry.getKey().equals(mDefaultGroup);
+              boolean defaultGroup = entry.getKey().equals( mDefaultGroup );
               mLogger.log("[Group Selector]Mapping jobs in group " + entry.getKey(),
                           LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -180,58 +160,26 @@ public class Group extends SiteSelector {
               mLogger.log(msg,LogManager.DEBUG_MESSAGE_LEVEL);
               //hand of the first job to the internal selector
               job = (SubInfo)l.get(0);
-              res[getIndex(job)] = mapJob2ExecPool(job,pools);
+              mSelector.mapJob( job, sites );
 
               //traverse thru the remaining jobs in the group
               for(Iterator it1 = l.iterator();it1.hasNext();){
                   SubInfo j = (SubInfo)it1.next();
-                  res[getIndex(j)] = (defaultGroup)?
-                                     //each job in the group has to be
-                                     //mapped individually
-                                     mapJob2ExecPool(j,pools):
-                                     //mapping same as the one for
-                                     //for the first job in group
-                                     res[getIndex(job)];
+                  if ( defaultGroup ){
+                      //each job in the group has to be
+                      //mapped individually
+                      mSelector.mapJob( j, sites);
+                  }
+                  else{
+                      //mapping same as the one for
+                      //for the first job in group
+                      j.setSiteHandle( job.getSiteHandle() );
+                  }
               }
           }
-
-          //res[i] = this.mapJob2ExecPool(job,pools);
-
-          return res;
-    }
-
-    /**
-     * Maps the job using the internal site selector. Hands off to the internal
-     * site selector and returns it's result!
-     */
-    public String mapJob2ExecPool(SubInfo job, List pools) {
-        return mSelector.mapJob2ExecPool(job,pools);
-    }
-
-    /**
-     * Sets the tcmapper which will generate a valid map for a given executable.
-     *
-     * @param mapper Mapper containing the various mappings.
-     */
-    public void setTCMapper(Mapper mapper){
-        super.setTCMapper(mapper);
-        //in addition set the mapper for the
-        //internal site selector
-        mSelector.setTCMapper(mapper);
     }
 
 
-    /**
-     * Returns the index of the job.
-     *
-     * @param job the job whose index is reqd.
-     *
-     * @return int
-     */
-    private int getIndex(SubInfo job){
-        //no checks as there is a guarentee of it being in the map
-        return ((Integer)mIndexMap.get(job.jobName)).intValue();
-    }
 
     /**
      * Inserts the job into the group map.

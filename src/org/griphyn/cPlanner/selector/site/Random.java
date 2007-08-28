@@ -16,13 +16,9 @@ package org.griphyn.cPlanner.selector.site;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
+import org.griphyn.cPlanner.classes.PegasusBag;
+
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
-
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
-
-import org.griphyn.cPlanner.selector.SiteSelector;
 
 
 import java.util.List;
@@ -35,28 +31,9 @@ import java.util.List;
  * @version $Revision$
  */
 
-public class Random
-    extends SiteSelector {
+public class Random extends AbstractPerJob {
 
-    /**
-     * The handle to the pool configuration file.
-     */
-    private PoolInfoProvider mPoolHandle;
 
-    /**
-     * The handle to the transformation catalog.
-     */
-    //private TransformationCatalog mTCHandle;
-
-    /**
-     * The handle to the properties file.
-     */
-    private PegasusProperties mProps;
-
-    /**
-     * The handle to the logger.
-     */
-    private LogManager mLogger;
 
     /**
      * The default constructor. Should not be called. Call the overloaded one.
@@ -64,66 +41,39 @@ public class Random
     public Random() {
     }
 
-    /**
-     * The overloaded constructor.
-     *
-     * @param path  the path to the site selector. In this case it is null.
-     */
-    public Random(String path) {
-        super(path);
-        mProps = PegasusProperties.nonSingletonInstance();
-        mLogger = LogManager.getInstance();
-        String tcmode = mProps.getTCMode();
-        //mTCHandle = TCMode.loadInstance();
 
-        String poolClass = PoolMode.getImplementingClass(mProps.getPoolMode());
-        mPoolHandle = PoolMode.loadPoolInstance(poolClass, mProps.getPoolFile(),
-                                                PoolMode.SINGLETON_LOAD);
+    /**
+     * Initializes the site selector.
+     *
+     * @param bag   the bag of objects that is useful for initialization.
+     *
+     */
+    public void initialize( PegasusBag bag ){
+        super.initialize( bag );
     }
 
     /**
-     * The main method that maps a particular job to an execution pool.
+     * Maps a job in the workflow to an execution site.
      *
-     * @param job SubInfo   the <code>SubInfo</code> object  corresponding to the
-     *                  job whose execution pool we want to determine.
+     * @param job    the job to be mapped.
+     * @param sites  the list of <code>String</code> objects representing the
+     *               execution sites that can be used.
      *
-     * @param pools     the list of <code>String</code> objects representing the
-     *                  execution pools that can be used.
-     *
-     * @return if the pool is found to which the job can be mapped, a string of the
-     *         form <code>executionpool:jobmanager</code> where the jobmanager can
-     *          be null. If the pool is not found, then set poolhandle to NONE.
-     *          null - if some error occured .
      */
-    public String mapJob2ExecPool(SubInfo job, List pools) {
-        List sites = null;
+    public void mapJob( SubInfo job, List sites ){
 
-        sites = mTCMapper.getSiteList(job.namespace,job.logicalName,job.version,
-                                      pools);
-        String mapping = null;
-
-        //for each of the record ,
-        //check if the entry is for one of pools passed
-        if (sites != null) {
+        List rsites = mTCMapper.getSiteList( job.getTXNamespace(),job.getTXName(),
+                                             job.getTXVersion(), sites );
 
 
-            if (sites.isEmpty()) {
-                mapping = SiteSelector.POOL_NOT_FOUND + ":null";
-                return mapping;
-            }
-
-            String selectedSite=null;
-            selectedSite = selectRandomSite(sites);
-            mapping = selectedSite + ":";
-            //assume no jobmanager selected
-            mapping += null;
-        } else {
-            //means no pool has been found to which the job could be mapped to.
-            mapping = SiteSelector.POOL_NOT_FOUND + ":null";
+        if( rsites == null || rsites.isEmpty() ){
+            job.setSiteHandle( null );
         }
-        mLogger.log("[Random Selector] Mapped to " + mapping,
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-        return mapping;
+        else{
+            job.setSiteHandle(selectRandomSite(rsites));
+            mLogger.log( "[Random Selector] Mapped to " + job.getSiteHandle(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
     }
 
     /**
