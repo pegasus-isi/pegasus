@@ -147,6 +147,12 @@ public class VDS extends Namespace {
     public static final String TRANSFER_ARGUMENTS_KEY = "transfer.arguments";
 
     /**
+     * The name of the profile key when associated with a transformation in the
+     * transformation catalog gives expected runtime in seconds.
+     */
+    public static final String RUNTIME_KEY = "runtime";
+
+    /**
      * The name of the key, that denotes the style of the dag that is constructed.
      * Possible styles can be
      *      -condor(glidein,flocking,submitting directly to condor pool)
@@ -299,6 +305,15 @@ public class VDS extends Namespace {
 
             case 'l':
                 if( key.compareTo( LABEL_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+
+            case 'r':
+                if( key.compareTo( RUNTIME_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{

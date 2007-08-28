@@ -25,11 +25,15 @@ import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.selector.SiteSelector;
+
+import org.griphyn.cPlanner.selector.site.SiteSelectorFactory;
+
 import org.griphyn.cPlanner.selector.TransformationSelector;
 
 import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
@@ -93,9 +97,9 @@ public class InterPoolEngine extends Engine implements Refiner {
     private TransformationSelector mTXSelector;
 
     /**
-     * The mode with which the transformation catalog mapper needs to be called.
+     * The bag of objects that is required for the Site Selector initialization.
      */
-    private String mTCMapperMode;
+    private PegasusBag mBag;
 
     /**
      * The handle to the transformation catalog mapper object that caches the
@@ -121,7 +125,18 @@ public class InterPoolEngine extends Engine implements Refiner {
         super( props );
         mDag        = new ADag();
         mExecPools  = new java.util.HashSet();
-        mTCMapper   = Mapper.loadTCMapper(mProps.getTCMapperMode());
+
+        mTCHandle = TCMode.loadInstance();
+        //initialize the transformation mapper
+        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode() );
+
+        //intialize the bag of objects and load the site selector
+        mBag = new PegasusBag();
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, props );
+        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
+        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( props );
     }
@@ -142,15 +157,17 @@ public class InterPoolEngine extends Engine implements Refiner {
         mPOptions = options;
         mExecPools = (Set)options.getExecutionSites();
         mTCHandle = TCMode.loadInstance();
+        //initialize the transformation mapper
+        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode() );
 
-        mSiteSelector = SiteSelector.loadSiteSelector(
-            mProps.getSiteSelectorMode(),
-            mProps.getSiteSelectorPath());
-        mSiteSelector.setAbstractDag(aDag);
-        //initialize the transformation mapper and pass
-        //them to the site selector loaded
-        mTCMapper   = Mapper.loadTCMapper(mProps.getTCMapperMode());
-        mSiteSelector.setTCMapper(mTCMapper);
+        //intialize the bag of objects and load the site selector
+        mBag = new PegasusBag();
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, props );
+        mBag.add( PegasusBag.PLANNER_OPTIONS, options );
+        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
+        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        mBag.add( PegasusBag.SITE_CATALOG, mPoolHandle );
 
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( props );
@@ -184,28 +201,31 @@ public class InterPoolEngine extends Engine implements Refiner {
      * those list of jobs that are ready to be scheduled.
      *
      */
-    public void determinePools() {
+    public void determineSites() {
         SubInfo job;
 
         //at present we schedule the whole workflow at once
-        List jobs = convertToList(mDag.vJobSubInfos);
-        List pools = convertToList(mExecPools);
+        List jobs = convertToList( mDag.vJobSubInfos );
+        List pools = convertToList( mExecPools );
 
         //going through all the jobs making up the Adag, to do the physical mapping
-        scheduleJobs(jobs, pools);
+        scheduleJobs( mDag, pools );
     }
 
     /**
      * It schedules a list of jobs on the execution pools by calling out to the
      * site selector specified. It is upto to the site selector to determine if
-     * the job can be run on the list of pools passed.
+     * the job can be run on the list of sites passed.
      *
-     * @param jobs  the list of jobs to be scheduled.
-     * @param pools the list of execution pools, specified by the user.
+     * @param dag   the abstract workflow.
+     * @param sites the list of execution sites, specified by the user.
      *
      */
-    public void scheduleJobs(List jobs, List pools) {
-        String[] mappings = mSiteSelector.mapJob2ExecPool(jobs, pools);
+    public void scheduleJobs( ADag dag, List sites ) {
+
+        mSiteSelector = SiteSelectorFactory.loadInstance( mBag );
+        mSiteSelector.mapWorkflow( dag, sites );
+
         int i = 0;
         StringBuffer error;
 
@@ -228,10 +248,11 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         //Iterate through the jobs and hand them to
         //the site selector if required
-        for(Iterator it = jobs.iterator();it.hasNext();i++){
-            SubInfo job = (SubInfo) it.next();
-            String res = mappings[i];
+        String site ;
+        for( Iterator it = dag.jobIterator(); it.hasNext(); i++ ){
 
+            SubInfo job = ( SubInfo ) it.next();
+            site  = job.getSiteHandle();
             //check if the user has specified any hints in the dax
             incorporateHint(job, "pfnUniverse");
             if (incorporateHint(job, "executionPool")) {
@@ -240,7 +261,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                 continue;
             }
 
-            if (res == null) {
+            if ( site == null ) {
                 error = new StringBuffer();
                 error.append( "Site Selector could not map the job " ).
                       append( job.getCompleteTCName() ).
@@ -249,14 +270,12 @@ public class InterPoolEngine extends Engine implements Refiner {
                             LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
-            String pool = res.substring(0, res.indexOf(":"));
-            String jm = res.substring(res.indexOf(":") + 1);
-            jm = ( (jm == null) || jm.length() == 0 ||
-                  jm.equalsIgnoreCase("null")) ?
+            String jm = job.getJobManager();
+            jm = ( (jm == null) || jm.length() == 0 ) ?
                 null : jm;
 
-            if (pool.length() == 0 ||
-                pool.equalsIgnoreCase(SiteSelector.POOL_NOT_FOUND)) {
+            if ( site.length() == 0 ||
+                 site.equalsIgnoreCase( SiteSelector.SITE_NOT_FOUND ) ) {
                 error = new StringBuffer();
                 error.append( "Site Selector (" ).append( mSiteSelector.description() ).
                       append( ") could not map job " ).append( job.getCompleteTCName() ).
@@ -264,21 +283,12 @@ public class InterPoolEngine extends Engine implements Refiner {
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
-            job.executionPool = pool;
-            job.globusScheduler = (jm == null) ?
-                getJobManager(pool, job.condorUniverse) : jm;
+            job.setJobManager( jm == null ?
+                                          getJobManager( site, job.getUniverse() ) :
+                                          jm );
 
-            if (job.globusScheduler == null) {
-                error = new StringBuffer();
-                error.append( "Could not find a jobmanager at pool (").
-                      append( pool ).append( ") for universe " ).
-                      append( job.condorUniverse );
-                mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-                throw new RuntimeException( error.toString() );
 
-            }
-
-            mLogger.log("Mapped job " + job.jobName + " to pool " + pool,
+            mLogger.log("Mapped job " + job.jobName + " to pool " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL);
             //incorporate the profiles and
             //do transformation selection
@@ -557,17 +567,31 @@ public class InterPoolEngine extends Engine implements Refiner {
     /**
      * It returns a jobmanager for the given pool.
      *
-     * @param pool      the name of the pool.
+     * @param site      the name of the pool.
      * @param universe  the universe for which you need the scheduler on that
      *                  particular pool.
      *
      * @return the jobmanager for that pool and universe.
      *         null if not found.
      */
-    private String getJobManager(String pool, String universe) {
-        SiteInfo p = mPoolHandle.getPoolEntry(pool, universe);
-        JobManager jm = (p == null)? null : p.selectJobManager(universe,true);
-        return (jm == null) ? null : jm.getInfo(JobManager.URL);
+    private String getJobManager( String site, String universe) {
+        SiteInfo p = mPoolHandle.getPoolEntry( site, universe );
+        JobManager jm = ( p == null )? null : p.selectJobManager( universe, true );
+        String result =  ( jm == null ) ? null : jm.getInfo( JobManager.URL );
+
+
+        if ( result == null) {
+            StringBuffer error = new StringBuffer();
+            error = new StringBuffer();
+            error.append( "Could not find a jobmanager at site (").
+                  append( site ).append( ") for universe " ).
+                  append( universe );
+            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
+            throw new RuntimeException( error.toString() );
+
+        }
+
+        return result;
     }
 
     /**

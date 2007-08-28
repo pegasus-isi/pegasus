@@ -178,8 +178,8 @@ public class MainEngine
         //unmarkArgs();
         message = "Doing site selection" ;
         mLogger.log(message, LogManager.INFO_MESSAGE_LEVEL);
-        mIPEng = new InterPoolEngine(mReducedDag, mProps, mPOptions);
-        mIPEng.determinePools();
+        mIPEng = new InterPoolEngine( mReducedDag, mProps, mPOptions );
+        mIPEng.determineSites();
         mIPEng = null;
         mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
 

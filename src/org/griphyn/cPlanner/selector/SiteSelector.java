@@ -17,21 +17,16 @@ package org.griphyn.cPlanner.selector;
 
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.common.util.DynamicLoader;
+import org.griphyn.cPlanner.partitioner.graph.Graph;
 
-import org.griphyn.common.catalog.transformation.Mapper;
-
-import java.util.Iterator;
 import java.util.List;
 
 /**
- * The interface that supports callout to a separate site selector, that could be
- * java based or an arbitary executable. Any class interfacing with or implementing
- * a site scheduler should implement this interface.
- * An implementation is provided that calls out to an executable, instead of
- * making an api call to a java based site selector.
+ *
+ * The interface for the Site Selector. Allows us to maps the workflows
+ * to different sites.
  *
  * @author Karan Vahi
  * @author Jens-S. Vöckler
@@ -40,179 +35,59 @@ import java.util.List;
  *
  * @version $Revision$
  */
-public abstract class SiteSelector {
+public interface SiteSelector {
 
     /**
-     * The name of the package where the implementing classes reside.
+     * The version of the API of the Site Selector.
      */
-    public static final String PACKAGE_NAME = "org.griphyn.cPlanner.selector.site";
+    public static final String VERSION = "2.0";
 
     /**
      * The value for the pool handle, when the pool is not found.
      */
-    public static final String POOL_NOT_FOUND = "NONE";
-
-    /**
-     * The path to the executable representing the site selector that need to be
-     * called. In case the site selector is implemented in the implementing class
-     * or interfaced as an api call, the path can be set to null.
-     */
-    protected String mSiteSelectorPath;
-
-    /**
-     * Handle to the TCMapper.
-     */
-    protected Mapper mTCMapper;
-
-    /**
-     * The reference to the ADag object containing the workflow, whose jobs are
-     * being sent to the site selector to be scheduled. It contains extra
-     * metadata about the workflow like label,timestamp etc that might be used
-     * by some site selectors.
-     */
-    protected ADag mAbstractDag;
+    public static final String SITE_NOT_FOUND = "NONE";
 
 
     /**
-     * The default constructor.
-     */
-    public SiteSelector(){
-        mSiteSelectorPath = null;
-        mAbstractDag      = null;
-        mTCMapper          = null;
-    }
-
-    /**
-     * The overloaded constructor.
+     * Initializes the site selector.
      *
-     * @param path   the path to the site selector. It can be null.
+     * @param bag   the bag of objects that is useful for initialization.
+     *
      */
-    public SiteSelector(String path) {
-        mSiteSelectorPath = path;
-        mAbstractDag      = null;
-        mTCMapper         = null;
-    }
+    public void initialize( PegasusBag bag );
 
     /**
-     * It sets the abstract dag whose jobs are to be scheduled by the site
-     * selector.
+     * Maps the jobs in the workflow to the various grid sites.
+     * The jobs are mapped by setting the site handle for the jobs.
      *
-     * @param dag  the <code>ADag</code> object containing the abstract workflow
-     *             that needs to be mapped.
+     * @param workflow   the workflow in a Graph form.
+     *
+     * @param sites     the list of <code>String</code> objects representing the
+     *                  execution sites that can be used.
      */
-    public void setAbstractDag(ADag dag){
-        mAbstractDag = dag;
-    }
+    public void mapWorkflow( Graph workflow, List sites );
 
     /**
-     * It sets the tcmapper which will generate a valid map for a given executable.
-     * @param mapper Mapper
+     * Maps the jobs in the workflow to the various grid sites.
+     * The jobs are mapped by setting the site handle for the jobs.
+     *
+     * @param workflow   the workflow.
+     *
+     * @param sites     the list of <code>String</code> objects representing the
+     *                  execution sites that can be used.
      */
-    public void setTCMapper(Mapper mapper){
-        mTCMapper=mapper;
-    }
+    public void mapWorkflow( ADag workflow, List sites );
 
-    /**
-     * The call out to the site selector to determine on what pool
-     * the job should be scheduled. Any class interfacing with or implementing a
-     * site scheduler should implement this function.
-     * An implementation is provided that takes the <code>SubInfo<code>
-     * object and dumps it into a temporary file, which is provided as input to
-     * a separate executable representing the site selector.This executable writes
-     * out the selected pool in it's stdout, which is picked up by the implementation
-     * and returned to the calling method.
-     *
-     * @param job SubInfo   the <code>SubInfo</code> object  corresponding to the
-     *                  job whose execution pool we want to determine.
-     *
-     * @param pools     the list of <code>String</code> objects representing the
-     *                  execution pools that can be used.
-     *
-     * @return if the pool is found to which the job can be mapped, a string of the
-     *         form <code>executionpool:jobmanager</code> where the jobmanager can
-     *          be null. If the pool is not found, then set poolhandle to NONE.
-     *          null - if some error occured .
-     */
-    public abstract String mapJob2ExecPool(SubInfo job, List pools);
+
 
     /**
      * This method returns a String describing the site selection technique
      * that is being implemented by the implementing class.
-     * @return String
+     *
+     * @return a short description
      */
-    public abstract String description();
-
-    /**
-     * Loads the implementing class corresponding to the mode specified by the user
-     * at runtime in the properties file.
-     *
-     * @param className  The name of the class that implements the mode. It is the
-     *                   name of the class, not the complete name with package. That
-     *                   is added by itself.
-     * @param path       path to the external site selector.
-     * @return SiteSelector
-     */
-    public static SiteSelector loadSiteSelector(String className,String path) {
-
-        //prepend the package name
-        className = PACKAGE_NAME + "." + className;
-
-        //try loading the class dynamically
-        SiteSelector ss = null;
-        DynamicLoader dl = new DynamicLoader( className);
-        try {
-               Object argList[] = new Object[1];
-               argList[0] = (path == null) ? new String():path;
-               ss = (SiteSelector) dl.instantiate(argList);
-        }
-        catch ( Exception e ) {
-            throw new RuntimeException( dl.convertException(e) );
-        }
-
-        return ss;
-    }
+    public  String description();
 
 
-    /**
-     * The call out to map a list of jobs on to the execution pools. A default
-     * implementation is provided that internally calls mapJob2ExecPool(SubInfo,
-     * String,String,String) to map each of the jobs sequentially to an execution pool.
-     * The reason for this method is to support site selectors that
-     * make their decision on a group of jobs i.e use backtracking to reach a good
-     * decision.
-     * The implementation that calls out to an executable using Runtime does not
-     * implement this method, but relies on the default implementation defined
-     * here.
-     *
-     * @param jobs      the list of <code>SubInfo</code> objects representing the
-     *                  jobs that are to be scheduled.
-     * @param pools     the list of <code>String</code> objects representing the
-     *                  execution pools that can be used.
-     *
-     * @return an Array of String objects, corresponding to the jobs list and each
-     *         String of the form <code>executionpool:jobmanager</code> where the
-     *         jobmanager can be null.
-     *         null - if some error occured .
-     *
-     */
-    public String[] mapJob2ExecPool(List jobs, List pools){
-          //traverse through the list and allocate each job
-          //at a time
-          Iterator it = jobs.iterator();
-          SubInfo sub;
-          String res[] = new String[jobs.size()];
-          String pool  = null;
-          String jm    = null;
-
-          int i = 0;
-          while(it.hasNext()){
-              sub = (SubInfo)it.next();
-              res[i] = this.mapJob2ExecPool(sub,pools);
-              i++;
-
-          }
-
-          return res;
-    }
 
 }
