@@ -141,22 +141,12 @@ my %grid = ( $default => {
 
 # set defaults of %app to include test[123] transformations
 my %app = 
-    ( "test::world:1.0" =>         
+    ( "black::findrange:1.0" =>  
       [ '$pegasus/keg', {}, \$default_inst, \$default_arch ],
-      "${user}::findrange:1.0" =>  
+      "black::preprocess:1.0" => 
       [ '$pegasus/keg', {}, \$default_inst, \$default_arch ],
-      "${user}::preprocess:1.0" => 
-      [ '$pegasus/keg', {}, \$default_inst, \$default_arch ],
-      "${user}::analyze:1.0" =>    
-      [ '$pegasus/keg', {}, \$default_inst, \$default_arch ],
-      "${user}::process:1.0" =>    
-      [ '$pegasus/keg', {}, \$default_inst, \$default_arch ],
-      "${user}::generate:1.0" =>   
-      [ '$pegasus/keg', {}, \$default_inst, \$default_arch ],
-      "${user}::combine:1.0" =>    
-      [ '$pegasus/keg', {}, \$default_inst, \$default_arch ],
-      "${user}::multi:1.0" =>      
-      [ '$pegasus/keg', {}, \$default_inst, \$default_arch ] );
+      "black::analyze:1.0" =>    
+      [ '$pegasus/keg', {}, \$default_inst, \$default_arch ]);
 
 
 # defaults for the remote vors host
@@ -188,6 +178,7 @@ my $scfn = $p->property('pegasus.catalog.site.file') ||
 
 my $kickstart = '$pegasus/kickstart';
 my $workdir = '$tmp';
+my $pegasushome='$grid3/pegasus/';
 my $pegasusbin = '$grid3/pegasus/bin';	# FIXME!!! Old: $grid3/pegasus/bin/linux
 #my $pegasusbin = '$grid3/pegasus/bin/linux';	# This location is deprecated
 my @appfn = ();
@@ -918,12 +909,12 @@ foreach my $grid ( @grid ) {
 	}
 	$xlate{rwd} = $rwd;
 
+
 	# determine remote environment -- no checking done!!!
-	my ($gl, $llp);
+	my ($gl, $llp,$ph);
 	$gl = File::Spec->catfile( $xlate{grid3}, 'globus' );
 	$llp = File::Spec->catfile( $gl, 'lib' );
-	#my $vdldemo = File::Spec->catfile( $xlate{data}, 'vdldemo' );
-	#my $bindir = File::Spec->catfile( $vdldemo, 'bin' );
+	$ph = File::Spec->catfile($xlate{grid3},'pegasus');
 
 	my $real = $site;
 	$real =~ tr/-/_/;
@@ -974,10 +965,13 @@ foreach my $grid ( @grid ) {
 			  data => $xlate{data},
 			  grid3 => $xlate{grid3},
 			  tmp => $xlate{tmp},
-			  wntmp => $xlate{wntmp} },
+			  wntmp => $xlate{wntmp},
+			  GLOBUS_LOCATION => "$gl",
+			  PEGASUS_HOME => "$ph",
+			  LD_LIBRARY_PATH => "$llp"},
 		      pegasus => {
 			  grid => $grid
-		      } } );
+			  } } );
 	
 	#
 	# transformation catalogs (TC)
@@ -1009,22 +1003,25 @@ foreach my $grid ( @grid ) {
 		      deref($app{$lfn}->[3]) || $sysinfo || $default_arch );
 	}
 
-	# default transformations for each remote site
-	$tc->add( $real, 'globus-url-copy', 
-		  "$gl/bin/globus-url-copy",
-		  { env => { 'LD_LIBRARY_PATH' => $llp } }, 
-		  'INSTALLED', $sysinfo );
-	$tc->add( $real, 'transfer', 
-		  File::Spec->catfile( $xlate{pegasus}, 'transfer' ),
-		  { env => { 'LD_LIBRARY_PATH' => $llp } }, 
-		  'INSTALLED', $sysinfo );
-	$tc->add( $real, 'T2', 
-		  File::Spec->catfile( $xlate{pegasus}, 'T2' ),
-		  { env => { 'LD_LIBRARY_PATH' => $llp } }, 
-		  'INSTALLED', $sysinfo );
-	$tc->add( $real, 'dirmanager', 
-		  File::Spec->catfile( $xlate{pegasus}, 'dirmanager' ),
-		  { }, 'INSTALLED', $sysinfo );
+#
+# Commented out 8/31/2007. Removed default pegasus transformations in tc because of auto support since 2.0.
+#
+#	# default transformations for each remote site
+#	$tc->add( $real, 'globus-url-copy', 
+#		  "$gl/bin/globus-url-copy",
+#		  { env => { 'LD_LIBRARY_PATH' => $llp } }, 
+#		  'INSTALLED', $sysinfo );
+#	$tc->add( $real, 'transfer', 
+#		  File::Spec->catfile( $xlate{pegasus}, 'transfer' ),
+#		  { env => { 'LD_LIBRARY_PATH' => $llp } }, 
+#		  'INSTALLED', $sysinfo );
+#	$tc->add( $real, 'T2', 
+#		  File::Spec->catfile( $xlate{pegasus}, 'T2' ),
+#		  { env => { 'LD_LIBRARY_PATH' => $llp } }, 
+#		  'INSTALLED', $sysinfo );
+#	$tc->add( $real, 'dirmanager', 
+#		  File::Spec->catfile( $xlate{pegasus}, 'dirmanager' ),
+#		  { }, 'INSTALLED', $sysinfo );
 
 	# add syntactic sugar
 	$tc->add_special( $real, @special );
@@ -1092,6 +1089,11 @@ my $gl = $ENV{'GLOBUS_LOCATION'} || die "Hey, will you set GLOBUS_LOCATION!\n";
 my $llp = File::Spec->catfile( $gl, 'lib' );
 
 
+#my $cp = join( ':', File::Spec->catfile( $vl, 'lib', 'globus_rls_client.jar' ),
+#	       File::Spec->catfile( $vl, 'lib', 'java-getopt-1.0.9.jar' ),
+#	       File::Spec->catfile( $vl, 'lib', 'pegasus.jar' ) );
+
+
 #construct default profiles for site local
 my %mprofiles= ( pegasus => {grid => 'local'},
 		 env => ({GLOBUS_LOCATION => "$gl",
@@ -1111,10 +1113,6 @@ $sc->add( 'local',
 	  profile => { %mprofiles}
 	  );
 
-my $cp = join( ':', File::Spec->catfile( $gl, 'lib', 'rls.jar' ),
-	       File::Spec->catfile( $vl, 'lib', 'rls.jar' ),
-	       File::Spec->catfile( $vl, 'lib', 'java-getopt-1.0.9.jar' ),
-	       File::Spec->catfile( $vl, 'lib', 'gpegasus.jar' ) );
 
 #
 #  WE DONT NEED THE LOCAL TC ENTRIES ANY MORE because of PEGASUS 2.0 support.
