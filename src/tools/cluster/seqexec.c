@@ -495,7 +495,7 @@ append_argument( char* msg, size_t size, size_t len, char* argv[] )
 	}
         skip = ( *s == '!' || *s == '^' );
 	strncat( msg+len, s+skip, size-len );
-	len += slen + 3 + ( i == 2 );
+	len += slen + 3 + ( i == 2 ) - skip;
       } else {
 	break;
       }
