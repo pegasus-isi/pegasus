@@ -239,7 +239,6 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
       if ( timeout == 0 ) break;
     } else if ( status > 0 ) {
       /* poll OK */
-      count = 0; /* reset timeout computation */
       if ( (pfds.revents & mask) > 0 ) {
 	ssize_t rsize = read( pfds.fd, rbuffer, bufsize-1 );
 	if ( rsize == -1 ) {
