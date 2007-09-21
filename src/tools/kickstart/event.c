@@ -13,6 +13,7 @@
  * Southern California. All rights reserved.
  */
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/poll.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -105,6 +106,45 @@ send_message( int outfd, char* msg, ssize_t msize, unsigned channel )
   return msize;
 }
 
+#ifdef MUST_USE_SELECT_NOT_POLL
+int
+poll_via_select( struct pollfd* fds, unsigned nfds, long timeout )
+/* purpose: emulate poll() through select() <yikes!>
+ * warning: this is an incomplete and very simplified emulation!
+ * paramtr: see poll() arguments -- however, this only handles read events!
+ * returns: return value from select()
+ */
+{
+  struct timeval tv = { timeout / 1000, (timeout % 1000) * 1000 };
+  fd_set rfds, efds;
+  unsigned i, status;
+  int max = 0;
+
+  FD_ZERO( &rfds );
+  FD_ZERO( &efds );
+  for ( i = 0; i < nfds; ++i ) {
+    if ( fds[i].events & ( POLLIN | POLLRDNORM ) &&
+	 fds[i].fd != -1 ) { 
+      FD_SET( fds[i].fd, &rfds );
+      FD_SET( fds[i].fd, &efds );
+      if ( fds[i].fd >= max ) max = fds[i].fd+1;
+      fds[i].revents = 0;
+    }
+  }
+
+  if ( (status = select( max, &rfds, NULL, NULL, &tv )) > 0 ) {
+    for ( i = 0; i < nfds; ++i ) {
+      if ( fds[i].fd != -1 ) {
+	if ( FD_ISSET( fds[i].fd, &rfds ) ) fds[i].revents |= POLLIN;
+	if ( FD_ISSET( fds[i].fd, &efds ) ) fds[i].revents |= POLLERR;
+      }
+    }
+  }
+  
+  return status;
+}
+#endif /* MUST_USE_SELECT_NOT_POLL */
+
 int
 eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
 /* purpose: copy from input file(s) to output fd while not interrupted.
@@ -118,7 +158,7 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
   size_t count, bufsize = getpagesize();
   int timeout = 30000;
   int result = 0;
-  int status = 0;
+  int saverr, status = 0;
   int mask = POLLIN | POLLERR | POLLHUP | POLLNVAL;
   char* rbuffer;
   struct pollfd pfds;
@@ -130,7 +170,6 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
   /* prepare poll fds */
   pfds.fd = fifo->file.descriptor;
   pfds.events = POLLIN;
-  pfds.revents = 0;
 
   /* become aware of SIGPIPE for write failures */
   memset( &new_pipe, 0, sizeof(new_pipe) );
@@ -148,6 +187,10 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
   if ( (rbuffer = (char*) malloc( bufsize )) == NULL )
     return -1;
 
+#ifdef DEBUG_EVENTLOOP
+  fputs( "# starting event loop\n", stderr );
+#endif /* DEBUG_EVENTLOOP */
+
   /* poll (may have been interrupted by SIGCHLD) */
   for ( count=0; 1; count++ ) {
     /* race condition possible, thus we MUST time out */
@@ -161,8 +204,29 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
     } else {
       timeout = 30000;
     }
-    status = poll( &pfds, 1, timeout );
+    pfds.revents = 0;
 
+#ifdef DEBUG_EVENTLOOP
+    fprintf( stderr, "# tm=%d, s_sp=%d, calling poll([%d:%x:%x],%d,%d)\n", 
+	     *terminate, seen_sigpipe, 
+	     pfds.fd, pfds.events, pfds.revents, 1, timeout );
+#endif /* DEBUG_EVENTLOOP */
+
+    errno = 0;
+#ifdef MUST_USE_SELECT_NOT_POLL
+    status = poll_via_select( &pfds, 1, timeout );
+#else
+    status = poll( &pfds, 1, timeout );
+#endif /* MUST_USE_SELECT_NOT_POLL */
+    saverr = errno;
+
+#ifdef DEBUG_EVENTLOOP
+    fprintf( stderr, "# poll() returned %d [errno=%d: %s] [%d:%x:%x]\n", 
+	     status, saverr, strerror(saverr),
+	     pfds.fd, pfds.events, pfds.revents );
+#endif /* DEBUG_EVENTLOOP */
+
+    errno = saverr;
     if ( status == -1 ) {
       /* poll ERR */
       if ( errno != EINTR ) {
@@ -175,6 +239,7 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
       if ( timeout == 0 ) break;
     } else if ( status > 0 ) {
       /* poll OK */
+      count = 0; /* reset timeout computation */
       if ( (pfds.revents & mask) > 0 ) {
 	ssize_t rsize = read( pfds.fd, rbuffer, bufsize-1 );
 	if ( rsize == -1 ) {

@@ -59,6 +59,11 @@ CC	= xlc
 CXX	= xlC
 endif
 
+ifeq (DARWIN,${SYSTEM})
+#CFLAGS	+= -DDEBUG_WAIT=1 -DDEBUG_EVENTLOOP=1
+CFLAGS	+= -DMUST_USE_SELECT_NOT_POLL=1
+endif
+
 ifeq (LINUX,${SYSTEM})
 ifeq (ia64,${MARCH})
 CFLAGS	= -Wall -O2 -ggdb
