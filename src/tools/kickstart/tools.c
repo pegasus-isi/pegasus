@@ -38,7 +38,8 @@ full_append( char* buffer, const size_t size, size_t* len,
  */          
 {
   if ( *len + msglen + 1 < size ) {
-    strcat( buffer + *len, msg );
+    /* JSV 20070921: msglen may be smaller than strlen(msg) ! */
+    strncat( buffer + *len, msg, msglen );
     *len += msglen;
   } else {
     strncat( buffer + *len, msg, size - *len - 1 );

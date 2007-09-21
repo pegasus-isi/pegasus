@@ -25,7 +25,11 @@
 #include "limitinfo.h"
 
 #ifndef SYS_NMLN
+#ifdef _SYS_NAMELEN /* DARWIN */
 #define SYS_NMLN 65
+#else
+#error "No SYS_NMLN nor _SYS_NAMELEN: check <sys/utsname.h>"
+#endif /* _SYS_NAMELEN */
 #endif /* SYS_NMLN */
 
 typedef struct {
