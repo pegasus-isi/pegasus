@@ -627,7 +627,7 @@ public class MRC
                 if ( result.containsKey( lfn ) ) {
                     //right now no merging of RCE being done on basis
                     //on them having same pfns. duplicate might occur.
-                    ( (Set) result.get( lfn )).addAll( (Set) entry.getValue());
+                    ( (Collection)result.get( lfn )).addAll( (Collection) entry.getValue());
                 }
                 else {
                     result.put( lfn, entry.getValue() );
