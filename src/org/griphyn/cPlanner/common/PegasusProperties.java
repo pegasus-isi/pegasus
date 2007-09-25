@@ -1679,6 +1679,35 @@ public class PegasusProperties {
         return mProps.getProperty( "pegasus.local.env" );
     }
 
+    /**
+     * Returns a boolean indicating whether to write out the planner metrics
+     * or not.
+     *
+     * Referred to by the "pegasus.log.metrics" property.
+     *
+     * @return boolean in the properties, else false
+     */
+    public boolean writeOutMetrics(){
+        return Boolean.parse( mProps.getProperty( "pegasus.log.metrics" ), false );
+    }
+
+    /**
+     * Returns the path to the file that is used to be logging metrics
+     *
+     * Referred to by the "pegasus.log.metrics.file" property.
+     *
+     * @return path to the metrics file if specified, else $PEGASUS_HOME/var/pegasus.log
+     */
+    public String getMetricsLogFile(){
+        String file = mProps.getProperty( "pegasus.log.metrics.file" );
+        if( file == null || file.length() == 0 ){
+            //construct the default path
+            File dir = new File( this.getPegasusHome(), "var" );
+            file = new File( dir, "pegasus.log" ).getAbsolutePath();
+        }
+        return file;
+    }
+
 
     //SOME MISCELLANEOUS PROPERTIES
 
