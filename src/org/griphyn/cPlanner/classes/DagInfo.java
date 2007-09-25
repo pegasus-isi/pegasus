@@ -112,6 +112,13 @@ public class DagInfo extends Data {
     public String releaseVersion;
 
     /**
+     * The workflow metric objects that contains metrics about the workflow being
+     * planned.
+     */
+    private WorkflowMetrics mWFMetrics;
+
+
+    /**
      * Contains a unique ordered listing of the logical names referred
      * to by the dag. The TreeMap implementation guarentees us a log(n) execution
      * time for the basic operations. Hence should scale well. The key for the
@@ -139,16 +146,19 @@ public class DagInfo extends Data {
         mDAXMTime      = new String();
         releaseVersion = new String();
         lfnMap         = new TreeMap();
+        mWFMetrics     = new WorkflowMetrics();
     }
 
 
     /**
      * Adds a new job to the dag.
      *
-     * @param newJob  the name of the new job
+     * @param job  the job to be added
      */
-    public void addNewJob(String newJob) {
-        dagJobs.add(newJob);
+    public void addNewJob( SubInfo job ) {
+        dagJobs.add( job.getID() );
+        //increment the various metrics
+        mWFMetrics.increment( job );
     }
 
     /**
@@ -185,11 +195,13 @@ public class DagInfo extends Data {
      * Removes a job from the dag/graph structure. It however does not
      * delete the relations the edges that refer to the job.
      *
-     * @param jobName  the name of the job.
+     * @param job the job to be removed
+     *
      * @return boolean indicating whether removal was successful or not.
      */
-    public boolean remove(String jobName){
-        return dagJobs.remove(jobName);
+    public boolean remove( SubInfo  job ){
+        mWFMetrics.decrement( job );
+        return dagJobs.remove( job.getID() );
     }
 
 
@@ -445,6 +457,14 @@ public class DagInfo extends Data {
     }
 
 
+    /**
+     * Returns the workflow metrics so far.
+     *
+     * @return the workflow metrics
+     */
+    public WorkflowMetrics getWorkflowMetrics(){
+        return this.mWFMetrics;
+    }
 
 
     /**
@@ -488,6 +508,7 @@ public class DagInfo extends Data {
      */
     public void setLabel(String label){
         this.nameOfADag = label;
+        mWFMetrics.setLabel( label );
     }
 
     /**
@@ -561,7 +582,7 @@ public class DagInfo extends Data {
         dag.mDAXMTime       = new String(this.mDAXMTime);
         dag.releaseVersion = new String(this.releaseVersion);
         dag.lfnMap = (TreeMap)this.lfnMap.clone();
-
+        dag.mWFMetrics = ( WorkflowMetrics )this.mWFMetrics.clone();
         return dag;
     }
 

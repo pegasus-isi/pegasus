@@ -64,6 +64,8 @@ public class ADag extends Data {
      */
     private String mSubmitDirectory;
 
+
+
     /**
      * Initialises the class member variables.
      */
@@ -119,7 +121,7 @@ public class ADag extends Data {
      */
     public void add(SubInfo job){
         //add to the dagInfo
-        dagInfo.addNewJob(job.jobName);
+        dagInfo.addNewJob(job );
         vJobSubInfos.addElement(job);
     }
 
@@ -136,6 +138,8 @@ public class ADag extends Data {
         dagInfo.dagJobs.clear();
         dagInfo.relations.clear();
         dagInfo.lfnMap.clear();
+        //reset the workflow metrics also
+        this.getWorkflowMetrics().reset();
     }
 
     /**
@@ -155,7 +159,7 @@ public class ADag extends Data {
      * @return boolean indicating whether the removal was successful or not.
      */
     public boolean remove(SubInfo job){
-	boolean a = dagInfo.remove(job.jobName);
+	boolean a = dagInfo.remove( job );
 	boolean b = vJobSubInfos.remove(job);
 	return a && b;
     }
@@ -357,6 +361,16 @@ public class ADag extends Data {
         throw new RuntimeException("Can't find the sub info object for job " + job);
 
     }
+
+    /**
+     * Returns the metrics about the workflow.
+     *
+     * @return the WorkflowMetrics
+     */
+    public WorkflowMetrics getWorkflowMetrics(){
+        return this.dagInfo.getWorkflowMetrics();
+    }
+
 
     /**
      * Returns the DOT description of the object. This is used for visualizing

@@ -94,7 +94,7 @@ public class DAX2CDAG implements Callback {
     public void cbDocument(Map attributes) {
         mDagInfo.count = (String)attributes.get("count");
         mDagInfo.index = (String)attributes.get("index");
-        mDagInfo.nameOfADag = (String)attributes.get("name");
+        mDagInfo.setLabel( (String)attributes.get("name") );
     }
 
     /**
@@ -107,7 +107,7 @@ public class DAX2CDAG implements Callback {
     public void cbJob(SubInfo job) {
         mJobMap.put(job.logicalId,job.jobName);
         mVSubInfo.add(job);
-        mDagInfo.addNewJob(job.jobName);
+        mDagInfo.addNewJob( job );
 
         //put the input files in the map
         Iterator it = job.inputFiles.iterator();

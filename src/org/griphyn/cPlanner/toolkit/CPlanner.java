@@ -22,6 +22,7 @@ import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.NameValue;
+import org.griphyn.cPlanner.classes.PlannerMetrics;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -53,6 +54,11 @@ import gnu.getopt.LongOpt;
 import java.io.File;
 import java.io.IOException;
 import java.io.FilenameFilter;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 
 import java.util.Collection;
 import java.util.List;
@@ -123,6 +129,10 @@ public class CPlanner extends Executable{
      */
     private PlannerOptions mPOptions;
 
+    /**
+     * The PlannerMetrics object storing the metrics about this planning instance.
+     */
+    private PlannerMetrics mPMetrics;
 
     /**
      * The number formatter to format the run submit dir entries.
@@ -151,6 +161,8 @@ public class CPlanner extends Executable{
         mUser = mProps.getProperty( "user.name" ) ;
         if ( mUser == null ){ mUser = "user"; }
 
+        mPMetrics = new PlannerMetrics();
+        mPMetrics.setUser( mUser );
     }
 
     /**
@@ -222,11 +234,16 @@ public class CPlanner extends Executable{
      */
     public void executeCommand(String[] args) {
         String message = new String();
-        boolean singleTransfer  = false;
         mPOptions = parseCommandLineArguments(args);
 
         //print help if asked for
         if( mPOptions.getHelp() ) { printLongVersion(); return; }
+
+        //populate planner metrics
+        mPMetrics.setStartTime( new Date() );
+        mPMetrics.setVOGroup( mPOptions.getVOGroup() );
+        mPMetrics.setBaseSubmitDirectory( mPOptions.getSubmitDirectory() );
+        mPMetrics.setDAX( mPOptions.getDAX() );
 
         //do sanity check on dax file
         String dax         = mPOptions.getDAX();
@@ -330,6 +347,11 @@ public class CPlanner extends Executable{
                 mPOptions.setSubmitDirectory( submitDir, relativeDir  );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
+
+                mPMetrics.setRelativeSubmitDirectory( mPOptions.getRelativeSubmitDirectory() );
+
+                //also log in the planner metrics where the properties are
+                mPMetrics.setProperties( mProps.getPropertiesInSubmitDirectory() );
             }
             catch( IOException ioe ){
                 String error = ( state == 0 ) ?
@@ -361,6 +383,10 @@ public class CPlanner extends Executable{
 
             ADag finalDag = cwmain.runPlanner();
             DagInfo ndi = finalDag.dagInfo;
+
+            //store the workflow metrics from the final dag into
+            //the planner metrics
+            mPMetrics.setWorkflowMetrics( finalDag.getWorkflowMetrics() );
 
             //we only need the script writer for daglite megadag generator mode
             CodeGenerator codeGenerator = null;
@@ -426,6 +452,9 @@ public class CPlanner extends Executable{
             //log entry in to the work catalog
             boolean nodatabase = logEntryInWorkCatalog( finalDag, submitDir, relativeDir );
 
+            //write out  the planner metrics  to global log
+            mPMetrics.setEndTime( new Date() );
+            writeOutMetrics( mPMetrics );
 
             if(mPOptions.submitToScheduler()){//submit the jobs
                 throw new RuntimeException( "Direct submission is not supported at present" );
@@ -887,10 +916,54 @@ public class CPlanner extends Executable{
         } else {
             // does not exist, try to make it
             if ( ! dir.mkdirs() ) {
-                throw new IOException( "Unable to create base directory " +
+                throw new IOException( "Unable to create  directory " +
                                        dir.getPath() );
             }
         }
+    }
+
+
+    /**
+     * Writes out the planner metrics to the global log.
+     *
+     * @param pm  the metrics to be written out.
+     *
+     * @return boolean
+     */
+    protected boolean writeOutMetrics( PlannerMetrics pm  ){
+        boolean result = false;
+        if ( mProps.writeOutMetrics() ) {
+            File log = new File( mProps.getMetricsLogFile() );
+
+            //do a sanity check on the directory
+            try{
+                sanityCheck( log.getParentFile() );
+                //open the log file in append mode
+                FileOutputStream fos = new FileOutputStream( log ,true );
+
+                //get an exclusive lock
+                FileLock fl = fos.getChannel().lock();
+                try{
+                    mLogger.log( "Logging Planner Metrics to " + log,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    //write out to the planner metrics to fos
+                    fos.write( pm.toString().getBytes() );
+                }
+                finally{
+                    fl.release();
+                    fos.close();
+                }
+
+            }
+            catch( IOException ioe ){
+                mLogger.log( "Unable to write out planner metrics ", ioe,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                return false;
+            }
+
+            result = true;
+        }
+        return result;
     }
 
 
