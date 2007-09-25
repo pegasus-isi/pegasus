@@ -69,6 +69,18 @@ public class SysInfo{
                       glibc;
     }
 
+
+
+    /**
+     * Another convenience constructor that uses all entries as strings.
+     * @param arch String
+     * @param os String
+     * @param glibc String
+     */
+    public SysInfo(String arch, String os, String glibc) {
+        this( arch, os, null, glibc );
+    }
+
     /**
      * Another convenience constructor that uses all entries as strings.
      * @param arch String
@@ -87,6 +99,9 @@ public class SysInfo{
                       null:
                       glibc;
     }
+
+
+
 
     public SysInfo(String system) {
         if (system != null) {
