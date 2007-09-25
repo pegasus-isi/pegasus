@@ -1685,10 +1685,10 @@ public class PegasusProperties {
      *
      * Referred to by the "pegasus.log.metrics" property.
      *
-     * @return boolean in the properties, else false
+     * @return boolean in the properties, else true
      */
     public boolean writeOutMetrics(){
-        return Boolean.parse( mProps.getProperty( "pegasus.log.metrics" ), false );
+        return Boolean.parse( mProps.getProperty( "pegasus.log.metrics" ), true );
     }
 
     /**
