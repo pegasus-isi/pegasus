@@ -279,9 +279,13 @@ public class PegasusFile extends Data {
      * @see #TRANSFER_OPTIONAL
      */
     public void setTransferFlag(String dTFlag) throws IllegalArgumentException{
+        if(dTFlag == null || dTFlag.length() == 0){
+            //set to default value.
+            //throw new IllegalArgumentException();
+            mTransferFlag = this.TRANSFER_MANDATORY;
+            return;
+        }
 
-        if(dTFlag == null || dTFlag.length() == 0)
-            throw new IllegalArgumentException();
 
         if(dTFlag.equals("true"))
             mTransferFlag = this.TRANSFER_NOT;

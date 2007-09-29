@@ -23,6 +23,8 @@ import edu.isi.ikcap.workflows.sr.template.Component;
 
 import edu.isi.ikcap.workflows.util.FactoryException;
 
+import com.hp.hpl.jena.util.LocationMapper;
+
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
@@ -62,6 +64,17 @@ public class Windward  implements TransformationCatalog {
     protected LogManager mLogger;
 
     /**
+    * Returns an instance of the File TC.
+    *
+    * @return TransformationCatalog
+    */
+   public static TransformationCatalog getInstance() {
+       return new Windward();
+
+   }
+
+
+    /**
      * The default constructor.
      */
     public Windward() {
@@ -71,7 +84,7 @@ public class Windward  implements TransformationCatalog {
         mLogger = LogManager.getInstance();
 
         //instantiate the process catalog in the connect method
-        this.connect( mProps.matchingSubset( "some prefix", false ) );
+        this.connect( mProps.matchingSubset( "pegasus.catalog.transformation.windward", false ) );
     }
 
     /**
@@ -419,7 +432,7 @@ public class Windward  implements TransformationCatalog {
             }
         }
 
-        return result.isEmpty()? result : null;
+        return result.isEmpty()? null: result;
 
 
     }
@@ -463,7 +476,9 @@ public class Windward  implements TransformationCatalog {
 
         }
 
-        return result.isEmpty()? result : null;
+        //System.out.println( "Returning  " + result );
+
+        return result.isEmpty()? null : result;
 
     }
 
@@ -661,7 +676,7 @@ class Adapter{
 
         //do a sanity check on glibc
         String glibc = (String)from.getCharacteristic( TransformationCharacteristics.DEPENDANT_LIBRARY );
-        if( glibc.startsWith( "glibc_" ) ){
+        if( glibc != null && glibc.startsWith( "glibc_" ) ){
             glibc = glibc.substring( glibc.indexOf( "glibc_" ));
         }
 
