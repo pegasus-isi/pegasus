@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- generated: Mon Aug 28 16:46:45 PDT 2006 by the Wings WIXtoDAX convertor -->
-<adag xsi:schemaLocation="http://www.griphyn.org/chimera/DAX http://www.griphyn.org/chimera/dax-1.10.xsd" 
-xmlns="http://www.griphyn.org/chimera/DAX" 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-version="1.10" count="1" index="0" name="fmri">
+<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-2.0.xsd" version="2.0" count="1" index="0" name="fmri">
 
    <job id="Node_convertZ" namespace="fmri" name="convert" version="1">
       <argument><filename file="atlas-z.pgm"/> <filename file="atlas-z.gif"/></argument>

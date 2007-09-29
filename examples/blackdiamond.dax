@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- generated: 2004-08-18T10:53:01-05:00 -->
-
-<adag xmlns="http://www.griphyn.org/chimera/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.griphyn.org/chimera/DAX http://www.griphyn.org/chimera/dax-1.8.xsd" version="1.8" count="1" index="0" name="black-diamond">
+<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-2.0.xsd" version="2.0" count="1" index="0" name="black-diamond">
 <!-- part 1: list of all files used (may be empty) -->
   <filename file="f.a" link="input"/>
   <filename file="f.b1" link="inout"/>
