@@ -23,8 +23,6 @@ import edu.isi.ikcap.workflows.sr.template.Component;
 
 import edu.isi.ikcap.workflows.util.FactoryException;
 
-import com.hp.hpl.jena.util.LocationMapper;
-
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
