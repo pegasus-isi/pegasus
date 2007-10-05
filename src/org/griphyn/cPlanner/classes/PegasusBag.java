@@ -272,6 +272,25 @@ public class PegasusBag
     }
 
     /**
+     * A convenice method to get PegasusProperties
+     *
+     * @return  the handle to the properties.
+     */
+    public PegasusProperties getPegasusProperties(){
+        return ( PegasusProperties )get( PegasusBag.PEGASUS_PROPERTIES );
+    }
+
+    /**
+     * A convenice method to get Logger/
+     *
+     * @return  the handle to the logger.
+     */
+    public LogManager getLogger(){
+        return ( LogManager )get( PegasusBag.PEGASUS_LOGMANAGER );
+    }
+
+
+    /**
      * A convenience method to get the intValue for the object passed.
      *
      * @param key   the key to be converted
