@@ -4,6 +4,7 @@
   <description>Manages Pegasus</description>
   <property name="build.src" location="build/classes"/>
   <property environment="env"/>
+ <property name="pegasus.home" value="${env.PEGASUS_HOME}"/>
 
   <target name="getsystem"
           description="Obtains the system information and architecture"
@@ -143,7 +144,7 @@
           description="Runs PDF-LaTeX to auto-document properties" 
 	  if="latex.available"
           unless="pegasus.predicate.latex">
-    <exec executable="libexec/assemble-sample-props"
+    <exec executable="${pegasus.home}/libexec/assemble-sample-props"
 	  failonerror="true">
       <arg file="${dist.doc}/properties.pdf"/>
     </exec>
