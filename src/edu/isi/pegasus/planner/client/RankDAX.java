@@ -123,6 +123,7 @@ public class RankDAX extends Executable {
             //are thrown that may have chained causes
             me.log( convertException(rte),
                          LogManager.FATAL_MESSAGE_LEVEL );
+            rte.printStackTrace();
             result = 1;
         }
         catch ( Exception e ) {
@@ -253,7 +254,7 @@ public class RankDAX extends Executable {
 
         //now rank the daxes
         Rank rank = new Rank();
-        rank.initialize( mBag, (List)mSites );
+        rank.initialize( mBag, (List)mSites, mRequestID );
         Collection rankings = rank.rank( daxes );
 
         //write out the rankings file

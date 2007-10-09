@@ -21,7 +21,6 @@ import org.griphyn.cPlanner.selector.site.heft.Algorithm;
 
 import org.griphyn.cPlanner.classes.ADag;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.cPlanner.parser.DaxParser;
@@ -30,9 +29,10 @@ import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
 import org.griphyn.cPlanner.parser.dax.Callback;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.TreeSet;
 import java.util.List;
+import java.util.LinkedList;
 
 /**
  * The Rank class that ranks the DAX'es
@@ -58,6 +58,11 @@ public class Rank {
     private List mSites;
 
     /**
+     * The optional request id.
+     */
+    private String mRequestID;
+
+    /**
      * The handle to the logging object.
      */
     private LogManager mLogger;
@@ -74,11 +79,13 @@ public class Rank {
      *
      * @param bag   the PegasusBag.
      * @param sites the sites where the wf can run potentially.
+     * @param id    the request id
      */
-    public void initialize( PegasusBag bag , List sites ){
+    public void initialize( PegasusBag bag , List sites , String id ){
         mBag = bag;
         mLogger = bag.getLogger();
         mHeft = new Algorithm( bag );
+        mRequestID = id;
         mSites = sites;
     }
 
@@ -92,9 +99,12 @@ public class Rank {
      */
     public Collection<Ranking> rank( Collection<String> daxes ){
 
-        Collection result = new TreeSet();
+        Collection result = new LinkedList();
+
+        long max = 0;
 
         //traverse through the DAX'es
+        long rank;
         for( Iterator it = daxes.iterator(); it.hasNext(); ){
             String dax = ( String ) it.next();
             Callback cb = DAXCallbackFactory.loadInstance( mBag.getPegasusProperties(),
@@ -107,10 +117,21 @@ public class Rank {
                                                  cb );
 
             ADag dag = (ADag)cb.getConstructedObject();
+            dag.setRequestID( mRequestID );
             mHeft.schedule( dag, mSites );
-            result.add( new Ranking( dax, mHeft.getMakespan()) );
+            rank = mHeft.getMakespan();
+            max = ( rank > max ) ? rank : max;
+            result.add( new Ranking( dax, rank ) );
         }
 
+        //update the ranks for all the daxes ( inverse them )
+        for( Iterator it = result.iterator(); it.hasNext(); ){
+            Ranking r = ( Ranking )it.next();
+            //inverse the ranking
+            r.setRank( max - r.getRank() );
+        }
+
+        Collections.sort( (List)result );
         return result;
     }
 

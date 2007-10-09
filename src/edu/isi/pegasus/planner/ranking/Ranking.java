@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.ranking;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Ranking {
+public class Ranking implements Comparable {
 
     /**
      * The name of the DAX.
@@ -44,6 +44,25 @@ public class Ranking {
         mRank = rank;
         mName = name;
     }
+
+    /**
+     * Sets the rank.
+     *
+     * @param rank the rank.
+     */
+    public void setRank( long rank ){
+        mRank = rank;
+    }
+
+    /**
+     * Sets the name.
+     *
+     * @param name  the name of the dax
+     */
+    public void setName( String name ){
+        mName = name;
+    }
+
 
     /**
      * Returns the rank.
@@ -97,5 +116,14 @@ public class Ranking {
         }
     }
 
+    public boolean equals( Object o ){
+        boolean result = false;
+        if( o instanceof Ranking ){
+            Ranking r = ( Ranking ) o;
+            result = ( r.getName().equals( this.getName() ) ) &&
+                     ( r.getRank() == this.getRank() );
+        }
+        return result;
+    }
 
 }
