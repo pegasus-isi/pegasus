@@ -64,7 +64,10 @@ public class ADag extends Data {
      */
     private String mSubmitDirectory;
 
-
+    /**
+     * The optional request ID associated with the DAX.
+     */
+    private String mRequestID;
 
     /**
      * Initialises the class member variables.
@@ -97,6 +100,7 @@ public class ADag extends Data {
         newAdag.dagInfo     = (DagInfo)this.dagInfo.clone();
         newAdag.vJobSubInfos= (Vector)this.vJobSubInfos.clone();
         newAdag.setBaseSubmitDirectory( this.mSubmitDirectory );
+        newAdag.setRequestID( this.mRequestID );
         return newAdag;
     }
 
@@ -174,6 +178,23 @@ public class ADag extends Data {
         return this.dagInfo.getNoOfJobs();
     }
 
+    /**
+     * Sets the request id.
+     *
+     * @param id    the request id.
+     */
+    public void setRequestID( String id ){
+        mRequestID = id;
+    }
+
+    /**
+     * Returns the request id.
+     *
+     * @return    the request id.
+     */
+    public String getRequestID( ){
+        return mRequestID;
+    }
 
 
     /**

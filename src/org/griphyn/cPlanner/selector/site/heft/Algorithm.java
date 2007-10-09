@@ -34,14 +34,25 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 import org.griphyn.cPlanner.partitioner.graph.Bag;
 
-
+import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
 import org.griphyn.common.catalog.transformation.Mapper;
+import org.griphyn.common.catalog.transformation.Windward;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.cPlanner.namespace.VDS;
+
+
+import edu.isi.ikcap.workflows.ac.ProcessCatalogFactory;
+import edu.isi.ikcap.workflows.ac.ProcessCatalog;
+import edu.isi.ikcap.workflows.ac.classes.TransformationCharacteristics;
+
+import edu.isi.ikcap.workflows.util.FactoryException;
+
+import edu.isi.ikcap.workflows.sr.util.WorkflowGenerationProvenanceCatalog;
+
 
 import java.util.List;
 import java.util.Map;
@@ -50,6 +61,8 @@ import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Collections;
+import java.util.Properties;
+
 
 /**
  * The HEFT based site selector. The runtime for the job in seconds is picked
@@ -80,6 +93,12 @@ public class Algorithm {
      * The pegasus profile key that gives us the expected runtime.
      */
     public static final String RUNTIME_PROFILE_KEY = VDS.RUNTIME_KEY;
+
+    /**
+     * The property that designates which Process catalog impl to pick up.
+     */
+    public static final String PROCESS_CATALOG_IMPL_PROPERTY = "pegasus.catalog.transformation.windward";
+
 
     /**
      * The average bandwidth between the sites. In mega bytes/per second.
@@ -145,6 +164,32 @@ public class Algorithm {
      */
     private PegasusProperties mProps;
 
+    //TANGRAM related variables
+    /**
+     * The handle to the workflow provenance catalog
+     */
+    private WorkflowGenerationProvenanceCatalog mWGPC;
+
+    /**
+     * The request id associated with the DAX.
+     */
+    private String mRequestID;
+
+    /**
+     * The label of the workflow.
+     */
+    private String mLabel;
+
+    /**
+     * The handle to the Process Catalog.
+     */
+    private ProcessCatalog mProcessCatalog;
+
+    /**
+     * The handle to the transformation catalog.
+     */
+    private TransformationCatalog mTCHandle;
+
     /**
      * The default constructor.
      *
@@ -152,10 +197,19 @@ public class Algorithm {
      */
     public Algorithm(  PegasusBag bag ) {
         mProps      = ( PegasusProperties ) bag.get( PegasusBag.PEGASUS_PROPERTIES );
+        mTCHandle   = ( TransformationCatalog )bag.get( PegasusBag.TRANSFORMATION_CATALOG );
         mTCMapper   = ( Mapper )bag.get( PegasusBag.TRANSFORMATION_MAPPER );
         mLogger     = ( LogManager )bag.get( PegasusBag.PEGASUS_LOGMANAGER );
         mSiteHandle = ( PoolInfoProvider )bag.get( PegasusBag.SITE_CATALOG );
         mAverageCommunicationCost = (this.AVERAGE_BANDWIDTH / this.AVERAGE_DATA_SIZE_BETWEEN_JOBS);
+
+        mProcessCatalog = this.loadProcessCatalog( mProps.getProperty( this.PROCESS_CATALOG_IMPL_PROPERTY ),
+                                                   mProps.matchingSubset( this.PROCESS_CATALOG_IMPL_PROPERTY, false )
+                                                   );
+
+        //to figure out a way to insantiate SWF
+        //Varun needs to write out a factory
+        mWGPC = new WorkflowGenerationProvenanceCatalog();
     }
 
 
@@ -168,10 +222,42 @@ public class Algorithm {
      *              execute.
      */
     public void schedule( ADag dag , List sites ){
+        //metadata about the DAG needs to go to Graph object
+        mLabel     = dag.getLabel();
+        mRequestID = dag.getRequestID();
+
         //convert the dag into a graph representation
         schedule( Adapter.convert( dag ), sites );
     }
 
+
+
+    /**
+     * Load the process catalog, only if it is determined that the Transformation
+     * Catalog description is the windward one.
+     *
+     * @param type  the type of process catalog
+     * @param props contains all necessary data to establish the link.
+     *
+     * @return true if connected now, or false to indicate a failure.
+     */
+    protected ProcessCatalog loadProcessCatalog( String type, Properties props ) {
+        ProcessCatalog result = null;
+
+        //only load process catalog if TC implementation loaded is of type windward.
+        if( ! (mTCHandle instanceof Windward ) ) {
+            return result;
+        }
+
+        //figure out how to specify via properties
+        try{
+            result = ProcessCatalogFactory.loadInstance( type, props );
+        }catch( FactoryException e ){
+            mLogger.log( "Unable to connect to process catalog " + e.convertException(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        return result;
+    }
 
 
     /**
@@ -374,7 +460,7 @@ public class Algorithm {
                                             site );
         //pick the first one for time being
         TransformationCatalogEntry entry = ( TransformationCatalogEntry ) entries.get( 0 );
-        result[ 1 ] = result[ 0 ] + getExpectedRuntime( entry );
+        result[ 1 ] = result[ 0 ] + getExpectedRuntime( job, entry );
 
         //est now stores the estimated finish time
         return result;
@@ -448,7 +534,7 @@ public class Algorithm {
 
             //pick the first one for time being
             TransformationCatalogEntry entry = ( TransformationCatalogEntry ) entries.get( 0 );
-            int jobRuntime = getExpectedRuntime( entry );
+            int jobRuntime = getExpectedRuntime( job, entry );
             total_nodes += nodes;
             total += jobRuntime * nodes;
 
@@ -461,14 +547,24 @@ public class Algorithm {
     /**
      * Return expected runtime.
      *
+     * @param job    the job in the workflow.
      * @param entry  the <code>TransformationCatalogEntry</code> object.
      *
      * @return the runtime in seconds.
      */
-    protected int getExpectedRuntime( TransformationCatalogEntry entry ){
-        List profiles = entry.getProfiles( Profile.VDS );
+    protected int getExpectedRuntime( SubInfo job, TransformationCatalogEntry entry ){
         int result = -1;
 
+        //try and fetch the expected runtime from the Windward AC
+        result = getExpectedRuntimeFromAC( job , entry );
+        if( result > 1 ){
+            return result;
+        }
+
+        //else try and get the runtime from the profiles
+        List profiles = entry.getProfiles( Profile.VDS );
+        mLogger.log( "Fetching runtime information from profiles for job " + job.getName(),
+                     LogManager.DEBUG_MESSAGE_LEVEL  );
         if( profiles != null ){
             for (Iterator it = profiles.iterator(); it.hasNext(); ) {
                 Profile p = (Profile) it.next();
@@ -486,6 +582,33 @@ public class Algorithm {
         return result;
     }
 
+    /**
+     * Return expected runtime from the AC only if the process catalog is
+     * initialized.
+     *
+     * @param job    the job in the workflow.
+     * @param entry  the TC entry
+     *
+     * @return the runtime in seconds.
+     */
+    protected int getExpectedRuntimeFromAC( SubInfo job, TransformationCatalogEntry entry  ){
+        int result = -1;
+        if( mProcessCatalog == null ){
+            return result;
+        }
+        //fetch the job information first
+        List tcs =  mProcessCatalog.getPredictedPerformance(
+                          mWGPC.getJobInformation( mRequestID, mLabel, job.getLogicalID() ),
+                          entry.getResourceId(),
+                          entry.getSysInfo().getArch().toString()
+                              );
+
+
+
+        return tcs == null || tcs.isEmpty()?
+               result:
+               (Integer)((( TransformationCharacteristics )tcs.get(0)).getCharacteristic( TransformationCharacteristics.EXPECTED_RUNTIME ));
+    }
 
     /**
      * Populates the number of free nodes for each site, by querying the
