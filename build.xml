@@ -79,7 +79,7 @@
     <javac destdir="${build.src}" srcdir="src"
            target="1.5" source="1.5"
 	   encoding="UTF-8" debug="true"
-	   includes="org/griphyn/cPlanner/**/*.java"
+	   includes="org/griphyn/cPlanner/**/*.java,edu/isi/pegasus/planner/**/*.java"
 	   excludes="org/griphyn/cPlanner/**/*Test.java"/>
   </target>
 
@@ -88,7 +88,7 @@
     <javac destdir="${build.src}" srcdir="src" 
            target="1.5" source="1.5"
 	   encoding="UTF-8" debug="true"
-	   includes="*.java,org/**/*.java"/>
+	   includes="*.java,edu/**/*.java,org/**/*.java"/>
   </target>
 
   <target name="deprecation" depends="init"
