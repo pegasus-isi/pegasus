@@ -263,7 +263,7 @@ public class Windward  implements ReplicaCatalog {
         //traverse through the entries and insert one by one
         for( Iterator it = x.entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = ( Map.Entry )it.next();
-            String lfn = ( String )entry.getValue();
+            String lfn = ( String )entry.getKey();
 
             //traverse through rce's for each lfn
             for( Iterator rceIt = ((List)entry.getValue()).iterator(); rceIt.hasNext(); ){
