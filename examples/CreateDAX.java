@@ -46,8 +46,12 @@ public class CreateDAX{
 	    //add the files used by the job
 	    
 	    job.addUses(new Filename(FA,LFN.INPUT));
-	    job.addUses(new Filename(FB1,LFN.OUTPUT));
-	    job.addUses(new Filename(FB2,LFN.OUTPUT));
+	    Filename f=new Filename(FB1,LFN.OUTPUT);
+	    f.setDontRegister(true);
+	    job.addUses(f);
+	    f=new Filename(FB2,LFN.OUTPUT);
+	    f.setDontRegister(true);
+	    job.addUses(f);
 	    
 	    //add the job to the dax
 	    dax.addJob(job);
