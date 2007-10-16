@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<chapter>
-  <title id="grid">Conventions for Running Pegasus on the Grid</title>
+<chapter label="2" version="5.0" xmlns="http://docbook.org/ns/docbook"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:svg="http://www.w3.org/2000/svg"
+         xmlns:mml="http://www.w3.org/1998/Math/MathML"
+         xmlns:html="http://www.w3.org/1999/xhtml"
+         xmlns:db="http://docbook.org/ns/docbook">
+  <title xml:id="grid">Conventions for Running Pegasus on the Grid</title>
 
   <para>This document describes the conventions for workflow execution and job
   management needed to run workflows across multiple Grid sites.</para>
@@ -38,9 +44,9 @@
 
     <para>Input files are looked up in the Replica Catalog and copied to the
     site where the job will run, if they don’t already exist at that site. In
-    Pegasus v 2.0 RLS <link linkend="grid">(</link><ulink
-    url="http://www.globus.org/rls">http://www.globus.org/rls/ </ulink>), DB
-    backend via JDBC and a Simple File are the available implementations of a
+    Pegasus v 2.0 RLS <link linkend="grid">(</link><link
+    xlink:href="http://www.globus.org/rls">http://www.globus.org/rls/ </link>),
+    DB backend via JDBC and a Simple File are the available implementations of a
     replica catalog.</para>
 
     <para>Programs start in their working directory (i.e., their “current
@@ -326,43 +332,45 @@ storage="/home/pegasus" …/&gt;
       or absolute the <emphasis>wdir/sdir</emphasis> are either appended or
       replaced.</para>
 
-      <table frame="box" rules="all">
-        <caption></caption>
+      <table>
+        <title></title>
 
-        <col align="center" span="1" />
+        <tgroup cols="3">
+          <tbody>
+            <row>
+              <entry></entry>
 
-        <tbody>
-          <tr>
-            <th></th>
+              <entry><emphasis role="bold">pwdir</emphasis></entry>
 
-            <td>pwdir</td>
+              <entry><emphasis role="bold">psdir</emphasis></entry>
+            </row>
 
-            <td>psdir</td>
-          </tr>
+            <row>
+              <entry><emphasis role="bold">pw/psdir is
+              relative</emphasis></entry>
 
-          <tr>
-            <th>XXdir is relative</th>
+              <entry>wdir1 = wdir + pwdir</entry>
 
-            <td>wdir1 = wdir1 + pwdir</td>
+              <entry>sdir1 = sdir + psdir</entry>
+            </row>
 
-            <td>sdir1 = sdir + psdir</td>
-          </tr>
+            <row>
+              <entry><emphasis role="bold">pw/psdir is
+              absolute</emphasis></entry>
 
-          <tr>
-            <th>XXdir is absolute</th>
+              <entry>wdir1 == pwdir</entry>
 
-            <td>wdir1 == pwdir</td>
-
-            <td>sdir1 == psdir</td>
-          </tr>
-        </tbody>
+              <entry>sdir1 == psdir</entry>
+            </row>
+          </tbody>
+        </tgroup>
       </table>
 
       <para>All subsequent filename resolutions below assume that the above
       transformations have taken place.</para>
 
-      <section id="sec.231">
-        <title id="sec.231.title">Setup Job</title>
+      <section xml:id="sec.231">
+        <title xml:id="sec.231.title">Setup Job</title>
 
         <para>Pegasus uses a setup job to create the remote<emphasis>
         jdir1</emphasis> from <emphasis>wdir1</emphasis> for a partition of a
