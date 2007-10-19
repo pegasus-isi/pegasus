@@ -294,7 +294,8 @@
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0"&gt;
  ……
   &lt;site handle="ncsa_tera" gridlaunch="/opt/pegasus/bin/kickstart"&gt;
-    <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt;</emphasis>
+    <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;condor&lt;/profile&gt;
+</emphasis>    <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt;</emphasis>
     &lt;gridftp url="gsiftp://ncsa.teragrid.org/" storage="/pegasus/data/"
       major="2" minor="4" patch="0" /&gt;
     &lt;jobmanager universe="transfer" url="ncsa.teragrid.org/jobmanager-condor"
@@ -555,7 +556,8 @@
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0"&gt;
  …… 
   &lt;site handle="ncsa_tera" gridlaunch="/opt/Pegasus/bin/kickstart"&gt;
-<emphasis role="bold">    &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
+    <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glidein&lt;/profile&gt;
+</emphasis><emphasis role="bold">    &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
     &lt;profile namespace="condor" key="FileSystemDomain"&gt;ncsa.teragrid.org&lt;/profile&gt; 
 </emphasis>    &lt;gridftp url="gsiftp://ncsa.teragrid.org/" storage="/pegasus/data/"
        major="2" minor="4" patch="0" /&gt; 
