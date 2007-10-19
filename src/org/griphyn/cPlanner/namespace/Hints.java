@@ -41,6 +41,12 @@ public class Hints extends Namespace {
      */
     public static final String NAMESPACE_NAME = Profile.HINTS;
 
+
+    /**
+     * The jobmanager universe key.
+     */
+    public static final String JOBMANAGER_UNIVERSE = "jobmanager.universe";
+
     /**
      * The name of the implementing namespace. It should be one of the valid
      * namespaces always.
@@ -114,6 +120,8 @@ public class Hints extends Namespace {
     *
     * @param key   The key that you want to search for
     *              in the namespace.
+    *
+    * @return boolean
     */
    public boolean containsKey(Object key){
        return (mProfileMap == null)? false : mProfileMap.containsKey(key);
@@ -160,15 +168,27 @@ public class Hints extends Namespace {
                 }
                 break;
 
-            case 'p':
-                if (key.compareTo("pfnHint") == 0 ||
-                    key.compareTo("pfnUniverse") == 0) {
+            case 'j':
+                if (key.compareTo( JOBMANAGER_UNIVERSE ) == 0 ) {
                     res = VALID_KEY;
                 }
                 else {
                     res = NOT_PERMITTED_KEY;
                 }
                 break;
+
+
+            case 'p':
+                if (key.compareTo("pfnHint") == 0 /*||
+                    key.compareTo("pfnUniverse") == 0*/) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = NOT_PERMITTED_KEY;
+                }
+                break;
+
+
 
             default:
                 res = NOT_PERMITTED_KEY;
@@ -219,6 +239,8 @@ public class Hints extends Namespace {
     /**
      * Converts the contents of the map into the string that can be put in the
      * Condor file for printing.
+     *
+     * @return String
      */
     public String toString() {
         return null;

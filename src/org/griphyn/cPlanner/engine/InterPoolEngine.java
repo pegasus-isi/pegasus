@@ -36,6 +36,8 @@ import org.griphyn.cPlanner.selector.site.SiteSelectorFactory;
 
 import org.griphyn.cPlanner.selector.TransformationSelector;
 
+import org.griphyn.cPlanner.namespace.Hints;
+
 import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
 import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
 
@@ -254,7 +256,10 @@ public class InterPoolEngine extends Engine implements Refiner {
             SubInfo job = ( SubInfo ) it.next();
             site  = job.getSiteHandle();
             //check if the user has specified any hints in the dax
-            incorporateHint(job, "pfnUniverse");
+
+//          replaced with jobmanager-type
+//            incorporateHint(job, "pfnUniverse");
+            incorporateHint(job, Hints.JOBMANAGER_UNIVERSE );
             if (incorporateHint(job, "executionPool")) {
                 //i++;
                 incorporateProfiles(job);
@@ -640,7 +645,9 @@ public class InterPoolEngine extends Engine implements Refiner {
                 }
                 break;
 
+            /*//not required any longer
             case 'p':
+
                 if (key.equals("pfnUniverse")) {
                     job.condorUniverse = job.hints.containsKey("pfnUniverse") ?
                         (String) job.hints.removeKey("pfnUniverse") :
@@ -650,6 +657,18 @@ public class InterPoolEngine extends Engine implements Refiner {
 
                 }
                 break;
+            */
+            case 'j':
+                if (key.equals( Hints.JOBMANAGER_UNIVERSE )) {
+                 job.condorUniverse = job.hints.containsKey( Hints.JOBMANAGER_UNIVERSE ) ?
+                     (String) job.hints.removeKey( Hints.JOBMANAGER_UNIVERSE ) :
+                     job.condorUniverse;
+
+                 return true;
+
+             }
+             break;
+
 
             default:
                 break;

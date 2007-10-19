@@ -89,6 +89,17 @@ public class JobManager {
         "total-nodes", "free-mem", "total-mem", "jobs-in-queue", "running-jobs",
         "max-count", "max-cpu-time", "os", "arch"};
 
+
+    /**
+     * The jobmanager type associated with the compute jobs.
+     */
+    public static final String VANILLA_JOBMANAGER_TYPE = "vanilla";
+
+    /**
+     * The jobmanager type associated with the transfer jobs.
+     */
+    public static final String FORK_JOBMANAGER_TYPE = "transfer";
+
     /**
      * The constant to be passed to the accessor functions to get or set the url.
      */
@@ -408,6 +419,8 @@ public class JobManager {
     /**
      * Checks if an object is similar to the one referred to by this class.
      * We compare the primary key to determine if it is the same or not.
+     *
+     * @param o  the object to be compared for equality.
      *
      * @return true if the primary key (url) match.
      *         else false.
