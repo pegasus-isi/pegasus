@@ -335,7 +335,8 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         for(Iterator it = files.iterator();it.hasNext();){
             FileTransfer ft = (FileTransfer) it.next();
             NameValue source = ft.getSourceURL();
-            NameValue dest   = ft.getDestURL();
+            //we want to leverage multiple dests if possible
+            NameValue dest   = ft.getDestURL( true );
             writer.write("#" + source.getKey() + "\n" + source.getValue() + "\n#" +
                         dest.getKey() + "\n" + dest.getValue() + "\n");
             writer.flush();

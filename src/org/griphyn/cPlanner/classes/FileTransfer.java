@@ -15,6 +15,7 @@
 package org.griphyn.cPlanner.classes;
 
 
+import org.griphyn.cPlanner.common.PegRandom;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -112,7 +113,7 @@ public class FileTransfer extends PegasusFile {
      * @param lfn        The logical name of the file that has to be transferred.
      * @param job        The name of the job with which the transfer is
      *                   associated with.
-     * @param flags
+     * @param flags      the BitSet flags.
      */
     public FileTransfer(String lfn, String job, BitSet flags){
 
@@ -213,8 +214,24 @@ public class FileTransfer extends PegasusFile {
      *         null if no urls are assoiciated with the object.
      */
     public NameValue getSourceURL(){
-        return getURL(mSourceMap);
+        return getSourceURL( false );
     }
+
+    /**
+     * Returns a single source url associated with the transfer.
+     * If random is set to false, thensource url returned is first entry from
+     * the key set of the  underlying map.
+     *
+     * @param random   boolean indicating if a random entry needs to be picked.
+     *
+     * @return NameValue where the name would be the pool on which the URL is
+     *         and value the URL.
+     *         null if no urls are assoiciated with the object.
+     */
+    public NameValue getSourceURL( boolean random ){
+        return getURL( mSourceMap , random );
+    }
+
 
 
     /**
@@ -227,8 +244,26 @@ public class FileTransfer extends PegasusFile {
      *         null if no urls are assoiciated with the object.
      */
     public NameValue getDestURL(){
-        return getURL(mDestMap);
+        return getDestURL( false );
     }
+
+
+    /**
+     * Returns a single destination url associated with the transfer.
+     * If random is set to false, then dest url returned is first entry from
+     * the key set of the  underlying map.
+     *
+     * @param random   boolean indicating if a random entry needs to be picked.
+
+     *
+     * @return NameValue where the name would be the pool on which the URL is
+     *         and value the URL.
+     *         null if no urls are assoiciated with the object.
+     */
+    public NameValue getDestURL( boolean random ){
+        return getURL( mDestMap, random );
+    }
+
 
 
     /**
@@ -270,29 +305,36 @@ public class FileTransfer extends PegasusFile {
     }
 
     /**
-     * Returns a single url from the map passed.
+     * Returns a single url from the map passed. If the random parameter is set,
+     * then a random url is returned from the values for the first site.
      *
-     * @param m  the map containing the url's
+     * Fix Me: Random set to true, shud also lead to randomness on the sites.
+     *
+     * @param m       the map containing the url's
+     * @param random  boolean indicating that a random url to be picked up.
      *
      * @return NameValue where the name would be the pool on which the URL is
      *         and value the URL.
      *         null if no urls are assoiciated with the object.
      */
-    private NameValue getURL(Map m){
+    private NameValue getURL( Map m, boolean random ){
         if(m == null || m.keySet().isEmpty()){
             return null;
         }
 
         //Return the first url from the EntrySet
         Iterator it = m.entrySet().iterator();
-        Map.Entry entry = (Map.Entry)it.next();
+        Map.Entry entry = ( Map.Entry )it.next();
+        List urls       = ( List )entry.getValue();
+        String site     = ( String )entry.getKey();
 
-        //returning the first element. No need for a check as
-        //population of the list is controlled
-        return new NameValue(
-                             (String)entry.getKey(),
-                             (String)( ((List)entry.getValue()).get(0) )
-                             );
+
+        return ( random ) ?
+                //pick a random value
+                new NameValue( site, ( String ) urls.get( PegRandom.getInteger( 0, urls.size() )) ):
+                //returning the first element. No need for a check as
+                //population of the list is controlled
+                new NameValue( site, ( String )( urls.get(0) ) );
 
     }
 
@@ -329,11 +371,17 @@ public class FileTransfer extends PegasusFile {
 
     /**
      * Constructs a URL with the prefix as the poolname enclosed in #.
+     *
+     * @param site       the site
+     * @param directory  the directory
+     * @param filename   the filename
+     *
+     * @return String
      */
-    private String constructURL(String pool,String directory,String filename){
+    private String constructURL(String site, String directory, String filename ){
         StringBuffer sb = new StringBuffer();
         sb/*.append("#").append(pool).append("#\n")*/
-            .append(directory).append(File.separatorChar).append(filename);
+            .append( directory ).append(File.separatorChar).append(filename);
 
         return sb.toString();
     }
@@ -352,6 +400,8 @@ public class FileTransfer extends PegasusFile {
 
     /**
      * Returns a clone of the object.
+     *
+     * @return clone of the object.
      */
     public Object clone() {
         FileTransfer ft = new FileTransfer();
