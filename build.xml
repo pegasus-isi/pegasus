@@ -4,7 +4,7 @@
   <description>Manages Pegasus</description>
   <property name="build.src" location="build/classes"/>
   <property environment="env"/>
- <property name="pegasus.home" value="${env.PEGASUS_HOME}"/>
+  <property name="pegasus.home" value="${env.PEGASUS_HOME}"/>
 
   <target name="getsystem"
           description="Obtains the system information and architecture"
@@ -38,6 +38,19 @@
     </exec>
   </target>
 
+
+  <target name="checkjava" depends="init">
+     <condition property="build.target" value="1.4" else="1.5">
+        <os arch="ia64"/>
+     </condition>
+     <condition property="build.source" value="1.4" else="1.5">
+         <os arch="ia64"/>
+     </condition>
+     <echo>JAVA TARGET is ${build.target}</echo>
+     <echo>JAVA SOURCE is ${build.source}</echo>
+  </target>
+
+
   <target name="version" depends="common"
 	  unless="dist.dir"
 	  description="Provides the version number from within PEGASUS to ANT">
@@ -56,45 +69,45 @@
     <echo file="stamp">${ISODATE.utc} ${dist.arch}${line.separator}</echo>
   </target>
 
-  <target name="common" depends="init"
+  <target name="common" depends="init,checkjava"
 	  description="Compiles the code common to both, Chimera and Pegasus">
     <javac destdir="${build.src}" srcdir="src" 
 	   encoding="UTF-8" deprecation="true" debug="true"
-           target="1.5" source="1.5"
+           target="${build.target}" source="${build.source}"
 	   includes="org/griphyn/common/**/*.java,*.java"
 	   excludes="org/griphyn/common/**/*Test.java,*Test.java"/>
   </target>
 
-  <target name="chimera" depends="init"
+  <target name="chimera" depends="init,checkjava"
 	  description="Compiles the abstract planner Chimera">
     <javac destdir="${build.src}" srcdir="src" 
-           target="1.5" source="1.5"
+           target="${build.target}" source="${build.source}"
 	   encoding="UTF-8" debug="true"
 	   includes="org/griphyn/vdl/*.java,org/griphyn/vdl/**/*.java"
            excludes="org/griphyn/vdl/*Test.java,org/griphyn/vdl/**/*Test.java"/>
   </target>
 
-  <target name="pegasus" depends="init"
+  <target name="pegasus" depends="init,checkjava"
 	  description="Compiles the concrete planner Pegasus">
     <javac destdir="${build.src}" srcdir="src"
-           target="1.5" source="1.5"
+           target="${build.target}" source="${build.source}"
 	   encoding="UTF-8" debug="true"
 	   includes="org/griphyn/cPlanner/**/*.java,edu/isi/pegasus/planner/**/*.java"
 	   excludes="org/griphyn/cPlanner/**/*Test.java"/>
   </target>
 
-  <target name="compile" depends="init"
+  <target name="compile" depends="init,checkjava"
 	  description="Compiles all sources, including tests">
     <javac destdir="${build.src}" srcdir="src" 
-           target="1.5" source="1.5"
+           target="${build.target}" source="${build.source}"
 	   encoding="UTF-8" debug="true"
 	   includes="*.java,edu/**/*.java,org/**/*.java"/>
   </target>
 
-  <target name="deprecation" depends="init"
+  <target name="deprecation" depends="init,checkjava"
 	  description="compiles everything with deprecation flag">
     <javac destdir="${build.src}" srcdir="src" 
-           target="1.5" source="1.5"
+           target="${build.target}" source="${build.source}"
 	   encoding="UTF-8" deprecation="true" debug="true"
 	   includes="*.java,org/**/*.java"/>
   </target>
