@@ -369,9 +369,11 @@ public static final String DB_ALL_PREFIX =
   public String getDatabaseURL( String dbDriverPrefix )
   {
     return ( dbDriverPrefix == null ?
+             //pick pegasus.catalog.*.db.url
 	     m_props.getProperty( DB_ALL_PREFIX + ".url" ) :
 	     m_props.getProperty( dbDriverPrefix + ".url",
-		  m_props.getProperty( DB_ALL_PREFIX + ".url" ) )
+                                  //default value pegasus.catalog.*.db.url
+		                  m_props.getProperty( DB_ALL_PREFIX + ".url" ) )
 	   );
   }
 
