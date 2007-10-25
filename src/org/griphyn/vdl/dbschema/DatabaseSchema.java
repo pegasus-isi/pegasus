@@ -32,7 +32,7 @@ import org.griphyn.vdl.util.Logging;
  * database driver class API.<p>
  * The separation of database driver and schema lowers the implementation
  * cost, as only N driver and M schemas need to be implemented, instead
- * of N x M schema-specific database-specific drivers. 
+ * of N x M schema-specific database-specific drivers.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
@@ -71,7 +71,7 @@ public abstract class DatabaseSchema
    * @exception ClassNotFoundException if the schema for the database
    * cannot be loaded. You might want to check your CLASSPATH, too.
    * @exception NoSuchMethodException if the schema's constructor interface
-   * does not comply with the database driver API. 
+   * does not comply with the database driver API.
    * @exception InstantiationException if the schema class is an abstract
    * class instead of a concrete implementation.
    * @exception IllegalAccessException if the constructor for the schema
@@ -81,12 +81,12 @@ public abstract class DatabaseSchema
    *
    * @see org.griphyn.vdl.util.ChimeraProperties
    */
-  static public DatabaseSchema 
+  static public DatabaseSchema
     loadSchema( String dbSchemaName,
 		String propertyPrefix,
 		Object[] arguments )
-    throws ClassNotFoundException, IOException, 
-	   NoSuchMethodException, InstantiationException, 
+    throws ClassNotFoundException, IOException,
+	   NoSuchMethodException, InstantiationException,
 	   IllegalAccessException, InvocationTargetException
   {
     Logging log = Logging.instance();
@@ -96,17 +96,17 @@ public abstract class DatabaseSchema
 
     // determine the database schema to load
     if ( dbSchemaName == null ) {
-	// get it by property prefix	
+	// get it by property prefix
       dbSchemaName = ChimeraProperties.instance()
 	.getDatabaseSchemaName( propertyPrefix );
-      if ( dbSchemaName == null ) 
-	throw new RuntimeException( "You need to specify the " + 
+      if ( dbSchemaName == null )
+	throw new RuntimeException( "You need to specify the " +
 				    propertyPrefix + " property" );
     }
 
     // syntactic sugar adds absolute class prefix
     if ( dbSchemaName.indexOf('.') == -1 ) {
-      // how about xxx.getClass().getPackage().getName()? 
+      // how about xxx.getClass().getPackage().getName()?
       dbSchemaName = "org.griphyn.vdl.dbschema." + dbSchemaName;
     }
 
@@ -116,9 +116,9 @@ public abstract class DatabaseSchema
     DatabaseSchema result = (DatabaseSchema) dl.instantiate(arguments);
 
     // done
-    if ( result == null ) 
+    if ( result == null )
       log.log( "dbschema", 0, "unable to load " + dbSchemaName );
-    else 
+    else
       log.log( "dbschema", 3, "successfully loaded " + dbSchemaName );
     return result;
   }
@@ -137,7 +137,7 @@ public abstract class DatabaseSchema
    * @exception ClassNotFoundException if the schema for the database
    * cannot be loaded. You might want to check your CLASSPATH, too.
    * @exception NoSuchMethodException if the schema's constructor interface
-   * does not comply with the database driver API. 
+   * does not comply with the database driver API.
    * @exception InstantiationException if the schema class is an abstract
    * class instead of a concrete implementation.
    * @exception IllegalAccessException if the constructor for the schema
@@ -148,15 +148,15 @@ public abstract class DatabaseSchema
    * @see #loadSchema( String, String, Object[] )
    * @see org.griphyn.vdl.util.ChimeraProperties
    */
-  static public DatabaseSchema 
+  static public DatabaseSchema
     loadSchema( String propertyPrefix )
-    throws ClassNotFoundException,IOException, 
-	   NoSuchMethodException, InstantiationException, 
+    throws ClassNotFoundException,IOException,
+	   NoSuchMethodException, InstantiationException,
 	   IllegalAccessException, InvocationTargetException
   {
     return loadSchema( null, propertyPrefix, new Object[0] );
   }
-   
+
   //
   // instance methods
   //
@@ -174,21 +174,21 @@ public abstract class DatabaseSchema
 
   /**
    * Connects to the database, this method does not rely on global
-   * property values, instead, each property has to be provided 
+   * property values, instead, each property has to be provided
    * explicitly.
    *
    * @param dbDriverName is the name of the class that conforms to
    * the DatabaseDriver API. This class will be dynamically loaded.
    * @param url is the database url
-   * @param dbDriverProperties holds properties specific to the 
-   * database driver. 
-   * @param dbSchemaProperties holds properties specific to the 
+   * @param dbDriverProperties holds properties specific to the
+   * database driver.
+   * @param dbSchemaProperties holds properties specific to the
    * database schema.
    *
    * @exception ClassNotFoundException if the driver for the database
    * cannot be loaded. You might want to check your CLASSPATH, too.
    * @exception NoSuchMethodException if the driver's constructor interface
-   * does not comply with the database driver API. 
+   * does not comply with the database driver API.
    * @exception InstantiationException if the driver class is an abstract
    * class instead of a concrete implementation.
    * @exception IllegalAccessException if the constructor for the driver
@@ -198,21 +198,21 @@ public abstract class DatabaseSchema
    * @exception SQLException if the driver for the database can be
    * loaded, but faults when initially accessing the database
    */
-  public DatabaseSchema( String dbDriverName, String url, 
+  public DatabaseSchema( String dbDriverName, String url,
 			 Properties dbDriverProperties,
 			 Properties dbSchemaProperties)
     throws ClassNotFoundException, IOException,
-	   NoSuchMethodException, InstantiationException, 
+	   NoSuchMethodException, InstantiationException,
 	   IllegalAccessException, InvocationTargetException,
 	   SQLException
   {
     Logging.instance().log( "dbschema", 3, "accessing DatabaseSchema(String,String, Properties, Properties)" );
 
     // dynamically load the driver from its default constructor
-    this.m_dbdriver = 
+    this.m_dbdriver =
       DatabaseDriver.loadDriver( dbDriverName, null, new Object[0] );
     this.m_dbschemaprops = dbSchemaProperties;
-    
+
     // create a database connection right now, right here
     // mind, url may be null, which may be legal for some drivers!
     Logging.instance().log( "dbschema", 3, "invoking connect( " + url + " )" );
@@ -240,6 +240,24 @@ public abstract class DatabaseSchema
   }
 
   /**
+   * Guesses from the schema prefix the db prefix.
+   *
+   * @param schemaPrefix is the property key prefix for the schema.
+   *
+   * @return the guess for the db properties prefix, may be <code>null</code>
+   */
+  private static String dbFromSchema( String schemaPrefix )
+  {
+    String result = null;
+    if ( schemaPrefix != null && schemaPrefix.endsWith(".schema") )
+      result = schemaPrefix.substring( 0, schemaPrefix.length()-7 );
+    Logging.instance().log( "dbschema", 4, "db propertiesr prefix guess " +
+                            ( result == null ? "(null)" : result ) );
+    return result;
+  }
+
+
+  /**
    * Connects to the database as specified by the properties, and
    * checks the schema implementation. Makes heavy use of global
    * property values.
@@ -253,7 +271,7 @@ public abstract class DatabaseSchema
    * @exception ClassNotFoundException if the driver for the database
    * cannot be loaded. You might want to check your CLASSPATH, too.
    * @exception NoSuchMethodException if the driver's constructor interface
-   * does not comply with the database driver API. 
+   * does not comply with the database driver API.
    * @exception InstantiationException if the driver class is an abstract
    * class instead of a concrete implementation.
    * @exception IllegalAccessException if the constructor for the driver
@@ -265,7 +283,7 @@ public abstract class DatabaseSchema
    */
   public DatabaseSchema( String dbDriverName, String propertyPrefix )
     throws ClassNotFoundException, IOException,
-	   NoSuchMethodException, InstantiationException, 
+	   NoSuchMethodException, InstantiationException,
 	   IllegalAccessException, InvocationTargetException,
 	   SQLException
   {
@@ -278,22 +296,35 @@ public abstract class DatabaseSchema
     ChimeraProperties props = ChimeraProperties.instance();
 
     if ( dbDriverName == null || dbDriverName.equals("") ) {
-      if ( driverPrefix != null ) 
+      if ( driverPrefix != null )
 	dbDriverName = props.getDatabaseDriverName(driverPrefix);
-      if ( dbDriverName == null ) 
+      if ( dbDriverName == null )
 	throw new RuntimeException( "You need to specify the database driver property" );
     }
     Logging.instance().log( "dbschema", 4, "dbdriver class " + dbDriverName );
 
     // dynamically load the driver from its default constructor
-    this.m_dbdriver = 
+    this.m_dbdriver =
       DatabaseDriver.loadDriver( dbDriverName, driverPrefix, new Object[0] );
     this.m_dbschemaprops = props.getDatabaseSchemaProperties( propertyPrefix );
-    
+
+
+    //instead of the driverPrefix, use the DB prefix
+    //This is because the DB properties are now gotten from example
+    //pegasus.catalog.provenance.db.* instead of
+    //pegasus.catalog.proveance.db.driver.*
+    //Karan Oct 25, 2007. Pegasus Bug Number: 11
+    //http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=11
+    String dbPrefix = DatabaseSchema.dbFromSchema( propertyPrefix );
+
+//    Properties dbdriverprops = props.getDatabaseDriverProperties(driverPrefix);
+//    String url = props.getDatabaseURL(driverPrefix);
+
+
     // extract those properties specific to the database driver.
     // these properties are transparently passed through MINUS the url key.
-    Properties dbdriverprops = props.getDatabaseDriverProperties(driverPrefix);
-    String url = props.getDatabaseURL(driverPrefix);
+    Properties dbdriverprops = props.getDatabaseDriverProperties( dbPrefix );
+    String url = props.getDatabaseURL( dbPrefix );
 
     // create a database connection right now, right here
     // mind, url may be null, which may be legal for some drivers!
@@ -328,7 +359,7 @@ public abstract class DatabaseSchema
 
     // get database schema properties
     this.m_dbschemaprops = props.getDatabaseSchemaProperties( propertyPrefix );
-    
+
     // extract those properties specific to the database driver.
     // these properties are transparently passed through MINUS the url key.
     Properties dbdriverprops = props.getDatabaseDriverProperties(driverPrefix);
@@ -349,7 +380,7 @@ public abstract class DatabaseSchema
    * pass-thru to driver.
    * @return true, if it is feasible to cache results from the driver
    * false, if requerying the driver is sufficiently fast (e.g. driver
-   * is in main memory, or driver does caching itself). 
+   * is in main memory, or driver does caching itself).
    */
   public boolean cachingMakesSense()
   {
@@ -417,7 +448,7 @@ public abstract class DatabaseSchema
       else ps.setLong( pos, l );
     }
   }
-  
+
   /**
    * Converts any given string into a guaranteed non-null value.
    * Especially the definition triples use empty strings instead of
