@@ -27,7 +27,7 @@ import java.io.IOException;
  * This class is the container for an abstract DAG description. It consists
  * of three parts.<p>
  *
- * <ol> 
+ * <ol>
  * <li> {@link Filename} deals with the filenames that are used in the
  * picture of the DAG - does a file go into the DAG, come out of the
  * DAG, or is it an intermediary file. There are multiple instances
@@ -40,7 +40,7 @@ import java.io.IOException;
  *
  * <li> {@link Child} deals with the dependency in a two-level fashion.
  * It contains a list of child to parent(s) relationships. The children
- * and parents refer to jobs from the previous section. There are 
+ * and parents refer to jobs from the previous section. There are
  * multiple instances stored in a DAX.
  * </ol>
  *
@@ -60,12 +60,12 @@ public class ADAG extends DAX implements Cloneable
    * The "not-so-official" location URL of the DAX schema definition.
    */
   public static final String SCHEMA_LOCATION =
-    "http://pegasus.isi.edu/schema/dax-2.0.xsd";
+    "http://pegasus.isi.edu/schema/dax-2.1.xsd";
 
   /**
    * The version to report.
    */
-  public static final String SCHEMA_VERSION = "2.2";
+  public static final String SCHEMA_VERSION = "2.1";
 
   /**
    * list of all filenames in terms of Filename
@@ -118,9 +118,9 @@ public class ADAG extends DAX implements Cloneable
    */
   public Object clone()
   {
-    ADAG result = new ADAG( this.m_size, this.m_index, this.m_name ); 
+    ADAG result = new ADAG( this.m_size, this.m_index, this.m_name );
 
-    // maybe unsafe? 
+    // maybe unsafe?
     result.setVersion( this.m_version );
 
     for ( Iterator i=this.m_fileMap.values().iterator(); i.hasNext(); ) {
@@ -143,7 +143,7 @@ public class ADAG extends DAX implements Cloneable
   /**
    * Default ctor: construct a hollow shell to add data later.
    */
-  public ADAG() 
+  public ADAG()
   {
     m_size = 1;
     m_index = 0;
@@ -216,14 +216,14 @@ public class ADAG extends DAX implements Cloneable
 	f.setLink( LFN.INOUT );
       }
       // set file hint
-      if ( temporary != null ) f.setTemporary(temporary); 
-      if ( dontRegister ) f.setDontRegister(dontRegister);
+      if ( temporary != null ) f.setTemporary(temporary);
+      if ( dontRegister ) f.setRegister( !dontRegister );
       if ( dontTransfer != LFN.XFER_MANDATORY )
-	f.setDontTransfer(dontTransfer);
+	f.setTransfer(dontTransfer);
     } else {
       // file is not in list, add it
       // PS: and it is most likely not a stdio filename?
-      this.m_fileMap.put( lfn, new Filename( lfn, isInput ? LFN.INPUT : LFN.OUTPUT, 
+      this.m_fileMap.put( lfn, new Filename( lfn, isInput ? LFN.INPUT : LFN.OUTPUT,
 					     temporary, dontRegister, dontTransfer,
 					     null ) );
     }
@@ -246,7 +246,7 @@ public class ADAG extends DAX implements Cloneable
   }
 
   /**
-   * Adds a completely constructed {@link Job} structure to the 
+   * Adds a completely constructed {@link Job} structure to the
    * map of jobs. The structure must be assembled outside, using
    * the related classes. The job ID will be taken as unique key.
    * If a job with this ID already exists in the DAX, it will be
@@ -255,7 +255,7 @@ public class ADAG extends DAX implements Cloneable
    * @param job is the new job to add
    * @return true, if the bag did not contain this job already.
    */
-  public boolean addJob( Job job ) 
+  public boolean addJob( Job job )
   {
     String id = job.getID();
     boolean result = ! this.m_jobMap.containsKey(id);
@@ -328,7 +328,7 @@ public class ADAG extends DAX implements Cloneable
   }
 
   /**
-   * Registers a job node collapsion as a replacement. 
+   * Registers a job node collapsion as a replacement.
    */
   public String replaceParent( String oldid, String newid )
   {
@@ -391,14 +391,14 @@ public class ADAG extends DAX implements Cloneable
    * @see Filename
    */
   public int getFilenameCount()
-  { 
-    return this.m_fileMap.size(); 
+  {
+    return this.m_fileMap.size();
   }
 
   /**
    * Accessor: Counts the number of jobs in the abstract DAG.
    *
-   * @return the number of jobs. 
+   * @return the number of jobs.
    */
   public int getJobCount()
   {
@@ -441,7 +441,7 @@ public class ADAG extends DAX implements Cloneable
   /**
    * Accessor: Obtains the name of the DAX.
    *
-   * @return the name of this DAX, or <code>null</code>, if no name 
+   * @return the name of this DAX, or <code>null</code>, if no name
    * was specified.
    * @see #setName( String )
    */
@@ -463,7 +463,7 @@ public class ADAG extends DAX implements Cloneable
 
   /**
    * Accessor: Obtains the version that will be reported in the DAX.
-   * @return the version as a string. 
+   * @return the version as a string.
    * @see #setVersion( String )
    * @since 1.7
    */
@@ -508,8 +508,8 @@ public class ADAG extends DAX implements Cloneable
    * @see Filename
    */
   public void removeAllFilename()
-  { 
-    this.m_fileMap.clear(); 
+  {
+    this.m_fileMap.clear();
   }
 
   /**
@@ -618,7 +618,7 @@ public class ADAG extends DAX implements Cloneable
    * DAX documents.
    *
    * @param version is the new version number as string composed of two
-   * integers separted by a period. 
+   * integers separted by a period.
    * @see #getVersion()
    * @since 1.7
    */
@@ -654,7 +654,7 @@ public class ADAG extends DAX implements Cloneable
    *
    * @param id is the job id to start
    * @param distance is the increment (or decrement for negative).
-   * @return number of jobs adjusted? 
+   * @return number of jobs adjusted?
    */
   public int adjustLevels( String id, int distance )
   {
@@ -681,14 +681,14 @@ public class ADAG extends DAX implements Cloneable
   /**
    * Converts the active state into something meant for human consumption.
    * The method will be called when recursively traversing the instance
-   * tree. 
+   * tree.
    *
    * @param stream is a stream opened and ready for writing. This can also
    * be a string stream for efficient output.
    */
   public void toString( Writer stream )
     throws IOException
-  { 
+  {
     String newline = System.getProperty( "line.separator", "\r\n" );
 
     // FIXME: default name of a DAX w/o name is "test"
@@ -707,7 +707,7 @@ public class ADAG extends DAX implements Cloneable
     stream.write( (new Integer(this.m_index)).toString() );
     stream.write( ';' );
     stream.write( newline );
-    
+
     // part 1: filelist
     stream.write( "  files {" );
     stream.write( newline );
@@ -727,7 +727,7 @@ public class ADAG extends DAX implements Cloneable
     }
     stream.write( "  }" );
     stream.write(newline);
-    
+
     // part 3: dependencies
     stream.write( "  dependencies {" );
     stream.write( newline );
@@ -746,7 +746,7 @@ public class ADAG extends DAX implements Cloneable
   /**
    * Writes the header of the XML output. The output contains the special
    * strings to start an XML document, some comments, and the root element.
-   * The latter points to the XML schema via XML Instances. 
+   * The latter points to the XML schema via XML Instances.
    *
    * @param stream is a stream opened and ready for writing. This can also
    * be a string stream for efficient output.
@@ -755,9 +755,9 @@ public class ADAG extends DAX implements Cloneable
    * The parameter is used internally for the recursive traversal.
    * @param namespace is the XML schema namespace prefix. If neither
    * empty nor null, each element will be prefixed with this prefix,
-   * and the root element will map the XML namespace. 
+   * and the root element will map the XML namespace.
    * @exception IOException if something fishy happens to the stream.
-   */ 
+   */
   public void writeXMLHeader( Writer stream, String indent, String namespace )
     throws IOException
   {
@@ -813,11 +813,11 @@ public class ADAG extends DAX implements Cloneable
     writeAttribute( stream, " name=\"", daxname );
 
     // added with dax-1.9
-    writeAttribute( stream, " jobCount=\"", 
+    writeAttribute( stream, " jobCount=\"",
 		    Integer.toString(this.m_jobMap.size()) );
-    writeAttribute( stream, " fileCount=\"", 
+    writeAttribute( stream, " fileCount=\"",
 		    Integer.toString(this.m_fileMap.size()) );
-    writeAttribute( stream, " childCount=\"", 
+    writeAttribute( stream, " childCount=\"",
 		    Integer.toString(this.m_childMap.size()) );
 
     stream.write( '>' );
@@ -837,7 +837,7 @@ public class ADAG extends DAX implements Cloneable
    * The parameter is used internally for the recursive traversal.
    * @param namespace is the XML schema namespace prefix. If neither
    * empty nor null, each element will be prefixed with this prefix,
-   * and the root element will map the XML namespace. 
+   * and the root element will map the XML namespace.
    * @exception IOException if something fishy happens to the stream.
    */
   public void toXML( Writer stream, String indent, String namespace )
@@ -865,7 +865,7 @@ public class ADAG extends DAX implements Cloneable
     for ( Iterator i=this.m_jobMap.values().iterator(); i.hasNext(); ) {
       ((Job) i.next()).toXML( stream, newindent, namespace );
     }
-    
+
     // part 3: dependencies
     if ( this.m_dirty ) updateChildren();
     stream.write( "<!-- part 3: list of control-flow dependencies (may be empty) -->" );

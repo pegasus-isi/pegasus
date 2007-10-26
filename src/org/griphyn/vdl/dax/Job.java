@@ -24,7 +24,7 @@ import java.io.IOException;
 
 /**
  * This class defines the specifics of a job to run in an abstract manner.
- * All filename references still refer to logical files. All references 
+ * All filename references still refer to logical files. All references
  * transformations also refer to logical transformtions, though through
  * <code>Profile</code> physical location hints can be passed.
  *
@@ -63,19 +63,19 @@ public class Job extends DAX implements Cloneable
 
   /**
    * DVs are dynamically mapped to TR. This variable records the namespace
-   * of the chosen DV. 
+   * of the chosen DV.
    */
   private String m_dv_namespace = null;
 
   /**
    * DVs are dynamically mapped to TR. This variable records the name
-   * of the chosen DV. 
+   * of the chosen DV.
    */
   private String m_dv_name = null;
 
   /**
    * DVs are dynamically mapped to TR. This variable records the version
-   * of the chosen DV. 
+   * of the chosen DV.
    */
   private String m_dv_version = null;
 
@@ -128,8 +128,8 @@ public class Job extends DAX implements Cloneable
   private ArrayList m_argumentList;
 
   /**
-   * The profile list encapsulates scheduler specific data in a 
-   * generic structure. 
+   * The profile list encapsulates scheduler specific data in a
+   * generic structure.
    *
    * @see Profile
    */
@@ -150,7 +150,7 @@ public class Job extends DAX implements Cloneable
   public Object clone()
   {
     Job result = new Job( this.m_namespace, this.m_name, this.m_version,
-			  this.m_id, 
+			  this.m_id,
 			  this.m_dv_namespace, this.m_dv_name, this.m_dv_version );
 
     result.setChain( this.getChain() );
@@ -173,17 +173,17 @@ public class Job extends DAX implements Cloneable
   }
 
   /**
-   * Default ctor: Note that a job must be named. 
+   * Default ctor: Note that a job must be named.
    */
-  public Job() 
+  public Job()
   {
     this.m_argumentList = new ArrayList();
     this.m_profileList = new ArrayList();
     this.m_usesList = new ArrayList();
   }
 
-  /** 
-   * Convenience ctor. Any job must be named. The job id will be 
+  /**
+   * Convenience ctor. Any job must be named. The job id will be
    * assembled from the name.
    *
    * @param namespace is the namespace that the TR resides in.
@@ -193,7 +193,7 @@ public class Job extends DAX implements Cloneable
    * from other jobs in the same DAG.
    * @see org.griphyn.vdl.classes.Transformation
    */
-  public Job( String namespace, String name, String version, String id ) 
+  public Job( String namespace, String name, String version, String id )
   {
     this.m_namespace = namespace;
     this.m_name = name;
@@ -204,8 +204,8 @@ public class Job extends DAX implements Cloneable
     this.m_usesList = new ArrayList();
   }
 
-  /** 
-   * Convenience ctor. Any job must be named. The job id will be 
+  /**
+   * Convenience ctor. Any job must be named. The job id will be
    * assembled from the name.
    *
    * @param namespace is the namespace that the TR resides in.
@@ -219,7 +219,7 @@ public class Job extends DAX implements Cloneable
    * @see org.griphyn.vdl.classes.Transformation
    */
   public Job( String namespace, String name, String version, String id,
-	      String dv_namespace, String dv_name, String dv_version ) 
+	      String dv_namespace, String dv_name, String dv_version )
   {
     this.m_namespace = namespace;
     this.m_name = name;
@@ -242,11 +242,11 @@ public class Job extends DAX implements Cloneable
    * @see Leaf
    */
   public void addArgument( Leaf vArgument )
-  { 
-    this.m_argumentList.add(vArgument); 
+  {
+    this.m_argumentList.add(vArgument);
   }
 
-  /** 
+  /**
    * Accessor: Inserts an argument at an arbitrary place into the list.
    * Each component in this vector with an index greater or equal to the
    * specified index is shifted upward to have an index one greater than
@@ -262,8 +262,8 @@ public class Job extends DAX implements Cloneable
    */
   public void addArgument( int index, Leaf vArgument )
     throws IndexOutOfBoundsException
-  { 
-    this.m_argumentList.add(index, vArgument); 
+  {
+    this.m_argumentList.add(index, vArgument);
   }
 
   /**
@@ -306,17 +306,17 @@ public class Job extends DAX implements Cloneable
 	result = true;
       }
     }
-    this.m_profileList.add(vProfile); 
+    this.m_profileList.add(vProfile);
     return result;
   }
-  
+
 
   /**
    * Accessor: Inserts a profile definition at an arbitrary position
    * into the list of profiles. Each component in this vector with an
    * index greater or equal to the specified index is shifted upward to
    * have an index one greater than the value it had previously.
-   * 
+   *
    * @param index is the position to insert the definitions into.
    * @param vProfile is the profile to append to remembered profiles.
    * @exception IndexOutOfBounds if the argument does not fit into the list.
@@ -327,19 +327,19 @@ public class Job extends DAX implements Cloneable
   public void addProfile( int index, Profile vProfile )
     throws IndexOutOfBoundsException
   {
-    this.m_profileList.add(index, vProfile); 
+    this.m_profileList.add(index, vProfile);
   }
 
   /**
    * Accessor: Appends a filename to the list of used filenames.
-   * 
+   *
    * @param filename is the LFN to append to remembered filenames.
    * @exception IndexOutOfBounds if the argument does not fit into the list.
    * @see Filename
    */
   public void addUses( Filename filename )
   {
-    this.m_usesList.add(filename); 
+    this.m_usesList.add(filename);
   }
 
 
@@ -348,7 +348,7 @@ public class Job extends DAX implements Cloneable
    * into the list of used filenames. Each component in this vector with an
    * index greater or equal to the specified index is shifted upward to
    * have an index one greater than the value it had previously.
-   * 
+   *
    * @param index is the position to insert the definitions into.
    * @param filename is the LFN to append to remembered filenames.
    * @exception IndexOutOfBounds if the argument does not fit into the list.
@@ -359,7 +359,7 @@ public class Job extends DAX implements Cloneable
   public void addUses( int index, Filename filename )
     throws IndexOutOfBoundsException
   {
-    this.m_profileList.add(index, filename); 
+    this.m_profileList.add(index, filename);
   }
 
   /**
@@ -385,7 +385,7 @@ public class Job extends DAX implements Cloneable
    */
   public Enumeration enumerateProfile()
   {
-    return Collections.enumeration(this.m_profileList); 
+    return Collections.enumeration(this.m_profileList);
   }
 
   /**
@@ -398,7 +398,7 @@ public class Job extends DAX implements Cloneable
    */
   public Enumeration enumerateUses()
   {
-    return Collections.enumeration(this.m_usesList); 
+    return Collections.enumeration(this.m_usesList);
   }
 
   /**
@@ -416,15 +416,15 @@ public class Job extends DAX implements Cloneable
     throws IndexOutOfBoundsException
   {
     //-- check bound for index
-    if ((index < 0) || (index >= this.m_argumentList.size())) 
+    if ((index < 0) || (index >= this.m_argumentList.size()))
       throw new IndexOutOfBoundsException();
-    
+
     return (Leaf) this.m_argumentList.get(index);
   }
 
   /**
    * Accessor: Obtains the complete commandline arguments
-   * 
+   *
    * @return an array with all commandline argument fragments inside.
    * @see #setArgument( Leaf[] )
    * @see Leaf
@@ -446,13 +446,13 @@ public class Job extends DAX implements Cloneable
    * @see Leaf
    */
   public int getArgumentCount()
-  { 
-    return this.m_argumentList.size(); 
+  {
+    return this.m_argumentList.size();
   }
 
   /**
    * Accessor: Gets an array of all values that constitute the current
-   * argument line. This list is read-only. 
+   * argument line. This list is read-only.
    *
    * @return an array with a mixture of either <code>PseudoText</code> or
    *         <code>Filename</code> values.
@@ -465,9 +465,9 @@ public class Job extends DAX implements Cloneable
     return Collections.unmodifiableList(this.m_argumentList);
   }
 
-  /** 
+  /**
    * Accessor: Obtains the XML list attribute which contains the
-   * chain of compound transformations that lead to this job. 
+   * chain of compound transformations that lead to this job.
    *
    * @return the chain, which may be empty or even <code>null</code>.
    * @see #setChain( String )
@@ -481,7 +481,7 @@ public class Job extends DAX implements Cloneable
    * Accessor: Obtains the unique ID of this job. The ID will be used
    * in references in the dependency list.
    *
-   * @return The unique id from this job. 
+   * @return The unique id from this job.
    * @see #setID( String )
    * @see Child
    */
@@ -490,7 +490,7 @@ public class Job extends DAX implements Cloneable
     return this.m_id;
   }
 
-  /** 
+  /**
    * Accessor: Obtains the current name of the job.
    *
    * @return the name as logical TR string for this job.
@@ -503,7 +503,7 @@ public class Job extends DAX implements Cloneable
 
   /**
    * Accessor: Obtains the current namespace that is used for the
-   * definition. Note that a namespace is part of the key for any 
+   * definition. Note that a namespace is part of the key for any
    * logical transformation.
    *
    * @return the namespace the definition resides in, or null, if
@@ -511,8 +511,8 @@ public class Job extends DAX implements Cloneable
    * @see #setNamespace(java.lang.String)
    */
   public String getNamespace()
-  { 
-    return this.m_namespace; 
+  {
+    return this.m_namespace;
   }
 
   /**
@@ -525,8 +525,8 @@ public class Job extends DAX implements Cloneable
    * @see #setDV( String, String, String )
    */
   public String getDVNamespace()
-  { 
-    return this.m_dv_namespace; 
+  {
+    return this.m_dv_namespace;
   }
 
   /**
@@ -538,13 +538,13 @@ public class Job extends DAX implements Cloneable
    * @see #setDV( String, String, String )
    */
   public String getDVName()
-  { 
-    return this.m_dv_name; 
+  {
+    return this.m_dv_name;
   }
 
   /**
    * Accessor: Obtains the current version from the DV that created
-   * this job. Note that a version is part of the key triple for any 
+   * this job. Note that a version is part of the key triple for any
    * DV.
    *
    * @return the version the DV resides in, or null, if no version
@@ -553,8 +553,8 @@ public class Job extends DAX implements Cloneable
    * @see #setDV( String, String, String )
    */
   public String getDVVersion()
-  { 
-    return this.m_dv_version; 
+  {
+    return this.m_dv_version;
   }
 
   /**
@@ -614,7 +614,7 @@ public class Job extends DAX implements Cloneable
    * Accessor: Obtains an <code>Profile</code> at an arbitrary position.
    *
    * @param index is the place to look up the element at.
-   * @exception IndexOutOfBoundsException if the referenced position does not exist. 
+   * @exception IndexOutOfBoundsException if the referenced position does not exist.
    * @see #addProfile( int, Profile )
    * @see #setProfile( int, Profile )
    * @see Profile
@@ -623,15 +623,15 @@ public class Job extends DAX implements Cloneable
     throws IndexOutOfBoundsException
   {
     //-- check bounds for index
-    if ((index < 0) || (index >= this.m_profileList.size())) 
+    if ((index < 0) || (index >= this.m_profileList.size()))
       throw new IndexOutOfBoundsException();
-    
+
     return (Profile) this.m_profileList.get(index);
   }
 
   /**
    * Accessor: Obtains all profiles.
-   * 
+   *
    * @return an array with all profiles inside.
    * @see #setProfile( Profile[] )
    * @see Profile
@@ -648,13 +648,13 @@ public class Job extends DAX implements Cloneable
 
   /**
    * Accessor: Counts the number of profile specifications known to this job.
-   * 
+   *
    * @return the number of profiles
    * @see Profile
    */
   public int getProfileCount()
-  { 
-    return this.m_profileList.size(); 
+  {
+    return this.m_profileList.size();
   }
 
   /**
@@ -664,7 +664,7 @@ public class Job extends DAX implements Cloneable
    * @return a collection containing the scheduler specific environment
    *         options for the job.
    * @see #setProfile( Collection )
-   * @see Profile 
+   * @see Profile
    */
   public java.util.List getProfileList()
   {
@@ -675,7 +675,7 @@ public class Job extends DAX implements Cloneable
    * Accessor: Obtains an <code>Filename</code> at an arbitrary position.
    *
    * @param index is the place to look up the element at.
-   * @exception IndexOutOfBoundsException if the referenced position does not exist. 
+   * @exception IndexOutOfBoundsException if the referenced position does not exist.
    * @see #addUses( int, Filename )
    * @see #setUses( int, Filename )
    * @see Filename
@@ -686,10 +686,10 @@ public class Job extends DAX implements Cloneable
     //-- check bounds for index
     if ((index < 0) || (index >= this.m_usesList.size()))
       throw new IndexOutOfBoundsException();
-    
+
     return (Filename) this.m_usesList.get(index);
   }
-  
+
   /**
    * Accessor: Obtain a copy of the list of all <code>Filename</code>
    * specifications, that were part of the arguments that generated
@@ -712,15 +712,15 @@ public class Job extends DAX implements Cloneable
   /**
    * Accessor: Counts the number of argument-referenced logical filenames
    * known to this job.
-   * 
+   *
    * @return the number of LFNs.
    * @see Filename
    */
   public int getUsesCount()
-  { 
-    return this.m_usesList.size(); 
+  {
+    return this.m_usesList.size();
   }
-  
+
   /**
    * Accessor: Obtain a copy of the list of all <code>Filename</code>
    * specifications, that were part of the arguments that generated
@@ -744,110 +744,110 @@ public class Job extends DAX implements Cloneable
    * @see #setVersion(java.lang.String)
    */
   public String getVersion()
-  { 
-    return this.m_version; 
+  {
+    return this.m_version;
   }
 
   /**
-   * Accessor: Provides an iterator to the internal list of all 
+   * Accessor: Provides an iterator to the internal list of all
    * commandline argument elements.
    *
    * @return an iterator to walk the list with.
    */
   public Iterator iterateArgument()
-  { 
-    return this.m_argumentList.iterator(); 
+  {
+    return this.m_argumentList.iterator();
   }
 
   /**
-   * Accessor: Provides an iterator to the internal list of all 
+   * Accessor: Provides an iterator to the internal list of all
    * profiles.
    *
    * @return an iterator to walk the list with.
    */
   public Iterator iterateProfile()
-  { 
-    return this.m_profileList.iterator(); 
+  {
+    return this.m_profileList.iterator();
   }
 
   /**
    * Accessor: Provides an iterator to the internal list of used
-   * filenames. 
+   * filenames.
    *
    * @return an iterator to walk the list with.
    */
   public Iterator iterateUses()
-  { 
-    return this.m_usesList.iterator(); 
+  {
+    return this.m_usesList.iterator();
   }
 
   /**
-   * Accessor: Provides a list iterator to the internal list of all 
+   * Accessor: Provides a list iterator to the internal list of all
    * commandline argument elements.
    *
    * @return a list iterator to walk the list with.
    */
   public ListIterator listIterateArgument()
-  { 
-    return this.m_argumentList.listIterator(); 
+  {
+    return this.m_argumentList.listIterator();
   }
 
   /**
-   * Accessor: Provides a list iterator to the internal list of all 
+   * Accessor: Provides a list iterator to the internal list of all
    * commandline argument elements.
    *
    * @param start is the start index
    * @return a list iterator to walk the list with.
    */
   public ListIterator listIterateArgument(int start)
-  { 
-    return this.m_argumentList.listIterator(start); 
+  {
+    return this.m_argumentList.listIterator(start);
   }
 
   /**
-   * Accessor: Provides a list iterator to the internal list of all 
+   * Accessor: Provides a list iterator to the internal list of all
    * profiles.
    *
    * @return a list iterator to walk the list with.
    */
   public ListIterator listIterateProfile()
-  { 
-    return this.m_profileList.listIterator(); 
+  {
+    return this.m_profileList.listIterator();
   }
 
   /**
-   * Accessor: Provides a list iterator to the internal list of all 
+   * Accessor: Provides a list iterator to the internal list of all
    * profiles.
    *
    * @param start is the start index
    * @return a list iterator to walk the list with.
    */
   public ListIterator listIterateProfile(int start)
-  { 
-    return this.m_profileList.listIterator(start); 
+  {
+    return this.m_profileList.listIterator(start);
   }
 
   /**
-   * Accessor: Provides a list iterator to the internal list of all 
+   * Accessor: Provides a list iterator to the internal list of all
    * used filenames.
    *
    * @return a list iterator to walk the list with.
    */
   public ListIterator listIterateUses()
-  { 
-    return this.m_usesList.listIterator(); 
+  {
+    return this.m_usesList.listIterator();
   }
 
   /**
-   * Accessor: Provides a list iterator to the internal list of all 
+   * Accessor: Provides a list iterator to the internal list of all
    * used filenames.
    *
    * @param start is the start index
    * @return a list iterator to walk the list with.
    */
   public ListIterator listIterateUses(int start)
-  { 
-    return this.m_usesList.listIterator(start); 
+  {
+    return this.m_usesList.listIterator(start);
   }
 
   /**
@@ -940,7 +940,7 @@ public class Job extends DAX implements Cloneable
     throws IndexOutOfBoundsException
   {
     //-- check bounds for index
-    if ((index < 0) || (index >= this.m_argumentList.size())) 
+    if ((index < 0) || (index >= this.m_argumentList.size()))
       throw new IndexOutOfBoundsException();
 
     this.m_argumentList.set(index, vArgument);
@@ -948,7 +948,7 @@ public class Job extends DAX implements Cloneable
 
   /**
    * Accessor: Replace the commandline arguments with a new commandline
-   * argument fragment list. 
+   * argument fragment list.
    *
    * @param argumentArray is the new commandline argument array.
    * @see #getArgument()
@@ -963,7 +963,7 @@ public class Job extends DAX implements Cloneable
 
   /**
    * Accessor: Replace the commandline arguments with a new commandline
-   * argument fragment list. 
+   * argument fragment list.
    *
    * @param arguments is the new commandline argument collection.
    * @see #getArgumentList()
@@ -975,7 +975,7 @@ public class Job extends DAX implements Cloneable
     this.m_argumentList.addAll(arguments);
   }
 
-  /** 
+  /**
    * Accessor: Sets the current name of the job. If the job ID was
    * not set previously, it will be set to the job name.
    * FIXME: We need to use the primary key triple for logical TR!
@@ -996,8 +996,8 @@ public class Job extends DAX implements Cloneable
    * @see #getNamespace()
    */
   public void setNamespace(String namespace)
-  { 
-    this.m_namespace = namespace; 
+  {
+    this.m_namespace = namespace;
   }
 
   /**
@@ -1008,8 +1008,8 @@ public class Job extends DAX implements Cloneable
    * @see #setDV( String, String, String )
    */
   public void setDVNamespace(String namespace)
-  { 
-    this.m_dv_namespace = namespace; 
+  {
+    this.m_dv_namespace = namespace;
   }
 
   /**
@@ -1020,8 +1020,8 @@ public class Job extends DAX implements Cloneable
    * @see #setDV( String, String, String )
    */
   public void setDVName(String name)
-  { 
-    this.m_dv_name = name; 
+  {
+    this.m_dv_name = name;
   }
 
   /**
@@ -1032,8 +1032,8 @@ public class Job extends DAX implements Cloneable
    * @see #setDV( String, String, String )
    */
   public void setDVVersion(String version)
-  { 
-    this.m_dv_version = version; 
+  {
+    this.m_dv_version = version;
   }
 
   /**
@@ -1050,16 +1050,16 @@ public class Job extends DAX implements Cloneable
    * @see #setDVVersion( String )
    */
   public void setDV( String namespace, String name, String version)
-  { 
+  {
     this.m_dv_namespace = namespace;
     this.m_dv_name = name;
-    this.m_dv_version = version; 
+    this.m_dv_version = version;
   }
 
 
-  /** 
+  /**
    * Accessor: Sets the XML list attribute which contains the
-   * chain of compound transformations that lead to this job. 
+   * chain of compound transformations that lead to this job.
    *
    * @param chain is the chain, which may be empty or even <code>null</code>.
    * @see #getChain( )
@@ -1074,7 +1074,7 @@ public class Job extends DAX implements Cloneable
    * in references in the dependency list. Please do not use this
    * function.
    *
-   * @param id is the new unique id for this job. 
+   * @param id is the new unique id for this job.
    * @see #getID()
    * @see Child
    */
@@ -1133,7 +1133,7 @@ public class Job extends DAX implements Cloneable
     throws IndexOutOfBoundsException
   {
     //-- check bounds for index
-    if ((index < 0) || (index >= this.m_profileList.size())) 
+    if ((index < 0) || (index >= this.m_profileList.size()))
       throw new IndexOutOfBoundsException();
 
     this.m_profileList.set(index, vProfile);
@@ -1180,7 +1180,7 @@ public class Job extends DAX implements Cloneable
     throws IndexOutOfBoundsException
   {
     //-- check bounds for index
-    if ((index < 0) || (index >= this.m_usesList.size())) 
+    if ((index < 0) || (index >= this.m_usesList.size()))
       throw new IndexOutOfBoundsException();
 
     this.m_usesList.set(index, vFilename);
@@ -1222,21 +1222,21 @@ public class Job extends DAX implements Cloneable
    * @see #getVersion()
    */
   public void setVersion(String version)
-  { 
-    this.m_version = version; 
+  {
+    this.m_version = version;
   }
 
   /**
    * Converts the active state into something meant for human consumption.
    * The method will be called when recursively traversing the instance
-   * tree. 
+   * tree.
    *
    * @param stream is a stream opened and ready for writing. This can also
    * be a string stream for efficient output.
    */
   public void toString( Writer stream )
     throws IOException
-  { 
+  {
     String newline = System.getProperty( "line.separator", "\r\n" );
 
     stream.write( "    job " );
@@ -1259,7 +1259,7 @@ public class Job extends DAX implements Cloneable
     stream.write( ';' );
     stream.write( newline );
 
-    // concat all command line fragments into one big string. 
+    // concat all command line fragments into one big string.
     if ( this.getArgumentCount() > 0 ) {
       stream.write( "      argument=" );
       for ( Iterator i=this.m_argumentList.iterator(); i.hasNext(); ) {
@@ -1312,17 +1312,17 @@ public class Job extends DAX implements Cloneable
     stream.write( "    }" );
     stream.write( newline );
   }
-  
+
   /**
    * Helper: Formats the attributes of any {@link Filename} instance,
-   * or inherited instances. 
+   * or inherited instances.
    *
    * @param tag is the name of the element to use when formating.
    * @param indent is the indentation of the element, may be null.
    * @param namespace is an optional namespace to use in the tag.
    * @param f is an instance of a <code>Filename</code> object.
    * @param full denotes the full attributes set, or just the stdio
-   * attributes set if false. 
+   * attributes set if false.
    *
    * @return the XML-formatted attributes without the element tags.
    */
@@ -1330,18 +1330,21 @@ public class Job extends DAX implements Cloneable
 				 Filename f, boolean full )
   {
     StringBuffer result = new StringBuffer( full ? 128 : 80 );
-    if ( namespace != null && namespace.length() > 0 ) 
+    if ( namespace != null && namespace.length() > 0 )
       tag = namespace + ":" + tag;
     if ( indent != null && indent.length() > 0 ) result.append( indent );
     result.append('<').append(tag);
     result.append(" file=\"").append(quote(f.getFilename(),true)).append('"');
     result.append(" link=\"").append(LFN.toString(f.getLink())).append('"');
-    
+
     if ( full ) {
-      result.append(" dontRegister=\"")
-	.append(Boolean.toString(f.getDontRegister())).append('"');
-      result.append(" dontTransfer=\"")
-	.append(LFN.transferString(f.getDontTransfer())).append('"');
+      result.append(" register=\"")
+	.append(Boolean.toString( f.getRegister())).append('"');
+      result.append(" transfer=\"")
+	.append(LFN.transferString( f.getTransfer() )).append('"');
+      result.append(" type=\"")
+      .append(LFN.typeString( f.getType() )).append('"');
+
       if ( f.getTemporary() != null )
 	result.append(" temporaryHint=\"")
 	  .append(quote(f.getTemporary(),true)).append('"');
@@ -1351,7 +1354,7 @@ public class Job extends DAX implements Cloneable
 
     // add newline and done
     result.append("/>");
-    if ( indent != null ) 
+    if ( indent != null )
       result.append( System.getProperty( "line.separator", "\r\n" ) );
     return result.toString();
   }
@@ -1369,7 +1372,7 @@ public class Job extends DAX implements Cloneable
    * The parameter is used internally for the recursive traversal.
    * @param namespace is the XML schema namespace prefix. If neither
    * empty nor null, each element will be prefixed with this prefix,
-   * and the root element will map the XML namespace. 
+   * and the root element will map the XML namespace.
    */
   public void toXML( Writer stream, String indent, String namespace )
     throws IOException
@@ -1386,7 +1389,7 @@ public class Job extends DAX implements Cloneable
     stream.write( tag );
     writeAttribute( stream, " id=\"", this.m_id );
 
-    // open tag: print TR 
+    // open tag: print TR
     writeAttribute( stream, " namespace=\"", this.m_namespace );
     writeAttribute( stream, " name=\"", this.m_name );
     writeAttribute( stream, " version=\"", this.m_version );
@@ -1394,7 +1397,7 @@ public class Job extends DAX implements Cloneable
     // misc. attributes like the search tree depth
     if ( this.m_level != -1 )
       writeAttribute( stream, " level=\"", Integer.toString(this.m_level) );
-    if ( this.m_chain != null && this.m_chain.length() > 0 ) 
+    if ( this.m_chain != null && this.m_chain.length() > 0 )
       writeAttribute( stream, " compound=\"", this.m_chain );
 
     // still opening tag: print DV, if available
@@ -1408,7 +1411,7 @@ public class Job extends DAX implements Cloneable
     stream.write( '>' );
     if ( indent != null ) stream.write( newline );
 
-    // concat all command line fragments into one big string. 
+    // concat all command line fragments into one big string.
     String newindent = indent==null ? null : indent + "  ";
     if ( this.getArgumentCount() > 0 ) {
       if ( newindent != null ) stream.write( newindent );
@@ -1433,13 +1436,13 @@ public class Job extends DAX implements Cloneable
     // finally any bound stdio descriptor
     // FIXME: really need to dump a Filename element!
     if ( this.m_stdin != null )
-      stream.write( formatFilename( "stdin", newindent, namespace, 
+      stream.write( formatFilename( "stdin", newindent, namespace,
 				    this.m_stdin, false) );
     if ( this.m_stdout != null )
-      stream.write( formatFilename( "stdout", newindent, namespace, 
+      stream.write( formatFilename( "stdout", newindent, namespace,
 				    this.m_stdout, false) );
     if ( this.m_stderr != null )
-      stream.write( formatFilename( "stderr", newindent, namespace, 
+      stream.write( formatFilename( "stderr", newindent, namespace,
 				    this.m_stderr, false) );
 
     // VDL referenced Filenames to be dumped next

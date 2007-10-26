@@ -21,12 +21,12 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * This class captures the logical filename and its linkage. Also, 
+ * This class captures the logical filename and its linkage. Also,
  * some static methods allow to use the linkage constants outside
- * the class. 
+ * the class.
  *
  * <code>LFN</code> extends the <code>Leaf</code> class by adding
- * a filename and linkage type. 
+ * a filename and linkage type.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
@@ -44,7 +44,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
 {
   /**
    * Linkage type: no linkage, usually used for constants etc.
-   * It can also be used to indicate that the linkage is unknown. 
+   * It can also be used to indicate that the linkage is unknown.
    * The NONE linkage does not participate in DAG construction.
    */
   public static final int NONE = 0;
@@ -66,7 +66,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
   public static final int INOUT = 3;
 
   /**
-   * The filename is the logical name of the file. With the help of 
+   * The filename is the logical name of the file. With the help of
    * the replica location service (RLS), the physical filename is
    * determined by the concrete planner.
    */
@@ -92,11 +92,11 @@ public class LFN extends Leaf implements Cloneable, Serializable
 
   /**
    * Converts an integer into the symbolic linkage type represented by
-   * the constant. 
+   * the constant.
    *
    * @param x is the integer with the linkage type to symbolically convert
    * @return a string with the symbolic linkage name, or null, if the
-   * constant is out of range. 
+   * constant is out of range.
    */
   public static String toString( int x )
   {
@@ -156,21 +156,72 @@ public class LFN extends Leaf implements Cloneable, Serializable
 
   /**
    * Converts an integer into the symbolic transfer mode represented by
-   * the constant. 
+   * the constant.
    *
    * @param x is the integer with the linkage type to symbolically convert
    * @return a string with the symbolic linkage name, or null, if the
-   * constant is out of range. 
+   * constant is out of range.
    */
   public static String transferString( int x )
   {
     switch ( x ) {
-    case LFN.XFER_MANDATORY:	return "false";
+    case LFN.XFER_MANDATORY:	return "true";
     case LFN.XFER_OPTIONAL:	return "optional";
-    case LFN.XFER_NOT:	return "true";
+    case LFN.XFER_NOT:	return "false";
     default:		return null;
     }
   }
+
+  /**
+   * Type of File: Denotes a data file. They are generally looked up in a replica
+   * catalog.
+   */
+  public static final int TYPE_DATA = 0;
+
+  /**
+   * Type of File: Denotes an executable file. They are generally looked up in a
+   * transformation catalog.
+   */
+  public static final int TYPE_EXECUTABLE = 1;
+
+
+  /**
+   * Type of File: Denotes a pattern. They are generally looked up in a
+   * pattern catalog.
+   */
+  public static final int TYPE_PATTERN = 2;
+
+  /**
+   * Predicate to determine, if an integer is within the valid range for
+   * type
+   *
+   * @param x is the integer to test for in-intervall.
+   * @return true, if the integer satisfies {@link LFN#TYPE_DATA}
+   * &leq; x &leq; {@link LFN#TYPE_PATTERN}, false otherwise.
+   */
+  public static boolean typeInRange( int x )
+  {
+    return ((x >= LFN.TYPE_DATA) && (x <= LFN.TYPE_PATTERN));
+  }
+
+  /**
+   * Converts an integer into the symbolic transfer mode represented by
+   * the constant.
+   *
+   * @param x is the integer with the linkage type to symbolically convert
+   * @return a string with the symbolic linkage name, or null, if the
+   * constant is out of range.
+   */
+  public static String typeString( int x )
+  {
+    switch ( x ) {
+    case TYPE_DATA:	        return "data";
+    case TYPE_EXECUTABLE:	return "executable";
+    case TYPE_PATTERN:	        return "pattern";
+    default:		        return null;
+    }
+  }
+
 
   /**
    * Marks a filename for transfer to the result collector. If marked
@@ -201,21 +252,26 @@ public class LFN extends Leaf implements Cloneable, Serializable
   private boolean m_optional = false;
 
   /**
+   * The type of the filename, whether it refers to a data, pattern or executable.
+   */
+  private int m_type = TYPE_DATA;
+
+  /**
    * Creates and returns a copy of this object.
    * @return a new instance.
    */
   public Object clone()
   {
-    return new LFN( this.m_filename, this.m_link, this.m_temporary, 
+    return new LFN( this.m_filename, this.m_link, this.m_temporary,
 		    this.m_dontRegister, this.m_dontTransfer,
 		    this.m_optional );
   }
 
   /**
    * ctor.
-   */  
+   */
   public LFN()
-  { 
+  {
     super();
   }
 
@@ -226,7 +282,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * @param filename is the logical filename to store.
    */
   public LFN( String filename )
-  { 
+  {
     super();
     this.m_filename = filename;
     this.m_dontRegister = false;
@@ -243,7 +299,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
    */
   public LFN( String filename, int link )
     throws IllegalArgumentException
-  { 
+  {
     super();
     this.m_filename = filename;
     this.m_dontRegister = false;
@@ -267,7 +323,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
    */
   public LFN( String filename, int link, String hint )
     throws IllegalArgumentException
-  { 
+  {
     super();
     this.m_filename = filename;
     if ( (this.m_temporary = hint) == null ) {
@@ -284,10 +340,11 @@ public class LFN extends Leaf implements Cloneable, Serializable
       throw new IllegalArgumentException();
   }
 
+
   /**
    * ctor: Creates a filename given almost all specs. This is a backward
    * compatible constructor, as it lacks access to the optional transfer
-   * attribute. 
+   * attribute.
    *
    * @param filename is the logical filename to store.
    * @param link is the linkage of the file to remember.
@@ -297,11 +354,13 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * @throws IllegalArgumentException if the linkage does not match the
    * legal range, or the transfer mode does not match its legal range.
    * @since 1.21
+   *
+   * @deprecated
    */
   public LFN( String filename, int link, String hint,
 	      boolean dontRegister, int dontTransfer )
     throws IllegalArgumentException
-  { 
+  {
     super();
     this.m_filename = filename;
     this.m_temporary = hint;
@@ -317,10 +376,11 @@ public class LFN extends Leaf implements Cloneable, Serializable
       throw new IllegalArgumentException("Illegal linkage type");
   }
 
+
   /**
    * ctor: Creates a filename given almost all specs. This is a backward
    * compatible constructor, as it lacks access to the optional transfer
-   * attribute. 
+   * attribute.
    *
    * @param filename is the logical filename to store.
    * @param link is the linkage of the file to remember.
@@ -331,11 +391,13 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * @throws IllegalArgumentException if the linkage does not match the
    * legal range, or the transfer mode does not match its legal range.
    * @since 1.23
+   *
+   * @deprecated
    */
   public LFN( String filename, int link, String hint,
 	      boolean dontRegister, int dontTransfer, boolean optional )
     throws IllegalArgumentException
-  { 
+  {
     super();
     this.m_filename = filename;
     this.m_temporary = hint;
@@ -345,29 +407,130 @@ public class LFN extends Leaf implements Cloneable, Serializable
       this.m_dontTransfer = dontTransfer;
     else
       throw new IllegalArgumentException("Illegal transfer mode");
-
     if ( LFN.isInRange(link) )
       this.m_link = link;
     else
       throw new IllegalArgumentException("Illegal linkage type");
   }
 
-//   /** 
+
+//The new constructors that need to be added later, after the deprecation
+//ends for the above constructors. Karan Oct 24, 2007
+  /**
+   * ctor: Creates a filename given almost all specs. This is a backward
+   * compatible constructor, as it lacks access to the optional transfer
+   * attribute.
+   *
+   * @param filename is the logical filename to store.
+   * @param link is the linkage of the file to remember.
+   * @param hint is an expression for a temporary filename choice.
+   * @param register whether to to register with a replica catalog.
+   * @param transfer whether to transfer the file to the collector.
+   * @throws IllegalArgumentException if the linkage does not match the
+   * legal range, or the transfer mode does not match its legal range.
+   */
+//  public LFN( String filename, int link, String hint,
+//	      boolean register, int transfer )
+//  throws IllegalArgumentException
+//  {
+//    super();
+//    this.m_filename = filename;
+//    this.m_temporary = hint;
+//    this.m_dontRegister = !register;
+//    if ( LFN.transferInRange( transfer ) )
+//      this.m_dontTransfer = transfer;
+//    else
+//      throw new IllegalArgumentException("Illegal transfer mode");
+//
+//    if ( LFN.isInRange(link) )
+//      this.m_link = link;
+//    else
+//      throw new IllegalArgumentException("Illegal linkage type");
+//  }
+
+  /**
+   * ctor: Creates a filename given almost all specs. This is a backward
+   * compatible constructor, as it lacks access to the optional transfer
+   * attribute.
+   *
+   * @param filename is the logical filename to store.
+   * @param link is the linkage of the file to remember.
+   * @param hint is an expression for a temporary filename choice.
+   * @param register whether to to register with a replica catalog.
+   * @param transfer whether to transfer the file to the collector.
+   * @param optional whether the file is optional or required.
+   * @throws IllegalArgumentException if the linkage does not match the
+   * legal range, or the transfer mode does not match its legal range.
+   */
+//  public LFN( String filename, int link, String hint,
+//	      boolean register, int transfer, boolean optional )
+//    throws IllegalArgumentException
+//  {
+//    super();
+//    this.m_filename = filename;
+//    this.m_temporary = hint;
+//    this.m_dontRegister = !register;
+//    this.m_optional = optional;
+//    if ( LFN.transferInRange( transfer ) )
+//      this.m_dontTransfer = transfer;
+//    else
+//      throw new IllegalArgumentException("Illegal transfer mode");
+//    if ( LFN.isInRange(link) )
+//      this.m_link = link;
+//    else
+//      throw new IllegalArgumentException("Illegal linkage type");
+//  }
+
+
+
+
+  /**
+   * ctor: Creates a filename given almost all specs. This is a backward
+   * compatible constructor, as it lacks access to the optional transfer
+   * attribute.
+   *
+   * @param filename is the logical filename to store.
+   * @param link is the linkage of the file to remember.
+   * @param hint is an expression for a temporary filename choice.
+   * @param dontRegister whether to to register with a replica catalog.
+   * @param dontTransfer whether to transfer the file to the collector.
+   * @param optional whether the file is optional or required.
+   * @param type     whether the file is data|executable|pattern
+   *
+   * @throws IllegalArgumentException if the linkage does not match the
+   * legal range, or the transfer mode does not match its legal range.
+   * @since 1.23
+   */
+  public LFN( String filename, int link, String hint,
+              boolean dontRegister, int dontTransfer, boolean optional,
+              int type     )
+    throws IllegalArgumentException
+  {
+    this( filename, link, hint, dontRegister, dontTransfer, optional );
+
+    if ( LFN.typeInRange( type ) )
+      this.m_type = type;
+    else
+      throw new IllegalArgumentException("Illegal File type");
+  }
+
+
+//   /**
 //    * @deprecated Use the finer control of {@link #getDontRegister}
 //    * and {@link #getDontTransfer}.
-//    * 
+//    *
 //    * @return true, if the current filename instance points to
 //    * a transient (dontRegister, dontTransfer) file. False for all other
-//    * cases. 
+//    * cases.
 //    */
 //   public boolean getIsTransient()
-//   { 
+//   {
 //     return ( this.m_dontRegister && this.m_dontTransfer );
 //   }
 
-  /** 
+  /**
    * Accessor: Obtains the linkage type from the object.
-   * 
+   *
    * @return the linkage type of the current object. Note that
    * <code>LFN</code> objects <i>default</i> to no linkage.
    * @see #setLink(int)
@@ -384,22 +547,74 @@ public class LFN extends Leaf implements Cloneable, Serializable
   public String getFilename()
   { return this.m_filename; }
 
+
+
+  /**
+   * Accessor: Obtains the predicate on registring with a replica
+   * catalog.
+   *
+   * @return true if the file will be registered with a replica catalog.
+   *
+   * @see #setRegister( boolean )
+   *
+   * @since 2.1
+   */
+  public boolean getRegister()
+  { return !this.m_dontRegister; }
+
+  /**
+   * Accessor: Returns the predicate on the type of the LFN
+   *
+   * @return the type of LFN
+   *
+   *
+   * @see #setType( int )
+   *
+   * @since 2.1
+   */
+  public int getType(  ){
+      return this.m_type;
+  }
+
+
+
   /**
    * Accessor: Obtains the predicate on registring with a replica
    * catalog.
    *
    * @return false if the file will be registered with a replica catalog.
-   * @see #setDontRegister( boolean )
+   * @see #setRegister( boolean )
+   * @see #getRegister()
+   * @deprecated
    * @since 1.21
    */
   public boolean getDontRegister()
   { return this.m_dontRegister; }
 
+
   /**
-   * Accessor: Obtains the transfering mode. 
+   * Accessor: Obtains the transfering mode.
+   *
+   * @return true if the file will be tranferred to an output collector.
+   *
+   * @see #setTransfer( int )
+   *
+   * @since 2.1
+   */
+  public int getTransfer()
+  { return this.m_dontTransfer; }
+
+
+  /**
+   * Accessor: Obtains the transfering mode.
    *
    * @return false if the file will be tranferred to an output collector.
-   * @see #setDontTransfer( int )
+   *
+   * @deprecated
+   *
+   * @see #getTransfer()
+   * @see #setTransfer( int )
+   *
    * @since 1.21
    */
   public int getDontTransfer()
@@ -415,7 +630,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
   public boolean getOptional()
   { return this.m_optional; }
 
-  /** 
+  /**
    * Accessor: Obtains the file name suggestion for a transient file.
    * If a filename is marked transient, the higher level planners might
    * have some notion where to place it, or how to name it. Lower level
@@ -423,23 +638,23 @@ public class LFN extends Leaf implements Cloneable, Serializable
    *
    * @return the transient name suggestion of the file. The current
    * settings will always be returned, regardless of the transiency
-   * state of the file. 
+   * state of the file.
    * @see #setTemporary(String)
    */
   public String getTemporary()
-  { 
+  {
     return this.m_temporary;
   }
- 
-//  /** 
-//    * @deprecated Use the finer control of {@link #setDontRegister} and 
-//    * {@link #setDontTranfer} for transiency control. 
-//    * 
+
+//  /**
+//    * @deprecated Use the finer control of {@link #setDontRegister} and
+//    * {@link #setDontTranfer} for transiency control.
+//    *
 //    * @param transient is the transience state of this filename instance.
 //    * dontRegister and dontTransfer will both be set to the value of
 //    * transient.
 //    *
-//    * @see #getIsTransient() 
+//    * @see #getIsTransient()
 //    */
 //   public void setIsTransient( boolean isTransient )
 //   { this.m_dontRegister = this.m_dontTransfer = isTransient; }
@@ -454,7 +669,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
    */
   public void setLink( int link )
     throws IllegalArgumentException
-  { 
+  {
     if ( LFN.isInRange(link) )
       this.m_link = link;
     else
@@ -469,8 +684,43 @@ public class LFN extends Leaf implements Cloneable, Serializable
    */
   public void setFilename( String fn )
   {
-    this.m_filename = fn; 
+    this.m_filename = fn;
   }
+
+
+  /**
+   * Accessor: Sets the predicate on registring with a replica catalog.
+   *
+   * @param register is true, if the file should be registered with a
+   * replica catalog.
+   *
+   *
+   * @see #getRegister(  )
+   *
+   * @since 2.1
+   */
+  public void setRegister( boolean register )
+  { this.m_dontRegister = !register; }
+
+  /**
+   * Accessor: Sets the predicate on the type of the LFN
+   *
+   * @param type   the type of LFN
+   *
+   *
+   * @see #getType( )
+   *
+   * @since 2.1
+   */
+  public void setType( int type ){
+      if ( typeInRange( type ) ) {
+          this.m_type = type;
+      }
+      else{
+          throw new IllegalArgumentException( "Invalid LFN type " + type );
+      }
+  }
+
 
   /**
    * Accessor: Sets the predicate on registring with a replica catalog.
@@ -479,9 +729,38 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * replica catalog.
    * @see #getDontRegister()
    * @since 1.21
+   * @deprecated
+   *
+   * @see #setRegister( boolean )
+   * @see #getRegister( boolean )
    */
   public void setDontRegister( boolean dontRegister )
   { this.m_dontRegister = dontRegister; }
+
+
+  /**
+   * Accessor: Sets the transfer mode.
+   *
+   * @param transfer   the transfer flag
+   *
+   * @exception IllegalArgumentException if the transfer mode is outside
+   * its legal range.
+   * @see #getTransfer( )
+   * @see LFN#XFER_MANDATORY
+   * @see LFN#XFER_OPTIONAL
+   * @see LFN#XFER_NOT
+   *
+   * @since 2.1
+   */
+  public void setTransfer( int transfer )
+    throws IllegalArgumentException
+  {
+    if ( LFN.transferInRange( transfer ) )
+      this.m_dontTransfer = transfer;
+    else
+      throw new IllegalArgumentException();
+  }
+
 
   /**
    * Accessor: Sets the transfer mode.
@@ -489,7 +768,10 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * @param dontTransfer is false, if the file should be transferred to
    * the output collector.
    * @exception IllegalArgumentException if the transfer mode is outside
-   * its legal range. 
+   * its legal range.
+   *
+   * @deprecated
+   *
    * @see #getDontTransfer( )
    * @see LFN#XFER_MANDATORY
    * @see LFN#XFER_OPTIONAL
@@ -498,9 +780,9 @@ public class LFN extends Leaf implements Cloneable, Serializable
    */
   public void setDontTransfer( int dontTransfer )
     throws IllegalArgumentException
-  { 
-    if ( LFN.transferInRange(dontTransfer) ) 
-      this.m_dontTransfer = dontTransfer; 
+  {
+    if ( LFN.transferInRange(dontTransfer) )
+      this.m_dontTransfer = dontTransfer;
     else
       throw new IllegalArgumentException();
   }
@@ -516,7 +798,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
   public void setOptional( boolean optional )
   { this.m_optional = optional; }
 
-  /** 
+  /**
    * Accessor: Sets a file name suggestion for a transient file. If a
    * filename is marked transient, the higher level planners might have
    * some notion where to place it, or how to name it. Lower level
@@ -527,11 +809,11 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * @see #getTemporary()
    */
   public void setTemporary( String name )
-  { 
+  {
     this.m_temporary = name;
   }
 
-  /** 
+  /**
    * Predicate to determine, if the output can be abbreviated. Filenames
    * can be abbreviated, if one of these two conditions are met: The
    * hint is <code>null</code> and dontRegister is false and
@@ -543,7 +825,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * @param dt is the value of dontTransfer
    * @param opt is whether a given file is optional or not
    * @return true, if the filename can use abbreviated mode
-   * 
+   *
    */
   public static boolean abbreviatable( String temp, boolean dr, int dt,
 				       boolean opt )
@@ -552,8 +834,8 @@ public class LFN extends Leaf implements Cloneable, Serializable
     else return ( ( temp == null && ! dr && dt == LFN.XFER_MANDATORY ) ||
 		  ( temp != null && dr && dt == LFN.XFER_NOT ) );
   }
-  
-  /** 
+
+  /**
    * Convenience function to call the static test, if a filename can
    * use the abbreviated notation.
    *
@@ -569,9 +851,9 @@ public class LFN extends Leaf implements Cloneable, Serializable
   }
 
   /**
-   * Convert the logical filename and linkage into something human readable. 
+   * Convert the logical filename and linkage into something human readable.
    * The output is also slightly nudged towards machine parsability.
-   * 
+   *
    * @return a textual description of the element and its attributes.
    */
   public String toString()
@@ -594,7 +876,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
       result.append( '|' );
       if ( this.m_optional ) result.append('o');
       if ( ! this.m_dontRegister ) result.append('r');
-      if ( this.m_dontTransfer != LFN.XFER_NOT ) 
+      if ( this.m_dontTransfer != LFN.XFER_NOT )
 	result.append( this.m_dontTransfer == LFN.XFER_OPTIONAL ? 'T' : 't');
     }
     result.append( '}' );
@@ -609,7 +891,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * @throws IOException if something happens to the stream.
    */
   public void toString( Writer stream )
-    throws IOException 
+    throws IOException
   {
     stream.write( "@{" );
     stream.write( LFN.toString(this.m_link) );
@@ -626,11 +908,11 @@ public class LFN extends Leaf implements Cloneable, Serializable
       stream.write( '|' );
       if ( this.m_optional ) stream.write('o');
       if ( ! this.m_dontRegister ) stream.write('r');
-      if ( this.m_dontTransfer != LFN.XFER_NOT ) 
+      if ( this.m_dontTransfer != LFN.XFER_NOT )
 	stream.write( this.m_dontTransfer == LFN.XFER_OPTIONAL ? 'T' : 't');
     }
 
-    stream.write( "}" ); 
+    stream.write( "}" );
   }
 
   /**
@@ -652,18 +934,21 @@ public class LFN extends Leaf implements Cloneable, Serializable
     if ( indent != null ) result.append(indent);
     result.append("<lfn file=\"").append(quote(this.m_filename,true));
     result.append("\" link=\"").append(LFN.toString(this.m_link));
-    result.append("\" dontRegister=\"")
-      .append(Boolean.toString(this.m_dontRegister));
-    result.append("\" dontTransfer=\"")
+    result.append("\" register=\"")
+      .append(Boolean.toString(!this.m_dontRegister));
+    result.append("\" transfer=\"")
       .append(LFN.transferString(this.m_dontTransfer));
     result.append("\" optional=\"")
       .append(Boolean.toString(this.m_optional));
+
+    result.append( "\" type=\"" ).
+           append( LFN.typeString( this.m_type ) );
     if ( this.m_temporary != null ) {
       result.append("\" temporaryHint=\"");
       result.append(quote(this.m_temporary,true));
     }
     result.append("\"/>");
-    if ( indent != null ) 
+    if ( indent != null )
       result.append( System.getProperty( "line.separator", "\r\n" ) );
 
     return result.toString();
@@ -682,7 +967,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * The parameter is used internally for the recursive traversal.
    * @param namespace is the XML schema namespace prefix. If neither
    * empty nor null, each element will be prefixed with this prefix,
-   * and the root element will map the XML namespace. 
+   * and the root element will map the XML namespace.
    * @exception IOException if something fishy happens to the stream.
    */
   public void toXML( Writer stream, String indent, String namespace )
@@ -690,24 +975,26 @@ public class LFN extends Leaf implements Cloneable, Serializable
   {
     if ( indent != null && indent.length() > 0 ) stream.write( indent );
     stream.write( '<' );
-    if ( namespace != null && namespace.length() > 0 ) { 
+    if ( namespace != null && namespace.length() > 0 ) {
       stream.write( namespace );
       stream.write( ':' );
     }
     stream.write( "lfn" );
     writeAttribute( stream, " file=\"", this.m_filename );
     writeAttribute( stream, " link=\"", LFN.toString(this.m_link) );
-    writeAttribute( stream, " dontRegister=\"", 
-		    Boolean.toString(this.m_dontRegister) );
-    writeAttribute( stream, " dontTransfer=\"", 
+    writeAttribute( stream, " register=\"",
+		    Boolean.toString(!this.m_dontRegister) );
+    writeAttribute( stream, " transfer=\"",
 		    LFN.transferString(this.m_dontTransfer) );
     writeAttribute( stream, " optional=\"",
 		    Boolean.toString(this.m_optional) );
+    writeAttribute( stream, " type=\"",
+                    LFN.typeString( this.m_type ) );
 
     // null-safe
-    writeAttribute( stream, " temporaryHint=\"", this.m_temporary ); 
+    writeAttribute( stream, " temporaryHint=\"", this.m_temporary );
     stream.write( "/>" );
-    if ( indent != null ) 
+    if ( indent != null )
       stream.write( System.getProperty( "line.separator", "\r\n" ) );
   }
 }
