@@ -8,7 +8,7 @@ import java.io.FileWriter;
 
 public class CreateDAX{
 
-    
+
     public static String NAMESPACE ="pegasus";
     public static String VERSION = "2.0";
     public static String PREPROCESS = "preprocess";
@@ -23,15 +23,15 @@ public class CreateDAX{
 
     public CreateDAX(){
     }
-    
+
     public void constructDAX(String daxfile){
-	
+
 	try{
 	    //construct a dax object
 	    ADAG dax = new ADAG(1, 0, "daxfile");
-	    
+
 	    String id1="ID0000001";
-	    
+
 	    //create a job
 	    Job job=new Job (NAMESPACE,PREPROCESS,VERSION,id1);
 	    //add the arguments to the job
@@ -44,21 +44,21 @@ public class CreateDAX{
 	    job.addArgument(new PseudoText(" "));
 	    job.addArgument(new Filename(FB2));
 	    //add the files used by the job
-	    
+
 	    job.addUses(new Filename(FA,LFN.INPUT));
 	    Filename f=new Filename(FB1,LFN.OUTPUT);
-	    f.setDontRegister(true);
+	    f.setRegister( false );
 	    job.addUses(f);
 	    f=new Filename(FB2,LFN.OUTPUT);
-	    f.setDontRegister(true);
+	    f.setRegister( false );
 	    job.addUses(f);
-	    
+
 	    //add the job to the dax
 	    dax.addJob(job);
-	    
-	    
+
+
 	    //create second  job
-	    
+
 	    String id2="ID0000002";
 	    job=new Job (NAMESPACE,FINDRANGE,VERSION,id2);
 	    //add the arguments to the job
@@ -69,15 +69,15 @@ public class CreateDAX{
 	    job.addArgument(new PseudoText(" -o "));
 	    job.addArgument(new Filename(FC1));
 	    //add the files used by the job
-	    
+
 	    job.addUses(new Filename(FB1,LFN.INPUT));
 	    job.addUses(new Filename(FC1,LFN.OUTPUT));
-	    
+
 	    //add the job to the dax
 	    dax.addJob(job);
-	    
+
 	    //create third job
-	    
+
 	    String id3="ID0000003";
 	    job=new Job (NAMESPACE,FINDRANGE,VERSION,id3);
 	    //add the arguments to the job
@@ -88,16 +88,16 @@ public class CreateDAX{
 	    job.addArgument(new PseudoText(" -o "));
 	    job.addArgument(new Filename(FC2));
 	    //add the files used by the job
-	    
+
 	    job.addUses(new Filename(FB2,LFN.INPUT));
 	    job.addUses(new Filename(FC2,LFN.OUTPUT));
-	    
+
 	    //add the job to the dax
 	    dax.addJob(job);
-	    
-	    
+
+
 	    //create fourth job
-	    
+
 	    String id4="ID0000004";
 	    job=new Job (NAMESPACE,ANALYZE,VERSION,id4);
 	    //add the arguments to the job
@@ -109,24 +109,24 @@ public class CreateDAX{
 	    job.addArgument(new Filename(FC2));
 	    job.addArgument(new PseudoText(" -o "));
 	    job.addArgument(new Filename(FD));
-	    
+
 	    //add the files used by the job
 	    job.addUses(new Filename(FC1,LFN.INPUT));
 	    job.addUses(new Filename(FC2,LFN.INPUT));
 	    job.addUses(new Filename(FD,LFN.OUTPUT));
-	    
+
 	    //add the job to the dax
 	    dax.addJob(job);
-	    
-	    
-	    
+
+
+
 	    //add the relationships between the jobs (creating a diamond dependency)
-	    
-	    dax.addChild(id2,id1);	
+
+	    dax.addChild(id2,id1);
 	    dax.addChild(id3,id1);
 	    dax.addChild(id4,id2);
 	    dax.addChild(id4,id3);
-	    
+
 	    //write DAX to file
 	    FileWriter daxFw = new FileWriter(daxfile);
 	    dax.toXML(daxFw, "", null);
@@ -135,18 +135,20 @@ public class CreateDAX{
 	    e.printStackTrace();
 	}
     }
-    
+
     /**
      * Usage : CreateDAX daxfile
      */
     public static void main(String[] args) {
         CreateDAX daxgen = new CreateDAX();
+        args = new String[1];
         if (args.length == 1) {
-            daxgen.constructDAX(args[0]);
-	    
+            //daxgen.constructDAX(args[0]);
+            daxgen.constructDAX( "/tmp/black_dax.xml" );
+
         } else {
             System.out.println("Usage: CreateDAX <outputdaxfile>");
         }
     }
-    
+
 }
