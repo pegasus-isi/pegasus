@@ -138,13 +138,13 @@ public class CreateDAX{
 
     /**
      * Usage : CreateDAX daxfile
+     *
+     * @param args the arguments passed
      */
     public static void main(String[] args) {
         CreateDAX daxgen = new CreateDAX();
-        args = new String[1];
         if (args.length == 1) {
-            //daxgen.constructDAX(args[0]);
-            daxgen.constructDAX( "/tmp/black_dax.xml" );
+            daxgen.constructDAX(args[0]);
 
         } else {
             System.out.println("Usage: CreateDAX <outputdaxfile>");
