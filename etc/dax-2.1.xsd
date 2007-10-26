@@ -58,8 +58,8 @@
 		</xs:annotation>
 		<xs:complexContent>
 			<xs:extension base="PlainFilenameType">
-				<xs:attribute name="dontTransfer" type="TransferType" use="optional" default="false"/>
-				<xs:attribute name="dontRegister" type="xs:boolean" use="optional" default="false"/>
+				<xs:attribute name="dontTransfer" type="TransferType" use="optional"/>
+				<xs:attribute name="dontRegister" type="xs:boolean" use="optional"/>
 				<xs:attribute name="temporaryHint" type="xs:string" use="optional"/>
 				<xs:attribute name="link" type="LinkageType" use="optional"/>
 				<xs:attribute name="optional" type="xs:boolean" use="optional" default="false"/>
