@@ -331,7 +331,7 @@ public class FileTransfer extends PegasusFile {
 
         return ( random ) ?
                 //pick a random value
-                new NameValue( site, ( String ) urls.get( PegRandom.getInteger( 0, urls.size() )) ):
+                new NameValue( site, ( String ) urls.get( PegRandom.getInteger( 0, urls.size() -1 )) ):
                 //returning the first element. No need for a check as
                 //population of the list is controlled
                 new NameValue( site, ( String )( urls.get(0) ) );
