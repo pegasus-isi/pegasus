@@ -69,13 +69,22 @@ public class DaxParser extends Parser {
      * The "not-so-official" location URL of the DAX schema definition.
      */
     public static final String SCHEMA_LOCATION =
-                                 "http://pegasus.isi.edu/schema/dax-2.0.xsd";
+                                 "http://pegasus.isi.edu/schema/dax-2.1.xsd";
 
     /**
      * URI namespace
      */
     public static final String SCHEMA_NAMESPACE =
                                            "http://pegasus.isi.edu/schema/DAX";
+
+
+
+    /**
+     * The constant designating the version when the double negative transfer
+     * and registration flags were removed.
+     */
+    private static final String DAX_VERSION_WITHOUT_DOUBLE_NEGATIVE = "2.1";
+
 
     public String mDaxSchemaVersion;
 
@@ -192,6 +201,12 @@ public class DaxParser extends Parser {
     private Set mVJobOutFiles = new HashSet();
 
     /**
+     * A boolean indicating whether to use the double negative flags for
+     * transfer and register or not.
+     */
+    private boolean mUseDoubleNegative;
+
+    /**
      * The default constructor
      *
      * @param properties the <code>PegasusProperties</code> to be used.
@@ -204,7 +219,7 @@ public class DaxParser extends Parser {
         mDagmanNS = new Dagman();
         mHintNS   = new Hints();
         mVdsNS    = new VDS();
-
+        mUseDoubleNegative = false;
 
     }
 
@@ -228,13 +243,18 @@ public class DaxParser extends Parser {
 
         //try to get the version number
         //of the dax
-        mDaxSchemaVersion = getVersionOfDAX(daxFileName);
-
+        mDaxSchemaVersion = getVersionOfDAX( daxFileName );
+        mLogger.log( "Version of DAX as picked up from the DAX" + mDaxSchemaVersion,
+                      LogManager.DEBUG_MESSAGE_LEVEL );
         String schemaLoc = getSchemaLocation();
-        mLogger.log("Picking schema for DAX" + schemaLoc,
-                    LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log( "Picking schema for DAX" + schemaLoc, LogManager.CONFIG_MESSAGE_LEVEL );
         String list = DaxParser.SCHEMA_NAMESPACE + " " + schemaLoc;
         setSchemaLocations(list);
+
+        //figure out whether to pick up the double negative flags or not
+        mUseDoubleNegative = useDoubleNegative( mDaxSchemaVersion );
+        mLogger.log( "Picking up the dontTransfer and dontRegister flags " + mUseDoubleNegative,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
 
         mLogger.log("Parsing the DAX",LogManager.INFO_MESSAGE_LEVEL);
 
@@ -586,13 +606,26 @@ public class DaxParser extends Parser {
         //since dax 1.6, the isTemporary
         //is broken into two transient
         //attributes dontTransfer and dontRegister
-        boolean dontRegister = new Boolean(attrs.getValue("","dontRegister")).booleanValue();
+//        System.out.println( "DontRegister is " + attrs.getValue("","dontRegister") );
+//        System.out.println( "Register is " + attrs.getValue("","register") );
+
+        //pick up the registration flag
+        boolean register = ( mUseDoubleNegative )?
+                           //pick up the dR flag
+                           !new Boolean( attrs.getValue( "", "dontRegister" ) ).booleanValue():
+                           //pick up the register flag
+                           new Boolean( attrs.getValue( "", "register" ) ).booleanValue();
+
+        //boolean dontRegister = new Boolean(attrs.getValue("","dontRegister")).booleanValue();
 
         //notion of optional file since dax 1.8
-        boolean optionalFile = new Boolean(attrs.getValue("","optional")).booleanValue();
+        boolean optionalFile = new Boolean( attrs.getValue( "", "optional" ) ).booleanValue();
 
         //value of dontTransfer is tri state (true,false,optional) since dax 1.7
-        String dontTransfer = attrs.getValue("","dontTransfer");
+        String transfer = ( mUseDoubleNegative )?
+                          attrs.getValue( "", "dontTransfer" ):
+                          attrs.getValue( "" , "transfer" );
+        //String dontTransfer = attrs.getValue("","dontTransfer");
         PegasusFile pf = new PegasusFile(fileName);
 
         //handling the transient file feature
@@ -602,16 +635,16 @@ public class DaxParser extends Parser {
             if (temp) {
                 //set the transient flags
                 pf.setTransferFlag(PegasusFile.TRANSFER_NOT);
-                dontRegister = true;
+                register = false;
             }
         }
         else{
             //set the transfer mode for the file
             //for dax 1.5 onwards
-            pf.setTransferFlag(dontTransfer);
+            pf.setTransferFlag( transfer, mUseDoubleNegative );
         }
         //handling the dR flag
-        if(dontRegister)
+        if( !register )
             pf.setTransientRegFlag();
 
         //handling the optional attribute
@@ -673,6 +706,9 @@ public class DaxParser extends Parser {
 
         jobId = attrs.getValue("", "id");
         mCurrentJobSubInfo.logicalId = jobId;
+        mLogger.log( "Parsing job with logical id " + jobId,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
         //mvJobIds.addElement(jobId);
 
         //concatenating jobname and id into job name
@@ -999,6 +1035,30 @@ public class DaxParser extends Parser {
 
         // Nota bene: vds.schema.dax may be a networked URI...
         return this.mProps.getDAXSchemaLocation(dax.getAbsolutePath());
+    }
+
+
+    /**
+     * Determines whether to use a doubleNegative or not.
+     *
+     * @param daxVersion the version of the dax as determined.
+     *
+     * @return boolean
+     */
+    protected boolean useDoubleNegative( String daxVersion ){
+        float current =  shiftRight( daxVersion );
+        boolean result = false;
+        //sanity check
+        if( current == -1 ){
+            //we were unable to parse the dax version
+            //means we assume double negative is turned off
+            return result;
+        }
+
+        float base = shiftRight( this.DAX_VERSION_WITHOUT_DOUBLE_NEGATIVE );
+
+        //we turned off double negative after >= base
+        return base > current;
     }
 
     /**

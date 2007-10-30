@@ -270,7 +270,9 @@ public class PegasusFile extends Data {
      * value of transfer mode passed. The legal range of transfer values is
      * true|false|optional.
      *
-     * @param dTFlag  tri-state transfer value as got from dontTransfer flag.
+     * @param flag            tri-state transfer value as got from dontTransfer flag.
+     * @param doubleNegative  indicates whether a double negative or not.
+     *
      * @exception IllegalArgumentException if the transfer mode is outside
      * its legal range.
      *
@@ -278,8 +280,8 @@ public class PegasusFile extends Data {
      * @see #TRANSFER_NOT
      * @see #TRANSFER_OPTIONAL
      */
-    public void setTransferFlag(String dTFlag) throws IllegalArgumentException{
-        if(dTFlag == null || dTFlag.length() == 0){
+    public void setTransferFlag( String flag, boolean doubleNegative ) throws IllegalArgumentException{
+        if( flag == null || flag.length() == 0){
             //set to default value.
             //throw new IllegalArgumentException();
             mTransferFlag = this.TRANSFER_MANDATORY;
@@ -287,17 +289,21 @@ public class PegasusFile extends Data {
         }
 
 
-        if(dTFlag.equals("true"))
-            mTransferFlag = this.TRANSFER_NOT;
-
-        else if(dTFlag.equals("false"))
-            mTransferFlag = this.TRANSFER_MANDATORY;
-
-        else if(dTFlag.equals("optional"))
+        if( flag.equals("true") ){
+            mTransferFlag = (doubleNegative) ?
+                                              this.TRANSFER_NOT :
+                                              this.TRANSFER_MANDATORY;
+        }
+        else if( flag.equals("false")){
+            mTransferFlag = ( doubleNegative ) ?
+                                              this.TRANSFER_MANDATORY:
+                                              this.TRANSFER_NOT;
+        }
+        else if( flag.equals("optional"))
             mTransferFlag = this.TRANSFER_OPTIONAL;
         else{
-            throw new IllegalArgumentException("Invalid dT value passed " +
-                                               dTFlag);
+            throw new IllegalArgumentException( "Invalid transfer value passed " +
+                                                flag );
 
         }
     }
