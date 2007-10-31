@@ -985,7 +985,7 @@ public class PlannerOptions extends Data implements Cloneable{
      *
      * @return the absolute path.
      */
-    private String sanitizePath(String path){
+    private String sanitizePath( String path ){
         String absPath;
         char separator = File.separatorChar;
 
@@ -993,13 +993,15 @@ public class PlannerOptions extends Data implements Cloneable{
                   //absolute path given already
                   path:
                   //get the current working dir
-                  System.getProperty("user.dir") + separator
-                  + ((path.indexOf('.') == 0)?
-                     ((path.indexOf(separator) == 1) ?
-                      path.substring(path.indexOf('.') + 2):
-                      path.substring(path.indexOf('.') + 1)
+                  System.getProperty( "user.dir" ) + separator
+                  + ( ( path.indexOf( '.' ) == 0 )? //path starts with a . ?
+                      ( (path.indexOf( separator ) == 1 ) ? //path starts with a ./ ?
+                                                         path.substring( 2 ):
+                                                         ( path.length() > 1 && path.charAt( 1 )  == '.' )? //path starts with .. ?
+                                                                                       path: //keep path as it is
+                                                                                       path.substring( path.indexOf( '.' ) + 1 )
                       )
-                     :path);
+                      : path );
 
         //remove trailing separator if any
         absPath = (absPath.lastIndexOf(separator) == absPath.length() - 1)?
