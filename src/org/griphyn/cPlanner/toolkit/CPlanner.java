@@ -248,7 +248,8 @@ public class CPlanner extends Executable{
         //do sanity check on dax file
         String dax         = mPOptions.getDAX();
         String pdax        = mPOptions.getPDAX();
-        String submitDir   = mPOptions.getSubmitDirectory();
+//      String submitDir   = mPOptions.getSubmitDirectory();
+        String baseDir     = mPOptions.getBaseSubmitDirectory();
 
         if( dax == null && pdax == null ){
             mLogger.log( "\nNeed to specify either a dax file ( using --dax )  or a pdax file (using --pdax) to plan",
@@ -338,13 +339,16 @@ public class CPlanner extends Executable{
             try{
                 //create the base directory if required
                 relativeDir = ( mPOptions.partOfDeferredRun() )?
-                              null:
-                              createSubmitDirectory( orgDag,
-                                                     submitDir,
-                                                     mUser,
-                                                     mPOptions.getVOGroup(),
-                                                     mProps.useTimestampForDirectoryStructure() );
-                mPOptions.setSubmitDirectory( submitDir, relativeDir  );
+                                        null:
+                                        ( mPOptions.getRelativeSubmitDirectory() == null )?
+                                                //create our own relative dir
+                                                createSubmitDirectory( orgDag,
+                                                                       baseDir,
+                                                                       mUser,
+                                                                       mPOptions.getVOGroup(),
+                                                                       mProps.useTimestampForDirectoryStructure() ):
+                                                mPOptions.getRelativeSubmitDirectory();
+                mPOptions.setSubmitDirectory( baseDir, relativeDir  );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
 
@@ -357,7 +361,7 @@ public class CPlanner extends Executable{
                 String error = ( state == 0 ) ?
                                "Unable to write  to directory" :
                                "Unable to write out properties to directory";
-                throw new RuntimeException( error + submitDir , ioe );
+                throw new RuntimeException( error + mPOptions.getSubmitDirectory() , ioe );
 
             }
 
@@ -450,7 +454,7 @@ public class CPlanner extends Executable{
             }
 
             //log entry in to the work catalog
-            boolean nodatabase = logEntryInWorkCatalog( finalDag, submitDir, relativeDir );
+            boolean nodatabase = logEntryInWorkCatalog( finalDag, baseDir, relativeDir );
 
             //write out  the planner metrics  to global log
             mPMetrics.setEndTime( new Date() );
@@ -483,7 +487,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfRnzVr::aD:d:s:o:P:c:C:b:g:",
+                              "vhfRnzVr::aD:d:s:o:P:c:C:b:g:2:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -524,6 +528,10 @@ public class CPlanner extends Executable{
 
                 case 'D': //dir
                     options.setSubmitDirectory( g.getOptarg(), null );
+                    break;
+
+                case '2'://relative-dir
+                    options.setRelativeSubmitDirectory( g.getOptarg() );
                     break;
 
                 case 'f'://force
@@ -657,7 +665,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[20];
+        LongOpt[] longopts = new LongOpt[21];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -682,6 +690,7 @@ public class CPlanner extends Executable{
         longopts[17]  = new LongOpt( "nocleanup", LongOpt.NO_ARGUMENT, null, 'n' );
         longopts[18]  = new LongOpt( "group",   LongOpt.REQUIRED_ARGUMENT, null, 'g' );
         longopts[19]  = new LongOpt( "deferred", LongOpt.NO_ARGUMENT, null, 'z');
+        longopts[20]  = new LongOpt( "relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2' );
         return longopts;
     }
 
@@ -695,8 +704,9 @@ public class CPlanner extends Executable{
           "\n " + getGVDSVersion() +
           "\n Usage : pegasus-plan [-Dprop  [..]] -d|-P <dax file|pdax file> " +
           " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
-          "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <dir  for o/p files>] [-g <vogroup>] [-o <output site>] " +
-          "[-r[dir name]] [--monitor] [-n]  [-v] [-V] [-h]";
+          "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] " +
+          " [ --relative-dir <relative directory to base directory> ][-g <vogroup>] [-o <output site>] " +
+          "\n [-r[dir name]] [--monitor] [-n]  [-v] [-V] [-h]";
 
         System.out.println(text);
     }
@@ -728,6 +738,7 @@ public class CPlanner extends Executable{
            "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to " +
            "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads." +
            "\n -D |--dir          the directory where to generate the concrete workflow." +
+           "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." +
            "\n -f |--force        skip reduction of the workflow, resulting in build style dag." +
            "\n -g |--group        the VO Group to which the user belongs " +
            "\n -m |--megadag      type of style to use while generating the megadag in deferred planning." +

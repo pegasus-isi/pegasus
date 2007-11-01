@@ -43,10 +43,15 @@ public class PlannerOptions extends Data implements Cloneable{
     private String mBaseDir;
 
     /**
+     * The relative submit directory.
+     */
+    private String mRelativeDir;
+
+    /**
      * This is the directory where the submit files are generated on the submit
      * host (the site running the concrete planner).
      */
-    private String mSubmitFileDir ;
+    //private String mSubmitFileDir ;
 
     /**
      * The dax file which contains the abstract dag. This dax is created by the
@@ -176,8 +181,9 @@ public class PlannerOptions extends Data implements Cloneable{
      * Default Constructor.
      */
     public PlannerOptions(){
-        mSubmitFileDir    = ".";
+//        mSubmitFileDir    = ".";
         mBaseDir          = ".";
+        mRelativeDir      = null;
         mDAXFile          = null;
         mPDAXFile         = null;
         mvExecPools       = new java.util.HashSet();
@@ -424,9 +430,11 @@ public class PlannerOptions extends Data implements Cloneable{
      * @return the relative submit directory
      */
     public String getRelativeSubmitDirectory(){
-        return ( mBaseDir == null ) ?
-                 mSubmitFileDir:
-                 mSubmitFileDir.substring( mBaseDir.length() );
+        return mRelativeDir;
+
+//        return ( mBaseDir == null ) ?
+//                 mSubmitFileDir:
+//                 mSubmitFileDir.substring( mBaseDir.length() );
     }
 
 
@@ -438,7 +446,9 @@ public class PlannerOptions extends Data implements Cloneable{
      * @return the path to the directory.
      */
     public String getSubmitDirectory(){
-        return mSubmitFileDir;
+        return ( mRelativeDir == null )?
+                                   new File( mBaseDir ).getAbsolutePath():
+                                   new File( mBaseDir, mRelativeDir ).getAbsolutePath();
     }
 
     /**
@@ -720,12 +730,24 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public void setSubmitDirectory( String base, String relative ){
         base = sanitizePath( base );
+        /*
         mSubmitFileDir = ( relative == null )?
                          new File( base ).getAbsolutePath():
                          new File( base, relative ).getAbsolutePath();
+         */
+        mRelativeDir = relative;
         mBaseDir  = base;
     }
 
+    /**
+     * Sets the path to the directory where the submit files are to be
+     * generated.
+     *
+     * @param relative   the directory relative to the base where submit files are generated.
+     */
+    public void setRelativeSubmitDirectory( String relative ){
+        mRelativeDir = relative;
+    }
 
 
 
@@ -759,7 +781,7 @@ public class PlannerOptions extends Data implements Cloneable{
         String st = "\n" +
                     "\n Concrete Planner Options" +
                     "\n Base Submit Directory " + mBaseDir +
-                    "\n SubmitFile Directory " + mSubmitFileDir +
+                    "\n SubmitFile Directory " + this.getSubmitDirectory() +
                     "\n Basename Prefix      " + mBasenamePrefix +
                     "\n Abstract Dag File    " + mDAXFile +
                     "\n Partition File       " + mPDAXFile +
@@ -792,7 +814,10 @@ public class PlannerOptions extends Data implements Cloneable{
         StringBuffer sb = new StringBuffer();
 
         //the submit file dir
-        if(mSubmitFileDir != null){ sb.append(" --dir ").append(mSubmitFileDir);}
+//        if( mSubmitFileDir != null){ sb.append(" --dir ").append(mSubmitFileDir);}
+        //confirm how this plays in deferred planning. not clear. Karan Oct 31 2007
+        sb.append(" --dir ").append( this.getBaseSubmitDirectory() );
+        if( mRelativeDir != null){ sb.append(" --relative-dir ").append( this.getRelativeSubmitDirectory() );}
 
         //the basename prefix
         if(mBasenamePrefix != null){ sb.append(" --basename ").append(mBasenamePrefix);}
@@ -925,8 +950,9 @@ public class PlannerOptions extends Data implements Cloneable{
             //try calling the constructor directly
             pOpt = new PlannerOptions();
         }
-        pOpt.mSubmitFileDir  = this.mSubmitFileDir;
+//        pOpt.mSubmitFileDir  = this.mSubmitFileDir;
         pOpt.mBaseDir        = this.mBaseDir;
+        pOpt.mRelativeDir    = this.mRelativeDir;
         pOpt.mDAXFile        = this.mDAXFile;
         pOpt.mPDAXFile       = this.mPDAXFile;
         pOpt.mvExecPools     = cloneSet(this.mvExecPools);
