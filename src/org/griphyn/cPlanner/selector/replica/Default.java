@@ -34,13 +34,12 @@ import java.util.Vector;
  * This gives preference to a replica residing on the same site as the site,
  * where it is required to be staged to. If there is no such replica, then a
  * random replica is selected.
- * <p>
- * In order to use the transfer implementation implemented by this class,
+ *
  *
  * <p>
  * In order to use the replica selector implemented by this class,
  * <pre>
- *        - the property pegasus.replica.selector must be set to value Default, or
+ *        - the property pegasus.selector.replica must be set to value Default, or
  *          the property should be left undefined in the properties.
  * </pre>
  *
@@ -197,7 +196,7 @@ public class Default implements ReplicaSelector {
      *
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
-     * @param prefferedSite the preffered site for picking up the replicas.
+     * @param preferredSite the preffered site for picking up the replicas.
      *
      * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
      *
