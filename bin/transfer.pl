@@ -59,8 +59,8 @@ while(<STDIN>){
 	print STDOUT "SRC URL: ", $src,"\n";
 	print STDOUT "DES URL:" ,$dest,"\n";
 	if($src =~ /^file\:\/\// && $dest =~ /^file\:\/\//){
-	    $src =~ s/^file\:\/\///;
-	    $dest =~ s/^file\:\/\///;
+	    $src =~ s/^file\:\/\/[a-zA-Z0-9\-\.]*//;
+	    $dest =~ s/^file\:\/\/[a-zA-Z0-9\-\.]*//;
 
 	    print STDOUT "CHOPPED SRC:", $src,"\n";
 	    print STDOUT "CHOPPED DES:", $dest,"\n";
