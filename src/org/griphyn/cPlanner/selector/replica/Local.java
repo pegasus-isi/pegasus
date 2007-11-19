@@ -172,7 +172,6 @@ public class Local implements ReplicaSelector {
 
         ReplicaCatalogEntry rce;
         String site;
-        String ucAttrib;
         int noOfLocs = 0;
 
         for ( Iterator it = rl.pfnIterator(); it.hasNext(); ) {
