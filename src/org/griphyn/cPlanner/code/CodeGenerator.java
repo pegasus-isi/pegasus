@@ -19,6 +19,7 @@ package org.griphyn.cPlanner.code;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
@@ -42,22 +43,17 @@ public interface CodeGenerator {
     /**
      * The version number associated with this API of Code Generator.
      */
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.4";
 
 
     /**
      * Initializes the Code Generator implementation.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param directory  the base directory where the generated code should reside.
-     * @param options    the options passed to the planner at runtime.
+     * @param bag   the bag of initialization objects.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void initialize( PegasusProperties properties,
-                            String directory,
-                            PlannerOptions options) throws CodeGeneratorException;
+    public void initialize( PegasusBag bag ) throws CodeGeneratorException;
 
     /**
      * Generates the code for the concrete workflow in the input format of the

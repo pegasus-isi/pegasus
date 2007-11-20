@@ -16,6 +16,7 @@ package org.griphyn.cPlanner.code.generator;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.code.CodeGenerator;
 
@@ -57,10 +58,7 @@ public class CodeGeneratorFactory {
      * mode specified in the properties file.
      *
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner at runtime.
-     * @param directory  the base directory where the generated code should reside.
+     * @param bag   the bag of initialization objects.
      *
      * @return the instance of the class implementing this interface.
      *
@@ -70,10 +68,11 @@ public class CodeGeneratorFactory {
      * @see #DEFAULT_PACKAGE_NAME
      * @see org.griphyn.cPlanner.common.PegasusProperties#getDAXCallback()
      */
-    public static CodeGenerator loadInstance(PegasusProperties properties,
-                                             PlannerOptions options,
-                                             String directory)
+    public static CodeGenerator loadInstance( PegasusBag bag )
         throws CodeGeneratorFactoryException{
+
+        PegasusProperties properties = bag.getPegasusProperties();
+        PlannerOptions options       = bag.getPlannerOptions();
 
         //sanity check
         if(properties == null){
@@ -102,7 +101,7 @@ public class CodeGeneratorFactory {
         }
 
 
-        return loadInstance( properties, options, directory, className );
+        return loadInstance( bag, className );
 
     }
 
@@ -111,10 +110,7 @@ public class CodeGeneratorFactory {
      * user at runtime.
      *
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner at runtime.
-     * @param directory  the base directory where the generated code should reside.
+     * @param bag   the bag of initialization objects.
      * @param className  the name of the implementing class.
      *
      * @return the instance of the class implementing this interface.
@@ -124,11 +120,13 @@ public class CodeGeneratorFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static CodeGenerator loadInstance(PegasusProperties properties,
-                                             PlannerOptions options,
-                                             String directory,
-                                             String className)
+    public static CodeGenerator loadInstance( PegasusBag bag, String className)
         throws CodeGeneratorFactoryException{
+
+
+        PegasusProperties properties = bag.getPegasusProperties();
+        PlannerOptions options       = bag.getPlannerOptions();
+
 
         //sanity check
         if (properties == null) {
@@ -151,7 +149,7 @@ public class CodeGeneratorFactory {
             DynamicLoader dl = new DynamicLoader( className );
             cGen = (CodeGenerator) dl.instantiate( new Object[0] );
             //initialize the loaded code generator
-            cGen.initialize( properties, directory, options );
+            cGen.initialize( bag );
         }
         catch (Exception e) {
             throw new CodeGeneratorFactoryException(

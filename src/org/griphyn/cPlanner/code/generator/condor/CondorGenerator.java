@@ -68,6 +68,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This class generates the condor submit files for the DAG which has to
@@ -196,35 +197,27 @@ public class CondorGenerator extends Abstract {
      * Initializes the Code Generator implementation. Initializes the various
      * writers.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param directory  the base directory where the generated code should reside.
-     * @param options    the options passed to the planner at runtime.
+     * @param bag   the bag of initialization objects.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void initialize( PegasusProperties properties,
-                            String directory,
-                            PlannerOptions options) throws CodeGeneratorException{
+    public void initialize( PegasusBag bag ) throws CodeGeneratorException{
 
-        super.initialize( properties, directory, options );
+        super.initialize( bag );
 
         //create the base directory recovery
         File wdir = new File(mSubmitFileDir);
         wdir.mkdirs();
 
 
-        mTCHandle = TCMode.loadInstance();
-        String poolmode = mProps.getPoolMode();
-        mPoolClass = PoolMode.getImplementingClass(poolmode);
-        mPoolHandle = PoolMode.loadPoolInstance(mPoolClass,mProps.getPoolFile(),
-                                                PoolMode.SINGLETON_LOAD);
+        mTCHandle = bag.getHandleToTransformationCatalog();
+        mPoolHandle = bag.getHandleToSiteCatalog();
         mProjectMap  = constructMap(mProps.getRemoteSchedulerProjects());
         mQueueMap    = constructMap(mProps.getRemoteSchedulerQueues());
         mWalltimeMap = constructMap(mProps.getRemoteSchedulerMaxWallTimes());
 
         //instantiate and intialize the style factory
-        mStyleFactory.initialize( properties, mPoolHandle );
+        mStyleFactory.initialize( mProps, mPoolHandle );
     }
 
 
@@ -243,13 +236,12 @@ public class CondorGenerator extends Abstract {
 
         if ( mInitializeGridStart ){
             mConcreteWorkflow = dag;
-            mGridStartFactory.initialize( mProps, mSubmitFileDir, dag );
+            mGridStartFactory.initialize( mBag, dag );
             mInitializeGridStart = false;
         }
 
 
-        CodeGenerator storkGenerator = CodeGeneratorFactory.loadInstance(
-                                  mProps, mPOptions, this.mSubmitFileDir, "Stork");
+        CodeGenerator storkGenerator = CodeGeneratorFactory.loadInstance( mBag, "Stork" );
 
         String className   = this.getClass().getName();
         String dagFileName = getDAGFilename( dag, ".dag" );
@@ -343,7 +335,7 @@ public class CondorGenerator extends Abstract {
         //initialize GridStart if required.
         if ( mInitializeGridStart ){
             mConcreteWorkflow = dag;
-            mGridStartFactory.initialize( mProps, mSubmitFileDir, dag );
+            mGridStartFactory.initialize( mBag, dag );
             mInitializeGridStart = false;
         }
 

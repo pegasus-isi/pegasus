@@ -43,6 +43,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This generates the submit files in the xml format that can be used to submit
@@ -110,25 +111,16 @@ public class GRMS extends Abstract {
     /**
      * Initializes the Code Generator implementation.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param directory  the base directory where the generated code should reside.
-     * @param options    the options passed to the planner at runtime.
+     *  @param bag   the bag of initialization objects.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void initialize( PegasusProperties properties,
-                            String directory,
-                            PlannerOptions options) throws CodeGeneratorException{
-
-        this.mSubmitFileDir = options.getSubmitDirectory();
-        mLogger = LogManager.getInstance();
-        mProps = properties;
+    public void initialize( PegasusBag bag ) throws CodeGeneratorException{
+        super.initialize( bag );
+        mLogger = bag.getLogger();
 
         //get the handle to pool file
-        String poolmode = mProps.getPoolMode();
-        String mPoolClass = PoolMode.getImplementingClass(poolmode);
-        mPoolHandle = PoolMode.loadPoolInstance(mPoolClass,null,PoolMode.SINGLETON_LOAD);
+        mPoolHandle = bag.getHandleToSiteCatalog();
 
     }
 
@@ -361,6 +353,8 @@ public class GRMS extends Abstract {
      * the path to the executable and location of it's stdout , stdin and stderr.
      *
      * @param job  the GRMS job.
+     *
+     * @return String
      */
     protected String executableToXML(SubInfo job){
         StringBuffer sb = new StringBuffer();
@@ -400,6 +394,8 @@ public class GRMS extends Abstract {
      * @param stdin  the url for the stdin of the job.
      * @param stdout the url for the stdin of the job.
      * @param stderr the url for the stdin of the job.
+     *
+     * @return String
      */
     protected String executableToXML(String path,String args,String stdin,
                                   String stdout, String stderr){
@@ -522,6 +518,8 @@ public class GRMS extends Abstract {
      * @param url the url
      * @param type i input url
      *             o output url
+     *
+     * @return String
      */
     protected String urlToXML(String lfn, String url,char type){
         StringBuffer sb = new StringBuffer();
@@ -608,6 +606,8 @@ public class GRMS extends Abstract {
 
     /**
      * Returns the xml header for the output xml file.
+     *
+     * @return String
      */
     private String getXMLHeader(){
         String st = "<?xml version=\"1.0\" encoding=\"UTF-8\"?> " ;
@@ -636,6 +636,8 @@ public class GRMS extends Abstract {
 
     /**
      * Writes a string to the associated write handle with the class
+     *
+     * @param st  the string to be written.
      */
     private void writeString(String st){
         //try{

@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.io.IOException;
 
 import java.util.StringTokenizer;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 /**
@@ -78,17 +79,12 @@ public class Stork extends Abstract {
     /**
      * Initializes the Code Generator implementation.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param directory  the base directory where the generated code should reside.
-     * @param options    the options passed to the planner at runtime.
+     * @param bag   the bag of initialization objects.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void initialize( PegasusProperties properties,
-                            String directory,
-                            PlannerOptions options) throws CodeGeneratorException{
-        super.initialize( properties, directory, options );
+    public void initialize( PegasusBag bag ) throws CodeGeneratorException{
+        super.initialize( bag );
         mCredName = mProps.getCredName();
     }
 

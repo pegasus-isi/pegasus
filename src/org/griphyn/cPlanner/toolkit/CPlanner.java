@@ -395,7 +395,7 @@ public class CPlanner extends Executable{
             //we only need the script writer for daglite megadag generator mode
             CodeGenerator codeGenerator = null;
             codeGenerator = CodeGeneratorFactory.
-                                     loadInstance( mProps, mPOptions, mPOptions.getSubmitDirectory());
+                                     loadInstance( cwmain.getPegasusBag() );
 
 
             //before generating the codes for the workflow check
@@ -441,7 +441,7 @@ public class CPlanner extends Executable{
                 //set the submit directory in the planner options for cleanup wf
                 cleanupOptions.setSubmitDirectory( cleanupOptions.getSubmitDirectory(), this.CLEANUP_DIR );
                 codeGenerator = CodeGeneratorFactory.
-                              loadInstance( mProps, cleanupOptions, cleanupOptions.getSubmitDirectory() );
+                              loadInstance( cwmain.getPegasusBag() );
 
                 try{
                     codeGenerator.generateCode(cleanupDAG);

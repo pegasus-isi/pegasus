@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * An Abstract Base class implementing the CodeGenerator interface. Introduces
@@ -46,9 +47,10 @@ import java.io.PrintWriter;
 public abstract class Abstract implements CodeGenerator{
 
     /**
-     * The version number associated with this API of Code Generator.
+     * The bag of initialization objects.
      */
-    public static final String VERSION = "1.3";
+    protected PegasusBag mBag;
+
 
     /**
      * The directory where all the submit files are to be generated.
@@ -70,20 +72,15 @@ public abstract class Abstract implements CodeGenerator{
     /**
      * Initializes the Code Generator implementation.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param directory  the base directory where the generated code should reside.
-     * @param options    the options passed to the planner at runtime.
+     * @param bag   the bag of initialization objects.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void initialize( PegasusProperties properties,
-                            String directory,
-                            PlannerOptions options) throws CodeGeneratorException{
-
-        mSubmitFileDir = directory;
-        mProps         = properties;
-        mPOptions      = options;
+    public void initialize( PegasusBag bag ) throws CodeGeneratorException{
+        mBag           = bag;
+        mProps         = bag.getPegasusProperties();
+        mPOptions      = bag.getPlannerOptions();
+        mSubmitFileDir = mPOptions.getSubmitDirectory();
     }
 
 

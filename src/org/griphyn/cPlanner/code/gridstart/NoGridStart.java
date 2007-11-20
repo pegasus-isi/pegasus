@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.FileWriter;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This class ends up running the job directly on the grid, without wrapping
@@ -93,17 +94,14 @@ public class NoGridStart implements GridStart {
     /**
      * Initializes the GridStart implementation.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
-     * @param dag        the concrete dag so far.
+     *  @param bag   the bag of objects that is used for initialization.
+     * @param dag   the concrete dag so far.
      */
-    public void initialize( PegasusProperties properties, String submitDir, ADag dag ){
-        mSubmitDir = submitDir;
-        mProps     = properties;
-        mGenerateLOF  = properties.generateLOFFiles();
-        mLogger    = LogManager.getInstance();
+    public void initialize( PegasusBag bag, ADag dag ){
+        mLogger    = bag.getLogger();
+        mSubmitDir = bag.getPlannerOptions().getSubmitDirectory();
+        mProps     = bag.getPegasusProperties();
+        mGenerateLOF  = mProps.generateLOFFiles();
         mExitParserArguments = getExitCodeArguments();
     }
 

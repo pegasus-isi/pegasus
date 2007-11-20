@@ -24,6 +24,7 @@ import java.util.Vector;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -111,6 +112,11 @@ public class MainEngine
      */
     private NodeCollapser mNodeCollapser;
 
+    /**
+     * The bag of objects that is populated as planner is run.
+     */
+    private PegasusBag mBag;
+
 
     /**
      * This constructor initialises the class variables to the variables
@@ -180,6 +186,7 @@ public class MainEngine
         mLogger.log(message, LogManager.INFO_MESSAGE_LEVEL);
         mIPEng = new InterPoolEngine( mReducedDag, mProps, mPOptions );
         mIPEng.determineSites();
+        mBag = mIPEng.getPegasusBag();
         mIPEng = null;
         mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
 
@@ -254,6 +261,15 @@ public class MainEngine
      */
     public ADag getCleanupDAG(){
         return mCleanupDag;
+    }
+
+    /**
+     * Returns the bag of intialization objects.
+     *
+     * @return PegasusBag
+     */
+    public PegasusBag getPegasusBag(){
+        return mBag;
     }
 
     /**

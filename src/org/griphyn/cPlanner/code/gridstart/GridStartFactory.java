@@ -30,6 +30,7 @@ import org.griphyn.common.util.DynamicLoader;
 
 import java.util.Map;
 import java.util.HashMap;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * An abstract factory class to load the appropriate type of GridStart
@@ -171,6 +172,10 @@ public class GridStartFactory {
      */
     private  Map mGridStartImplementationTable ;
 
+    /**
+     * The bag of objects used for initialization.
+     */
+    private PegasusBag mBag;
 
     /**
      * The properties object holding all the properties.
@@ -206,23 +211,21 @@ public class GridStartFactory {
     /**
      * Initializes the factory with known GridStart implementations.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
-     * @param dag        the concrete dag so far.
+     * @param bag   the bag of objects that is used for initialization.
+     * @param dag   the concrete dag so far.
      */
-    public void initialize( PegasusProperties properties, String submitDir, ADag dag){
-        mProps     = properties;
-        mSubmitDir = submitDir;
+    public void initialize( PegasusBag bag, ADag dag ){
+        mBag       = bag;
+        mProps     = bag.getPegasusProperties();
+        mSubmitDir = bag.getPlannerOptions().getSubmitDirectory() ;
         mDAG       = dag;
-        mPostScriptScope = properties.getPOSTScriptScope();
+        mPostScriptScope = mProps.getPOSTScriptScope();
 
         //load all the known implementations and initialize them
         for( int i = 0; i < GRIDSTART_IMPLEMENTING_CLASSES.length; i++){
             //load via reflection just once
             registerGridStart( GRIDSTART_SHORT_NAMES[i],
-                               this.loadGridStart( properties, submitDir, dag,
+                               this.loadGridStart( bag, dag,
                                                     GRIDSTART_IMPLEMENTING_CLASSES[i] )
                              );
         }
@@ -277,7 +280,7 @@ public class GridStartFactory {
 
             if( obj == null ){
                 //load via reflection and register in the cache
-                obj = this.loadGridStart( mProps, mSubmitDir, mDAG, shortName );
+                obj = this.loadGridStart( mBag, mDAG, shortName );
                 this.registerGridStart( shortName, (GridStart)obj );
             }
             gs = (GridStart) obj;
@@ -374,11 +377,7 @@ public class GridStartFactory {
      * name is not specified with the class, then class is assumed to be
      * in the DEFAULT_PACKAGE. The properties object passed should not be null.
      *
-     *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
+     * @param bag        the bag of initialization objects
      * @param dag        the concrete dag so far.
      * @param className  the name of the class that implements the mode. It is the
      *                   name of the class, not the complete name with package. That
@@ -391,10 +390,9 @@ public class GridStartFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    private GridStart loadGridStart( PegasusProperties properties,
-                                   String submitDir,
-                                   ADag dag,
-                                   String className)
+    private GridStart loadGridStart( PegasusBag bag,
+                                     ADag dag,
+                                     String className )
                                    throws GridStartFactoryException {
 
 
@@ -410,7 +408,7 @@ public class GridStartFactory {
         try{
             DynamicLoader dl = new DynamicLoader( className);
             gs = (GridStart) dl.instantiate( new Object[0] );
-            gs.initialize( properties, submitDir, dag);
+            gs.initialize( bag, dag);
         }
         catch (Exception e) {
             throw new GridStartFactoryException("Instantiating GridStart ",

@@ -271,6 +271,17 @@ public class PegasusBag
         }
     }
 
+
+    /**
+     * A convenice method to get PlannerOptions
+     *
+     * @return  the handle to options passed to the planner.
+     */
+    public PlannerOptions getPlannerOptions(){
+        return ( PlannerOptions )get( PegasusBag.PLANNER_OPTIONS );
+    }
+
+
     /**
      * A convenice method to get PegasusProperties
      *
@@ -288,6 +299,25 @@ public class PegasusBag
     public LogManager getLogger(){
         return ( LogManager )get( PegasusBag.PEGASUS_LOGMANAGER );
     }
+
+    /**
+     * A convenice method to get the handle to the site catalog.
+     *
+     * @return  the handle to site catalog
+     */
+    public PoolInfoProvider getHandleToSiteCatalog(){
+        return ( PoolInfoProvider )get( PegasusBag.SITE_CATALOG );
+    }
+
+    /**
+     * A convenice method to get the handle to the transformation catalog.
+     *
+     * @return  the handle to transformation catalog
+     */
+    public TransformationCatalog getHandleToTransformationCatalog(){
+        return ( TransformationCatalog )get( PegasusBag.TRANSFORMATION_CATALOG );
+    }
+
 
 
     /**

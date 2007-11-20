@@ -28,6 +28,8 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.cluster.JobAggregator;
 
@@ -137,6 +139,11 @@ public abstract class Abstract implements JobAggregator {
      */
     protected GridStartFactory mGridStartFactory;
 
+    /**
+     * Bag of initialization objects.
+     */
+    protected PegasusBag mBag;
+
 
     /**
      * A convenience method to return the complete transformation name being
@@ -176,13 +183,33 @@ public abstract class Abstract implements JobAggregator {
         mTCHandle = TCMode.loadInstance();
 
         mGridStartFactory = new GridStartFactory();
-        mGridStartFactory.initialize( properties, submitDir, dag );
 
         //load the SiteHandle
         String poolmode = mProps.getPoolMode();
         String poolClass = PoolMode.getImplementingClass(poolmode);
         mSiteHandle = PoolMode.loadPoolInstance(poolClass,mProps.getPoolFile(),
                                                 PoolMode.SINGLETON_LOAD);
+
+        PlannerOptions options = new PlannerOptions();
+
+        //only submit directory is required.
+        //till the time the clusterer interface is fixed
+        //can create problems with running clustered jobs
+        //on local worker node temp....
+        options.setSubmitDirectory( submitDir );
+
+        //intialize the bag of objects and load the site selector
+        mBag = new PegasusBag();
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
+        mBag.add( PegasusBag.PLANNER_OPTIONS, options );
+        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
+//        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        mBag.add( PegasusBag.SITE_CATALOG, mSiteHandle );
+
+        mGridStartFactory.initialize( mBag, dag );
+
 
     }
 

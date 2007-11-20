@@ -15,9 +15,9 @@
 
 package org.griphyn.cPlanner.code;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 
@@ -43,7 +43,7 @@ public interface  GridStart {
     /**
      * The version number associated with this API of GridStart.
      */
-    public static final String VERSION = "1.4";
+    public static final String VERSION = "1.5";
 
     /**
      * The File separator to be used on the submit host.
@@ -54,13 +54,10 @@ public interface  GridStart {
     /**
      * Initializes the GridStart implementation.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
-     * @param dag        the concrete dag so far.
+     * @param bag   the bag of objects that is used for initialization.
+     * @param dag   the concrete dag so far.
      */
-    public void initialize( PegasusProperties properties, String submitDir, ADag dag);
+    public void initialize( PegasusBag bag, ADag dag );
 
     /**
      * Enables a collection of jobs and puts them into an AggregatedJob.

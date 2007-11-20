@@ -215,6 +215,17 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
+     * Returns the bag of intialization objects.
+     *
+     * @return PegasusBag
+     */
+    public PegasusBag getPegasusBag(){
+        return mBag;
+    }
+
+
+
+    /**
      * Returns a reference to the workflow that is being refined by the refiner.
      *
      *

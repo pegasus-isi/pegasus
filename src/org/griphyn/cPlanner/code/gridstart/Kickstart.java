@@ -14,9 +14,6 @@
  */
 package org.griphyn.cPlanner.code.gridstart;
 
-import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
-
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.AggregatedJob;
@@ -25,12 +22,13 @@ import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.NameValue;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 
-import org.griphyn.cPlanner.common.UserOptions;
+import org.griphyn.cPlanner.common.LogManager;
+import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
-
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.namespace.VDS;
@@ -51,6 +49,7 @@ import java.util.ArrayList;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+
 
 /**
  * This enables a job to be run on the grid, by launching it through kickstart.
@@ -122,6 +121,11 @@ public class Kickstart implements GridStart {
     private PegasusProperties mProps;
 
     /**
+     * The options passed to the planner.
+     */
+    private PlannerOptions mPOptions;
+
+    /**
      * The handle to the workflow that is being enabled.
      */
     private ADag mConcDAG;
@@ -161,29 +165,21 @@ public class Kickstart implements GridStart {
     /**
      * Initializes the GridStart implementation.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
-     * @param dag        the concrete dag so far.
+     * @param bag   the bag of objects that is used for initialization.
+     * @param dag   the concrete dag so far.
      */
-    public void initialize( PegasusProperties properties, String submitDir, ADag dag ){
-        mSubmitDir    = submitDir;
-        mProps        = properties;
-        mInvokeAlways = properties.useInvokeInGridStart();
-        mInvokeLength = properties.getGridStartInvokeLength();
-        mDoStat       = properties.doStatWithKickstart();
-        mGenerateLOF  = properties.generateLOFFiles();
+    public void initialize( PegasusBag bag, ADag dag ){
+
+        mProps        = bag.getPegasusProperties();
+        mPOptions     = bag.getPlannerOptions();
+        mSubmitDir    = mPOptions.getSubmitDirectory();
+        mInvokeAlways = mProps.useInvokeInGridStart();
+        mInvokeLength = mProps.getGridStartInvokeLength();
+        mDoStat       = mProps.doStatWithKickstart();
+        mGenerateLOF  = mProps.generateLOFFiles();
         mLogger       = LogManager.getInstance();
         mConcDAG      = dag;
-
-
-        String poolmode = mProps.getPoolMode();
-        String poolClass = PoolMode.getImplementingClass(poolmode);
-        mSiteHandle = PoolMode.loadPoolInstance(poolClass,mProps.getPoolFile(),
-                                                PoolMode.SINGLETON_LOAD);
-
-
+        mSiteHandle = bag.getHandleToSiteCatalog();
     }
 
 
@@ -425,7 +421,7 @@ public class Kickstart implements GridStart {
                 String destDir = mSiteHandle.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
                 destDir = ( destDir == null ) ? "/tmp" : destDir;
 
-                String relativeDir = UserOptions.getInstance().getOptions().getRelativeSubmitDirectory();
+                String relativeDir = mPOptions.getRelativeSubmitDirectory();
                 String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
 
 

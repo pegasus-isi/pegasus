@@ -70,6 +70,9 @@ import java.util.regex.Pattern;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.common.catalog.transformation.Mapper;
+import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 /**
  * This callback ends up creating the megadag that contains the smaller dags
@@ -251,6 +254,11 @@ public class PDAX2MDAG implements Callback {
     private String mDAGManKnobs;
 
     /**
+     * Bag of initialization objects.
+     */
+    private PegasusBag mBag;
+
+    /**
      * The overloaded constructor.
      *
      * @param directory the directory where the pdax and all the daxes
@@ -271,6 +279,24 @@ public class PDAX2MDAG implements Callback {
         mDone = false;
         mUser = mProps.getProperty( "user.name" ) ;
         if ( mUser == null ){ mUser = "user"; }
+
+
+        //initialize the transformation mapper
+//        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode() );
+
+        //intialize the bag of objects and load the site selector
+        mBag = new PegasusBag();
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
+        mBag.add( PegasusBag.PLANNER_OPTIONS, options );
+        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
+//        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        mBag.add( PegasusBag.SITE_CATALOG,
+                  PoolMode.loadPoolInstance( mProps.getPoolMode(),
+                                             PoolMode.getImplementingClass( mProps.getPoolMode() ),
+                                             PoolMode.SINGLETON_LOAD )
+            );
 
 
         //the default gobbler callback always log to debug level
@@ -574,9 +600,7 @@ public class PDAX2MDAG implements Callback {
         int state = 0;
         try{
             //load the Condor Writer that understands HashedFile Factories.
-            codeGenerator = CodeGeneratorFactory.loadInstance( mProps,
-                                                               mPOptions,
-                                                               mPOptions.getSubmitDirectory(),
+            codeGenerator = CodeGeneratorFactory.loadInstance( mBag,
                                                                CODE_GENERATOR_CLASS );
             state = 1;
             codeGenerator.generateCode( mMegaDAG );
