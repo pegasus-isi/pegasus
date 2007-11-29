@@ -139,12 +139,7 @@ public class PegasusProperties {
     public static final String ALL_TRANSFER_PRIORITY_PROPERTY =
                                                       "pegasus.transfer.*.priority";
 
-    //internal constants for the type of transfer job
-    //till the cyclic compile dependency b/w SubInfo and
-    //PegasusProperties is resolved. Karan Monday Oct 17, 2005
-    private static final int XFER_STAGE_IN_JOB  = 1;
-    private static final int XFER_STAGE_OUT_JOB = 2;
-    private static final int XFER_INTER_JOB = 3;
+
 
     /**
      * The default DAXCallback that is loaded, if none is specified by the user.
@@ -1712,6 +1707,19 @@ public class PegasusProperties {
     //SOME MISCELLANEOUS PROPERTIES
 
 
+    /**
+     * Returns a boolean indicating whether to have jobs executing on worker
+     * node tmp or not.
+     *
+     * Referred to by the "pegasus.execute.*.filesystem.local" property.
+     *
+     * @return boolean value in the properties file, else false if not specified
+     *         or an invalid value specified.
+     */
+    public boolean executeOnWorkerNode( ){
+        return Boolean.parse( mProps.getProperty( "pegasus.execute.*.filesystem.local" ) ,
+                              false  );
+    }
 
     /**
      * Returns a boolean indicating whether to treat the entries in the cache

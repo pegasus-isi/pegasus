@@ -55,7 +55,10 @@ import org.griphyn.common.catalog.transformation.Mapper;
 
 import org.griphyn.common.util.Separator;
 
+import org.griphyn.cPlanner.transfer.SLS;
 
+import org.griphyn.cPlanner.transfer.sls.SLSFactory;
+import org.griphyn.cPlanner.transfer.sls.SLSFactoryException;
 
 import java.io.File;
 
@@ -64,8 +67,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.Vector;
-import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.namespace.ENV;
 
 /**
  * This engine calls out to the Site Selector selected by the user and maps the
@@ -118,21 +119,15 @@ public class InterPoolEngine extends Engine implements Refiner {
      */
     private XMLProducer mXMLStore;
 
+    /**
+     * The handle to the SLS implementor
+     */
+    private SLS mSLS;
 
     /**
-     * The path to local user proxy.
+     * A boolean indicating whether to have worker node execution or not.
      */
-    private String mLocalUserProxy;
-
-    /**
-     * The basename of the proxy
-     */
-    private String mLocalUserProxyBasename;
-
-    /**
-     * The local url prefix for the submit host.
-     */
-    private String mLocalURLPrefix;
+    private boolean mWorkerNodeExecution;
 
     /**
      * Default constructor.
@@ -159,15 +154,12 @@ public class InterPoolEngine extends Engine implements Refiner {
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( props );
 
-        //only do if worker node execution
-        if( true ){
-            mLocalUserProxy = getPathToUserProxy();
-            mLocalUserProxyBasename = (mLocalUserProxy == null) ?
-                                  null :
-                                  new File(mLocalUserProxy).getName();
-
-            mLocalURLPrefix = mPoolHandle.getURLPrefix( "local" );
+        mWorkerNodeExecution = props.executeOnWorkerNode();
+        if( mWorkerNodeExecution ){
+            //load SLS
+            mSLS = SLSFactory.loadInstance( mBag );
         }
+
     }
 
     /**
@@ -201,14 +193,10 @@ public class InterPoolEngine extends Engine implements Refiner {
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( props );
 
-        //only do if worker node execution
-        if( true ){
-            mLocalUserProxy = getPathToUserProxy();
-            mLocalUserProxyBasename = (mLocalUserProxy == null) ?
-                                  null :
-                                  new File(mLocalUserProxy).getName();
-
-            mLocalURLPrefix = mPoolHandle.getURLPrefix( "local" );
+        mWorkerNodeExecution = props.executeOnWorkerNode();
+        if( mWorkerNodeExecution ){
+            //load SLS
+            mSLS = SLSFactory.loadInstance( mBag );
         }
 
 
@@ -358,7 +346,12 @@ public class InterPoolEngine extends Engine implements Refiner {
             }
 
             //modify the jobs if required for worker node execution
-            modifyJobForWorkerNodeExecution( job );
+            if( mWorkerNodeExecution ){
+                mSLS.modifyJobForFirstLevelStaging( job,
+                                                    mPOptions.getSubmitDirectory(),
+                                                    mSLS.getSLSInputLFN( job ),
+                                                    mSLS.getSLSOutputLFN( job )   );
+            }
 
             //log actions as XML fragment
             try{
@@ -380,121 +373,9 @@ public class InterPoolEngine extends Engine implements Refiner {
 
     }
 
-    /**
-     * Enables a job for worker node execution. Currently, only adds
-     * an input file pointing to the .in file for the second level staging.
-     *
-     * @param job SubInfo
-     */
-    private void modifyJobForWorkerNodeExecution( SubInfo job ){
-        //sanity check
-        Set input = job.getInputFiles();
-        if( input == null || input.isEmpty() ){
-            return ;
-        }
-
-        StringBuffer sls = new StringBuffer();
-        sls.append( "sls_" ).append( job.getName() ).append( ".in" );
-        String separator = File.separator;
-
-        FileTransfer ft = new FileTransfer( sls.toString(), job.getName() );
-
-        //the source sls is to be sent across from the local site
-        //using the grid ftp server at local site.
-        StringBuffer sourceURL = new StringBuffer();
-        sourceURL.append( mLocalURLPrefix ).append( separator ).
-                  append( mPOptions.getSubmitDirectory() ).append( separator ).
-                  append( sls );
-        ft.addSource( "local" , sourceURL.toString() );
-
-        //the destination URL is the working directory on the filesystem
-        //on the head node where the job is to be run.
-        StringBuffer destURL = new StringBuffer();
-        destURL.append( mPoolHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-                append( mPoolHandle.getExecPoolWorkDir( job ) ).append( separator ).
-                append( sls );
-        ft.addDestination( job.getSiteHandle(), destURL.toString()  );
-
-        //add this as input file for the job
-        job.addInputFile( ft );
-
-        //add the sls out file for the job
-        sls = new StringBuffer();
-        sls.append( "sls_" ).append( job.getName() ).append( ".out" );
-
-        ft = new FileTransfer( sls.toString(), job.getName() );
-
-        //the source sls is to be sent across from the local site
-        //using the grid ftp server at local site.
-        sourceURL = new StringBuffer();
-        sourceURL.append( mLocalURLPrefix ).append( separator ).
-                  append( mPOptions.getSubmitDirectory() ).append( separator ).
-                  append( sls );
-        ft.addSource( "local" , sourceURL.toString() );
-
-        //the destination URL is the working directory on the filesystem
-        //on the head node where the job is to be run.
-        destURL = new StringBuffer();
-        destURL.append( mPoolHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-                append( mPoolHandle.getExecPoolWorkDir( job ) ).append( separator ).
-                append( sls );
-        ft.addDestination( job.getSiteHandle(), destURL.toString()  );
-
-        //add this as input file for the job
-        job.addInputFile( ft );
 
 
 
-        //add the proxy as input file if required.
-        if( mLocalUserProxy != null ){
-            FileTransfer proxy = new FileTransfer( ENV.X509_USER_PROXY_KEY, job.getName() );
-            sourceURL = new StringBuffer();
-            sourceURL.append( mLocalURLPrefix ).append( mLocalUserProxy );
-            proxy.addSource( "local" , sourceURL.toString() );
-
-            destURL = new StringBuffer();
-            destURL.append( mPoolHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-                append( mPoolHandle.getExecPoolWorkDir( job ) ).append( separator ).
-                append( mLocalUserProxyBasename );
-            proxy.addDestination( job.getSiteHandle(), destURL.toString()  );
-            job.addInputFile( proxy );
-        }
-
-
-    }
-
-
-    /**
-     * Returns the path to the user proxy from the pool configuration file and
-     * the properties file. The value in the properties file overrides the
-     * value from the pool configuration file.
-     *
-     * @return path to user proxy on local pool.
-     *         null if no path is found.
-     */
-    protected String getPathToUserProxy(){
-        List l = mPoolHandle.getPoolProfile("local",Profile.ENV);
-        String proxy = null;
-
-        if(l != null){
-            //try to get the path to the proxy on local pool
-            for(Iterator it = l.iterator();it.hasNext();){
-                Profile p = (Profile)it.next();
-                proxy = p.getProfileKey().equalsIgnoreCase(ENV.X509_USER_PROXY_KEY)?
-                        p.getProfileValue():
-                        proxy;
-            }
-        }
-
-        //overload from the properties file
-        ENV env = new ENV();
-        env.checkKeyInNS(mProps,"local");
-        proxy = env.containsKey(ENV.X509_USER_PROXY_KEY)?
-                (String)env.get(ENV.X509_USER_PROXY_KEY):
-                proxy;
-
-        return proxy;
-    }
 
 
     /**

@@ -39,6 +39,11 @@ import org.griphyn.cPlanner.code.POSTScript;
 import org.griphyn.cPlanner.code.generator.condor.CondorQuoteParser;
 import org.griphyn.cPlanner.code.generator.condor.CondorQuoteParserException;
 
+import org.griphyn.cPlanner.transfer.SLS;
+
+import org.griphyn.cPlanner.transfer.sls.SLSFactory;
+import org.griphyn.cPlanner.transfer.sls.SLSFactoryException;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.StringTokenizer;
@@ -161,6 +166,15 @@ public class Kickstart implements GridStart {
      */
     private long mInvokeLength;
 
+    /**
+     * A boolean indicating whether to have worker node execution or not.
+     */
+    private boolean mWorkerNodeExecution;
+
+    /**
+     * The handle to the SLS implementor
+     */
+    private SLS mSLS;
 
     /**
      * Initializes the GridStart implementation.
@@ -179,7 +193,13 @@ public class Kickstart implements GridStart {
         mGenerateLOF  = mProps.generateLOFFiles();
         mLogger       = LogManager.getInstance();
         mConcDAG      = dag;
-        mSiteHandle = bag.getHandleToSiteCatalog();
+        mSiteHandle   = bag.getHandleToSiteCatalog();
+
+        mWorkerNodeExecution = mProps.executeOnWorkerNode();
+        if( mWorkerNodeExecution ){
+            //load SLS
+            mSLS = SLSFactory.loadInstance( bag );
+        }
     }
 
 
@@ -274,8 +294,6 @@ public class Kickstart implements GridStart {
      *         the job is scheduled.
      */
     protected boolean enable( SubInfo job, boolean isGlobusJob, boolean stat, boolean addPostScript ) {
-        //check for worker node execution
-        boolean mWorkerNodeExecution = true;
 
         //take care of relative submit directory if specified.
         String submitDir = mSubmitDir + mSeparator;
@@ -434,45 +452,68 @@ public class Kickstart implements GridStart {
                 //banking upon kickstart to change the directory for us
                 job.condorVariables.construct( key, destDir );
 
-                //generate the sls file with the mappings in the submit directory
-                File slsInputFile = generateSLSInputFile( job, mSubmitDir, directory, workerNodeDir );
-                //to add the environment for GRIDSTART_PREJOB
-                if( slsInputFile != null ){
+                //see if we need to generate a SLS input file in the submit directory
+                File slsInputFile  = null;
+                if( mSLS.needsSLSInput( job ) ){
+                    //generate the sls file with the mappings in the submit directory
+                    slsInputFile = mSLS.generateSLSInputFile( job,
+                                                              mSLS.getSLSInputLFN( job ),
+                                                              mSubmitDir,
+                                                              directory,
+                                                              workerNodeDir );
+
                     //construct a setup job not reqd as kickstart creating the directory
                     //String setupJob = constructSetupJob( job, workerNodeDir );
                     //setupJob = quote( setupJob );
                     //job.envVariables.construct( this.KICKSTART_SETUP, setupJob );
 
-                    String preJob = constructPREJob( job,
-                                                     mSiteHandle.getURLPrefix(job.getSiteHandle()),
-                                                     directory,
-                                                     workerNodeDir,
-                                                     slsInputFile.getName() );
+                    File headNodeSLS = new File( directory, slsInputFile.getName() );
+                    String preJob = mSLS.invocationString( job, headNodeSLS );
 
-                    preJob = quote( preJob );
-                    job.envVariables.construct( this.KICKSTART_PREJOB, preJob );
+                    if( preJob != null ){
+                        preJob = quote( preJob );
+                        job.envVariables.construct( this.KICKSTART_PREJOB, preJob );
+                    }
+                }
 
+
+                //see if we need to generate a SLS output file in the submit directory
+                File slsOutputFile = null;
+                if( mSLS.needsSLSOutput( job ) ){
                     //construct the postjob that transfers the output files
                     //back to head node directory
                     //to fix later. right now post job only created is pre job
                     //created
-                    File slsOutputFile = generateSLSOutputFile( job, mSubmitDir, directory, workerNodeDir );
-                    String postJob = constructPOSTJob( job,
-                                                       mSiteHandle.getURLPrefix(job.getSiteHandle()),
-                                                       directory,
-                                                       workerNodeDir,
-                                                       slsOutputFile.getName() );
+                    slsOutputFile = mSLS.generateSLSOutputFile( job,
+                                                                mSLS.getSLSOutputLFN( job ),
+                                                                mSubmitDir,
+                                                                directory,
+                                                                workerNodeDir );
 
-                    postJob = quote( postJob );
-                    job.envVariables.construct( this.KICKSTART_POSTJOB, postJob );
+                    //generate the post job
+                    File headNodeSLS = new File( directory, slsOutputFile.getName() );
+                    String postJob = mSLS.invocationString( job, headNodeSLS );
+                    if( postJob != null ){
+                        postJob = quote( postJob );
+                        job.envVariables.construct( this.KICKSTART_POSTJOB, postJob );
+                    }
+                }
 
+                //modify the job if required
+                if ( !mSLS.modifyJobForWorkerNodeExecution( job,
+                                                            mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                            directory,
+                                                            workerNodeDir ) ){
+                    throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
+                }
 
-                    String cleanupJob = constructCleanupJob( job, workerNodeDir );
+                String cleanupJob = constructCleanupJob( job, workerNodeDir );
+                if( cleanupJob != null ){
                     cleanupJob = quote( cleanupJob );
                     job.envVariables.construct( this.KICKSTART_CLEANUP, cleanupJob );
                 }
             }
-        }
+        }//end of worker node execution
 
         //check if the job type indicates staging of executable
 //        The -X functionality is handled by the setup jobs that
@@ -699,154 +740,6 @@ public class Kickstart implements GridStart {
     }
 
 
-    /**
-     * Generates a second level staging file for the input files. Responsible
-     * for transferring from the head node to the worker node temp.
-     *
-     * @param job        the job for which the file is being created
-     * @param submitDir  the submit directory where it has to be written out.
-     * @param headNodeDirectory  the directory on the head node of the compute site.
-     * @param workerNodeDirectory  the worker node directory
-     *
-     * @return the full path to lof file created, else null if no file is written out.
-     */
-    protected File generateSLSInputFile( SubInfo job,
-                                         String submitDir,
-                                         String headNodeDirectory,
-                                         String workerNodeDirectory ){
-        //sanity check
-        Set files = job.getInputFiles();
-        if ( files == null || files.isEmpty() ){
-            mLogger.log( "Not Writing out a SLS file for job " + job.getName() ,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            return null;
-        }
-
-        File sls = null;
-
-        //figure out the remote site's headnode gridftp server
-        //and the working directory on it.
-        //the below should be cached somehow
-        String sourceURLPrefix = mSiteHandle.getURLPrefix( job.getSiteHandle() );
-        //String sourceDir = mSiteHandle.getExecPoolWorkDir( job );
-        String sourceDir = headNodeDirectory;
-        String destDir = workerNodeDirectory;
-
-
-        //writing the stdin file
-        try {
-            StringBuffer name = new StringBuffer();
-            name.append( "sls_" ).append( job.getName() ).append( ".in" );
-            sls = new File( submitDir, name.toString() );
-            FileWriter input = new FileWriter( sls );
-            PegasusFile pf;
-
-            //To do. distinguish the sls file from the other input files
-            for( Iterator it = files.iterator(); it.hasNext(); ){
-                pf = ( PegasusFile ) it.next();
-
-                if( pf.getLFN().equals( ENV.X509_USER_PROXY_KEY ) ){
-                    //ignore the proxy file for time being
-                    //as we picking it from the head node directory
-                    continue;
-                }
-
-
-                input.write( sourceURLPrefix ); input.write( File.separator );
-                input.write( sourceDir ); input.write( File.separator );
-                input.write( pf.getLFN() );
-                input.write( "\n" );
-
-                //destination
-                input.write( "file://" );
-                input.write( destDir ); input.write( File.separator );
-                input.write( pf.getLFN() );
-                input.write( "\n" );
-
-
-            }
-            //close the stream
-            input.close();
-
-        } catch ( IOException e) {
-            mLogger.log( "Unable to write the sls file for job " + job.getName(), e ,
-                         LogManager.ERROR_MESSAGE_LEVEL);
-        }
-
-        return sls;
-    }
-
-
-    /**
-     * Generates a second level staging file for the output files. Transfers
-     * the output files from the worker node back to head node.
-     *
-     * @param job        the job for which the file is being created
-     * @param submitDir  the submit directory where it has to be written out.
-     * @param headNodeDirectory  the directory on the head node of the compute site.
-     * @param workerNodeDirectory  the worker node directory
-     *
-     * @return the full path to lof file created, else null if no file is written out.
-     */
-    protected File generateSLSOutputFile( SubInfo job,
-                                         String submitDir,
-                                         String headNodeDirectory,
-                                         String workerNodeDirectory ){
-        //sanity check
-        Set files = job.getOutputFiles();
-        if ( files == null || files.isEmpty() ){
-            mLogger.log( "Not Writing out a SLS output file for job " + job.getName() ,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            return null;
-        }
-
-        File sls = null;
-
-        //figure out the remote site's headnode gridftp server
-        //and the working directory on it.
-        //the below should be cached somehow
-        String destURLPrefix = mSiteHandle.getURLPrefix( job.getSiteHandle() );
-        //String sourceDir = mSiteHandle.getExecPoolWorkDir( job );
-        String destDir = headNodeDirectory;
-        String sourceDir = workerNodeDirectory;
-
-
-        //writing the stdin file
-        try {
-            StringBuffer name = new StringBuffer();
-            name.append( "sls_" ).append( job.getName() ).append( ".out" );
-            sls = new File( submitDir, name.toString() );
-            FileWriter input = new FileWriter( sls );
-            PegasusFile pf;
-
-            //To do. distinguish the sls file from the other input files
-            for( Iterator it = files.iterator(); it.hasNext(); ){
-                pf = ( PegasusFile ) it.next();
-
-                //source
-                input.write( "file://" );
-                input.write( sourceDir ); input.write( File.separator );
-                input.write( pf.getLFN() );
-                input.write( "\n" );
-
-                //destination
-                input.write( destURLPrefix ); input.write( File.separator );
-                input.write( destDir ); input.write( File.separator );
-                input.write( pf.getLFN() );
-                input.write( "\n" );
-
-            }
-            //close the stream
-            input.close();
-
-        } catch ( IOException e) {
-            mLogger.log( "Unable to write the sls output file for job " + job.getName(), e ,
-                         LogManager.ERROR_MESSAGE_LEVEL);
-        }
-
-        return sls;
-    }
-
 
     /**
      * Constructs a kickstart setup job
@@ -897,40 +790,15 @@ public class Kickstart implements GridStart {
      * @return String containing the prescript invocation
      */
     protected String constructPREJob( SubInfo job,
-                                    String headNodeURLPrefix,
-                                    String headNodeDirectory,
-                                    String workerNodeDirectory,
-                                    String slsFile ){
-
-        StringBuffer preJob = new StringBuffer();
-
-        //first figure out the path to transfer
-        //hardcoded for now
-        String transfer = "/nfs/home/vahi/PEGASUS/default/bin/transfer";
+                                      String headNodeURLPrefix,
+                                      String headNodeDirectory,
+                                      String workerNodeDirectory,
+                                      String slsFile ){
 
 
-        //try and figure out the proxy
-        String proxy = null;
-        StringBuffer proxyPath = null;
-        for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
-            PegasusFile pf = ( PegasusFile ) it.next();
-            if( pf instanceof FileTransfer && pf.getLFN().equals( ENV.X509_USER_PROXY_KEY ) ){
-                //there is a proxy that needs to be set for the job
-                //actually set it in prejob somehow.
-                proxy =  ((NameValue)((FileTransfer)pf).getDestURL()).getValue();
-                proxy = new File( proxy ).getName();
-                proxyPath =  new StringBuffer();
-                proxyPath.append( headNodeDirectory ).append( File.separator ).append( proxy );
-                job.envVariables.construct( ENV.X509_USER_PROXY_KEY, proxyPath.toString()  );
-                break;
-            }
-        }
 
-        //add the command to chmod the proxy
-        if( proxy != null ){
-            preJob.append( "/bin/bash -c \"chmod 600 " ).append( proxyPath.toString() ).append( " && " );
-        }
-
+        File headNodeSLS = new File( headNodeDirectory, slsFile );
+        return mSLS.invocationString( job, headNodeSLS );
 
         //first we need to get the sls file to worker node
         /*
@@ -947,16 +815,7 @@ public class Kickstart implements GridStart {
         //now we need to get transfer to execute this sls file
         preJob.append( transfer ).append( " base mnt < " ).append( slsFile );
         */
-        preJob.append( transfer ).append( " base mnt " ).append( headNodeDirectory ).
-                                  append( File.separator ).append( slsFile );
 
-        if( proxy != null ){
-            //add the end quote
-            preJob.append( "\"" );
-        }
-
-
-        return preJob.toString();
     }
 
 
@@ -970,7 +829,7 @@ public class Kickstart implements GridStart {
      * @param workerNodeDirectory String
      * @param slsFile String
      *
-     * @return String containing the prescript invocation
+     * @return String containing the postscript invocation
      */
     protected String constructPOSTJob( SubInfo job,
                                        String headNodeURLPrefix,
