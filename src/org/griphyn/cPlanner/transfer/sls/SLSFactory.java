@@ -79,8 +79,10 @@ public class SLSFactory {
             throw new SLSFactoryException( "Invalid Options specified" );
         }
 
-        String className = DEFAULT_SLS_IMPL_CLASS; //to be picked up from properties eventually
-
+        String className = properties.getSLSTransferImplementation();
+        if( className == null ){
+            className = DEFAULT_SLS_IMPL_CLASS; //to be picked up from properties eventually
+        }
 
         return loadInstance( bag, className );
 
