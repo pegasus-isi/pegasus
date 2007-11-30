@@ -799,6 +799,21 @@ public class PegasusProperties {
         return getTransferImplementation( "pegasus.transfer.*.impl" );
     }
 
+    /**
+     * Returns the sls transfer implementation that is to be used for constructing
+     * the transfer jobs.
+     *
+     * Referred to by the "pegasus.transfer.sls.*.impl" property.
+     *
+     * @return the transfer implementation, else the
+     *         DEFAULT_TRANSFER_IMPLEMENTATION.
+     *
+     * @see #DEFAULT_TRANSFER_IMPLEMENTATION
+     */
+    public String getSLSTransferImplementation(){
+        return getTransferImplementation( "pegasus.transfer.sls.*.impl" );
+    }
+
 
     /**
      * Returns the transfer implementation.
