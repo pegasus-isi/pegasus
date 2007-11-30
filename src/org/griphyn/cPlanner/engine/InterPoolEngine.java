@@ -449,9 +449,25 @@ public class InterPoolEngine extends Engine implements Refiner {
                 //have been handled Karan May 31 2007
                 //job.addInputFile(fTx);
 
-                //the jobs executable is the path to where
-                //the executable is going to be staged
-                job.executable = stagedPath;
+                if( mWorkerNodeExecution ){
+                    //do not specify the full path as we do not know worker
+                    //node directory
+
+                    if( mSLS.doesCondorModifications() ){
+                        //we need to take the basename of the source url
+                        //as condor file transfer mech does not allow to
+                        //specify destination filenames
+                        job.setRemoteExecutable( new File( tcEntry.getPhysicalTransformation() ).getName() );
+                    }
+                    else{
+                        job.setRemoteExecutable(job.getStagedExecutableBaseName());
+                    }
+                }
+                else{
+                    //the jobs executable is the path to where
+                    //the executable is going to be staged
+                    job.executable = stagedPath;
+                }
                 //setting the job type of the job to
                 //denote the executable is being staged
                 job.setJobType(SubInfo.STAGED_COMPUTE_JOB);
