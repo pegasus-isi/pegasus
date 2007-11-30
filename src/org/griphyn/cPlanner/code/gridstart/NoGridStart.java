@@ -23,6 +23,13 @@ import org.griphyn.cPlanner.code.POSTScript;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.AggregatedJob;
+import org.griphyn.cPlanner.classes.PegasusFile;
+import org.griphyn.cPlanner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.PegasusBag;
+
+import org.griphyn.cPlanner.transfer.sls.SLSFactory;
+import org.griphyn.cPlanner.transfer.SLS;
+
 
 import org.griphyn.cPlanner.namespace.VDS;
 import org.griphyn.cPlanner.namespace.Dagman;
@@ -34,10 +41,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.io.IOException;
 import java.io.FileWriter;
-import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.PegasusBag;
-
+import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 /**
  * This class ends up running the job directly on the grid, without wrapping
  * it in any other launcher executable.
@@ -90,6 +95,27 @@ public class NoGridStart implements GridStart {
      */
     private boolean mGenerateLOF;
 
+    /**
+     * A boolean indicating whether to have worker node execution or not.
+     */
+    private boolean mWorkerNodeExecution;
+
+    /**
+     * The handle to the SLS implementor
+     */
+    private SLS mSLS;
+
+    /**
+     * The options passed to the planner.
+     */
+    private PlannerOptions mPOptions;
+
+
+    /**
+     * Handle to the site catalog.
+     */
+    private PoolInfoProvider mSiteHandle;
+
 
     /**
      * Initializes the GridStart implementation.
@@ -99,10 +125,19 @@ public class NoGridStart implements GridStart {
      */
     public void initialize( PegasusBag bag, ADag dag ){
         mLogger    = bag.getLogger();
-        mSubmitDir = bag.getPlannerOptions().getSubmitDirectory();
+        mSiteHandle   = bag.getHandleToSiteCatalog();
+        mPOptions  = bag.getPlannerOptions();
+        mSubmitDir = mPOptions.getSubmitDirectory();
         mProps     = bag.getPegasusProperties();
         mGenerateLOF  = mProps.generateLOFFiles();
         mExitParserArguments = getExitCodeArguments();
+
+        mWorkerNodeExecution = mProps.executeOnWorkerNode();
+        if( mWorkerNodeExecution ){
+            //load SLS
+            mSLS = SLSFactory.loadInstance( bag );
+        }
+
     }
 
     /**
@@ -210,6 +245,49 @@ public class NoGridStart implements GridStart {
                 construct(job,"transfer_error","true");
             }
         }
+
+        if ( mWorkerNodeExecution ){
+            if( job.getJobType() == SubInfo.COMPUTE_JOB ||
+                job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+
+                if( !mSLS.doesCondorModifications() ){
+                    throw new RuntimeException( "Second Level Staging with NoGridStart only works with Condor SLS" );
+                }
+
+                String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
+
+                //remove the remote or initial dir's for the compute jobs
+                String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
+                               "remote_initialdir" :
+                               "initialdir";
+
+                String directory = (String)job.condorVariables.removeKey( key );
+
+                String destDir = mSiteHandle.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
+                destDir = ( destDir == null ) ? "/tmp" : destDir;
+
+                String relativeDir = mPOptions.getRelativeSubmitDirectory();
+                String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
+
+
+
+                //always have the remote dir set to /tmp as we are
+                //banking upon kickstart to change the directory for us
+                job.condorVariables.construct( key, "/tmp" );
+
+
+                //modify the job if required
+                if ( !mSLS.modifyJobForWorkerNodeExecution( job,
+                                                            mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                            directory,
+                                                            workerNodeDir ) ){
+                    throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
+                }
+
+
+            }
+        }//end of worker node execution
+
 
         if( mGenerateLOF ){
             //but generate lof files nevertheless

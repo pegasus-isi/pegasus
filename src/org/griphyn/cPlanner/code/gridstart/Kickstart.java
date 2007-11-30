@@ -420,7 +420,8 @@ public class Kickstart implements GridStart {
 
 
         if ( mWorkerNodeExecution ){
-            if( job.getJobType() == SubInfo.COMPUTE_JOB ){
+            if( job.getJobType() == SubInfo.COMPUTE_JOB ||
+                job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
                 mLogger.log( "Going to generate a SLS file for " + job.getName() ,
                               LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -428,9 +429,7 @@ public class Kickstart implements GridStart {
                 //and clustered jobs
 
                 //remove the remote or initial dir's for the compute jobs
-                String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE ) ||
-                                     ( style.equalsIgnoreCase( VDS.GLIDEIN_STYLE ) || style.equalsIgnoreCase( VDS.CONDOR_STYLE ) )
-                              )?
+                String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
                                "remote_initialdir" :
                                "initialdir";
 
@@ -446,11 +445,26 @@ public class Kickstart implements GridStart {
                 //pass the worker node directory as an argument to kickstart
                 //because most jobmanagers cannot handle worker node tmp
                 //as they check for existance on the head node
-                gridStartArgs.append("-W ").append( workerNodeDir ).append(' ');
+                if( !mSLS.doesCondorModifications() ){
+                    //only valid if job does not use SLS condor
+                    gridStartArgs.append("-W ").append(workerNodeDir).append(' ');
+
+                    //handle for staged compute jobs. set their X bit after
+                    // SLS has happened
+                    if( job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+                        for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
+                            PegasusFile pf = ( PegasusFile )it.next();
+                            if( pf.getType() == PegasusFile.EXECUTABLE_FILE ){
+                                gridStartArgs.append( "-X " ).append( workerNodeDir ).
+                                              append( File.separator ).append( pf.getLFN() ).append(' ');
+                            }
+                        }
+                    }
+                }
 
                 //always have the remote dir set to /tmp as we are
                 //banking upon kickstart to change the directory for us
-                job.condorVariables.construct( key, destDir );
+                job.condorVariables.construct( key, "/tmp" );
 
                 //see if we need to generate a SLS input file in the submit directory
                 File slsInputFile  = null;
