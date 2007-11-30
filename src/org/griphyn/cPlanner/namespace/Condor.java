@@ -81,6 +81,12 @@ public class Condor extends Namespace{
     public static final String TRANSFER_IP_FILES_KEY = "transfer_input_files";
 
     /**
+     * The name of the key that specifies transfer of input files.
+     */
+    public static final String TRANSFER_OP_FILES_KEY = "transfer_output_files";
+
+
+    /**
      * The name of the key that specifies the priority for the job.
      */
     public static final String PRIORITY_KEY = "priority";
@@ -176,6 +182,35 @@ public class Condor extends Namespace{
         }
         this.construct(Condor.TRANSFER_IP_FILES_KEY,files);
     }
+
+    /**
+     * Adds an output file that is to be transferred from the submit host via
+     * the Condor File Transfer Mechanism. It also sets the associated condor
+     * keys like when_to_transfer and should_transfer_files.
+     *
+     * @param file  the path to the file on the submit host.
+     */
+    public void addOPFileForTransfer( String file ){
+        //sanity check
+        if(file == null || file.length() == 0){
+            return ;
+        }
+        String files;
+        //check if the key is already set.
+        if(this.containsKey( Condor.TRANSFER_OP_FILES_KEY )){
+            //update the existing list.
+            files = (String)this.get( Condor.TRANSFER_OP_FILES_KEY );
+            files =  files + "," + file;
+        }
+        else{
+            files = file;
+            //set the additional keys only once
+            this.construct("should_transfer_files","YES");
+            this.construct("when_to_transfer_output","ON_EXIT");
+        }
+        this.construct( Condor.TRANSFER_OP_FILES_KEY, files );
+    }
+
 
     /**
      * Additional method to handle the Condor namespace with
@@ -591,6 +626,8 @@ public class Condor extends Namespace{
     /**
      * Converts the contents of the map into the string that can be put in the
      * Condor file for printing.
+     *
+     * @return the textual description
      */
     public String toString(){
         StringBuffer st = new StringBuffer();
