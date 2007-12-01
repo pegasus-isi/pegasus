@@ -420,114 +420,8 @@ public class Kickstart implements GridStart {
 
 
         if ( mWorkerNodeExecution ){
-            if( job.getJobType() == SubInfo.COMPUTE_JOB ||
-                job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
-                mLogger.log( "Going to generate a SLS file for " + job.getName() ,
-                              LogManager.DEBUG_MESSAGE_LEVEL );
-
-                //To Do handle staged compute jobs also.
-                //and clustered jobs
-
-                //remove the remote or initial dir's for the compute jobs
-                String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
-                               "remote_initialdir" :
-                               "initialdir";
-
-                String directory = (String)job.condorVariables.removeKey( key );
-
-                String destDir = mSiteHandle.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
-                destDir = ( destDir == null ) ? "/tmp" : destDir;
-
-                String relativeDir = mPOptions.getRelativeSubmitDirectory();
-                String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
-
-
-                //pass the worker node directory as an argument to kickstart
-                //because most jobmanagers cannot handle worker node tmp
-                //as they check for existance on the head node
-                if( !mSLS.doesCondorModifications() ){
-                    //only valid if job does not use SLS condor
-                    gridStartArgs.append("-W ").append(workerNodeDir).append(' ');
-
-                    //handle for staged compute jobs. set their X bit after
-                    // SLS has happened
-                    if( job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
-                        for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
-                            PegasusFile pf = ( PegasusFile )it.next();
-                            if( pf.getType() == PegasusFile.EXECUTABLE_FILE ){
-                                gridStartArgs.append( "-X " ).append( workerNodeDir ).
-                                              append( File.separator ).append( pf.getLFN() ).append(' ');
-                            }
-                        }
-                    }
-                }
-
-                //always have the remote dir set to /tmp as we are
-                //banking upon kickstart to change the directory for us
-                job.condorVariables.construct( key, "/tmp" );
-
-                //see if we need to generate a SLS input file in the submit directory
-                File slsInputFile  = null;
-                if( mSLS.needsSLSInput( job ) ){
-                    //generate the sls file with the mappings in the submit directory
-                    slsInputFile = mSLS.generateSLSInputFile( job,
-                                                              mSLS.getSLSInputLFN( job ),
-                                                              mSubmitDir,
-                                                              directory,
-                                                              workerNodeDir );
-
-                    //construct a setup job not reqd as kickstart creating the directory
-                    //String setupJob = constructSetupJob( job, workerNodeDir );
-                    //setupJob = quote( setupJob );
-                    //job.envVariables.construct( this.KICKSTART_SETUP, setupJob );
-
-                    File headNodeSLS = new File( directory, slsInputFile.getName() );
-                    String preJob = mSLS.invocationString( job, headNodeSLS );
-
-                    if( preJob != null ){
-                        preJob = quote( preJob );
-                        job.envVariables.construct( this.KICKSTART_PREJOB, preJob );
-                    }
-                }
-
-
-                //see if we need to generate a SLS output file in the submit directory
-                File slsOutputFile = null;
-                if( mSLS.needsSLSOutput( job ) ){
-                    //construct the postjob that transfers the output files
-                    //back to head node directory
-                    //to fix later. right now post job only created is pre job
-                    //created
-                    slsOutputFile = mSLS.generateSLSOutputFile( job,
-                                                                mSLS.getSLSOutputLFN( job ),
-                                                                mSubmitDir,
-                                                                directory,
-                                                                workerNodeDir );
-
-                    //generate the post job
-                    File headNodeSLS = new File( directory, slsOutputFile.getName() );
-                    String postJob = mSLS.invocationString( job, headNodeSLS );
-                    if( postJob != null ){
-                        postJob = quote( postJob );
-                        job.envVariables.construct( this.KICKSTART_POSTJOB, postJob );
-                    }
-                }
-
-                //modify the job if required
-                if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                            mSiteHandle.getURLPrefix( job.getSiteHandle() ),
-                                                            directory,
-                                                            workerNodeDir ) ){
-                    throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
-                }
-
-                String cleanupJob = constructCleanupJob( job, workerNodeDir );
-                if( cleanupJob != null ){
-                    cleanupJob = quote( cleanupJob );
-                    job.envVariables.construct( this.KICKSTART_CLEANUP, cleanupJob );
-                }
-            }
-        }//end of worker node execution
+            enableForWorkerNodeExecution( job , gridStartArgs );
+        }
 
         //check if the job type indicates staging of executable
 //        The -X functionality is handled by the setup jobs that
@@ -640,6 +534,159 @@ public class Kickstart implements GridStart {
 
         //all finished successfully
         return true;
+    }
+
+
+
+    /**
+     * Enables a job for worker node execution, by calling out to the SLS
+     * interface to do the second level staging. Also adds the appropriate
+     * prejob/setup job/post/cleanup jobs to the job if required.
+     *
+     *
+     * @param job     the job to be enabled
+     * @param args    the arguments constructed so far.
+     */
+    protected void enableForWorkerNodeExecution( SubInfo job, StringBuffer args ){
+        String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
+
+        if( job.getJobType() == SubInfo.COMPUTE_JOB ||
+            job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+            mLogger.log( "Enabling job for worker node execution " + job.getName() ,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+            //To Do handle staged compute jobs also.
+            //and clustered jobs
+
+            //remove the remote or initial dir's for the compute jobs
+            String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
+                          "remote_initialdir" :
+                          "initialdir";
+
+            String directory = (String)job.condorVariables.removeKey( key );
+
+            String destDir = mSiteHandle.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
+            destDir = ( destDir == null ) ? "/tmp" : destDir;
+
+            String relativeDir = mPOptions.getRelativeSubmitDirectory();
+            String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
+
+
+            //pass the worker node directory as an argument to kickstart
+            //because most jobmanagers cannot handle worker node tmp
+            //as they check for existance on the head node
+            StringBuffer xBitSetInvocation = null;
+            if( !mSLS.doesCondorModifications() ){
+                //only valid if job does not use SLS condor
+                args.append("-W ").append(workerNodeDir).append(' ');
+
+                //handle for staged compute jobs. set their X bit after
+                // SLS has happened
+                if( job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+                    xBitSetInvocation = new StringBuffer();
+                    xBitSetInvocation.append( "/bin/chmod 600 " );
+
+                    for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
+                        PegasusFile pf = ( PegasusFile )it.next();
+                        if( pf.getType() == PegasusFile.EXECUTABLE_FILE ){
+//                            //the below does not work as kickstart attempts to
+//                            //set the X bit before running any prejobs
+//                            args.append( "-X " ).append( workerNodeDir ).
+//                                append( File.separator ).append( pf.getLFN() ).append(' ');
+                            xBitSetInvocation.append( pf.getLFN() ).append( " " );
+                        }
+                    }
+                }
+            }
+
+            //always have the remote dir set to /tmp as we are
+            //banking upon kickstart to change the directory for us
+            job.condorVariables.construct( key, "/tmp" );
+
+            //see if we need to generate a SLS input file in the submit directory
+            File slsInputFile  = null;
+            if( mSLS.needsSLSInput( job ) ){
+                //generate the sls file with the mappings in the submit directory
+                slsInputFile = mSLS.generateSLSInputFile( job,
+                                                          mSLS.getSLSInputLFN( job ),
+                                                          mSubmitDir,
+                                                          directory,
+                                                          workerNodeDir );
+
+                //construct a setup job not reqd as kickstart creating the directory
+                //String setupJob = constructSetupJob( job, workerNodeDir );
+                //setupJob = quote( setupJob );
+                //job.envVariables.construct( this.KICKSTART_SETUP, setupJob );
+
+                File headNodeSLS = new File( directory, slsInputFile.getName() );
+                String preJob = mSLS.invocationString( job, headNodeSLS );
+
+
+                if( preJob != null ){
+                /*
+                    //add the x bit invocation if required
+                    //this is required till kickstart -X feature is fixed
+                    //it needs to be invoked after the prejob
+                    if( xBitSetInvocation != null ){
+                        if( preJob.startsWith( "/bin/bash" ) ){
+                            //remove the last " and add the x bit invocation
+                            if( preJob.lastIndexOf( "\"" ) == preJob.length() - 1 ){
+                                preJob = preJob.substring( 0, preJob.length() - 1 );
+                                xBitSetInvocation.append( "\"" );
+                                preJob += " && " + xBitSetInvocation.toString();
+                            }
+                        }
+                        else{
+                            //prepend a /bin/bash -c invocation
+                            preJob = "/bin/bash -c \"" + preJob + xBitSetInvocation.toString();
+                        }
+                    }
+                 */
+
+                    preJob = quote( preJob );
+                    job.envVariables.construct( this.KICKSTART_PREJOB, preJob );
+                }
+            }
+
+
+            //see if we need to generate a SLS output file in the submit directory
+            File slsOutputFile = null;
+            if( mSLS.needsSLSOutput( job ) ){
+                //construct the postjob that transfers the output files
+                //back to head node directory
+                //to fix later. right now post job only created is pre job
+                //created
+                slsOutputFile = mSLS.generateSLSOutputFile( job,
+                                                            mSLS.getSLSOutputLFN( job ),
+                                                            mSubmitDir,
+                                                            directory,
+                                                            workerNodeDir );
+
+                //generate the post job
+                File headNodeSLS = new File( directory, slsOutputFile.getName() );
+                String postJob = mSLS.invocationString( job, headNodeSLS );
+                if( postJob != null ){
+                    postJob = quote( postJob );
+                    job.envVariables.construct( this.KICKSTART_POSTJOB, postJob );
+                }
+            }
+
+            //modify the job if required
+            if ( !mSLS.modifyJobForWorkerNodeExecution( job,
+                                                        mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                        directory,
+                                                        workerNodeDir ) ){
+
+                throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
+
+            }
+
+            String cleanupJob = constructCleanupJob( job, workerNodeDir );
+            if( cleanupJob != null ){
+                cleanupJob = quote( cleanupJob );
+                job.envVariables.construct( this.KICKSTART_CLEANUP, cleanupJob );
+            }
+        }
     }
 
 

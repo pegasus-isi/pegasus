@@ -460,7 +460,10 @@ public class InterPoolEngine extends Engine implements Refiner {
                         job.setRemoteExecutable( new File( tcEntry.getPhysicalTransformation() ).getName() );
                     }
                     else{
-                        job.setRemoteExecutable(job.getStagedExecutableBaseName());
+                        //do this only when kickstart executable existance check is fixed
+                        //Karan Nov 30 2007
+                        //job.setRemoteExecutable(job.getStagedExecutableBaseName());
+                        job.setRemoteExecutable(  stagedPath );
                     }
                 }
                 else{
