@@ -41,12 +41,14 @@ public class Os
     private static final String _LINUX = "LINUX";
     private static final String _SUNOS = "SUNOS";
     private static final String _AIX = "AIX";
+    private static final String _WINDOWS = "WINDOWS";
 
     public static final Os LINUX = new Os(_LINUX);
     public static final Os SUNOS = new Os(_SUNOS);
     public static final Os AIX = new Os(_AIX);
+    public static final Os WINDOWS = new Os(_WINDOWS);
 
-    public static final String err = "Error: Illegal Operating System defined. Please specify one of the predefined types \n [LINUX, SUNOS, AIX]";
+    public static final String err = "Error: Illegal Operating System defined. Please specify one of the predefined types \n [LINUX, SUNOS, AIX, WINDOWS]";
 
     /**
      * Returns the value of the operating system as string.

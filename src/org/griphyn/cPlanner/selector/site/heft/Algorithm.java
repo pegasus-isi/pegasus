@@ -516,7 +516,7 @@ public class Algorithm {
                                                     mSites );
 
         //sanity check
-        if( runnableSites.isEmpty() ){
+        if( runnableSites == null || runnableSites.isEmpty() ){
             throw new RuntimeException( "No runnable site for job " + job.getName() );
         }
 
@@ -604,7 +604,8 @@ public class Algorithm {
                               );
 
 
-
+        mLogger.log( "Predicted performance for job " + job.getID() + " is " + tcs,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         return tcs == null || tcs.isEmpty()?
                result:
                (Integer)((( TransformationCharacteristics )tcs.get(0)).getCharacteristic( TransformationCharacteristics.EXPECTED_RUNTIME ));
