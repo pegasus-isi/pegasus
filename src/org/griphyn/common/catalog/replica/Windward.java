@@ -361,7 +361,7 @@ public class Windward  implements ReplicaCatalog {
 
         for( Iterator it = l.iterator(); it.hasNext(); ){
             DataSourceLocationObject ds = (DataSourceLocationObject) it.next();
-            l.add( convertToRCE( ds ) );
+            result.add( convertToRCE( ds ) );
         }
 
         return result;
