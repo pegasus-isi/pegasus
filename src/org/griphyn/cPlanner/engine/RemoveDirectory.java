@@ -245,16 +245,16 @@ public class RemoveDirectory extends Engine {
                                               this.TRANSFORMATION_NAME,
                                               this.TRANSFORMATION_VERSION,
                                               execPool, TCType.INSTALLED);
-
-            entry = ( entries == null ) ?
-                     this.defaultTCEntry( execPool ): //try using a default one
-                     (TransformationCatalogEntry) entries.get(0);
         }
         catch (Exception e) {
             //non sensical catching
             mLogger.log("Unable to retrieve entry from TC " + e.getMessage(),
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
+        entry = ( entries == null ) ?
+                     this.defaultTCEntry( execPool ): //try using a default one
+                     (TransformationCatalogEntry) entries.get(0);
+
 
         if( entry == null ){
             //NOW THROWN AN EXCEPTION
