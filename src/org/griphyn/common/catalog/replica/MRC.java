@@ -147,7 +147,7 @@ public class MRC
 
         //get the subset for the properties
         Properties subset = VDSProperties.matchingSubset( props, PROPERTY_PREFIX, false );
-        System.out.println( "Properties are " + subset );
+        mLogger.log( "MRC Properties are " + subset , LogManager.DEBUG_MESSAGE_LEVEL );
 
         //container for properties for each of the different catalogs
         Map propertiesMap = new HashMap();
