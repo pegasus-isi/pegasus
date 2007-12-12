@@ -681,10 +681,13 @@ public class Kickstart implements GridStart {
 
             }
 
-            String cleanupJob = constructCleanupJob( job, workerNodeDir );
-            if( cleanupJob != null ){
-                cleanupJob = quote( cleanupJob );
-                job.envVariables.construct( this.KICKSTART_CLEANUP, cleanupJob );
+            //only to have cleanup job when not using condor modifications
+            if( !mSLS.doesCondorModifications() ){
+                String cleanupJob = constructCleanupJob( job, workerNodeDir );
+                if( cleanupJob != null ){
+                    cleanupJob = quote( cleanupJob );
+                    job.envVariables.construct( this.KICKSTART_CLEANUP, cleanupJob );
+                }
             }
         }
     }
