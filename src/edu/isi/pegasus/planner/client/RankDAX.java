@@ -97,6 +97,11 @@ public class RankDAX extends Executable {
     private PlannerOptions mPlannerOptions;
 
     /**
+     * The top n workflows to execute and put in the rankings file
+     */
+    private int mTopNum;
+
+    /**
      * The default constructor.
      */
     public RankDAX() {
@@ -104,6 +109,7 @@ public class RankDAX extends Executable {
         mBag = new PegasusBag();
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
         mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
+        mTopNum = Integer.MAX_VALUE;
     }
 
     /**
@@ -170,7 +176,7 @@ public class RankDAX extends Executable {
     public void parseCommandLineArguments(String[] args){
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("rank-dax", args, "vhr:d:s:o:r:f:", longOptions, false);
+        Getopt g = new Getopt("rank-dax", args, "vhr:d:s:o:r:f:t:", longOptions, false);
         g.setOpterr(false);
 
         int option = 0;
@@ -202,6 +208,10 @@ public class RankDAX extends Executable {
                 case 'f'://the options to be passed to pegasus-plan
                     mPlannerOptions = new CPlanner().parseCommandLineArguments( g.getOptarg().split( "\\s" ) );
                     mBag.add( PegasusBag.PLANNER_OPTIONS , mPlannerOptions );
+                    break;
+
+                case 't'://rank top t
+                    mTopNum = new Integer( g.getOptarg() ).intValue();
                     break;
 
                 case 'h':
@@ -313,7 +323,8 @@ public class RankDAX extends Executable {
 
         //write out the ranked daxes.
         PrintWriter pw = new PrintWriter( new FileWriter( file ) );
-        for ( Iterator it = rankings.iterator(); it.hasNext(); ) {
+        int i = 1;
+        for ( Iterator it = rankings.iterator(); it.hasNext() && i <= mTopNum ; i++ ) {
             pw.println( it.next() );
             pw.println( mPlannerOptions.toOptions() );
         }
@@ -390,7 +401,7 @@ public class RankDAX extends Executable {
         text.append( "\n" ).append( " $Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
              append( "\n" ).append( "Usage : rank-dax [-Dprop  [..]]  -r <request id> -f <options to pegasus-plan> -d <base directory> " ).
-             append( "\n" ).append( " [-s site[,site[..]]] [-o <output file>] [-v] [-h]" );
+             append( "\n" ).append( " [-s site[,site[..]]] [-o <output file>] [-t execute top t] [-v] [-h]" );
 
        System.out.println( text.toString() );
 
@@ -405,7 +416,7 @@ public class RankDAX extends Executable {
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[7];
+        LongOpt[] longopts = new LongOpt[8];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
         longopts[1]   = new LongOpt( "sites", LongOpt.REQUIRED_ARGUMENT, null, 's' );
@@ -414,6 +425,7 @@ public class RankDAX extends Executable {
         longopts[4]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[5]   = new LongOpt( "request-id", LongOpt.OPTIONAL_ARGUMENT, null, 'r' );
         longopts[6]   = new LongOpt( "forward", LongOpt.REQUIRED_ARGUMENT, null, 'f' );
+        longopts[7]   = new LongOpt( "top", LongOpt.REQUIRED_ARGUMENT, null, 't' );
 
         return longopts;
     }
