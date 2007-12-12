@@ -238,6 +238,14 @@ public class Windward extends Abstract
 
 
 
+        //this should in fact only be set
+        // for non third party pools
+        //we first check if there entry for transfer universe,
+        //if no then go for globus
+        SiteInfo ePool = mSCHandle.getTXPoolEntry( job.getSiteHandle() );
+        JobManager jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
+
+
         //use the DC transfer client to handle the data sources
         for( Iterator it = rawDataSources.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer)it.next();
@@ -253,10 +261,12 @@ public class Windward extends Abstract
 
             dcTXJob.setRemoteExecutable( tcEntry.getPhysicalTransformation() );
 
+            dcTXJob.globusScheduler = (jobmanager == null) ?
+                                  null :
+                                  jobmanager.getInfo(JobManager.URL);
 
             dcTXJob.setArguments( quote( ((NameValue)ft.getSourceURL()).getValue() ) + " " +
                                   quote( ((NameValue)ft.getDestURL()).getValue() ) );
-            dcTXJob.setRemoteExecutable( "java" );
             dcTXJob.setStdIn( "" );
             dcTXJob.setStdOut( "" );
             dcTXJob.setStdErr( "" );
@@ -440,7 +450,8 @@ public class Windward extends Abstract
             //set the flag back to true
             return defaultTCEntry;
         }
-
+        //add the DC home to environments
+        envs.add( new Profile( Profile.ENV, "DC_HOME", dcHome ) );
 
         //remove trailing / if specified
         dcHome = ( dcHome.charAt( dcHome.length() - 1 ) == File.separatorChar )?
@@ -451,7 +462,7 @@ public class Windward extends Abstract
         StringBuffer path = new StringBuffer();
         path.append( dcHome ).append( File.separator ).
              append( "bin" ).append( File.separator ).
-             append( "dc-client" );
+             append( "dc-transfer" );
 
 
         defaultTCEntry = new TransformationCatalogEntry( namespace,
