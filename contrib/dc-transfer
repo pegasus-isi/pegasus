@@ -1,0 +1,37 @@
+#!/bin/sh
+
+if [ "X${JAVA_HOME}" = "X"  ]; then
+   echo 'Please set the $JAVA_HOME environment variable' 1>&2
+   exit 1
+fi
+
+if [ "X${DC_HOME}" = "X"  ]; then
+   echo 'Please set the $DC_HOME environment variable' 1>&2
+   exit 1
+fi
+
+#pick the jar
+jar="$DC_HOME/lib/TransferClient.jar"
+
+
+
+#construct the arguments
+arguments="-jar $jar $@"
+
+
+if [ -r "$JAVA_HOME/bin/java" ];then
+   executable="$JAVA_HOME/bin/java"   
+   command="$executable $arguments"
+
+   echo "Command to run is " 1>&2
+   echo $command 1>&2
+
+   $command 
+   exit $?
+
+else
+    echo "Unable to find java $JAVA_HOME/bin/java" 1>&2
+    exit 1
+fi
+
+exit 0
