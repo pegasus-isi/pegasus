@@ -600,7 +600,7 @@ public class PlannerOptions extends Data implements Cloneable{
      * @param sites  <code>Collection</code> of execution site names.
      */
     public void setExecutionSites(Collection sites){
-        mvExecPools = (Set)sites;
+        mvExecPools = new HashSet( sites );
     }
 
 
