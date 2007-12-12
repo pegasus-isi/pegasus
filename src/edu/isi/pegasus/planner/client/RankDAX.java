@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.ranking.Rank;
 import edu.isi.pegasus.planner.ranking.Ranking;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -49,7 +50,9 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.IOException;
 import java.util.Date;
+
 import org.griphyn.cPlanner.toolkit.CPlanner;
+
 import org.griphyn.common.util.FactoryException;
 import org.griphyn.common.catalog.transformation.Mapper;
 
@@ -87,6 +90,11 @@ public class RankDAX extends Executable {
      * The bag of objects that Pegasus requires.
      */
     private PegasusBag mBag;
+
+    /**
+     * The options to be passed ahead to pegasus plan.
+     */
+    private PlannerOptions mPlannerOptions;
 
     /**
      * The default constructor.
@@ -162,7 +170,7 @@ public class RankDAX extends Executable {
     public void parseCommandLineArguments(String[] args){
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("rank-dax", args, "vhr:d:s:o:", longOptions, false);
+        Getopt g = new Getopt("rank-dax", args, "vhr:d:s:o:r:f:", longOptions, false);
         g.setOpterr(false);
 
         int option = 0;
@@ -191,8 +199,14 @@ public class RankDAX extends Executable {
                     level++;
                     break;
 
+                case 'f'://the options to be passed to pegasus-plan
+                    mPlannerOptions = new CPlanner().parseCommandLineArguments( g.getOptarg().split( "\\s" ) );
+                    mBag.add( PegasusBag.PLANNER_OPTIONS , mPlannerOptions );
+                    break;
+
                 case 'h':
                     printShortHelp();
+                    System.exit( 0 );
                     break;
 
                 default: //same as help
@@ -216,13 +230,16 @@ public class RankDAX extends Executable {
         parseCommandLineArguments(args);
 
 
-        if( mRequestID == null ){
-            mLogger.log( "\nNeed to specify either the request id",
+        if( mRequestID == null  || mPlannerOptions == null ){
+            mLogger.log( "\nNeed to specify the request id and options that are to be passed to planner.",
                          LogManager.INFO_MESSAGE_LEVEL );
 
             this.printShortVersion();
             return;
         }
+
+        //override the sites if any are set in the forward options
+        mPlannerOptions.setExecutionSites( mSites );
 
         //load the site catalog using the factory
         PoolInfoProvider sCatalog = SiteFactory.loadInstance( mProps, false );
@@ -298,6 +315,7 @@ public class RankDAX extends Executable {
         PrintWriter pw = new PrintWriter( new FileWriter( file ) );
         for ( Iterator it = rankings.iterator(); it.hasNext(); ) {
             pw.println( it.next() );
+            pw.println( mPlannerOptions.toOptions() );
         }
         pw.close();
 
@@ -371,7 +389,7 @@ public class RankDAX extends Executable {
         StringBuffer text = new StringBuffer();
         text.append( "\n" ).append( " $Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
-             append( "\n" ).append( "Usage : rank-dax [-Dprop  [..]]  -r <request id> -d <base directory> " ).
+             append( "\n" ).append( "Usage : rank-dax [-Dprop  [..]]  -r <request id> -f <options to pegasus-plan> -d <base directory> " ).
              append( "\n" ).append( " [-s site[,site[..]]] [-o <output file>] [-v] [-h]" );
 
        System.out.println( text.toString() );
@@ -387,7 +405,7 @@ public class RankDAX extends Executable {
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[6];
+        LongOpt[] longopts = new LongOpt[7];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
         longopts[1]   = new LongOpt( "sites", LongOpt.REQUIRED_ARGUMENT, null, 's' );
@@ -395,6 +413,7 @@ public class RankDAX extends Executable {
         longopts[3]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[4]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[5]   = new LongOpt( "request-id", LongOpt.OPTIONAL_ARGUMENT, null, 'r' );
+        longopts[6]   = new LongOpt( "forward", LongOpt.REQUIRED_ARGUMENT, null, 'f' );
 
         return longopts;
     }

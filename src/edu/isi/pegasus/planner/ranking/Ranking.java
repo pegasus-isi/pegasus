@@ -89,7 +89,7 @@ public class Ranking implements Comparable {
      */
     public String toString(){
         StringBuffer sb = new StringBuffer();
-        sb.append( mName ).append( ":" ).append( mRank );
+        sb.append( mName ).append( ":" ).append( "dax" ).append( ":" ).append( mRank );
         return sb.toString();
     }
 
