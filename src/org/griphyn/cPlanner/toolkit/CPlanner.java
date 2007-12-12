@@ -24,6 +24,7 @@ import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PlannerMetrics;
 import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.UserOptions;
@@ -440,6 +441,8 @@ public class CPlanner extends Executable{
                 mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
                 //set the submit directory in the planner options for cleanup wf
                 cleanupOptions.setSubmitDirectory( cleanupOptions.getSubmitDirectory(), this.CLEANUP_DIR );
+                PegasusBag bag = cwmain.getPegasusBag();
+                bag.add( PegasusBag.PLANNER_OPTIONS, cleanupOptions );
                 codeGenerator = CodeGeneratorFactory.
                               loadInstance( cwmain.getPegasusBag() );
 
