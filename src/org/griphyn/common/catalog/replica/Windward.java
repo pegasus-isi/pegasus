@@ -53,6 +53,13 @@ public class Windward  implements ReplicaCatalog {
 
 
     /**
+     * The availability time attribute key, that designates how soon the data
+     * will be available.
+     */
+    public static final String DATA_AVAILABILITY_KEY = "data_availability";
+
+
+    /**
      * The handle to the Data Characterization Catalog.
      */
     private DataCharacterization mDCharCatalog;
@@ -75,6 +82,7 @@ public class Windward  implements ReplicaCatalog {
         ReplicaCatalogEntry rce = new ReplicaCatalogEntry( );
         rce.setPFN( ds.getLocation() );
         rce.setResourceHandle( ds.getSite() );
+        rce.addAttribute( DATA_AVAILABILITY_KEY,  ds.getAvailabilityTime() );
 
         //other attributes to converted later on.
 
