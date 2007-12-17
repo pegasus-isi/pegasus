@@ -193,8 +193,8 @@ public class Windward extends Abstract
 
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = ( FileTransfer )it.next();
-            if( ft.getLFN().startsWith( DATA_SOURCE_PREFIX ) ){
-                //it a raw data source
+            if( ft.getLFN().startsWith( DATA_SOURCE_PREFIX ) && !ft.getSourceURL().getValue().endsWith( ".zip" )){
+                //it a raw data source that will have to be ingested
                 rawDataSources.add( ft );
             }
             else{
