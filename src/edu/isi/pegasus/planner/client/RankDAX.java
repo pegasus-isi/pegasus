@@ -271,6 +271,8 @@ public class RankDAX extends Executable {
                  LogManager.DEBUG_MESSAGE_LEVEL );
             getDax.connect( mProps );
             daxes = getDax.get( mRequestID, dir.getAbsolutePath() );
+            mLogger.log( "Number of DAX'es retrieved  " + daxes.size(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
             mLogger.logCompletion( "Writing daxes to directory " + dir,
                                    LogManager.DEBUG_MESSAGE_LEVEL);
         }
