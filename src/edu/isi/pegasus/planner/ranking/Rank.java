@@ -131,7 +131,7 @@ public class Rank {
             r.setRank( max - r.getRank() );
         }
 
-        Collections.sort( (List)result );
+        Collections.sort( (List)result, Collections.reverseOrder() );
         return result;
     }
 
