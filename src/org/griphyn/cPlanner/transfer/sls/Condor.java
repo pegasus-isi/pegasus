@@ -305,6 +305,14 @@ public class Condor   implements SLS {
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile )it.next();
             String lfn = pf.getLFN();
+
+            //ignore any input files of FileTransfer as they are first level
+            //staging put in by Condor Transfer refiner
+            if( pf instanceof FileTransfer ){
+                continue;
+            }
+
+
             //add an input file for transfer
             job.condorVariables.addOPFileForTransfer( lfn );
         }

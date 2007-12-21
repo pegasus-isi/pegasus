@@ -111,11 +111,11 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer)it.next();
 
-            //insert the extra slash that is requried by GRMS
             String url = ((NameValue)ft.getSourceURL()).getValue();
 
             //remove from input files the PegasusFile object
-            //corresponding to this File Transfer
+            //corresponding to this File Transfer and the
+            //FileTransfer object instead
             boolean removed = inputFiles.remove( ft );
             //System.out.println( "Removed " + ft.getLFN() + " " + removed );
             inputFiles.add( ft );
@@ -172,7 +172,34 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
     public void addStageOutXFERNodes( SubInfo job,
                                       Collection files,
                                       ReplicaCatalogBridge rcb ) {
-        this.addStageOutXFERNodes(job, files, rcb, false);
+
+        Set outputFiles = job.getOutputFiles();
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            FileTransfer ft = (FileTransfer)it.next();
+
+            String url = ((NameValue)ft.getDestURL()).getValue();
+
+            //remove from input files the PegasusFile object
+            //corresponding to this File Transfer and the
+            //FileTransfer object instead
+            boolean removed = outputFiles.remove( ft );
+            //System.out.println( "Removed " + ft.getLFN() + " " + removed );
+            outputFiles.add( ft );
+
+            //put the url in only if it is a file url
+            if( url.startsWith( "file:/" ) ){
+                try{
+                    job.condorVariables.addOPFileForTransfer( new URL(url).getPath() );
+                }
+                catch( Exception e ){
+                    throw new RuntimeException ( "Malformed destination URL " + url );
+                }
+            }
+            else{
+                throw new RuntimeException ( "Malformed destination URL. Output URL should be a file url " + url );
+            }
+        }
+
     }
 
     /**
