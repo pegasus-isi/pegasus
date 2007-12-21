@@ -221,6 +221,8 @@ public class RankDAX extends Executable {
 
                 default: //same as help
                     printShortHelp();
+                    for( int i =0 ; i < args.length ; i++ )
+                        System.out.println( args[i] );
                     throw new RuntimeException("Incorrect option or option usage " +
                                                option);
 
