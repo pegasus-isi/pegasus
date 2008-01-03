@@ -16,16 +16,14 @@
 package org.griphyn.cPlanner.transfer.refiner;
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.Data;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.GRMSJob;
+import org.griphyn.cPlanner.classes.TransferJob;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.Utility;
 
 import org.griphyn.cPlanner.transfer.MultipleFTPerXFERJobRefiner;
 
@@ -35,17 +33,18 @@ import java.io.File;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.HashSet;
+
+
 import java.net.URL;
+import java.net.MalformedURLException;
 
 /**
  * A refiner that relies on the Condor file transfer mechanism to get the
- * raw input data to the remote working directory.
+ * raw input data to the remote working directory. It is to be used for doing
+ * the file transfers in a condor pool, while trying to run on the local
+ * filesystem of the worker nodes.
  *
  * <p>
  * Additionally, this will only work with local replica selector that prefers
@@ -58,6 +57,8 @@ import java.net.URL;
  *       value <code>Condor</code>.
  *     - property <code>pegasus.selector.replica</code> must be set to value
  *       <code>Local</code>
+ *     - property <code>pegasus.execute.*.filesystem.local</code> must be set to value
+ *       <code>true</code>
  * </pre>
  *
  *
@@ -88,6 +89,15 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      */
     public Condor( ADag dag, PegasusProperties properties, PlannerOptions options){
         super(dag,properties,options);
+
+        //explicitly set the stageout transfer to Condor irrespective of
+        //what the user said for the time being
+        //properties.setProperty( "pegasus.transfer.stageout.impl", "Condor" );
+        //this.mTXStageOutImplementation = ImplementationFactory.loadInstance(
+        //                                       properties,options,
+        //                                       ImplementationFactory.TYPE_STAGE_OUT );
+
+
     }
 
 
@@ -95,7 +105,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
     /**
      * Adds the stage in transfer nodes which transfer the input files for a job,
      * from the location returned from the replica catalog to the job's execution
-     * pool. It creates a stagein job for each file to be transferred.
+     * pool.
      *
      * @param job   <code>SubInfo</code> object corresponding to the node to
      *              which the files are to be transferred to.
@@ -174,40 +184,143 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
                                       ReplicaCatalogBridge rcb ) {
 
         Set outputFiles = job.getOutputFiles();
+        String destinationDirectory = null;
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer)it.next();
 
             String url = ((NameValue)ft.getDestURL()).getValue();
 
-            //remove from input files the PegasusFile object
-            //corresponding to this File Transfer and the
-            //FileTransfer object instead
-            boolean removed = outputFiles.remove( ft );
-            //System.out.println( "Removed " + ft.getLFN() + " " + removed );
-            outputFiles.add( ft );
-
             //put the url in only if it is a file url
             if( url.startsWith( "file:/" ) ){
-                try{
-                    job.condorVariables.addOPFileForTransfer( new URL(url).getPath() );
+
+                try {
+                    destinationDirectory = new File(new URL(url).getPath()).getParent();
                 }
-                catch( Exception e ){
-                    throw new RuntimeException ( "Malformed destination URL " + url );
+                catch (MalformedURLException ex) {
+                    throw new RuntimeException( "Malformed URL", ex );
                 }
+
+                //strong disconnect here, as assuming worker node execution
+                //and having the SLS to the submit directory
+                String pfn = "file://" + mPOptions.getSubmitDirectory() + File.separator + ft.getLFN();
+                ft.removeSourceURL();
+                ft.addSource( "local", pfn );
+
             }
             else{
                 throw new RuntimeException ( "Malformed destination URL. Output URL should be a file url " + url );
             }
         }
 
+        if( !files.isEmpty() ){
+            String txName = this.STAGE_OUT_PREFIX + job.getName() + "_0" ;
+            SubInfo txJob = this.createStageOutTransferJob( job,
+                                                            files,
+                                                            destinationDirectory,
+                                                            txName );
+
+            this.mDAG.add( txJob );
+            this.addRelation( job.getName(), txName );
+        }
+
     }
 
+
     /**
-     * For GRMS we do not need to add any push transfer nodes. Instead we modify
-     * the job description to specify the urls to where the materialized files
-     * need to be pushed to.
-     * It modifies the job input file list to point to urls of the files that are
-     * to be used. The deletedLeaf flag is immaterial for this case.
+     * Constructs a  condor file transfer job that handles multiple transfers.
+     * The job itself is a /bin/true job that does the stageout using the
+     * transfer_input_files feature.
+     *
+     * @param job         the SubInfo object for the job, in relation to which
+     *                    the transfer node is being added. Either the transfer
+     *                    node can be transferring this jobs input files to
+     *                    the execution pool, or transferring this job's output
+     *                    files to the output pool.
+     * @param files       collection of <code>FileTransfer</code> objects
+     *                    representing the data files and staged executables to be
+     *                    transferred.
+     * @param directory   the directory where the transfer job needs to be executed
+     * @param txJobName   the name of transfer node.
+     *
+     * @return  the created TransferJob.
+     */
+    private TransferJob createStageOutTransferJob( SubInfo job,
+                                                   Collection files,
+                                                   String directory,
+                                                   String txJobName
+                                                   ) {
+
+
+
+        TransferJob txJob = new TransferJob();
+
+        //run job always on the site where the compute job runs
+        txJob.setSiteHandle( "local" );
+
+        //the non third party site for the transfer job is
+        //always the job execution site for which the transfer
+        //job is being created.
+        txJob.setNonThirdPartySite(job.getSiteHandle());
+
+        txJob.setName( txJobName );
+
+        txJob.setTransformation( "pegasus",
+                                 "true",
+                                  null  );
+
+        txJob.setDerivation( "pegasus",
+                             "true",
+                             null  );
+
+
+        txJob.setRemoteExecutable( "/bin/true" );
+
+
+        //add input files for transfer since we are only doing for
+        //creating stagein jobs
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            FileTransfer ft = ( FileTransfer )it.next();
+            NameValue nv = ft.getSourceURL(  );
+
+
+            //put the url in only if it is a file url
+            String url = nv.getValue();
+            if( url.startsWith( "file:/" ) ){
+                try{
+                    txJob.condorVariables.addIPFileForTransfer(new URL(url).
+                        getPath());
+                }
+                catch( Exception e ){
+                    throw new RuntimeException ( "Malformed source URL " + url );
+                }
+            }
+
+        }
+
+
+        //the intial directory is set to the directory where we need the output
+        txJob.condorVariables.construct( "initialdir", directory );
+
+        txJob.setJobType( SubInfo.STAGE_OUT_JOB );
+        txJob.setVDSSuperNode( job.jobName );
+
+        txJob.stdErr = "";
+        txJob.stdOut = "";
+
+        //the i/p and o/p files remain empty
+        //as we doing just copying urls
+        txJob.inputFiles = new HashSet();
+
+        //to get the file stat information we need to put
+        //the files as output files of the transfer job
+        txJob.outputFiles = new HashSet( files );
+
+        return txJob;
+    }
+
+
+    /**
+     *
      *
      *
      * @param job   <code>SubInfo</code> object corresponding to the node to
