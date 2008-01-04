@@ -254,8 +254,9 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
 
         TransferJob txJob = new TransferJob();
 
-        //run job always on the site where the compute job runs
+        //want to run in the local pool in universe vanilla
         txJob.setSiteHandle( "local" );
+        txJob.condorVariables.construct( "universe", "vanilla" );
 
         //the non third party site for the transfer job is
         //always the job execution site for which the transfer
@@ -289,6 +290,9 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
                 try{
                     txJob.condorVariables.addIPFileForTransfer(new URL(url).
                         getPath());
+
+                    //add the basename of the file fot t_o_f as mei suggests
+                    txJob.condorVariables.addOPFileForTransfer( ft.getLFN() );
                 }
                 catch( Exception e ){
                     throw new RuntimeException ( "Malformed source URL " + url );
