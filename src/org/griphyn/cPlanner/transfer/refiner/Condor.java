@@ -39,6 +39,9 @@ import java.util.HashSet;
 
 import java.net.URL;
 import java.net.MalformedURLException;
+import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+import org.griphyn.cPlanner.poolinfo.SiteFactory;
+import org.griphyn.cPlanner.poolinfo.SiteFactoryException;
 
 /**
  * A refiner that relies on the Condor file transfer mechanism to get the
@@ -77,6 +80,12 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      */
     protected String mLogMsg;
 
+    /**
+     * The handle to the Site Catalog. It is instantiated in this class.
+     */
+    protected PoolInfoProvider mSCHandle;
+
+
 
     /**
      * The overloaded constructor.
@@ -90,13 +99,8 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
     public Condor( ADag dag, PegasusProperties properties, PlannerOptions options){
         super(dag,properties,options);
 
-        //explicitly set the stageout transfer to Condor irrespective of
-        //what the user said for the time being
-        //properties.setProperty( "pegasus.transfer.stageout.impl", "Condor" );
-        //this.mTXStageOutImplementation = ImplementationFactory.loadInstance(
-        //                                       properties,options,
-        //                                       ImplementationFactory.TYPE_STAGE_OUT );
-
+        /* load the catalog using the factory */
+        mSCHandle = SiteFactory.loadInstance( properties, false );
 
     }
 
@@ -202,9 +206,9 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
 
                 //strong disconnect here, as assuming worker node execution
                 //and having the SLS to the submit directory
-                String pfn = "file://" + mPOptions.getSubmitDirectory() + File.separator + ft.getLFN();
-                ft.removeSourceURL();
-                ft.addSource( "local", pfn );
+                //String pfn = "file://" + mPOptions.getSubmitDirectory() + File.separator + ft.getLFN();
+                //ft.removeSourceURL();
+                //ft.addSource( "local", pfn );
 
             }
             else{
@@ -318,6 +322,16 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
         //to get the file stat information we need to put
         //the files as output files of the transfer job
         txJob.outputFiles = new HashSet( files );
+
+        //the profile information from the pool catalog needs to be
+        //assimilated into the job.
+        txJob.updateProfiles( mSCHandle.getPoolProfile( txJob.getSiteHandle() ) );
+
+        //the profile information from the properties file
+        //is assimilated overidding the one from transformation
+        //catalog.
+        txJob.updateProfiles( mProps );
+
 
         return txJob;
     }

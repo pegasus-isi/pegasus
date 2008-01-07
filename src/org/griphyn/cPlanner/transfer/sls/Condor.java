@@ -285,6 +285,9 @@ public class Condor   implements SLS {
         //remove any directory. let condor figure it out
         job.condorVariables.removeKey( "initialdir" );
 
+        //set the initial dir to the headnode directory
+        job.condorVariables.construct( "initialdir", headNodeDirectory );
+
         //iterate through all the input files
         for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile )it.next();
@@ -298,7 +301,9 @@ public class Condor   implements SLS {
 
             String lfn = pf.getLFN();
             //add an input file for transfer
-            job.condorVariables.addIPFileForTransfer( mPOptions.getSubmitDirectory() + File.separator + lfn );
+            //job.condorVariables.addIPFileForTransfer( headNodeDirectory + File.separator + lfn );
+            //we add just the lfn as we are setting initialdir
+            job.condorVariables.addIPFileForTransfer( lfn );
         }
 
         //iterate and add output files for transfer back
