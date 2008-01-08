@@ -31,6 +31,7 @@ import java.util.Iterator;
 import org.griphyn.cPlanner.code.GridStart;
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This class aggregates the smaller jobs in a manner such that
@@ -51,20 +52,24 @@ public class MPIExec extends Abstract {
      */
     public static final String COLLAPSE_LOGICAL_NAME = "mpiexec";
 
+
     /**
-     * The overloaded constructor, that is called by load method.
+     * The default constructor.
+     */
+    public MPIExec(){
+        super();
+    }
+
+    /**
+     *Initializes the JobAggregator impelementation
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
-     * @param dag        the workflow that is being clustered.
+     * @param dag  the workflow that is being clustered.
+     * @param bag   the bag of objects that is useful for initialization.
      *
-     * @see JobAggregatorFactory#loadInstance(String,PegasusProperties,String,ADag)
      *
      */
-    public MPIExec(PegasusProperties properties, String submitDir,ADag dag){
-        super(properties,submitDir,dag);
+    public void initialize( ADag dag , PegasusBag bag  ){
+        super.initialize(dag, bag);
     }
 
     /**

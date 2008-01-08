@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * An abstract clusterer that the other clusterers can extend. The abstract
@@ -140,20 +141,18 @@ public abstract class Abstract implements Clusterer {
     /**
      *Initializes the Clusterer impelementation
      *
-     * @param dag         the workflow that is being clustered.
-     * @param properties  the properties passed to the planner.
-     * @param submitDir   the base submit directory for the workflow.
+     * @param dag  the workflow that is being clustered.
+     * @param bag   the bag of objects that is useful for initialization.
      *
      * @throws ClustererException in case of error.
      */
-    public void initialize(ADag dag,
-                           PegasusProperties properties,
-                           String submitDir)
-                           throws ClustererException {
+    public void initialize( ADag dag , PegasusBag bag  )
+        throws ClustererException{
+
 
         mScheduledDAG = dag;
-        mProps = properties;
-        mJobAggregatorFactory.initialize( properties, dag, submitDir);
+        mProps = bag.getPegasusProperties();
+        mJobAggregatorFactory.initialize( dag, bag );
 
         mClusteredRelations = new Vector( dag.dagInfo.relations.size()/2 );
 

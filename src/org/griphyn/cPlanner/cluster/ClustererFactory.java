@@ -16,6 +16,7 @@
 package org.griphyn.cPlanner.cluster;
 
 import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
@@ -129,11 +130,9 @@ public class ClustererFactory {
      * Loads the appropriate clusterer on the basis of the clustering type
      * specified in the options passed to the planner.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param type       type of clustering to be used.
      * @param dag        the workflow being clustered.
-     * @param submitDir  the submit directory for the workflow.
+     * @param bag        the bag of initialization objects.
+     * @param type       type of clustering to be used.
      *
      * @return the instance of the appropriate clusterer.
      *
@@ -142,10 +141,9 @@ public class ClustererFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static  Clusterer loadClusterer( PegasusProperties properties,
-                                            String type,
-                                            ADag dag,
-                                            String submitDir )
+    public static  Clusterer loadClusterer( ADag dag,
+                                            PegasusBag bag,
+                                            String type )
                                             throws ClustererFactoryException{
 
 
@@ -176,7 +174,7 @@ public class ClustererFactory {
             //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader( className );
             clusterer = (Clusterer) dl.instantiate( new Object[0] );
-            clusterer.initialize( dag, properties, submitDir );
+            clusterer.initialize( dag, bag );
         }
         catch ( Exception e ){
             throw new ClustererFactoryException( " Unable to instantiate partitioner ",

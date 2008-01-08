@@ -17,6 +17,7 @@ package org.griphyn.cPlanner.engine;
 
 
 import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -82,21 +83,24 @@ public class NodeCollapser extends Engine {
      */
     private Map mGraph;
 
-
+    /**
+     * The bag of initialization objects.
+     */
+    private PegasusBag mBag;
 
     /**
      * The overloaded constructor.
      *
-     * @param properties the handle to the properties object.
-     * @param options    the options specified by the user to run the planner.
+     * @param bag  the bag of initialization objects.
      *
      */
-    public NodeCollapser( PegasusProperties properties, PlannerOptions options) {
-        super( properties );
-        mLogger = LogManager.getInstance();
+    public NodeCollapser( PegasusBag bag ) {
+        super( bag.getPegasusProperties() );
+        mBag = bag;
+        mLogger = bag.getLogger();
         mGraph  = new HashMap();
-        mPOptions = options;
-        setDirectory( options.getSubmitDirectory() );
+        mPOptions = bag.getPlannerOptions();
+        setDirectory( mPOptions.getSubmitDirectory() );
     }
 
 
@@ -207,8 +211,7 @@ public class NodeCollapser extends Engine {
         mLogger.log( "Partitioner loaded is " + p.description(),
                      LogManager.CONFIG_MESSAGE_LEVEL );
 
-        Clusterer c = ClustererFactory.loadClusterer(
-                                     mProps, type, dag, mDirectory );
+        Clusterer c = ClustererFactory.loadClusterer( dag, mBag, type );
 
         mLogger.log( "Clusterer loaded is "+ c.description(),
                      LogManager.CONFIG_MESSAGE_LEVEL );

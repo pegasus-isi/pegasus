@@ -194,7 +194,7 @@ public class MainEngine
         if( mPOptions.getClusteringTechnique() != null ){
             message = "Clustering the jobs in the workflow";
             mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-            mNodeCollapser = new NodeCollapser( mProps, mPOptions );
+            mNodeCollapser = new NodeCollapser( mBag );
 
             try{
                 mReducedDag = mNodeCollapser.cluster( mReducedDag );

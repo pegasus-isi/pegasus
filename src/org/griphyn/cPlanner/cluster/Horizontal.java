@@ -46,6 +46,7 @@ import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.StringTokenizer;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The horizontal clusterer, that clusters jobs on the same level.
@@ -180,17 +181,15 @@ public class Horizontal implements Clusterer,
     /**
      *Initializes the Clusterer impelementation
      *
-     * @param dag         the workflow that is being clustered.
-     * @param properties  the properties passed to the planner.
-     * @param submitDir   the base submit directory for the workflow.
+     * @param dag  the workflow that is being clustered.
+     * @param bag   the bag of objects that is useful for initialization.
      *
      * @throws ClustererException in case of error.
      */
-    public void initialize( ADag dag , PegasusProperties properties, String submitDir )
-                                                              throws ClustererException{
+    public void initialize( ADag dag , PegasusBag bag  )  throws ClustererException{
         mScheduledDAG = dag;
-        mProps = properties;
-        mJobAggregatorFactory.initialize( properties, dag, submitDir);
+        mProps = bag.getPegasusProperties();
+        mJobAggregatorFactory.initialize( dag, bag );
 
         mJobMap = new HashMap();
         mCollapseMap = this.constructMap(mProps.getCollapseFactors());
@@ -204,7 +203,7 @@ public class Horizontal implements Clusterer,
         }
 
         //load the PPS implementation
-        mXMLStore        = XMLProducerFactory.loadXMLProducer( properties );
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
         mPPS = PPSFactory.loadPPS( this.mProps );
 
         mXMLStore.add( "<workflow url=\"" + null + "\">" );
@@ -372,7 +371,7 @@ public class Horizontal implements Clusterer,
             JobAggregator aggregator = mJobAggregatorFactory.loadInstance( (SubInfo)l.get(0) );
             if(aggregator.entryNotInTC(key)){
                 //no need to collapse one job. go to the next iteration
-                mLogger.log("\t No collapsing for execution pool " + key,
+                mLogger.log("\t No collapsing for execution pool because job aggregator entry not in tc " + key,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 continue;
             }
@@ -380,9 +379,9 @@ public class Horizontal implements Clusterer,
             //checks made ensure that l is not empty at this point
             cFactor = getCollapseFactor(key,(SubInfo)l.get(0),size);
             if(cFactor[0] == 1 && cFactor[1] == 0){
-                mLogger.log("\t Collapse factor of " + cFactor +
-                            " determined for pool. " + key +
-                            "Skipping collapsing",LogManager.DEBUG_MESSAGE_LEVEL);
+                mLogger.log("\t Collapse factor of (" + cFactor[0] + "," + cFactor[1] +
+                            ") determined for pool. " + key +
+                            ". Skipping collapsing", LogManager.DEBUG_MESSAGE_LEVEL);
                 continue;
             }
 

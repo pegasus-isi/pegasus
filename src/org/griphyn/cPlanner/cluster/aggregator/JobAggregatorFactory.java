@@ -20,6 +20,7 @@ import org.griphyn.cPlanner.cluster.JobAggregator;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.common.util.DynamicLoader;
 
@@ -61,11 +62,8 @@ public class JobAggregatorFactory {
      * at runtime in the properties file. The properties object passed should not
      * be null.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit files for the job
-     *                   has to be generated.
      * @param dag        the workflow that is being clustered.
+     * @param bag        the bag of objects that is useful for initialization.
      *
      * @return the instance of the class implementing this interface.
      *
@@ -74,28 +72,28 @@ public class JobAggregatorFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static JobAggregator loadInstance( PegasusProperties properties,
-                                              String submitDir,
-                                              ADag dag) {
+    public static JobAggregator loadInstance( ADag dag,
+                                              PegasusBag bag ) {
 
-        return loadInstance(
-                      properties.getJobAggregator(), properties, submitDir, dag);
+        PegasusProperties properties = bag.getPegasusProperties();
+        //sanity check
+        if( properties  == null){
+            throw new RuntimeException("Invalid properties passed");
+        }
+
+
+        return loadInstance( properties.getJobAggregator(), dag, bag );
     }
 
 
     /**
-     * Loads the implementing class corresponding to the class. If the package
-     * name is not specified with the class, then class is assumed to be
-     * in the DEFAULT_PACKAGE. The properties object passed should not be null.
+     * Loads the implementing class corresponding to the class passed.
      *
      * @param className  the name of the class that implements the mode. It is the
      *                   name of the class, not the complete name with package. That
      *                   is added by itself.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
      * @param dag        the workflow that is being clustered.
+     * @param bag        the bag of objects that is useful for initialization.
      *
      * @return the instance of the class implementing this interface.
      *
@@ -104,13 +102,13 @@ public class JobAggregatorFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static JobAggregator loadInstance(String className,
-                                             PegasusProperties properties,
-                                             String submitDir,
-                                             ADag dag) {
+    public static JobAggregator loadInstance( String className,
+                                              ADag dag,
+                                              PegasusBag bag
+                                               ) {
 
         //sanity check
-        if(properties == null){
+        if( bag.getPegasusProperties() == null){
             throw new RuntimeException("Invalid properties passed");
         }
         if(className == null){
@@ -137,11 +135,10 @@ public class JobAggregatorFactory {
 
             //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader( className);
-            Object argList[] = new Object[3];
-            argList[0] = properties;
-            argList[1] = (submitDir == null) ? ".":submitDir;
-            argList[2] = dag;
+            Object argList[] = new Object[0];
             ja = (JobAggregator) dl.instantiate(argList);
+
+            ja.initialize( dag, bag );
         }
         catch ( Exception e ) {
             throw new JobAggregatorFactoryException("Instantiating JobAggregator ",

@@ -27,6 +27,7 @@ import org.griphyn.cPlanner.namespace.VDS;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * A JobAggergator factory that caches up the loaded implementations.
@@ -69,16 +70,16 @@ public class JobAggregatorInstanceFactory {
      */
     private ADag mDAG;
 
-    /**
-     * The submit directory.
-     */
-    private String mSubmitDir;
 
     /**
      * A boolean indicating that the factory has been initialized.
      */
     private boolean mInitialized;
 
+    /**
+     * The bag of initialization objects
+     */
+    private PegasusBag mBag;
 
     /**
      * The default constructor.
@@ -91,24 +92,19 @@ public class JobAggregatorInstanceFactory {
     /**
      * Initializes the Factory. Loads all the implementations just once.
      *
-     * @param properties  the <code>PegasusProperties</code> object containing all
-     *                    the properties required by Pegasus.
      * @param dag        the workflow that is being clustered.
-     * @param submitDir  the submit directory where the submit files for the job
-     *                   has to be generated.
+     * @param bag     the bag of initialization objects.
      *
      * @throws JobAggregatorFactoryException that nests any error that
      *            might occur during the instantiation of the implementation.
      */
-    public void initialize( PegasusProperties properties,
-                            ADag dag,
-                            String submitDir
+    public void initialize( ADag dag,
+                            PegasusBag bag
                             ) throws JobAggregatorFactoryException{
 
-
-        mProps     = properties;
+        mBag       = bag;
+        mProps     = bag.getPegasusProperties();
         mDAG       = dag;
-        mSubmitDir = submitDir;
 
         //load all the implementations that correspond to the VDS style keys
         for( Iterator it = this.implementingClassNameTable().entrySet().iterator(); it.hasNext(); ){
@@ -117,7 +113,7 @@ public class JobAggregatorInstanceFactory {
             String className  = (String)entry.getValue();
 
             //load via reflection. not required in this case though
-            put( aggregator, JobAggregatorFactory.loadInstance( className, mProps, mSubmitDir, mDAG ));
+            put( aggregator, JobAggregatorFactory.loadInstance( className, mDAG, mBag ));
         }
 
         //we have successfully loaded all implementations
@@ -159,7 +155,7 @@ public class JobAggregatorInstanceFactory {
         Object aggregator = this.get( shortName.toLowerCase() );
         if ( aggregator == null ) {
             //load via reflection
-            aggregator = JobAggregatorFactory.loadInstance( shortName, mProps, mSubmitDir, mDAG);
+            aggregator = JobAggregatorFactory.loadInstance( shortName, mDAG, mBag );
 
             //throw exception if still null
             if (aggregator == null ){

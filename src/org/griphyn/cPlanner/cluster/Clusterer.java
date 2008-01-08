@@ -16,10 +16,10 @@
 package org.griphyn.cPlanner.cluster;
 
 import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.partitioner.Partition;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import java.util.List;
 
@@ -37,19 +37,18 @@ public interface Clusterer {
     /**
      * The version number associated with this API of Code Generator.
      */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
 
 
     /**
      *Initializes the Clusterer impelementation
      *
-     * @param dag         the workflow that is being clustered.
-     * @param properties  the properties passed to the planner.
-     * @param submitDir   the base submit directory for the workflow.
+     * @param dag  the workflow that is being clustered.
+     * @param bag   the bag of objects that is useful for initialization.
      *
      * @throws ClustererException in case of error.
      */
-    public void initialize( ADag dag , PegasusProperties properties, String submitDir )
+    public void initialize( ADag dag , PegasusBag bag  )
         throws ClustererException;
 
     /**

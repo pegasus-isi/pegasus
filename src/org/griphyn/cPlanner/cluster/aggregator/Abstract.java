@@ -161,53 +161,33 @@ public abstract class Abstract implements JobAggregator {
 
 
     /**
-     * The overloaded constructor, that is called by load method.
+     * The default constructor.
+     */
+    public Abstract(){
+
+    }
+
+
+    /**
+     *Initializes the JobAggregator impelementation
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
-     * @param dag        the workflow that is being clustered.
-     *
-     * @see JobAggregatorFactory#loadInstance(String,PegasusProperties,String,ADag)
+     * @param dag  the workflow that is being clustered.
+     * @param bag   the bag of objects that is useful for initialization.
      *
      */
-    public Abstract(PegasusProperties properties, String submitDir, ADag dag){
-        mLogger = LogManager.getInstance();
-        mProps  = properties;
-        setDirectory(submitDir);
+    public void initialize( ADag dag , PegasusBag bag  ){
+        mBag    = bag;
         mClusteredADag = dag;
-        //load the transformation catalog
-        //should have been loaded by passing
-        //the PegasusProperties object?? Karan
-        mTCHandle = TCMode.loadInstance();
+
+        mLogger = bag.getLogger();
+        mProps  = bag.getPegasusProperties();
+
+        mTCHandle = bag.getHandleToTransformationCatalog();
+        mSiteHandle = bag.getHandleToSiteCatalog();
+
+        setDirectory( bag.getPlannerOptions().getSubmitDirectory() );
 
         mGridStartFactory = new GridStartFactory();
-
-        //load the SiteHandle
-        String poolmode = mProps.getPoolMode();
-        String poolClass = PoolMode.getImplementingClass(poolmode);
-        mSiteHandle = PoolMode.loadPoolInstance(poolClass,mProps.getPoolFile(),
-                                                PoolMode.SINGLETON_LOAD);
-
-        PlannerOptions options = new PlannerOptions();
-
-        //only submit directory is required.
-        //till the time the clusterer interface is fixed
-        //can create problems with running clustered jobs
-        //on local worker node temp....
-        options.setSubmitDirectory( submitDir );
-
-        //intialize the bag of objects and load the site selector
-        mBag = new PegasusBag();
-        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
-        mBag.add( PegasusBag.PLANNER_OPTIONS, options );
-        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
-//        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-        mBag.add( PegasusBag.SITE_CATALOG, mSiteHandle );
-
         mGridStartFactory.initialize( mBag, dag );
 
 

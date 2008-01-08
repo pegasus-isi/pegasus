@@ -23,6 +23,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.NameValue;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -139,10 +140,14 @@ public class Windward extends Abstract
         //should be fixed
         ADag dag = new ADag();
         dag.dagInfo.setLabel( "windward" );
+        PegasusBag bag = new PegasusBag();
+        bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        bag.add( PegasusBag.PLANNER_OPTIONS, options );
+
         mSeqExecAggregator = JobAggregatorFactory.loadInstance( JobAggregatorFactory.SEQ_EXEC_CLASS,
-                                                                properties,
-                                                                options.getSubmitDirectory(),
-                                                                dag  );
+                                                                dag,
+                                                                bag  );
     }
 
     /**

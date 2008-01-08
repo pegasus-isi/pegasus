@@ -36,6 +36,7 @@ import java.io.File;
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.code.GridStart;
 import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This class aggregates the smaller jobs in a manner such that
@@ -72,21 +73,23 @@ public class SeqExec extends Abstract {
     private boolean mFailOnFirstError;
 
     /**
-     * The overloaded constructor, that is called by load method.
+     * The default constructor.
+     */
+    public SeqExec(){
+        super();
+    }
+
+    /**
+     *Initializes the JobAggregator impelementation
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param submitDir  the submit directory where the submit file for the job
-     *                   has to be generated.
-     * @param dag        the workflow that is being clustered.
-     *
-     * @see JobAggregatorFactory#loadInstance(String,PegasusProperties,String,ADag)
+     * @param dag  the workflow that is being clustered.
+     * @param bag   the bag of objects that is useful for initialization.
      *
      */
-    public SeqExec(PegasusProperties properties, String submitDir, ADag dag){
-        super(properties,submitDir,dag);
+    public void initialize( ADag dag , PegasusBag bag  ){
+        super.initialize( dag, bag );
         mFailOnFirstError = false;
-        mGlobalLog = properties.jobAggregatorLogGlobal();
+        mGlobalLog = bag.getPegasusProperties().jobAggregatorLogGlobal();
     }
 
     /**

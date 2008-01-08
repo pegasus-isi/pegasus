@@ -15,45 +15,12 @@
 
 package org.griphyn.cPlanner.cluster;
 
-
-import org.griphyn.cPlanner.code.GridStart;
-
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
-import org.griphyn.cPlanner.code.gridstart.GridStartFactoryException;
-
-import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
-
 import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.AggregatedJob;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.SiteInfo;
-
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.VDS;
-
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
-
-
-import org.griphyn.common.util.DynamicLoader;
-
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
-
-import org.griphyn.common.catalog.transformation.TCMode;
-
-import org.griphyn.common.classes.TCType;
-
-
-import java.io.File;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 
 import java.util.List;
-import java.util.Set;
-import java.util.Iterator;
+
 
 /**
  * The interface that dictates how the jobs are clumped together into one single
@@ -69,7 +36,17 @@ public interface JobAggregator {
     /**
      * The version number associated with this API of Job Aggregator.
      */
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.3";
+
+    /**
+     *Initializes the JobAggregator impelementation
+     *
+     * @param dag  the workflow that is being clustered.
+     * @param bag   the bag of objects that is useful for initialization.
+     *
+     */
+    public void initialize( ADag dag , PegasusBag bag  );
+
 
 
     /**
