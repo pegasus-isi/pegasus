@@ -176,6 +176,13 @@ public class Kickstart implements GridStart {
      */
     private SLS mSLS;
 
+
+    /**
+     * An instance variable to track if enabling is happening as part of a clustered job.
+     * See Bug 21 comments on Pegasus Bugzilla
+     */
+    private boolean mEnablingPartOfAggregatedJob;
+
     /**
      * Initializes the GridStart implementation.
      *
@@ -200,6 +207,7 @@ public class Kickstart implements GridStart {
             //load SLS
             mSLS = SLSFactory.loadInstance( bag );
         }
+        mEnablingPartOfAggregatedJob = false;
     }
 
 
@@ -221,6 +229,11 @@ public class Kickstart implements GridStart {
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
         boolean first = true;
 
+
+        //we do not want the jobs being clustered to be enabled
+        //for worker node execution just yet.
+        mEnablingPartOfAggregatedJob = true;
+
         for (Iterator it = jobs.iterator(); it.hasNext(); ) {
             SubInfo job = (SubInfo)it.next();
             if(first){
@@ -231,6 +244,8 @@ public class Kickstart implements GridStart {
                 //to suppress the header creation
                 job.vdsNS.construct(VDS.GRIDSTART_ARGUMENTS_KEY,"-H");
             }
+
+
             //always pass isGlobus true as always
             //interested only in executable strargs
             //due to the fact that seqexec does not allow for setting environment
@@ -247,6 +262,12 @@ public class Kickstart implements GridStart {
 //
 //           }
         }
+
+
+        //set the flag back to false
+        mEnablingPartOfAggregatedJob = false;
+
+
         return aggJob;
     }
 
@@ -419,7 +440,7 @@ public class Kickstart implements GridStart {
         }
 
 
-        if ( mWorkerNodeExecution ){
+        if ( mWorkerNodeExecution && !mEnablingPartOfAggregatedJob ){
             enableForWorkerNodeExecution( job , gridStartArgs );
         }
 

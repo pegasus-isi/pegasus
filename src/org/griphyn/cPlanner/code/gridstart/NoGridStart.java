@@ -118,6 +118,13 @@ public class NoGridStart implements GridStart {
 
 
     /**
+     * An instance variable to track if enabling is happening as part of a clustered job.
+     * See Bug 21 comments on Pegasus Bugzilla
+     */
+    private boolean mEnablingPartOfAggregatedJob;
+
+
+    /**
      * Initializes the GridStart implementation.
      *
      *  @param bag   the bag of objects that is used for initialization.
@@ -137,7 +144,7 @@ public class NoGridStart implements GridStart {
             //load SLS
             mSLS = SLSFactory.loadInstance( bag );
         }
-
+        mEnablingPartOfAggregatedJob = false;
     }
 
     /**
@@ -159,6 +166,9 @@ public class NoGridStart implements GridStart {
             construct( aggJob, "arguments", aggJob.strargs);
         }
 
+        //we do not want the jobs being clustered to be enabled
+        //for worker node execution just yet.
+        mEnablingPartOfAggregatedJob = true;
 
         for (Iterator it = jobs.iterator(); it.hasNext(); ) {
             SubInfo job = (SubInfo)it.next();
@@ -167,6 +177,12 @@ public class NoGridStart implements GridStart {
             this.enable(job, true);
             aggJob.add(job);
         }
+
+
+        //set the flag back to false
+        mEnablingPartOfAggregatedJob = false;
+
+
         return aggJob;
     }
 
@@ -246,7 +262,7 @@ public class NoGridStart implements GridStart {
             }
         }
 
-        if ( mWorkerNodeExecution ){
+        if ( mWorkerNodeExecution && !mEnablingPartOfAggregatedJob ){
             if( job.getJobType() == SubInfo.COMPUTE_JOB ||
                 job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
 
