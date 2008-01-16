@@ -49,6 +49,9 @@ public class Condor extends Abstract {
 
     public static final String STANDARD_UNIVERSE =
                          org.griphyn.cPlanner.namespace.Condor.STANDARD_UNIVERSE;
+
+    public static final String LOCAL_UNIVERSE =
+                         org.griphyn.cPlanner.namespace.Condor.LOCAL_UNIVERSE;
     //
 
     /**
@@ -113,8 +116,15 @@ public class Condor extends Abstract {
             }
             //isGlobus = false;
         }
-        else if(universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE)){
-            if(job.executionPool.equalsIgnoreCase("local")){
+        else if(universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE) || universe.equalsIgnoreCase( Condor.LOCAL_UNIVERSE )){
+
+//        Disabled check for execution site to be local.
+//        Was required for the sipht case where the cdir job
+//        needed to run in the local universe
+//        Karan Vahi January 16, 2008
+
+//            if(job.executionPool.equalsIgnoreCase("local")){
+
                 //scheduler universe only makes sense for
                 //local site.
                 // For the "local" pool the universe should be "scheduler".
@@ -131,12 +141,15 @@ public class Condor extends Abstract {
                 }
                 // Let Condor figure out the current working directory on submit host
                 // bwSubmit.println("initialdir = " + workdir);
-            }
-            else{
-                //invalid state. throw an exception??
-                //Is invalid state
-                throw new CondorStyleException( errorMessage( job, STYLE_NAME, universe ) );
-            }
+
+
+//           }
+//           else{
+//               //invalid state. throw an exception??
+//                //Is invalid state
+//                throw new CondorStyleException( errorMessage( job, STYLE_NAME, universe ) );
+//            }
+
         }
         else{
             //Is invalid state

@@ -118,6 +118,13 @@ public class Condor extends Namespace{
 
 
     /**
+     * The condor universe key value for local universe.
+     */
+    public static final String LOCAL_UNIVERSE = "local";
+
+
+
+    /**
      * The name of the implementing namespace. It should be one of the valid
      * namespaces always.
      *
