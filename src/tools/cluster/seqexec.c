@@ -44,6 +44,7 @@ int progress = -1;
 char* application = "seqexec";
 char* identifier = NULL;
 static struct utsname uname_cache;
+static char success[257];
 
 static
 ssize_t
@@ -113,6 +114,7 @@ helpMe( const char* programname, int rc )
 "\tis to execute all entries in the input file regardless of their exit.\n"
 " -s fn\tProtocol anything to given status file, default stdout.\n"
 " -R fn\tRecords progress into the given file, see also SEQEXEC_PROGRESS_REPORT.\n"
+" -S ec\tMulti-option: Mark non-zero exit-code ec as success (for -f mode)\n"
 " input\tFile with list of applications and args to execute, default stdin.\n" );
   exit(rc);
 }
@@ -122,7 +124,11 @@ void
 parseCommandline( int argc, char* argv[], int* fail_hard )
 {
   char *s, *ptr = strrchr( argv[0], '/' );
-  int option;
+  int option, tmp;
+
+  /* exit code 0 is always good, just in case */
+  memset( success, 0, sizeof(success) );
+  success[0] = 1;
 
   if ( ptr == NULL ) ptr = argv[0];
   else ptr++;
@@ -137,7 +143,7 @@ parseCommandline( int argc, char* argv[], int* fail_hard )
   }
 
   opterr = 0;
-  while ( (option = getopt( argc, argv, "R:dfhs:" )) != -1 ) {
+  while ( (option = getopt( argc, argv, "R:S:dfhs:" )) != -1 ) {
     switch ( option ) {
     case 'R':
       if ( progress != -1 ) close(progress);
@@ -145,6 +151,12 @@ parseCommandline( int argc, char* argv[], int* fail_hard )
 	showerr( "%s: open progress %s: %d: %s\n",
 		 application, optarg, errno, strerror(errno) );
       }
+      break;
+
+    case 'S':
+      tmp = atoi(optarg);
+      if ( tmp > 0 && tmp < sizeof(success) ) success[tmp] = 1;
+      else showerr( "%s: Ignoring unreasonable success code %d\n", application, tmp );
       break;
 
     case 'd':
@@ -717,6 +729,12 @@ mysystem( char* argv[], char* envp[] )
 }
 
 int
+isafailure( int status )
+{
+  return ( WIFEXITED(status) && success[ WEXITSTATUS(status) ] == 1 ) ? 0 : 1;
+}
+
+int
 main( int argc, char* argv[], char* envp[] )
 {
   size_t len;
@@ -724,7 +742,7 @@ main( int argc, char* argv[], char* envp[] )
   int appc, status = 0;
   int fail_hard = 0;
   char* cmd;
-  char** appv;
+  char** appv = NULL;
 
   char* save = NULL;
   unsigned long total = 0;
@@ -788,7 +806,7 @@ main( int argc, char* argv[], char* envp[] )
     if ( cmd != line ) free((void*) cmd);
 
     /* fail hard mode, if requested */
-    if ( fail_hard && status ) break;
+    if ( fail_hard && status && isafailure(status) ) break;
   }
 
   /* provide final statistics */
@@ -798,5 +816,5 @@ main( int argc, char* argv[], char* envp[] )
 	  lineno, total, failure, diff, isodate(when,line,sizeof(line)) );
 
   fflush(stdout);
-  exit( (fail_hard && status) ? 5 : 0 );
+  exit( (fail_hard && status && isafailure(status)) ? 5 : 0 );
 }

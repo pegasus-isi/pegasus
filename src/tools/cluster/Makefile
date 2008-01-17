@@ -17,7 +17,7 @@ prefix	= $(PEGASUS_HOME)
 endif
 
 NROFF   = groff -mandoc
-TEXT    = -Tlatin1
+TEXT    = -Tutf8
 HTML    = -Thtml
 
 ifeq (SUNOS,${SYSTEM})
