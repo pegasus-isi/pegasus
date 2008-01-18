@@ -130,7 +130,10 @@ public class Condor extends Abstract {
                 // For the "local" pool the universe should be "scheduler".
                 // Thus, jobs run immediately on the submit host, instead of
                 // being Condor-delayed in the pool to which the SH belongs.
-                job.condorVariables.construct("universe",Condor.SCHEDULER_UNIVERSE);
+
+// Jobs can run on local or scheduler universe as overridden in profiles
+// Karan Vahi January 16,2008
+//                job.condorVariables.construct("universe",Condor.SCHEDULER_UNIVERSE);
 
                 //check if the job can be run in the workdir or not
                 //and whether intial dir is populated before hand or not.

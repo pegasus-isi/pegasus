@@ -966,7 +966,9 @@ public class CondorGenerator extends Abstract {
 
         //on the basis of the
         //transfer_executable key do some magic
-        handleTransferOfExecutable(sinfo);
+// No longer handled here. Handled in Kickstart.java
+// Karan Vahi January 16, 2008
+//        handleTransferOfExecutable(sinfo);
 
         //correctly quote the arguments according to
         //Condor Quoting Rules.

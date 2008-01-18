@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import org.griphyn.cPlanner.code.CodeGeneratorException;
 
 
 /**
@@ -546,15 +547,58 @@ public class Kickstart implements GridStart {
                 append(' ').append(job.strargs);
         }
 
+
+
+
+
+
         //the executable path and arguments are put
         //in the Condor namespace and not printed to the
         //file so that they can be overriden if desired
         //later through profiles and key transfer_executable
-        construct(job,"executable", gridStartPath);
-        construct(job,"arguments", gridStartArgs.toString());
+        construct(job, "executable", handleTransferOfExecutable( job, gridStartPath ) );
+        construct(job, "arguments", gridStartArgs.toString());
 
         //all finished successfully
         return true;
+    }
+
+
+    /**
+     * It changes the paths to the executable depending on whether we want to
+     * transfer the executable or not. If the transfer_executable is set to true,
+     * then the executable needs to be shipped from the submit host meaning the
+     * local pool. This function changes the path of the executable to the one on
+     * the local pool, so that it can be shipped.
+     *
+     * @param job   the <code>SubInfo</code> containing the job description.
+     * @param path  the path to kickstart on the remote compute site.
+     *
+     * @return the path that needs to be set as the executable
+     */
+    protected String handleTransferOfExecutable( SubInfo job, String path ) {
+        Condor cvar = job.condorVariables;
+
+        if (!cvar.getBooleanValue("transfer_executable")) {
+            //the executable paths are correct and
+            //point to the executable on the remote pool
+            return path;
+        }
+
+
+        SiteInfo site = mSiteHandle.getPoolEntry( "local", Condor.VANILLA_UNIVERSE );
+        String gridStartPath = site.getKickstartPath();
+        if ( gridStartPath == null ) {
+            mLogger.log( "Gridstart needs to be shipped from the submit host to pool" +
+                         job.getSiteHandle() + ".\nNo entry for it in pool local",
+                         LogManager.ERROR_MESSAGE_LEVEL );
+            throw new RuntimeException( "GridStart needs to be shipped from submit host to site " +
+                                         job.getSiteHandle() + " for job " + job.getName() );
+
+        }
+
+        return gridStartPath;
+
     }
 
 
