@@ -89,6 +89,11 @@ public class Condor extends Abstract {
                               //default is Scheduler universe for condor style
                               Condor.SCHEDULER_UNIVERSE;
 
+
+        //set the universe for the job
+        // Karan Jan 28, 2008
+        job.condorVariables.construct( "universe", universe );
+
         if(universe.equalsIgnoreCase( this.VANILLA_UNIVERSE ) ||
            universe.equalsIgnoreCase( this.STANDARD_UNIVERSE )){
             //the glide in/ flocking case

@@ -27,6 +27,8 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.transfer.MultipleFTPerXFERJobRefiner;
 
+import org.griphyn.cPlanner.namespace.VDS;
+
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
 import java.io.File;
@@ -42,6 +44,7 @@ import java.net.MalformedURLException;
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 import org.griphyn.cPlanner.poolinfo.SiteFactory;
 import org.griphyn.cPlanner.poolinfo.SiteFactoryException;
+import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 
 /**
  * A refiner that relies on the Condor file transfer mechanism to get the
@@ -280,6 +283,9 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
 
         txJob.setRemoteExecutable( "/bin/true" );
 
+        //we dont want the job to be launced via grid start
+        txJob.vdsNS.construct( VDS.GRIDSTART_KEY , GridStartFactory.GRIDSTART_SHORT_NAMES[
+                                                          GridStartFactory.NO_GRIDSTART_INDEX ] );
 
         //add input files for transfer since we are only doing for
         //creating stagein jobs
