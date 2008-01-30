@@ -231,11 +231,10 @@ public class ReplicaCatalogBridge
             mReplicaCatalog = null;
             if ( mSearchFiles != null && !mSearchFiles.isEmpty() ){
                mReplicaCatalog = ReplicaFactory.loadInstance(properties);
+
+               //load all the mappings.
+               mReplicaStore = new ReplicaStore( mReplicaCatalog.lookup( mSearchFiles ) );
             }
-
-            //load all the mappings.
-            mReplicaStore = new ReplicaStore( mReplicaCatalog.lookup( mSearchFiles ) );
-
 
         } catch ( Exception ex ) {
             String msg = "Problem while connecting with the Replica Catalog: ";
