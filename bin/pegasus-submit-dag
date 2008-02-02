@@ -40,11 +40,14 @@ my $submit=1;
 my $notify = 'NEVER';
 my $verbose;
 my %props = ();
+my $grid=1; #Grid checks enabled
 
 $main::DEBUG = 0;		# for now
 $main::revision = 'unknown';
 $_ = '$Revision$';      # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
+
+
 
 sub myversion() {
     my $version = version();
@@ -68,6 +71,7 @@ Usage: @{[basename($0)]} [-Dprops] [options] dagfile
  -n|--notify x  When to notify: Never, Error, Complete; default $notify
  -v|--verbose   Enter DAGMan verbose mode, default is not
  -V|--version   Print version number and exit.
+ --grid | --nogrid Enable checks for grid proxy and GLOBUS LOCATION (Default is enabled)
 
 A maximum number of 0 means unlimited. 
 
@@ -177,14 +181,7 @@ sub salvage_logfile($) {
     $result;
 }
 
-# check Globus proxy lifetime?
-my $left = proxy_duration() || 
-    die "ERROR: Problems with grid-proxy-info. Check your user proxy\n";
-if ( $left <= 0 ) {
-    die "ERROR: Your grid user proxy has expired, please refresh now.\n";
-} elsif ( $left < 7200 ) {
-    warn "Warning: There is little time remaining on your proxy. You need to refresh soon!\n";
-}
+
 
 # read various property files -- all the magic is in this c'tor
 my $props = Work::Properties->new();
@@ -207,7 +204,21 @@ GetOptions( "debug|d=i"    => \$main::DEBUG,
 	    "notify|n=s" => \$notify,
 	    "version|V" => \&myversion,
 	    "verbose|v" => \$verbose,
+	    "grid!"=>\$grid,
 	    "help|h|?" => \&usage );
+
+
+#check grid stuff only if $grid enabled
+if($grid){
+# check Globus proxy lifetime?
+    my $left = proxy_duration() || 
+	die "ERROR: Problems with grid-proxy-info. Check your user proxy\n";
+    if ( $left <= 0 ) {
+	die "ERROR: Your grid user proxy has expired, please refresh now.\n";
+    } elsif ( $left < 7200 ) {
+	warn "Warning: There is little time remaining on your proxy. You need to refresh soon!\n";
+    }
+}
 
 my $dag = shift || usage("Need the name of a .dag file\n");
 my $c_s_d = find_exec( 'condor_submit_dag' ) ||

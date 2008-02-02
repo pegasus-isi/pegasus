@@ -32,13 +32,13 @@ use Getopt::Long qw(:config bundling no_ignore_case);
 # load our own local modules
 use Work::Common;
 use Work::Properties qw(%initial); # parses -Dprop=val from @ARGV
-use Work::Workflow;
-#use Euryale::Delegation;	# GT4 delegation cache daemon client
+#use Work::Workflow;
 
 # constants
 sub usage(;$);			# { }
 $main::DEBUG = 0;		# for now
 my $condor;			# if set, use Condor for tailstatd
+my $grid=1;                     # if set, disable grid checks;
 my $props = Work::Properties->new();
 my $default_tsd = File::Spec->catfile( File::Spec->rel2abs( 
     File::Spec->canonpath(dirname($0)) ), 'tailstatd' );
@@ -55,7 +55,8 @@ GetOptions( "help|h" => \&usage,
 	    "condor" => \$condor,
 	    "vdd=s" => \$vdd,
 	    "debug|d=o" => \$main::DEBUG,
-	    "verbose|v+" => \$main::DEBUG
+	    "verbose|v+" => \$main::DEBUG,
+            "grid!"=>\$grid,
 	    );
 
 # arguments
@@ -86,7 +87,8 @@ Optional arguments:
  -d|--debug lvl     sets the debug level (verbosity), default is $main::DEBUG. 
  -v|--verbose       raises debug level by 1, see --debug. 
  --condor           uses Condor to submit daemons (prototype).
- --database|--nodatabase Make tailstad log events in the workflow database (default yes)         
+ --database|--nodatabase Make tailstad log events in the workflow database (default yes)
+ --grid|--nogrid  Disable or Enable grid checks (default is enabled)
  --vdd l            uses GT4 delegation cache daemon installed as l, default
                     is $default_vdd.
 EOF
@@ -168,7 +170,10 @@ chdir($run) || die "ERROR: chdir $run: $!\n";
 die "ERROR: Unable to execute $tsd\n" unless -x $tsd;
 print STDERR "# found $tsd\n" if $main::DEBUG;
 
+# Do GRID check if $grid enabled
+if($grid){
 # sanity check: Is there a GLOBUS_LOCATION?
+
 die( "ERROR: Your environment setup misses GLOBUS_LOCATION. This bodes ill.\n",
      "Please check carefully that you have sourced the correct setup files!\n" )
     unless exists $ENV{'GLOBUS_LOCATION'};
@@ -208,6 +213,9 @@ die( "ERROR: $gpi exited with status ", $?>>8 ) if ( $? != 0 );
 die( "ERROR: Too little time left ($timeleft s) on grid proxy\n" ) 
     if $timeleft < 7200;
 print STDERR "# grid proxy has $timeleft s left\n" if $main::DEBUG;
+
+} # end if($grid) checks only if grid option is enabled.
+
 
 # find pegasus-submit-dag
 my $vsd = File::Spec->catfile( $config{pegasushome}, 'bin', 'pegasus-submit-dag' );
@@ -262,6 +270,9 @@ foreach my $k ( keys %initial ) {
 my @args = ( $vsd );
 push( @args, @extra ) if @extra > 0;
 push( @args, '-d', 0+$main::DEBUG);
+if(!$grid){
+    push(@args, '--nogrid');
+}
 push( @args, '--nosubmit', $config{dag} );
 print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
 system(@args) == 0 
