@@ -278,13 +278,13 @@ public class CondorGenerator extends Abstract {
             //in addition makes the corresponding
             //entries in the .dag file corresponding
             //to the job and it's postscript
-            if ( sinfo.getSiteHandle().equals("stork") ) {
+            if ( sinfo.getSiteHandle().equals( "stork" ) ) {
                 //write the job information in the .dag file
                 StringBuffer dagString = new StringBuffer();
-                dagString.append("DaP ").append( sinfo.getName() ).append(" ");
-                dagString.append( sinfo.getName() ).append(".sub");
+                dagString.append( "DATA " ).append( sinfo.getName() ).append( " " );
+                dagString.append( sinfo.getName() ).append( ".stork" );
                 printDagString( dagString.toString() );
-                storkGenerator.generateCode( dag, sinfo);
+                storkGenerator.generateCode( dag, sinfo );
             }
             else {
                 //write out a condor submit file
@@ -354,7 +354,7 @@ public class CondorGenerator extends Abstract {
         handleGlobusRSLForJob( job );
 
         writer.println(this.mSeparator);
-        writer.println("# PEGASUS GENERATED SUBMIT FILE");
+        writer.println("# PEGASUS WMS GENERATED SUBMIT FILE");
         writer.println("# DAG : " + dagname + ", Index = " + dagindex +
                        ", Count = " + dagcount);
         writer.println("# SUBMIT FILE NAME : " + subfilename);
@@ -553,7 +553,7 @@ public class CondorGenerator extends Abstract {
                 FileWriter(dag)));
 
             printDagString(this.mSeparator);
-            printDagString("# PEGASUS GENERATED SUBMIT FILE");
+            printDagString("# PEGASUS WMS GENERATED DAG FILE");
             printDagString("# DAG " + dinfo.nameOfADag);
             printDagString("# Index = " + dinfo.index + ", Count = " +
                            dinfo.count);

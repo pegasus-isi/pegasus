@@ -65,7 +65,7 @@ public class Stork extends Abstract {
      * The name of the credential that is to be used for submitting the stork
      * job.
      */
-    private String mCredName;
+//    private String mCredName;
 
 
     /**
@@ -85,7 +85,7 @@ public class Stork extends Abstract {
      */
     public void initialize( PegasusBag bag ) throws CodeGeneratorException{
         super.initialize( bag );
-        mCredName = mProps.getCredName();
+//        mCredName = mProps.getCredName();
     }
 
     /**
@@ -123,15 +123,16 @@ public class Stork extends Abstract {
         String dstUrl = (st.hasMoreTokens())?st.nextToken():null;
 
         //sanity check
-        if(mCredName == null){
-            mLogger.log("Credential name needs to be specified for " +
-                        " stork job. Set pegasus.transfer.stork.cred property",
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            throw new CodeGeneratorException(
-                "Credential name needs to be specified for " +
-                " stork job. Set pegasus.transfer.stork.cred property");
-
-        }
+        // Credential name is no longer required. Karan Feb 04, 2008
+//        if(mCredName == null){
+//            mLogger.log("Credential name needs to be specified for " +
+//                        " stork job. Set pegasus.transfer.stork.cred property",
+//                        LogManager.ERROR_MESSAGE_LEVEL);
+//            throw new CodeGeneratorException(
+//                "Credential name needs to be specified for " +
+//                " stork job. Set pegasus.transfer.stork.cred property");
+//
+//        }
 
         //check for type of job. Stork only understands Transfer Jobs
         if (!(job instanceof TransferJob )){
@@ -148,7 +149,7 @@ public class Stork extends Abstract {
         }
 
         writer.println(this.mStartSeparator);
-        writer.println(" * GRIPHYN VDS STORK FILE GENERATOR");
+        writer.println(" * PEGASUS WMS STORK FILE GENERATOR");
         writer.println(" * DAG : " + dagname + ", Index = " + dagindex +
                        ", Count = " + dagcount);
         writer.println(" * STORK FILE NAME : " + this.getFileBaseName(job));
@@ -156,10 +157,10 @@ public class Stork extends Abstract {
 
         writer.println("[");
 
-        writer.println("\tdap_type = \"" + job.logicalName + "\";");
+        writer.println("\tdap_type = \"" + "transfer" + "\";");
         writer.println("\tsrc_url = \"" + srcUrl + "\";");
         writer.println("\tdest_url = \"" + dstUrl + "\";");
-        writer.println("\tcred_name = \"" + mCredName + "\";");
+        writer.println("\tx509proxy = \"" + "default" + "\";");
 
         // DONE
         writer.println("]");
@@ -171,4 +172,18 @@ public class Stork extends Abstract {
         //flush the contents
         writer.close();
     }
+
+    /**
+     * Returns the basename of the file to which the job is written to.
+     *
+     * @param job  the job whose job information needs to be written.
+     *
+     * @return  the basename of the file.
+     */
+    public String getFileBaseName(SubInfo job){
+        StringBuffer sb = new StringBuffer();
+        sb.append(job.jobName).append(".stork");
+        return sb.toString();
+    }
+
 }

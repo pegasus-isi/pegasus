@@ -81,7 +81,7 @@ public class Stork extends AbstractSingleFTPerXFERJob {
     /**
      * The derivation namespace for for the transfer job.
      */
-    public static final String DERIVATION_NAMESPACE = "VDS";
+    public static final String DERIVATION_NAMESPACE = "condor";
 
     /**
      * The name of the underlying derivation.
@@ -194,13 +194,13 @@ public class Stork extends AbstractSingleFTPerXFERJob {
 
         //we first check if there entry for transfer universe,
         //if no then go for globus
-        ePool = mSCHandle.getTXPoolEntry(tPool);
+    //    ePool = mSCHandle.getTXPoolEntry(tPool);
 
         txJob.jobName = txJobName;
         txJob.executionPool = tPool;
         txJob.condorUniverse = "globus";
 
-        TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry(tPool);
+     /*   TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry(tPool);
         if(tcEntry == null){
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
@@ -210,11 +210,12 @@ public class Stork extends AbstractSingleFTPerXFERJob {
             throw new RuntimeException( error.toString() );
 
         }
+      */
 
 
-        txJob.namespace   = tcEntry.getLogicalNamespace();
-        txJob.logicalName = tcEntry.getLogicalName();
-        txJob.version     = tcEntry.getLogicalVersion();
+        txJob.namespace   = this.TRANSFORMATION_NAMESPACE;
+        txJob.logicalName = this.TRANSFORMATION_NAME;
+        txJob.version     = null;
 
         txJob.dvName      = this.getDerivationName();
         txJob.dvNamespace = this.getDerivationNamespace();
@@ -222,10 +223,10 @@ public class Stork extends AbstractSingleFTPerXFERJob {
 
         //this should in fact only be set
         // for non third party pools
-        jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
-        txJob.globusScheduler = (jobmanager == null) ?
-                                  null :
-                                  jobmanager.getInfo(JobManager.URL);
+//        jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
+//        txJob.globusScheduler = (jobmanager == null) ?
+//                                  null :
+//                                  jobmanager.getInfo(JobManager.URL);
 
         txJob.jobClass = jobClass;
         txJob.jobID = job.jobName;
@@ -233,7 +234,7 @@ public class Stork extends AbstractSingleFTPerXFERJob {
         txJob.stdErr = "";
         txJob.stdOut = "";
 
-        txJob.executable = tcEntry.getPhysicalTransformation();
+        txJob.executable = null;
 
         //the i/p and o/p files remain empty
         //as we doing just copying urls
@@ -249,7 +250,7 @@ public class Stork extends AbstractSingleFTPerXFERJob {
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
         //overriding the one from pool catalog.
-        txJob.updateProfiles(tcEntry);
+        //txJob.updateProfiles(tcEntry);
 
         //the profile information from the properties file
         //is assimilated overidding the one from transformation
