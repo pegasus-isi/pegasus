@@ -34,7 +34,7 @@ import java.util.Stack;
 /**
  * This class uses the xerces SAX2 parser to validate and parse an DAX
  * document. This class extends the xerces DefaultHandler so that we
- * only need to override callbacks of interest. 
+ * only need to override callbacks of interest.
  *
  * @author Kavitha Ranganathan
  * @author Jens-S. Vöckler
@@ -47,19 +47,19 @@ public class DAXParser extends DefaultHandler
   /**
    * class name of the SAX parser.
    */
-  private static String vendorParserClass = 
+  private static String vendorParserClass =
     "org.apache.xerces.parsers.SAXParser";
 
   /**
    * our own instance of the SAX parser.
    */
   private XMLReader m_parser;
-  
+
   /**
-   * maintain the hierarchy for some debug printing 
+   * maintain the hierarchy for some debug printing
    */
   private int m_depth;
-  
+
   /**
    * collects the information for a section 2 job element.
    */
@@ -79,7 +79,7 @@ public class DAXParser extends DefaultHandler
    * collects the parents associated with a particular child.
    */
   private java.util.List m_parent;
-  
+
   /**
    * maintains the indications which parent element to be used whenever
    * a filename tag is being encountered.
@@ -121,7 +121,7 @@ public class DAXParser extends DefaultHandler
 
   /**
    * Sets a feature while capturing failed features right here.
-   * 
+   *
    * @param uri is the feature's URI to modify
    * @param flag is the new value to set.
    * @return true, if the feature could be set, false for an exception
@@ -133,8 +133,8 @@ public class DAXParser extends DefaultHandler
       this.m_parser.setFeature( uri, flag );
       result = true;
     } catch ( SAXException se ) {
-      Logging.instance().log( "default", 0, 
-			      "Could not set parser feature " + 
+      Logging.instance().log( "default", 0,
+			      "Could not set parser feature " +
 			      se.getMessage() );
     }
     return result;
@@ -146,7 +146,7 @@ public class DAXParser extends DefaultHandler
    * enable schema validation.
    *
    * @param schemaLocation is any URI pointing to the XML schema definition.
-   */  
+   */
   public DAXParser( String schemaLocation )
   {
     // member variables
@@ -156,10 +156,10 @@ public class DAXParser extends DefaultHandler
 
     // parser related members
     this.m_forward = new HashMap();
-    this.m_reverse = new HashMap();    
+    this.m_reverse = new HashMap();
     this.m_log = Logging.instance();
 
-    try { 
+    try {
       m_parser = (XMLReader) Class.forName(vendorParserClass).newInstance();
       m_parser.setContentHandler(this);
       // m_parser.setErrorHandler(this);
@@ -171,7 +171,7 @@ public class DAXParser extends DefaultHandler
       // time+memory consuming, see http://xml.apache.org/xerces2-j/features.html
       // set( "http://apache.org/xml/features/validation/schema-full-checking", true );
 
-      // Send XML Schema element default values via characters().  
+      // Send XML Schema element default values via characters().
       set( "http://apache.org/xml/features/validation/schema/element-default", true );
       set( "http://apache.org/xml/features/validation/warn-on-duplicate-attdef", true );
       // mysteriously, this one fails with recent Xerces
@@ -199,13 +199,13 @@ public class DAXParser extends DefaultHandler
 
   /**
    * Obtains the current instance to be used for callbacks.
-   * 
+   *
    * @return the current callback instance object, or null.
    * @see #setCallback( Callback )
    */
   public Callback getCallback()
   { return this.m_callback; }
-    
+
   /**
    * Sets a new callback object to use for future callbacks.
    *
@@ -228,7 +228,7 @@ public class DAXParser extends DefaultHandler
   {
     // schema location handling
     try {
-      m_parser.setProperty( 
+      m_parser.setProperty(
 	"http://apache.org/xml/properties/schema/external-schemaLocation",
 	list );
     } catch ( SAXException se ) {
@@ -236,7 +236,7 @@ public class DAXParser extends DefaultHandler
 		 "The SAXParser reported an error: " + se );
     }
   }
-    
+
   /**
    * This function parses a DAX source (could be a document, a stream,
    * etc.), and creates java class instances that correspond to the DAX.
@@ -308,7 +308,7 @@ public class DAXParser extends DefaultHandler
    * can be used to print debug information, i.e the current location
    * (line, column) in the document.
    *
-   * @param locator is the externally set current position 
+   * @param locator is the externally set current position
    */
   public void setDocumentLocator( Locator locator )
   {
@@ -317,14 +317,14 @@ public class DAXParser extends DefaultHandler
 
   /**
    * This method specifies what to do when the parser is at the beginning
-   * of the document. In this case, we simply print a message for debugging.  
+   * of the document. In this case, we simply print a message for debugging.
    */
   public void startDocument()
   {
-    m_depth = 0;  
+    m_depth = 0;
     m_log.log( "parser", 1, "*** start of document ***" );
   }
-  
+
   /**
    * The parser comes to the end of the document.
    */
@@ -348,7 +348,7 @@ public class DAXParser extends DefaultHandler
     String u = uri == null ? null : new String(uri);
     m_log.log( "parser", 2, "adding \"" + p + "\" <=> " + u );
 
-    if ( ! this.m_forward.containsKey(p) ) 
+    if ( ! this.m_forward.containsKey(p) )
       this.m_forward.put(p, new Stack());
     ((Stack) this.m_forward.get(p)).push(u);
 
@@ -362,7 +362,7 @@ public class DAXParser extends DefaultHandler
    * Out of the reach of the prefix, remove it from the HashMap.
    *
    * @param prefix is the prefix that was being mapped previously.
-   */ 
+   */
   public void endPrefixMapping( java.lang.String prefix )
     throws SAXException
   {
@@ -399,24 +399,24 @@ public class DAXParser extends DefaultHandler
   public void startElement( java.lang.String namespaceURI,
                             java.lang.String localName,
                             java.lang.String qName,
-                            Attributes atts ) 
+                            Attributes atts )
     throws SAXException
   {
 
-    m_log.log( "parser", 3, 
+    m_log.log( "parser", 3,
 	       "<" + map(namespaceURI) + localName + "> at " +
 	       m_location.getLineNumber() + ":" +
 	       m_location.getColumnNumber() );
 
     // yup, one more element level
-    m_depth++; 
+    m_depth++;
 
     java.util.List names = new java.util.ArrayList();
     java.util.List values = new java.util.ArrayList();
     for ( int i=0; i < atts.getLength(); ++i ) {
       String name = new String( atts.getLocalName(i) );
       String value = new String( atts.getValue(i) );
-      
+
       m_log.log( "parser", 2, "attribute " + map(atts.getURI(i)) +
 		 name + "=\"" + value + "\"" );
       names.add(name);
@@ -425,7 +425,7 @@ public class DAXParser extends DefaultHandler
 
     createElementObject( localName, names, values );
   }
-  
+
 
   /**
    * The parser is at the end of an element. Each successfully and
@@ -442,8 +442,8 @@ public class DAXParser extends DefaultHandler
     throws SAXException
   {
     // that's it for this level
-    m_depth--; 
-    m_log.log( "parser", 3, 
+    m_depth--;
+    m_log.log( "parser", 3,
 	       "</" + map(namespaceURI) + localName + "> at " +
 	       m_location.getLineNumber() + ":" +
 	       m_location.getColumnNumber() );
@@ -454,7 +454,7 @@ public class DAXParser extends DefaultHandler
   /**
    * This method is the callback function for characters in an element.
    * The element should be mixed-content.
-   * 
+   *
    * @param ch are the characters from the XML document
    * @param start is the start position into the array
    * @param length is the amount of valid data in the array
@@ -466,7 +466,7 @@ public class DAXParser extends DefaultHandler
     if ( message.length() > 0  ) {
       if ( message.trim().length() == 0 )
 	m_log.log( "parser", 3, "Characters: whitespace x " + length );
-      else 
+      else
 	m_log.log( "parser", 3, "Characters: \"" + message  + "\"" );
       elementCharacters(message);
     }
@@ -507,7 +507,7 @@ public class DAXParser extends DefaultHandler
    *
    * @param name The name of the skipped entity. If it is a parameter
    * entity, the name will begin with '%', and if it is the external DTD
-   * subset, it will be the string "[dtd]". 
+   * subset, it will be the string "[dtd]".
    */
   public void skippedEntity(java.lang.String name)
     throws SAXException
@@ -551,15 +551,15 @@ public class DAXParser extends DefaultHandler
 
   /**
    * This method finds out what is the current element, creates the
-   * java object that corresponds to the element, and sets the member 
+   * java object that corresponds to the element, and sets the member
    * variables with the values of the attributes of the element.
    *
    * @param e is the name of the element
    * @param names is a list of attribute names, as strings.
    * @param values is a list of attribute values, to match the key list.
    */
-  public void createElementObject( String e, 
-				   java.util.List names, 
+  public void createElementObject( String e,
+				   java.util.List names,
 				   java.util.List values )
     throws IllegalArgumentException
   {
@@ -579,7 +579,7 @@ public class DAXParser extends DefaultHandler
 	  this.log( e, name, value );
 	  cbdata.put( name, value );
 	} else if (name.equals("index")) {
-	  this.log( e, name, value );	
+	  this.log( e, name, value );
 	  cbdata.put( name, value );
 	} else if (name.equals("count")) {
 	  this.log( e, name, value );
@@ -606,7 +606,7 @@ public class DAXParser extends DefaultHandler
       return;
     }
 
-    if ( e.equals("filename") || e.equals("stdin") || 
+    if ( e.equals("filename") || e.equals("stdin") ||
          e.equals("stdout") || e.equals("stderr") ||
 	 e.equals("uses") ) {
       Filename fn = new Filename();
@@ -651,6 +651,9 @@ public class DAXParser extends DefaultHandler
 	} else if (name.equals("varname")) {
 	  this.log( e, name, value );
 	  fn.setVariable( value );
+	} else if (name.equals("type") ){
+          this.log( e, name, value );
+          fn.setType( LFN.typeInt( value ));
 	} else {
 	  this.complain( e, name, value );
 	}
@@ -668,7 +671,7 @@ public class DAXParser extends DefaultHandler
 	  m_job.addArgument(fn);
 	}
       } else {
-	m_tag = TAG_OTHER;  
+	m_tag = TAG_OTHER;
 
         if ( e.equals("stdin") )
 	  m_job.setStdin(fn);
@@ -727,7 +730,7 @@ public class DAXParser extends DefaultHandler
       for ( int i=0; i < names.size(); ++i ) {
 	String name = (String) names.get(i);
 	String value = (String) values.get(i);
-	
+
 	if ( name.equals("ref") ) {
 	  this.log( e, name, value );
 	  m_child = value;
@@ -743,7 +746,7 @@ public class DAXParser extends DefaultHandler
       for ( int i=0; i < names.size(); ++i ) {
 	String name = (String) names.get(i);
 	String value = (String) values.get(i);
-	
+
 	if ( name.equals("ref") ) {
 	  this.log( e, name, value );
 	  parent = value;
@@ -754,7 +757,7 @@ public class DAXParser extends DefaultHandler
       if ( parent != null ) m_parent.add(parent);
       return;
     }
- 
+
     if ( e.equals("argument") ){
       m_tag = TAG_ARGUMENT;
       return;

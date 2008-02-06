@@ -205,7 +205,7 @@ public class LFN extends Leaf implements Cloneable, Serializable
   }
 
   /**
-   * Converts an integer into the symbolic transfer mode represented by
+   * Converts an integer into the symbolic type mode represented by
    * the constant.
    *
    * @param x is the integer with the linkage type to symbolically convert
@@ -221,6 +221,32 @@ public class LFN extends Leaf implements Cloneable, Serializable
     default:		        return null;
     }
   }
+
+  /**
+   * Converts a String into the corresponding integer value.
+   *
+   * @param x is the String to symbolically convert
+   * @return an integer with the value or -1 if not valid.
+   */
+  public static int typeInt( String x )
+  {
+    int result = -1;
+    if( x == null ){
+        return result;
+    }
+
+    if( x.equalsIgnoreCase( "data" ) ){
+        result = TYPE_DATA;
+    }
+    else if( x.equalsIgnoreCase( "executable" ) ){
+        result = TYPE_EXECUTABLE;
+    }
+    else if( x.equalsIgnoreCase( "pattern" ) ){
+        result = TYPE_PATTERN;
+    }
+    return result;
+  }
+
 
 
   /**
