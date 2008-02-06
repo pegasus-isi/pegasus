@@ -29,6 +29,10 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.UserOptions;
 import org.griphyn.cPlanner.common.LogManager;
+import org.griphyn.cPlanner.common.StreamGobbler;
+import org.griphyn.cPlanner.common.StreamGobblerCallback;
+import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
+
 
 import org.griphyn.cPlanner.engine.MainEngine;
 
@@ -72,6 +76,7 @@ import java.util.regex.Pattern;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import org.griphyn.vdl.euryale.VTorInUseException;
 
 /**
  * This is the main program for the Pegasus. It parses the options specified
@@ -463,12 +468,22 @@ public class CPlanner extends Executable{
             mPMetrics.setEndTime( new Date() );
             writeOutMetrics( mPMetrics );
 
-            if(mPOptions.submitToScheduler()){//submit the jobs
-                throw new RuntimeException( "Direct submission is not supported at present" );
-            }
+            if( mPOptions.submitToScheduler() ){//submit the jobs
+                StringBuffer invocation = new StringBuffer();
+                //construct the path to the bin directory
+                invocation.append( mProps.getPegasusHome() ).append( File.separator ).
+                           append( "bin" ).append( File.separator ).append( getPegasusRunInvocation ( nodatabase ) );
 
-            //log the success message
-            this.logSuccessfulCompletion( nodatabase );
+                boolean submit = submitWorkflow( invocation.toString() );
+                if ( !submit ){
+                    throw new RuntimeException(
+                        "Unable to submit the workflow using pegasus-run" );
+                }
+            }
+            else{
+                //log the success message
+                this.logSuccessfulCompletion(nodatabase);
+            }
         }
         else{
             printShortVersion();
@@ -490,7 +505,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfRnzVr::aD:d:s:o:P:c:C:b:g:2:",
+                              "vhfSnzVr::aD:d:s:o:P:c:C:b:g:2:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -570,9 +585,9 @@ public class CPlanner extends Executable{
                     options.setRandomDir(g.getOptarg());
                     break;
 
-//                case 'R'://submit option
-//                    options.setSubmitToScheduler( true);
-//                    break;
+                case 'S'://submit option
+                    options.setSubmitToScheduler( true );
+                    break;
 
                 case 's'://sites
                     options.setExecutionSites( g.getOptarg() );
@@ -599,7 +614,15 @@ public class CPlanner extends Executable{
 
     }
 
-
+    /**
+     * Logs an entry in the work catalog about the workflow being planned.
+     *
+     * @param dag ADag
+     * @param baseDir String
+     * @param relativeDir String
+     *
+     * @return boolean
+     */
     protected boolean logEntryInWorkCatalog( ADag dag, String baseDir, String relativeDir ){
         //connect to the work catalog and populate
         //an entry in it for the current workflow
@@ -629,6 +652,60 @@ public class CPlanner extends Executable{
         }
         return nodatabase;
     }
+
+
+    /**
+     * Submits the workflow for execution using pegasus-run, a wrapper around
+     * pegasus-submit-dag.
+     *
+     * @param invocation    the pegasus run invocation
+     *
+     * @return boolean indicating whether could successfully submit the workflow or not.
+     */
+    public boolean submitWorkflow( String invocation ){
+        boolean result = false;
+        try{
+            //set the callback and run the pegasus-run command
+            Runtime r = Runtime.getRuntime();
+
+            mLogger.log( "Executing  " + invocation,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            Process p = r.exec( invocation );
+
+            //spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips =
+                new StreamGobbler( p.getInputStream(), new DefaultStreamGobblerCallback(
+                                                                   LogManager.INFO_MESSAGE_LEVEL ));
+            StreamGobbler eps =
+                new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
+                                                             LogManager.ERROR_MESSAGE_LEVEL));
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            eps.join();
+
+            //get the status
+            int status = p.waitFor();
+
+            mLogger.log( "Submission of workflow exited with status " + status,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+            result = (status == 0) ?true : false;
+        }
+        catch(IOException ioe){
+            mLogger.log("IOException while running tailstatd ", ioe,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+        }
+        catch( InterruptedException ie){
+            //ignore
+        }
+        return result;
+
+    }
+
 
 
      /**
@@ -677,7 +754,7 @@ public class CPlanner extends Executable{
         longopts[4]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[5]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[6]   = new LongOpt( "force", LongOpt.NO_ARGUMENT, null, 'f' );
-        longopts[7]   = new LongOpt( "run", LongOpt.NO_ARGUMENT, null, 'R' );
+        longopts[7]   = new LongOpt( "submit", LongOpt.NO_ARGUMENT, null, 'S' );
         longopts[8]   = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[9]   = new LongOpt( "randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r' );
         longopts[10]  = new LongOpt( "authenticate", LongOpt.NO_ARGUMENT, null, 'a' );
@@ -709,7 +786,7 @@ public class CPlanner extends Executable{
           " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
           "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] " +
           " [ --relative-dir <relative directory to base directory> ][-g <vogroup>] [-o <output site>] " +
-          "\n [-r[dir name]] [--monitor] [-n]  [-v] [-V] [-h]";
+          "\n [-r[dir name]] [--monitor] [-S] [-n]  [-v] [-V] [-h]";
 
         System.out.println(text);
     }
@@ -751,9 +828,9 @@ public class CPlanner extends Executable{
            "\n                    can optionally specify the basename of the remote directories" +
            "\n     --monitor      monitor the execution of the workflow, using workflow monitor daemon like tailstatd." +
            "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the concrete workflow." +
-// "\n -R |--run          submit the concrete workflow generated" +
+           "\n -S |--submit       submit the executable workflow generated" +
            "\n -v |--verbose      increases the verbosity of messages about what is going on" +
-           "\n -V |--version      displays the version of the Griphyn Virtual Data System" +
+           "\n -V |--version      displays the version of the Pegasus Workflow Management System" +
            "\n -h |--help         generates this help." +
            "\n The following exitcodes are produced" +
            "\n 0 concrete planner planner was able to generate a concretized workflow" +
@@ -989,15 +1066,30 @@ public class CPlanner extends Executable{
     private void logSuccessfulCompletion( boolean nodatabase ){
         StringBuffer message = new StringBuffer();
         message.append( this.SUCCESS_MESSAGE ).
-                append( "" ).append( "pegasus-run ").
-                append( "-Dpegasus.user.properties=" ).append( mProps.getPropertiesInSubmitDirectory() ).
-                append( nodatabase ? " --nodatabase"  : "" ).
-                append( " " ).append( mPOptions.getSubmitDirectory() ).
+                append( "" ).append( getPegasusRunInvocation( nodatabase ) ).
                 append( "\n\n" );
         mLogger.log( message.toString(), LogManager.INFO_MESSAGE_LEVEL );
 
     }
 
+    /**
+     * Returns the pegasus-run invocation on the workflow planned.
+     *
+     * @param nodatabase boolean indicating whether to add a nodatabase option or not.
+     *
+     * @return  the pegasus-run invocation
+     */
+    private String getPegasusRunInvocation( boolean nodatabase ){
+        StringBuffer result = new StringBuffer();
+
+        result.append( "pegasus-run ").
+               append( "-Dpegasus.user.properties=" ).append( mProps.getPropertiesInSubmitDirectory() ).
+               append( nodatabase ? " --nodatabase"  : "" ).
+               append( " " ).append( mPOptions.getSubmitDirectory() );
+
+        return result.toString();
+
+    }
 
 }
 

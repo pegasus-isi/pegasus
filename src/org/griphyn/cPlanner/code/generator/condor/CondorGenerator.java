@@ -21,6 +21,7 @@ import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.code.CodeGeneratorException;
@@ -46,12 +47,10 @@ import org.griphyn.cPlanner.namespace.Globus;
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 import org.griphyn.vdl.euryale.VTorInUseException;
 
 import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.transformation.TCMode;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -68,7 +67,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This class generates the condor submit files for the DAG which has to
@@ -95,13 +93,6 @@ public class CondorGenerator extends Abstract {
     protected LogManager mLogger;
 
     /**
-     * The variable containing the message to be logged.
-     */
-    private String mLogMsg;
-
-
-
-    /**
      * Handle to the Transformation Catalog.
      */
     protected TransformationCatalog mTCHandle;
@@ -111,13 +102,6 @@ public class CondorGenerator extends Abstract {
      */
     private PoolInfoProvider mPoolHandle;
 
-    /**
-     * Defines the read mode for transformation catalog and pool.config.
-     * Whether we want to read all at once or as desired.
-     *
-     * @see org.griphyn.common.catalog.transformation.TCMode
-     */
-    private String mTCMode;
 
     /**
      * Specifies the implementing class for the pool interface. Contains
