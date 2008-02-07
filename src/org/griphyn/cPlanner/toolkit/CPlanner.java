@@ -69,6 +69,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Date;
 import java.util.Set;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -238,23 +239,32 @@ public class CPlanner extends Executable{
      *
      * @param args the command line options.
      */
-    public void executeCommand(String[] args) {
+    public void executeCommand( String[] args ) {
+        executeCommand( parseCommandLineArguments( args ) );
+    }
+
+    /**
+     * Executes the command on the basis of the options specified.
+     *
+     * @param options the command line options.
+     */
+    public void executeCommand( PlannerOptions options ) {
         String message = new String();
-        mPOptions = parseCommandLineArguments(args);
+        mPOptions = options;
 
         //print help if asked for
         if( mPOptions.getHelp() ) { printLongVersion(); return; }
 
-        //populate planner metrics
-        mPMetrics.setStartTime( new Date() );
-        mPMetrics.setVOGroup( mPOptions.getVOGroup() );
-        mPMetrics.setBaseSubmitDirectory( mPOptions.getSubmitDirectory() );
-        mPMetrics.setDAX( mPOptions.getDAX() );
+        //set the logging level only if -v was specified
+        //else bank upon the the default logging level
+        if(mPOptions.getLoggingLevel() > 0){
+            mLogger.setLevel(mPOptions.getLoggingLevel());
+        }
+
 
         //do sanity check on dax file
         String dax         = mPOptions.getDAX();
         String pdax        = mPOptions.getPDAX();
-//      String submitDir   = mPOptions.getSubmitDirectory();
         String baseDir     = mPOptions.getBaseSubmitDirectory();
 
         if( dax == null && pdax == null ){
@@ -264,11 +274,21 @@ public class CPlanner extends Executable{
             return;
         }
 
-        //set the logging level only if -v was specified
-        //else bank upon the the default logging level
-        if(mPOptions.getLoggingLevel() > 0){
-            mLogger.setLevel(mPOptions.getLoggingLevel());
+        if( mPOptions.getPartitioningType() != null ){
+            // partition and plan the workflow
+            doPartitionAndPlan( mProps, options );
+            return;
         }
+
+
+        //populate planner metrics
+        mPMetrics.setStartTime( new Date() );
+        mPMetrics.setVOGroup( mPOptions.getVOGroup() );
+        mPMetrics.setBaseSubmitDirectory( mPOptions.getSubmitDirectory() );
+        mPMetrics.setDAX( mPOptions.getDAX() );
+
+
+
 
         UserOptions opts = UserOptions.getInstance(mPOptions);
 
@@ -505,7 +525,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfSnzVr::aD:d:s:o:P:c:C:b:g:2:",
+                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -576,6 +596,9 @@ public class CPlanner extends Executable{
                     options.setOutputSite(g.getOptarg());
                     break;
 
+                case 'p'://partition and plan
+                    options.setPartitioningType( "Whole" );
+                    break;
 
                 case 'P'://pdax file
                     options.setPDAX(g.getOptarg());
@@ -706,20 +729,81 @@ public class CPlanner extends Executable{
 
     }
 
+    /**
+     * Partitions and plans the workflow. First step of merging DAGMan and
+     * Condor
+     *
+     * @param properties   the properties passed to the planner.
+     * @param options      the options passed to the planner.
+     */
+    protected void doPartitionAndPlan( PegasusProperties properties, PlannerOptions options ){
+        //we first need to get the label of DAX
+        Callback cb =  DAXCallbackFactory.loadInstance( properties, options.getDAX(), "DAX2Metadata" );
+        try{
+            DaxParser daxParser = new DaxParser( options.getDAX(), properties, cb );
+        }catch( Exception e ){
+            //ignore
+        }
+        Map metadata = ( Map ) cb.getConstructedObject();
+        String label = (String) metadata.get( "name" );
 
+        String baseDir = options.getBaseSubmitDirectory();
+        String relativeDir = null;
+        //construct the submit directory structure
+        try{
+            relativeDir = (options.getRelativeSubmitDirectory() == null) ?
+                                 //create our own relative dir
+                                 createSubmitDirectory(label,
+                                                       baseDir,
+                                                       mUser,
+                                                       options.getVOGroup(),
+                                                       properties.useTimestampForDirectoryStructure()) :
+                                 options.getRelativeSubmitDirectory();
+        }
+        catch( IOException ioe ){
+            String error = "Unable to write  to directory" ;
+            throw new RuntimeException( error + options.getSubmitDirectory() , ioe );
 
-     /**
-      * Sets the basename of the random directory that is created on the remote
-      * sites per workflow. The name is generated by default from teh flow ID,
-      * unless a basename prefix is specifed at runtime in the planner options.
-      *
-      * @param dag  the DAG containing the abstract workflow.
-      *
-      * @return  the basename of the random directory.
-      */
-     protected String getRandomDirectory(ADag dag){
+        }
 
-         //constructing the name of the dagfile
+        options.setSubmitDirectory( baseDir, relativeDir  );
+        mLogger.log( "Submit Directory for workflow is " + options.getSubmitDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
+
+        //now let us run partitiondax
+        mLogger.log( "Partitioning Workflow" , LogManager.INFO_MESSAGE_LEVEL );
+        PartitionDAX partitionDAX = new PartitionDAX();
+        File dir = new File( options.getSubmitDirectory(), "dax" );
+        String pdax = partitionDAX.partitionDAX(
+                                                  properties,
+                                                  options.getDAX(),
+                                                  dir.getAbsolutePath(),
+                                                  options.getPartitioningType() );
+
+        mLogger.log( "PDAX file generated is " + pdax , LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.logCompletion( "Partitioning Workflow" , LogManager.INFO_MESSAGE_LEVEL );
+
+        //now run pegasus-plan with pdax option
+        CPlanner pegasusPlan = new CPlanner();
+        options.setDAX( null );
+        options.setPDAX( pdax );
+        options.setPartitioningType( null );
+
+        pegasusPlan.executeCommand( options );
+
+    }
+
+    /**
+     * Sets the basename of the random directory that is created on the remote
+     * sites per workflow. The name is generated by default from teh flow ID,
+     * unless a basename prefix is specifed at runtime in the planner options.
+     *
+     * @param dag  the DAG containing the abstract workflow.
+     *
+     * @return  the basename of the random directory.
+     */
+    protected String getRandomDirectory(ADag dag){
+
+        //constructing the name of the dagfile
         StringBuffer sb = new StringBuffer();
         String bprefix = mPOptions.getBasenamePrefix();
         if( bprefix != null){
@@ -734,7 +818,7 @@ public class CPlanner extends Executable{
             sb.append(dag.dagInfo.flowID);
         }
         return sb.toString();
-     }
+    }
 
 
     /**
@@ -745,7 +829,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[21];
+        LongOpt[] longopts = new LongOpt[22];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -771,6 +855,7 @@ public class CPlanner extends Executable{
         longopts[18]  = new LongOpt( "group",   LongOpt.REQUIRED_ARGUMENT, null, 'g' );
         longopts[19]  = new LongOpt( "deferred", LongOpt.NO_ARGUMENT, null, 'z');
         longopts[20]  = new LongOpt( "relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2' );
+        longopts[21]  = new LongOpt(  "pap", LongOpt.NO_ARGUMENT, null, 'p' );
         return longopts;
     }
 
@@ -909,7 +994,6 @@ public class CPlanner extends Executable{
 
     }
 
-
     /**
      * Creates the submit directory for the workflow. This is not thread safe.
      *
@@ -925,6 +1009,29 @@ public class CPlanner extends Executable{
      * @throws IOException in case of unable to create submit directory.
      */
     protected String createSubmitDirectory( ADag dag,
+                                            String dir,
+                                            String user,
+                                            String vogroup,
+                                            boolean timestampBased ) throws IOException {
+
+        return createSubmitDirectory( dag.getLabel(), dir, user, vogroup, timestampBased );
+    }
+
+    /**
+     * Creates the submit directory for the workflow. This is not thread safe.
+     *
+     * @param label   the label of the workflow
+     * @param dir     the base directory specified by the user.
+     * @param user    the username of the user.
+     * @param vogroup the vogroup to which the user belongs to.
+     * @param timestampBased boolean indicating whether to have a timestamp based dir or not
+     *
+     * @return  the directory name created relative to the base directory passed
+     *          as input.
+     *
+     * @throws IOException in case of unable to create submit directory.
+     */
+    protected String createSubmitDirectory( String label,
                                             String dir,
                                             String user,
                                             String vogroup,
@@ -945,7 +1052,6 @@ public class CPlanner extends Executable{
         result.append( vogroup ).append( File.separator );
 
         //add the label of the DAX
-        String label = dag.getLabel();
         base = new File( base, label );
         sanityCheck( base );
         result.append( label ).append( File.separator );

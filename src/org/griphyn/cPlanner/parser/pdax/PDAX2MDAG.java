@@ -363,13 +363,16 @@ public class PDAX2MDAG implements Callback {
         // create files in the directory, unless anything else is known.
         try {
             //create a submit directory structure if required
-            String relativeDir = this.createSubmitDirectory( mMegaDAG.getLabel(),
-                                                             mPOptions.getSubmitDirectory(),
-                                                             mUser,
-                                                             mPOptions.getVOGroup(),
-                                                             mProps.useTimestampForDirectoryStructure() );
+            String relativeDir = ( mPOptions.getRelativeSubmitDirectory() == null ) ?
+                                          this.createSubmitDirectory( mMegaDAG.getLabel(),
+                                                                      mPOptions.getSubmitDirectory(),
+                                                                      mUser,
+                                                                      mPOptions.getVOGroup(),
+                                                                      mProps.useTimestampForDirectoryStructure() ):
+                                          mPOptions.getRelativeSubmitDirectory();
+
             //set the directory structure
-            mPOptions.setSubmitDirectory( mPOptions.getSubmitDirectory(), relativeDir);
+            mPOptions.setSubmitDirectory( mPOptions.getBaseSubmitDirectory(), relativeDir);
             mSubmitDirectory = mPOptions.getSubmitDirectory();
 
             //we want to set the relative directory as the base working
@@ -1020,6 +1023,9 @@ public class PDAX2MDAG implements Callback {
         //in case of deferred planning cleanup wont work
         //explicitly turn it off
         mClonedPOptions.setCleanup( false );
+
+        //we want monitoring to happen
+        mClonedPOptions.setMonitoring( true );
 
         //construct the argument string.
         //add the jvm options and the pegasus options if any

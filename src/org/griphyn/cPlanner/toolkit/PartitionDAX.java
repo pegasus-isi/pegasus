@@ -112,6 +112,7 @@ public class PartitionDAX extends Executable {
         Getopt g = new Getopt("PartitionDAX", args, "vhVD:d:t:", longOptions, false);
         boolean help = false;
         boolean version = false;
+        int status = 0;
 
         //log the starting time
         double starttime = new Date().getTime();
@@ -162,28 +163,65 @@ public class PartitionDAX extends Executable {
 
         if ( ( help && version ) || help ) {
             printLongVersion();
-            System.exit( 0 );
+            System.exit( status );
         }
         else if ( version ) {
             //print the version message
             mLogger.log( getGVDSVersion(), LogManager.INFO_MESSAGE_LEVEL );
-            System.exit( 0 );
+            System.exit( status );
         }
+
+
+        try{
+            String pdax = partitionDAX( mProps, mDAXFile, mDirectory, mType );
+            mLogger.log( "Partitioned DAX written out " + pdax,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        catch( Exception e ){
+            mLogger.log( "", e, LogManager.FATAL_MESSAGE_LEVEL );
+            status = 1;
+        }
+        //log the end time and time execute
+        double endtime = new Date().getTime();
+        double execTime = (endtime - starttime)/1000;
+        mLogger.log("Time taken to execute is " + execTime + " seconds",
+                    LogManager.INFO_MESSAGE_LEVEL);
+
+        System.exit( status );
+
+
+    }
+
+    /**
+     * @param properties  the PegasusProperties
+     * @param daxFile     String
+     * @param directory   the directory where paritioned daxes reside
+     * @param type        the type of partitioning to use.
+     *
+     * @return  the path to the pdax file.
+     */
+    public String partitionDAX( PegasusProperties properties ,
+                             String daxFile,
+                             String directory,
+                             String type  ){
+        int status = 0;
         //sanity check for the dax file
-        if ( mDAXFile == null || mDAXFile.length() == 0 ) {
+        if ( daxFile == null || daxFile.length() == 0 ) {
             mLogger.log( "The dax file that is to be partitioned not " +
                          "specified", LogManager.FATAL_MESSAGE_LEVEL );
             printShortVersion();
-            System.exit(1);
+            status = 1;
+            throw new RuntimeException( "Unable to partition" );
         }
+
 
         //always try to make the directory
         //referred to by the directory
-        File dir = new File( mDirectory );
+        File dir = new File( directory );
         dir.mkdirs();
 
         //build up the partition graph
-        String callbackClass = ( mType.equalsIgnoreCase("label") ) ?
+        String callbackClass = ( type.equalsIgnoreCase("label") ) ?
                                 "DAX2LabelGraph": //graph with labels populated
                                 "DAX2Graph";
 
@@ -194,17 +232,17 @@ public class PartitionDAX extends Executable {
         String daxName          = null;
         int state = 0;
         try{
-            callback = DAXCallbackFactory.loadInstance( mProps,
-                                                        mDAXFile,
+            callback = DAXCallbackFactory.loadInstance( properties,
+                                                        daxFile,
                                                         callbackClass );
 
             //set the appropriate key that is to be used for picking up the labels
             if( callback instanceof DAX2LabelGraph ){
-                ((DAX2LabelGraph)callback).setLabelKey( mProps.getPartitionerLabelKey() );
+                ((DAX2LabelGraph)callback).setLabelKey( properties.getPartitionerLabelKey() );
             }
 
             state = 1;
-            DaxParser d = new DaxParser( mDAXFile, mProps, callback );
+            DaxParser d = new DaxParser( daxFile, properties, callback );
             state = 2;
             //get the graph map
             Map graphMap = (Map) callback.getConstructedObject();
@@ -212,10 +250,10 @@ public class PartitionDAX extends Executable {
             GraphNode root = (GraphNode) graphMap.get( DAX2Graph.DUMMY_NODE_ID );
             daxName = ( (DAX2Graph) callback).getNameOfDAX();
             state = 3;
-            partitioner = PartitionerFactory.loadInstance( mProps,
+            partitioner = PartitionerFactory.loadInstance( properties,
                                                            root,
                                                            graphMap,
-                                                           mType );
+                                                           type );
         }
         catch ( FactoryException fe){
             mLogger.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
@@ -254,27 +292,22 @@ public class PartitionDAX extends Executable {
                     errorStatus = 1;
                     break;
             }
-            System.exit( errorStatus );
+            status = errorStatus;
+        }
+        if( status > 0 ){
+            throw new RuntimeException( "Unable to partition" );
         }
 
 
         //load the writer callback that writes out
         //the partitioned daxes and PDAX
         WriterCallback cb = new WriterCallback();
-        cb.initialize( mProps, mDAXFile, daxName, mDirectory );
+        cb.initialize( properties, daxFile, daxName, directory );
 
         //start the partitioning of the graph
         partitioner.determinePartitions( cb );
 
-        //log the end time and time execute
-        double endtime = new Date().getTime();
-        double execTime = (endtime - starttime)/1000;
-        mLogger.log("Time taken to execute is " + execTime + " seconds",
-                    LogManager.INFO_MESSAGE_LEVEL);
-
-        System.exit(0);
-
-
+        return cb.getPDAX();
     }
 
     /**

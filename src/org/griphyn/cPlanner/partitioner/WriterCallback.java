@@ -49,6 +49,10 @@ public class WriterCallback implements Callback {
      */
     protected DAXWriter mDAXWriter;
 
+    /**
+     * The path to the PDAX file written out.
+     */
+    protected String mPDAX;
 
     /**
      * Handle to the properties available.
@@ -162,11 +166,21 @@ public class WriterCallback implements Callback {
         //change internal state to signal
         //that we are done with partitioning.
         mPartitioningStarted = false;
+
         mPDAXWriter.close();
         mDAXWriter.close();
     }
 
 
+    /**
+     * Returns the name of the pdax file written out.
+     * Will be null if the partitioning has not completed.
+     *
+     * @return path to the pdax file.
+     */
+    public String getPDAX(){
+        return this.mPDAX;
+    }
 
 
     /**
@@ -206,6 +220,7 @@ public class WriterCallback implements Callback {
         //now the complete path
         pdaxPath = directory + File.separator + pdaxPath + ".pdax";
         //System.out.println("Name is " + nameOfPDAX);
+        mPDAX = pdaxPath;
 
         return new PDAXWriter( name, pdaxPath );
 

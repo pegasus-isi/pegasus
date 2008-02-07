@@ -178,6 +178,11 @@ public class PlannerOptions extends Data implements Cloneable{
     private Date mDate;
 
     /**
+     * Stores the type of partitioning to be done.
+     */
+    private String mPartitioningType;
+
+    /**
      * Default Constructor.
      */
     public PlannerOptions(){
@@ -206,6 +211,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mVOGroup          = "pegasus";
         mDeferredRun      = false;
         mDate             = new Date();
+        mPartitioningType = null;
     }
 
     /**
@@ -508,6 +514,25 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public boolean monitorWorkflow(){
         return this.mMonitor;
+    }
+
+    /**
+     * Sets the partitioning type in case of partition and plan.
+     *
+     * @param type   the type of partitioning technique
+     */
+    public void setPartitioningType( String type ){
+        mPartitioningType = type;
+    }
+
+
+    /**
+     * Returns the partitioning type in case of partition and plan.
+     *
+     * @return   the type of partitioning technique
+     */
+    public String getPartitioningType( ){
+        return mPartitioningType;
     }
 
 
@@ -973,6 +998,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mVOGroup        = this.mVOGroup;
         pOpt.mDeferredRun    = this.mDeferredRun;
         pOpt.mDate           = (Date)this.mDate.clone();
+        pOpt.mPartitioningType = this.mPartitioningType;
         //Note not cloning the vdsProps
         pOpt.mVDSProps       = null;
         return pOpt;
@@ -1012,6 +1038,9 @@ public class PlannerOptions extends Data implements Cloneable{
      * @return the absolute path.
      */
     private String sanitizePath( String path ){
+        if( path == null ){
+            return null;
+        }
         String absPath;
         char separator = File.separatorChar;
 
