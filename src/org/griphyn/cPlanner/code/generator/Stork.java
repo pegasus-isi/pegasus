@@ -161,6 +161,7 @@ public class Stork extends Abstract {
         writer.println("\tsrc_url = \"" + srcUrl + "\";");
         writer.println("\tdest_url = \"" + dstUrl + "\";");
         writer.println("\tx509proxy = \"" + "default" + "\";");
+	writer.println("\tlog = \"" + this.getFileBaseName(job) + ".log" + "\";");
 
         // DONE
         writer.println("]");
