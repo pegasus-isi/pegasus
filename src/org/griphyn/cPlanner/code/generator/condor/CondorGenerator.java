@@ -398,6 +398,7 @@ public class CondorGenerator extends Abstract {
         }
 
         //tailstatd requires the braindump file first
+        boolean result = false;
         String bdump;
         try{
             bdump = writeOutBraindump(new File(mSubmitFileDir),
@@ -406,7 +407,7 @@ public class CondorGenerator extends Abstract {
                                            this.getDAGFilename( mConcreteWorkflow, ".dag" ));
 
             mLogger.log("Written out braindump to " + bdump, LogManager.DEBUG_MESSAGE_LEVEL);
-            return true;
+            result = true;
         }
         catch(IOException ioe){
             //log the message and return
@@ -415,61 +416,62 @@ public class CondorGenerator extends Abstract {
             return false;
         }
 
-	//No longer launching tailstatd directly for the time being
+        //No longer launching tailstatd directly for the time being
         //Karan May 21, 2007
-	/*
-        //construct the default path to the tailstatd
-        char sep = File.separatorChar;
-        StringBuffer tsd = new StringBuffer();
-        tsd.append(mProps.getPegasusHome())
-           .append(sep).append("bin")
-           .append(sep).append("tailstatd");
+        if(  mPOptions.monitorWorkflow() ){
+            //construct the default path to the tailstatd
+            char sep = File.separatorChar;
+            StringBuffer tsd = new StringBuffer();
+            tsd.append(mProps.getPegasusHome())
+                .append(sep).append("bin")
+                .append(sep).append("tailstatd");
 
-       boolean result = false;
-       try{
-           //set the callback and run the tailstatd command
-           Runtime r = Runtime.getRuntime();
 
-           //append the arguments to the constructed tsd
-           tsd.append(" ").append(mSubmitFileDir).append(sep).
-               append(this.getDAGMANOutFilename(mConcreteWorkflow));
+            try{
+                //set the callback and run the tailstatd command
+                Runtime r = Runtime.getRuntime();
 
-           mLogger.log("Executing tailstatd " + tsd.toString(),
-                       LogManager.DEBUG_MESSAGE_LEVEL);
-           Process p = r.exec( tsd.toString() );
+                //append the arguments to the constructed tsd
+                tsd.append(" ").append(mSubmitFileDir).append(sep).
+                    append(this.getDAGMANOutFilename(mConcreteWorkflow));
 
-           //spawn off the gobblers with the already initialized default callback
-           StreamGobbler ips =
-               new StreamGobbler(p.getInputStream(), new DefaultStreamGobblerCallback(
+                mLogger.log("Executing tailstatd " + tsd.toString(),
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                Process p = r.exec( tsd.toString() );
+
+                //spawn off the gobblers with the already initialized default callback
+                StreamGobbler ips =
+                    new StreamGobbler(p.getInputStream(), new DefaultStreamGobblerCallback(
+                                                            LogManager.DEBUG_MESSAGE_LEVEL));
+                StreamGobbler eps =
+                    new StreamGobbler(p.getErrorStream(), new DefaultStreamGobblerCallback(
                                                              LogManager.DEBUG_MESSAGE_LEVEL));
-           StreamGobbler eps =
-               new StreamGobbler(p.getErrorStream(), new DefaultStreamGobblerCallback(
-                                                             LogManager.DEBUG_MESSAGE_LEVEL));
 
-           ips.start();
-           eps.start();
+                ips.start();
+                eps.start();
 
-           //wait for the threads to finish off
-           ips.join();
-           eps.join();
+                //wait for the threads to finish off
+                ips.join();
+                eps.join();
 
-           //get the status
-           int status = p.waitFor();
+                //get the status
+                int status = p.waitFor();
 
-           mLogger.log("Command " + tsd + " exited with status " + status,
-                       LogManager.DEBUG_MESSAGE_LEVEL);
+                mLogger.log("Command " + tsd + " exited with status " + status,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
 
-           result = (status == 0) ?true : false;
-       }
-       catch(IOException ioe){
-           mLogger.log("IOException while running tailstatd ", ioe,
-                       LogManager.ERROR_MESSAGE_LEVEL);
-       }
-       catch( InterruptedException ie){
-           //ignore
-       }
-       return result;
-	*/
+                result = (status == 0) ?true : false;
+            }
+            catch(IOException ioe){
+                mLogger.log("IOException while running tailstatd ", ioe,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
+            catch( InterruptedException ie){
+                //ignore
+            }
+        }
+        return result;
+
 
     }
 

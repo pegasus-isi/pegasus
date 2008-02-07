@@ -24,6 +24,8 @@ import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
+
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -36,6 +38,8 @@ import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.partitioner.Partition;
 import org.griphyn.cPlanner.partitioner.DAXWriter;
+
+import org.griphyn.cPlanner.poolinfo.SiteFactory;
 
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -70,9 +74,6 @@ import java.util.regex.Pattern;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.common.catalog.transformation.Mapper;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 /**
  * This callback ends up creating the megadag that contains the smaller dags
@@ -292,11 +293,8 @@ public class PDAX2MDAG implements Callback {
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
 //        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-        mBag.add( PegasusBag.SITE_CATALOG,
-                  PoolMode.loadPoolInstance( mProps.getPoolMode(),
-                                             PoolMode.getImplementingClass( mProps.getPoolMode() ),
-                                             PoolMode.SINGLETON_LOAD )
-            );
+
+        mBag.add( PegasusBag.SITE_CATALOG, SiteFactory.loadInstance( properties, false ) );
 
 
         //the default gobbler callback always log to debug level
