@@ -66,13 +66,20 @@ endif
 
 ifeq (LINUX,${SYSTEM})
 ifeq (ia64,${MARCH})
+# old Intel-only IA64 architecture
 CFLAGS	= -Wall -O2 -ggdb
 else
 ifeq (x86_64,${MARCH})
+# new Intel/AMD 64bit architecture
 CFLAGS	= -Wall -O2 -ggdb -m64
 else
+# regular 32bit x86 architecture
 CFLAGS	= -Wall -O2 -march=i686 -ggdb
 #EXTRA_LDFLAGS += -static
+else
+# UNKNOWN ARCHITECTURE -- MAKE NO ASSUMPTIONS
+CFLAGS	= -Wall -O2 -ggdb
+endif
 endif
 endif
 #CFLAGS	+= -D__USE_POSIX=199309
