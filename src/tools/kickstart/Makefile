@@ -73,9 +73,9 @@ ifeq (x86_64,${MARCH})
 # new Intel/AMD 64bit architecture
 CFLAGS	= -Wall -O2 -ggdb -m64
 else
+ifeq (i686,${MARCH})
 # regular 32bit x86 architecture
 CFLAGS	= -Wall -O2 -march=i686 -ggdb
-#EXTRA_LDFLAGS += -static
 else
 # UNKNOWN ARCHITECTURE -- MAKE NO ASSUMPTIONS
 CFLAGS	= -Wall -O2 -ggdb
