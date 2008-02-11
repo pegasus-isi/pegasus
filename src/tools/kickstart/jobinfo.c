@@ -309,7 +309,7 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
 	   job->status );
 
   /* <status>: cases of completion */
-  status = job->status;	/* $#@! broken Debian headers */
+  status = (int) job->status;	/* $#@! broken Debian headers */
   if ( job->status < 0 ) {
     /* <failure> */
     myprint( buffer, size, len, "<failure error=\"%d\">%s%s</failure>",
