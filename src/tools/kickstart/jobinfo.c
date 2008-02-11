@@ -266,6 +266,8 @@ initJobInfo( JobInfo* jobinfo, int argc, char* const* argv )
   }
 }
 
+
+
 int
 printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
 		 const char* tag, const JobInfo* job )
@@ -278,6 +280,8 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
  *          job (IN): job info to print.
  * returns: number of characters put into buffer (buffer length) */
 {
+  int status;	/* $#@! broken Debian headers */
+
   /* sanity check */
   if ( ! job->isValid ) return *len;
 
@@ -305,37 +309,38 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
 	   job->status );
 
   /* <status>: cases of completion */
+  status = job->status;	/* $#@! broken Debian headers */
   if ( job->status < 0 ) {
     /* <failure> */
     myprint( buffer, size, len, "<failure error=\"%d\">%s%s</failure>",
 	     job->saverr, 
 	     job->prefix && job->prefix[0] ? job->prefix : "", 
 	     strerror(job->saverr) );
-  } else if ( WIFEXITED(job->status) ) {
+  } else if ( WIFEXITED(status) ) {
     myprint( buffer, size, len, "<regular exitcode=\"%d\"/>", 
-	     WEXITSTATUS(job->status) );
-  } else if ( WIFSIGNALED(job->status) ) {
-    /* result = 128 + WTERMSIG(job->status); */
+	     WEXITSTATUS(status) );
+  } else if ( WIFSIGNALED(status) ) {
+    /* result = 128 + WTERMSIG(status); */
     myprint( buffer, size, len, "<signalled signal=\"%u\"", 
-	     WTERMSIG(job->status) );
+	     WTERMSIG(status) );
 #ifdef WCOREDUMP
     myprint( buffer, size, len, " corefile=\"%s\"", 
-	     WCOREDUMP(job->status) ? "true" : "false" );
+	     WCOREDUMP(status) ? "true" : "false" );
 #endif
     myprint( buffer, size, len, ">%s</signalled>", 
 #if defined(CYGWINNT50) || defined(CYGWINNT51)
 	     "unknown"
 #else
-	     sys_siglist[WTERMSIG(job->status)]
+	     sys_siglist[WTERMSIG(status)]
 #endif
 	     );
-  } else if ( WIFSTOPPED(job->status) ) {
+  } else if ( WIFSTOPPED(status) ) {
     myprint( buffer, size, len, "<suspended signal=\"%u\">%s</suspended>",
-	     WSTOPSIG(job->status),
+	     WSTOPSIG(status),
 #if defined(CYGWINNT50) || defined(CYGWINNT51)
 	     "unknown"
 #else
-	     sys_siglist[WSTOPSIG(job->status)]
+	     sys_siglist[WSTOPSIG(status)]
 #endif
 	     );
   } /* FIXME: else? */
