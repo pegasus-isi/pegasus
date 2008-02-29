@@ -482,12 +482,13 @@ public class Algorithm {
      */
     protected float computeDownwardRank( GraphNode node ){
         float result = 0;
-        float value = 0;
+	//value needs to be computed for each parent separately
+        //float value = 0;
 
         for( Iterator it = node.getParents().iterator(); it.hasNext(); ){
             GraphNode p = (GraphNode)it.next();
             Bag pbag    = p.getBag();
-
+	    float value = 0;
             value += ( getFloatValue ( pbag.get( HeftBag.DOWNWARD_RANK ) )+
                        getFloatValue ( pbag.get( HeftBag.AVG_COMPUTE_TIME ) ) +
                        mAverageCommunicationCost
