@@ -40,6 +40,10 @@ $VERSION = $1 if ( '$Revision: 1.0 $' =~ /Revision:\s+([0-9.]+)/o );
 sub usage {
     my $app = basename($0);
     print << "EOF";
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! WARNING: THIS IS A PROTOTYPE - DO NOT USE (UNLESS YOU ARE A DEVELOPER) !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 Usage: $app [options] fn [fn [..]]
 
 Optional arguments:
@@ -112,6 +116,7 @@ my $tmp = $ENV{'MY_TMP'} ||     # Wei likes MY_TMP, so try that first
     File::Spec->tmpdir() ||     # OK, this gets used if all above fail
     '/tmp';                     # last resort
 
+usage unless @ARGV;
 my @SAVE = ( @ARGV );
 $main::debug = 0;
 my ($emptyfail,$firstfail,$keep) = (0,0,0);
@@ -135,7 +140,7 @@ GetOptions( 'help|h' => \&usage
          "$0 @SAVE\n" );
 
 # sanity checks
-die "ERROR: Missing necessary file argument" unless @ARGV;
+usage unless @ARGV;
 
 # instantiate and setup XML parser
 my $xml = new XML::Parser::Expat( ProtocolEncoding => 'UTF-8',
