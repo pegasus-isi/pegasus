@@ -76,6 +76,16 @@ import java.util.Properties;
  * The number of processors in a site is picked by the attribute idle-nodes
  * associated with the vanilla jobmanager for a site in the site catalog.
  *
+ * There are two important differences with the algorithm cited in the
+ * HEFT paper.
+ * <pre>
+ *    - Our implementation uses downward ranks instead of the upward ranks as
+ *      mentioned in the paper. The formulas have been updated accordingly.
+ *
+ *    - During the processor selection phase, we do the simple selection and
+ *      not follow the insertion based approach.
+ * </pre>
+ *
  * @author Karan Vahi
  * @version $Revision$
  *
