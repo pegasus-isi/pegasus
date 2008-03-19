@@ -88,8 +88,10 @@ public class SeqExec extends Abstract {
      */
     public void initialize( ADag dag , PegasusBag bag  ){
         super.initialize( dag, bag );
-        mFailOnFirstError = false;
         mGlobalLog = bag.getPegasusProperties().jobAggregatorLogGlobal();
+        //set abort of first job failure
+        this.setAbortOnFirstJobFailure( mProps.abortOnFirstJobFailure() );
+
     }
 
     /**

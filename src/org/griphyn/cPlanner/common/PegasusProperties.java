@@ -1846,15 +1846,27 @@ public class PegasusProperties {
      *
      * Referred to by the "pegasus.cluster.job.aggregator.seqexec.log.global" property.
      *
-     * @return the value specified in the properties file, else
-     *         DEFAULT_JOB_AGGREGATOR
+     * @return the value specified in the properties file, else true
      *
-     * @see #DEFAULT_JOB_AGGREGATOR
      */
     public boolean jobAggregatorLogGlobal(){
         return Boolean.parse( mProps.getProperty( "pegasus.clusterer.job.aggregator.seqexec.hasgloballog" ),
                               true );
     }
+
+    /**
+     * Returns a boolean indicating whether seqexec trips on the first job failure.
+     *
+     * Referred to by the "pegasus.cluster.job.aggregator.seqexec.firstjobfail" property.
+     *
+     * @return the value specified in the properties file, else false
+     *
+     */
+    public boolean abortOnFirstJobFailure(){
+        return Boolean.parse( mProps.getProperty( "pegasus.clusterer.job.aggregator.seqexec.firstjobfail" ),
+                              false );
+    }
+
 
 
     //DEFERRED PLANNING PROPERTIES
