@@ -35,7 +35,7 @@ import java.util.TreeMap;
 /**
  * A site selector than ends up doing grouping jobs together on the basis of
  * an identifier specifed in the dax for the jobs, and schedules them on to the
- * same site. Currently, the identifier is key <code>group</code> in the vds
+ * same site. Currently, the identifier is key <code>group</code> in the pegasus
  * profile namespace. All the jobs that do not have a group associated with them
  * are put in one default group and end up being scheduled on the same pool.
  * A limitation of this site selector is that it does not check whether all the
@@ -44,6 +44,15 @@ import java.util.TreeMap;
  * the selector just hands the first job in each group to the other site selectors
  * that work on jobs. Currently, it hands it to the Random Site Selector.
  *
+ * In the DAX, a job tagged with groups will look as follows
+ * <pre>
+ * <job id="ID000001" namespace="pegasus" name="preprocess" version="1.0" level="3" dv-namespace="vahi" dv-name="top" dv-version="1.0">
+ *    <profile namespace="pegasus" key="group">group-1</profile>
+ *    <argument>-a top -T 6  -i <filename file="f.a"/>  -o <filename file="f.b"/> </argument>
+ *    <uses file="f.a" link="input" register="false" transfer="true" type="data"/>
+ *    <uses file="f.b" link="output" register="true" transfer="true" type="data"/>
+ * </job>
+ * </pre>
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
