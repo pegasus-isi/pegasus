@@ -183,7 +183,10 @@ public class Globus extends Namespace {
 
         switch (key.charAt(0)) {
             case 'a':
-                if ( (key.compareTo("arguments") == 0) || ( key.compareTo( "arch" ) == 0 ) ){
+                if( ( key.compareTo( "arch" ) == 0 ) ){
+                    res = VALID_KEY;
+                }
+                else if ( (key.compareTo("arguments") == 0)  ){
                     res = NOT_PERMITTED_KEY;
                 }
                 else {
