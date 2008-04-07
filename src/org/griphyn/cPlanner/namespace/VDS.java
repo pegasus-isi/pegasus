@@ -161,6 +161,12 @@ public class VDS extends Namespace {
     public static final String STYLE_KEY = "style";
 
     /**
+     * The name of the key that denotes the type of the job. Whether it is
+     * recursive or not. Still protypical.
+     */
+    public static final String TYPE_KEY = "type";
+
+    /**
      * The style indicating that the submit files are to be generated for
      * a vanilla condor execution.
      */
