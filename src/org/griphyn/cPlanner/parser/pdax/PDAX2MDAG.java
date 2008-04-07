@@ -85,6 +85,8 @@ import java.text.DecimalFormat;
  */
 public class PDAX2MDAG implements Callback {
 
+
+
     /**
      * The SubmitWriter that has to be loaded for now.
      */
@@ -257,7 +259,7 @@ public class PDAX2MDAG implements Callback {
     /**
      * Bag of initialization objects.
      */
-    private PegasusBag mBag;
+    //private PegasusBag mBag;
 
     /**
      * The overloaded constructor.
@@ -286,6 +288,8 @@ public class PDAX2MDAG implements Callback {
 //        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode() );
 
         //intialize the bag of objects and load the site selector
+        //Moved to CPlanner Karan April 1, 2008
+        /*
         mBag = new PegasusBag();
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
         mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
@@ -295,7 +299,7 @@ public class PDAX2MDAG implements Callback {
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
 
         mBag.add( PegasusBag.SITE_CATALOG, SiteFactory.loadInstance( properties, false ) );
-
+        */
 
         //the default gobbler callback always log to debug level
         mDefaultCallback =
@@ -596,7 +600,7 @@ public class PDAX2MDAG implements Callback {
         mMegaDAG.dagInfo.generateFlowID();
         mMegaDAG.dagInfo.setReleaseVersion();
 
-
+        /* Moved to CPlanner Class Karan Apr 1 2008
         CodeGenerator codeGenerator = null;
         int state = 0;
         try{
@@ -617,6 +621,7 @@ public class PDAX2MDAG implements Callback {
         catch( Exception e){
             throw new RuntimeException("Error while generating code for the workflow",e);
         }
+        */
 
 
     }
