@@ -1102,6 +1102,17 @@ public class SubInfo extends Data implements GraphNodeContent{
         return (obj == null)? null: (String)obj;
     }
 
+    /**
+     * Returns whether the job is recursive or not.
+     *
+     * @return boolean
+     */
+    public boolean typeRecursive(){
+
+        return  this.vdsNS.containsKey( VDS.TYPE_KEY )?
+                this.vdsNS.getStringValue( VDS.TYPE_KEY ).equals( "recursive" ):
+                false;
+    }
 
     /**
      * Returns whether the job type value for the job is in range or not.
