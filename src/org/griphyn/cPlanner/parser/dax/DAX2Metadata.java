@@ -33,6 +33,11 @@ import java.util.Map;
  */
 public class DAX2Metadata implements Callback {
 
+    /**
+     * The parsing completed message.
+     */
+    public static final String PARSING_DONE_ERROR_MESSAGE = "Parsing done";
+
 
     /**
      * The handle to the properties object.
@@ -107,7 +112,7 @@ public class DAX2Metadata implements Callback {
      */
     public void cbDone() {
         mDone = true;
-        throw new RuntimeException( "Parsing done" );
+        throw new RuntimeException( PARSING_DONE_ERROR_MESSAGE );
     }
 
     /**
