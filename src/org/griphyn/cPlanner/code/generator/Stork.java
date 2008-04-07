@@ -19,19 +19,20 @@ package org.griphyn.cPlanner.code.generator;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.code.CodeGeneratorException;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.IOException;
 
+import java.util.Collection;
 import java.util.StringTokenizer;
-import org.griphyn.cPlanner.classes.PegasusBag;
+
 
 
 /**
@@ -94,9 +95,11 @@ public class Stork extends Abstract {
      *
      * @param dag  the concrete workflow.
      *
+     * @return null
+     *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag ) throws CodeGeneratorException{
+    public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
         throw new CodeGeneratorException(
             new UnsupportedOperationException(
                  "Stork Code Generator: Method generateCode( ADag) not implemeneted"));

@@ -46,7 +46,13 @@ import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.Globus;
 import org.griphyn.cPlanner.namespace.VDS;
 
+import org.griphyn.cPlanner.partitioner.PartitionAndPlan;
+
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+
+import org.griphyn.common.catalog.TransformationCatalogEntry;
+
+import org.griphyn.common.classes.TCType;
 
 import org.griphyn.vdl.euryale.VTorInUseException;
 
@@ -62,11 +68,15 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.InputStream;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.Collection;
+import java.util.List;
+
 
 /**
  * This class generates the condor submit files for the DAG which has to
@@ -84,6 +94,17 @@ public class CondorGenerator extends Abstract {
     public  static final String mSeparator =
         "######################################################################";
 
+    /**
+     * The namespace to use for condor dagman.
+     */
+    public static final String CONDOR_DAGMAN_NAMESPACE = "condor";
+
+    /**
+     * The logical name with which to query the transformation catalog for the
+     * condor_dagman executable, that ends up running the mini dag as one
+     * job.
+     */
+    public static final String CONDOR_DAGMAN_LOGICAL_NAME = "dagman";
 
 
 
@@ -208,13 +229,17 @@ public class CondorGenerator extends Abstract {
 
     /**
      * Generates the code for the concrete workflow in Condor DAGMAN and CondorG
-     * input format.
+     * input format. Returns only the File object for the DAG file that is written
+     * out.
      *
      * @param dag  the concrete workflow.
      *
+     * @return the Collection of <code>File</code> objects for the files written
+     *         out.
+     *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag ) throws CodeGeneratorException{
+    public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
         DagInfo ndi        = dag.dagInfo;
         Vector vSubInfo    = dag.vJobSubInfos;
 
@@ -231,15 +256,19 @@ public class CondorGenerator extends Abstract {
         String dagFileName = getDAGFilename( dag, ".dag" );
         mDone = false;
 
+        File dagFile = null;
+        Collection<File> result = new ArrayList(1);
         if (ndi.dagJobs.isEmpty()) {
             //call the callout before returns
             concreteDagEmpty( dagFileName, dag );
-            return ;
+            return result ;
         } else {
             //initialize the file handle to the dag
             //file and print it's header
-            initializeDagFileWriter( dagFileName, ndi );
+            dagFile = initializeDagFileWriter( dagFileName, ndi );
+            result.add( dagFile );
         }
+
 
         //Create a file in the /tmp for the log and symlink it to the submit directory.
         try{
@@ -283,7 +312,7 @@ public class CondorGenerator extends Abstract {
 
         //writing the tail of .dag file
         //that contains the relation pairs
-        this.writeDagFileTail(ndi);
+        this.writeDagFileTail( ndi );
         mLogger.log("Written Dag File : " + dagFileName.toString(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -298,6 +327,8 @@ public class CondorGenerator extends Abstract {
 
         //we are done
         mDone = true;
+
+        return result;
     }
 
     /**
@@ -323,6 +354,34 @@ public class CondorGenerator extends Abstract {
             mInitializeGridStart = false;
         }
 
+        //for recursive dax's trigger partition and plan and exit.
+        if ( job.typeRecursive() ){
+            String args = job.getArguments();
+            PartitionAndPlan pap = new PartitionAndPlan();
+            pap.initialize( mBag );
+            Collection<File> files = pap.doPartitionAndPlan( args );
+            File dagFile = null;
+            for( Iterator it = files.iterator(); it.hasNext(); ){
+                File f = (File) it.next();
+                if ( f.getName().endsWith( ".dag" ) ){
+                    dagFile = f;
+                    break;
+                }
+            }
+
+            mLogger.log( "The DAG for the recursive job created is " + dagFile,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+            //translate the current job into DAGMan submit file
+            SubInfo dagCondorJob = this.constructDAGJob( job.getName(),
+                                                         dagFile.getParent(),
+                                                         dagFile.getName() );
+
+            //write out the dagCondorJob for it
+            mLogger.log( "Generating submit file for DAG " , LogManager.DEBUG_MESSAGE_LEVEL );
+            this.generateCode( dag, dagCondorJob );
+            return;
+        }
 
         // intialize the print stream to the file
         PrintWriter writer = null;
@@ -516,15 +575,184 @@ public class CondorGenerator extends Abstract {
         return map;
     }
 
+
+    /**
+     * Constructs a job that plans and submits the partitioned workflow,
+     * referred to by a Partition. The main job itself is a condor dagman job
+     * that submits the concrete workflow. The concrete workflow is generated by
+     * running the planner in the prescript for the job.
+     *
+     * @param name        the name to be assigned to the job.
+     * @param directory   the submit directory where the submit files for the
+     *                    partition should reside. this is where the dag file is
+     *                    created
+     * @param dagBasename the basename of the dag file created.
+     *
+     * @return the constructed DAG job.
+     */
+    protected SubInfo constructDAGJob( String name,
+                                       String directory,
+                                       String dagBasename){
+        //for time being use the old functions.
+        SubInfo job = new SubInfo();
+
+        //set the logical transformation
+        job.setTransformation( CONDOR_DAGMAN_NAMESPACE,
+                               CONDOR_DAGMAN_LOGICAL_NAME,
+                               null);
+
+        //set the logical derivation attributes of the job.
+        job.setDerivation( CONDOR_DAGMAN_NAMESPACE,
+                           CONDOR_DAGMAN_LOGICAL_NAME,
+                           null );
+
+        //always runs on the submit host
+        job.setSiteHandle( "local" );
+
+        //set the partition id only as the unique id
+        //for the time being.
+//        job.setName(partition.getID());
+
+        //set the logical id for the job same as the partition id.
+        job.setName( name );
+
+        List entries;
+        TransformationCatalogEntry entry = null;
+
+        //get the path to condor dagman
+        try{
+            entries = mTCHandle.getTCEntries( job.namespace,
+                                              job.logicalName,
+                                              job.version,
+                                              job.getSiteHandle(),
+                                             TCType.INSTALLED);
+            entry = (entries == null) ?
+                null :
+                //Gaurang assures that if no record is found then
+                //TC Mechanism returns null
+                (TransformationCatalogEntry) entries.get(0);
+        }
+        catch(Exception e){
+            throw new RuntimeException( "ERROR: While accessing the Transformation Catalog",e);
+        }
+        if(entry == null){
+            //throw appropriate error
+            throw new RuntimeException("ERROR: Entry not found in tc for job " +
+                                        job.getCompleteTCName() +
+                                        " on site " + job.getSiteHandle());
+        }
+
+        //set the path to the executable and environment string
+        job.setRemoteExecutable( entry.getPhysicalTransformation() );
+
+        //the job itself is the main job of the super node
+        //construct the classad specific information
+        job.jobID = job.getName();
+        job.jobClass = SubInfo.COMPUTE_JOB;
+
+
+        //directory where all the dagman related files for the nested dagman
+        //reside. Same as the directory passed as an input parameter
+        String dir = directory;
+
+        //make the initial dir point to the submit file dir for the partition
+        //we can do this as we are running this job both on local host, and scheduler
+        //universe. Hence, no issues of shared filesystem or anything.
+        job.condorVariables.construct( "initialdir", dir );
+
+
+        //construct the argument string, with all the dagman files
+        //being generated in the partition directory. Using basenames as
+        //initialdir has been specified for the job.
+        StringBuffer sb = new StringBuffer();
+
+        sb.append(" -f -l . -Debug 3").
+           append(" -Lockfile ").append( getBasename( dagBasename, ".lock") ).
+           append(" -Dag ").append(  dagBasename ).
+           append(" -Rescue ").append( getBasename( dagBasename, ".rescue")).
+           append(" -Condorlog ").append( getBasename( dagBasename, ".log"));
+
+       //pass any dagman knobs that were specified in properties file
+//       sb.append( this.mDAGManKnobs );
+
+       //put in the environment variables that are required
+       job.envVariables.construct("_CONDOR_DAGMAN_LOG",
+                                  directory + File.separator + dagBasename + ".dagman.out" );
+       job.envVariables.construct("_CONDOR_MAX_DAGMAN_LOG","0");
+
+       //set the arguments for the job
+       job.setArguments(sb.toString());
+
+       //the environment need to be propogated for exitcode to be picked up
+       job.condorVariables.construct("getenv","TRUE");
+
+       job.condorVariables.construct("remove_kill_sig","SIGUSR1");
+
+
+       //the log file for condor dagman for the dagman also needs to be created
+       //it is different from the log file that is shared by jobs of
+       //the partition. That is referred to by Condorlog
+
+//       keep the log file common for all jobs and dagman albeit without
+//       dag.dagman.log suffix
+//       job.condorVariables.construct("log", getAbsolutePath( partition, dir,".dag.dagman.log"));
+
+//       String dagName = mMegaDAG.dagInfo.nameOfADag;
+//       String dagIndex= mMegaDAG.dagInfo.index;
+//       job.condorVariables.construct("log", dir + mSeparator +
+//                                     dagName + "_" + dagIndex + ".log");
+
+
+       //incorporate profiles from the transformation catalog
+       //and properties for the time being. Not from the site catalog.
+
+       //the profile information from the transformation
+       //catalog needs to be assimilated into the job
+       //overriding the one from pool catalog.
+       job.updateProfiles( entry );
+
+       //the profile information from the properties file
+       //is assimilated overidding the one from transformation
+       //catalog.
+       job.updateProfiles(mProps);
+
+       //we do not want the job to be launched via kickstart
+       //Fix for VDS bug number 143
+       //http://bugzilla.globus.org/vds/show_bug.cgi?id=143
+       job.vdsNS.construct( VDS.GRIDSTART_KEY,
+                            GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
+
+       return job;
+    }
+
+
+    /**
+     * A covenience method to construct the basename.
+     *
+     * @param prefix   the first half of basename
+     * @param suffix   the latter half of basename
+     *
+     * @return basename
+     */
+    protected String getBasename( String prefix, String suffix ){
+        StringBuffer sb = new StringBuffer();
+        sb.append( prefix ).append( suffix );
+        return sb.toString();
+
+    }
+
+
     /**
      * Initializes the file handler to the dag file and writes the header to it.
      *
      * @param filename     basename of dag file to be written.
      * @param dinfo        object containing daginfo of type DagInfo .
      *
+     * @return the File object for the DAG file.
+     *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected void initializeDagFileWriter(String filename, DagInfo dinfo)
+    protected File initializeDagFileWriter(String filename, DagInfo dinfo)
                                                        throws CodeGeneratorException{
         // initialize file handler
 
@@ -548,7 +776,7 @@ public class CondorGenerator extends Abstract {
             throw new CodeGeneratorException( "While writing to DAG FILE " + filename,
                                               e);
         }
-
+        return dag;
     }
 
     /**

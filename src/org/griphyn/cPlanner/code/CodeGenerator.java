@@ -23,7 +23,9 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
+import java.util.Collection;
 
+import java.io.File;
 /**
  * The interface that allows us to plug in various code generators for writing
  * out the concrete plan. Each of Code Generators are dependant upon the
@@ -43,7 +45,7 @@ public interface CodeGenerator {
     /**
      * The version number associated with this API of Code Generator.
      */
-    public static final String VERSION = "1.4";
+    public static final String VERSION = "1.5";
 
 
     /**
@@ -61,9 +63,12 @@ public interface CodeGenerator {
      *
      * @param dag  the concrete workflow.
      *
+     * @return the Collection of <code>File</code> objects for the files written
+     *         out.
+     *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag ) throws CodeGeneratorException;
+    public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException;
 
     /**
      * Generates the code for a single job in the input format of the workflow

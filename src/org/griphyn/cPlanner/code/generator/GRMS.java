@@ -18,13 +18,10 @@ package org.griphyn.cPlanner.code.generator;
 
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.GRMSJob;
-import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.code.CodeGeneratorException;
 
 import org.griphyn.cPlanner.common.LogManager;
@@ -33,17 +30,18 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.namespace.ENV;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
+
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
+import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This generates the submit files in the xml format that can be used to submit
@@ -131,12 +129,17 @@ public class GRMS extends Abstract {
      *
      * @param dag  the concrete workflow.
      *
+     * @return handle to the GRMS output file.
+     *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag ) throws CodeGeneratorException{
+    public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
         String opFileName = this.mSubmitFileDir + File.separator +
                             dag.dagInfo.nameOfADag + ".xml";
-        initializeWriteHandle(opFileName);
+
+        initializeWriteHandle( opFileName );
+        Collection result = new ArrayList( 1 );
+        result.add( new File( opFileName ) );
         SubInfo job = null;
 
 
@@ -150,6 +153,8 @@ public class GRMS extends Abstract {
         }
         writeString("\n</grmsjob>");
         mWriteHandle.close();
+
+        return result;
     }
 
     /**
