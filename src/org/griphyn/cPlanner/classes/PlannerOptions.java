@@ -183,6 +183,11 @@ public class PlannerOptions extends Data implements Cloneable{
     private String mPartitioningType;
 
     /**
+     * A boolean storing whether to sanitize paths or not
+     */
+    private boolean mSanitizePath;
+
+    /**
      * Default Constructor.
      */
     public PlannerOptions(){
@@ -212,6 +217,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mDeferredRun      = false;
         mDate             = new Date();
         mPartitioningType = null;
+        mSanitizePath     = true;
     }
 
     /**
@@ -452,9 +458,17 @@ public class PlannerOptions extends Data implements Cloneable{
      * @return the path to the directory.
      */
     public String getSubmitDirectory(){
-        return ( mRelativeDir == null )?
-                                   new File( mBaseDir ).getAbsolutePath():
-                                   new File( mBaseDir, mRelativeDir ).getAbsolutePath();
+        if( mSanitizePath ){
+            return ( mRelativeDir == null )?
+                                       new File( mBaseDir ).getAbsolutePath():
+                                       new File( mBaseDir, mRelativeDir ).getAbsolutePath();
+        }
+        else{
+            return (mRelativeDir == null )?
+                                       mBaseDir:
+                                       new File( mBaseDir, mRelativeDir ).getPath();
+        }
+
     }
 
     /**
@@ -554,6 +568,25 @@ public class PlannerOptions extends Data implements Cloneable{
     public boolean partOfDeferredRun( ){
         return mDeferredRun;
     }
+
+    /**
+     * Sets the flag denoting whether to sanitize path or not.
+     *
+     * @param value  the value to set
+     */
+    public void setSanitizePath( boolean value ){
+        mSanitizePath = value;
+    }
+
+    /**
+     * Returns whether to sanitize paths or not. Internal method only.
+     *
+     * @return boolean
+     */
+   /* protected boolean sanitizePath(){
+        return mSanitizePath;
+    }
+    */
 
     /**
      * Sets the caches files. If cache files have been already specified it
@@ -1041,6 +1074,11 @@ public class PlannerOptions extends Data implements Cloneable{
         if( path == null ){
             return null;
         }
+
+        if( !mSanitizePath ){
+            return path;
+        }
+
         String absPath;
         char separator = File.separatorChar;
 
