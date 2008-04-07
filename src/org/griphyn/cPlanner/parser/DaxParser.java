@@ -256,7 +256,8 @@ public class DaxParser extends Parser {
         mLogger.log( "Picking up the dontTransfer and dontRegister flags " + mUseDoubleNegative,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
-        mLogger.log("Parsing the DAX",LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.log("Parsing the DAX " + daxFileName,
+                    LogManager.INFO_MESSAGE_LEVEL);
 
         mCurrentJobSubInfo.condorUniverse = "vanilla"; //default value
 
