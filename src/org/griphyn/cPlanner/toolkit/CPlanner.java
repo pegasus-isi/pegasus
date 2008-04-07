@@ -32,7 +32,7 @@ import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.StreamGobblerCallback;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
-
+import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
 
 import org.griphyn.cPlanner.engine.MainEngine;
 
@@ -78,6 +78,8 @@ import java.util.regex.Pattern;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import org.griphyn.vdl.euryale.VTorInUseException;
+import org.griphyn.cPlanner.poolinfo.SiteFactory;
+import org.griphyn.common.catalog.transformation.TCMode;
 
 /**
  * This is the main program for the Pegasus. It parses the options specified
@@ -97,10 +99,6 @@ public class CPlanner extends Executable{
      */
     public static final String DEFAULT_MEGADAG_MODE = "dag";
 
-    /**
-     * The prefix for the submit directory.
-     */
-    public static final String SUBMIT_DIRECTORY_PREFIX = "run";
 
     /**
      * The basename of the directory that contains the submit files for the
@@ -247,13 +245,19 @@ public class CPlanner extends Executable{
      * Executes the command on the basis of the options specified.
      *
      * @param options the command line options.
+     *
+     *
+     * @return the Collection of <code>File</code> objects for the files written
+     *         out.
      */
-    public void executeCommand( PlannerOptions options ) {
+    public Collection<File> executeCommand( PlannerOptions options ) {
         String message = new String();
         mPOptions = options;
 
+        Collection result = null;
+
         //print help if asked for
-        if( mPOptions.getHelp() ) { printLongVersion(); return; }
+        if( mPOptions.getHelp() ) { printLongVersion(); return result; }
 
         //set the logging level only if -v was specified
         //else bank upon the the default logging level
@@ -271,13 +275,13 @@ public class CPlanner extends Executable{
             mLogger.log( "\nNeed to specify either a dax file ( using --dax )  or a pdax file (using --pdax) to plan",
                          LogManager.INFO_MESSAGE_LEVEL);
             this.printShortVersion();
-            return;
+            return result;
         }
 
         if( mPOptions.getPartitioningType() != null ){
             // partition and plan the workflow
             doPartitionAndPlan( mProps, options );
-            return;
+            return result;
         }
 
 
@@ -340,7 +344,7 @@ public class CPlanner extends Executable{
            && !eSites.isEmpty()){
             //do the deferreed planning by parsing
             //the partition graph in the pdax file.
-            doDeferredPlanning();
+            result = doDeferredPlanning();
         }
         else if(pdax == null && dax != null
              && !eSites.isEmpty()){
@@ -429,13 +433,13 @@ public class CPlanner extends Executable{
             if( finalDag.isEmpty() ){
 
                mLogger.log( EMPTY_FINAL_WORKFLOW_MESSAGE, LogManager.INFO_MESSAGE_LEVEL );
-               return;
+               return result;
             }
 
             message = "Generating codes for the concrete workflow";
             log( message, LogManager.INFO_MESSAGE_LEVEL );
             try{
-                codeGenerator.generateCode(finalDag);
+                result = codeGenerator.generateCode(finalDag);
 
                 //generate only the braindump file that is required.
                 //no spawning off the tailstatd for time being
@@ -509,8 +513,9 @@ public class CPlanner extends Executable{
             printShortVersion();
             throw new RuntimeException("Invalid combination of arguments passed");
         }
-    }
 
+        return result;
+    }
 
     /**
      * Parses the command line arguments using GetOpt and returns a
@@ -521,7 +526,23 @@ public class CPlanner extends Executable{
      *
      * @return the  options.
      */
-    public PlannerOptions parseCommandLineArguments(String[] args){
+    public PlannerOptions parseCommandLineArguments( String[] args ){
+        return parseCommandLineArguments( args, true );
+    }
+
+
+    /**
+     * Parses the command line arguments using GetOpt and returns a
+     * <code>PlannerOptions</code> contains all the options passed by the
+     * user at the command line.
+     *
+     * @param args  the arguments passed by the user at command line.
+     * @param sanitizePath  whether to sanitize path during construction of options
+     *
+     *
+     * @return the  options.
+     */
+    public PlannerOptions parseCommandLineArguments( String[] args, boolean sanitizePath ){
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
@@ -531,6 +552,7 @@ public class CPlanner extends Executable{
 
         int option = 0;
         PlannerOptions options = new PlannerOptions();
+        options.setSanitizePath( sanitizePath );
 
         while( (option = g.getopt()) != -1){
             //System.out.println("Option tag " + (char)option);
@@ -932,8 +954,11 @@ public class CPlanner extends Executable{
     /**
      * This ends up invoking the deferred planning code, that generates
      * the MegaDAG that is used to submit the partitioned daxes in layers.
+     *
+     * @return the Collection of <code>File</code> objects for the files written
+     *         out.
      */
-    private void doDeferredPlanning(){
+    private Collection<File> doDeferredPlanning(){
         String mode = mPOptions.getMegaDAGMode();
         mode  = (mode == null)?
                    DEFAULT_MEGADAG_MODE:
@@ -947,6 +972,7 @@ public class CPlanner extends Executable{
 
         int errorStatus = 1;
         ADag megaDAG = null;
+        Collection result = null;
         try{
             //load the correct callback handler
             org.griphyn.cPlanner.parser.pdax.Callback c =
@@ -956,12 +982,35 @@ public class CPlanner extends Executable{
             //this is a bug. Should not be called. To be corrected by Karan
             UserOptions y = UserOptions.getInstance(mPOptions);
 
+
+            //intialize the bag of objects and load the site selector
+            PegasusBag bag = new PegasusBag();
+            bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+            bag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
+            bag.add( PegasusBag.PLANNER_OPTIONS, mPOptions );
+            bag.add( PegasusBag.TRANSFORMATION_CATALOG, TCMode.loadInstance() );
+          //bag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
+            bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+            bag.add( PegasusBag.SITE_CATALOG, SiteFactory.loadInstance( mProps, false ) );
+
+
             //start the parsing and let the fun begin
             PDAXParser p = new PDAXParser( file , mProps );
             p.setCallback(c);
             p.startParser(file);
 
             megaDAG = (ADag)c.getConstructedObject();
+
+            CodeGenerator codeGenerator = null;
+            //load the Condor Writer that understands HashedFile Factories.
+            codeGenerator = CodeGeneratorFactory.loadInstance( bag );
+            errorStatus = 3;
+            result = codeGenerator.generateCode( megaDAG );
+
+            //generate only the braindump file that is required.
+            //no spawning off the tailstatd for time being
+            codeGenerator.startMonitoring();
+
         }
         catch(FactoryException fe){
             //just rethrow for time being. we need error status as 2
@@ -978,6 +1027,10 @@ public class CPlanner extends Executable{
                     message = "Unable to parse the PDAX file ";
                     break;
 
+                case 3:
+                    message = "Unable to generate the code for the MegaDAG";
+                    break;
+
                 default:
                     //unreachable code
                     message = "Unknown Error " ;
@@ -992,6 +1045,7 @@ public class CPlanner extends Executable{
                                                                   mPOptions.getBaseSubmitDirectory(),
                                                                   mPOptions.getRelativeSubmitDirectory() ));
 
+        return result;
     }
 
     /**
@@ -1067,12 +1121,12 @@ public class CPlanner extends Executable{
             //find the maximum run directory
             int num, max = 1;
             for( int i = 0; i < files.length ; i++ ){
-                num = Integer.parseInt( files[i].substring( SUBMIT_DIRECTORY_PREFIX.length() ) );
+                num = Integer.parseInt( files[i].substring( RunDirectoryFilenameFilter.SUBMIT_DIRECTORY_PREFIX.length() ) );
                 if ( num + 1 > max ){ max = num + 1; }
             }
 
             //create the directory name
-            leaf.append( SUBMIT_DIRECTORY_PREFIX ).append( mNumFormatter.format( max ) );
+            leaf.append( RunDirectoryFilenameFilter.SUBMIT_DIRECTORY_PREFIX ).append( mNumFormatter.format( max ) );
         }
         result.append( leaf.toString() );
         base = new File( base, leaf.toString() );
@@ -1200,46 +1254,6 @@ public class CPlanner extends Executable{
 }
 
 
-/**
- * A filename filter for identifying the run directory
- *
- * @author Karan Vahi vahi@isi.edu
- */
-class RunDirectoryFilenameFilter implements FilenameFilter {
 
-    /**
-     * Store the regular expressions necessary to parse kickstart output files
-     */
-    private static final String mRegexExpression =
-                                     "(" + CPlanner.SUBMIT_DIRECTORY_PREFIX + ")([0-9][0-9][0-9][0-9])";
-
-    /**
-     * Stores compiled patterns at first use, quasi-Singleton.
-     */
-    private static Pattern mPattern = null;
-
-
-
-    /***
-     * Tests if a specified file should be included in a file list.
-     *
-     * @param dir the directory in which the file was found.
-     * @param name - the name of the file.
-     *
-     * @return  true if and only if the name should be included in the file list
-     *          false otherwise.
-     *
-     *
-     */
-     public boolean accept( File dir, String name) {
-         //compile the pattern only once.
-         if( mPattern == null ){
-             mPattern = Pattern.compile( mRegexExpression );
-         }
-         return mPattern.matcher( name ).matches();
-     }
-
-
-}
 
 
