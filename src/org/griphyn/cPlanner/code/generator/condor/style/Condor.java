@@ -52,6 +52,11 @@ public class Condor extends Abstract {
 
     public static final String LOCAL_UNIVERSE =
                          org.griphyn.cPlanner.namespace.Condor.LOCAL_UNIVERSE;
+
+    public static final String PARALLEL_UNIVERSE =
+                         org.griphyn.cPlanner.namespace.Condor.PARALLEL_UNIVERSE;
+
+
     //
 
     /**
@@ -94,8 +99,9 @@ public class Condor extends Abstract {
         // Karan Jan 28, 2008
         job.condorVariables.construct( "universe", universe );
 
-        if(universe.equalsIgnoreCase( this.VANILLA_UNIVERSE ) ||
-           universe.equalsIgnoreCase( this.STANDARD_UNIVERSE )){
+        if( universe.equalsIgnoreCase( this.VANILLA_UNIVERSE )  ||
+            universe.equalsIgnoreCase( this.STANDARD_UNIVERSE ) ||
+            universe.equalsIgnoreCase( this.PARALLEL_UNIVERSE ) ){
             //the glide in/ flocking case
             //submitting directly to condor
             //check if it is a glide in job.

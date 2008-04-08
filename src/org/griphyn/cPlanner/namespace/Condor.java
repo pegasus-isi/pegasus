@@ -116,12 +116,15 @@ public class Condor extends Namespace{
      */
     public static final String STANDARD_UNIVERSE = "standard";
 
-
     /**
      * The condor universe key value for local universe.
      */
     public static final String LOCAL_UNIVERSE = "local";
 
+    /**
+     * The condor universe key value for parallel universe.
+     */
+    public static final String PARALLEL_UNIVERSE = "parallel";
 
 
     /**

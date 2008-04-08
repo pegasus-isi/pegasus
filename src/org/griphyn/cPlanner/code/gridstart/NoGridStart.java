@@ -71,7 +71,7 @@ public class NoGridStart implements GridStart {
     /**
      * The LogManager object which is used to log all the messages.
      */
-    private LogManager mLogger;
+    protected LogManager mLogger;
 
     /**
      * The object holding all the properties pertaining to Pegasus.
@@ -82,46 +82,46 @@ public class NoGridStart implements GridStart {
      * The submit directory where the submit files are being generated for
      * the workflow.
      */
-    private String mSubmitDir;
+    protected String mSubmitDir;
 
     /**
      * The argument string containing the arguments with which the exitcode
      * is invoked on kickstart output.
      */
-    private String mExitParserArguments;
+    protected String mExitParserArguments;
 
     /**
      * A boolean indicating whether to generate lof files or not.
      */
-    private boolean mGenerateLOF;
+    protected boolean mGenerateLOF;
 
     /**
      * A boolean indicating whether to have worker node execution or not.
      */
-    private boolean mWorkerNodeExecution;
+    protected boolean mWorkerNodeExecution;
 
     /**
      * The handle to the SLS implementor
      */
-    private SLS mSLS;
+    protected SLS mSLS;
 
     /**
      * The options passed to the planner.
      */
-    private PlannerOptions mPOptions;
+    protected PlannerOptions mPOptions;
 
 
     /**
      * Handle to the site catalog.
      */
-    private PoolInfoProvider mSiteHandle;
+    protected PoolInfoProvider mSiteHandle;
 
 
     /**
      * An instance variable to track if enabling is happening as part of a clustered job.
      * See Bug 21 comments on Pegasus Bugzilla
      */
-    private boolean mEnablingPartOfAggregatedJob;
+    protected boolean mEnablingPartOfAggregatedJob;
 
 
     /**

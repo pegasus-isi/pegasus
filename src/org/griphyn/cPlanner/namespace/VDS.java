@@ -93,6 +93,11 @@ public class VDS extends Namespace {
      */
     public static final String GRIDSTART_ARGUMENTS_KEY = "gridstart.arguments";
 
+    /**
+     * The name of the profile key that designates the path to a gridstart.
+     */
+    public static final String GRIDSTART_PATH_KEY = "gridstart.path";
+
 
     /**
      * The deprecated change dir key.
@@ -299,9 +304,10 @@ public class VDS extends Namespace {
                 break;
 
             case 'g':
-                if (key.compareTo(GROUP_KEY) == 0 ||
-                    key.compareTo(GRIDSTART_KEY) == 0 ||
-                    key.compareTo(GRIDSTART_ARGUMENTS_KEY) == 0) {
+                if (key.compareTo( GROUP_KEY ) == 0 ||
+                    key.compareTo( GRIDSTART_KEY ) == 0 ||
+                    key.compareTo( GRIDSTART_PATH_KEY ) == 0 ||
+                    key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ) {
                     res = VALID_KEY;
                 }
                 else {
