@@ -130,8 +130,20 @@ public class PartitionAndPlan{
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         if( submit == null || !submit.startsWith( File.separator ) ){
-            //then set the submit directory relative to the parent workflow
-            options.setSubmitDirectory( mPegasusPlanOptions.getSubmitDirectory(), submit );
+            //then set the submit directory relative to the parent workflow basedir
+            String innerBase     = mPegasusPlanOptions.getBaseSubmitDirectory();
+            String innerRelative = mPegasusPlanOptions.getRelativeSubmitDirectory();
+            innerRelative = ( innerRelative == null && mPegasusPlanOptions.partOfDeferredRun() )?
+                             mPegasusPlanOptions.getRandomDir(): //the random dir is the relative submit dir?
+                             innerRelative;
+            innerRelative += File.separator + submit  ;
+
+            //options.setSubmitDirectory( mPegasusPlanOptions.getSubmitDirectory(), submit );
+            options.setSubmitDirectory( innerBase, innerRelative );
+            mLogger.log( "Base Submit directory for inner workflow set to " + innerBase,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log( "Relative Submit Directory for inner workflow set to " + innerRelative,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
             mLogger.log( "Submit directory for inner workflow set to " + options.getSubmitDirectory(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }

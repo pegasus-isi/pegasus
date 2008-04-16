@@ -797,6 +797,18 @@ public class PlannerOptions extends Data implements Cloneable{
         mBaseDir  = base;
     }
 
+
+    /**
+     * Sets the path to the base submitdirectory where the submit files are to be
+     * generated.
+     *
+     * @param base   the base directory  where submit files are generated.
+     */
+    public void setBaseSubmitDirectory( String base ){
+        mBaseDir = base;
+    }
+
+
     /**
      * Sets the path to the directory where the submit files are to be
      * generated.

@@ -1008,14 +1008,22 @@ public class PDAX2MDAG implements Callback {
         //in the directory where the job is being run.
         mClonedPOptions.setSubmitDirectory( (String)job.condorVariables.get("initialdir"));
 
+
         //generate the remote working directory for the paritition
         String submit        = mClonedPOptions.getSubmitDirectory(); // like /tmp/vahi/pegasus/blackdiamond/run0001/00/PID1
         String remoteBase    = mPOptions.getRandomDir(); // like vahi/pegasus/blackdiamond/run0001
         String remoteWorkDir = submit.substring( submit.indexOf( remoteBase) ); //gets us vahi/pegasus/blackdiamond/run0001/00/PID1
-        mClonedPOptions.setRandomDir( remoteWorkDir );
-        mLogger.log( "Remote working directory set to " + remoteWorkDir +
-                     " for partition " + job.getID() ,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+//trying to use the relative dir option now, Karan April 10, 2008
+//        mClonedPOptions.setRandomDir( remoteWorkDir );
+//        mLogger.log( "Remote working directory set to " + remoteWorkDir +
+//                     " for partition " + job.getID() ,
+//                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        //set the base and relative submit dir
+        mClonedPOptions.setBaseSubmitDirectory( mPOptions.getBaseSubmitDirectory() );
+        mClonedPOptions.setRelativeSubmitDirectory( remoteWorkDir );
 
         //set the basename for the nested dag as the ID of the job.
         //which is actually the basename of the deep lfn job name!!

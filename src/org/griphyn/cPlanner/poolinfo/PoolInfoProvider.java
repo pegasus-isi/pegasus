@@ -667,7 +667,8 @@ public abstract class PoolInfoProvider {
         if( mDeepStorageStructure ){
             String leaf = ( this.mUserOpts.getOptions().partOfDeferredRun() )?
                              //if a deferred run then pick up the relative random directory
-                             this.mUserOpts.getOptions().getRandomDir():
+                             //this.mUserOpts.getOptions().getRandomDir():
+                             this.mUserOpts.getOptions().getRelativeSubmitDirectory():
                              //for a normal run add the relative submit directory
                              this.mUserOpts.getOptions().getRelativeSubmitDirectory();
             File f = new File( mount_point, leaf );

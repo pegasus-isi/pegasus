@@ -368,8 +368,8 @@ public class CPlanner extends Executable{
             String relativeDir; //the submit directory relative to the base specified
             try{
                 //create the base directory if required
-                relativeDir = ( mPOptions.partOfDeferredRun() )?
-                                        null:
+                relativeDir = /*( mPOptions.partOfDeferredRun() )?
+                                        null:*/
                                         ( mPOptions.getRelativeSubmitDirectory() == null )?
                                                 //create our own relative dir
                                                 createSubmitDirectory( orgDag,
