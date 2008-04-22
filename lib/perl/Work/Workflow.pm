@@ -45,7 +45,7 @@ use Carp;
 use File::Spec;
 use Work::Properties qw(%system);
 use Work::Common; 
-use DBI 1.38;			# installed_versions was added in 1.38
+eval "use DBI 1.38";			# installed_versions was added in 1.38
 
 #
 # helpers to translate JDBC to Perl
