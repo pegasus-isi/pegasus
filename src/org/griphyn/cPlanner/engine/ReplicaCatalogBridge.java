@@ -241,12 +241,16 @@ public class ReplicaCatalogBridge
             mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
             //set the flag to denote RLI is down
             mRCDown = true;
-            mReplicaStore = new ReplicaStore();
+            //mReplicaStore = new ReplicaStore();
 
             //exit if there is no cache overloading specified.
             if ( options.getCacheFiles().isEmpty() ) {
                 throw new RuntimeException( msg , ex );
             }
+        }
+        finally{
+            //set replica store to an empty store if required
+            mReplicaStore = ( mReplicaStore == null ) ?new ReplicaStore() : mReplicaStore;
         }
 
 
