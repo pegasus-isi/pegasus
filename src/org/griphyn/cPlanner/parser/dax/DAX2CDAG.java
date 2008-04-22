@@ -110,16 +110,23 @@ public class DAX2CDAG implements Callback {
         mDagInfo.addNewJob( job );
 
         //put the input files in the map
-        Iterator it = job.inputFiles.iterator();
-        String lfn;
-        while(it.hasNext()){
-            lfn = ((PegasusFile)it.next()).getLFN();
+        for ( Iterator it = job.inputFiles.iterator(); it.hasNext(); ){
+            String lfn = ((PegasusFile)it.next()).getLFN();
             mDagInfo.updateLFNMap(lfn,"i");
         }
 
-        it = job.outputFiles.iterator();
-        while(it.hasNext()){
-            lfn = ((PegasusFile)it.next()).getLFN();
+        for ( Iterator it = job.outputFiles.iterator(); it.hasNext(); ){
+            PegasusFile pf = (PegasusFile)it.next();
+            String lfn = ( pf ).getLFN();
+
+            //if the output LFN is also an input LFN of the same
+            //job then it is a pass through LFN. Should be tagged
+            //as i only, as we want it staged in
+
+            if( job.inputFiles.contains( pf ) ){
+                //dont add to lfn map in DagInfo
+                continue;
+            }
             mDagInfo.updateLFNMap(lfn,"o");
         }
 
