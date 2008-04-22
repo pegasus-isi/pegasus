@@ -51,7 +51,7 @@
   </target>
 
 
-  <target name="version" depends="common"
+  <target name="version" depends="commonversion"
 	  unless="dist.dir"
 	  description="Provides the version number from within PEGASUS to ANT">
     <taskdef name="versiontask"
@@ -69,16 +69,25 @@
     <echo file="stamp">${ISODATE.utc} ${dist.arch}${line.separator}</echo>
   </target>
 
-  <target name="common" depends="init,checkjava"
+  <target name="commonversion" depends="checkjava"
+	  description="Compiles the code common to both, Chimera and Pegasus">
+    <javac destdir="${build.src}" srcdir="src" 
+	   encoding="UTF-8" debug="true"
+           target="${build.target}" source="${build.source}"
+	   includes="org/griphyn/common/util/Version.java,*.java"
+	   excludes="org/griphyn/common/**/*Test.java,*Test.java"/>
+  </target>
+
+  <target name="common" depends="checkjava"
 	  description="Compiles the code common to both, Chimera and Pegasus">
     <javac destdir="${build.src}" srcdir="src" 
 	   encoding="UTF-8" deprecation="true" debug="true"
            target="${build.target}" source="${build.source}"
-	   includes="org/griphyn/common/**/*.java,*.java"
-	   excludes="org/griphyn/common/**/*Test.java,*Test.java"/>
+	   includes="org/griphyn/common/**/*.java"
+	   excludes="org/griphyn/common/**/*Test.java"/>
   </target>
 
-  <target name="chimera" depends="init,checkjava"
+  <target name="chimera" depends="checkjava"
 	  description="Compiles the abstract planner Chimera">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
@@ -87,16 +96,16 @@
            excludes="org/griphyn/vdl/*Test.java,org/griphyn/vdl/**/*Test.java"/>
   </target>
 
-  <target name="pegasus" depends="init,checkjava"
+  <target name="pegasus" depends="checkjava"
 	  description="Compiles the concrete planner Pegasus">
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
 	   encoding="UTF-8" debug="true"
 	   includes="org/griphyn/cPlanner/**/*.java,edu/isi/pegasus/planner/**/*.java"
-	   excludes="org/griphyn/cPlanner/**/*Test.java"/>
+	   excludes="org/griphyn/cPlanner/**/*Test.java,edu/isi/pegasus/planner/**/*.java"/>
   </target>
 
-  <target name="compile" depends="init,checkjava"
+  <target name="compile" depends="checkjava"
 	  description="Compiles all sources, including tests">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
@@ -104,7 +113,7 @@
 	   includes="*.java,edu/**/*.java,org/**/*.java"/>
   </target>
 
-  <target name="deprecation" depends="init,checkjava"
+  <target name="deprecation" depends="checkjava"
 	  description="compiles everything with deprecation flag">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
@@ -165,7 +174,7 @@
 
   <target name="javadoc-pre" depends="version">
     <uptodate property="pegasus.predicate.doc">
-      <srcfiles dir="src" includes="org/griphyn/**/*.java" 
+      <srcfiles dir="src" includes="org/griphyn/**/*.java,edu/isi/pegasus/**/*.jva" 
 	        excludes="**/*Test.java"/>
       <mapper type="glob" from="*.java" to="${dist.doc}/javadoc/*.html"/>
     </uptodate>
@@ -182,15 +191,14 @@
              Private="true"
              Windowtitle="PEGASUS">
       <packageset dir="src">
-        <!-- <include name="org/globus/**"/> -->
         <include name="org/griphyn/common/**"/>
         <include name="org/griphyn/vdl/**"/>
         <include name="org/griphyn/cPlanner/**"/>
+        <include name="edu/isi/pegasus/**"/>
       </packageset>
       <fileset dir="src" includes="*.java"/>
       <doctitle><![CDATA[PEGASUS ${pegasus.version}]]></doctitle>
       <bottom><![CDATA[<i>Copyright &#169; 2007 The University of Southern California. All Rights Reserved.</i>]]></bottom>
-      <!-- <group title="Replica Management" packages="org.globus.*"/> -->
       <group title="Common Shared Code" packages="org.griphyn.common.*"/>
       <group title="Chimera">
 	<package name="org.griphyn.vdl"/>
@@ -298,34 +306,7 @@
   <target name="man" depends="man-roff,man-ps,man-html,man-txt"
           description="Copies and formats the client tool manpages"/>
 
-  <target depends="jar" name="webapps">
-    <!-- prepares for creation of the .war file -->
-    <property name="webapp.src" value="contrib/chiron"/>
-    <property name="webapp.dir" value="dist/webapps"/>
-    <mkdir dir="${webapp.dir}"/>
-    <mkdir dir="${webapp.dir}/tmp"/>
-    <copy todir="${webapp.dir}">
-      <fileset dir="${webapp.src}">
-        <exclude name="**/*~"/>
-      </fileset>
-    </copy>
-    <copy todir="${webapp.dir}/WEB-INF/lib">
-      <fileset dir="lib">
-      <include name="*.jar"/>
-      <exclude name="pegasus.jar"/>
-      </fileset>
-    </copy>
-    <copy todir="${webapp.dir}/WEB-INF/lib">
-      <fileset dir="${dist.lib}">
-      <include name="pegasus.jar"/>
-      </fileset>
-    </copy>
-  </target>
 
-  <target name="dist-war" depends="webapps"
-	  description="Creates the WAR file for the Chiron portal">
-    <jar basedir="dist/webapps" jarfile="dist/chiron-${pegasus.version}.war"/>
-  </target>
 
   <target name="dist-setup-app">
     <chmod perm="ugo+rx" type="file">
@@ -339,7 +320,7 @@
     <echo>Ran chmod on ${dist.dir}/bin</echo>
   </target>
 
-  <target name="dist-worker" depends="version,ctools-all,getsystem"
+  <target name="dist-worker" depends="version,man-roff,ctools-all"
           description="Creates a distribution of only the C/C++ tools">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.dir}/bin">
@@ -403,7 +384,7 @@
     </chmod>
   </target>
 
-  <target name="dist" depends="jar,latex,javadoc,man,ctools-all,getsystem"
+  <target name="dist" depends="jar,latex,javadoc,man-roff,ctools-all,getsystem"
           description="Sets up the dist directory">
     <!-- bin -->
     <mkdir dir="${dist.dir}/bin"/>
