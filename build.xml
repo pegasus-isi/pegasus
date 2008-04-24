@@ -239,7 +239,9 @@
     <exec executable="${basedir}/src/tools/make.pl" dir="src/tools" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
       <arg line="prefix=${dist.dir}"/>
-      <arg line="install.all"/>
+      <arg line="install"/>
+      <arg line="install.man"/>
+      <!-- TODO: Add test for groff devices and then add groff targets accordingly. -->
     </exec>
   </target>
 
