@@ -19,7 +19,9 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusFile;
+
 import org.griphyn.cPlanner.namespace.ENV;
+import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
@@ -192,7 +194,22 @@ public class Transfer   implements SLS {
                               append( slsFile.getParent() ).append( File.separator ).
                               append( mLocalUserProxyBasename).append(" && ");
         }
-        invocation.append( entry.getPhysicalTransformation() ).append( " base mnt " ).append( slsFile.getAbsolutePath() );
+        invocation.append( entry.getPhysicalTransformation() );
+
+        //add any arguments that might have been passed through properties
+        //String propArgs = mProps.getTransferArguments();
+        //if( propArgs != null  ){
+          //  invocation.append( " " ).append( propArgs );
+        //}
+
+
+        //add any arguments that might have been passed through properties
+        if( job.vdsNS.containsKey( VDS.TRANSFER_ARGUMENTS_KEY) ){
+            invocation.append( " " ).append( job.vdsNS.removeKey( VDS.TRANSFER_ARGUMENTS_KEY ) );
+        }
+
+        //add the required arguments to transfer
+        invocation.append( " base mnt " ).append( slsFile.getAbsolutePath() );
 
         if( mLocalUserProxyBasename != null ){
             invocation.append( "\"" );
