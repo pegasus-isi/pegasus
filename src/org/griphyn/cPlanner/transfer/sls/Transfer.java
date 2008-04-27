@@ -205,7 +205,7 @@ public class Transfer   implements SLS {
 
         //add any arguments that might have been passed through properties
         if( job.vdsNS.containsKey( VDS.TRANSFER_ARGUMENTS_KEY) ){
-            invocation.append( " " ).append( job.vdsNS.removeKey( VDS.TRANSFER_ARGUMENTS_KEY ) );
+            invocation.append( " " ).append( ( String )job.vdsNS.get( VDS.TRANSFER_ARGUMENTS_KEY ) );
         }
 
         //add the required arguments to transfer
