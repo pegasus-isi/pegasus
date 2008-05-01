@@ -80,6 +80,13 @@ public class Dagman extends Namespace {
     public static final String RETRY_KEY = "RETRY";
 
     /**
+     * The name of the key that determines the category to which the job
+     * belongs to.
+     */
+    public static final String CATEGORY_KEY = "CATEGORY";
+
+
+    /**
      * The name of the key that indicates the path to the corresponding
      * submit file for the job.
      */
@@ -206,6 +213,15 @@ public class Dagman extends Namespace {
         key = key.toUpperCase();
 
         switch (key.charAt(0)) {
+
+            case 'C':
+                if ( key.compareTo( this.CATEGORY_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else {
+                    res = NOT_PERMITTED_KEY;
+                }
+                break;
 
             case 'J':
                 if (key.compareTo(this.JOB_KEY) == 0) {
@@ -368,6 +384,8 @@ public class Dagman extends Namespace {
     /**
      * Helper method to decide whether a key has to be ignored or not.
      *
+     * @param key  the key
+     *
      * @return boolean
      */
     private boolean ignore(String key){
@@ -380,6 +398,8 @@ public class Dagman extends Namespace {
     /**
      * Returns the replacement key that needs to be printed in .dag file in
      * lieu of the key.
+     *
+     * @param key  the key
      *
      * @return the replacement key.
      */
@@ -398,6 +418,8 @@ public class Dagman extends Namespace {
      * Returns the replacement value that needs to be printed in .dag file for
      * a key. This helps us tie the post script path to the arguments, and same
      * for prescript.
+     *
+     * @param key   the key
      *
      * @return the replacement value
      */

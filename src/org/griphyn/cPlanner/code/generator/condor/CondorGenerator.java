@@ -76,7 +76,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.Collection;
 import java.util.List;
-
+import java.util.Properties;
 
 /**
  * This class generates the condor submit files for the DAG which has to
@@ -106,7 +106,10 @@ public class CondorGenerator extends Abstract {
      */
     public static final String CONDOR_DAGMAN_LOGICAL_NAME = "dagman";
 
-
+    /**
+     * The prefix for DAGMan specific properties
+     */
+    public static final String DAGMAN_PROPERTIES_PREFIX = "pegasus.dagman.";
 
     /**
      * The LogManager object which is used to log all the messages.
@@ -267,6 +270,9 @@ public class CondorGenerator extends Abstract {
             //file and print it's header
             dagFile = initializeDagFileWriter( dagFileName, ndi );
             result.add( dagFile );
+
+            //write out any category based dagman knobs to the dagman file
+            printDagString( this.getCategoryDAGManKnobs( mProps ) );
         }
 
 
@@ -302,6 +308,10 @@ public class CondorGenerator extends Abstract {
             else {
                 //write out a condor submit file
                 generateCode( dag, sinfo );
+                //write out all the dagman profile variables associated
+                //with the job to the .dag file.
+                printDagString( sinfo.dagmanVariables.toString( sinfo.getName()) );
+
             }
 
             mLogger.log("Written Submit file : " +
@@ -777,6 +787,45 @@ public class CondorGenerator extends Abstract {
                                               e);
         }
         return dag;
+    }
+
+
+    /**
+     * Write out the DAGMan knobs for each category the user mentions in
+     * the properties.
+     *
+     * @param properties  the pegasus properties
+     *
+     * @return the String
+     */
+    protected String getCategoryDAGManKnobs( PegasusProperties properties ){
+
+        //get all dagman properties
+        Properties dagman = properties.matchingSubset( DAGMAN_PROPERTIES_PREFIX, false );
+        StringBuffer result = new StringBuffer();
+        String newLine = System.getProperty( "line.separator", "\r\n" );
+
+        //iterate through all the properties
+        int dotIndex = -1;
+        for( Iterator it = dagman.keySet().iterator(); it.hasNext(); ){
+            String name = ( String ) it.next();//like bigjob.maxjobs
+            //System.out.println( name );
+
+            //figure out whether it is a category property or not
+            //really a short cut way of doing it
+            if( (dotIndex = name.indexOf( "." )) != -1 && dotIndex != name.length() - 1 ){
+                //we have a category and a key
+                String category = name.substring( 0, dotIndex   );//like bigjob
+                String knob     = name.substring( dotIndex + 1 );//like maxjobs
+                String value    = dagman.getProperty( name );//the value of the property in the properties
+
+                //System.out.println( category + " " + knob + " " + value);
+                result.append( knob.toUpperCase( ) ).append( " " ).append( category ).
+                       append( " " ).append( value ).append( newLine );
+            }
+        }
+
+        return result.toString();
     }
 
     /**
@@ -1481,7 +1530,7 @@ public class CondorGenerator extends Abstract {
 
         //write out all the dagman profile variables associated
         //with the job to the .dag file.
-        printDagString(job.dagmanVariables.toString(jobName));
+//        printDagString(job.dagmanVariables.toString(jobName));
 
         return rslString.toString();
     }
