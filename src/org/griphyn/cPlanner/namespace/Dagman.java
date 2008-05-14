@@ -371,15 +371,32 @@ public class Dagman extends Namespace {
             //continue to next if the key has to be ignored.
             if( ignore(key) ){ continue;}
 
-            sb.append( replacementKey(key) ).append(" ").append(name).
-               append(" ").
-               /*append((String)mProfileMap.get(key))*/
-               append( replacementValue(key)).
-               append("\n");
+            append( sb, replacementKey( key ), name, replacementValue( key ) );
+
+//            sb.append( replacementKey(key) ).append(" ").append(name).
+//               append(" ").
+//               /*append((String)mProfileMap.get(key))*/
+//               append( replacementValue(key)).
+//            append("\n");
+
         }
+
+        //add the category key in the end if required
+        if( this.containsKey( this.CATEGORY_KEY ) ){
+            append( sb, replacementKey( this.CATEGORY_KEY  ), name, replacementValue( this.CATEGORY_KEY  ) );
+        }
+
         return sb.toString();
+    }
+
+
+    protected StringBuffer append ( StringBuffer sb, String key, String name, String value ){
+        return sb.append( key ).append(" ").append( name ).
+               append(" ").append( value).
+               append("\n");
 
     }
+
 
     /**
      * Helper method to decide whether a key has to be ignored or not.
@@ -391,7 +408,8 @@ public class Dagman extends Namespace {
     private boolean ignore(String key){
         return key.equals( this.POST_SCRIPT_ARGUMENTS_KEY ) ||
                key.equals( this.PRE_SCRIPT_ARGUMENTS_KEY) ||
-               key.equals( this.OUTPUT_KEY );
+               key.equals( this.OUTPUT_KEY ) ||
+               key.equals( this.CATEGORY_KEY );
     }
 
 
