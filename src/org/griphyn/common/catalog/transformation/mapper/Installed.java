@@ -28,6 +28,7 @@ import org.griphyn.common.util.Separator;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -63,15 +64,26 @@ public class Installed
         //the fully qualified lfn
         String lfn = Separator.combine( namespace, name, version );
 
+        //optimization. query only for sites where transformation is not
+        //already in case of hassite=false Karan May 13, 2008 Pegasus Bug 33
+        List falseSites = new ArrayList();
+        List cacheSites = new ArrayList();//list of sites for which entries already exist
+        boolean hassite = true;
+
         //check if the sitemap already exists in the TCMap
         if ( ( sitemap = mTCMap.getSiteMap( lfn ) ) != null ) {
-            boolean hassite = true;
+
+
             for ( Iterator i = siteids.iterator(); i.hasNext(); ) {
                 //check if the site exists in the sitemap if not then generate sitemap again
                 // Need to check if this can be avoided by making sure Karan always sends me a list of sites rather then individual sites.
-
-                if ( !sitemap.containsKey( ( String ) i.next() ) ) {
+                String site = ( String ) i.next();
+                if ( !sitemap.containsKey( site ) ) {
                     hassite = false;
+                    falseSites.add( site );
+                }
+                else{
+                    cacheSites.add( site );
                 }
             }
             if ( hassite ) {
@@ -84,10 +96,12 @@ public class Installed
 
         //since sitemap does not exist we need to generate and populate it.
         //get the TransformationCatalog entries from the TC.
+        //Only query for falseSites not the whole sites. Karan May 13, 2008
+        //Pegasus Bug 33
         try {
             tcentries = mTCHandle.getTCEntries( namespace, name, version,
-                siteids,
-                TCType.INSTALLED );
+                                                hassite? siteids : falseSites,
+                                                TCType.INSTALLED );
         } catch ( Exception e ) {
             mLogger.log(
                 "Unable to get physical names from TC in the TC Mapper\n",
@@ -97,10 +111,20 @@ public class Installed
         if ( tcentries != null ) {
             sysinfomap = mPoolHandle.getSysinfos( siteids );
         } else {
-            throw new RuntimeException(
-                "There are no entries for the transformation \"" + lfn +
-                "\" of type \"" + TCType._INSTALLED + "\" the TC" );
+            //throw an execption only if cacheSites is empty
+            if( cacheSites.isEmpty() ){
+                throw new RuntimeException(
+                    "There are no entries for the transformation \"" + lfn +
+                    "\" of type \"" + TCType._INSTALLED + "\" the TC" +
+                    " for sites " +
+                    siteids);
+            }
+            else{
+                //return entries for cached sites only
+                return mTCMap.getSitesTCEntries( lfn, cacheSites );
+            }
         }
+
         if ( sysinfomap != null ) {
             for ( Iterator i = siteids.iterator(); i.hasNext(); ) {
                 String site = ( String ) i.next();
