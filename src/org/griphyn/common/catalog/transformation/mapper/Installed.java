@@ -29,6 +29,8 @@ import org.griphyn.common.util.Separator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -39,6 +41,22 @@ import java.util.Map;
  */
 public class Installed
     extends Mapper {
+
+
+    /**
+     * A map that maps a transformation name to the set of sites where it is not
+     * installed. It is used to prevent duplicate queries in case of a
+     * transformation not installed on a particular site.
+     */
+//    protected Map mNullMap;
+
+    /**
+     * The default constructor.
+     */
+    public Installed() {
+        super();
+//        mNullMap = new HashMap();
+    }
 
     /**
      * This method returns a Map of compute sites to List of
@@ -76,7 +94,6 @@ public class Installed
 
             for ( Iterator i = siteids.iterator(); i.hasNext(); ) {
                 //check if the site exists in the sitemap if not then generate sitemap again
-                // Need to check if this can be avoided by making sure Karan always sends me a list of sites rather then individual sites.
                 String site = ( String ) i.next();
                 if ( !sitemap.containsKey( site ) ) {
                     hassite = false;
@@ -109,7 +126,7 @@ public class Installed
         }
         //get the system info for the sites from the RIC
         if ( tcentries != null ) {
-            sysinfomap = mPoolHandle.getSysinfos( siteids );
+            sysinfomap = mPoolHandle.getSysinfos( hassite? siteids : falseSites );
         } else {
             //throw an execption only if cacheSites is empty
             if( cacheSites.isEmpty() ){
