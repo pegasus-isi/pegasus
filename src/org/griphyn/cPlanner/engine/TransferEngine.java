@@ -254,6 +254,7 @@ public class TransferEngine extends Engine {
 //            currentJob = (SubInfo) eSubs.nextElement();
 
         boolean stageOut = (( outputSite != null ) && ( outputSite.trim().length() > 0 ));
+
         for( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
             currentJob = (SubInfo)node.getContent();
@@ -275,9 +276,15 @@ public class TransferEngine extends Engine {
 
             //transfer the nodes output files
             //to the output pool
-            if ( stageOut    /*&& !currentJob.isTemp*/) {
+            if ( stageOut ) {
                 vOutPoolTX = getFileTX(outputSite, currentJob);
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb );
+            }
+
+            if( mPOptions.partOfDeferredRun() && !stageOut ){
+                //create the cache file always for deferred runs
+                //Pegasus Bug 34
+                trackInTransientRC( currentJob );
             }
         }
 
@@ -453,6 +460,44 @@ public class TransferEngine extends Engine {
 
         return vFileTX;
 
+    }
+
+
+    /**
+     * Tracks the files created by a job in the Transient Replica Catalog.
+     *
+     * @param job  the job whose input files need to be tracked.
+     */
+    protected void trackInTransientRC( SubInfo job ){
+
+
+        //check if there is a remote initialdir set
+        String path  = job.vdsNS.getStringValue(
+                                                 VDS.REMOTE_INITIALDIR_KEY );
+
+        SiteInfo ePool = mPoolHandle.getPoolEntry( job.getSiteHandle(), "vanilla" );
+        if ( ePool == null ) {
+            this.poolNotFoundMsg( job.getSiteHandle(), "vanilla" ) ;
+            mLogger.log( mLogMsg, LogManager.ERROR_MESSAGE_LEVEL );
+            throw new RuntimeException( mLogMsg );
+        }
+
+
+        for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
+            PegasusFile pf = (PegasusFile) it.next();
+            String lfn = pf.getLFN();
+
+            //definite inconsitency as url prefix and mount point
+            //are not picked up from the same server
+            StringBuffer execURL = new StringBuffer();
+            execURL.append( ePool.getURLPrefix( true ) ).
+                    append( mPoolHandle.getExecPoolWorkDir( job.getSiteHandle(), path ) ).
+                    append( File.separatorChar ).append( lfn );
+
+            //write out the exec url to the cache file
+            trackInTransientRC( lfn, execURL.toString(), job.getSiteHandle() );
+
+        }
     }
 
     /**
