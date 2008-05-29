@@ -15,17 +15,22 @@
 
 package org.griphyn.cPlanner.parser;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
+
+
 import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * This is the base class which all the xml parsing classes extend.
@@ -100,7 +105,24 @@ public abstract class Parser extends DefaultHandler{
      * Intialises the parser. Sets the various features. However the parsing is
      * done in the implementing class, by call mParser.parse(filename).
      *
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag   the bag of objects that is useful for initialization.
+     */
+    public Parser( PegasusBag bag ) {
+        mTextContent  = new StringBuffer();
+        mLogMsg       = new String();
+        mLogger       = bag.getLogger();
+        mProps        = bag.getPegasusProperties();
+        mTextString   = new String();
+        mAdjFName     = false;
+        mTextContent.setLength(0);
+        createParserInstance();
+    }
+
+    /**
+     * Intialises the parser. Sets the various features. However the parsing is
+     * done in the implementing class, by call mParser.parse(filename).
+     *
+     * @param properties  the properties passed at runtime.
      */
     public Parser( PegasusProperties properties ) {
         mTextContent  = new StringBuffer();

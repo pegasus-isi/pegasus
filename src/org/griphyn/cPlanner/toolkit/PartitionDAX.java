@@ -30,6 +30,8 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
+import org.griphyn.cPlanner.classes.PegasusBag;
+
 import org.griphyn.common.util.FactoryException;
 
 import gnu.getopt.Getopt;
@@ -242,7 +244,11 @@ public class PartitionDAX extends Executable {
             }
 
             state = 1;
-            DaxParser d = new DaxParser( daxFile, properties, callback );
+
+            PegasusBag bag = new PegasusBag();
+            bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
+
+            DaxParser d = new DaxParser( daxFile, bag, callback );
             state = 2;
             //get the graph map
             Map graphMap = (Map) callback.getConstructedObject();

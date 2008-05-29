@@ -156,6 +156,11 @@ public class PlannerOptions extends Data implements Cloneable{
     private String mBasenamePrefix;
 
     /**
+     * The prefix that is to be applied while constructing job names.
+     */
+    private String mJobPrefix;
+
+    /**
      * A boolean indicating whether the planner invocation is part of a larger
      * deferred planning run.
      */
@@ -218,6 +223,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mDate             = new Date();
         mPartitioningType = null;
         mSanitizePath     = true;
+        mJobPrefix        = null;
     }
 
     /**
@@ -266,6 +272,16 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public String getBasenamePrefix(){
         return mBasenamePrefix;
+    }
+
+
+    /**
+     * Returns the job prefix to be used while constructing the job names.
+     *
+     * @return the job prefix if set, else null.
+     */
+    public String getJobnamePrefix(){
+        return mJobPrefix;
     }
 
     /**
@@ -488,6 +504,16 @@ public class PlannerOptions extends Data implements Cloneable{
     public void setBasenamePrefix(String prefix){
         mBasenamePrefix = prefix;
     }
+
+    /**
+     * Sets the job prefix to be used while constructing the job names.
+     *
+     * @param prefix  the job prefix .
+     */
+    public void setJobnamePrefix( String prefix ){
+        mJobPrefix = prefix;
+   }
+
 
 
     /**
@@ -853,6 +879,7 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Base Submit Directory " + mBaseDir +
                     "\n SubmitFile Directory " + this.getSubmitDirectory() +
                     "\n Basename Prefix      " + mBasenamePrefix +
+                    "\n Jobname Prefix       " + mJobPrefix +
                     "\n Abstract Dag File    " + mDAXFile +
                     "\n Partition File       " + mPDAXFile +
                     "\n Execution Pools      " + this.setToString(mvExecPools,",")+
@@ -891,6 +918,9 @@ public class PlannerOptions extends Data implements Cloneable{
 
         //the basename prefix
         if(mBasenamePrefix != null){ sb.append(" --basename ").append(mBasenamePrefix);}
+
+        //the jobname prefix
+        if( mJobPrefix != null ){ sb.append( " --job-prefix " ).append(  mJobPrefix ); }
 
         if(!mvExecPools.isEmpty()){
             sb.append(" --sites ");
@@ -1040,6 +1070,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mAuthenticate   = this.mAuthenticate;
         pOpt.mClusterer      = this.mClusterer;
         pOpt.mBasenamePrefix = this.mBasenamePrefix;
+        pOpt.mJobPrefix      = this.mJobPrefix;
         pOpt.mVOGroup        = this.mVOGroup;
         pOpt.mDeferredRun    = this.mDeferredRun;
         pOpt.mDate           = (Date)this.mDate.clone();

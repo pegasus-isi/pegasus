@@ -135,6 +135,11 @@ public class CPlanner extends Executable{
     private PlannerOptions mPOptions;
 
     /**
+     * The object containing the bag of pegasus objects
+     */
+    private PegasusBag mBag;
+
+    /**
      * The PlannerMetrics object storing the metrics about this planning instance.
      */
     private PlannerMetrics mPMetrics;
@@ -168,6 +173,8 @@ public class CPlanner extends Executable{
 
         mPMetrics = new PlannerMetrics();
         mPMetrics.setUser( mUser );
+
+        mBag = new PegasusBag();
     }
 
     /**
@@ -253,6 +260,12 @@ public class CPlanner extends Executable{
     public Collection<File> executeCommand( PlannerOptions options ) {
         String message = new String();
         mPOptions = options;
+
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
+        mBag.add( PegasusBag.PLANNER_OPTIONS, mPOptions );
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+
+
 
         Collection result = null;
 
@@ -351,7 +364,7 @@ public class CPlanner extends Executable{
 
             Callback cb =  DAXCallbackFactory.loadInstance( mProps, dax, "DAX2CDAG" );
 
-            DaxParser daxParser = new DaxParser( dax, mProps, cb );
+            DaxParser daxParser = new DaxParser( dax, mBag, cb );
 
             ADag orgDag = (ADag)cb.getConstructedObject();
 
@@ -546,7 +559,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:",
+                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -604,6 +617,10 @@ public class CPlanner extends Executable{
 
                 case 'h'://help
                     options.setHelp(true);
+                    break;
+
+                case 'j'://job-prefix
+                    options.setJobnamePrefix( g.getOptarg() );
                     break;
 
                 case 'm'://megadag option
@@ -762,7 +779,7 @@ public class CPlanner extends Executable{
         //we first need to get the label of DAX
         Callback cb =  DAXCallbackFactory.loadInstance( properties, options.getDAX(), "DAX2Metadata" );
         try{
-            DaxParser daxParser = new DaxParser( options.getDAX(), properties, cb );
+            DaxParser daxParser = new DaxParser( options.getDAX(), mBag, cb );
         }catch( Exception e ){
             //ignore
         }
@@ -851,7 +868,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[22];
+        LongOpt[] longopts = new LongOpt[23];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -877,7 +894,8 @@ public class CPlanner extends Executable{
         longopts[18]  = new LongOpt( "group",   LongOpt.REQUIRED_ARGUMENT, null, 'g' );
         longopts[19]  = new LongOpt( "deferred", LongOpt.NO_ARGUMENT, null, 'z');
         longopts[20]  = new LongOpt( "relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2' );
-        longopts[21]  = new LongOpt(  "pap", LongOpt.NO_ARGUMENT, null, 'p' );
+        longopts[21]  = new LongOpt( "pap", LongOpt.NO_ARGUMENT, null, 'p' );
+        longopts[22]  = new LongOpt( "job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j' );
         return longopts;
     }
 
@@ -891,7 +909,7 @@ public class CPlanner extends Executable{
           "\n " + getGVDSVersion() +
           "\n Usage : pegasus-plan [-Dprop  [..]] -d|-P <dax file|pdax file> " +
           " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
-          "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] " +
+          "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] [-j <job-prefix>] " +
           " [ --relative-dir <relative directory to base directory> ][-g <vogroup>] [-o <output site>] " +
           "\n [-r[dir name]] [--monitor] [-S] [-n]  [-v] [-V] [-h]";
 
@@ -928,6 +946,7 @@ public class CPlanner extends Executable{
            "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." +
            "\n -f |--force        skip reduction of the workflow, resulting in build style dag." +
            "\n -g |--group        the VO Group to which the user belongs " +
+           "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames " +
            "\n -m |--megadag      type of style to use while generating the megadag in deferred planning." +
            "\n -o |--output       the output site where the data products during workflow execution are transferred to." +
            "\n -s |--sites        comma separated list of executions sites on which to map the workflow." +

@@ -19,6 +19,7 @@ import org.griphyn.cPlanner.classes.Data;
 import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -207,12 +208,18 @@ public class DaxParser extends Parser {
     private boolean mUseDoubleNegative;
 
     /**
+     * The job prefix that needs to be applied to the job file basenames.
+     */
+    protected String mJobPrefix;
+
+
+    /**
      * The default constructor
      *
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag   the bag of objects that is useful for initialization.
      */
-    public DaxParser( PegasusProperties properties ) { //default constructor
-        super( properties );
+    public DaxParser( PegasusBag bag ) { //default constructor
+        super( bag );
         mGlobusNS = new Globus();
         mCondorNS = new Condor();
         mEnvNS    = new ENV();
@@ -220,7 +227,9 @@ public class DaxParser extends Parser {
         mHintNS   = new Hints();
         mVdsNS    = new VDS();
         mUseDoubleNegative = false;
-
+        mJobPrefix = ( bag.getPlannerOptions() == null ) ?
+                       null:
+                       bag.getPlannerOptions().getJobnamePrefix();
     }
 
     /**
@@ -228,11 +237,11 @@ public class DaxParser extends Parser {
      * in Xerces.
      *
      * @param daxFileName the file which you want to parse.
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag   the bag of objects that is useful for initialization.
      * @param callback    the object which implements the callback.
      */
-    public DaxParser(String daxFileName, PegasusProperties properties, Callback callback) {
-        super( properties );
+    public DaxParser(String daxFileName, PegasusBag bag, Callback callback) {
+        this( bag );
 
         try{
             this.testForFile(daxFileName);
@@ -712,11 +721,20 @@ public class DaxParser extends Parser {
 
         //mvJobIds.addElement(jobId);
 
-        //concatenating jobname and id into job name
-        jobName = jobName.concat("_");
-        jobName = jobName.concat(jobId);
+        //construct the jobname/primary key for job
+        StringBuffer name = new StringBuffer();
 
-        mCurrentJobSubInfo.jobName = jobName;
+        //prepend a job prefix to job if required
+        if( mJobPrefix != null ){
+            name.append( mJobPrefix );
+        }
+
+        //append the name and id recevied from dax
+        name.append( jobName );
+        name.append( "_" );
+        name.append( jobId );
+
+        mCurrentJobSubInfo.setName( name.toString() );
         //mvJobsInADag.addElement(jobName);
 
     }

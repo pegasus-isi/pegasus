@@ -15,6 +15,7 @@
 package org.griphyn.cPlanner.parser.dax;
 
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This interfaces defines the callback calls from DAX parsing. A slim
@@ -28,6 +29,12 @@ import org.griphyn.cPlanner.classes.SubInfo;
 public interface Callback {
 
     /**
+     * The version of the Callback api
+     */
+    public static final String VERSION = "1.2";
+
+
+    /**
      * Return a object that is constructed during the parsing of the object.
      * The type of the object that is constructed is determined by the
      * implementing callback handler. For example, it could be an Adag object
@@ -36,6 +43,8 @@ public interface Callback {
      * the corresponding object has been created by the implementing class or
      * not. The variable should be set when the implementing callback handler
      * deems that it has enough data to construct that object.
+     *
+     * @return  constructed object
      */
     public Object getConstructedObject();
 

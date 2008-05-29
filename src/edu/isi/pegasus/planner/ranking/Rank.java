@@ -113,7 +113,7 @@ public class Rank {
 
             mLogger.log( "Ranking dax " + dax, LogManager.DEBUG_MESSAGE_LEVEL );
             DaxParser daxParser = new DaxParser( dax,
-                                                 mBag.getPegasusProperties(),
+                                                 mBag,
                                                  cb );
 
             ADag dag = (ADag)cb.getConstructedObject();

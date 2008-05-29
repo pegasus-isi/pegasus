@@ -83,6 +83,11 @@ public class PartitionAndPlan{
     private LogManager mLogger;
 
     /**
+     * Bag of Pegasus objects
+     */
+    private PegasusBag mBag;
+
+    /**
      * The default constructor.
      */
     public PartitionAndPlan() {
@@ -98,6 +103,7 @@ public class PartitionAndPlan{
      * @param bag  the bag of objects required for initialization
      */
     public void initialize( PegasusBag bag ){
+        mBag = bag;
         mProps  = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         this.mPegasusPlanOptions  = bag.getPlannerOptions();
@@ -175,7 +181,7 @@ public class PartitionAndPlan{
         Callback cb =  DAXCallbackFactory.loadInstance( properties, options.getDAX(), "DAX2Metadata" );
 
         try{
-            DaxParser daxParser = new DaxParser(options.getDAX(), properties, cb);
+            DaxParser daxParser = new DaxParser(options.getDAX(), mBag, cb);
         }
         catch( RuntimeException e ){
             //ignore only if the parsing is completed
