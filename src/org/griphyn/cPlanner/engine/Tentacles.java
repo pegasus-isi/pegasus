@@ -19,9 +19,9 @@ package org.griphyn.cPlanner.engine;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -48,10 +48,10 @@ public class Tentacles extends CreateDirectory {
      * Default constructor.
      *
      * @param concDag  The concrete dag so far.
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag      bag of initialization objects
      */
-    public Tentacles( ADag concDag, PegasusProperties properties ) {
-        super( concDag, properties );
+    public Tentacles( ADag concDag, PegasusBag bag ) {
+        super( concDag, bag );
     }
 
     /**

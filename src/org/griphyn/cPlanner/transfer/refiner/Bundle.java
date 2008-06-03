@@ -118,6 +118,12 @@ public class Bundle extends Default {
     private ReplicaCatalogBridge mRCB;
 
     /**
+     * The job prefix that needs to be applied to the job file basenames.
+     */
+    private String mJobPrefix;
+
+
+    /**
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
@@ -126,13 +132,14 @@ public class Bundle extends Default {
      * @param options    the options passed to the planner.
      *
      */
-    public Bundle(ADag dag,PegasusProperties properties,PlannerOptions options){
+    public Bundle( ADag dag, PegasusProperties properties, PlannerOptions options ){
         super(dag, properties,options);
         mStageInMap   = new HashMap(options.getExecutionSites().size());
         mSIBundleMap  = new HashMap();
         mRelationsMap = new HashMap();
         mSetupMap     = new HashMap();
         mCurrentLevel = -1;
+        mJobPrefix    = options.getJobnamePrefix();
     }
 
     /**
@@ -902,6 +909,9 @@ public class Bundle extends Default {
                     throw new RuntimeException( "Wrong type specified " + type );
             }
 
+            //append the job prefix if specified in options at runtime
+            if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
             sb.append( mPool ).append( "_" ).append( level ).
                append( "_" ).append( counter );
 
@@ -920,6 +930,10 @@ public class Bundle extends Default {
         private String getRegJobName( int counter,  int level ){
             StringBuffer sb = new StringBuffer();
             sb.append( Refiner.REGISTER_PREFIX );
+
+
+            //append the job prefix if specified in options at runtime
+            if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
             sb.append( mPool ).append( "_" ).append( level ).
                append( "_" ).append( counter );
@@ -951,6 +965,12 @@ public class Bundle extends Default {
                 default:
                     throw new RuntimeException( "Wrong type specified " + type );
             }
+
+
+            //append the job prefix if specified in options at runtime
+            if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+
             sb.append(mPool).append("_").append(counter);
 
            return sb.toString();

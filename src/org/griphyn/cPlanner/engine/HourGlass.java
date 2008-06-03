@@ -20,21 +20,14 @@ package org.griphyn.cPlanner.engine;
 
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.Data;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
-
-import org.griphyn.common.catalog.TransformationCatalogEntry;
 
 import org.griphyn.cPlanner.namespace.VDS;
-
-import org.griphyn.common.classes.TCType;
-
-import java.io.File;
 
 import java.util.Iterator;
 import java.util.List;
@@ -69,11 +62,11 @@ public class HourGlass
     /**
      * Default constructor.
      *
-     * @param concDag  The concrete dag so far.     *
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param concDag  The concrete dag so far.
+     * @param bag      bag of initialization objects
      */
-    public HourGlass( ADag concDag, PegasusProperties properties ) {
-        super( concDag, properties );
+    public HourGlass( ADag concDag, PegasusBag bag ) {
+        super( concDag, bag );
     }
 
     /**
@@ -153,8 +146,7 @@ public class HourGlass
 
         //jobname has the dagname and index to indicate different
         //jobs for deferred planning
-        newJob.jobName = mCurrentDag.dagInfo.nameOfADag + "_" +
-                         mCurrentDag.dagInfo.index + "_" +  this.DUMMY_CONCAT_JOB;
+        newJob.jobName = getConcatJobname();
 
         newJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
                                   this.TRANSFORMATION_NAME,
@@ -182,6 +174,25 @@ public class HourGlass
 
         return newJob;
 
+    }
+
+    /**
+     * Returns the name of the concat job
+     *
+     * @return name
+     */
+    protected String getConcatJobname(){
+        StringBuffer sb = new StringBuffer();
+
+        sb.append( mCurrentDag.dagInfo.nameOfADag ).append( "_" ).
+           append( mCurrentDag.dagInfo.index ).append( "_" );
+
+        //append the job prefix if specified in options at runtime
+        if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+        sb.append( this.DUMMY_CONCAT_JOB );
+
+        return sb.toString();
     }
 
     /**

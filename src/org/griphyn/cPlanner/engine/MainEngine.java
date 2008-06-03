@@ -225,10 +225,10 @@ public class MainEngine
             message = "Grafting the remote workdirectory creation jobs " +
                         "in the workflow";
             mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-            mCreateEng = CreateDirectory.loadCreateDirectoryInstance(mProps.
-                getCreateDirClass(),
-                mReducedDag,
-                mProps );
+            mCreateEng = CreateDirectory.loadCreateDirectoryInstance(
+                                                     mProps.getCreateDirClass(),
+                                                     mReducedDag,
+                                                     mBag );
             mCreateEng.addCreateDirectoryNodes();
             mCreateEng = null;
             mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);

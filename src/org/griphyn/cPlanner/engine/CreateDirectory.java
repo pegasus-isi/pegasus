@@ -22,6 +22,8 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -32,6 +34,7 @@ import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.classes.TCType;
 
+import org.griphyn.common.util.Separator;
 import org.griphyn.common.util.DynamicLoader;
 import org.griphyn.common.util.FactoryException;
 
@@ -39,8 +42,8 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
+
 import java.io.File;
-import org.griphyn.common.util.Separator;
 
 /**
  * This common interface that identifies the basic functions that need to be
@@ -117,6 +120,12 @@ public abstract class CreateDirectory
      */
     protected LogManager mLogger;
 
+    /**
+     * The job prefix that needs to be applied to the job file basenames.
+     */
+    protected String mJobPrefix;
+
+
 
     /**
      * A convenience method to return the complete transformation name being
@@ -139,7 +148,7 @@ public abstract class CreateDirectory
      *                   name of the class, not the complete name with package.
      *                   That is added by itself.
      * @param concDag        the workflow.
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag      bag of initialization objects
      *
      * @return instance of a CreateDirecctory implementation
      *
@@ -149,7 +158,7 @@ public abstract class CreateDirectory
     public static CreateDirectory loadCreateDirectoryInstance(
                                                               String className,
                                                               ADag concDag,
-                                                              PegasusProperties properties ) throws FactoryException {
+                                                              PegasusBag bag ) throws FactoryException {
 
         //prepend the package name
         className = PACKAGE_NAME + className;
@@ -158,9 +167,9 @@ public abstract class CreateDirectory
         CreateDirectory cd = null;
         DynamicLoader dl = new DynamicLoader(className);
         try {
-            Object argList[] = new Object[2];
+            Object argList[] = new Object[ 2 ];
             argList[0] = concDag;
-            argList[1] = properties;
+            argList[1] = bag;
             cd = (CreateDirectory) dl.instantiate(argList);
         } catch (Exception e) {
             throw new FactoryException( "Instantiating Create Directory",
@@ -175,28 +184,27 @@ public abstract class CreateDirectory
      * A pratically nothing constructor !
      *
      *
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag      bag of initialization objects
      */
-    protected CreateDirectory( PegasusProperties properties ) {
-        super( properties );
+    protected CreateDirectory( PegasusBag bag ) {
+        super( bag.getPegasusProperties() );
+        mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
         mCurrentDag = null;
-        mUserOpts   = UserOptions.getInstance();
-        mTCHandle   = TCMode.loadInstance();
-        mLogger     = LogManager.getInstance();
+        mUserOpts = UserOptions.getInstance();
+        mTCHandle = bag.getHandleToTransformationCatalog();
+        mLogger   = bag.getLogger();
     }
+
 
     /**
      * Default constructor.
      *
      * @param concDag  The concrete dag so far.
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag      bag of initialization objects
      */
-    protected CreateDirectory( ADag concDag, PegasusProperties properties ) {
-        super( properties );
+    protected CreateDirectory( ADag concDag, PegasusBag bag ) {
+        this( bag );
         mCurrentDag = concDag;
-        mUserOpts = UserOptions.getInstance();
-        mTCHandle = TCMode.loadInstance();
-        mLogger   = LogManager.getInstance();
     }
 
     /**
@@ -222,9 +230,15 @@ public abstract class CreateDirectory
      */
     protected String getCreateDirJobName(String pool){
         StringBuffer sb = new StringBuffer();
+
+
         sb.append(mCurrentDag.dagInfo.nameOfADag).append("_").
-           append(mCurrentDag.dagInfo.index).append("_").
-           append(pool).append(this.CREATE_DIR_SUFFIX);
+           append(mCurrentDag.dagInfo.index).append("_");
+
+       //append the job prefix if specified in options at runtime
+       if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+       sb.append(pool).append(this.CREATE_DIR_SUFFIX);
 
        return sb.toString();
     }
