@@ -55,6 +55,10 @@ import org.griphyn.cPlanner.classes.Profile;
  * name as <code>globus::guc</code> for all the sites where workflow is run,
  * or on the local site in case of third party transfers.
  *
+ * Pegasus can automatically construct the path to the globus-url-copy client, if
+ * the environment variable GLOBUS_LOCATION is specified in the site catalog for 
+ * the site.
+ *   
  * <p>
  * The arguments with which the client is invoked can be specified
  * <pre>
