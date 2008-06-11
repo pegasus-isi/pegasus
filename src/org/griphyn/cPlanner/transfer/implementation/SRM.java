@@ -58,7 +58,7 @@ import java.util.ArrayList;
  * The arguments with which the client is invoked can be specified
  * <pre>
  *       - by specifying the property pegasus.transfer.arguments
- *       - associating the VDS profile key transfer.arguments
+ *       - associating the Pegasus profile key transfer.arguments
  * </pre>
  *
  * @author Karan Vahi
@@ -183,7 +183,7 @@ public class SRM extends AbstractMultipleFTPerXFERJob {
      * Mechanism. In addition, the stdin is set to null, after the file has
      * been marked for transfer by Condor File Transfer Mechanism.
      *
-     * @job  the <code>TransferJob</code> that has been created.
+     * @param job  the <code>TransferJob</code> that has been created.
      */
     public void postProcess( TransferJob job ){
         File f = new File( mPOptions.getSubmitDirectory(), job.getStdIn() );
