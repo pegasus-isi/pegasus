@@ -531,6 +531,8 @@ public class Algorithm {
             throw new RuntimeException( "No runnable site for job " + job.getName() );
         }
 
+        mLogger.log( "Runnables sites for job " + job.getName() + " " + runnableSites , LogManager.DEBUG_MESSAGE_LEVEL );
+
         //for each runnable site get the expected runtime
         String site;
         int total_nodes = 0;
@@ -576,15 +578,34 @@ public class Algorithm {
         List profiles = entry.getProfiles( Profile.VDS );
         mLogger.log( "Fetching runtime information from profiles for job " + job.getName(),
                      LogManager.DEBUG_MESSAGE_LEVEL  );
+        mLogger.log( "Profiles are " + profiles, LogManager.DEBUG_MESSAGE_LEVEL);
         if( profiles != null ){
             for (Iterator it = profiles.iterator(); it.hasNext(); ) {
                 Profile p = (Profile) it.next();
+
                 if (p.getProfileKey().equals(this.RUNTIME_PROFILE_KEY)) {
                     result = Integer.parseInt(p.getProfileValue());
                     break;
                 }
             }
         }
+        //if no information . try from profiles in dax
+        if( result < 1 ){
+            mLogger.log( "Fetching runtime information from profiles for job " + job.getName(),
+                          LogManager.DEBUG_MESSAGE_LEVEL  );
+
+            for (Iterator it = job.vdsNS.getProfileKeyIterator(); it.hasNext(); ) {
+                String key = (String) it.next();
+
+                if ( key.equals(this.RUNTIME_PROFILE_KEY)) {
+                    result = Integer.parseInt( job.vdsNS.getStringValue( key ) );
+                    break;
+                }
+
+            }
+
+        }
+
         //sanity check for time being
         if( result < 1 ){
             throw new RuntimeException( "Invalid or no runtime specified" );
