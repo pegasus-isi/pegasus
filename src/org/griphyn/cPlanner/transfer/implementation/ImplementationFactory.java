@@ -57,6 +57,10 @@ public  class ImplementationFactory {
      */
     public static final int TYPE_STAGE_OUT = 2;
 
+    /**
+     * The constant designating the implementation to be loaded for setup tx jobs.
+     */
+    public static final int TYPE_SETUP = 3;
 
     /**
      * Loads the implementing class corresponding to the type specified by the user.
@@ -185,6 +189,9 @@ public  class ImplementationFactory {
         }
         else if(type == TYPE_STAGE_OUT){
             property = "pegasus.transfer.stageout.impl";
+        }
+        else if( type == TYPE_SETUP ){
+            property = "pegasus.transfer.setup.impl";
         }
         else{
             throw new java.lang.IllegalArgumentException(
