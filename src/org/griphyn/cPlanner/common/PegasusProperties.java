@@ -89,6 +89,8 @@ public class PegasusProperties {
     //transfer constants
 
     public static final String DEFAULT_TRANSFER_IMPLEMENTATION = "Transfer";
+    
+    public static final String DEFAULT_SETUP_TRANSFER_IMPLEMENTATION = "GUC";
 
     public static final String DEFAULT_TRANSFER_REFINER = "Default";
 
@@ -828,8 +830,12 @@ public class PegasusProperties {
         String value = mProps.getProperty(property,
                                           getDefaultTransferImplementation());
 
+        String dflt = property.equals( "pegasus.transfer.setup.impl" ) ?
+                            DEFAULT_SETUP_TRANSFER_IMPLEMENTATION:
+                            DEFAULT_TRANSFER_IMPLEMENTATION ;
+                
         return (value == null)?
-               DEFAULT_TRANSFER_IMPLEMENTATION:
+               dflt :
                value;
     }
 
