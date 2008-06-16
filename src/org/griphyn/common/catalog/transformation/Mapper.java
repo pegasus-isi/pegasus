@@ -16,11 +16,17 @@
 package org.griphyn.common.catalog.transformation;
 
 import org.griphyn.cPlanner.classes.TCMap;
+
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
+
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 import org.griphyn.cPlanner.poolinfo.PoolMode;
+
 import org.griphyn.common.catalog.TransformationCatalog;
+import org.griphyn.common.catalog.transformation.mapper.Staged;
+import org.griphyn.common.catalog.transformation.mapper.Submit;
+
 import org.griphyn.common.util.DynamicLoader;
 import org.griphyn.common.util.Separator;
 
@@ -112,6 +118,16 @@ public abstract class Mapper {
         mPoolHandle = PoolMode.loadPoolInstance( mPoolClass, mPoolFile,
             PoolMode.SINGLETON_LOAD );
 
+    }
+
+    /**
+     * Returns whether this instance of mapper is an instance of a Stageable
+     * mapper or not.
+     *
+     * @return boolean
+     */
+    public boolean isStageableMapper(){
+        return ( ( this instanceof Staged )  || ( this instanceof Submit )  );
     }
 
     /**
