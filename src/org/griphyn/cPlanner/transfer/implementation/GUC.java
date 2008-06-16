@@ -56,9 +56,9 @@ import org.griphyn.cPlanner.classes.Profile;
  * or on the local site in case of third party transfers.
  *
  * Pegasus can automatically construct the path to the globus-url-copy client, if
- * the environment variable GLOBUS_LOCATION is specified in the site catalog for 
+ * the environment variable GLOBUS_LOCATION is specified in the site catalog for
  * the site.
- *   
+ *
  * <p>
  * The arguments with which the client is invoked can be specified
  * <pre>
@@ -406,8 +406,8 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
            sb.append(" -p ").append( mNumOfTXStreams );
        }
 
-       //always append -cd option
-       sb.append( " -cd " );
+       //always append -cd option and verbose option
+       sb.append( " -cd -vb" );
        sb.append(" -f ").append( job.getStdIn() );
 
 
