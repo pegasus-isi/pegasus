@@ -22,15 +22,14 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.UserOptions;
 
+import org.griphyn.cPlanner.namespace.VDS;
+
 import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.classes.TCType;
 
@@ -88,6 +87,20 @@ public abstract class CreateDirectory
     public static final String TRANSFORMATION_VERSION = null;
 
     /**
+     * The path to be set for create dir jobs.
+     */
+    public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";
+    
+    /**
+     * The complete TC name for kickstart.
+     */
+    public static final String COMPLETE_TRANSFORMATION_NAME = Separator.combine(
+                                                                 TRANSFORMATION_NAMESPACE,
+                                                                 TRANSFORMATION_NAME,
+                                                                 TRANSFORMATION_VERSION  );
+
+
+    /**
      * The derivation namespace for the create dir  jobs.
      */
     public static final String DERIVATION_NAMESPACE = "pegasus";
@@ -125,6 +138,10 @@ public abstract class CreateDirectory
      */
     protected String mJobPrefix;
 
+    /**
+     * Whether we want to use dirmanager or mkdir directly.
+     */
+    protected boolean mUseMkdir;
 
 
     /**
@@ -133,11 +150,11 @@ public abstract class CreateDirectory
      *
      * @return the complete transformation name
      */
-    public static String getCompleteTranformationName(){
-        return Separator.combine( TRANSFORMATION_NAMESPACE,
-                                  TRANSFORMATION_NAME,
-                                  TRANSFORMATION_VERSION );
-    }
+//    public static String getCompleteTranformationName(){
+//        return Separator.combine( TRANSFORMATION_NAMESPACE,
+//                                  TRANSFORMATION_NAME,
+//                                  TRANSFORMATION_VERSION );
+//    }
 
 
     /**
@@ -193,6 +210,9 @@ public abstract class CreateDirectory
         mUserOpts = UserOptions.getInstance();
         mTCHandle = bag.getHandleToTransformationCatalog();
         mLogger   = bag.getLogger();
+        //in case of staging of executables/worker package
+        //we use mkdir directly
+        mUseMkdir = bag.getHandleToTransformationMapper().isStageableMapper();
     }
 
 
@@ -293,9 +313,9 @@ public abstract class CreateDirectory
         JobManager jobManager = null;
 
         try {
-            entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
-                                              this.TRANSFORMATION_NAME,
-                                              this.TRANSFORMATION_VERSION,
+            entries = mTCHandle.getTCEntries( CreateDirectory.TRANSFORMATION_NAMESPACE,
+                                              CreateDirectory.TRANSFORMATION_NAME,
+                                              CreateDirectory.TRANSFORMATION_VERSION,
                                               execPool, TCType.INSTALLED);
         }
         catch (Exception e) {
@@ -314,28 +334,50 @@ public abstract class CreateDirectory
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
-                append( this.getCompleteTranformationName() ).
+                append( COMPLETE_TRANSFORMATION_NAME ).
                 append(" at site ").append( execPool );
 
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException( error.toString() );
         }
 
-        execPath = entry.getPhysicalTransformation();
-
+        
 
         SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
         jobManager = ePool.selectJobManager("transfer",true);
-        String argString = "--create --dir " +
-            mPoolHandle.getExecPoolWorkDir(execPool);
+        
+        String argString = null;
+        if( mUseMkdir ){
+            /*
+            //we are using mkdir directly
+            argString = " -p " + mPoolHandle.getExecPoolWorkDir( execPool );
+            execPath  = "mkdir";
+            //path variable needs to be set
+            newJob.envVariables.construct( "PATH", CreateDirectory.PATH_VALUE );
+            */
+            newJob.vdsNS.construct( VDS.GRIDSTART_KEY, "None" );
+            
+            StringBuffer sb = new StringBuffer();
+            sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" ).
+               append( File.separator ).append( "dirmanager" );
+            execPath = sb.toString();
+            argString = "--create --dir " +
+                        mPoolHandle.getExecPoolWorkDir( execPool );
+            newJob.condorVariables.construct( "transfer_executable", "true" );
+        }
+        else{
+            execPath = entry.getPhysicalTransformation();
+            argString = "--create --dir " +
+                        mPoolHandle.getExecPoolWorkDir( execPool );
+        }
 
         newJob.jobName = jobName;
-        newJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
-                                  this.TRANSFORMATION_NAME,
-                                  this.TRANSFORMATION_VERSION );
-        newJob.setDerivation( this.DERIVATION_NAMESPACE,
-                              this.DERIVATION_NAME,
-                              this.DERIVATION_VERSION );
+        newJob.setTransformation( CreateDirectory.TRANSFORMATION_NAMESPACE,
+                                  CreateDirectory.TRANSFORMATION_NAME,
+                                  CreateDirectory.TRANSFORMATION_VERSION );
+        newJob.setDerivation( CreateDirectory.DERIVATION_NAMESPACE,
+                              CreateDirectory.DERIVATION_NAME,
+                              CreateDirectory.DERIVATION_VERSION );
         newJob.condorUniverse = "vanilla";
         newJob.globusScheduler = jobManager.getInfo(JobManager.URL);
         newJob.executable = execPath;
@@ -380,7 +422,7 @@ public abstract class CreateDirectory
         home = ( home == null )? mPoolHandle.getVDS_HOME( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
-                     this.getCompleteTranformationName() +
+                     COMPLETE_TRANSFORMATION_NAME +
                      " at site " + site,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -388,7 +430,7 @@ public abstract class CreateDirectory
         if ( home == null ){
             //cannot create default TC
             mLogger.log( "Unable to create a default entry for " +
-                         this.getCompleteTranformationName(),
+                         COMPLETE_TRANSFORMATION_NAME,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             //set the flag back to true
             return defaultTCEntry;
