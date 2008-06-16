@@ -1,16 +1,17 @@
-/*
- * This file or a portion of this file is licensed under the terms of
- * the Globus Toolkit Public License, found in file GTPL, or at
- * http://www.globus.org/toolkit/download/license.html. This notice must
- * appear in redistributions of this file, with or without modification.
+/**
+ *  Copyright 2007-2008 University Of Southern California
  *
- * Redistributions of this Software, with or without modification, must
- * reproduce the GTPL in: (1) the Software, or (2) the Documentation or
- * some other similar material which is provided with the Software (if
- * any).
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * Copyright 1999-2004 University of Chicago and The University of
- * Southern California. All rights reserved.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
 package org.griphyn.common.util;
@@ -89,7 +90,7 @@ public class Currently {
    */
   public void setDateFormat( SimpleDateFormat format )
   {
-    if ( format != null ) 
+    if ( format != null )
       m_formatter = format;
   }
 
@@ -102,12 +103,12 @@ public class Currently {
    */
   public void setDateFormat( String format )
   {
-    if ( format != null ) 
+    if ( format != null )
       m_formatter = new SimpleDateFormat(format);
   }
 
   /**
-   * Obtains the current time as formatted string according to 
+   * Obtains the current time as formatted string according to
    * the format option.
    * @return the current time as formatted string.
    * @see #now( Date )
@@ -118,7 +119,7 @@ public class Currently {
   }
 
   /**
-   * Obtains the current time as formatted string according to 
+   * Obtains the current time as formatted string according to
    * the format option.
    * @param then is a timestamp expressed as Date.
    * @return the current time as formatted string.
@@ -178,7 +179,7 @@ public class Currently {
 	if ( m.group(4).length() > 0 ) {
 	  c.set( Calendar.HOUR_OF_DAY, Integer.parseInt(m.group(5)) );
 	  c.set( Calendar.MINUTE, Integer.parseInt(m.group(6)) );
-	  if ( m.group(7) != null && m.group(7).length() > 0 ) 
+	  if ( m.group(7) != null && m.group(7).length() > 0 )
 	    c.set( Calendar.SECOND, Integer.parseInt(m.group(7)) );
 	  if ( m.group(8) != null && m.group(8).length() > 1 ) {
 	    String millis = m.group(8).substring(1);
@@ -240,7 +241,7 @@ public class Currently {
    * will be omitted.
    * @param withMillis will put the millisecond extension into the timestamp.
    * If false, the time will be without millisecond fraction. The separator
-   * is taken from {@link java.text.DecimalFormatSymbols#getMinusSign()}, 
+   * is taken from {@link java.text.DecimalFormatSymbols#getMinusSign()},
    * which usually is a period or a comma.
    * @param now is a time stamp as Date.
    * @return an ISO 8601 formatted date and time representation for

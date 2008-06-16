@@ -1,23 +1,25 @@
-/*
- * This file or a portion of this file is licensed under the terms of
- * the Globus Toolkit Public License, found in file GTPL, or at
- * http://www.globus.org/toolkit/download/license.html. This notice must
- * appear in redistributions of this file, with or without modification.
+/**
+ *  Copyright 2007-2008 University Of Southern California
  *
- * Redistributions of this Software, with or without modification, must
- * reproduce the GTPL in: (1) the Software, or (2) the Documentation or
- * some other similar material which is provided with the Software (if
- * any).
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * Copyright 1999-2004 University of Chicago and The University of
- * Southern California. All rights reserved.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
+
 
 package org.griphyn.common.util;
 
 /**
  * This class solely defines the separators used in the textual in-
- * and output between namespace, name and version(s). A textual 
+ * and output between namespace, name and version(s). A textual
  * representation of a definition looks like ns::name:version, and
  * a textual representation of a uses like ns::name:min,max.<p>
  *
@@ -27,11 +29,11 @@ package org.griphyn.common.util;
  *
  * @see org.griphyn.vdl.classes.Definition
  */
-public class Separator 
+public class Separator
 {
   /**
    * This constant defines the separator between a namespace and
-   * the identifier. 
+   * the identifier.
    */
   public static final String NAMESPACE = "::";
 
@@ -57,7 +59,7 @@ public class Separator
 
   /**
    * Combines the three components that constitute a fully-qualified
-   * definition identifier into a single string. 
+   * definition identifier into a single string.
    *
    * @param namespace is the namespace, may be empty or null.
    * @param name is the name to use, must not be empty nor null.
@@ -90,18 +92,18 @@ public class Separator
 
   /**
    * Combines the four components that reference a fully-qualified
-   * definition identifier into a single string. 
+   * definition identifier into a single string.
    *
    * @param namespace is the namespace, may be empty or null.
    * @param name is the name to use, must not be empty nor null.
    * @param min is the lower version to attach, may be empty or null.
    * @param max is the upper version to attach, may be empty or null.
-   * @return the combination of namespace, name and versions with 
+   * @return the combination of namespace, name and versions with
    * appropriate separators.
    * @exception NullPointerException will be thrown on an empty or null
    * name, as no such identifier can be constructed.
    */
-  public static String combine( String namespace, String name, 
+  public static String combine( String namespace, String name,
 				String min, String max )
   {
     StringBuffer result = new StringBuffer(32);
@@ -167,10 +169,10 @@ public class Separator
   /**
    * Splits a fully-qualified definition identifier into separate
    * namespace, name and version. Certain extensions permit a spec
-   * to distinguish between an empty namespace or version and a 
+   * to distinguish between an empty namespace or version and a
    * null (wildcard match) namespace and version.<p>
    *
-   * There is a subtle distinction between a null value and an 
+   * There is a subtle distinction between a null value and an
    * empty value for the namespace and version. A null value is
    * usually taken as a wildcard match. An empty string however
    * is an exact match of a definition without the namespace or
@@ -178,8 +180,8 @@ public class Separator
    *
    * In order to enable the DAX generation function to distinguish
    * these cases when specifying user input, the following convention
-   * is supported, where * stands in for wild-card matches, and 
-   * (-) for a match of an empty element: 
+   * is supported, where * stands in for wild-card matches, and
+   * (-) for a match of an empty element:
    *
    * <table>
    *  <tr><th>INPUT</th> <th>NS</th>  <th>ID</th> <th>VS</th></tr>
@@ -283,7 +285,7 @@ public class Separator
     { 4, 0, 5, 1 }, 	// 5
     { 7, 0, 0, 1 }	// 6
   };
- 
+
   /**
    * Maps the state and character class to the follow-up state. The
    * final state 16 is a regular final state, and final state 17 is
@@ -297,7 +299,7 @@ public class Separator
    *  <tr><th>3</th><td>any other</td>
    * </table>
    */
-  private static short statemap[][] = 
+  private static short statemap[][] =
   { { 17, 17, 17,  1 },	// 0
     { 16,  2, 17,  1 }, // 1
     { 17,  3, 17,  5 }, // 2
@@ -316,7 +318,7 @@ public class Separator
    * if the context requires a 4 argument string.
    *
    * @param fqdn is the string to split into components.
-   * @return a vector with three or four Strings, if it was parsable. 
+   * @return a vector with three or four Strings, if it was parsable.
    * <ol>
    * <li>namespace, may be null
    * <li>name, never null
@@ -324,9 +326,9 @@ public class Separator
    * <li>maximum version for 4arg, may be null
    * </ol>
    * @exception IllegalArgumentException, if the identifier cannot
-   * be parsed correctly. 
+   * be parsed correctly.
    */
-  public static String[] split( String fqdn ) 
+  public static String[] split( String fqdn )
     throws IllegalArgumentException
   {
     String namespace = null;

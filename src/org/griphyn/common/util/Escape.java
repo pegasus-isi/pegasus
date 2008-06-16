@@ -1,17 +1,19 @@
-/*
- * This file or a portion of this file is licensed under the terms of
- * the Globus Toolkit Public License, found in file GTPL, or at
- * http://www.globus.org/toolkit/download/license.html. This notice must
- * appear in redistributions of this file, with or without modification.
+/**
+ *  Copyright 2007-2008 University Of Southern California
  *
- * Redistributions of this Software, with or without modification, must
- * reproduce the GTPL in: (1) the Software, or (2) the Documentation or
- * some other similar material which is provided with the Software (if
- * any).
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * Copyright 1999-2004 University of Chicago and The University of
- * Southern California. All rights reserved.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
+
 
 package org.griphyn.common.util;
 
@@ -23,20 +25,20 @@ package org.griphyn.common.util;
  * unescape( escape( s ) ) === s
  * </pre>
  *
- * holds true, but 
+ * holds true, but
  *
  * <pre>
  * escape( unescape( s ) ) =?= s
  * </pre>
- * 
- * does not necessarily hold. 
+ *
+ * does not necessarily hold.
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
  * @author Jens-S. Vöckler
  * @version $Revision$
  */
-public class Escape 
+public class Escape
 {
   /**
    * Defines the character used to escape characters.
@@ -54,7 +56,7 @@ public class Escape
    * is the backslash.
    *
    */
-  public Escape() 
+  public Escape()
   {
     m_escapable = "\"'\\";
     m_escape = '\\';
@@ -67,12 +69,12 @@ public class Escape
    * @param escape is the escape character itself.
    */
   public Escape( String escapable, char escape )
-  { 
+  {
     m_escape = escape;
     m_escapable = escapable;
 
     // ensure that the escape character is part of the escapable char set
-    if ( escapable.indexOf(escape) == -1 ) m_escapable += m_escape; 
+    if ( escapable.indexOf(escape) == -1 ) m_escapable += m_escape;
   }
 
   /**
@@ -100,7 +102,7 @@ public class Escape
 
   /**
    * Transforms a given string by unescaping all characters that
-   * are prefixed with the escape character. 
+   * are prefixed with the escape character.
    *
    * @param s is the string to remove escapes from.
    * @return the quoted string
@@ -119,14 +121,14 @@ public class Escape
 	// default state
 	if ( ch == m_escape ) state = 1;
 	else result.append(ch);
-      } else { 
+      } else {
 	// "found escape" state
 	if ( m_escapable.indexOf(ch) == -1 ) result.append(m_escape);
 	result.append(ch);
 	state = 0;
       }
     }
-    
+
     return result.toString();
   }
 
@@ -135,7 +137,7 @@ public class Escape
    *
    * @param args are command-line arguments
    */
-  public static void main( String args[] ) 
+  public static void main( String args[] )
   {
     Escape me = new Escape(); // defaults
 
