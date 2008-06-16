@@ -1,0 +1,811 @@
+/**
+ *  Copyright 2007-2008 University Of Southern California
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package org.griphyn.cPlanner.engine;
+
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.FileTransfer;
+import org.griphyn.cPlanner.classes.Profile;
+
+import org.griphyn.cPlanner.common.LogManager;
+
+import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import org.griphyn.cPlanner.partitioner.graph.Graph;
+import org.griphyn.cPlanner.partitioner.graph.Adapter;
+
+
+import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+
+import org.griphyn.cPlanner.namespace.VDS;
+
+import org.griphyn.cPlanner.transfer.Implementation;
+import org.griphyn.cPlanner.transfer.implementation.ImplementationFactory;
+import org.griphyn.cPlanner.transfer.refiner.RefinerFactory;
+
+import org.griphyn.cPlanner.selector.TransformationSelector;
+
+import org.griphyn.common.util.DynamicLoader;
+import org.griphyn.common.util.FactoryException;
+import org.griphyn.common.util.Separator;
+
+import org.griphyn.common.catalog.transformation.Mapper;
+
+import org.griphyn.common.catalog.TransformationCatalogEntry;
+
+import org.griphyn.common.classes.TCType;
+import org.griphyn.common.classes.SysInfo;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
+
+import java.io.File;
+
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import org.griphyn.cPlanner.classes.JobManager;
+import org.griphyn.cPlanner.classes.NameValue;
+import org.griphyn.cPlanner.classes.SiteInfo;
+
+
+/**
+ *
+ *
+ * @author Karan Vahi
+ * @author Gaurang Mehta
+ *
+ * @version $Revision: 538 $
+ */
+public class DeployWorkerPackage
+    extends Engine {
+
+    /**
+     * Constant suffix for the names of the deployment nodes.
+     */
+    public static final String DEPLOY_WORKER_PREFIX = "setup_tx_";
+    
+    /**
+     * Constant suffix for the names of the deployment nodes.
+     */
+    public static final String UNTAR_PREFIX = "untar_";
+
+
+    /**
+     * Array storing the names of the executables in the $PEGASUS_HOME/bin directory
+     */
+    public static final String PEGASUS_WORKER_EXECUTABLES[] = {
+        "T2", "transfer", "kickstart", "cleanup", "seqexec", "dirmanager", "invoke",  "keg" };
+
+    /**
+     * Store the regular expressions necessary to parse the basename from the worker
+     * package url to retrieve the version of pegasus.
+     */
+    private static final String mRegexExpression =
+                                     "(pegasus-)(binary|worker)-([0-9]\\.[0-9]\\.[0-9][a-zA-Z]*)-x86.*";
+
+
+    /**
+     * The path to be set for create dir jobs.
+     */
+    public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";
+    
+    /**
+     * The default transfer refiner name.
+     */
+    public static final String DEFAULT_REFINER = "Default";
+
+    /**
+     * The transformation namespace for the worker package
+     */
+    public static final String TRANSFORMATION_NAMESPACE = "pegasus";
+
+    /**
+     * The logical name of the worker package
+     */
+    public static final String TRANSFORMATION_NAME = "worker";
+
+    /**
+     * The version number for the worker package.
+     */
+    public static final String TRANSFORMATION_VERSION = null;
+
+    /**
+     * The transformation namespace for the worker package
+     */
+    public static final String UNTAR_TRANSFORMATION_NAMESPACE = null;
+
+    /**
+     * The logical name of the worker package
+     */
+    public static final String UNTAR_TRANSFORMATION_NAME = "tar";
+
+    /**
+     * The version number for the worker package.
+     */
+    public static final String UNTAR_TRANSFORMATION_VERSION = null;
+
+    /**
+     * The complete TC name for untar.
+     */
+    public static final String COMPLETE_UNTAR_TRANSFORMATION_NAME = Separator.combine(
+                                                                    UNTAR_TRANSFORMATION_NAMESPACE,
+                                                                    UNTAR_TRANSFORMATION_NAME,
+                                                                    UNTAR_TRANSFORMATION_VERSION  );
+
+    
+    /**
+     * The complete TC name for pegasus worker package.
+     */
+    public static final String COMPLETE_TRANSFORMATION_NAME = Separator.combine(
+                                                                    TRANSFORMATION_NAMESPACE,
+                                                                    TRANSFORMATION_NAME,
+                                                                    TRANSFORMATION_VERSION  );
+
+    /**
+     * The derivation namespace for the worker package.
+     */
+    public static final String DERIVATION_NAMESPACE = "pegasus";
+
+    /**
+     * The logical name of the transformation for the worker package
+     */
+    public static final String DERIVATION_NAME = "worker";
+
+
+    /**
+     * The version number for the derivations for worker package.
+     */
+    public static final String DERIVATION_VERSION = "2.0";
+
+    /**
+     * The derivation namespace for the untar job.
+     */
+    public static final String UNTAR_DERIVATION_NAMESPACE = null;
+
+    /**
+     * The logical name of the transformation for the untar job.
+     */
+    public static final String UNTAR_DERIVATION_NAME = "worker";
+
+
+    /**
+     * The version number for the derivations for untar job.
+     */
+    public static final String UNTAR_DERIVATION_VERSION = "2.0";
+
+    /**
+     * The name of the package in which all the implementing classes are.
+     */
+    public static final String PACKAGE_NAME = "org.griphyn.cPlanner.engine.";
+
+    /**
+     * Stores compiled patterns at first use, quasi-Singleton.
+     */
+    private static Pattern mPattern = null;
+
+
+    /**
+     * It is a reference to the Concrete Dag so far.
+     */
+    protected ADag mCurrentDag;
+
+
+    /**
+     * The job prefix that needs to be applied to the job file basenames.
+     */
+    protected String mJobPrefix;
+
+    /**
+     * The transfer implementation to be used for staging in the data as part
+     * of setup job.
+     */
+    protected Implementation mSetupTransferImplementation;
+
+    
+    /**
+     * The bag of initialization objects
+     */
+    protected PegasusBag mBag;
+
+    /**
+     * The FileTransfer map indexed by site id.
+     */
+    protected Map mFTMap;
+
+    /**
+     * Loads the implementing class corresponding to the mode specified by the
+     * user at runtime.
+     *
+     * @param bag      bag of initialization objects
+     *
+     * @return instance of a DeployWorkerPackage implementation
+     *
+     * @throws FactoryException that nests any error that
+     *         might occur during the instantiation of the implementation.
+     */
+    public static DeployWorkerPackage loadDeployWorkerPackage( PegasusBag bag ) throws FactoryException {
+
+        //prepend the package name
+        String className = PACKAGE_NAME + "DeployWorkerPackage";
+
+        //try loading the class dynamically
+        DeployWorkerPackage dp = null;
+        DynamicLoader dl = new DynamicLoader(className);
+        try {
+            Object argList[] = new Object[ 1 ];
+            argList[0] = bag;
+            dp = (DeployWorkerPackage) dl.instantiate(argList);
+        } catch (Exception e) {
+            throw new FactoryException( "Instantiating Deploy Worker Package",
+                                        className,
+                                        e );
+        }
+
+        return dp;
+    }
+
+    /**
+     * A pratically nothing constructor !
+     *
+     *
+     * @param bag      bag of initialization objects
+     */
+    public DeployWorkerPackage( PegasusBag bag ) {
+        super( bag.getPegasusProperties() );
+        mBag = bag;
+        mPOptions = bag.getPlannerOptions();
+        mCurrentDag = null;
+        mFTMap = new HashMap();
+        mTCHandle = bag.getHandleToTransformationCatalog();
+        mLogger   = bag.getLogger();
+        mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
+
+        //load the transfer setup implementation
+        //To DO . specify type for loading
+        mSetupTransferImplementation = ImplementationFactory.loadInstance(
+                                                          bag.getPegasusProperties(),
+                                                          bag.getPlannerOptions(),
+                                                          ImplementationFactory.TYPE_SETUP );
+        
+        
+    }
+
+
+    /**
+     * Initialize with the scheduled graph.  Results in the appropriate
+     * population of the transformation catalog with pegasus-worker executables.
+     *
+     *
+     * @param scheduledDAG the scheduled workflow.
+     */
+    public void initialize( ADag scheduledDAG ) {
+        Mapper m = mBag.getHandleToTransformationMapper();
+        PoolInfoProvider siteCatalog = mBag.getHandleToSiteCatalog();
+
+        //figure if we need to deploy or not
+        if( !m.isStageableMapper() ){
+            mLogger.log( "No Deployment of Worker Package needed" ,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        mLogger.log( "Deployment of Worker Package needed" ,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        //load the transformation selector. different
+        //selectors may end up being loaded for different jobs.
+        TransformationSelector txSelector = TransformationSelector.loadTXSelector( mProps.getTXSelectorMode() );
+
+        mSetupTransferImplementation.setRefiner( 
+                RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mProps, scheduledDAG, mPOptions));
+        
+        //for each scheduled site query TCMapper
+        for( Iterator it = this.getDeploymentSites( scheduledDAG ).iterator(); it.hasNext(); ){
+            String site = ( String ) it.next();
+            //get the set of valid tc entries
+            List entries = m.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+                                        DeployWorkerPackage.TRANSFORMATION_NAME,
+                                        DeployWorkerPackage.TRANSFORMATION_VERSION,
+                                        site );
+
+            //get selected entries
+            List selectedEntries = txSelector.getTCEntry( entries );
+            if( selectedEntries == null || selectedEntries.size() == 0 ){
+                throw new RuntimeException( "Unable to find a valid location to stage " +
+                                            Separator.combine( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+                                                               DeployWorkerPackage.TRANSFORMATION_NAME,
+                                                               DeployWorkerPackage.TRANSFORMATION_VERSION ) );
+            }
+            //select the first entry from selector
+            TransformationCatalogEntry selected = ( TransformationCatalogEntry )selectedEntries.get( 0 );
+            mLogger.log( "Selected entry " + selected, LogManager.DEBUG_MESSAGE_LEVEL );
+
+            //figure out the directory where to stage the data
+            String baseRemoteWorkDir = siteCatalog.getExecPoolWorkDir( site );
+            String name = getRootDirectoryNameForPegasus( selected.getPhysicalTransformation() );
+            File pegasusHome = new File( baseRemoteWorkDir, name );
+
+            StringBuffer sb = new StringBuffer();
+            sb.append( "Directory where pegasus worker executables will reside on site ").append( site ).
+               append( " " ).append( pegasusHome.getAbsolutePath() );
+            mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+
+            //now create transformation catalog entry objects for each
+            //worker package executable
+            for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
+                TransformationCatalogEntry entry = defaultTCEntry( site,  pegasusHome.getAbsolutePath(), selected.getSysInfo(), PEGASUS_WORKER_EXECUTABLES[i] );
+                mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+
+            //create the File Transfer object for shipping the worker executable
+            String sourceURL = selected.getPhysicalTransformation();
+            FileTransfer ft = new FileTransfer( COMPLETE_TRANSFORMATION_NAME, null );
+            ft.addSource( selected.getResourceId(), sourceURL );
+            String baseName = sourceURL.substring( sourceURL.lastIndexOf( "/" ) + 1 );
+            ft.addDestination( site, siteCatalog.getURLPrefix( site ) + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
+            mFTMap.put( site, ft );
+        }
+    }
+
+
+    /**
+     * Does regex magic to figure out the version of pegasus from the url, and
+     * use it to construct the name of pegasus directory, when worker package
+     * is untarred.
+     *
+     * @param url   the url.
+     *
+     * @return basename for pegasus directory
+     */
+    protected String getRootDirectoryNameForPegasus( String url ){
+        StringBuffer result = new StringBuffer();
+        result.append( "pegasus-" );
+        //compile the pattern only once.
+         if( mPattern == null ){
+             mPattern = Pattern.compile( mRegexExpression );
+         }
+
+         String base = url.substring( url.lastIndexOf( "/" ) + 1 );
+         mLogger.log( "Base is " + base, LogManager.DEBUG_MESSAGE_LEVEL );
+         Matcher matcher = mPattern.matcher( base );
+
+         String version = null;
+         if(  matcher.matches() ){
+             version = matcher.group(3);
+         }
+         else{
+             throw new RuntimeException( "Unable to determine pegasus version from url " + url );
+         }
+
+
+         mLogger.log( "Version is " + version, LogManager.DEBUG_MESSAGE_LEVEL );
+         result.append( version );
+
+         return result.toString();
+
+    }
+
+    /**
+     * Adds a setup node per execution site in the workflow that will stage the
+     * worker node executables to the workdirectory on the sites the workflow
+     * has been scheduled to.
+     *
+     * @param dag   the scheduled workflow.
+     *
+     * @return  the workflow with setup jobs added
+     */
+    public ADag addSetupNodes( ADag dag ){
+        //convert the dag to a graph representation and walk it
+        //in a top down manner
+        Graph workflow = Adapter.convert( dag );
+
+
+        //get the root nodes of the workflow
+        List roots = workflow.getRoots();
+
+        //add a setup job per execution site
+        for( Iterator it = this.getDeploymentSites( dag ).iterator(); it.hasNext(); ){
+            String site = ( String ) it.next();
+            mLogger.log( "Adding worker package deployment node for " + site,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+            FileTransfer ft = (FileTransfer)mFTMap.get( site ); 
+            List fts = new ArrayList(1);
+            fts.add( ft );
+            
+            //hmm need to propogate site info with a dummy job on fly
+            SubInfo dummy = new SubInfo() ;
+            dummy.setSiteHandle( site );
+            
+            SubInfo setupTXJob = mSetupTransferImplementation.createTransferJob(
+                                         dummy,
+                                         fts,
+                                         null,
+                                         this.getDeployJobName( dag, site ),
+                                         SubInfo.STAGE_IN_JOB );
+
+            
+            //add the untar job
+            SubInfo untarJob = this.makeUntarJob( site,
+                                                  this.getUntarJobName( dag, site ),  
+                                                  getBasename( ((NameValue)ft.getSourceURL()).getValue() )
+                                                  );
+            
+            //the setup and untar jobs need to be launched without kickstart.
+            setupTXJob.vdsNS.construct( VDS.GRIDSTART_KEY, "None" );
+            untarJob.vdsNS.construct( VDS.GRIDSTART_KEY, "None" );
+            
+            GraphNode untarNode  = new GraphNode( untarJob.getName(), untarJob );
+            GraphNode setupNode = new GraphNode( setupTXJob.getName(), setupTXJob );
+
+            //untar node is child of setup
+            setupNode.addChild( untarNode );
+            
+            //add the original roots as children to untar node 
+            for( Iterator rIt = roots.iterator(); rIt.hasNext(); ){
+                GraphNode n = ( GraphNode ) rIt.next();
+                mLogger.log( "Added edge " + untarNode.getID() + " -> " + n.getID(),
+                              LogManager.DEBUG_MESSAGE_LEVEL );
+                untarNode.addChild( n );
+            }
+
+            workflow.addNode( setupNode );
+            workflow.addNode( untarNode );
+        }
+
+
+        //convert back to ADag and return
+        ADag result = dag;
+        //we need to reset the jobs and the relations in it
+        result.clearJobs();
+
+        //traverse through the graph and jobs and edges
+        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+
+            //get the job associated with node
+            result.add( ( SubInfo )node.getContent() );
+
+            //all the children of the node are the edges of the DAG
+            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
+                GraphNode child = ( GraphNode ) childrenIt.next();
+                result.addNewRelation( node.getID(), child.getID() );
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Retrieves the sites for which the deployment jobs need to be created.
+     *
+     * @param dag   the dag on which the jobs need to execute.
+     *
+     * @return  a Set containing a list of siteID's of the sites where the
+     *          dag has to be run.
+     */
+    protected Set getDeploymentSites( ADag dag ){
+        Set set = new HashSet();
+
+        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
+            SubInfo job = (SubInfo)it.next();
+            //add to the set only if the job is
+            //being run in the work directory
+            //this takes care of local site create dir
+            if(job.runInWorkDirectory()){
+                set.add(job.executionPool);
+            }
+        }
+
+        //remove the stork pool
+        set.remove("stork");
+
+        return set;
+    }
+
+
+    /**
+     * It returns the name of the deployment  job, that is to be assigned.
+     * The name takes into account the workflow name while constructing it, as
+     * that is thing that can guarentee uniqueness of name in case of deferred
+     * planning.
+     *
+     * @param dag   the workflow so far.
+     * @param site  the execution pool for which the create directory job
+     *                  is responsible.
+     *
+     * @return String corresponding to the name of the job.
+     */
+    protected String getDeployJobName( ADag dag, String site ){
+        StringBuffer sb = new StringBuffer();
+
+        //append setup prefix
+        sb.append( DeployWorkerPackage.DEPLOY_WORKER_PREFIX );
+        //append the job prefix if specified in options at runtime
+        if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
+           append( dag.dagInfo.index ).append( "_" );
+
+
+        sb.append( site );
+
+        return sb.toString();
+    }
+
+    /**
+     * It returns the name of the untar  job, that is to be assigned.
+     * The name takes into account the workflow name while constructing it, as
+     * that is thing that can guarentee uniqueness of name in case of deferred
+     * planning.
+     *
+     * @param dag   the workflow so far.
+     * @param site  the execution pool for which the create directory job
+     *                  is responsible.
+     *
+     * @return String corresponding to the name of the job.
+     */
+    protected String getUntarJobName( ADag dag, String site ){
+        StringBuffer sb = new StringBuffer();
+
+        //append setup prefix
+        sb.append( DeployWorkerPackage.UNTAR_PREFIX );
+        //append the job prefix if specified in options at runtime
+        if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
+           append( dag.dagInfo.index ).append( "_" );
+
+
+        sb.append( site );
+
+        return sb.toString();
+    }
+
+
+
+    /**
+     * It creates a untar job , that untars the worker package that is staged
+     * by the setup transfer job.
+     * 
+     * @param site       the execution pool for which the create dir job is to be
+     *                   created.
+     * @param jobName    the name that is to be assigned to the job.
+     * @param wpBasename the basename of the worker package that is staged to remote site.
+     *
+     * @return create dir job.
+     */
+    protected SubInfo makeUntarJob( String site, String jobName, String wpBasename ) {
+        SubInfo newJob  = new SubInfo();
+        List entries    = null;
+        String execPath = null;
+        TransformationCatalogEntry entry   = null;
+        JobManager jobManager = null;
+
+        try {
+            entries = mTCHandle.getTCEntries( DeployWorkerPackage.UNTAR_TRANSFORMATION_NAMESPACE,
+                                              DeployWorkerPackage.UNTAR_TRANSFORMATION_NAME,
+                                              DeployWorkerPackage.UNTAR_TRANSFORMATION_VERSION,
+                                              site, TCType.INSTALLED);
+        }
+        catch (Exception e) {
+            //non sensical catching
+            mLogger.log("Unable to retrieve entries from TC " +
+                        e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        entry = ( entries == null ) ?
+            this.defaultUntarTCEntry( site ): //try using a default one
+            (TransformationCatalogEntry) entries.get(0);
+
+        if( entry == null ){
+            //NOW THROWN AN EXCEPTION
+
+            //should throw a TC specific exception
+            StringBuffer error = new StringBuffer();
+            error.append("Could not find entry in tc for lfn ").
+                append( DeployWorkerPackage.COMPLETE_UNTAR_TRANSFORMATION_NAME ).
+                append(" at site ").append( site );
+
+            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( error.toString() );
+        }
+
+        execPath = entry.getPhysicalTransformation();
+
+
+        SiteInfo ePool = mPoolHandle.getPoolEntry( site, "transfer" );
+        jobManager = ePool.selectJobManager( "transfer", true );
+        String argString = "zxvf " + wpBasename;
+
+        newJob.jobName = jobName;
+        newJob.setTransformation( DeployWorkerPackage.UNTAR_TRANSFORMATION_NAMESPACE,
+                                  DeployWorkerPackage.UNTAR_TRANSFORMATION_NAME,
+                                  DeployWorkerPackage.UNTAR_TRANSFORMATION_VERSION );
+        newJob.setDerivation( DeployWorkerPackage.UNTAR_DERIVATION_NAMESPACE,
+                              DeployWorkerPackage.UNTAR_DERIVATION_NAME,
+                              DeployWorkerPackage.UNTAR_DERIVATION_VERSION );
+        newJob.condorUniverse = "vanilla";
+        newJob.globusScheduler = jobManager.getInfo(JobManager.URL);
+        newJob.executable = execPath;
+        newJob.executionPool = site;
+        newJob.strargs = argString;
+        newJob.jobClass = SubInfo.STAGE_IN_JOB;
+        newJob.jobID = jobName;
+
+        //the profile information from the pool catalog needs to be
+        //assimilated into the job.
+        newJob.updateProfiles(mPoolHandle.getPoolProfile(newJob.executionPool));
+
+        //the profile information from the transformation
+        //catalog needs to be assimilated into the job
+        //overriding the one from pool catalog.
+        newJob.updateProfiles(entry);
+
+        //the profile information from the properties file
+        //is assimilated overidding the one from transformation
+        //catalog.
+        newJob.updateProfiles(mProps);
+
+        return newJob;
+
+    }
+    
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     * @param pegasusHome  the path to deployed worker package
+     * @param sysinfo the system information of that site.
+     * @param name    name of the executable
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCEntry( String site,
+                                                        String pegasusHome,
+                                                        SysInfo sysinfo,
+                                                        String name ){
+        TransformationCatalogEntry defaultTCEntry = null;
+
+        mLogger.log( "Creating a default TC entry for " +
+                     Separator.combine( "pegasus", name, null ) +
+                     " at site " + site,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+        //construct the path to the executable
+        StringBuffer path = new StringBuffer();
+        path.append( pegasusHome ).append( File.separator ).
+            append( "bin" ).append( File.separator ).
+            append( name );
+
+        mLogger.log( "Remote Path set is " + path.toString(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        defaultTCEntry = new TransformationCatalogEntry( "pegasus",
+                                                         name ,
+                                                         null );
+
+        defaultTCEntry.setPhysicalTransformation( path.toString() );
+        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setType( TCType.INSTALLED );
+        defaultTCEntry.setSysInfo( sysinfo );
+
+        //add pegasus home as an environment variable
+        defaultTCEntry.setProfile( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ));
+
+        
+        //register back into the transformation catalog
+        //so that we do not need to worry about creating it again
+        try{
+            mTCHandle.addTCEntry( defaultTCEntry , false );
+        }
+        catch( Exception e ){
+            //just log as debug. as this is more of a performance improvement
+            //than anything else
+            mLogger.log( "Unable to register in the TC the default entry " +
+                          defaultTCEntry.getLogicalTransformation() +
+                          " for site " + site, e,
+                          LogManager.ERROR_MESSAGE_LEVEL );
+            //throw exception as
+            throw new RuntimeException( e );
+        }
+        
+        
+        return defaultTCEntry;
+    }
+
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultUntarTCEntry( String site ){
+        TransformationCatalogEntry defaultTCEntry = null;
+
+        mLogger.log( "Creating a default TC entry for " +
+                     DeployWorkerPackage.COMPLETE_UNTAR_TRANSFORMATION_NAME +
+                     " at site " + site,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+        //construct the path to the executable
+        StringBuffer path = new StringBuffer();
+        path.append( "/bin/tar" );
+
+        mLogger.log( "Remote Path set is " + path.toString(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        defaultTCEntry = new TransformationCatalogEntry( DeployWorkerPackage.UNTAR_TRANSFORMATION_NAMESPACE,
+                                                         DeployWorkerPackage.UNTAR_TRANSFORMATION_NAME ,
+                                                         DeployWorkerPackage.UNTAR_TRANSFORMATION_VERSION );
+
+        defaultTCEntry.setPhysicalTransformation( path.toString() );
+        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setType( TCType.INSTALLED );
+
+        //add path as an environment variable
+        //defaultTCEntry.setProfile( new Profile( Profile.ENV, "PATH", DeployWorkerPackage.PATH_VALUE ));
+
+        
+        //register back into the transformation catalog
+        //so that we do not need to worry about creating it again
+        try{
+            mTCHandle.addTCEntry( defaultTCEntry , false );
+        }
+        catch( Exception e ){
+            //just log as debug. as this is more of a performance improvement
+            //than anything else
+            mLogger.log( "Unable to register in the TC the default entry " +
+                          defaultTCEntry.getLogicalTransformation() +
+                          " for site " + site, e,
+                          LogManager.ERROR_MESSAGE_LEVEL );
+            //throw exception as
+            throw new RuntimeException( e );
+        }
+        
+        
+        return defaultTCEntry;
+    }
+
+    
+    /**
+     * Returns the basename of the URL using substring.
+     * 
+     * @param url
+     * 
+     * @return basename
+     */
+    protected String getBasename( String url ){
+        
+        
+        return ( url == null || url.length() == 0 )? 
+                 null:
+                 url.substring( url.lastIndexOf( File.separator ) + 1 );
+    }
+}

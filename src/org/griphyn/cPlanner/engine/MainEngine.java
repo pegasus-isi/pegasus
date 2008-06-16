@@ -190,6 +190,10 @@ public class MainEngine
         mIPEng = null;
         mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
 
+        //intialize the deployment engine
+        DeployWorkerPackage deploy = DeployWorkerPackage.loadDeployWorkerPackage( mBag );
+        deploy.initialize( mReducedDag );
+
         //do the node cluster
         if( mPOptions.getClusteringTechnique() != null ){
             message = "Clustering the jobs in the workflow";
@@ -207,6 +211,7 @@ public class MainEngine
             mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
         }
 
+
         message = "Grafting transfer nodes in the workflow";
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
         mTransEng = new TransferEngine( mReducedDag, vDelLeafJobs, mProps, mPOptions );
@@ -216,6 +221,10 @@ public class MainEngine
 
         //close the connection to RLI explicitly
         mRCBridge.closeConnection();
+
+        //add the deployment of setup jobs if required
+        mReducedDag = deploy.addSetupNodes( mReducedDag );
+        deploy = null;
 
 
         if (mPOptions.generateRandomDirectory()) {
