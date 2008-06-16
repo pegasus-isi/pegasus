@@ -200,20 +200,20 @@ public abstract class AbstractRefiner implements Refiner{
      * @see SubInfo#STAGE_OUT_JOB
      */
     public boolean runTPTOnRemoteSite(String site,int type){
-        Implementation implementation;
+        //Implementation implementation;
         //the value from the properties file
         //later on maybe picked up as profiles
         boolean remoteTPT = false;
         if(type == SubInfo.STAGE_IN_JOB ){
-            implementation = mTXStageInImplementation;
+            //implementation = mTXStageInImplementation;
             remoteTPT      = mTPT.stageInThirdPartyRemote(site);
         }
         else if(type == SubInfo.INTER_POOL_JOB){
-            implementation = mTXInterImplementation;
+            //implementation = mTXInterImplementation;
             remoteTPT      = mTPT.interThirdPartyRemote(site);
         }
         else if(type == SubInfo.STAGE_OUT_JOB){
-            implementation = mTXStageOutImplementation;
+            //implementation = mTXStageOutImplementation;
             remoteTPT      = mTPT.stageOutThirdPartyRemote(site);
         }
         else{
