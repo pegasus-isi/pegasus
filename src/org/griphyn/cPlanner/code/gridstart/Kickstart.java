@@ -1,16 +1,17 @@
 /**
- * This file or a portion of this file is licensed under the terms of
- * the Globus Toolkit Public License, found in file GTPL, or at
- * http://www.globus.org/toolkit/download/license.html. This notice must
- * appear in redistributions of this file, with or without modification.
+ *  Copyright 2007-2008 University Of Southern California
  *
- * Redistributions of this Software, with or without modification, must
- * reproduce the GTPL in: (1) the Software, or (2) the Documentation or
- * some other similar material which is provided with the Software (if
- * any).
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * Copyright 1999-2004 University of Chicago and The University of
- * Southern California. All rights reserved.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 package org.griphyn.cPlanner.code.gridstart;
 
@@ -29,6 +30,7 @@ import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.namespace.VDS;
@@ -44,6 +46,13 @@ import org.griphyn.cPlanner.transfer.SLS;
 import org.griphyn.cPlanner.transfer.sls.SLSFactory;
 import org.griphyn.cPlanner.transfer.sls.SLSFactoryException;
 
+import org.griphyn.common.util.Separator;
+
+import org.griphyn.common.classes.TCType;
+
+import org.griphyn.common.catalog.TransformationCatalog;
+import org.griphyn.common.catalog.TransformationCatalogEntry;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.StringTokenizer;
@@ -54,7 +63,6 @@ import java.util.ArrayList;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.griphyn.cPlanner.code.CodeGeneratorException;
 
 
 /**
@@ -74,6 +82,31 @@ import org.griphyn.cPlanner.code.CodeGeneratorException;
  * @version $Revision$
  */
 public class Kickstart implements GridStart {
+
+
+    /**
+     * The transformation namespace for the kickstart
+     */
+    public static final String TRANSFORMATION_NAMESPACE = "pegasus";
+
+    /**
+     * The logical name of kickstart
+     */
+    public static final String TRANSFORMATION_NAME = "kickstart";
+
+    /**
+     * The version number for kickstart.
+     */
+    public static final String TRANSFORMATION_VERSION = null;
+
+
+    /**
+     * The complete TC name for kickstart.
+     */
+    public static final String COMPLETE_TRANSFORMATION_NAME = Separator.combine(
+                                                                    TRANSFORMATION_NAMESPACE,
+                                                                    TRANSFORMATION_NAME,
+                                                                    TRANSFORMATION_VERSION  );
 
     /**
      * The suffix for the kickstart input file, that is generated to use
@@ -142,6 +175,11 @@ public class Kickstart implements GridStart {
     private PoolInfoProvider mSiteHandle;
 
     /**
+     * Handle to Transformation Catalog.
+     */
+    private TransformationCatalog mTCHandle;
+
+    /**
      * The submit directory where the submit files are being generated for
      * the workflow.
      */
@@ -177,12 +215,16 @@ public class Kickstart implements GridStart {
      */
     private SLS mSLS;
 
-
     /**
      * An instance variable to track if enabling is happening as part of a clustered job.
      * See Bug 21 comments on Pegasus Bugzilla
      */
     private boolean mEnablingPartOfAggregatedJob;
+
+    /**
+     * A boolean indicating whether kickstart is deployed dynamically or not.
+     */
+    private boolean mDynamicDeployment;
 
     /**
      * Initializes the GridStart implementation.
@@ -202,6 +244,9 @@ public class Kickstart implements GridStart {
         mLogger       = LogManager.getInstance();
         mConcDAG      = dag;
         mSiteHandle   = bag.getHandleToSiteCatalog();
+        mTCHandle     = bag.getHandleToTransformationCatalog();
+
+        mDynamicDeployment = bag.getHandleToTransformationMapper().isStageableMapper();
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
@@ -566,10 +611,17 @@ public class Kickstart implements GridStart {
 
     /**
      * It changes the paths to the executable depending on whether we want to
-     * transfer the executable or not. If the transfer_executable is set to true,
-     * then the executable needs to be shipped from the submit host meaning the
-     * local pool. This function changes the path of the executable to the one on
-     * the local pool, so that it can be shipped.
+     * transfer the executable or not.
+     *
+     * If the transfer_executable is set to true, then the executable needs to be
+     * shipped from the submit host meaning the local pool. This function changes
+     * the path of the executable to the one on the local pool, so that it can
+     *  be shipped.
+     *
+     * If the worker package is being deployed dynamically, then the path is set
+     * to the directory where the worker package is deployed.
+     *
+     * Else, we pick up the path from the site catalog that is passed as input
      *
      * @param job   the <code>SubInfo</code> containing the job description.
      * @param path  the path to kickstart on the remote compute site.
@@ -579,25 +631,65 @@ public class Kickstart implements GridStart {
     protected String handleTransferOfExecutable( SubInfo job, String path ) {
         Condor cvar = job.condorVariables;
 
-        if (!cvar.getBooleanValue("transfer_executable")) {
+        if ( cvar.getBooleanValue("transfer_executable")) {
+            SiteInfo site = mSiteHandle.getPoolEntry("local", Condor.VANILLA_UNIVERSE);
+            String gridStartPath = site.getKickstartPath();
+            if (gridStartPath == null) {
+                mLogger.log(
+                    "Gridstart needs to be shipped from the submit host to pool" +
+                    job.getSiteHandle() + ".\nNo entry for it in pool local",
+                    LogManager.ERROR_MESSAGE_LEVEL);
+                throw new RuntimeException(
+                    "GridStart needs to be shipped from submit host to site " +
+                    job.getSiteHandle() + " for job " + job.getName());
+
+            }
+
+            return gridStartPath;
+        }
+        else if( mDynamicDeployment &&
+                 job.runInWorkDirectory()  ){//any jobs that run in submit directory use local kickstart path
+            //pick up the path from the transformation catalog of
+            //dynamic deployment
+            List entries = null;
+            try{
+                entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
+                                                  this.TRANSFORMATION_NAME,
+                                                  this.TRANSFORMATION_VERSION,
+                                                  job.getSiteHandle(),
+                                                  TCType.INSTALLED );
+            }
+            catch (Exception e) {
+                //non sensical catching
+                mLogger.log("Unable to retrieve entries from TC " +
+                            e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+
+
+
+            TransformationCatalogEntry entry = ( entries == null ) ?
+                                                 null  :
+                                                 (TransformationCatalogEntry) entries.get(0);
+
+            if( entry == null ){
+                //NOW THROWN AN EXCEPTION
+
+                //should throw a TC specific exception
+                StringBuffer error = new StringBuffer();
+                error.append("Could not find entry in tc for lfn ").
+                    append( COMPLETE_TRANSFORMATION_NAME ).
+                    append(" at site ").append( job.getSiteHandle() );
+
+                mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+                throw new RuntimeException( error.toString() );
+            }
+            return entry.getPhysicalTransformation();
+        }
+        else{
             //the executable paths are correct and
             //point to the executable on the remote pool
             return path;
         }
-
-
-        SiteInfo site = mSiteHandle.getPoolEntry( "local", Condor.VANILLA_UNIVERSE );
-        String gridStartPath = site.getKickstartPath();
-        if ( gridStartPath == null ) {
-            mLogger.log( "Gridstart needs to be shipped from the submit host to pool" +
-                         job.getSiteHandle() + ".\nNo entry for it in pool local",
-                         LogManager.ERROR_MESSAGE_LEVEL );
-            throw new RuntimeException( "GridStart needs to be shipped from submit host to site " +
-                                         job.getSiteHandle() + " for job " + job.getName() );
-
-        }
-
-        return gridStartPath;
 
     }
 
