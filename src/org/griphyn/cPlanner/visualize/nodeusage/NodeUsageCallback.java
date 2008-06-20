@@ -381,5 +381,10 @@ public class NodeUsageCallback implements Callback {
         return name.startsWith( "cln_" );
     }
 
+	public Map cbGetMetadata() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 }

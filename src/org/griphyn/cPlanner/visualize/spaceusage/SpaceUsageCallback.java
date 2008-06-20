@@ -27,6 +27,7 @@ import org.griphyn.vdl.invocation.StatInfo;
 
 import java.util.List;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 /**
@@ -530,5 +531,10 @@ public class SpaceUsageCallback implements Callback {
         }
         return event;
     }
+
+	public Map cbGetMetadata() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

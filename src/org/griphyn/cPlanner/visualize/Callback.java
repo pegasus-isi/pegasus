@@ -125,4 +125,6 @@ public interface Callback {
      * @return the <code>Object</code> constructed.
      */
     public Object getConstructedObject();
+    
+    public Map cbGetMetadata();
 }

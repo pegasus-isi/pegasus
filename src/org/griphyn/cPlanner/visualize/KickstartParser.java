@@ -23,9 +23,13 @@ import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.directive.ParseKickstart;
 
 import org.griphyn.vdl.invocation.InvocationRecord;
+import org.griphyn.vdl.invocation.Job;
+import org.griphyn.vdl.invocation.JobStatus;
+import org.griphyn.vdl.invocation.JobStatusRegular;
 import org.griphyn.vdl.invocation.StatCall;
 import org.griphyn.vdl.invocation.Data;
 import org.griphyn.vdl.invocation.Regular;
+import org.griphyn.vdl.invocation.Status;
 
 import org.griphyn.vdl.parser.InvocationParser;
 
@@ -35,6 +39,7 @@ import org.griphyn.common.util.Currently;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 
 import java.io.File;
 import java.io.IOException;
@@ -136,6 +141,39 @@ public class KickstartParser {
 
             //get the data about the various jobs
             List jobs = invocation.getJobList();
+////////////////////////////////////////////////////////////////////////////////////
+            Map metadata =  mCallback.cbGetMetadata();
+            ArrayList exitcodes = new ArrayList();
+            ArrayList executables = new ArrayList();
+            ArrayList arguments = new ArrayList();
+            for ( Iterator it = jobs.iterator(); it.hasNext(); ){
+            	Job job = (Job) it.next();
+            	Status status = job.getStatus(); 
+            	JobStatus js = status.getJobStatus();
+            	int exitcode =  ((JobStatusRegular) js).getExitCode();
+            	exitcodes.add(new Integer(exitcode));
+            	executables.add(((Regular)job.getExecutable().getFile()).getFilename());
+            	arguments.add(job.getArguments().getValue());            		
+            }                                   
+            metadata.put("exitcodes", exitcodes);
+            metadata.put("executables", executables);
+            metadata.put("arguments", arguments);
+            metadata.put("version", invocation.getVersion());
+            metadata.put("start", invocation.getStart());
+            metadata.put("duration", invocation.getDuration());
+            metadata.put("transformation",invocation.getTransformation());           
+            metadata.put("derivation", invocation.getDerivation());    
+            metadata.put("resource", invocation.getResource()); 
+            metadata.put("hostaddr", invocation.getHostAddress());
+            metadata.put("hostname", invocation.getHostname());            
+            metadata.put("pid", invocation.getPID());                                   
+            metadata.put("uid", invocation.getUID());
+            metadata.put("user", invocation.getUser());            
+            metadata.put("gid", invocation.getGID());
+            metadata.put("group", invocation.getGroup());            
+            metadata.put("umask", invocation.getUMask());
+            metadata.put("resource", invocation.getResource());                                  
+//////////////////////////////////////////////////////////////////////////////////////            
 
             //callback for the data sections of various streams
             List stats = invocation.getStatList();
