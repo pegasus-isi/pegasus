@@ -297,8 +297,7 @@ public class ShowLogSummary extends Executable{
 	           "\n $Id: ShowLogSummary.java 554 2008-06-20 23:45:48Z akumar $ " +
 	           "\n " + getGVDSVersion() +
 	           "\n jobstate-summary - A debugging tool that show the information about failed jobs."  +
-	           "\n Usage: plot_space_usage --i <input directory>  " +
-	           "\n [--v(erbose)] [--V(ersion)] [--h(elp)] " +
+	           "\n Usage:  jobstate-summary  --i <input directory>  " +" [--v(erbose)] [--V(ersion)] [--h(elp)] " +
 	           "\n" +
 	           "\n Mandatory Options " +
 	           "\n --i                 the directory where the log files reside." +
