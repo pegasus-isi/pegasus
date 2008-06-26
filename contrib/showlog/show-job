@@ -27,6 +27,7 @@ sub usage {
     print " -V|--version  print version information and exit.\n";
     print " -k|--keep     don't unlink temporary data files.\n";
     print " -a|--adjust s adjust time information by s seconds.\n";
+    print " -c|--color-file <file> the file mapping job transformation names to color.\n";
     print "\n";
     exit(1);
 }
@@ -34,10 +35,12 @@ sub usage {
 # global variables
 my $adjustment = 0;		# time zone adjustment (@#~! Condor)
 my $nounlink = 0;		# remove temporary files later
+my $color_fn ; # the path to the file containing color scheme for jobs
 GetOptions( 'help|h' => \&usage, 
 	    'version|V' => sub { print "$main::version\n"; exit(0); },
 	    "keep|k!" => \$nounlink,
-	    "adjust|a=i" => \$adjustment );
+	    "adjust|a=i" => \$adjustment,
+	    "color-file|c=s" => \$color_fn );
 
 # determine dag filename to find kickstart records
 my $dagfn = shift || die "ERROR: Need the name of the DAG file\n";
@@ -77,18 +80,34 @@ $main::failure = 0;
 #THIS SHOULD BE CHANGED FOR DIFFERENT TYPES OF WORKFLOWS
 #IF NOT SPECIFIED, THEN GRAY COLOR IS ASSIGNED
 %main::color = 
-   ( "genome::chr21:1.0" => "yelloworange",
-     "genome::fast2bfq:1.0" => "powderblue",
-     "genome::fastqSplit:1.0" => "orange",
-     "genome::filterContams:1.0" => "coral",
-     "genome::map:1.0" => "claret",
-     "genome::mapMerge:1.0" => "redorange",
-     "genome::pileup:1.0" => "darkblue",
-     "genome::sol2sanger:1.0" => "pink",
+   ( 
      "pegasus::dirmanager" => "lavender",
      "pegasus::transfer" => "magenta",
      "unknown" => "gray(0.75)",
     );
+
+
+sub load_job_colors( $ ){
+    # purpose: load the color scheme file.
+    # paramtr: path to file. 
+    # fileformat: each line in file is complete_transformation_name color
+    #             e.g. genome::solsanger:1.0   blue
+    
+    my $color_fn = shift;
+
+    if ( -r $color_fn && -s $color_fn && open( CS, "<$color_fn" ) ) {
+	my ($job, $color);
+	while ( <CS> ) {
+	    chomp;
+	    ($job,$color)=split /\s+/, $_ ;	    
+	    #print("For job $job color coding is $color \n");
+	    $main::color{$job}=$color;
+	}
+    }
+    else{
+	die "Unable to open color file $color_fn";	
+    }
+}
 
 sub find_exec($;$) {
     # purpose: determine location of given binary in $PATH
@@ -476,6 +495,13 @@ foreach my $app ( qw(ploticus convert) ) {
 
 my %submit = slurp_dagfile($dagfn);
 my %job = slurp_jobstate($joblog);
+
+#load the color file
+if( defined $color_fn ){
+    load_job_colors( $color_fn );
+}
+
+
 warn( "# min=$main::min @{[unix2iso($main::min)]}\n", 
       "# max=$main::max @{[unix2iso($main::max)]}\n", 
       "# diff=", $main::max-$main::min, "\n" );
