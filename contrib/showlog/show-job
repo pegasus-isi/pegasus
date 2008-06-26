@@ -73,6 +73,23 @@ $main::failure = 0;
       POST_SCRIPT_TERMINATED => -1,
       POST_SCRIPT_FAILURE => 7 );
 
+#ASSIGN DIFFERENT COLORS TO DIFFERENT JOB
+#THIS SHOULD BE CHANGED FOR DIFFERENT TYPES OF WORKFLOWS
+#IF NOT SPECIFIED, THEN GRAY COLOR IS ASSIGNED
+%main::color = 
+   ( "genome::chr21:1.0" => "yelloworange",
+     "genome::fast2bfq:1.0" => "powderblue",
+     "genome::fastqSplit:1.0" => "orange",
+     "genome::filterContams:1.0" => "coral",
+     "genome::map:1.0" => "claret",
+     "genome::mapMerge:1.0" => "redorange",
+     "genome::pileup:1.0" => "darkblue",
+     "genome::sol2sanger:1.0" => "pink",
+     "pegasus::dirmanager" => "lavender",
+     "pegasus::transfer" => "magenta",
+     "unknown" => "gray(0.75)",
+    );
+
 sub find_exec($;$) {
     # purpose: determine location of given binary in $PATH
     # paramtr: $program (IN): executable basename to look for
@@ -250,6 +267,7 @@ sub gen_data($$$\%) {
     warn "# xstubs=$xstubs, xticks=$xtics, width=$width, height=$height\n";
 
     my $cfn = substr( $dfn, 0, -4 ) . "-$y.pls";
+    print "CFN file is $cfn \n";
     open( OUT, ">$cfn" ) || die "ERROR: open $cfn: $!\n";
     print OUT << "END";
 //
@@ -352,23 +370,54 @@ sub gen_data($$$\%) {
   yfield: $y
   symbol: shape=square style=spokes linecolor=black
 
+END
+    ;
+
+# taken care of in for loop below
 #proc bars
-  select: \@11 != $dpo
-  outline: color=gray(0.4)
-  color: gray(0.75)
+#  select: \@11 != $dpo
+#  outline: color=gray(0.4)
+#  color: gray(0.75)
+#  horizontalbars: yes
+#  barwidth: 0.06
+#  tails: no
+#  segmentfields: 11 12
+#  locfield: $y
+#
+##proc legendentry
+#  sampletype: color
+#  label: job duration
+#  details: gray(0.75)
+#
+#END
+#    ;
+
+    #generate legends for specific type of jobs
+    foreach my $job (keys %main::color) {
+	my $color = $main::color{$job};
+	# do something with $key and $value
+	print "job $job has color $color\n";
+
+	print OUT << "END";
+
+#proc bars
+  select: \@\@13 = $color
+  outline: color=$color
+  color: $color
   horizontalbars: yes
   barwidth: 0.06
   tails: no
   segmentfields: 11 12
   locfield: $y
-
+ 
 #proc legendentry
   sampletype: color
-  label: job duration
-  details: gray(0.75)
+  label: $job
+  details: $color
 
 END
     ;
+    }
 
     # deal with failures here (optional output)
     if ( %main::fail > 0 ) {
@@ -410,7 +459,9 @@ END
     } else {
 	print OUT "#proc legend\n";
 	print OUT "  format: multiline\n";
-	print OUT "  location: min+0.5 max\n\n";
+# change by Karan. Want in lower right always.
+#	print OUT "  location: min+0.5 max\n\n";
+	print OUT "  location: max-1 min+3\n\n";
     }
 
     close OUT;
@@ -459,23 +510,33 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 	}
     }
 
+    #print "DFN is $dfn";
     if ( @{$job{$jobid}} == 8 ) {
 	my $kfn = substr( $submit{$jobid}, 0, -4 ) . '.out';
 	if ( -r $kfn && -s _ && open( KS, "<$kfn" ) ) {
-	    my ($kss,$ksf,$d);
+	    my ($kss,$ksf,$d, $txn);
 	    while ( <KS> ) {
 		next unless /<invocation\s/;
 		$kss = iso2unix($1) if /start=\"([^\"]+)\"/;
 	        $ksf = $kss+($d=$1) if /duration=\"([^\"]+)\"/;
+		#get the transformation name
+		$txn = $1 if /transformation=\"([^\"]+)\"/;
+		print "Tx name is $txn \n";
+
 		$main::duration += $d if $d; 
 		$main::kmin = $kss if $main::kmin > $kss;
 		$main::kmax = $ksf if $main::kmax < $ksf;
 		$kss -= $main::min; $ksf -= $main::min;
 		if ( $kss > -100 && $ksf > -10 ) {
+		    print "$dfn , $dsize, $kss\n";
+		    print "$dfn , $dsize, $ksf\n";
+		    print "$dfn  $main::color{$txn}\n";
+
 		    printf $dfh " %*d", $dsize, $kss;
 		    printf $dfh " %*d", $dsize, $ksf;
+		    printf $dfh " %s", defined($main::color{$txn})?$main::color{$txn}:$main::color{"unknown"};
 		} else {
-		    warn "Warning: kickstart duration out of range\n";
+		    warn "Warning: kickstart duration out of range\n";		    
 		    printf $dfh " %*d %*d", $dsize, $dpo, $dsize, $dpo;
 		}
 		last;
