@@ -237,6 +237,10 @@ sub gen_data($$$\%) {
 	$xstubs = 7200;
 	$xtics = 1200;
 	$width = $diff / 7200;
+    } elsif ( $diff <= 345600 ) {
+	$xstubs = 28800;
+	$xtics = 4800;
+	$width = $diff / 28800;
     } else {
 	die "ERROR: $diff s workflow is just too long!\n";
     }
