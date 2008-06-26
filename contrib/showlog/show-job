@@ -83,6 +83,7 @@ $main::failure = 0;
    ( 
      "pegasus::dirmanager" => "lavender",
      "pegasus::transfer" => "magenta",
+     "pegasus::rc-client" => "powderblue2",
      "unknown" => "gray(0.75)",
     );
 
@@ -286,7 +287,7 @@ sub gen_data($$$\%) {
     warn "# xstubs=$xstubs, xticks=$xtics, width=$width, height=$height\n";
 
     my $cfn = substr( $dfn, 0, -4 ) . "-$y.pls";
-    print "CFN file is $cfn \n";
+    #print "CFN file is $cfn \n";
     open( OUT, ">$cfn" ) || die "ERROR: open $cfn: $!\n";
     print OUT << "END";
 //
@@ -547,16 +548,16 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 	        $ksf = $kss+($d=$1) if /duration=\"([^\"]+)\"/;
 		#get the transformation name
 		$txn = $1 if /transformation=\"([^\"]+)\"/;
-		print "Tx name is $txn \n";
+		
 
 		$main::duration += $d if $d; 
 		$main::kmin = $kss if $main::kmin > $kss;
 		$main::kmax = $ksf if $main::kmax < $ksf;
 		$kss -= $main::min; $ksf -= $main::min;
 		if ( $kss > -100 && $ksf > -10 ) {
-		    print "$dfn , $dsize, $kss\n";
-		    print "$dfn , $dsize, $ksf\n";
-		    print "$dfn  $main::color{$txn}\n";
+		    #print "$dfn , $dsize, $kss\n";
+		    #print "$dfn , $dsize, $ksf\n";
+		    #print "$dfn  $main::color{$txn}\n";
 
 		    printf $dfh " %*d", $dsize, $kss;
 		    printf $dfh " %*d", $dsize, $ksf;
