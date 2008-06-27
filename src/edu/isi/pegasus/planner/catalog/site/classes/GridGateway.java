@@ -246,6 +246,28 @@ public class GridGateway extends AbstractSiteData{
         writer.write( newLine );
     }
 
-    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        GridGateway obj;
+        try{
+            obj = ( GridGateway ) super.clone();
+            obj.setType( this.getType() );
+            obj.setContact( this.getContact() );
+            obj.setScheduler( this.getScheduler() );
+            obj.setJobType( this.getJobType() );
+            obj.setOS( this.getOS() );
+            obj.setArchitecture( this.getArchitecture() );
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
+    }
     
 }

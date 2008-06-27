@@ -26,7 +26,7 @@ import java.io.IOException;
  * 
  * @author Karan Vahi
  */
-public abstract class AbstractSiteData {
+public abstract class AbstractSiteData implements Cloneable {
     
     
     /**
@@ -72,6 +72,24 @@ public abstract class AbstractSiteData {
         writer.write( value );
         writer.write( "\"" );
     }
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    /*public Object clone(){
+        AbstractSiteData d;
+        try{
+            d = ( AbstractSiteData ) super.clone();
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return d;
+    }*/
     
 
 }

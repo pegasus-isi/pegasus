@@ -103,4 +103,30 @@ public abstract class DirectoryType extends AbstractSiteData{
     public InternalMountPoint getInternalMountPoint(){
         return this.mInternalMount;
     }
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        DirectoryType obj;
+        try{
+            obj = ( DirectoryType ) super.clone();
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+                
+        obj.setInternalMountPoint( (InternalMountPoint)mInternalMount.clone() );
+        
+        for( FileServer server : mFileServers ){
+            obj.addFileServer( (FileServer)server.clone() );
+        }
+        
+        return obj;
+    }
+    
 }

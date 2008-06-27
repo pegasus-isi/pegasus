@@ -79,6 +79,15 @@ public abstract class FileServerType extends AbstractSiteData {
     
     
     /**
+     * Set the protocol implemented by the file server.
+     * 
+     * @param protocol  the protocol
+     */
+    public void setProtocol( String protocol ){
+        mProtocol = protocol;
+    }
+    
+    /**
      * Returns protocol implemented by the file server.
      * 
      * @return protocol
@@ -87,6 +96,15 @@ public abstract class FileServerType extends AbstractSiteData {
         return mProtocol;
     }
 
+     
+    /**
+     * Sets the url prefix .
+     * 
+     * @param prefix   the url prefix
+     */
+    public void setURLPrefix( String prefix ){
+        mURLPrefix = prefix;
+    }
     
     /**
      * Returns the url prefix .
@@ -98,9 +116,18 @@ public abstract class FileServerType extends AbstractSiteData {
     }
     
     /**
-     * Returns the mount point/
+     * Returns the mount point.
      * 
-     * @return  the url prefix
+     * @param point   the mount point.
+     */
+    public void setMountPoint( String point ){
+        mMountPoint = point;
+    }
+    
+    /**
+     * Returns the mount point
+     * 
+     * @return  the mount point.
      */
     public String getMountPoint(){
         return mMountPoint;
@@ -117,6 +144,37 @@ public abstract class FileServerType extends AbstractSiteData {
     }
     
     
+    /**
+     * Sets the profiles associated with the file server.
+     * 
+     * @param profiles   the profiles.
+     */
+    public void setProfiles( Profiles profiles ){
+        mProfiles = profiles;
+    }
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        FileServerType obj;
+        try{
+            obj = ( FileServerType ) super.clone();
+            obj.setMountPoint( this.getMountPoint() );
+            obj.setProtocol( this.getProtocol() );
+            obj.setURLPrefix( this.getURLPrefix() );
+            obj.setProfiles( (Profiles)this.mProfiles.clone() );
+        
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
+    }
     
     
 }

@@ -75,6 +75,83 @@ public abstract class FileSystemType extends AbstractSiteData {
         mFreeSize   = freeSize;
     }
     
+    /**
+     * Sets the mount point for the file system type.
+     * 
+     * @param point  the mount point.
+     */
+    public void setMountPoint( String point ){
+        this.mMountPoint = point;
+    }
+    
+    
+    /**
+     * Returns the mount point for the file system type.
+     * 
+     * @return  the mount point.
+     */
+    public String getMountPoint(  ){
+        return this.mMountPoint;
+    }
+    
+    /**
+     * Sets the directory size
+     * 
+     * @param size  the directory size.
+     */
+    public void setTotalSize( String size ){
+        this.mTotalSize = size;
+    }
+    
+    
+    /**
+     * Returns the total directory size.
+     * 
+     * @return the directory size.
+     */
+    public String getTotalSize( ){
+        return this.mTotalSize ;
+    }
+    
+    /**
+     * Sets the free directory size
+     * 
+     * @param size  the directory size.
+     */
+    public void setFreeSize( String size ){
+        this.mFreeSize = size;
+    }
+    
+    
+    /**
+     * Sets the free directory size
+     * 
+     * @return  the directory size.
+     */
+    public String getFreeSize( ){
+        return this.mFreeSize;
+    }
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        FileSystemType obj;
+        try{
+            obj = ( FileSystemType ) super.clone();
+            obj.setMountPoint( this.getMountPoint() );
+            obj.setTotalSize( this.getTotalSize() );
+            obj.setFreeSize( this.getFreeSize() );
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
+    }
     
    
 }

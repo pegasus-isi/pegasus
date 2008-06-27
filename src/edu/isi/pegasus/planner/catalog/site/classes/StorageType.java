@@ -94,4 +94,25 @@ public abstract class StorageType extends AbstractSiteData{
     public SharedDirectory getSharedDirectory(  ){
         return mSharedDirectory;
     }
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        StorageType obj;
+        try{
+            obj = ( StorageType ) super.clone();
+            obj.setLocalDirectory( this.getLocalDirectory() );
+            obj.setSharedDirectory( this.getSharedDirectory() );
+            
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
+    }
 }

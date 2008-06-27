@@ -70,7 +70,7 @@ public class Profiles {
      * The default constructor.
      */
     public Profiles() {
-        mProfileMap = new EnumMap( NAMESPACES.class );
+        mProfileMap = new EnumMap<NAMESPACES, Namespace>( NAMESPACES.class );
                 
         mProfileMap.put( NAMESPACES.condor, new Condor() );
         mProfileMap.put( NAMESPACES.dagman, new Dagman() );
@@ -140,6 +140,33 @@ public class Profiles {
                 writer.write( newLine );                
             }
         }
+    }
+    
+    
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        Profiles obj;
+        try{
+            obj = ( Profiles ) super.clone();
+            
+            //traverse through all the enum keys
+            for ( NAMESPACES n : NAMESPACES.values() ){
+                Namespace nm = obj.get( n );
+                nm =  ( Namespace )this.get( n ).clone();                        
+            }
+            
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
     }
     
     /**

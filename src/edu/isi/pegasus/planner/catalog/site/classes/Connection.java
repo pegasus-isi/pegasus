@@ -68,6 +68,25 @@ public class Connection extends AbstractSiteData {
         return this.mValue;
     }
     
+    
+    /**
+     * Returns the connection key.
+     * 
+     * @param key   the key
+     */
+    public void setKey( String key ){
+        this.mKey = key;
+    }
+    
+    /**
+     * Returns the key value.
+     * 
+     * @param value the value.
+     */
+    public void setValue( String value ){
+        this.mValue = value ;
+    }
+    
     /**
      * Writes out the xml description of the object. 
      *
@@ -91,5 +110,26 @@ public class Connection extends AbstractSiteData {
         writer.write( "</connection>" );
         writer.write( newLine );
     }
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        Connection obj;
+        try{
+            obj = ( Connection ) super.clone();
+            obj.setValue( this.getValue() );
+            obj.setKey( this.getKey() );
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
+    }
+    
 }
     

@@ -71,6 +71,16 @@ public class ReplicaCatalog extends AbstractSiteData {
     }
     
     /**
+     * Sets the url for the replica catalog.
+     * 
+     * @param url  the url
+     */
+    public void setURL( String url ){
+        mURL = url;
+    }
+    
+    
+    /**
      * Returns the url for the replica catalog.
      * 
      * @return url
@@ -78,6 +88,16 @@ public class ReplicaCatalog extends AbstractSiteData {
     public String getURL(){
         return mURL;
     }
+    
+    /**
+     * Sets the type of replica catalog.
+     * 
+     * @param type the type of replica catalog.
+     */
+    public void setType( String type ){
+        mType = type;
+    }
+    
     
     /**
      * Returns the type of replica catalog.
@@ -95,6 +115,15 @@ public class ReplicaCatalog extends AbstractSiteData {
      */
     public void addAlias( String name ){
         mAliases.add( name );
+    }
+    
+    /**
+     * Adds a connection parameter
+     * 
+     * @param connection  the connection parameter.
+     */
+    public void addConnection( Connection connection ){
+        mConnectionParams.add( connection );
     }
     
     /**
@@ -157,6 +186,36 @@ public class ReplicaCatalog extends AbstractSiteData {
         writer.write( indent );
         writer.write( "</replica-catalog>" );
         writer.write( newLine );
+    }
+    
+        
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        ReplicaCatalog obj;
+        try{
+            obj = ( ReplicaCatalog ) super.clone();
+            obj.setType( this.getType() );
+            obj.setURL( this.getURL() );
+            
+            for( Iterator<String> it = this.getAliasIterator(); it.hasNext() ; ){
+                obj.addAlias( it.next() );
+            }
+            
+            for( Iterator<Connection> it = this.getConnectionIterator(); it.hasNext() ; ){
+                obj.addConnection( it.next() );
+            }
+            
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
     }
 
     /**
