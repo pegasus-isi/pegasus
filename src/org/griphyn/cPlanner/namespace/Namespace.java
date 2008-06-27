@@ -420,6 +420,29 @@ public abstract class Namespace extends Data{
             " with value " + value + " is malformed, ignoring!",
             LogManager.WARNING_MESSAGE_LEVEL);
    }
+   
+   /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        Namespace obj;
+        try{
+            obj = ( Namespace ) super.clone();
+            for( Iterator it = this.getProfileKeyIterator(); it.hasNext(); ){
+                String key = ( String )it.next();
+                obj.construct( key, (String)this.get( key ));
+            }
+            
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
+    }
 
    /**
      * An empty iterator that allows me to traverse in case of null objects.
