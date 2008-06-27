@@ -346,13 +346,13 @@ sub gen_data($$$\%) {
   horizontalbars: yes
   segmentfields: 5 8
   locfield: $y
-  color: green
+  color: yellow
   tails: 0.03
 
 #proc legendentry
   sampletype: color
   label: condor job
-  details: green
+  details: yellow
 
 #proc bars
   select: \@9 != $dpo
@@ -371,8 +371,8 @@ sub gen_data($$$\%) {
 
 #proc bars
   select: \@6 != $dpo
-  outline: color=yellow
-  color: yellow2
+  outline: color=orange
+  color: lightorange
   horizontalbars: yes
   barwidth: 0.04
   tails: no
@@ -382,7 +382,7 @@ sub gen_data($$$\%) {
 #proc legendentry
   sampletype: color
   label: Q delay
-  details: yellow2
+  details: lightorange
 
 #proc scatterplot
   select: \@7 != $dpo
