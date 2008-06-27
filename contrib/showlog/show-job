@@ -77,8 +77,7 @@ $main::failure = 0;
       POST_SCRIPT_FAILURE => 7 );
 
 #ASSIGN DIFFERENT COLORS TO DIFFERENT JOB
-#THIS SHOULD BE CHANGED FOR DIFFERENT TYPES OF WORKFLOWS
-#IF NOT SPECIFIED, THEN GRAY COLOR IS ASSIGNED
+#THE HASH IS POPULATED AT RUNTIME by --color-file option
 %main::color = 
    ( 
      "pegasus::dirmanager" => "lavender",
@@ -108,6 +107,34 @@ sub load_job_colors( $ ){
     else{
 	die "Unable to open color file $color_fn";	
     }
+}
+
+sub find_job_out_file($){
+    # purpose: determine the latest .out file to pick up for a job
+    # paramtr: $program (IN): the job name
+    #          
+    # returns: name for the .out file to load
+
+    my $job = shift;
+    my ($out,$new_out);
+    for( my $i = 0; $i < 1000; $i++){
+	$new_out = sprintf( "%s.out.%03d",$job,$i);
+	#try and open the file to detect
+	if( open( KS, "<$new_out" ) ){
+	    close KS;
+	    $out = $new_out;
+	    next;
+	}
+	else{
+	    #break
+	    last;
+	}
+    }
+    
+    #if no job.out.xxx exists try for .out
+    $out = sprintf( "%s.out", $job ) unless defined( $out );
+    #print "Correct out file to pick is $out\n";
+    return $out;
 }
 
 sub find_exec($;$) {
@@ -539,7 +566,8 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 
     #print "DFN is $dfn";
     if ( @{$job{$jobid}} == 8 ) {
-	my $kfn = substr( $submit{$jobid}, 0, -4 ) . '.out';
+	#my $kfn = substr( $submit{$jobid}, 0, -4 ) . '.out';
+	my $kfn = find_job_out_file( substr( $submit{$jobid}, 0, -4 ) );
 	if ( -r $kfn && -s _ && open( KS, "<$kfn" ) ) {
 	    my ($kss,$ksf,$d, $txn);
 	    while ( <KS> ) {
