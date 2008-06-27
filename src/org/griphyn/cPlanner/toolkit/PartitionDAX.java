@@ -249,6 +249,7 @@ public class PartitionDAX extends Executable {
 
             PegasusBag bag = new PegasusBag();
             bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
+            bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
 
             DaxParser d = new DaxParser( daxFile, bag, callback );
             state = 2;
