@@ -79,6 +79,7 @@ import java.util.regex.Pattern;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import java.util.LinkedList;
 import org.griphyn.vdl.euryale.VTorInUseException;
 import org.griphyn.cPlanner.poolinfo.SiteFactory;
 import org.griphyn.common.catalog.transformation.TCMode;
@@ -409,6 +410,17 @@ public class CPlanner extends Executable{
                 throw new RuntimeException( error + mPOptions.getSubmitDirectory() , ioe );
 
             }
+            
+            boolean rescue = handleRescueDAG( orgDag, mPOptions );
+            if( rescue ){
+                mLogger.log( "No planning attempted. Rescue dag will be submitted", 
+                             LogManager.INFO_MESSAGE_LEVEL );
+                result = new LinkedList(  );
+                result.add(  new File ( mPOptions.getSubmitDirectory(), 
+                                        this.getDAGFilename( orgDag, mPOptions)));
+                return result;
+            }
+            
 
             //check if a random directory is specified by the user
             if(mPOptions.generateRandomDirectory() && mPOptions.getRandomDir() == null){
@@ -561,7 +573,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:",
+                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -609,6 +621,10 @@ public class CPlanner extends Executable{
                     options.setRelativeSubmitDirectory( g.getOptarg() );
                     break;
 
+                case '3'://rescue
+                    options.setNumberOfRescueTries( g.getOptarg() );
+                    break;
+                    
                 case 'f'://force
                     options.setForce(true);
                     break;
@@ -870,7 +886,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[23];
+        LongOpt[] longopts = new LongOpt[24];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -898,6 +914,7 @@ public class CPlanner extends Executable{
         longopts[20]  = new LongOpt( "relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2' );
         longopts[21]  = new LongOpt( "pap", LongOpt.NO_ARGUMENT, null, 'p' );
         longopts[22]  = new LongOpt( "job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j' );
+        longopts[23]  = new LongOpt( "rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
         return longopts;
     }
 
@@ -1237,6 +1254,105 @@ public class CPlanner extends Executable{
         }
         return result;
     }
+
+    /**
+     * Returns the basename of the dag file
+     * 
+     * @param dag       the dag that was parsed.
+     * @param options   the planner options
+     * 
+     * @return boolean  true means submit the rescue
+     *                  false do the planning operation
+     */
+    protected String getDAGFilename( ADag dag, PlannerOptions options ){
+        //determine the name of the .dag file that will be written out.
+        //constructing the name of the dagfile
+        StringBuffer sb = new StringBuffer();
+        String bprefix = options.getBasenamePrefix();
+        if( bprefix != null){
+            //the prefix is not null using it
+            sb.append(bprefix);
+        }
+        else{
+            //generate the prefix from the name of the dag
+            sb.append(dag.dagInfo.nameOfADag).append("-").
+                append(dag.dagInfo.index);
+        }
+        //append the suffix
+        sb.append( ".dag" );
+        return sb.toString();
+    }
+    
+    /**
+     * Checks for rescue dags, and determines whether to plan or not.
+     * 
+     * 
+     * @param dag       the dag that was parsed.
+     * @param options   the planner options
+     * 
+     * @return boolean  true means submit the rescue
+     *                  false do the planning operation
+     */
+    protected boolean handleRescueDAG( ADag dag, PlannerOptions options ) {
+        
+        
+
+        return this.handleRescueDAG(  getDAGFilename( dag, options ),
+                                      options.getSubmitDirectory(),
+                                      options.getNumberOfRescueTries() );
+
+    }
+    
+    /**
+     * Checks for rescue dags, and determines whether to plan or not.
+     * 
+     * 
+     * @param dag           the dag file for the dax
+     * @param dir           the submit directory.  
+     * @param numOfRescues  the number of rescues to handle.
+     * 
+     * 
+     * @return true means submit the rescue
+     *                  false do the planning operation
+     */
+    protected boolean handleRescueDAG( String dag, String dir, int numOfRescues ) {
+        boolean result = false;
+        //sanity check
+        if( numOfRescues < 1 ){
+            return result;
+        }
+        
+        //check for existence of dag file
+        
+        if( numOfRescues < 1 ){
+            return result;
+        }
+        
+        //check for existence of dag file
+        //if it does not exists means we need to plan
+        File f  = new File( dir, dag );
+        mLogger.log( "Determining existence of dag file " + f.getAbsolutePath(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );        
+        if ( !f.exists() ){
+            return result;
+        }
+        
+        
+        
+        //check for existence of latest rescue file.
+        NumberFormat nf = new DecimalFormat( "000" );
+        
+        String rescue = dag + ".rescue" +  nf.format( numOfRescues );
+        f  = new File( dir, rescue );
+        mLogger.log( "Determining existence of rescue file " + f.getAbsolutePath(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+         
+        
+         return  f.exists() ?
+                 result  ://means we need to start planning now
+                 !result;
+          
+      }   
 
 
     /**

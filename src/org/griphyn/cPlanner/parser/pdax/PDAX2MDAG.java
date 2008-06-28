@@ -770,9 +770,23 @@ public class PDAX2MDAG implements Callback {
         sb.append(" -f -l . -Debug 3").
            append(" -Lockfile ").append( getBasename( partition, ".dag.lock") ).
            append(" -Dag ").append( getBasename( partition, ".dag")).
-           append(" -Rescue ").append(getBasename( partition, ".dag.rescue")).
            append(" -Condorlog ").append(getBasename( partition, ".log"));
 
+        //we append the Rescue DAG option only if old version
+        //of Condor is used < 7.1.0.  To detect we check for a non
+        //zero value of --rescue option to pegasus-plan
+        //Karan June 27, 2007
+        if( mPOptions.getNumberOfRescueTries() > 0 ){            
+            mLogger.log( "Constructing arguments to dagman in 7.1.0 and later style",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            sb.append( " -AutoRescue 1 -DoRescueFrom 0 ");
+        }
+        else{
+            mLogger.log( "Constructing arguments to dagman in pre 7.1.0 style",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            sb.append(" -Rescue ").append(getBasename( partition, ".dag.rescue"));
+        }
+        
        //pass any dagman knobs that were specified in properties file
        sb.append( this.mDAGManKnobs );
 

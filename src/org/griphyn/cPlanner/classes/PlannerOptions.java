@@ -193,6 +193,11 @@ public class PlannerOptions extends Data implements Cloneable{
      * A boolean storing whether to sanitize paths or not
      */
     private boolean mSanitizePath;
+    
+    /**
+     * The numer of rescue's to try before replanning.
+     */
+    private int mNumOfRescueTries;
 
     /**
      * Default Constructor.
@@ -226,6 +231,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mPartitioningType = null;
         mSanitizePath     = true;
         mJobPrefix        = null;
+        mNumOfRescueTries = 0;
     }
 
     /**
@@ -868,7 +874,33 @@ public class PlannerOptions extends Data implements Cloneable{
         mVOGroup = group;
     }
 
+    /**
+     * Sets the number of times to try for rescue dag submission.
+     * 
+     * @param num  number.
+     */
+    public void setNumberOfRescueTries( String num ){
+        this.mNumOfRescueTries = Integer.parseInt( num );
+    }
+    
+    /**
+     * Sets the number of times to try for rescue dag submission.
+     * 
+     * @param num  number.
+     */
+    public void setNumberOfRescueTries( int num ){
+        this.mNumOfRescueTries = num;
+    }
 
+    /**
+     * Returns the number of times to try for rescue dag submission.
+     * 
+     * @return number.
+     */
+    public int getNumberOfRescueTries( ){
+        return this.mNumOfRescueTries;
+    }
+    
     /**
      * Returns the textual description of all the options that were set for
      * the planner.
@@ -898,6 +930,7 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Clustering Technique " + mClusterer +
                     "\n Monitor Workflow     " + mMonitor +
                     "\n VO Group             " + mVOGroup +
+                    "\n Rescue Tries         " + mNumOfRescueTries +
                     "\n VDS Properties       " + mVDSProps;
         return st;
     }
@@ -985,6 +1018,9 @@ public class PlannerOptions extends Data implements Cloneable{
 
         //specify the vogroup
         sb.append(" --group ").append( mVOGroup );
+        
+        //specify the number of times to try rescue
+        sb.append( " --rescue " ).append( this.getNumberOfRescueTries() );
 
         //help option
         if(mDisplayHelp){  sb.append(" --help ");}
@@ -1077,6 +1113,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mDeferredRun    = this.mDeferredRun;
         pOpt.mDate           = (Date)this.mDate.clone();
         pOpt.mPartitioningType = this.mPartitioningType;
+        pOpt.mNumOfRescueTries = this.mNumOfRescueTries;
         //Note not cloning the vdsProps
         pOpt.mVDSProps       = null;
         return pOpt;
