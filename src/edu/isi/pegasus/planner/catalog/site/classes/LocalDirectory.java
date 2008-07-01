@@ -67,6 +67,7 @@ public class LocalDirectory extends DirectoryType{
         //write out the  xml element
         writer.write( indent );
         writer.write( "<local>" );
+        writer.write( newLine );
       
         //iterate through all the file servers
         for( Iterator<FileServer> it = this.getFileServersIterator(); it.hasNext(); ){

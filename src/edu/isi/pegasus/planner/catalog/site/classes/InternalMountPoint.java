@@ -30,6 +30,25 @@ import java.io.IOException;
  */
 public class InternalMountPoint extends FileSystemType {
     
+    
+    /**
+     * The default constructor.
+     */
+    public InternalMountPoint() {
+        super();
+    }
+    
+    /**
+     * The overloaded constructor.
+     * 
+     * @param mountPoint  the mount point of the system.
+     * @param totalSize   the total size of the system.  
+     * @param freeSize    the free size  
+     */
+    public  InternalMountPoint( String mountPoint, String totalSize, String freeSize ){
+        super( mountPoint, totalSize, freeSize );
+    }
+    
     /**
      *  Writes out the xml description of the object. 
      * 

@@ -237,13 +237,9 @@ public class GridGateway extends AbstractSiteData{
             writeAttribute( writer, "arch", getArchitecture().toString() );
         }
         
-        writer.write( ">");
+        writer.write( "/>");
         writer.write( newLine );
         
-        
-        writer.write( indent );
-        writer.write( "</grid>" );
-        writer.write( newLine );
     }
 
     /**

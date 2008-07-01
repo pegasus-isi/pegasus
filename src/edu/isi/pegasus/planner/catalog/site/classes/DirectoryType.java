@@ -44,8 +44,7 @@ public abstract class DirectoryType extends AbstractSiteData{
      * The default constructor.
      */
     public DirectoryType(){
-        mFileServers = new LinkedList <FileServer> ();
-        mInternalMount = new InternalMountPoint();
+        initialize( );
     }
     
     /**
@@ -55,8 +54,27 @@ public abstract class DirectoryType extends AbstractSiteData{
      * @param  imt the internal mount point.
      */
     public DirectoryType( List<FileServer> fs, InternalMountPoint imt ){
-        mFileServers = fs;
-        mInternalMount = imt;
+        initialize( fs, imt );
+    }
+    
+    /**
+     *  Initializes the object
+     * 
+     */
+    public void initialize( ){
+        this.mFileServers = new LinkedList <FileServer> ();
+        this.mInternalMount =  new InternalMountPoint();
+    }
+    
+    /**
+     *  Initializes the object
+     * 
+     * @param  fs  list of file servers
+     * @param  imt the internal mount point.
+     */
+    public void initialize( List<FileServer> fs, InternalMountPoint imt ){
+        this.mFileServers = fs;
+        this.mInternalMount = imt ;
     }
     
     /**
@@ -119,7 +137,7 @@ public abstract class DirectoryType extends AbstractSiteData{
             throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
                                        e );
         }
-                
+        obj.initialize( );        
         obj.setInternalMountPoint( (InternalMountPoint)mInternalMount.clone() );
         
         for( FileServer server : mFileServers ){

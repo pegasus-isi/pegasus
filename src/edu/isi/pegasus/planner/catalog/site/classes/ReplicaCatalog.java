@@ -26,6 +26,7 @@ import java.util.Iterator;
 
 import java.io.Writer;
 import java.io.IOException;
+import java.util.LinkedList;
 
 
 /**
@@ -57,6 +58,12 @@ public class ReplicaCatalog extends AbstractSiteData {
      */
     protected Set<String> mAliases;
     
+    /**
+     * The default constrcutor.
+     */
+    public ReplicaCatalog( ){
+        this( "", "" );
+    }
     
     /**
      * The overloaded constructor.
@@ -64,12 +71,23 @@ public class ReplicaCatalog extends AbstractSiteData {
      * @param url  the url for the replica catalog.
      * @param type the type of replica catalog.
      */
-    public ReplicaCatalog( String url, String type ){
+    public ReplicaCatalog( String url, String type ){ 
+        initialize( url, type );        
+    }
+    
+    /**
+     * Initialize the class. 
+     * 
+     * @param url  the url for the replica catalog.
+     * @param type the type of replica catalog.
+     */
+    public void initialize( String url, String type ){
         mURL  = url;
         mType = type;
         mAliases = new HashSet<String>();
+        mConnectionParams = new LinkedList<Connection>();
     }
-    
+            
     /**
      * Sets the url for the replica catalog.
      * 
@@ -198,15 +216,14 @@ public class ReplicaCatalog extends AbstractSiteData {
         ReplicaCatalog obj;
         try{
             obj = ( ReplicaCatalog ) super.clone();
-            obj.setType( this.getType() );
-            obj.setURL( this.getURL() );
+            obj.initialize( this.getType(), this.getURL() );
             
             for( Iterator<String> it = this.getAliasIterator(); it.hasNext() ; ){
                 obj.addAlias( it.next() );
             }
             
             for( Iterator<Connection> it = this.getConnectionIterator(); it.hasNext() ; ){
-                obj.addConnection( it.next() );
+                obj.addConnection( (Connection)it.next().clone() );
             }
             
         }
@@ -233,12 +250,9 @@ public class ReplicaCatalog extends AbstractSiteData {
         writer.write( indent );
         writer.write( "<alias " );        
         writeAttribute( writer, "name", value );
+        writer.write( "/>" );
         writer.write( newLine );
         
-        
-        writer.write( indent );
-        writer.write( "</alias>" );
-        writer.write( newLine );
         
     }
 }

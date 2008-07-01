@@ -54,6 +54,23 @@ public abstract class AbstractSiteData implements Cloneable {
      */
     public abstract void toXML( Writer writer, String indent ) throws IOException ;
     
+    /**
+     * Writes out the object as a string. Internally calls out the toXML method.
+     *
+     * @return string description
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    public String toString(){
+        StringWriter writer = new StringWriter( );
+        try{
+            this.toXML( writer, "" );
+        }
+        catch( IOException ioe ){
+            
+        }
+        return writer.toString();
+    }
 
     /**
      * Writes an attribute to the stream. Wraps the value in quotes as required
@@ -78,7 +95,7 @@ public abstract class AbstractSiteData implements Cloneable {
      *
      * @return the clone
      */
-    /*public Object clone(){
+    public Object clone(){
         AbstractSiteData d;
         try{
             d = ( AbstractSiteData ) super.clone();
@@ -89,7 +106,7 @@ public abstract class AbstractSiteData implements Cloneable {
                                        e );
         }
         return d;
-    }*/
+    }
     
 
 }

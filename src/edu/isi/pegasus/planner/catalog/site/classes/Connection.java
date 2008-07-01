@@ -46,6 +46,18 @@ public class Connection extends AbstractSiteData {
      * @param value  the key value
      */
     public Connection( String key, String value ){
+        initialize( key, value );
+        mKey   = key;
+        mValue = value;
+    }
+        
+    /**
+     * Initializes the object.
+     * 
+     * @param key    the key
+     * @param value  the key value
+     */
+    public void initialize( String key, String value ){
         mKey   = key;
         mValue = value;
     }
@@ -120,8 +132,7 @@ public class Connection extends AbstractSiteData {
         Connection obj;
         try{
             obj = ( Connection ) super.clone();
-            obj.setValue( this.getValue() );
-            obj.setKey( this.getKey() );
+            obj.initialize( this.getKey(), this.getValue() );
         }
         catch( CloneNotSupportedException e ){
             //somewhere in the hierarch chain clone is not implemented

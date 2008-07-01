@@ -33,7 +33,23 @@ import java.io.IOException;
  */
 public class FileServer extends FileServerType {
 
+    /**
+     * The default constructor.
+     */
+    public FileServer() {
+        super();
+    }
     
+    /**
+     * Overloaded constructor.
+     * 
+     * @param protocol   protocol employed by the File Server.
+     * @param urlPrefix  the url prefix 
+     * @param mountPoint the mount point for the server.
+     */
+    public FileServer( String protocol, String urlPrefix, String mountPoint ) {
+        super( protocol, urlPrefix, mountPoint );
+    }
     /**
      * Writes out the xml description of the object. 
      *
@@ -55,9 +71,13 @@ public class FileServer extends FileServerType {
         writeAttribute( writer, "url", getURLPrefix() );        
         writeAttribute( writer, "mount-point", getMountPoint() );        
         
-        writer.write( "/>" );
+        writer.write( ">" );
         writer.write( newLine );
         
         mProfiles.toXML( writer , newIndent );
+        
+        writer.write( indent );
+        writer.write( "</file-server>" );
+        writer.write( newLine );
     }
 }

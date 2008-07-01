@@ -69,6 +69,7 @@ public class SharedDirectory extends DirectoryType{
         //write out the  xml element
         writer.write( indent );
         writer.write( "<shared>" );
+        writer.write( newLine );
       
         //iterate through all the file servers
         for( Iterator<FileServer> it = this.getFileServersIterator(); it.hasNext(); ){

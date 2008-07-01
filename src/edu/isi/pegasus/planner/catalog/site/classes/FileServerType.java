@@ -62,6 +62,7 @@ public abstract class FileServerType extends AbstractSiteData {
         mProtocol = new String();
         mURLPrefix = new String();
         mMountPoint = new String();
+        mProfiles = new Profiles();
     }
     
     /**
@@ -74,7 +75,8 @@ public abstract class FileServerType extends AbstractSiteData {
     public FileServerType( String protocol, String urlPrefix, String mountPoint ) {
         mProtocol = protocol;
         mURLPrefix = urlPrefix;
-        mMountPoint = mountPoint;
+        mMountPoint = mountPoint;        
+        mProfiles = new Profiles();
     }
     
     

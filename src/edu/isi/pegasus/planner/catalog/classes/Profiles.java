@@ -151,20 +151,13 @@ public class Profiles {
      */
     public Object clone(){
         Profiles obj;
-        try{
-            obj = ( Profiles ) super.clone();
+        
+        obj = new Profiles();
             
-            //traverse through all the enum keys
-            for ( NAMESPACES n : NAMESPACES.values() ){
-                Namespace nm = obj.get( n );
-                nm =  ( Namespace )this.get( n ).clone();                        
-            }
-            
-        }
-        catch( CloneNotSupportedException e ){
-            //somewhere in the hierarch chain clone is not implemented
-            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
-                                       e );
+        //traverse through all the enum keys
+        for ( NAMESPACES n : NAMESPACES.values() ){
+            Namespace nm = obj.get( n );
+            nm =  ( Namespace )this.get( n ).clone();                        
         }
         return obj;
     }

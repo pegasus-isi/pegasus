@@ -56,6 +56,7 @@ public class HeadNodeFS extends AbstractSiteData {
     public HeadNodeFS(){
         mScratch = new HeadNodeScratch();
         mStorage = new HeadNodeStorage();
+        mProfiles= new Profiles();
     }
     
     /**
@@ -67,6 +68,7 @@ public class HeadNodeFS extends AbstractSiteData {
     public HeadNodeFS( HeadNodeScratch scratch, HeadNodeStorage storage ){
         setScratch( scratch );
         setStorage( storage );
+        mProfiles = new Profiles();
     }
     
     /**
@@ -117,7 +119,14 @@ public class HeadNodeFS extends AbstractSiteData {
        mProfiles.addProfile(  p );
     }
 
-    
+    /**
+     * Sets the profiles associated with the file server.
+     * 
+     * @param profiles   the profiles.
+     */
+    public void setProfiles( Profiles profiles ){
+        mProfiles = profiles;
+    }
     /**
      * Writes out the xml description of the object. 
      *
@@ -143,5 +152,27 @@ public class HeadNodeFS extends AbstractSiteData {
         writer.write( indent );
         writer.write( "</head-fs>" );
         writer.write( newLine );
+    }
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        HeadNodeFS obj;
+        try{
+            obj = ( HeadNodeFS ) super.clone();
+            obj.setScratch( this.getScratch() );
+            obj.setStorage( this.getStorage() );
+            obj.setProfiles( (Profiles)this.mProfiles.clone() );
+            
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
     }
 }

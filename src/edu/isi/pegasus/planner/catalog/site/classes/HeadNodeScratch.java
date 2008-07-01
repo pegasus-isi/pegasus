@@ -64,7 +64,8 @@ public class HeadNodeScratch extends StorageType {
         
         //write out the  xml element
         writer.write( indent );
-        writer.write( "<scratch>" );
+        writer.write( "<scratch>" );        
+        writer.write( newLine );
       
         this.getLocalDirectory().toXML( writer, newIndent );
         this.getSharedDirectory().toXML( writer, newIndent );

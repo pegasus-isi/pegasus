@@ -57,6 +57,7 @@ public class WorkerNodeFS extends AbstractSiteData {
     public WorkerNodeFS(){
         mScratch = new WorkerNodeScratch();
         mStorage = new WorkerNodeStorage();
+        mProfiles = new Profiles();
     }
     
     /**
@@ -68,6 +69,7 @@ public class WorkerNodeFS extends AbstractSiteData {
     public WorkerNodeFS( WorkerNodeScratch scratch, WorkerNodeStorage storage ){
         setScratch( scratch );
         setStorage( storage );
+        mProfiles = new Profiles();
     }
     
     /**
@@ -109,6 +111,15 @@ public class WorkerNodeFS extends AbstractSiteData {
     }
     
     /**
+     * Sets the profiles associated with the file server.
+     * 
+     * @param profiles   the profiles.
+     */
+    public void setProfiles( Profiles profiles ){
+        mProfiles = profiles;
+    }
+    
+    /**
      * Adds a profile.
      * 
      * @param profile  the profile to be added
@@ -144,5 +155,27 @@ public class WorkerNodeFS extends AbstractSiteData {
         writer.write( indent );
         writer.write( "</worker-fs>" );
         writer.write( newLine );
+    }
+    
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        WorkerNodeFS obj;
+        try{
+            obj = ( WorkerNodeFS ) super.clone();
+            obj.setScratch( this.getScratch() );
+            obj.setStorage( this.getStorage() );
+            obj.setProfiles( (Profiles)this.mProfiles.clone() );
+            
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return obj;
     }
 }
