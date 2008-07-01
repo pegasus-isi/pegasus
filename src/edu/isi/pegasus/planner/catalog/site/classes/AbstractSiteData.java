@@ -95,16 +95,10 @@ public abstract class AbstractSiteData implements Cloneable {
      *
      * @return the clone
      */
-    public Object clone(){
+    public Object clone() throws CloneNotSupportedException{
         AbstractSiteData d;
-        try{
-            d = ( AbstractSiteData ) super.clone();
-        }
-        catch( CloneNotSupportedException e ){
-            //somewhere in the hierarch chain clone is not implemented
-            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
-                                       e );
-        }
+        d = ( AbstractSiteData ) super.clone();
+        
         return d;
     }
     
