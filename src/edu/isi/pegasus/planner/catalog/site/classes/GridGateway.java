@@ -81,6 +81,27 @@ public class GridGateway extends AbstractSiteData{
      */
     private Architecture mArch;
     
+    /**
+     * Optional information about the os release.
+     */
+    private String mOSRelease;
+    
+    /**
+     * Optional information about the version.
+     */
+    private String mOSVersion;
+    
+    /**
+     * Optional information about the glibc.
+     */
+    private String mGlibc;
+    
+    /**
+     * The default constructor.
+     */
+    public GridGateway( ){
+        this( TYPE.gt2, "localhost/jobmanager-fork", SCHEDULER_TYPE.Fork );
+    }
     
     /**
      * The overloaded constructor.
@@ -191,6 +212,63 @@ public class GridGateway extends AbstractSiteData{
     }
     
     /**
+     * Sets the OS release of the site.
+     * 
+     * @param release the os releaseof the site.
+     */
+    public void setOSRelease( String release ){
+        mOSRelease = release;
+    }
+    
+    
+    /**
+     * Returns the OS release of the site.
+     * 
+     * @return  the OS
+     */
+    public String getOSRelease( ){
+        return mOSRelease;
+    }
+    
+    /**
+     * Sets the OS version of the site.
+     * 
+     * @param version  the os versionof the site.
+     */
+    public void setOSVersion( String version ){
+        mOSVersion = version;
+    }
+    
+    
+    /**
+     * Returns the OS version of the site.
+     * 
+     * @return  the OS
+     */
+    public String getOSVersion( ){
+        return mOSVersion;
+    }
+    
+    /**
+     * Sets the glibc version on the site.
+     * 
+     * @param version  the glibc version of the site.
+     */
+    public void setGlibc( String version ){
+        mGlibc = version;
+    }
+    
+    
+    /**
+     * Returns the glibc version of the site.
+     * 
+     * @return  the OS
+     */
+    public String getGlibc( ){
+        return mGlibc;
+    }
+    
+    /**
      * Sets the architecture of the nodes that this grid gateway talks to.
      * 
      * @param arch   the architecture of the nodes
@@ -237,6 +315,19 @@ public class GridGateway extends AbstractSiteData{
             writeAttribute( writer, "arch", getArchitecture().toString() );
         }
         
+        String val = null;
+        if ( ( val = this.getOSRelease() ) != null ){
+            writeAttribute( writer, "osrelease", val );
+        }
+        
+        if ( ( val = this.getOSVersion() ) != null ){
+            writeAttribute( writer, "osversion", val );
+        }
+         
+        if ( ( val = this.getGlibc() ) != null ){
+            writeAttribute( writer, "glibc", val );
+        }
+        
         writer.write( "/>");
         writer.write( newLine );
         
@@ -257,6 +348,11 @@ public class GridGateway extends AbstractSiteData{
             obj.setJobType( this.getJobType() );
             obj.setOS( this.getOS() );
             obj.setArchitecture( this.getArchitecture() );
+            
+            obj.setOSRelease( this.getOSRelease() );
+            obj.setOSVersion( this.getOSVersion() );
+            obj.setGlibc( this.getGlibc() );
+        
         }
         catch( CloneNotSupportedException e ){
             //somewhere in the hierarch chain clone is not implemented

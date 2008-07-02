@@ -26,7 +26,8 @@ import java.io.IOException;
  * 
  * @author Karan Vahi
  */
-public abstract class AbstractSiteData implements Cloneable {
+public abstract class AbstractSiteData extends SiteData
+                                        {
     
     
     /**

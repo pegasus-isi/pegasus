@@ -38,6 +38,13 @@ public class Connection extends AbstractSiteData {
      * The value of the connection key.
      */
     private String mValue;
+
+    /**
+     * The default constructor.
+     */
+    public Connection() {
+        this( "", "" );
+    }
     
     /**
      * The overloaded constructor.
