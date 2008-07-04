@@ -38,6 +38,16 @@ public class HeadNodeStorage extends StorageType {
         super();
     }
     
+    
+    /**
+     * The overloaded constructor
+     * 
+     * @param type  StorageType
+     */
+    public HeadNodeStorage( StorageType type ) {
+        this( type.getLocalDirectory(), type.getSharedDirectory() );
+    }
+    
     /**
      * The overloaded constructor.
      * 

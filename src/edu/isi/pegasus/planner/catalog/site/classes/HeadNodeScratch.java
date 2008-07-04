@@ -39,6 +39,15 @@ public class HeadNodeScratch extends StorageType {
     }
     
     /**
+     * The overloaded constructor
+     * 
+     * @param type  StorageType
+     */
+    public HeadNodeScratch( StorageType type ) {
+        this( type.getLocalDirectory(), type.getSharedDirectory() );
+    }
+    
+    /**
      * The overloaded constructor.
      * 
      * @param local   the local directory on the node.

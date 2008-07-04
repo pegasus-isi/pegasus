@@ -95,6 +95,13 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * The list of replica catalog associated with the site.
      */
     private List<ReplicaCatalog> mReplicaCatalogs;
+
+    /**
+     * The default constructor.
+     */
+    public SiteCatalogEntry() {
+        this( "" );
+    }
     
     /**
      * The overloaded constructor.

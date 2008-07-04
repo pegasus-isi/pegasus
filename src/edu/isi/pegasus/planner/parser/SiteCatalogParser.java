@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeStorage;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.LocalDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.site.classes.StorageType;
 import edu.isi.pegasus.planner.catalog.site.classes.SharedDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -39,7 +40,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.WorkerSharedDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeStorage;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeScratch;
 
+import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.namespace.Namespace;
+
 import org.griphyn.cPlanner.parser.Parser;
 
 
@@ -55,7 +58,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 /**
- * The parser for parsing the new Site Catalog schema ( v3.0 )
+ * This class uses the Xerces SAX2 parser to validate and parse an XML
+ * document conforming to the Site Catalog schema v3.0
  * 
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
@@ -83,6 +87,11 @@ public class SiteCatalogParser extends Parser {
      * The stack of objects kept around.
      */
     private Stack mStack;
+    
+    /**
+     * The final result constructed.
+     */
+    private SiteStore mResult;
 
     /**
      * Default Class Constructor.
@@ -126,6 +135,13 @@ public class SiteCatalogParser extends Parser {
         try {
             this.testForFile( file );
             mParser.parse( file );
+            
+            //sanity check
+            if ( mDepth != 0 ){
+                throw new RuntimeException( "Invalid stack depth at end of parsing " + mDepth );
+            }
+            mLogger.log( "Object constructed is " + mResult.toXML(), 
+                         LogManager.DEBUG_MESSAGE_LEVEL );
         } catch ( IOException ioe ) {
             mLogger.log( "IO Error :" + ioe.getMessage(),
                         LogManager.ERROR_MESSAGE_LEVEL );
@@ -147,17 +163,7 @@ public class SiteCatalogParser extends Parser {
 
     }
 
-    public void endElement( String uri, String localName, String qName ) {
-            if ( true ){
-            } else {
-                mLogger.log(
-                    "Unkown element end reached :" + uri + ":" +
-                    localName + ":" + qName + "-******" + mTextContent +
-                    "***********", LogManager.ERROR_MESSAGE_LEVEL );
-                mTextContent.setLength( 0 );
-            }
-
-    }
+    
 
     
      /**
@@ -197,7 +203,7 @@ public class SiteCatalogParser extends Parser {
 
         Object object = createObject( qName, names, values );
         if ( object != null ){
-            //mStack.push( new IVSElement( qName, object ) );
+            mStack.push( new ParserStackElement( qName, object ) );
         }
         else{
             mLogger.log(
@@ -208,6 +214,50 @@ public class SiteCatalogParser extends Parser {
         }
     }
 
+    /**
+     * The parser is at the end of an element. Triggers the association of
+     * the child elements with the appropriate parent elements.
+     *
+     * @param namespaceURI is the URI of the namespace for the element
+     * @param localName is the element name without namespace
+     * @param qName is the element name as it appears in the docment
+     */  
+    public void endElement( String namespaceURI,
+                            String localName,
+                            String qName )   throws SAXException{
+
+        // that's it for this level
+        mDepth--;
+        mLogger.log( "</" +  localName + "> at " +
+                     this.mLocator.getLineNumber() + ":" +
+                     mLocator.getColumnNumber() , LogManager.DEBUG_MESSAGE_LEVEL );
+
+        ParserStackElement tos = ( ParserStackElement ) mStack.pop();
+        if ( ! qName.equals( tos.getElementName() ) ) {
+            String error = "Top of Stack " + tos.getElementName() + " does not mactch " + qName;
+            mLogger.log( error,
+                         LogManager.FATAL_MESSAGE_LEVEL );
+            throw new SAXException( error );
+        }
+
+        if ( ! mStack.empty() ) {
+            // add pieces to lower levels
+            ParserStackElement peek = ( ParserStackElement ) mStack.peek();
+            
+            if ( !setElementRelation( tos.getElementName(), peek.getElementObject(), tos.getElementObject() )){
+                    mLogger.log( "Element " + tos.getElementName() +
+                     		  " does not fit into element " + peek.getElementName(),
+                                  LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+            
+        } else {
+          // run finalizer, if available
+          mLogger.log( "Unreachable statment. ",
+                        LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        //reinitialize our cdata handler at end of each element
+        mTextContent.setLength( 0 );    
+  }
    
     
     /**
@@ -295,8 +345,8 @@ public class SiteCatalogParser extends Parser {
                         else {
                 	      this.complain( element, name, value );
                         }
-                        return fs;
-                    } 
+                    }
+                    return fs;
                 }
                 else{
                     return null;
@@ -326,31 +376,31 @@ public class SiteCatalogParser extends Parser {
                             gw.setScheduler( GridGateway.SCHEDULER_TYPE.valueOf( value ));
                  	    this.log( element, name, value );                              
                         }                                    
-                        else if ( name.equals( "job-type" ) ) {
+                        else if ( name.equals( "jobtype" ) ) {
                             gw.setJobType( GridGateway.JOB_TYPE.valueOf( value ));
                  	    this.log( element, name, value );                              
                         }
-                        else if ( name.equals( "os") ){
+                        else if ( name.equals( "os" ) ){
                             gw.setOS( OS.valueOf( value ) );
                             this.log( element, name, value );                              
                         }
-                        else if ( name.equals( "osrelease") ){
+                        else if ( name.equals( "osrelease" ) ){
                             gw.setOSRelease( value );
                             this.log( element, name, value );                              
                         }
-                        else if ( name.equals( "osversion") ){                            
+                        else if ( name.equals( "osversion" ) ){                            
                             gw.setOSVersion( value  );
                             this.log( element, name, value );                              
                         }
-                        else if ( name.equals( "glibc") ){
+                        else if ( name.equals( "glibc" ) ){
                             gw.setGlibc( value );                            
                             this.log( element, name, value );                              
                         }
                         else {
                 	      this.complain( element, name, value );
                         }
-                        return gw;
                     } 
+                    return gw;
                 }
                 else{
                     return null;
@@ -389,7 +439,7 @@ public class SiteCatalogParser extends Parser {
                 	      this.complain( element, name, value );
                         }
                     }
-                    
+                    return imt;
                 }
                 else{
                     return null;
@@ -404,10 +454,119 @@ public class SiteCatalogParser extends Parser {
                     return null;
                 }
                 
+            //p profile                 
+            case 'p':
+                if( element.equals( "profile" ) ){
+                    Profile p = new Profile();
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "namespace" ) ) {
+                            p.setProfileNamespace( value );
+                 	    this.log( element, name, value );                              
+                        }
+                        else if ( name.equals( "key" ) ) {
+                            p.setProfileKey( value );
+                 	    this.log( element, name, value );                              
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+                    }
+                    return p;
+                }
+                else{
+                    return null;
+                }
+                
+            //r replica-catalog
+            case 'r':
+                if( element.equals( "replica-catalog" ) ){
+                    ReplicaCatalog rc = new ReplicaCatalog();
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "type" ) ) {
+                            rc.setType( value );
+                 	    this.log( element, name, value );                              
+                        }
+                        else if ( name.equals( "url" ) ) {
+                            rc.setURL( value );
+                 	    this.log( element, name, value );                              
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+                    }
+                    return rc;
+                }
+                else{
+                    return null;
+                }
+                
+            //s shared scratch storage site
+            case 's':
+                if( element.equals( "shared" ) ){
+                    return new SharedDirectory();
+                }
+                else if( element.equals( "scratch" ) || element.equals( "storage" ) ){
+                    return new StorageType();//typecast later
+                }
+                else if( element.equals( "site" ) ){
+                    SiteCatalogEntry site = new SiteCatalogEntry();
+                    
+                    for ( int i=0; i<names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "arch") ){
+                            site.setArchitecture( Architecture.valueOf( value ));
+                 	    this.log( element, name, value );                              
+                        }
+                        else if ( name.equals( "os") ){
+                            site.setOS( OS.valueOf( value ) );
+                            this.log( element, name, value );                              
+                        }
+                        else if ( name.equals( "handle" ) ){
+                            site.setSiteHandle( value );                            
+                            this.log( element, name, value ); 
+                        }
+                        else if ( name.equals( "osrelease") ){
+                            site.setOSRelease( value );
+                            this.log( element, name, value );                              
+                        }
+                        else if ( name.equals( "osversion") ){                            
+                            site.setOSVersion( value  );
+                            this.log( element, name, value );                              
+                        }
+                        else if ( name.equals( "glibc") ){
+                            site.setGlibc( value );                            
+                            this.log( element, name, value );                              
+                        }
+                        else {
+                	      this.complain( element, name, value );
+                        }
+                    }
+                    return site;
+                }
+                else if( element.equals( "sitecatalog" ) ){
+                    SiteStore catalog = new SiteStore();
+                    mResult = catalog;
+                    return catalog;
+                }
+                else{
+                    return null;
+                }
+                
             //w worker-fs
             case 'w':
                 if( element.equals( "worker-fs" ) ){
                     return new WorkerNodeFS();
+                }
+                else if ( element.equals( "wshared" ) ){
+                    return new WorkerSharedDirectory();
                 }
                 else{
                     return null;
@@ -419,6 +578,254 @@ public class SiteCatalogParser extends Parser {
         return object;
     }
 
+    /**
+     * This method sets the relations between the currently finished XML
+     * element and its containing element in terms of Java objects.
+     * Usually it involves adding the object to the parent's child object
+     * list.
+     *
+     * @param elment name  is the  the child element name
+     * @param parent is a reference to the parent's Java object
+     * @param child is the completed child object to connect to the parent
+     * 
+     * @return true if the element was added successfully, false, if the
+     *              child does not match into the parent.
+     */
+    private boolean setElementRelation( String childElement, Object parent, Object child ) {
+    
+        switch ( childElement.charAt( 0 ) ) {
+            // a alias
+            case 'a':
+                //alias only appears in replica-catalog
+                if ( child instanceof String && parent instanceof ReplicaCatalog ) {
+                    ReplicaCatalog replica = ( ReplicaCatalog )parent;
+                    replica.addAlias( (String)child );
+                    return true;
+                }
+                else{
+                    return false;
+                }
+                
+            //c connection
+            case 'c':
+                //connection only appears in replica-catalog
+                if ( child instanceof Connection && parent instanceof ReplicaCatalog ) {
+                    ReplicaCatalog replica = ( ReplicaCatalog )parent;
+                    Connection c = ( Connection )child;
+                    c.setValue( mTextContent.toString().trim() );
+                    replica.addConnection( c );
+                    return true;
+                }
+                else{
+                    return false;
+                }
+                
+            //f
+            case 'f':
+                //file-server appears in local , shared, wshared
+                if ( child instanceof FileServer && parent instanceof LocalDirectory ) {
+                    LocalDirectory directory = ( LocalDirectory )parent;
+                    directory.addFileServer( (FileServer)child );
+                    return true;
+                }
+                else if ( child instanceof FileServer && parent instanceof SharedDirectory ) {
+                    SharedDirectory directory = ( SharedDirectory )parent;
+                    directory.addFileServer( (FileServer)child );
+                    return true;
+                }
+                else if ( child instanceof FileServer && parent instanceof WorkerSharedDirectory ) {
+                    WorkerSharedDirectory directory = ( WorkerSharedDirectory )parent;
+                    directory.addFileServer( (FileServer)child );
+                    return true;
+                }
+                else{
+                    return false;
+                }
+                
+            //g  grid
+            case 'g':
+                //grid only appears in the site element
+                if ( child instanceof GridGateway && parent instanceof SiteCatalogEntry ) {
+                    SiteCatalogEntry site = ( SiteCatalogEntry )parent;
+                    site.addGridGateway( (GridGateway)child );
+                    return true;
+                }
+                else{
+                    return false;
+                }
+                
+            //h head-fs
+            case 'h':
+                //head-fs only appears in the site element
+                if ( child instanceof HeadNodeFS && parent instanceof SiteCatalogEntry ) {
+                    SiteCatalogEntry site = ( SiteCatalogEntry )parent;
+                    site.setHeadNodeFS( (HeadNodeFS)child );
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            
+            //i  internal-mount-point
+            case 'i':
+                //internal-mount-point appears in local , shared, wshared
+                if ( child instanceof InternalMountPoint && parent instanceof LocalDirectory ) {
+                    LocalDirectory directory = ( LocalDirectory )parent;
+                    directory.setInternalMountPoint( (InternalMountPoint)child );
+                    return true;
+                }
+                else if ( child instanceof InternalMountPoint && parent instanceof SharedDirectory ) {
+                    SharedDirectory directory = ( SharedDirectory )parent;
+                    directory.setInternalMountPoint( (InternalMountPoint)child );
+                    return true;
+                }
+                else if ( child instanceof InternalMountPoint && parent instanceof WorkerSharedDirectory ) {
+                    WorkerSharedDirectory directory = ( WorkerSharedDirectory )parent;
+                    directory.setInternalMountPoint( (InternalMountPoint)child );
+                    return true;
+                }
+                else{
+                    return false;
+                }
+                
+            //l local                 
+            case 'l':
+                //local appears in scratch and storage
+                if ( child instanceof LocalDirectory &&
+                     parent instanceof StorageType ) {
+                    StorageType st = ( StorageType )parent;
+                    st.setLocalDirectory( (LocalDirectory)child );
+                    return true;
+                }
+                else{
+                    return false;
+                }
+                
+            //p profile                 
+            case 'p':
+                //profile appear in file-server site head-fs worker-fs
+                if ( child instanceof Profile ){
+                    Profile p = ( Profile ) child;
+                    p.setProfileValue( mTextContent.toString().trim() );
+                    mLogger.log( "Set Profile Value to " + p.getProfileValue(), LogManager.DEBUG_MESSAGE_LEVEL );
+                    if ( parent instanceof FileServer ) {
+                        FileServer server = ( FileServer )parent;
+                        server.addProfile( p );
+                        return true;
+                    }
+                    else  if ( parent instanceof HeadNodeFS ) {
+                        HeadNodeFS fs = ( HeadNodeFS )parent;
+                        fs.addProfile( p );
+                        return true;
+                    }
+                    else if ( parent instanceof WorkerNodeFS ) {
+                        WorkerNodeFS fs = ( WorkerNodeFS )parent;
+                        fs.addProfile( p );
+                        return true;
+                    }
+                }
+                else{
+                    return false;
+                }
+                
+                
+            //r replica-catalog                 
+            case 'r':
+                //replica-catalog appear in site
+                if ( child instanceof ReplicaCatalog && parent instanceof SiteCatalogEntry ){
+                    SiteCatalogEntry s = ( SiteCatalogEntry )parent;
+                    s.addReplicaCatalog( (ReplicaCatalog)child );
+                    return true;
+                    
+                }
+                else{
+                   return false;
+                }
+                
+            //s shared scratch storage site site-catalog
+            case 's':
+                if ( child instanceof SharedDirectory ){
+                    //shared appears in scratch and storage
+                    if ( parent instanceof StorageType ) {
+                        StorageType st = ( StorageType )parent;
+                        st.setSharedDirectory( (SharedDirectory)child );
+                        return true;
+                    }
+                }
+                else if ( child instanceof StorageType && childElement.equals( "scratch" ) ){
+                    //scratch appears in HeadNodeFS and WorkerNodeFS
+                    StorageType scratch = ( StorageType )child;
+                    
+                     if ( parent instanceof HeadNodeFS ) {
+                        HeadNodeFS fs = ( HeadNodeFS )parent;
+                        fs.setScratch( new HeadNodeScratch(scratch) );
+                        return true;
+                    }
+                    else if ( parent instanceof WorkerNodeFS ) {
+                        WorkerNodeFS fs = ( WorkerNodeFS )parent;
+                        fs.setScratch( new WorkerNodeScratch(scratch) );
+                        return true;
+                    }
+                }
+                else if ( child instanceof StorageType && childElement.equals( "storage" ) ){
+                    //storage appears in HeadNodeFS and WorkerNodeFS
+                    StorageType storage = ( StorageType )child;
+                    
+                     if ( parent instanceof HeadNodeFS ) {
+                        HeadNodeFS fs = ( HeadNodeFS )parent;
+                        fs.setStorage( new HeadNodeStorage( storage ) );
+                        return true;
+                    }
+                    else if ( parent instanceof WorkerNodeFS ) {
+                        WorkerNodeFS fs = ( WorkerNodeFS )parent;
+                        fs.setStorage( new WorkerNodeStorage( storage ) );
+                        return true;
+                    }
+                }
+                else if( child instanceof SiteCatalogEntry && parent instanceof SiteStore ){
+                    SiteStore c = ( SiteStore )parent;
+                    c.addEntry( (SiteCatalogEntry)child );
+                }
+                else if ( child instanceof SiteStore ){
+                    //should never happen.
+                    //XML totally messed up
+                    mLogger.log( "sitecatalog element appears as child to " + parent,
+                                 LogManager.ERROR_MESSAGE_LEVEL );
+                    return false;
+                  
+                }
+                else{
+                    return false;
+                }
+                
+            //w worker-fs wshared
+            case 'w':
+                //worker-fs appears in site
+                if ( child instanceof WorkerNodeFS &&
+                     parent instanceof SiteCatalogEntry ) {
+                    SiteCatalogEntry site = ( SiteCatalogEntry )parent;
+                    site.setWorkerNodeFS((WorkerNodeFS)child );
+                    return true;
+                }
+                //wshared appears in shared scratch of worker node
+                else if ( child instanceof WorkerSharedDirectory && parent instanceof WorkerNodeScratch ){
+                    WorkerNodeScratch scratch = ( WorkerNodeScratch )parent;
+                    scratch.setWorkerSharedDirectory( (WorkerSharedDirectory)child );
+                }
+                else if ( child instanceof WorkerSharedDirectory && parent instanceof WorkerNodeStorage ){
+                    WorkerNodeStorage storage = ( WorkerNodeStorage )parent;
+                    storage.setWorkerSharedDirectory( (WorkerSharedDirectory)child );
+                }
+                else{
+                    return false;
+                }
+                
+            default:
+                return false;
+        }
+        
+    }
+    
     /**
      * Returns the local path to the XML schema against which to validate.
      * 
@@ -456,5 +863,23 @@ public class SiteCatalogParser extends Parser {
         mLogger.log( "For element " + element + " invalid attribute found " + attribute + " -> " + value,
                      LogManager.ERROR_MESSAGE_LEVEL );
     }
+    
+    /**
+     * 
+     * @param args
+     */
+    public static void main( String[] args ){
+        LogManager.getInstance().setLevel( 5 );
+        SiteCatalogParser parser = new SiteCatalogParser( PegasusProperties.getInstance() );
+        if (args.length == 1) {
+            parser.startParser( args[0] );
+ 
+        } else {
+            System.out.println("Usage: SiteCatalogParser <input site catalog xml file>");
+        }
+        
+    }
+
+    
 }
 

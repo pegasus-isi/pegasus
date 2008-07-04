@@ -48,6 +48,17 @@ public class WorkerNodeScratch extends StorageType {
     }
     
     /**
+     * The overloaded constructor
+     * 
+     * @param type  StorageType
+     */
+    public WorkerNodeScratch( StorageType type ) {
+        this( type.getLocalDirectory(), type.getSharedDirectory() );
+        mWorkerShared = null;
+    }
+    
+    
+    /**
      * The overloaded constructor.
      * 
      * @param local   the local directory on the node.

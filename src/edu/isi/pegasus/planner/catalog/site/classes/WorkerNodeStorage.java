@@ -46,6 +46,16 @@ public class WorkerNodeStorage extends StorageType {
     }
     
     /**
+     * The overloaded constructor
+     * 
+     * @param type  StorageType
+     */
+    public WorkerNodeStorage( StorageType type ) {
+        this( type.getLocalDirectory(), type.getSharedDirectory() );
+        mWorkerShared = null;
+    }
+    
+    /**
      * The overloaded constructor.
      * 
      * @param local   the local directory on the node.

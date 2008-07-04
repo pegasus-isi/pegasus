@@ -18,6 +18,9 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import java.io.IOException;
+import java.io.Writer;
+
 /**
  * An Abstract Data class to describe the filesystem layout on a site, both
  * shared and local on a site/node
@@ -25,7 +28,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
  * @version $Revision$
  * @author Karan Vahi
  */
-public abstract class StorageType extends AbstractSiteData{
+public  class StorageType extends AbstractSiteData{
 
     /**
      * The local directory on the node.
@@ -114,5 +117,15 @@ public abstract class StorageType extends AbstractSiteData{
                                        e );
         }
         return obj;
+    }
+
+    /**
+     * 
+     * @param writer
+     * @param indent
+     * @throws java.io.IOException
+     */
+    public void toXML(Writer writer, String indent) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
