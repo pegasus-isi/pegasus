@@ -151,7 +151,7 @@ public abstract class Parser extends DefaultHandler{
      * is called automatically by the Sax parser when the end tag of an element
      * comes in the xml file. Any parser class should implement this method
      */
-    public abstract void endElement(String uri,String localName,String qName);
+    public abstract void endElement(String uri,String localName,String qName) throws SAXException;
 
 
     /**

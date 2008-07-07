@@ -34,6 +34,7 @@ import java.util.List;
 public class Profile
     extends Data {
 
+    
     /**
      * A private static handle to the escape class.
      */
@@ -57,7 +58,20 @@ public class Profile
 
     private String mValue;
 
-
+    /**
+     * Returns the unknown namespace message.
+     * 
+     * @param namespace  the namespace.
+     * @return the message 
+     */
+    public static final String unknownNamespaceMessage( String namespace ){
+        StringBuffer sb = new StringBuffer();
+        sb.append( "Unknown namespace type " ).append( namespace ).
+           append( " . Valid types are " ).append( validTypesToString() );
+        return sb.toString();
+    }
+                                        
+    
     /**
      * Returns a comma separated string containing the valid namespace types.
      *
@@ -93,20 +107,32 @@ public class Profile
      * @throws Exception
      */
     public Profile( String namespace, String key, String value ) {
-        if ( namespace.equalsIgnoreCase( CONDOR ) ||
-            namespace.equalsIgnoreCase( GLOBUS ) ||
-            namespace.equalsIgnoreCase( VDS ) ||
-            namespace.equalsIgnoreCase( DAGMAN ) ||
-            namespace.equalsIgnoreCase( HINTS ) ||
-            namespace.equalsIgnoreCase( ENV ) ) {
+        if ( namespaceValid( namespace ) ){
             mNamespace = new String( namespace );
             mKey = new String( key );
             mValue = new String( value );
         } else {
-            throw new RuntimeException( "Unknown namespace type " + namespace +
-                                        " . Valid types are " + validTypesToString());
+            throw new RuntimeException( unknownNamespaceMessage( namespace ) );
         }
     }
+
+    /**
+     * Returns a boolean indicating whether the namespace is valid or not.
+     * 
+     * @param namespace the namespace
+     * 
+     * @return true if valid namespace
+     */
+    public boolean namespaceValid( String namespace ){
+        return ( namespace.equalsIgnoreCase( CONDOR ) ||
+            namespace.equalsIgnoreCase( GLOBUS ) ||
+            namespace.equalsIgnoreCase( VDS ) ||
+            namespace.equalsIgnoreCase( DAGMAN ) ||
+            namespace.equalsIgnoreCase( HINTS ) ||
+            namespace.equalsIgnoreCase( ENV ) ) ;
+    }
+    
+    
 
     /**
      * This method allows to set the namespace , key and value of the Profile.
@@ -114,22 +140,17 @@ public class Profile
      * @param namespace Takes a String as the namespace. Has to be one of the predefined types.
      * @param key Takes a String as the key.
      * @param value The value for the key as String
+     * 
      * @throws Exception
      */
 
     public void setProfile( String namespace, String key, String value ) {
-        if ( namespace.equalsIgnoreCase( CONDOR ) ||
-            namespace.equalsIgnoreCase( GLOBUS ) ||
-            namespace.equalsIgnoreCase( VDS ) ||
-            namespace.equalsIgnoreCase( DAGMAN ) ||
-            namespace.equalsIgnoreCase( HINTS ) ||
-            namespace.equalsIgnoreCase( ENV ) ) {
+        if ( namespaceValid( namespace ) ){
             mNamespace = new String( namespace );
             mKey = new String( key );
             mValue = new String( value );
         } else {
-            throw new RuntimeException( "Unknown namespace type. Please check that " +
-                                        "you have specified one of the valid namespace types." );
+            throw new RuntimeException( unknownNamespaceMessage( namespace ) );
         }
     }
 
@@ -146,12 +167,39 @@ public class Profile
     }
 
     /**
+     * Sets  the NameSpace of the Profile
+     *
+     * @param namespace the namespace
+     * 
+     * @exception in case of invalid namespace
+     */
+    public void setProfileNamespace( String namespace ) {
+        if( namespaceValid( namespace ) ){
+            mNamespace = namespace;
+            return;
+        }
+        else {
+            throw new RuntimeException( unknownNamespaceMessage( namespace ) );
+        }
+    }
+    
+    /**
      * Returns the NameSpace of the Profile
      * @return String
      */
     public String getProfileNamespace() {
         return mNamespace;
     }
+    
+    /**
+     * Sets the profile key
+     * 
+     * @param key  the profile key
+     */
+    public void setProfileKey( String key ) {
+        mKey = key;
+    }
+
 
     /**
      * Returns the Key of the Profile
@@ -161,6 +209,15 @@ public class Profile
         return mKey;
     }
 
+    /**
+     * Sets the profile value
+     * 
+     * @param value  the profile value
+     */
+    public void setProfileValue( String value ) {
+        mValue = value;
+    }
+    
     /**
      * Returns the Value for the profile
      * @return String
