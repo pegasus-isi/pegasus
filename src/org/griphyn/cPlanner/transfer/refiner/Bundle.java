@@ -326,7 +326,7 @@ public class Bundle extends Default {
         int level   = job.getLevel();
         String site = job.getSiteHandle();
         int bundleValue = getSOSiteBundleValue( site,
-                                                job.vdsNS.getStringValue( VDS.BUNDLE_STAGE_OUT_KEY) );
+                                                getComputeJobBundleValue( job ) );
 
         if ( level != mCurrentSOLevel ){
             mCurrentSOLevel = level;
@@ -377,7 +377,17 @@ public class Bundle extends Default {
 
     }
 
-
+    /**
+     * Returns the bundle value associated with a compute job as a String.
+     * 
+     * @param job
+     * 
+     * @return value as String or NULL
+     */
+    protected String getComputeJobBundleValue( SubInfo job ){
+        return  job.vdsNS.getStringValue( VDS.BUNDLE_STAGE_OUT_KEY );
+    }
+    
     /**
      * Signals that the traversal of the workflow is done. At this point the
      * transfer nodes are actually constructed traversing through the transfer

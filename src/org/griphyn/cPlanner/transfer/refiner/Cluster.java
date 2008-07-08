@@ -339,6 +339,16 @@ public class Cluster extends Bundle {
         mStageInMapPerLevel = new HashMap< String, PoolTransfer >();
     }
 
+    /**
+     * Returns the bundle value associated with a compute job as a String.
+     * 
+     * @param job
+     * 
+     * @return value as String or NULL
+     */
+    protected String getComputeJobBundleValue( SubInfo job ){
+        return  job.vdsNS.getStringValue( VDS.CLUSTER_STAGE_OUT_TX_KEY );
+    }
        
     /**
      * Returns the appropriate stagein pool transfer for a particular site.
