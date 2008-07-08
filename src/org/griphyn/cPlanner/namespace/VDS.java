@@ -131,6 +131,18 @@ public class VDS extends Namespace {
      * stageout transfer node.
      */
     public static final String BUNDLE_STAGE_OUT_KEY = "bundle.stageout";
+    
+    /**
+     * The name of the key that determines the clustering parameter for the
+     * stagein transfer node.
+     */
+    public static final String CLUSTER_STAGE_IN_TX_KEY = " cluster.stagein";
+
+    /**
+     * The name of the key that determines the clustering parameter for the
+     * stageout transfer node.
+     */
+    public static final String CLUSTER_STAGE_OUT_TX_KEY = "cluster.stageout";
 
 
     /**
