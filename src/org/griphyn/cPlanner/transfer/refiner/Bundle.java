@@ -99,7 +99,7 @@ public class Bundle extends Default {
      * name of the corresponding setup job, that changes the XBit on the staged
      * file.
      */
-    private Map mSetupMap;
+    protected Map mSetupMap;
 
 
     /**
@@ -112,7 +112,7 @@ public class Bundle extends Default {
     /**
      * The current level of the jobs being traversed.
      */
-    private int mCurrentLevel;
+    private int mCurrentSOLevel;
 
     /**
      * The handle to the replica catalog bridge.
@@ -122,7 +122,7 @@ public class Bundle extends Default {
     /**
      * The job prefix that needs to be applied to the job file basenames.
      */
-    private String mJobPrefix;
+    protected String mJobPrefix;
 
 
     /**
@@ -140,7 +140,7 @@ public class Bundle extends Default {
         mSIBundleMap  = new HashMap();
         mRelationsMap = new HashMap();
         mSetupMap     = new HashMap();
-        mCurrentLevel = -1;
+        mCurrentSOLevel = -1;
         mJobPrefix    = options.getJobnamePrefix();
     }
 
@@ -328,8 +328,8 @@ public class Bundle extends Default {
         int bundleValue = getSOSiteBundleValue( site,
                                                 job.vdsNS.getStringValue( VDS.BUNDLE_STAGE_OUT_KEY) );
 
-        if ( level != mCurrentLevel ){
-            mCurrentLevel = level;
+        if ( level != mCurrentSOLevel ){
+            mCurrentSOLevel = level;
             //we are starting on a new level of the workflow.
             //reinitialize stuff
             this.resetStageOutMap();
@@ -540,7 +540,7 @@ public class Bundle extends Default {
     /**
      * Resets the stage out map.
      */
-    private void resetStageOutMap(){
+    protected void resetStageOutMap(){
         if ( this.mStageOutMapPerLevel != null ){
             //before flushing add the stageout nodes to the workflow
             SubInfo job = new SubInfo();
@@ -598,7 +598,7 @@ public class Bundle extends Default {
      * A container class for storing the name of the transfer job, the list of
      * file transfers that the job is responsible for.
      */
-    private class TransferContainer{
+    protected class TransferContainer{
 
         /**
          * The name of the transfer job.
@@ -747,7 +747,7 @@ public class Bundle extends Default {
      * The transfers are stored over a collection of Transfer Containers with
      * each transfer container responsible for one transfer job.
      */
-    private class PoolTransfer{
+    protected class PoolTransfer{
 
         /**
          * The maximum number of transfer jobs that are allowed for this
@@ -943,6 +943,14 @@ public class Bundle extends Default {
            return sb.toString();
         }
 
+        /**
+         * Return the pool for which the transfers are grouped
+         * 
+         * @retrun name of pool.
+         */
+        public String getPoolName(){
+            return this.mPool;
+        }
 
         /**
          * Generates the name of the transfer job, that is unique for the given
