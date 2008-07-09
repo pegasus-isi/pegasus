@@ -94,6 +94,85 @@ public class SiteStore extends AbstractSiteData{
     }
     
     /**
+     * Returns SiteCatalogEntry matching a site handle.
+     * 
+     * @return SiteCatalogEntry if exists else null.
+     */
+    public SiteCatalogEntry lookup ( String handle ){
+        return this.mStore.get( handle );
+    }
+    
+    /**
+     * Returns boolean indicating whether the store has a SiteCatalogEntry 
+     * matching a handle.
+     * 
+     * @param handle  the site handle / identifier.
+     * 
+     * @return boolean
+     */
+    public boolean contains( String handle ){
+        return this.mStore.containsKey( handle );
+    }
+    
+    /**
+     * Returns an environment variable associated with the site.
+     *
+     * @param handle   the site handle / identifier.
+     *
+     * @return value of the environment variable if found, else null
+     */
+    public String getEnvironmentVariable( String handle, String variable ){
+        //sanity check
+        if( !this.contains( handle ) ) {
+            return null;
+        }
+        else{
+            return this.lookup( handle ).getEnvironmentVariable( variable );
+        }
+    }
+    
+    /**
+     * This is a soft state remove, that removes a GridGateway from a particular
+     * site. The cause of this removal could be the inability to
+     * authenticate against it at runtime. The successful removal lead Pegasus
+     * not to schedule job on that particular grid gateway.
+     *
+     * @param handle   the site handle with which it is associated.
+     * @param contact  the contact string for the grid gateway.
+     *
+     * @return true if was able to remove the jobmanager from the cache
+     *         false if unable to remove, or the matching entry is not found
+     *         or if the implementing class does not maintain a soft state.
+     */
+    public boolean removeGridGateway( String handle,  String contact ) {
+        //sanity check
+        if( !this.contains( handle ) ) {
+            return false;
+        }
+        else{
+            return this.lookup( handle ).removeGridGateway( contact );
+        }
+    }
+
+    /**
+     * This is a soft state remove, that removes a file server from a particular
+     * pool entry. The cause of this removal could be the inability to
+     * authenticate against it at runtime. The successful removal lead Pegasus
+     * not to schedule any transfers on that particular gridftp server.
+     *
+     * @param handle the site handle with which it is associated.
+     * @param url    the contact string for the file server.
+     *
+     * @return true if was able to remove the gridftp from the cache
+     *         false if unable to remove, or the matching entry is not found
+     *         or if the implementing class does not maintain a soft state.
+     *         or the information about site is not in the site catalog.
+     */
+    public boolean removeFileServer( String handle, String url ){
+        throw new UnsupportedOperationException( "Method remove( String , String ) not yet implmeneted" );
+    }
+    
+    /**
      * Writes out the contents of the replica store as XML document
      * 
      * @param writer

@@ -20,6 +20,9 @@ import edu.isi.pegasus.planner.catalog.classes.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
+
+import java.util.Map.Entry;
 import org.griphyn.cPlanner.classes.Profile;
 
 import java.util.List;
@@ -309,6 +312,18 @@ public class SiteCatalogEntry extends AbstractSiteData{
     }
     
     /**
+     * Returns an environment variable associated with the site.
+     *
+     * @param variable  the environment variable whose value is required.
+     *
+     * @return value of the environment variable if found, else null
+     */
+    public String getEnvironmentVariable( String variable ){
+        return (String)this.mProfiles.get( Profiles.NAMESPACES.env ).get( variable );
+    }
+
+    
+    /**
      * Returns a grid gateway object corresponding to a job type.
      * 
      * @return GridGateway
@@ -335,6 +350,28 @@ public class SiteCatalogEntry extends AbstractSiteData{
         mGridGateways.put( g.getJobType(), g );
     }
     
+    /**
+     * This is a soft state remove, that removes a GridGateway from a particular
+     * site. 
+     * 
+     * @param contact the contact string for the grid gateway.
+     *
+     * @return true if was able to remove the jobmanager from the cache
+     *         false if unable to remove, or the matching entry is not found
+     *         or if the implementing class does not maintain a soft state.
+     */
+    public boolean removeGridGateway( String contact ) {
+        //iterate through the entry set
+        for( Iterator it = this.mGridGateways.entrySet().iterator(); it.hasNext(); ){
+            Map.Entry entry = (Entry) it.next();
+            GridGateway g = ( GridGateway )entry.getValue();
+            if( g.getContact().equals( contact ) ) {
+                it.remove();
+                return true;
+            }
+        }
+        return false;
+    }
     
     /**
      * Return an iterator to the replica catalog associated with the site.
