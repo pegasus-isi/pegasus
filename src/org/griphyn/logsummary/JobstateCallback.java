@@ -140,7 +140,7 @@ public class JobstateCallback implements Callback{
             String line;                        
             while ( (line = reader.readLine()) != null) {
             	lineno++;
-            	if(lineno <= count) continue;
+            	//if(lineno <= count) continue;
             	processLineJobState(line);
             }
             writer = new BufferedWriter( new FileWriter( linecount ) );

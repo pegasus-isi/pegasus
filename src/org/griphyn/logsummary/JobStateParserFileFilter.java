@@ -32,7 +32,7 @@ public class JobStateParserFileFilter implements FilenameFilter {
      * Store the regular expressions necessary to parse kickstart output files
      */
     private static final String mRegexExpression =
-                                     "[a-zA-Z_0-9]*(.out)([.][0-9][0-9][0-9])*";
+                                     ".*(.out)([.][0-9][0-9][0-9])*";
 
     /**
      * Stores compiled patterns at first use, quasi-Singleton.
@@ -57,9 +57,10 @@ public class JobStateParserFileFilter implements FilenameFilter {
          if( mPattern == null ){
              mPattern = Pattern.compile( mRegexExpression );
          }
-         boolean result = mPattern.matcher( name ).matches();
+         boolean result = mPattern.matcher( name ).matches();       
          result = result && name.startsWith( this.jobname ) && !name.startsWith( "chmod" ); 
          //we want to ignore jobs starting with chmod
+         //System.out.println(name + " " + result);
          return  result ;
      }
 

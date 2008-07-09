@@ -51,7 +51,7 @@ public class ShowLogSummary extends Executable{
 	 /**
      * The input directory containing the kickstart records.
      */
-    private String mInputDir;
+    private String mInputDir;    
     
     /**
      * The logging level to be used.
@@ -121,38 +121,43 @@ public class ShowLogSummary extends Executable{
 	 */
 	public void executeCommand(String[] args) {		
 	    parseCommandLineArguments(args);
-
-        //set logging level only if explicitly set by user
-        if( mLoggingLevel > 0 ) { mLogger.setLevel( mLoggingLevel ); }
+        StringBuffer stbuff = doParsing(mInputDir, mLoggingLevel);
+        System.out.println(stbuff.toString());
+        		
+	}
+	
+	public StringBuffer doParsing(String inputDir, int loggingLevel) {
+		mLoggingLevel = loggingLevel;
+	     //set logging level only if explicitly set by user
+        if( loggingLevel > 0 ) { mLogger.setLevel( loggingLevel ); }
 
 
         //do sanity check on input directory
-        if( mInputDir == null ){
+        if( inputDir == null ){
             throw new RuntimeException(
                 "You need to specify the directory containing kickstart records");
 
         }
-
-		
+		StringBuffer ret = new StringBuffer();
 		Callback c = new JobstateCallback();
-		c.initialize(mInputDir, true);
+		c.initialize(inputDir, true);
 		JobStateMeasurement jsmeasure = (JobStateMeasurement)c.getConstructedObject(); 		
 		List failedJobs = jsmeasure.getFailedJobs();
 		
-		if((failedJobs == null) || (failedJobs.size() == 0)) {
-			System.out.println("No Failed Jobs");
-			return;
+		if((failedJobs == null) || (failedJobs.size() == 0)) {			
+			ret.append("No Failed Jobs\n");
+			return ret;
 		}
 		Iterator litr = failedJobs.iterator();
-		File directory = new File( mInputDir );
+		File directory = new File( inputDir );
 		if ( directory.isDirectory() ){
 			//see if it is readable
 			if ( !directory.canRead() ){
-				throw new RuntimeException( "Cannot read directory " + mInputDir);
+				throw new RuntimeException( "Cannot read directory " + inputDir);
 			}
 		}
 		else{
-			throw new RuntimeException( mInputDir + " is not a directory " );
+			throw new RuntimeException( inputDir + " is not a directory " );
 		}
 
 		KickstartParser su = new KickstartParser();
@@ -172,7 +177,7 @@ public class ShowLogSummary extends Executable{
 					filename = files[i];
 				}
 			}
-			String file = mInputDir + File.separator +  filename;
+			String file = inputDir + File.separator +  filename;
 						
 			try {
 				log( "Parsing file " + file , LogManager.DEBUG_MESSAGE_LEVEL );
@@ -186,48 +191,50 @@ public class ShowLogSummary extends Executable{
 				log( "Problem parsing file " + file + convertException( fn ),
 						LogManager.WARNING_MESSAGE_LEVEL );
 			}
-			setPegasusJobClass(mInputDir, jobname, jsmeasure) ;
-			printSummary(jobname, jsmeasure);						
+			setPegasusJobClass(inputDir, jobname, jsmeasure) ;
+			ret.append(printSummary(jobname, jsmeasure).toString());						
 		}	
+		return ret;
 	}
-	
+
 	/**
 	 * prints the out put information 
 	 * @param jobname name of the failed job 
 	 * @param jsmeasure data structure to maintain the job information
 	 */
-	private void printSummary(String jobname, JobStateMeasurement jsmeasure) {
-		
-		System.out.println("************************BEGIN**********************");		
-		System.out.println("Jobname                  = " + jobname);
-		System.out.println("Status                   = FAILED");
-		System.out.println("Exitcode                 = " + ((List)jsmeasure.getMetadata().get("exitcodes")).get(0));
-		System.out.println("Transformation           = " + jsmeasure.getMetadata().get("transformation"));
-		System.out.println("Job Class                = " + jsmeasure.getMetadata().get("pegasus_job_class"));
-		System.out.println("Resource                 = " + jsmeasure.getMetadata().get("resource"));
-		System.out.println("Host Name                = " + jsmeasure.getMetadata().get("hostname"));
+	private StringBuffer printSummary(String jobname, JobStateMeasurement jsmeasure) {		
+		StringBuffer ret = new StringBuffer();
+		ret.append("************************BEGIN**********************");ret.append("\n");		
+		ret.append("Jobname                  = " + jobname);ret.append("\n");	
+		ret.append("Status                   = FAILED");ret.append("\n");	
+		ret.append("Exitcode                 = " + ((List)jsmeasure.getMetadata().get("exitcodes")).get(0));ret.append("\n");	
+		ret.append("Transformation           = " + jsmeasure.getMetadata().get("transformation"));ret.append("\n");	
+		ret.append("Job Class                = " + jsmeasure.getMetadata().get("pegasus_job_class"));ret.append("\n");	
+		ret.append("Resource                 = " + jsmeasure.getMetadata().get("resource"));ret.append("\n");	
+		ret.append("Host Name                = " + jsmeasure.getMetadata().get("hostname"));ret.append("\n");	
 		if(mLoggingLevel > 0){
-		System.out.println("Host Address             = " + jsmeasure.getMetadata().get("hostaddr"));
-		System.out.println("Remote Executable        = " + ((List)jsmeasure.getMetadata().get("executables")).get(0));
-		System.out.println("Parameters               = " + ((List)jsmeasure.getMetadata().get("arguments")).get(0));
+			ret.append("Host Address             = " + jsmeasure.getMetadata().get("hostaddr"));ret.append("\n");	
+			ret.append("Remote Executable        = " + ((List)jsmeasure.getMetadata().get("executables")).get(0));ret.append("\n");	
+			ret.append("Parameters               = " + ((List)jsmeasure.getMetadata().get("arguments")).get(0));ret.append("\n");	
 		}
-		System.out.println("Start of job             = " + jsmeasure.getMetadata().get("start"));		
-		System.out.println("Duration of job(seconds) = " + jsmeasure.getMetadata().get("duration"));
+		ret.append("Start of job             = " + jsmeasure.getMetadata().get("start"));ret.append("\n");		
+		ret.append("Duration of job(seconds) = " + jsmeasure.getMetadata().get("duration"));ret.append("\n");	
 		if(mLoggingLevel > 0){
-		System.out.println("User ID                  = " + jsmeasure.getMetadata().get("uid"));
-		System.out.println("User Name                = " + jsmeasure.getMetadata().get("user"));
-		System.out.println("Group ID                 = " + jsmeasure.getMetadata().get("gid"));
-		System.out.println("Group Name               = " + jsmeasure.getMetadata().get("group"));				
-		System.out.println("Pegasus Build            = " + jsmeasure.getMetadata().get("pegasus_build"));
-		System.out.println("Pegasus Version          = " + jsmeasure.getMetadata().get("pegasus_version"));
-		System.out.println("**********************STD ERR**********************");			
-		System.out.println(jsmeasure.getMetadata().get("stderr"));
-		System.out.println("***********************STD IN**********************");
-		System.out.println(jsmeasure.getMetadata().get("stdin"));
-		System.out.println("***********************STD OUT*********************");
-		System.out.println(jsmeasure.getMetadata().get("stdout"));
+			ret.append("User ID                  = " + jsmeasure.getMetadata().get("uid"));ret.append("\n");	
+			ret.append("User Name                = " + jsmeasure.getMetadata().get("user"));ret.append("\n");	
+			ret.append("Group ID                 = " + jsmeasure.getMetadata().get("gid"));ret.append("\n");	
+			ret.append("Group Name               = " + jsmeasure.getMetadata().get("group"));ret.append("\n");					
+			ret.append("Pegasus Build            = " + jsmeasure.getMetadata().get("pegasus_build"));ret.append("\n");	
+			ret.append("Pegasus Version          = " + jsmeasure.getMetadata().get("pegasus_version"));ret.append("\n");	
+			ret.append("**********************STD ERR**********************");ret.append("\n");				
+			ret.append(jsmeasure.getMetadata().get("stderr"));ret.append("\n");	
+			ret.append("***********************STD IN**********************");ret.append("\n");	
+			ret.append(jsmeasure.getMetadata().get("stdin"));ret.append("\n");	
+			ret.append("***********************STD OUT*********************");ret.append("\n");	
+			ret.append(jsmeasure.getMetadata().get("stdout"));ret.append("\n");	
 		}
-		System.out.println("************************END************************");
+		ret.append("************************END************************");ret.append("\n");	
+		return ret;
 	}
 
 	/**
