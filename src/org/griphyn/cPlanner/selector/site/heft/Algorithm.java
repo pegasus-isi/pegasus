@@ -218,7 +218,7 @@ public class Algorithm {
 
         //to figure out a way to insantiate SWF
         //Varun needs to write out a factory
-        mWGPC = new WorkflowGenerationProvenanceCatalog();
+        mWGPC = new WorkflowGenerationProvenanceCatalog( true );
     }
 
 
