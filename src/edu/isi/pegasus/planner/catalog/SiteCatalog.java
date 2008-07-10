@@ -16,8 +16,9 @@
  * 
  */
 
-package edu.isi.pegasus.planner.catalog.site;
+package edu.isi.pegasus.planner.catalog;
 
+import edu.isi.pegasus.planner.catalog.site.*;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
