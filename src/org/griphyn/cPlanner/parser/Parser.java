@@ -234,7 +234,7 @@ public abstract class Parser extends DefaultHandler{
 
 
     }
-
+    
     /**
      * Our own implementation for ignorable whitespace. A String that holds the
      * contents of data passed as text by the underlying parser. The whitespaces
@@ -246,6 +246,20 @@ public abstract class Parser extends DefaultHandler{
      *
      */
     public String ignoreWhitespace(String str){
+        return ignoreWhitespace( str, false );
+    }
+
+    /**
+     * Our own implementation for ignorable whitespace. A String that holds the
+     * contents of data passed as text by the underlying parser. The whitespaces
+     * at the end are replaced by one whitespace.
+     *
+     * @param str   The string that contains whitespaces.
+     *
+     * @return  String corresponding to the trimmed version.
+     *
+     */
+/*    public String ignoreWhitespace(String str){
         boolean st = false;
         boolean end = false;
         int length = str.length();
@@ -267,6 +281,55 @@ public abstract class Parser extends DefaultHandler{
             str = str.trim();
             str = st == true ? ' ' + str:str;
             str = end == true ? str + ' ':str;
+        }
+
+        return str;
+    }
+ */
+    
+     /**
+     * Our own implementation for ignorable whitespace. A String that holds the
+     * contents of data passed as text by the underlying parser. The whitespaces
+     * at the end are replaced by one whitespace.
+     *
+     * @param str   The string that contains whitespaces.
+     *
+     * @return  String corresponding to the trimmed version.
+     *
+     */
+    public String ignoreWhitespace(String str, boolean preserveLineBreak ){
+        boolean st = false;
+        boolean end = false;
+        int length = str.length();
+        boolean sN = false;//start with \n ;
+        boolean eN = false;//end with \n
+        
+        if(length > 0){
+            sN = str.charAt(0) == '\n';
+            eN = str.charAt(length -1) == '\n';
+            //check for whitespace in the
+            //starting
+            if(str.charAt(0) == ' ' || str.charAt(0) == '\t' || str.charAt(0) == '\n'){
+                st = true;
+            }
+            //check for whitespace in the end
+            if(str.length() > 1 &&
+               (str.charAt(length -1) == ' ' ||
+                str.charAt(length -1) == '\t' ||
+                str.charAt(length -1) == '\n')){
+
+                end = true;
+            }
+            //trim the string and add a single whitespace accordingly
+            str = str.trim();
+            str = st == true ? ' ' + str:str;
+            str = end == true ? str + ' ':str;
+            
+            if( preserveLineBreak ){
+                str = sN ? '\n' + str:str;
+                str = eN ? str + '\n':str;
+            
+            }
         }
 
         return str;

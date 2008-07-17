@@ -17,14 +17,12 @@
 package org.griphyn.cPlanner.parser;
 
 
-import org.griphyn.cPlanner.classes.Data;
 import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.Dagman;
@@ -47,7 +45,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -905,6 +902,7 @@ public class DaxParser extends Parser {
         mAdjFName     = false;
     }
 
+    
     /**
      * Invoked when the end of the Argument Tag is reached.
      *
@@ -924,7 +922,22 @@ public class DaxParser extends Parser {
 
         //resetting the buffer
         mTextContent.setLength(0);
+        //System.out.println( "Argument is " + mCurrentJobSubInfo.getArguments() );
 
+    }
+    
+    /**
+     * Our own implementation for ignorable whitespace. A String that holds the
+     * contents of data passed as text by the underlying parser. The whitespaces
+     * at the end are replaced by one whitespace.
+     *
+     * @param str   The string that contains whitespaces.
+     *
+     * @return  String corresponding to the trimmed version.
+     *
+     */
+    public String ignoreWhitespace(String str){
+        return ignoreWhitespace( str, mProps.preserveParserLineBreaks() );
     }
 
     /**
