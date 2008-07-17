@@ -74,7 +74,7 @@ public class PegasusProperties {
 
     public static final String DEFAULT_TC_MODE = TCMode.DEFAULT_TC_CLASS;
 
-    public static final String DEFAULT_POOL_MODE = PoolMode.XML_READ_CLASS;
+    public static final String DEFAULT_POOL_MODE = "XML";
 
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
 
@@ -1753,6 +1753,18 @@ public class PegasusProperties {
                              false);
     }
 
+    /**
+     * Returns a boolean indicating whether to preserver line breaks.
+     * 
+     * Referred to by the "pegasus.parser.dax.preserve.linebreaks" property.
+     * 
+     * @return boolean value in the properties file, else false if not specified
+     *         or an invalid value specified.
+     */
+    public boolean preserveParserLineBreaks( ){
+        return Boolean.parse( mProps.getProperty( "pegasus.parser.dax.preserve.linebreaks" ),
+                              false) ;
+    }
 
     /**
      * Returns the timeout value in seconds after which to timeout in case of
