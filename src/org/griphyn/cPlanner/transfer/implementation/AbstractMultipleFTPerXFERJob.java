@@ -17,14 +17,15 @@
 
 package org.griphyn.cPlanner.transfer.implementation;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.JobManager;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.transfer.MultipleFTPerXFERJob;
 
@@ -41,7 +42,6 @@ import java.io.FileWriter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Iterator;
 
 
 /**
@@ -61,12 +61,10 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     * @param bag  the bag of Pegasus initialization objects
      */
-    public AbstractMultipleFTPerXFERJob(PegasusProperties properties,
-                                    PlannerOptions options) {
-        super(properties, options);
+    public AbstractMultipleFTPerXFERJob( PegasusBag bag ) {
+        super( bag );
     }
 
     /**
@@ -99,8 +97,10 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
                                          String txJobName,
                                          int jobClass) {
         TransferJob txJob = new TransferJob();
-        SiteInfo ePool;
-        JobManager jobmanager;
+//        SiteInfo ePool;
+//        JobManager jobmanager;
+        SiteCatalogEntry ePool;
+        GridGateway jobmanager;
 
         //site where the transfer is scheduled
         //to be run. For thirdparty site it makes
@@ -120,7 +120,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
         //we first check if there entry for transfer universe,
         //if no then go for globus
-        ePool = mSCHandle.getTXPoolEntry(tPool);
+//        ePool = mSCHandle.getTXPoolEntry(tPool);
+        ePool = mSiteStore.lookup( tPool );
 
         txJob.jobName = txJobName;
         txJob.executionPool = tPool;
@@ -147,10 +148,12 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
         //this should in fact only be set
         // for non third party pools
-        jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
+//        jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
+        jobmanager = ePool.getGridGateway( GridGateway.JOB_TYPE.transfer );
         txJob.globusScheduler = (jobmanager == null) ?
                                   null :
-                                  jobmanager.getInfo(JobManager.URL);
+//                                  jobmanager.getInfo(JobManager.URL);
+                                  jobmanager.getContact();  
 
         txJob.jobClass = jobClass;
         txJob.jobID = job.jobName;
@@ -178,7 +181,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        txJob.updateProfiles(mSCHandle.getPoolProfile(tPool));
+//        txJob.updateProfiles(mSCHandle.getPoolProfile(tPool));
+        txJob.updateProfiles( ePool.getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
@@ -235,9 +239,9 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
-        String home = mSCHandle.getPegasusHome( site );
+        String home = mSiteStore.getPegasusHome( site );
         //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mSCHandle.getVDS_HOME( site ): home;
+        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
                      Separator.combine( namespace, name, version ) +

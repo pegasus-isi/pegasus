@@ -37,6 +37,7 @@ import java.io.FileWriter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the old GUC
@@ -139,11 +140,10 @@ public class OldGUC extends AbstractSingleFTPerXFERJob {
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     * @param  bag  bag of intialization objects.
      */
-    public OldGUC(PegasusProperties properties,PlannerOptions options){
-        super(properties,options);
+    public OldGUC( PegasusBag bag ){
+        super( bag );
         mNumOfTXStreams   = mProps.getNumOfTransferStreams();
         mUseForce         = mProps.useForceInTransfer();
         mQuoteURL       = mProps.quoteTransferURL();

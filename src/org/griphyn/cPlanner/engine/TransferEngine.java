@@ -16,6 +16,8 @@
 
 package org.griphyn.cPlanner.engine;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.GridFTPServer;
@@ -65,6 +67,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.Properties;
 import java.io.IOException;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 
@@ -159,30 +162,56 @@ public class TransferEngine extends Engine {
      * the files are staged out.
      */
     private String mStageOutBaseDirectory;
+    
+    /**
+     * The working directory relative to the mount point of the execution pool.
+     * It is populated from the pegasus.dir.exec property from the properties file.
+     * If not specified then it work_dir is supposed to be the exec mount point
+     * of the execution pool.
+     */
+    protected String mWorkDir;
+
+    /**
+     * This contains the storage directory relative to the se mount point of the
+     * pool. It is populated from the pegasus.dir.storage property from the properties
+     * file. If not specified then the storage directory is the se mount point
+     * from the pool.config file.
+     */
+    protected String mStorageDir;
+
+
+    /**
+     * A boolean indicating whether to have a deep directory structure for
+     * the storage directory or not.
+     */
+    protected boolean mDeepStorageStructure;
 
     /**
      * Overloaded constructor.
      *
      * @param reducedDag  the reduced workflow.
      * @param vDelLJobs    list of deleted jobs.
-     * @param properties the <code>PegasusProperties</code> to be used.
-     * @param options   The options specified by the user to run the planner.
+     * @param bag 
      */
     public TransferEngine( ADag reducedDag,
                            Vector vDelLJobs,
-                           PegasusProperties properties,
-                           PlannerOptions options ) {
+                           PegasusBag bag ){
+//                           PegasusProperties properties,
+//                           PlannerOptions options ) {
         //call the super class constructor for initializations
-        super( properties );
+        super( bag );
 
+        
+        mWorkDir = mProps.getExecDirectory();
+        mStorageDir = mProps.getStorageDirectory();
+        mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
+        
         mDag = reducedDag;
         mvDelLeafJobs = vDelLJobs;
-        mPOptions = options;
-        mTCHandle = TCMode.loadInstance();
 
         try{
-            mTXRefiner = RefinerFactory.loadInstance(mProps, reducedDag,
-                                                     options);
+            mTXRefiner = RefinerFactory.loadInstance( reducedDag,
+                                                      bag );
             mReplicaSelector = ReplicaSelectorFactory.loadInstance(mProps);
         }
         catch(Exception e){
@@ -331,7 +360,7 @@ public class TransferEngine extends Engine {
      */
     private Vector getDeletedFileTX( String pool, SubInfo job ) {
         Vector vFileTX = new Vector();
-        SiteInfo p = mPoolHandle.getPoolEntry( pool, "vanilla" );
+        SiteCatalogEntry p = mSiteStore.lookup(pool);//getPoolEntry( pool, "vanilla" );
 
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
@@ -352,7 +381,9 @@ public class TransferEngine extends Engine {
                 String sourceURL = selLoc.getPFN();
                 //definite inconsitency as url prefix and mount point
                 //are not picked up from the same server
-                String destURL = p.getURLPrefix(true) + this.getPathOnStageoutSite( lfn );
+                String destURL = //p.getURLPrefix(true) + 
+                                 p.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
+                                 this.getPathOnStageoutSite( lfn );
                 //+                                 File.separator + lfn;
 
                 //check if the URL's match
@@ -477,7 +508,8 @@ public class TransferEngine extends Engine {
         String path  = job.vdsNS.getStringValue(
                                                  VDS.REMOTE_INITIALDIR_KEY );
 
-        SiteInfo ePool = mPoolHandle.getPoolEntry( job.getSiteHandle(), "vanilla" );
+//        SiteInfo ePool = mPoolHandle.getPoolEntry( job.getSiteHandle(), "vanilla" );
+        SiteCatalogEntry ePool = mSiteStore.lookup( job.getSiteHandle() );
         if ( ePool == null ) {
             this.poolNotFoundMsg( job.getSiteHandle(), "vanilla" ) ;
             mLogger.log( mLogMsg, LogManager.ERROR_MESSAGE_LEVEL );
@@ -492,8 +524,9 @@ public class TransferEngine extends Engine {
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
             StringBuffer execURL = new StringBuffer();
-            execURL.append( ePool.getURLPrefix( true ) ).
-                    append( mPoolHandle.getExecPoolWorkDir( job.getSiteHandle(), path ) ).
+            FileServer server = ePool.getHeadNodeFS().selectScratchSharedFileServer();
+            execURL.append( server.getURLPrefix() ).
+                    append( mSiteStore.getWorkDirectory( job.getSiteHandle(), path ) ).
                     append( File.separatorChar ).append( lfn );
 
             //write out the exec url to the cache file
@@ -524,8 +557,10 @@ public class TransferEngine extends Engine {
         String lfn = pf.getLFN();
         FileTransfer ft = null;
 
-        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "vanilla");
-        SiteInfo dPool = mPoolHandle.getPoolEntry(destPool, "vanilla");
+//        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "vanilla");
+//        SiteInfo dPool = mPoolHandle.getPoolEntry(destPool, "vanilla");
+        SiteCatalogEntry ePool = mSiteStore.lookup( execPool );
+        SiteCatalogEntry dPool = mSiteStore.lookup( destPool );
         if (ePool == null || dPool == null) {
             mLogMsg = (ePool == null) ?
                 this.poolNotFoundMsg(execPool, "vanilla") :
@@ -536,8 +571,8 @@ public class TransferEngine extends Engine {
 
         //definite inconsitency as url prefix and mount point
         //are not picked up from the same server
-        String execURL = ePool.getURLPrefix(true) +
-            mPoolHandle.getExecPoolWorkDir(execPool,path) + File.separatorChar +
+        String execURL = ePool.getHeadNodeFS().selectScratchSharedFileServer() +
+            mSiteStore.getWorkDirectory(execPool,path) + File.separatorChar +
             lfn;
 
         //write out the exec url to the cache file
@@ -568,7 +603,7 @@ public class TransferEngine extends Engine {
             //construct the source url depending on whether third party tx
             String sourceURL = isSiteThirdParty(execPool,SubInfo.STAGE_OUT_JOB) ?
                 execURL :
-                "file://" + mPoolHandle.getExecPoolWorkDir(execPool,path) +
+                "file://" + mSiteStore.getWorkDirectory(execPool,path) +
                 File.separator + lfn;
 
             ft = new FileTransfer(lfn,job,pf.getFlags());
@@ -580,22 +615,27 @@ public class TransferEngine extends Engine {
 
             //add all the possible destination urls iterating through
             //the list of grid ftp servers associated with the dest pool.
-            List l = mPoolHandle.getGridFTPServers(destPool);
-            Iterator it = l.iterator();
+            Iterator it = mSiteStore.lookup( destPool ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator();
             String destURL = null;
             boolean first = true;
             while(it.hasNext()){
+                /*
                 destURL = (first)?
                           //the first entry has to be the one in the Pool object
                           dPool.getURLPrefix(false):
                           //get it from the list
                           ((GridFTPServer)it.next()).getInfo(GridFTPServer.GRIDFTP_URL);
+                 */
+                FileServer fs = (FileServer)it.next();
+                destURL = fs.getURLPrefix() ;
 
+                /*
                 if(!first && destURL.equals(dPool.getURLPrefix(false))){
                     //ensures no duplicate entries. The gridftp server in the pool
                     //object is one of the servers in the list of gridftp servers.
                     continue;
                 }
+                 */
 
 
                 //assumption of same se mount point for each gridftp server
@@ -657,41 +697,47 @@ public class TransferEngine extends Engine {
         String destRemoteDir = job.vdsNS.getStringValue(
                                                  VDS.REMOTE_INITIALDIR_KEY);
 
-        SiteInfo desPool = mPoolHandle.getTXPoolEntry(destPool);
-        SiteInfo sourcePool;
+//        SiteInfo desPool = mPoolHandle.getTXPoolEntry(destPool);
+//        SiteInfo sourcePool;
+        SiteCatalogEntry desPool = mSiteStore.lookup( destPool );
+        SiteCatalogEntry sourcePool;
 
         Vector vFileTX = new Vector();
 
         for (Iterator it = nodes.iterator();it.hasNext();) {
             //get the parent job
             SubInfo pJob = (SubInfo)it.next();
-            sourcePool = mPoolHandle.getTXPoolEntry(pJob.executionPool);
+//            sourcePool = mPoolHandle.getTXPoolEntry(pJob.executionPool);
+            sourcePool = mSiteStore.lookup( pJob.getSiteHandle() );
 
-            if (((String)sourcePool.getInfo(SiteInfo.HANDLE))
-                .equalsIgnoreCase(destPool)) {
+//            if (((String)sourcePool.getInfo(SiteInfo.HANDLE))
+//                .equalsIgnoreCase(destPool)) {
+            if( sourcePool.getSiteHandle().equalsIgnoreCase(destPool) ){
                 //no need to add transfers, as the parent job and child
                 //job are run in the same directory on the pool
                 continue;
             }
 
             String sourceURI = null;
-            String thirdPartyDestURI = desPool.getURLPrefix(true) +
-                mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir) ;
+//            String thirdPartyDestURI = desPool.getURLPrefix(true) +
+//                mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir) ;
+             String thirdPartyDestURI = desPool.getHeadNodeFS().selectScratchSharedFileServer() +
+                                        mSiteStore.getWorkDirectory( destPool, destRemoteDir );
+//                mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir) ;
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
             String destURI = isSiteThirdParty(destPool,SubInfo.INTER_POOL_JOB) ?
                 //construct for third party transfer
                 thirdPartyDestURI :
                 //construct for normal transfer
-                "file://" + mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir);
+//                "file://" + mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir);
+                "file://" + mSiteStore.getWorkDirectory( destPool, destRemoteDir );
 
 
             for (Iterator fileIt = pJob.getOutputFiles().iterator(); fileIt.hasNext(); ){
                 PegasusFile pf = (PegasusFile) fileIt.next();
                 String outFile = pf.getLFN();
 
-//       Not required as input files are Sets now Karan Sept 14, 2006
-//                if (stringInPegVector(outFile, job.inputFiles)) {
             if( job.getInputFiles().contains( pf ) ){
                     String sourceURL     = null;
                     String destURL       = destURI + File.separator + outFile;
@@ -702,17 +748,24 @@ public class TransferEngine extends Engine {
 
                     //add all the possible source urls iterating through
                     //the list of grid ftp servers associated with the dest pool.
-                    List l = mPoolHandle.getGridFTPServers(pJob.executionPool);
+//                    List l = mPoolHandle.getGridFTPServers(pJob.executionPool);
                     boolean first = true;
-                    for(Iterator it1 = l.iterator();it1.hasNext();){
+//                    for(Iterator it1 = l.iterator();it1.hasNext();){
+                    for( Iterator it1 = mSiteStore.lookup( destPool ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator(); 
+                                      it1.hasNext();){
+                        FileServer server = ( FileServer)it1.next();
                         //definite inconsitency as url prefix and mount point
                         //are not picked up from the same server
-                        sourceURI = (first)?
+/*
+                            sourceURI = (first)?
                             //the first entry has to be the one in the Pool object
                             sourcePool.getURLPrefix(false) :
                             //get it from the list
                             ((GridFTPServer)it1.next()).getInfo(GridFTPServer.GRIDFTP_URL);
-
+*/
+                        sourceURI = server.getURLPrefix();
+  
+/*                        
                         if((!first && sourceURI.equals(sourcePool.getURLPrefix(false)) )){
                             //ensures no duplicate entries. The gridftp server in the pool
                             //object is one of the servers in the list of gridftp servers.
@@ -720,10 +773,14 @@ public class TransferEngine extends Engine {
                                         outFile, LogManager.DEBUG_MESSAGE_LEVEL);
                             continue;
                         }
+*/
 
-
-                        sourceURI += mPoolHandle.getExecPoolWorkDir(pJob.executionPool,
-                            pJob.vdsNS.getStringValue(VDS.REMOTE_INITIALDIR_KEY));
+//                        sourceURI += mPoolHandle.getExecPoolWorkDir( pJob.executionPool,
+//                                                                     pJob.vdsNS.getStringValue(VDS.REMOTE_INITIALDIR_KEY));
+                                                                        
+                        sourceURI += mSiteStore.getWorkDirectory(  pJob.executionPool,
+                                                                   pJob.vdsNS.getStringValue(VDS.REMOTE_INITIALDIR_KEY));
+                        
                         sourceURL = sourceURI + File.separator + outFile;
 
                         if(!(sourceURL.equalsIgnoreCase(thirdPartyDestURL))){
@@ -767,13 +824,15 @@ public class TransferEngine extends Engine {
         String eRemoteDir = job.vdsNS.getStringValue(
                                                  VDS.REMOTE_INITIALDIR_KEY);
         String sourceURL,destURL=null;
-        SiteInfo ep        = mPoolHandle.getPoolEntry(ePool, "vanilla");
+//        SiteInfo ep        = mPoolHandle.getPoolEntry(ePool, "vanilla");
+        SiteCatalogEntry ep        = mSiteStore.lookup( ePool );
         //we are using the pull mode for data transfer
         String scheme  = "file";
 
         //sAbsPath would be just the source directory absolute path
         //dAbsPath would be just the destination directory absolute path
-        String dAbsPath = mPoolHandle.getExecPoolWorkDir(ePool,eRemoteDir);
+//        String dAbsPath = mPoolHandle.getExecPoolWorkDir(ePool,eRemoteDir);
+        String dAbsPath = mSiteStore.getWorkDirectory( ePool, eRemoteDir );
         String sAbsPath = null;
 
         //sDirURL would be the url to the source directory.
@@ -781,7 +840,8 @@ public class TransferEngine extends Engine {
         //and is always a networked url.
         //definite inconsitency as url prefix and mount point
         //are not picked up from the same server
-        String dDirURL = ep.getURLPrefix(true) + dAbsPath;
+//        String dDirURL = ep.getURLPrefix(true) + dAbsPath;
+        String dDirURL = ep.getHeadNodeFS().selectScratchSharedFileServer( ) + dAbsPath;
         String sDirURL = null;
         //check if the execution pool is third party or not
         String destDir = (isSiteThirdParty(ePool, SubInfo.STAGE_IN_JOB)) ?
@@ -789,7 +849,8 @@ public class TransferEngine extends Engine {
             dDirURL
             :
             //use the default pull mode
-            scheme + "://" + mPoolHandle.getExecPoolWorkDir(ePool,eRemoteDir);
+//            scheme + "://" + mPoolHandle.getExecPoolWorkDir(ePool,eRemoteDir);
+            scheme + "://" + mSiteStore.getWorkDirectory( ePool, eRemoteDir );
 
         for( Iterator it = searchFiles.iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile) it.next();
@@ -1008,7 +1069,8 @@ public class TransferEngine extends Engine {
         }
 
         // create files in the directory, unless anything else is known.
-        mStageOutBaseDirectory = mPoolHandle.getSeMountPoint( mPoolHandle.getPoolEntry( outputSite, "vanilla") );
+//        mStageOutBaseDirectory = mPoolHandle.getSeMountPoint( mPoolHandle.getPoolEntry( outputSite, "vanilla") );
+        mStageOutBaseDirectory = mSiteStore.lookup( outputSite ).getHeadNodeFS().selectStorageLocalFileServer().getMountPoint() ;
 
         if( mProps.useDeepStorageDirectoryStructure() ){
             // create hashed, and levelled directories
@@ -1106,6 +1168,53 @@ public class TransferEngine extends Engine {
         sb.append(".cache");
 
         return sb.toString();
+
+    }
+
+    /**
+     * Return the storage mount point for a particular pool.
+     *
+     * @param site  SiteInfo object of the site for which you want the
+     *              storage-mount-point.
+     *
+     * @return    String corresponding to the mount point if the pool is found.
+     *            null if pool entry is not found.
+     */
+    public String getStorageMountPoint( SiteCatalogEntry site ) {
+        String storageDir = mStorageDir;
+        String mount_point = storageDir;
+        FileServer server = null;
+        if ( storageDir.length() == 0 || storageDir.charAt( 0 ) != '/' ) {
+            server = site.getHeadNodeFS().selectStorageLocalFileServer();
+            mount_point = server.getMountPoint();
+
+            //removing the trailing slash if there
+            int length = mount_point.length();
+            if ( length > 1 && mount_point.charAt( length - 1 ) == '/' ) {
+                mount_point = mount_point.substring( 0, length - 1 );
+            }
+
+            //append the Storage Dir
+            File f = new File( mount_point, storageDir );
+            mount_point = f.getAbsolutePath();
+
+        }
+
+        //check if we need to replicate the submit directory
+        //structure on the storage directory
+        if( mDeepStorageStructure ){
+            String leaf = ( this.mPOptions.partOfDeferredRun() )?
+                             //if a deferred run then pick up the relative random directory
+                             //this.mUserOpts.getOptions().getRandomDir():
+                             this.mPOptions.getRelativeSubmitDirectory():
+                             //for a normal run add the relative submit directory
+                             this.mPOptions.getRelativeSubmitDirectory();
+            File f = new File( mount_point, leaf );
+            mount_point = f.getAbsolutePath();
+        }
+
+
+        return mount_point;
 
     }
 

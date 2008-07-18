@@ -17,6 +17,9 @@
 
 package org.griphyn.cPlanner.classes;
 
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.partitioner.graph.Bag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -46,7 +49,7 @@ public class PegasusBag
      */
     public static final String PEGASUS_INFO[] = {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
-        "transformation-catalog", "pegasus-logger"
+        "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store"
     };
 
 
@@ -92,6 +95,12 @@ public class PegasusBag
      */
     public static final Integer PEGASUS_LOGMANAGER = new Integer( 6 );
 
+    
+    /**
+     * The constant to be passed to the accessor functions to get or set the
+     * handle to the Site Store
+     */
+    public static final Integer SITE_STORE = new Integer( 7 );
 
     /**
      * The handle to the <code>PegasusProperties</code>.
@@ -127,6 +136,11 @@ public class PegasusBag
      * The handle to the LogManager.
      */
     private LogManager mLogger;
+    
+    /**
+     * The site store containing the sites that need to be used.
+     */
+    private SiteStore mSiteStore;
 
     /**
      * The default constructor.
@@ -199,6 +213,13 @@ public class PegasusBag
                     valid = false;
                 break;
 
+            case 7: //SITE_STORE
+                if ( value != null && value instanceof SiteStore )
+                    mSiteStore = ( SiteStore ) value;
+                else
+                    valid = false;
+                break;
+
             default:
                 throw new RuntimeException(
                       " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -253,8 +274,10 @@ public class PegasusBag
             case 2:
                 return this.mRCHandle;
 
-            case 3:
+            /*
+             case 3:
                 return this.mSCHandle;
+             */ 
 
             case 4:
                 return this.mTCHandle;
@@ -264,6 +287,9 @@ public class PegasusBag
 
             case 6: //PEGASUS_LOGMANAGER
                 return this.mLogger;
+                
+            case 7: //SITE_STORE
+                return this.mSiteStore;
 
             default:
                 throw new RuntimeException(
@@ -305,10 +331,20 @@ public class PegasusBag
      *
      * @return  the handle to site catalog
      */
+    /*
     public PoolInfoProvider getHandleToSiteCatalog(){
         return ( PoolInfoProvider )get( PegasusBag.SITE_CATALOG );
-    }
+    }*/
 
+    /**
+     * A convenice method to get the handle to the site store
+     *
+     * @return  the handle to site store
+     */
+    public SiteStore getHandleToSiteStore(){
+        return ( SiteStore )get( PegasusBag.SITE_STORE );
+    }
+    
     /**
      * A convenice method to get the handle to the transformation catalog.
      *

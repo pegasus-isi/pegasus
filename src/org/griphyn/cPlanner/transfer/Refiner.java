@@ -23,11 +23,15 @@ import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
+import org.griphyn.cPlanner.transfer.implementation.TransferImplementationFactoryException;
+
 import java.util.Collection;
 
 import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
+
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 /**
@@ -80,17 +84,12 @@ public interface Refiner
      * at runtime in the properties file. The properties object passed should not
      * be null.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner at runtime.
+     * @param bag   the bag of initialization objects.
+     * @throws org.griphyn.cPlanner.transfer.implementation.TransferImplementationFactoryException 
      *
      */
-    public void loadImplementations(PegasusProperties properties,
-                                    PlannerOptions options)
-        throws ClassNotFoundException, IOException,
-                 NoSuchMethodException, InstantiationException,
-                 IllegalAccessException, InvocationTargetException,
-                 ClassCastException;
+    public void loadImplementations( PegasusBag bag )
+        throws TransferImplementationFactoryException;
 
 
     /**

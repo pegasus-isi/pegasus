@@ -16,6 +16,8 @@
 
 package org.griphyn.cPlanner.code.gridstart;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
@@ -44,7 +46,6 @@ import java.util.Set;
 import java.io.IOException;
 import java.io.FileWriter;
 import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 /**
  * This class ends up running the job directly on the grid, without wrapping
  * it in any other launcher executable.
@@ -114,10 +115,10 @@ public class NoGridStart implements GridStart {
 
 
     /**
-     * Handle to the site catalog.
+     * Handle to the site catalog store.
      */
-    protected PoolInfoProvider mSiteHandle;
-
+    //protected PoolInfoProvider mSiteHandle;
+    protected SiteStore mSiteStore;
 
     /**
      * An instance variable to track if enabling is happening as part of a clustered job.
@@ -134,7 +135,7 @@ public class NoGridStart implements GridStart {
      */
     public void initialize( PegasusBag bag, ADag dag ){
         mLogger    = bag.getLogger();
-        mSiteHandle   = bag.getHandleToSiteCatalog();
+        mSiteStore   = bag.getHandleToSiteStore();
         mPOptions  = bag.getPlannerOptions();
         mSubmitDir = mPOptions.getSubmitDirectory();
         mProps     = bag.getPegasusProperties();
@@ -281,7 +282,7 @@ public class NoGridStart implements GridStart {
 
                 String directory = (String)job.condorVariables.removeKey( key );
 
-                String destDir = mSiteHandle.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
+                String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
                 destDir = ( destDir == null ) ? "/tmp" : destDir;
 
                 String relativeDir = mPOptions.getRelativeSubmitDirectory();
@@ -296,7 +297,8 @@ public class NoGridStart implements GridStart {
 
                 //modify the job if required
                 if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                            mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                            //mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                            mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
                                                             directory,
                                                             workerNodeDir ) ){
                     throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );

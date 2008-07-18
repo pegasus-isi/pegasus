@@ -29,6 +29,7 @@ import org.griphyn.common.util.DynamicLoader;
 import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 /**
@@ -56,10 +57,8 @@ public class RefinerFactory {
      * In addition it ends up loading the appropriate Transfer Implementation
      * that is required by the refiner.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
      * @param dag        the workflow that is being refined.
-     * @param options    the options with which the planner was invoked.
+     * @param bag        the bag of initialization objects
      *
      * @return the instance of the class implementing this interface.
      *
@@ -68,12 +67,11 @@ public class RefinerFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static Refiner loadInstance(PegasusProperties properties,
-                                       ADag dag,
-                                       PlannerOptions options )
+    public static Refiner loadInstance( ADag dag,
+                                        PegasusBag bag )
         throws TransferRefinerFactoryException{
 
-        return loadInstance(properties.getTransferRefiner(),properties,dag,options);
+        return loadInstance( bag.getPegasusProperties().getTransferRefiner(), bag, dag );
     }
 
 
@@ -86,10 +84,8 @@ public class RefinerFactory {
      *
      * @param className  the name of the class that implements the mode.It can or
      *                   cannot be with the package name.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
+     * @param bag        the bag of initialization objects
      * @param dag        the workflow that is being refined.
-     * @param options    the options with which the planner was invoked.
      *
      * @return the instance of the class implementing this interface.
      *
@@ -98,16 +94,15 @@ public class RefinerFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static Refiner loadInstance(String className,
-                                       PegasusProperties properties,
-                                       ADag dag,
-                                       PlannerOptions options )
+    public static Refiner loadInstance( String className,
+                                        PegasusBag bag,
+                                        ADag dag )
         throws TransferRefinerFactoryException{
 
         Refiner refiner = null;
         try{
             //sanity check
-            if (properties == null) {
+            if ( bag.getPegasusProperties() == null) {
                 throw new RuntimeException("Invalid properties passed");
             }
             if (dag == null) {
@@ -121,17 +116,16 @@ public class RefinerFactory {
                         //load directly
                         className;
 
-                //try loading the class dynamically
+            //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader(className);
-            Object argList[] = new Object[3];
+            Object argList[] = new Object[2];
             argList[0] = dag;
-            argList[1] = properties;
-            argList[2] = options;
+            argList[1] = bag;
             refiner = (Refiner) dl.instantiate(argList);
 
             //we got the refiner try to load the appropriate
             //transfer implementation also
-            refiner.loadImplementations(properties, options);
+            refiner.loadImplementations( bag );
         }
         catch (Exception e){
             throw new TransferRefinerFactoryException("Instantiating Transfer Refiner",

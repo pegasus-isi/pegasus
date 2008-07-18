@@ -16,17 +16,14 @@
 
 package org.griphyn.cPlanner.transfer.refiner;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
@@ -37,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This transfer refiner builds upon the Default Refiner.
@@ -65,8 +63,8 @@ public class Chain extends Default {
     /**
      * The handle to the Site Catalog. It is instantiated in this class.
      */
-    protected PoolInfoProvider mSCHandle;
-
+    //protected PoolInfoProvider mSCHandle;
+    protected SiteStore mSiteStore;
 
     /**
      * The map containing the stage in bundle values indexed by the name of the
@@ -94,24 +92,18 @@ public class Chain extends Default {
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag        the bag of initialization objects
      *
      */
-    public Chain(ADag dag,PegasusProperties properties,PlannerOptions options){
-        super(dag, properties,options);
+    public Chain( ADag dag, PegasusBag bag ){
+        super( dag, bag );
         //specifying initial capacity.
         //adding one to account for local pool
-        mStageInMap = new HashMap(options.getExecutionSites().size() + 1);
+        mStageInMap = new HashMap( mPOptions.getExecutionSites().size() + 1);
         mSIBundleMap= new HashMap();
 
         //load the site catalog
-        String poolFile  = mProps.getPoolFile();
-        String poolClass = PoolMode.getImplementingClass(mProps.getPoolMode());
-        mSCHandle        = PoolMode.loadPoolInstance(poolClass, poolFile,
-                                                PoolMode.SINGLETON_LOAD);
-
+        mSiteStore = bag.getHandleToSiteStore();
     }
 
     /**
@@ -194,7 +186,7 @@ public class Chain extends Default {
         SubInfo sub = new SubInfo();
         //assimilate the profile information from the
         //site catalog into the job.
-        sub.updateProfiles(mSCHandle.getPoolProfile(site));
+        sub.updateProfiles( mSiteStore.lookup(site).getProfiles() );
 
         //this should be parameterised Karan Dec 20,2005
         TransformationCatalogEntry entry  =

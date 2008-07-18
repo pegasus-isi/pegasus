@@ -16,6 +16,8 @@
 
 package org.griphyn.cPlanner.transfer.implementation;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -40,6 +42,7 @@ import java.util.HashSet;
 import java.io.FileWriter;
 
 import java.net.URL;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * A prototype implementation that leverages the Condor file transfer mechanism
@@ -104,12 +107,11 @@ public class Condor extends AbstractMultipleFTPerXFERJob {
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     *
+     * @param  bag  bag of intialization objects.
      */
-    public Condor( PegasusProperties properties,
-                   PlannerOptions options ) {
-        super( properties, options );
+    public Condor( PegasusBag bag ) {
+        super( bag );
     }
 
 
@@ -284,11 +286,17 @@ public class Condor extends AbstractMultipleFTPerXFERJob {
         // for non third party pools
         //we first check if there entry for transfer universe,
         //if no then go for globus
-        SiteInfo ePool = mSCHandle.getTXPoolEntry( txJob.getSiteHandle() );
-        JobManager jobmanager = ePool.selectJobManager( this.TRANSFER_UNIVERSE, true );
+//        SiteInfo ePool = mSCHandle.getTXPoolEntry( txJob.getSiteHandle() );
+//        JobManager jobmanager = ePool.selectJobManager( this.TRANSFER_UNIVERSE, true );
+//        txJob.setJobManager( ( jobmanager == null) ?
+//                               null :
+//                               jobmanager.getInfo( JobManager.URL ) );
+        
+        SiteCatalogEntry ePool = mSiteStore.lookup( txJob.getSiteHandle() );
+        GridGateway jobmanager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         txJob.setJobManager( ( jobmanager == null) ?
                                null :
-                               jobmanager.getInfo( JobManager.URL ) );
+                               jobmanager.getContact() );
 
         txJob.setJobType( jobClass );
         txJob.setVDSSuperNode( job.jobName );
@@ -307,7 +315,8 @@ public class Condor extends AbstractMultipleFTPerXFERJob {
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        txJob.updateProfiles( mSCHandle.getPoolProfile( txJob.getSiteHandle() ) );
+//        txJob.updateProfiles( mSCHandle.getPoolProfile( txJob.getSiteHandle() ) );
+        txJob.updateProfiles( ePool.getProfiles()  );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job

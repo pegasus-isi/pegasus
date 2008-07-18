@@ -17,13 +17,15 @@
 
 package org.griphyn.cPlanner.engine;
 
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 import org.griphyn.common.catalog.TransformationCatalog;
@@ -33,6 +35,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The  class which is a superclass of all the various Engine classes. It
@@ -80,7 +83,8 @@ public abstract  class Engine {
     /**
      * The handle to the Pool Info Provider. It is instantiated in this class
      */
-    protected PoolInfoProvider mPoolHandle;
+   //protected PoolInfoProvider mPoolHandle;
+    protected SiteStore mSiteStore;
 
 
     /**
@@ -102,12 +106,7 @@ public abstract  class Engine {
      */
     protected String mTCMode;
 
-    /**
-     * Specifies the implementing class for the pool interface. Contains
-     * the name of the class that implements the pool interface the
-     * user has asked at runtime.
-     */
-    protected String mPoolClass;
+  
 
 
     /**
@@ -122,20 +121,31 @@ public abstract  class Engine {
      * runtime.
      */
     protected PlannerOptions mPOptions;
-
+    
     /**
-     * Default constructor.
-     *
-     * @param props   the properties to be used.
+     * The bag of initialization objects
      */
-    public Engine( PegasusProperties props ) {
-        mProps = props;
+    protected PegasusBag mBag;
+
+
+    
+    /**
+     * A pratically nothing constructor !
+     *
+     *
+     * @param bag      bag of initialization objects
+     */
+    public Engine( PegasusBag bag ) {
+        mBag   = bag;
+        mProps = bag.getPegasusProperties() ;
+        mPOptions = bag.getPlannerOptions();
+        mTCHandle = bag.getHandleToTransformationCatalog();
+        mSiteStore= bag.getHandleToSiteStore();
+        mLogger   = bag.getLogger();
         loadProperties();
-
-        mPoolHandle = PoolMode.loadPoolInstance(mPoolClass, mPoolFile,
-                                                PoolMode.SINGLETON_LOAD);
-
     }
+    
+    
 
     /**
      * Loads all the properties that are needed by the Engine classes.
@@ -148,9 +158,6 @@ public abstract  class Engine {
         mRLIUrl = mProps.getRLIURL();
         String rmode = mProps.getReplicaMode();
         String tcmode = mProps.getTCMode();
-        String poolmode = mProps.getPoolMode();
-
-        mPoolClass = PoolMode.getImplementingClass(poolmode);
 
     }
 

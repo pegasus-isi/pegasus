@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.Set;
 import java.util.StringTokenizer;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The default single refiner, that always creates a transfer job per file
@@ -79,13 +80,11 @@ public class SDefault extends SingleFTPerXFERJobRefiner {
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag        the bag of initialization objects
      *
      */
-    public SDefault(ADag dag,PegasusProperties properties,PlannerOptions options){
-        super(dag,properties,options);
+    public SDefault( ADag dag, PegasusBag bag ){
+        super( dag, bag );
         mFileTable = new TreeMap();
     }
 

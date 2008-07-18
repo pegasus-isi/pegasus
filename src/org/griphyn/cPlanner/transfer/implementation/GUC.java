@@ -21,6 +21,8 @@ import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.NameValue;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.Profile;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -40,7 +42,6 @@ import java.util.Iterator;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import org.griphyn.cPlanner.classes.Profile;
 
 /**
  * The implementation that is used to create transfer jobs that callout to
@@ -129,11 +130,10 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
     * The overloaded constructor, that is called by the Factory to load the
     * class.
     *
-    * @param properties  the properties object.
-    * @param options     the options passed to the Planner.
+    * @param bag  the bag of Pegasus initialization objects.
     */
-   public GUC( PegasusProperties properties, PlannerOptions options ){
-       super( properties, options );
+   public GUC( PegasusBag bag ){
+       super( bag );
        mNumOfTXStreams   = mProps.getNumOfTransferStreams();
        mUseForce         = mProps.useForceInTransfer();
    }
@@ -325,7 +325,7 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
        List result = new ArrayList(2) ;
 
        //create the CLASSPATH from home
-       String globus = mSCHandle.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
+       String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
        if( globus == null ){
            mLogger.log( "GLOBUS_LOCATION not set in site catalog for site " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL );
@@ -335,7 +335,7 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
 
 
        //check for LD_LIBRARY_PATH
-       String ldpath = mSCHandle.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
+       String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
        if ( ldpath == null ){
            //construct a default LD_LIBRARY_PATH
            ldpath = globus;

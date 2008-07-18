@@ -38,6 +38,7 @@ import org.griphyn.common.util.Separator;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashSet;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the stork data
@@ -106,11 +107,10 @@ public class Stork extends AbstractSingleFTPerXFERJob {
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     * @param  bag  bag of intialization objects.
      */
-    public Stork(PegasusProperties properties,PlannerOptions options){
-        super(properties,options);
+    public Stork( PegasusBag bag ){
+        super( bag );
     }
 
     /**
@@ -247,7 +247,8 @@ public class Stork extends AbstractSingleFTPerXFERJob {
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        txJob.updateProfiles(mSCHandle.getPoolProfile(tPool));
+//        txJob.updateProfiles(mSCHandle.getPoolProfile(tPool));
+        txJob.updateProfiles( mSiteStore.lookup(tPool).getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job

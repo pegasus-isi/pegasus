@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Vector;
 import java.util.Iterator;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 /**
@@ -128,20 +129,16 @@ public class ReductionEngine extends Engine implements Refiner{
      * The constructor
      *
      * @param orgDag    The original Dag object
-     * @param properties the <code>PegasusProperties</code> to be used.
-     * @param options   The options specified by
-     *                  the user to run the
-     *                  planner
+     * @param bag       the bag of initialization objects.
      */
-    public ReductionEngine( ADag orgDag, PegasusProperties properties, PlannerOptions options ){
-        super( properties );
-        this.mPOptions   = options;
+    public ReductionEngine( ADag orgDag, PegasusBag bag ){
+        super( bag) ;
         mOriginalDag     = orgDag;
         mOrgDagRelations = mOriginalDag.dagInfo.relations;
         mOrgJobsInRC     = new Vector();
         mAddJobsDeleted  = new Vector();
         mAllDeletedJobs  = new Vector();
-        mXMLStore        = XMLProducerFactory.loadXMLProducer( properties );
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
         mWorkflow        = orgDag;
     }
 

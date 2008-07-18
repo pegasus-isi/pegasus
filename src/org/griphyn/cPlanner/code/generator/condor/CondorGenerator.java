@@ -17,6 +17,8 @@
 
 package org.griphyn.cPlanner.code.generator.condor;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.PCRelation;
@@ -126,7 +128,12 @@ public class CondorGenerator extends Abstract {
     /**
      * Handle to the pool provider.
      */
-    private PoolInfoProvider mPoolHandle;
+    //private PoolInfoProvider mPoolHandle;
+    
+    /**
+     * The handle to the site catalog store.
+     */
+    private SiteStore mSiteStore;
 
 
     /**
@@ -221,13 +228,13 @@ public class CondorGenerator extends Abstract {
 
 
         mTCHandle = bag.getHandleToTransformationCatalog();
-        mPoolHandle = bag.getHandleToSiteCatalog();
+        mSiteStore  = bag.getHandleToSiteStore();
         mProjectMap  = constructMap(mProps.getRemoteSchedulerProjects());
         mQueueMap    = constructMap(mProps.getRemoteSchedulerQueues());
         mWalltimeMap = constructMap(mProps.getRemoteSchedulerMaxWallTimes());
 
         //instantiate and intialize the style factory
-        mStyleFactory.initialize( mProps, mPoolHandle );
+        mStyleFactory.initialize( mProps, mSiteStore );
     }
 
 
@@ -1281,7 +1288,7 @@ public class CondorGenerator extends Abstract {
             return;
         }
 
-        SiteInfo site = mPoolHandle.getPoolEntry(sinfo.executionPool, Condor.VANILLA_UNIVERSE);
+        SiteCatalogEntry site = mSiteStore.lookup( sinfo.getSiteHandle() );
         String gridStartPath = site.getKickstartPath();
 
         if (gridStartPath == null) {
@@ -1292,7 +1299,7 @@ public class CondorGenerator extends Abstract {
                         LogManager.ERROR_MESSAGE_LEVEL);
             return;
         } else {
-            site = mPoolHandle.getPoolEntry("local", Condor.VANILLA_UNIVERSE);
+            site =  mSiteStore.lookup( "local" );
             gridStartPath = site.getKickstartPath();
             if (gridStartPath == null) {
                 mLogger.log(
@@ -1311,7 +1318,7 @@ public class CondorGenerator extends Abstract {
                 //appended with the true remote directory
                 String args = (String) cvar.removeKey("arguments");
                 args = " -w " +
-                    mPoolHandle.getExecPoolWorkDir(sinfo) +
+                    mSiteStore.getWorkDirectory( sinfo ) +
                     " " + args;
                 cvar.construct("arguments", args);
 
@@ -1477,8 +1484,10 @@ public class CondorGenerator extends Abstract {
         //pool, querying with entry for vanilla universe.
         //In the new format the gridstart is associated with the
         //pool not pool, condor universe
-        SiteInfo site = mPoolHandle.getPoolEntry(job.executionPool,
-                                                 Condor.VANILLA_UNIVERSE);
+//        SiteInfo site = mPoolHandle.getPoolEntry(job.executionPool,
+//                                                 Condor.VANILLA_UNIVERSE);
+        
+        SiteCatalogEntry site = mSiteStore.lookup( job.getSiteHandle() );
         String gridStartPath = site.getKickstartPath();
 
         StringBuffer rslString = new StringBuffer();

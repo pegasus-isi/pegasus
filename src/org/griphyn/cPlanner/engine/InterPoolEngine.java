@@ -17,6 +17,8 @@
 
 package org.griphyn.cPlanner.engine;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.PegasusFile;
@@ -100,10 +102,6 @@ public class InterPoolEngine extends Engine implements Refiner {
      */
     private TransformationSelector mTXSelector;
 
-    /**
-     * The bag of objects that is required for the Site Selector initialization.
-     */
-    private PegasusBag mBag;
 
     /**
      * The handle to the transformation catalog mapper object that caches the
@@ -134,26 +132,28 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      * @param props   the properties to be used.
      */
-    public InterPoolEngine( PegasusProperties props ) {
-        super( props );
+    public InterPoolEngine( PegasusBag bag ) {
+        super( bag  );
         mDag        = new ADag();
         mExecPools  = new java.util.HashSet();
 
-        mTCHandle = TCMode.loadInstance();
         //initialize the transformation mapper
-        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode() );
+        mTCMapper = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
+        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
+/*        
+        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
 
         //intialize the bag of objects and load the site selector
         mBag = new PegasusBag();
-        mBag.add( PegasusBag.PEGASUS_PROPERTIES, props );
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
         mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-
+*/
         mTXSelector = null;
-        mXMLStore        = XMLProducerFactory.loadXMLProducer( props );
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
 
-        mWorkerNodeExecution = props.executeOnWorkerNode();
+        mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
             //load SLS
             mSLS = SLSFactory.loadInstance( mBag );
@@ -167,32 +167,33 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @param aDag      the <code>ADag</code> object corresponding to the Dag
      *                  for which we want to determine on which pools to run
      *                  the nodes of the Dag.
-     * @param props   the properties to be used.
-     * @param options   The options specified by the user to run the planner.
+     * @param bag       the bag of initialization objects
      *
      */
-    public InterPoolEngine( ADag aDag, PegasusProperties props, PlannerOptions options) {
-        super( props );
+    public InterPoolEngine( ADag aDag, PegasusBag bag ) {
+        super( bag );
         mDag = aDag;
-        mPOptions = options;
-        mExecPools = (Set)options.getExecutionSites();
-        mTCHandle = TCMode.loadInstance();
+        mExecPools = (Set)mPOptions.getExecutionSites();
+        
+        mTCMapper = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
+        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
+/*        
         //initialize the transformation mapper
         mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode() );
 
         //intialize the bag of objects and load the site selector
         mBag = new PegasusBag();
-        mBag.add( PegasusBag.PEGASUS_PROPERTIES, props );
-        mBag.add( PegasusBag.PLANNER_OPTIONS, options );
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
+        mBag.add( PegasusBag.PLANNER_OPTIONS, mPOptions );
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
         mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-        mBag.add( PegasusBag.SITE_CATALOG, mPoolHandle );
-
+        mBag.add( PegasusBag.SITE_CATALOG, mSiteStore );
+*/
         mTXSelector = null;
-        mXMLStore        = XMLProducerFactory.loadXMLProducer( props );
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
 
-        mWorkerNodeExecution = props.executeOnWorkerNode();
+        mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
             //load SLS
             mSLS = SLSFactory.loadInstance( mBag );
@@ -397,7 +398,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        job.updateProfiles(mPoolHandle.getPoolProfile(siteHandle));
+        job.updateProfiles( mSiteStore.lookup( siteHandle ).getProfiles() );
 
 
         //query the TCMapper and get hold of all the valid TC
@@ -424,7 +425,8 @@ public class InterPoolEngine extends Engine implements Refiner {
             //Need to verify further after more runs. (Gaurang 2-7-2006).
 //            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
             if(tcEntry.getType().equals(TCType.STATIC_BINARY)){
-                SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,"vanilla");
+//                SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,"vanilla");
+                SiteCatalogEntry site = mSiteStore.lookup( siteHandle );
                 //construct a file transfer object and add it
                 //as an input file to the job in the dag
                 fTx = new FileTransfer(job.getStagedExecutableBaseName(),
@@ -439,10 +441,13 @@ public class InterPoolEngine extends Engine implements Refiner {
                 //pool where it needs to be staged to
                 //always creating a third party transfer URL
                 //for the destination.
-                String stagedPath =  mPoolHandle.getExecPoolWorkDir(job)
+                String stagedPath =  mSiteStore.getWorkDirectory(job)
                     + File.separator + job.getStagedExecutableBaseName();
-                fTx.addDestination(siteHandle,
-                                   site.getURLPrefix(false) + stagedPath);
+//                fTx.addDestination(siteHandle,
+//                                   site.getURLPrefix(false) + stagedPath);
+                fTx.addDestination( siteHandle,
+                                    site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
+
 
                 //added in the end now after dependant executables
                 //have been handled Karan May 31 2007
@@ -560,8 +565,10 @@ public class InterPoolEngine extends Engine implements Refiner {
 
                     //            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
                     if (tcEntry.getType().equals(TCType.STATIC_BINARY)) {
-                        SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,
-                            "vanilla");
+//                        SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,
+//                            "vanilla");
+                        
+                        SiteCatalogEntry site = mSiteStore.lookup( siteHandle );
                         //construct a file transfer object and add it
                         //as an input file to the job in the dag
 
@@ -580,10 +587,16 @@ public class InterPoolEngine extends Engine implements Refiner {
                         //pool where it needs to be staged to
                         //always creating a third party transfer URL
                         //for the destination.
-                        String stagedPath = mPoolHandle.getExecPoolWorkDir(job)
+//                        String stagedPath = mPoolHandle.getExecPoolWorkDir(job)
+//                            + File.separator + basename;
+//                        fTx.addDestination(siteHandle,
+//                                           site.getURLPrefix(false) + stagedPath);
+                        
+                        String stagedPath = mSiteStore.getWorkDirectory(job)
                             + File.separator + basename;
                         fTx.addDestination(siteHandle,
-                                           site.getURLPrefix(false) + stagedPath);
+                                           site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
+
 
                         dependantExecutables.add( fTx );
 
@@ -649,9 +662,12 @@ public class InterPoolEngine extends Engine implements Refiner {
      *         null if not found.
      */
     private String getJobManager( String site, String universe) {
-        SiteInfo p = mPoolHandle.getPoolEntry( site, universe );
-        JobManager jm = ( p == null )? null : p.selectJobManager( universe, true );
-        String result =  ( jm == null ) ? null : jm.getInfo( JobManager.URL );
+//        SiteInfo p = mPoolHandle.getPoolEntry( site, universe );
+        SiteCatalogEntry p = mSiteStore.lookup( site );
+//        JobManager jm = ( p == null )? null : p.selectJobManager( universe, true );
+//        String result =  ( jm == null ) ? null : jm.getInfo( JobManager.URL );
+        GridGateway jm = ( p == null )? null : p.selectGridGateway( GridGateway.JOB_TYPE.valueOf( universe ) );
+        String result = ( jm == null ) ? null : jm.getContact( );
 
 
         if ( result == null) {
@@ -706,9 +722,12 @@ public class InterPoolEngine extends Engine implements Refiner {
                         //specified in the DAX
                         (String) job.hints.removeKey("globusScheduler") :
                         //select one from the pool handle
-                        mPoolHandle.getPoolEntry(job.executionPool,
-                                                 job.condorUniverse).
-                        selectJobManager(job.condorUniverse,true).getInfo(JobManager.URL);
+//                        mPoolHandle.getPoolEntry(job.executionPool,
+//                                                 job.condorUniverse).
+//                        selectJobManager(job.condorUniverse,true).getInfo(JobManager.URL);
+                          mSiteStore.lookup( job.getSiteHandle() ).
+                                     selectGridGateway( GridGateway.JOB_TYPE.valueOf(job.condorUniverse)).
+                                     getContact();  
 
                     return true;
                 }

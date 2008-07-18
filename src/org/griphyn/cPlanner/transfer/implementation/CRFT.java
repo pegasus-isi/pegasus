@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.ArrayList;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the c rft client
@@ -229,11 +230,10 @@ public class CRFT extends AbstractMultipleFTPerXFERJob {
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     * @param  bag  bag of intialization objects.
      */
-    public CRFT(PegasusProperties properties,PlannerOptions options){
-        super(properties,options);
+    public CRFT( PegasusBag bag ){
+        super( bag );
         mCRFTProps = mProps.matchingSubset(PROPERTIES_PREFIX,false);
 
         mEndPoint = mCRFTProps.getProperty(END_POINT_KEY);

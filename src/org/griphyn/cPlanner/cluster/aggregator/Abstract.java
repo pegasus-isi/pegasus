@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.cluster.aggregator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import org.griphyn.cPlanner.code.GridStart;
 
@@ -38,8 +39,6 @@ import org.griphyn.cPlanner.cluster.JobAggregator;
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 
 import org.griphyn.common.util.DynamicLoader;
@@ -126,9 +125,10 @@ public abstract class Abstract implements JobAggregator {
     protected TransformationCatalog mTCHandle;
 
     /**
-     * Handle to the site catalog.
+     * Handle to the site catalog store
      */
-    protected PoolInfoProvider mSiteHandle;
+    protected SiteStore mSiteStore;
+    //protected PoolInfoProvider mSiteHandle;
 
     /**
      * The handle to the ADag object that contains the workflow being
@@ -185,7 +185,7 @@ public abstract class Abstract implements JobAggregator {
         mProps  = bag.getPegasusProperties();
 
         mTCHandle = bag.getHandleToTransformationCatalog();
-        mSiteHandle = bag.getHandleToSiteCatalog();
+        mSiteStore = bag.getHandleToSiteStore();
 
         setDirectory( bag.getPlannerOptions().getSubmitDirectory() );
 
@@ -281,7 +281,7 @@ public abstract class Abstract implements JobAggregator {
 
 
         SubInfo job    = null;
-        String mergedJobName = this.FAT_JOB_PREFIX + name + "_" + id;
+        String mergedJobName = Abstract.FAT_JOB_PREFIX + name + "_" + id;
         mLogger.log("Constructing clustered job " + mergedJobName,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -495,9 +495,9 @@ public abstract class Abstract implements JobAggregator {
     private  TransformationCatalogEntry defaultTCEntry( String name, String site ){
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
-        String home = mSiteHandle.getPegasusHome( site );
+        String home = mSiteStore.getPegasusHome( site );
         //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mSiteHandle.getVDS_HOME( site ): home;
+        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
                      this.getCompleteTranformationName( name ) +

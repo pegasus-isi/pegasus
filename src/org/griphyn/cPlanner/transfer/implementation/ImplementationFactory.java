@@ -27,6 +27,7 @@ import org.griphyn.common.util.DynamicLoader;
 import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The factory class that loads an appropriate Transfer Immplementation class,
@@ -69,10 +70,7 @@ public  class ImplementationFactory {
      * The type is used to determine what property to be picked up from the
      * properties file. The properties object passed should not be null.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner at runtime.
-     * @param type       the type for which implementation needs to be loaded.
+     * @param bag   the bag of initialization objects.
      *
      * @return the instance of the class implementing this interface.
      *
@@ -81,14 +79,13 @@ public  class ImplementationFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static  Implementation loadInstance(PegasusProperties properties,
-                                               PlannerOptions options,
-                                               int type)
+    public static  Implementation loadInstance( PegasusBag bag,
+                                                int type)
         throws TransferImplementationFactoryException{
 
 
-        return loadInstance(properties.getTransferImplementation(getProperty(type)),
-                            properties,options);
+        return loadInstance( bag.getPegasusProperties().getTransferImplementation(getProperty(type)),
+                             bag );
     }
 
 
@@ -108,12 +105,11 @@ public  class ImplementationFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static  Implementation loadInstance(PegasusProperties properties,
-                                               PlannerOptions options)
+    public static  Implementation loadInstance( PegasusBag bag )
         throws TransferImplementationFactoryException{
 
-        return loadInstance(properties.getTransferImplementation(),
-                            properties,options);
+        return loadInstance( bag.getPegasusProperties().getTransferImplementation(),
+                             bag );
     }
 
 
@@ -124,9 +120,7 @@ public  class ImplementationFactory {
      *
      * @param className  the name of the class that implements the mode.It can or
      *                   cannot be with the package name.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner at runtime.
+     * @param bag   the bag of initialization objects.
      *
      * @return the instance of the class implementing this interface.
      *
@@ -135,15 +129,14 @@ public  class ImplementationFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    private static Implementation loadInstance(String className,
-                                              PegasusProperties properties,
-                                              PlannerOptions options)
+    private static Implementation loadInstance( String className,
+                                                PegasusBag bag )
        throws TransferImplementationFactoryException{
 
        Implementation implementation = null;
        try{
            //sanity check
-           if (properties == null) {
+           if ( bag.getPegasusProperties() == null) {
                throw new RuntimeException("Invalid properties passed");
            }
 
@@ -156,9 +149,8 @@ public  class ImplementationFactory {
 
                //try loading the class dynamically
            DynamicLoader dl = new DynamicLoader(className);
-           Object argList[] = new Object[2];
-           argList[0] = properties;
-           argList[1] = options;
+           Object argList[] = new Object[1];
+           argList[0] =bag;
            implementation = (Implementation) dl.instantiate(argList);
        }
        catch(Exception e){

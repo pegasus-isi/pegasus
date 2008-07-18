@@ -17,13 +17,14 @@
 package org.griphyn.cPlanner.code.generator.condor.style;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.code.generator.condor.CondorStyle;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
@@ -102,13 +103,13 @@ public class CondorStyleFactory {
      *
      * @param properties  the <code>PegasusProperties</code> object containing all
      *                    the properties required by Pegasus.
-     * @param siteCatalog a handle to the Site Catalog being used.
+     * @param siteStore   the handle to the SiteCatalog Store being used.
      *
      * @throws CondorStyleFactoryException that nests any error that
      *            might occur during the instantiation of the implementation.
      */
     public void initialize( PegasusProperties properties,
-                            PoolInfoProvider siteCatalog) throws CondorStyleFactoryException{
+                            SiteStore siteStore ) throws CondorStyleFactoryException{
 
         //load all the implementations that correspond to the VDS style keys
         for( Iterator it = this.implementingClassNameTable().entrySet().iterator(); it.hasNext(); ){
@@ -117,7 +118,7 @@ public class CondorStyleFactory {
             String className= (String)entry.getValue();
 
             //load via reflection. not required in this case though
-            put( style, this.loadInstance( properties, siteCatalog, className ));
+            put( style, this.loadInstance( properties, siteStore, className ));
         }
 
         //we have successfully loaded all implementations
@@ -173,7 +174,7 @@ public class CondorStyleFactory {
      *
      * @param properties  the <code>PegasusProperties</code> object containing all
      *                    the properties required by Pegasus.
-     * @param siteCatalog a handle to the Site Catalog being used.
+     * @param siteStore   the handle to the SiteCatalog Store being used.
      * @param className  the name of the implementing class.
      *
      * @return the instance of the class implementing this interface.
@@ -184,7 +185,7 @@ public class CondorStyleFactory {
      * @see #DEFAULT_PACKAGE_NAME
      */
     private  CondorStyle loadInstance( PegasusProperties properties,
-                                       PoolInfoProvider siteCatalog,
+                                       SiteStore siteStore,
                                        String className )
                                               throws CondorStyleFactoryException{
 
@@ -209,7 +210,7 @@ public class CondorStyleFactory {
             DynamicLoader dl = new DynamicLoader( className );
             cs = (CondorStyle) dl.instantiate( new Object[0] );
             //initialize the loaded condor style
-            cs.initialize( properties, siteCatalog );
+            cs.initialize( properties, siteStore );
         }
         catch (Exception e) {
             throw new CondorStyleFactoryException( "Instantiating Condor Style ",

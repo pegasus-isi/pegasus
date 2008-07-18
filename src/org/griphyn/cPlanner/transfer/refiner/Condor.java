@@ -17,15 +17,18 @@
 
 package org.griphyn.cPlanner.transfer.refiner;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.NameValue;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.PegasusBag;
+
+import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.transfer.MultipleFTPerXFERJobRefiner;
 
@@ -43,10 +46,7 @@ import java.util.HashSet;
 
 import java.net.URL;
 import java.net.MalformedURLException;
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.SiteFactory;
-import org.griphyn.cPlanner.poolinfo.SiteFactoryException;
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+
 
 /**
  * A refiner that relies on the Condor file transfer mechanism to get the
@@ -88,7 +88,8 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
     /**
      * The handle to the Site Catalog. It is instantiated in this class.
      */
-    protected PoolInfoProvider mSCHandle;
+//    protected PoolInfoProvider mSCHandle;
+    protected SiteStore mSiteStore;
 
 
 
@@ -96,16 +97,14 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag        the bag of initialization objects
      *
      */
-    public Condor( ADag dag, PegasusProperties properties, PlannerOptions options){
-        super(dag,properties,options);
+    public Condor( ADag dag, PegasusBag bag ){
+        super( dag, bag );
 
         /* load the catalog using the factory */
-        mSCHandle = SiteFactory.loadInstance( properties, false );
+        mSiteStore = bag.getHandleToSiteStore();
 
     }
 
@@ -333,7 +332,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        txJob.updateProfiles( mSCHandle.getPoolProfile( txJob.getSiteHandle() ) );
+        txJob.updateProfiles( mSiteStore.lookup( txJob.getSiteHandle() ).getProfiles() );
 
         //the profile information from the properties file
         //is assimilated overidding the one from transformation

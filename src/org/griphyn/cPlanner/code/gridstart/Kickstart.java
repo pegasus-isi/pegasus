@@ -16,11 +16,13 @@
 
 package org.griphyn.cPlanner.code.gridstart;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.NameValue;
@@ -30,14 +32,12 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.code.GridStart;
-import org.griphyn.cPlanner.code.POSTScript;
 
 import org.griphyn.cPlanner.code.generator.condor.CondorQuoteParser;
 import org.griphyn.cPlanner.code.generator.condor.CondorQuoteParserException;
@@ -45,7 +45,6 @@ import org.griphyn.cPlanner.code.generator.condor.CondorQuoteParserException;
 import org.griphyn.cPlanner.transfer.SLS;
 
 import org.griphyn.cPlanner.transfer.sls.SLSFactory;
-import org.griphyn.cPlanner.transfer.sls.SLSFactoryException;
 
 import org.griphyn.common.util.Separator;
 
@@ -171,9 +170,10 @@ public class Kickstart implements GridStart {
     private ADag mConcDAG;
 
     /**
-     * Handle to the site catalog.
+     * Handle to the site catalog store.
      */
-    private PoolInfoProvider mSiteHandle;
+    private SiteStore mSiteStore;
+    //private PoolInfoProvider mSiteHandle;
 
     /**
      * Handle to Transformation Catalog.
@@ -244,7 +244,7 @@ public class Kickstart implements GridStart {
         mGenerateLOF  = mProps.generateLOFFiles();
         mLogger       = LogManager.getInstance();
         mConcDAG      = dag;
-        mSiteHandle   = bag.getHandleToSiteCatalog();
+        mSiteStore    = bag.getHandleToSiteStore();
         mTCHandle     = bag.getHandleToTransformationCatalog();
 
         mDynamicDeployment =  ( bag.getHandleToTransformationMapper() == null )?
@@ -373,8 +373,7 @@ public class Kickstart implements GridStart {
         //pool, querying with entry for vanilla universe.
         //In the new format the gridstart is associated with the
         //pool not pool, condor universe
-        SiteInfo site = mSiteHandle.getPoolEntry(job.executionPool,
-                                                 Condor.VANILLA_UNIVERSE);
+        SiteCatalogEntry site = mSiteStore.lookup( job.getSiteHandle() );
         String gridStartPath = site.getKickstartPath();
         //sanity check
         if (gridStartPath == null){
@@ -635,7 +634,7 @@ public class Kickstart implements GridStart {
         Condor cvar = job.condorVariables;
 
         if ( cvar.getBooleanValue("transfer_executable")) {
-            SiteInfo site = mSiteHandle.getPoolEntry("local", Condor.VANILLA_UNIVERSE);
+            SiteCatalogEntry site = mSiteStore.lookup( "local" );
             String gridStartPath = site.getKickstartPath();
             if (gridStartPath == null) {
                 mLogger.log(
@@ -725,7 +724,7 @@ public class Kickstart implements GridStart {
 
             String directory = (String)job.condorVariables.removeKey( key );
 
-            String destDir = mSiteHandle.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
+            String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
             destDir = ( destDir == null ) ? "/tmp" : destDir;
 
             String relativeDir = mPOptions.getRelativeSubmitDirectory();
@@ -833,7 +832,8 @@ public class Kickstart implements GridStart {
 
             //modify the job if required
             if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                        mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                        //mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                        mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
                                                         directory,
                                                         workerNodeDir ) ){
 

@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.transfer.refiner;
 
 import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -52,17 +53,15 @@ public class SChain extends SDefault {
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag        the bag of initialization objects
      *
      */
-    public SChain(ADag dag,PegasusProperties properties,PlannerOptions options){
-        super(dag, properties,options);
-        mChainRefiner = new Chain(dag,properties,options);
+    public SChain( ADag dag, PegasusBag bag ){
+        super( dag, bag );
+        mChainRefiner = new Chain( dag, bag );
 	try{
             //hmm we are bypassing the factory check!
-            mChainRefiner.loadImplementations(properties, options);
+            mChainRefiner.loadImplementations( bag );
         }
         catch(Exception e){
             throw new FactoryException( "While loading in SChain " , e );

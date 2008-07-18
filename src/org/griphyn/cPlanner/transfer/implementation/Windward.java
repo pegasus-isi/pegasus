@@ -17,6 +17,8 @@
 
 package org.griphyn.cPlanner.transfer.implementation;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
@@ -128,24 +130,18 @@ public class Windward extends Abstract
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     * @param bag   the bag of initialization objects.
      */
-    public Windward( PegasusProperties properties,
-                     PlannerOptions options) {
-        super(properties, options);
+    public Windward( PegasusBag bag ) {
+        super( bag );
 
         //should probably go through the factory
-        mPegasusTransfer = new Transfer( properties, options );
+        mPegasusTransfer = new Transfer( bag );
 
         //just to pass the label have to send an empty ADag.
         //should be fixed
         ADag dag = new ADag();
         dag.dagInfo.setLabel( "windward" );
-        PegasusBag bag = new PegasusBag();
-        bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
-        bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-        bag.add( PegasusBag.PLANNER_OPTIONS, options );
 
         mSeqExecAggregator = JobAggregatorFactory.loadInstance( JobAggregatorFactory.SEQ_EXEC_CLASS,
                                                                 dag,
@@ -249,8 +245,10 @@ public class Windward extends Abstract
         // for non third party pools
         //we first check if there entry for transfer universe,
         //if no then go for globus
-        SiteInfo ePool = mSCHandle.getTXPoolEntry( job.getSiteHandle() );
-        JobManager jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
+//        SiteInfo ePool = mSCHandle.getTXPoolEntry( job.getSiteHandle() );
+//        JobManager jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
+        SiteCatalogEntry ePool = mSiteStore.lookup( job.getSiteHandle() );
+        GridGateway jobmanager = ePool.getGridGateway( GridGateway.JOB_TYPE.transfer );
 
 
         //use the DC transfer client to handle the data sources
@@ -270,7 +268,7 @@ public class Windward extends Abstract
 
             dcTXJob.globusScheduler = (jobmanager == null) ?
                                   null :
-                                  jobmanager.getInfo(JobManager.URL);
+                                  jobmanager.getContact( );
 
             dcTXJob.setArguments( quote( ((NameValue)ft.getSourceURL()).getValue() ) + " " +
                                   quote( ((NameValue)ft.getDestURL()).getValue() ) );
@@ -428,7 +426,7 @@ public class Windward extends Abstract
 
         TransformationCatalogEntry defaultTCEntry = null;
         //check if DC_HOME is set
-        String dcHome = mSCHandle.getEnvironmentVariable( site, "DC_HOME" );
+        String dcHome = mSiteStore.getEnvironmentVariable( site, "DC_HOME" );
 
         mLogger.log( "Creating a default TC entry for " +
                      Separator.combine( namespace, name, version ) +
@@ -512,7 +510,7 @@ public class Windward extends Abstract
         List result = new ArrayList(1) ;
 
         //create the CLASSPATH from home
-        String java = mSCHandle.getEnvironmentVariable( site, "JAVA_HOME" );
+        String java = mSiteStore.getEnvironmentVariable( site, "JAVA_HOME" );
         if( java == null ){
             mLogger.log( "JAVA_HOME not set in site catalog for site " + site,
                          LogManager.DEBUG_MESSAGE_LEVEL );

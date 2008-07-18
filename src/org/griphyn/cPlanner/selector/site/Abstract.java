@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.selector.site;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
@@ -27,9 +28,6 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 import org.griphyn.cPlanner.selector.SiteSelector;
-
-
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.common.catalog.transformation.Mapper;
 
@@ -61,7 +59,8 @@ public abstract class Abstract implements SiteSelector {
     /**
      * The handle to the site catalog.
      */
-    protected PoolInfoProvider mSCHandle;
+//    protected PoolInfoProvider mSCHandle;
+    protected SiteStore mSiteStore;
 
     /**
      * The handle to the TCMapper object.
@@ -83,7 +82,7 @@ public abstract class Abstract implements SiteSelector {
         mBag   =  bag;
         mProps =  ( PegasusProperties )bag.get( PegasusBag.PEGASUS_PROPERTIES );
         mLogger   = ( LogManager )bag.get( PegasusBag.PEGASUS_LOGMANAGER );
-        mSCHandle = ( PoolInfoProvider )bag.get( PegasusBag.SITE_CATALOG );
+        mSiteStore = bag.getHandleToSiteStore();
         mTCMapper = ( Mapper )bag.get( PegasusBag.TRANSFORMATION_MAPPER );
     }
 

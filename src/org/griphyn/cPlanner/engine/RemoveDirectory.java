@@ -16,6 +16,8 @@
 
 package org.griphyn.cPlanner.engine;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.SiteInfo;
@@ -36,6 +38,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.io.File;
+import org.griphyn.cPlanner.classes.PegasusBag;
 /**
  * Ends up creating a cleanup dag that deletes the remote directories that
  * were created by the create dir jobs. The cleanup dag is generated in a
@@ -121,10 +124,10 @@ public class RemoveDirectory extends Engine {
      * generated the cleanup dag for.
      *
      * @param concDag  the concrete dag for which cleanup is reqd.
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag      the bag of initialization objects
      */
-    public RemoveDirectory( ADag concDag, PegasusProperties properties ) {
-        super( properties );
+    public RemoveDirectory( ADag concDag, PegasusBag bag ) {
+        super( bag );
         mConcDag = concDag;
         mTCHandle = TCMode.loadInstance();
     }
@@ -240,7 +243,8 @@ public class RemoveDirectory extends Engine {
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-        JobManager jm   = null;
+//        JobManager jm   = null;
+        GridGateway jm = null;
 
         try {
             entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
@@ -272,11 +276,16 @@ public class RemoveDirectory extends Engine {
         }
         execPath = entry.getPhysicalTransformation();
 
-        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
-        jm = ePool.selectJobManager("transfer",true);
-        String argString = "--verbose --remove --dir " +
-            mPoolHandle.getExecPoolWorkDir(execPool);
+//        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
+//        jm = ePool.selectJobManager("transfer",true);
+        SiteCatalogEntry ePool = mSiteStore.lookup( execPool );
 
+//        String argString = "--verbose --remove --dir " +
+//            mPoolHandle.getExecPoolWorkDir(execPool);
+
+        String argString = "--verbose --remove --dir " +
+                            mSiteStore.getWorkDirectory( execPool );
+        
         newJob.jobName = jobName;
         newJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
                                   this.TRANSFORMATION_NAME,
@@ -287,7 +296,7 @@ public class RemoveDirectory extends Engine {
                               this.DERIVATION_VERSION  );
 
         newJob.condorUniverse = "vanilla";
-        newJob.globusScheduler = jm.getInfo(JobManager.URL);
+        newJob.globusScheduler = jm.getContact();
         newJob.executable = execPath;
         newJob.executionPool = execPool;
         newJob.strargs = argString;
@@ -296,7 +305,7 @@ public class RemoveDirectory extends Engine {
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        newJob.updateProfiles(mPoolHandle.getPoolProfile(newJob.executionPool));
+        newJob.updateProfiles( mSiteStore.lookup( newJob.getSiteHandle() ).getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
@@ -327,9 +336,9 @@ public class RemoveDirectory extends Engine {
     private  TransformationCatalogEntry defaultTCEntry( String site ){
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
-        String home = mPoolHandle.getPegasusHome( site );
+        String home = mSiteStore.getPegasusHome( site );
         //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mPoolHandle.getVDS_HOME( site ): home;
+        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
                      this.getCompleteTranformationName() +

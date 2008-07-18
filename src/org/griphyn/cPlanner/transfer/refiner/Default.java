@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.TreeMap;
 import java.util.Map;
 import java.util.List;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The default transfer refiner, that implements the multiple refiner.
@@ -91,15 +92,12 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag   the bag of initialization objects.
      *
      */
     public Default( ADag dag,
-                    PegasusProperties properties,
-                    PlannerOptions options ){
-        super( dag, properties, options );
+                    PegasusBag bag ){
+        super( dag, bag );
         mLogMsg = null;
         mFileTable = new TreeMap();
 

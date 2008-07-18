@@ -16,15 +16,10 @@
 
 package org.griphyn.cPlanner.selector.site;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
-import org.griphyn.cPlanner.selector.SiteSelector;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import java.util.Iterator;
 import java.util.List;

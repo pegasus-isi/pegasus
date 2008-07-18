@@ -31,6 +31,7 @@ import org.griphyn.common.util.Separator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This implementation only generates maps for sites where transformation can be staged
@@ -40,6 +41,15 @@ import java.util.Map;
 public class Staged
     extends Mapper {
 
+    /**
+     * The protected constructor.
+     * 
+     * @param bag        the bag of initialization objects
+     */
+    public Staged( PegasusBag bag ) {
+        super( bag );
+    }
+    
     /**
      * This method returns a Map of compute sites to List of TransformationCatalogEntry
      * objects that are valid for that site
@@ -89,12 +99,12 @@ public class Staged
                     TCType.STATIC_BINARY );
             } catch ( Exception e ) {
                 mLogger.log(
-                    "Unable to physical names from TC in the TC Mapper",
+                    "Unable to get physical names from TC in the TC Mapper",
                    LogManager.ERROR_MESSAGE_LEVEL );
             }
             //get the system info for the sites from the RIC
             if ( tcentries != null ) {
-                sysinfomap = mPoolHandle.getSysinfos( siteids );
+                sysinfomap = mSiteStore.getSysInfos( siteids );
             } else {
                 throw new RuntimeException(
                     "There are no entries for the transformation \"" + lfn +

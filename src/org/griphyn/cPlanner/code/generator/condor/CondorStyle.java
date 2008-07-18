@@ -17,11 +17,12 @@
 
 package org.griphyn.cPlanner.code.generator.condor;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 /**
  * An interface to allow us to apply different execution styles to a job
@@ -48,12 +49,12 @@ public interface CondorStyle {
      *
      * @param properties  the <code>PegasusProperties</code> object containing all
      *                    the properties required by Pegasus.
-     * @param siteCatalog a handle to the Site Catalog being used.
+     * @param siteStore   the handle to the SiteCatalog Store being used.
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
     public void initialize( PegasusProperties properties,
-                            PoolInfoProvider siteCatalog) throws CondorStyleException;
+                            SiteStore siteStore ) throws CondorStyleException;
 
 
 

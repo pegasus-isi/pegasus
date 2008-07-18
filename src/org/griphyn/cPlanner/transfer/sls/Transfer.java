@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.transfer.sls;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -97,7 +98,8 @@ public class Transfer   implements SLS {
     /**
      * The handle to the site catalog.
      */
-    protected PoolInfoProvider mSiteHandle;
+//    protected PoolInfoProvider mSiteHandle;
+    protected SiteStore mSiteStore;
 
     /**
      * The handle to the transformation catalog.
@@ -145,14 +147,16 @@ public class Transfer   implements SLS {
     public void initialize( PegasusBag bag ) {
         mProps      = bag.getPegasusProperties();
         mLogger     = bag.getLogger();
-        mSiteHandle = bag.getHandleToSiteCatalog();
+//        mSiteHandle = bag.getHandleToSiteCatalog();
+        mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
         mLocalUserProxy = getPathToUserProxy();
         mLocalUserProxyBasename = (mLocalUserProxy == null) ?
                                   null :
                                   new File(mLocalUserProxy).getName();
 
-        mLocalURLPrefix = mSiteHandle.getURLPrefix( "local" );
+//        mLocalURLPrefix = mSiteHandle.getURLPrefix( "local" );
+        mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
     }
 
     /**
@@ -314,7 +318,8 @@ public class Transfer   implements SLS {
         //figure out the remote site's headnode gridftp server
         //and the working directory on it.
         //the below should be cached somehow
-        String sourceURLPrefix = mSiteHandle.getURLPrefix( job.getSiteHandle() );
+//        String sourceURLPrefix = mSiteHandle.getURLPrefix( job.getSiteHandle() );
+         String sourceURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         //String sourceDir = mSiteHandle.getExecPoolWorkDir( job );
         String sourceDir = headNodeDirectory;
         String destDir = workerNodeDirectory;
@@ -394,7 +399,8 @@ public class Transfer   implements SLS {
         //figure out the remote site's headnode gridftp server
         //and the working directory on it.
         //the below should be cached somehow
-        String destURLPrefix = mSiteHandle.getURLPrefix( job.getSiteHandle() );
+//        String destURLPrefix = mSiteHandle.getURLPrefix( job.getSiteHandle() );
+        String destURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
         //String sourceDir = mSiteHandle.getExecPoolWorkDir( job );
         String destDir = headNodeDirectory;
         String sourceDir = workerNodeDirectory;
@@ -477,8 +483,12 @@ public class Transfer   implements SLS {
             //the destination URL is the working directory on the filesystem
             //on the head node where the job is to be run.
             StringBuffer destURL = new StringBuffer();
-            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-                    append( mSiteHandle.getExecPoolWorkDir(job)).append( separator ).
+//            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
+//                    append( mSiteHandle.getExecPoolWorkDir(job)).append( separator ).
+//                    append( slsInputLFN );
+            destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() ).
+                    append( separator ).
+                    append( mSiteStore.getWorkDirectory( job ) ).append( separator ).
                     append( slsInputLFN );
             ft.addDestination( job.getSiteHandle(), destURL.toString() );
 
@@ -502,9 +512,14 @@ public class Transfer   implements SLS {
             //the destination URL is the working directory on the filesystem
             //on the head node where the job is to be run.
             StringBuffer destURL = new StringBuffer();
-            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-                    append( mSiteHandle.getExecPoolWorkDir( job ) ).append( separator ).
+//            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
+//                    append( mSiteHandle.getExecPoolWorkDir( job ) ).append( separator ).
+//                    append( slsOutputLFN );
+            destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() )
+                    .append( separator ).
+                    append( mSiteStore.getWorkDirectory( job ) ).append( separator ).
                     append( slsOutputLFN );
+
             ft.addDestination( job.getSiteHandle(), destURL.toString()  );
 
             //add this as input file for the job
@@ -519,8 +534,12 @@ public class Transfer   implements SLS {
             proxy.addSource( "local" , sourceURL.toString() );
 
             StringBuffer destURL = new StringBuffer();
-            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-                    append( mSiteHandle.getExecPoolWorkDir( job ) ).append( separator ).
+//            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
+//                    append( mSiteHandle.getExecPoolWorkDir( job ) ).append( separator ).
+//                    append( mLocalUserProxyBasename );
+            
+            destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() ).append( separator ).
+                    append( mSiteStore.getWorkDirectory( job ) ).append( separator ).
                     append( mLocalUserProxyBasename );
             proxy.addDestination( job.getSiteHandle(), destURL.toString()  );
             job.addInputFile( proxy );
@@ -580,19 +599,7 @@ public class Transfer   implements SLS {
      *         null if no path is found.
      */
     protected String getPathToUserProxy(){
-        List l = mSiteHandle.getPoolProfile( "local", Profile.ENV );
-        String proxy = null;
-
-        if( l != null ){
-            //try to get the path to the proxy on local pool
-            for( Iterator it = l.iterator(); it.hasNext(); ){
-                Profile p = ( Profile )it.next();
-                proxy = p.getProfileKey().equalsIgnoreCase( ENV.X509_USER_PROXY_KEY )?
-                        p.getProfileValue():
-                        proxy;
-            }
-        }
-
+        String proxy = mSiteStore.getEnvironmentVariable( "local", ENV.X509_USER_PROXY_KEY);
         //overload from the properties file
         ENV env = new ENV();
         env.checkKeyInNS( mProps,"local" );
@@ -663,9 +670,9 @@ public class Transfer   implements SLS {
 
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
-        String home = mSiteHandle.getPegasusHome( site );
+        String home = mSiteStore.getPegasusHome( site );
         //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mSiteHandle.getVDS_HOME( site ): home;
+        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
                      Separator.combine( namespace, name, version ) +
@@ -736,7 +743,7 @@ public class Transfer   implements SLS {
         List result = new ArrayList(2) ;
 
         //create the CLASSPATH from home
-        String globus = mSiteHandle.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
+        String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
         if( globus == null ){
             mLogger.log( "GLOBUS_LOCATION not set in site catalog for site " + site,
                          LogManager.DEBUG_MESSAGE_LEVEL );
@@ -746,7 +753,7 @@ public class Transfer   implements SLS {
 
 
         //check for LD_LIBRARY_PATH
-        String ldpath = mSiteHandle.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
+        String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
         if ( ldpath == null ){
             //construct a default LD_LIBRARY_PATH
             ldpath = globus;

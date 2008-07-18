@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.transfer.sls;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -61,7 +62,8 @@ public class Condor   implements SLS {
     /**
      * The handle to the site catalog.
      */
-    protected PoolInfoProvider mSiteHandle;
+//    protected PoolInfoProvider mSiteHandle;
+    protected SiteStore mSiteStore;
 
 
     /**
@@ -96,7 +98,8 @@ public class Condor   implements SLS {
         mProps      = bag.getPegasusProperties();
         mPOptions   = bag.getPlannerOptions();
         mLogger     = bag.getLogger();
-        mSiteHandle = bag.getHandleToSiteCatalog();
+//        mSiteHandle = bag.getHandleToSiteCatalog();
+        mSiteStore = bag.getHandleToSiteStore();
     }
 
     /**

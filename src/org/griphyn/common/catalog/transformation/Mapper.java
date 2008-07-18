@@ -17,13 +17,13 @@
 
 package org.griphyn.common.catalog.transformation;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.classes.TCMap;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
-
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.transformation.mapper.Staged;
@@ -61,7 +61,8 @@ public abstract class Mapper {
     /**
      * The handle to the RIC.
      */
-    protected PoolInfoProvider mPoolHandle;
+//    protected PoolInfoProvider mPoolHandle;
+    protected SiteStore mSiteStore;
 
     /**
      * Handle to Pegasus Properties
@@ -85,10 +86,11 @@ public abstract class Mapper {
      * @param className  The name of the class that implements the mode. It is the
      *                   name of the class, not the complete name with package. That
      *                   is added by itself.
+     * @param bag        the bag of initialization objects
      *
      * @return Mapper
      */
-    public static Mapper loadTCMapper( String className ) {
+    public static Mapper loadTCMapper( String className, PegasusBag bag ) {
 
         //prepend the package name
         className = PACKAGE_NAME + "." + className;
@@ -97,7 +99,8 @@ public abstract class Mapper {
         Mapper ss = null;
         DynamicLoader dl = new DynamicLoader( className );
         try {
-            Object argList[] = new Object[0 ];
+            Object argList[] = new Object[ 1 ];
+            argList[ 0 ] = bag;
             ss = ( Mapper ) dl.instantiate( argList );
         } catch ( Exception e ) {
             System.err.println( dl.convertException( e ) );
@@ -109,17 +112,15 @@ public abstract class Mapper {
 
     /**
      * The private constructor.
+     * 
+     * @param bag        the bag of initialization objects
      */
-    protected Mapper() {
-        mLogger = LogManager.getInstance();
-        mTCHandle = TCMode.loadInstance();
-        mProps = PegasusProperties.getInstance();
-        mTCMap = new TCMap();
-        String mPoolClass = PoolMode.getImplementingClass( mProps.getPoolMode() );
-        String mPoolFile = mProps.getPoolFile();
-        mPoolHandle = PoolMode.loadPoolInstance( mPoolClass, mPoolFile,
-            PoolMode.SINGLETON_LOAD );
-
+    protected Mapper( PegasusBag bag ) {
+        mLogger   = bag.getLogger();
+        mTCHandle = bag.getHandleToTransformationCatalog();
+        mProps    = bag.getPegasusProperties();
+        mSiteStore= bag.getHandleToSiteStore();
+        mTCMap    = new TCMap();
     }
 
     /**

@@ -17,14 +17,14 @@
 
 package org.griphyn.cPlanner.transfer.implementation;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.JobManager;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.Utility;
@@ -36,8 +36,6 @@ import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.VDS;
 import org.griphyn.cPlanner.namespace.ENV;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 import org.griphyn.cPlanner.transfer.Implementation;
 import org.griphyn.cPlanner.transfer.Refiner;
@@ -47,7 +45,6 @@ import org.griphyn.common.classes.TCType;
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
-import org.griphyn.common.catalog.transformation.TCMode;
 
 import java.io.File;
 
@@ -57,6 +54,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.StringTokenizer;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.common.util.Separator;
 
 /**
@@ -133,7 +131,13 @@ public abstract class Abstract implements Implementation{
     /**
      * The handle to the Site Catalog. It is instantiated in this class.
      */
-    protected PoolInfoProvider mSCHandle;
+//    protected PoolInfoProvider mSCHandle;
+    /**
+     * The handle to the Pool Info Provider. It is instantiated in this class
+     */
+   //protected PoolInfoProvider mPoolHandle;
+    protected SiteStore mSiteStore;
+
 
     /**
      * The handle to the Transformation Catalog. It must be instantiated  in the
@@ -163,24 +167,18 @@ public abstract class Abstract implements Implementation{
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     * @param bag   the bag of initialization objects.
      */
-    public Abstract( PegasusProperties properties, PlannerOptions options ){
-        mProps = properties;
-        mPOptions = options;
-        mLogger = LogManager.getInstance();
-
+    public Abstract( PegasusBag bag ){
+        mProps     = bag.getPegasusProperties();
+        mPOptions  = bag.getPlannerOptions();
+        mLogger    = bag.getLogger();
+        mSiteStore = bag.getHandleToSiteStore();        
+        mTCHandle = bag.getHandleToTransformationCatalog();
+        
         //build up the set of disabled chmod sites
-        mDisabledChmodSites = determineDisabledChmodSites( properties.getChmodDisabledSites() );
+        mDisabledChmodSites = determineDisabledChmodSites( mProps.getChmodDisabledSites() );
 
-        //load the site catalog
-        String poolFile = mProps.getPoolFile();
-        String poolClass = PoolMode.getImplementingClass(mProps.getPoolMode());
-        mSCHandle = PoolMode.loadPoolInstance(poolClass, poolFile,
-                                              PoolMode.SINGLETON_LOAD);
-        //load transformation catalog
-        mTCHandle = TCMode.loadInstance();
         mLocalUserProxy = getPathToUserProxy();
         mLocalUserProxyBasename = (mLocalUserProxy == null) ?
                                   null :
@@ -550,7 +548,8 @@ public abstract class Abstract implements Implementation{
     protected SubInfo createSetXBitJob(FileTransfer file, String name){
         SubInfo xBitJob = new SubInfo();
         TransformationCatalogEntry entry   = null;
-        JobManager jobManager = null;
+//        JobManager jobManager = null;
+        GridGateway jobManager = null;
         NameValue destURL  = (NameValue)file.getDestURL();
         String eSiteHandle = destURL.getKey();
 
@@ -587,8 +586,10 @@ public abstract class Abstract implements Implementation{
         }
 
 
-        SiteInfo eSite = mSCHandle.getPoolEntry(eSiteHandle, "transfer");
-        jobManager     = eSite.selectJobManager("transfer",true);
+//        SiteInfo eSite = mSCHandle.getPoolEntry(eSiteHandle, "transfer");
+//        jobManager     = eSite.selectJobManager("transfer",true);
+        SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
+        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         String arguments = " -X -f " + Utility.getAbsolutePath(destURL.getValue());
 
         xBitJob.jobName     = name;
@@ -599,7 +600,8 @@ public abstract class Abstract implements Implementation{
         xBitJob.dvNamespace = this.XBIT_DERIVATION_NS;
         xBitJob.dvVersion   = this.XBIT_DERIVATION_VERSION;
         xBitJob.condorUniverse  = "vanilla";
-        xBitJob.globusScheduler = jobManager.getInfo(JobManager.URL);
+//        xBitJob.globusScheduler = jobManager.getInfo(JobManager.URL);
+        xBitJob.globusScheduler = jobManager.getContact();
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
         xBitJob.strargs         = arguments;
@@ -608,17 +610,18 @@ public abstract class Abstract implements Implementation{
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        xBitJob.updateProfiles(mSCHandle.getPoolProfile(eSiteHandle));
+//        xBitJob.updateProfiles(mSCHandle.getPoolProfile(eSiteHandle));
+        xBitJob.updateProfiles( eSite.getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
         //overriding the one from pool catalog.
-        xBitJob.updateProfiles(entry);
+        xBitJob.updateProfiles( entry );
 
         //the profile information from the properties file
         //is assimilated overidding the one from transformation
         //catalog.
-        xBitJob.updateProfiles(mProps);
+        xBitJob.updateProfiles( mProps );
 
         return xBitJob;
     }
@@ -636,9 +639,9 @@ public abstract class Abstract implements Implementation{
     private  TransformationCatalogEntry defaultXBitTCEntry( String site ){
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
-        String home = mSCHandle.getPegasusHome( site );
+        String home = mSiteStore.getPegasusHome( site );
         //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mSCHandle.getVDS_HOME( site ): home;
+        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         //if home is still null
         if ( home == null ){
@@ -763,6 +766,7 @@ public abstract class Abstract implements Implementation{
      *         null if no path is found.
      */
     protected String getPathToUserProxy(){
+/*        
         List l = mSCHandle.getPoolProfile("local",Profile.ENV);
         String proxy = null;
 
@@ -775,7 +779,8 @@ public abstract class Abstract implements Implementation{
                         proxy;
             }
         }
-
+*/
+        String proxy = mSiteStore.lookup( "local" ).getEnvironmentVariable( ENV.X509_USER_PROXY_KEY );
         //overload from the properties file
         ENV env = new ENV();
         env.checkKeyInNS(mProps,"local");

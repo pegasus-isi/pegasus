@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 /**
@@ -50,14 +51,11 @@ public abstract class SingleFTPerXFERJobRefiner extends AbstractRefiner{
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag        the bag of initialization objects
      */
-    public SingleFTPerXFERJobRefiner(ADag dag,
-                                     PegasusProperties properties,
-                                     PlannerOptions options){
-          super(dag,properties,options);
+    public SingleFTPerXFERJobRefiner( ADag dag,
+                                      PegasusBag bag  ){
+          super( dag, bag );
     }
 
 
@@ -71,28 +69,26 @@ public abstract class SingleFTPerXFERJobRefiner extends AbstractRefiner{
      * at runtime in the properties file. The properties object passed should not
      * be null.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options with which the planner was invoked.
+     * 
+     * @param bag        the bag of initialization objects
      *
      * @exception TransferImplementationFactoryException that nests any error that
      *            might occur during the instantiation.
      */
-    public void loadImplementations(PegasusProperties properties,
-                                             PlannerOptions options)
+    public void loadImplementations( PegasusBag bag )
         throws TransferImplementationFactoryException{
 
         //this can work with any Implementation Factory
         this.mTXStageInImplementation = ImplementationFactory.loadInstance(
-                                              properties,options,
+                                              bag,
                                               ImplementationFactory.TYPE_STAGE_IN);
         this.mTXStageInImplementation.setRefiner(this);
         this.mTXInterImplementation = ImplementationFactory.loadInstance(
-                                              properties,options,
+                                              bag,
                                               ImplementationFactory.TYPE_STAGE_INTER);
         this.mTXInterImplementation.setRefiner(this);
         this.mTXStageOutImplementation = ImplementationFactory.loadInstance(
-                                               properties,options,
+                                               bag,
                                                ImplementationFactory.TYPE_STAGE_OUT);
         this.mTXStageOutImplementation.setRefiner(this);
         //log config messages message

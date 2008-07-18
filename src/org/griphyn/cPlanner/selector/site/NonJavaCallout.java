@@ -18,6 +18,8 @@
 package org.griphyn.cPlanner.selector.site;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.GridFTPServer;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -547,7 +549,7 @@ public class NonJavaCallout extends AbstractPerJob {
                     st = "resource.id=" + pool + " ";
 
                     // get handle to pool config
-                    List l = mSCHandle.getGridFTPServers(pool);
+/*                    List l = mSCHandle.getGridFTPServers(pool);
                     if (l == null || l.isEmpty()) {
                         // FIXME: How hard should this error be?
                         mLogger.log("Site " + pool +
@@ -561,6 +563,11 @@ public class NonJavaCallout extends AbstractPerJob {
                             pw.println(st + ( (GridFTPServer) j.next()).
                                        getInfo(GridFTPServer.GRIDFTP_URL));
                         }
+                    }
+ */
+                    SiteCatalogEntry site = mSiteStore.lookup( pool );
+                    for( Iterator it = site.getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator(); it.hasNext();){
+                        pw.println(st + ( (FileServer) it.next()).getURLPrefix() );
                     }
                 } // for
             }

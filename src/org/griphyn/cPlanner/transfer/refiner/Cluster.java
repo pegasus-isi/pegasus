@@ -47,6 +47,7 @@ import java.util.HashSet;
 
 import java.util.Map;
 import java.util.HashMap;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 
 
@@ -114,13 +115,11 @@ public class Cluster extends Bundle {
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag        the bag of initialization objects
      *
      */
-    public Cluster( ADag dag, PegasusProperties properties, PlannerOptions options ){
-        super( dag, properties, options );
+    public Cluster( ADag dag, PegasusBag bag ){
+        super( dag, bag );
         mCurrentSILevel = -1;
         mSyncJobMap = new HashMap< String, SubInfo >();
     }

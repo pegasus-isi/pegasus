@@ -16,6 +16,9 @@
 
 package org.griphyn.cPlanner.engine;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.SiteInfo;
@@ -202,7 +205,7 @@ public abstract class CreateDirectory
      * @param bag      bag of initialization objects
      */
     protected CreateDirectory( PegasusBag bag ) {
-        super( bag.getPegasusProperties() );
+        super( bag );
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
         mCurrentDag = null;
         mUserOpts = UserOptions.getInstance();
@@ -308,7 +311,8 @@ public abstract class CreateDirectory
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-        JobManager jobManager = null;
+//        JobManager jobManager = null;
+        GridGateway jobManager = null;
 
         try {
             entries = mTCHandle.getTCEntries( CreateDirectory.TRANSFORMATION_NAMESPACE,
@@ -341,8 +345,10 @@ public abstract class CreateDirectory
 
 
 
-        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
-        jobManager = ePool.selectJobManager("transfer",true);
+//        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
+//        jobManager = ePool.selectJobManager("transfer",true);
+        SiteCatalogEntry ePool = mSiteStore.lookup( execPool );
+        
 
         String argString = null;
         if( mUseMkdir ){
@@ -360,13 +366,13 @@ public abstract class CreateDirectory
                append( File.separator ).append( "dirmanager" );
             execPath = sb.toString();
             argString = "--create --dir " +
-                        mPoolHandle.getExecPoolWorkDir( execPool );
+                        mSiteStore.getWorkDirectory( execPool );
             newJob.condorVariables.construct( "transfer_executable", "true" );
         }
         else{
             execPath = entry.getPhysicalTransformation();
             argString = "--create --dir " +
-                        mPoolHandle.getExecPoolWorkDir( execPool );
+                        mSiteStore.getWorkDirectory( execPool );
         }
 
         newJob.jobName = jobName;
@@ -377,7 +383,7 @@ public abstract class CreateDirectory
                               CreateDirectory.DERIVATION_NAME,
                               CreateDirectory.DERIVATION_VERSION );
         newJob.condorUniverse = "vanilla";
-        newJob.globusScheduler = jobManager.getInfo(JobManager.URL);
+        newJob.globusScheduler = jobManager.getContact();
         newJob.executable = execPath;
         newJob.executionPool = execPool;
         newJob.strargs = argString;
@@ -386,7 +392,7 @@ public abstract class CreateDirectory
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        newJob.updateProfiles(mPoolHandle.getPoolProfile(newJob.executionPool));
+        newJob.updateProfiles( ePool.getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
@@ -415,9 +421,9 @@ public abstract class CreateDirectory
     private  TransformationCatalogEntry defaultTCEntry( String site ){
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
-        String home = mPoolHandle.getPegasusHome( site );
+        String home = mSiteStore.getPegasusHome( site );
         //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mPoolHandle.getVDS_HOME( site ): home;
+        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
                      COMPLETE_TRANSFORMATION_NAME +

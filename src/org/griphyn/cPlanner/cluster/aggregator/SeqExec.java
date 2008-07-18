@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.cluster.aggregator;
 
-import org.griphyn.cPlanner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 import org.griphyn.cPlanner.code.gridstart.ExitPOST;
@@ -26,19 +26,17 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.cPlanner.namespace.VDS;
 import org.griphyn.cPlanner.namespace.Dagman;
 
-import java.util.List;
 
-import java.io.File;
-import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.code.GridStart;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
+
+
+import java.util.List;
 
 /**
  * This class aggregates the smaller jobs in a manner such that
@@ -168,8 +166,14 @@ public class SeqExec extends Abstract {
      */
     protected AggregatedJob  enable(  AggregatedJob mergedJob, List jobs  ){
         SubInfo firstJob = (SubInfo)jobs.get(0);
-        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
-                                                  Condor.VANILLA_UNIVERSE);
+        
+//        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
+//                                                  Condor.VANILLA_UNIVERSE);
+
+        SiteCatalogEntry site = mSiteStore.lookup( firstJob.getSiteHandle() );
+        
+        //NEEDS TO BE FIXED AS CURRENTLY NO PLACEHOLDER FOR Kickstart 
+        //PATH IN THE NEW SITE CATALOG Karan July 10, 2008
         GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,
                                                                site.getKickstartPath() );
 

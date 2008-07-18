@@ -16,23 +16,19 @@
 
 package org.griphyn.cPlanner.cluster.aggregator;
 
-import org.griphyn.cPlanner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 
 import java.util.List;
-import java.util.Iterator;
 import org.griphyn.cPlanner.code.GridStart;
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
@@ -123,13 +119,17 @@ public class MPIExec extends Abstract {
         //we cannot invoke any of clustered jobs also via kickstart
         //as the output will be clobbered
         SubInfo firstJob = (SubInfo)jobs.get(0);
-        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
-                                                  Condor.VANILLA_UNIVERSE);
+        
+//        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
+//                                                  Condor.VANILLA_UNIVERSE);
 
+        SiteCatalogEntry site = mSiteStore.lookup( firstJob.getSiteHandle() );
         firstJob.vdsNS.construct( VDS.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[
                                                           GridStartFactory.NO_GRIDSTART_INDEX] );
 
+        //NEEDS TO BE FIXED AS CURRENTLY NO PLACEHOLDER FOR Kickstart 
+        //PATH IN THE NEW SITE CATALOG Karan July 10, 2008
         GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,
                                                                site.getKickstartPath() );
 

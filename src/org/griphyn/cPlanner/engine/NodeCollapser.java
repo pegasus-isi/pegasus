@@ -96,7 +96,7 @@ public class NodeCollapser extends Engine {
      *
      */
     public NodeCollapser( PegasusBag bag ) {
-        super( bag.getPegasusProperties() );
+        super( bag );
         mBag = bag;
         mLogger = bag.getLogger();
         mGraph  = new HashMap();

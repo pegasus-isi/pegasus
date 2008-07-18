@@ -17,6 +17,10 @@
 package org.griphyn.cPlanner.engine;
 
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.LRC;
 import org.griphyn.cPlanner.classes.NameValue;
@@ -54,6 +58,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This coordinates the look up to the Replica Location Service, to determine
@@ -192,12 +197,27 @@ public class ReplicaCatalogBridge
      *
      */
     public ReplicaCatalogBridge( ADag dag ,
-                                 PegasusProperties properties,
-                                 PlannerOptions options ) {
-        super( properties );
-        this.initialize( dag, properties, options);
+//                                 PegasusProperties properties,
+//                                 PlannerOptions options 
+                                 PegasusBag bag ) {
+        super( bag );
+        this.initialize( dag, bag );
     }
 
+    /**
+     * Intialises the refiner.
+     *
+     * @param dag         the workflow that is being worked on.
+     * @param bag         the bag of Pegasus initialization objects
+     *
+     */
+    public void initialize( ADag dag ,
+                            PegasusBag bag ){
+        
+        this.initialize( dag, bag.getPegasusProperties(), bag.getPlannerOptions() );
+
+    }
+    
     /**
      * Intialises the refiner.
      *
@@ -419,7 +439,8 @@ public class ReplicaCatalogBridge
                               this.RC_DERIVATION_NAME,
                               this.RC_DERIVATION_VERSION );
 
-        SiteInfo site = mPoolHandle.getPoolEntry( mOutputPool, "vanilla" );
+//        SiteInfo site = mPoolHandle.getPoolEntry( mOutputPool, "vanilla" );
+        SiteCatalogEntry site = mSiteStore.lookup( mOutputPool );
 
         //change this function
         List tcentries = null;
@@ -461,7 +482,8 @@ public class ReplicaCatalogBridge
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        newJob.updateProfiles( mPoolHandle.getPoolProfile( newJob.getSiteHandle() ) );
+//        newJob.updateProfiles( mPoolHandle.getPoolProfile( newJob.getSiteHandle() ) );
+        newJob.updateProfiles( mSiteStore.lookup( newJob.getSiteHandle() ).getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
@@ -594,7 +616,7 @@ public class ReplicaCatalogBridge
      * At present by default it would be picking up the file containing the
      * mappings.
      *
-     * @param site     the <code>SiteInfo</code> object/
+     * @param site     the <code>SiteCatalogEntry</code> object
      * @param regJob   The name of the registration job.
      *
      * @param files Collection of <code>FileTransfer</code> objects containing the
@@ -603,15 +625,16 @@ public class ReplicaCatalogBridge
      *
      * @return the argument string.
      */
-    private String generateRepJobArgumentString( SiteInfo site, String regJob, Collection files ) {
+    private String generateRepJobArgumentString( SiteCatalogEntry site, String regJob, Collection files ) {
         StringBuffer arguments = new StringBuffer();
 
         //select a LRC. disconnect here. It should be select a RC.
 
-        LRC lrc = (site == null) ? null : site.selectLRC(true);
-        if (lrc  == null || lrc.getURL() == null || lrc.getURL().length() == 0) {
+        edu.isi.pegasus.planner.catalog.site.classes.ReplicaCatalog rc =
+                                (site == null) ? null : site.selectReplicaCatalog();
+        if ( rc  == null || rc.getURL() == null || rc.getURL().length() == 0) {
             throw new RuntimeException(
-                "The LRC URL is not specified in site catalog for site " + mOutputPool );
+                "The Replica Catalog URL is not specified in site catalog for site " + mOutputPool );
         }
 
         //get any command line properties that may need specifying
@@ -619,7 +642,7 @@ public class ReplicaCatalogBridge
 
         //we have a lrc selected . construct vds.rc.url property
         arguments.append( "-D" ).append( ReplicaCatalog.c_prefix ).append( "." ).
-                  append( this.REPLICA_CATALOG_URL_KEY).append( "=" ).append( lrc.getURL() ).
+                  append( this.REPLICA_CATALOG_URL_KEY).append( "=" ).append( rc.getURL() ).
                   append( " " );
 
         //append the insert option
@@ -798,7 +821,9 @@ public class ReplicaCatalogBridge
         ENV env = new ENV();
 
         //load from the pool.config
-        env.checkKeyInNS( mPoolHandle.getPoolProfile( "local", Profile.ENV ) );
+//        env.checkKeyInNS( mPoolHandle.getPoolProfile( "local", Profile.ENV ) );
+        SiteCatalogEntry local = mSiteStore.lookup( "local" );        
+        env.checkKeyInNS( local.getProfiles().get( Profiles.NAMESPACES.env ) );
         //load from property file
         env.checkKeyInNS( mProps.getLocalPoolEnvVar() );
 

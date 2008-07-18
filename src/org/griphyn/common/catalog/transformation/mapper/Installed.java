@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  *This class only generates maps for sites with installed transformations.
@@ -53,13 +54,14 @@ public class Installed
 //    protected Map mNullMap;
 
     /**
-     * The default constructor.
+     * The protected constructor.
+     * 
+     * @param bag        the bag of initialization objects
      */
-    public Installed() {
-        super();
-//        mNullMap = new HashMap();
+    public Installed( PegasusBag bag ) {
+        super( bag );
     }
-
+    
     /**
      * This method returns a Map of compute sites to List of
      * TransformationCatalogEntry objects that are valid for that site.
@@ -128,7 +130,7 @@ public class Installed
         }
         //get the system info for the sites from the RIC
         if ( tcentries != null ) {
-            sysinfomap = mPoolHandle.getSysinfos( hassite? siteids : falseSites );
+            sysinfomap = mSiteStore.getSysInfos( hassite? siteids : falseSites );
         } else {
             //throw an execption only if cacheSites is empty
             if( cacheSites.isEmpty() ){

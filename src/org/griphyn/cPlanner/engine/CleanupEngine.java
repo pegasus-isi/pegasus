@@ -32,6 +32,7 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 import java.util.Iterator;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The refiner that results in the creation of cleanup jobs within the workflow.
@@ -46,14 +47,11 @@ public class CleanupEngine extends Engine {
     /**
      * The overloaded constructor.
      *
-     * @param properties the handle to the properties object.
-     * @param options    the options specified by the user to run the planner.
+     * @param bag  the bag of initialization objects
      *
      */
-    public CleanupEngine( PegasusProperties properties, PlannerOptions options) {
-        super( properties );
-        mLogger = LogManager.getInstance();
-        mPOptions = options;
+    public CleanupEngine( PegasusBag bag ) {
+        super( bag );
     }
 
     /**

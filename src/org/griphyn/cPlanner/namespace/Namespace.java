@@ -162,6 +162,22 @@ public abstract class Namespace extends Data{
                                                namespaceName());
    }
 
+   /**
+    * It puts in the namespaces keys from another namespace instance.
+    * 
+    * @param nm  the namespace to be assimilated
+    */
+   public void checkKeyInNS( Namespace nm ) {
+       if( !nm.namespaceName().equals( this.namespaceName() ) ){
+           //mismatch of namespaces
+           throw new RuntimeException( "Mismatch of namespaces " + this.namespaceName() + " " + nm.namespaceName() );
+       }
+       for( Iterator it = nm.getProfileKeyIterator(); it.hasNext() ; ){
+           String key = ( String )it.next();
+           this.checkKeyInNS( key, (String) nm.get(key) );
+       }
+        
+    }
 
    /**
     * It puts in the namespace specific information from the Transformation

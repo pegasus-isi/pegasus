@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The implementation that is used to create transfer jobs that callout to
@@ -122,11 +123,10 @@ public class SRM extends AbstractMultipleFTPerXFERJob {
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     * @param  bag  bag of intialization objects.
      */
-    public SRM(PegasusProperties properties, PlannerOptions options) {
-        super(properties, options);
+    public SRM( PegasusBag bag ) {
+        super( bag );
     }
 
     /**

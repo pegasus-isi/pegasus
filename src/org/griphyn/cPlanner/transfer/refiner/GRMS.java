@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.StringTokenizer;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The refiner that is compatible with the GRMS system. In this the job
@@ -76,13 +77,11 @@ public class GRMS extends SingleFTPerXFERJobRefiner {
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag        the bag of initialization objects
      *
      */
-    public GRMS(ADag dag,PegasusProperties properties,PlannerOptions options){
-        super(dag,properties,options);
+    public GRMS( ADag dag, PegasusBag bag ){
+        super( dag, bag );
         //we have to convert all the jobs in the vector to type GRMS
         Iterator it = dag.vJobSubInfos.iterator();
         List l = new java.util.ArrayList();

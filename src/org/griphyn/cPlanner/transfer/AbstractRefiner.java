@@ -19,6 +19,7 @@ package org.griphyn.cPlanner.transfer;
 import org.griphyn.cPlanner.transfer.Refiner;
 
 import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
@@ -100,20 +101,17 @@ public abstract class AbstractRefiner implements Refiner{
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag   the bag of initialization objects.
      */
-    public AbstractRefiner(ADag dag,
-                           PegasusProperties properties,
-                           PlannerOptions options){
-        mLogger = LogManager.getInstance();
+    public AbstractRefiner( ADag dag,
+                            PegasusBag bag ){
+        mLogger = bag.getLogger();
         mDAG = dag;
-        mProps = properties;
-        mPOptions = options;
-        mTPT = new TPT(properties);
+        mProps = bag.getPegasusProperties();
+        mPOptions = bag.getPlannerOptions();
+        mTPT = new TPT( mProps );
         mTPT.buildState();
-        mXMLStore        = XMLProducerFactory.loadXMLProducer( properties );
+        mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
     }
 
 

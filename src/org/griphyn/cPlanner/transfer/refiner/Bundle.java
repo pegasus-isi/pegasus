@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
 /**
@@ -129,19 +130,17 @@ public class Bundle extends Default {
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner.
+     * @param bag        the bag of initialization objects
      *
      */
-    public Bundle( ADag dag, PegasusProperties properties, PlannerOptions options ){
-        super(dag, properties,options);
-        mStageInMap   = new HashMap(options.getExecutionSites().size());
+    public Bundle( ADag dag, PegasusBag bag ){
+        super( dag, bag );
+        mStageInMap   = new HashMap( mPOptions.getExecutionSites().size());
         mSIBundleMap  = new HashMap();
         mRelationsMap = new HashMap();
         mSetupMap     = new HashMap();
         mCurrentSOLevel = -1;
-        mJobPrefix    = options.getJobnamePrefix();
+        mJobPrefix    = mPOptions.getJobnamePrefix();
     }
 
     /**

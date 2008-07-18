@@ -17,6 +17,8 @@
 
 package org.griphyn.cPlanner.code.generator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SiteInfo;
@@ -29,9 +31,6 @@ import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.ENV;
-
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-
 
 import java.io.File;
 import java.io.FileWriter;
@@ -98,7 +97,12 @@ public class GRMS extends Abstract {
     /**
      * Handle to the pool provider.
      */
-    private PoolInfoProvider mPoolHandle;
+    //private PoolInfoProvider mPoolHandle;
+    
+    /**
+     * Handle to the Site Store.
+     */
+    private SiteStore mSiteStore;
 
     /**
      * The default constructor.
@@ -119,7 +123,7 @@ public class GRMS extends Abstract {
         mLogger = bag.getLogger();
 
         //get the handle to pool file
-        mPoolHandle = bag.getHandleToSiteCatalog();
+        mSiteStore = bag.getHandleToSiteStore();
 
     }
 
@@ -233,8 +237,12 @@ public class GRMS extends Abstract {
      *         launched and it's arguments.
      */
     private String gridstart(SubInfo job){
-        SiteInfo site = mPoolHandle.getPoolEntry(job.executionPool, "vanilla");
-        SiteInfo submitSite = mPoolHandle.getPoolEntry("local","vanilla");
+//        SiteInfo site = mPoolHandle.getPoolEntry(job.executionPool, "vanilla");
+//        SiteInfo submitSite = mPoolHandle.getPoolEntry("local","vanilla");
+        
+        SiteCatalogEntry site       = mSiteStore.lookup( job.getSiteHandle() );
+        SiteCatalogEntry submitSite = mSiteStore.lookup( "local" );
+        
         String gridStartPath = site.getKickstartPath();
         boolean isGlobusJob = true;
 
@@ -277,7 +285,7 @@ public class GRMS extends Abstract {
                 if (job.stdIn.length() > 0) {
                     // the output of gridstart is propagated back to the submit host
                     // to the submit file dir at the submit host
-                    String stdIn = submitSite.getURLPrefix(false) +
+                    String stdIn = submitSite.getHeadNodeFS().getScratch().getLocalDirectory().selectFileServer().getURLPrefix() +
                         File.separatorChar + mSubmitFileDir +
                         File.separator + job.jobName + ".in";
                     job.stdIn = stdIn;
@@ -311,7 +319,8 @@ public class GRMS extends Abstract {
         }
         // the output of gridstart is propagated back to the submit host
         // to the submit file dir at the submit host
-        String stdout = submitSite.getURLPrefix(false) + File.separatorChar +
+        String stdout = submitSite.getHeadNodeFS().getScratch().getLocalDirectory().selectFileServer().getURLPrefix() +
+                        + File.separatorChar +
                         mSubmitFileDir +
                         File.separator + STDOUT_PREFIX + job.jobName + ".xml";
         job.stdOut = stdout;
@@ -329,15 +338,15 @@ public class GRMS extends Abstract {
 
         // the error of gridstart is propagated back to the submit host
         // to the submit file dir at the submit host
-        String stderr = submitSite.getURLPrefix(false) + File.separatorChar +
-                        mSubmitFileDir +
+        String stderr = submitSite.getHeadNodeFS().getScratch().getLocalDirectory().selectFileServer().getURLPrefix()
+                        + File.separatorChar +     mSubmitFileDir +
                         File.separator +  job.jobName + ".err";
         job.stdErr = stderr;
 
         //GRMS invokes the job in it's own directory
         //make kickstart change to a directory that can be
         //tracked through the VDS by pass -w to kickstart
-        gridStartArgs.append("-w ").append(mPoolHandle.getExecPoolWorkDir(job)).
+        gridStartArgs.append("-w ").append( mSiteStore.getWorkDirectory( job ) ).
             append(' ');
 
 

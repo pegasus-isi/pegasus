@@ -17,6 +17,8 @@
 
 package org.griphyn.cPlanner.code.generator.condor.style;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.code.generator.condor.CondorStyle;
 import org.griphyn.cPlanner.code.generator.condor.CondorStyleException;
 
@@ -25,7 +27,6 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 
 /**
@@ -44,9 +45,9 @@ public abstract class Abstract implements CondorStyle {
     protected PegasusProperties mProps;
 
     /**
-     * The handle to the Site Catalog.
+     * The handle to the Site Catalog Store.
      */
-    protected PoolInfoProvider mSCHandle;
+    protected SiteStore mSiteStore;
 
 
     /**
@@ -67,15 +68,15 @@ public abstract class Abstract implements CondorStyle {
      *
      * @param properties  the <code>PegasusProperties</code> object containing all
      *                    the properties required by Pegasus.
-     * @param siteCatalog a handle to the Site Catalog being used.
+     * @param siteCatalog a handle to the Site Catalog being used. 
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
     public void initialize( PegasusProperties properties,
-                            PoolInfoProvider siteCatalog ) throws CondorStyleException{
+                            SiteStore siteStore ) throws CondorStyleException{
 
         mProps = properties;
-        mSCHandle = siteCatalog;
+        mSiteStore = siteStore;
 
     }
 

@@ -17,6 +17,10 @@
 package org.griphyn.cPlanner.classes;
 
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+
+import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
+import org.griphyn.cPlanner.namespace.Namespace;
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.ENV;
@@ -1167,6 +1171,59 @@ public class SubInfo extends Data implements GraphNodeContent{
         envVariables.checkKeyInNS(properties,executionPool);
         vdsNS.checkKeyInNS(properties,executionPool);
     }
+    
+    /**
+     * Updates all the profile namespaces with the information specified in
+     * list of profile objects passed. Pool catalog returns profile information
+     * as a list of <code>Profile</code> objects that need to be propogated to
+     * the job.
+     * It ends up updating already existing information, and adds supplemental
+     * new information if present in the properties file.
+     *
+     *
+     * @param profiles  The <code>Profiles</code> that need to be incorporated in
+     *                  the jobs profile namespaces.
+     */
+    public void updateProfiles( Profiles profiles){
+        if( profiles == null ){
+            //nothing to put in the namespaces
+            return;
+        }
+
+        String key = null;
+        Namespace n = profiles.get( NAMESPACES.condor );
+        for( Iterator it = n.getProfileKeyIterator(); it.hasNext(); ){
+            key = (String)it.next();
+            condorVariables.checkKeyInNS( key, (String)n.get( key ) );
+        }
+
+        n = profiles.get( NAMESPACES.globus );
+        for( Iterator it = n.getProfileKeyIterator(); it.hasNext(); ){
+            key = (String)it.next();
+            globusRSL.checkKeyInNS( key, (String)n.get( key ) );
+        }
+        
+        n = profiles.get( NAMESPACES.env );
+        for( Iterator it = n.getProfileKeyIterator(); it.hasNext(); ){
+            key = (String)it.next();
+            envVariables.checkKeyInNS( key, (String)n.get( key ) );
+        }
+        
+        n = profiles.get( NAMESPACES.pegasus );
+        for( Iterator it = n.getProfileKeyIterator(); it.hasNext(); ){
+            key = (String)it.next();
+            vdsNS.checkKeyInNS( key, (String)n.get( key ) );
+        }
+        
+        
+        n = profiles.get( NAMESPACES.dagman );
+        for( Iterator it = n.getProfileKeyIterator(); it.hasNext(); ){
+            key = (String)it.next();
+            dagmanVariables.checkKeyInNS( key, (String)n.get( key ) );
+        }
+
+    }
+
 
     /**
      * Updates all the profile namespaces with the information specified in

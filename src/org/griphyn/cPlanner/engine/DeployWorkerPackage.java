@@ -16,6 +16,10 @@
 
 package org.griphyn.cPlanner.engine;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
@@ -262,6 +266,7 @@ public class DeployWorkerPackage
         }
         return mOSToNMIOS;
     }
+    
     /**
      * It is a reference to the Concrete Dag so far.
      */
@@ -280,11 +285,7 @@ public class DeployWorkerPackage
     protected Implementation mSetupTransferImplementation;
 
     
-    /**
-     * The bag of initialization objects
-     */
-    protected PegasusBag mBag;
-
+    
     /**
      * The FileTransfer map indexed by site id.
      */
@@ -329,21 +330,15 @@ public class DeployWorkerPackage
      * @param bag      bag of initialization objects
      */
     public DeployWorkerPackage( PegasusBag bag ) {
-        super( bag.getPegasusProperties() );
-        mBag = bag;
-        mPOptions = bag.getPlannerOptions();
+        super( bag );
         mCurrentDag = null;
         mFTMap = new HashMap();
-        mTCHandle = bag.getHandleToTransformationCatalog();
-        mPoolHandle = bag.getHandleToSiteCatalog();
-        mLogger   = bag.getLogger();
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
 
         //load the transfer setup implementation
         //To DO . specify type for loading
         mSetupTransferImplementation = ImplementationFactory.loadInstance(
-                                                          bag.getPegasusProperties(),
-                                                          bag.getPlannerOptions(),
+                                                          bag,
                                                           ImplementationFactory.TYPE_SETUP );
         
         
@@ -359,7 +354,7 @@ public class DeployWorkerPackage
      */
     public void initialize( ADag scheduledDAG ) {
         Mapper m = mBag.getHandleToTransformationMapper();
-        PoolInfoProvider siteCatalog = mBag.getHandleToSiteCatalog();
+        SiteStore siteStore = mBag.getHandleToSiteStore();
 
         //figure if we need to deploy or not
         if( !m.isStageableMapper() ){
@@ -376,7 +371,7 @@ public class DeployWorkerPackage
         TransformationSelector txSelector = TransformationSelector.loadTXSelector( mProps.getTXSelectorMode() );
 
         mSetupTransferImplementation.setRefiner( 
-                RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mProps, scheduledDAG, mPOptions));
+                RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) );
         
         //for each site insert default entries in the Transformation Catalog
         //for each scheduled site query TCMapper
@@ -425,7 +420,7 @@ public class DeployWorkerPackage
             mLogger.log( "Selected entry " + selected, LogManager.DEBUG_MESSAGE_LEVEL );
 
             //figure out the directory where to stage the data
-            String baseRemoteWorkDir = siteCatalog.getExecPoolWorkDir( site );
+            String baseRemoteWorkDir = siteStore.getWorkDirectory( site );
             String name = getRootDirectoryNameForPegasus( selected.getPhysicalTransformation() );
             File pegasusHome = new File( baseRemoteWorkDir, name );
 
@@ -446,7 +441,10 @@ public class DeployWorkerPackage
             FileTransfer ft = new FileTransfer( COMPLETE_TRANSFORMATION_NAME, null );
             ft.addSource( selected.getResourceId(), sourceURL );
             String baseName = sourceURL.substring( sourceURL.lastIndexOf( "/" ) + 1 );
-            ft.addDestination( site, siteCatalog.getURLPrefix( site ) + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
+            ft.addDestination( site, 
+                               //siteCatalog.getURLPrefix( site ) + 
+                               siteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
+                               new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
             mFTMap.put( site, ft );
         }
     }
@@ -694,7 +692,7 @@ public class DeployWorkerPackage
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-        JobManager jobManager = null;
+        GridGateway jobManager = null;
 
         try {
             entries = mTCHandle.getTCEntries( DeployWorkerPackage.UNTAR_TRANSFORMATION_NAMESPACE,
@@ -728,8 +726,8 @@ public class DeployWorkerPackage
         execPath = entry.getPhysicalTransformation();
 
 
-        SiteInfo ePool = mPoolHandle.getPoolEntry( site, "transfer" );
-        jobManager = ePool.selectJobManager( "transfer", true );
+        SiteCatalogEntry ePool = mSiteStore.lookup( site );
+        jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         String argString = "zxvf " + wpBasename;
 
         newJob.jobName = jobName;
@@ -740,7 +738,7 @@ public class DeployWorkerPackage
                               DeployWorkerPackage.UNTAR_DERIVATION_NAME,
                               DeployWorkerPackage.UNTAR_DERIVATION_VERSION );
         newJob.condorUniverse = "vanilla";
-        newJob.globusScheduler = jobManager.getInfo(JobManager.URL);
+        newJob.globusScheduler = jobManager.getContact();
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = argString;
@@ -749,7 +747,7 @@ public class DeployWorkerPackage
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        newJob.updateProfiles(mPoolHandle.getPoolProfile(newJob.executionPool));
+        newJob.updateProfiles( ePool.getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
@@ -836,7 +834,6 @@ public class DeployWorkerPackage
      * the http webserver on the pegasus website.    
      * 
      * @param site    the execution site for which we need a matching static binary.
-     * @param sysinfo the system information of the required site.
      * @param name    name of the executable
      *
      *
@@ -848,7 +845,7 @@ public class DeployWorkerPackage
         TransformationCatalogEntry defaultTCEntry = null;
        
         //String site = "pegasus";
-        SysInfo sysinfo = mPoolHandle.getSysinfo( site );
+        SysInfo sysinfo = mSiteStore.getSysInfo( site );
 
         //construct the path to the executable
         String path = constructURLToPegasusWebsite( name, sysinfo );

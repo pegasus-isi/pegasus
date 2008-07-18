@@ -18,6 +18,14 @@
 package org.griphyn.cPlanner.toolkit;
 
 
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
+
+import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
+import edu.isi.pegasus.planner.catalog.site.SiteFactory;
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+
 import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 
@@ -38,7 +46,6 @@ import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
 
 import org.griphyn.cPlanner.engine.MainEngine;
 
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 import org.griphyn.cPlanner.parser.dax.Callback;
 import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
@@ -79,10 +86,12 @@ import java.util.regex.Pattern;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import org.griphyn.vdl.euryale.VTorInUseException;
-import org.griphyn.cPlanner.poolinfo.SiteFactory;
+
 import org.griphyn.common.catalog.transformation.TCMode;
+import org.griphyn.common.catalog.transformation.TransformationFactory;
 
 /**
  * This is the main program for the Pegasus. It parses the options specified
@@ -205,6 +214,7 @@ public class CPlanner extends Executable{
             //are thrown that may have chained causes
             cPlanner.log( convertException(rte),
                          LogManager.FATAL_MESSAGE_LEVEL );
+            rte.printStackTrace();
             result = 1;
         }
         catch ( Exception e ) {
@@ -300,6 +310,15 @@ public class CPlanner extends Executable{
             return result;
         }
 
+        //check if sites set by user. If user has not specified any sites then
+        //load all sites from site catalog.
+        Collection eSites  = mPOptions.getExecutionSites();
+        //load the site catalog and transformation catalog accordingly
+        SiteStore s = loadSiteStore( mPOptions.getExecutionSites() );
+        mBag.add( PegasusBag.SITE_STORE, s );
+        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, 
+                  TransformationFactory.loadInstance( mProps )  );
+        
 
         //populate planner metrics
         mPMetrics.setStartTime( new Date() );
@@ -324,38 +343,7 @@ public class CPlanner extends Executable{
 
         }
 
-
-
-
-        //check if sites set by user. If user has not specified any sites then
-        //load all sites from site catalog.
-        Collection eSites  = mPOptions.getExecutionSites();
-        if(eSites.isEmpty()) {
-            mLogger.log("No sites given by user. Will use sites from the site catalog",
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            List sitelist=(
-                PoolMode.loadPoolInstance(
-                              PoolMode.getImplementingClass(mProps.getPoolMode()),
-                              mProps.getPoolFile(),PoolMode.SINGLETON_LOAD)).getPools();
-
-            if(sitelist != null){
-                if ( sitelist.contains( "local" ) ) {
-                    sitelist.remove( "local" );
-                }
-                if( sitelist.size() >= 1 ) {
-                    Set siteset = new HashSet( sitelist );
-                    mPOptions.setExecutionSites( siteset );
-                    eSites = mPOptions.getExecutionSites();
-                } else {
-                    throw new RuntimeException("Only local site is available. " +
-                                               " Make sure your site catalog contains more sites");
-                }
-            } else {
-                throw new RuntimeException("No sites present in the site catalog. " +
-                                           "Please make sure your site catalog is correctly populated");
-            }
-        }
-
+        
         if(dax == null && pdax != null
            && !eSites.isEmpty()){
             //do the deferreed planning by parsing
@@ -440,7 +428,7 @@ public class CPlanner extends Executable{
 
             //populate the singleton instance for user options
             //UserOptions opts = UserOptions.getInstance(mPOptions);
-            MainEngine cwmain = new MainEngine( orgDag, mProps, mPOptions);
+            MainEngine cwmain = new MainEngine( orgDag, mBag );
 
             ADag finalDag = cwmain.runPlanner();
             DagInfo ndi = finalDag.dagInfo;
@@ -1026,11 +1014,11 @@ public class CPlanner extends Executable{
             bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
             bag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
             bag.add( PegasusBag.PLANNER_OPTIONS, mPOptions );
-            bag.add( PegasusBag.TRANSFORMATION_CATALOG, TCMode.loadInstance() );
+//            bag.add( PegasusBag.TRANSFORMATION_CATALOG, TCMode.loadInstance() );
           //bag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
             bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-            bag.add( PegasusBag.SITE_CATALOG, SiteFactory.loadInstance( mProps, false ) );
-
+            bag.add( PegasusBag.SITE_STORE, mBag.getHandleToSiteStore() );
+            bag.add( PegasusBag.TRANSFORMATION_CATALOG, mBag.getHandleToTransformationCatalog() );
 
             //start the parsing and let the fun begin
             PDAXParser p = new PDAXParser( file , mProps );
@@ -1352,7 +1340,57 @@ public class CPlanner extends Executable{
                  result  ://means we need to start planning now
                  !result;
           
-      }   
+      }
+
+    /**
+     * 
+     * @param sites
+     * @return SiteStore object containing the information about the sites.
+     */
+    private SiteStore loadSiteStore( Collection<String> sites ) {
+        SiteStore result = new SiteStore();
+        if( sites.isEmpty() ) {
+            mLogger.log("No sites given by user. Will use sites from the site catalog",
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            sites.add( "*" );
+        }
+        SiteCatalog catalog = null;
+        
+        /* load the catalog using the factory */
+        catalog = SiteFactory.loadInstance( mProps );
+        
+        /* always load local site */
+        sites.add( "local" );
+
+        /* load the sites in site catalog */
+        try{
+            catalog.load( new ArrayList( sites ) );
+        
+            /* query for the sites, and print them out */
+            mLogger.log( "Sites loaded are "  + catalog.list( ) ,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
+            
+            //load into SiteStore from the catalog.
+            for( Iterator<String> it = sites.iterator(); it.hasNext(); ){
+                SiteCatalogEntry s = catalog.lookup( it.next() );
+                if( s != null ){
+                    result.addEntry( s );
+                }
+            }
+        }
+        catch ( SiteCatalogException e ){
+            throw new RuntimeException( "Unable to load from site catalog " , e );
+        }
+        finally{
+            /* close the connection */
+            try{
+                catalog.close();
+            }catch( Exception e ){}
+        }
+
+        return result;
+    }
 
 
     /**

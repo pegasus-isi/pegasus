@@ -111,29 +111,22 @@ public class MainEngine
      */
     private NodeCollapser mNodeCollapser;
 
-    /**
-     * The bag of objects that is populated as planner is run.
-     */
-    private PegasusBag mBag;
-
+    
 
     /**
      * This constructor initialises the class variables to the variables
      * passed. The pool names specified should be present in the pool.config file
      *
      * @param orgDag    the dag to be worked on.
-     * @param props   the properties to be used.
-     * @param options   The options specified by the user to run the planner.
+     * @param bag       the bag of initialization objects
      */
 
-    public MainEngine( ADag orgDag, PegasusProperties props, PlannerOptions options) {
+    public MainEngine( ADag orgDag, PegasusBag bag ) {
 
-        super( props );
+        super( bag );
         mOriginalDag = orgDag;
-        this.mPOptions = options;
         mExecPools = (Set)mPOptions.getExecutionSites();
         mOutputPool = mPOptions.getOutputSite();
-        mTCHandle = TCMode.loadInstance();
 
         if (mOutputPool != null && mOutputPool.length() > 0) {
             Engine.mOutputPool = mOutputPool;
@@ -149,7 +142,7 @@ public class MainEngine
     public ADag runPlanner() {
         //do the authentication against the pools
         if (mPOptions.authenticationSet()) {
-            mAuthEng = new AuthenticateEngine( mProps,
+            mAuthEng = new AuthenticateEngine( mBag,
                           new java.util.HashSet(mPOptions.getExecutionSites()));
 
             mLogger.log("Authenticating Sites", LogManager.INFO_MESSAGE_LEVEL);
@@ -171,10 +164,10 @@ public class MainEngine
 
         Vector vDelLeafJobs = new Vector();
         String message = null;
-        mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mProps, mPOptions );
+        mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mBag );
 
 
-        mRedEng = new ReductionEngine( mOriginalDag, mProps, mPOptions);
+        mRedEng = new ReductionEngine( mOriginalDag, mBag );
         mReducedDag = mRedEng.reduceDag( mRCBridge );
         vDelLeafJobs = mRedEng.getDeletedLeafJobs();
         mRedEng = null;
@@ -183,7 +176,7 @@ public class MainEngine
         //unmarkArgs();
         message = "Doing site selection" ;
         mLogger.log(message, LogManager.INFO_MESSAGE_LEVEL);
-        mIPEng = new InterPoolEngine( mReducedDag, mProps, mPOptions );
+        mIPEng = new InterPoolEngine( mReducedDag, mBag );
         mIPEng.determineSites();
         mBag = mIPEng.getPegasusBag();
         mIPEng = null;
@@ -213,7 +206,7 @@ public class MainEngine
 
         message = "Grafting transfer nodes in the workflow";
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-        mTransEng = new TransferEngine( mReducedDag, vDelLeafJobs, mProps, mPOptions );
+        mTransEng = new TransferEngine( mReducedDag, vDelLeafJobs, mBag );
         mTransEng.addTransferNodes( mRCBridge );
         mTransEng = null;
         mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
@@ -244,7 +237,7 @@ public class MainEngine
             //create the cleanup dag
             message = "Generating the cleanup workflow";
             mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-            mRemoveEng = new RemoveDirectory( mReducedDag, mProps );
+            mRemoveEng = new RemoveDirectory( mReducedDag, mBag );
             mCleanupDag = mRemoveEng.generateCleanUPDAG();
             mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
         }
@@ -253,7 +246,7 @@ public class MainEngine
         if ( mPOptions.getCleanup() ){ /* should be exposed via command line option */
             message = "Adding cleanup jobs in the workflow";
             mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
-            CleanupEngine cEngine = new CleanupEngine( mProps, mPOptions );
+            CleanupEngine cEngine = new CleanupEngine( mBag );
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
             mLogger.logCompletion( message, LogManager.INFO_MESSAGE_LEVEL );
         }

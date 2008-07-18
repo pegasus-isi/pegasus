@@ -27,6 +27,7 @@ import org.griphyn.common.util.Separator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This implementation of the mapper generates maps for sites with installed as
@@ -38,6 +39,15 @@ import java.util.Map;
 public class All
     extends Mapper {
 
+    /**
+     * The private constructor.
+     * 
+     * @param bag        the bag of initialization objects
+     */
+    public All( PegasusBag bag ) {
+        super( bag );
+    }
+    
     /**
      * This method returns a Map of compute sites to List of TransformationCatalogEntry
      * objects that are valid for that site.
@@ -91,7 +101,7 @@ public class All
         }
         //get the system info for the sites from the SC
         if ( tcentries != null ) {
-            sysinfomap = mPoolHandle.getSysinfos( siteids );
+            sysinfomap = mSiteStore.getSysInfos( siteids );
         } else {
             throw new RuntimeException(
                 "There are no entries for the transformation \"" +

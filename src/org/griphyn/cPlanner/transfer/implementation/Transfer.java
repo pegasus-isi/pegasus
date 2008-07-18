@@ -45,6 +45,7 @@ import java.util.ArrayList;
 
 import java.util.StringTokenizer;
 import java.io.File;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the transfer
@@ -131,11 +132,10 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
-     * @param properties  the properties object.
-     * @param options     the options passed to the Planner.
+     * @param bag   the bag of initialization objects.
      */
-    public Transfer(PegasusProperties properties,PlannerOptions options){
-        super(properties,options);
+    public Transfer( PegasusBag bag ){
+        super( bag );
         mNumOfTXProcesses = mProps.getNumOfTransferProcesses();
         mNumOfTXStreams   = mProps.getNumOfTransferStreams();
         mUseForce         = mProps.useForceInTransfer();
@@ -228,7 +228,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
         List result = new ArrayList(2) ;
 
         //create the CLASSPATH from home
-        String globus = mSCHandle.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
+        String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
         if( globus == null ){
             mLogger.log( "GLOBUS_LOCATION not set in site catalog for site " + site,
                          LogManager.DEBUG_MESSAGE_LEVEL );
@@ -238,7 +238,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
 
 
         //check for LD_LIBRARY_PATH
-        String ldpath = mSCHandle.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
+        String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
         if ( ldpath == null ){
             //construct a default LD_LIBRARY_PATH
             ldpath = globus;
