@@ -78,6 +78,23 @@ public  class StorageType extends AbstractSiteData{
         return mLocalDirectory;
     }
     
+    /**
+     * Selects a  <code>FileServer</code> associated with the Local Directory.
+     * 
+     * @return <FileServer> if specified, else null
+     */
+    public FileServer selectLocalFileServer(){
+        return this.getLocalDirectory().selectFileServer();
+    }
+    
+    /**
+     * Selects a  <code>FileServer</code> associated with the Shared Directory.
+     * 
+     * @return <FileServer> if specified, else null
+     */
+    public FileServer selectSharedFileServer(){
+        return this.getSharedDirectory().selectFileServer();
+    }
     
     /**
      * Sets the shared directory.

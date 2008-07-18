@@ -52,8 +52,13 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.Set;
+import java.util.HashSet;
+
+import java.util.Iterator;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -94,37 +99,71 @@ public class SiteCatalogParser extends Parser {
     private SiteStore mResult;
 
     /**
-     * Default Class Constructor.
+     * The set of sites that need to be parsed.
+     */
+    private Set<String> mSites;
+    
+    /**
+     * A boolean indicating whether to load all sites.
+     */
+    private boolean mLoadAll;
+    
+    /**
+     * A boolean indicating that parsing is done.
+     */
+    private boolean mParsingDone;
+    
+    /**
+     * The default Constructor.
+     * 
+     * @param sites   the list of sites to be parsed. * means all.
+     *
+     */
+    public SiteCatalogParser( List<String> sites ) {
+        this( PegasusProperties.nonSingletonInstance(), sites );
+    }
+    
+    
+    /**
+     * The overloaded constructor.
      *
      * @param properties the <code>PegasusProperties</code> to be used.
+     * @param sites the list of sites that need to be parsed. * means all.
      */
-    public SiteCatalogParser( PegasusProperties properties ) {
+    public SiteCatalogParser( PegasusProperties properties, List<String> sites ) {
         super( properties );
         mStack = new Stack();
         mDepth = 0;
-    }
-
-    /**
-     * Class Constructor intializes the parser and turns on validation.
-     *
-     * @param configFileName The file which you want to parse
-     * @param properties the <code>PegasusProperties</code> to be used.
-     */
-    public SiteCatalogParser( String configFileName, PegasusProperties properties ) {
-        this( properties );
-
-        mLogger.log("Parsing the site catalog " + configFileName, LogManager.INFO_MESSAGE_LEVEL);
-
+        
+        mSites = new HashSet<String>();
+        for( Iterator<String> it = sites.iterator(); it.hasNext(); ){
+            mSites.add( it.next() );
+        }
+        mLoadAll = mSites.contains( "*" );                
+        
         //setting the schema Locations
         String schemaLoc = getSchemaLocation();
         mLogger.log( "Picking schema for site catalog" + schemaLoc,
                      LogManager.CONFIG_MESSAGE_LEVEL);
         String list = SiteCatalogParser.SCHEMA_NAMESPACE + " " + schemaLoc;
         setSchemaLocations( list );
-        startParser( configFileName );
-        mLogger.logCompletion("Parsing the site catalog",LogManager.INFO_MESSAGE_LEVEL);
-
     }
+
+    /**
+     * Returns the constructed site store object
+     * 
+     * @return <code>SiteStore<code> if parsing completed 
+     */
+    public SiteStore getSiteStore() {
+        if( mParsingDone ){
+            return mResult;
+        }
+        else{
+            throw new RuntimeException( "Parsing of file needs to complete before function can be called" );
+        }
+    }
+
+
 
     /**
      * The main method that starts the parsing.
@@ -160,7 +199,7 @@ public class SiteCatalogParser extends Parser {
      * 
      */
     public void endDocument() {
-
+        mParsingDone = true;
     }
 
     
@@ -579,6 +618,17 @@ public class SiteCatalogParser extends Parser {
     }
 
     /**
+     * Whether to laod a site or not in the <code>SiteStore</code>
+     * 
+     * @param site   the <code>SiteCatalogEntry</code> object.
+     * 
+     * @return
+     */
+    private boolean loadSite(SiteCatalogEntry site) {
+        return ( mLoadAll || mSites.contains( site.getSiteHandle() ));
+    }
+
+    /**
      * This method sets the relations between the currently finished XML
      * element and its containing element in terms of Java objects.
      * Usually it involves adding the object to the parent's child object
@@ -784,7 +834,14 @@ public class SiteCatalogParser extends Parser {
                 }
                 else if( child instanceof SiteCatalogEntry && parent instanceof SiteStore ){
                     SiteStore c = ( SiteStore )parent;
-                    c.addEntry( (SiteCatalogEntry)child );
+                    
+                    //add only to store if required.
+                    SiteCatalogEntry site = (SiteCatalogEntry)child ;
+                    if( loadSite( site ) ){
+                        mLogger.log( "Loading site in SiteStore " + site.getSiteHandle(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                        c.addEntry( site );
+                    }
                 }
                 else if ( child instanceof SiteStore ){
                     //should never happen.
@@ -870,7 +927,9 @@ public class SiteCatalogParser extends Parser {
      */
     public static void main( String[] args ){
         LogManager.getInstance().setLevel( 5 );
-        SiteCatalogParser parser = new SiteCatalogParser( PegasusProperties.getInstance() );
+        List s = new ArrayList(1);
+        s.add( "*" );
+        SiteCatalogParser parser = new SiteCatalogParser( s );
         if (args.length == 1) {
             parser.startParser( args[0] );
  

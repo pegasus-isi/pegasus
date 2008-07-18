@@ -262,7 +262,7 @@ public class RankDAX extends Executable {
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, tCatalog );
 
         //initialize the transformation mapper
-        mBag.add( PegasusBag.TRANSFORMATION_MAPPER,  Mapper.loadTCMapper( mProps.getTCMapperMode() ) );
+        mBag.add( PegasusBag.TRANSFORMATION_MAPPER,  Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag ) );
 
         //write out the daxes to the directory
         File dir = new File( mBaseDir, mRequestID );

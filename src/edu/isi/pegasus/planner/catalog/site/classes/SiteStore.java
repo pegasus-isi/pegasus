@@ -19,12 +19,21 @@
 package edu.isi.pegasus.planner.catalog.site.classes;
 
 
+import java.util.List;
+import java.util.Set;
+import org.griphyn.cPlanner.classes.SubInfo;
+
+import org.griphyn.cPlanner.namespace.VDS;
+
+import org.griphyn.common.classes.SysInfo;
+        
 import org.griphyn.common.util.Currently;
 
 
 import java.io.IOException;
 import java.io.Writer;
 
+import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -52,6 +61,8 @@ public class SiteStore extends AbstractSiteData{
      */
     public static final String SCHEMA_VERSION = "3.0";
     
+    
+    
     /**
      * The internal map that maps a site catalog entry to the site handle.
      */
@@ -63,6 +74,8 @@ public class SiteStore extends AbstractSiteData{
     public SiteStore(){
         initialize();
     }
+
+    
     
     /**
      * The intialize method.
@@ -92,6 +105,15 @@ public class SiteStore extends AbstractSiteData{
     public Iterator<SiteCatalogEntry> entryIterator(){
         return this.mStore.values().iterator();
     }
+
+    /**
+     * Returns the list of sites, in the store.
+     * 
+     * @return
+     */
+    public Set<String> list() {
+        return mStore.keySet();
+    }
     
     /**
      * Returns SiteCatalogEntry matching a site handle.
@@ -113,6 +135,67 @@ public class SiteStore extends AbstractSiteData{
     public boolean contains( String handle ){
         return this.mStore.containsKey( handle );
     }
+    
+    /**
+     * 
+     * @param siteids
+     * @return
+     */
+    public Map getSysInfos(List siteids) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+    
+    /**
+     * Returns the <code>SysInfo</code> for the site
+     * 
+     * @param handle the site handle / identifier.
+     * @return the SysInfo else null
+     */
+    public SysInfo getSysInfo( String handle ){
+        //sanity check
+        if( !this.contains( handle ) ) {
+            return null;
+        }
+        else{
+            return this.lookup( handle ).getSysInfo();
+        }
+        
+    }
+    
+    /**
+     * Returns the value of VDS_HOME for a site.
+     *
+     * @param handle   the site handle / identifier.
+     * 
+     * @return value if set else null.
+     */
+    public String getVDSHome( String handle ){
+        //sanity check
+        if( !this.contains( handle ) ) {
+            return null;
+        }
+        else{
+            return this.lookup( handle ).getVDSHome();
+        }
+    }
+
+
+    /**
+     * Returns the value of PEGASUS_HOME for a site.
+     *
+     * @param handle   the site handle / identifier.
+     * 
+     * @return value if set else null.
+     */
+    public String getPegasusHome( String handle ){        
+        if( !this.contains( handle ) ) {
+            return null;
+        }
+        else{
+            return this.lookup( handle ).getPegasusHome();
+        }
+    }
+
     
     /**
      * Returns an environment variable associated with the site.
@@ -171,6 +254,117 @@ public class SiteStore extends AbstractSiteData{
     public boolean removeFileServer( String handle, String url ){
         throw new UnsupportedOperationException( "Method remove( String , String ) not yet implmeneted" );
     }
+    
+    
+    /**
+     * This determines the working directory on remote execution pool on the
+     * basis of whether an absolute path is specified in the pegasus.dir.exec directory
+     * or a relative path.
+     *
+     * @param handle  the site handle of the site where a job has to be executed.
+     *
+     * @return the path to the pool work dir.
+     * @throws RuntimeException in case of site not found in the site catalog.
+     */
+    public String getWorkDirectory( String handle ) {
+        return this.getWorkDirectory( handle, null, -1 );
+    }
+
+    /**
+     * This determines the working directory on remote execution pool for a
+     * particular job. The job should have it's execution pool set.
+     *
+     * @param job <code>SubInfo</code> object for the job.
+     *
+     * @return the path to the pool work dir.
+     * @throws RuntimeException in case of site not found in the site catalog.
+     */
+    public String getWorkDirectory( SubInfo job ) {
+        return this.getWorkDirectory( job.executionPool,
+            job.vdsNS.getStringValue(
+            VDS.REMOTE_INITIALDIR_KEY ),
+            job.jobClass );
+    }
+
+    /**
+     * This determines the working directory on remote execution pool on the
+     * basis of whether an absolute path is specified in the pegasus.dir.exec
+     * directory or a relative path.
+     *
+     * @param handle  the site handle of the site where a job has to be executed.
+     * @param path    the relative path that needs to be appended to the
+     *                workdir from the execution pool.
+     *
+     * @return the path to the pool work dir.
+     * @throws RuntimeException in case of site not found in the site catalog.
+     */
+    public String getWorkDirectory( String handle, String path ) {
+        return this.getWorkDirectory( handle, path, -1 );
+    }
+
+    /**
+     * This determines the working directory on remote execution pool on the
+     * basis of whether an absolute path is specified in the pegasus.dir.exec directory
+     * or a relative path. If the job class happens to be a create directory job
+     * it does not append the name of the random directory since the job is
+     * trying to create that random directory.
+     *
+     * @param handle  the site handle of the site where a job has to be executed.
+     * @param path       the relative path that needs to be appended to the
+     *                   workdir from the execution pool.
+     * @param jobClass   the class of the job.
+     *
+     * @return the path to the pool work dir.
+     * @throws RuntimeException in case of site not found in the site catalog.
+     */
+    public String getWorkDirectory( String handle, String path, int jobClass ) {
+        SiteCatalogEntry execPool = this.lookup( handle );
+        if(execPool == null){
+            throw new RuntimeException("Entry for " + handle +
+                                       " does not exist in the Site Catalog");
+        }
+        throw new UnsupportedOperationException( "getWorkDirectory not implemented as yet" );
+        /*
+        String execPoolDir = mWorkDir;
+
+        if(jobClass == SubInfo.CREATE_DIR_JOB ){
+            //the create dir jobs always run in the
+            //workdir specified in the site catalog
+            return execPool.getExecMountPoint();
+        }
+
+        if ( mWorkDir.length() == 0 || mWorkDir.charAt( 0 ) != '/' ) {
+            //means you have to append the
+            //value specfied by pegasus.dir.exec
+            File f = new File( execPool.getExecMountPoint(), mWorkDir );
+            execPoolDir = f.getAbsolutePath();
+        }
+
+
+        //get the random directory name
+        String randDir = mUserOpts.getRandomDirName();
+
+        if ( randDir != null) {
+            //append the random dir name to the
+            //work dir constructed till now
+            File f = new File( execPoolDir, randDir );
+            execPoolDir = f.getAbsolutePath();
+        }
+
+        //path takes precedence over random dir
+        if ( path != null ) {
+            //well i can do nesting conditional return but wont
+            return ( path.length() == 0 || path.charAt( 0 ) != '/' ) ?
+                //append the path
+                new File( execPoolDir, path ).getAbsolutePath()
+                : //else absolute path specified
+                path;
+        }
+
+        return execPoolDir;
+         */
+    }
+
     
     /**
      * Writes out the contents of the replica store as XML document

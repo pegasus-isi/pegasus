@@ -83,6 +83,25 @@ public class WorkerNodeFS extends AbstractSiteData {
     
     
     /**
+     * Selects a  <code>FileServer</code> associated with the Local Directory on
+     * the Scratch system.
+     * 
+     * @return <FileServer> if specified, else null
+     */
+    public FileServer selectScratchLocalFileServer(){
+        return this.getScratch().getLocalDirectory().selectFileServer();
+    }
+    
+    /**
+     * Selects a  <code>FileServer</code> associated with the Shared Directory on
+     * the Scratch system.
+     * 
+     * @return <FileServer> if specified, else null
+     */
+    public FileServer selectScratchSharedFileServer(){
+        return this.getScratch().getSharedDirectory().selectFileServer();
+    }
+    /**
      * Returns the scratch area on the head node.
      * 
      * @return the scratch area.
@@ -100,6 +119,25 @@ public class WorkerNodeFS extends AbstractSiteData {
         mStorage = storage;
     }
     
+    /**
+     * Selects a  <code>FileServer</code> associated with the Local Directory on
+     * the Storage system.
+     * 
+     * @return <FileServer> if specified, else null
+     */
+    public FileServer selectStorageLocalFileServer(){
+        return this.getStorage().getLocalDirectory().selectFileServer();
+    }
+    
+    /**
+     * Selects a  <code>FileServer</code> associated with the Shared Directory on
+     * the Storage system.
+     * 
+     * @return <FileServer> if specified, else null
+     */
+    public FileServer selectStorageSharedFileServer(){
+        return this.getStorage().getSharedDirectory().selectFileServer();
+    }
     
     /**
      * Returns the storage area on the head node.

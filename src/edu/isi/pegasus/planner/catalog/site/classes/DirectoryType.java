@@ -21,6 +21,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
+import org.griphyn.cPlanner.common.PegRandom;
         
 /**
  * An abstract base class that creates a directory type. It associates multiple
@@ -93,6 +94,17 @@ public abstract class DirectoryType extends AbstractSiteData{
      */
     public void setFileServers( List<FileServer> servers ){
         mFileServers = servers;
+    }
+    
+    /**
+     * Selects a random file server and returns it.
+     * 
+     * @return
+     */
+    public FileServer selectFileServer(){
+        return ( this.mFileServers == null || this.mFileServers.size() == 0 )?
+                 null :
+                 this.mFileServers.get(  PegRandom.getInteger( this.mFileServers.size() - 1) );
     }
     
     /**

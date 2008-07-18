@@ -22,15 +22,22 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 
-import java.util.Map.Entry;
+import org.griphyn.common.classes.Arch;
+import org.griphyn.common.classes.Os;
+import org.griphyn.common.classes.SysInfo;
+
 import org.griphyn.cPlanner.classes.Profile;
+
+import org.griphyn.cPlanner.common.PegRandom;
 
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map.Entry;
 
+import java.io.File;
 import java.io.Writer;
 import java.io.IOException;
         
@@ -42,6 +49,56 @@ import java.io.IOException;
  */
 public class SiteCatalogEntry extends AbstractSiteData{
 
+    /**
+     * The name of the environment variable PEGASUS_HOME.
+     */
+    public static final String PEGASUS_HOME = "PEGASUS_HOME";
+
+    /**
+     * The name of the environment variable VDS_HOME.
+     */
+    public static final String VDS_HOME = "VDS_HOME";
+    
+    /**
+     * The map storing architecture to corresponding NMI architecture platforms.
+     */
+    private static Map< Architecture,Arch > mNMIArchToOldArch = null;
+    
+    /**
+     * Singleton access to the  NMI arch to old arch map.
+     * @return map
+     */
+    private static Map NMIArchToOldArch(){
+        //singleton access
+        if( mNMIArchToOldArch == null ){
+            mNMIArchToOldArch = new HashMap< Architecture,Arch >();
+            mNMIArchToOldArch.put( Architecture.x86, Arch.INTEL32  );
+           // mNMIArchToOldArch.put( "x86", Arch.INTEL64,  );
+            mNMIArchToOldArch.put( Architecture.x86_64, Arch.AMD64 );
+            
+        }
+        return mNMIArchToOldArch;
+    }
+
+    
+    /**
+     * The map storing OS to corresponding NMI OS platforms.
+     */
+    private static Map<OS,Os> mNMIOSToOldOS = null;
+    
+    /**
+     * Singleton access to the os to NMI os map.
+     * @return map
+     */
+    private static Map NMIOSToOldOS(){
+        //singleton access
+        if( mNMIOSToOldOS == null ){
+            mNMIOSToOldOS = new HashMap<OS,Os>();
+            //mNMIOSToOldOS.put( "rhas_3", Os.LINUX );
+            mNMIOSToOldOS.put( OS.LINUX, Os.LINUX );
+        }
+        return mNMIOSToOldOS;
+    }
     
     /**
      * The site identifier. 
@@ -113,6 +170,18 @@ public class SiteCatalogEntry extends AbstractSiteData{
      */
     public SiteCatalogEntry( String id ) {
         initialize( id );
+    }
+
+    public Iterator getFileServerIterator() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public List getFileServers() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public List getGridGateways() {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
     
     /**
@@ -187,6 +256,19 @@ public class SiteCatalogEntry extends AbstractSiteData{
         return mOS;
     }
     
+    
+    /**
+     * Returns the sysinfo for the site.
+     * 
+     * @return getSysInfo
+     */
+    public SysInfo getSysInfo(){
+        return new SysInfo( (Arch)NMIArchToOldArch().get( this.getArchitecture() ),
+                            (Os)NMIOSToOldOS().get( this.getOS() ),
+                            this.getOSVersion(),
+                            this.getGlibc() );
+                            
+    }
     
     /**
      * Sets the OS release of the site.
@@ -312,6 +394,47 @@ public class SiteCatalogEntry extends AbstractSiteData{
     }
     
     /**
+     * Returns the value of VDS_HOME for a site.
+     *
+     * 
+     * @return value if set else null.
+     */
+    public String getVDSHome( ){
+        return this.getEnvironmentVariable( VDS_HOME );
+    }
+
+
+    /**
+     * Returns the value of PEGASUS_HOME for a site.
+     *
+     * 
+     * @return value if set else null.
+     */
+    public String getPegasusHome( ){
+        return this.getEnvironmentVariable(  PEGASUS_HOME );
+    }
+    
+    /**
+     * Returns the default path to kickstart as constructed from the
+     * environment variable.
+     * 
+     * @return value if set else null
+     */
+    public String getKickstartPath() {
+        String home = this.getPegasusHome();
+        if( home == null ){
+            return null;
+        }
+        
+        StringBuffer ks = new StringBuffer();
+        ks.append( home ).append( File.separator ).
+           append( "bin").append( File.separator ).
+           append( "kickstart" );
+        return ks.toString();
+    }
+    
+    
+    /**
      * Returns an environment variable associated with the site.
      *
      * @param variable  the environment variable whose value is required.
@@ -326,10 +449,23 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * Returns a grid gateway object corresponding to a job type.
      * 
+     * @param type the job type
+     * 
      * @return GridGateway
      */
     public GridGateway getGridGateway( GridGateway.JOB_TYPE type ){
         return mGridGateways.get( type );
+    }
+    
+    /**
+     * Selects a grid gateway object corresponding to a job type.
+     *
+     * @param type the job type
+     * 
+     * @return GridGateway
+     */
+    public GridGateway selectGridGateway( GridGateway.JOB_TYPE type ){
+        return this.getGridGateway( type );
     }
     
     /**
@@ -390,6 +526,20 @@ public class SiteCatalogEntry extends AbstractSiteData{
     public void addReplicaCatalog( ReplicaCatalog catalog ){
         mReplicaCatalogs.add( catalog );
     }
+    
+    /**
+     * Selects a Random ReplicaCatalog.
+     *
+     * @return <code>ReplicaCatalog</object> if more than one associates else
+     *         returns null.
+     */
+    public ReplicaCatalog selectReplicaCatalog( ) {
+        
+        return ( this.mReplicaCatalogs == null || this.mReplicaCatalogs.size() == 0 )?
+                 null :
+                 this.mReplicaCatalogs.get(  PegRandom.getInteger( this.mReplicaCatalogs.size() - 1) );
+    }
+
     
     /**
      * Writes out the xml description of the object. 
