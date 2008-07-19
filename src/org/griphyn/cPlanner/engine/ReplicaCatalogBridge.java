@@ -19,6 +19,7 @@ package org.griphyn.cPlanner.engine;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import org.griphyn.cPlanner.classes.FileTransfer;
@@ -475,7 +476,8 @@ public class ReplicaCatalogBridge
         }
         newJob.setRemoteExecutable( tc.getPhysicalTransformation() );
         newJob.setArguments( this.generateRepJobArgumentString( site, regJobName, files ) );
-        newJob.setUniverse( Engine.REGISTRATION_UNIVERSE );
+//        newJob.setUniverse( Engine.REGISTRATION_UNIVERSE );
+        newJob.setUniverse( GridGateway.JOB_TYPE.register.toString() );
         newJob.setSiteHandle( tc.getResourceId() );
         newJob.setJobType( SubInfo.REPLICA_REG_JOB );
         newJob.setVDSSuperNode( job.getName() );

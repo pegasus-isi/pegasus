@@ -40,6 +40,7 @@ import java.util.Map.Entry;
 import java.io.File;
 import java.io.Writer;
 import java.io.IOException;
+import org.griphyn.cPlanner.namespace.Namespace;
         
 /**
  * This data class describes a site in the site catalog.
@@ -366,6 +367,17 @@ public class SiteCatalogEntry extends AbstractSiteData{
     }
     
     /**
+     * Returns the work directory for the compute jobs on a site. 
+     * 
+     * Currently, the work directory is picked up from the head node shared filesystem.
+     * 
+     * @return
+     */
+    public String getInternalMountPointOfWorkDirectory() {
+        return this.getHeadNodeFS().getScratch().getSharedDirectory().getInternalMountPoint().getMountPoint();
+    }
+    
+    /**
      * Adds a profile.
      * 
      * @param profile  the profile to be added
@@ -442,7 +454,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return value of the environment variable if found, else null
      */
     public String getEnvironmentVariable( String variable ){
-        return (String)this.mProfiles.get( Profiles.NAMESPACES.env ).get( variable );
+        Namespace n = this.mProfiles.get( Profiles.NAMESPACES.env );
+        return ( n == null ) ? null : (String)n.get( variable );
     }
 
     
@@ -459,13 +472,24 @@ public class SiteCatalogEntry extends AbstractSiteData{
     
     /**
      * Selects a grid gateway object corresponding to a job type.
+     * It also defaults to other GridGateways if grid gateway not found for
+     * that job type.
      *
      * @param type the job type
      * 
      * @return GridGateway
      */
     public GridGateway selectGridGateway( GridGateway.JOB_TYPE type ){
-        return this.getGridGateway( type );
+        GridGateway g = this.getGridGateway( type );
+        if( g == null ){
+            if( type == JOB_TYPE.transfer || type == JOB_TYPE.cleanup || type == JOB_TYPE.register ){
+                return this.selectGridGateway( JOB_TYPE.auxillary );
+            }
+            else if ( type == JOB_TYPE.auxillary ){
+                return this.selectGridGateway( JOB_TYPE.compute );
+            }
+        }
+        return g;
     }
     
     /**
@@ -653,6 +677,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
         }
         return obj;
     }
+
+   
     
     
     

@@ -17,8 +17,17 @@
 
 package org.griphyn.cPlanner.engine.cleanup;
 
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
+
+import edu.isi.pegasus.planner.catalog.site.SiteFactory;
+import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PegasusFile;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -26,10 +35,6 @@ import org.griphyn.cPlanner.common.LogManager;
 
 
 import org.griphyn.cPlanner.namespace.Condor;
-
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.SiteFactory;
-import org.griphyn.cPlanner.poolinfo.SiteFactoryException;
 
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -112,7 +117,8 @@ public class Cleanup implements Implementation{
     /**
      * Handle to the site catalog.
      */
-    protected PoolInfoProvider mSiteHandle;
+//    protected PoolInfoProvider mSiteHandle;
+    protected SiteStore mSiteStore;
 
     /**
      * The handle to the properties passed to Pegasus.
@@ -145,33 +151,33 @@ public class Cleanup implements Implementation{
     /**
      * Creates a new instance of InPlace
      *
-     * @param properties  the properties passed to the planner.
-     * @param options     the options passed to the planner.
+     * @param bag  the bag of initialization objects.
      *
      */
-    public Cleanup( PegasusProperties properties, PlannerOptions options ) {
-        mLogger = LogManager.getInstance();
-        mProps = properties;
-        mSubmitDirectory = options.getSubmitDirectory();
-
+    public Cleanup( PegasusBag bag ) {
+        mProps           = bag.getPegasusProperties();
+        mSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory();
+        mSiteStore       = bag.getHandleToSiteStore();
+        mTCHandle        = bag.getHandleToTransformationCatalog();  
+        
         /* load the site catalog using the factory */
-        try{
+/*        try{
             mSiteHandle = SiteFactory.loadInstance( properties, false );
         }
         catch ( SiteFactoryException e ){
             throw new RuntimeException( "Unable to load Site Catalog " + e.convertException() ,
                                         e );
         }
-
+*/
         /* load the transformation catalog using the factory */
-        try{
+/*        try{
             mTCHandle = TransformationFactory.loadInstance( properties );
         }
         catch ( TransformationFactoryException e ){
             throw new RuntimeException( "Unable to load Transformation Catalog " + e.convertException() ,
                                         e );
         }
-
+*/
 
     }
 
@@ -260,7 +266,7 @@ public class Cleanup implements Implementation{
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        cJob.updateProfiles( mSiteHandle.getPoolProfile( job.getSiteHandle()) );
+        cJob.updateProfiles( mSiteStore.lookup( job.getSiteHandle() ).getProfiles()  );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
@@ -336,7 +342,7 @@ public class Cleanup implements Implementation{
     private  TransformationCatalogEntry defaultTCEntry( String site ){
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
-        String home = mSiteHandle.getPegasusHome( site );
+        String home = mSiteStore.getPegasusHome( site );
 
         mLogger.log( "Creating a default TC entry for " +
                      this.getCompleteTranformationName() +
@@ -365,12 +371,12 @@ public class Cleanup implements Implementation{
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( this.TRANSFORMATION_NAME );
+            append( Cleanup.TRANSFORMATION_NAME );
 
 
-        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NAMESPACE,
-                                                           this.TRANSFORMATION_NAME,
-                                                           this.TRANSFORMATION_VERSION );
+        defaultTCEntry = new TransformationCatalogEntry( Cleanup.TRANSFORMATION_NAMESPACE,
+                                                           Cleanup.TRANSFORMATION_NAME,
+                                                           Cleanup.TRANSFORMATION_VERSION );
 
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );

@@ -18,6 +18,7 @@
 
 package org.griphyn.cPlanner.transfer.refiner;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -507,7 +508,9 @@ public class Cluster extends Bundle {
         newJob.setTransformation( "pegasus", "noop", "1.0" );
         newJob.setDerivation( "pegasus", "noop", "1.0" );
 
-        newJob.setUniverse( "vanilla" );
+//        newJob.setUniverse( "vanilla" );
+        newJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
+        
         //the noop job does not get run by condor
         //even if it does, giving it the maximum
         //possible chance

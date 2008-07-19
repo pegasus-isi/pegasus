@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.HashSet;
 import java.lang.StringBuffer;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.partitioner.graph.MapGraph;
 
 
@@ -106,15 +107,14 @@ public class InPlace implements Strategy{
     /**
      * Creates a new instance of InPlace
      *
-     * @param properties  the properties passed to the planner.
-     * @param options     the options passed to the planner.
+     * @param bag  the bag of initialization objects.
      *
      */
-    public InPlace( PegasusProperties properties, PlannerOptions options ) {
-        mProps = properties;
-        mLogger = LogManager.getInstance();
+    public InPlace( PegasusBag bag ) {
+        mProps = bag.getPegasusProperties();
+        mLogger = bag.getLogger();
 
-        mImpl  = new Cleanup( properties, options );
+        mImpl  = new Cleanup( bag );
 
         //intialize the internal structures
         mResMap       = new HashMap();

@@ -424,6 +424,19 @@ public class PlannerOptions extends Data implements Cloneable{
     }
 
     /**
+     * Returns the name of the random
+     * directory, only if the generate
+     * Random Dir flag is set.
+     * Else it returns null.
+     */
+    public String getRandomDirName(){
+        if ( this .generateRandomDirectory()){
+            return this.getRandomDir();
+        }
+        return null;
+    }
+    
+    /**
      * Returns whether to submit the workflow or not.
      *
      * @return boolean indicating whether to submit or not.

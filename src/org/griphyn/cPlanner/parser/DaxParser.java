@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.parser;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -267,7 +268,7 @@ public class DaxParser extends Parser {
         mLogger.log("Parsing the DAX " + daxFileName,
                     LogManager.INFO_MESSAGE_LEVEL);
 
-        mCurrentJobSubInfo.condorUniverse = "vanilla"; //default value
+        mCurrentJobSubInfo.condorUniverse = GridGateway.JOB_TYPE.compute.toString(); //default value
 
         //initialising the namespace handles
         mCondorNS = new Condor();
@@ -699,7 +700,7 @@ public class DaxParser extends Parser {
         String jobName = attrs.getValue("", "name");
 
         mCurrentJobSubInfo = new SubInfo();
-        mCurrentJobSubInfo.condorUniverse = "vanilla";
+        mCurrentJobSubInfo.condorUniverse = GridGateway.JOB_TYPE.compute.toString();
         mCurrentJobSubInfo.namespace   = attrs.getValue("", "namespace");
         mCurrentJobSubInfo.version     = attrs.getValue("", "version");
         mCurrentJobSubInfo.dvName      = attrs.getValue("", "dv-name");
@@ -982,7 +983,7 @@ public class DaxParser extends Parser {
                  System.out.println("qname: "+qName);*/
 
         boolean temp = true;
-        String universe = "vanilla"; //by default jobs are vanilla
+        String universe = GridGateway.JOB_TYPE.compute.toString(); //by default jobs are vanilla
 
         //when we get the end tag of argument, we change reset the currentCommOpt
         if (localName.equals("argument")) { // || localName.trim().equalsIgnoreCase("job")){

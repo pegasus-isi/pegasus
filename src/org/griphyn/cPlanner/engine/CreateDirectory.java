@@ -20,13 +20,10 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.JobManager;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.UserOptions;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
@@ -127,7 +124,7 @@ public abstract class CreateDirectory
      * The handle to the options specified by the user at runtime. The name of
      * the random directory is picked up from here.
      */
-    protected UserOptions mUserOpts;
+//    protected UserOptions mUserOpts;
 
     /**
      * The handle to the logging object, that is used to log the messages.
@@ -208,7 +205,6 @@ public abstract class CreateDirectory
         super( bag );
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
         mCurrentDag = null;
-        mUserOpts = UserOptions.getInstance();
         mTCHandle = bag.getHandleToTransformationCatalog();
         mLogger   = bag.getLogger();
         //in case of staging of executables/worker package
@@ -348,7 +344,7 @@ public abstract class CreateDirectory
 //        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
 //        jobManager = ePool.selectJobManager("transfer",true);
         SiteCatalogEntry ePool = mSiteStore.lookup( execPool );
-        
+        jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
 
         String argString = null;
         if( mUseMkdir ){
@@ -382,7 +378,8 @@ public abstract class CreateDirectory
         newJob.setDerivation( CreateDirectory.DERIVATION_NAMESPACE,
                               CreateDirectory.DERIVATION_NAME,
                               CreateDirectory.DERIVATION_VERSION );
-        newJob.condorUniverse = "vanilla";
+//        newJob.condorUniverse = "vanilla";
+        newJob.condorUniverse = jobManager.getJobType().toString();
         newJob.globusScheduler = jobManager.getContact();
         newJob.executable = execPath;
         newJob.executionPool = execPool;

@@ -125,7 +125,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
         txJob.jobName = txJobName;
         txJob.executionPool = tPool;
-        txJob.condorUniverse = "globus";
+//        txJob.condorUniverse = "globus";
+        txJob.setUniverse( GridGateway.JOB_TYPE.transfer.toString() );
 
         TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry(tPool);
         if(tcEntry == null){

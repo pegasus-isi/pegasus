@@ -85,7 +85,19 @@ public class ENV extends Namespace {
         mNamespace = NAMESPACE_NAME;
     }
 
-    
+    /**
+    * Returns the value to which this namespace maps the specified key.
+    * Returns null if the map contains no mapping for this key. A return value
+    * of null does not necessarily indicate that the map contains no mapping for
+    * the key; it's also possible that the map explicitly maps the key to null.
+    * The containsKey operation may be used to distinguish these two cases.
+    *
+    * @param key The key whose value you want.
+    *
+    */
+   public Object get(Object key){
+      return ( mProfileMap == null )? null : mProfileMap.get(key);
+   }
 
     /**
      * Returns the name of the namespace associated with the profile implementations.

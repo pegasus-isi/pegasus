@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.transfer.implementation;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.NameValue;
@@ -200,19 +201,11 @@ public class Stork extends AbstractSingleFTPerXFERJob {
 
         txJob.jobName = txJobName;
         txJob.executionPool = tPool;
-        txJob.condorUniverse = "globus";
 
-     /*   TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry(tPool);
-        if(tcEntry == null){
-            //should throw a TC specific exception
-            StringBuffer error = new StringBuffer();
-            error.append( "Could not find entry in tc for lfn " ).append( getCompleteTCName() ).
-                  append(" at site " ).append( txJob.getSiteHandle());
-            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( error.toString() );
+//        txJob.condorUniverse = "globus";
+        txJob.setUniverse( GridGateway.JOB_TYPE.transfer.toString() );
 
-        }
-      */
+     
 
 
         txJob.namespace   = this.TRANSFORMATION_NAMESPACE;

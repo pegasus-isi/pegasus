@@ -174,6 +174,8 @@ public class InterPoolEngine extends Engine implements Refiner {
         super( bag );
         mDag = aDag;
         mExecPools = (Set)mPOptions.getExecutionSites();
+        mLogger.log( "List of executions sites is " + mExecPools,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         
         mTCMapper = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
         mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
@@ -293,6 +295,8 @@ public class InterPoolEngine extends Engine implements Refiner {
 
             SubInfo job = ( SubInfo ) it.next();
             site  = job.getSiteHandle();
+            mLogger.log( "Mapping Job "  + job.getName(), 
+                         LogManager.DEBUG_MESSAGE_LEVEL );
             //check if the user has specified any hints in the dax
 
 //          replaced with jobmanager-type

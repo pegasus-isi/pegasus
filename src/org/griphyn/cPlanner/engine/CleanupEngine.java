@@ -66,7 +66,7 @@ public class CleanupEngine extends Engine {
         ADag result;
 
         //load the appropriate strategy that is to be used
-        Strategy strategy = new InPlace( mProps, mPOptions );
+        Strategy strategy = new InPlace( mBag );
 
         //we first need to convert internally into graph format
         Graph resultGraph =  strategy.addCleanupJobs( Adapter.convert(dag ) );

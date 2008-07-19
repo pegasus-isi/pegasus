@@ -279,7 +279,7 @@ public class RemoveDirectory extends Engine {
 //        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
 //        jm = ePool.selectJobManager("transfer",true);
         SiteCatalogEntry ePool = mSiteStore.lookup( execPool );
-
+        jm = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
 //        String argString = "--verbose --remove --dir " +
 //            mPoolHandle.getExecPoolWorkDir(execPool);
 
@@ -295,7 +295,8 @@ public class RemoveDirectory extends Engine {
                               this.DERIVATION_NAME,
                               this.DERIVATION_VERSION  );
 
-        newJob.condorUniverse = "vanilla";
+//        newJob.condorUniverse = "vanilla";
+        newJob.setUniverse( GridGateway.JOB_TYPE.cleanup.toString() );
         newJob.globusScheduler = jm.getContact();
         newJob.executable = execPath;
         newJob.executionPool = execPool;

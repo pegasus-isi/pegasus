@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.parser;
 
-import org.griphyn.cPlanner.common.UserOptions;
+
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 

@@ -19,6 +19,7 @@
 package edu.isi.pegasus.planner.catalog.site.classes;
 
 
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -37,6 +38,8 @@ import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.common.PegasusProperties;
 
 /**
  * The site store contains the collection of sites backed by a HashMap.
@@ -69,6 +72,12 @@ public class SiteStore extends AbstractSiteData{
     private Map<String, SiteCatalogEntry> mStore;
     
     /**
+     * The work dir path from the properties.
+     */
+    private String mWorkDir;
+    private PlannerOptions mPlannerOptions;
+    
+    /**
      * The default constructor.
      */
     public SiteStore(){
@@ -84,6 +93,16 @@ public class SiteStore extends AbstractSiteData{
         mStore = new HashMap<String, SiteCatalogEntry>( );
     }
     
+    /**
+     * A setter method that is to be set to use getWorkDirectory functions, correctly.
+     * 
+     * @param properties  the <code>PegasusProperties</code>
+     * @param options     the <code>PlannerOptions</code>
+     */
+    public void setForPlannerUse( PegasusProperties properties, PlannerOptions options ){
+        mPlannerOptions = options;
+        mWorkDir = properties.getExecDirectory();
+    }
     
     /**
      * Adds a site catalog entry to the store.
@@ -138,11 +157,19 @@ public class SiteStore extends AbstractSiteData{
     
     /**
      * 
-     * @param siteids
+     * @param site the list of site identifiers for which sysinfo is required.
+     * 
      * @return
      */
-    public Map getSysInfos(List siteids) {
-        throw new UnsupportedOperationException("Not yet implemented");
+    public Map getSysInfos( List<String> sites ) {
+        HashMap result = new HashMap();
+        for ( Iterator i = sites.iterator(); i.hasNext(); ) {
+            SiteCatalogEntry site = this.lookup (( String ) i.next());
+            if( site != null ){
+                result.put( site.getSiteHandle(), site.getSysInfo() );
+            }
+        }
+        return result;
     }
     
     /**
@@ -318,31 +345,35 @@ public class SiteStore extends AbstractSiteData{
      * @throws RuntimeException in case of site not found in the site catalog.
      */
     public String getWorkDirectory( String handle, String path, int jobClass ) {
+        //get the random directory name
+        //sanitary check
+        if( mPlannerOptions == null ){
+            throw new RuntimeException(
+                    "The initializeUseForPlanner() was not called before calling getWorkDirectory");
+        }
+    
         SiteCatalogEntry execPool = this.lookup( handle );
         if(execPool == null){
             throw new RuntimeException("Entry for " + handle +
                                        " does not exist in the Site Catalog");
         }
-        throw new UnsupportedOperationException( "getWorkDirectory not implemented as yet" );
-        /*
+        
         String execPoolDir = mWorkDir;
 
         if(jobClass == SubInfo.CREATE_DIR_JOB ){
             //the create dir jobs always run in the
             //workdir specified in the site catalog
-            return execPool.getExecMountPoint();
+            return execPool.getHeadNodeFS().getScratch().getSharedDirectory().getInternalMountPoint().getMountPoint();
         }
 
         if ( mWorkDir.length() == 0 || mWorkDir.charAt( 0 ) != '/' ) {
             //means you have to append the
             //value specfied by pegasus.dir.exec
-            File f = new File( execPool.getExecMountPoint(), mWorkDir );
+            File f = new File( execPool.getInternalMountPointOfWorkDirectory(), mWorkDir );
             execPoolDir = f.getAbsolutePath();
         }
-
-
-        //get the random directory name
-        String randDir = mUserOpts.getRandomDirName();
+        
+        String randDir = mPlannerOptions.getRandomDirName();
 
         if ( randDir != null) {
             //append the random dir name to the
@@ -362,7 +393,7 @@ public class SiteStore extends AbstractSiteData{
         }
 
         return execPoolDir;
-         */
+         
     }
 
     

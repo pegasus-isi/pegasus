@@ -120,7 +120,7 @@ public class SiteFactory {
         try{
             if ( catalogImplementor == null ){
                 throw new RuntimeException( "You need to specify the " +
-                                        WorkCatalog.c_prefix + " property" );
+                                        SiteCatalog.c_prefix + " property" );
             }
 
             /* prepend the package name if required */

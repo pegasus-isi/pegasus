@@ -509,7 +509,9 @@ public abstract class Abstract implements Implementation{
         newJob.setTransformation( "pegasus", "noop", "1.0" );
         newJob.setDerivation( "pegasus", "noop", "1.0" );
 
-        newJob.setUniverse( "vanilla" );
+//        newJob.setUniverse( "vanilla" );
+        newJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
+                
         //the noop job does not get run by condor
         //even if it does, giving it the maximum
         //possible chance
@@ -599,7 +601,8 @@ public abstract class Abstract implements Implementation{
         xBitJob.dvName      = this.CHANGE_XBIT_TRANSFORMATION;
         xBitJob.dvNamespace = this.XBIT_DERIVATION_NS;
         xBitJob.dvVersion   = this.XBIT_DERIVATION_VERSION;
-        xBitJob.condorUniverse  = "vanilla";
+//        xBitJob.condorUniverse  = "vanilla";
+        xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
 //        xBitJob.globusScheduler = jobManager.getInfo(JobManager.URL);
         xBitJob.globusScheduler = jobManager.getContact();
         xBitJob.executable      = entry.getPhysicalTransformation();

@@ -18,6 +18,7 @@
 package org.griphyn.cPlanner.engine;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -154,7 +155,8 @@ public class HourGlass
                               this.DERIVATION_NAME,
                               this.DERIVATION_VERSION );
 
-        newJob.condorUniverse = Engine.REGISTRATION_UNIVERSE;
+//        newJob.condorUniverse = Engine.REGISTRATION_UNIVERSE;
+        newJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
         //the noop job does not get run by condor
         //even if it does, giving it the maximum
         //possible chance

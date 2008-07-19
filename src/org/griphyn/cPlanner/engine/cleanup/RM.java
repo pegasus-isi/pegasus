@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.engine.cleanup;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusFile;
@@ -41,6 +42,7 @@ import org.griphyn.common.classes.TCType;
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashSet;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * Use's RM to do removal of the files on the remote sites.
@@ -76,7 +78,8 @@ public class RM implements Implementation{
     /**
      * Handle to the site catalog.
      */
-    protected PoolInfoProvider mSiteHandle;
+//    protected PoolInfoProvider mSiteHandle;
+    protected SiteStore mSiteStore;
 
     /**
      * The handle to the properties passed to Pegasus.
@@ -86,31 +89,13 @@ public class RM implements Implementation{
     /**
      * Creates a new instance of InPlace
      *
-     * @param properties  the properties passed to the planner.
-     * @param options     the options passed to the planner.
+     * @param bag  the bag of initialization objects.
      *
      */
-    public RM( PegasusProperties properties, PlannerOptions options ) {
-        mProps = properties;
-
-        /* load the site catalog using the factory */
-        try{
-            mSiteHandle = SiteFactory.loadInstance( properties, false );
-        }
-        catch ( SiteFactoryException e ){
-            throw new RuntimeException( "Unable to load Site Catalog " + e.convertException() ,
-                                        e );
-        }
-
-        /* load the transformation catalog using the factory */
-        try{
-            mTCHandle = TransformationFactory.loadInstance( properties );
-        }
-        catch ( TransformationFactoryException e ){
-            throw new RuntimeException( "Unable to load Transformation Catalog " + e.convertException() ,
-                                        e );
-        }
-
+    public RM( PegasusBag bag ) {
+        mSiteStore       = bag.getHandleToSiteStore();
+        mTCHandle        = bag.getHandleToTransformationCatalog();  
+        mProps           = bag.getPegasusProperties();
 
     }
 
@@ -167,7 +152,7 @@ public class RM implements Implementation{
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        cJob.updateProfiles( mSiteHandle.getPoolProfile( job.getSiteHandle()) );
+        cJob.updateProfiles( mSiteStore.lookup( job.getSiteHandle() ).getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job

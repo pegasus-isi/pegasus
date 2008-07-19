@@ -37,10 +37,8 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.UserOptions;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.StreamGobbler;
-import org.griphyn.cPlanner.common.StreamGobblerCallback;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
 import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
 
@@ -67,30 +65,22 @@ import gnu.getopt.LongOpt;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.FilenameFilter;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 
-import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Date;
-import java.util.Set;
 import java.util.Map;
-import java.util.HashSet;
 import java.util.Iterator;
 
-import java.util.regex.Pattern;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import org.griphyn.vdl.euryale.VTorInUseException;
 
-import org.griphyn.common.catalog.transformation.TCMode;
 import org.griphyn.common.catalog.transformation.TransformationFactory;
 
 /**
@@ -314,7 +304,9 @@ public class CPlanner extends Executable{
         //load all sites from site catalog.
         Collection eSites  = mPOptions.getExecutionSites();
         //load the site catalog and transformation catalog accordingly
-        SiteStore s = loadSiteStore( mPOptions.getExecutionSites() );
+        SiteStore s = loadSiteStore( eSites );
+        s.setForPlannerUse( mProps, mPOptions);
+        
         mBag.add( PegasusBag.SITE_STORE, s );
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, 
                   TransformationFactory.loadInstance( mProps )  );
@@ -326,10 +318,10 @@ public class CPlanner extends Executable{
         mPMetrics.setBaseSubmitDirectory( mPOptions.getSubmitDirectory() );
         mPMetrics.setDAX( mPOptions.getDAX() );
 
-
-
-
-        UserOptions opts = UserOptions.getInstance(mPOptions);
+        
+            //Commented for new Site catalog
+//        UserOptions opts = UserOptions.getInstance(mPOptions);
+        
 
         //try to get hold of the vds properties
         //set in the jvm that user specifed at command line
@@ -1006,7 +998,8 @@ public class CPlanner extends Executable{
             errorStatus = 2;
 
             //this is a bug. Should not be called. To be corrected by Karan
-            UserOptions y = UserOptions.getInstance(mPOptions);
+            //Commented for new Site catalog
+//            UserOptions y = UserOptions.getInstance(mPOptions);
 
 
             //intialize the bag of objects and load the site selector
@@ -1360,11 +1353,12 @@ public class CPlanner extends Executable{
         catalog = SiteFactory.loadInstance( mProps );
         
         /* always load local site */
-        sites.add( "local" );
+        List toLoad = new ArrayList( sites );
+        toLoad.add( "local" );
 
         /* load the sites in site catalog */
         try{
-            catalog.load( new ArrayList( sites ) );
+            catalog.load( toLoad );
         
             /* query for the sites, and print them out */
             mLogger.log( "Sites loaded are "  + catalog.list( ) ,
@@ -1372,7 +1366,7 @@ public class CPlanner extends Executable{
             
             
             //load into SiteStore from the catalog.
-            for( Iterator<String> it = sites.iterator(); it.hasNext(); ){
+            for( Iterator<String> it = toLoad.iterator(); it.hasNext(); ){
                 SiteCatalogEntry s = catalog.lookup( it.next() );
                 if( s != null ){
                     result.addEntry( s );

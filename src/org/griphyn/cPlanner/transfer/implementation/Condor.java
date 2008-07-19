@@ -246,7 +246,8 @@ public class Condor extends AbstractMultipleFTPerXFERJob {
         txJob.setNonThirdPartySite(job.getSiteHandle());
 
         txJob.setName( txJobName );
-        txJob.setUniverse( "globus" );
+//        txJob.setUniverse( "globus" );
+        txJob.setUniverse( GridGateway.JOB_TYPE.transfer.toString() );
 
         txJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
                                  this.TRANSFORMATION_NAME,

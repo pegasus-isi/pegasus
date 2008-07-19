@@ -19,13 +19,11 @@ package org.griphyn.cPlanner.transfer.implementation;
 
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.Profile;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.VDS;
 

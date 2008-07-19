@@ -737,7 +737,8 @@ public class DeployWorkerPackage
         newJob.setDerivation( DeployWorkerPackage.UNTAR_DERIVATION_NAMESPACE,
                               DeployWorkerPackage.UNTAR_DERIVATION_NAME,
                               DeployWorkerPackage.UNTAR_DERIVATION_VERSION );
-        newJob.condorUniverse = "vanilla";
+//        newJob.condorUniverse = "vanilla";
+        newJob.condorUniverse = GridGateway.JOB_TYPE.auxillary.toString();
         newJob.globusScheduler = jobManager.getContact();
         newJob.executable = execPath;
         newJob.executionPool = site;
