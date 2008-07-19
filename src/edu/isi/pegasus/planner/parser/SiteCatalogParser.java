@@ -773,6 +773,10 @@ public class SiteCatalogParser extends Parser {
                         fs.addProfile( p );
                         return true;
                     }
+                    else if ( parent instanceof SiteCatalogEntry ){
+                        SiteCatalogEntry s = ( SiteCatalogEntry )parent;
+                        s.addProfile( p );
+                    }
                 }
                 else{
                     return false;
