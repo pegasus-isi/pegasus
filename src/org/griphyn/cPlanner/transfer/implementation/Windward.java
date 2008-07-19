@@ -248,7 +248,7 @@ public class Windward extends Abstract
 //        SiteInfo ePool = mSCHandle.getTXPoolEntry( job.getSiteHandle() );
 //        JobManager jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
         SiteCatalogEntry ePool = mSiteStore.lookup( job.getSiteHandle() );
-        GridGateway jobmanager = ePool.getGridGateway( GridGateway.JOB_TYPE.transfer );
+        GridGateway jobmanager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
 
 
         //use the DC transfer client to handle the data sources

@@ -197,7 +197,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
 //                                  null :
 //                                  jobmanager.getInfo(JobManager.URL);
 
-        jobmanager = ePool.getGridGateway( GridGateway.JOB_TYPE.transfer );
+        jobmanager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         txJob.globusScheduler = (jobmanager == null) ?
                                   null :
                                   jobmanager.getContact();

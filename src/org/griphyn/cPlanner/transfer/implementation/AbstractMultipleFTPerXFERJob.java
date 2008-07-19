@@ -150,7 +150,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         //this should in fact only be set
         // for non third party pools
 //        jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
-        jobmanager = ePool.getGridGateway( GridGateway.JOB_TYPE.transfer );
+        jobmanager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         txJob.globusScheduler = (jobmanager == null) ?
                                   null :
 //                                  jobmanager.getInfo(JobManager.URL);
