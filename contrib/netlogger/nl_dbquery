@@ -1,0 +1,237 @@
+#!/usr/bin/env python
+
+# nl_dbquery
+# Author: Binit Singh Bhatia
+# BSBhatia@lbl.gov, Binit.Bhatia@TTU.edu
+# $Id$
+
+"""
+This is a basic database connection and query processing script
+reads information from a configuration file and also from the command line
+executes the database queries based on the information/arguments supplied
+by the user
+"""
+
+from configobj import ConfigObj
+from copy import copy
+import logging
+import magicdate
+import optparse
+import os
+import re
+import signal
+import string
+import sys
+import time
+import warnings
+
+class ConnectionError(Exception): pass
+
+class Query:
+    def execute_query(self, q):
+        """Executes a query q
+        """
+        cursor = self.conn.cursor()
+        print "Running query: %s" % q
+        print
+        cursor.execute(q)
+        #numrows = int(DBC.rowcount)
+        for i, row in enumerate(cursor.fetchall()):
+            row_str = '\t'.join([str(x) for x in row])
+            print '%03d: %s' % (i+1 , row_str)
+
+class MySQLQuery(Query):
+    """MySQL query class
+    """
+    def __init__(self, **kw):
+        try:
+            import MySQLdb
+            self.conn = MySQLdb.connect(**kw)
+        except ImportError:
+            print "MySQLdb python module required for mysql scheme"
+            sys.exit(1)
+        except MySQLdb.Error, e:
+            raise ConnectionError("Error %d: %s" % (e.args[0], e.args[1]))
+
+class SQLiteQuery(Query):
+    """SQLite query class
+    """
+    def __init__(self, filename):
+        try:
+            import sqlite3
+            self.conn = sqlite3.connect(filename)
+            c = self.conn.cursor()
+            c.execute("select count(id) from event")
+        except ImportError:
+            print "sqlite3 python module required for sqlite scheme"
+            sys.exit(1)
+        except sqlite3.OperationalError, E:
+            raise ConnectionError("Error connecting to file '%s': %s" % (filename, E))
+
+def split_uri(uri):
+    m = re.match("([^:]*)://(.*)", uri)
+    if m is None:
+        return (None, None)
+    else:
+        return m.groups()
+
+# Fix magicdate returning None for values it seems to only kinda
+# dislike - 'years' or 'months'.
+def check_magicdate_wrap(option, opt, value):
+    """ A wrapper of magicdate.check_magicdate to raise an exception
+    when None is returned. """
+    ret = magicdate.check_magicdate(option, opt, value)
+    if ret is None:
+    	raise optparse.OptionValueError(
+            "option %s: invalid date value: %r" % (opt, value))
+    return ret
+
+class MagicDateOptionWrapper(optparse.Option):
+    TYPES = optparse.Option.TYPES + ("magicdate",)
+    TYPE_CHECKER = copy(optparse.Option.TYPE_CHECKER)
+    TYPE_CHECKER["magicdate"] = check_magicdate_wrap
+
+MAGICDATE_EXAMPLES = ', '.join(["%s" % s for s in (
+     '<N> weeks|days|hours|minutes|seconds ago',
+     'today',
+     'now',
+     'tomorrow',
+     'yesterday',
+     '4th [[Jan] 2003]',
+     'Jan 4th 2003',
+     'mm/dd/yyyy (preferred)',
+     'dd/mm/yyyy',
+     'yyyy-mm-dd',
+     'yyyymmdd',
+     'next Tuesday',
+     'last Tuesday')])
+
+def main():
+
+    parser = optparse.OptionParser(version="LBL: nl_dbquery 872 2008-07-17 23:12:32Z ksb\n$Id$", option_class=MagicDateOptionWrapper)
+    parser.add_option('-c','--config', action='store', dest='config_name',
+                      default="./%s.conf" % os.path.basename(sys.argv[0]),
+                      metavar='FILE',
+                      help="Read configuration from FILE. Default=%default."
+                      "The configuration file should follow the syntax in this file for it "
+                      "to be successfully parsed by the script. The configuration file is for"
+                      "reading the query information and other parameters from a database."
+                      "Its also used for automatically generating a part of the help message itself. ")
+    parser.add_option('-d','--db',action="store", dest="db_name",default="pegasus",
+                      help="Database to connect to. Default=%default")
+    parser.add_option('-l', '--list', action='store_true', dest='qlist',
+                      help="This generates a numbered list of the available"
+                      "queries reading the query information from the config"
+                      "file")
+    parser.add_option('-n', '--dry-run', action='store_true', dest='dryRun',
+                      help="Display but don't run the query")
+    parser.add_option('-p', '--param', action="append", dest="db_param",
+                      default=[],
+                      help="Database connection parameters (full path to the filename"
+                      " in case of a sqlite database or a host name in case of MySql). The host name "
+                      "for MySQL should be of the form mysql://hostname while for SQLite it should be "
+                      "of the form sqlite:///path/to/filename. This parameter is a required parameter"
+                      "except in case when the script is executed just with the -l/--list option to list"
+                      " the available queries.")
+    parser.add_option('-q', '--query', action="store", dest="query", metavar='QUERY',
+                      help="Run QUERY, which can be a number or name. Use -l/--list to list available queries")
+    parser.add_option('-u', '--uri', default=None, action='store', dest='db_uri', metavar='URI',
+                     help="Database connection URI, where the database module "
+                      "name is used as the URI scheme. "
+                      "MySQL requires a host and sqlite requires a filename.")
+    grp = optparse.OptionGroup(parser, "Time Range",
+                               "The following start/end times for the query "
+                               "accept many date expressions like 'yesterday', "
+                               "'2 weeks 1 day ago', 'last wed', 'Jan 4', etc. "
+                               "A more complete list is: " + MAGICDATE_EXAMPLES)
+
+    grp.add_option('-s', '--start', action="store", dest="start",type='magicdate',
+                   default='1 week ago', help="Start date for the query ['1 week ago'].")
+    grp.add_option('-e', '--end', action="store", dest="end",type='magicdate',
+                   default='today', help="End date for the query ['today'].")
+    parser.add_option_group(grp)
+    #
+    (options, args) = parser.parse_args()
+
+    #    if not SQLITE and not MYSQL:
+    #        parser.error("One of either MySQLdb or sqlite3 python modules must be installed")
+
+    if options.db_uri is None:
+        if options.qlist is not None or options.dryRun:
+            pass
+        else:
+            parser.error("-u/--uri is required")
+    else:
+        uri_scheme, uri_rest = split_uri(options.db_uri)
+        if uri_scheme is None:
+            parser.error("URI must be 'scheme://host-or-file', e.g., "
+                         "mysql://localhost or sqlite:///tmp/abc")
+        uri_scheme = uri_scheme.lower()
+
+    # init config file
+    config = ConfigObj(options.config_name, interpolation='template')
+    # number queries and build 2 lookup tables
+    q_bynum = { }
+    q_byname = { }
+    def list_queries(section, key):
+        if key == 'DEFAULT' or 'DEFAULT' not in section.keys():
+            return
+        d = section[key]
+        desc, val = d['desc'], d['query']
+        q_bynum[num[0]] = (key, desc, val)
+        q_byname[key] = (num[0], desc, val)
+        num[0] = num[0] + 1
+    num = [1]
+    config.walk(list_queries, call_on_sections=True)
+    if len(q_bynum) < 1:
+        parser.error("config file '%s' has no queries" % options.config_name)
+    # For -l/--list, print queries and quit
+    if options.qlist:
+        for i in xrange(1, len(q_bynum)+1):
+            v = q_bynum[i]
+            print "[%2d] %s: %s" % (i, v[0], v[1])
+        return
+    # otherwise, find query
+    if options.query is None:
+        parser.error("-q/--query is required")
+    try:
+        qnum = int(options.query)
+        if not q_bynum.has_key(qnum):
+            parser.error("query %d out of range" % qnum)
+        query_str = q_bynum[qnum][2]
+    except ValueError:
+        if not q_byname.has_key(options.query):
+            parser.error("no query named '%s' found" % options.query)
+        query_str = q_byname[options.query][2]
+    # set range into query str
+    start = options.start
+    end = options.end
+    timerange = "time >= unix_timestamp('%s') and time <= unix_timestamp('%s')" % (
+                start, end)
+
+    # this one to be used for sqlite case
+    # timerange = "time >= datetime(%s) and time <= datetime(%s)" %(start, end)
+    query_str = query_str.replace('TIMERANGE', timerange)
+    # run query
+    if options.dryRun:
+        print query_str;
+        return
+
+    try:
+        if uri_scheme == 'mysql':
+            q = MySQLQuery(db = options.db_name,host = uri_rest, read_default_file="~/.my.cnf")
+        elif uri_scheme == 'sqlite':
+            q = SQLiteQuery(filename = uri_rest)
+        else:
+            parser.error("Unknown URI scheme, must be mysql:// or sqlite://")
+    except ConnectionError, E:
+        parser.error("While connecting to %s database: %s" % (uri_scheme, E))
+    #print "Time range: %s -- %s" % (start, end)
+    t0 = time.time()
+    q.execute_query(query_str)
+    dt = time.time() - t0
+    print
+    print "Query execution time: %lf seconds" % dt
+
+if __name__ == '__main__':
+    main()
