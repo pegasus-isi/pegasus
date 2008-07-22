@@ -158,7 +158,8 @@ public class Cleanup implements Implementation{
         mProps           = bag.getPegasusProperties();
         mSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory();
         mSiteStore       = bag.getHandleToSiteStore();
-        mTCHandle        = bag.getHandleToTransformationCatalog();  
+        mTCHandle        = bag.getHandleToTransformationCatalog(); 
+        mLogger          = bag.getLogger();
         
         /* load the site catalog using the factory */
 /*        try{
