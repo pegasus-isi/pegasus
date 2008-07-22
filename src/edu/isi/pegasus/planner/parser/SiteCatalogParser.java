@@ -238,7 +238,7 @@ public class SiteCatalogParser extends Parser {
             values.add(value);
         }
 
-        System.out.println( "QNAME " + qName + " NAME " + names + "\t Values" + values );
+        //System.out.println( "QNAME " + qName + " NAME " + names + "\t Values" + values );
 
         Object object = createObject( qName, names, values );
         if ( object != null ){
@@ -291,7 +291,7 @@ public class SiteCatalogParser extends Parser {
             
         } else {
           // run finalizer, if available
-          mLogger.log( "Unreachable statment. ",
+          mLogger.log( "End of last element reached ",
                         LogManager.DEBUG_MESSAGE_LEVEL );
         }
         //reinitialize our cdata handler at end of each element
