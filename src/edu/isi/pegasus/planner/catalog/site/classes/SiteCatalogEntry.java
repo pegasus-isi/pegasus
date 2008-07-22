@@ -69,7 +69,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * Singleton access to the  NMI arch to old arch map.
      * @return map
      */
-    private static Map NMIArchToOldArch(){
+    public static Map NMIArchToOldArch(){
         //singleton access
         if( mNMIArchToOldArch == null ){
             mNMIArchToOldArch = new HashMap< Architecture,Arch >();
@@ -91,7 +91,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * Singleton access to the os to NMI os map.
      * @return map
      */
-    private static Map NMIOSToOldOS(){
+    public static Map NMIOSToOldOS(){
         //singleton access
         if( mNMIOSToOldOS == null ){
             mNMIOSToOldOS = new HashMap<OS,Os>();
@@ -99,6 +99,46 @@ public class SiteCatalogEntry extends AbstractSiteData{
             mNMIOSToOldOS.put( OS.LINUX, Os.LINUX );
         }
         return mNMIOSToOldOS;
+    }
+    
+     /**
+     * The map storing architecture to corresponding NMI architecture platforms.
+     */
+    private static Map mArchToNMIArch = null;
+    
+    /**
+     * Singleton access to the architecture to NMI arch map.
+     * @return map
+     */
+    public static Map oldArchToNMIArch(){
+        //singleton access
+        if( mArchToNMIArch == null ){
+            mArchToNMIArch = new HashMap();
+            mArchToNMIArch.put( Arch.INTEL32, Architecture.x86 );
+            mArchToNMIArch.put( Arch.INTEL64, Architecture.x86 );
+            mArchToNMIArch.put( Arch.AMD64, Architecture.x86_64 );
+            
+        }
+        return mArchToNMIArch;
+    }
+
+    
+    /**
+     * The map storing OS to corresponding NMI OS platforms.
+     */
+    private static Map mOSToNMIOS = null;
+    
+    /**
+     * Singleton access to the os to NMI os map.
+     * @return map
+     */
+    public static Map oldOSToNMIOS(){
+        //singleton access
+        if( mOSToNMIOS == null ){
+            mOSToNMIOS = new HashMap();
+            mOSToNMIOS.put( Os.LINUX, OS.LINUX );
+        }
+        return mOSToNMIOS;
     }
     
     /**
@@ -257,7 +297,18 @@ public class SiteCatalogEntry extends AbstractSiteData{
         return mOS;
     }
     
-    
+    /**
+     * Sets the sysinfo for the site.
+     * 
+     * @param  sysinfo
+     */
+    public void setSysInfo( SysInfo sysinfo ){
+        this.setOSVersion( sysinfo.getOsversion() );
+        this.setGlibc( sysinfo.getGlibc() );
+        this.setOS( (OS)oldOSToNMIOS().get( sysinfo.getOs() ) );
+        this.setArchitecture( (Architecture)oldArchToNMIArch().get( sysinfo.getArch() ) );
+                            
+    }
     /**
      * Returns the sysinfo for the site.
      * 
@@ -490,6 +541,21 @@ public class SiteCatalogEntry extends AbstractSiteData{
             }
         }
         return g;
+    }
+    
+    /**
+     * A convenience method that selects a file server for staging the data out to 
+     * a site. It returns the file server to which the generated data is staged
+     * out / published.
+     * 
+     * The <code>FileServer</code> selected is associated with the HeadNode Filesystem.
+     * 
+     * @return the <code>FileServer</code> else null.
+     */
+    public FileServer selectStorageFileServerForStageout(){
+        return ( this.getHeadNodeFS() == null )?
+               null:
+               this.getHeadNodeFS().selectStorageFileServerForStageout();
     }
     
     /**

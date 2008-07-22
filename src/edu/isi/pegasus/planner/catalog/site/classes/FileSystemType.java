@@ -57,9 +57,9 @@ public abstract class FileSystemType extends AbstractSiteData {
      * The default constructor.
      */
     public FileSystemType() {
-        mMountPoint = new String();
-        mTotalSize = new String();
-        mFreeSize  = new String();
+        mMountPoint = "";
+        mTotalSize = "";
+        mFreeSize  = "";
     }
     
     /**

@@ -119,6 +119,25 @@ public class HeadNodeFS extends AbstractSiteData {
         mStorage = storage;
     }
     
+    /**
+     * A convenience method that returns a file server to be used for stageout.
+     * 
+     * It selects a FileServer associated with the Local Directory.
+     * If that is null, it then selects a FileServer associated with the 
+     * Shared Directory.
+     * 
+     * @return
+     */
+    public FileServer selectStorageFileServerForStageout() {
+        HeadNodeStorage s = this.getStorage();
+        if( s == null ) { return null ; }
+        
+        FileServer fs = null;
+        return ( (fs = this.selectStorageLocalFileServer()) == null)?
+                  this.selectStorageSharedFileServer():  
+                  fs;
+    }
+
     
     /**
      * Selects a  <code>FileServer</code> associated with the Local Directory on
@@ -215,4 +234,6 @@ public class HeadNodeFS extends AbstractSiteData {
         }
         return obj;
     }
+
+    
 }

@@ -37,6 +37,15 @@ public class InternalMountPoint extends FileSystemType {
     public InternalMountPoint() {
         super();
     }
+
+    /**
+     * The overloaded constructor.
+     * 
+     * @param mountPoint  the mount point of the system.
+     */
+    public InternalMountPoint( String mountPoint ) {
+        this( mountPoint, null, null );
+    }
     
     /**
      * The overloaded constructor.
@@ -47,6 +56,19 @@ public class InternalMountPoint extends FileSystemType {
      */
     public  InternalMountPoint( String mountPoint, String totalSize, String freeSize ){
         super( mountPoint, totalSize, freeSize );
+    }
+    
+    /***
+     * A convenience method that returns true if all the attributes values are 
+     * uninitialized or empty strings. Useful for serializing the object as
+     * XML.
+     * 
+     * @return
+     */
+    public boolean isEmpty(){
+        return ( this.getFreeSize() == null || this.getFreeSize().length() == 0 ) && 
+               ( this.getMountPoint() == null || this.getMountPoint().length() == 0 ) && 
+               ( this.getTotalSize() == null || this.getTotalSize().length() == 0 ) ;
     }
     
     /**
@@ -61,6 +83,11 @@ public class InternalMountPoint extends FileSystemType {
     public void toXML( Writer writer, String indent ) throws IOException {
         String newLine = System.getProperty( "line.separator", "\r\n" );
 
+        //sanity check?
+        if( this.isEmpty() ){
+            return;
+        }
+        
         //write out the  xml element
         writer.write( indent );
         writer.write( "<internal-mount-point" );

@@ -134,6 +134,18 @@ public abstract class DirectoryType extends AbstractSiteData{
         return this.mInternalMount;
     }
     
+    /***
+     * A convenience method that returns true if all the attributes values are 
+     * uninitialized or empty strings. Useful for serializing the object as
+     * XML.
+     * 
+     * @return
+     */
+    public boolean isEmpty(){
+        return this.mFileServers.isEmpty() && this.getInternalMountPoint().isEmpty();
+    }
+    
+    
     /**
      * Returns the clone of the object.
      *

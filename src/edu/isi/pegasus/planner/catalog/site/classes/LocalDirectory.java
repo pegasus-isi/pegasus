@@ -64,6 +64,11 @@ public class LocalDirectory extends DirectoryType{
         String newLine = System.getProperty( "line.separator", "\r\n" );
         String newIndent = indent + "\t";
         
+        //sanity check?
+        if( this.isEmpty() ){
+            return;
+        }
+        
         //write out the  xml element
         writer.write( indent );
         writer.write( "<local>" );
