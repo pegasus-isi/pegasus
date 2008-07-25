@@ -22,10 +22,10 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
 import org.griphyn.cPlanner.common.LogManager;
 
 import edu.isi.ikcap.workflows.dc.DataCharacterization;
-import edu.isi.ikcap.workflows.dc.DataCharacterizationFactory;
 
 import edu.isi.ikcap.workflows.dc.classes.DataSourceLocationObject;
 
+import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
 import edu.isi.ikcap.workflows.util.FactoryException;
 
 
@@ -130,10 +130,12 @@ public class Windward  implements ReplicaCatalog {
         //figure out how to specify via properties
         try{
             String implementor = props.getProperty( this.DATA_CHARACTERIZATION_IMPL_PROPERTY );
-            mDCharCatalog = DataCharacterizationFactory.loadInstance( implementor, props );
-        }catch( FactoryException e ){
+//            mDCharCatalog = DataCharacterizationFactory.loadInstance( implementor, props );
+            mDCharCatalog =   PropertiesHelper.getDCFactory().getDC(
+				PropertiesHelper.getDCDomain(), null );
+        }catch( Exception e ){
             connect = false;
-            mLogger.log( "Unable to connect to Data Characterization Catalog " + e.convertException(),
+            mLogger.log( "Unable to connect to Data Characterization Catalog " + e,
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
 

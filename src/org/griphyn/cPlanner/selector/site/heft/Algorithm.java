@@ -43,11 +43,10 @@ import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-
-import edu.isi.ikcap.workflows.ac.ProcessCatalogFactory;
 import edu.isi.ikcap.workflows.ac.ProcessCatalog;
 import edu.isi.ikcap.workflows.ac.classes.TransformationCharacteristics;
 
+import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
 import edu.isi.ikcap.workflows.util.FactoryException;
 
 import edu.isi.ikcap.workflows.sr.util.WorkflowGenerationProvenanceCatalog;
@@ -260,9 +259,12 @@ public class Algorithm {
 
         //figure out how to specify via properties
         try{
-            result = ProcessCatalogFactory.loadInstance( type, props );
-        }catch( FactoryException e ){
-            mLogger.log( "Unable to connect to process catalog " + e.convertException(),
+            result = PropertiesHelper.getPCFactory().getPC(
+				PropertiesHelper.getDCDomain(), 
+				PropertiesHelper.getPCDomain(), null);
+		
+        }catch( Exception e ){
+            mLogger.log( "Unable to connect to process catalog " + e,
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
         return result;

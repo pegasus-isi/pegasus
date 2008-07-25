@@ -20,8 +20,6 @@ import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
-import org.griphyn.common.classes.Arch;
-import org.griphyn.common.classes.Os;
 import org.griphyn.common.classes.TCType;
 import org.griphyn.common.classes.SysInfo;
 
@@ -29,14 +27,13 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 
 import edu.isi.ikcap.workflows.ac.ProcessCatalog;
-import edu.isi.ikcap.workflows.ac.ProcessCatalogFactory;
 
 import edu.isi.ikcap.workflows.ac.classes.TransformationCharacteristics;
 import edu.isi.ikcap.workflows.ac.classes.EnvironmentVariable;
 
 import edu.isi.ikcap.workflows.sr.template.Component;
 
-import edu.isi.ikcap.workflows.util.FactoryException;
+import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
 
 import java.util.List;
 import java.util.LinkedList;
@@ -241,10 +238,13 @@ public class Windward  implements TransformationCatalog {
         boolean connect = true;
         //figure out how to specify via properties
         try{
-            mProcessCatalog = ProcessCatalogFactory.loadInstance( mPCImpl, props );
-        }catch( FactoryException e ){
+            //mProcessCatalog = ProcessCatalogFactory.loadInstance( mPCImpl, props );
+            mProcessCatalog = PropertiesHelper.getPCFactory().getPC(
+				PropertiesHelper.getDCDomain(), 
+				PropertiesHelper.getPCDomain(), null );
+        }catch( Exception e ){
             connect = false;
-            mLogger.log( "Unable to connect ot process catalog " + e.convertException(),
+            mLogger.log( "Unable to connect ot process catalog " + e,
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
         return connect;
