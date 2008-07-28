@@ -15,9 +15,10 @@
  */
 
 
-package org.griphyn.cPlanner.engine;
+package org.griphyn.cPlanner.engine.createdir;
 
 
+import org.griphyn.cPlanner.engine.*;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
@@ -33,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
+import org.griphyn.common.util.Separator;
 
 
 /**
@@ -50,24 +52,70 @@ import java.util.Vector;
  * @version $Revision$
  */
 
-public class HourGlass
-    extends CreateDirectory {
+public class HourGlass extends AbstractStrategy{
 
+    
     /**
      * The name concatenating dummy job that ensures that Condor does not start
      * staging in before the directories are created.
      */
     public static final String DUMMY_CONCAT_JOB = "pegasus_concat";
+    
+    /**
+     * The transformation namespace for the create dir jobs.
+     */
+    public static final String TRANSFORMATION_NAMESPACE = "pegasus";
 
     /**
-     * Default constructor.
-     *
-     * @param concDag  The concrete dag so far.
-     * @param bag      bag of initialization objects
+     * The logical name of the transformation that creates directories on the
+     * remote execution pools.
      */
-    public HourGlass( ADag concDag, PegasusBag bag ) {
-        super( concDag, bag );
+    public static final String TRANSFORMATION_NAME = "dirmanager";
+
+    /**
+     * The version number for the derivations for create dir  jobs.
+     */
+    public static final String TRANSFORMATION_VERSION = null;
+
+
+    /**
+     * The complete TC name for kickstart.
+     */
+    public static final String COMPLETE_TRANSFORMATION_NAME = Separator.combine(
+                                                                 TRANSFORMATION_NAMESPACE,
+                                                                 TRANSFORMATION_NAME,
+                                                                 TRANSFORMATION_VERSION  );
+
+
+    /**
+     * The derivation namespace for the create dir  jobs.
+     */
+    public static final String DERIVATION_NAMESPACE = "pegasus";
+
+    /**
+     * The logical name of the transformation that creates directories on the
+     * remote execution pools.
+     */
+    public static final String DERIVATION_NAME = "dirmanager";
+
+
+    /**
+     * The version number for the derivations for create dir  jobs.
+     */
+    public static final String DERIVATION_VERSION = "1.0";
+    
+    /**
+     * Intializes the class.
+     *
+     * @param bag    bag of initialization objects
+     * @param imp    the implementation instance that creates create dir job 
+     */
+    public void initialize( PegasusBag bag, Implementation impl ){
+        super.initialize( bag, impl );
     }
+
+
+    
 
     /**
      * It modifies the concrete dag passed in the constructor and adds the create
@@ -76,9 +124,12 @@ public class HourGlass
      * does not start staging in the data before the directories have been added.
      * The root nodes in the unmodified dag are now chidren of this concatenating
      * dummy job.
+     * @param dag   the workflow to which the nodes have to be added.
+     * 
+     * @return the added workflow
      */
-    public void addCreateDirectoryNodes() {
-        Set set = this.getCreateDirSites();
+    public ADag addCreateDirectoryNodes( ADag dag ){
+        Set set = this.getCreateDirSites( dag );
 
         //remove the entry for the local pool
         //set.remove("local");
@@ -90,43 +141,43 @@ public class HourGlass
 
         //add the concat job
         if (!set.isEmpty()) {
-            concatJob = makeDummyConcatJob();
-            introduceRootDependencies(concatJob.jobName);
-            mCurrentDag.add(concatJob);
+            concatJob = makeDummyConcatJob( dag );
+            introduceRootDependencies( dag, concatJob.jobName);
+            dag.add(concatJob);
         }
 
         //for each execution pool add
         //a create directory node.
         for (Iterator it = set.iterator();it.hasNext();){
             pool = (String) it.next();
-            jobName = getCreateDirJobName(pool);
-            newJob = makeCreateDirJob(pool, jobName);
-            mCurrentDag.add(newJob);
+            jobName = getCreateDirJobName( dag, pool);
+            newJob = mImpl.makeCreateDirJob(pool, jobName);
+            dag.add(newJob);
 
             //add the relation to the concat job
-            mLogMsg = "Adding relation " + jobName + " -> " + concatJob.jobName;
-            mLogger.log(mLogMsg,LogManager.DEBUG_MESSAGE_LEVEL);
-            mCurrentDag.addNewRelation(jobName, concatJob.jobName);
+            String msg = "Adding relation " + jobName + " -> " + concatJob.jobName;
+            mLogger.log( msg, LogManager.DEBUG_MESSAGE_LEVEL );
+            dag.addNewRelation( jobName, concatJob.jobName );
         }
-
+        return dag;
     }
 
     /**
      * It traverses through the root jobs of the dag and introduces a new super
      * root node to it.
      *
+     * @param dag       the DAG
      * @param newRoot   the name of the job that is the new root of the graph.
      */
-    private void introduceRootDependencies(String newRoot) {
-        Vector vRootNodes = mCurrentDag.getRootNodes();
+    private void introduceRootDependencies( ADag dag, String newRoot) {
+        Vector vRootNodes = dag.getRootNodes();
         Iterator it = vRootNodes.iterator();
         String job = null;
 
         while (it.hasNext()) {
             job = (String) it.next();
-            mCurrentDag.addNewRelation(newRoot, job);
-            mLogMsg = "Adding relation " + newRoot + " -> " + job;
-            mLogger.log(mLogMsg,LogManager.DEBUG_MESSAGE_LEVEL);
+            dag.addNewRelation(newRoot, job);
+            mLogger.log( "Adding relation " + newRoot + " -> " + job,LogManager.DEBUG_MESSAGE_LEVEL);
 
         }
     }
@@ -136,9 +187,11 @@ public class HourGlass
      * This job should run always provided the directories were created
      * successfully.
      *
+     * @param dag  the workflow
+     * 
      * @return  the dummy concat job.
      */
-    public SubInfo makeDummyConcatJob() {
+    public SubInfo makeDummyConcatJob( ADag dag ) {
 
         SubInfo newJob = new SubInfo();
         List entries = null;
@@ -146,14 +199,14 @@ public class HourGlass
 
         //jobname has the dagname and index to indicate different
         //jobs for deferred planning
-        newJob.jobName = getConcatJobname();
+        newJob.jobName = getConcatJobname( dag );
 
-        newJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
-                                  this.TRANSFORMATION_NAME,
-                                  this.TRANSFORMATION_VERSION );
-        newJob.setDerivation( this.DERIVATION_NAMESPACE,
-                              this.DERIVATION_NAME,
-                              this.DERIVATION_VERSION );
+        newJob.setTransformation( HourGlass.TRANSFORMATION_NAMESPACE,
+                                  HourGlass.TRANSFORMATION_NAME,
+                                  HourGlass.TRANSFORMATION_VERSION );
+        newJob.setDerivation( HourGlass.DERIVATION_NAMESPACE,
+                              HourGlass.DERIVATION_NAME,
+                              HourGlass.DERIVATION_VERSION );
 
 //        newJob.condorUniverse = Engine.REGISTRATION_UNIVERSE;
         newJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
@@ -182,11 +235,11 @@ public class HourGlass
      *
      * @return name
      */
-    protected String getConcatJobname(){
+    protected String getConcatJobname( ADag dag ){
         StringBuffer sb = new StringBuffer();
 
-        sb.append( mCurrentDag.dagInfo.nameOfADag ).append( "_" ).
-           append( mCurrentDag.dagInfo.index ).append( "_" );
+        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
+           append( dag.dagInfo.index ).append( "_" );
 
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
