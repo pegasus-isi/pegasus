@@ -58,9 +58,7 @@ public class JobStateParserFileFilter implements FilenameFilter {
              mPattern = Pattern.compile( mRegexExpression );
          }
          boolean result = mPattern.matcher( name ).matches();       
-         result = result && name.startsWith( this.jobname ) && !name.startsWith( "chmod" ); 
-         //we want to ignore jobs starting with chmod
-         //System.out.println(name + " " + result);
+         result = result && name.startsWith( this.jobname ) ;         
          return  result ;
      }
 
