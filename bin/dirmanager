@@ -40,6 +40,7 @@ my $chmod=0;
 my $none=0;
 my $dir='';
 my $file='';
+my $mode='';
 
 # let CVS set version automagically
 $main::revision = 'unknown';
@@ -62,11 +63,12 @@ sub usage {
     print "\t -c|--create  Create a directory specified by --dir\n";
     print "\t -r|--remove  Remove the directory specified by --dir\n";
     print "\t -X|--exec    Marks a file or directory executable\n";
+    print "\t  -m, --mode=MODE   set permission mode (as in chmod), not rwxrwxrwx - umask\n";
     print "\t -n|--none    Dummy job: Prints the system time\n";
     print "\t -h|--help    Print this usage\n";
     print "\t -v|--verbose Print debug messages\n";
     print "\t -V|--version Print version message and exit\n";
-
+    
     exit(1);
 }
 
@@ -167,6 +169,7 @@ my $result=GetOptions( "create|c"   => \$create,
  		       "dir|d=s"    => \$dir,
 		       "file|f=s"   => \$file,
 	               "exec|X"     => \$chmod,
+		       "mode|m=s"   => \$mode,
 		       "verbose|v+" => \$main::debug,
 		       "version|V"  => \&version,
 		       "help|h"     => \&usage );
@@ -191,13 +194,21 @@ if( $create+$remove+$none+$chmod != 1 ) {
 } elsif ( $chmod && (length($file)+length($dir) == 0) ) {
     print "ERROR: Missing file- or directory name\n";
     usage();
+} elsif ( $mode && (length($file)+length($dir) == 0) ) {
+    print "ERROR: Missing file- or directory name\n";
+    usage();
 }
 
-if ($create) {
+if( $create && $mode ){
+    warn "# Running ", $executables{'mkdir'}, " -m $mode -p  $dir\n" if $main::debug;
+    @result=pipe_out_cmd( $executables{'mkdir'}, '-p', '-m', $mode, $dir );
+    exit(exit_code($?, 'mkdir'));
+}elsif ($create) {
     warn "# Running ", $executables{'mkdir'}, " -p  $dir\n" if $main::debug;
     @result=pipe_out_cmd( $executables{'mkdir'}, '-p', $dir );
     exit(exit_code($?, 'mkdir'));
-} elsif ($remove) {
+} 
+elsif ($remove) {
     warn "# Running ", $executables{'rm'}, " -rf  $dir\n" if $main::debug;
     @result=pipe_out_cmd( $executables{'rm'}, '-rf', $dir );
     exit(exit_code($?, 'rm'));
@@ -210,7 +221,16 @@ if ($create) {
     warn "# Running ",$executables{'chmod'}," a+x $obj\n" if $main::debug;
     @result=pipe_out_cmd( $executables{'chmod'}, 'a+x', $obj );
     exit(exit_code($?,'chmod'));
-} else {
+}
+elsif( $mode ){
+    my $obj = $file || $dir;	# take whatever was specified   
+    warn "# Running ",$executables{'chmod'}," $mode \n" if $main::debug;
+    @result=pipe_out_cmd( $executables{'chmod'}, $mode, $obj );
+    exit(exit_code($?,'chmod'));
+}
+else {
     # assertion failure. No \n, let Perl print lineno
     die "ERROR: Assertion failure: Illegal code branch"; 
 }
+
+
