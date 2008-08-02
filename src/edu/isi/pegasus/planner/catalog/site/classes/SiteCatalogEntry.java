@@ -74,8 +74,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
         if( mNMIArchToOldArch == null ){
             mNMIArchToOldArch = new HashMap< Architecture,Arch >();
             mNMIArchToOldArch.put( Architecture.x86, Arch.INTEL32  );
-           // mNMIArchToOldArch.put( "x86", Arch.INTEL64,  );
-            mNMIArchToOldArch.put( Architecture.x86_64, Arch.AMD64 );
+            mNMIArchToOldArch.put( Architecture.x86_64, Arch.INTEL64  );
+            //mNMIArchToOldArch.put( Architecture.x86_64, Arch.AMD64 );
             
         }
         return mNMIArchToOldArch;
@@ -115,7 +115,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
         if( mArchToNMIArch == null ){
             mArchToNMIArch = new HashMap();
             mArchToNMIArch.put( Arch.INTEL32, Architecture.x86 );
-            mArchToNMIArch.put( Arch.INTEL64, Architecture.x86 );
+            mArchToNMIArch.put( Arch.INTEL64, Architecture.x86_64 );
             mArchToNMIArch.put( Arch.AMD64, Architecture.x86_64 );
             
         }

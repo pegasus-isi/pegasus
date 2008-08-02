@@ -241,7 +241,7 @@ public class DeployWorkerPackage
         if( mArchToNMIArch == null ){
             mArchToNMIArch = new HashMap();
             mArchToNMIArch.put( Arch.INTEL32, "x86" );
-            mArchToNMIArch.put( Arch.INTEL64, "x86" );
+            mArchToNMIArch.put( Arch.INTEL64, "x86_64" );
             mArchToNMIArch.put( Arch.AMD64, "x86_64" );
             
         }
