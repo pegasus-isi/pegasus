@@ -16,16 +16,19 @@
 
 package org.griphyn.cPlanner.engine.createdir;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.partitioner.graph.Graph;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
+import org.griphyn.cPlanner.common.LogManager;
+
+import org.griphyn.cPlanner.partitioner.graph.Graph;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.common.LogManager;
 
 /**
  * The interface that defines how the cleanup job is invoked and created.
@@ -62,6 +65,11 @@ public abstract class AbstractStrategy implements Strategy {
     protected Implementation mImpl;
     
     /**
+     * The Site Store handle.
+     */
+    protected SiteStore mSiteStore;
+    
+    /**
      * Intializes the class.
      *
      * @param bag    bag of initialization objects
@@ -70,7 +78,9 @@ public abstract class AbstractStrategy implements Strategy {
     public void initialize( PegasusBag bag, Implementation impl ){
         mImpl       = impl;
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
-        mLogger   = bag.getLogger();
+        mLogger     = bag.getLogger();
+        mSiteStore  = bag.getHandleToSiteStore();
+        
         //in case of staging of executables/worker package
         //we use mkdir directly
         mUseMkdir = bag.getHandleToTransformationMapper().isStageableMapper();

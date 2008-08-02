@@ -18,9 +18,9 @@
 package org.griphyn.cPlanner.engine.createdir;
 
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import java.util.List;
-import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The interface that defines how the create dir job is created.
@@ -51,10 +51,11 @@ public interface Implementation {
      * @param site  the execution site for which the create dir job is to be
      *                  created.
      * @param name  the name that is to be assigned to the job.
+     * @param directory  the directory to be created on the site.
      *
      * @return create dir job.
      */
-    public SubInfo makeCreateDirJob( String site, String name );
+    public SubInfo makeCreateDirJob( String site, String name, String directory );
 
 
 

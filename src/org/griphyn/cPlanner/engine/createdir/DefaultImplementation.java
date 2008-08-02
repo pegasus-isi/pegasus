@@ -144,11 +144,12 @@ public class DefaultImplementation implements Implementation {
      *
      * @param site  the execution site for which the create dir job is to be
      *                  created.
-     * @param name  the name that is to be assigned to the job.
+     * @param name  the name that is to be assigned to the job.     * 
+     * @param directory  the directory to be created on the site.
      *
      * @return create dir job.
      */
-    public SubInfo makeCreateDirJob( String site, String name ) {
+    public SubInfo makeCreateDirJob( String site, String name, String directory ) {
         SubInfo newJob  = new SubInfo();
         List entries    = null;
         String execPath = null;
@@ -212,8 +213,9 @@ public class DefaultImplementation implements Implementation {
         }
         else{
             execPath = entry.getPhysicalTransformation();
-            argString = "--create --dir " +
-                        mSiteStore.getWorkDirectory( site );
+            argString = "--create --dir " + 
+                        directory;
+//                        mSiteStore.getWorkDirectory( site );
         }
 
         newJob.jobName = name;

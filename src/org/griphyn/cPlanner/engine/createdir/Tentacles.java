@@ -115,7 +115,9 @@ public class Tentacles extends AbstractStrategy {
         for (Iterator it = set.iterator();it.hasNext();){
             pool    = (String)it.next();
             jobName = getCreateDirJobName( dag, pool);
-            newJob  = mImpl.makeCreateDirJob( pool, jobName );
+            newJob  = mImpl.makeCreateDirJob( pool,
+                                              jobName,
+                                              mSiteStore.getWorkDirectory( pool ) );
             dag.add(newJob);
 
         }

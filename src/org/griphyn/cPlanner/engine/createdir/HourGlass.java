@@ -79,7 +79,7 @@ public class HourGlass extends AbstractStrategy{
 
 
     /**
-     * The complete TC name for kickstart.
+     * The complete TC name for dirmanager.
      */
     public static final String COMPLETE_TRANSFORMATION_NAME = Separator.combine(
                                                                  TRANSFORMATION_NAMESPACE,
@@ -151,7 +151,9 @@ public class HourGlass extends AbstractStrategy{
         for (Iterator it = set.iterator();it.hasNext();){
             pool = (String) it.next();
             jobName = getCreateDirJobName( dag, pool);
-            newJob = mImpl.makeCreateDirJob(pool, jobName);
+            newJob = mImpl.makeCreateDirJob( pool, 
+                                             jobName,
+                                             mSiteStore.getWorkDirectory( pool ) );
             dag.add(newJob);
 
             //add the relation to the concat job
