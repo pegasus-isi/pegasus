@@ -189,8 +189,9 @@ public class Windward implements GridStart{
      */
     protected String getGUWrapperArguments( SubInfo job ){
         StringBuffer args = new StringBuffer();
-        args.append( " -m " ).append( job.getName() );
+        args.append( " -m " ).append( job.getTXName() );
         args.append( " -w " ).append( mWorkflowID );
+        args.append( " -j " ).append( "1" );
         args.append( " -k ").append( this.mAllegroKB );
         args.append( " -h " ).append( this.mAllegroHost );
         args.append( " -p " ).append( this.mAllegroPort );
@@ -240,7 +241,8 @@ public class Windward implements GridStart{
      * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
      */
     public  String getVDSKeyValue(){
-        return this.CLASSNAME;
+        //we want the merged jobs to also have the kickstart postscript i.e. exitpost
+        return Kickstart.CLASSNAME;
     }
 
 
@@ -274,7 +276,8 @@ public class Windward implements GridStart{
      * @return
      */
     public AggregatedJob enable(AggregatedJob aggJob, Collection jobs) {
-        throw new UnsupportedOperationException( "Clustering for GU wrapped components not supported" );
+        //let the job launch via kickstart directly for time being.
+        return mKickstartLauncher.enable( aggJob, jobs );
     }
 
     /**

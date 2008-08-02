@@ -44,6 +44,8 @@ import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
 
 import org.griphyn.cPlanner.engine.MainEngine;
 
+import org.griphyn.cPlanner.engine.createdir.WindwardImplementation;
+
 
 import org.griphyn.cPlanner.parser.dax.Callback;
 import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
@@ -55,6 +57,8 @@ import org.griphyn.cPlanner.parser.PDAXParser;
 
 import org.griphyn.common.catalog.work.WorkFactory;
 import org.griphyn.common.catalog.WorkCatalog;
+
+import org.griphyn.common.catalog.transformation.TransformationFactory;
 
 import org.griphyn.common.util.Version;
 import org.griphyn.common.util.Currently;
@@ -81,7 +85,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import org.griphyn.common.catalog.transformation.TransformationFactory;
+import java.util.Properties;
+
 
 /**
  * This is the main program for the Pegasus. It parses the options specified
@@ -1353,9 +1358,19 @@ public class CPlanner extends Executable{
         catalog = SiteFactory.loadInstance( mProps );
         
         /* always load local site */
-        List toLoad = new ArrayList( sites );
+        List<String> toLoad = new ArrayList<String>( sites );
         toLoad.add( "local" );
 
+        /* add the windward allegro graph site if reqd
+         * a kludge for time being 
+         */
+        //figure out some allegro graph stuff
+        Properties p = mProps.matchingSubset( WindwardImplementation.ALLEGRO_PROPERTIES_PREFIX, false  );
+        String site = p.getProperty( "site" );
+        if( site != null ){
+            toLoad.add( site );
+        }
+        
         /* load the sites in site catalog */
         try{
             catalog.load( toLoad );

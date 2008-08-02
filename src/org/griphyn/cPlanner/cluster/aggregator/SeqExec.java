@@ -149,9 +149,6 @@ public class SeqExec extends Abstract {
         message.append( mergedJob.dagmanVariables.get( Dagman.POST_SCRIPT_KEY ) );
         mLogger.log( message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
 
-
-
-        System.out.println( "Input files of merged job " + mergedJob.getInputFiles() );
         return mergedJob;
     }
 
