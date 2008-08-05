@@ -388,7 +388,7 @@ public class Node {
 				int overlap = (j >= tempST && j < tempFT) ? 1 : 0;
 				localMax = Math.max(localMax, timeMap[j].size() - overlap);
 			}
-			if( limit > (localMax+1) ) {
+			if( limit > (localMax + 1 - pushedParents(i) ) ) {
 				cursor = i;
 				found = true;
 				break;
@@ -443,7 +443,7 @@ public class Node {
 				int overlap = (j >= tempST && j < tempFT) ? 1 : 0;
 				localMax = Math.max(localMax, timeMap[j].size() - overlap);
 			}
-			if( limit > (localMax+1) ) {
+			if( limit > (localMax + 1 - pushedChildren(i + weight)) ) {
 				cursor = i;
 				found = true;
 				break;
@@ -479,6 +479,30 @@ public class Node {
 			n.updateRightBound(tempST - ce.getCost(),null);
 		}
 		return true;
+	}
+
+	private int pushedParents(long timeLimit) {
+		int result = 0;
+		for(int i = 0 ; i < inEdges.size(); i++) {
+			Edge ce = (Edge)inEdges.get(i);
+			Node cn = ce.getFrom();
+			if( timeLimit < cn.tempFT ) {
+				result++;
+			}
+		}
+		return result;
+	}
+
+	private int pushedChildren(long timeLimit) {
+		int result = 0;
+		for(int i = 0 ; i < outEdges.size(); i++) {
+			Edge ce = (Edge)outEdges.get(i);
+			Node cn = ce.getTo();
+			if( timeLimit > cn.tempST ) {
+				result++;
+			}
+		}
+		return result;
 	}
 
 	/**

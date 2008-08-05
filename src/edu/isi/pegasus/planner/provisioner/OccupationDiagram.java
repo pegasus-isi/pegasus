@@ -164,6 +164,8 @@ public class OccupationDiagram {
 		int cntPt = 0;
 		int cntP = 0;
 
+		LinkedList sortTemp = null;
+
 		while(true) {
 			cntWhile++;
 			max = 0;
@@ -200,48 +202,68 @@ public class OccupationDiagram {
 			}
 			if( reduced ) continue;
 	
-			// propagated balancing
-			long min = Integer.MAX_VALUE;
-			long longest = 0;
-			Node lcn = null;
-			for(int k = 0 ; k < max ;k++) {
+			// propagated balancing			
+			
+			// redistribute to left direction	
+			sortTemp = new LinkedList();
+			for(int k = 0 ; k < max ;k++) {		// among tasks in the highest time slot
 				Node cn = (Node)timeMap[maxIndexL].get(k);
-				if( (cn.tempST-cn.olb) >= cn.evalWeight() && min >= cn.getAncET() ) {
-					if( min > cn.getAncET() /*|| cn.evalWeight() > longest*/ ) {
-						lcn = cn;
-						longest = cn.evalWeight();
-						min = cn.getAncET();
+				if( (cn.tempST-cn.olb) >= cn.evalWeight() ) {	//check whether the tasks can be moved or not
+					boolean mid = false;
+					for(int ii = 0 ; ii < sortTemp.size(); ii++ ) {	//sorting movable tasks with the number ancestor tasks and ET
+						Node tn = (Node)sortTemp.get(ii);
+						if( tn.getAncET() > cn.getAncET() ) {
+							sortTemp.add(ii, cn);
+							mid = true;
+							break;
+						} else if ( tn.getAncET() < cn.getAncET() ) {
+							continue;
+						} else if( tn.evalWeight() > cn.evalWeight() ) {	//tie break
+							sortTemp.add(ii, cn);
+							mid = true;
+						}
 					}
+					if( !mid ) sortTemp.add(cn);
 				}
 			}
 
 			boolean succ = false;
-			if( lcn != null ) {
-		//		System.out.print("lcn:"+lcn.getID() );
-				succ = lcn.moveLeft(timeMap, max, maxIndexL);
-		//		System.out.print(" " + succ  + "\r\n");
-				if( succ ) continue;
+			for(int k = 0 ; k < sortTemp.size() ; k++ ) {
+				Node cn = (Node)sortTemp.get(k);
+				succ = cn.moveLeft(timeMap, max, maxIndexL);
+				if( succ ) break;
 			}
+			if( succ ) continue;
 
-			Node rcn = null;
-			for(int k=0; k<max;k++) {
+			// redistribute to right direction	
+			sortTemp = new LinkedList();
+			for(int k = 0 ; k < max ;k++) {		// among tasks in the highest time slot
 				Node cn = (Node)timeMap[maxIndexR].get(k);
-				if( (cn.orb - cn.tempFT) >= cn.evalWeight() && min >= cn.getDesET() ) {
-					if( min > cn.getAncET() /*|| cn.evalWeight() > longest*/ ) {
-						rcn = cn;
-						longest = cn.evalWeight();
-						min = cn.getDesET();
+				if( (cn.orb - cn.tempFT) >= cn.evalWeight() ) {	//check whether the tasks can be moved or not
+					boolean mid = false;
+					for(int ii = 0 ; ii < sortTemp.size(); ii++ ) {	//sorting movable tasks with the number descendant tasks and ET
+						Node tn = (Node)sortTemp.get(ii);
+						if( tn.getDesET() > cn.getDesET() ) {
+							sortTemp.add(ii, cn);
+							mid = true;
+							break;
+						} else if ( tn.getDesET() < cn.getDesET() ) {
+							continue;
+						} else if( tn.evalWeight() > cn.evalWeight() ) {	//tie break
+							sortTemp.add(ii, cn);
+							mid = true;
+						}
 					}
+					if( !mid ) sortTemp.add(cn);
 				}
 			}
 
-			if( rcn != null ) {
-			//	System.out.println("rcn:"+rcn.getID());
-				succ = rcn.moveRight(timeMap, max, maxIndexR+1 );
-			//	System.out.print(" " + succ  + "\r\n");
+			for(int k = 0 ; k < sortTemp.size() ; k++ ) {
+				Node cn = (Node)sortTemp.get(k);
+				succ = cn.moveRight(timeMap, max, maxIndexR+1);
+				if( succ ) break;
 			}
 
-		//	System.out.println("succ:"+ succ);
 			if( !succ ) break;
 		}
 
