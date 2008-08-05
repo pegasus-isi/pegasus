@@ -25,20 +25,29 @@ import sys
 import time
 import warnings
 
+logging.basicConfig()
+log = logging.getLogger("nl_dbquery")
+
 class ConnectionError(Exception): pass
 
 class Query:
     def execute_query(self, q):
         """Executes a query q
         """
+        log.info("query.start")
         cursor = self.conn.cursor()
         print "Running query: %s" % q
         print
+        log.debug("query.execute.start")
         cursor.execute(q)
+        log.debug("query.execute.end")
         #numrows = int(DBC.rowcount)
+        log.debug("query.fetchall.start")
         for i, row in enumerate(cursor.fetchall()):
             row_str = '\t'.join([str(x) for x in row])
             print '%03d: %s' % (i+1 , row_str)
+        log.debug("query.fetchall.end")
+        log.info("query.end")
 
 class MySQLQuery(Query):
     """MySQL query class
@@ -106,9 +115,46 @@ MAGICDATE_EXAMPLES = ', '.join(["%s" % s for s in (
      'next Tuesday',
      'last Tuesday')])
 
-def main():
+PARAM_PAT = r'<[a-zA-Z]\w*>'
 
-    parser = optparse.OptionParser(version="LBL: nl_dbquery 872 2008-07-17 23:12:32Z ksb\n$Id$", option_class=MagicDateOptionWrapper)
+def substitute(qstr, param_val):
+    """Perform string substitution in string 'qstr'
+    using names and values from dictionary 'param_val'.
+    
+    Replace occurrences of <key> or <KEY> with
+    the value of param_val['key'].
+
+    Raises KeyError if a parameter is not found in
+    the dictionary.
+    """
+    param_unused = dict.fromkeys(param_val.keys())
+    def subfn(m):
+        # get <FOO> -->  foo
+        p_key = qstr[m.start()+1:m.end()-1].lower()
+        if not param_val.has_key(p_key):
+            raise KeyError("No value given for "
+                        "parameter <%s>" % p_key)
+        del param_unused[p_key]
+        return param_val[p_key]
+    # substitute with subfn
+    result = re.sub(PARAM_PAT, subfn, qstr)
+    # return new string and list of unused params
+    return result, param_unused.keys()
+
+def getparam(qstr):
+    """Extract a list of the parameters in 'qstr'
+
+    If there are none, return an empty list.
+    """
+    # find parameters
+    plist = re.findall(PARAM_PAT, qstr)
+    # remove angle brackets and normalize case
+    result = [s[1:-1].lower() for s in plist]
+    # return resulting list
+    return result
+
+def main():
+    parser = optparse.OptionParser(version="LBL r896, Pegasus r673", option_class=MagicDateOptionWrapper)
     parser.add_option('-c','--config', action='store', dest='config_name',
                       default="./%s.conf" % os.path.basename(sys.argv[0]),
                       metavar='FILE',
@@ -133,12 +179,22 @@ def main():
                       "of the form sqlite:///path/to/filename. This parameter is a required parameter"
                       "except in case when the script is executed just with the -l/--list option to list"
                       " the available queries.")
+    parser.add_option('-P', '--query-param', action="append",
+                      dest="query_param", default=[],
+                      help="Parameter for the given query, in the "
+                      "form 'name=value'. The 'value' is substituted for "
+                      "occurrences of '<name>' in the query string. May "
+                      "be repeated.")
     parser.add_option('-q', '--query', action="store", dest="query", metavar='QUERY',
                       help="Run QUERY, which can be a number or name. Use -l/--list to list available queries")
     parser.add_option('-u', '--uri', default=None, action='store', dest='db_uri', metavar='URI',
                      help="Database connection URI, where the database module "
                       "name is used as the URI scheme. "
                       "MySQL requires a host and sqlite requires a filename.")
+    parser.add_option('-v', '--verbose', action="count", default=0,
+                                 dest='verbosity', help="Repeat up to 3 "
+                                 "times for more verbose logging. The "
+                                 "default level is ERROR")
     grp = optparse.OptionGroup(parser, "Time Range",
                                "The following start/end times for the query "
                                "accept many date expressions like 'yesterday', "
@@ -150,15 +206,14 @@ def main():
     grp.add_option('-e', '--end', action="store", dest="end",type='magicdate',
                    default='today', help="End date for the query ['today'].")
     parser.add_option_group(grp)
-    #
     (options, args) = parser.parse_args()
-
-    #    if not SQLITE and not MYSQL:
-    #        parser.error("One of either MySQLdb or sqlite3 python modules must be installed")
-
+    # set log level
+    vb = min(options.verbosity, 3)
+    log.setLevel(logging.ERROR - vb*10)
+    # parse uri
     if options.db_uri is None:
         if options.qlist is not None or options.dryRun:
-            pass
+            uri_scheme = 'mysql'
         else:
             parser.error("-u/--uri is required")
     else:
@@ -167,7 +222,8 @@ def main():
             parser.error("URI must be 'scheme://host-or-file', e.g., "
                          "mysql://localhost or sqlite:///tmp/abc")
         uri_scheme = uri_scheme.lower()
-
+        if uri_scheme not in ('sqlite', 'mysql'):
+            parser.error("Unknown URI scheme, must be mysql:// or sqlite://")
     # init config file
     config = ConfigObj(options.config_name, interpolation='template')
     # number queries and build 2 lookup tables
@@ -187,9 +243,15 @@ def main():
         parser.error("config file '%s' has no queries" % options.config_name)
     # For -l/--list, print queries and quit
     if options.qlist:
+        print "[Number] Name: Description. (parameters)"
         for i in xrange(1, len(q_bynum)+1):
             v = q_bynum[i]
-            print "[%2d] %s: %s" % (i, v[0], v[1])
+            plist = getparam(v[2])
+            if plist:
+                params = ','.join(plist)
+            else:
+                params = "None"
+            print "[%2d] %s: %s (%s)" % (i, v[0], v[1], params)
         return
     # otherwise, find query
     if options.query is None:
@@ -203,27 +265,39 @@ def main():
         if not q_byname.has_key(options.query):
             parser.error("no query named '%s' found" % options.query)
         query_str = q_byname[options.query][2]
-    # set range into query str
+    # get timerange
     start = options.start
     end = options.end
-    timerange = "time >= unix_timestamp('%s') and time <= unix_timestamp('%s')" % (
-                start, end)
-
-    # this one to be used for sqlite case
-    # timerange = "time >= datetime(%s) and time <= datetime(%s)" %(start, end)
-    query_str = query_str.replace('TIMERANGE', timerange)
+    if uri_scheme  == 'mysql':
+        tr = ("time >= unix_timestamp('%s') and "
+              "time <= unix_timestamp('%s')" % (start, end))
+    elif uri_scheme == 'sqlite':
+        tr = "time >= datetime(%s) and time <= datetime(%s)" % (start, end)
+    # get other parameters
+    params = { 'timerange' : tr }
+    for nvp in options.query_param:
+        try:
+            name, value = nvp.split('=')
+        except ValueError:
+            parser.error("Parameter '%s' not in form name=value" % nvp)
+        params[name.lower()] = value
+    # substitute parameters in query string
+    try:
+        query_str, unused = substitute(query_str, params)
+    except KeyError, E:
+        parser.error("%s in query string:\n %s" %
+                (E, query_str))
+    if unused:
+        log.warn("Unused parameters: %s" % ', '.join(unused))
     # run query
     if options.dryRun:
-        print query_str;
+        print query_str
         return
-
     try:
         if uri_scheme == 'mysql':
             q = MySQLQuery(db = options.db_name,host = uri_rest, read_default_file="~/.my.cnf")
         elif uri_scheme == 'sqlite':
             q = SQLiteQuery(filename = uri_rest)
-        else:
-            parser.error("Unknown URI scheme, must be mysql:// or sqlite://")
     except ConnectionError, E:
         parser.error("While connecting to %s database: %s" % (uri_scheme, E))
     #print "Time range: %s -- %s" % (start, end)
