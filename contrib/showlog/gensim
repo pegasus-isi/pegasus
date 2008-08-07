@@ -1,0 +1,430 @@
+#!/usr/bin/env perl
+
+use Getopt::Long;
+use List::Util qw[min max];
+use File::Basename qw(dirname basename);
+use File::Path;
+use File::Copy;
+use File::Spec;
+
+$jobstate = 1;
+$result = GetOptions(
+    "dag|d=s" => \$dagName,
+    "help|h" => \&usage,
+    "input|i=s" => \$inputDir,
+    "jobstate|j!" => \$jobstate,
+    "jobstate-log|l=s" => \$jobstateLog,
+    "output|o=s" => \$outputDir,
+);
+
+if (!defined($dagName) || !defined($outputDir)) {
+    usage();
+}
+
+die "--no-jobstate or --jobstate-log=<logfile> is required\n" if ($jobstate && !defined($jobstateLog));
+
+sub usage(;$) {
+    my $ec = shift || 0;
+    my $basename = basename($0,'.pl');
+    print << "EOF";
+
+Usage: $basename --dag=<dag name> --jobstate|--no-jobstate --jobstate-log=<jobstate log> --output=<output directory> --help 
+
+Mandatory arguments:
+ -d|--dag dagname       name of the dag file to process
+ -o|--output dir        write outputs in given directory
+
+Complex arguments:
+ -j|--jobstate          yes, we have jobstate
+ --no-jobstate          no, we don't have jobstate
+ -l|--jobstate-log log  jobstate log to process
+
+Optional arguments:
+ -h|--help              print this help message and exit
+ -i|--input dir         read inputs from given directory
+
+EOF
+    exit($ec);
+}
+
+$outputDir = File::Spec->rel2abs($outputDir);
+if (! -d $outputDir) {
+    eval {mkpath($outputDir), {verbose => 1}};
+    if ($@) {
+        die "Could not create $outputDir\n";
+    }
+}
+
+if (defined($inputDir)) {
+    chdir $inputDir || die "Cannot chdir to $inputDir\n";
+}
+
+%jobs = ();
+%map = ();
+%files = ();
+
+sub processTransfers {
+    my $job = @_[0];
+    my $key = @_[1];
+    my $srcSite, $dstURL, $dstSite;
+
+    @{$jobs{$job}{$key}} = ();
+
+    if (open(INPUT, "$job.in")) {
+        # List of transfers
+        # Format:
+        # Comment indicating src site
+        # Source url
+        # Comment indicating dest site
+        # Dest url
+        while ($srcSite = <INPUT>) {
+            chomp $srcSite;
+            $srcSite =~ s/^#//;
+
+            #ignore src url
+            <INPUT>;
+
+            $dstSite = <INPUT>;
+            chomp $dstSite;
+            $dstSite =~ s/^#//;
+
+            $dstURL = <INPUT>;
+            chomp $dstURL;
+            $dstURL =~ s/.*\///;
+
+            push(@{$jobs{$job}{$key}}, $dstURL);
+
+            $files{$dstURL}{'used'} = "true";
+            #Save the source only for stage-in jobs
+            if ($job !~ /new_rc_tx_/) {
+                $files{$dstURL}{'src'} = $srcSite;
+            }
+        }
+        close(INPUT);
+    }
+}
+
+sub processFiles {
+    $job = @_[0];
+    $key = @_[1];
+
+    @{$jobs{$job}{$key}} = ();
+
+    if (open(INPUT, "$job.$key.lof")) {
+        while ($file = <INPUT>) {
+            chomp $file;
+            push(@{$jobs{$job}{$key}}, $file);
+
+            $files{$file}{'used'} = "true";
+        }
+        close(INPUT);
+    }
+}
+
+#
+# Read file size information
+# Exitpost only
+#
+
+@statfiles = glob "*.out.[0-9]*";
+for $file (@statfiles) {
+    if (open(FILE, $file)) {
+        while ($line = <FILE>) {
+            chomp $line;
+            if ($line =~ /<file/) {
+                $line =~ s/.*name=\"(.*)\".*(<\/file>|\/>)/\1/;
+                $fileName = $line;
+            } elsif ($line =~ /<statinfo/) {
+                $line =~ s/.* size=\"([0-9]*)\".*\/>/\1/;
+                $size = $line;
+                $files{$fileName}{'size'} = $size;
+            }
+        }
+    }
+}
+
+#
+# Read dagman.out
+# Create hash of jobs
+# Create parent -> child relationships
+#
+open(DAGIN, "$dagName") || die "$dagName not found\n";
+open(DAGOUT, ">$outputDir/dag") || die "Could not open $outputDir/dag\n";
+foreach $line (<DAGIN>) {
+    chomp($line);
+    if ($line =~ '^JOB') {
+        @tokens = split(' ', $line);
+        $job = $tokens[1];
+        $jobs{$job} = ();
+
+        $jobs{$job}{'in'} = ();
+        $jobs{$job}{'out'} = ();
+
+        if ($job =~ /rc_tx_/) {
+            &processTransfers($job, 'in');
+            # We're not processing the outputs of
+            # the transfer job.
+        } else {
+            &processFiles($job, 'in');
+            &processFiles($job, 'out');
+        }
+
+        $map{$job} = ();
+
+        print DAGOUT $line, "\n";
+    } elsif ($line =~ '^PARENT') {
+        @tokens = split(' ', $line);
+        $parent = $tokens[1];
+        $child = $tokens[3];
+        
+        push(@{$map{$child}}, $parent);
+
+        print DAGOUT $line, "\n";
+    }
+}
+for $job (keys %jobs) {
+    for $file (@{$jobs{$job}{'in'}}) {
+        print DAGOUT "FILE $file INPUT $job\n";
+    }
+    for $file (@{$jobs{$job}{'out'}}) {
+        print DAGOUT "FILE $file OUTPUT $job\n";
+    }
+}
+close(DAGOUT);
+close(DAGIN);
+
+if ($jobstate) {
+    #
+    # Read jobstate.log
+    # Note epochs for job submission, execute and termination
+    # Also note site job was run on
+    # Copy log with "relative" timestamps into OUTPUTDIR/log
+    #
+    open(JOBSTATE, "$jobstateLog") || die "$jobstateLog not found\n";
+    open(OUT, ">$outputDir/out") || die "Cannot open $outputDir/out\n";
+    if ($line = <JOBSTATE>) {
+        chomp($line);
+        @tokens = split(' ', $line);
+        $globalStartTime = $tokens[0];
+        $tokens[0] = 0;
+        print OUT join(' ', @tokens), "\n";
+    }
+    $condorQLength = 0;
+    $lastLine = "";
+    foreach $line (<JOBSTATE>) {
+        chomp($line);
+        @tokens = split(' ', $line);
+        $tokens[0] -= $globalStartTime;
+        $job = $tokens[1];
+        if (defined $jobs{$job}) {
+            if ($line =~ ' SUBMIT ') {
+                $jobs{$job}{'submit'} = $tokens[0];
+                $jobs{$job}{'site'} = $tokens[4];
+                if ($jobs{$job}{'site'} ne "local") {
+                    $condorQLength++;
+                }
+            } elsif ($line =~ ' JOB_TERMINATED ') {
+                $jobs{$job}{'terminated'} = $tokens[0];
+            } elsif ($line =~ ' EXECUTE ') {
+                if (defined($jobs{$job}{'execute'})) {
+                    # For whatever reason, this job was executed twice.
+                    # This run may not be good. 
+                    warn "$job was executed more than once.\n";
+                }
+                $jobs{$job}{'execute'} = $tokens[0];
+            } elsif ($line =~ ' GRID_SUBMIT ') {
+                $jobs{$job}{'grid_submit'} = $tokens[0];
+                $jobs{$job}{'condorQLength'} = $condorQLength;
+                $condorQLength--;
+            } elsif ($line =~ ' POST_SCRIPT_STARTED') {
+                if (defined($jobs{$job})) {
+                    $jobs{$job}{'post_script_start'} = $tokens[0];
+                }
+            } elsif ($line =~ ' POST_SCRIPT_TERMINATED') {
+                $jobs{$job}{'post_script_end'} = $tokens[0];
+            }
+        }
+        print OUT join(' ', @tokens), "\n";
+        $lastLine = $line;
+    }
+    close(OUT);
+    close(JOBSTATE);
+    if ($lastLine =~ 'TAILSTATD_FINISHED 1') {
+        die "Workflow execution failed, aborting";
+    }
+
+    #
+    # Calculate runtimes for each job
+    #
+    for $job (keys %jobs) {
+        if (defined $jobs{$job}{'execute'}) {
+            $jobs{$job}{'runtime'} = $jobs{$job}{'terminated'} - $jobs{$job}{'execute'};
+        } else {
+            $jobs{$job}{'runtime'} = $jobs{$job}{'terminated'} - $jobs{$job}{'submit'};
+        }
+
+        if ($jobs{$job}{'site'} eq 'local') {
+            $jobs{$job}{'ksruntime'} = $jobs{$job}{'terminated'} - $jobs{$job}{'submit'};
+        } elsif ($job =~ /rc_tx/) {
+            $jobs{$job}{'ksruntime'} = 0;
+        } else {
+            $jobs{$job}{'ksruntime'} = 0;
+#            $grepOut = `grep -h '<invocation' $job.out.* 2>&1`;
+#            chomp($grepOut);
+#            $i1 = index($grepOut, "duration=\"");
+#            $grepOut = substr($grepOut, $i1 + 10);
+#            $i2 = index($grepOut, "\"");
+#            $grepOut = substr($grepOut, 0, $i2);
+#
+#            if ($grepOut =~ /^[\.0-9]*$/) {
+#                $jobs{$job}{'ksruntime'} = $grepOut;
+#            }
+            @grepLines = `grep -h '<invocation' $job.out.* 2>&1`;
+            for $line (@grepLines) {
+                chomp($line);
+                $i1 = index($line, "duration=\"");
+                $line = substr($line, $i1 + 10);
+                $i2 = index($line, "\"");
+                $line= substr($line, 0, $i2);
+                if ($line =~ /^[\.0-9]*$/) {
+                    $jobs{$job}{'ksruntime'} += $line;
+                }
+            }
+        }
+        if (defined $jobs{$job}{'post_script_end'}) {
+            if (!defined $jobs{$job}{'post_script_start'}) {
+                $jobs{$job}{'post_script_start'} = $jobs{$job}{'terminated'};
+            }
+            $jobs{$job}{'postscripttime'} = $jobs{$job}{'post_script_end'} - $jobs{$job}{'post_script_start'};
+        } else {
+            $jobs{$job}{'postscripttime'} = 0;
+        }
+    }
+
+    #
+    # Calculate dagmanDelays and condor dagmanDelays
+    # 
+
+    for $child (keys %jobs) {
+        $maxParentEnd = 0;
+        for $parent (@{$map{$child}}) {
+            $parentEnd = $jobs{$parent}{'terminated'};
+            if (defined $jobs{$parent}{'post_script_end'}) {
+                $parentEnd = $jobs{$parent}{'post_script_end'};
+            }
+            if ($parentEnd > $maxParentEnd) {
+                $maxParentEnd = $parentEnd;
+            }
+        }
+        $dagmanDelay = $jobs{$child}{'submit'} - $maxParentEnd;
+
+        if (defined $jobs{$child}{'grid_submit'}) {
+            $condorDelay = $jobs{$child}{'grid_submit'} - $jobs{$child}{'submit'};
+            $resourceDelay = $jobs{$child}{'execute'} - $jobs{$child}{'grid_submit'};
+        } else {
+            $condorDelay = 0;
+            $resourceDelay = 0;
+        }
+
+        $jobs{$child}{'dagmanDelay'} = $dagmanDelay;
+        $jobs{$child}{'condorDelay'} = $condorDelay;
+        $jobs{$child}{'resourceDelay'} = $resourceDelay;
+
+        #
+        # If condorQLength is not known, set it to 0.
+        #
+        if (!defined($jobs{$child}{'condorQLength'})) {
+            $jobs{$child}{'condorQLength'} = 0;
+        }
+    }
+}
+
+#
+# Write out various files.
+#
+
+$jobsFile = "$outputDir/jobs";
+open(JOBS, ">$jobsFile") || die "Could not open $jobsFile\n";
+    print JOBS "#JobName\tSite\tRuntime\tPostscript\tDAGMan\tCondor\tResource\tRunSeen\tcondorQLength\n";
+for $job (sort keys %jobs) {
+   print JOBS $job, "\t", $jobs{$job}{'site'}, "\t", $jobs{$job}{'ksruntime'}, "\t", $jobs{$job}{'postscripttime'}, "\t", $jobs{$job}{'dagmanDelay'}, "\t", $jobs{$job}{'condorDelay'}, "\t", $jobs{$job}{'resourceDelay'}, "\t", $jobs{$job}{'runtime'}, "\t", $jobs{$job}{'condorQLength'}, "\n";
+}
+close(JOBS);
+
+#
+# Write out files in OUTPUTDIR/files
+#
+$filesFile = "$outputDir/files";
+open(FILES, ">$filesFile") || die "Could not open $filesFile\n";
+print FILES "#Filename\tSize\tSource\n";
+for $fileName (sort keys %files) {
+    if (defined $files{$fileName}{'used'}) {
+        print FILES $fileName, "\t", $files{$fileName}{'size'}, "\t", $files{$fileName}{'src'}, "\n";
+    }
+}
+close(FILES);
+
+#
+#Write out dax in OUTPUTDIR/dax
+#
+
+$daxFile = "$outputDir/dax";
+open(DAX, ">$daxFile") || die "Could not open $daxFile\n";
+
+print DAX << "HERE";
+<?xml version="1.0" encoding="UTF-8"?>
+<adag xmlns="http://www.griphyn.org/chimera/DAX"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.griphyn.org/chimera/DAX
+    http://www.griphyn.org/chimera/dax-1.8.xsd"
+    name="inspiral" index="0" count="1" version="1.8">
+
+HERE
+
+for $file (sort keys %files) {
+    if (defined $files{$file}{'used'}) {
+        print DAX "\t<filename file=\"$file\" size=\"$files{$file}{'size'}\"";
+        if (defined $files{$file}{'src'}) {
+            print DAX " src=\"$files{$file}{'src'}\"";
+        }
+        print DAX "/>\n";
+    }
+}
+
+for $job (sort keys %jobs) {
+    $runtime = $jobs{$job}{'runtime'};
+    $ksruntime = $jobs{$job}{'ksruntime'};
+    $postscripttime = $jobs{$job}{'postscripttime'};
+    $dagmanDelay = $jobs{$job}{'dagmanDelay'};
+    $condorDelay = $jobs{$job}{'condorDelay'};
+    $resourceDelay = $jobs{$job}{'resourceDelay'};
+    $site = $jobs{$job}{'site'};
+    $condorQLength = $jobs{$job}{'condorQLength'};
+#    print DAX "\t<job id=\"$job\" site=\"$site\" dagmanDelay=\"$dagmanDelay\" condorDelay=\"$condorDelay\" resourceDelay=\"$resourceDelay\" runtime=\"$ksruntime\" postscripttime=\"$postscripttime\">\n";
+    print DAX "\t<job id=\"$job\" site=\"$site\" runtime=\"$ksruntime\" postscripttime=\"$postscripttime\" dagmanDelay=\"$dagmanDelay\" condorDelay=\"$condorDelay\" resourceDelay=\"$resourceDelay\" runSeen=\"$runtime\" condorQLength=\"$condorQLength\">\n";
+
+    for $file (@{$jobs{$job}{'in'}}) {
+        print DAX "\t\t<uses file=\"$file\" link=\"input\"/>\n";
+    }
+    for $file (@{$jobs{$job}{'out'}}) {
+        print DAX "\t\t<uses file=\"$file\" link=\"output\"/>\n";
+    }
+    print DAX "\t</job>\n";
+}
+
+for $child (sort keys %jobs) {
+
+    if (scalar @{$map{$child}} > 0) {
+        print DAX "\t<child ref=\"$child\">\n";
+        for $parent (@{$map{$child}}) {
+            print DAX "\t\t<parent ref=\"$parent\"/>\n";
+        }
+        print DAX "\t</child>\n";
+    }
+}
+
+print DAX "</adag>\n";
+close(DAX);
+
+#Copy info.txt if it exists
+copy("info.txt", "$outputDir/info.txt");
