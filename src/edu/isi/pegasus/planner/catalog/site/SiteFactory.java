@@ -20,12 +20,23 @@ package edu.isi.pegasus.planner.catalog.site;
 
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 
-import org.griphyn.cPlanner.common.*;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
+import org.griphyn.cPlanner.classes.PegasusBag;
+
+import org.griphyn.cPlanner.common.PegasusProperties;
+import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.common.catalog.*;
 import org.griphyn.common.util.*;
 
 import java.util.Properties;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * A factory class to load the appropriate implementation of Site Catalog
  * as specified by properties.
@@ -42,6 +53,62 @@ public class SiteFactory {
     public static final String DEFAULT_PACKAGE_NAME =
         "edu.isi.pegasus.planner.catalog.site.impl";
 
+    /**
+     * 
+     * @param sites
+     * @param bag  the bag of pegasus objects
+     * 
+     * @return SiteStore object containing the information about the sites.
+     */
+    public static SiteStore loadSiteStore( Collection<String> sites , PegasusBag bag ) {
+        LogManager logger = bag.getLogger();
+        SiteStore result = new SiteStore();
+        if( sites.isEmpty() ) {
+            logger.log( "No sites given by user. Will use sites from the site catalog",
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            sites.add( "*" );
+        }
+        SiteCatalog catalog = null;
+        
+        /* load the catalog using the factory */
+        catalog = SiteFactory.loadInstance( bag.getPegasusProperties() );
+        
+        /* always load local site */
+        List<String> toLoad = new ArrayList<String>( sites );
+        toLoad.add( "local" );
+
+        
+        /* load the sites in site catalog */
+        try{
+            catalog.load( toLoad );
+        
+            /* query for the sites, and print them out */
+            logger.log( "Sites loaded are "  + catalog.list( ) ,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
+            
+            //load into SiteStore from the catalog.
+            for( Iterator<String> it = toLoad.iterator(); it.hasNext(); ){
+                SiteCatalogEntry s = catalog.lookup( it.next() );
+                if( s != null ){
+                    result.addEntry( s );
+                }
+            }
+        }
+        catch ( SiteCatalogException e ){
+            throw new RuntimeException( "Unable to load from site catalog " , e );
+        }
+        finally{
+            /* close the connection */
+            try{
+                catalog.close();
+            }catch( Exception e ){}
+        }
+
+        return result;
+    }
+
+    
     /**
      * Connects the interface with the transformation catalog implementation. The
      * choice of backend is configured through properties. This method uses default

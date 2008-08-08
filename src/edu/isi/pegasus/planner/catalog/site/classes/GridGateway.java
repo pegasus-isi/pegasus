@@ -97,6 +97,16 @@ public class GridGateway extends AbstractSiteData{
     private String mGlibc;
     
     /**
+     * The number of idle nodes.
+     */
+    private int mIdleNodes;
+    
+    /**
+     * The number of total nodes
+     */
+    private int mTotalNodes;
+    
+    /**
      * The default constructor.
      */
     public GridGateway( ){
@@ -114,6 +124,8 @@ public class GridGateway extends AbstractSiteData{
         mType = type;
         mContact = contact;
         mScheduler = scheduler;
+        mIdleNodes  = -1;
+        mTotalNodes = -1;
     }
     
     
@@ -172,6 +184,74 @@ public class GridGateway extends AbstractSiteData{
      */
     public String getContact( ){
         return mContact;
+    }
+    
+    /**
+     * Sets the number of total nodes that this grid gateway talks to.
+     * 
+     * @param num the number of nodes.
+     */
+    public void setTotalNodes( String num ){
+        try{
+            mTotalNodes = Integer.parseInt( num );
+        }
+        catch( Exception e ){
+            //empty catch
+        }
+    }
+    
+    /**
+     * Sets the total number of nodes that this grid gateway talks to.
+     * 
+     * @param num the number of nodes.
+     */
+    public void setTotalNodes( int num ){
+        mTotalNodes = num;
+    }
+    
+    
+    /**
+     * Returns the total number of nodes that this grid gateway talks to.
+     * If they are not set then -1 is returned.
+     * 
+     * @return the number of nodes, or -1 if not set.
+     */
+    public int getTotalNodes(  ){
+        return mTotalNodes;
+    }
+    
+    /**
+     * Sets the number of idle nodes that this grid gateway talks to.
+     * 
+     * @param num the number of nodes.
+     */
+    public void setIdleNodes( String num ){
+        try{
+        mIdleNodes = Integer.parseInt( num );
+        }
+        catch( Exception e ){
+            //empty catch
+        }
+    }
+    
+    /**
+     * Sets the number of idle nodes that this grid gateway talks to.
+     * 
+     * @param num the number of nodes.
+     */
+    public void setIdleNodes( int num ){
+        mIdleNodes = num;
+    }
+    
+    
+    /**
+     * Returns the total number of nodes that this grid gateway talks to.
+     * If they are not set then -1 is returned.
+     * 
+     * @return the number of nodes, or -1 if not set.
+     */
+    public int getIdleNodes(  ){
+        return mIdleNodes;
     }
     
     /**
@@ -328,6 +408,14 @@ public class GridGateway extends AbstractSiteData{
             writeAttribute( writer, "glibc", val );
         }
         
+        if( this.getIdleNodes() != -1 ){
+            writeAttribute( writer, "idle-nodes", Integer.toString( this.getIdleNodes() ));
+        }
+                
+        if( this.getTotalNodes() != -1 ){
+            writeAttribute( writer, "total-nodes", Integer.toString( this.getTotalNodes() ));
+        }
+        
         writer.write( "/>");
         writer.write( newLine );
         
@@ -352,7 +440,8 @@ public class GridGateway extends AbstractSiteData{
             obj.setOSRelease( this.getOSRelease() );
             obj.setOSVersion( this.getOSVersion() );
             obj.setGlibc( this.getGlibc() );
-        
+            obj.setTotalNodes( this.getTotalNodes());
+            obj.setIdleNodes( this.getIdleNodes() );
         }
         catch( CloneNotSupportedException e ){
             //somewhere in the hierarch chain clone is not implemented

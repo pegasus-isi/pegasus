@@ -812,6 +812,8 @@ public class XML extends Parser implements SiteCatalog{
             else if( url.endsWith( "lsf" ) ){
                 gw.setScheduler( GridGateway.SCHEDULER_TYPE.LSF );
             }  
+            gw.setIdleNodes( (String)jm.getInfo( JobManager.IDLE_NODES ) );            
+            gw.setTotalNodes( (String)jm.getInfo( JobManager.TOTAL_NODES ) );
             
             site.addGridGateway( gw );
         }

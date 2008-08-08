@@ -435,6 +435,14 @@ public class SiteCatalogParser extends Parser {
                             gw.setGlibc( value );                            
                             this.log( element, name, value );                              
                         }
+                        else if ( name.equals( "idle-nodes") ){
+                            gw.setIdleNodes(name);
+                            this.log( element, name, value );                              
+                        }
+                        else if ( name.equals( "total-nodes") ){
+                            gw.setTotalNodes(name);
+                            this.log( element, name, value );                              
+                        }
                         else {
                 	      this.complain( element, name, value );
                         }
