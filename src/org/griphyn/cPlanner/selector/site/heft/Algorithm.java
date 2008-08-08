@@ -20,9 +20,6 @@ package org.griphyn.cPlanner.selector.site.heft;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -43,6 +40,10 @@ import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+
 import edu.isi.ikcap.workflows.ac.ProcessCatalog;
 import edu.isi.ikcap.workflows.ac.classes.TransformationCharacteristics;
 
@@ -60,6 +61,7 @@ import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Collections;
 import java.util.Properties;
+import org.griphyn.cPlanner.classes.Profile;
 
 
 /**
@@ -144,7 +146,8 @@ public class Algorithm {
     /**
      * Handle to the site catalog.
      */
-    private PoolInfoProvider mSiteHandle;
+//    private PoolInfoProvider mSiteHandle;
+    private SiteStore mSiteStore;
 
     /**
      * The list of sites where the workflow can run.
@@ -208,7 +211,8 @@ public class Algorithm {
         mTCHandle   = ( TransformationCatalog )bag.get( PegasusBag.TRANSFORMATION_CATALOG );
         mTCMapper   = ( Mapper )bag.get( PegasusBag.TRANSFORMATION_MAPPER );
         mLogger     = ( LogManager )bag.get( PegasusBag.PEGASUS_LOGMANAGER );
-        mSiteHandle = ( PoolInfoProvider )bag.get( PegasusBag.SITE_CATALOG );
+//        mSiteHandle = ( PoolInfoProvider )bag.get( PegasusBag.SITE_CATALOG );
+        mSiteStore = bag.getHandleToSiteStore();
         mAverageCommunicationCost = (this.AVERAGE_BANDWIDTH / this.AVERAGE_DATA_SIZE_BETWEEN_JOBS);
 
         mProcessCatalog = this.loadProcessCatalog( mProps.getProperty( this.PROCESS_CATALOG_IMPL_PROPERTY ),
@@ -650,6 +654,7 @@ public class Algorithm {
      *
      * @param sites   list of sites.
      */
+    @SuppressWarnings({"unchecked", "unchecked"})
     protected void populateSiteMap( List sites ){
         mSiteMap = new HashMap();
 
@@ -659,20 +664,31 @@ public class Algorithm {
         String value = null;
         int nodes = 0;
         for( Iterator it = mSites.iterator(); it.hasNext(); ){
+//            SiteInfo s = mSiteHandle.getPoolEntry( site, "vanilla" );
+//            JobManager manager = s.selectJobManager( "vanilla", true );
+//            value = (String)manager.getInfo( JobManager.IDLE_NODES );
             String site = (String)it.next();
-            SiteInfo s = mSiteHandle.getPoolEntry( site, "vanilla" );
-            JobManager manager = s.selectJobManager( "vanilla", true );
-            value = (String)manager.getInfo( JobManager.IDLE_NODES );
-
+            SiteCatalogEntry eSite = mSiteStore.lookup( site );
+            GridGateway jobManager = eSite.selectGridGateway( GridGateway.JOB_TYPE.compute );   
+            
             try {
-                nodes = ( value == null )?
-                        this.DEFAULT_NUMBER_OF_FREE_NODES:
-                        new Integer( value ).intValue();
-
+                nodes = jobManager.getIdleNodes();
+                if( nodes == -1 ){
+                    mLogger.log( "Picking up total nodes for site " + site, 
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    nodes = jobManager.getTotalNodes();
+                
+                    if( nodes == -1 ){
+                        mLogger.log( "Picking up default free nodes for site " + site, 
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                        nodes = Algorithm.DEFAULT_NUMBER_OF_FREE_NODES;
+                    }
+                }
             }catch( Exception e ){
                 nodes = this.DEFAULT_NUMBER_OF_FREE_NODES;
             }
-
+            mLogger.log( "Available nodes set for site " + site + " " + nodes, 
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
             mSiteMap.put( site, new Site( site,  nodes ) );
         }
 

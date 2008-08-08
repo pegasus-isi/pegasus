@@ -16,6 +16,8 @@
 package edu.isi.pegasus.planner.client;
 
 
+import edu.isi.pegasus.planner.catalog.site.SiteFactory;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.ranking.GetDAX;
 import edu.isi.pegasus.planner.ranking.Rank;
 import edu.isi.pegasus.planner.ranking.Ranking;
@@ -24,13 +26,9 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.toolkit.Executable;
 
-import org.griphyn.cPlanner.poolinfo.SiteFactory;
-import org.griphyn.cPlanner.poolinfo.SiteFactoryException;
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 
 import org.griphyn.common.catalog.TransformationCatalog;
@@ -254,8 +252,10 @@ public class RankDAX extends Executable {
         mPlannerOptions.setExecutionSites( mSites );
 
         //load the site catalog using the factory
-        PoolInfoProvider sCatalog = SiteFactory.loadInstance( mProps, false );
-        mBag.add( PegasusBag.SITE_CATALOG, sCatalog );
+//        PoolInfoProvider sCatalog = SiteFactory.loadInstance( mProps, false );
+//        mBag.add( PegasusBag.SITE_CATALOG, sCatalog );
+        SiteStore s = SiteFactory.loadSiteStore( mSites, mBag );        
+        mBag.add( PegasusBag.SITE_STORE, s );
 
         //load the transformation catalog using the factory
         TransformationCatalog tCatalog = TransformationFactory.loadInstance( mProps );

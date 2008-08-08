@@ -68,7 +68,7 @@ public class GetDAX {
      */
     private static final String mCStatements[] = {
         // 0:
-        "SELECT dax FROM instances_and_daxes WHERE request_id=?",
+        "SELECT dax FROM instances_and_daxes WHERE seed_id=?",
     };
 
 
