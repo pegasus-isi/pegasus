@@ -247,6 +247,9 @@ public class RankDAX extends Executable {
             this.printShortVersion();
             return;
         }
+        
+        //set the request id in the properties
+        mProps.setProperty( "pegasus.wings.request.id", mRequestID );
 
         //override the sites if any are set in the forward options
         mPlannerOptions.setExecutionSites( mSites );

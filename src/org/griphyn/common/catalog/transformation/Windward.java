@@ -73,6 +73,11 @@ public class Windward  implements TransformationCatalog {
      * The handle to the log manager.
      */
     protected LogManager mLogger;
+    
+    /**
+     * The request id .
+     */
+    protected String mRequestID;
 
     /**
      * Returns an instance of the File TC.
@@ -106,6 +111,10 @@ public class Windward  implements TransformationCatalog {
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mPCImpl = mProps.getProperty( this.PROCESS_CATALOG_IMPL_PROPERTY );
+        mRequestID = mProps.getWingsRequestID();
+        if( mRequestID == null ){
+            throw new RuntimeException( "Specify the request id by specifying pegasus.wings.request.id property" );
+        }
         
         String wings = mProps.getWingsPropertiesFile();
         //do sanity check
@@ -267,6 +276,7 @@ public class Windward  implements TransformationCatalog {
             mProcessCatalog = PropertiesHelper.getPCFactory().getPC(
 				PropertiesHelper.getDCDomain(), 
 				PropertiesHelper.getPCDomain(), null );
+            mProcessCatalog.setRequestId( mRequestID );
         }catch( Exception e ){
             connect = false;
             mLogger.log( "Unable to connect ot process catalog " + e,

@@ -266,6 +266,12 @@ public class Algorithm {
             result = PropertiesHelper.getPCFactory().getPC(
 				PropertiesHelper.getDCDomain(), 
 				PropertiesHelper.getPCDomain(), null);
+            
+            String requestID = mProps.getWingsRequestID();
+            if( requestID == null ){
+                throw new RuntimeException( "Specify the request id by specifying pegasus.wings.request.id property" );
+            }
+            result.setRequestId( requestID );
 		
         }catch( Exception e ){
             mLogger.log( "Unable to connect to process catalog " + e,

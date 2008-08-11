@@ -1778,6 +1778,17 @@ public class PegasusProperties {
     }
     
     /**
+     * Returns the request id.
+     * 
+     * Referred to by the "pegasus.wings.request-id" property.
+     * 
+     * @return value in the properties file, else null.
+     */
+    public String getWingsRequestID( ){
+        return mProps.getProperty( "pegasus.wings.request.id" ) ;
+    }
+    
+    /**
      * Returns the timeout value in seconds after which to timeout in case of
      * opening sockets to grid ftp server.
      *
