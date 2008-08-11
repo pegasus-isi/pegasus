@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Properties;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The implementation that allows us to inteface with Windward Process Catalogs.
@@ -74,28 +75,44 @@ public class Windward  implements TransformationCatalog {
     protected LogManager mLogger;
 
     /**
-    * Returns an instance of the File TC.
-    *
-    * @return TransformationCatalog
-    */
-   public static TransformationCatalog getInstance() {
-       return new Windward();
-
-   }
+     * Returns an instance of the File TC.
+     *
+     * @return TransformationCatalog
+     * @deprecated
+     */
+    public static TransformationCatalog getInstance() {
+        PegasusBag bag = new PegasusBag();
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance() );
+        bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
+        TransformationCatalog result = new Windward();
+        result.initialize( bag );
+        return result;
+    }
 
 
     /**
      * The default constructor.
      */
     public Windward() {
-        //live with this till we change the factory totally
-        mProps = PegasusProperties.nonSingletonInstance();
+    }
+    
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     * 
+     * @param bag  the bag of Pegasus initialization objects.
+     * 
+     */
+    public void initialize ( PegasusBag bag ){
+        mProps = bag.getPegasusProperties();
+        mLogger = bag.getLogger();
         mPCImpl = mProps.getProperty( this.PROCESS_CATALOG_IMPL_PROPERTY );
-        mLogger = LogManager.getInstance();
+        
+        
 
         //instantiate the process catalog in the connect method
         this.connect( mProps.matchingSubset( "pegasus.catalog.transformation.windward", false ) );
     }
+    
 
     /**
      * Add an single entry into the transformation catalog.

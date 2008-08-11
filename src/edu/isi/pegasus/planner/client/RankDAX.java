@@ -258,7 +258,7 @@ public class RankDAX extends Executable {
         mBag.add( PegasusBag.SITE_STORE, s );
 
         //load the transformation catalog using the factory
-        TransformationCatalog tCatalog = TransformationFactory.loadInstance( mProps );
+        TransformationCatalog tCatalog = TransformationFactory.loadInstance( mBag );
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, tCatalog );
 
         //initialize the transformation mapper

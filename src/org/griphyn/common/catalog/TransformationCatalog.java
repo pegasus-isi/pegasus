@@ -19,6 +19,8 @@ package org.griphyn.common.catalog;
 import org.griphyn.common.classes.SysInfo;
 import org.griphyn.common.classes.TCType;
 
+import org.griphyn.cPlanner.classes.PegasusBag;
+
 import java.util.List;
 
 /**
@@ -34,6 +36,19 @@ import java.util.List;
  */
 public interface TransformationCatalog
     extends org.griphyn.common.catalog.Catalog {
+    
+    /**
+     * The version of the API
+     */
+    public static final String VERSION = "1.1";
+    
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     * 
+     * @param bag  the bag of Pegasus initialization objects.
+     * 
+     */
+    public void initialize ( PegasusBag bag );
 
     /**
      * Returns TC entries for a particular logical transformation and/or on a particular resource and/or of a particular type.

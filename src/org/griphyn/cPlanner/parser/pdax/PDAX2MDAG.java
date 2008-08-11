@@ -16,8 +16,6 @@
 
 package org.griphyn.cPlanner.parser.pdax;
 
-import org.griphyn.cPlanner.code.CodeGenerator;
-import org.griphyn.cPlanner.code.CodeGeneratorException;
 
 import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 
@@ -26,8 +24,6 @@ import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusBag;
-
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -35,17 +31,15 @@ import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
 import org.griphyn.cPlanner.common.StreamGobblerCallback;
 
-import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.partitioner.Partition;
 import org.griphyn.cPlanner.partitioner.DAXWriter;
 
-import org.griphyn.cPlanner.poolinfo.SiteFactory;
-
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.catalog.transformation.TCMode;
+
+import org.griphyn.common.catalog.transformation.TransformationFactory;
 
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.HashedFileFactory;
@@ -53,8 +47,6 @@ import org.griphyn.vdl.euryale.FlatFileFactory;
 
 import org.griphyn.common.classes.TCType;
 
-import org.griphyn.common.util.Version;
-import org.griphyn.common.util.FactoryException;
 
 import java.io.File;
 import java.io.IOException;
@@ -277,7 +269,9 @@ public class PDAX2MDAG implements Callback {
         mLogger    = LogManager.getInstance();
         mPOptions  = options;
         mClonedPOptions  = (options == null)? null : (PlannerOptions)options.clone();
-        mTCHandle  = TCMode.loadInstance();
+        
+        mTCHandle = TransformationFactory.loadInstance( mProps, mLogger );
+        
         mMDAGPropertiesFile = null;
         mNumFormatter = new DecimalFormat( "0000" );
 

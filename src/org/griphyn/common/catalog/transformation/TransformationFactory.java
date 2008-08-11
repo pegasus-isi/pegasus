@@ -18,6 +18,7 @@
 
 package org.griphyn.common.catalog.transformation;
 
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.common.*;
 import org.griphyn.common.catalog.*;
 import org.griphyn.common.util.*;
@@ -57,8 +58,14 @@ public class TransformationFactory {
      */
     public static TransformationCatalog loadInstance() throws
         TransformationFactoryException {
-        return loadInstance(PegasusProperties.getInstance());
+        PegasusBag bag = new PegasusBag();
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance() );
+        bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
+        
+        return loadInstance( bag );
     }
+
+    
 
     /**
      * Connects the interface with the transformation catalog implementation. The
@@ -75,15 +82,68 @@ public class TransformationFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static TransformationCatalog loadInstance(PegasusProperties
+    public static TransformationCatalog loadInstance( PegasusProperties
         properties) throws
+        TransformationFactoryException {
+                
+        PegasusBag bag = new PegasusBag();
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance() );
+        bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
+        
+        return loadInstance( bag );
+    }
+     
+
+    
+    /**
+     * Connects the interface with the transformation catalog implementation. The
+     * choice of backend is configured through properties. This class is
+     * useful for non-singleton instances that may require changing
+     * properties.
+     *
+     * @param properties is an instance of properties to use.
+     * @param logger  handle to the logging.
+     * 
+     * @return handle to the Transformation Catalog.
+     *
+     * @throws TransformationFactoryException that nests any error that
+     *         might occur during the instantiation
+     *
+     * @see #DEFAULT_PACKAGE_NAME
+     */
+    public static TransformationCatalog loadInstance( PegasusProperties
+        properties, LogManager logger ) throws
+        TransformationFactoryException {
+                
+        PegasusBag bag = new PegasusBag();
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER, logger );
+        bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
+        
+        return loadInstance( bag );
+    }
+    
+    /**
+     * Connects the interface with the transformation catalog implementation. The
+     * choice of backend is configured through properties. This class is
+     * useful for non-singleton instances that may require changing
+     * properties.
+     *
+     * @param bag is bag of initialization objects
+     *
+     * @return handle to the Transformation Catalog.
+     *
+     * @throws TransformationFactoryException that nests any error that
+     *         might occur during the instantiation
+     *
+     * @see #DEFAULT_PACKAGE_NAME
+     */
+    public static TransformationCatalog loadInstance( PegasusBag bag ) throws
         TransformationFactoryException {
 
         TransformationCatalog tc = null;
-        String methodName = "getInstance";
 
         /* get the implementor from properties */
-        String catalogImplementor = properties.getTCMode().trim();
+        String catalogImplementor = bag.getPegasusProperties().getTCMode().trim();
 
         /* prepend the package name if required */
         catalogImplementor = (catalogImplementor.indexOf('.') == -1) ?
@@ -95,11 +155,15 @@ public class TransformationFactory {
         TransformationCatalog catalog;
 
         /* try loading the catalog implementation dynamically */
-        try {
+        try {            
             DynamicLoader dl = new DynamicLoader(catalogImplementor);
-            catalog = (TransformationCatalog) dl.static_method(methodName,
-                new String[0]);
+            catalog = ( TransformationCatalog ) dl.instantiate( new Object[0] );
 
+            if ( catalog == null ){
+                throw new RuntimeException( "Unable to load " + catalogImplementor );
+            }
+
+            catalog.initialize( bag );
         }
         catch (Exception e) {
             throw new TransformationFactoryException(

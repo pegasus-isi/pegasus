@@ -314,7 +314,7 @@ public class CPlanner extends Executable{
         
         mBag.add( PegasusBag.SITE_STORE, s );
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, 
-                  TransformationFactory.loadInstance( mProps )  );
+                  TransformationFactory.loadInstance( mBag )  );
         
 
         //populate planner metrics

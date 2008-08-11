@@ -41,6 +41,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 public class Database
     extends DatabaseSchema implements TransformationCatalog {
@@ -58,19 +59,45 @@ public class Database
 
     private static Database mDatabaseTC = null;
 
-    private Database() throws ClassNotFoundException,
-        NoSuchMethodException, InstantiationException,
-        IllegalAccessException, InvocationTargetException,
-        SQLException, IOException {
-        super( (String)null, "pegasus.catalog.transformation.db.schema");
-        //mLogger = LogManager.getInstance();
-        mLogger.log("TC Mode being used is " + this.getTCMode(),
-                    LogManager.CONFIG_MESSAGE_LEVEL);
+    /**
+     * Used for a singleton access to the implementation
+     * 
+     * @return
+     * 
+     * @deprecated
+     */
+    public static TransformationCatalog getInstance() {
+        try {
+            if( mDatabaseTC == null ){
+                PegasusBag bag = new PegasusBag();
+                bag.add( PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance() );
+                mDatabaseTC = new Database();
+                mDatabaseTC.initialize( bag );
+            }
+            return mDatabaseTC;
+        }
+        catch (Exception e) {
+            mLogger.log(
+                "Unable to create Database TC Instance", e,
+                LogManager.ERROR_MESSAGE_LEVEL);
+            return null;
+        }
+    }
 
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     * 
+     * @param bag  the bag of Pegasus initialization objects.
+     * 
+     */
+    public void initialize ( PegasusBag bag ){
+        mLogger = bag.getLogger();
+        
+        try{
         /**
          * ADD SECTION
          */
-
+        
         this.m_dbdriver.insertPreparedStatement("stmt.add.lfn",
                                                 "INSERT INTO tc_logicaltx VALUES (?,?,?,?)");
 
@@ -205,6 +232,21 @@ public class Database
 
         this.m_dbdriver.insertPreparedStatement("stmt.delete.sysinfo",
                                                 "DELETE FROM tc_sysinfo WHERE architecture=? and os=? and osversion=? and glibc=?");
+
+        }
+        catch ( SQLException sqe ){
+            throw new RuntimeException( "SQL exception during initialization" + sqe );
+        }
+    }
+    
+    private Database() throws ClassNotFoundException,
+        NoSuchMethodException, InstantiationException,
+        IllegalAccessException, InvocationTargetException,
+        SQLException, IOException {
+        super( (String)null, "pegasus.catalog.transformation.db.schema");
+        //mLogger = LogManager.getInstance();
+        mLogger.log("TC Mode being used is " + this.getTCMode(),
+                    LogManager.CONFIG_MESSAGE_LEVEL);
 
     }
 
@@ -1572,20 +1614,7 @@ if(!write) return false;
         return false;
     }
 
-    public static TransformationCatalog getInstance() {
-        try {
-            mDatabaseTC = (mDatabaseTC == null) ? new Database() :
-                mDatabaseTC;
-            return mDatabaseTC;
-        }
-        catch (Exception e) {
-            mLogger.log(
-                "Unable to create Database TC Instance", e,
-                LogManager.ERROR_MESSAGE_LEVEL);
-            return null;
-        }
-    }
-
+    
     /**
      * Returns the TC implementation being used
      * @return String

@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This is the new file based TC implementation storing the contents of the file
@@ -91,10 +92,15 @@ public class File
      * Returns an instance of the File TC.
      *
      * @return TransformationCatalog
+     * @deprecated
      */
     public static TransformationCatalog getInstance() {
         if (mTCFileHandle == null) {
+            PegasusBag bag = new PegasusBag();
+            bag.add( PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance() );
+            bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
             mTCFileHandle = new File();
+            mTCFileHandle.initialize( bag );
         }
         return mTCFileHandle;
 
@@ -106,9 +112,11 @@ public class File
      * picked up from the properties file.
      * @return TransformatinCatalog
      */
+/*
     public static TransformationCatalog getNonSingletonInstance() {
         return new File();
     }
+*/
 
     /**
      * Returns a non singleton instance to the file transformation catalog.
@@ -117,10 +125,11 @@ public class File
      * catalog in ths six column format
      * @return TransformationCatalog
      */
+/*
     public static TransformationCatalog getNonSingletonInstance(String path) {
         return new File(path);
     }
-
+*/
     /**
      * Returns a non singleton instance to the file transformation catalog.
      * It populates the in memory structure by reading from the input stream
@@ -130,31 +139,36 @@ public class File
      *                read.
      * @return TransformationCatalog
      */
+/*
     public static TransformationCatalog getNonSingletonInstance(InputStream
         reader) {
         return new File();
     }
+*/ 
 
     /**
      * The private constructor. Initialises the file handles to tc file.
      *
      */
+/*
     private File() {
         initialize(null);
         populateTC();
     }
-
+*/
     /**
      * The overloaded constructor.
      *
      * @param path  the path to the file containing the transformation catalog
      *              in six column format.
      */
+ /*
     private File(String path) {
         initialize(path);
         populateTC();
     }
-
+*/
+    
     /**
      * The overloaded constructor. It populates the in memory structure by
      * reading from the input stream passed.
@@ -162,17 +176,20 @@ public class File
      * @param reader  the <code>InputStrean</code> containing the bytes to be
      *                read.
      */
+/*
     private File(InputStream reader) {
         initialize(null);
         populateTC(reader);
     }
-
+*/
+    
     /**
      * Initializes the various class members.
      *
      * @param path the path to file containing the transformation
      * catalog. can be null.
      */
+/*
     private void initialize(String path) {
         mProps = PegasusProperties.nonSingletonInstance();
         mTCFile = (path == null) ? mProps.getTCPath() : path;
@@ -189,6 +206,40 @@ public class File
             System.exit(1);
         }
     }
+ */
+    /**
+     * The default constructor.
+     */
+    public void File(){
+        
+    }
+    
+    /**
+     * Initialize the implementation, and return an instance of the implementation.
+     * 
+     * @param bag  the bag of Pegasus initialization objects.
+     * 
+     */
+    public void initialize ( PegasusBag bag ){
+        mProps = bag.getPegasusProperties();
+        mLogger = bag.getLogger();
+        
+        mTCFile = mProps.getTCPath();
+        mTreeMap = new TreeMap();
+        mLogger.log("TC Mode being used is " + this.getTCMode(),
+                    LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log("TC File being used is " + mTCFile,
+                    LogManager.CONFIG_MESSAGE_LEVEL);
+        
+        if (mTCFile == null) {
+            throw new RuntimeException( "The File to be used as TC should be " +
+                                        "defined with the property pegasus.catalog.transformation.file");
+        }        
+        
+        //populate the TC
+        populateTC();
+    }
+    
 
     /**
      * Returns a textual description of the transformation mode.
