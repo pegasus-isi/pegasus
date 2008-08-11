@@ -22,13 +22,10 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.catalog.transformation.TCMode;
 
 /**
  * The central class that calls out to the various other components of Pegasus.

@@ -20,17 +20,13 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.GridFTPServer;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.ReplicaLocation;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.Utility;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
@@ -49,7 +45,6 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
 import org.griphyn.common.catalog.replica.ReplicaFactory;
 
-import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.util.FactoryException;
 

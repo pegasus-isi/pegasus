@@ -43,7 +43,7 @@ import org.griphyn.common.catalog.TransformationCatalogEntry;
 
 import org.griphyn.common.catalog.replica.ReplicaFactory;
 
-import org.griphyn.common.catalog.transformation.TCMode;
+
 
 import org.griphyn.common.classes.TCType;
 
@@ -129,12 +129,6 @@ public class ReplicaCatalogBridge
      */
     private ReplicaCatalog mReplicaCatalog;
 
-
-    /**
-     * Contains the various options to the Planner as passed by the user at
-     * runtime.
-     */
-    private PlannerOptions mPOptions;
 
 
     /**
@@ -278,7 +272,7 @@ public class ReplicaCatalogBridge
 
 
 
-        mTCHandle = TCMode.loadInstance();
+//        mTCHandle = TCMode.loadInstance();
 
         //incorporate the caching if any
         if ( !options.getCacheFiles().isEmpty() ) {

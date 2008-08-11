@@ -22,14 +22,10 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.JobManager;
-import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.selector.SiteSelector;
 
@@ -48,7 +44,6 @@ import org.griphyn.cPlanner.provenance.pasoa.pps.PPSFactory;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
-import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.classes.TCType;
 
@@ -59,7 +54,6 @@ import org.griphyn.common.util.Separator;
 import org.griphyn.cPlanner.transfer.SLS;
 
 import org.griphyn.cPlanner.transfer.sls.SLSFactory;
-import org.griphyn.cPlanner.transfer.sls.SLSFactoryException;
 
 import java.io.File;
 

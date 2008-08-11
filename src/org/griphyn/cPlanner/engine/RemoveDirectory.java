@@ -19,15 +19,11 @@ package org.griphyn.cPlanner.engine;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.JobManager;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.catalog.transformation.TCMode;
 
 import org.griphyn.common.classes.TCType;
 
@@ -129,7 +125,6 @@ public class RemoveDirectory extends Engine {
     public RemoveDirectory( ADag concDag, PegasusBag bag ) {
         super( bag );
         mConcDag = concDag;
-        mTCHandle = TCMode.loadInstance();
     }
 
     /**
