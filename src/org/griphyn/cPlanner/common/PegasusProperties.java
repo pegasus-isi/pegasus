@@ -1767,6 +1767,17 @@ public class PegasusProperties {
     }
 
     /**
+     * Returns the path to the wings properties file.
+     * 
+     * Referred to by the "pegasus.wings.properties" property.
+     * 
+     * @return value in the properties file, else null.
+     */
+    public String getWingsPropertiesFile( ){
+        return mProps.getProperty( "pegasus.wings.properties" ) ;
+    }
+    
+    /**
      * Returns the timeout value in seconds after which to timeout in case of
      * opening sockets to grid ftp server.
      *

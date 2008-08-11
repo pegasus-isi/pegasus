@@ -107,6 +107,14 @@ public class Windward  implements TransformationCatalog {
         mLogger = bag.getLogger();
         mPCImpl = mProps.getProperty( this.PROCESS_CATALOG_IMPL_PROPERTY );
         
+        String wings = mProps.getWingsPropertiesFile();
+        //do sanity check
+        if( wings == null ){
+            throw new RuntimeException( "Path to wings properties file needs to be mentioned in Pegasus properties." +
+                                         "Set pegasus.wings.properties  property.");
+        }
+        
+        PropertiesHelper.loadWingsProperties( wings );
         
 
         //instantiate the process catalog in the connect method
