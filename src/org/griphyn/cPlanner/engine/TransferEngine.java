@@ -566,7 +566,7 @@ public class TransferEngine extends Engine {
 
         //definite inconsitency as url prefix and mount point
         //are not picked up from the same server
-        String execURL = ePool.getHeadNodeFS().selectScratchSharedFileServer() +
+        String execURL = ePool.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
             mSiteStore.getWorkDirectory(execPool,path) + File.separatorChar +
             lfn;
 
@@ -716,7 +716,7 @@ public class TransferEngine extends Engine {
             String sourceURI = null;
 //            String thirdPartyDestURI = desPool.getURLPrefix(true) +
 //                mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir) ;
-             String thirdPartyDestURI = desPool.getHeadNodeFS().selectScratchSharedFileServer() +
+             String thirdPartyDestURI = desPool.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
                                         mSiteStore.getWorkDirectory( destPool, destRemoteDir );
 //                mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir) ;
             //definite inconsitency as url prefix and mount point
@@ -746,7 +746,7 @@ public class TransferEngine extends Engine {
 //                    List l = mPoolHandle.getGridFTPServers(pJob.executionPool);
                     boolean first = true;
 //                    for(Iterator it1 = l.iterator();it1.hasNext();){
-                    for( Iterator it1 = mSiteStore.lookup( destPool ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator(); 
+                    for( Iterator it1 = mSiteStore.lookup( pJob.getSiteHandle() ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator(); 
                                       it1.hasNext();){
                         FileServer server = ( FileServer)it1.next();
                         //definite inconsitency as url prefix and mount point
@@ -836,7 +836,7 @@ public class TransferEngine extends Engine {
         //definite inconsitency as url prefix and mount point
         //are not picked up from the same server
 //        String dDirURL = ep.getURLPrefix(true) + dAbsPath;
-        String dDirURL = ep.getHeadNodeFS().selectScratchSharedFileServer( ) + dAbsPath;
+        String dDirURL = ep.getHeadNodeFS().selectScratchSharedFileServer( ).getURLPrefix() + dAbsPath;
         String sDirURL = null;
         //check if the execution pool is third party or not
         String destDir = (isSiteThirdParty(ePool, SubInfo.STAGE_IN_JOB)) ?
