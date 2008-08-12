@@ -25,8 +25,16 @@ import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
+import org.griphyn.cPlanner.common.LogManager;
+import org.griphyn.cPlanner.common.PegasusProperties;
+import org.griphyn.cPlanner.toolkit.Executable;
+import org.griphyn.common.util.Version;
+
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -35,25 +43,33 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.toolkit.Executable;
-import org.griphyn.common.util.Version;
-
+/**
+ * The client that replaces the perl based pegasus-get-sites. 
+ * It generates a Site Catalog by querying VORS.
+ * 
+ * @author Atul Kumar
+ * @author Karan Vahi
+ * @version $Revision$
+ */
 public class PegasusGetSites extends Executable{	
-    private static LogManager mLogger = LogManager.getInstance();	 
-    private String vo ="";
-    private String grid ="";
-    private String source="";
-    private SiteCatalog catalog = null;
-    private String file = null;
-    PegasusGetSites(){
+    
+    private String mVO ="";
+    private String mGrid ="";
+    private String mSource="";
+    private SiteCatalog mCatalog = null;
+    private String mFile = null;
+    
+    /**
+     * The default constructor.
+     */
+    public PegasusGetSites(){
         super();
+        mLogger = LogManager.getInstance();
         mLogMsg = new String();
         mVersion = Version.instance().toString();                      
     }
 
-	/**
+    /**
      * The main program
      * 
      * @param args
@@ -99,60 +115,81 @@ public class PegasusGetSites extends Executable{
         System.exit( result );
     }
 
-    @Override
+    /**
+     * An empty implementation.
+     */
     public void loadProperties() {
         
     }
 
-    @Override
+    /**
+     * Prints out the long help.
+     */
     public void printLongVersion() {
-             StringBuffer text = new StringBuffer();
-        text.append( "\n" ).append( " $Id: PegasusGetSites.java 594 2008-08-1 18:50:50Z akumar $ ").
+        StringBuffer text = new StringBuffer();
+        text.append( "\n" ).append( " $Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
-             append( "\n" ).append( "Usage : pegasus-get-sites -source <site> -grid <grid> -vo <vo> -sc <filename> " ).
-             append( "\n" ).append( " [-v] [-h]" );
-
+             append( "\n" ).append( "Usage : pegasus-get-sites --source <source> --grid <grid> --vo <vo> --sc <filename> " ).
+             append( "\n" ).append( " [-v] [-h]" ).
+             append( "\n" ).
+             append( "\n Mandatory Options " ).
+             append( "\n -s |--source     the source to query for information. Valid sources are VORS" ).
+             append( "\n" ). 
+             append( "\n Other Options  " ).
+             append( "\n -g |--grid       the grid for which to generate the site catalog ").
+             append( "\n -o |--vo         the virtual organization to which the user belongs " ).
+             append( "\n -s |--sc         the path to the created site catalog file" ).
+             append( "\n -v |--verbose    increases the verbosity of messages about what is going on" ).
+             append( "\n -V |--version    displays the version of the Pegasus Workflow Management System" ).
+             append( "\n -h |--help       generates this help." );          
+             
        System.out.println( text.toString() );
     }
 
-    @Override
+    /**
+     * The short help version.
+     */
     public void printShortVersion() {
             StringBuffer text = new StringBuffer();
-        text.append( "\n" ).append( " $Id: PegasusGetSites.java 594 2008-08-1 18:50:50Z akumar $ ").
+        text.append( "\n" ).append( " $Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
-             append( "\n" ).append( "Usage : pegasus-get-sites -source <site> -grid <grid> -vo <vo> -sc <filename> " ).
+             append( "\n" ).append( "Usage : pegasus-get-sites -source <site> -g <grid> -o <vo> -s <filename> " ).
              append( "\n" ).append( " [-v] [-h]" );
         
        System.out.println( text.toString() );
     }
 
-    @Override
+    /**
+     * Executs the command on the basis of the command line options passed.
+     * 
+     * @param args
+     */
     public void executeCommand(String[] args) {
         parseCommandLineArguments(args);
         PegasusProperties p =  PegasusProperties.nonSingletonInstance();
-        if(!source.equals("VORS")){
-            throw new RuntimeException("This support only VORS but the source provided is "+source);
+        if(!mSource.equals("VORS")){
+            throw new RuntimeException( "Invalid source "+ mSource );
         }
         else{
             p.setProperty( "pegasus.catalog.site", "VORS" );
         }
-        if(file == null){
+        if(mFile == null){
             //no sc path is passed using command line                                
             //sc path is not set in the properties file go to default
             File f = new File(p.getPegasusHome(), "var/sites.xml");
-            file = f.getAbsolutePath();                                    
+            mFile = f.getAbsolutePath();                                    
                 
         }            
         
-        if(vo != null){
-            p.setProperty( "pegasus.catalog.site.vors.vo", vo );
+        if(mVO != null){
+            p.setProperty( "pegasus.catalog.site.vors.vo", mVO  );
         }
-        if(grid != null){
-            p.setProperty( "pegasus.catalog.site.vors.grid", grid );
+        if(mGrid != null){
+            p.setProperty( "pegasus.catalog.site.vors.grid", mGrid  );
         }
         
         try{                                    
-            catalog = SiteFactory.loadInstance( p);            	
+            mCatalog = SiteFactory.loadInstance( p);            	
         }
         catch ( SiteFactoryException e ){
             System.out.println(  e.convertException() );
@@ -163,24 +200,23 @@ public class PegasusGetSites extends Executable{
         try{        	                   
             List s = new ArrayList(1);
             s.add( "*" );   
-            catalog.load( s ); 
-            List toLoad = new ArrayList( catalog.list() );
+            mCatalog.load( s ); 
+            List toLoad = new ArrayList( mCatalog.list() );
             toLoad.add( "local" );            
             //load into SiteStore from the catalog.
             for( Iterator<String> it = toLoad.iterator(); it.hasNext(); ){
-                SiteCatalogEntry se = catalog.lookup( it.next() );
+                SiteCatalogEntry se = mCatalog.lookup( it.next() );
                 if( se != null ){
                     store.addEntry( se );
                 }
             }        
                  //write DAX to file
-            FileWriter scFw = new FileWriter( file );
-            System.out.println( "Writing out site catalog to " + file );
+            FileWriter scFw = new FileWriter( mFile  );
+            mLogger.log( "Writing out site catalog to " + mFile ,
+                         LogManager.INFO_MESSAGE_LEVEL );
             store.toXML( scFw, "" );
             scFw.close();
 
-            //test the clone method also
-            System.out.println( store);
   
         }
         catch ( SiteCatalogException e ){
@@ -202,7 +238,7 @@ public class PegasusGetSites extends Executable{
     public void parseCommandLineArguments(String[] args){
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("pegasus-get-sites", args, "r:g:o:s:hvV", longOptions, false);
+        Getopt g = new Getopt("pegasus-get-sites", args, "1:g:o:s:hvV", longOptions, false);
         g.setOpterr(false);
 
         int option = 0;
@@ -211,31 +247,31 @@ public class PegasusGetSites extends Executable{
             //System.out.println("Option tag " + (char)option);
             switch (option) {
 
-                case 'r': //base directory
-                     source = g.getOptarg();
+                case '1': //--source
+                     mSource = g.getOptarg();
                     break;
 
-                case 'g': //comma separated list of sites
-                    grid = g.getOptarg();
+                case 'g': //--grid
+                    mGrid = g.getOptarg();
                     break;
 
-                case 'o': //the output file where the ranked list is kept
-                    vo = g.getOptarg();
+                case 'o': //--vo
+                    mVO = g.getOptarg();
                     break;
                     
-                case 's': //the output file where the ranked list is kept
-                    file = g.getOptarg();
+                case 's': //--sc
+                    mFile = g.getOptarg();
                     break;
                     
-                case 'v': //sets the verbosity level
+                case 'v': //--verbose
                     level++;
                     break;
-                case 'V'://version
+                case 'V'://--version
                     mLogger.log(getGVDSVersion(),LogManager.INFO_MESSAGE_LEVEL);
                     System.exit(0);
 
-                case 'h':
-                    printShortVersion();
+                case 'h'://--help
+                    printLongVersion();
                     System.exit( 0 );
                     break;
 
@@ -251,11 +287,16 @@ public class PegasusGetSites extends Executable{
             mLogger.setLevel( level );
         }
     }
-    @Override
+    
+    /**
+     * Generates valid LongOpts.
+     * 
+     * @return
+     */
     public LongOpt[] generateValidOptions() {
           LongOpt[] longopts = new LongOpt[7];
 
-        longopts[0]   = new LongOpt( "source", LongOpt.REQUIRED_ARGUMENT, null, 'r' );
+        longopts[0]   = new LongOpt( "source", LongOpt.REQUIRED_ARGUMENT, null, '1' );
         longopts[1]   = new LongOpt( "grid", LongOpt.REQUIRED_ARGUMENT, null, 'g' );
         longopts[2]   = new LongOpt( "vo", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
         longopts[3]   = new LongOpt( "sc", LongOpt.REQUIRED_ARGUMENT, null, 's' );

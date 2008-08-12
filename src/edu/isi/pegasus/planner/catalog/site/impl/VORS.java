@@ -105,13 +105,15 @@ public class VORS implements SiteCatalog {
    	                     LogManager.CONFIG_MESSAGE_LEVEL);        			
     			}  
     			else{
-    				mSiteStore.addEntry( VORSSiteCatalogUtil.createSiteCatalogEntry(siteInfo ));
+                            mLogger.log( "Site " + sitename + " is ACCESSIBLE",
+  	                                  LogManager.INFO_MESSAGE_LEVEL);     
+                            mSiteStore.addEntry( VORSSiteCatalogUtil.createSiteCatalogEntry(siteInfo ));
     				ret++;
     			}    			    			    
     		}
     		else{
     			mLogger.log("Site " + sitename + " is INACCESSIBLE",
-  	                     LogManager.CONFIG_MESSAGE_LEVEL);        			
+  	                     LogManager.INFO_MESSAGE_LEVEL);        			
     		}    		    	           
     	}
                 /*////////////////////////FOR TESTING/////////////
