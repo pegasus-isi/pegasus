@@ -308,6 +308,11 @@ public class CPlanner extends Executable{
         //check if sites set by user. If user has not specified any sites then
         //load all sites from site catalog.
         Collection eSites  = mPOptions.getExecutionSites();
+        //add the output site if specified
+        if( mPOptions.getOutputSite() != null ){
+            eSites.add( mPOptions.getOutputSite() );
+        }
+        
         //load the site catalog and transformation catalog accordingly
         SiteStore s = loadSiteStore( eSites );
         s.setForPlannerUse( mProps, mPOptions);
@@ -1374,11 +1379,6 @@ public class CPlanner extends Executable{
         /* load the sites in site catalog */
         try{
             catalog.load( toLoad );
-        
-            /* query for the sites, and print them out */
-            mLogger.log( "Sites loaded are "  + catalog.list( ) ,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            
             
             //load into SiteStore from the catalog.
             for( Iterator<String> it = toLoad.iterator(); it.hasNext(); ){
@@ -1387,6 +1387,11 @@ public class CPlanner extends Executable{
                     result.addEntry( s );
                 }
             }
+            
+            /* query for the sites, and print them out */
+            mLogger.log( "Sites loaded are "  + result.list( ) ,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
         }
         catch ( SiteCatalogException e ){
             throw new RuntimeException( "Unable to load from site catalog " , e );
