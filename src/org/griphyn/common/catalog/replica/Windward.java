@@ -86,6 +86,10 @@ public class Windward  implements ReplicaCatalog {
         rce.setResourceHandle( ds.getSite() );
         rce.addAttribute( DATA_AVAILABILITY_KEY,  ds.getAvailabilityTime() );
 
+        //for SE18 the PFN is always null set to dummy value in /tmp
+        if( rce.getPFN() == null ){
+            rce.setPFN( "/tmp/dummy" );
+        }
         //other attributes to converted later on.
 
         return rce;
@@ -95,6 +99,7 @@ public class Windward  implements ReplicaCatalog {
      * The default constructor.
      */
     public Windward() {
+        mLogger = LogManager.getInstance();
     }
 
     /**
@@ -129,7 +134,7 @@ public class Windward  implements ReplicaCatalog {
         boolean connect = true;
         //figure out how to specify via properties
         try{
-            String implementor = props.getProperty( this.DATA_CHARACTERIZATION_IMPL_PROPERTY );
+            String implementor = props.getProperty( Windward.DATA_CHARACTERIZATION_IMPL_PROPERTY );
 //            mDCharCatalog = DataCharacterizationFactory.loadInstance( implementor, props );
             mDCharCatalog =   PropertiesHelper.getDCFactory().getDC(
 				PropertiesHelper.getDCDomain(), null );
@@ -137,6 +142,7 @@ public class Windward  implements ReplicaCatalog {
             connect = false;
             mLogger.log( "Unable to connect to Data Characterization Catalog " + e,
                          LogManager.DEBUG_MESSAGE_LEVEL );
+            e.printStackTrace();
         }
 
         return connect;
@@ -470,8 +476,11 @@ public class Windward  implements ReplicaCatalog {
 
             for( Iterator dit = l.iterator(); dit.hasNext(); ){
                 DataSourceLocationObject ds = ( DataSourceLocationObject )dit.next();
+                ReplicaCatalogEntry rce = convertToRCE( ds );
+                mLogger.log( "Replica Catalog Entry retrieved from DC for lfn " + lfn + " is " + rce,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
                 //add to the rces list
-                rces.add( convertToRCE( ds ) );
+                rces.add( rce );
             }
 
             //populate the entry for lfn into result

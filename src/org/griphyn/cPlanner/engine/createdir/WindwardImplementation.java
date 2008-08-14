@@ -282,8 +282,8 @@ public class WindwardImplementation implements Implementation {
         arguments.append( " -h " ).append( mAllegroHost );
         arguments.append( " -p " ).append( mAllegroPort );
         arguments.append( " -k " ).append( directory );        
-        arguments.append( File.separator );
-        arguments.append( "gu-kb" );
+//        arguments.append( File.separator );
+//        arguments.append( "gu-kb" );
         
         guJob.setArguments( arguments.toString() );
         

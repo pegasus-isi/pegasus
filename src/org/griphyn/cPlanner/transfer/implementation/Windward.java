@@ -22,17 +22,11 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.JobManager;
-import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.transfer.Implementation;
 import org.griphyn.cPlanner.transfer.MultipleFTPerXFERJob;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -45,10 +39,8 @@ import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
 import org.griphyn.cPlanner.cluster.JobAggregator;
 
 import java.io.File;
-import java.io.FileWriter;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
@@ -121,6 +113,12 @@ public class Windward extends Abstract
      */
     private Transfer mPegasusTransfer;
 
+    
+    /**
+     * The handle to the BAE transfer implementation.
+     */
+    private BAE mBAETransfer;
+    
     /**
      * The seqexec job aggregator.
      */
@@ -137,6 +135,7 @@ public class Windward extends Abstract
 
         //should probably go through the factory
         mPegasusTransfer = new Transfer( bag );
+        mBAETransfer     = new BAE( bag );
 
         //just to pass the label have to send an empty ADag.
         //should be fixed
@@ -157,6 +156,7 @@ public class Windward extends Abstract
         super.setRefiner( refiner );
         //also set the refiner for hte internal pegasus transfer
         mPegasusTransfer.setRefiner( refiner );
+        mBAETransfer.setRefiner(refiner);
     }
 
 
@@ -196,6 +196,8 @@ public class Windward extends Abstract
 
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = ( FileTransfer )it.next();
+            //no way to distinguish a pattern right now
+            /*
             if( ft.getLFN().startsWith( DATA_SOURCE_PREFIX ) && !ft.getSourceURL().getValue().endsWith( ".zip" )){
                 //it a raw data source that will have to be ingested
                 rawDataSources.add( ft );
@@ -203,7 +205,8 @@ public class Windward extends Abstract
             else{
                 //everything else is a pattern
                 patterns.add( ft );
-            }
+            }*/
+            rawDataSources.add( ft );
         }
 
         List txJobs = new LinkedList();
@@ -229,17 +232,7 @@ public class Windward extends Abstract
         }
 
 
-        TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry( job.getSiteHandle() );
-        if(tcEntry == null){
-            //should throw a TC specific exception
-            StringBuffer error = new StringBuffer();
-            error.append( "Could not find entry in tc for lfn " ).append( getCompleteTCName() ).
-                  append(" at site " ).append( job.getSiteHandle());
-            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( error.toString() );
-        }
-
-
+      
 
         //this should in fact only be set
         // for non third party pools
@@ -251,50 +244,34 @@ public class Windward extends Abstract
         GridGateway jobmanager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
 
 
-        //use the DC transfer client to handle the data sources
+        //use the DC transfer client to handle the data sources        
         for( Iterator it = rawDataSources.iterator(); it.hasNext(); ){
-            FileTransfer ft = (FileTransfer)it.next();
-            TransferJob dcTXJob = new TransferJob();
-
-            dcTXJob.namespace   = tcEntry.getLogicalNamespace();
-            dcTXJob.logicalName = tcEntry.getLogicalName();
-            dcTXJob.version     = tcEntry.getLogicalVersion();
-
-            dcTXJob.dvNamespace = this.DERIVATION_NAMESPACE;
-            dcTXJob.dvName      = this.DERIVATION_NAME;
-            dcTXJob.dvVersion   = this.DERIVATION_VERSION;
-
-            dcTXJob.setRemoteExecutable( tcEntry.getPhysicalTransformation() );
-
-            dcTXJob.globusScheduler = (jobmanager == null) ?
-                                  null :
-                                  jobmanager.getContact( );
-
-            dcTXJob.setArguments( quote( ((NameValue)ft.getSourceURL()).getValue() ) + " " +
-                                  quote( ((NameValue)ft.getDestURL()).getValue() ) );
-            dcTXJob.setStdIn( "" );
-            dcTXJob.setStdOut( "" );
-            dcTXJob.setStdErr( "" );
-            dcTXJob.setSiteHandle( job.getSiteHandle() );
-
-            //the profile information from the transformation
-            //catalog needs to be assimilated into the job
-            dcTXJob.updateProfiles(tcEntry);
-
-
+            FileTransfer ft = (FileTransfer)it.next();            
+            List<FileTransfer> l = new LinkedList<FileTransfer>();
+            l.add( ft );
+            TransferJob dcTXJob = mBAETransfer.createTransferJob( job,
+                                                                  l,
+                                                                  null,
+                                                                  txJobName, 
+                                                                  jobClass );
             txJobs.add( dcTXJob );
         }
 
+        //only merging if only one data set being staged
+        TransferJob txJob = null;
+        if( txJobs.size() > 1 ){        
+            //now lets merge all these jobs
+            SubInfo merged = mSeqExecAggregator.construct( txJobs, "transfer", txJobName  );
+            txJob = new TransferJob( merged );
 
-        //now lets merge all these jobs
-        SubInfo merged = mSeqExecAggregator.construct( txJobs, "transfer", txJobName  );
-        TransferJob txJob = new TransferJob( merged );
 
-
-        //set the name of the merged job back to the name of
-        //transfer job passed in the function call
-        txJob.setName( txJobName );
-        txJob.setJobType( jobClass );
+            //set the name of the merged job back to the name of
+            //transfer job passed in the function call
+            txJob.setName( txJobName );
+            txJob.setJobType( jobClass );
+        }else{
+            txJob = (TransferJob) txJobs.get( 0 );
+        }
 
         //if a pattern job was constructed add the pattern stdin
         //as an input file for condor to transfer
