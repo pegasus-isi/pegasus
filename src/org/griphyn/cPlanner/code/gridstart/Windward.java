@@ -138,7 +138,10 @@ public class Windward implements GridStart{
         Properties p = mProps.matchingSubset( Windward.ALLEGRO_PROPERTIES_PREFIX, false );
         mAllegroHost = p.getProperty( "host" );
         mAllegroPort = p.getProperty( "port" );
-        mAllegroKB   = p.getProperty( "kb", "/tmp/gu-kb" );
+        
+        String base  = p.getProperty( "basekb" );
+        File f = new File( base, bag.getPlannerOptions().getRelativeSubmitDirectory() );
+        mAllegroKB = f.getAbsolutePath();
         mWorkflowID  = dag.getLabel();
     } 
 
@@ -191,7 +194,7 @@ public class Windward implements GridStart{
         StringBuffer args = new StringBuffer();
         args.append( " -m " ).append( job.getTXName() );
         args.append( " -w " ).append( mWorkflowID );
-        args.append( " -j " ).append( "1" );
+        args.append( " -j " ).append( job.getID() );
         args.append( " -k ").append( this.mAllegroKB );
         args.append( " -h " ).append( this.mAllegroHost );
         args.append( " -p " ).append( this.mAllegroPort );
