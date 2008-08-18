@@ -1065,7 +1065,8 @@ public class TransferEngine extends Engine {
 
         // create files in the directory, unless anything else is known.
 //        mStageOutBaseDirectory = mPoolHandle.getSeMountPoint( mPoolHandle.getPoolEntry( outputSite, "vanilla") );
-        mStageOutBaseDirectory = mSiteStore.lookup( outputSite ).selectStorageFileServerForStageout().getMountPoint() ;
+        //mStageOutBaseDirectory = mSiteStore.lookup( outputSite ).selectStorageFileServerForStageout().getMountPoint() ;
+        mStageOutBaseDirectory = mSiteStore.getStorageDirectory( outputSite );
 
         if( mProps.useDeepStorageDirectoryStructure() ){
             // create hashed, and levelled directories

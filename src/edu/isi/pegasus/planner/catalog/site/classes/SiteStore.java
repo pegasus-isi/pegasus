@@ -77,6 +77,22 @@ public class SiteStore extends AbstractSiteData{
     private String mWorkDir;
     private PlannerOptions mPlannerOptions;
     
+    
+    /**
+     * This contains the storage directory relative to the se mount point of the
+     * pool. It is populated from the pegasus.dir.storage property from the properties
+     * file. If not specified then the storage directory is the se mount point
+     * from the pool.config file.
+     */
+    protected String mStorageDir;
+
+
+    /**
+     * A boolean indicating whether to have a deep directory structure for
+     * the storage directory or not.
+     */
+    protected boolean mDeepStorageStructure;
+    
     /**
      * The default constructor.
      */
@@ -101,7 +117,9 @@ public class SiteStore extends AbstractSiteData{
      */
     public void setForPlannerUse( PegasusProperties properties, PlannerOptions options ){
         mPlannerOptions = options;
-        mWorkDir = properties.getExecDirectory();
+        mWorkDir              = properties.getExecDirectory();
+        mStorageDir           = properties.getStorageDirectory();        
+        mDeepStorageStructure = properties.useDeepStorageDirectoryStructure();
     }
     
     /**
@@ -282,6 +300,58 @@ public class SiteStore extends AbstractSiteData{
         throw new UnsupportedOperationException( "Method remove( String , String ) not yet implmeneted" );
     }
     
+    /**
+     * Return the storage mount point for a particular pool.
+     *
+     * @param site  the site for which you want the  storage-mount-point.
+     *
+     * @return    String corresponding to the mount point if the pool is found.
+     *            null if pool entry is not found.
+     */
+    public String getStorageDirectory( String site ) {
+        
+        String mount_point = mStorageDir;
+        SiteCatalogEntry entry = this.lookup( site );
+        
+        //sanity check
+        if( entry == null ){
+            return null;
+        }
+        
+        FileServer server = null;
+        if ( mStorageDir.length() == 0 || mStorageDir.charAt( 0 ) != '/' ) {
+            server = entry.selectStorageFileServerForStageout();
+            mount_point = server.getMountPoint();
+
+            //removing the trailing slash if there
+            int length = mount_point.length();
+            if ( length > 1 && mount_point.charAt( length - 1 ) == '/' ) {
+                mount_point = mount_point.substring( 0, length - 1 );
+            }
+
+            //append the Storage Dir
+            File f = new File( mount_point, mStorageDir );
+            mount_point = f.getAbsolutePath();
+
+        }
+
+        //check if we need to replicate the submit directory
+        //structure on the storage directory
+        if( mDeepStorageStructure ){
+            String leaf = ( this.mPlannerOptions.partOfDeferredRun() )?
+                             //if a deferred run then pick up the relative random directory
+                             //this.mUserOpts.getOptions().getRandomDir():
+                             this.mPlannerOptions.getRelativeSubmitDirectory():
+                             //for a normal run add the relative submit directory
+                             this.mPlannerOptions.getRelativeSubmitDirectory();
+            File f = new File( mount_point, leaf );
+            mount_point = f.getAbsolutePath();
+        }
+
+
+        return mount_point;
+
+    }
     
     /**
      * This determines the working directory on remote execution pool on the
