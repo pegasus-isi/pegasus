@@ -581,6 +581,11 @@ public class Algorithm {
 
         //try and fetch the expected runtime from the Windward AC
         result = getExpectedRuntimeFromAC( job , entry );
+       
+        if(result == 0){
+            mLogger.log("PC returned 0 as runtime. Returning 1", LogManager.ERROR_MESSAGE_LEVEL);
+            return result=1;
+        }
         if( result > 1 ){
             return result;
         }

@@ -240,12 +240,15 @@ public class RankDAX extends Executable {
         parseCommandLineArguments(args);
 
 
-        if( mRequestID == null  || mPlannerOptions == null ){
-            mLogger.log( "\nNeed to specify the request id and options that are to be passed to planner.",
+        if( mRequestID == null ){
+            mLogger.log( "\nNeed to specify the request id.",
                          LogManager.INFO_MESSAGE_LEVEL );
 
             this.printShortVersion();
             return;
+        }
+        if( mPlannerOptions == null ){
+            mPlannerOptions = new PlannerOptions();
         }
         
         //set the request id in the properties
@@ -325,6 +328,12 @@ public class RankDAX extends Executable {
 
         //do a sanity check on the directory for the file specified
         File dir = file.getParentFile();
+        if( dir == null ){
+            dir = new File( "." );
+            mLogger.log( "Writing out ranking file to current workdir " + dir.getAbsolutePath(),
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+            
+        }
         sanityCheck( dir );
 
 
@@ -333,7 +342,7 @@ public class RankDAX extends Executable {
         int i = 1;
         for ( Iterator it = rankings.iterator(); it.hasNext() && i <= mTopNum ; i++ ) {
             pw.println( it.next() );
-            pw.println( mPlannerOptions.toOptions() );
+            //pw.println( mPlannerOptions.toOptions() );
         }
         pw.close();
 

@@ -89,7 +89,10 @@ public class Ranking implements Comparable {
      */
     public String toString(){
         StringBuffer sb = new StringBuffer();
-        sb.append( mName ).append( ":" ).append( "DAX" ).append( ":" ).append( mRank );
+    //    sb.append( mName ).append( ":" ).append( "DAX" ).append( ":" ).append( mRank );
+        //adding new format for Ensemble just pass daxname and rank 
+        sb.append( mName ).append( "\t" ).append( mRank );
+   
         return sb.toString();
     }
 
