@@ -339,10 +339,20 @@ public class RankDAX extends Executable {
 
         //write out the ranked daxes.
         PrintWriter pw = new PrintWriter( new FileWriter( file ) );
+        
+        //write out header
+        pw.println( "#\t DAX\tRANK\tRUNTIME " );
+        
         int i = 1;
-        for ( Iterator it = rankings.iterator(); it.hasNext() && i <= mTopNum ; i++ ) {
+        Iterator it = rankings.iterator();
+        while( it.hasNext() && i <= mTopNum ) {
             pw.println( it.next() );
+            i++;
             //pw.println( mPlannerOptions.toOptions() );
+        }
+        //write out all the remaining as comments
+        while( it.hasNext() ){
+            pw.println( "#"  + it.next() );                    
         }
         pw.close();
 

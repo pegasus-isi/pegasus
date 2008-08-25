@@ -33,16 +33,29 @@ public class Ranking implements Comparable {
      */
     private long mRank;
 
+    /**
+     * The runtime of the dax in seconds.
+     */
+    private long mRuntime;
 
     /**
      * The overloaded constructor.
      *
-     * @param name  the name of the dax
-     * @param rank  the rank
+     * @param name    the name of the dax
+     * @param runtime the runtime of the dax
      */
-    public Ranking( String name, long rank ) {
-        mRank = rank;
+    public Ranking( String name, long runtime ) {
+        mRuntime = runtime;
         mName = name;
+    }
+    
+    /**
+     * Sets the runtime.
+     *
+     * @param runtime   the runtime
+     */
+    public void setRuntime( long runtime ){
+        mRuntime = runtime;
     }
 
     /**
@@ -72,6 +85,16 @@ public class Ranking implements Comparable {
     public long getRank(){
         return mRank;
     }
+    
+    
+    /**
+     * Returns the runtime.
+     *
+     * @return the runtime
+     */
+    public long getRuntime( ){
+        return mRuntime;
+    }
 
     /**
      * Returns the name of the dax.
@@ -91,7 +114,7 @@ public class Ranking implements Comparable {
         StringBuffer sb = new StringBuffer();
     //    sb.append( mName ).append( ":" ).append( "DAX" ).append( ":" ).append( mRank );
         //adding new format for Ensemble just pass daxname and rank 
-        sb.append( mName ).append( "\t" ).append( mRank );
+        sb.append( mName ).append( "\t" ).append( mRank ).append( "\t" ).append( mRuntime );
    
         return sb.toString();
     }

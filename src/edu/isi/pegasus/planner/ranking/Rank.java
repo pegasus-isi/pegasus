@@ -99,12 +99,12 @@ public class Rank {
      */
     public Collection<Ranking> rank( Collection<String> daxes ){
 
-        Collection result = new LinkedList();
+        Collection<Ranking> result = new LinkedList();
 
         long max = 0;
 
         //traverse through the DAX'es
-        long rank;
+        long runtime;
         for( Iterator it = daxes.iterator(); it.hasNext(); ){
             String dax = ( String ) it.next();
             Callback cb = DAXCallbackFactory.loadInstance( mBag.getPegasusProperties(),
@@ -119,19 +119,19 @@ public class Rank {
             ADag dag = (ADag)cb.getConstructedObject();
             dag.setRequestID( mRequestID );
             mHeft.schedule( dag, mSites );
-            rank = mHeft.getMakespan();
-            max = ( rank > max ) ? rank : max;
-            result.add( new Ranking( dax, rank ) );
+            runtime = mHeft.getMakespan();
+            max = ( runtime > max ) ? runtime : max;
+            result.add( new Ranking( dax, runtime ) );
         }
 
         //update the ranks for all the daxes ( inverse them )
         for( Iterator it = result.iterator(); it.hasNext(); ){
             Ranking r = ( Ranking )it.next();
             //inverse the ranking
-            r.setRank( max - r.getRank() );
+            r.setRank( max - r.getRuntime() );
         }
 
-        Collections.sort( (List)result, Collections.reverseOrder() );
+        Collections.sort( (List<Ranking>)result, Collections.reverseOrder() );
         return result;
     }
 
