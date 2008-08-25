@@ -198,6 +198,11 @@ public class Windward implements GridStart{
         args.append( " -k ").append( this.mAllegroKB );
         args.append( " -h " ).append( this.mAllegroHost );
         args.append( " -p " ).append( this.mAllegroPort );
+        
+        if( true ){//should be a debug flag
+            args.append( " -d -z -r -t ");
+        }
+        
         return args.toString();
     }
     
