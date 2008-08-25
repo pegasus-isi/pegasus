@@ -124,8 +124,8 @@ public  class StorageType extends AbstractSiteData{
         StorageType obj;
         try{
             obj = ( StorageType ) super.clone();
-            obj.setLocalDirectory( this.getLocalDirectory() );
-            obj.setSharedDirectory( this.getSharedDirectory() );
+            obj.setLocalDirectory( ( LocalDirectory )this.getLocalDirectory().clone() );
+            obj.setSharedDirectory( ( SharedDirectory )this.getSharedDirectory().clone() );
             
         }
         catch( CloneNotSupportedException e ){

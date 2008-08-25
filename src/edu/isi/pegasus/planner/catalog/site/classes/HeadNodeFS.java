@@ -222,8 +222,8 @@ public class HeadNodeFS extends AbstractSiteData {
         HeadNodeFS obj;
         try{
             obj = ( HeadNodeFS ) super.clone();
-            obj.setScratch( this.getScratch() );
-            obj.setStorage( this.getStorage() );
+            obj.setScratch( (HeadNodeScratch)this.getScratch().clone() );
+            obj.setStorage( (HeadNodeStorage)this.getStorage().clone() );
             obj.setProfiles( (Profiles)this.mProfiles.clone() );
             
         }

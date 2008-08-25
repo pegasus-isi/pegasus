@@ -87,7 +87,22 @@ public class WorkerNodeScratch extends StorageType {
         return mWorkerShared;        
     }
     
-     
+     /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        WorkerNodeScratch obj;
+        
+        obj = ( WorkerNodeScratch ) super.clone();
+        
+        if( this.getWorkerSharedDirectory() != null ){
+            obj.setWorkerSharedDirectory( (WorkerSharedDirectory)this.getWorkerSharedDirectory().clone() );
+        }
+        
+        return obj;
+    }
 
     /**
      * Writes out the xml description of the object. 

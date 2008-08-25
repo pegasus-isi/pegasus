@@ -204,8 +204,8 @@ public class WorkerNodeFS extends AbstractSiteData {
         WorkerNodeFS obj;
         try{
             obj = ( WorkerNodeFS ) super.clone();
-            obj.setScratch( this.getScratch() );
-            obj.setStorage( this.getStorage() );
+            obj.setScratch( ( WorkerNodeScratch )this.getScratch().clone() );
+            obj.setStorage( ( WorkerNodeStorage )this.getStorage().clone() );
             obj.setProfiles( (Profiles)this.mProfiles.clone() );
             
         }
