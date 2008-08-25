@@ -71,6 +71,11 @@ public class InvocationRecord extends Invocation // implements Cloneable
   private String m_derivation;
 
   /**
+   * Records the physical memory on the remote machine, if available.
+   */
+  private long m_pmem = -1; 
+
+  /**
    * process id of gridlaunch itself.
    */
   private int m_pid;
@@ -790,6 +795,24 @@ public class InvocationRecord extends Invocation // implements Cloneable
   { this.m_cwd = cwd; }
 
   /**
+   * Accessor.
+   *
+   * @return the recorded physical memory in byte, or -1 if not available. 
+   * @see #setPhysicalMemory( long )
+   */ 
+  public long getPhysicalMemory()
+  { return this.m_pmem; }
+
+  /**
+   * Accessor.
+   *
+   * @param pmem
+   * @see #getPhysicalMemory()
+   */
+  public void setPhysicalMemory( long pmem ) 
+  { this.m_pmem = pmem; }
+
+  /**
    * Converts the active state into something meant for human consumption.
    * The method will be called when recursively traversing the instance
    * tree.
@@ -872,6 +895,8 @@ public class InvocationRecord extends Invocation // implements Cloneable
       writeAttribute( stream, " transformation=\"", this.m_transformation );
     if ( this.m_derivation != null && this.m_derivation.length() > 0 )
       writeAttribute( stream, " derivation=\"", this.m_derivation );
+    if ( this.m_pmem != -1 ) 
+      writeAttribute( stream, " ram=\"", Long.toString(this.m_pmem) );
     writeAttribute( stream, " pid=\"", Integer.toString( this.m_pid ) );
     if ( this.m_resource != null && this.m_resource.length() > 0 )
       writeAttribute( stream, " resource=\"", this.m_resource );
@@ -889,7 +914,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
     writeAttribute( stream, " gid=\"", Integer.toString( this.m_gid ) );
     if ( this.m_group != null && this.m_group.length() > 0 )
       writeAttribute( stream, " group=\"", this.m_group );
-
+    
     stream.write( '>' );
     if ( indent != null ) stream.write( newline );
   }

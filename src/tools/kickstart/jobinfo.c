@@ -304,6 +304,11 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
   /* <usage> */
   printXMLUseInfo( buffer, size, len, indent+2, "usage", &job->use );
 
+#ifdef USE_MEMINFO
+  /* <meminfo> */
+  printXMLMemInfo( buffer, size, len, indent+2, "peak", &job->peakmem );
+#endif /* USE_MEMINFO */
+
   /* <status>: open tag */
   myprint( buffer, size, len, "%*s<status raw=\"%d\">", indent+2, "", 
 	   job->status );

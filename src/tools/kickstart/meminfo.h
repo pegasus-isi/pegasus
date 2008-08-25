@@ -15,6 +15,7 @@
 #ifndef _MEMINFO_H
 #define _MEMINFO_H
 
+#include <sys/types.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -22,15 +23,40 @@
 typedef struct {
   /* private */
   struct timeval stamp;      /* point of time that app was started */
-  
-} JobInfo;
+  unsigned long  n;          /* running average helper */
+
+  /* the following info is in pages */
+  unsigned long  size;       /* memory (virtual) size */
+  unsigned long  rss;        /* resident set (present) size */
+  unsigned long  share;      /* amount of sharable memory */
+  unsigned long  trs;        /* executable (and lib) size */
+  unsigned long  lrs;        /* local (usually zero) size */
+  unsigned long  drs;        /* data PLUS stack size */
+  unsigned long  dirty;      /* dirty (need to write) pages */
+} MemInfo;
 
 extern
 void
-initMemInfo( MemInfo* meminfo, pid_t pid );
+initMemInfo( MemInfo* mem, pid_t pid );
 /* purpose: initialize the data structure from process status
- * paramtr: meminfo (OUT): initialized memory block
+ * paramtr: mem (OUT): initialized memory block
  *          pid (IN): process id to use for initialization.
+ */
+
+extern
+void
+maxMemInfo( MemInfo* max, const MemInfo* add );
+/* purpose: keeps the maximum found for the memory info.
+ * paramtr: max (IO): adjusted to the maximum
+ *          add (IN): look for maxima here
+ */
+
+extern
+void
+avgMemInfo( MemInfo* avg, const MemInfo* add );
+/* purpose: keeps a running average
+ * paramtr: max (IO): keeping the running average
+ *          avg (IN): new values to add to average
  */
 
 extern
@@ -49,9 +75,9 @@ printXMLMemInfo( char* buffer, size_t size, size_t* len, size_t indent,
 
 extern
 void
-deleteMemInfo( MemInfo* meminfo );
+deleteMemInfo( MemInfo* mem );
 /* purpose: destructor
- * paramtr: meminfo (IO): valid MemInfo structure to destroy. 
+ * paramtr: mem (IO): valid MemInfo structure to destroy. 
  */
 
-#endif /* _APPINFO_H */
+#endif /* _MEMINFO_H */

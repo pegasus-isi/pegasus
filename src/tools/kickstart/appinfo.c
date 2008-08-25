@@ -39,6 +39,10 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#ifdef DARWIN
+#include <sys/sysctl.h>
+#endif /* DARWIN */
+
 extern int isExtended; /* timestamp format concise or extended */
 extern int isLocal;    /* timestamp time zone, UTC or local */
 
@@ -84,6 +88,9 @@ static
 size_t
 convert2XML( char* buffer, size_t size, const AppInfo* run )
 {
+#if defined(_SC_PHYS_PAGES) || defined(DARWIN)
+  char b[32];
+#endif /* DARWIN || _SC_PHYS_PAGES */
   size_t i;
   struct passwd* user = wrap_getpwuid( getuid() );
   struct group* group = wrap_getgrgid( getgid() );
@@ -152,6 +159,11 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
     if ( (h = wrap_gethostbyaddr( (const char*) &address, sizeof(in_addr_t), AF_INET )) )
       myprint( buffer, size, &len, " hostname=\"%s\"", h->h_name );
   }
+
+#if defined(_SC_PHYS_PAGES) || defined(DARWIN)
+  sizer( b, sizeof(b), sizeof(run->pram), &run->pram );
+  myprint( buffer, size, &len, " ram=\"%s\"", b );
+#endif /* DARWIN || _SC_PHYS_PAGES */
 
   /* optional attributes for root element: application process id */
   if ( run->child != 0 )
@@ -244,7 +256,6 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
     if ( run->envp && run->envc ) {
       char* s; 
 
-#if 1
       /* attempt a sorted version */
       char** keys = malloc( sizeof(char*) * run->envc );
       for ( i=0; i < run->envc; ++i ) {
@@ -265,23 +276,6 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
 	}
       }
       free((void*) keys);
-
-#else
-      /* unsorted version */
-      append( buffer, size, &len, "  <environment>\n" );
-
-      for ( i=0; i < run->envc; ++i ) {
-	if ( run->envp[i] && (s = strchr( run->envp[i], '=' )) ) {
-	  *s = '\0'; /* temporarily cut string here */
-	  append( buffer, size, &len, "    <env key=\"" );
-	  append( buffer, size, &len, run->envp[i] );
-	  append( buffer, size, &len, "\">" );
-	  xmlquote( buffer, size, &len, s+1, strlen(s+1) );
-	  append( buffer, size, &len, "</env>\n" );
-	  *s = '='; /* reset string to original */
-	}
-      }
-#endif
       append( buffer, size, &len, "  </environment>\n" );
     }
 
@@ -316,6 +310,12 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
  *          argv (IN): from main()
  */
 {
+#ifdef DARWIN
+  int mib[2];
+  size_t plen;
+#else
+  long   ppages;
+#endif /* DARWIN */
   size_t tempsize = getpagesize();
   char* tempname = (char*) malloc(tempsize);
 
@@ -412,6 +412,19 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
 
   /* record resource limits */
   initLimitInfo( &appinfo->limits );
+
+#ifdef _SC_PHYS_PAGES
+  if ( (ppages = sysconf(_SC_PHYS_PAGES)) != -1 )
+    appinfo->pram = ((unsigned) ppages) * getpagesize();
+#else
+#ifdef DARWIN
+  mib[0] = CTL_HW;
+  mib[1] = HW_PHYSMEM;
+  plen = sizeof(appinfo->pram);
+  if ( sysctl( mib, 2, &appinfo->pram, &plen, NULL, 0 ) == -1 )
+    appinfo->pram = 0;
+#endif /* DARWIN */
+#endif /* _SC_PHYS_PAGES */
 
   /* which process is me */
   appinfo->child = getpid();

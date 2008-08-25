@@ -864,6 +864,9 @@ public class InvocationParser extends DefaultHandler
 	    } else if ( name.equals("resource") ) {
 	      this.log( e, name, value );
 	      m_result.setResource( value );
+	    } else if ( name.equals("ram" ) ) {
+	      this.log( e, name, value ); 
+	      m_result.setPhysicalMemory( Long.parseLong(value) ); 
 	    } else if ( name.equals("pid") ) {
 	      this.log( e, name, value );
 	      m_result.setPID( Integer.parseInt(value) );

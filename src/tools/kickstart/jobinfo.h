@@ -21,6 +21,10 @@
 #include <sys/resource.h>
 #include "statinfo.h"
 
+#ifdef USE_MEMINFO
+#include "meminfo.h"
+#endif /* USE_MEMINFO */
+
 typedef struct {
   /* private */
   int           isValid;     /* 0: uninitialized, 1:valid, 2:app not found */
@@ -39,6 +43,9 @@ typedef struct {
   int           saverr;      /* errno for status < 0 */
   char*         prefix;      /* prefix to error message for status < 0 */
   struct rusage use;         /* rusage record from reaping application status */
+#ifdef USE_MEMINFO
+  MemInfo       peakmem;     /* maximum memory usage during lifetime */
+#endif /* USE_MEMINFO */
 } JobInfo;
 
 extern
@@ -76,7 +83,7 @@ extern
 void
 deleteJobInfo( JobInfo* jobinfo );
 /* purpose: destructor
- * paramtr: runinfo (IO): valid AppInfo structure to destroy. 
+ * paramtr: runinfo (IO): valid JobInfo structure to destroy. 
  */
 
-#endif /* _APPINFO_H */
+#endif /* _JOBINFO_H */

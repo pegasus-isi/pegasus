@@ -471,6 +471,7 @@
             </xs:annotation>
          </xs:attribute>
          <xs:attribute name="hostname" type="xs:string" use="optional"/>
+         <xs:attribute name="ram" type="xs:nonNegativeInteger" use="optional"/>
          <xs:attribute name="pid" type="xs:decimal" use="optional">
             <xs:annotation>
                <xs:documentation>process number of the gridlaunch application itself.</xs:documentation>

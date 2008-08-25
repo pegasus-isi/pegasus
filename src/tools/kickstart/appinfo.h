@@ -23,6 +23,11 @@
 #include "statinfo.h"
 #include "jobinfo.h"
 #include "limitinfo.h"
+#include <unistd.h>
+
+#ifndef SOLARIS
+#include <stdint.h> /* uint64_t */
+#endif
 
 #ifndef SYS_NMLN
 #ifdef _SYS_NAMELEN /* DARWIN */
@@ -75,6 +80,9 @@ typedef struct {
   struct utsname uname;      /* system environment */
   char   archmode[SYS_NMLN]; /* IA32, IA64, ILP32, LP64, ... */
   LimitInfo      limits;     /* hard- and soft limits */
+#if defined(DARWIN) || defined(_SC_PHYS_PAGES)
+  uint64_t       pram;       /* physical memory in bytes */
+#endif /* DARWIN */
 } AppInfo;
 
 extern
