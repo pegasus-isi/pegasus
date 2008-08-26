@@ -209,7 +209,6 @@ public class SiteFactory {
                 throw new RuntimeException( "Unable to connect to site catalog implementation" );
         }
         catch( Exception e ){
-            e.printStackTrace();
             throw new SiteFactoryException( "Unable to instantiate Site Catalog ",
                                             catalogImplementor,
                                             e );
