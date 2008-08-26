@@ -83,9 +83,11 @@ import java.util.Iterator;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import java.util.Properties;
+import java.util.Set;
 
 
 /**
@@ -308,13 +310,16 @@ public class CPlanner extends Executable{
         //check if sites set by user. If user has not specified any sites then
         //load all sites from site catalog.
         Collection eSites  = mPOptions.getExecutionSites();
+        Set<String> toLoad = new HashSet<String>( mPOptions.getExecutionSites() );
         //add the output site if specified
         if( mPOptions.getOutputSite() != null ){
-            eSites.add( mPOptions.getOutputSite() );
+            toLoad.add( mPOptions.getOutputSite() );
         }
+        mLogger.log( "Sites to load in site store " + toLoad, LogManager.DEBUG_MESSAGE_LEVEL );        
+        mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
         
         //load the site catalog and transformation catalog accordingly
-        SiteStore s = loadSiteStore( eSites );
+        SiteStore s = loadSiteStore( toLoad );
         s.setForPlannerUse( mProps, mPOptions);
         
         mBag.add( PegasusBag.SITE_STORE, s );
