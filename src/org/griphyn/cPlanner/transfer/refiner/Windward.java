@@ -128,6 +128,8 @@ public class Windward extends MultipleFTPerXFERJobRefiner {
             //set the stage out explicitly to false as
             //registration takes care of the stage-out
             ft.setTransferFlag( PegasusFile.TRANSFER_NOT );
+            ft.setRegisterFlag( false );
+            
             
             //remove all the destination url;s
             while( ( nv = ft.removeDestURL() ) != null ){
@@ -139,6 +141,7 @@ public class Windward extends MultipleFTPerXFERJobRefiner {
             mLogger.log( "Setting destination URL for lfn " + lfn + " to " + mAllegroKB,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             ft.addDestination( "allegro_site" , mAllegroKB );
+            
         }
         
         mBundleRefiner.addStageOutXFERNodes( job, files, rcb, deletedLeaf);
