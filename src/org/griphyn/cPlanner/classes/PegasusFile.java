@@ -323,11 +323,24 @@ public class PegasusFile extends Data {
 
     /**
      * Sets the transient registration flag to true.
+     * 
+     * @deprecated
+     * @see #setRegisterFlag( boolean )
      */
     public void setTransientRegFlag(){
         mFlags.set(TRANSIENT_REGISTRATION_FLAG);
     }
 
+    
+    /**
+     * Sets the transient registration flag to value specified.
+     * 
+     * @param value the value to set to
+     */
+    public void setRegisterFlag( boolean value ){
+        mFlags.set( TRANSIENT_REGISTRATION_FLAG, !value );
+    }
+    
     /**
      * Sets the optionalflag denoting the file to be optional to true.
      */
