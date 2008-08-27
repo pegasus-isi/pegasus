@@ -19,14 +19,10 @@ package org.griphyn.cPlanner.transfer.implementation;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import java.io.File;
 import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.NameValue;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.FileTransfer;
 
 import org.griphyn.cPlanner.common.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.common.classes.TCType;
 
@@ -34,11 +30,7 @@ import org.griphyn.common.catalog.TransformationCatalogEntry;
 
 import org.griphyn.common.util.Separator;
 
-import java.io.FileWriter;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.Profile;
@@ -82,6 +74,11 @@ public class BAE extends AbstractSingleFTPerXFERJob {
      * The environment variable from which to construct the path to DC_HOME
      */
     public static final String DC_HOME = "DC_HOME";
+    
+    /**
+     * The allegro graph namespace that is to prepended.
+     */
+    public static final String ALLEGRO_NAMESPACE_PREFIX = "http://anchor/teo#";
     
     /**
      * The transformation namespace for the transfer job.
@@ -148,6 +145,11 @@ public class BAE extends AbstractSingleFTPerXFERJob {
      */
     private String mAllegroDatabase;
     
+    /**
+     * The path to the AllegroKB
+     */
+    private String mAllegroKB;
+    
     
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -163,6 +165,7 @@ public class BAE extends AbstractSingleFTPerXFERJob {
         mAllegroPort = p.getProperty( "port" );
         String base  = p.getProperty( "basekb" );
         File f = new File( base, mPOptions.getRelativeSubmitDirectory() );
+        mAllegroKB        = f.getAbsolutePath();
         mAllegroDirectory = f.getParent();
         mAllegroDatabase  = f.getName();
     }
@@ -233,8 +236,8 @@ public class BAE extends AbstractSingleFTPerXFERJob {
        //construct the path to it
        StringBuffer path = new StringBuffer();
        path.append( dcHome ).append( File.separator ).
-           append( "bin" ).append( File.separator ).
-           append( "dc-transfer" );
+           append( "Transfer_Client" ).append( File.separator ).
+           append( "dc-transfer.sh" );
 
 
        defaultTCEntry = new TransformationCatalogEntry( BAE.TRANSFORMATION_NAMESPACE,
@@ -271,17 +274,20 @@ public class BAE extends AbstractSingleFTPerXFERJob {
      */
     protected String generateArgumentString( TransferJob job, FileTransfer file ){
         StringBuffer sb = new StringBuffer();
-        
-        sb.append( file.getLFN() ).
-           append( " " ).
+               
+        sb.append( " -u " ).
+           append( file.getLFN() ).
+           append( " -h " ).
            append( mAllegroHost ).
-           append( " " ).
+           append( " -p " ).
            append( mAllegroPort ).
-           append( " " ).
-           append( mAllegroDirectory ).
-           append( " " ).
-           append( mAllegroDatabase );
-           
+           append( " -k " ).
+           append( mAllegroKB ).
+           append( " -g " ).
+           append( "\"" ).
+           append( BAE.ALLEGRO_NAMESPACE_PREFIX ).
+           append( file.getLFN() ).
+           append( "\"" );
         
         return sb.toString(); 
 
