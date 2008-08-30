@@ -57,11 +57,11 @@ sub version {
 sub usage {
     # purpose: print usage and exit
     # returns: does not return.
-    print "Usage: dirmanager [options] [-d <dir name>|-f <file name>]\n";
-    print "       dirmanager [options] [--dir <dir name>|--file <file name>]\n\n";
+    print "Usage: dirmanager [options] [-d <DIRECTORY...>|-f <file name>]\n";
+    print "       dirmanager [options] [--dir <DIRECTORY...>|--file <file name>]\n\n";
     print "Options:\n";
-    print "\t -c|--create  Create a directory specified by --dir\n";
-    print "\t -r|--remove  Remove the directory specified by --dir\n";
+    print "\t -c|--create  Create a directory/directories specified by --dir\n";
+    print "\t -r|--remove  Remove the directory/directories specified by --dir\n";
     print "\t -X|--exec    Marks a file or directory executable\n";
     print "\t  -m, --mode=MODE   set permission mode (as in chmod), not rwxrwxrwx - umask\n";
     print "\t -n|--none    Dummy job: Prints the system time\n";
@@ -200,17 +200,20 @@ if( $create+$remove+$none+$chmod != 1 ) {
 }
 
 if( $create && $mode ){
+    warn "# Directories to create are " , join( "\n# ", split( '\s+',$dir) ) ,"\n" if $main::debug ;
     warn "# Running ", $executables{'mkdir'}, " -m $mode -p  $dir\n" if $main::debug;
-    @result=pipe_out_cmd( $executables{'mkdir'}, '-p', '-m', $mode, $dir );
+    @result=pipe_out_cmd( $executables{'mkdir'}, '-p', '-m', $mode,  split( '\s+',$dir) );
     exit(exit_code($?, 'mkdir'));
 }elsif ($create) {
-    warn "# Running ", $executables{'mkdir'}, " -p  $dir\n" if $main::debug;
-    @result=pipe_out_cmd( $executables{'mkdir'}, '-p', $dir );
+    warn "# Directories to create are " , join( "\n# ", split( '\s+',$dir) ) ,"\n" if $main::debug ;
+    warn "# Running ", $executables{'mkdir'}, " -p  $dir\n" if $main::debug;    
+    @result=pipe_out_cmd( $executables{'mkdir'}, '-p',  split( '\s+',$dir) );
     exit(exit_code($?, 'mkdir'));
 } 
 elsif ($remove) {
+    warn "# Directories to remove are " , join( "\n# ", split( '\s+',$dir) ) ,"\n" if $main::debug ;
     warn "# Running ", $executables{'rm'}, " -rf  $dir\n" if $main::debug;
-    @result=pipe_out_cmd( $executables{'rm'}, '-rf', $dir );
+    @result=pipe_out_cmd( $executables{'rm'}, '-rf', split( '\s+',$dir) );
     exit(exit_code($?, 'rm'));
 } elsif ($none) {
     warn "# Running ", $executables{'date'}, "\n" if $main::debug;
