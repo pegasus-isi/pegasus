@@ -213,7 +213,6 @@ public class MainEngine
 
         //add the deployment of setup jobs if required
         mReducedDag = deploy.addSetupNodes( mReducedDag );
-        deploy = null;
 
 
         if (mPOptions.generateRandomDirectory()) {
@@ -243,6 +242,9 @@ public class MainEngine
             CleanupEngine cEngine = new CleanupEngine( mBag );
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
             mLogger.logCompletion( message, LogManager.INFO_MESSAGE_LEVEL );
+            
+            //add the cleanup of setup jobs if required
+            mReducedDag = deploy.addCleanupNodesForWorkerPackage( mReducedDag );
         }
 
         return mReducedDag;

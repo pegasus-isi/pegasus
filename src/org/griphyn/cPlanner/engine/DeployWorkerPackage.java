@@ -71,12 +71,17 @@ import java.util.HashMap;
 
 import java.io.File;
 
+import java.util.LinkedList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 /**
- *
- *
+ * The refiner that is responsible for adding 
+ *  - setup nodes that deploy a worker package on each deployment site at start 
+ *    of workflow execution
+ *  - cleanup nodes that undeploy a worker package on each deployment site at end
+ *    workflow execution
+ * 
  * @author Karan Vahi
  * @author Gaurang Mehta
  *
@@ -95,6 +100,10 @@ public class DeployWorkerPackage
      */
     public static final String UNTAR_PREFIX = "untar_";
 
+    /**
+     * Constant suffix for the names of the deployment nodes.
+     */
+    public static final String CLEANUP_PREFIX = "cln_";
 
     /**
      * Array storing the names of the executables in the $PEGASUS_HOME/bin directory
@@ -285,11 +294,16 @@ public class DeployWorkerPackage
     protected Implementation mSetupTransferImplementation;
 
     
-    
     /**
      * The FileTransfer map indexed by site id.
      */
     protected Map mFTMap;
+    
+    /**
+     * Maps a site to the the directory where the pegasus worker package has
+     * been untarred during workflow execution.
+     */
+    protected Map<String,String> mSiteToPegasusHomeMap;
 
     /**
      * Loads the implementing class corresponding to the mode specified by the
@@ -333,6 +347,7 @@ public class DeployWorkerPackage
         super( bag );
         mCurrentDag = null;
         mFTMap = new HashMap();
+        mSiteToPegasusHomeMap = new HashMap<String,String>();
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
 
         //load the transfer setup implementation
@@ -428,7 +443,8 @@ public class DeployWorkerPackage
             sb.append( "Directory where pegasus worker executables will reside on site ").append( site ).
                append( " " ).append( pegasusHome.getAbsolutePath() );
             mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
-
+            mSiteToPegasusHomeMap.put( site, pegasusHome.getAbsolutePath() );
+            
             //now create transformation catalog entry objects for each
             //worker package executable
             for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
@@ -515,14 +531,15 @@ public class DeployWorkerPackage
         List roots = workflow.getRoots();
 
         //add a setup job per execution site
-        for( Iterator it = this.getDeploymentSites( dag ).iterator(); it.hasNext(); ){
+        Set deploymentSites = this.getDeploymentSites( dag );
+        for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
             String site = ( String ) it.next();
             mLogger.log( "Adding worker package deployment node for " + site,
                          LogManager.DEBUG_MESSAGE_LEVEL );
 
 
             FileTransfer ft = (FileTransfer)mFTMap.get( site ); 
-            List fts = new ArrayList(1);
+            List<FileTransfer> fts = new ArrayList<FileTransfer>(1);
             fts.add( ft );
             
             //hmm need to propogate site info with a dummy job on fly
@@ -565,7 +582,7 @@ public class DeployWorkerPackage
             workflow.addNode( untarNode );
         }
 
-
+       
         //convert back to ADag and return
         ADag result = dag;
         //we need to reset the jobs and the relations in it
@@ -588,6 +605,91 @@ public class DeployWorkerPackage
         return result;
     }
 
+    /**
+     * Adds cleanup nodes in the workflow for sites specified.
+     * 
+     * @param sites      the sites where the workflow has been scheduled.
+     * @return 
+     */
+    public ADag addCleanupNodesForWorkerPackage( ADag dag ) {
+        Mapper m = mBag.getHandleToTransformationMapper();
+        
+        //figure if we need to deploy or not
+        if( !m.isStageableMapper() ){
+            mLogger.log( "No cleanup of Worker Package needed" ,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            return dag;
+        }
+        
+        //convert the dag to a graph representation and walk it
+        //in a top down manner
+        Graph workflow = Adapter.convert( dag );
+
+        RemoveDirectory removeDirectory = new RemoveDirectory( dag, mBag );
+        
+        //add a setup job per execution site
+        Set sites = this.getDeploymentSites( dag );       
+        for( Iterator it = sites.iterator(); it.hasNext(); ){
+            String site = ( String ) it.next();
+            mLogger.log( "Adding worker package cleanup node for " + site,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+            String baseRemoteWorkDir = mSiteStore.getWorkDirectory( site );
+
+            //figure out what needs to be deleted for the site
+            FileTransfer ft = (FileTransfer)mFTMap.get( site ); 
+            List<String> cleanupFiles = new LinkedList<String>();
+            cleanupFiles.add( new File ( baseRemoteWorkDir,
+                                         getBasename( ft.getSourceURL().getValue() )).getAbsolutePath() );
+            cleanupFiles.add( mSiteToPegasusHomeMap.get( site ) );
+            for( String f : cleanupFiles ){
+                StringBuffer sb = new StringBuffer();
+                sb.append( "Need to cleanup file " ).append( f ).append( " on site " ).append( site );
+                mLogger.log( sb.toString(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+            
+            //create a remove directory job per site
+            String cleanupJobname = this.getCleanupJobname( dag, site );
+            SubInfo cleanupJob = removeDirectory.makeRemoveDirJob( site, cleanupJobname, cleanupFiles);
+                
+            //add the original leaves as parents to cleanup node 
+            for( Iterator lIt = workflow.getLeaves().iterator(); lIt.hasNext(); ){                
+                GraphNode gn = ( GraphNode ) lIt.next();
+                mLogger.log( "Added edge " + gn.getID() + " -> " + cleanupJobname,
+                              LogManager.DEBUG_MESSAGE_LEVEL );
+                
+                GraphNode cleanupNode = new GraphNode( cleanupJob.getName(), cleanupJob );
+                cleanupNode.addParent( gn );
+                gn.addChild( cleanupNode );
+                
+                workflow.addNode( cleanupNode );
+            }
+        }
+        
+        //convert back to ADag and return
+        ADag result = dag;
+        //we need to reset the jobs and the relations in it
+        result.clearJobs();
+
+        //traverse through the graph and jobs and edges
+        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+
+            //get the job associated with node
+            result.add( ( SubInfo )node.getContent() );
+
+            //all the children of the node are the edges of the DAG
+            for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
+                GraphNode child = ( GraphNode ) childrenIt.next();
+                result.addNewRelation( node.getID(), child.getID() );
+            }
+        }
+
+        return result;
+    }
+ 
+    
     /**
      * Retrieves the sites for which the deployment jobs need to be created.
      *
@@ -674,6 +776,34 @@ public class DeployWorkerPackage
         return sb.toString();
     }
 
+    /**
+     * It returns the name of the untar  job, that is to be assigned.
+     * The name takes into account the workflow name while constructing it, as
+     * that is thing that can guarentee uniqueness of name in case of deferred
+     * planning.
+     *
+     * @param dag   the workflow so far.
+     * @param site  the execution pool for which the create directory job
+     *                  is responsible.
+     *
+     * @return String corresponding to the name of the job.
+     */
+    protected String getCleanupJobname( ADag dag, String site ){
+        StringBuffer sb = new StringBuffer();
+
+        //append setup prefix
+        sb.append( DeployWorkerPackage.CLEANUP_PREFIX );
+        //append the job prefix if specified in options at runtime
+        if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
+           append( dag.dagInfo.index ).append( "_" );
+
+
+        sb.append( site );
+
+        return sb.toString();
+    }
 
 
     /**
@@ -763,6 +893,7 @@ public class DeployWorkerPackage
         return newJob;
 
     }
+
     
     /**
      * Returns a default TC entry to be used in case entry is not found in the

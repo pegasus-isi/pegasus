@@ -18,8 +18,10 @@ package org.griphyn.cPlanner.engine;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.LogManager;
 
@@ -33,8 +35,12 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
+
 import java.io.File;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.namespace.VDS;
+
+
 /**
  * Ends up creating a cleanup dag that deletes the remote directories that
  * were created by the create dir jobs. The cleanup dag is generated in a
@@ -103,6 +109,12 @@ public class RemoveDirectory extends Engine {
 
 
     /**
+     *  Boolean indicating whether we need to transfer dirmanager from the submit
+     * host.
+     */
+    private boolean mTransferFromSubmitHost;
+    
+    /**
      * A convenience method to return the complete transformation name being
      * used to construct jobs in this class.
      *
@@ -125,6 +137,7 @@ public class RemoveDirectory extends Engine {
     public RemoveDirectory( ADag concDag, PegasusBag bag ) {
         super( bag );
         mConcDag = concDag;
+        mTransferFromSubmitHost = bag.getHandleToTransformationMapper().isStageableMapper();
     }
 
     /**
@@ -233,19 +246,37 @@ public class RemoveDirectory extends Engine {
      *
      * @return the remove dir job.
      */
-    private SubInfo makeRemoveDirJob(String execPool, String jobName) {
+    public SubInfo makeRemoveDirJob( String site, String jobName ) {
+        List l = new LinkedList();
+        l.add( mSiteStore.getWorkDirectory( site ) );
+        
+        return makeRemoveDirJob( site, jobName, l );
+    }
+    
+    /**
+     * It creates a remove directory job that creates a directory on the remote pool
+     * using the perl executable that Gaurang wrote. It access mkdir underneath.
+     * It gets the name of the random directory from the Pool handle.
+     *
+     * @param site      the site from where the files need to be removed.
+     * @param jobName   the name that is to be assigned to the job.
+     * @param files     the files to be removed
+     *
+     * @return the remove dir job.
+     */
+    public SubInfo makeRemoveDirJob( String site, String jobName, List files ) {
         SubInfo newJob  = new SubInfo();
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-//        JobManager jm   = null;
         GridGateway jm = null;
 
         try {
-            entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
-                                              this.TRANSFORMATION_NAME,
-                                              this.TRANSFORMATION_VERSION,
-                                              execPool, TCType.INSTALLED);
+            entries = mTCHandle.getTCEntries( RemoveDirectory.TRANSFORMATION_NAMESPACE,
+                                              RemoveDirectory.TRANSFORMATION_NAME,
+                                              RemoveDirectory.TRANSFORMATION_VERSION,
+                                              site,
+                                              TCType.INSTALLED);
         }
         catch (Exception e) {
             //non sensical catching
@@ -253,7 +284,7 @@ public class RemoveDirectory extends Engine {
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
         entry = ( entries == null ) ?
-                     this.defaultTCEntry( execPool ): //try using a default one
+                     this.defaultTCEntry( site ): //try using a default one
                      (TransformationCatalogEntry) entries.get(0);
 
 
@@ -264,38 +295,58 @@ public class RemoveDirectory extends Engine {
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
                   append( this.getCompleteTranformationName() ).
-                  append(" at site ").append( execPool );
+                  append(" at site ").append( site );
 
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException( error.toString() );
         }
-        execPath = entry.getPhysicalTransformation();
+        if( mTransferFromSubmitHost ){
+            /*
+            //we are using mkdir directly
+            argString = " -p " + mPoolHandle.getExecPoolWorkDir( execPool );
+            execPath  = "mkdir";
+            //path variable needs to be set
+            newJob.envVariables.construct( "PATH", CreateDirectory.PATH_VALUE );
+            */
+            newJob.vdsNS.construct( VDS.GRIDSTART_KEY, "None" );
 
-//        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "transfer");
-//        jm = ePool.selectJobManager("transfer",true);
-        SiteCatalogEntry ePool = mSiteStore.lookup( execPool );
+            StringBuffer sb = new StringBuffer();
+            sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" ).
+               append( File.separator ).append( "dirmanager" );
+            execPath = sb.toString();
+            newJob.condorVariables.construct( "transfer_executable", "true" );
+        }
+        else{
+            execPath = entry.getPhysicalTransformation();
+        }
+
+        SiteCatalogEntry ePool = mSiteStore.lookup( site );
         jm = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
-//        String argString = "--verbose --remove --dir " +
-//            mPoolHandle.getExecPoolWorkDir(execPool);
 
-        String argString = "--verbose --remove --dir " +
-                            mSiteStore.getWorkDirectory( execPool );
+        StringBuffer arguments = new StringBuffer();
+        arguments.append( "--verbose --remove --dir \"" );       
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            arguments.append( it.next() ).append( " " );
+        }
+        arguments.append( "\"" );
         
         newJob.jobName = jobName;
-        newJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
-                                  this.TRANSFORMATION_NAME,
-                                  this.TRANSFORMATION_VERSION );
+        newJob.setTransformation( RemoveDirectory.TRANSFORMATION_NAMESPACE,
+                                  RemoveDirectory.TRANSFORMATION_NAME,
+                                  RemoveDirectory.TRANSFORMATION_VERSION );
 
-        newJob.setDerivation( this.DERIVATION_NAMESPACE,
-                              this.DERIVATION_NAME,
-                              this.DERIVATION_VERSION  );
+        newJob.setDerivation( RemoveDirectory.DERIVATION_NAMESPACE,
+                              RemoveDirectory.DERIVATION_NAME,
+                              RemoveDirectory.DERIVATION_VERSION  );
 
 //        newJob.condorUniverse = "vanilla";
+        
+        
         newJob.setUniverse( GridGateway.JOB_TYPE.cleanup.toString() );
         newJob.globusScheduler = jm.getContact();
         newJob.executable = execPath;
-        newJob.executionPool = execPool;
-        newJob.strargs = argString;
+        newJob.setSiteHandle( site );
+        newJob.setArguments( arguments.toString() );
         newJob.jobClass = SubInfo.CREATE_DIR_JOB;
         newJob.jobID = jobName;
 
@@ -337,7 +388,7 @@ public class RemoveDirectory extends Engine {
         home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
-                     this.getCompleteTranformationName() +
+                     RemoveDirectory.getCompleteTranformationName() +
                      " at site " + site,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -345,7 +396,7 @@ public class RemoveDirectory extends Engine {
         if ( home == null ){
             //cannot create default TC
             mLogger.log( "Unable to create a default entry for " +
-                         this.getCompleteTranformationName(),
+                         RemoveDirectory.getCompleteTranformationName(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
             //set the flag back to true
             return defaultTCEntry;
@@ -360,12 +411,12 @@ public class RemoveDirectory extends Engine {
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( this.TRANSFORMATION_NAME );
+            append( RemoveDirectory.TRANSFORMATION_NAME );
 
 
-        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NAMESPACE,
-                                                         this.TRANSFORMATION_NAME,
-                                                         this.TRANSFORMATION_VERSION );
+        defaultTCEntry = new TransformationCatalogEntry( RemoveDirectory.TRANSFORMATION_NAMESPACE,
+                                                         RemoveDirectory.TRANSFORMATION_NAME,
+                                                         RemoveDirectory.TRANSFORMATION_VERSION );
 
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );
