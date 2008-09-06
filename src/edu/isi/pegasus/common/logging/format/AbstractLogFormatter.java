@@ -15,24 +15,49 @@
  */
 
 
-package edu.isi.pegasus.common.logging;
+package edu.isi.pegasus.common.logging.format;
+
+import edu.isi.pegasus.common.logging.*;
+import java.util.Stack;
 
 /**
- * The interface that defines how the messages need to be formatted for logging
+ * The abstract formatter that implements all of the functions except
+ * the addEvent function
+ * 
  * 
  * @author Karan Vahi
  * @author Gaurang Mehta
  * 
  * @version $Revision$
  */
-public interface LogFormatter {
+public abstract class AbstractLogFormatter implements LogFormatter {
+    
+    /**
+     * The name of the program.
+     */
+    protected String mProgram;
+    
+    /**
+     * The Stack of event objects maintained internally
+     */
+    protected Stack<Event> mStack;
 
+    /**
+     * The default constructor.
+     */
+    public AbstractLogFormatter(){
+        mStack = new Stack<Event>();
+    }
+    
+    
     /**
      * Sets the program name for the software whose log statement are logged.
      * 
      * @param name 
      */
-    public void setProgramName( String name );
+    public void setProgramName( String name ){
+        mProgram = name;
+    }
     
     
     /**
@@ -40,7 +65,9 @@ public interface LogFormatter {
      * 
      * @param name 
      */
-    public String getProgramName( String name );
+    public String getProgramName( String name ){
+        return mProgram;
+    }
     
     /**
      * Adds the event that is to be associated with the log messages onto an
@@ -50,14 +77,16 @@ public interface LogFormatter {
      * @param entityName  the primary entity that is associated with the event e.g. workflow
      * @param entityID    the id of that entity.
      */
-    public void addEvent( String name, String entityName, String entityID );
+    public abstract void addEvent( String name, String entityName, String entityID );
     
     /**
      * Pop the event on top of the internal stack.
      * 
      * @return event on top , else null
      */
-    public Event popEvent();
+    public Event popEvent(){
+        return mStack.pop();
+    }
     
     /**
      * Returns the name of event that is currently associated with the log messages
@@ -65,37 +94,49 @@ public interface LogFormatter {
      * 
      * @return  name of the event.
      */
-    public String getEventName( );
+    public String getEventName( ){
+        return mStack.peek().getEventName();
+    }
+            
     
     /**
      * Creates the start message for the event on top of the internal stack
      * 
      * @return start event message
      */
-    public String getStartEventMessage();
+    public String getStartEventMessage(){
+        return mStack.peek().getStartEventMessage();
+    }
     
     /**
      * Creates the end message for the event on top of the stack.
      * 
      * @return end event message
      */
-    public String getEndEventMessage();
+    public String getEndEventMessage(){
+        return mStack.peek().getEndEventMessage();
+    }
     
     
     /**
-     * Add to the log message.
+     * Add to the log message for the event on the top.
      * 
      * @param key 
      * @param value
      * 
      * @return Self-reference, so calls can be chained
      */
-    public LogFormatter add( String key, String value );
+    public LogFormatter add( String key, String value ){
+        mStack.peek().add( key, value );
+        return this;
+    }
     
     /**
      * Creates a log message with the contents of the internal log buffer.
      */
-    public String createLogMessage();
+    public String createLogMessage(){
+        return mStack.peek().createLogMessage();
+    }
     
     
     /**
@@ -104,7 +145,9 @@ public interface LogFormatter {
      * 
      * @return 
      */
-    public String createLogMessageAndReset();
+    public String createLogMessageAndReset(){
+        return mStack.peek().createLogMessageAndReset();
+    }
     
     
     
