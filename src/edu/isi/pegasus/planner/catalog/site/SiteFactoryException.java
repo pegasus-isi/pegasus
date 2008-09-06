@@ -33,7 +33,7 @@ public class SiteFactoryException extends FactoryException {
     /**
      * The default classname that is associated with the exception.
      */
-    public static final String DEFAULT_NAME = "Transformation Catalog";
+    public static final String DEFAULT_NAME = "Site Catalog";
 
 
     /**

@@ -337,6 +337,8 @@ public class PegasusProperties {
         return sb.toString();
     }
 
+    
+
     /**
      * Gets the handle to the properties file. The singleton instance is
      * invoked if the properties file is null (partly due to the way VDSProperties
@@ -1682,18 +1684,7 @@ public class PegasusProperties {
     }
 
 
-    /**
-     * Return returns the environment string specified for the local pool. If
-     * specified the registration jobs are set with these environment variables.
-     *
-     * Referred to by the "pegasus.local.env" property
-     *
-     * @return the environment string for local pool in properties file if
-     *         defined, else null.
-     */
-    public String getLocalPoolEnvVar() {
-        return mProps.getProperty( "pegasus.local.env" );
-    }
+    
 
     /**
      * Returns a boolean indicating whether to write out the planner metrics
@@ -1724,10 +1715,32 @@ public class PegasusProperties {
         return file;
     }
 
+    /**
+     * Returns the log formatter to use.
+     * 
+     * Referred to by the "pegasus.log.formatter" property.
+     *
+     * @return the value in the properties file, else Simple
+     */
+    public String getLogFormatter() {
+        return mProps.getProperty( "pegasus.log.formatter", "Simple" );
+    }
 
     //SOME MISCELLANEOUS PROPERTIES
 
-
+    /**
+     * Return returns the environment string specified for the local pool. If
+     * specified the registration jobs are set with these environment variables.
+     *
+     * Referred to by the "pegasus.local.env" property
+     *
+     * @return the environment string for local pool in properties file if
+     *         defined, else null.
+     */
+    public String getLocalPoolEnvVar() {
+        return mProps.getProperty( "pegasus.local.env" );
+    }
+    
     /**
      * Returns a boolean indicating whether to have jobs executing on worker
      * node tmp or not.
