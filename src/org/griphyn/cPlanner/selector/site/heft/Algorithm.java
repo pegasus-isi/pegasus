@@ -580,7 +580,15 @@ public class Algorithm {
         int result = -1;
 
         //try and fetch the expected runtime from the Windward AC
-        result = getExpectedRuntimeFromAC( job , entry );
+        double pcresult = getExpectedRuntimeFromAC( job , entry );
+        if( pcresult > 0.0 && pcresult < 1.0 ){
+            mLogger.log( "PC returned a value between 0 and 1" + pcresult, 
+                         LogManager.WARNING_MESSAGE_LEVEL );
+            result = 1;
+        }
+        else{
+            result = (int)pcresult;
+        }
        
 //        if(result == 0){
 //            mLogger.log("PC returned 0 as runtime. Returning 1", LogManager.ERROR_MESSAGE_LEVEL);
@@ -639,8 +647,8 @@ public class Algorithm {
      *
      * @return the runtime in seconds.
      */
-    protected int getExpectedRuntimeFromAC( SubInfo job, TransformationCatalogEntry entry  ){
-        int result = -1;
+    protected double getExpectedRuntimeFromAC( SubInfo job, TransformationCatalogEntry entry  ){
+        double result = -1;
         if( mProcessCatalog == null ){
             return result;
         }
@@ -656,7 +664,7 @@ public class Algorithm {
                      LogManager.DEBUG_MESSAGE_LEVEL );
         return tcs == null || tcs.isEmpty()?
                result:
-               (Integer)((( TransformationCharacteristics )tcs.get(0)).getCharacteristic( TransformationCharacteristics.EXPECTED_RUNTIME ));
+               (Double)((( TransformationCharacteristics )tcs.get(0)).getCharacteristic( TransformationCharacteristics.EXPECTED_RUNTIME ));
     }
 
     /**
