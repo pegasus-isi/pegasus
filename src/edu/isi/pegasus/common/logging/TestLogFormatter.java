@@ -16,6 +16,9 @@
 
 package edu.isi.pegasus.common.logging;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 
 /**
@@ -34,10 +37,18 @@ public class TestLogFormatter {
     public void writeTestLog( LogFormatter fm ){
         fm.setProgramName( "Pegasus" );
             
-            
-        fm.addEvent( "event.pegasus.ranking", LoggingKeys.DAX_ID, "se18-gda.dax" );              
+        String wf = "se18-gda.dax";    
+        List jobs = new ArrayList();
+        jobs.add( "gda-job" );
+        jobs.add( "pattern-matcher-job" );
+        
+        fm.addEvent( "event.pegasus.ranking", LoggingKeys.DAX_ID, wf );              
         System.out.println( fm.getStartEventMessage() );
             
+        System.out.println( fm.createEntityHierarchyMessage( LoggingKeys.DAX_ID, 
+                                                             wf,
+                                                             LoggingKeys.JOB_ID, 
+                                                             jobs) );
         /* nesting events */
         fm.addEvent( "event.pegasus.parsing.dax", LoggingKeys.DAX_ID, "se18-gda-nested.dax" );
         System.out.println( fm.getStartEventMessage() );
@@ -46,9 +57,14 @@ public class TestLogFormatter {
             
         fm.add( LoggingKeys.JOB_ID, "jobGDA" );
         System.out.println( fm.createLogMessage() );
+        fm.add ( "Messs supplied without a key ");
+        System.out.println( fm.createLogMessage() );
+              
         fm.add( LoggingKeys.QUERY_NAME, "getpredicted performace" ).add( "time", "10.00" );
         System.out.println( fm.createLogMessageAndReset() );
             
+        
+        
         System.out.println( fm.getEndEventMessage() );
     }
   

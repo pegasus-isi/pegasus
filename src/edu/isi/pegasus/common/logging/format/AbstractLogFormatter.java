@@ -18,6 +18,7 @@
 package edu.isi.pegasus.common.logging.format;
 
 import edu.isi.pegasus.common.logging.*;
+import java.util.Collection;
 import java.util.Stack;
 
 /**
@@ -31,6 +32,11 @@ import java.util.Stack;
  * @version $Revision$
  */
 public abstract class AbstractLogFormatter implements LogFormatter {
+   
+    /**
+     * The default key to use for logging messages
+     */
+    private static String DEFAULT_KEY = "msg";
     
     /**
      * The name of the program.
@@ -117,6 +123,16 @@ public abstract class AbstractLogFormatter implements LogFormatter {
         return mStack.peek().getEndEventMessage();
     }
     
+    /**
+     * Add to the log message with just  a value.
+     * 
+     * @param value  
+     *  
+     * @return self-reference 
+     */
+    public LogFormatter add( String value ){
+        return this.add( AbstractLogFormatter.DEFAULT_KEY, value );
+    }
     
     /**
      * Add to the log message for the event on the top.
@@ -149,6 +165,23 @@ public abstract class AbstractLogFormatter implements LogFormatter {
         return mStack.peek().createLogMessageAndReset();
     }
     
+    /**
+     * Creates a log message that connects the parent entities with the 
+     * children. For e.g. can we use to create the log messages connecting the 
+     * jobs with the workflow they are part of.
+     * 
+     * @param parentType   the type of parent entity
+     * @param parentID     the id of the parent entity
+     * @param childIdType  the type of children entities
+     * @param childIDs     Collection of children id's
+     * @return
+     */
+    public String createEntityHierarchyMessage( String parentType,
+                                                String parentID,
+                                                String childIdType,
+                                                Collection<String> childIDs ){
+        return mStack.peek().createEntityHierarchyMessage(parentType, parentID, childIdType, childIDs);
+    }
     
     
 }

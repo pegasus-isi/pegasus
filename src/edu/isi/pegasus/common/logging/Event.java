@@ -5,6 +5,8 @@
 
 package edu.isi.pegasus.common.logging;
 
+import java.util.Collection;
+
 /**
  *
  * @author vahi
@@ -88,5 +90,21 @@ public interface Event extends Cloneable{
      * @return 
      */
     public String createLogMessageAndReset();
+    
+    /**
+     * Creates a log message that connects the parent entities with the 
+     * children. For e.g. can we use to create the log messages connecting the 
+     * jobs with the workflow they are part of.
+     * 
+     * @param parentType   the type of parent entity
+     * @param parentID     the id of the parent entity
+     * @param childIdType  the type of children entities
+     * @param childIDs     Collection of children id's
+     * @return
+     */
+    public String createEntityHierarchyMessage( String parentType,
+                                                String parentID,
+                                                String childIdType,
+                                                Collection<String> childIDs );
     
 }

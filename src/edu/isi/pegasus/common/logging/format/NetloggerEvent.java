@@ -16,15 +16,19 @@
 package edu.isi.pegasus.common.logging.format;
 
 import edu.isi.pegasus.common.logging.*;
+
 import edu.isi.ikcap.workflows.util.logging.LogEvent;
 import edu.isi.ikcap.workflows.util.logging.EventLogMessage;
-import edu.isi.ikcap.workflows.util.logging.LoggingKeys;
+
+import java.util.Collection;
 
 
 
 /**
- *
- * @author vahi
+ * The netlogger event.
+ * 
+ * @author Karan Vahi
+ * @version $Revision$
  */
 public class NetloggerEvent implements Event{
     
@@ -41,18 +45,7 @@ public class NetloggerEvent implements Event{
     /**
      * The current log event message.
      */
-    private EventLogMessage mMessage;
-    
-     /*
-      LogEvent event = new LogEvent( "event.pegasus.ranking", "Pegasus", LoggingKeys.DAX_ID, "se18-dax");
-              
-                System.out.println( event.createStartLogMsg() );
-                
-                
-                System.out.println ( event.createLogMsg().add( LoggingKeys.JOB_ID, "jobGDA" ).add( LoggingKeys.QUERY_NAME, "getpredicted performace" ));
-                
-                System.out.println( event.createEndLogMsg() );
-      */          
+    private EventLogMessage mMessage;   
         
     /**
      * The default constructor.
@@ -163,4 +156,21 @@ public class NetloggerEvent implements Event{
         return result;
     }
     
+    /**
+     * Creates a log message that connects the parent entities with the 
+     * children. For e.g. can we use to create the log messages connecting the 
+     * jobs with the workflow they are part of.
+     * 
+     * @param parentType   the type of parent entity
+     * @param parentID     the id of the parent entity
+     * @param childIdType  the type of children entities
+     * @param childIDs     Collection of children id's
+     * @return
+     */
+    public String createEntityHierarchyMessage( String parentType,
+                                                String parentID,
+                                                String childIdType,
+                                                Collection<String> childIDs ){
+        return LogEvent.createIdHierarchyLogMsg( parentType, parentID, childIdType, childIDs.iterator() ).toString();
+    }
 }
