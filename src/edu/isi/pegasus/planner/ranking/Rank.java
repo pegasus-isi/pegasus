@@ -83,6 +83,8 @@ public class Rank {
      */
     public void initialize( PegasusBag bag , List sites , String id ){
         mBag = bag;
+        //set the wings request property
+        mBag.getPegasusProperties().setProperty( "pegasus.wings.request.id", id);
         mLogger = bag.getLogger();
         mHeft = new Algorithm( bag );
         mRequestID = id;
@@ -117,7 +119,7 @@ public class Rank {
                                                  cb );
 
             ADag dag = (ADag)cb.getConstructedObject();
-            dag.setRequestID( mRequestID );
+            //dag.setRequestID( mRequestID );
             mHeft.schedule( dag, mSites );
             runtime = mHeft.getMakespan();
             max = ( runtime > max ) ? runtime : max;

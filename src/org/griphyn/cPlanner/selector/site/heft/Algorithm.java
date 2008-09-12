@@ -208,6 +208,7 @@ public class Algorithm {
      */
     public Algorithm(  PegasusBag bag ) {
         mProps      = ( PegasusProperties ) bag.get( PegasusBag.PEGASUS_PROPERTIES );
+        mRequestID  = mProps.getWingsRequestID();
         mTCHandle   = ( TransformationCatalog )bag.get( PegasusBag.TRANSFORMATION_CATALOG );
         mTCMapper   = ( Mapper )bag.get( PegasusBag.TRANSFORMATION_MAPPER );
         mLogger     = ( LogManager )bag.get( PegasusBag.PEGASUS_LOGMANAGER );
@@ -236,7 +237,6 @@ public class Algorithm {
     public void schedule( ADag dag , List sites ){
         //metadata about the DAG needs to go to Graph object
         mLabel     = dag.getLabel();
-        mRequestID = dag.getRequestID();
 
         //convert the dag into a graph representation
         schedule( Adapter.convert( dag ), sites );
@@ -267,11 +267,11 @@ public class Algorithm {
 				PropertiesHelper.getDCDomain(), 
 				PropertiesHelper.getPCDomain(), null);
             
-            String requestID = mProps.getWingsRequestID();
-            if( requestID == null ){
+            //String requestID = mProps.getWingsRequestID();
+            if( mRequestID == null ){
                 throw new RuntimeException( "Specify the request id by specifying pegasus.wings.request.id property" );
             }
-            result.setRequestId( requestID );
+            result.setRequestId( mRequestID );
 		
         }catch( Exception e ){
             mLogger.log( "Unable to connect to process catalog " + e,
