@@ -236,10 +236,10 @@ public class Algorithm {
      */
     public void schedule( ADag dag , List sites ){
         //metadata about the DAG needs to go to Graph object
-        mLabel     = dag.getLabel();
+        //mLabel     = dag.getLabel();
 
         //convert the dag into a graph representation
-        schedule( Adapter.convert( dag ), sites );
+        schedule( Adapter.convert( dag ), sites, dag.getLabel() );
     }
 
 
@@ -287,9 +287,11 @@ public class Algorithm {
      * @param workflow  the workflow that has to be scheduled.
      * @param sites the list of candidate sites where the workflow can potentially
      *              execute.
-
+     * @param label  the label of the workflow
+     *
      */
-    public void schedule( Graph workflow , List sites ){
+    public void schedule( Graph workflow , List sites, String label ){
+        mLabel = label;
         mWorkflow = workflow;
         populateSiteMap( sites );
 

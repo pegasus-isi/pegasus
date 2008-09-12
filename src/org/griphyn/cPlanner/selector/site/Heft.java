@@ -31,6 +31,8 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import java.util.List;
 import java.util.Iterator;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 /**
  * The HEFT based site selector. The runtime for the job in seconds is picked
@@ -79,6 +81,20 @@ public class Heft extends Abstract {
         mHeftImpl = new Algorithm( bag );
     }
 
+    
+    /**
+     * Maps the jobs in the workflow to the various grid sites.
+     * The jobs are mapped by setting the site handle for the jobs.
+     *
+     * @param workflow   the workflow.
+     *
+     * @param sites     the list of <code>String</code> objects representing the
+     *                  execution sites that can be used.
+     */
+    public void mapWorkflow( ADag workflow, List sites ){
+        this.mapWorkflow(  Adapter.convert( workflow ), sites, workflow.getLabel() );
+    }
+    
     /**
      * Maps the jobs in the workflow to the various grid sites.
      * The jobs are mapped by setting the site handle for the jobs.
@@ -87,11 +103,28 @@ public class Heft extends Abstract {
      *
      * @param sites     the list of <code>String</code> objects representing the
      *                  execution sites that can be used.
+     * 
+     * @param label  the label of the workflow
      */
     public void mapWorkflow( Graph workflow, List sites ){
+        throw new UnsupportedOperationException( "Heft needs the DAX label to work" );
+    }
+    
+    /**
+     * Maps the jobs in the workflow to the various grid sites.
+     * The jobs are mapped by setting the site handle for the jobs.
+     *
+     * @param workflow   the workflow in a Graph form.
+     *
+     * @param sites     the list of <code>String</code> objects representing the
+     *                  execution sites that can be used.
+     * 
+     * @param label  the label of the workflow
+     */
+    public void mapWorkflow( Graph workflow, List sites, String label ){
 
         //schedule the workflow, till i fix the interface
-        mHeftImpl.schedule( workflow, sites );
+        mHeftImpl.schedule( workflow, sites, label );
 
         //get the makespan of the workflow
         mLogger.log( "Makespan of scheduled workflow is " + mHeftImpl.getMakespan() ,
