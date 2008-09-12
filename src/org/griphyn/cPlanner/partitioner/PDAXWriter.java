@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import org.griphyn.cPlanner.common.LogManager;
+import org.griphyn.common.util.Currently;
 
 /**
  * It writes out the partition graph in xml form.
@@ -89,7 +90,7 @@ public class PDAXWriter {
         String name = new File(mFileName).getName();
 
         writeln("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        writeln("<!-- generated: " + mLogger.getTimeStamp() + "-->");
+        writeln("<!-- generated: " + Currently.iso8601(false) + "-->");
         writeln("<pdag xmlns=\""+XML_NAMESPACE+"/PDAX\"" +
                 " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
                 " xsi:schemaLocation=\""+XML_NAMESPACE+"/PDAX " +
