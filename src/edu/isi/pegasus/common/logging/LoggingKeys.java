@@ -41,42 +41,47 @@ public  class LoggingKeys {
     public static final String EVENT_QUERY_DATACATALOG    = "event.query.datacatalog";
 	
     
-    public static String EVENT_PEGASUS_RANKING = "event.ranking";
-    public static String EVENT_PEGASUS_PLAN = "event.pegasus.plan";
-    public static String EVENT_PEGASUS_REDUCE = "event.pegasus.reduce";
-    public static String EVENT_PEGASUS_SITESELECTION = "event.pegasus.siteselection";
-    public static String EVENT_PEGASUS_ADD_TRANSFER_NODES = "event.pegasus.add-transfer-nodes";
-    public static String EVENT_PEGASUS_ADDCLEANUP = "event.pegasus.cleanup";
-    public static String EVENT_PEGASUS_CLUSTER = "event.pegasus.cluster";
-    public static String EVENT_PEGASUS_GENERATECLEANUP = "event.pegasus.generatecleanup";
-	
-    public static String QUERY_NUMBER = "query.number";
-    public static String QUERY_NAME = "query.name";
-    public static String QUERY_INPUT = "query.input";
-    public static String QUERY_OUTPUT = "query.output";
-    public static String QUERY_ID = "query.id";
-    public static String QUERY_ARGUMENTS = "query.arguments";
-    public static String QUERY_RESPONSE = "query.response";
-    public static String FILE_OUTPUT_NAME = "file.output.name";
-    public static String FILE_OUTPUT_CONTENTS = "file.output.contents";
-    public static String FILE_PRIORTY = "file.priorty";
-    public static String FILE_TYPE = "file.type";
-    public static String TIME_START = "time.start";
-    public static String TIME_END = "time.end";
-    public static String SYSTEM_HOSTNAME = "system.hostname";
-    public static String SYSTEM_HOSTADDR = "system.hostaddr";
-    public static String SYSTEM_OS = "system.os";
-    public static String SYSTEM_ARCHITECTURE = "system.architecture";
-    public static String SYSTEM_NODENAME = "system.nodename";
-    public static String SYSTEM_NUMBEROFPROCESSORS = "system.numberOfProcessors";
-    public static String JOB_EXITTCODE = "job.exittcode";
-    public static String JOB_ARGUMENTS = "job.arguments";
-    public static String JOB_ENVIRONMENTVARIABLE = "job.environmentVariable";
-    public static String JOB_RESOURCE_INFORMATION = "job.resource.information";
-    public static String PERFMETRIC_CPU_UTILIZATION = "perfmetric.cpu.utilization";
-    public static String PERFMETRIC_MEMORY_UTILIZATION = "perfmetric.memory.utilization";
-    public static String PERFMETRIC_NETWORK_BANDWIDTH = "perfmetric.network.bandwidth";
-    public static String PERFMETRIC_TIME_DURATION = "perfmetric.time.duration";
+    public static final String EVENT_PEGASUS_RANKING = "event.ranking";
+    public static final String EVENT_PEGASUS_RANKING_RETRIEVE_DAX = "event.ranking.retrive.dax";
+    public static final String EVENT_PEGASUS_PLAN = "event.pegasus.plan";
+    public static final String EVENT_PEGASUS_REDUCE = "event.pegasus.reduce";
+    public static final String EVENT_PEGASUS_SITESELECTION = "event.pegasus.siteselection";
+    public static final String EVENT_PEGASUS_ADD_TRANSFER_NODES = "event.pegasus.add-transfer-nodes";
+    public static final String EVENT_PEGASUS_ADDCLEANUP = "event.pegasus.cleanup";
+    public static final String EVENT_PEGASUS_CLUSTER = "event.pegasus.cluster";
+    public static final String EVENT_PEGASUS_GENERATECLEANUP = "event.pegasus.generatecleanup";
+    
+    public static final String EVENT_PEGASUS_CODE_GENERATION = "event.pegasus.code.generation";
+    public static final String EVENT_PEGASUS_PARTITION = "event.pegasus.partition";
+    public static final String EVENT_PEGASUS_LOAD_TRANSIENT_CACHE = "event.pegasus.load.cache";
+    
+    public static final String QUERY_NUMBER = "query.number";
+    public static final String QUERY_NAME = "query.name";
+    public static final String QUERY_INPUT = "query.input";
+    public static final String QUERY_OUTPUT = "query.output";
+    public static final String QUERY_ID = "query.id";
+    public static final String QUERY_ARGUMENTS = "query.arguments";
+    public static final String QUERY_RESPONSE = "query.response";
+    public static final String FILE_OUTPUT_NAME = "file.output.name";
+    public static final String FILE_OUTPUT_CONTENTS = "file.output.contents";
+    public static final String FILE_PRIORTY = "file.priorty";
+    public static final String FILE_TYPE = "file.type";
+    public static final String TIME_START = "time.start";
+    public static final String TIME_END = "time.end";
+    public static final String SYSTEM_HOSTNAME = "system.hostname";
+    public static final String SYSTEM_HOSTADDR = "system.hostaddr";
+    public static final String SYSTEM_OS = "system.os";
+    public static final String SYSTEM_ARCHITECTURE = "system.architecture";
+    public static final String SYSTEM_NODENAME = "system.nodename";
+    public static final String SYSTEM_NUMBEROFPROCESSORS = "system.numberOfProcessors";
+    public static final String JOB_EXITTCODE = "job.exittcode";
+    public static final String JOB_ARGUMENTS = "job.arguments";
+    public static final String JOB_ENVIRONMENTVARIABLE = "job.environmentVariable";
+    public static final String JOB_RESOURCE_INFORMATION = "job.resource.information";
+    public static final String PERFMETRIC_CPU_UTILIZATION = "perfmetric.cpu.utilization";
+    public static final String PERFMETRIC_MEMORY_UTILIZATION = "perfmetric.memory.utilization";
+    public static final String PERFMETRIC_NETWORK_BANDWIDTH = "perfmetric.network.bandwidth";
+    public static final String PERFMETRIC_TIME_DURATION = "perfmetric.time.duration";
     
     
 }

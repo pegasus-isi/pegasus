@@ -43,7 +43,36 @@ public class LogFormatterFactory {
         "edu.isi.pegasus.common.logging.format";
 
 
+    /**
+     * Holds a singleton instance that is populated via the loadSingletonInstance() 
+     * method.
+     */
+    private static LogFormatter mSingletonInstance;
   
+    /**
+     * Loads the appropriate LogFormatter class as specified by properties.
+     * 
+     * @param implementor  the name of the class implementing LogFormatter
+     *
+     * 
+     * @return handle to the Log Formatter.
+     *
+     * @throws LogFormatterFactoryException that nests any error that
+     *         might occur during the instantiation
+     *
+     * @see #DEFAULT_PACKAGE_NAME
+     */
+    public static LogFormatter loadSingletonInstance( String implementor ) throws
+        LogFormatterFactoryException {
+        
+        return ( mSingletonInstance = ( mSingletonInstance == null )?
+                                        loadInstance( implementor ):  
+                                        mSingletonInstance 
+                );
+            
+  
+    }
+    
     /**
      * Loads the appropriate LogFormatter class as specified by properties.
      * 
@@ -81,8 +110,7 @@ public class LogFormatterFactory {
     /**
      * Loads the Log Formatter specified.
      * 
-     * @param formatImplementor  the name of the class implementing LogFormatter
-     * @param properties          the connection properties.
+     * @param implementor  the name of the class implementing LogFormatter
      *
      * @return handle to the Site Catalog.
      *
