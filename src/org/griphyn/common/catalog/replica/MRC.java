@@ -16,6 +16,7 @@
 
 package org.griphyn.common.catalog.replica;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.common.catalog.ReplicaCatalog;
@@ -107,7 +108,7 @@ public class MRC
      */
     public MRC() {
         mRCList = new LinkedList();
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
     }
 
     /**

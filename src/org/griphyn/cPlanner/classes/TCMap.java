@@ -18,6 +18,7 @@
 
 package org.griphyn.cPlanner.classes;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
@@ -65,7 +66,7 @@ public class TCMap {
      * Default constructor. Initializes the tcmap to 10 lfns.
      */
     public TCMap() {
-        mLogger = LogManager.getInstance();
+        mLogger = LoggerFactory.loadSingletonInstance();
         mTCMap = new HashMap( 10 );
     }
 

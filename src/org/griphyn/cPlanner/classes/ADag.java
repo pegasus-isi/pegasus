@@ -197,6 +197,15 @@ public class ADag extends Data {
         return mRequestID;
     }
 
+    /**
+     * Returns the workflow id
+     * @return
+     */
+    public String getWorkflowID(){
+        StringBuffer id = new StringBuffer();
+        id.append( this.dagInfo.getLabel() ).append( "_" ).append( this.dagInfo.index );
+        return id.toString();
+    }
 
     /**
      * Adds a new PCRelation pair to the Vector of <code>PCRelation</code>

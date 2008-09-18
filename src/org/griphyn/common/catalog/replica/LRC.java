@@ -16,6 +16,7 @@
 
 package org.griphyn.common.catalog.replica;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 import org.griphyn.common.catalog.CatalogException;
@@ -156,7 +157,7 @@ public class LRC implements ReplicaCatalog {
     public LRC() {
         mRLS = null;
         mLRC = null;
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
         mBatchSize = this.RLS_BULK_QUERY_SIZE;
         mTimeout   = Integer.parseInt(this.DEFAULT_LRC_TIMEOUT);
     }
@@ -2721,7 +2722,7 @@ public class LRC implements ReplicaCatalog {
         LRC lrc = new LRC();
         lrc.connect("rls://sukhna.isi.edu");
         String lfn = "test";
-        LogManager.getInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+        LoggerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
 
         /*
         ReplicaCatalogEntry rce = new ReplicaCatalogEntry("gsiftp://sukhna.isi.edu/tmp/test");

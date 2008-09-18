@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.engine;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.LinkedList;
@@ -111,7 +112,7 @@ public class ThreadPool {
         mQueue      = new LinkedList();
         mCurrentNum = new ConditionVariable();
         mProps      = properties;
-        mLogger     = LogManager.getInstance();
+        mLogger     =  LoggerFactory.loadSingletonInstance( properties );
         String poolClass = PoolMode.getImplementingClass(mProps.getPoolMode());
         mPoolHandle = PoolMode.loadPoolInstance(poolClass,mProps.getPoolFile(),
                                                 PoolMode.SINGLETON_LOAD);

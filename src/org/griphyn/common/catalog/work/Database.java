@@ -17,6 +17,7 @@
 
 package org.griphyn.common.catalog.work;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.util.*;
 import java.sql.*;
 
@@ -243,7 +244,7 @@ public class Database
         // make connection defunct
         mConnection = null;
         mStatements = null;
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
     }
 
     /**

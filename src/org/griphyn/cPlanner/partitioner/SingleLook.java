@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.partitioner;
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.vdl.classes.LFN;
@@ -123,8 +124,8 @@ public class SingleLook extends DAXWriter{
         //set the current number of jobs whose information we have
         mCurrentNum = 0;
         if(!mDAXInMemory){
-            mLogger.log("Parsing the original DAX file",
-                        LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, mDaxFile );
+
             //dax is not in memory.
             mJobMap = new java.util.HashMap();
             //Callback takes care of putting dax in memory
@@ -136,8 +137,7 @@ public class SingleLook extends DAXWriter{
             //start the parsing of the dax
             d.parse(mDaxFile);
             mDAXInMemory = true;
-            mLogger.logCompletion("Parsing the original DAX file",
-                                  LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.logEventCompletion();
         }
 
         mPartADAG      = new ADAG(0,index,mPartitionName);
@@ -198,8 +198,8 @@ public class SingleLook extends DAXWriter{
             return false;
         }
         this.close();
-        mLogger.logCompletion("Writing out the DAX File for partition " + partition.getID(),
-                              LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.log("Writing out the DAX File for partition - DONE" + partition.getID(),
+                     LogManager.DEBUG_MESSAGE_LEVEL);
 
 
         //generation was successful

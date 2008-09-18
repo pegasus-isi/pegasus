@@ -64,7 +64,6 @@ public class PegasusGetSites extends Executable{
      */
     public PegasusGetSites(){
         super();
-        mLogger = LogManager.getInstance();
         mLogMsg = new String();
         mVersion = Version.instance().toString();                      
     }

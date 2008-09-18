@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.common;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import java.io.InputStream;
@@ -75,7 +76,7 @@ public class StreamGobbler extends Thread {
     public StreamGobbler(InputStream is, StreamGobblerCallback callback) {
         this.mIPStream = is;
         mCallback      = callback;
-        mLogger        = LogManager.getInstance();
+        mLogger    = LoggerFactory.loadSingletonInstance( );
 
         //set the prompt to nothing
         mPrompt = "";

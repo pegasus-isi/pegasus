@@ -29,6 +29,7 @@ import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
 import edu.isi.ikcap.workflows.util.FactoryException;
 
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
@@ -99,7 +100,7 @@ public class Windward  implements ReplicaCatalog {
      * The default constructor.
      */
     public Windward() {
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
     }
 
     /**

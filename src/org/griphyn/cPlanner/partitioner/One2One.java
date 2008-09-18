@@ -129,8 +129,8 @@ public class One2One extends Partitioner {
             c.cbParents( key, partitionIDs );
             partitionIDs = null;
         }
-        mLogger.logCompletion("Building Relations between partitions ",
-                              LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.log("Building Relations between partitions - DONE",
+                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //we are done with the partitioning
         c.cbDone();

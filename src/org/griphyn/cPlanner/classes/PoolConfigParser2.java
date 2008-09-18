@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.classes;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import java.io.IOException;
@@ -60,7 +61,7 @@ public class PoolConfigParser2 {
      * @throws PoolConfigException
      */
     public PoolConfigParser2(Reader r) throws IOException, PoolConfigException {
-        m_logger  = LogManager.getInstance();
+        m_logger  = LoggerFactory.loadSingletonInstance();
         m_scanner = new PoolConfigScanner(r);
         m_lookAhead = m_scanner.nextToken();
     }

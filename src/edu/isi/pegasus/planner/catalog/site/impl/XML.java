@@ -18,6 +18,8 @@
 
 package edu.isi.pegasus.planner.catalog.site.impl;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
@@ -119,7 +121,7 @@ public class XML extends Parser implements SiteCatalog{
      */
     public XML(){
         super( PegasusProperties.nonSingletonInstance() );
-        mLogger = LogManager.getInstance();
+        mLogger = LoggerFactory.loadSingletonInstance();
         
         mSiteStore = new SiteStore();
     }
@@ -197,7 +199,9 @@ public class XML extends Parser implements SiteCatalog{
         if( this.isClosed() ){
             throw new SiteCatalogException( "Need to connect to site catalog before loading" );
         }
-        mLogger.log( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG , "site-catalog.id", mFilename,
+                                LogManager.DEBUG_MESSAGE_LEVEL );
+        //mLogger.log( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
         
 
         //setting the schema Locations
@@ -207,7 +211,7 @@ public class XML extends Parser implements SiteCatalog{
         String list = XML.SCHEMA_NAMESPACE + " " + schemaLoc;
         setSchemaLocations( list );
         startParser( mFilename );
-        mLogger.logCompletion( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
         
         return mSiteStore.list().size();
     }
@@ -738,7 +742,7 @@ public class XML extends Parser implements SiteCatalog{
      * @return the converted <code>SiteCatalogEntry</code> object.
      */
     private static SiteCatalogEntry convertSiteInfoToSiteCatalogEntry( SiteInfo s ) {
-        LogManager logger = LogManager.getInstance();
+        LogManager logger = LoggerFactory.loadSingletonInstance();
         SiteCatalogEntry site = new SiteCatalogEntry();
         
         /* set the handle */

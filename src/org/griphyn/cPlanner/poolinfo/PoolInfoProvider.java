@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.poolinfo;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.classes.GridFTPServer;
 import org.griphyn.cPlanner.classes.LRC;
 import org.griphyn.cPlanner.classes.PoolConfig;
@@ -170,7 +171,7 @@ public abstract class PoolInfoProvider {
      * the objects would be loaded normally.
      */
     protected void loadSingletonObjects() {
-        mLogger = LogManager.getInstance();
+        mLogger = LoggerFactory.loadSingletonInstance();
         mLogMsg = new String();
         mPoolProvider = new String();
         mProps = PegasusProperties.getInstance();
@@ -193,7 +194,7 @@ public abstract class PoolInfoProvider {
     public void loadNonSingletonObjects( String propFileName ) {
         //these should be invoked in non singleton
         //manner but is not.
-        mLogger = LogManager.getInstance();
+        mLogger = LoggerFactory.loadSingletonInstance();
 
         mLogMsg = new String();
         mPoolProvider = new String();

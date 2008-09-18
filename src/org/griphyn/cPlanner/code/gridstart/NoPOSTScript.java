@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.code.gridstart;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -61,7 +62,7 @@ public class NoPOSTScript implements POSTScript {
      * The default constructor.
      */
     public NoPOSTScript(){
-        mLogger = LogManager.getInstance();
+        //mLogger = LogManager.getInstance();
     }
 
 
@@ -78,6 +79,7 @@ public class NoPOSTScript implements POSTScript {
                             String path,
                             String submitDir ){
         mProps     = properties;
+        mLogger    = LoggerFactory.loadSingletonInstance( properties );
     }
 
     /**

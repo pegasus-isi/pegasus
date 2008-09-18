@@ -278,8 +278,8 @@ public class Horizontal extends BFS{
                 c.cbParents( p.getID(), new ArrayList( parentPartitions ) );
             }
         }
-        mLogger.logCompletion( "Determining relations between partitions",
-                               LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.log( "Determining relations between partitions - DONE",
+                     LogManager.INFO_MESSAGE_LEVEL );
 
 
         //done with the partitioning

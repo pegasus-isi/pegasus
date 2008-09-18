@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.toolkit;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
@@ -62,10 +63,10 @@ public abstract class Executable {
      * The constructor which ends up initialising the PegasusProperties object.
      */
     public Executable() {
+        mProps = PegasusProperties.getInstance();
         //setup logging before doing anything with properties
         setupLogging();
         mLogMsg = new String();
-        mProps = PegasusProperties.getInstance();
         loadProperties();
         mVersion = Version.instance().toString();
     }
@@ -103,7 +104,8 @@ public abstract class Executable {
      */
     protected void setupLogging(){
         //setup the logger for the default streams.
-        mLogger = LogManager.getInstance();
+        mLogger = LoggerFactory.loadSingletonInstance( mProps );
+        mLogger.logEventStart( "pegasus", "planner", mVersion );
 
         //get the logging value set in properties
         //cannot ask for PegasusProperties, as deprecation warnings could be

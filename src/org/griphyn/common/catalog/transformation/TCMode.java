@@ -17,6 +17,7 @@
 
 package org.griphyn.common.catalog.transformation;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.common.catalog.TransformationCatalog;
@@ -50,7 +51,7 @@ public class TCMode {
     public static final String PACKAGE_NAME =
         "org.griphyn.common.catalog.transformation.";
 
-    private static LogManager mLogger = LogManager.getInstance();
+    private static LogManager mLogger =  LoggerFactory.loadSingletonInstance();
 
     //add your constants here.
 

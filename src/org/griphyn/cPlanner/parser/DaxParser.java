@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.parser;
 
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.classes.PegasusFile;
@@ -265,8 +266,7 @@ public class DaxParser extends Parser {
         mLogger.log( "Picking up the dontTransfer and dontRegister flags " + mUseDoubleNegative,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
-        mLogger.log("Parsing the DAX " + daxFileName,
-                    LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, daxFileName );
 
         mCurrentJobSubInfo.condorUniverse = GridGateway.JOB_TYPE.compute.toString(); //default value
 
@@ -281,7 +281,7 @@ public class DaxParser extends Parser {
         mCallback = callback;
 
         startParser(daxFileName);
-        mLogger.logCompletion("Parsing the DAX",LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.logEventCompletion();
     }
 
     /**

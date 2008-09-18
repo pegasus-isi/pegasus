@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.partitioner;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 
@@ -85,7 +86,7 @@ public class Label extends Partitioner {
         super(root, graph, properties);
         mPartitionMap = new HashMap(10);
         mQueue = new LinkedList();
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance( properties );
     }
 
     /**
@@ -179,8 +180,8 @@ public class Label extends Partitioner {
             mLogger.log( "Removed " + node.getID(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
-        mLogger.logCompletion( "Starting Graph Traversal",
-                               LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.log( "Starting Graph Traversal - DONE",
+                      LogManager.INFO_MESSAGE_LEVEL );
 
         for( Iterator it = mPartitionMap.entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = (Map.Entry)it.next();
@@ -217,8 +218,8 @@ public class Label extends Partitioner {
                 c.cbParents( p.getID(), new ArrayList( parentPartitions ) );
             }
         }
-        mLogger.logCompletion( "Determining relations between partitions",
-                               LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.log( "Determining relations between partitions - DONE",
+                      LogManager.INFO_MESSAGE_LEVEL );
 
         //done with the partitioning
         c.cbDone();

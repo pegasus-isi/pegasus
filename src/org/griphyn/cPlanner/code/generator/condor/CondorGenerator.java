@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.code.generator.condor;
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.ADag;
@@ -204,7 +205,6 @@ public class CondorGenerator extends Abstract {
      */
     public CondorGenerator(){
         super();
-        mLogger = LogManager.getInstance();
         mInitializeGridStart = true;
         mStyleFactory     = new CondorStyleFactory();
         mGridStartFactory = new GridStartFactory();
@@ -226,9 +226,9 @@ public class CondorGenerator extends Abstract {
         File wdir = new File(mSubmitFileDir);
         wdir.mkdirs();
 
-
-        mTCHandle = bag.getHandleToTransformationCatalog();
-        mSiteStore  = bag.getHandleToSiteStore();
+        mLogger      = bag.getLogger();
+        mTCHandle    = bag.getHandleToTransformationCatalog();
+        mSiteStore   = bag.getHandleToSiteStore();
         mProjectMap  = constructMap(mProps.getRemoteSchedulerProjects());
         mQueueMap    = constructMap(mProps.getRemoteSchedulerQueues());
         mWalltimeMap = constructMap(mProps.getRemoteSchedulerMaxWallTimes());
@@ -297,7 +297,10 @@ public class CondorGenerator extends Abstract {
         }
 
 
-        mLogger.log("Writing the Condor submit files ", LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CODE_GENERATION,
+                               LoggingKeys.DAG_ID,
+                               dag.getWorkflowID(),
+                               LogManager.DEBUG_MESSAGE_LEVEL);
         for(Iterator it = vSubInfo.iterator();it.hasNext();){
             //get information about each job making the ADag
             SubInfo sinfo = (SubInfo) it.next();
@@ -326,8 +329,7 @@ public class CondorGenerator extends Abstract {
             mLogger.log("Written Submit file : " +
                         getFileBaseName(sinfo), LogManager.DEBUG_MESSAGE_LEVEL);
         }
-        mLogger.logCompletion("Writing the Condor submit files",
-                              LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
 
         //writing the tail of .dag file
         //that contains the relation pairs

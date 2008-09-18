@@ -16,6 +16,7 @@
 
 package org.griphyn.common.catalog.transformation;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.common.catalog.TransformationCatalog;
@@ -97,7 +98,7 @@ public class File
     public static TransformationCatalog getInstance() {
         if (mTCFileHandle == null) {
             PegasusBag bag = new PegasusBag();
-            bag.add( PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance() );
+            bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LoggerFactory.loadSingletonInstance() );
             bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
             mTCFileHandle = new File();
             mTCFileHandle.initialize( bag );
@@ -1155,8 +1156,8 @@ public class File
                     LogManager.DEBUG_MESSAGE_LEVEL);
         writer.flush();
         writer.close();
-        mLogger.logCompletion("Starting to write the TC file",
-                              LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.log( "Starting to write the TC file - DONE",
+                     LogManager.DEBUG_MESSAGE_LEVEL);
     }
 
     /**

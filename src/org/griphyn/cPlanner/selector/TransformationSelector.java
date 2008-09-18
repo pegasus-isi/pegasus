@@ -26,6 +26,7 @@ package org.griphyn.cPlanner.selector;
  *
  */
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.common.util.DynamicLoader;
@@ -41,7 +42,7 @@ public abstract class TransformationSelector {
     protected LogManager mLogger;
 
     public TransformationSelector() {
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
     }
 
     /**

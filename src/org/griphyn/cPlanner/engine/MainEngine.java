@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.engine;
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
@@ -142,7 +143,7 @@ public class MainEngine
             mAuthEng = new AuthenticateEngine( mBag,
                           new java.util.HashSet(mPOptions.getExecutionSites()));
 
-            mLogger.log("Authenticating Sites", LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_AUTHENTICATION, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
             Set authenticatedSet = mAuthEng.authenticate();
             if (authenticatedSet.isEmpty()) {
                 StringBuffer error = new StringBuffer( );
@@ -154,8 +155,7 @@ public class MainEngine
             mLogger.log("Sites authenticated are " +
                         setToString(authenticatedSet, ","),
                         LogManager.DEBUG_MESSAGE_LEVEL);
-            mLogger.logCompletion("Authenticating Sites",
-                                  LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.logEventCompletion();
             mPOptions.setExecutionSites(authenticatedSet);
         }
 
@@ -171,13 +171,12 @@ public class MainEngine
 
         //unmark arg strings
         //unmarkArgs();
-        message = "Doing site selection" ;
-        mLogger.log(message, LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_SITESELECTION, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
         mIPEng = new InterPoolEngine( mReducedDag, mBag );
         mIPEng.determineSites();
         mBag = mIPEng.getPegasusBag();
         mIPEng = null;
-        mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.logEventCompletion();
 
         //intialize the deployment engine
         DeployWorkerPackage deploy = DeployWorkerPackage.loadDeployWorkerPackage( mBag );
@@ -185,8 +184,7 @@ public class MainEngine
 
         //do the node cluster
         if( mPOptions.getClusteringTechnique() != null ){
-            message = "Clustering the jobs in the workflow";
-            mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CLUSTER, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
             mNodeCollapser = new NodeCollapser( mBag );
 
             try{
@@ -197,17 +195,18 @@ public class MainEngine
             }
 
             mNodeCollapser = null;
-            mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.logEventCompletion();
         }
 
 
         message = "Grafting transfer nodes in the workflow";
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );       
         mTransEng = new TransferEngine( mReducedDag, vDelLeafJobs, mBag );
         mTransEng.addTransferNodes( mRCBridge );
         mTransEng = null;
-        mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
-
+        mLogger.logEventCompletion();
+        
         //close the connection to RLI explicitly
         mRCBridge.closeConnection();
 
@@ -221,27 +220,30 @@ public class MainEngine
             //execution pools.
             message = "Grafting the remote workdirectory creation jobs " +
                         "in the workflow";
-            mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
+            //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_WORKDIR, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
             mCreateEng = new CreateDirectory( mBag );
             mCreateEng.addCreateDirectoryNodes( mReducedDag );
             mCreateEng = null;
-            mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.logEventCompletion();
 
             //create the cleanup dag
             message = "Generating the cleanup workflow";
-            mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
+            //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP_WF, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
             mRemoveEng = new RemoveDirectory( mReducedDag, mBag );
             mCleanupDag = mRemoveEng.generateCleanUPDAG();
-            mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
+            mLogger.logEventCompletion();
         }
 
         //add the cleanup nodes in place
         if ( mPOptions.getCleanup() ){ /* should be exposed via command line option */
             message = "Adding cleanup jobs in the workflow";
-            mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
+           // mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
             CleanupEngine cEngine = new CleanupEngine( mBag );
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
-            mLogger.logCompletion( message, LogManager.INFO_MESSAGE_LEVEL );
+            mLogger.logEventCompletion();
             
             //add the cleanup of setup jobs if required
             mReducedDag = deploy.addCleanupNodesForWorkerPackage( mReducedDag );

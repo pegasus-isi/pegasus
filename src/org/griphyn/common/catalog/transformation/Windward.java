@@ -35,6 +35,7 @@ import edu.isi.ikcap.workflows.sr.template.Component;
 
 import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
@@ -87,7 +88,7 @@ public class Windward  implements TransformationCatalog {
      */
     public static TransformationCatalog getInstance() {
         PegasusBag bag = new PegasusBag();
-        bag.add( PegasusBag.PEGASUS_LOGMANAGER, LogManager.getInstance() );
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LoggerFactory.loadSingletonInstance() );
         bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
         TransformationCatalog result = new Windward();
         result.initialize( bag );

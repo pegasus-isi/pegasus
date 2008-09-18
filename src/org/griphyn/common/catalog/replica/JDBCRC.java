@@ -17,6 +17,7 @@
 
 package org.griphyn.common.catalog.replica;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.util.*;
 import java.sql.*;
 import org.griphyn.common.catalog.Catalog;
@@ -224,7 +225,7 @@ public class JDBCRC implements ReplicaCatalog
     // make connection defunc
     mConnection = null;
     mStatements = null;
-    mLogger = LogManager.getInstance();
+    mLogger =  LoggerFactory.loadSingletonInstance();
   }
 
   /**

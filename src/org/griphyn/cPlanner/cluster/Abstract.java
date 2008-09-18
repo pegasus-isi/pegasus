@@ -98,7 +98,7 @@ public abstract class Abstract implements Clusterer {
      * The Abstract constructor.
      */
     public Abstract(){
-        mLogger = LogManager.getInstance();
+        //mLogger = LogManager.getInstance();
         mJobAggregatorFactory = new JobAggregatorInstanceFactory();
     }
 

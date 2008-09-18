@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.code.gridstart;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -67,7 +68,7 @@ public class UserPOSTScript implements POSTScript {
      * The default constructor.
      */
     public UserPOSTScript(){
-        mLogger = LogManager.getInstance();
+        //mLogger = LogManager.getInstance();
     }
 
 
@@ -88,6 +89,7 @@ public class UserPOSTScript implements POSTScript {
 
         mProps     = properties;
         mPOSTScriptPath = path;
+        mLogger    = LoggerFactory.loadSingletonInstance( properties );
 
         if ( path == null ){
             throw new RuntimeException( "Path to user specified postscript not given" );

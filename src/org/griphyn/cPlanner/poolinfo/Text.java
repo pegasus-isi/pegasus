@@ -63,7 +63,7 @@ public class Text
             PoolConfigParser2 p = new PoolConfigParser2( new FileReader(
                 this.mPoolProvider ) );
             mPoolConfig = p.parse();
-            mLogger.logCompletion( msg, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log( msg + " -DONE", LogManager.DEBUG_MESSAGE_LEVEL);
         } catch ( PoolConfigException pce ) {
             mLogger.log( this.mPoolProvider + ": 1" + pce.getMessage(),
                         LogManager.ERROR_MESSAGE_LEVEL );
@@ -104,7 +104,7 @@ public class Text
             PoolConfigParser2 p = new PoolConfigParser2( new FileReader(
                 this.mPoolProvider ) );
             mPoolConfig = p.parse();
-            mLogger.logCompletion( msg,LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log( msg + " -DONE",LogManager.DEBUG_MESSAGE_LEVEL );
         } catch ( PoolConfigException pce ) {
             mLogger.log( this.mPoolProvider + ": 1" + pce.getMessage(),
                         LogManager.ERROR_MESSAGE_LEVEL );

@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.parser.pdax;
 
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
@@ -266,7 +267,7 @@ public class PDAX2MDAG implements Callback {
     public PDAX2MDAG( String directory, PegasusProperties properties, PlannerOptions options) {
         mPDAXDirectory = directory;
         mProps     = properties;
-        mLogger    = LogManager.getInstance();
+        mLogger    =  LoggerFactory.loadSingletonInstance( properties );
         mPOptions  = options;
         mClonedPOptions  = (options == null)? null : (PlannerOptions)options.clone();
         
@@ -1257,7 +1258,7 @@ public class PDAX2MDAG implements Callback {
             StreamGobbler eps = new StreamGobbler(p.getErrorStream(),
                                                   new StreamGobblerCallback(){
                                                       //we cannot log to any of the default stream
-                                                      LogManager mLogger = LogManager.getInstance();
+                                                      LogManager mLogger =  LoggerFactory.loadSingletonInstance();
 
                                                       public void work(String s){
                                                           mLogger.log("Output on stream gobller error stream " +

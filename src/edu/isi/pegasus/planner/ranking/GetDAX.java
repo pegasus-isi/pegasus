@@ -18,6 +18,7 @@
 
 package edu.isi.pegasus.planner.ranking;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 
@@ -97,7 +98,7 @@ public class GetDAX {
      * The default constructor.
      */
     public GetDAX() {
-        mLogger = LogManager.getInstance();
+        mLogger = LoggerFactory.loadSingletonInstance();
         // make connection defunct
         mConnection = null;
         mStatements = null;
@@ -434,7 +435,7 @@ public class GetDAX {
      */
     public static void main( String[] args ){
         GetDAX d = new GetDAX();
-        LogManager.getInstance().setLevel( LogManager.DEBUG_MESSAGE_LEVEL );
+        LoggerFactory.loadSingletonInstance().setLevel( LogManager.DEBUG_MESSAGE_LEVEL );
 
         System.out.println( "Connecting to database " +  d.connect( PegasusProperties.getInstance( ) ) );
 

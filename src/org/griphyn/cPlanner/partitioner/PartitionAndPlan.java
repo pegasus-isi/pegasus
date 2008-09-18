@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.partitioner;
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
 import org.griphyn.cPlanner.parser.dax.Callback;
 
@@ -215,7 +216,7 @@ public class PartitionAndPlan{
         mLogger.log( "Submit Directory for workflow is " + options.getSubmitDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
 
         //now let us run partitiondax
-        mLogger.log( "Partitioning Workflow" , LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARTITION, LoggingKeys.DAX_ID, label );
         PartitionDAX partitionDAX = new PartitionDAX();
         File dir = new File( options.getSubmitDirectory(), "dax" );
         String pdax = partitionDAX.partitionDAX(
@@ -225,7 +226,7 @@ public class PartitionAndPlan{
                                                   options.getPartitioningType() );
 
         mLogger.log( "PDAX file generated is " + pdax , LogManager.DEBUG_MESSAGE_LEVEL );
-        mLogger.logCompletion( "Partitioning Workflow" , LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.logEventCompletion();
 
         //now run pegasus-plan with pdax option
         CPlanner pegasusPlan = new CPlanner();

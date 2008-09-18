@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.poolinfo;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.classes.SiteInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -46,7 +47,7 @@ public class TestSiteCatalog {
      */
     public static void main( String[] args ) {
         PoolInfoProvider catalog = null;
-        LogManager logger = LogManager.getInstance();
+        LogManager logger =  LoggerFactory.loadSingletonInstance();
 
         /* load the catalog using the factory */
         try{

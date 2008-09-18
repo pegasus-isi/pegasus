@@ -18,9 +18,12 @@ package edu.isi.pegasus.planner.client;
 
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import edu.isi.pegasus.planner.ranking.GetDAX;
 import edu.isi.pegasus.planner.ranking.Rank;
 import edu.isi.pegasus.planner.ranking.Ranking;
+
+import edu.isi.pegasus.common.logging.LoggingKeys;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
@@ -275,14 +278,18 @@ public class RankDAX extends Executable {
         Collection daxes;
         GetDAX getDax = new GetDAX();
         try{
-            log( "Writing daxes to directory " + dir,
-                 LogManager.DEBUG_MESSAGE_LEVEL );
+            //log( "Writing daxes to directory " + dir,
+            //     LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_RANKING_RETRIEVE_DAX, 
+                                   LoggingKeys.REQUEST_ID, 
+                                   mRequestID );
             getDax.connect( mProps );
             daxes = getDax.get( mRequestID, dir.getAbsolutePath() );
             mLogger.log( "Number of DAX'es retrieved  " + daxes.size(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
-            mLogger.logCompletion( "Writing daxes to directory " + dir,
-                                   LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.logEventCompletion( );
+            mLogger.log( "Writing daxes to directory " + dir,
+                          LogManager.DEBUG_MESSAGE_LEVEL);
         }
         finally{
             getDax.close();

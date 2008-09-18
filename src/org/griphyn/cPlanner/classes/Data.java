@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.classes;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Set;
@@ -37,7 +38,7 @@ public abstract class Data implements Cloneable {
      *
      * @see org.griphyn.cPlanner.common.LogManager
      */
-    public LogManager mLogger = LogManager.getInstance();
+    public LogManager mLogger = LoggerFactory.loadSingletonInstance( );
 
     /**
      * The String which stores the message to be stored.

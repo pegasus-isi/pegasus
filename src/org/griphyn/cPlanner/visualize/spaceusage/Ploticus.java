@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.visualize.spaceusage;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import java.util.List;
@@ -101,7 +102,7 @@ public class Ploticus implements Plot {
      *
      */
     public Ploticus(){
-        mLogger    = LogManager.getInstance();
+        mLogger    =  LoggerFactory.loadSingletonInstance();
         mDirectory = ".";
         mBasename  = "ploticus" ;
         mNumFormatter = new DecimalFormat( "0.000" );

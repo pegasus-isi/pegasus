@@ -39,7 +39,18 @@ public  class Simple extends AbstractLogFormatter {
     }
     
     
-   
+   /**
+     * Add to the log message with just  a value.
+     * 
+     * @param value  
+     *  
+     * @return self-reference 
+     */
+    @Override
+    public LogFormatter add( String value ){
+        return this.add( "", value );
+    }
+    
     
     /**
      * Adds the event that is to be associated with the log messages onto an

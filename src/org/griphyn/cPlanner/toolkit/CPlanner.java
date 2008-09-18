@@ -18,6 +18,7 @@
 package org.griphyn.cPlanner.toolkit;
 
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
@@ -478,7 +479,7 @@ public class CPlanner extends Executable{
             catch ( Exception e ){
                 throw new RuntimeException( "Unable to generate code", e );
             }
-            mLogger.logCompletion( message, LogManager.INFO_MESSAGE_LEVEL );
+            mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
 
             //create the submit files for cleanup dag if
             //random dir option specified
@@ -504,7 +505,7 @@ public class CPlanner extends Executable{
                     throw new RuntimeException( "Unable to generate code", e );
                 }
 
-                mLogger.logCompletion(message,LogManager.INFO_MESSAGE_LEVEL);
+                mLogger.log(message + " -DONE",LogManager.INFO_MESSAGE_LEVEL);
             }
 
             //log entry in to the work catalog
@@ -822,7 +823,8 @@ public class CPlanner extends Executable{
         mLogger.log( "Submit Directory for workflow is " + options.getSubmitDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
 
         //now let us run partitiondax
-        mLogger.log( "Partitioning Workflow" , LogManager.INFO_MESSAGE_LEVEL );
+        //mLogger.log( "Partitioning Workflow" , LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARTITION, LoggingKeys.DAX_ID, options.getDAX() );
         PartitionDAX partitionDAX = new PartitionDAX();
         File dir = new File( options.getSubmitDirectory(), "dax" );
         String pdax = partitionDAX.partitionDAX(
@@ -832,8 +834,8 @@ public class CPlanner extends Executable{
                                                   options.getPartitioningType() );
 
         mLogger.log( "PDAX file generated is " + pdax , LogManager.DEBUG_MESSAGE_LEVEL );
-        mLogger.logCompletion( "Partitioning Workflow" , LogManager.INFO_MESSAGE_LEVEL );
-
+        mLogger.logEventCompletion();
+                
         //now run pegasus-plan with pdax option
         CPlanner pegasusPlan = new CPlanner();
         options.setDAX( null );

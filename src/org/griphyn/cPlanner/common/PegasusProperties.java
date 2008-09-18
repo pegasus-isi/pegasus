@@ -17,7 +17,6 @@ package org.griphyn.cPlanner.common;
 
 import org.griphyn.cPlanner.classes.NameValue;
 
-import org.griphyn.cPlanner.poolinfo.PoolMode;
 
 import org.griphyn.common.catalog.transformation.TCMode;
 
@@ -167,7 +166,7 @@ public class PegasusProperties {
     /**
      * The Logger object.
      */
-    private LogManager mLogger;
+//    private LogManager mLogger;
 
     /**
      * The String containing the messages to be logged.
@@ -273,7 +272,7 @@ public class PegasusProperties {
      *                       from $PEGASUS_HOME/etc/ directory.
      */
     private PegasusProperties( String propertiesFile ) {
-        mLogger = LogManager.getInstance();
+//        mLogger = LogManager.getInstance();
         mDeprecatedProperties   = new HashSet(5);
         initializePropertyFile( propertiesFile );
         mPegasusHome = mProps.getPegasusHome();
@@ -358,11 +357,13 @@ public class PegasusProperties {
                 VDSProperties.nonSingletonInstance( propertiesFile );
         } catch ( IOException e ) {
             mLogMsg = "unable to read property file: " + e.getMessage();
-            mLogger.log( mLogMsg , LogManager.FATAL_MESSAGE_LEVEL);
+            System.err.println( mLogMsg );
+//            mLogger.log( mLogMsg , LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 1 );
         } catch ( MissingResourceException e ) {
             mLogMsg = "You forgot to set -Dpegasus.home=$PEGASUS_HOME!";
-            mLogger.log( mLogMsg , LogManager.FATAL_MESSAGE_LEVEL);
+            System.err.println( mLogMsg );
+//            mLogger.log( mLogMsg , LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 1 );
         }
 
@@ -1658,6 +1659,29 @@ public class PegasusProperties {
     }
 
     //SOME LOGGING PROPERTIES
+    
+    /**
+     * Returns the log manager to use.
+     * 
+     * Referred to by the "pegasus.log.manager" property.
+     *
+     * @return the value in the properties file, else Default
+     */
+    public String getLogManager() {
+        return mProps.getProperty( "pegasus.log.manager", "Default" );
+    }
+    
+    /**
+     * Returns the log formatter to use.
+     * 
+     * Referred to by the "pegasus.log.formatter" property.
+     *
+     * @return the value in the properties file, else Simple
+     */
+    public String getLogFormatter() {
+        return mProps.getProperty( "pegasus.log.formatter", "Simple" );
+    }
+    
     /**
      * Returns the file to which all the logging needs to be directed to.
      *
@@ -1715,16 +1739,7 @@ public class PegasusProperties {
         return file;
     }
 
-    /**
-     * Returns the log formatter to use.
-     * 
-     * Referred to by the "pegasus.log.formatter" property.
-     *
-     * @return the value in the properties file, else Simple
-     */
-    public String getLogFormatter() {
-        return mProps.getProperty( "pegasus.log.formatter", "Simple" );
-    }
+    
 
     //SOME MISCELLANEOUS PROPERTIES
 
@@ -2108,7 +2123,8 @@ public class PegasusProperties {
             sb.append( "The property " ).append( deprecatedProperty ).
                 append( " has been deprecated. Use " ).append( newProperty ).
                 append( " instead." );
-            mLogger.log(sb.toString(),LogManager.WARNING_MESSAGE_LEVEL );
+//            mLogger.log(sb.toString(),LogManager.WARNING_MESSAGE_LEVEL );
+            System.err.println( "[WARNING] " + sb.toString() );
 
             //push the property in to indicate it has already been
             //warned about

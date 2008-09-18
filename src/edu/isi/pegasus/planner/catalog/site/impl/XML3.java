@@ -18,6 +18,8 @@
 
 package edu.isi.pegasus.planner.catalog.site.impl;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -78,7 +80,7 @@ public class XML3 implements SiteCatalog {
      * The default constructor.
      */
     public XML3(){
-        mLogger = LogManager.getInstance();
+        mLogger = LoggerFactory.loadSingletonInstance();
         //mSiteMap = new HashMap<String,SiteCatalogEntry>();
     }
     
@@ -156,9 +158,11 @@ public class XML3 implements SiteCatalog {
             throw new SiteCatalogException( "Need to connect to site catalog before loading" );
         }
         mParser = new SiteCatalogParser( sites );
-        mLogger.log( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
+        //mLogger.log( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
+         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG , "site-catalog.id", mFilename,
+                                LogManager.DEBUG_MESSAGE_LEVEL );
         mParser.startParser( mFilename );        
-        mLogger.logCompletion( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
         mSiteStore = mParser.getSiteStore();
         return mSiteStore.list().size();
     }

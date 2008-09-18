@@ -18,6 +18,7 @@
 
 package org.griphyn.cPlanner.parser;
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import org.griphyn.cPlanner.classes.PoolConfig;
 import org.griphyn.cPlanner.classes.GlobusVersion;
 import org.griphyn.cPlanner.classes.GridFTPServer;
@@ -88,9 +89,9 @@ public class ConfigXmlParser extends Parser {
     public ConfigXmlParser( String configFileName, PegasusProperties properties ) {
         super( properties );
 
-        mLogger.log("Parsing the site catalog "/* +
-                    configFileName*/,LogManager.INFO_MESSAGE_LEVEL);
-
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG, "site-catalog.id", configFileName,
+                                LogManager.DEBUG_MESSAGE_LEVEL );
+        
         //setting the schema Locations
         String schemaLoc = getSchemaLocation();
         mLogger.log( "Picking schema for site catalog" + schemaLoc,
@@ -98,7 +99,7 @@ public class ConfigXmlParser extends Parser {
         String list = ConfigXmlParser.SCHEMA_NAMESPACE + " " + schemaLoc;
         setSchemaLocations( list );
         startParser( configFileName );
-        mLogger.logCompletion("Parsing the site catalog",LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.logEventCompletion();
 
     }
 

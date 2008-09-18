@@ -22,6 +22,11 @@ import org.apache.log4j.Level;
 import java.io.File;
 import java.io.IOException;
 
+import edu.isi.pegasus.common.logging.LogFormatter;
+
+import edu.isi.pegasus.common.logging.LoggerFactory;
+import java.util.Properties;
+
 
 /**
  * The logging class that to log messages at different levels.
@@ -62,6 +67,19 @@ import java.io.IOException;
  * @version $Revision$
  */
 public abstract class LogManager {
+    
+    /**
+     * The version of the Logging API
+     */
+    public static final String VERSION = "2.0";
+    
+    /**
+     * Prefix for the property subset to use with the LogManager
+     */
+    public static final String PROPERTIES_PREFIX = "pegasus.log.manager";
+    
+    public static final String MESSAGE_DONE_PREFIX = " -DONE";
+
 
     //level  constants that loosely match Log4J and are used
     //to generate the appropriate mask values.
@@ -101,7 +119,17 @@ public abstract class LogManager {
     /**
      * Ensures only one object is created always. Implements the Singleton.
      */
-    private static LogManager logger;
+    private static LogManager mLogger;
+    
+    /**
+     * The default Logger
+     */
+    public static final String DEFAULT_LOGGER = "Default";
+    
+    /**
+     * The Log4j logger.
+     */
+    public static final String LOG4J_LOGGER = "Log4j";
 
     /**
      * The debug level. Higher the level the more the detail is logged. At present
@@ -110,28 +138,64 @@ public abstract class LogManager {
      */
     protected int mDebugLevel;
 
+    /**
+     * The LogFormatter to use to format the message.
+     */
+    protected LogFormatter mLogFormatter;
  
 
     /**
      * The constructor.
      */
-    protected LogManager(){
+    public LogManager(){
         mDebugLevel    = 0;
-        
     }
+    
+    /**
+     * To get a reference to the the object.
+     *
+     * 
+     * 
+     * @return a singleton access to the object.
+     */
+   /* public static LogManager getInstance( ){
+        return getInstance( "Log4j", "Simple" );
+    }
+    * /
 
     /**
      * To get a reference to the the object.
      *
+     * @param logger   the logger to use for logging
+     * @param formatter the log formatter to use for formatting messages
+     * 
      * @return a singleton access to the object.
      */
-    public static LogManager getInstance(){
-        if(logger == null){
-            logger = new DefaultLogger();
+    public static LogManager getInstance( String logger, String formatter ){
+        if(mLogger == null){
+            mLogger = LoggerFactory.loadSingletonInstance(  PegasusProperties.nonSingletonInstance() );
+            /*if( logger == null || logger.equals( DEFAULT_LOGGER ) ){
+                mLogger = new Default();
+            }
+            else if( logger.equals( LOG4J_LOGGER )){
+                mLogger = new Log4j();
+            }
+            else{
+                throw new RuntimeException( "Unknown Logger Implementation Specified" + logger );
+            }
+            */
         }
-        return logger;
+        return mLogger;
     }
-
+    
+    /**
+     * Sets the log formatter to use for formatting the messages.
+     * 
+     * @param formatter  the formatter to use.
+     * @param properties  properties that the underlying implementations understand
+     */
+    public abstract void initialize( LogFormatter formatter, Properties properties );
+    
     /**
      * Checks the destination location for existence, if it can
      * be created, if it is writable etc.
@@ -283,16 +347,28 @@ public abstract class LogManager {
     public abstract void setWriters( String out );
 
     /**
-     * Sets both the output writer and the error writer to the same
-     * underlying writer.
-     *
-     * Note: The previous stream is not closed automatically.
-     *
-     * @param err  the stream to which error messages are to be logged.
+     * Log the message represented by the internal log buffer.
+     * The log buffer is populated via the add methods.
+     * 
+     * @param level    the level on which the message has to be logged.
      */
-    //public abstract void setWriters(OutputStream err);
-
-
+    public  void log( int level ){
+        this.log( mLogFormatter.createLogMessage(), level );
+    }
+    
+    
+    /**
+     * Creates a log message with the contents of the internal log buffer.
+     * The log buffer is populated via the add methods.
+     * It then resets the buffer before logging the log message
+     * 
+     * 
+     * @param level    the level on which the message has to be logged.
+     */
+    public  void logAndReset( int level ){
+        this.log( mLogFormatter.createLogMessageAndReset(), level );
+    }
+    
     /**
      * Logs the exception on the appropriate queue if the level of the message
      * is less than or equal to the level set for the Logger. For INFO level
@@ -309,6 +385,13 @@ public abstract class LogManager {
     public abstract void log(String message, Exception e,int level);
 
 
+    
+    
+    /**
+     * A stop gap function .
+     */
+    protected abstract void logAlreadyFormattedMessage( String message, int level );
+    
     /**
      * Logs the message on the appropriate queue if the level of the message
      * is less than or equal to the level set for the Logger. For INFO level
@@ -321,20 +404,83 @@ public abstract class LogManager {
      * @see #setLevel(int)
      * @see #log(String,int,boolean)
      */
-    public abstract void log ( String message, int level);
-
+    public  void log ( String message, int level){
+        mLogFormatter.add( message );
+        this.logAlreadyFormattedMessage( mLogFormatter.createLogMessageAndReset(), level);
+    }
     
-
-
-     /**
+    /**
+     * Log an event start message to INFO level
+     * 
+     * @param name        the name of the event to be associated
+     * @param entityName  the primary entity that is associated with the event e.g. workflow
+     * @param entityID    the id of that entity.
+     */
+    public  void logEventStart( String name, String entityName, String entityID  ){
+        logEventStart( name, entityName, entityID , LogManager.INFO_MESSAGE_LEVEL );
+    }
+    
+    /**
+      * Log an event start message.
+      * 
+      * @param name        the name of the event to be associated
+      * @param entityName  the primary entity that is associated with the event e.g. workflow
+      * @param entityID    the id of that entity.
+      * @param level       the level at which event needs to be logged.
+      */
+    public void logEventStart( String name, String entityName, String entityID , int level ){
+       mLogFormatter.addEvent( name, entityName, entityID );
+       this.logAlreadyFormattedMessage( mLogFormatter.getStartEventMessage() , level );
+    }
+    
+    
+    /**
       * Logs the completion message on the basis of the debug level.
       *
-      * @param message the message to be logged.
+      * 
+      */ 
+    public  void logEventCompletion( ){
+        //this.log( LogManager.INFO_MESSAGE_LEVEL );
+        this.logEventCompletion( LogManager.INFO_MESSAGE_LEVEL );
+    }
+    
+    /**
+      * Logs the completion message on the basis of the debug level.
+      *
       * @param level  the debug level of the start message for whose completion
       *                    you want.
       */
-     public abstract void logCompletion(String message,int level);
+    public abstract void logEventCompletion( int level );
 
 
-   
+    /**
+     * Add to the internal log buffer message  a value with the default key.
+     * The buffer is logged later when the log() method is called.
+     * 
+     * @param value  
+     *  
+     * @return self-reference 
+     */
+    public LogManager add( String value ){
+        add( "msg", value );
+        return this;
+    }
+    
+    /**
+     * Add to the internal log buffer message  a value with the  key oassed
+     * The buffer is logged later when the log() method is called.
+     * 
+     * 
+     * @param key 
+     * @param value
+     * 
+     * @return Self-reference, so calls can be chained
+     */
+    public LogManager add( String key, String value ){
+        mLogFormatter.add( key, value );
+        return this;
+    }
+    
+    
+    
 }

@@ -18,6 +18,7 @@
 
 package edu.isi.pegasus.planner.parser;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import edu.isi.pegasus.planner.catalog.classes.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.OS;
 
@@ -938,7 +939,7 @@ public class SiteCatalogParser extends Parser {
      * @param args
      */
     public static void main( String[] args ){
-        LogManager.getInstance().setLevel( 5 );
+        LoggerFactory.loadSingletonInstance().setLevel( 5 );
         List s = new ArrayList(1);
         s.add( "*" );
         SiteCatalogParser parser = new SiteCatalogParser( s );

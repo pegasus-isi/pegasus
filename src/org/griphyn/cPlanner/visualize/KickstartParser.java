@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.visualize;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.vdl.util.ChimeraProperties;
@@ -84,7 +85,7 @@ public class KickstartParser {
      * The default constructor.
      */
     public KickstartParser(){
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
     }
 
 
@@ -96,7 +97,7 @@ public class KickstartParser {
      */
     public void setCallback( Callback c ){
         mCallback = c;
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
     }
 
     /**

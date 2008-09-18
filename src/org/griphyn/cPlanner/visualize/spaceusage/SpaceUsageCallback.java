@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.visualize.spaceusage;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.common.util.Currently;
@@ -106,7 +107,7 @@ public class SpaceUsageCallback implements Callback {
      */
     public SpaceUsageCallback() {
         mSpaceStore = new SpaceUsage();
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
         mUseStatInfo = false;
         mJobOutSize = 0;
         mJobInSize = 0;

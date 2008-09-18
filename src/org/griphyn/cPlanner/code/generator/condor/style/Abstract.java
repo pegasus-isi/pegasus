@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.code.generator.condor.style;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import org.griphyn.cPlanner.code.generator.condor.CondorStyle;
@@ -59,7 +60,7 @@ public abstract class Abstract implements CondorStyle {
      * The default constructor.
      */
     public Abstract() {
-        mLogger = LogManager.getInstance();
+        //mLogger = LogManager.getInstance();
     }
 
 
@@ -77,7 +78,7 @@ public abstract class Abstract implements CondorStyle {
 
         mProps = properties;
         mSiteStore = siteStore;
-
+        mLogger = LoggerFactory.loadSingletonInstance( properties );
     }
 
 

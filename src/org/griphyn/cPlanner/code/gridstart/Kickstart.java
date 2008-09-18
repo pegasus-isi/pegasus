@@ -237,12 +237,12 @@ public class Kickstart implements GridStart {
 
         mProps        = bag.getPegasusProperties();
         mPOptions     = bag.getPlannerOptions();
+        mLogger       = bag.getLogger();
         mSubmitDir    = mPOptions.getSubmitDirectory();
         mInvokeAlways = mProps.useInvokeInGridStart();
         mInvokeLength = mProps.getGridStartInvokeLength();
         mDoStat       = mProps.doStatWithKickstart();
         mGenerateLOF  = mProps.generateLOFFiles();
-        mLogger       = LogManager.getInstance();
         mConcDAG      = dag;
         mSiteStore    = bag.getHandleToSiteStore();
         mTCHandle     = bag.getHandleToTransformationCatalog();

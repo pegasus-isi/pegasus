@@ -18,6 +18,7 @@
 package org.griphyn.cPlanner.engine;
 
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.classes.AuthenticateRequest;
 
 import org.griphyn.cPlanner.common.LogManager;
@@ -104,7 +105,7 @@ public class Authenticate {
      */
     public Authenticate( PegasusProperties properties, PoolInfoProvider poolHandle ) {
         mPoolHandle = poolHandle;
-        mLogger     = LogManager.getInstance();
+        mLogger     =  LoggerFactory.loadSingletonInstance( );
         mProps      = properties;
         mTimeout    = (mProps.getGridFTPTimeout() == null)?
                       this.TIMEOUT_VALUE:
@@ -185,7 +186,7 @@ public class Authenticate {
     public boolean authenticateJobManager(String contact){
         boolean val = true;
         try{
-            mLogger.log("Authenticating " + contact,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log( "Authenticating " + contact, LogManager.DEBUG_MESSAGE_LEVEL);
 
             if(mCredential == null){
                 //try authenticating the default credential
@@ -215,7 +216,7 @@ public class Authenticate {
             val = false;
         }
         finally{
-            mLogger.logCompletion("Authenticating ",LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("Authenticating completed for " + contact,LogManager.DEBUG_MESSAGE_LEVEL);
         }
         return val;
     }

@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.classes;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import java.util.Map;
@@ -48,7 +49,7 @@ public class PoolConfig {
      * The default constructor.
      */
     public PoolConfig() {
-        mLogger     = LogManager.getInstance();
+        mLogger     = LoggerFactory.loadSingletonInstance();
         mSiteCatalog = new HashMap(20);
     }
 

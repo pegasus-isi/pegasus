@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.visualize.nodeusage;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.common.util.Currently;
@@ -122,7 +123,7 @@ public class NodeUsageCallback implements Callback {
         mWFMeasurements = new WorkflowMeasurements();
         mJMStore        = new HashMap();
         mNumJobsStore   = new HashMap();
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
     }
 
     /**

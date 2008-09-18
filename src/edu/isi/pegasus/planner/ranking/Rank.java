@@ -71,7 +71,7 @@ public class Rank {
      * The default constructor.
      */
     public Rank() {
-        mLogger = LogManager.getInstance();
+        
     }
 
     /**

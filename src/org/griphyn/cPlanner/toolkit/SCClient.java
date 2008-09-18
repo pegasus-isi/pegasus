@@ -284,8 +284,8 @@ public class SCClient
                 PoolConfigParser2 p = new PoolConfigParser2( new FileReader(
                     filename ) );
                 mConfig.add(p.parse());
-                mLogger.logCompletion("Reading " + filename,
-                                      LogManager.INFO_MESSAGE_LEVEL);
+                mLogger.log( "Reading " + filename + " -DONE",
+                             LogManager.INFO_MESSAGE_LEVEL);
             } catch ( PoolConfigException pce ) {
                 mLogger.log( filename + ": " + pce.getMessage() ,
                              LogManager.ERROR_MESSAGE_LEVEL);

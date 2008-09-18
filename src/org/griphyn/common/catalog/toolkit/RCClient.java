@@ -16,6 +16,7 @@
 
 package org.griphyn.common.catalog.toolkit;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.io.*;
 import java.lang.reflect.*;
 import java.sql.*;
@@ -190,7 +191,7 @@ public class RCClient extends Toolkit
     m_total_lines_succ_worked  = 0;
     // private logger
     m_log = Logger.getLogger( RCClient.class );
-    m_rls_logger = LogManager.getInstance();
+    m_rls_logger =  LoggerFactory.loadSingletonInstance();
     m_log.debug( "starting instance" );
     determineChunkFactor();
   }

@@ -31,7 +31,7 @@ public class SimpleEvent implements Event{
     /**
      * This is used to format the time stamp.
      */
-    private static final Currently DATE_FORMATTER = new Currently( "yyyy.MM.dd HH:mm:ss.SSS zzz: " );
+    //private static final Currently DATE_FORMATTER = new Currently( "yyyy.MM.dd HH:mm:ss.SSS zzz: " );
 
     /**
      * The name of the program.
@@ -108,8 +108,8 @@ public class SimpleEvent implements Event{
      */
     public String getStartEventMessage(){
         StringBuffer message = new StringBuffer();
-        message.append( DATE_FORMATTER.now() ).append( " " ).
-                append( mEventBuffer ).
+        message./*append( DATE_FORMATTER.now() ).append( " " ).*/
+                append( mEventBuffer.toString() ).
                 append( " - STARTED ");
         return message.toString();
     }
@@ -122,7 +122,7 @@ public class SimpleEvent implements Event{
      */
     public String getEndEventMessage(){
         StringBuffer message = new StringBuffer();
-        message.append( DATE_FORMATTER.now() ).append( " " ).
+        message./*append( DATE_FORMATTER.now() ).append( " " ).*/
                 append( mEventBuffer ).
                 append( " - FINISHED ");
         return message.toString();
@@ -156,7 +156,7 @@ public class SimpleEvent implements Event{
      */
     public String createLogMessage(){
         StringBuffer message = new StringBuffer();
-        return message.append( DATE_FORMATTER.now() ).append( " " ).append( mLogBuffer ).toString();
+        return message./*append( DATE_FORMATTER.now() ).append( " " )*/append( mLogBuffer ).toString();
     }
     
     
@@ -188,7 +188,7 @@ public class SimpleEvent implements Event{
                                                 String childIdType,
                                                 Collection<String> childIDs ){
         StringBuffer result = new StringBuffer();
-        result.append( DATE_FORMATTER.now() ).append( " " );
+        //result.append( DATE_FORMATTER.now() ).append( " " );
         result.append( parentType ).append( "<" ).append( parentID ).append( ">" ).
                append( " -> ").append( childIdType ).append( "<" );
         for( String child: childIDs ){

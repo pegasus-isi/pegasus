@@ -75,7 +75,6 @@ public class Stork extends Abstract {
      */
     public Stork(){
         super();
-        mLogger = LogManager.getInstance();
     }
 
     /**
@@ -87,6 +86,7 @@ public class Stork extends Abstract {
      */
     public void initialize( PegasusBag bag ) throws CodeGeneratorException{
         super.initialize( bag );
+        mLogger = bag.getLogger();
 //        mCredName = mProps.getCredName();
     }
 

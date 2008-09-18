@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.code.gridstart;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -92,7 +93,7 @@ public abstract class VDSPOSTScript implements POSTScript {
      * The default constructor.
      */
     public VDSPOSTScript(){
-        mLogger = LogManager.getInstance();
+        //mLogger = LogManager.getInstance();
     }
 
     /**
@@ -109,6 +110,7 @@ public abstract class VDSPOSTScript implements POSTScript {
                             String submitDir ){
         mProps     = properties;
         mSubmitDir = submitDir;
+        mLogger    = LoggerFactory.loadSingletonInstance( properties );
 
         //construct the exitcode paths and arguments
         mExitParserPath       = (path == null ) ? getDefaultExitCodePath() : path;

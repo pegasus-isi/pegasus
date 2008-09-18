@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.classes;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.common.classes.SysInfo;
 
 import org.griphyn.cPlanner.common.PegRandom;
@@ -464,7 +465,7 @@ public class SiteInfo {
         }
         catch (Exception e) {
             //wonder why gaurang throws it
-            LogManager.getInstance().
+            LoggerFactory.loadSingletonInstance().
                 log("Exception while removing jobmanager:" + e.getMessage(),
                     LogManager.ERROR_MESSAGE_LEVEL);
             return false;
@@ -495,7 +496,7 @@ public class SiteInfo {
         }
         catch(Exception e){
             //wonder why gaurang throws it
-            LogManager.getInstance().log(
+            LoggerFactory.loadSingletonInstance().log(
                 "Exception while removing jobmanager:" + e.getMessage(),
                 LogManager.ERROR_MESSAGE_LEVEL);
             return false;

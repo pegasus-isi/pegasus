@@ -16,6 +16,7 @@
 
 package org.griphyn.cPlanner.partitioner;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -69,7 +70,7 @@ public class PDAXWriter {
      * @param fileName  the path to the xml file that has to be written.
      */
     public PDAXWriter(String name, String fileName) {
-        mLogger   = LogManager.getInstance();
+        mLogger   =  LoggerFactory.loadSingletonInstance();
         mFileName = fileName;
         mName     = name;
 

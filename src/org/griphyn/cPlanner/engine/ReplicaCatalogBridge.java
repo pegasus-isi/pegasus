@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.engine;
 
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
@@ -181,6 +182,8 @@ public class ReplicaCatalogBridge
      */
     private boolean mDefaultTCRCCreated;
 
+    private ADag mDag;
+    
 
     /**
      * The overloaded constructor.
@@ -224,7 +227,7 @@ public class ReplicaCatalogBridge
     public void initialize( ADag dag ,
                             PegasusProperties properties,
                             PlannerOptions options ){
-
+                            
         mProps = properties;
         mPOptions = options;
         mRCDown = false;
@@ -766,8 +769,9 @@ public class ReplicaCatalogBridge
                                                               ReplicaCatalog.c_prefix,
                                                               false );
 
-        mLogger.log("Loading transient cache files",
-                    LogManager.INFO_MESSAGE_LEVEL);
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_LOAD_TRANSIENT_CACHE, 
+                               LoggingKeys.DAX_ID,
+                               mDag.getWorkflowID() );
 
         ReplicaCatalog simpleFile;
         Map wildcardConstraint = null;
@@ -801,8 +805,7 @@ public class ReplicaCatalogBridge
             simpleFile.close();
         }
 
-        mLogger.logCompletion("Loading transient cache files",
-                              LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.logEventCompletion();
     }
 
     /**

@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.common;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.TreeMap;
@@ -157,7 +158,7 @@ public class TPT {
       */
      public TPT() {
          mProps  = PegasusProperties.getInstance();
-         mLogger = LogManager.getInstance();
+         mLogger =  LoggerFactory.loadSingletonInstance( );
          mStateMap = new TreeMap();
      }
 
@@ -169,7 +170,7 @@ public class TPT {
       */
      public TPT(PegasusProperties properties) {
          mProps  = properties;
-         mLogger = LogManager.getInstance();
+         mLogger =  LoggerFactory.loadSingletonInstance( properties );
          mStateMap = new TreeMap();
      }
 

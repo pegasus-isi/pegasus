@@ -15,6 +15,7 @@
  */
 package org.griphyn.logsummary;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -42,8 +43,9 @@ import org.griphyn.vdl.invocation.StatInfo;
  */
 public class JobstateCallback implements Callback{
 
-	public static final LogManager mLogger = LogManager.getInstance();
-	/**
+    public static final LogManager mLogger =  LoggerFactory.loadSingletonInstance();
+        
+    /**
      * The name of the log file.
      */
     public static final String JOBSTATE_LOG = "jobstate.log";

@@ -114,8 +114,8 @@ public abstract  class Engine {
      *
      * @see org.griphyn.cPlanner.common.LogManager
      */
-    protected LogManager mLogger = LogManager.getInstance();
-
+    protected LogManager mLogger ;
+    
     /**
      * Contains the various options to the Planner as passed by the user at
      * runtime.
@@ -136,12 +136,12 @@ public abstract  class Engine {
      * @param bag      bag of initialization objects
      */
     public Engine( PegasusBag bag ) {
-        mBag   = bag;
-        mProps = bag.getPegasusProperties() ;
+        mBag      = bag;
+        mLogger   = bag.getLogger();
+        mProps    = bag.getPegasusProperties() ;
         mPOptions = bag.getPlannerOptions();
         mTCHandle = bag.getHandleToTransformationCatalog();
         mSiteStore= bag.getHandleToSiteStore();
-        mLogger   = bag.getLogger();
         loadProperties();
     }
     

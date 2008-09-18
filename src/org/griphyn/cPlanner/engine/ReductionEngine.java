@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.engine;
 
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.PCRelation;
@@ -207,7 +208,9 @@ public class ReductionEngine extends Engine implements Refiner{
         mXMLStore.clear();
 
 
-        mLogger.log("Reducing the workflow",LogManager.DEBUG_MESSAGE_LEVEL);
+        //mLogger.log("Reducing the workflow",LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
+           
         mOrgJobsInRC =
             getJobsInRC(mOriginalDag.vJobSubInfos,mFilesInRC);
         mAllDeletedJobs = (Vector)mOrgJobsInRC.clone();
@@ -223,7 +226,7 @@ public class ReductionEngine extends Engine implements Refiner{
             mXMLStore.add( "<removed job = \"" + deletedJob + "\"/>" );
             mXMLStore.add( "\n" );
         }
-        mLogger.logCompletion( mLogMsg, LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.log( mLogMsg +  " - DONE", LogManager.DEBUG_MESSAGE_LEVEL );
         mReducedDag = makeRedDagObject( mOriginalDag, mAllDeletedJobs );
 
 
@@ -243,8 +246,7 @@ public class ReductionEngine extends Engine implements Refiner{
         }
 
 
-        mLogger.logCompletion("Reducing the workflow",
-                              LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.logEventCompletion();
         return mReducedDag;
     }
 
@@ -344,8 +346,8 @@ public class ReductionEngine extends Engine implements Refiner{
             noOfSuccessfulMatches = 0;
             noOfOutputFilesInJob = 0;
         }
-        mLogger.logCompletion("Jobs whose o/p files already exist",
-                              LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.log("Jobs whose o/p files already exist - DONE",
+                     LogManager.DEBUG_MESSAGE_LEVEL);
         return vJobsInReplica;
 
     }
@@ -505,8 +507,8 @@ public class ReductionEngine extends Engine implements Refiner{
 
             }
         }
-        mLogger.logCompletion("Finding deleted leaf jobs",
-                              LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.log("Finding deleted leaf jobs - DONE",
+                     LogManager.DEBUG_MESSAGE_LEVEL);
         return delLeafJobs;
     }
 

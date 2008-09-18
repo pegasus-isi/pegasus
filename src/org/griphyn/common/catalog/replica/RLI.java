@@ -16,6 +16,7 @@
 
 package org.griphyn.common.catalog.replica;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 import org.griphyn.common.catalog.CatalogException;
@@ -205,7 +206,7 @@ public class RLI implements ReplicaCatalog {
      * The timeout in seconds to be applied while querying the RLI.
      */
     private int mTimeout;
-
+    
     /**
      * The default constructor, that creates an object which is not linked with
      * any RLS. Use the connect method to connect to the RLS.
@@ -214,7 +215,7 @@ public class RLI implements ReplicaCatalog {
      */
     public RLI() {
         mRLS = null;
-        mLogger = LogManager.getInstance();
+        mLogger =  LoggerFactory.loadSingletonInstance();
         mConnectProps = new Properties();
         mBatchSize = this.RLS_BULK_QUERY_SIZE;
         mTimeout   = Integer.parseInt(DEFAULT_RLI_TIMEOUT);
@@ -634,7 +635,7 @@ public class RLI implements ReplicaCatalog {
             }
 
 
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log( message  + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
         return result;
     }
@@ -705,7 +706,7 @@ public class RLI implements ReplicaCatalog {
             }
 
 
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
         return result;
 
@@ -780,7 +781,7 @@ public class RLI implements ReplicaCatalog {
             }
 
 
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
         return result;
 
@@ -857,7 +858,7 @@ public class RLI implements ReplicaCatalog {
             }
 
 
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
         return result;
 
@@ -975,7 +976,7 @@ public class RLI implements ReplicaCatalog {
             finally{
                 lrc.close();
             }
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
         return result;
@@ -1025,7 +1026,7 @@ public class RLI implements ReplicaCatalog {
             finally{
                 lrc.close();
             }
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
         return result;
@@ -1200,7 +1201,7 @@ public class RLI implements ReplicaCatalog {
                  //disconnect
                  lrc.close();
              }
-             mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+             mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
         return result;
@@ -1266,7 +1267,7 @@ public class RLI implements ReplicaCatalog {
                  //disconnect
                  lrc.close();
              }
-             mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+             mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
         return result;
@@ -1371,7 +1372,7 @@ public class RLI implements ReplicaCatalog {
                  //disconnect
                  lrc.close();
              }
-             mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+             mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
 
@@ -1435,7 +1436,7 @@ public class RLI implements ReplicaCatalog {
                 //disconnect
                 lrc.close();
             }
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
        }
 
        return result;
@@ -1496,7 +1497,7 @@ public class RLI implements ReplicaCatalog {
                 //disconnect
                 lrc.close();
             }
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log(message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
        }
 
        return result;
@@ -1549,8 +1550,8 @@ public class RLI implements ReplicaCatalog {
             finally{
                 lrc.close();
             }
-            mLogger.logCompletion("Removing from LRC " + url,
-                                  LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log( "Removing from LRC " + url + LogManager.MESSAGE_DONE_PREFIX,
+                          LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
         return result;
@@ -1614,7 +1615,7 @@ public class RLI implements ReplicaCatalog {
             finally{
                 lrc.close();
             }
-            mLogger.logCompletion(message,LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log( message + LogManager.MESSAGE_DONE_PREFIX,LogManager.DEBUG_MESSAGE_LEVEL);
         }
 
         return result;
@@ -1987,7 +1988,7 @@ public class RLI implements ReplicaCatalog {
         s.add(lfn);s.add("testX");s.add("vahi.f.a");
         System.out.println("Connecting " + rli.connect("rls://sukhna"));
         boolean insert = false;
-        LogManager.getInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+        LoggerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
 
         if(insert){
             ReplicaCatalogEntry rce = new ReplicaCatalogEntry(

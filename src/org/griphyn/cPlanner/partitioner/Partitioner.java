@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.partitioner;
 
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.LogManager;
 
@@ -82,7 +83,7 @@ public abstract class Partitioner {
     public Partitioner(GraphNode root, Map graph, PegasusProperties properties) {
         mRoot  = root;
         mGraph = graph;
-        mLogger = LogManager.getInstance();
+        mLogger = LoggerFactory.loadSingletonInstance( properties );
         mProps = properties;
         //set a default name to the partition dax
         //mPDAXWriter = null;

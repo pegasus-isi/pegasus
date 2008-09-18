@@ -98,7 +98,7 @@ public class Group extends Abstract {
     public Group() {
         mGroupMap = new TreeMap();
         mSelector = new Random();
-        mLogger   = LogManager.getInstance();
+//        mLogger   = LogManager.getInstance();
     }
 
     /**

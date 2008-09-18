@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.visualize.nodeusage;
 
+import edu.isi.pegasus.common.logging.LoggerFactory;
 import org.griphyn.cPlanner.common.LogManager;
 
 import org.griphyn.cPlanner.visualize.WorkflowMeasurements;
@@ -98,7 +99,7 @@ public class Ploticus {
      *
      */
     public Ploticus(){
-        mLogger    = LogManager.getInstance();
+        mLogger    =  LoggerFactory.loadSingletonInstance();
         mDirectory = ".";
         mBasename  = "ploticus" ;
         mNumFormatter = new DecimalFormat( "0.000" );
