@@ -69,6 +69,11 @@ public class WindwardImplementation implements Implementation {
     public static final String ALLEGRO_PROPERTIES_PREFIX = "pegasus.windward.allegro.";
     
     /**
+     * The name of the GU KB script that is used to create the kb.
+     */
+    public static final String GU_CREATE_KB_SCRIPT_NAME = "create-kb.sh";
+    
+    /**
      * The transformation namespace for the create dir jobs.
      */
     public static final String TRANSFORMATION_NAMESPACE = "windward";
@@ -265,7 +270,7 @@ public class WindwardImplementation implements Implementation {
         
         //construct path to the remote GU executable
         StringBuffer path = new StringBuffer();
-        path.append( guHome ).append( File.separator ).append( "create-ag-kb.sh" );
+        path.append( guHome ).append( File.separator ).append( GU_CREATE_KB_SCRIPT_NAME );
         guJob.setRemoteExecutable( path.toString() );
         
         GridGateway jobmanager = s.selectGridGateway( GridGateway.JOB_TYPE.transfer );
