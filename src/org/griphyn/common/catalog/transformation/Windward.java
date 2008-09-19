@@ -276,7 +276,7 @@ public class Windward  implements TransformationCatalog {
             //mProcessCatalog = ProcessCatalogFactory.loadInstance( mPCImpl, props );
             mProcessCatalog = PropertiesHelper.getPCFactory().getPC(
 				PropertiesHelper.getDCDomain(), 
-				PropertiesHelper.getPCDomain(), null );
+				PropertiesHelper.getPCDomain(), mRequestID );
             mProcessCatalog.setRequestId( mRequestID );
         }catch( Exception e ){
             connect = false;
