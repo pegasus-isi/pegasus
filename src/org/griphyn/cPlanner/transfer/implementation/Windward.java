@@ -264,7 +264,7 @@ public class Windward extends Abstract
                                                                   txJobName, 
                                                                   jobClass );
             txJobs.add( dcTXJob );
-            txJobIDs.add( patternTXJob.getID() );
+            txJobIDs.add( dcTXJob.getID() );
         }
 
         //only merging if more than only one data set being staged
