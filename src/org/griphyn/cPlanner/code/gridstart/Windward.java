@@ -142,7 +142,7 @@ public class Windward implements GridStart{
         String base  = p.getProperty( "basekb" );
         File f = new File( base, bag.getPlannerOptions().getRelativeSubmitDirectory() );
         mAllegroKB = f.getAbsolutePath();
-        mWorkflowID  = dag.getLabel();
+        mWorkflowID  = dag.getExecutableWorkflowID();
     } 
 
     /**

@@ -771,7 +771,7 @@ public class ReplicaCatalogBridge
 
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_LOAD_TRANSIENT_CACHE, 
                                LoggingKeys.DAX_ID,
-                               mDag.getWorkflowID() );
+                               mDag.getAbstractWorkflowID() );
 
         ReplicaCatalog simpleFile;
         Map wildcardConstraint = null;

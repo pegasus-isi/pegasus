@@ -18,6 +18,8 @@
 
 package org.griphyn.cPlanner.engine.createdir;
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -32,6 +34,8 @@ import java.util.Iterator;
 import java.util.Properties;
 
 import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A Windward specific strategy for adding the create dir nodes.
@@ -166,6 +170,10 @@ public class Windward extends AbstractStrategy{
         
         SubInfo kbJob = makeCreateGUKBJob( kbJobname, site, directory );
         result.add( kbJob );
+        List l = new LinkedList();
+        l.add( kbJob.getID() );
+        mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, dag.getAbstractWorkflowID(),
+                                           LoggingKeys.JOB_ID, l );
         
         return result;
     }

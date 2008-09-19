@@ -201,12 +201,23 @@ public class ADag extends Data {
      * Returns the workflow id
      * @return
      */
-    public String getWorkflowID(){
+    public String getAbstractWorkflowID(){
         StringBuffer id = new StringBuffer();
         id.append( this.dagInfo.getLabel() ).append( "_" ).append( this.dagInfo.index );
         return id.toString();
     }
 
+    /**
+     * Returns the workflow id
+     * @return
+     */
+    public String getExecutableWorkflowID(){
+        StringBuffer id = new StringBuffer();
+        id.append( this.dagInfo.getLabel() ).append( "_" ).append( this.dagInfo.index ).
+           append( "." ).append( "dag");
+        return id.toString();
+    }
+    
     /**
      * Adds a new PCRelation pair to the Vector of <code>PCRelation</code>
      * pairs. For the new relation the isDeleted parameter is set to false.

@@ -17,6 +17,7 @@
 
 package org.griphyn.cPlanner.transfer.implementation;
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.ADag;
@@ -123,6 +124,11 @@ public class Windward extends Abstract
      * The seqexec job aggregator.
      */
     private JobAggregator mSeqExecAggregator;
+    
+    /**
+     * The refiner beig used.
+     */
+    private Refiner mRefiner;
 
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -157,6 +163,7 @@ public class Windward extends Abstract
         //also set the refiner for hte internal pegasus transfer
         mPegasusTransfer.setRefiner( refiner );
         mBAETransfer.setRefiner(refiner);
+        mRefiner = refiner;
     }
 
 
@@ -214,6 +221,7 @@ public class Windward extends Abstract
         //use the Pegasus Transfer to handle the patterns
         TransferJob patternTXJob = null;
         String patternTXJobStdin = null;
+        List<String> txJobIDs = new LinkedList<String>();
         if( !patterns.isEmpty() ){
             patternTXJob = mPegasusTransfer.createTransferJob( job,
                                                                patterns,
@@ -229,6 +237,7 @@ public class Windward extends Abstract
             patternTXJob.setArguments( patternArgs.toString() );
             patternTXJob.setStdIn( "" );
             txJobs.add( patternTXJob );
+            txJobIDs.add( patternTXJob.getID() );
         }
 
 
@@ -255,9 +264,10 @@ public class Windward extends Abstract
                                                                   txJobName, 
                                                                   jobClass );
             txJobs.add( dcTXJob );
+            txJobIDs.add( patternTXJob.getID() );
         }
 
-        //only merging if only one data set being staged
+        //only merging if more than only one data set being staged
         TransferJob txJob = null;
         if( txJobs.size() > 1 ){        
             //now lets merge all these jobs
@@ -291,6 +301,8 @@ public class Windward extends Abstract
             super.addSetXBitJobs( job, txJob, execFiles );
         }
 
+        mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, mRefiner.getWorkflow().getAbstractWorkflowID(),
+                                           LoggingKeys.JOB_ID, txJobIDs );
 
         return txJob;
     }

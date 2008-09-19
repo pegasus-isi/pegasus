@@ -84,11 +84,13 @@ import java.util.Iterator;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
 
 import java.util.Properties;
 import java.util.Set;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 
 /**
@@ -374,6 +376,9 @@ public class CPlanner extends Executable{
             orgDag.dagInfo.generateFlowID();
             orgDag.dagInfo.setReleaseVersion();
 
+            //log id hiearchy message
+            //that connects dax with the jobs
+            logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowID() );
 
             //write out a the relevant properties to submit directory
             int state = 0;
@@ -463,6 +468,9 @@ public class CPlanner extends Executable{
             log( message, LogManager.INFO_MESSAGE_LEVEL );
             try{
                 result = codeGenerator.generateCode(finalDag);
+                
+                //connect the jobs and the DAG via the hierarchy message
+                this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowID() );
 
                 //generate only the braindump file that is required.
                 //no spawning off the tailstatd for time being
@@ -1411,6 +1419,29 @@ public class CPlanner extends Executable{
         }
 
         return result;
+    }
+
+    /**
+     * Logs a message that connects the jobs with DAX/DAG
+     * 
+     * 
+     * @param dag           the DAG object
+     * @param parentType    the parent type
+     * @param parentID      the parent id
+     */
+    private void logIDHierarchyMessage(ADag dag, String parentType, String parentID ) {
+        //log the create id hieararchy message that 
+        //ties the DAX with the jobs in it.
+        //in bunches of 1000
+        Enumeration e = dag.vJobSubInfos.elements();
+        while( e.hasMoreElements() ){
+            List<String> l = new LinkedList<String>();
+            for( int i = 0; e.hasMoreElements() && i++ < 1000; ){
+                SubInfo job = (SubInfo)e.nextElement();
+                l.add( job.getID() );
+            }
+            mLogger.logEntityHierarchyMessage( parentType, parentID, LoggingKeys.JOB_ID, l );
+        }
     }
 
 

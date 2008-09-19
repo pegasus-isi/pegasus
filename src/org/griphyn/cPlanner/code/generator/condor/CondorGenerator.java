@@ -298,8 +298,8 @@ public class CondorGenerator extends Abstract {
 
 
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CODE_GENERATION,
-                               LoggingKeys.DAG_ID,
-                               dag.getWorkflowID(),
+                               LoggingKeys.DAX_ID,
+                               dag.getAbstractWorkflowID(),
                                LogManager.DEBUG_MESSAGE_LEVEL);
         for(Iterator it = vSubInfo.iterator();it.hasNext();){
             //get information about each job making the ADag

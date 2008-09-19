@@ -143,7 +143,7 @@ public class MainEngine
             mAuthEng = new AuthenticateEngine( mBag,
                           new java.util.HashSet(mPOptions.getExecutionSites()));
 
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_AUTHENTICATION, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_AUTHENTICATION, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
             Set authenticatedSet = mAuthEng.authenticate();
             if (authenticatedSet.isEmpty()) {
                 StringBuffer error = new StringBuffer( );
@@ -171,7 +171,7 @@ public class MainEngine
 
         //unmark arg strings
         //unmarkArgs();
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_SITESELECTION, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_SITESELECTION, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
         mIPEng = new InterPoolEngine( mReducedDag, mBag );
         mIPEng.determineSites();
         mBag = mIPEng.getPegasusBag();
@@ -184,7 +184,7 @@ public class MainEngine
 
         //do the node cluster
         if( mPOptions.getClusteringTechnique() != null ){
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CLUSTER, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CLUSTER, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
             mNodeCollapser = new NodeCollapser( mBag );
 
             try{
@@ -201,7 +201,7 @@ public class MainEngine
 
         message = "Grafting transfer nodes in the workflow";
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );       
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );       
         mTransEng = new TransferEngine( mReducedDag, vDelLeafJobs, mBag );
         mTransEng.addTransferNodes( mRCBridge );
         mTransEng = null;
@@ -221,7 +221,7 @@ public class MainEngine
             message = "Grafting the remote workdirectory creation jobs " +
                         "in the workflow";
             //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_WORKDIR, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_WORKDIR, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
             mCreateEng = new CreateDirectory( mBag );
             mCreateEng.addCreateDirectoryNodes( mReducedDag );
             mCreateEng = null;
@@ -230,7 +230,7 @@ public class MainEngine
             //create the cleanup dag
             message = "Generating the cleanup workflow";
             //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP_WF, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP_WF, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
             mRemoveEng = new RemoveDirectory( mReducedDag, mBag );
             mCleanupDag = mRemoveEng.generateCleanUPDAG();
             mLogger.logEventCompletion();
@@ -240,7 +240,7 @@ public class MainEngine
         if ( mPOptions.getCleanup() ){ /* should be exposed via command line option */
             message = "Adding cleanup jobs in the workflow";
            // mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, mOriginalDag.getWorkflowID() );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
             CleanupEngine cEngine = new CleanupEngine( mBag );
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
             mLogger.logEventCompletion();

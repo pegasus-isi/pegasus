@@ -25,6 +25,7 @@ import java.io.IOException;
 import edu.isi.pegasus.common.logging.LogFormatter;
 
 import edu.isi.pegasus.common.logging.LoggerFactory;
+import java.util.Collection;
 import java.util.Properties;
 
 
@@ -452,6 +453,46 @@ public abstract class LogManager {
       */
     public abstract void logEventCompletion( int level );
 
+    /**
+     * Log a message that connects the parent entities with the 
+     * children. For e.g. can we use to create the log messages connecting the 
+     * jobs with the workflow they are part of.
+     *
+     * @param parentType   the type of parent entity
+     * @param parentID     the id of the parent entity
+     * @param childIDType  the type of children entities
+     * @param childIDs     Collection of children id's
+     * 
+     */
+    public void logEntityHierarchyMessage( String parentType,
+                                           String parentID,
+                                           String childIDType,
+                                           Collection<String> childIDs ){
+        this.logEntityHierarchyMessage( parentType, parentID, childIDType, childIDs, LogManager.DEBUG_MESSAGE_LEVEL );
+    }
+
+    /**
+     * Log a message that connects the parent entities with the 
+     * children. For e.g. can we use to create the log messages connecting the 
+     * jobs with the workflow they are part of.
+     * 
+     * @param parentType   the type of parent entity
+     * @param parentID     the id of the parent entity
+     * @param childIDType  the type of children entities
+     * @param childIDs     Collection of children id's
+     * @param level        the logging level.
+     * 
+     */
+    public void logEntityHierarchyMessage( String parentType, 
+                                           String parentID,
+                                           String childIDType, 
+                                           Collection<String> childIDs, 
+                                           int level ) {
+
+        this.logAlreadyFormattedMessage( 
+                mLogFormatter.createEntityHierarchyMessage(parentType, parentID, childIDType, childIDs),
+                level );
+    }
 
     /**
      * Add to the internal log buffer message  a value with the default key.
@@ -480,6 +521,8 @@ public abstract class LogManager {
         mLogFormatter.add( key, value );
         return this;
     }
+
+   
     
     
     

@@ -1010,7 +1010,7 @@ public class DaxParser extends Parser {
      *  automatically when the end of the XML file is reached.
      */
     public void endDocument() {
-
+        
     }
 
     /**
