@@ -182,6 +182,9 @@ public class ReplicaCatalogBridge
      */
     private boolean mDefaultTCRCCreated;
 
+    /**
+     * The DAG being worked upon.
+     */
     private ADag mDag;
     
 
@@ -227,7 +230,7 @@ public class ReplicaCatalogBridge
     public void initialize( ADag dag ,
                             PegasusProperties properties,
                             PlannerOptions options ){
-                            
+        mDag   = dag;
         mProps = properties;
         mPOptions = options;
         mRCDown = false;
