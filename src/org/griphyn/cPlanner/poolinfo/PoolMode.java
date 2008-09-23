@@ -17,8 +17,8 @@
 
 package org.griphyn.cPlanner.poolinfo;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.common.util.DynamicLoader;
 import org.griphyn.common.util.FactoryException;
@@ -93,7 +93,7 @@ public class PoolMode {
 
     public static final String PACKAGE_NAME = "org.griphyn.cPlanner.poolinfo.";
 
-    private static LogManager mLogger =  LoggerFactory.loadSingletonInstance();
+    private static LogManager mLogger =  LogManagerFactory.loadSingletonInstance();
 
     //add your constants here.
 

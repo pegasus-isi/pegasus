@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.code.CodeGeneratorException;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.io.File;
 import java.io.PrintWriter;

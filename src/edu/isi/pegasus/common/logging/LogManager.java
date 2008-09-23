@@ -14,9 +14,10 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.common;
+package edu.isi.pegasus.common.logging;
 
 
+import org.griphyn.cPlanner.common.*;
 import org.apache.log4j.Level;
 
 import java.io.File;
@@ -24,7 +25,7 @@ import java.io.IOException;
 
 import edu.isi.pegasus.common.logging.LogFormatter;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -174,7 +175,7 @@ public abstract class LogManager {
      */
     public static LogManager getInstance( String logger, String formatter ){
         if(mLogger == null){
-            mLogger = LoggerFactory.loadSingletonInstance(  PegasusProperties.nonSingletonInstance() );
+            mLogger = LogManagerFactory.loadSingletonInstance(  PegasusProperties.nonSingletonInstance() );
             /*if( logger == null || logger.equals( DEFAULT_LOGGER ) ){
                 mLogger = new Default();
             }

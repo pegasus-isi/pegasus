@@ -16,7 +16,7 @@
 
 package org.griphyn.cPlanner.partitioner;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;

@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.PoolConfig;
 import org.griphyn.cPlanner.classes.PoolConfigException;
 import org.griphyn.cPlanner.classes.PoolConfigParser2;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.parser.ConfigXmlParser;
 

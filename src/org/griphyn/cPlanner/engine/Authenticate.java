@@ -18,10 +18,10 @@
 package org.griphyn.cPlanner.engine;
 
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.AuthenticateRequest;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
@@ -105,7 +105,7 @@ public class Authenticate {
      */
     public Authenticate( PegasusProperties properties, PoolInfoProvider poolHandle ) {
         mPoolHandle = poolHandle;
-        mLogger     =  LoggerFactory.loadSingletonInstance( );
+        mLogger     =  LogManagerFactory.loadSingletonInstance( );
         mProps      = properties;
         mTimeout    = (mProps.getGridFTPTimeout() == null)?
                       this.TIMEOUT_VALUE:

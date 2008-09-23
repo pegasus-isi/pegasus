@@ -24,7 +24,7 @@ import org.griphyn.common.classes.TCType;
 import org.griphyn.common.classes.SysInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.ikcap.workflows.ac.ProcessCatalog;
 
@@ -35,7 +35,7 @@ import edu.isi.ikcap.workflows.sr.template.Component;
 
 import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
@@ -88,7 +88,7 @@ public class Windward  implements TransformationCatalog {
      */
     public static TransformationCatalog getInstance() {
         PegasusBag bag = new PegasusBag();
-        bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LoggerFactory.loadSingletonInstance() );
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LogManagerFactory.loadSingletonInstance() );
         bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
         TransformationCatalog result = new Windward();
         result.initialize( bag );

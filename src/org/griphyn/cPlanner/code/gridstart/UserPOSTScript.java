@@ -16,11 +16,11 @@
 
 package org.griphyn.cPlanner.code.gridstart;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.namespace.Dagman;
 
@@ -89,7 +89,7 @@ public class UserPOSTScript implements POSTScript {
 
         mProps     = properties;
         mPOSTScriptPath = path;
-        mLogger    = LoggerFactory.loadSingletonInstance( properties );
+        mLogger    = LogManagerFactory.loadSingletonInstance( properties );
 
         if ( path == null ){
             throw new RuntimeException( "Path to user specified postscript not given" );

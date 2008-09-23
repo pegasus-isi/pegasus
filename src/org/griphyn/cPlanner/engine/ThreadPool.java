@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.engine;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.LinkedList;
@@ -27,7 +27,7 @@ import org.gridforum.jgss.ExtendedGSSCredential;
 import org.gridforum.jgss.ExtendedGSSManager;
 import org.griphyn.cPlanner.classes.AuthenticateRequest;
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
@@ -112,7 +112,7 @@ public class ThreadPool {
         mQueue      = new LinkedList();
         mCurrentNum = new ConditionVariable();
         mProps      = properties;
-        mLogger     =  LoggerFactory.loadSingletonInstance( properties );
+        mLogger     =  LogManagerFactory.loadSingletonInstance( properties );
         String poolClass = PoolMode.getImplementingClass(mProps.getPoolMode());
         mPoolHandle = PoolMode.loadPoolInstance(poolClass,mProps.getPoolFile(),
                                                 PoolMode.SINGLETON_LOAD);

@@ -16,14 +16,14 @@
 
 package org.griphyn.cPlanner.partitioner;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.common.util.Currently;
 
 /**
@@ -70,7 +70,7 @@ public class PDAXWriter {
      * @param fileName  the path to the xml file that has to be written.
      */
     public PDAXWriter(String name, String fileName) {
-        mLogger   =  LoggerFactory.loadSingletonInstance();
+        mLogger   =  LogManagerFactory.loadSingletonInstance();
         mFileName = fileName;
         mName     = name;
 

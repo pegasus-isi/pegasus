@@ -16,8 +16,8 @@
 
 package org.griphyn.cPlanner.parser;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
@@ -45,7 +45,7 @@ public class XMLErrorHandler implements ErrorHandler{
      * Initializes the logger object.
      */
     public XMLErrorHandler(){
-        mLogger =  LoggerFactory.loadSingletonInstance();
+        mLogger =  LogManagerFactory.loadSingletonInstance();
     }
 
     /**

@@ -19,7 +19,7 @@ package org.griphyn.common.catalog.replica;
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.ikcap.workflows.dc.DataCharacterization;
 
@@ -29,7 +29,7 @@ import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
 import edu.isi.ikcap.workflows.util.FactoryException;
 
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
@@ -100,7 +100,7 @@ public class Windward  implements ReplicaCatalog {
      * The default constructor.
      */
     public Windward() {
-        mLogger =  LoggerFactory.loadSingletonInstance();
+        mLogger =  LogManagerFactory.loadSingletonInstance();
     }
 
     /**

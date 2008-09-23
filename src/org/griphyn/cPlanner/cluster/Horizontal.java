@@ -16,14 +16,14 @@
 
 package org.griphyn.cPlanner.cluster;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorInstanceFactory;
 
@@ -153,7 +153,7 @@ public class Horizontal implements Clusterer,
      * The default constructor.
      */
     public Horizontal(){
-        mLogger = LoggerFactory.loadSingletonInstance();
+        mLogger = LogManagerFactory.loadSingletonInstance();
         mJobAggregatorFactory = new JobAggregatorInstanceFactory();
     }
 

@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.catalog.site.impl.VORS;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.Properties;
 import org.griphyn.cPlanner.common.PegasusProperties;

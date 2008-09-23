@@ -17,7 +17,7 @@
 package org.griphyn.cPlanner.partitioner;
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.vdl.classes.LFN;
 

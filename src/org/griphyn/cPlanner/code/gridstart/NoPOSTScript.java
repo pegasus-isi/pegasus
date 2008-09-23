@@ -16,11 +16,11 @@
 
 package org.griphyn.cPlanner.code.gridstart;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.namespace.Dagman;
 
@@ -79,7 +79,7 @@ public class NoPOSTScript implements POSTScript {
                             String path,
                             String submitDir ){
         mProps     = properties;
-        mLogger    = LoggerFactory.loadSingletonInstance( properties );
+        mLogger    = LogManagerFactory.loadSingletonInstance( properties );
     }
 
     /**

@@ -17,7 +17,7 @@
  */
 package edu.isi.pegasus.planner.catalog.site.impl;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,7 +28,7 @@ import java.util.Set;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
@@ -60,7 +60,7 @@ public class VORS implements SiteCatalog {
 	
 
 	public VORS() {		
-            mLogger = LoggerFactory.loadSingletonInstance();       
+            mLogger = LogManagerFactory.loadSingletonInstance();       
 	    mSiteStore = new SiteStore();		
 	}
 

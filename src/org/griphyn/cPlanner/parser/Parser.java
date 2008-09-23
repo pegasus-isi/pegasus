@@ -17,10 +17,10 @@
 
 package org.griphyn.cPlanner.parser;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 
@@ -130,7 +130,7 @@ public abstract class Parser extends DefaultHandler{
     public Parser( PegasusProperties properties ) {
         mTextContent  = new StringBuffer();
         mLogMsg       = new String();
-        mLogger       = LoggerFactory.loadSingletonInstance( properties );
+        mLogger       = LogManagerFactory.loadSingletonInstance( properties );
         mProps        = properties;
         mTextString   = new String();
         mAdjFName     = false;

@@ -17,7 +17,7 @@
 package org.griphyn.cPlanner.parser.pdax;
 
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
@@ -267,7 +267,7 @@ public class PDAX2MDAG implements Callback {
     public PDAX2MDAG( String directory, PegasusProperties properties, PlannerOptions options) {
         mPDAXDirectory = directory;
         mProps     = properties;
-        mLogger    =  LoggerFactory.loadSingletonInstance( properties );
+        mLogger    =  LogManagerFactory.loadSingletonInstance( properties );
         mPOptions  = options;
         mClonedPOptions  = (options == null)? null : (PlannerOptions)options.clone();
         
@@ -1258,7 +1258,7 @@ public class PDAX2MDAG implements Callback {
             StreamGobbler eps = new StreamGobbler(p.getErrorStream(),
                                                   new StreamGobblerCallback(){
                                                       //we cannot log to any of the default stream
-                                                      LogManager mLogger =  LoggerFactory.loadSingletonInstance();
+                                                      LogManager mLogger =  LogManagerFactory.loadSingletonInstance();
 
                                                       public void work(String s){
                                                           mLogger.log("Output on stream gobller error stream " +

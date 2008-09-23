@@ -17,7 +17,7 @@
 
 package org.griphyn.common.catalog.work;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.*;
 import java.sql.*;
 
@@ -25,7 +25,7 @@ import org.griphyn.common.catalog.WorkCatalog;
 
 import org.griphyn.common.util.VDSProperties;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 /**
  * This class implements a work catalog on top of a simple table in a
@@ -244,7 +244,7 @@ public class Database
         // make connection defunct
         mConnection = null;
         mStatements = null;
-        mLogger =  LoggerFactory.loadSingletonInstance();
+        mLogger =  LogManagerFactory.loadSingletonInstance();
     }
 
     /**

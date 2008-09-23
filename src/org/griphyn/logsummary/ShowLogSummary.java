@@ -26,7 +26,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.toolkit.Executable;
 import org.griphyn.cPlanner.visualize.Callback;
 import org.griphyn.cPlanner.visualize.KickstartParser;

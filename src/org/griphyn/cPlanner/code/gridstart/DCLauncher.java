@@ -18,7 +18,7 @@ package org.griphyn.cPlanner.code.gridstart;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.namespace.VDS;
 

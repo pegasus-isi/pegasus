@@ -18,7 +18,7 @@
 
 package edu.isi.pegasus.planner.parser;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.classes.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.OS;
 
@@ -47,7 +47,7 @@ import org.griphyn.cPlanner.namespace.Namespace;
 import org.griphyn.cPlanner.parser.Parser;
 
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import java.io.File;
@@ -939,7 +939,7 @@ public class SiteCatalogParser extends Parser {
      * @param args
      */
     public static void main( String[] args ){
-        LoggerFactory.loadSingletonInstance().setLevel( 5 );
+        LogManagerFactory.loadSingletonInstance().setLevel( 5 );
         List s = new ArrayList(1);
         s.add( "*" );
         SiteCatalogParser parser = new SiteCatalogParser( s );

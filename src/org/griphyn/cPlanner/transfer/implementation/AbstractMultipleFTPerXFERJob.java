@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.transfer.MultipleFTPerXFERJob;
 

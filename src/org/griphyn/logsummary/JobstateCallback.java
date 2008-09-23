@@ -15,7 +15,7 @@
  */
 package org.griphyn.logsummary;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.visualize.Callback;
 import org.griphyn.cPlanner.visualize.JobMeasurements;
 import org.griphyn.cPlanner.visualize.nodeusage.NumJobsMeasurement;
@@ -43,7 +43,7 @@ import org.griphyn.vdl.invocation.StatInfo;
  */
 public class JobstateCallback implements Callback{
 
-    public static final LogManager mLogger =  LoggerFactory.loadSingletonInstance();
+    public static final LogManager mLogger =  LogManagerFactory.loadSingletonInstance();
         
     /**
      * The name of the log file.

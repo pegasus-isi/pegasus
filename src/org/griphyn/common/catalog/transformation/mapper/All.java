@@ -17,7 +17,7 @@
 
 package org.griphyn.common.catalog.transformation.mapper;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 import org.griphyn.common.catalog.transformation.Mapper;
 import org.griphyn.common.classes.SysInfo;

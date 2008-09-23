@@ -16,8 +16,8 @@
 
 package org.griphyn.cPlanner.partitioner;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.common.util.DynamicLoader;
@@ -88,7 +88,7 @@ public abstract class DAXWriter {
     protected DAXWriter(){
         mDaxFile = null;
         mPDAXDirectory = null;
-        mLogger  =  LoggerFactory.loadSingletonInstance();
+        mLogger  =  LogManagerFactory.loadSingletonInstance();
         mPartitionName = null;
 
     }
@@ -101,7 +101,7 @@ public abstract class DAXWriter {
      *                  generated.
      */
     protected DAXWriter(String daxFile, String directory) {
-        mLogger  =  LoggerFactory.loadSingletonInstance();
+        mLogger  =  LogManagerFactory.loadSingletonInstance();
         mDaxFile = daxFile;
         mPDAXDirectory = directory;
         mPartitionName = null;

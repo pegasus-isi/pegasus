@@ -17,14 +17,14 @@
 
 package org.griphyn.common.catalog.replica;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.*;
 import java.sql.*;
 import org.griphyn.common.catalog.Catalog;
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 import org.griphyn.common.util.VDSProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 /**
  * This class implements a replica catalog on top of a simple table in a
@@ -225,7 +225,7 @@ public class JDBCRC implements ReplicaCatalog
     // make connection defunc
     mConnection = null;
     mStatements = null;
-    mLogger =  LoggerFactory.loadSingletonInstance();
+    mLogger =  LogManagerFactory.loadSingletonInstance();
   }
 
   /**

@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.namespace.Globus;
 import org.griphyn.cPlanner.namespace.Hints;
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNodeContent;

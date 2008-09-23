@@ -26,7 +26,7 @@ import org.griphyn.common.util.*;
 
 import java.util.Properties;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 /**
  * A factory class to load the appropriate implementation of Logger API
@@ -35,7 +35,7 @@ import org.griphyn.cPlanner.common.LogManager;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class LoggerFactory {
+public class LogManagerFactory {
 
    
     /**
@@ -57,13 +57,13 @@ public class LoggerFactory {
      *
      * @return handle to the Log Formatter.
      *
-     * @throws LoggerFactoryException that nests any error that
+     * @throws LogManagerFactoryException that nests any error that
      *         might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
    public static LogManager loadSingletonInstance( ) throws
-        LoggerFactoryException {
+        LogManagerFactoryException {
         
         return ( mSingletonInstance = ( mSingletonInstance == null )?
                                         loadSingletonInstance( PegasusProperties.getInstance() ):  
@@ -80,13 +80,13 @@ public class LoggerFactory {
      * 
      * @return handle to the Log Formatter.
      *
-     * @throws LoggerFactoryException that nests any error that
+     * @throws LogManagerFactoryException that nests any error that
      *         might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
    public static LogManager loadSingletonInstance( PegasusProperties properties ) throws
-        LoggerFactoryException {
+        LogManagerFactoryException {
         
         return ( mSingletonInstance = ( mSingletonInstance == null )?
                                         loadInstance( properties ):  
@@ -103,16 +103,16 @@ public class LoggerFactory {
      *
      * @return handle to the Log Manager.
      *
-     * @throws LoggerFactoryException that nests any error that
+     * @throws LogManagerFactoryException that nests any error that
      *         might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
     public static LogManager loadInstance( PegasusProperties properties ) throws
-        LoggerFactoryException {
+        LogManagerFactoryException {
 
         if( properties == null ){
-            throw new LoggerFactoryException( "Invalid NULL properties passed" );
+            throw new LogManagerFactoryException( "Invalid NULL properties passed" );
         }
 
         /* get the implementor from properties */
@@ -132,7 +132,7 @@ public class LoggerFactory {
      *
      * @return handle to the Site Catalog.
      *
-     * @throws LoggerFactoryException that nests any error that
+     * @throws LogManagerFactoryException that nests any error that
      *         might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
@@ -140,7 +140,7 @@ public class LoggerFactory {
     public  static LogManager loadInstance( String implementor, 
                                             String formatImplementor, 
                                             Properties properties ) throws
-        LoggerFactoryException{
+        LogManagerFactoryException{
         
         //implementor = implementor == null ? "Default" : implementor;
         //formatImplementor = formatImplementor == null ? "Simple" : formatImplementor;
@@ -171,7 +171,7 @@ public class LoggerFactory {
             result.initialize( LogFormatterFactory.loadInstance( formatImplementor ), properties );
         }
         catch( Exception e ){
-            throw new LoggerFactoryException( "Unable to instantiate Logger ",
+            throw new LogManagerFactoryException( "Unable to instantiate Logger ",
                                             implementor,
                                             e );
         }

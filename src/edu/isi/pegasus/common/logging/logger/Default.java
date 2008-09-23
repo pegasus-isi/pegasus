@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.common.logging.logger;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import org.griphyn.cPlanner.common.*;
 import org.griphyn.common.util.Currently;

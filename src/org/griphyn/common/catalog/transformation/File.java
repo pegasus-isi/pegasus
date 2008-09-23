@@ -16,8 +16,8 @@
 
 package org.griphyn.common.catalog.transformation;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -98,7 +98,7 @@ public class File
     public static TransformationCatalog getInstance() {
         if (mTCFileHandle == null) {
             PegasusBag bag = new PegasusBag();
-            bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LoggerFactory.loadSingletonInstance() );
+            bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LogManagerFactory.loadSingletonInstance() );
             bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
             mTCFileHandle = new File();
             mTCFileHandle.initialize( bag );

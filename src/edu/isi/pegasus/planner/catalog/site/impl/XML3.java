@@ -18,7 +18,7 @@
 
 package edu.isi.pegasus.planner.catalog.site.impl;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
@@ -27,7 +27,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.parser.SiteCatalogParser;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,7 +80,7 @@ public class XML3 implements SiteCatalog {
      * The default constructor.
      */
     public XML3(){
-        mLogger = LoggerFactory.loadSingletonInstance();
+        mLogger = LogManagerFactory.loadSingletonInstance();
         //mSiteMap = new HashMap<String,SiteCatalogEntry>();
     }
     

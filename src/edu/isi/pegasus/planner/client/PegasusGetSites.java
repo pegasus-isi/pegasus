@@ -26,7 +26,7 @@ import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.toolkit.Executable;
 import org.griphyn.common.util.Version;

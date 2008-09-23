@@ -16,12 +16,12 @@
 
 package org.griphyn.cPlanner.selector.replica;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.ReplicaLocation;
 
 import org.griphyn.cPlanner.selector.ReplicaSelector;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.PegRandom;
 
@@ -83,7 +83,7 @@ public class Local implements ReplicaSelector {
      */
     public Local( PegasusProperties properties ){
         mProps       = properties;
-        mLogger      =  LoggerFactory.loadSingletonInstance( properties );
+        mLogger      =  LogManagerFactory.loadSingletonInstance( properties );
     }
 
 

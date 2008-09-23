@@ -18,7 +18,8 @@
 
 package org.griphyn.common.catalog.transformation;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.common.*;
 import org.griphyn.common.catalog.*;
@@ -60,7 +61,7 @@ public class TransformationFactory {
     public static TransformationCatalog loadInstance() throws
         TransformationFactoryException {
         PegasusBag bag = new PegasusBag();
-        bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LoggerFactory.loadSingletonInstance() );
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LogManagerFactory.loadSingletonInstance() );
         bag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
         
         return loadInstance( bag );
@@ -88,7 +89,7 @@ public class TransformationFactory {
         TransformationFactoryException {
                 
         PegasusBag bag = new PegasusBag();
-        bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LoggerFactory.loadSingletonInstance( properties ) );
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LogManagerFactory.loadSingletonInstance( properties ) );
         bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
         
         return loadInstance( bag );

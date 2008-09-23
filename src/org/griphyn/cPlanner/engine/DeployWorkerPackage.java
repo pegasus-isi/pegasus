@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.SiteInfo;
 
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Graph;

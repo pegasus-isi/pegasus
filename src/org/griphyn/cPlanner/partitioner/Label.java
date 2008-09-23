@@ -16,9 +16,9 @@
 
 package org.griphyn.cPlanner.partitioner;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Bag;
@@ -86,7 +86,7 @@ public class Label extends Partitioner {
         super(root, graph, properties);
         mPartitionMap = new HashMap(10);
         mQueue = new LinkedList();
-        mLogger =  LoggerFactory.loadSingletonInstance( properties );
+        mLogger =  LogManagerFactory.loadSingletonInstance( properties );
     }
 
     /**

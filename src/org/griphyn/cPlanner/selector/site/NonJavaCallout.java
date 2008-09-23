@@ -18,14 +18,14 @@
 package org.griphyn.cPlanner.selector.site;
 
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.GridFTPServer;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
@@ -776,7 +776,7 @@ public class NonJavaCallout extends AbstractPerJob {
    *
    */
   public static void main( String[] args ){
-      LoggerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+      LogManagerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
 
       NonJavaCallout nj = new NonJavaCallout( );
 

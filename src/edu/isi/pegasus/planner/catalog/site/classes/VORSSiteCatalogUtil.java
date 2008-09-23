@@ -17,7 +17,7 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -30,12 +30,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.SCHEDULER_TYPE;
 
 public class VORSSiteCatalogUtil {
-	 private static LogManager mLogger = LoggerFactory.loadSingletonInstance();	 
+	 private static LogManager mLogger = LogManagerFactory.loadSingletonInstance();	 
 	 public static List<VORSVOInfo> get_sites_in_grid(String host, String port, String vo, String grid){
 	    	URL vors = null;
 	    	URLConnection vc = null;

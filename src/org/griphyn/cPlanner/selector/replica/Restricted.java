@@ -16,7 +16,7 @@
 
 package org.griphyn.cPlanner.selector.replica;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.PegRandom;
 

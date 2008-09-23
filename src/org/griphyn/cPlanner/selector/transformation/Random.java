@@ -17,7 +17,7 @@ package org.griphyn.cPlanner.selector.transformation;
 
 import org.griphyn.cPlanner.selector.TransformationSelector;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.ArrayList;
 import java.util.List;

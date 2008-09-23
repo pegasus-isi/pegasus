@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.poolinfo;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.parser.ConfigXmlParser;
 

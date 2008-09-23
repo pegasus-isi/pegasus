@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.poolinfo;
 import org.griphyn.cPlanner.classes.PoolConfig;
 import org.griphyn.cPlanner.classes.SiteInfo;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.common.classes.SysInfo;
 

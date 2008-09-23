@@ -16,7 +16,8 @@
 
 package org.griphyn.cPlanner.common;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 /**
  * The default callback for the stream gobbler, that logs all the messages to
@@ -46,7 +47,7 @@ public class DefaultStreamGobblerCallback implements StreamGobblerCallback {
     public DefaultStreamGobblerCallback(int level) {
         //should do a sanity check on the levels
         mLevel  = level;
-        mLogger    = LoggerFactory.loadSingletonInstance(  );
+        mLogger    = LogManagerFactory.loadSingletonInstance(  );
     }
 
     /**

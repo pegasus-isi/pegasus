@@ -23,7 +23,7 @@ package org.griphyn.common.catalog.transformation.client;
  * @version $Revision$
  */
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.classes.SysInfo;
 import org.griphyn.common.classes.TCType;

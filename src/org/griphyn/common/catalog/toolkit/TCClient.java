@@ -16,8 +16,8 @@
 
 package org.griphyn.common.catalog.toolkit;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.transformation.TransformationFactory;
@@ -87,7 +87,7 @@ public class TCClient {
 
     private Map argsmap = null;
 
-    private LogManager mLogger =  LoggerFactory.loadSingletonInstance();
+    private LogManager mLogger =  LogManagerFactory.loadSingletonInstance();
 
     private Version version = Version.instance();
 

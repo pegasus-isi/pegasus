@@ -18,6 +18,7 @@
 package org.griphyn.cPlanner.common;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import java.util.Collection;

@@ -18,7 +18,7 @@ package org.griphyn.cPlanner.visualize.spaceusage;
 
 import org.griphyn.cPlanner.visualize.Callback;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.io.File;
 import java.io.FileReader;

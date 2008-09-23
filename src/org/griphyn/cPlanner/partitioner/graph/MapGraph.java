@@ -17,10 +17,10 @@
 
 package org.griphyn.cPlanner.partitioner.graph;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.Data;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -55,7 +55,7 @@ public class MapGraph implements Graph{
      */
     public MapGraph(){
         mStore = new HashMap();
-        mLogger =  LoggerFactory.loadSingletonInstance();
+        mLogger =  LogManagerFactory.loadSingletonInstance();
     }
 
     /**

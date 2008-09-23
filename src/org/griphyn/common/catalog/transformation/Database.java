@@ -23,9 +23,9 @@ package org.griphyn.common.catalog.transformation;
  * @version $Revision$
  */
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -52,7 +52,7 @@ public class Database
      * used to log all the messages.
      * It's values are set in the CPlanner class.
      */
-    protected static LogManager mLogger =  LoggerFactory.loadSingletonInstance();
+    protected static LogManager mLogger =  LogManagerFactory.loadSingletonInstance();
 
     //   private static final String TC_MODE = "Database TC Mode";
 
@@ -71,7 +71,7 @@ public class Database
         try {
             if( mDatabaseTC == null ){
                 PegasusBag bag = new PegasusBag();
-                bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LoggerFactory.loadSingletonInstance() );
+                bag.add( PegasusBag.PEGASUS_LOGMANAGER,  LogManagerFactory.loadSingletonInstance() );
                 mDatabaseTC = new Database();
                 mDatabaseTC.initialize( bag );
             }

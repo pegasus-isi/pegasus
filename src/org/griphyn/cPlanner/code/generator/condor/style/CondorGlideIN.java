@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.code.generator.condor.style;
 import org.griphyn.cPlanner.code.generator.condor.CondorStyle;
 import org.griphyn.cPlanner.code.generator.condor.CondorStyleException;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;

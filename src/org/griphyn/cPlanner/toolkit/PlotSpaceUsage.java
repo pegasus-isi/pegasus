@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.toolkit;
 
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.common.util.Version;
 import org.griphyn.common.util.FactoryException;

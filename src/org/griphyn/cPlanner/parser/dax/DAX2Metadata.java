@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.parser.dax;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import java.util.HashMap;

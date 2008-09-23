@@ -18,7 +18,7 @@
 
 package org.griphyn.cPlanner.classes;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.globus.replica.rls.RLSClient;
 import org.globus.replica.rls.RLSString2Bulk;

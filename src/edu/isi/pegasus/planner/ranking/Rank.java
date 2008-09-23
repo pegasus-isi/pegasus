@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.selector.site.heft.Algorithm;
 
 import org.griphyn.cPlanner.classes.ADag;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.parser.DaxParser;
 

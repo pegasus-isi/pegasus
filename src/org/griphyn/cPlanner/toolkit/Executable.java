@@ -16,8 +16,8 @@
 
 package org.griphyn.cPlanner.toolkit;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.common.util.FactoryException;
@@ -104,7 +104,7 @@ public abstract class Executable {
      */
     protected void setupLogging(){
         //setup the logger for the default streams.
-        mLogger = LoggerFactory.loadSingletonInstance( mProps );
+        mLogger = LogManagerFactory.loadSingletonInstance( mProps );
         mLogger.logEventStart( "pegasus", "planner", mVersion );
 
         //get the logging value set in properties

@@ -17,13 +17,13 @@
 package org.griphyn.cPlanner.parser.dax;
 
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -90,7 +90,7 @@ public class DAX2Graph implements Callback {
     public DAX2Graph(PegasusProperties properties, String dax){
         mProps = properties;
         mAbstractGraph = new java.util.HashMap();
-        mLogger        = LoggerFactory.loadSingletonInstance( properties );
+        mLogger        = LogManagerFactory.loadSingletonInstance( properties );
         mDone          = false;
         mLabel         = null;
         mRoot          = null;

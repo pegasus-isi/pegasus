@@ -18,7 +18,7 @@
 
 package edu.isi.pegasus.planner.catalog.site.impl;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
@@ -44,7 +44,7 @@ import org.griphyn.cPlanner.classes.LRC;
 import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.WorkDir;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.parser.Parser;
@@ -121,7 +121,7 @@ public class XML extends Parser implements SiteCatalog{
      */
     public XML(){
         super( PegasusProperties.nonSingletonInstance() );
-        mLogger = LoggerFactory.loadSingletonInstance();
+        mLogger = LogManagerFactory.loadSingletonInstance();
         
         mSiteStore = new SiteStore();
     }
@@ -742,7 +742,7 @@ public class XML extends Parser implements SiteCatalog{
      * @return the converted <code>SiteCatalogEntry</code> object.
      */
     private static SiteCatalogEntry convertSiteInfoToSiteCatalogEntry( SiteInfo s ) {
-        LogManager logger = LoggerFactory.loadSingletonInstance();
+        LogManager logger = LogManagerFactory.loadSingletonInstance();
         SiteCatalogEntry site = new SiteCatalogEntry();
         
         /* set the handle */

@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;

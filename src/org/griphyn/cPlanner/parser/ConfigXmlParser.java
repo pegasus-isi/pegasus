@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.classes.LRC;
 import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.WorkDir;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import java.io.File;

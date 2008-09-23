@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.Iterator;
 import java.util.Set;

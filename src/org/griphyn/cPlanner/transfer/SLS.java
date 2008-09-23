@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.code.GridStart;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import java.io.File;

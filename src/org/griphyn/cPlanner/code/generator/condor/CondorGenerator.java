@@ -40,7 +40,7 @@ import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 
 import org.griphyn.cPlanner.code.generator.condor.style.CondorStyleFactory;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.StreamGobblerCallback;

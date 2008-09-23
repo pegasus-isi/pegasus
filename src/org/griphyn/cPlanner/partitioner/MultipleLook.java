@@ -18,7 +18,7 @@ package org.griphyn.cPlanner.partitioner;
 
 import org.griphyn.vdl.classes.LFN;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.vdl.dax.ADAG;
 import org.griphyn.vdl.dax.Filename;

@@ -24,7 +24,7 @@ import org.griphyn.cPlanner.partitioner.graph.LabelBag;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 /**
  * The callback, that ends up building a label graph. With each GraphNode a label

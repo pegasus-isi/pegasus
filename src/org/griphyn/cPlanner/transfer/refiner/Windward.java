@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 import org.griphyn.cPlanner.engine.createdir.WindwardImplementation;

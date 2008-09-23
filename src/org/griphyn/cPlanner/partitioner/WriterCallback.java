@@ -17,9 +17,9 @@
 
 package org.griphyn.cPlanner.partitioner;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.List;
 import java.util.Iterator;
@@ -95,7 +95,7 @@ public class WriterCallback implements Callback {
                             String directory ){
 
         mProps  = properties;
-        mLogger =  LoggerFactory.loadSingletonInstance( properties );
+        mLogger =  LogManagerFactory.loadSingletonInstance( properties );
         //load the writer for the partitioned daxes
         mDAXWriter = DAXWriter.loadInstance( properties, daxFile, directory );
         mDAXWriter.setPartitionName( daxName );

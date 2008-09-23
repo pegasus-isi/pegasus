@@ -24,7 +24,7 @@ package org.griphyn.common.catalog.transformation.client;
  */
 
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.classes.TCType;
 

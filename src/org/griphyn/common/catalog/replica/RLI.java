@@ -16,12 +16,12 @@
 
 package org.griphyn.common.catalog.replica;
 
-import edu.isi.pegasus.common.logging.LoggerFactory;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 import org.griphyn.common.catalog.CatalogException;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.globus.replica.rls.RLSClient;
 import org.globus.replica.rls.RLSException;
@@ -215,7 +215,7 @@ public class RLI implements ReplicaCatalog {
      */
     public RLI() {
         mRLS = null;
-        mLogger =  LoggerFactory.loadSingletonInstance();
+        mLogger =  LogManagerFactory.loadSingletonInstance();
         mConnectProps = new Properties();
         mBatchSize = this.RLS_BULK_QUERY_SIZE;
         mTimeout   = Integer.parseInt(DEFAULT_RLI_TIMEOUT);
@@ -1988,7 +1988,7 @@ public class RLI implements ReplicaCatalog {
         s.add(lfn);s.add("testX");s.add("vahi.f.a");
         System.out.println("Connecting " + rli.connect("rls://sukhna"));
         boolean insert = false;
-        LoggerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
+        LogManagerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
 
         if(insert){
             ReplicaCatalogEntry rce = new ReplicaCatalogEntry(

@@ -24,7 +24,7 @@ import org.griphyn.common.catalog.transformation.Mapper;
 import org.griphyn.common.classes.SysInfo;
 import org.griphyn.common.classes.TCType;
 
-import org.griphyn.cPlanner.common.LogManager;
+import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.common.util.Separator;
 
