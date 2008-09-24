@@ -41,6 +41,12 @@ public  class LoggingKeys {
     public static final String EVENT_QUERY_DATACATALOG    = "event.query.datacatalog";
 	
     
+    
+    public static final String EVENT_ENSEMBLE_RANKING      = "event.ensemble.ranking";
+    public static final String EVENT_ENSEMBLE_PLANNING      = "event.ensemble.planning";
+    public static final String EVENT_ENSEMBLE_WG      =         "event.ensemble.wings";
+    public static final String EVENT_ENSEMBLE_EXECUTE      = "event.ensemble.workflow.execute";
+
     public static final String EVENT_PEGASUS_RANKING              = "event.ranking";
     public static final String EVENT_PEGASUS_RANKING_RETRIEVE_DAX = "event.ranking.retrive.dax";
     
