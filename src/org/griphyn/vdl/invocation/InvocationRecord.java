@@ -161,6 +161,11 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * at this API point.
    */
   private int m_umask = -1;
+  
+  /**
+   * The Machine object capturing machine information.
+   */
+  private Machine m_machine;
 
   /**
    * Accessor
@@ -241,6 +246,26 @@ public class InvocationRecord extends Invocation // implements Cloneable
   public void setDuration( double duration )
   { this.m_duration = duration; }
 
+
+  /**
+   * Accessor.
+   *
+   * @param machine
+   * @see #getMachine()
+   */
+  public void setMachine( Machine machine )
+  { this.m_machine = machine; }
+
+  /**
+   * Accessor.
+   *
+   * @return  machine
+   * @see #setMachine()
+   */
+  public Machine getMachine(  )
+  { return this.m_machine; }
+
+  
   /**
    * Accessor
    *
@@ -951,7 +976,11 @@ public class InvocationRecord extends Invocation // implements Cloneable
     m_cwd.toXML( stream, newindent, namespace );
     m_usage.toXML( stream, newindent, namespace );
     m_uname.toXML( stream, newindent, namespace );
-
+    //machine if not null
+    if( m_machine != null ){
+        m_machine.toXML( stream, indent, namespace );
+    }
+    
     // part 3: statcall records
     for ( Iterator i=this.m_stat.iterator(); i.hasNext(); ) {
       ((StatCall) i.next()).toXML( stream, newindent, namespace );

@@ -14,6 +14,8 @@
  */
 package org.griphyn.vdl.parser;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.griphyn.vdl.invocation.*;
 import org.griphyn.vdl.util.Logging;
 
@@ -369,8 +371,12 @@ public class InvocationParser extends DefaultHandler
     }
 
     //System.out.println( "QNAME " + qName + " NAME " + names + "\t Values" + values );
-
-    Invocation object = createObject( qName, names, values );
+    Invocation parent = null;
+    if ( ! m_stack.empty() ) {
+        IVSElement peek = (IVSElement) m_stack.peek();
+        parent = (Invocation)peek.m_obj;
+    }
+    Invocation object = createObject( parent, qName, names, values );
     if ( object != null )
       m_stack.push( new IVSElement( qName, object ) );
     else
@@ -407,9 +413,12 @@ public class InvocationParser extends DefaultHandler
     if ( ! m_stack.empty() ) {
       // add pieces to lower levels
       IVSElement peek = (IVSElement) m_stack.peek();
-      if ( !setElementRelation( peek.m_name.charAt(0), peek.m_obj, tos.m_obj ))
+      if ( !setElementRelation( peek.m_name.charAt(0), peek.m_obj, tos.m_obj )){
 	m_log.log( "parser", 0, "Element " + tos.m_name +
 		   " does not fit into element " + peek.m_name );
+        //System.out.println(  "Element " + tos.m_name +
+	//	   " does not fit into element " + peek.m_name );
+      }
     } else {
       // run finalizer, if available
       // m_log.log( "default", 0, "How did I get here?" );
@@ -596,13 +605,14 @@ public class InvocationParser extends DefaultHandler
    * Java object that corresponds to the element, and sets the member
    * variables with the values of the attributes of the element.
    *
+   * @param parent  is the parent element
    * @param e is the name of the element
    * @param names is a list of attribute names, as strings.
    * @param values is a list of attribute values, to match the key list.
    * @return A new VDL Java object, which may only be partly constructed.
    * @exception IllegalArgumentException if the element name is too short.
    */
-  protected Invocation createObject( String e, java.util.List names,
+  protected Invocation createObject( Invocation parent, String e, java.util.List names,
 			     java.util.List values )
     throws IllegalArgumentException
   {
@@ -665,6 +675,17 @@ public class InvocationParser extends DefaultHandler
 	// unknown
 	return null;
 
+        //
+	// B
+	//
+      case 'b':
+	if ( e.equals("boot") ) {
+            Boot b = new Boot();
+            b.addAttributes(names, values);
+            return b;
+        }
+        return null;
+        
 	//
 	// C
 	//
@@ -683,6 +704,11 @@ public class InvocationParser extends DefaultHandler
 	  setupJob( job, names, values );
 	  return job;
 	}
+        else if ( e.equals( "cpu" ) ){
+            CPU c  = new CPU();
+            c.addAttributes(names, values);
+            return c;
+        }
 
 	// unknown
 	return null;
@@ -902,6 +928,19 @@ public class InvocationParser extends DefaultHandler
 
 	// unknown
 	return null;
+        
+        //
+	// L
+	//
+      case 'l':
+	if ( e.equals("load") ) {
+	  Load l = new Load();
+          l.addAttributes( names, values );
+	  return l;
+	}
+
+	// unknown
+	return null;
 
 	//
 	// M
@@ -912,6 +951,11 @@ public class InvocationParser extends DefaultHandler
 	  setupJob( job, names, values );
 	  return job;
 	}
+        else if ( e.equals( "machine" ) ){
+            Machine m = new Machine();
+            m.addAttributes( names, values );
+            return m;
+        }
 
 	// unknown
 	return null;
@@ -929,6 +973,11 @@ public class InvocationParser extends DefaultHandler
 	  setupJob( job, names, values );
 	  return job;
 	}
+        else if ( e.equals( "proc") ){
+            Proc p = new Proc();
+            p.addAttributes(names, values);
+            return p;
+        }
 
 	// unknown
 	return null;
@@ -955,6 +1004,11 @@ public class InvocationParser extends DefaultHandler
 	  // ignore
 	  return new Ignore();
 	}
+        else if( e.equals( "ram" ) ){
+            RAM r = new RAM();
+            r.addAttributes(names, values);
+            return r;
+        } 
 
 	// unknown
 	return null;
@@ -1091,10 +1145,19 @@ public class InvocationParser extends DefaultHandler
 	  setupJob( job, names, values );
 	  return job;
 	}
+        else if( e.equals( "stamp" ) ){
+            Stamp s = new Stamp();
+            return s;
+        } 
+        else if( e.equals( "swap" ) ){
+            Swap s = new Swap();
+            s.addAttributes( names, values );
+            return s;
+        } 
 
 	// unknown
 	return null;
-
+ 
 	//
 	// T
 	//
@@ -1117,6 +1180,11 @@ public class InvocationParser extends DefaultHandler
 	  }
 	  return file;
 	}
+        else if( e.equals( "task" ) ){
+            Task t = new Task();
+            t.addAttributes(names, values);
+            return t;
+        } 
 
 	// unknown
 	return null;
@@ -1184,7 +1252,12 @@ public class InvocationParser extends DefaultHandler
 	    }
 	  }
 	  return usage;
-	} else if ( e.equals("uname") ) {
+	}else if( e.equals( "uname" ) && parent instanceof Machine ){
+            Uname u = new Uname();
+            u.addAttributes(names, values);
+            return u;
+        }
+        else if ( e.equals("uname") ) {
 	  Architecture uname = new Architecture();
 	  for ( int i=0; i<names.size(); ++i ) {
 	    String name = (String) names.get(i);
@@ -1214,7 +1287,7 @@ public class InvocationParser extends DefaultHandler
 	  }
 	  return uname;
 	}
-
+        
 	// unknown
 	return null;
 
@@ -1335,6 +1408,19 @@ public class InvocationParser extends DefaultHandler
 	  invocation.setEnvironment((Environment) child);
 	  return true;
 	}
+        else if ( child instanceof Machine ) {
+	  invocation.setMachine((Machine) child);
+          /*
+          StringWriter s = new StringWriter();
+                try {
+                    ((Machine) child).toXML(s, "", null);
+                } catch (IOException ex) {
+                    Logger.getLogger(InvocationParser.class.getName()).log(Level.SEVERE, null, ex);
+                }
+          System.out.println( s );
+	  */
+          return true;
+	}
       }
       // unknown
       return false;
@@ -1359,6 +1445,22 @@ public class InvocationParser extends DefaultHandler
 	  return true;
 	}
       }
+      else if( parent instanceof Machine ){
+          Machine m = (Machine)parent;
+          if( child instanceof Stamp ||
+              child instanceof Uname ||
+              child instanceof RAM ||
+              child instanceof Swap ||
+              child instanceof Boot ||
+              child instanceof CPU ||
+              child instanceof Load ||
+              child instanceof Proc ||
+              child instanceof Task ){
+              m.addMachineInfo( (MachineInfo)child );
+              return true;
+          }
+      }
+      
       // unknown
       return false;
 
