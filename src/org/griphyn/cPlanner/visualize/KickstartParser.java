@@ -46,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.HashMap;
 
 /**
  * A helper class that parses the kickstart records and has calls to callbacks
@@ -143,7 +144,8 @@ public class KickstartParser {
             //get the data about the various jobs
             List jobs = invocation.getJobList();
 ////////////////////////////////////////////////////////////////////////////////////
-            Map metadata =  mCallback.cbGetMetadata();
+            //Map metadata =  mCallback.cbMetadata();
+            Map metadata =  new HashMap();
             ArrayList exitcodes = new ArrayList();
             ArrayList executables = new ArrayList();
             ArrayList arguments = new ArrayList();
@@ -173,7 +175,8 @@ public class KickstartParser {
             metadata.put("gid", invocation.getGID());
             metadata.put("group", invocation.getGroup());            
             metadata.put("umask", invocation.getUMask());
-            metadata.put("resource", invocation.getResource());                                  
+            metadata.put("resource", invocation.getResource());   
+            mCallback.cbMetadata(metadata);
 //////////////////////////////////////////////////////////////////////////////////////            
 
             //callback for the data sections of various streams

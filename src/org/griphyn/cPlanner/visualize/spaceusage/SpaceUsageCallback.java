@@ -533,9 +533,14 @@ public class SpaceUsageCallback implements Callback {
         return event;
     }
 
-	public Map cbGetMetadata() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
+    /**
+     * Callback for the metadata retrieved from the kickstart record.
+     * 
+     * @param metadata
+     */
+    public void cbMetadata( Map metadata ){
+        
+    }
 
 }

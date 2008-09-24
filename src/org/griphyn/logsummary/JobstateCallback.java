@@ -212,9 +212,17 @@ public class JobstateCallback implements Callback{
 		
 	}	
 	
-
-	public Map cbGetMetadata() {		
+        /*
+	public Map cbMetadata() {		
 		return measure.getMetadata();		
-	}
+	}*/
+        /**
+         * Callback for the metadata retrieved from the kickstart record.
+         * 
+         * @param metadata
+         */
+        public void cbMetadata( Map metadata ){
+            measure.setMetadata(metadata);
+        }
 
 }

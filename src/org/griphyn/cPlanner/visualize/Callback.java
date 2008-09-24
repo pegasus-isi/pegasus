@@ -35,7 +35,7 @@ public interface Callback {
     /**
      * The version of the API.
      */
-    public static final String VERSION ="1.3";
+    public static final String VERSION ="1.4";
 
     /**
      * Initializes the callback.
@@ -126,5 +126,10 @@ public interface Callback {
      */
     public Object getConstructedObject();
     
-    public Map cbGetMetadata();
+    /**
+     * Callback for the metadata retrieved from the kickstart record.
+     * 
+     * @param metadata
+     */
+    public void cbMetadata( Map metadata );
 }
