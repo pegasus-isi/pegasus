@@ -102,6 +102,9 @@ public class Log4j extends LogManager{
         mLogFormatter = formatter;
         mProperties   = properties;
         
+        //set formatter to pegasus always for time being
+        mLogFormatter.setProgramName( "pegasus" );
+        
         //specify the path to the log4j properties file if specified.
         String conf = properties.getProperty( Log4j.LOG4J_CONF_PROPERTY);
         if( conf != null ){
