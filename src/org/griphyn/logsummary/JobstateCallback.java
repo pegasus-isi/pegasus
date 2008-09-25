@@ -33,6 +33,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.visualize.Callback;
 import org.griphyn.cPlanner.visualize.JobMeasurements;
 import org.griphyn.cPlanner.visualize.nodeusage.NumJobsMeasurement;
+import org.griphyn.vdl.invocation.Machine;
 import org.griphyn.vdl.invocation.StatInfo;
 /**
  * Call back implementation for ShowLogSummary class. 
@@ -223,6 +224,14 @@ public class JobstateCallback implements Callback{
          */
         public void cbMetadata( Map metadata ){
             measure.setMetadata(metadata);
+            
         }
-
+        
+    /**
+     * Callback to pass the machine information on which the job is executed.
+     * 
+     * @param machine
+     */
+    public void cbMachine(Machine machine) {
+    }
 }

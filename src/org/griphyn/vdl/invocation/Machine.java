@@ -102,6 +102,14 @@ public  class Machine extends Invocation {
         mMachineInfoList.add( info );
     }
     
+    /**
+     * Returns an iterator for the machine info objects
+     * 
+     * @return Iterator for <code>MachineInfo</code> objects.
+     */
+    public Iterator<MachineInfo> getMachineInfoIterator(  ){
+        return this.mMachineInfoList.iterator();
+    }
     
     /**
      * Converts the active state into something meant for human consumption.

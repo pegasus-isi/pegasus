@@ -18,6 +18,7 @@ package org.griphyn.cPlanner.visualize;
 
 import org.griphyn.vdl.invocation.Data;
 import org.griphyn.vdl.invocation.Job;
+import org.griphyn.vdl.invocation.Machine;
 import org.griphyn.vdl.invocation.StatInfo;
 
 import java.util.List;
@@ -35,7 +36,9 @@ public interface Callback {
     /**
      * The version of the API.
      */
-    public static final String VERSION ="1.4";
+    public static final String VERSION ="1.5";
+
+    
 
     /**
      * Initializes the callback.
@@ -132,4 +135,11 @@ public interface Callback {
      * @param metadata
      */
     public void cbMetadata( Map metadata );
+    
+    /**
+     * Callback to pass the machine information on which the job is executed.
+     * 
+     * @param machine
+     */
+    public void cbMachine( Machine machine );
 }

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
+import org.griphyn.vdl.invocation.Machine;
 
 /**
  * Implements callback interface to calculate space usage.
@@ -542,5 +543,13 @@ public class SpaceUsageCallback implements Callback {
     public void cbMetadata( Map metadata ){
         
     }
-
+    
+    /**
+     * Callback to pass the machine information on which the job is executed.
+     * 
+     * @param machine
+     */
+    public void cbMachine( Machine machine ){
+        
+    }
 }

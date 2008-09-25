@@ -78,8 +78,28 @@ public abstract class MachineInfo extends Invocation {
             addAttribute( name, value );
 	}
     }
+
+    /**
+     * Returns Iterator for attribute keys.
+     * 
+     * @return
+     */
+    public Iterator<String> getAttributeKeysIterator(){
+        return mAttributeMap.keySet().iterator();
+    }
     
-      /**
+    /**
+     * Returns attribute value for a key
+     * 
+     * @param key
+     * 
+     * @return
+     */
+    public String get( String key ){
+        return mAttributeMap.get(key);
+    }
+    
+    /**
      * Converts the active state into something meant for human consumption.
      * The method will be called when recursively traversing the instance
      * tree. 

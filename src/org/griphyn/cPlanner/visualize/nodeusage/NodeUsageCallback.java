@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
+import org.griphyn.vdl.invocation.Machine;
 
 
 /**
@@ -391,5 +392,12 @@ public class NodeUsageCallback implements Callback {
         
     }
 
-
+    /**
+     * Callback to pass the machine information on which the job is executed.
+     * 
+     * @param machine
+     */
+    public void cbMachine( Machine machine ){
+        
+    }
 }

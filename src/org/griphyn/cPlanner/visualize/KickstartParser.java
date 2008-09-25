@@ -34,9 +34,6 @@ import org.griphyn.vdl.invocation.Status;
 
 import org.griphyn.vdl.parser.InvocationParser;
 
-
-import org.griphyn.common.util.Currently;
-
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -227,6 +224,11 @@ public class KickstartParser {
                 }
             }
 
+            //callback with the machine information if present
+            if( invocation.getMachine() != null ){
+                mCallback.cbMachine( invocation.getMachine() );
+            }
+            
             //successfully done with an invocation record
             mCallback.cbInvocationEnd();
         }
