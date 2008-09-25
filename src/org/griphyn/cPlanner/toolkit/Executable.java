@@ -64,11 +64,11 @@ public abstract class Executable {
      */
     public Executable() {
         mProps = PegasusProperties.getInstance();
+        mVersion = Version.instance().toString();
         //setup logging before doing anything with properties
         setupLogging();
         mLogMsg = new String();
         loadProperties();
-        mVersion = Version.instance().toString();
     }
 
     /**
@@ -147,7 +147,7 @@ public abstract class Executable {
      * This function is passed command line arguments. In this function you
      * generate the valid options and parse the options specified at run time.
      */
-    public abstract void executeCommand(String[] args);
+    //public abstract void executeCommand(String[] args);
 
     /**
      * Generates an array of valid <code>LongOpt</code> objects which contain

@@ -180,8 +180,8 @@ public class NetloggerCallback implements Callback {
    public void done(){
        for( Map m : mInvocationList ){
          for( Iterator<String> it = m.keySet().iterator(); it.hasNext() ; ){
-               String key = it.next(); 
-            System.out.println( key + "   "  + mInvocationMap.get(key) );
+            String key = it.next(); 
+            //System.out.println( key + "   "  + mInvocationMap.get(key) );
          }
        }
       
