@@ -114,6 +114,7 @@ public class GridStartFactory {
         associate( new ExitCode() );
         associate( new UserPOSTScript() );
         associate( new NoPOSTScript() );
+        associate( new NetloggerPostScript() );
     }
 
 

@@ -143,6 +143,8 @@ public class Windward implements GridStart{
         File f = new File( base, bag.getPlannerOptions().getRelativeSubmitDirectory() );
         mAllegroKB = f.getAbsolutePath();
         mWorkflowID  = dag.getExecutableWorkflowID();
+        //set it in the properties for postscript to pick up
+        mProps.setProperty( NetloggerPostScript.WORKFLOW_ID_PROPERTY , mWorkflowID );
     } 
 
     /**
@@ -272,7 +274,7 @@ public class Windward implements GridStart{
      * @see POSTScript#shortDescribe()
      */
     public String defaultPOSTScript(){
-        return mKickstartLauncher.defaultPOSTScript();
+        return NetloggerPostScript.SHORT_NAME;
     }
 
     
