@@ -19,6 +19,8 @@ package edu.isi.pegasus.common.logging.format;
 
 import edu.isi.pegasus.common.logging.*;
 import edu.isi.pegasus.common.logging.format.AbstractLogFormatter;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This formatter formats the messages in the netlogger format.
@@ -57,4 +59,21 @@ public  class Netlogger extends AbstractLogFormatter {
         return;
     }
     
+    
+    
+    /**
+     * Adds the event that is to be associated with the log messages onto an
+     * internal stack
+     * 
+     * @param name     the name of the event to be associated
+     * @param map      Map indexed by entity name . The values is corresponding 
+     *                 EntityID     
+     */
+    public void addEvent( String name, Map<String,String> map ){
+        Event e = new NetloggerEvent();
+        e.setProgramName( mProgram );
+        e.setEvent( name, map );
+        mStack.addElement( e );
+        return;
+    }
 }

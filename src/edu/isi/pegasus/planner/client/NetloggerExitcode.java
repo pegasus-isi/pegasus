@@ -40,6 +40,7 @@ import gnu.getopt.LongOpt;
 import java.io.IOException;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.griphyn.common.util.VDSProperties;
@@ -177,7 +178,10 @@ public class NetloggerExitcode extends Executable{
         su.setCallback( c );
 
         try{
-           mLogger.logEventStart( LoggingKeys.EVENT_WORKFLOW_JOB_STATUS, LoggingKeys.JOB_ID , mJobID ); 
+           Map eventIDMap = new HashMap();
+           eventIDMap.put( LoggingKeys.DAG_ID, mWorkflowID );
+           eventIDMap.put( LoggingKeys.JOB_ID , mJobID );
+           mLogger.logEventStart( LoggingKeys.EVENT_WORKFLOW_JOB_STATUS, eventIDMap ); 
            log( "Parsing file " + mFilename , LogManager.DEBUG_MESSAGE_LEVEL );
            su.parseKickstartFile( mFilename );
            
@@ -279,7 +283,6 @@ public class NetloggerExitcode extends Executable{
      * @param level is the level to generate the log message for.
      */
     public void log( String msg, int level ){
-        mLogger.add( LoggingKeys.DAG_ID, mWorkflowID );
         mLogger.add( msg );
         mLogger.logAndReset(level);
     }

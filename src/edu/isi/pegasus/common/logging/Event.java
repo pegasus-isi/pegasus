@@ -6,6 +6,8 @@
 package edu.isi.pegasus.common.logging;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -37,6 +39,17 @@ public interface Event extends Cloneable{
      * @param entityID    the id of that entity.
      */
     public void setEvent( String name, String entityName, String entityID );
+    
+    
+    
+    /**
+     * Adds the event that is to be associated with the log messages onto an
+     * internal stack
+     * 
+     * @param name  the name of the event to be associated
+     * @param map   Map of Entity Names with the entity identifiers.
+     */
+    public void setEvent( String name, Map<String,String> map );
     
     
     /**

@@ -21,6 +21,8 @@ import edu.isi.ikcap.workflows.util.logging.LogEvent;
 import edu.isi.ikcap.workflows.util.logging.EventLogMessage;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 
 
@@ -85,6 +87,17 @@ public class NetloggerEvent implements Event{
         reset();
     }
     
+    /**
+     * Adds the event that is to be associated with the log messages onto an
+     * internal stack
+     * 
+     * @param name  the name of the event to be associated
+     * @param map   Map of Entity Names with the entity identifiers.
+     */
+    public void setEvent( String name, Map<String,String> map ){
+        mLogEvent = new LogEvent( name, mProgram, map );
+        reset();
+    }
     
     /**
      * Returns the name of event that is currently associated with the log messages.

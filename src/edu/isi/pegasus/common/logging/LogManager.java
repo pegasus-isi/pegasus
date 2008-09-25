@@ -27,6 +27,7 @@ import edu.isi.pegasus.common.logging.LogFormatter;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
 
 
@@ -73,7 +74,7 @@ public abstract class LogManager {
     /**
      * The version of the Logging API
      */
-    public static final String VERSION = "2.0";
+    public static final String VERSION = "2.1";
     
     /**
      * Prefix for the property subset to use with the LogManager
@@ -435,6 +436,30 @@ public abstract class LogManager {
        this.logAlreadyFormattedMessage( mLogFormatter.getStartEventMessage() , level );
     }
     
+    /**
+     * Log an event start message to the INFO Level
+     * 
+     * @param name     the name of the event to be associated
+     * @param map      Map indexed by entity name . The values is corresponding 
+     *                 EntityID    
+     * @param level    the level to log to
+     *  
+     */
+    public void logEventStart( String name, Map<String,String> map ){
+        this.logEventStart( name, map, LogManager.INFO_MESSAGE_LEVEL );
+    }
+    
+    /**
+     * Log an event start message.
+     * 
+     * @param name     the name of the event to be associated
+     * @param map      Map indexed by entity name . The values is corresponding 
+     *                 EntityID     
+     */
+    public void logEventStart( String name, Map<String,String> map , int level ){
+       mLogFormatter.addEvent( name, map );
+       this.logAlreadyFormattedMessage( mLogFormatter.getStartEventMessage() , level );
+    }
     
     /**
       * Logs the completion message on the basis of the debug level.

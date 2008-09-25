@@ -17,6 +17,8 @@ package edu.isi.pegasus.common.logging.format;
 
 import edu.isi.pegasus.common.logging.*;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import org.griphyn.common.util.Currently;
 
 /**
@@ -90,6 +92,24 @@ public class SimpleEvent implements Event{
                      append( entityName ).append( " " ).
                      append( entityID ).append( " " );
     }
+    
+    /**
+     * Adds the event that is to be associated with the log messages onto an
+     * internal stack
+     * 
+     * @param name  the name of the event to be associated
+     * @param map   Map of Entity Names with the entity identifiers.
+     */
+    public void setEvent( String name, Map<String,String> map ){
+        mEventBuffer = new StringBuffer();
+        mEventBuffer.append( name ).append( " " );
+        
+       for( String key : map.keySet()  ){
+            mEventBuffer.append( key ).append( " " ).
+                         append( map.get(key) ).append( " " );
+       }
+    }
+    
     
     
     /**

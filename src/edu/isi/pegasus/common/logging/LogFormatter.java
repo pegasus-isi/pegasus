@@ -18,6 +18,7 @@
 package edu.isi.pegasus.common.logging;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * The interface that defines how the messages need to be formatted for logging
@@ -53,6 +54,16 @@ public interface LogFormatter {
      * @param entityID    the id of that entity.
      */
     public void addEvent( String name, String entityName, String entityID );
+    
+    /**
+     * Adds the event that is to be associated with the log messages onto an
+     * internal stack
+     * 
+     * @param name     the name of the event to be associated
+     * @param map      Map indexed by entity name . The values is corresponding 
+     *                 EntityID     
+     */
+    public void addEvent( String name, Map<String,String> map );
     
     /**
      * Pop the event on top of the internal stack.
