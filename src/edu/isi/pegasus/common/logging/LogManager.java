@@ -368,7 +368,7 @@ public abstract class LogManager {
      * @param level    the level on which the message has to be logged.
      */
     public  void logAndReset( int level ){
-        this.log( mLogFormatter.createLogMessageAndReset(), level );
+        this.logAlreadyFormattedMessage( mLogFormatter.createLogMessageAndReset(), level );
     }
     
     /**
@@ -504,8 +504,7 @@ public abstract class LogManager {
      * @return self-reference 
      */
     public LogManager add( String value ){
-        add( "msg", value );
-        return this;
+        return add( "msg", value );
     }
     
     /**

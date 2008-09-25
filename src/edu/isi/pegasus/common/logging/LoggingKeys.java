@@ -66,6 +66,8 @@ public  class LoggingKeys {
     public static final String EVENT_PEGASUS_PARSE_DAX            = "event.pegasus.parse.dax";
     public static final String EVENT_PEGASUS_PARSE_PDAX           = "event.pegasus.parse.pdax";
     
+    public static final String EVENT_WORKFLOW_JOB_STATUS           = "event.workflow.job.status";
+    
     public static final String QUERY_NUMBER = "query.number";
     public static final String QUERY_NAME = "query.name";
     public static final String QUERY_INPUT = "query.input";

@@ -311,7 +311,7 @@ public class Log4j extends LogManager{
       */
      public void logEventCompletion( int level ){
          String message = mLogFormatter.getEndEventMessage();
-         log( message /*+ " COMPLETED"*/, level );
+         logAlreadyFormattedMessage( message , level );
          mLogFormatter.popEvent();
      }
 
