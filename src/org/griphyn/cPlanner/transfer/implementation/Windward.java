@@ -118,7 +118,13 @@ public class Windward extends Abstract
     /**
      * The handle to the BAE transfer implementation.
      */
-    private BAE mBAETransfer;
+    private BAE mBAESITransfer;
+    
+    /**
+     * The handle to the BAE stageout transfer implementation.
+     */
+    private BAERIC mBAESOTransfer;
+    
     
     /**
      * The seqexec job aggregator.
@@ -141,7 +147,8 @@ public class Windward extends Abstract
 
         //should probably go through the factory
         mPegasusTransfer = new Transfer( bag );
-        mBAETransfer     = new BAE( bag );
+        mBAESITransfer     = new BAE( bag );
+        mBAESOTransfer     = new BAERIC( bag );
 
         //just to pass the label have to send an empty ADag.
         //should be fixed
@@ -162,7 +169,8 @@ public class Windward extends Abstract
         super.setRefiner( refiner );
         //also set the refiner for hte internal pegasus transfer
         mPegasusTransfer.setRefiner( refiner );
-        mBAETransfer.setRefiner(refiner);
+        mBAESITransfer.setRefiner(refiner);
+        mBAESOTransfer.setRefiner( refiner );
         mRefiner = refiner;
     }
 
@@ -195,7 +203,46 @@ public class Windward extends Abstract
                                           String txJobName,
                                           int jobClass) {
 
+        
+        if( jobClass == SubInfo.STAGE_IN_JOB ){
+            return createSITransferJob( job, files, execFiles, txJobName );
+        }
+        else if ( jobClass == SubInfo.STAGE_OUT_JOB ){
+            return createSOTransferJob( job, files, execFiles, txJobName );
+        }
+        else{
+            throw new RuntimeException( "Windward Transfer Implementation does not support jobs of class "  + jobClass );
+        }
+    }
 
+
+
+    /**
+     * Creates a stagein transfer job that stages in data using BAE transfer client
+     * 
+     *
+     * @param job         the SubInfo object for the job, in relation to which
+     *                    the transfer node is being added. Either the transfer
+     *                    node can be transferring this jobs input files to
+     *                    the execution pool, or transferring this job's output
+     *                    files to the output pool.
+     * @param files       collection of <code>FileTransfer</code> objects
+     *                    representing the data files and staged executables to be
+     *                    transferred.
+     * @param execFiles   subset collection of the files parameter, that identifies
+     *                    the executable files that are being transferred.
+     * @param txJobName   the name of transfer node.
+     *
+     * @return  the created TransferJob.
+     */
+    public TransferJob createSITransferJob( SubInfo job,
+                                          Collection files,
+                                          Collection execFiles,
+                                          String txJobName) {
+
+        
+        int jobClass = SubInfo.STAGE_IN_JOB;
+                                          
         //iterate through all the files and identify the patterns
         //and the other data sources
         Collection rawDataSources = new LinkedList();
@@ -258,7 +305,7 @@ public class Windward extends Abstract
             FileTransfer ft = (FileTransfer)it.next();            
             List<FileTransfer> l = new LinkedList<FileTransfer>();
             l.add( ft );
-            TransferJob dcTXJob = mBAETransfer.createTransferJob( job,
+            TransferJob dcTXJob = mBAESITransfer.createTransferJob( job,
                                                                   l,
                                                                   null,
                                                                   txJobName, 
@@ -307,6 +354,96 @@ public class Windward extends Abstract
         return txJob;
     }
 
+
+     /**
+     * Creates a stage-out transfer job that stages out data using BAE RIC client
+     * 
+     *
+     * @param job         the SubInfo object for the job, in relation to which
+     *                    the transfer node is being added. Either the transfer
+     *                    node can be transferring this jobs input files to
+     *                    the execution pool, or transferring this job's output
+     *                    files to the output pool.
+     * @param files       collection of <code>FileTransfer</code> objects
+     *                    representing the data files and staged executables to be
+     *                    transferred.
+     * @param execFiles   subset collection of the files parameter, that identifies
+     *                    the executable files that are being transferred.
+     * @param txJobName   the name of transfer node.
+     *
+     * @return  the created TransferJob.
+     */
+    public TransferJob createSOTransferJob( SubInfo job,
+                                          Collection files,
+                                          Collection execFiles,
+                                          String txJobName) {
+
+        
+        int jobClass = SubInfo.STAGE_OUT_JOB;
+                                          
+        
+
+        List txJobs = new LinkedList();
+        List<String> txJobIDs = new LinkedList<String>();
+        
+        //this should in fact only be set
+        // for non third party pools
+        //we first check if there entry for transfer universe,
+        //if no then go for globus
+//        SiteInfo ePool = mSCHandle.getTXPoolEntry( job.getSiteHandle() );
+//        JobManager jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
+        SiteCatalogEntry ePool = mSiteStore.lookup( job.getSiteHandle() );
+        GridGateway jobmanager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
+
+
+        //use the DC transfer client to handle the data sources        
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            FileTransfer ft = (FileTransfer)it.next();            
+            List<FileTransfer> l = new LinkedList<FileTransfer>();
+            l.add( ft );
+            TransferJob dcTXJob = mBAESOTransfer.createTransferJob( job,
+                                                                  l,
+                                                                  null,
+                                                                  txJobName, 
+                                                                  jobClass );
+            txJobs.add( dcTXJob );
+            txJobIDs.add( dcTXJob.getID() );
+        }
+
+        //only merging if more than only one data set being staged
+        TransferJob txJob = null;
+        if( txJobs.size() > 1 ){        
+            //now lets merge all these jobs
+            SubInfo merged = mSeqExecAggregator.construct( txJobs, "transfer", txJobName  );
+            txJob = new TransferJob( merged );
+
+
+            //set the name of the merged job back to the name of
+            //transfer job passed in the function call
+            txJob.setName( txJobName );
+            txJob.setJobType( jobClass );
+        }else{
+            txJob = (TransferJob) txJobs.get( 0 );
+        }
+
+        //take care of transfer of proxies
+        this.checkAndTransferProxy( txJob );
+
+        //apply the priority to the transfer job
+        this.applyPriority( txJob );
+
+
+
+        if(execFiles != null){
+            //we need to add setup jobs to change the XBit
+            super.addSetXBitJobs( job, txJob, execFiles );
+        }
+
+        mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, mRefiner.getWorkflow().getAbstractWorkflowID(),
+                                           LoggingKeys.JOB_ID, txJobIDs );
+
+        return txJob;
+    }
 
 
 

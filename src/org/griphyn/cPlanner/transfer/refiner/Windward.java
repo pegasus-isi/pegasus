@@ -127,7 +127,7 @@ public class Windward extends MultipleFTPerXFERJobRefiner {
             
             //set the stage out explicitly to false as
             //registration takes care of the stage-out
-            ft.setTransferFlag( PegasusFile.TRANSFER_NOT );
+            //ft.setTransferFlag( PegasusFile.TRANSFER_NOT );
             ft.setRegisterFlag( false );
             
             
