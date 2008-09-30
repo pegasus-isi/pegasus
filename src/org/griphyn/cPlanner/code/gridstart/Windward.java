@@ -32,6 +32,7 @@ import org.griphyn.cPlanner.code.GridStart;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
+import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.VDS;
 
 
@@ -279,13 +280,18 @@ public class Windward implements GridStart{
 
     
     /**
-     * Enables an aggregated job. 
+     * Enables an aggregated job.  Always set the POSTSCRIPT to be used as
+     * netlogger-exitcode for clustered jobs.
      * 
      * @param aggJob
      * @param jobs
      * @return
      */
     public AggregatedJob enable(AggregatedJob aggJob, Collection jobs) {
+        //set the postscript always to default
+        //overriding one in seqexec
+        aggJob.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY, this.defaultPOSTScript() );
+        
         //let the job launch via kickstart directly for time being.
         return mKickstartLauncher.enable( aggJob, jobs );
     }
