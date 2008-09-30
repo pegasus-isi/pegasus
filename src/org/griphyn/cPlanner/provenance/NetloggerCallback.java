@@ -87,7 +87,6 @@ public class NetloggerCallback implements Callback {
      */
     public NetloggerCallback() {
         mLogger =  LogManagerFactory.loadSingletonInstance();
-        mInvocationMap    = new LinkedHashMap<String,String>();
         mInvocationList   = new LinkedList<Map<String,String>>();
         counter = 0;
     }
@@ -111,7 +110,7 @@ public class NetloggerCallback implements Callback {
      */
     public void cbInvocationStart( String job, String resource) {
         counter ++;
-       
+        mInvocationMap    = new LinkedHashMap<String,String>();
     }
 
 
@@ -194,7 +193,7 @@ public class NetloggerCallback implements Callback {
      * @param metadata
      */
     public void cbMetadata( Map metadata ){
-        //System.out.println( metadata );
+        System.out.println( metadata );
         mInvocationMap.put( "job.counter", Integer.toString(counter) );
         mInvocationMap.put( "job.exitcode", 
                    getListValueFromMetadata( metadata, "exitcodes" ) );
