@@ -145,6 +145,11 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
      * The port for the AllegroGraph KB store.
      */
     private String mAllegroPort;
+    
+    /**
+     * the workflow id.
+     */
+    private String mWFID;
    
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -159,6 +164,7 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
         mAllegroHost = p.getProperty( "host" );
         mAllegroPort = p.getProperty( "port" );
         String base  = p.getProperty( "basekb" );
+        mWFID = mProps.getProperty( "pegasus.windward.wf.id" );
     }
 
     /**
@@ -268,17 +274,15 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
                
         
         sb.append( " -g " ).
+           append( "<" ).
            append( file.getLFN() ).
-           append( " -h " ).
-           append( mAllegroHost ).
-           append( " -p " ).
-           append( mAllegroPort ).
-           append( " -k " ).
-           append( file.getDestURL().getValue() ).
-           append( " -c " ).
-           append( BAERIC.CREATOR ).
-           append( " -s "  ).
-           append( BAERIC.SOURCE );
+           append( ">" ).
+           append( " -u " ).append( file.getLFN() ).
+           append( " -h " ).append( mAllegroHost ).
+           append( " -p " ).append( mAllegroPort ).
+           append( " -k " ).append( file.getDestURL().getValue() ).
+           append( " -c " ).append( mProps.getProperty( "pegasus.windward.wf.id" ) ).
+           append( " -s "  ).append( BAERIC.SOURCE );
         
         return sb.toString(); 
 

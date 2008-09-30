@@ -74,6 +74,10 @@ public class Windward extends MultipleFTPerXFERJobRefiner {
      */
     public Windward( ADag dag, PegasusBag bag ){
         super( dag, bag );
+        
+        //set the windward specific wf id property
+        mProps.setProperty( "pegasus.windward.wf.id", dag.getExecutableWorkflowID() );
+        
         mBundleRefiner = (MultipleFTPerXFERJobRefiner)RefinerFactory.loadInstance( "Bundle", bag, dag );
         Properties p = mProps.matchingSubset( WindwardImplementation.ALLEGRO_PROPERTIES_PREFIX, false  );
         mLogger.log( "Allegro Graph properties set are " + p, LogManager.DEBUG_MESSAGE_LEVEL );
