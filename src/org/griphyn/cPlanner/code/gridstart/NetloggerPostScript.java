@@ -144,7 +144,7 @@ public class NetloggerPostScript implements POSTScript {
         
         //add the -j and -w options
         extraOptions.append( " -j " ).append( job.getID() ).
-                     append( " -w " ).append( mWorkflowID );
+                     append( " -w " ).append( mWorkflowID ).append( " -f ");
         
         //put the extra options into the exitcode arguments
         //in the correct order.
