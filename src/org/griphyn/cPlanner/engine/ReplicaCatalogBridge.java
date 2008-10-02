@@ -248,7 +248,8 @@ public class ReplicaCatalogBridge
         mLocalEnv = loadLocalEnvVariables();
 
         //only for windward for time being
-        properties.setProperty( "pegasus.catalog.replica.windward.dax.id", dag.getAbstractWorkflowID() );
+        properties.setProperty( "pegasus.catalog.replica.dax.id", dag.getAbstractWorkflowID() );
+        properties.setProperty( "pegasus.catalog.replica.mrc.windward.dax.id", dag.getAbstractWorkflowID() );
         
         try {
 

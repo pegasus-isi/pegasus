@@ -133,11 +133,12 @@ public class Windward  implements ReplicaCatalog {
      */
     public boolean connect( Properties props ) {
         boolean connect = true;
-        System.out.println( props );
+        
+        System.out.println( "Properties are "  + props );
         //figure out how to specify via properties
         try{
             String implementor = props.getProperty( Windward.DATA_CHARACTERIZATION_IMPL_PROPERTY );
-            String id = props.getProperty( "windward.dax.id" );
+            String id = props.getProperty( "dax.id" );
             mDCharCatalog =   PropertiesHelper.getDCFactory().getDC(
 				PropertiesHelper.getDCDomain(), id );
         }catch( Exception e ){
