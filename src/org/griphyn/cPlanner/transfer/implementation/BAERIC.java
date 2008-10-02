@@ -76,6 +76,7 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
     public static final String DC_HOME = "DC_HOME";
     
     
+    
     /**
      * The creator to be associated with the datasets.
      */
@@ -275,7 +276,10 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
         
         sb.append( " -g " ).
            append( "<" ).
+           append( "\"" ).
+           append( BAE.ALLEGRO_NAMESPACE_PREFIX ).
            append( file.getLFN() ).
+           append( "\"" ).
            append( ">" ).
            append( " -u " ).append( file.getLFN() ).
            append( " -h " ).append( mAllegroHost ).
