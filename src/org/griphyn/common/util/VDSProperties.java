@@ -484,6 +484,9 @@ public class VDSProperties
    */
   public Object setProperty( String key, String value )
   {
+    //set in internal properties object also
+    //else prefix option does not work. Karan Oct 1, 2008
+    this.m_props.setProperty( key, value );
     return System.setProperty( key, value );
   }
 
@@ -540,7 +543,7 @@ public class VDSProperties
     String key;
     for ( Enumeration e = propertyNames(); e.hasMoreElements(); ) {
       key = (String) e.nextElement();
-
+      
       if ( keepPrefix ) {
 	// keep full prefix in result, also copy direct matches
 	if ( key.startsWith(prefixMatch) || key.equals(prefixSelf) )
