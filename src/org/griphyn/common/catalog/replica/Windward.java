@@ -28,8 +28,8 @@ import edu.isi.ikcap.workflows.dc.classes.DataSourceLocationObject;
 import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
 import edu.isi.ikcap.workflows.util.FactoryException;
 
-
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
@@ -133,12 +133,13 @@ public class Windward  implements ReplicaCatalog {
      */
     public boolean connect( Properties props ) {
         boolean connect = true;
+        System.out.println( props );
         //figure out how to specify via properties
         try{
             String implementor = props.getProperty( Windward.DATA_CHARACTERIZATION_IMPL_PROPERTY );
-//            mDCharCatalog = DataCharacterizationFactory.loadInstance( implementor, props );
+            String id = props.getProperty( "windward.dax.id" );
             mDCharCatalog =   PropertiesHelper.getDCFactory().getDC(
-				PropertiesHelper.getDCDomain(), null );
+				PropertiesHelper.getDCDomain(), id );
         }catch( Exception e ){
             connect = false;
             mLogger.log( "Unable to connect to Data Characterization Catalog " + e,

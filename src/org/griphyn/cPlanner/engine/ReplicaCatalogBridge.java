@@ -247,6 +247,9 @@ public class ReplicaCatalogBridge
         //from pool config and property file
         mLocalEnv = loadLocalEnvVariables();
 
+        //only for windward for time being
+        properties.setProperty( "pegasus.catalog.replica.windward.dax.id", dag.getAbstractWorkflowID() );
+        
         try {
 
             //make sure that RLS can be loaded from local environment
