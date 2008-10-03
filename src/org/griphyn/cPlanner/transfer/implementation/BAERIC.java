@@ -24,6 +24,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 import edu.isi.pegasus.common.logging.LogManager;
 
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import org.griphyn.common.classes.TCType;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -148,9 +149,9 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
     private String mAllegroPort;
     
     /**
-     * the workflow id.
+     * the request id.
      */
-    private String mWFID;
+    private String mRequestID;
    
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -165,7 +166,7 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
         mAllegroHost = p.getProperty( "host" );
         mAllegroPort = p.getProperty( "port" );
         String base  = p.getProperty( "basekb" );
-        mWFID = mProps.getProperty( "pegasus.windward.wf.id" );
+        mRequestID        = mProps.getWingsRequestID();
     }
 
     /**
@@ -287,6 +288,12 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
            append( " -k " ).append( file.getDestURL().getValue() ).
            append( " -c " ).append( mProps.getProperty( "pegasus.windward.wf.id" ) ).
            append( " -s "  ).append( BAERIC.SOURCE );
+        
+        //append some logging parameters
+        sb.append( " -l " ).append( LoggingKeys.REQUEST_ID ).append( "=" ).append( mRequestID ).
+           append( " -l " ).append( LoggingKeys.DAG_ID ).append( "=" ).append(  mProps.getProperty( "pegasus.windward.wf.id" ) ).
+           append( " -l " ).append( LoggingKeys.JOB_ID ).append( "=" ).append( job.getID() );
+        
         
         return sb.toString(); 
 

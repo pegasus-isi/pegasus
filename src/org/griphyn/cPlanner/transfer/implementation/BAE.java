@@ -17,13 +17,19 @@
 package org.griphyn.cPlanner.transfer.implementation;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import java.io.File;
+
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.FileTransfer;
+
+
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.Profile;
+import org.griphyn.cPlanner.engine.createdir.WindwardImplementation;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
 
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import org.griphyn.common.classes.TCType;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
@@ -32,9 +38,8 @@ import org.griphyn.common.util.Separator;
 
 
 import java.util.Properties;
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.engine.createdir.WindwardImplementation;
+
+import java.io.File;
 
 /**
  * The implementation that creates transfer jobs that retrieve data from the 
@@ -150,6 +155,11 @@ public class BAE extends AbstractSingleFTPerXFERJob {
      */
     private String mAllegroKB;
     
+    /**
+     * The wings request id
+     */
+    private String mRequestID;
+    
     
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -168,6 +178,7 @@ public class BAE extends AbstractSingleFTPerXFERJob {
         mAllegroKB        = f.getAbsolutePath();
         mAllegroDirectory = f.getParent();
         mAllegroDatabase  = f.getName();
+        mRequestID        = mProps.getWingsRequestID();
     }
 
     /**
@@ -288,6 +299,11 @@ public class BAE extends AbstractSingleFTPerXFERJob {
            append( BAE.ALLEGRO_NAMESPACE_PREFIX ).
            append( file.getLFN() ).
            append( "\"" );
+        
+        //append some logging parameters
+        sb.append( " -l " ).append( LoggingKeys.REQUEST_ID ).append( "=" ).append( mRequestID ).
+           append( " -l " ).append( LoggingKeys.DAG_ID ).append( "=" ).append(  mProps.getProperty( "pegasus.windward.wf.id" ) ).
+           append( " -l " ).append( LoggingKeys.JOB_ID ).append( "=" ).append( job.getID() );
         
         return sb.toString(); 
 
