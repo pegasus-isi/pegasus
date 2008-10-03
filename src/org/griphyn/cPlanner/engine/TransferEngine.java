@@ -942,7 +942,11 @@ public class TransferEngine extends Engine {
             //construct the file transfer object
             FileTransfer ft = (pf instanceof FileTransfer) ?
                                (FileTransfer)pf:
-                               new FileTransfer(lfn,jobName);
+                               new FileTransfer( lfn, jobName );
+            
+            //make sure the type information is set in file transfer
+            ft.setType( pf.getType() );
+            
             //the transfer mode for the file needs to be
             //propogated for optional transfers.
             ft.setTransferFlag(pf.getTransferFlag());
