@@ -315,7 +315,7 @@ public class TransferEngine extends Engine {
         }
 
         //we are done with the traversal.
-        mTXRefiner.done();
+        //mTXRefiner.done();
 
         //get the deleted leaf jobs o/p files to output pool
         //only if output pool is specified
@@ -325,16 +325,20 @@ public class TransferEngine extends Engine {
 
             for ( Enumeration e = this.mvDelLeafJobs.elements(); e.hasMoreElements(); ) {
                 currentJob = (SubInfo)e.nextElement();
-
+                currentJob.setLevel( 0 );
+                
                 //for a deleted node, to transfer it's output
                 //the execution pool should be set to local i.e submit host
                 currentJob.executionPool = "local";
 
                 vOutPoolTX = getDeletedFileTX(outputSite, currentJob);
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, true );
+
             }
         }
 
+        //we are done with the traversal.
+        mTXRefiner.done();
 
 
         //close the handle to the cache file if it is written
