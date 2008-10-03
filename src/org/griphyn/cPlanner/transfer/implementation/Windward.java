@@ -250,17 +250,15 @@ public class Windward extends Abstract
 
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = ( FileTransfer )it.next();
-            //no way to distinguish a pattern right now
-            /*
-            if( ft.getLFN().startsWith( DATA_SOURCE_PREFIX ) && !ft.getSourceURL().getValue().endsWith( ".zip" )){
-                //it a raw data source that will have to be ingested
-                rawDataSources.add( ft );
+            
+            //separate patterns from datasets
+            if( ft.getType() == FileTransfer.OTHER_FILE ){
+                patterns.add( ft );
             }
             else{
-                //everything else is a pattern
-                patterns.add( ft );
-            }*/
-            rawDataSources.add( ft );
+                rawDataSources.add( ft );
+            }
+            
         }
 
         List txJobs = new LinkedList();

@@ -83,6 +83,13 @@ public class PegasusFile extends Data {
      * @see #DATA_FILE
      */
     public static final String EXECUTABLE_TYPE = "executable";
+    
+    
+    /**
+     * The string value of a file that is of type other.
+     * @see #OTHER_FILE
+     */
+    public static final String OTHER_TYPE = "other";
 
     /**
      * The type denoting that a logical file is a data file.
@@ -95,6 +102,11 @@ public class PegasusFile extends Data {
     public static final int EXECUTABLE_FILE = 1;
 
     /**
+     * The type denoting that a logical file is an other file.
+     */
+    public static final int OTHER_FILE = 2;
+    
+    /**
      * The logical name of the file.
      */
     protected String mLogicalFile;
@@ -105,6 +117,7 @@ public class PegasusFile extends Data {
      *
      * @see #DATA_FILE
      * @see #EXECUTABLE_FILE
+     * @see #OTHER_FILE
      */
     protected int mType;
 
@@ -182,8 +195,8 @@ public class PegasusFile extends Data {
      *         false if the value is not in range.
      */
     public boolean typeValid(int type){
-        return (type >= this.DATA_FILE &&
-                type <= this.EXECUTABLE_FILE);
+        return (type >= PegasusFile.DATA_FILE &&
+                type <= PegasusFile.OTHER_FILE );
     }
 
     /**
@@ -195,8 +208,8 @@ public class PegasusFile extends Data {
      *         false if the value is not in range.
      */
     public boolean transferInRange(int transfer){
-        return (transfer >= this.TRANSFER_MANDATORY &&
-                transfer <= this.TRANSFER_NOT);
+        return (transfer >= PegasusFile.TRANSFER_MANDATORY &&
+                transfer <= PegasusFile.TRANSFER_NOT);
     }
 
     /**
@@ -234,11 +247,14 @@ public class PegasusFile extends Data {
         if( type == null || type.length() == 0)
             throw new IllegalArgumentException( "Invalid Type passed " + type );
 
-        if( type.equals( this.DATA_TYPE )){
-            mType = this.DATA_FILE;
+        if( type.equals( PegasusFile.DATA_TYPE )){
+            mType = PegasusFile.DATA_FILE;
         }
-        else if( type.equals( this.EXECUTABLE_TYPE )){
-            mType = this.EXECUTABLE_FILE;
+        else if( type.equals( PegasusFile.EXECUTABLE_TYPE )){
+            mType = PegasusFile.EXECUTABLE_FILE;
+        }
+        else if( type.equals( PegasusFile.OTHER_TYPE )){
+            mType = PegasusFile.OTHER_FILE;
         }
         else{
             throw new IllegalArgumentException( "Invalid Type passed " + type );
@@ -365,6 +381,7 @@ public class PegasusFile extends Data {
      *
      * @see #DATA_FILE
      * @see #EXECUTABLE_FILE
+     * @see #OTHER_FILE
      */
     public int getType(){
         return mType;
@@ -472,7 +489,23 @@ public class PegasusFile extends Data {
      * @return type of the file.
      */
     public String typeToString(){
-        return (mType == DATA_FILE)?DATA_TYPE:EXECUTABLE_TYPE;
+        String result = null;
+        
+        switch( mType ){
+            case DATA_FILE:
+                result = DATA_TYPE;
+                break;
+                
+            case EXECUTABLE_FILE:
+                result = EXECUTABLE_TYPE;
+                break;
+                
+            case OTHER_FILE:
+                result = OTHER_TYPE;
+                break;
+                    
+        }
+        return result;
     }
 
     /**
