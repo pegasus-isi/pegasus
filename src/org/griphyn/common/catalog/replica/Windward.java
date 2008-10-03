@@ -464,9 +464,9 @@ public class Windward  implements ReplicaCatalog {
     public Map lookup( Set lfns ) {
         Map result = new HashMap();
 
+        mLogger.log( "Querying DC for lfns " + lfns, LogManager.DEBUG_MESSAGE_LEVEL );
         Map m = mDCharCatalog.findDataObjectLocationsAndAccessAttributes( lfns );
 
-        mLogger.log( "Querying DC for lfns " + lfns, LogManager.DEBUG_MESSAGE_LEVEL );
         //iterate through the entries and match for handle
         for( Iterator it = m.entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = ( Map.Entry )it.next();

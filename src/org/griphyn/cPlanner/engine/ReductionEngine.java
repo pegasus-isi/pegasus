@@ -219,14 +219,14 @@ public class ReductionEngine extends Engine implements Refiner{
         firstPass(mAddJobsDeleted);
 
         mLogMsg = "Nodes/Jobs Deleted from the Workflow during reduction ";
-        mLogger.log(mLogMsg,LogManager.DEBUG_MESSAGE_LEVEL);
+        mLogger.log( mLogMsg,LogManager.INFO_MESSAGE_LEVEL );
         for(Enumeration e = mAllDeletedJobs.elements();e.hasMoreElements();){
             String deletedJob = (String) e.nextElement();
-            mLogger.log("\t" + deletedJob, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("\t" + deletedJob, LogManager.INFO_MESSAGE_LEVEL );
             mXMLStore.add( "<removed job = \"" + deletedJob + "\"/>" );
             mXMLStore.add( "\n" );
         }
-        mLogger.log( mLogMsg +  " - DONE", LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.log( mLogMsg +  " - DONE", LogManager.INFO_MESSAGE_LEVEL );
         mReducedDag = makeRedDagObject( mOriginalDag, mAllDeletedJobs );
 
 

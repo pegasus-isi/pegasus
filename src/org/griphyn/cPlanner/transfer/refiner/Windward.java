@@ -124,6 +124,14 @@ public class Windward extends MultipleFTPerXFERJobRefiner {
                                       boolean deletedLeaf ) {
         NameValue nv;
        
+        if( deletedLeaf ){
+            mLogger.log( "Job " + job.getID() + " was deleted during datareuse " ,
+                         LogManager.INFO_MESSAGE_LEVEL );
+            mLogger.log( "Not adding stageout job for job " + job.getID() ,
+                          LogManager.INFO_MESSAGE_LEVEL );
+            return;
+        }
+        
         //update the destination url's to reflect the KB location.
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = ( FileTransfer )it.next();
