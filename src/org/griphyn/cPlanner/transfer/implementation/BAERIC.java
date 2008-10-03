@@ -234,7 +234,7 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
        //construct the path to it
        StringBuffer path = new StringBuffer();
        path.append( dcHome ).append( File.separator ).
-           append( "RIC_Client" ).append( File.separator ).
+           append( "dc-register-ingest-characterize-client" ).append( File.separator ).
            append( "dc-ric.sh" );
 
 

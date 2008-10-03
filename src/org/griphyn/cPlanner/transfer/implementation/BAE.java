@@ -236,7 +236,7 @@ public class BAE extends AbstractSingleFTPerXFERJob {
        //construct the path to it
        StringBuffer path = new StringBuffer();
        path.append( dcHome ).append( File.separator ).
-           append( "Transfer_Client" ).append( File.separator ).
+           append( "dc-transfer-client" ).append( File.separator ).
            append( "dc-transfer.sh" );
 
 
