@@ -105,7 +105,7 @@ public abstract class Executable {
     protected void setupLogging(){
         //setup the logger for the default streams.
         mLogger = LogManagerFactory.loadSingletonInstance( mProps );
-        mLogger.logEventStart( "pegasus", "planner", mVersion );
+        mLogger.logEventStart( "event.pegasus.planner", "planner.version", mVersion );
 
         //get the logging value set in properties
         //cannot ask for PegasusProperties, as deprecation warnings could be

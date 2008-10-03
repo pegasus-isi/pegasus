@@ -238,6 +238,7 @@ public class CPlanner extends Executable{
                          LogManager.INFO_MESSAGE_LEVEL);
         }
 
+        cPlanner.mLogger.logEventCompletion();
         System.exit(result);
     }
 

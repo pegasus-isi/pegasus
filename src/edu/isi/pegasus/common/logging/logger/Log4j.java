@@ -19,6 +19,7 @@ package edu.isi.pegasus.common.logging.logger;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogFormatter;
+import java.util.Collection;
 import org.griphyn.cPlanner.common.*;
 
 import org.apache.log4j.Logger;
@@ -112,6 +113,24 @@ public class Log4j extends LogManager{
         }
     }
     
+    /**
+     * Log a message that connects the parent entities with the 
+     * children. For e.g. can we use to create the log messages connecting the 
+     * jobs with the workflow they are part of. They are by default logged
+     * to INFO level
+     *
+     * @param parentType   the type of parent entity
+     * @param parentID     the id of the parent entity
+     * @param childIDType  the type of children entities
+     * @param childIDs     Collection of children id's
+     * 
+     */
+    public void logEntityHierarchyMessage( String parentType,
+                                           String parentID,
+                                           String childIDType,
+                                           Collection<String> childIDs ){
+        this.logEntityHierarchyMessage( parentType, parentID, childIDType, childIDs, LogManager.INFO_MESSAGE_LEVEL );
+    }
 
 
     /**

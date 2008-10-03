@@ -193,7 +193,6 @@ public class NetloggerCallback implements Callback {
      * @param metadata
      */
     public void cbMetadata( Map metadata ){
-        System.out.println( metadata );
         mInvocationMap.put( "job.counter", Integer.toString(counter) );
         mInvocationMap.put( "job.exitcode", 
                    getListValueFromMetadata( metadata, "exitcodes" ) );

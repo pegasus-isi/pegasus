@@ -144,7 +144,7 @@ public class NetloggerExitcode extends Executable{
     protected void setupLogging(){
         //setup the logger for the default streams.
         mLogger = LogManagerFactory.loadSingletonInstance( mProps );
-        mLogger.logEventStart( "netlogger-exitcode", "postscript", "netlogger-exitcode-" + mVersion );
+        mLogger.logEventStart( "event.pegasus.netlogger-exitcode", "postscript.version",  mVersion );
 
     }
 
