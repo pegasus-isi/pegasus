@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Collection;
 import java.util.Properties;
+import org.griphyn.cPlanner.common.PegasusProperties;
 
 /**
  * An implementation of the Replica Catalog interface that talks to Windward
@@ -138,7 +139,8 @@ public class Windward  implements ReplicaCatalog {
         //figure out how to specify via properties
         try{
             String implementor = props.getProperty( Windward.DATA_CHARACTERIZATION_IMPL_PROPERTY );
-            String id = props.getProperty( "dax.id" );
+            //String id = props.getProperty( "dax.id" );
+            String id = PegasusProperties.getInstance().getProperty( "pegasus.wings.request.id" );
             mDCharCatalog =   PropertiesHelper.getDCFactory().getDC(
 				PropertiesHelper.getDCDomain(), id );
         }catch( Exception e ){

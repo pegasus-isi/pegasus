@@ -277,7 +277,6 @@ public class Windward  implements TransformationCatalog {
             mProcessCatalog = PropertiesHelper.getPCFactory().getPC(
 				PropertiesHelper.getDCDomain(), 
 				PropertiesHelper.getPCDomain(), mRequestID );
-            mProcessCatalog.setRequestId( mRequestID );
         }catch( Exception e ){
             connect = false;
             mLogger.log( "Unable to connect ot process catalog " + e,
