@@ -48,6 +48,11 @@ public class NetloggerPostScript implements POSTScript {
      * The property to be set for postscript to pick up workflow id
      */
     public static final String WORKFLOW_ID_PROPERTY = "pegasus.gridstart.workflow.id" ;
+    
+    /**
+     * The LOG4j system configuration property.
+     */
+    private static String LOG4J_CONF_PROPERTY = "log4j.configuration";
 
     /**
      * The LogManager object which is used to log all the messages.
@@ -75,12 +80,19 @@ public class NetloggerPostScript implements POSTScript {
      * the workflow id used.
      */
     private String mWorkflowID;
+    
+    /**
+     * The log4j system property
+     */
+    private String mLog4jConf;
 
     /**
      * The default constructor.
      */
     public NetloggerPostScript(){
         //mLogger = LogManager.getInstance();
+        
+        mLog4jConf = System.getProperty( NetloggerPostScript.LOG4J_CONF_PROPERTY );
     }
 
 
@@ -142,9 +154,17 @@ public class NetloggerPostScript implements POSTScript {
         //put in the postscript properties if any
         extraOptions.append( this.mPostScriptProperties );
         
+        //add the log4j conf option if specified
+        if( mLog4jConf != null ){
+            extraOptions.append( " -D" ).append( NetloggerPostScript.LOG4J_CONF_PROPERTY ).
+                         append( "=" ).append( mLog4jConf );
+                         
+        }
+        
         //add the -j and -w options
         extraOptions.append( " -j " ).append( job.getID() ).
                      append( " -w " ).append( mWorkflowID ).append( " -f ");
+        
         
         //put the extra options into the exitcode arguments
         //in the correct order.
