@@ -76,6 +76,11 @@ public class Windward implements GridStart{
     public static final String SHORT_NAME = "Windward Launcher";
 
     /**
+     * The name of GU environment variable that turns on logging
+     */
+    public static final String GU_LOGGING_ENV_VARIABLE = "GU_SERVER_LOGGING";
+    
+    /**
      * The KickStart instance that is initialized.
      */
     private Kickstart mKickstartLauncher;
@@ -181,6 +186,10 @@ public class Windward implements GridStart{
             args += " -c " + new File( config ).getName();            
             job.setArguments( args );
         }
+        
+        //add the GU logging envvariable
+        job.envVariables.construct( Windward.GU_LOGGING_ENV_VARIABLE, "1" );
+        
         
         //launch the jobs directly via kickstart
         return mKickstartLauncher.enable( job, isGlobusJob );
@@ -291,6 +300,9 @@ public class Windward implements GridStart{
         //set the postscript always to default
         //overriding one in seqexec
         aggJob.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY, this.defaultPOSTScript() );
+        
+        //add the GU logging envvariable
+        aggJob.envVariables.construct( Windward.GU_LOGGING_ENV_VARIABLE, "1" );
         
         //let the job launch via kickstart directly for time being.
         return mKickstartLauncher.enable( aggJob, jobs );
