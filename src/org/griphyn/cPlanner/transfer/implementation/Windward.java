@@ -406,6 +406,14 @@ public class Windward extends Abstract
                                                                   jobClass );
             txJobs.add( dcTXJob );
             txJobIDs.add( dcTXJob.getID() );
+      
+            //append some logging parameters
+            //mLogger.add( LoggingKeys.REQUEST_ID , mRequestID ).
+            mLogger.add( LoggingKeys.DAG_ID , mProps.getProperty( "pegasus.windward.wf.id" ) ).
+                    add( LoggingKeys.JOB_ID , dcTXJob.getID() ).
+                    add( "dataset.id" , ft.getLFN() ).
+                    add( "Ingestion job created" );
+            mLogger.logAndReset( LogManager.INFO_MESSAGE_LEVEL );
         }
 
         //only merging if more than only one data set being staged
