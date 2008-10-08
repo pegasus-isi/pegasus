@@ -206,8 +206,10 @@ public class NetloggerExitcode extends Executable{
             result = 5;
         }
         catch( FriendlyNudge fn ){
+            mLogger.add( "job.exitcode" , "9" );
             log( "Problem parsing file " + mFilename + convertException( fn ),
                     LogManager.WARNING_MESSAGE_LEVEL );
+            result = 9;
         }
         finally{
             //we are done with parsing
@@ -351,6 +353,7 @@ public class NetloggerExitcode extends Executable{
            "\n   5  invocation record has an invalid state, unable to parse." + 
            "\n   7  illegal state, stumbled over an exception, try --verbose for details. "  +
            "\n   8  multiple 0..5 failures during parsing of multiple records" +
+           "\n   9  probably an empty kickstart output." +
            "\n";
 
         System.out.println(text);
