@@ -23,6 +23,7 @@ import org.griphyn.cPlanner.classes.PoolConfigParser2;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
@@ -51,6 +52,7 @@ import java.util.StringTokenizer;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.common.PegasusProperties;
 //import javax.naming.directory.SearchControls;
+import org.griphyn.common.util.FactoryException;
 //import javax.naming.ldap.LdapContext;
 
 /**
@@ -68,6 +70,11 @@ public class SCClient
      * The default output format.
      */
     private static String DEFAULT_OUTPUT_FORMAT = "XML3";
+    
+    /**
+     * The XML format.
+     */
+    private static String XML_FORMAT = "XML";
     
     /**
      * The textual format.
@@ -102,14 +109,8 @@ public class SCClient
     private String mInputFormat;
 
     /**
-     * The data class containing the contents of the site catalog.
+     * The default constructor.
      */
-    private PoolConfig mConfig;
-
-   
-
-   
-
     public SCClient() {
         super();
         
@@ -121,10 +122,18 @@ public class SCClient
         
         mInputFiles = null;
         mOutputFile = null;
-        mConfig = null;
-        mConfig = new PoolConfig();
     }
 
+    /**
+     * Sets up the logging options for this class. Looking at the properties
+     * file, sets up the appropriate writers for output and stderr.
+     */
+    protected void setupLogging(){
+        //setup the logger for the default streams.
+        mLogger = LogManagerFactory.loadSingletonInstance( mProps );
+        mLogger.logEventStart( "event.pegasus.sc-client", "pegasus.version",  mVersion );
+
+    }
     /**
      * Loads all the properties
      * that would be needed
@@ -155,7 +164,7 @@ public class SCClient
      * @param opts Command options
      */
 
-    public void executeCommand( String[] opts ) {
+    public void executeCommand( String[] opts ) throws IOException {
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt( "SCClient", opts, "lthvVi:I:o:O:f:",
@@ -232,13 +241,11 @@ public class SCClient
             //else bank upon the the default logging level
             mLogger.setLevel(level);
         }
-	try {
-	    String result = this.parseInputFiles( mInputFiles, mInputFormat, mOutputFormat );
-            //write out the result to the output file
-            this.toFile( mOutputFile, result );
-	} catch ( Exception e ) {
-	    e.printStackTrace();
-	}
+        
+        String result = this.parseInputFiles( mInputFiles, mInputFormat, mOutputFormat );
+        //write out the result to the output file
+        this.toFile( mOutputFile, result );
+	
     }
 
 
@@ -246,11 +253,11 @@ public class SCClient
      * Parses the input files in the input format and returns a String in the 
      * output format.
      * 
-     * @param inputFiles
-     * @param inputFormat
-     * @param outputFormat
+     * @param inputFiles      list of input files that need to be converted
+     * @param inputFormat     input format of the input files
+     * @param outputFormat    output format of the output file
      * 
-     * @return
+     * @return  String in output format
      * 
      * @throws java.io.IOException
      */
@@ -258,6 +265,17 @@ public class SCClient
 	//sanity check
         if ( inputFiles == null || inputFiles.isEmpty() ){
             throw new IOException( "Input files not specified. Specify the --input option" );
+        }
+        
+        mLogger.log( "Input  format detected is " + inputFormat , LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.log( "Output format detected is " + outputFormat , LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        //check if support for backward compatibility applies
+        boolean backwardCompatibility =  mInputFormat.equals( SCClient.TEXT_FORMAT ) &&
+                                         mOutputFormat.equals( SCClient.XML_FORMAT ) ;
+        
+        if( backwardCompatibility ){
+            return parseInputFilesForBackwardCompatibility( inputFiles, inputFormat, outputFormat );
         }
         
         //sanity check for output format
@@ -274,6 +292,7 @@ public class SCClient
                 /* load the catalog using the factory */
                 try{
                     mProps.setProperty( "pegasus.catalog.site.file", inputFile );
+                    mProps.setProperty( SiteCatalog.c_prefix, mInputFormat );
                     catalog = SiteFactory.loadInstance( mProps );
                 
                     /* load all sites in site catalog */
@@ -305,64 +324,97 @@ public class SCClient
                     SiteInfo s = (SiteInfo)it.next();
                     
                     //convert and add to site store
-                    result.addEntry( SiteInfo2SiteCatalogEntry.convert( s ) );
+                    result.addEntry( SiteInfo2SiteCatalogEntry.convert( s , mLogger ) );
                 }
             }//end of input format Text
         }//end of iteration through input files.
        
         return result.toXML();
     }
-    
-    
+
+    /**
+     * Parses the input files in the input format and returns a String in the old XML
+     * output format.
+     * 
+     * @param inputFiles      list of input files that need to be converted
+     * @param inputFormat     input format of the input files
+     * @param outputFormat    output format of the output file
+     * 
+     * @return  String in output format ( old XML )
+     * 
+     * @throws java.io.IOException
+     */
+    private String parseInputFilesForBackwardCompatibility( List<String> inputFiles,
+                                                            String inputFormat, 
+                                                            String outputFormat ) {
+        
+        PoolConfig result = new PoolConfig();
+        for( String inputFile : inputFiles ){
+            PoolConfig config = this.getTextToPoolConfig( inputFile );
+            result.add( config );    
+        }
+        return this.toXML( result );
+    }
+
+    /**
+     * Returns the short help.
+     * 
+     * 
+     */
     public void printShortVersion() {
         String text =
-            "\n " + this.getGVDSVersion() +
-            "\n Usage :sc-client  [-f <list of files>] " +
-            "\n  [-o <output filename>] [-l] [-t] [-v] [-V] " +
-            "\n Type sc-client -h for more details" +
-            "\n" +
-            "\n Usage :sc-client  [--files <list of files>] " +
-            "\n [--local] [--text] [--output <output filename>] [--verbose] [--version]" +
-            "\n Type sc-client --help for more help";
+            "\n $Id$ " +
+            "\n " + getGVDSVersion() +
+            "\n Usage: sc-client [-Dprop  [..]]  -i <list of input files> -o <output file to write> " +
+            "\n        [-I input format] [-O <output format> [-v] [-V] [-h]" ;
 
         mLogger.log( text,LogManager.ERROR_MESSAGE_LEVEL );
-
     }
 
     public void printLongVersion() {
         String text =
-            "\n" + this.getGVDSVersion() +
-            "\n sc-client - this is used to write the xml site catalog file" +
-            "\n from a local text config file. " +
-            "\n Usage: sc-client  [OPTIONS]...." +
-
-            "\n\n Mandatory Options " +
+           "\n $Id $ " +
+           "\n " + getGVDSVersion() +
+           "\n sc-client - Parses the site catalogs in old format ( Text and XML3 ) and generates site catalog in new format ( XML3 )"  +
+           "\n " +
+           "\n Usage: sc-client [-Dprop  [..]]  --input <list of input files> --output <output file to write> " +
+            "\n        [--iformat input format] [--oformat <output format> [--verbose] [--Version] [--help]" +
+            "\n" +   
             "\n" +
+            "\n Mandatory Options " +
+            "\n" +
+            "\n -i |--input      comma separated list of input files to convert " +
+            "\n -o |--output     the output file to which the output needs to be written to." +
+            "\n" +
+            "\n" +
+            "\n Other Options " +
+            "\n" +
+            "\n -I |--iformat    the input format for the files . Can be [XML , Text] "  + 
+            "\n -O |--oformat    the output format of the file. Usually [XML3] " +
+            "\n -v |--verbose       increases the verbosity of messages about what is going on" +
+            "\n -V |--version       displays the version of the Pegasus Workflow Planner" +
+            "\n -h |--help          generates this help." +
+            "\n" + 
+            "\n" + 
+            "\n Deprecated Options " +
+            "\n" + 
             "\n --text | -t        To convert an xml site catalog file to the multiline site catalog file." +
+            "\n                    Use --iformat instead " + 
             "\n" +
             "\n --files | -f  The local text site catalog file|files to be converted to " +
             "\n                    xml or text. This file needs to be in multiline textual " +
             "\n                    format not the single line or in xml format if converting " +
             "\n                    to text format. See $PEGASUS_HOME/etc/sample.sites.txt. " +
             "\n" +
-            "\n --output | -o      The name of the xml/text file to which you want the ouput " +
-            "\n                    written to. Default it writes to standard out." +
             "\n" +
-            "\n\n Other Options " +
+            "\n Example Usage " +
+            "\n" + 
+            "\n sc-client  -i sites.xml -I XML -o sites.xml.new  -O XML3 -vvvvv" +
             "\n" +
-            "\n -v | --verbose   increases the verbosity level." +
             "\n" +
-            "\n --version | -V     Displays the version number of PEGASUS. " +
-            "\n" +
-            "\n --help   | -h      Generates this help." +
-            "\n" +
-            "\n\n Example Usages " +
-            "\n sc-client --files sites.txt --output sites.xml" +
-            "\n" +
-            "\n sc-client --files sites.txt,sites2.txt " +
-            "\n --output sites.xml" +
-            "\n" +
-            "\n sc-client --files sites.xml --text --output sites.txt \n";
+            "\n Deprecated Usage . Exists only for backward compatibility " +
+            "\n" + 
+            "\n sc-client --files sites.txt --output sites.xml" ;
 
         mLogger.log( text,LogManager.INFO_MESSAGE_LEVEL );
 
@@ -402,47 +454,9 @@ public class SCClient
            mLogger.log("ignoring rest, skipping to next file",
                            LogManager.ERROR_MESSAGE_LEVEL );
         }
-        return mConfig;
+        return result;
     }
-    /**
-     * Generates the old site catalog object reading in from text files.
-     * 
-     * 
-     * @param files  the list of text files to parse.
-     * 
-     * @return
-     */
-    public PoolConfig getLocalConfigInfo( List<String> files ) {
-        for ( int i = 0; i < files.size(); i++ ) {
-            String filename = null;
-            try {
-                filename = ( String ) files.get( i );
-                mLogger.log( "Reading " + filename, LogManager.INFO_MESSAGE_LEVEL);
-                PoolConfigParser2 p = new PoolConfigParser2( new FileReader(
-                    filename ) );
-                mConfig.add(p.parse());
-                mLogger.log( "Reading " + filename + " -DONE",
-                             LogManager.INFO_MESSAGE_LEVEL);
-            } catch ( PoolConfigException pce ) {
-                mLogger.log( filename + ": " + pce.getMessage() ,
-                             LogManager.ERROR_MESSAGE_LEVEL);
-                mLogger.log(
-                    " ignoring rest, skipping to next file",
-                   LogManager.ERROR_MESSAGE_LEVEL );
-            } catch ( IOException ioe ) {
-                mLogger.log( filename + ": " + ioe.getMessage() ,
-                             LogManager.ERROR_MESSAGE_LEVEL);
-                mLogger.log("ignoring rest, skipping to next file",
-                           LogManager.ERROR_MESSAGE_LEVEL );
-            } catch ( Exception e ) {
-                mLogger.log( filename + ": " + e.getMessage(),
-                            LogManager.ERROR_MESSAGE_LEVEL );
-                mLogger.log("ignoring rest, skipping to next file",
-                           LogManager.ERROR_MESSAGE_LEVEL );
-            }
-        }
-        return mConfig;
-    }
+    
 
     /**
      * Returns the XML description of the  contents of <code>PoolConfig</code>
@@ -499,17 +513,64 @@ public class SCClient
      * @throws IOException
      */
     public void toFile( String filename, String output ) throws IOException {
+        if( filename == null ){
+            throw new IOException( "Please specify a file to write the output to using --output option ");
+        }
+        
         File outfile = new File( filename );
+        
         PrintWriter pw = new PrintWriter( new BufferedWriter( new FileWriter(
             outfile ) ) );
         pw.println( output );
         pw.close();
-
+        mLogger.log( "Written out the converted file to " + filename, LogManager.INFO_MESSAGE_LEVEL );
     }
 
     public static void main( String[] args ) throws Exception {
-        SCClient client = new SCClient();
-        client.executeCommand( args );
+        
+        SCClient me = new SCClient();
+        int result = 0;
+        double starttime = new Date().getTime();
+        double execTime  = -1;
+
+        try{
+             me.executeCommand( args );
+        }
+        catch ( IOException ioe ){
+            me.log( ioe.getMessage(), LogManager.FATAL_MESSAGE_LEVEL);
+            result = 1;
+        }
+        catch ( FactoryException fe){
+            me.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
+            result = 2;
+        }
+        catch ( Exception e ) {
+            //unaccounted for exceptions
+            me.log(e.getMessage(),
+                         LogManager.FATAL_MESSAGE_LEVEL );
+            e.printStackTrace();
+            result = 3;
+        } finally {
+            double endtime = new Date().getTime();
+            execTime = (endtime - starttime)/1000;
+        }
+
+        // warn about non zero exit code
+        if ( result != 0 ) {
+            me.log("Non-zero exit-code " + result,
+                         LogManager.WARNING_MESSAGE_LEVEL );
+        }
+        else{
+            //log the time taken to execute
+            me.log("Time taken to execute is " + execTime + " seconds",
+                         LogManager.INFO_MESSAGE_LEVEL);
+        }
+        
+        me.log( "Exiting with exitcode " + result, LogManager.DEBUG_MESSAGE_LEVEL );
+        me.mLogger.logEventCompletion();
+        System.exit(result);
+        
     }
 
+    
 }

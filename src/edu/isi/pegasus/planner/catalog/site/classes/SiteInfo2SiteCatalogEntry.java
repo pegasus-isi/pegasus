@@ -40,7 +40,8 @@ import java.util.List;
  * @version  $Revision$
  */
 public class SiteInfo2SiteCatalogEntry {
-
+    
+     
     /**
      * An adapter method that converts the <code>SiteInfo</code> object to 
      * <code>SiteCatalogEntry</code> object.
@@ -50,7 +51,18 @@ public class SiteInfo2SiteCatalogEntry {
      * @return the converted <code>SiteCatalogEntry</code> object.
      */
     public static SiteCatalogEntry convert( SiteInfo s ) {
-        LogManager logger = LogManagerFactory.loadSingletonInstance();
+        return SiteInfo2SiteCatalogEntry.convert( s,  LogManagerFactory.loadSingletonInstance() );
+    }
+
+    /**
+     * An adapter method that converts the <code>SiteInfo</code> object to 
+     * <code>SiteCatalogEntry</code> object.
+     * 
+     * @param s  <code>SiteInfo</code> to be converted.
+     * 
+     * @return the converted <code>SiteCatalogEntry</code> object.
+     */
+    public static SiteCatalogEntry convert( SiteInfo s, LogManager logger ) {
         SiteCatalogEntry site = new SiteCatalogEntry();
         
         /* set the handle */
