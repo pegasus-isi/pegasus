@@ -23,6 +23,11 @@ import org.griphyn.cPlanner.classes.PoolConfigParser2;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
+import edu.isi.pegasus.planner.catalog.site.SiteFactory;
+import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.parser.ConfigXmlParser;
 
 //import org.griphyn.cPlanner.poolinfo.MdsQuery;
@@ -38,50 +43,85 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 
 //import javax.naming.NamingEnumeration;
+import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.common.PegasusProperties;
 //import javax.naming.directory.SearchControls;
 //import javax.naming.ldap.LdapContext;
 
 /**
- * This client generates a xml poolconfig file by querying the MDS or local
- * multiline poolconfig files.
- *
+ * A client to convert site catalog between different formats.
+ * 
+ * @author Karan Vahi
  * @author Gaurang Mehta gmehta@isi.edu
  *
  * @version $Revision$
  */
 public class SCClient
     extends Executable {
+    
+    /**
+     * The default output format.
+     */
+    private static String DEFAULT_OUTPUT_FORMAT = "XML3";
+    
+    /**
+     * The textual format.
+     */
+    private static String TEXT_FORMAT = "Text";
+
+    private static final String XML_NAMESPACE="http://pegasus.isi.edu/schema";
+    private static final String XML_VERSION="2.0";
 
 
+    //private boolean mText;
 
-    private boolean mText;
+    /**
+     * The input files.
+     */
+    private List<String> mInputFiles;
 
-    private ArrayList mLocalPoolConfig;
-
-    private String mOutputXML;
+    
+    /**
+     * The output file that is written out.
+     */
+    private String mOutputFile;
+    
+    /**
+     * The output format for the site catalog.
+     */
+    private String mOutputFormat;
+    
+    /**
+     * The input format for the site catalog.
+     */
+    private String mInputFormat;
 
     /**
      * The data class containing the contents of the site catalog.
      */
     private PoolConfig mConfig;
 
-    private static final String XML_NAMESPACE="http://pegasus.isi.edu/schema";
-    private static final String XML_VERSION="2.0";
+   
 
-
-    private boolean mLocalPrec;
+   
 
     public SCClient() {
         super();
-	//    mGIISPort = 2135;
-        mText = false;
-        mLocalPoolConfig = null;
-        mOutputXML = null;
+        
+        //the output format is whatever user specified in the properties
+        mOutputFormat = mProps.getPoolMode();
+        mInputFormat  = SCClient.TEXT_FORMAT;
+        
+        //mText = false;
+        
+        mInputFiles = null;
+        mOutputFile = null;
         mConfig = null;
-        mLocalPrec = false;
         mConfig = new PoolConfig();
     }
 
@@ -91,21 +131,20 @@ public class SCClient
      * by the Toolkit classes
      */
     public void loadProperties() {
-	//        mGIISHost = mProps.getGIISHost();
-        //mGIISDN = mProps.getGIISDN();
+        
     }
 
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[7 ];
-        longopts[ 0 ] = new LongOpt( "local", LongOpt.NO_ARGUMENT, null, 'l' );
-        longopts[ 1 ] = new LongOpt( "text", LongOpt.NO_ARGUMENT, null, 't' );
-        longopts[ 2 ] = new LongOpt( "files", LongOpt.REQUIRED_ARGUMENT, null,
-            'f' );
-        longopts[ 3 ] = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null,
-            'o' );
-        longopts[ 4 ] = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
-        longopts[ 5 ] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
-        longopts[ 6 ] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
+        LongOpt[] longopts = new LongOpt[ 9 ];
+        longopts[ 0 ] = new LongOpt( "text", LongOpt.NO_ARGUMENT, null, 't' );
+        longopts[ 1 ] = new LongOpt( "files", LongOpt.REQUIRED_ARGUMENT, null,            'f' );
+        longopts[ 2 ] = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
+        longopts[ 3 ] = new LongOpt( "iformat", LongOpt.REQUIRED_ARGUMENT, null, 'I' );
+        longopts[ 4 ] = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
+        longopts[ 5 ] = new LongOpt( "oformat", LongOpt.REQUIRED_ARGUMENT, null, 'O' );
+        longopts[ 6 ] = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
+        longopts[ 7 ] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
+        longopts[ 8 ] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
 
         return longopts;
 
@@ -119,7 +158,7 @@ public class SCClient
     public void executeCommand( String[] opts ) {
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt( "SCClient", opts, "lthvVo:f:",
+        Getopt g = new Getopt( "SCClient", opts, "lthvVi:I:o:O:f:",
             longOptions, false );
 
         int option = 0;
@@ -127,24 +166,40 @@ public class SCClient
         int level = 0;
         while ( ( option = g.getopt() ) != -1 ) {
             switch ( option ) {
-                case 't': //text or xml
-                    mText = true;
-
+                case 't': //text 
+                    //mText = true;
+                    mOutputFormat = SCClient.TEXT_FORMAT;
                     break;
 
-                case 'f': //local pool config file
-                    StringTokenizer st = new StringTokenizer( g.getOptarg(),
-                        "," );
-                    mLocalPoolConfig = new ArrayList( st.countTokens() );
+                case 'f': //files
+                    StringTokenizer st = new StringTokenizer( g.getOptarg(), "," );
+                    mInputFiles = new ArrayList( st.countTokens() );
                     while ( st.hasMoreTokens() ) {
-                        mLocalPoolConfig.add( st.nextToken() );
+                        mInputFiles.add( st.nextToken() );
                     }
                     break;
 
+                case 'i': //input
+                    StringTokenizer str = new StringTokenizer( g.getOptarg(), "," );
+                    mInputFiles = new ArrayList( str.countTokens() );
+                    while ( str.hasMoreTokens() ) {
+                        mInputFiles.add( str.nextToken() );
+                    }
+                    break;
+                    
+                case 'I': //iformat
+                    mInputFormat = g.getOptarg();
+                    break;
+                    
                 case 'o': //output
-                    mOutputXML = g.getOptarg();
+                    mOutputFile = g.getOptarg();
                     break;
 
+                
+                case 'O': //oformat
+                    mOutputFormat = g.getOptarg();
+                    break;
+                    
                 case 'h': //help
                     printLongVersion();
                     System.exit( 0 );
@@ -154,9 +209,13 @@ public class SCClient
                     mLogger.log( getGVDSVersion(), LogManager.INFO_MESSAGE_LEVEL);
                     System.exit( 0 );
                     break;
+                    
+                    /*
                 case 'l': // Precedence for local or remote
                     mLocalPrec = true;
                     break;
+                     */
+                    
                 case 'v': //Verbose mode
                     level++;
                     break;
@@ -174,52 +233,87 @@ public class SCClient
             mLogger.setLevel(level);
         }
 	try {
-	    generatePoolConfig();
+	    String result = this.parseInputFiles( mInputFiles, mInputFormat, mOutputFormat );
+            //write out the result to the output file
+            this.toFile( mOutputFile, result );
 	} catch ( Exception e ) {
 	    e.printStackTrace();
 	}
     }
 
 
-    public void generatePoolConfig() throws Exception {
-	//convert the xml file to text file.
-	if ( mLocalPoolConfig != null ) {
-	    if ( mText ) {
-		ConfigXmlParser p = new ConfigXmlParser( mProps );
-                p.startParser( ( String ) mLocalPoolConfig.get( 0 ) );
-                mConfig = p.getPoolConfig();
-            } else {
-		mConfig=getLocalConfigInfo(mLocalPoolConfig);
-	    }
-	} else {
-                mLogger.log("Provide thepool config file with --files option",
-                            LogManager.ERROR_MESSAGE_LEVEL);
-	}
-
-        if ( mConfig != null ) {
-            if ( mText && mOutputXML == null ) {
-                //not sure about this
-                System.out.println( this.toMultiLine( mConfig ) );
-            } else if ( !mText && mOutputXML == null ) {
-                System.out.println( this.toXML( mConfig ) );
-            } else if ( mText && mOutputXML != null ) {
-                toFile( mOutputXML, this.toMultiLine( mConfig ) );
-                mLogger.log( "Written text output to file :" +
-                    mOutputXML, LogManager.INFO_MESSAGE_LEVEL );
-                System.exit( 0 );
-            } else {
-                toFile( mOutputXML, this.toXML( mConfig ) );
-                mLogger.log( "Written xml output to file : " +
-                    mOutputXML,LogManager.INFO_MESSAGE_LEVEL);
-                System.exit( 0 );
-            }
-
-        } else {
-            throw new Exception(
-                "Error: Something bad happened the config data is empty" );
+    /**
+     * Parses the input files in the input format and returns a String in the 
+     * output format.
+     * 
+     * @param inputFiles
+     * @param inputFormat
+     * @param outputFormat
+     * 
+     * @return
+     * 
+     * @throws java.io.IOException
+     */
+    public String parseInputFiles( List<String> inputFiles, String inputFormat, String outputFormat ) throws IOException{
+	//sanity check
+        if ( inputFiles == null || inputFiles.isEmpty() ){
+            throw new IOException( "Input files not specified. Specify the --input option" );
         }
+        
+        //sanity check for output format
+        if ( !outputFormat.equals( SCClient.DEFAULT_OUTPUT_FORMAT )){
+            throw new RuntimeException( "Only XML3 output format is currently supported");
+        }
+        
+        SiteStore result = new SiteStore();
+        for( String inputFile : inputFiles ){
+            //switch on input format.
+            if( inputFormat.equals( "XML" ) ){
+                SiteCatalog catalog = null;
+        
+                /* load the catalog using the factory */
+                try{
+                    mProps.setProperty( "pegasus.catalog.site.file", inputFile );
+                    catalog = SiteFactory.loadInstance( mProps );
+                
+                    /* load all sites in site catalog */
+                    List s = new ArrayList(1);
+                    s.add( "*" );
+                    mLogger.log( "Loaded  " + catalog.load( s ) + " number of sites ", LogManager.DEBUG_MESSAGE_LEVEL );
+        
+                    /* query for the sites, and print them out */
+                    mLogger.log( "Sites loaded are "  + catalog.list( ) , LogManager.DEBUG_MESSAGE_LEVEL );
+                    for( String site : catalog.list() ){
+                        result.addEntry( catalog.lookup( site ) );
+                    }
+                }
+                finally{
+                    /* close the connection */
+                    try{
+                        catalog.close();
+                    }catch( Exception e ){}
+                }
+            }//end of input format xml
+            else if ( inputFormat.equals( "Text" ) ){
+                //do a two step process.
+                //1. convert to PoolConfig
+                //2. convert to SiteCatalogEntry
+                PoolConfig config = this.getTextToPoolConfig( inputFile );
+                
+                //iterate through each entry
+                for( Iterator it = config.getSites().values().iterator(); it.hasNext(); ){
+                    SiteInfo s = (SiteInfo)it.next();
+                    
+                    //convert and add to site store
+                    result.addEntry( SiteInfo2SiteCatalogEntry.convert( s ) );
+                }
+            }//end of input format Text
+        }//end of iteration through input files.
+       
+        return result.toXML();
     }
-
+    
+    
     public void printShortVersion() {
         String text =
             "\n " + this.getGVDSVersion() +
@@ -274,12 +368,55 @@ public class SCClient
 
     }
 
-
-    public PoolConfig getLocalConfigInfo( ArrayList localpoolconfig ) {
-        for ( int i = 0; i < localpoolconfig.size(); i++ ) {
+    /**
+     * Generates the old site catalog object reading in from text file.
+     * 
+     * 
+     * @param file text file to parse.
+     * 
+     * @return
+     */
+    public PoolConfig getTextToPoolConfig( String file ) {
+        PoolConfig result = new PoolConfig();
+        try {
+            
+            mLogger.log( "Reading " + file, LogManager.INFO_MESSAGE_LEVEL);
+            PoolConfigParser2 p = new PoolConfigParser2( new FileReader( file ) );
+            result.add(p.parse());
+            mLogger.log( "Reading " + file + " -DONE",
+                             LogManager.INFO_MESSAGE_LEVEL);
+        } catch ( PoolConfigException pce ) {
+           mLogger.log( file + ": " + pce.getMessage() ,
+                             LogManager.ERROR_MESSAGE_LEVEL);
+           mLogger.log(
+                    " ignoring rest, skipping to next file",
+                   LogManager.ERROR_MESSAGE_LEVEL );
+        } catch ( IOException ioe ) {
+           mLogger.log( file + ": " + ioe.getMessage() ,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+           mLogger.log("ignoring rest, skipping to next file",
+                           LogManager.ERROR_MESSAGE_LEVEL );
+        } catch ( Exception e ) {
+           mLogger.log( file + ": " + e.getMessage(),
+                            LogManager.ERROR_MESSAGE_LEVEL );
+           mLogger.log("ignoring rest, skipping to next file",
+                           LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        return mConfig;
+    }
+    /**
+     * Generates the old site catalog object reading in from text files.
+     * 
+     * 
+     * @param files  the list of text files to parse.
+     * 
+     * @return
+     */
+    public PoolConfig getLocalConfigInfo( List<String> files ) {
+        for ( int i = 0; i < files.size(); i++ ) {
             String filename = null;
             try {
-                filename = ( String ) localpoolconfig.get( i );
+                filename = ( String ) files.get( i );
                 mLogger.log( "Reading " + filename, LogManager.INFO_MESSAGE_LEVEL);
                 PoolConfigParser2 p = new PoolConfigParser2( new FileReader(
                     filename ) );

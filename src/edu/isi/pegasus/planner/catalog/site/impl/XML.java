@@ -23,16 +23,8 @@ import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeFS;
-import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeScratch;
-import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeStorage;
-import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
-import edu.isi.pegasus.planner.catalog.site.classes.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.catalog.site.classes.SharedDirectory;
 
 import org.griphyn.cPlanner.classes.PoolConfig;
 import org.griphyn.cPlanner.classes.GlobusVersion;
@@ -45,6 +37,7 @@ import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.WorkDir;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.parser.Parser;
@@ -56,11 +49,9 @@ import java.io.IOException;
 
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.griphyn.common.classes.SysInfo;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -648,7 +639,7 @@ public class XML extends Parser implements SiteCatalog{
      *  Handles the end of the pool tag.
      */
     private  void handlePoolTagEnd() {
-        mSiteStore.addEntry( convertSiteInfoToSiteCatalogEntry( this.m_pool_info ) );
+        mSiteStore.addEntry( SiteInfo2SiteCatalogEntry.convert( this.m_pool_info ) );
     }
 
     /**
@@ -733,110 +724,5 @@ public class XML extends Parser implements SiteCatalog{
         return m_pconfig;
     }
 
-    /**
-     * An adapter method that converts the <code>SiteInfo</code> object to 
-     * <code>SiteCatalogEntry</code> object.
-     * 
-     * @param s  <code>SiteInfo</code> to be converted.
-     * 
-     * @return the converted <code>SiteCatalogEntry</code> object.
-     */
-    private static SiteCatalogEntry convertSiteInfoToSiteCatalogEntry( SiteInfo s ) {
-        LogManager logger = LogManagerFactory.loadSingletonInstance();
-        SiteCatalogEntry site = new SiteCatalogEntry();
-        
-        /* set the handle */
-        site.setSiteHandle( (String)s.getInfo( SiteInfo.HANDLE ) );
-        
-        SysInfo sysinfo = ( SysInfo )s.getInfo( SiteInfo.SYSINFO ) ;
-        if( sysinfo !=null) {
-            site.setSysInfo( sysinfo );
-        }
-        
-        // describe the head node filesystem
-        HeadNodeFS hfs = new HeadNodeFS();
-        
-        /* set the work directory as shared scratch */       
-        HeadNodeScratch hscratch = new HeadNodeScratch();    
-        SharedDirectory hscratchShared = new SharedDirectory();            
-        String workDir = s.getExecMountPoint();
-        for ( Iterator it = ((List)s.getInfo( SiteInfo.GRIDFTP )).iterator(); it.hasNext(); ) {
-            GridFTPServer g = (GridFTPServer) it.next();            
-            hscratchShared.addFileServer( new FileServer( "gsiftp" , (String)g.getInfo( GridFTPServer.GRIDFTP_URL ), workDir ) );
-        }
-        hscratchShared.setInternalMountPoint( new InternalMountPoint( workDir ));        
-        hscratch.setSharedDirectory( hscratchShared );
-        hfs.setScratch( hscratch );
-        
-        /* set the storage directory as shared storage */       
-        HeadNodeStorage hstorage = new HeadNodeStorage();    
-        SharedDirectory hstorageShared = new SharedDirectory(); 
-        String storageDir = null;
-        for ( Iterator it = ((List)s.getInfo( SiteInfo.GRIDFTP )).iterator(); it.hasNext(); ) {
-            GridFTPServer g = (GridFTPServer) it.next();            
-            storageDir      = ( String )g.getInfo( GridFTPServer.STORAGE_DIR ) ;
-            hstorageShared.addFileServer( new FileServer( "gsiftp" , 
-                                                          (String)g.getInfo( GridFTPServer.GRIDFTP_URL ),
-                                                          storageDir ) );
-        }
-        hstorageShared.setInternalMountPoint( new InternalMountPoint( storageDir ) );        
-        hstorage.setSharedDirectory( hstorageShared );
-        hfs.setStorage( hstorage );
-        
-        site.setHeadNodeFS( hfs );
-        
-        /* set the storage directory as GridGateways */
-        for ( Iterator it = ((List)s.getInfo( SiteInfo.JOBMANAGER )).iterator(); it.hasNext(); ) {
-            JobManager jm = (JobManager) it.next();
-            GridGateway gw = new GridGateway();
-            
-            String universe = (String)jm.getInfo( JobManager.UNIVERSE );
-            if( universe.equals( "vanilla" ) ){
-                gw.setJobType( GridGateway.JOB_TYPE.compute );
-            } 
-            else if( universe.equals( "transfer" ) ){
-                gw.setJobType( GridGateway.JOB_TYPE.auxillary );
-            } 
-            else{
-                throw new RuntimeException( "Unknown universe type " + universe + " for site " + site.getSiteHandle() );
-            }
-            
-            String url = (String)jm.getInfo( JobManager.URL );
-            gw.setContact( url );
-           
-            if( url.endsWith( "condor" ) ){
-                gw.setScheduler( GridGateway.SCHEDULER_TYPE.Condor );
-            }
-            else if( url.endsWith( "fork" ) ){
-                gw.setScheduler( GridGateway.SCHEDULER_TYPE.Fork );
-            }
-            else if( url.endsWith( "pbs" ) ){
-                gw.setScheduler( GridGateway.SCHEDULER_TYPE.PBS );
-            }
-            else if( url.endsWith( "lsf" ) ){
-                gw.setScheduler( GridGateway.SCHEDULER_TYPE.LSF );
-            }  
-            gw.setIdleNodes( (String)jm.getInfo( JobManager.IDLE_NODES ) );            
-            gw.setTotalNodes( (String)jm.getInfo( JobManager.TOTAL_NODES ) );
-            
-            site.addGridGateway( gw );
-        }
-        
-        /* set the LRC as Replica Catalog */
-        for( Iterator it = ((List)s.getInfo( SiteInfo.LRC )).iterator(); it.hasNext(); ) {
-            LRC lrc =  (LRC) it.next();            
-            ReplicaCatalog rc = new ReplicaCatalog( lrc.getURL() , "LRC" );
-            site.addReplicaCatalog( rc );
-        }
-        
-        /* add Profiles */
-        for( Iterator it = ((List)s.getInfo( SiteInfo.PROFILE )).iterator(); it.hasNext(); ) {
-            site.addProfile( (Profile) it.next() );
-        }
-        
-        logger.log( "SiteCatalogEntry object created is " + site,
-                    LogManager.DEBUG_MESSAGE_LEVEL );
-        return site;
-    }
     
 }

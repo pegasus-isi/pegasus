@@ -407,13 +407,7 @@ public class Windward extends Abstract
             txJobs.add( dcTXJob );
             txJobIDs.add( dcTXJob.getID() );
       
-            //append some logging parameters
-            //mLogger.add( LoggingKeys.REQUEST_ID , mRequestID ).
-            mLogger.add( LoggingKeys.DAG_ID , mProps.getProperty( "pegasus.windward.wf.id" ) ).
-                    add( LoggingKeys.JOB_ID , dcTXJob.getID() ).
-                    add( "dataset.id" , ft.getLFN() ).
-                    add( "Ingestion job created" );
-            mLogger.logAndReset( LogManager.INFO_MESSAGE_LEVEL );
+            
         }
 
         //only merging if more than only one data set being staged
@@ -432,6 +426,16 @@ public class Windward extends Abstract
             txJob = (TransferJob) txJobs.get( 0 );
         }
 
+        //append some logging parameters
+        mLogger.add( LoggingKeys.DAG_ID , mProps.getProperty( "pegasus.windward.wf.id" ) ).
+                add( LoggingKeys.JOB_ID , txJob.getID() );
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            FileTransfer ft = (FileTransfer)it.next();     
+            mLogger.add( "dataset.id" , ft.getLFN() );
+        }       
+        mLogger.add( "Ingestion job created" );
+        mLogger.logAndReset( LogManager.INFO_MESSAGE_LEVEL );
+        
         //take care of transfer of proxies
         this.checkAndTransferProxy( txJob );
 
