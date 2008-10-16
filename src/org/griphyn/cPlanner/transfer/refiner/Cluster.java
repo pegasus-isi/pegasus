@@ -159,7 +159,7 @@ public class Cluster extends Bundle {
         for ( Iterator it = files.iterator(); it.hasNext(); ) {
             FileTransfer ft = ( FileTransfer ) it.next();
             String lfn = ft.getLFN();
-            
+            mLogger.log( "File being looked at is " + lfn, LogManager.DEBUG_MESSAGE_LEVEL );
             //check for transfer flag to see if we need to transfer the file.
             if ( !ft.getTransientTransferFlag() ) {
                 String key = this.constructFileKey( ft.getLFN(), job.getSiteHandle() );
@@ -233,6 +233,7 @@ public class Cluster extends Bundle {
 
             //traverse through all files to be staged
             int staged = 0;
+            String dataFileSiJob = null;//the si job that stages in data files
             for( Iterator it = txFiles.iterator(); it.hasNext(); ){
                 FileTransfer ft = ( FileTransfer)it.next();
                 String key = this.constructFileKey( ft.getLFN(), job.getSiteHandle() );
@@ -251,15 +252,17 @@ public class Cluster extends Bundle {
                 else{
                     //make a new entry into the table
                     mFileTable.put( key, siJob);
+                    dataFileSiJob = siJob;
                 }
-                
-                
-                
-                //add the newJobName to the tempSet so that even
-                //if the job has duplicate input files only one instance
-                //of transfer is scheduled. This came up during collapsing
-                //June 15th, 2004
-                tempSet.add( siJob );
+            }
+            
+            //add the newJobName to the tempSet so that even
+            //if the job has duplicate input files only one instance
+            //of transfer is scheduled. This came up during collapsing
+            //June 15th, 2004
+            //tempSet.add( siJob )
+            if( dataFileSiJob != null ){
+                addRelation( dataFileSiJob, jobName  );
             }
             
             if( !stagedExecFiles.isEmpty() ){
