@@ -10,7 +10,9 @@ MARCH   = $(shell uname -m | tr '[A-Z]' '[a-z]')
 ifneq (,${CONDOR_VERSION})
 ifneq (ia64,${MARCH})
 ifneq (x86_64,${MARCH})
-TARGET += condor-log-parser
+
+#commented out on 10/15/2008 by Gaurang. No longer use condor-log-parser
+#TARGET += condor-log-parser
 endif
 endif
 endif

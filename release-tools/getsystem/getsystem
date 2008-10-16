@@ -259,7 +259,9 @@ sub get_linux_distro () {
             $distro{"version"} = "$distro_strs[1]";
             $distro{"short"} = "ubuntu";
         }
-
+	
+	#hack to handle "/" in version numbers should probably apply to other places as well
+	$distro{"version"} =~ s/\//_/g ;
         return %distro;
     }
 }
