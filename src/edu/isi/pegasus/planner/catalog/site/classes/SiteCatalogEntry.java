@@ -97,6 +97,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
             mNMIOSToOldOS = new HashMap<OS,Os>();
             //mNMIOSToOldOS.put( "rhas_3", Os.LINUX );
             mNMIOSToOldOS.put( OS.LINUX, Os.LINUX );
+            mNMIOSToOldOS.put( OS.WINDOWS, Os.WINDOWS );
         }
         return mNMIOSToOldOS;
     }
