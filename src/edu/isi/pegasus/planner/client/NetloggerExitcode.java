@@ -192,6 +192,9 @@ public class NetloggerExitcode extends Executable{
                for( String key : m.keySet() ){
                    mLogger.add( key, m.get(key) );
                }
+               
+               //add job.kickstart for easier debugging
+               mLogger.add( "job.kickstart", mFilename );
                int exitcode = Integer.parseInt( m.get( "job.exitcode" ) );
                if( exitcode != 0 ){
                    result = 8;
