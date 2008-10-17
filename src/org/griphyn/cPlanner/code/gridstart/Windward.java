@@ -122,6 +122,11 @@ public class Windward implements GridStart{
     private LogManager mLogger;
 
     /**
+     * Http URL for log4j properties.
+     */
+    private String mHttpLog4jURL;
+    
+    /**
      * The default constructor.
      */
     public Windward() {
@@ -151,6 +156,12 @@ public class Windward implements GridStart{
         mWorkflowID  = dag.getExecutableWorkflowID();
         //set it in the properties for postscript to pick up
         mProps.setProperty( NetloggerPostScript.WORKFLOW_ID_PROPERTY , mWorkflowID );
+        
+        mHttpLog4jURL = mProps.getHttpLog4jURL();
+        if( mHttpLog4jURL == null || mHttpLog4jURL.isEmpty() ){
+            mLogger.log( "No http log4j url specified for workflow " + mWorkflowID, 
+                         LogManager.WARNING_MESSAGE_LEVEL );
+        }
     } 
 
     /**
@@ -204,10 +215,16 @@ public class Windward implements GridStart{
      */
     protected String getGUWrapperArguments( SubInfo job ){
         StringBuffer args = new StringBuffer();
+        
+        //add the log4j properties url if it does not exist
+        if( this.mHttpLog4jURL != null ){
+            args.append( " -Dlog4j.properties=" ).append( mHttpLog4jURL );
+        }
+        
         args.append( " -m " ).append( job.getTXName() );
         args.append( " -w " ).append( mWorkflowID );
         args.append( " -j " ).append( job.getID() );
-        args.append( " -k ").append( this.mAllegroKB );
+        args.append( " -k " ).append( this.mAllegroKB );
         args.append( " -h " ).append( this.mAllegroHost );
         args.append( " -p " ).append( this.mAllegroPort );
         

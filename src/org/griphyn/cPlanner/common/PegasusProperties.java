@@ -338,6 +338,8 @@ public class PegasusProperties {
 
     
 
+    
+
     /**
      * Gets the handle to the properties file. The singleton instance is
      * invoked if the properties file is null (partly due to the way VDSProperties
@@ -1682,6 +1684,16 @@ public class PegasusProperties {
         return mProps.getProperty( "pegasus.log.formatter", "Simple" );
     }
     
+    /**
+     * Returns the http url for log4j properties for windward project.
+     * 
+     * Referred to by the "pegasus.log.windward.log4j.http.url" property.
+     *
+     * @return the value in the properties file, else null
+     */
+    public String getHttpLog4jURL() {
+        return mProps.getProperty( "pegasus.log.windward.log4j.http.url" );
+    }
     /**
      * Returns the file to which all the logging needs to be directed to.
      *
