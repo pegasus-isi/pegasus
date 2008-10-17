@@ -145,7 +145,7 @@ public class Windward  implements ReplicaCatalog {
         }catch( Exception e ){
             connect = false;
             mLogger.log( "Unable to connect to Data Characterization Catalog " + e,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
+                         LogManager.ERROR_MESSAGE_LEVEL );
         }
 
         return connect;
