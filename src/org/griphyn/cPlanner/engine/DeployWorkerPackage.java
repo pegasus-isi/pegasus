@@ -642,6 +642,8 @@ public class DeployWorkerPackage
             cleanupFiles.add( new File ( baseRemoteWorkDir,
                                          getBasename( ft.getSourceURL().getValue() )).getAbsolutePath() );
             cleanupFiles.add( mSiteToPegasusHomeMap.get( site ) );
+            cleanupFiles.add(  new File ( baseRemoteWorkDir,
+                                          this.getDeployJobName( dag, site ) + ".in" ).getAbsolutePath() );//to remove the GUC .in file
             for( String f : cleanupFiles ){
                 StringBuffer sb = new StringBuffer();
                 sb.append( "Need to cleanup file " ).append( f ).append( " on site " ).append( site );
