@@ -158,7 +158,7 @@ public class Windward implements GridStart{
         mProps.setProperty( NetloggerPostScript.WORKFLOW_ID_PROPERTY , mWorkflowID );
         
         mHttpLog4jURL = mProps.getHttpLog4jURL();
-        if( mHttpLog4jURL == null || mHttpLog4jURL.isEmpty() ){
+        if( mHttpLog4jURL == null || mHttpLog4jURL.length() == 0 ){
             mLogger.log( "No http log4j url specified for workflow " + mWorkflowID, 
                          LogManager.WARNING_MESSAGE_LEVEL );
         }

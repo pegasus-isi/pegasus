@@ -175,7 +175,7 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
         mRequestID        = mProps.getWingsRequestID();
         
         mHttpLog4jURL = mProps.getHttpLog4jURL();
-        if( mHttpLog4jURL == null || mHttpLog4jURL.isEmpty() ){
+        if( mHttpLog4jURL == null || mHttpLog4jURL.length() == 0 ){
             mLogger.log( "No http log4j url specified for request " + mRequestID, 
                          LogManager.WARNING_MESSAGE_LEVEL );
         }
