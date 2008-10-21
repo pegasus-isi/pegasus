@@ -584,13 +584,12 @@ public class Algorithm {
         //try and fetch the expected runtime from the Windward AC
         double pcresult = getExpectedRuntimeFromAC( job , entry );
         
-        
         if( pcresult == 0.0 ){
-             mLogger.log( "PC returned a value of 0 for job" + job.getID(), 
+            mLogger.log( "PC returned a value of 0 for job" + job.getID(), 
                          LogManager.WARNING_MESSAGE_LEVEL );
             result = 1;
         }
-        if( pcresult > 0.0 && pcresult < 1.0 ){
+        else if( pcresult > 0.0 && pcresult < 1.0 ){
             mLogger.log( "PC returned a value between 0 and 1" + pcresult + " for job " + job.getID(), 
                          LogManager.WARNING_MESSAGE_LEVEL );
             result = 1;
@@ -603,7 +602,7 @@ public class Algorithm {
 //            mLogger.log("PC returned 0 as runtime. Returning 1", LogManager.ERROR_MESSAGE_LEVEL);
 //            return result=1;
 //        }
-        if( result > 1 ){
+        if( result >= 1 ){
             return result;
         }
 
