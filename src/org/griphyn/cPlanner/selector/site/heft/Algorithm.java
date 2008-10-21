@@ -583,8 +583,15 @@ public class Algorithm {
 
         //try and fetch the expected runtime from the Windward AC
         double pcresult = getExpectedRuntimeFromAC( job , entry );
+        
+        
+        if( pcresult == 0.0 ){
+             mLogger.log( "PC returned a value of 0 for job" + job.getID(), 
+                         LogManager.WARNING_MESSAGE_LEVEL );
+            result = 1;
+        }
         if( pcresult > 0.0 && pcresult < 1.0 ){
-            mLogger.log( "PC returned a value between 0 and 1" + pcresult, 
+            mLogger.log( "PC returned a value between 0 and 1" + pcresult + " for job " + job.getID(), 
                          LogManager.WARNING_MESSAGE_LEVEL );
             result = 1;
         }
@@ -634,7 +641,7 @@ public class Algorithm {
 
         //sanity check for time being
         if( result < 1 ){
-            throw new RuntimeException( "Invalid or no runtime specified" );
+            throw new RuntimeException( "Invalid or no runtime specified for job " + job.getID() );
         }
 
         return result;
