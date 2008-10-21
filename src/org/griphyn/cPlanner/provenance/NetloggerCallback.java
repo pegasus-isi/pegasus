@@ -111,6 +111,7 @@ public class NetloggerCallback implements Callback {
     public void cbInvocationStart( String job, String resource) {
         counter ++;
         mInvocationMap    = new LinkedHashMap<String,String>();
+        mInvocationMap.put( "job.resource", resource );
     }
 
 
@@ -200,6 +201,7 @@ public class NetloggerCallback implements Callback {
                     getListValueFromMetadata( metadata, "executables" ) );
         mInvocationMap.put( "job.arguments",
                    getListValueFromMetadata( metadata, "arguments") );
+        mInvocationMap.put( "job.directory", metadata.get( "directory" ).toString() );
         mInvocationMap.put( "job.duration", metadata.get( "duration" ).toString() );
         mInvocationMap.put( "job.hostname", metadata.get( "hostname" ).toString() );
         mInvocationMap.put( "job.hostaddress", metadata.get( "hostaddr" ).toString() );

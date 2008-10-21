@@ -156,6 +156,7 @@ public class KickstartParser {
             	arguments.add(job.getArguments().getValue());            		
             }                                   
             metadata.put("exitcodes", exitcodes);
+            metadata.put("directory", invocation.getWorkingDirectory().getValue() );
             metadata.put("executables", executables);
             metadata.put("arguments", arguments);
             metadata.put("version", invocation.getVersion());
