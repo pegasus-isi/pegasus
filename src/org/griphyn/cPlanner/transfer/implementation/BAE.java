@@ -162,6 +162,11 @@ public class BAE extends AbstractSingleFTPerXFERJob {
     
     
     /**
+     * Http URL for log4j properties.
+     */
+    private String mHttpLog4jURL;
+    
+    /**
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
@@ -179,6 +184,12 @@ public class BAE extends AbstractSingleFTPerXFERJob {
         mAllegroDirectory = f.getParent();
         mAllegroDatabase  = f.getName();
         mRequestID        = mProps.getWingsRequestID();
+        
+        mHttpLog4jURL = mProps.getHttpLog4jURL();
+        if( mHttpLog4jURL == null || mHttpLog4jURL.isEmpty() ){
+            mLogger.log( "No http log4j url specified for workflow request" + mRequestID, 
+                         LogManager.WARNING_MESSAGE_LEVEL );
+        }
     }
 
     /**
@@ -298,7 +309,9 @@ public class BAE extends AbstractSingleFTPerXFERJob {
            append( "\"" ).
            append( BAE.ALLEGRO_NAMESPACE_PREFIX ).
            append( file.getLFN() ).
-           append( "\"" );
+           append( "\"" ).
+           append( " -o ").
+           append( this.mHttpLog4jURL );
         
         //append some logging parameters
         sb.append( " -l " ).append( LoggingKeys.REQUEST_ID ).append( "=" ).append( mRequestID ).

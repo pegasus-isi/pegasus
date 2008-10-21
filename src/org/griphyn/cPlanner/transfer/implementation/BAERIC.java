@@ -152,6 +152,12 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
      * the request id.
      */
     private String mRequestID;
+    
+    
+    /**
+     * Http URL for log4j properties.
+     */
+    private String mHttpLog4jURL;
    
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -167,6 +173,12 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
         mAllegroPort = p.getProperty( "port" );
         String base  = p.getProperty( "basekb" );
         mRequestID        = mProps.getWingsRequestID();
+        
+        mHttpLog4jURL = mProps.getHttpLog4jURL();
+        if( mHttpLog4jURL == null || mHttpLog4jURL.isEmpty() ){
+            mLogger.log( "No http log4j url specified for request " + mRequestID, 
+                         LogManager.WARNING_MESSAGE_LEVEL );
+        }
     }
 
     /**
@@ -287,7 +299,9 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
            append( " -p " ).append( mAllegroPort ).
            append( " -k " ).append( file.getDestURL().getValue() ).
            append( " -c " ).append( mProps.getProperty( "pegasus.windward.wf.id" ) ).
-           append( " -s "  ).append( BAERIC.SOURCE );
+           append( " -s "  ).append( BAERIC.SOURCE ).
+           append( " -o ").
+           append( this.mHttpLog4jURL );
         
         //append some logging parameters
         sb.append( " -l " ).append( LoggingKeys.REQUEST_ID ).append( "=" ).append( mRequestID ).
