@@ -470,6 +470,12 @@ public class CPlanner extends Executable{
             try{
                 result = codeGenerator.generateCode(finalDag);
                 
+                //connect the DAX and the DAG via the hieararcy message
+                List l = new ArrayList(1);
+                l.add( finalDag.getExecutableWorkflowID() );
+                mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, finalDag.getAbstractWorkflowID(),
+                                                   LoggingKeys.DAG_ID, l );
+                
                 //connect the jobs and the DAG via the hierarchy message
                 this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowID() );
 
