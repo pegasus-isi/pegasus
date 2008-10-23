@@ -1043,8 +1043,8 @@ public class InvocationParser extends DefaultHandler
 	  for ( int i=0; i<names.size(); ++i ) {
 	    String name = (String) names.get(i);
 	    String value = (String) values.get(i);
-
-	    if ( name.equals("mode") ) {
+            
+            if ( name.equals("mode") ) {
 	      this.log( e, name, value );
 	      statinfo.setMode( Integer.parseInt(value,8) );
 	    } else if ( name.equals("size") ) {
@@ -1052,7 +1052,7 @@ public class InvocationParser extends DefaultHandler
 	      statinfo.setSize( Long.parseLong(value) );
 	    } else if ( name.equals("inode") ) {
 	      this.log( e, name, value );
-	      statinfo.setINode( Long.parseLong(value) );
+	      statinfo.setINode( (long)Double.parseDouble(value) );
 	    } else if ( name.equals("nlink") ) {
 	      this.log( e, name, value );
 	      statinfo.setLinkCount( Long.parseLong(value) );
