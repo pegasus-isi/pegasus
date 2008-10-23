@@ -1043,7 +1043,7 @@ public class InvocationParser extends DefaultHandler
 	  for ( int i=0; i<names.size(); ++i ) {
 	    String name = (String) names.get(i);
 	    String value = (String) values.get(i);
-            
+            //System.out.println( name + " -> " + value );
             if ( name.equals("mode") ) {
 	      this.log( e, name, value );
 	      statinfo.setMode( Integer.parseInt(value,8) );
@@ -1073,13 +1073,13 @@ public class InvocationParser extends DefaultHandler
 	      statinfo.setModificationTime( parseDate(value) );
 	    } else if ( name.equals("uid") ) {
 	      this.log( e, name, value );
-	      statinfo.setUID( Integer.parseInt(value) );
+	      statinfo.setUID( (int)Long.parseLong(value) );
 	    } else if ( name.equals("user") ) {
 	      this.log( e, name, value );
 	      statinfo.setUser( value );
 	    } else if ( name.equals("gid") ) {
 	      this.log( e, name, value );
-	      statinfo.setGID( Integer.parseInt(value) );
+	      statinfo.setGID( (int)Long.parseLong(value) );
 	    } else if ( name.equals("group") ) {
 	      this.log( e, name, value );
 	      statinfo.setGroup( value );
