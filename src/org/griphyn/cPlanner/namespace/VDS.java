@@ -113,6 +113,12 @@ public class VDS extends Namespace {
      * the directory where kickstart is being run.
      */
     public static final String CHANGE_DIR_KEY = "change.dir";
+    
+    /**
+     * The name of the profile key that triggers the kickstart to create and 
+     * then the working directory to it before launching an executable.
+     */
+    public static final String CREATE_AND_CHANGE_DIR_KEY = "create.dir";
 
     /**
      * The deprecated bundle stagein key.
@@ -306,7 +312,8 @@ public class VDS extends Namespace {
                 if ((key.compareTo(COLLAPSE_KEY) == 0) ||
                     (key.compareTo(COLLAPSER_KEY) == 0) ||
                     (key.compareTo(CHANGE_DIR_KEY) == 0) ||
-                    (key.compareTo(CHAIN_STAGE_IN_KEY) == 0)) {
+                    (key.compareTo(CHAIN_STAGE_IN_KEY) == 0) || 
+                    (key.compareTo(CREATE_AND_CHANGE_DIR_KEY) == 0 )) {
                     res = VALID_KEY;
                 }
                 else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0){
