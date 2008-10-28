@@ -1366,7 +1366,8 @@ public class CondorGenerator extends Abstract {
             //only for CondorG style does RSL make sense
             //instead of writing directly
             //incorporate as condor profile
-            job.condorVariables.construct( "globusrsl", rslString );
+            //job.condorVariables.construct( "globusrsl", rslString );
+            job.condorVariables.construct( "globusrsl", job.globusRSL.toString() );
 
         }
     }

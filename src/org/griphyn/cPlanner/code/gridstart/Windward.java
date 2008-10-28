@@ -18,23 +18,29 @@
 
 package org.griphyn.cPlanner.code.gridstart;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Properties;
+import edu.isi.pegasus.common.logging.LogManager;
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.classes.OS;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.code.GridStart;
-import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
+
 import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.VDS;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import java.util.Collection;
+import java.util.Properties;
 
 /**
  * The launcher to be used for Windward jobs. The compute jobs in Windward are 
@@ -126,6 +132,12 @@ public class Windward implements GridStart{
      */
     private String mHttpLog4jURL;
     
+    
+    /**
+     * The handle to the SiteStore.
+     */
+    private SiteStore mSiteStore;
+    
     /**
      * The default constructor.
      */
@@ -162,6 +174,8 @@ public class Windward implements GridStart{
             mLogger.log( "No http log4j url specified for workflow " + mWorkflowID, 
                          LogManager.WARNING_MESSAGE_LEVEL );
         }
+        
+        mSiteStore = bag.getHandleToSiteStore();
     } 
 
     /**
@@ -191,11 +205,38 @@ public class Windward implements GridStart{
             //add the file for transfer via condor file transfer mechanism
             job.condorVariables.addIPFileForTransfer( config );
             
+            //trigger the second level transfer in case of windows env
+            //from the jobmanager to backend windows node.
+            if( mSiteStore.lookup( job.getSiteHandle() ).getOS() == OS.WINDOWS ){
+                mLogger.log( "Triggering SLS for job " + job.getID() ,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                StringBuffer tip = new StringBuffer();
+                tip.append( "( " ).append( "transfer_input_files" ).append( " " ).
+                    append( new File(config).getName() ).append( " )" );
+                //add the forward globus rsl key
+                job.globusRSL.construct( "condorsubmit", tip.toString() );
+                
+                //we dont want any directories set for windows jobs.
+                String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
+                String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
+                                   style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))?
+                                   (String)job.condorVariables.removeKey("remote_initialdir"):
+                                   (String)job.condorVariables.removeKey("initialdir");
+            }
             //reset the arguments to contain only the gu wrapper components
             args = getGUWrapperArguments( job );
             //append the cvs file path
             args += " -c " + new File( config ).getName();            
             job.setArguments( args );
+        }
+         //for windows os for auxillary jobs also delete remote_initialdir and intialdir
+        else if( mSiteStore.lookup( job.getSiteHandle() ).getOS() == OS.WINDOWS ){
+            //we dont want any directories set for windows jobs.
+            String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
+            String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
+                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))?
+                                   (String)job.condorVariables.removeKey("remote_initialdir"):
+                                   (String)job.condorVariables.removeKey("initialdir");
         }
         
         //add the GU logging envvariable
