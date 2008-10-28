@@ -401,6 +401,10 @@ public class CondorGenerator extends Abstract {
             //write out the dagCondorJob for it
             mLogger.log( "Generating submit file for DAG " , LogManager.DEBUG_MESSAGE_LEVEL );
             this.generateCode( dag, dagCondorJob );
+            
+            //setting the dagman variables of dagCondorJob to original job
+            //so that the right information is printed in the .dag file
+            job.dagmanVariables = dagCondorJob.dagmanVariables;
             return;
         }
 
@@ -455,7 +459,7 @@ public class CondorGenerator extends Abstract {
 
         // close the print stream to the file (flush)
         writer.close();
-
+        return;
     }
 
 
@@ -1498,7 +1502,8 @@ public class CondorGenerator extends Abstract {
         String script = null;
         job.dagmanVariables.checkKeyInNS(Dagman.JOB_KEY,
                                          getFileBaseName(job));
-
+        
+        
         //remove the prescript arguments key
         //should be already be set to the prescript key
 //        //NO NEED TO REMOVE AS WE ARE HANDLING CORRECTLY IN DAGMAN NAMESPACE
@@ -1545,7 +1550,7 @@ public class CondorGenerator extends Abstract {
         //write out all the dagman profile variables associated
         //with the job to the .dag file.
 //        printDagString(job.dagmanVariables.toString(jobName));
-
+        
         return rslString.toString();
     }
 
