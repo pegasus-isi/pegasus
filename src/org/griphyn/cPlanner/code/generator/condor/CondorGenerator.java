@@ -694,9 +694,12 @@ public class CondorGenerator extends Abstract {
         sb.append(" -f -l . -Debug 3").
            append(" -Lockfile ").append( getBasename( dagBasename, ".lock") ).
            append(" -Dag ").append(  dagBasename ).
-           append(" -Rescue ").append( getBasename( dagBasename, ".rescue")).
+           //append(" -Rescue ").append( getBasename( dagBasename, ".rescue")).
            append(" -Condorlog ").append( getBasename( dagBasename, ".log"));
 
+       //for condor 7.1.0
+       sb.append( " -AutoRescue 1 -DoRescueFrom 0 ");
+        
        //pass any dagman knobs that were specified in properties file
 //       sb.append( this.mDAGManKnobs );
 
