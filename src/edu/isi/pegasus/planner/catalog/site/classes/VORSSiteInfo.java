@@ -30,8 +30,8 @@ public class VORSSiteInfo {
 	private String sponsor_vo;             	//sponsor_vo
 	private String vdt_version; 			//vdt_version
 	private String globus_loc;              //globus_loc  --if globus_loc is empty then use osg_grid
-	private String exec_jm; 				//exec_jm -- transfer
-	private String util_jm;                 //util_jm -- compute
+	private String exec_jm; 				//exec_jm -- compute
+	private String util_jm;                 //util_jm -- transfer
 	private String grid_services;           //grid_services
 	private String app_space;				//app_space -- saved for later use
 	private String data_space;				//data_space -- saved for later use

@@ -24,15 +24,20 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.SCHEDULER_TYPE;
+import java.io.File;
+import java.util.Properties;
 
 public class VORSSiteCatalogUtil {
 	 private static LogManager mLogger = LogManagerFactory.loadSingletonInstance();	 
@@ -83,6 +88,7 @@ public class VORSSiteCatalogUtil {
 	        }
 	        return ret;
 	    }
+         
 	    public static VORSSiteInfo get_sites_info(String host, String port, String vo, String grid, String id){
 	    	URL vors = null;
 	    	URLConnection vc = null;
@@ -90,26 +96,27 @@ public class VORSSiteCatalogUtil {
 	        String inputLine = null;
 	        VORSSiteInfo ret = new VORSSiteInfo();
 	        Map values = new HashMap();
-			try {
-				vors = new URL("http://" + host + ":" + port + "/cgi-bin/tindex.cgi?VO=" + vo + "&grid=" + grid + "&res=" + id);
-						//"http://vors.grid.iu.edu/cgi-bin/tindex.cgi?VO=ligo&grid=osg&res=" + id);
-				vc = vors.openConnection();		
-				in = new BufferedReader(new InputStreamReader(vc.getInputStream()));
-	            
-				while ((inputLine = in.readLine()) != null){ 
-					//ignore commented or empty lines
-					inputLine = inputLine.trim();
-					if(inputLine.startsWith("#") || inputLine.equals("") ){
-					    continue;
-					}
-					
-					String[] col = inputLine.split("=");
-					if(col.length > 1){
-						values.put(col[0], col[1]);
-					}
-				}		
-				
-	        } catch (MalformedURLException e) {
+                
+                try {
+                    vors = new URL("http://" + host + ":" + port + "/cgi-bin/tindex.cgi?VO=" + vo + "&grid=" + grid + "&res=" + id);
+                    //"http://vors.grid.iu.edu/cgi-bin/tindex.cgi?VO=ligo&grid=osg&res=" + id);
+                    vc = vors.openConnection();
+                    in = new BufferedReader(new InputStreamReader(vc.getInputStream()));
+
+                    while ((inputLine = in.readLine()) != null) {
+                        //ignore commented or empty lines
+                        inputLine = inputLine.trim();
+                        if (inputLine.startsWith("#") || inputLine.equals("")) {
+                            continue;
+                        }
+
+                        String[] col = inputLine.split("=");
+                        if (col.length > 1) {
+                            values.put(col[0], col[1]);
+                        }
+                    }
+
+                } catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
 	        catch (IOException e) {
@@ -143,6 +150,50 @@ public class VORSSiteCatalogUtil {
 	        return ret;
 	    }
 
+            
+            
+            public static VORSSiteInfo getLocalSiteInfo( String vo ){
+                
+                VORSSiteInfo localSite = new VORSSiteInfo();
+                localSite.setShortname( "local" );
+                
+                //set some values on the basis of environment variables
+                String pHome = System.getenv( "PEGASUS_HOME" );
+                if( pHome != null ){
+                    //set osg_grid to the parent directory
+                    localSite.setOsg_grid( new File( pHome).getParent() );
+                }
+                
+                String gLocation = System.getenv( "GLOBUS_LOCATION" );
+                if( gLocation != null ){
+                    localSite.setGlobus_loc( gLocation );
+                }
+                
+                Properties p = new Properties();
+                String home = p.getProperty( "user.home" );
+                if( home != null ){
+                    String dir = new File( home, "pegasus" ).getAbsolutePath();
+                    localSite.setData_loc( dir );
+                    localSite.setTmp_loc( dir );
+                }
+                
+                String localHost = "localhost";
+                try {
+                    localHost = java.net.InetAddress.getLocalHost().getHostName();
+                } catch (UnknownHostException ex) {
+                    mLogger.log( "Unable to determine hostname of local site" , ex, LogManager.WARNING_MESSAGE_LEVEL );
+                }
+                //associate default ports for gridftp and gatekeeper
+                localSite.setGatekeeper( localHost );
+                localSite.setGsiftp_port( "2811" );
+
+                localSite.setUtil_jm( localHost + "/jobmanager-fork" );
+                localSite.setExec_jm( localHost + "/jobmanager-condor" );
+                localSite.setSponsor_vo( vo );
+                
+                return localSite;
+            }
+            
 	    /*public static String getGatekeeper(VORSSiteInfo sitInfo) {    	
 	    	String host = sitInfo.getGatekeeper();
 	    	String port = sitInfo.getGk_port();
@@ -183,6 +234,25 @@ public class VORSSiteCatalogUtil {
 	    		return "gsiftp://" + host + ":" + port;
 	    	}        
 	    }
+            
+            
+            /**
+             * Creates a Pegasus <code>SiteCatalogEntry</code> object from the information 
+             * in VORS.
+             * 
+             * The following coventions are followed for determining the worker node
+             * and storage node directories.
+             * 
+             * <pre>
+             * head node shared -> data_loc
+             * head node local -> tmp_loc
+             * worker node shared ->data_loc
+             * worker node local -> wntmp_loc
+             * </pre>
+             * 
+             * @param sitInfo
+             * @return
+             */
 	    public static SiteCatalogEntry createSiteCatalogEntry(VORSSiteInfo sitInfo){
 	        SiteCatalogEntry entry = new SiteCatalogEntry( sitInfo.getShortname());
 	  
@@ -193,7 +263,7 @@ public class VORSSiteCatalogUtil {
 	        ReplicaCatalog rc = new ReplicaCatalog( "rls://replica.isi.edu", "RLS" );
 	        
 	        rc.addAlias( sitInfo.getShortname());
-	        rc.addConnection( new Connection("ignore.lrc", "rls://replica.caltech.edu" ));            
+	        //rc.addConnection( new Connection("ignore.lrc", "rls://replica.caltech.edu" ));            
 	        entry.addReplicaCatalog( rc );
 	        
 	        //associate some profiles
@@ -210,21 +280,26 @@ public class VORSSiteCatalogUtil {
 	        
 	        //associate grid gateway for auxillary and compute jobs
 	        GridGateway gw = new GridGateway( GridGateway.TYPE.gt2,
-	        									((sitInfo.getExec_jm() != null)?sitInfo.getExec_jm():
-	        										(sitInfo.getVoInfo().getGatekeeper().split(":"))[0] + "/jobmanager-fork"),
-	        									getSchedulerType(sitInfo.getExec_jm()) );
+                                                  ((sitInfo.getUtil_jm() != null)?
+                                                       sitInfo.getUtil_jm():
+	        	        		      (sitInfo.getVoInfo().getGatekeeper().split(":"))[0] + "/jobmanager-fork"),
+	        				  getSchedulerType(sitInfo.getUtil_jm()) );
 	        gw.setJobType( GridGateway.JOB_TYPE.auxillary );        
 	        
 	        entry.addGridGateway( gw );
 	        
 	        gw = new GridGateway( GridGateway.TYPE.gt2,        									
-	        									((sitInfo.getUtil_jm() != null)?sitInfo.getUtil_jm():
-	        										(sitInfo.getVoInfo().getGatekeeper().split(":"))[0] + "/jobmanager-fork"),
-	        									getSchedulerType(sitInfo.getUtil_jm()) );
+	        		      ((sitInfo.getExec_jm() != null)?
+                                             sitInfo.getExec_jm():
+                                             (sitInfo.getVoInfo().getGatekeeper().split(":"))[0] + "/jobmanager-fork"),
+	        		      getSchedulerType(sitInfo.getExec_jm()) );
 	        gw.setJobType( GridGateway.JOB_TYPE.compute );
 	        entry.addGridGateway( gw );
 	        return entry;
 	    }
+            
+            
+            
 	    private static SCHEDULER_TYPE getSchedulerType(String url) {
 	    	if(url == null){
 	    		return GridGateway.SCHEDULER_TYPE.Fork ;
@@ -244,19 +319,24 @@ public class VORSSiteCatalogUtil {
 	        //if nothing is there than return fork
 	        return GridGateway.SCHEDULER_TYPE.Fork ;
 		}
-		/**
-	     * Creates an object describing the head node filesystem.
-	     * 
+            
+            
+            /**
+             * Creates an object describing the head node filesystem.
+             * 
+             * The following conventions are followed.
+             * <pre>
+	     *	shared:
+	     *	    scratch data_loc
+	     *	    storage data_loc
+	     *	local:   
+	     *	    scratch tmp_loc
+	     *	    storage tmp_loc
+             * 
+             * </pre>
+             * 
 	     * @return the HeadNodeFS
 	     */
-	    /*head node :
-	    	shared:
-	    	    scratch data_loc
-	    	    storage data_loc
-	    	local:   
-	    	    scratch tmp_loc
-	    	    storage tmp_loc
-	    */
 	    public static HeadNodeFS createHeadNodeFS(VORSSiteInfo sitInfo){
 	        // describe the head node filesystem
 	        HeadNodeFS hfs = new HeadNodeFS();
@@ -266,16 +346,19 @@ public class VORSSiteCatalogUtil {
 	        
 	        //head node local scratch description
 	        LocalDirectory hscratchLocal = new LocalDirectory();
-	        FileServer f = new FileServer( "gsiftp", getGsiftp(sitInfo), (sitInfo.getTmp_loc() != null)?sitInfo.getTmp_loc():"/" );
+                String directory = (sitInfo.getTmp_loc() != null)?sitInfo.getTmp_loc():"/";
+	        FileServer f = new FileServer( "gsiftp", getGsiftp(sitInfo), directory );
 	        hscratchLocal.addFileServer( f );      
-	        hscratchLocal.setInternalMountPoint( new InternalMountPoint( "/local", "50G", "100G") );
+                //no distinction between internal and external view
+	        hscratchLocal.setInternalMountPoint( new InternalMountPoint( directory, "50G", "100G") );
 	        
 	        //head node shared scratch description
 	        SharedDirectory hscratchShared = new SharedDirectory();            
-	        f = new FileServer( "gsiftp", getGsiftp(sitInfo), (sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/" );
-	        f.addProfile( new Profile( Profile.VDS, "transfer.arguments", "-s -a"));                    
+                directory = (sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/";
+	        f = new FileServer( "gsiftp", getGsiftp(sitInfo), directory );                    
 	        hscratchShared.addFileServer( f );
-	        hscratchShared.setInternalMountPoint( new InternalMountPoint( "/shared-scratch", "50G", "100G") );
+                //no distinction between internal and external view
+	        hscratchShared.setInternalMountPoint( new InternalMountPoint( directory, "50G", "100G") );
 	        hscratch.setLocalDirectory( hscratchLocal );
 	        hscratch.setSharedDirectory( hscratchShared );
 	        //head node scratch description ends
@@ -285,15 +368,19 @@ public class VORSSiteCatalogUtil {
 	            
 	        //head node local storage description            
 	        LocalDirectory hstorageLocal = new LocalDirectory();
-	        f = new FileServer( "gsiftp", getGsiftp(sitInfo), (sitInfo.getTmp_loc() != null)?sitInfo.getTmp_loc():"/"  );
+                directory =  (sitInfo.getTmp_loc() != null)?sitInfo.getTmp_loc():"/"  ;
+	        f = new FileServer( "gsiftp", getGsiftp(sitInfo), directory );
 	        hstorageLocal.addFileServer( f );
-	        hstorageLocal.setInternalMountPoint( new InternalMountPoint( "/local-storage", "30G", "100G") );
-	        //head node shared storage description
-	        SharedDirectory hstorageShared = new SharedDirectory();            
-	        f = new FileServer( "gsiftp", getGsiftp(sitInfo), (sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/"  );
-	        f.addProfile( new Profile( Profile.VDS, "transfer.arguments", "-s -a"));                    
+                //internal and external view is same
+	        hstorageLocal.setInternalMountPoint( new InternalMountPoint( directory, "30G", "100G") );
+	        
+                //head node shared storage description
+	        SharedDirectory hstorageShared = new SharedDirectory();    
+                directory = (sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/";
+	        f = new FileServer( "gsiftp", getGsiftp(sitInfo), directory  );                 
 	        hstorageShared.addFileServer( f );
-	        hstorageShared.setInternalMountPoint( new InternalMountPoint( "/shared-storage", "50G", "100G") );
+                //no distinction between internal and external view
+	        hstorageShared.setInternalMountPoint( new InternalMountPoint( directory, "50G", "100G") );
 	        hstorage.setLocalDirectory( hstorageLocal );
 	        hstorage.setSharedDirectory( hstorageShared );            
 	        //head node storage description ends
@@ -307,16 +394,19 @@ public class VORSSiteCatalogUtil {
 	    /**
 	     * Creates an object describing the worker node filesystem.
 	     * 
-	     * @return the HeadNodeFS
-	     */
-	    /*worker node:
-	    	shared:
-	    	    scratch data
-	    	    storage data
-	    	local:   
-	    	    scratch wntmp
-	    	    storage wntmp
-	    	    */
+             * The following conventions are followed.
+             * <pre>
+             *  shared:
+	     *	    scratch data
+	     *	    storage data
+	     *	local:   
+	     *	    scratch wntmp
+	     *	    storage wntmp
+             * </pre>
+             * 
+	     * @return the WorkerNodeFS
+	     *
+             */
 	    public static WorkerNodeFS createWorkerNodeFS(VORSSiteInfo sitInfo){
 	        // describe the head node filesystem
 	        WorkerNodeFS wfs = new WorkerNodeFS();
@@ -325,13 +415,18 @@ public class VORSSiteCatalogUtil {
 	        WorkerNodeScratch wscratch = new WorkerNodeScratch();            
 	        //worker node local scratch description
 	        LocalDirectory wscratchLocal = new LocalDirectory();
-	        FileServer f = new FileServer( "file", "file:///", (sitInfo.getWntmp_loc() != null)?sitInfo.getWntmp_loc():"/" );
+                String directory = (sitInfo.getWntmp_loc() != null)?sitInfo.getWntmp_loc():"/";
+	        FileServer f = new FileServer( "file", "file:///", directory );
 	        wscratchLocal.addFileServer( f );
-	        wscratchLocal.setInternalMountPoint( new InternalMountPoint( "/tmp", "50G", "100G") );
+                //no distinction between internal and external view
+	        wscratchLocal.setInternalMountPoint( new InternalMountPoint( directory, "50G", "100G") );
+                
 	        //worker node shared scratch description
-	        SharedDirectory wscratchShared = new SharedDirectory();            
-	        f = new FileServer( "file", "file:///", (sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/" );
-	        wscratchShared.setInternalMountPoint( new InternalMountPoint( "/shared-scratch", "50G", "100G") );
+	        SharedDirectory wscratchShared = new SharedDirectory();
+                directory = (sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/";
+	        f = new FileServer( "file", "file:///", directory );
+                //no distinction between internal and external view
+	        wscratchShared.setInternalMountPoint( new InternalMountPoint( directory, "50G", "100G") );
 	        wscratch.setLocalDirectory( wscratchLocal );
 	        wscratch.setSharedDirectory( wscratchShared );
 	        //head node scratch description ends                    
@@ -340,14 +435,18 @@ public class VORSSiteCatalogUtil {
 	        WorkerNodeStorage wstorage = new WorkerNodeStorage();            
 	        //worker node local scratch description
 	        LocalDirectory wstorageLocal = new LocalDirectory();
-	        f = new FileServer( "file", "file:///", (sitInfo.getWntmp_loc() != null)?sitInfo.getWntmp_loc():"/" );
+                directory = (sitInfo.getWntmp_loc() != null)?sitInfo.getWntmp_loc():"/";
+	        f = new FileServer( "file", "file:///", directory );
 	        wstorageLocal.addFileServer( f );
-	        wstorageLocal.setInternalMountPoint( new InternalMountPoint( "/tmp", "50G", "100G") );
+                //no distinction between internal and external view
+	        wstorageLocal.setInternalMountPoint( new InternalMountPoint( directory, "50G", "100G") );
 	        
 	        //worker node shared scratch description
 	        SharedDirectory wstorageShared = new SharedDirectory();            
-	        f = new FileServer( "file", "file:///", (sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/" );
-	        wstorageShared.setInternalMountPoint( new InternalMountPoint( "/shared-storage", "50G", "100G") );
+                directory = (sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/" ;
+	        f = new FileServer( "file", "file:///", directory );
+                //no distinction between internal and external view
+	        wstorageShared.setInternalMountPoint( new InternalMountPoint( directory, "50G", "100G") );
 	        wstorage.setLocalDirectory( wstorageLocal );
 	        wstorage.setSharedDirectory( wstorageShared );
 	        //worker node scratch description ends
