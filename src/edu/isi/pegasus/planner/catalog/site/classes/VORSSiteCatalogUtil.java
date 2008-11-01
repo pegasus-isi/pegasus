@@ -157,6 +157,7 @@ public class VORSSiteCatalogUtil {
                 VORSSiteInfo localSite = new VORSSiteInfo();
                 localSite.setShortname( "local" );
                 
+                //System.out.println( System.getenv() );
                 //set some values on the basis of environment variables
                 String pHome = System.getenv( "PEGASUS_HOME" );
                 if( pHome != null ){
@@ -169,13 +170,13 @@ public class VORSSiteCatalogUtil {
                     localSite.setGlobus_loc( gLocation );
                 }
                 
-                Properties p = new Properties();
-                String home = p.getProperty( "user.home" );
+                String home = System.getenv( "HOME" );
                 if( home != null ){
                     String dir = new File( home, "pegasus" ).getAbsolutePath();
                     localSite.setData_loc( dir );
                     localSite.setTmp_loc( dir );
                 }
+                localSite.setWntmp_loc( "/tmp" );
                 
                 String localHost = "localhost";
                 try {
