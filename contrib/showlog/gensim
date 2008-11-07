@@ -342,11 +342,14 @@ sub processJobstateLog {
             $jobsRef->{$job}->{'runtime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} - $jobsRef->{$job}->{'SUBMIT'};
         }
 
-        if ($jobsRef->{$job}->{'site'} eq 'local') {
+	#we want kickstart times for the registration jobs that are run on local site
+        if ($jobsRef->{$job}->{'site'} eq 'local' && $job !~ /new_rc_register_/ ) {
             $jobsRef->{$job}->{'ksruntime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} - $jobsRef->{$job}->{'SUBMIT'};
-        } elsif ($job =~ /rc_tx/) {
-            $jobsRef->{$job}->{'ksruntime'} = 0;
-        } else {
+        }
+	#elsif ($job =~ /rc_tx/) {
+        #    $jobsRef->{$job}->{'ksruntime'} = 0;
+        #}
+	else {
             $jobsRef->{$job}->{'ksruntime'} = 0;
             my @grepLines = `grep -h '<invocation' $job.out.* 2>&1`;
             foreach my $line (@grepLines) {
