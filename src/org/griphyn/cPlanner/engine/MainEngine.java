@@ -138,6 +138,11 @@ public class MainEngine
      * @return the planned worflow.
      */
     public ADag runPlanner() {
+        //create the main event refinement event
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REFINEMENT,
+                               LoggingKeys.DAX_ID, 
+                               mOriginalDag.getAbstractWorkflowID() );
+        
         //do the authentication against the pools
         if (mPOptions.authenticationSet()) {
             mAuthEng = new AuthenticateEngine( mBag,
@@ -249,6 +254,7 @@ public class MainEngine
             mReducedDag = deploy.addCleanupNodesForWorkerPackage( mReducedDag );
         }
 
+        mLogger.logEventCompletion();
         return mReducedDag;
     }
 
