@@ -342,16 +342,16 @@ sub node_type ($) {
 	# make an educated guess
       GUESS:
 	local($_) = basename($subfn);
-	if ( /^rc_tx_/ ) {
+	if ( /^stage_in_/ ) {
 	    # stage-in job
 	    $result = 2;
-	} elsif ( /^new_rc_tx_/ ) {
+	} elsif ( /^stage_out_/ ) {
 	    # stage-out job
 	    $result = 3;
-	} elsif ( /^new_rc_register_/ ) {
+	} elsif ( /^register_/ ) {
 	    # replica mgmt job
 	    $result = 4;
-	} elsif ( /^inter_tx_/ ) {
+	} elsif ( /^stage_inter_/ ) {
 	    # inter pool transfer
 	    $result = 5;
 	} elsif ( /\S+/ ) {

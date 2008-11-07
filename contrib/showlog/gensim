@@ -81,7 +81,7 @@ sub processTransfers {
             }
 
             #Save the source only for stage-in jobs
-            if ($job !~ /new_rc_tx_/) {
+            if ($job !~ /stage_out_/) {
                 my %fileParams = ();
                 $filesRef->{$dstURL} = \%fileParams;
 
@@ -141,7 +141,7 @@ sub processDAGManOutput {
             my %jobParams;
             $jobsRef->{$job} = \%jobParams;
 
-            if ($job =~ /rc_tx_/) {
+            if ($job =~ /stage_in_/) {
                 processTransfers($jobsRef, $filesRef, $job, 'in');
                 # We're not processing the outputs of
                 # the transfer job.
@@ -343,10 +343,10 @@ sub processJobstateLog {
         }
 
 	#we want kickstart times for the registration jobs that are run on local site
-        if ($jobsRef->{$job}->{'site'} eq 'local' && $job !~ /new_rc_register_/ ) {
+        if ($jobsRef->{$job}->{'site'} eq 'local' && $job !~ /register_/ ) {
             $jobsRef->{$job}->{'ksruntime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} - $jobsRef->{$job}->{'SUBMIT'};
         }
-	#elsif ($job =~ /rc_tx/) {
+	#elsif ($job =~ /stage_in/) {
         #    $jobsRef->{$job}->{'ksruntime'} = 0;
         #}
 	else {
