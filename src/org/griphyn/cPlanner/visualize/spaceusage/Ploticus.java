@@ -341,7 +341,7 @@ public class Ploticus implements Plot {
         writer.println( "xfield: time" );
         writer.println( "yfield: with_cleanup" );
         writer.println( "symbol: shape=circle fillcolor=red radius=0.04" );
-        writer.println( "select:  @@jobname like cln_*" );
+        writer.println( "select:  @@jobname like clean_up_*" );
         writer.println( "legendlabel: cleanup nodes" );
         writer.println( );
 //        using scatter plot now

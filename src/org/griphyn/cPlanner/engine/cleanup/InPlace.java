@@ -58,7 +58,7 @@ public class InPlace implements Strategy{
      * The prefix for CLEANUP_JOB ID i.e prefix+the parent compute_job ID becomes
      * ID of the cleanup job.
      */
-    public static final String CLEANUP_JOB_PREFIX = "cln_";
+    public static final String CLEANUP_JOB_PREFIX = "clean_up_";
 
     /**
      * The mapping to siteHandle to all the jobs that are mapped to it

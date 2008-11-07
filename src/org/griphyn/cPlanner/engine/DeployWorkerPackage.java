@@ -93,7 +93,7 @@ public class DeployWorkerPackage
     /**
      * Constant suffix for the names of the deployment nodes.
      */
-    public static final String DEPLOY_WORKER_PREFIX = "setup_tx_";
+    public static final String DEPLOY_WORKER_PREFIX = "stage_worker_";
     
     /**
      * Constant suffix for the names of the deployment nodes.
@@ -103,7 +103,7 @@ public class DeployWorkerPackage
     /**
      * Constant suffix for the names of the deployment nodes.
      */
-    public static final String CLEANUP_PREFIX = "cln_";
+    public static final String CLEANUP_PREFIX = "cleanup_";
 
     /**
      * Array storing the names of the executables in the $PEGASUS_HOME/bin directory

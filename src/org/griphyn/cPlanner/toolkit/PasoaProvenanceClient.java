@@ -50,6 +50,7 @@ import org.xml.sax.InputSource;
 import java.io.StringWriter;
 import java.io.IOException;
 import java.io.Reader;
+import org.griphyn.cPlanner.transfer.Refiner;
 import org.xml.sax.InputSource;
 public class PasoaProvenanceClient {
 
@@ -147,7 +148,7 @@ public class PasoaProvenanceClient {
             System.out.println("Inputs == "+cle.input);
             System.out.println("Outputs == "+cle.output);
 
-            if(cle.jobname.startsWith("rc_tx")|| (cle.jobname.startsWith("new_rc_tx"))){
+            if(cle.jobname.startsWith( Refiner.STAGE_IN_PREFIX )|| (cle.jobname.startsWith(Refiner.STAGE_OUT_PREFIX))){
                 InteractionKey ik = cle.transferInvocationInteraction();
                 cle.transferCompletionInteraction(ik);
             } else if(cle.jobname.startsWith("new_rc_register")){
@@ -282,7 +283,7 @@ private void parseFiles(List jobs)throws Exception{
     List temp = new ArrayList(jobs);
     for (Iterator i = temp.iterator(); i.hasNext(); ) {
         String job = (String) i.next();
-        if (job.startsWith("rc_tx_")) {
+        if (job.startsWith( Refiner.STAGE_IN_PREFIX )) {
             //this is for stagein jobs
             outfile = new File(job + ".out.lof");
             if (outfile.exists() && outfile.canRead() && outfile.length() != 0) {
@@ -305,7 +306,7 @@ private void parseFiles(List jobs)throws Exception{
                 }
             }
 
-        }else if (job.startsWith("new_rc_tx_")) {
+        }else if (job.startsWith( Refiner.STAGE_OUT_PREFIX )) {
             //this is for stageout/inter tx jobs
             outfile = new File(job + ".out.lof");
             if (outfile.exists() && outfile.canRead() && outfile.length() != 0) {
@@ -328,7 +329,7 @@ private void parseFiles(List jobs)throws Exception{
                 }
             }
 
-        }else if(job.startsWith("inter_tx_")){
+        }else if(job.startsWith( Refiner.INTER_POOL_PREFIX )){
             outfile = new File(job + ".out.lof");
             if (outfile.exists() && outfile.canRead() && outfile.length() != 0) {
                 try {
@@ -499,7 +500,7 @@ private void parseFiles(List jobs)throws Exception{
         if(parents!=null && !parents.isEmpty()){
             for(Iterator p=parents.iterator();p.hasNext();){
                 String tempjob=(String)p.next();
-                if(tempjob.startsWith("rc_tx") || tempjob.startsWith("inter_tx") ){
+                if(tempjob.startsWith(Refiner.STAGE_IN_PREFIX) || tempjob.startsWith(Refiner.INTER_POOL_PREFIX) ){
                     List ilist=null;
                     if(output==null){
                         output = new HashMap();
@@ -526,7 +527,7 @@ private void parseFiles(List jobs)throws Exception{
         if(children!=null && !children.isEmpty()){
             for(Iterator c=children.iterator();c.hasNext();){
                 String tempjob=(String)c.next();
-                if(tempjob.startsWith("new_rc_tx") || tempjob.startsWith("inter_tx") ){
+                if(tempjob.startsWith(Refiner.STAGE_OUT_PREFIX) || tempjob.startsWith(Refiner.INTER_POOL_PREFIX) ){
                     List ilist=null;
                     if(input==null){
                         input = new HashMap();
@@ -553,14 +554,14 @@ private void parseFiles(List jobs)throws Exception{
 
             }
         }
-        if(jobname.startsWith("rc_tx")||jobname.startsWith("new_rc_tx")||jobname.startsWith("inter_tx")){
+        if(jobname.startsWith(Refiner.STAGE_IN_PREFIX)||jobname.startsWith(Refiner.STAGE_OUT_PREFIX)||jobname.startsWith(Refiner.INTER_POOL_PREFIX)){
             BufferedReader bf =new BufferedReader(new FileReader(new File(jobname+".in")));
             String line = null;
             List ilist=null;
             while((bf.readLine())!=null){
                 String lfn=null;
                 line=bf.readLine();
-                if(jobname.startsWith("new_rc_tx") || jobname.startsWith("inter_tx")){
+                if(jobname.startsWith(Refiner.STAGE_OUT_PREFIX) || jobname.startsWith(Refiner.INTER_POOL_PREFIX)){
                     lfn= line.split("run\\d{4}/")[1];
                 }
                 if(input==null){
@@ -573,7 +574,7 @@ private void parseFiles(List jobs)throws Exception{
                 ilist.add(lfn);
                 bf.readLine();
                 line=bf.readLine();
-                if(jobname.startsWith("rc_tx")||jobname.startsWith("inter_tx")){
+                if(jobname.startsWith(Refiner.STAGE_IN_PREFIX)||jobname.startsWith(Refiner.INTER_POOL_PREFIX)){
                     lfn= line.split("run\\d{4}/")[1];
 
                 }
@@ -824,7 +825,7 @@ private void parseFiles(List jobs)throws Exception{
         List records=new ArrayList();
         Record recIpa = new Record(ipa, ik, vk, asserter.getElement());
         records.add(recIpa);
-        if(!jobname.startsWith("rc_tx")){
+        if(!jobname.startsWith(Refiner.STAGE_IN_PREFIX)){
             //iterate over parents to create multiple rpa's
             RelationshipPAssertion rpa = null;
             Record recRpa=null;
@@ -947,7 +948,7 @@ private void parseFiles(List jobs)throws Exception{
         while((bf.readLine())!=null){
             line=bf.readLine();
             filecount++;
-            if(!jobname.startsWith("new_rc_tx")){
+            if(!jobname.startsWith(Refiner.STAGE_OUT_PREFIX)){
                 message.append("<filename>"+line+"</filename>");
             } else {
                 String lfn= line.split("run\\d{4}/")[1];
@@ -995,7 +996,7 @@ private void parseFiles(List jobs)throws Exception{
             bf.readLine();
             line = bf.readLine();
             filecount++;
-            if(jobname.startsWith("new_rc_tx")){
+            if(jobname.startsWith(Refiner.STAGE_OUT_PREFIX)){
                 message.append("<filename>"+line+"</filename>");
             }else {
                 String lfn= line.split("run\\d{4}/")[1];

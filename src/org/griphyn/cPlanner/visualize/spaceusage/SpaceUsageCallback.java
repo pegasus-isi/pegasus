@@ -486,7 +486,7 @@ public class SpaceUsageCallback implements Callback {
      * @return boolean
      */
     public boolean cleanupJob( String name ){
-        return name.startsWith( "cln_" );
+        return name.startsWith( "clean_up_" );
     }
 
     /**
