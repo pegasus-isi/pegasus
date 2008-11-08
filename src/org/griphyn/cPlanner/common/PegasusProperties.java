@@ -535,11 +535,11 @@ public class PegasusProperties {
      * Referred to by the "pegasus.dir.create" property.
      *
      * @return  the create dir classname if specified in the properties file,
-     *          else HourGlass.
+     *          else Tentacles.
      */
     public String getCreateDirClass() {
         return mProps.getProperty( "pegasus.dir.create",
-                                   "HourGlass" );
+                                   "Tentacles" );
     }
 
     /**
