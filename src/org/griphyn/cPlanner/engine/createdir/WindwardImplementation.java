@@ -45,6 +45,7 @@ import org.griphyn.common.util.Separator;
 
 import java.io.File;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.LinkedList;
 import java.util.List;
@@ -171,6 +172,8 @@ public class WindwardImplementation implements Implementation {
      */
     private JobAggregator mSeqExecAggregator;
     
+    private String mWorkflowID;
+    
     /**
      * The default constructor.
      */
@@ -198,7 +201,8 @@ public class WindwardImplementation implements Implementation {
         mAllegroPort = p.getProperty( "port" );
         mAllegroBaseKB   = p.getProperty( "basekb" );
         
-        
+        //set in the DC interface
+        mWorkflowID = mProps.getProperty( "pegasus.windward.wf.id" );
         //just to pass the label have to send an empty ADag.
         //should be fixed
         ADag dag = new ADag();
@@ -234,6 +238,15 @@ public class WindwardImplementation implements Implementation {
         List <SubInfo> l = new LinkedList <SubInfo> ();
         l.add( pegasusJob );
         l.add( createGUKBJob );
+        
+        
+        //add extra logging options to create gu kb job
+        StringBuffer extraArgs = new StringBuffer();
+        extraArgs.append( " -w " ).append( mWorkflowID );
+        extraArgs.append( " -j " ).append( pegasusJob.getID() );
+        createGUKBJob.setArguments( createGUKBJob.getArguments() + extraArgs.toString() );
+        //System.out.println( createGUKBJob.getArguments() );
+        
         
         //now lets merge all these jobs
         SubInfo merged = mSeqExecAggregator.construct( l, "dirmanager", pegasusJob.getName()  );
