@@ -62,6 +62,12 @@ public class HourGlass extends AbstractStrategy{
     public static final String DUMMY_CONCAT_JOB = "pegasus_concat";
     
     /**
+     * The prefix assigned to the concatenating dummy job that ensures that Condor does not start
+     * staging in before the directories are created.
+     */
+    public static final String DUMMY_CONCAT_JOB_PREFIX = "pegasus_concat_";
+    
+    /**
      * The transformation namespace for the create dir jobs.
      */
     public static final String TRANSFORMATION_NAMESPACE = "pegasus";
@@ -240,13 +246,18 @@ public class HourGlass extends AbstractStrategy{
     protected String getConcatJobname( ADag dag ){
         StringBuffer sb = new StringBuffer();
 
-        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
-           append( dag.dagInfo.index ).append( "_" );
+        sb.append( HourGlass.DUMMY_CONCAT_JOB_PREFIX );
 
         //append the job prefix if specified in options at runtime
-        if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+        if ( mJobPrefix != null ) { sb.append( mJobPrefix ) ;} 
+        
+        sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
+           append( dag.dagInfo.index )/*.append( "_" )*/;
 
-        sb.append( this.DUMMY_CONCAT_JOB );
+        //append the job prefix if specified in options at runtime
+        //if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+        //sb.append( this.DUMMY_CONCAT_JOB );
 
         return sb.toString();
     }

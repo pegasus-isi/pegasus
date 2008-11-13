@@ -43,6 +43,12 @@ public abstract class AbstractStrategy implements Strategy {
      */
     public static final String CREATE_DIR_SUFFIX = "_cdir";
 
+    /**
+     * Constant prefix for the names of the create directory nodes.
+     */
+    public static final String CREATE_DIR_PREFIX = "create_dir_";
+
+
 
     /**
      * The handle to the logging object, that is used to log the messages.
@@ -102,14 +108,17 @@ public abstract class AbstractStrategy implements Strategy {
     public String getCreateDirJobName( ADag dag, String pool){
         StringBuffer sb = new StringBuffer();
 
+        sb.append( AbstractStrategy.CREATE_DIR_PREFIX );
+
+        //append the job prefix if specified in options at runtime
+        if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
         sb.append( dag.dagInfo.nameOfADag).append("_").
            append( dag.dagInfo.index).append("_");
 
-       //append the job prefix if specified in options at runtime
-       if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
-
-       sb.append(pool).append(this.CREATE_DIR_SUFFIX);
+       
+       //sb.append(pool).append(this.CREATE_DIR_SUFFIX);
+        sb.append( pool );
 
        return sb.toString();
     }
