@@ -19,14 +19,16 @@
 package edu.isi.pegasus.planner.catalog.site;
 
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
-import edu.isi.pegasus.planner.catalog.site.impl.VORS;
+
+import edu.isi.pegasus.common.logging.LogManager;
+
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import org.griphyn.cPlanner.common.PegasusProperties;
+
+import org.griphyn.common.util.Version;
 
 import java.util.ArrayList;
 import java.util.List;
-import edu.isi.pegasus.common.logging.LogManager;
-
-import java.util.Properties;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 /**
  * A Test program that shows how to load a Site Catalog, and query for all sites.
@@ -58,6 +60,9 @@ public class TestVORSSiteCatalog {
             //catalog = SiteFactory.loadInstance("VORS", props);
             PegasusProperties p =  PegasusProperties.nonSingletonInstance();
             p.setProperty( "pegasus.catalog.site", "VORS" );
+            LogManager logger = LogManagerFactory.loadInstance( p );
+            logger.setLevel( LogManager.DEBUG_MESSAGE_LEVEL );
+            logger.logEventStart( "event.pegasus.planner", "planner.version", Version.instance().toString() );
             catalog = SiteFactory.loadInstance( p);
             	
         }
@@ -70,11 +75,14 @@ public class TestVORSSiteCatalog {
         try{        	       
             //catalog.connect(props);
             List s = new ArrayList(1);
-            s.add( "Nebraska");//"*" );
+            String handle = "CIT_CMS_T2";
+            s.add( handle );//"*" );
             System.out.println( "Loaded  " + catalog.load( s ) + " number of sites " );
                        
             /* query for the sites, and print them out */
             System.out.println( "Sites loaded are "  + catalog.list( ) );
+            System.out.println( catalog.lookup( handle ));
+            
         }
         catch ( SiteCatalogException e ){
             e.printStackTrace();

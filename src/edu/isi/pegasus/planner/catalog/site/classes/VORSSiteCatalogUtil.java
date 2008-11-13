@@ -17,27 +17,29 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+
+import org.griphyn.cPlanner.classes.Profile;
+
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.SCHEDULER_TYPE;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.griphyn.cPlanner.classes.Profile;
-import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.SCHEDULER_TYPE;
 import java.io.File;
-import java.util.Properties;
 
 public class VORSSiteCatalogUtil {
 	 private static LogManager mLogger = LogManagerFactory.loadSingletonInstance();	 
@@ -269,8 +271,6 @@ public class VORSSiteCatalogUtil {
 	        
 	        //associate some profiles
 	        
-	        entry.addProfile( new Profile( Profile.ENV, "GLOBUS_LOCATION", ((sitInfo.getGlobus_loc() != null)?sitInfo.getGlobus_loc():"/") ) );
-	        entry.addProfile( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ((sitInfo.getGlobus_loc() != null)?sitInfo.getGlobus_loc():"") + "/lib") );
 	        entry.addProfile( new Profile( Profile.ENV, "PEGASUS_HOME", ((sitInfo.getOsg_grid() != null)?sitInfo.getOsg_grid():"") +"/pegasus")) ;
 	        entry.addProfile( new Profile( Profile.ENV, "app_loc",((sitInfo.getApp_loc() != null)?sitInfo.getApp_loc():"/")) );
 	        entry.addProfile( new Profile( Profile.ENV, "data_loc", ((sitInfo.getData_loc() != null)?sitInfo.getData_loc():"/")) );
@@ -288,6 +288,20 @@ public class VORSSiteCatalogUtil {
 	        gw.setJobType( GridGateway.JOB_TYPE.auxillary );        
 	        
 	        entry.addGridGateway( gw );
+                
+                if( gw.getScheduler() == GridGateway.SCHEDULER_TYPE.Fork ){
+                    //add the headnode globus location
+                    entry.addProfile( new Profile( Profile.ENV, "GLOBUS_LOCATION", ((sitInfo.getGlobus_loc() != null)?sitInfo.getGlobus_loc():"/") ) );
+                    entry.addProfile( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ((sitInfo.getGlobus_loc() != null)?sitInfo.getGlobus_loc():"") + "/lib") );
+                }
+                else{
+                    mLogger.log( "Creating globus location on basis of OSG_GRID for site " + entry.getSiteHandle() ,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    String wn = sitInfo.getOsg_grid();
+                    String globus = ( wn == null )? "/globus" : wn + "/globus";
+                    entry.addProfile( new Profile( Profile.ENV, "GLOBUS_LOCATION", globus ) );
+                    entry.addProfile( new Profile( Profile.ENV, "LD_LIBRARY_PATH", globus + "/lib" ));
+                }
 	        
 	        gw = new GridGateway( GridGateway.TYPE.gt2,        									
 	        		      ((sitInfo.getExec_jm() != null)?
