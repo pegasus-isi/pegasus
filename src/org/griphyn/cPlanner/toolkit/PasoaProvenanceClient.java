@@ -154,11 +154,11 @@ public class PasoaProvenanceClient {
             } else if(cle.jobname.startsWith("new_rc_register")){
                 InteractionKey ik = cle.registerInvocationInteraction();
                 cle.registerCompletionInteraction(ik);
-            } else if(cle.jobname.endsWith("cdir")) {
+            } else if(cle.jobname.startsWith("create_dir")) {
                 //write this handler
-            } else if(cle.jobname.startsWith("cln_")){
+            } else if(cle.jobname.startsWith("clean_up")){
                 //write this handler
-            }else if(cle.jobname.endsWith("concat")){
+            }else if(cle.jobname.startsWith("pegasus_concat")){
                 //write this handler
             }else{
                 InteractionKey ik = cle.jobInvocationInteraction();
