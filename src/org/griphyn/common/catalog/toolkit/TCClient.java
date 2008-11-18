@@ -27,6 +27,8 @@ import org.griphyn.common.catalog.transformation.client.TCAdd;
 import org.griphyn.common.catalog.transformation.client.TCDelete;
 import org.griphyn.common.catalog.transformation.client.TCQuery;
 
+import org.griphyn.cPlanner.toolkit.Executable;
+
 import org.griphyn.common.util.Version;
 import org.griphyn.common.util.FactoryException;
 
@@ -43,7 +45,7 @@ import gnu.getopt.LongOpt;
  * @author Gaurang Mehta
  * @version $Revision$
  */
-public class TCClient {
+public class TCClient extends Executable{
 
     public String classname;
 
@@ -98,6 +100,21 @@ public class TCClient {
     public void loadProperties() {
     }
 
+    /**
+     * Sets up the logging options for this class. Looking at the properties
+     * file, sets up the appropriate writers for output and stderr.
+     */
+    protected void setupLogging(){
+        //setup the logger for the default streams.
+        mLogger = LogManagerFactory.loadSingletonInstance( mProps );
+        mLogger.logEventStart( "event.pegasus.tc-client", 
+                               "client.version",
+                               mVersion,
+                               LogManager.DEBUG_MESSAGE_LEVEL );
+
+    }
+
+    
     public LongOpt[] generateValidOptions() {
         LongOpt[] longopts = new LongOpt[14 ];
         longopts[ 0 ] = new LongOpt( "add", LongOpt.NO_ARGUMENT, null, 'a' );
@@ -271,6 +288,7 @@ public class TCClient {
                 this.printShortVersion();
                 System.exit( -1 );
         }
+        mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
     }
 
     public void printShortVersion() {
