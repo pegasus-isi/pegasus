@@ -86,7 +86,8 @@ public class CondorGlideIN extends Abstract {
                               Condor.VANILLA_UNIVERSE;
 
         if( universe.equalsIgnoreCase( Condor.VANILLA_UNIVERSE ) ||
-            universe.equalsIgnoreCase( Condor.STANDARD_UNIVERSE ) ){
+            universe.equalsIgnoreCase( Condor.STANDARD_UNIVERSE ) ||
+            universe.equalsIgnoreCase( Condor.PARALLEL_UNIVERSE ) ){
             //the glide in/ flocking case
             //submitting directly to condor
 
