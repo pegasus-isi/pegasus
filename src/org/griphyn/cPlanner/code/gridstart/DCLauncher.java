@@ -92,6 +92,28 @@ public class DCLauncher
 
        //construct the arguments for the dc launcher.
        StringBuffer arguments = new StringBuffer();
+       
+       
+        //handle the -w option that asks kickstart to change
+        //directory before launching an executable.
+        String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
+        if(job.vdsNS.getBooleanValue(VDS.CHANGE_DIR_KEY) && !mWorkerNodeExecution ){
+	    style = (String)job.vdsNS.get(VDS.STYLE_KEY);
+
+//            Commented to take account of submitting to condor pool
+//            directly or glide in nodes. However, does not work for
+//            standard universe jobs. Also made change in Kickstart
+//            to pick up only remote_initialdir Karan Nov 15,2005
+            String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
+                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))?
+                     (String)job.condorVariables.removeKey("remote_initialdir"):
+                     (String)job.condorVariables.removeKey("initialdir");
+
+
+            //pass the directory as an argument to kickstart
+            arguments.append(" -w ").append(directory).append(' ');
+        }
+       
        arguments.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() );
        construct( job, "arguments", arguments.toString() );
        //the executable for the job is now the DC launcher
