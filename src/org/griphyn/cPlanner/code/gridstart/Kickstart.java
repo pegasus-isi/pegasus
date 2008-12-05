@@ -761,7 +761,7 @@ public class Kickstart implements GridStart {
                 // SLS has happened
                 if( job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
                     xBitSetInvocation = new StringBuffer();
-                    xBitSetInvocation.append( "/bin/chmod 600 " );
+                    xBitSetInvocation.append( "/bin/chmod 777 " );
 
                     for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
                         PegasusFile pf = ( PegasusFile )it.next();
@@ -800,7 +800,7 @@ public class Kickstart implements GridStart {
 
 
                 if( preJob != null ){
-                /*
+                //comment out section start
                     //add the x bit invocation if required
                     //this is required till kickstart -X feature is fixed
                     //it needs to be invoked after the prejob
@@ -815,10 +815,10 @@ public class Kickstart implements GridStart {
                         }
                         else{
                             //prepend a /bin/bash -c invocation
-                            preJob = "/bin/bash -c \"" + preJob + xBitSetInvocation.toString();
+                            preJob = "/bin/bash -c \"" + preJob  + " && "  + xBitSetInvocation.toString() + "\"";
                         }
                     }
-                 */
+                 //comment out section end
 
                     preJob = quote( preJob );
                     job.envVariables.construct( this.KICKSTART_PREJOB, preJob );
