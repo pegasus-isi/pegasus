@@ -118,9 +118,9 @@ public  class CreateDirectory  extends Engine {
         if( props == null ){
             throw new FactoryException( "Properties instance is null " );
         }
-        String className = props.getCreateDirClass();
+        String className = props.getCreateDirImplementation();
         //for now
-        className = "DefaultImplementation";
+        //className = "DefaultImplementation";
         
         //prepend the package name
         className = PACKAGE_NAME + "." + className;

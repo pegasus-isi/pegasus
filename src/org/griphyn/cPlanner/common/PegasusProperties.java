@@ -538,10 +538,27 @@ public class PegasusProperties {
      *          else Tentacles.
      */
     public String getCreateDirClass() {
-        return mProps.getProperty( "pegasus.dir.create",
-                                   "Tentacles" );
+        
+        return getProperty( "pegasus.dir.create.strategy",
+                            "pegasus.dir.create",
+                             "Tentacles" );
     }
 
+    /**
+     * Returns the name of the class that the user wants, to render the directory
+     * creation jobs. It dictates what mechanism is used to create the directory
+     * for a workflow.
+     *
+     * Referred to by the "pegasus.dir.create.impl" property.
+     *
+     * @return  the create dir classname if specified in the properties file,
+     *          else DefaultImplementation.
+     */
+    public String getCreateDirImplementation() {
+        
+        return mProps.getProperty( "pegasus.dir.create.impl", "DefaultImplementation" );
+                             
+    }
     /**
      * It specifies whether to use the extended timestamp format for generation
      * of timestamps that are used to create the random directory name, and for
@@ -2117,7 +2134,60 @@ public class PegasusProperties {
 
 
 
+    /**
+     * This function is used to check whether a deprecated property is used or
+     * not. If a deprecated property is used,it logs a warning message specifying
+     * the new property. If both properties are not set by the user, the function
+     * returns the default property. If no default property then null.
+     *
+     * @param newProperty          the new property that should be used.
+     * @param deprecatedProperty   the deprecated property that needs to be
+     *                             replaced.
+     *
+     * @return  the appropriate value.
+     */
+    private String getProperty(  String newProperty, String deprecatedProperty ) {
+        return this.getProperty(  newProperty, deprecatedProperty, null );
+    }
 
+    /**
+     * This function is used to check whether a deprecated property is used or
+     * not. If a deprecated property is used,it logs a warning message specifying
+     * the new property. If both properties are not set by the user, the
+     * function returns the default property. If no default property then null.
+     *
+     * 
+     * @param newProperty          the new property that should be used.
+     * @param deprecatedProperty   the deprecated property that needs to be
+     *                             replaced.
+     * @param defaultValue         the default value that should be returned.
+     *
+     * @return  the appropriate value.
+     */
+    private String getProperty( String newProperty,
+                                String deprecatedProperty,
+                                String defaultValue ) {
+        String value = null;
+
+        //try for the new property
+        //first
+        value = mProps.getProperty( newProperty );
+        if ( value == null ) {
+            //try the deprecated property if set
+            value = mProps.getProperty( deprecatedProperty );
+
+            //if the value is not null
+            if ( value != null ) {
+                //print the warning message
+                logDeprecatedWarning(deprecatedProperty,newProperty);
+                return value;
+            } else { //else return the default value
+                return defaultValue;
+            }
+        }
+
+        return value;
+    }
 
     /**
      * Logs a warning about the deprecated property. Logs a warning only if
