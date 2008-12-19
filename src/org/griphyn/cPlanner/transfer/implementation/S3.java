@@ -254,6 +254,10 @@ public class S3 extends Abstract
             super.addSetXBitJobs( job, txJob, execFiles );
         }
 
+        //set the non third party site as this job
+        //always run on local host.
+        txJob.setNonThirdPartySite( job.getSiteHandle() );
+        
         mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, mRefiner.getWorkflow().getAbstractWorkflowID(),
                                            LoggingKeys.JOB_ID, txJobIDs );
 
