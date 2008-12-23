@@ -62,7 +62,7 @@ import java.io.IOException;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Cleanup implements Implementation{
+public class Cleanup implements CleanupImplementation{
 
     /**
      * The transformation namespace for the  job.
@@ -146,7 +146,13 @@ public class Cleanup implements Implementation{
                                   TRANSFORMATION_NAME,
                                   TRANSFORMATION_VERSION );
     }
-
+    
+    /**
+     * The default constructor.
+     */
+    public Cleanup(){
+        
+    }
 
     /**
      * Creates a new instance of InPlace
@@ -154,32 +160,12 @@ public class Cleanup implements Implementation{
      * @param bag  the bag of initialization objects.
      *
      */
-    public Cleanup( PegasusBag bag ) {
+    public void initialize( PegasusBag bag ) {
         mProps           = bag.getPegasusProperties();
         mSubmitDirectory = bag.getPlannerOptions().getSubmitDirectory();
         mSiteStore       = bag.getHandleToSiteStore();
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
-        
-        /* load the site catalog using the factory */
-/*        try{
-            mSiteHandle = SiteFactory.loadInstance( properties, false );
-        }
-        catch ( SiteFactoryException e ){
-            throw new RuntimeException( "Unable to load Site Catalog " + e.convertException() ,
-                                        e );
-        }
-*/
-        /* load the transformation catalog using the factory */
-/*        try{
-            mTCHandle = TransformationFactory.loadInstance( properties );
-        }
-        catch ( TransformationFactoryException e ){
-            throw new RuntimeException( "Unable to load Transformation Catalog " + e.convertException() ,
-                                        e );
-        }
-*/
-
     }
 
 

@@ -532,7 +532,7 @@ public class PegasusProperties {
      * create directory jobs in the graph in case of creating random
      * directories.
      *
-     * Referred to by the "pegasus.dir.create" property.
+     * Referred to by the "pegasus.dir.create.strategy" property.
      *
      * @return  the create dir classname if specified in the properties file,
      *          else Tentacles.
@@ -633,8 +633,36 @@ public class PegasusProperties {
                               false );
     }
 
+    //PROPERTIES RELATED TO CLEANUP
+    /**
+     * Returns the name of the Strategy class that the user wants, to insert the
+     * cleanup jobs in the graph.
+     *
+     * Referred to by the "pegasus.file.cleanup.strategy" property.
+     *
+     * @return  the create dir classname if specified in the properties file,
+     *          else InPlace.
+     */
+    public String getCleanupStrategy() {
+         return mProps.getProperty( "pegasus.file.cleanup.strategy", "InPlace" );
+    }
 
-
+    /**
+     * Returns the name of the class that the user wants, to render the  cleanup
+     * jobs. It dictates what mechanism is used to remove the files on a remote
+     * system.
+     *
+     * Referred to by the "pegasus.file.cleanup.impl" property.
+     *
+     * @return  the cleanup implementation classname if specified in the properties file,
+     *          else Cleanup.
+     */
+    public String getCleanupImplementation() {
+        
+        return mProps.getProperty( "pegasus.file.cleanup.impl", "Cleanup" );
+                             
+    }
+    
     //PROPERTIES RELATED TO THE TRANSFORMATION CATALOG
     /**
      * Returns the mode to be used for accessing the Transformation Catalog.

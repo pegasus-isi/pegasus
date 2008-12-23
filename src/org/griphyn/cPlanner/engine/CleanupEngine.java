@@ -19,13 +19,8 @@ package org.griphyn.cPlanner.engine;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 
-import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
-
-import org.griphyn.cPlanner.engine.cleanup.Strategy;
-import org.griphyn.cPlanner.engine.cleanup.InPlace;
+import org.griphyn.cPlanner.engine.cleanup.CleanupStrategy;
 
 import org.griphyn.cPlanner.partitioner.graph.Graph;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
@@ -33,6 +28,7 @@ import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 import java.util.Iterator;
 import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.engine.cleanup.CleanupFactory;
 
 /**
  * The refiner that results in the creation of cleanup jobs within the workflow.
@@ -65,8 +61,9 @@ public class CleanupEngine extends Engine {
     public ADag addCleanupJobs( ADag dag ) {
         ADag result;
 
-        //load the appropriate strategy that is to be used
-        Strategy strategy = new InPlace( mBag );
+        //load the appropriate strategy and implementation that is to be used
+        //CleanupStrategy strategy = new InPlace( mBag );
+        CleanupStrategy strategy = CleanupFactory.loadCleanupStraegyInstance( mBag );
 
         //we first need to convert internally into graph format
         Graph resultGraph =  strategy.addCleanupJobs( Adapter.convert(dag ) );

@@ -19,23 +19,16 @@ package org.griphyn.cPlanner.engine.cleanup;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.SiteInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.Condor;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.SiteFactory;
-import org.griphyn.cPlanner.poolinfo.SiteFactoryException;
 
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
-import org.griphyn.common.catalog.transformation.TransformationFactory;
-import org.griphyn.common.catalog.transformation.TransformationFactoryException;
 
 import org.griphyn.common.classes.TCType;
 
@@ -50,7 +43,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class RM implements Implementation{
+public class RM implements CleanupImplementation{
 
 
     /**
@@ -87,12 +80,17 @@ public class RM implements Implementation{
     private PegasusProperties mProps;
 
     /**
-     * Creates a new instance of InPlace
-     *
-     * @param bag  the bag of initialization objects.
-     *
+     * The default constructor.
      */
-    public RM( PegasusBag bag ) {
+    public RM( ){
+    }
+    
+    /**
+     * Intializes the class.
+     *
+     * @param bag      bag of initialization objects
+     */
+    public void initialize( PegasusBag bag ) {
         mSiteStore       = bag.getHandleToSiteStore();
         mTCHandle        = bag.getHandleToTransformationCatalog();  
         mProps           = bag.getPegasusProperties();

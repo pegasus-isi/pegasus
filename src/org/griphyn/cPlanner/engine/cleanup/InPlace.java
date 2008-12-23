@@ -52,7 +52,7 @@ import org.griphyn.cPlanner.partitioner.graph.MapGraph;
  *
  * @version $Revision$
  */
-public class InPlace implements Strategy{
+public class InPlace implements CleanupStrategy{
 
     /**
      * The prefix for CLEANUP_JOB ID i.e prefix+the parent compute_job ID becomes
@@ -90,9 +90,9 @@ public class InPlace implements Strategy{
     private HashSet mDoNotClean;
 
     /**
-     * The handle to the Implementation instance that creates the jobs for us.
+     * The handle to the CleanupImplementation instance that creates the jobs for us.
      */
-    private Implementation mImpl;
+    private CleanupImplementation mImpl;
 
     /**
      * The handle to the properties passed to Pegasus.
@@ -104,17 +104,26 @@ public class InPlace implements Strategy{
      */
     private LogManager mLogger;
 
+    
+    
     /**
-     * Creates a new instance of InPlace
-     *
-     * @param bag  the bag of initialization objects.
-     *
+     * The default constructor.
      */
-    public InPlace( PegasusBag bag ) {
+    public InPlace(){
+        
+    }
+    
+    /**
+     * Intializes the class.
+     *
+     * @param bag    bag of initialization objects
+     * @param imp    the implementation instance that creates cleanup job 
+     */
+    public void initialize( PegasusBag bag, CleanupImplementation impl ) {
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
 
-        mImpl  = new Cleanup( bag );
+        mImpl  = impl;
 
         //intialize the internal structures
         mResMap       = new HashMap();

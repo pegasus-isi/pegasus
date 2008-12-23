@@ -19,6 +19,9 @@ package org.griphyn.cPlanner.engine.cleanup;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
+import org.griphyn.cPlanner.classes.PegasusBag;
+
+
 import java.util.List;
 
 /**
@@ -27,14 +30,21 @@ import java.util.List;
  * @author  Karan Vahi
  * @version $Revision$
  */
-public interface Implementation {
+public interface CleanupImplementation {
 
 
     /**
-     * The version number associated with this API Cleanup Implementation.
+     * The version number associated with this API Cleanup CleanupImplementation.
      */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
 
+    /**
+     * Intializes the class.
+     *
+     * @param bag      bag of initialization objects
+     */
+    public void initialize( PegasusBag bag ) ;
+    
     /**
      * Creates a cleanup job that removes the files from remote working directory.
      * This will eventually make way to it's own interface.

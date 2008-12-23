@@ -16,6 +16,8 @@
 
 package org.griphyn.cPlanner.engine.cleanup;
 
+import org.griphyn.cPlanner.classes.PegasusBag;
+
 import org.griphyn.cPlanner.partitioner.graph.Graph;
 
 /**
@@ -24,13 +26,22 @@ import org.griphyn.cPlanner.partitioner.graph.Graph;
  * @author  Karan Vahi
  * @version $Revision$
  */
-public interface Strategy {
+public interface CleanupStrategy {
 
 
     /**
-     * The version number associated with this API Cleanup Strategy.
+     * The version number associated with this API Cleanup CleanupStrategy.
      */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
+    
+    /**
+     * Intializes the class.
+     *
+     * @param bag    bag of initialization objects
+     * @param imp    the implementation instance that creates file cleanup job 
+     */
+    public void initialize( PegasusBag bag, CleanupImplementation impl ) ;
+    
 
     /**
      * Adds cleanup jobs to the workflow.
