@@ -77,7 +77,7 @@ public class CleanupFactory {
                            CleanupFactory.loadCleanupImplementationInstance( bag ) );
             
         } catch (Exception e) {
-            throw new CleanupFactoryException( "Instantiating Create Directory Strategy",
+            throw new CleanupFactoryException( "Instantiating Cleanup Strategy",
                                         className,
                                         e );
         }
@@ -120,7 +120,7 @@ public class CleanupFactory {
             impl.initialize( bag );
             
         } catch (Exception e) {
-            throw new CleanupFactoryException( "Instantiating Create Directory",
+            throw new CleanupFactoryException( "Instantiating Cleanup Implementation",
                                         className,
                                         e );
         }
