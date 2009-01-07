@@ -1,4 +1,302 @@
 $Id$
+
+===============================
+Release Notes for PEGASUS 2.2.0
+===============================
+ 
+NEW FEATURES
+--------------
+1) Naming scheme changed for auxillary jobs
+
+   Pegasus during the refinement of the abstract workflow to the
+   executable workflows adds auxillary jobs to do data stagein/stageout, 
+   create work directories for workflow etc. The prefixes/suffixes added
+   for these jobs has been changed.
+
+   Type of Job			    |   Old Prefix	 | New Prefix
+   -------------------------------------------------------------------
+   Data Stage In Job		    |  rc_tx_		 | stage_in_
+   Data Stage Out Job 	 	    |  new_rc_tx_	 | stage_out_
+   Data Stage In Job between sites  |  inter_tx_	 | stage_inter_
+   Data Registration Job	    |  new_rc_register_	 | register_
+   Cleanup Job	     		    |  cln_	         | clean_up_   
+   Transfer job to transfer the	    |  setup_tx_ 	 | stage_worker_
+   worker package  	    	    |  			 |
+
+   Additionally, the suffixes for the create dir jobs are now replaced 
+   by prefixes
+
+   Type of Job			    |   Old Suffix	 | New Prefix
+   -------------------------------------------------------------------
+   Directory creation job	    |  _cdir		 | create_dir_
+   Synch Job in HourGlass mode	    |  pegasus_concat	 | pegasus_concat_
+   
+
+2) Staging of worker package to remote sites
+
+   Pegasus now supports staging of worker package as part of the workflow.
+
+   This feature is tracked through pegasus bugzilla .
+
+   http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=35
+
+   The worker package is staged automatically to the remote site, by 
+   adding a setup transfer job to the workflow. 
+
+   The setup transfer job by default uses GUC to stage the data.
+   However, this can be configured by setting the property 
+   pegasus.transfer.setup.impl property. If you also, have 
+   pegasus.transfer.*.impl set in your properties file, then you need 
+   explicilty set pegasus.transfer.setup.impl to GUC
+
+
+   The code discovers the worker package by looking up pegasus::worker
+   in the transformation catalog. 
+   Note: that the basename of the url's should not be changed. Pegasus
+   parses the basename to determine the version of the worker package.
+   Pegasus automatically determines the location of the worker package 
+   to deploy on the remote site. Currently default mappings are as
+   follows 
+   INTEL32 => x86 
+   AMD64 => x86_64 or x86 if not available 
+   INTEL64 =>x86
+
+   OS LINUX = rhel3
+
+   There is an untar job added to the workflow after the setup job that
+   un tars the worker package on the remote site. It defaults to /bin/tar .
+   However can be overriden by specifying the entry tar in the
+   transformation catalog for a particular site.
+
+
+3) New Site Catalog Schema
+   
+   This release of Pegasus has support for site catalog schema version 3.
+
+   HTML visualization of schema:
+   http://pegasus.isi.edu/mapper/docs/schemas/sc-3.0/sc-3.0.html
+
+   Schema itself:
+   http://pegasus.isi.edu/schema/sc-3.0.xsd
+
+   A sample xml file :
+   http://pegasus.isi.edu/schema/sc-3.0-sample.xml
+
+   To use a site catalog in the new format set
+   pegasus.catalog.site  XML3   
+
+   Changes to sc-client
+   sc-client command line tool was updated to convert an existing
+   site catalog from old format to the new format.
+
+   Sample usage
+   sc-client -i ldg-old-sites.xml -I XML -o ldg-new-sites.xml -O XML3
+   sc-client --help gives detailed help
+
+4) pegasus-get-sites
+   
+   pegasus-get-sites was recoded in JAVA and now generates the site 
+   catalog confromant to schema sc-3.0. 
+
+   Sample Usage to query VORS to generate a site catalog for OSG.
+   pegasus-get-sites --source VORS --grid osg -s ./sites-new.xml
+
+   The value passed to the source option is case sensitive. 
+   
+5) Overhaul of logging
+  
+   The Pegasus logging interfaces have been reworked. 
+   Now users can specify the logger they want to use, by specifying the
+   property pegasus.log.manager .
+
+   Currently, two logging implementations are supported.
+   Default - Pegasus homegrown logger that logs to stdout and stderr 
+   	     directly.
+   Log4j  -  Uses log4j to log the messages.
+ 
+   The Log4j properties can be specified at runtime by specifying the
+   property pegasus.log.manager.log4j.conf
+
+   The format of the log message themselves can be specified at runtime
+   by specifying the property pegasus.log.manager.formatter
+
+   Right now two formatting modes are supported
+
+   a) Simple - This formats the messages in a simple format. The 
+      messages are logged as is with minimal formatting. Below are 
+      sample log messages in this format while ranking a dax according 
+      to performance.
+
+      event.pegasus.ranking dax.id se18-gda.dax - STARTED
+      event.pegasus.parsing.dax dax.id se18-gda-nested.dax - STARTED
+      event.pegasus.parsing.dax dax.id se18-gda-nested.dax - FINISHED
+      job.id jobGDA
+      job.id jobGDA query.name getpredicted performace time 10.00
+      event.pegasus.ranking dax.id se18-gda.dax - FINISHED
+
+   b) Netlogger - This formats the messages in the Netlogger format , 
+      that is based on key value pairs. The netlogger format is useful 
+      for loading the logs into a database to do some meaningful analysis.
+
+      Below are sample log messages in this format while ranking a dax 
+      according to performance.
+
+      ts=2008-09-06T12:26:20.100502Z event=event.pegasus.ranking.start \
+      msgid=6bc49c1f-112e-4cdb-af54-3e0afb5d593c \
+      eventId=event.pegasus.ranking_8d7c0a3c-9271-4c9c-a0f2-1fb57c6394d5 \
+      dax.id=se18-gda.dax prog=Pegasus
+
+      ts=2008-09-06T12:26:20.100750Z event=event.pegasus.parsing.dax.start \
+      msgid=fed3ebdf-68e6-4711-8224-a16bb1ad2969 \			   
+      eventId=event.pegasus.parsing.dax_887134a8-39cb-40f1-b11c-b49def0c5232\
+      dax.id=se18-gda-nested.dax prog=Pegasus
+ 
+      ts=2008-09-06T12:26:20.100894Z event=event.pegasus.parsing.dax.end \
+      msgid=a81e92ba-27df-451f-bb2b-b60d232ed1ad \
+      eventId=event.pegasus.parsing.dax_887134a8-39cb-40f1-b11c-b49def0c5232
+
+      ts=2008-09-06T12:26:20.100395Z event=event.pegasus.ranking \
+      msgid=4dcecb68-74fe-4fd5-aa9e-ea1cee88727d \
+      eventId=event.pegasus.ranking_8d7c0a3c-9271-4c9c-a0f2-1fb57c6394d5 \
+      job.id="jobGDA"
+
+      ts=2008-09-06T12:26:20.100395Z event=event.pegasus.ranking \
+      msgid=4dcecb68-74fe-4fd5-aa9e-ea1cee88727d \
+      eventId=event.pegasus.ranking_8d7c0a3c-9271-4c9c-a0f2-1fb57c6394d5 \
+      job.id="jobGDA" query.name="getpredicted performace" time="10.00"
+
+      ts=2008-09-06T12:26:20.102003Z event=event.pegasus.ranking.end \
+      msgid=31f50f39-efe2-47fc-9f4c-07121280cd64 \
+      eventId=event.pegasus.ranking_8d7c0a3c-9271-4c9c-a0f2-1fb57c6394d5
+
+6) New Transfer Refiner 
+
+   Pegasus has a new transfer refiner named Cluster.
+
+   In this refinement strategy, clusters of stage-in and stageout jobs are
+   created per level of the workflow. It builds upon the Bundle refiner. 
+   
+   The differences between the Bundle and Cluster refiner are as follows.
+   - stagein is also clustered/bundled per level. In Bundle it was
+     for the whole workflow.
+   - keys that control the clustering ( old name bundling are )
+     cluster.stagein and cluster.stageout instead of bundle.stagein and
+     bundle.stageout
+
+   This refinement strategy also adds dependencies between the stagein 
+   transfer jobs on different levels of the workflow to ensure that stagein
+   for the top level happens first and so on.
+
+   An image of the workflow with this refinement strategy can be found
+   at 
+   http://vtcpc.isi.edu/pegasus/index.php/ChangeLog#Added_a_Cluster_Transfer_Refiner
+
+7) New Transfer Implementation for GUC from globus 4.x
+   
+   Pegasus has a new transfer implementation that allows it to use GUC
+   from globus 4.x series to transfer multiple files in one job.
+   
+   In order to use this transfer implementation
+      - the property pegasus.transfer.*.impl must be set to value GUC. 
+  
+   There should be an entry in the transformation catalog with the
+   fully qualified  name as globus::guc for all the sites where
+   workflow is run, or on the local site in case of third party
+   transfers.
+ 
+   Pegasus can automatically construct the path to the globus-url-copy
+   client, if the environment variable GLOBUS_LOCATION is specified in
+   the site catalog for the site. 
+
+   The arguments with which the client is invoked can be specified
+         - by specifying the property pegasus.transfer.arguments
+         - associating the Pegasus profile key transfer.arguments
+ 
+
+8) Recursive DAX'es
+   
+   There is prototypical support for recursive dax'es. Recursive
+   DAX'es give you the ability to specify a job in the DAX that points
+   to another DAX that has to be executed. 
+
+   There is a sample recursive dax at
+   $PEGASUS_HOME/examples/recursive.dax
+
+   The dax refers to pegasus jobs in  turn plan and execute a dax
+
+   To get this dax planned by pegasus you will need to have additional
+   entries for dagman and pegasus in your transformation catalog.  
+
+   For e.g. 
+
+   local   condor::dagman  /opt/condor/7.1.0/bin/condor_dagman     INSTALLED       INTEL32::LINUX  NULL
+   local  pegasus::pegasus-plan:2.0       /lfs1/software/install/pegasus/default  INSTALLED       INTEL32::LINUX  NULL
+
+   The recursive dax needs to be planned for site local, since the
+   pegasus itself runs on local site. The jobs in the dax specify -s
+   option where you want each of your workflows to run.
+
+   Recursive DAX do not need to contain only pegasus jobs. They can
+   contain application/normal jobs that one usually specifies in a
+   DAX. Pegasus determines that a particular job is planning and
+   execute job by looking for a pegasus profile key named type with
+   value recursive e.g.
+
+   <job id="ID0000003" namespace="pegasus" name="pegasus-plan" version="2.0">
+    <profile namespace="pegasus" key="type">recursive</profile>
+    <argument>-Dpegasus.user.properties=/lfs1/work/conf/properties
+    --dax /lfs1/work/dax3  -s tacc -o local --nocleanup  --force
+    --rescue 1 --cluster horizontal -vvvvv --dir ./dag_3 
+    </argument>
+   </job>
+
+
+9) Executing workflows on Amazon EC2
+   
+   Pegasus now has support of running workflows on EC2 with the
+   storage of files on S3.  This feature is still in testing phase and
+   has not been tested fully.
+
+   To execute workflows on EC2/S3, Pegasus needs to be configured to
+   use S3 specific implementations of it's internal API's
+
+   a) First level Staging API - The S3 implementation stages in from the
+      local site ( submit node ) to a bucket on S3. Similarly the data is
+      staged back from the bucket to the local site ( submit node )
+      . All the first level transfers happen between the submit node
+      and the cloud. This means that input data can *only* be present
+      on the submit node when running on the cloud, and the output
+      data can be staged back only to the submit node.
+
+   b) Second Level Staging API - The S3 implementation retrieves input
+      data from the bucket to the worker node tmp directory and puts
+      created data back in the bucket. 
+
+   c) Directory creation API - The S3 implementation creates a bucket
+      on S3 for the workflow instead of a directory. 
+
+   d) Cleanup API - To cleanup files from the workflow specific bucket
+      on S3 during workflow execution.
+   
+   The above implementations rely on s3cmd command line client to
+   interface with S3 filesystem. There should be an entry in the
+   transformation catalog with the fully qualified name as
+   amazon::s3cmd for the site corresponding to the cloud and the local
+   site. 
+
+   To configure Pegasus to use these implementations set the following
+   properties 
+
+   pegasus.transfer.*.impl                      S3
+   pegasus.transfer.sls.*.impl                S3
+   pegasus.dir.create.impl                      S3
+   pegasus.file.cleanup.impl                  S3
+
+   pegasus.execute.*.filesystem.local   true
+
+BUGS FIXED
+----------
+
 ===============================
 Release Notes for PEGASUS 2.1.0
 ===============================
