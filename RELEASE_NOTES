@@ -103,6 +103,15 @@ NEW FEATURES
 
    The value passed to the source option is case sensitive. 
    
+   Additionally, the VORS module of pegasus-get-sites determines the
+   value of GLOBUS_LOCATION variable dependant on whether the
+   auxillary jobmanager is of type fork or not. 
+
+   If it is of type fork then picks up the value of GLOBUS_LOCATION
+   variable published in VORS for that site. else it picks up the
+   value from OSG_GRID variable published in VORS for that
+   site. i.e. GLOBUS_LOCATION is set to $OSG_GRID/globus 
+
 5) Overhaul of logging
   
    The Pegasus logging interfaces have been reworked. 
@@ -250,8 +259,28 @@ NEW FEATURES
     </argument>
    </job>
 
+09) Rescue option to pegasus-plan for deferred planning
 
-9) Executing workflows on Amazon EC2
+    A rescue option to pegasus-plan has been added. The rescue option
+    takes in an integer value, that determines the number of times
+    rescue dags are submitted before re-planning is triggered in case
+    of failures in deferred planning. For this to work, Condor 7.1.0
+    or higher is required as it relies on the recently implemented
+    auto rescue feature in Condor DAGMan. 
+
+    Even though re-planning is triggered, Condor DAGMan still ends up
+    submitting the rescue dag as it auto detects. The fix to it is to
+    remove the  rescue dag files in case of re-planning. This is still
+    to be implemented 
+
+10) -j|--job-prefix option to pegasus-plan
+
+    pegasus-plan can now be passed the -j|--job-prefix option to
+    designate the prefix that needs to be used for constructing the
+    job submit file.
+
+
+11) Executing workflows on Amazon EC2
    
    Pegasus now has support of running workflows on EC2 with the
    storage of files on S3.  This feature is still in testing phase and
@@ -294,8 +323,224 @@ NEW FEATURES
 
    pegasus.execute.*.filesystem.local   true
 
+
+12) Support for OSU Datacutter jobs
+
+   Pegasus has new gridstart mode called DCLauncher. This allows us to
+   launch the Data Cutter jobs using the wrapper that OSU group wrote. 
+
+   Pegasus now supports the condor parallel universe.
+   To launch a job using DCLauncher, the following pegasus profile
+   keys need to be associated with the job 
+   gridstart          to DCLauncher
+   gridstart.path     the path to the DCLauncher script
+
+13) New Pegasus Profiles Keys
+    a) create.dir - this profile key triggers kicstart to create and
+       change directories before launching a job. 
+
+    b) gridstart.path - this profile key specifies the path to the
+       gridstart used to launch a particular job
+
+    c) runtime - this profile key is useful when using Heft based site
+       selection. It allows users to associate expected runtimes of
+       jobs with the job description in DAX. 
+
+14) Kickstart captures machine information 
+    Kickstart now logs machine information in the invocation record
+    that it creates for each job invocation. The Kickstart JAVA parser
+    can parse both records in old and new format. 
+
+    A snippet of machine information captured is show below
+    <machine page-size="4096" provider="LINUX">
+     <stamp>2008-09-23T13:58:05.211-07:00</stamp>
+     <uname system="linux" nodename="viz-login" release="2.6.11.7"
+       machine="i686">#2 SMP Thu Apr 28 18:41:14 PDT  2005</uname> 
+     <ram total="2125209600" free="591347712" shared="0" buffer="419291136"/> 
+     <swap total="2006884352" free="2006876160"/>
+     <boot idle="943207.170">2008-09-12T12:03:49.772-07:00</boot>
+     <cpu count="4" speed="2400" vendor="GenuineIntel">Intel(R)
+       Xeon(TM) CPU 2.40GHz</cpu> 
+     <load min1="0.07" min5="0.04" min15="0.00"/>
+     <proc total="110" running="1" sleeping="109" vmsize="614912000"
+      rss="206729216"/> 
+     <task total="133" running="1" sleeping="132"/>
+  </machine>
+
+15) Kickstart works in cygwin environment
+    Kickstart now compiles on cygwin. Kickstart could not find
+    SYS_NMLN variable in Cygwin to determine the uname datastructure's
+    size. Added a fix in the Makefile to add CFLAGS -DSYS_NMLN=20 when
+    the OS is Cygwin/Windows 
+
+    The kickstart records generated on cygwin are slightly different
+    from the ones generated unix platforms. The kickstart parser was
+    modified to handle that.
+    
+    The differences are as follows - 
+    a) On cygwin inode value is double. The inode value is parsed as
+    double , but cast to long to prevent errors. 
+
+    b) On cygwin the uid and gid values are long. They are passed as
+    long, but cast to int to prevent errors. 
+
+16) Changes to dirmanager
+    The dirmanager executable can now remove and create multiple
+    directories. This is achieved by specifying a whitespace separated
+    list of directories to the --dir option. 
+
+
+17) Added color-file option to showjob
+
+    There is now a  --color-file option to show-job in
+    $PEGASUS_HOME/contrib/showlog to pass a file that has the mappings
+    from transformation name to colors. 
+
+    The format of each line is as follows
+    transformation-name color
+
+    This can be used to assign different colors to compute jobs in a
+    workflow. The default color assigned is gray if none is
+    specified. 
+
+18) jobstate-summary tool
+
+    There is a new tool at $PEGASUS_HOME/bin/jobstate-summary.
+
+    It attempts to give a summary for the workflow. Should help in
+    jobstate-summ debugging failed job information. It will shows all
+    the information associated with a failed job. It gets the list of
+    failed job from the jobstate.log file. After that it parses latest
+    kickstart file for each failed job and show the exit code and all
+    the other information. 
+
+    Usage: jobstate-summary --i <input directory> [--v(erbose)]
+           [--V(ersion)] [--h(elp)] 
+
+    Input directory is the place where all the log files including jobstate.log file reside.
+    v option is for verbose debugging.
+    V option gives the pegasus version.
+    h option prints the help message.
+    A sample run is like jobstate-summary -i /dags/pegasus/diamond/run0013 -v
+
+
+19) Support for DAGMan node categories
+
+
+    Pegasus now supports DAGMan node categories. DAGMan now allows to
+    specify CATEGORIES for jobs, and then specify tuning parameters (
+    like maxjobs ) per category. This functionality is exposed in
+    Pegasus as follows 
+
+    The user can associate a dagman profile key category with the
+    jobs. The key attribute for the profile is category and value is
+    the category to which the job belongs to. For example you can set
+    the dagman category in the DAX for a job as follows 
+
+    <job id="ID000001" namespace="vahi" name="preprocess" version="1.0" level="3" dv-namespace="vahi" dv-name="top" dv-version="1.0">
+       <profile namespace="dagman" key="CATEGORY">short-running</profile>
+       <argument>-a top -T 6  -i <filename file="david.f.a"/>  -o
+         <filename file="vahi.f.b1"/> 
+         <filename file="vahi.f.b2"/>
+       </argument>
+       <uses file="david.f.a" link="input" register="false"
+       transfer="true" type="data"/> 
+       <uses file="vahi.f.b1" link="output" register="true"
+       transfer="true" /> 
+       <uses file="vahi.f.b2" link="output" register="true"
+       transfer="true" /> 
+    </job>
+
+    The property pegasus.dagman.[category].maxjobs can be used to
+    control the value. 
+
+    For the above example, the user can set the property as follows 
+
+    pegasus.dagman.short-running.maxjobs 2
+
+    In the DAG file generated you will see the category associated
+    with jobs. For the above example, it will look as follows 
+
+    MAXJOBS short-running 2
+    CATEGORY preprocess_ID000001 short-running
+    JOB preprocess_ID000001 preprocess_ID000001.sub
+    RETRY preprocess_ID000001 2
+
+20) Handling of pass through LFN
+
+    If a job in a DAX, specifies the same LFN as an input and an
+    output, it is a pass through LFN. Internally, the LFN is tagged
+    only as an input for the job. The reason for this, being that we
+    need to make sure that the replica catalog is queried for the
+    location of the LFN. If this is not handled specially, then LFN is
+    tagged internally as inout ( meaning it is generated during
+    workflow execution ). LFN's with type inout are not queried for in
+    the Replica Catalog in the force mode of operation 
+
+
+21) Tripping seqexec on first job failures
+
+    By default seqexec does not stop execution even if one of the
+    clustered jobs it is executing fails. This is because seqexec
+    tries to get as much work done as possible. If for some reason,
+    you want to make seqexec stop on first job failure, set the
+    following property in the properties file 
+
+    pegasus.clusterer.job.aggregator.seqexec.firstjobfail true
+
+
+22) New properties to choose the cleanup implementation
+
+    Two new properties were added to select the strategy and
+    implementation for file cleanup.
+
+    pegasus.file.cleanup.strategy
+    pegasus.file.cleanup.implementation
+
+    Currently there is only one cleanup strategy ( InPlace ) that can
+    be used and is loaded by default. 
+
+    The cleanup implementations that can be used are 
+    	- Cleanup ( default)
+	- RM
+	- S3 
+
+    Detailed documentation can be found at
+    $PEGASUS_HOME/etc/sample.properties. 
+
+23) New properties to choose the create dir implementation
+
+    The property pegasus.dir.create was deprecated.
+
+    It has been replaced by
+    pegasus.dir.create.strategy   
+
+    Additionally, a user can specify a property to choose the
+    implementation used to create the directory on the remote sites. 
+
+    pegasus.dir.create.impl   
+
+    The create directory implementation that can be used are 
+    - DefaultImplementation   uses $PEGASUS_HOME/bin/dirmanager
+                              executable to create a directory on the
+    			      remote site.  
+    - S3   		      usese s3cmd to create a bucket on amazon S3.
+
+
 BUGS FIXED
 ----------
+1) Makefile for kickstart to build on Cygwin
+
+   Kickstart could not find SYS_NMLN variable in Cygwin to determine
+   the uname datastructure's size. Added a fix in the Makefile to add
+   CFLAGS -DSYS_NMLN=20 when the OS is Cygwin/Windows 
+
+
+2) Bug fix to getsystem release tools
+
+   Some systems have started using / in their system version name
+   which causes failures in Pegasus build process. Fixed the getsystem
+   release script which converts / into _ 
 
 ===============================
 Release Notes for PEGASUS 2.1.0
