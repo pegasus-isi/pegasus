@@ -103,7 +103,13 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
 
         Iterator it = files.iterator();
         FileTransfer ft = (FileTransfer)it.next();
-        return this.createTransferJob(job,ft,execFiles,txJobName,jobClass);
+        TransferJob txJob = this.createTransferJob(job,ft,execFiles,txJobName,jobClass);
+        
+        //to get the file stat information we need to put
+        //the files as output files of the transfer job
+        txJob.outputFiles = new HashSet( files );
+        return txJob;
+        
     }
 
     /**
@@ -214,7 +220,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
         //as we doing just copying urls
         txJob.inputFiles = new HashSet();
         txJob.outputFiles = new HashSet();
-
+        
         //no stdin file is written out
 
         //the profile information from the pool catalog needs to be

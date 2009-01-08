@@ -48,6 +48,7 @@ import java.util.Iterator;
 import org.griphyn.cPlanner.transfer.Refiner;
 import org.griphyn.cPlanner.classes.Profile;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 /**
@@ -254,6 +255,10 @@ public class S3 extends Abstract
             super.addSetXBitJobs( job, txJob, execFiles );
         }
 
+        //to get the file stat information we need to put
+        //the files as output files of the transfer job
+        txJob.outputFiles = new HashSet( files );
+        
         //set the non third party site as this job
         //always run on local host.
         txJob.setNonThirdPartySite( job.getSiteHandle() );
