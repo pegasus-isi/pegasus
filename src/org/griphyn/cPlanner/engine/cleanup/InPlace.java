@@ -40,6 +40,7 @@ import java.util.TreeSet;
 import java.util.HashSet;
 import java.lang.StringBuffer;
 import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.partitioner.graph.MapGraph;
 
 
@@ -262,11 +263,27 @@ public class InPlace implements CleanupStrategy{
 
             //populate mResMap ,mResMapLeaves,mResMapRoots
             SubInfo si = ( SubInfo )curGN.getContent();
-            if( !mResMap.containsKey( si.getSiteHandle() ) ){
-                mResMap.put( si.getSiteHandle(), new HashSet() );
+            
+            //Commented out as for stage out jobs we need non third party
+            //site. Karan Jan 8, 2009
+//            if( !mResMap.containsKey( si.getSiteHandle() ) ){
+//                mResMap.put( si.getSiteHandle(), new HashSet() );
+//
+//            }
+//            ((Set)mResMap.get( si.getSiteHandle() )).add( curGN );
+            
+
+            String site =  typeStageOut( si.getJobType() )?
+                             ((TransferJob)si).getNonThirdPartySite():   
+                             si.getSiteHandle();   
+            if( !mResMap.containsKey( site ) ){
+                mResMap.put( site, new HashSet() );
 
             }
-            ((Set)mResMap.get( si.getSiteHandle() )).add( curGN );
+            ((Set)mResMap.get( site )).add( curGN );
+            
+            
+            
             //System.out.println( "  site count="+((Set)mResMap.get( si.getSiteHandle() )).size() );
 
 
@@ -340,6 +357,17 @@ public class InPlace implements CleanupStrategy{
 
                 if( !typeNeedsCleanUp( curGN_SI.getJobType() ) ) { continue; }
 
+                /*if( curGN_SI.getJobType() == SubInfo.STAGE_OUT_JOB ){
+                    curGN_SI.getInputFiles().addAll( curGN_SI.getOutputFiles() );
+                    curGN_SI.getOutputFiles().clear();
+                    
+                    System.out.println( curGN_SI.getName() );
+                    System.out.println( curGN_SI.getOutputFiles() );
+                    System.out.println( curGN_SI.getInputFiles() );
+                     
+                }*/
+                    
+                    
 //              Leads to corruption of input files for the job.
 //                Set fileSet = curGN_SI.getInputFiles();
                 Set fileSet = new HashSet( curGN_SI.getInputFiles() );
@@ -394,10 +422,34 @@ public class InPlace implements CleanupStrategy{
                 if( nuGN.getParents().size() >= 1 ){
                     mLogger.log( "Adding cleanup job with ID " + nuGN.getID(),
                             LogManager.DEBUG_MESSAGE_LEVEL );
+                    
+                    // We have always pass the associaated compute job. Since now
+                    //a cleanup job can be associated with stageout jobs also, we
+                    //need to make sure that for the stageout job the cleanup job
+                    //is passed. Karan Jan 9, 2008                    
+//                    SubInfo cleanupJob = mImpl.createCleanupJob( nuGN.getID(),
+//                            cleanupFiles,
+//                            curGN_SI
+//                            );
+                    SubInfo computeJob;
+                    if( typeStageOut( curGN_SI.getJobType() ) ){
+                        //find a compute job that is parent of this
+                        GraphNode node = (GraphNode)curGN.getParents().get( 0 );
+                        computeJob = (SubInfo)node.getContent();
+                        message = new StringBuffer();
+                        message.append( "For cleanup job " ).append( nuGN.getID() ).
+                                append( " the associated compute job is ").append( computeJob.getID() );
+                        mLogger.log(  message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+                    }
+                    else{
+                        computeJob = curGN_SI;
+                    }
                     SubInfo cleanupJob = mImpl.createCleanupJob( nuGN.getID(),
-                            cleanupFiles,
-                            curGN_SI
-                            );
+                                                                 cleanupFiles,
+                                                                 computeJob
+                                                                 );
+                    
+                    //No longer required as stageout jobs are also cleaned. Karan Jan , 2008
                     //if the corresponding compute job has any transfer or stageout jobs as child add it
                     //as a parent of the cleanup job
                     for( Iterator itc=curGN.getChildren().iterator(); itc.hasNext() ;){
@@ -416,7 +468,7 @@ public class InPlace implements CleanupStrategy{
                     //and the node itself to the Graph
                     nuGN.setContent( cleanupJob );
                     workflow.addNode(nuGN);
-                }
+               }
             }
         }
 
@@ -549,9 +601,22 @@ public class InPlace implements CleanupStrategy{
      */
     protected boolean typeNeedsCleanUp( int type ){
         return (   type == SubInfo.COMPUTE_JOB
-                /*|| type == SubInfo.STAGE_OUT_JOB
-                || type == SubInfo.INTER_POOL_JOB*/
+                || type == SubInfo.STAGE_OUT_JOB
+                || type == SubInfo.INTER_POOL_JOB
                 || type == SubInfo.STAGED_COMPUTE_JOB );
     }
 
+    
+    /**
+     * Checks to see if job type is a stageout job type.
+     *
+     * @param type  the type of the job.
+     *
+     * @return boolean
+     */
+    protected boolean typeStageOut( int type ){
+        return (   type == SubInfo.STAGE_OUT_JOB
+                || type == SubInfo.INTER_POOL_JOB
+                );
+    }
 }
