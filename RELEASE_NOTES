@@ -542,6 +542,33 @@ BUGS FIXED
    which causes failures in Pegasus build process. Fixed the getsystem
    release script which converts / into _ 
 
+3) Bug fix in file cleanup module when stageout is enabled.
+   
+   There was a bug in how the dependencies are added between the
+   stageout jobs and the file cleanup jobs. In certain cases, cleanup
+   could occur before the output was staged out. This is fixed now.
+
+   This bug was tracked through bugzilla
+   http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=37
+
+4) Bug fix to deferred planning
+
+   Deferred planning used to fail if pegasus-plan was not given -o
+   option .
+
+   This is fixed now and was tracked through bugzilla
+   http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=34
+
+5) Bug fix to caching on entries from Transformation Catalog
+
+   In certain cases, caching of entries did not work for the INSTALLED
+   case. 
+
+   This is fixed now and was tracked through bugzilla
+   http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=33
+
+   
+
 ===============================
 Release Notes for PEGASUS 2.1.0
 ===============================
