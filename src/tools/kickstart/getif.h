@@ -23,6 +23,16 @@
 
 extern int getif_debug; /* enable debugging code paths */
 
+extern
+int
+interface_list( struct ifconf* ifc );
+/* purpose: returns the list of interfaces
+ * paramtr: ifc (IO): initializes structure with buffer and length
+ * returns: sockfd for further queries, or -1 to indicate an error. 
+ * warning: caller must free memory in ifc.ifc_buf
+ *          caller must close sockfd (result value)
+ */
+
 extern 
 struct ifreq* 
 primary_interface();

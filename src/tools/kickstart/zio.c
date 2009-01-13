@@ -26,6 +26,9 @@
 
 static pid_t* childpid = NULL;
 
+static const char* RCS_ID =
+  "$Id$";
+
 int 
 zopen( const char* pathname, int flags, mode_t mode )
 /* purpose: open a file, but put gzip into the io-path

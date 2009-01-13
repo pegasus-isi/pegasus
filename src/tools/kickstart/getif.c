@@ -12,16 +12,16 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
+#include "debug.h"
 #include "getif.h"
 
 #include <errno.h>
 #include <string.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
+#include <unistd.h>
 
 #include <sys/utsname.h>
 #include <sys/socket.h>
@@ -35,67 +35,12 @@
 #endif
 
 static const char* RCS_ID =
-"$Id$";
+  "$Id$";
 
 int getif_debug = 0; /* enable debugging code paths */
 
-#include <stdarg.h>
-
-static
-int
-debug( char* fmt, ... )
-{
-  int result;
-  va_list ap;
-  char buffer[4096];
-  int saverr = errno;
-
-  va_start( ap, fmt );
-  vsnprintf( buffer, sizeof(buffer), fmt, ap );
-  va_end( ap );
-
-  result = write( STDERR_FILENO, buffer, strlen(buffer) );
-  errno = saverr;
-  return result;
-}
-
-
-static 
-int 
-hexdump( char* area, size_t size )
-{
-  static const char digit[16] = "0123456789ABCDEF";
-  char a[82];
-  unsigned char b[18];
-  size_t i, j;
-  unsigned char c;
-  ssize_t result = 0;
-
-  for ( i=0; i<size; i+=16 ) {
-    memset( a, 0, sizeof(a) );
-    memset( b, 0, sizeof(b) );
-    sprintf( a, "%04X: ", i );
-    for ( j=0; j<16 && j+i<size; ++j ) {
-      c = (unsigned char) area[i+j];
-
-      a[6+j*3] = digit[ c >> 4 ];
-      a[7+j*3] = digit[ c & 15 ];
-      a[8+j*3] = ( j == 7 ? '-' : ' ' );
-      b[j] = (char) (c < 32 || c >= 127 ? '.' : c);
-    }
-    for ( ; j<16; ++j ) {
-      a[6+j*3] = a[7+j*3] = a[8+j*3] = b[j] = ' ';
-    }
-    strncat( a, (char*) b, sizeof(a) );
-    strncat( a, "\n", sizeof(a) );
-    result += write( STDERR_FILENO, a, strlen(a) );
-  }
-
-  return result;
-}
-
-static unsigned long vpn_network[4] = { 0, 0, 0, 0 };
-static unsigned long vpn_netmask[4] = { 0, 0, 0, 0 };
+static unsigned long vpn_network[5] = { 0, 0, 0, 0 };
+static unsigned long vpn_netmask[5] = { 0, 0, 0, 0 };
 
 static
 void
@@ -107,6 +52,7 @@ singleton_init( void )
     vpn_network[1] = inet_addr("10.0.0.0");    /* class A VPN net */
     vpn_network[2] = inet_addr("172.16.0.0");  /* class B VPN nets */
     vpn_network[3] = inet_addr("192.168.0.0"); /* class C VPN nets */
+    vpn_network[4] = inet_addr("169.254.0.0"); /* link-local junk */
   }
 
   /* singleton init */
@@ -115,37 +61,31 @@ singleton_init( void )
     vpn_netmask[1] = inet_addr("255.0.0.0");   /* class A mask */
     vpn_netmask[2] = inet_addr("255.240.0.0"); /* class B VPN mask */
     vpn_netmask[3] = inet_addr("255.255.0.0"); /* class C VPN mask */
+    vpn_netmask[4] = inet_addr("255.254.0.0"); /* link-local junk */
   }
 }
 
-struct ifreq*
-primary_interface( void )
-/* purpose: obtain the primary interface information
- * returns: a newly-allocated structure containing the interface info,
- *          or NULL to indicate an error. 
+int
+interface_list( struct ifconf* ifc )
+/* purpose: returns the list of interfaces
+ * paramtr: ifc (IO): initializes structure with buffer and length
+ * returns: sockfd for further queries, or -1 to indicate an error. 
+ * warning: caller must free memory in ifc.ifc_buf
+ *          caller must close sockfd (result value)
  */
 {
 #if defined(SIOCGLIFNUM)
   struct lifnum ifnr;
 #endif
-  struct sockaddr_in sa;
-  struct ifconf ifc;
-  struct ifreq  result, primary;
-  struct ifreq* ifrcopy = NULL;
-  char *ptr, *buf = 0;
-  int lastlen, len, sockfd, flag = 0;
-
-  /*
-   * phase 0: init
-   */
-  memset( &result, 0, sizeof(result) );
-  memset( &primary, 0, sizeof(primary) );
-  singleton_init();
+  char *buf = 0;
+  int lastlen, len, sockfd = 0;
 
   /* create a socket */
   if ( (sockfd = socket( AF_INET, SOCK_DGRAM, 0 )) == -1 ) { 
-    debug( "ERROR: socket DGRAM: %d: %s\n", errno, strerror(errno) );
-    return ifrcopy;
+    int saverr = errno; 
+    debugmsg( "ERROR: socket DGRAM: %d: %s\n", errno, strerror(errno) );
+    errno = saverr; 
+    return -1;
   }
 
   /*
@@ -154,79 +94,114 @@ primary_interface( void )
    */
 #if defined(SIOCGLIFNUM)
   /* API exists to determine the correct buffer size */
-  if ( getif_debug ) debug( "DEBUG: SIOCGLIFNUM ioctl supported\n" );
+  if ( getif_debug ) debugmsg( "DEBUG: SIOCGLIFNUM ioctl supported\n" );
 
   memset( &ifnr, 0, sizeof(ifnr) );
   ifnr.lifn_family = AF_INET;
   if ( ioctl( sockfd, SIOCGLIFNUM, &ifnr ) < 0 ) {
-    debug( "ERROR: ioctl SIOCGLIFNUM: %d: %s\n", errno, strerror(errno) );
+    debugmsg( "ERROR: ioctl SIOCGLIFNUM: %d: %s\n", errno, strerror(errno) );
 
     if ( errno != EINVAL ) {
+      int saverr = errno;
       close(sockfd);
-      return ifrcopy;
+      errno = saverr; 
+      return -1; 
     }
   } else {
     len = lastlen = ifnr.lifn_count * sizeof(struct ifreq);
   }
 #else /* does not have SIOCGLIFNUM */
   /* determine by repetitive guessing a buffer size */
-  if ( getif_debug ) debug( "DEBUG: SIOCGLIFNUM ioctl *not* supported\n" );
+  if ( getif_debug ) debugmsg( "DEBUG: SIOCGLIFNUM ioctl *not* supported\n" );
 
-  lastlen = len = 4 * sizeof(struct ifreq); /* 1st guesstimate */
+  lastlen = len = 3.5 * sizeof(struct ifreq); /* 1st guesstimate */
 #endif
   /* POST CONDITION: some buffer size determined */
 
   /* FIXME: Missing upper bound */
   for (;;) {
     /* guestimate correct buffer length */
-    if ( getif_debug ) debug( "DEBUG: lastlen=%d, len=%d\n", lastlen, len );
+    if ( getif_debug ) debugmsg( "DEBUG: lastlen=%d, len=%d\n", lastlen, len );
 
     buf = (char*) malloc(len);
     memset( buf, 0, len );
-    ifc.ifc_len = len;
-    ifc.ifc_buf = buf;
-    if ( ioctl( sockfd, SIOCGIFCONF, &ifc ) < 0 ) {
-      debug( "WARN: ioctl SIOCGIFCONF: %d: %s\n", errno, strerror(errno) );
+    ifc->ifc_len = len;
+    ifc->ifc_buf = buf;
+    if ( ioctl( sockfd, SIOCGIFCONF, ifc ) < 0 ) {
+      debugmsg( "WARN: ioctl SIOCGIFCONF: %d: %s\n", errno, strerror(errno) );
       if ( errno != EINVAL || lastlen != 0 ) {
+	int saverr = errno; 
 	close(sockfd);
-	return ifrcopy;
+	errno = saverr; 
+	return -1; 
       }
     } else {
-      if ( ifc.ifc_len == lastlen ) break; /* success */
-      if ( getif_debug ) debug( "DEBUG: size mismatch, next round\n" );
-      lastlen = ifc.ifc_len;
+      if ( ifc->ifc_len == lastlen ) break; /* success */
+      if ( getif_debug ) debugmsg( "DEBUG: size mismatch, next round\n" );
+      lastlen = ifc->ifc_len;
     }
     len <<= 1;
     free((void*) buf);
   }
   /* POST CONDITION: Now the buffer contains list of all interfaces */
   if ( getif_debug ) {
-    debug( "DEBUG: correct buffer length %d\n", ifc.ifc_len );
-    hexdump( buf, ifc.ifc_len );
+    debugmsg( "DEBUG: correct buffer length %d\n", ifc->ifc_len );
+    hexdump( ifc->ifc_buf, ifc->ifc_len );
   }
+
+  return sockfd; 
+}
+
+
+
+struct ifreq*
+primary_interface( void )
+/* purpose: obtain the primary interface information
+ * returns: a newly-allocated structure containing the interface info,
+ *          or NULL to indicate an error. 
+ */
+{
+  struct sockaddr_in sa;
+  struct ifconf ifc;
+  struct ifreq  result, primary;
+  struct ifreq* ifrcopy = NULL;
+  char   *ptr; 
+  int    sockfd, flag = 0;
+
+  /*
+   * phase 0: init
+   */
+  memset( &result, 0, sizeof(result) );
+  memset( &primary, 0, sizeof(primary) );
+  singleton_init();
+
+  /* 
+   * phase 1: obtain list of interfaces 
+   */
+  if ( (sockfd=interface_list( &ifc )) == -1 ) return NULL; 
 
   /*
    * phase 2: walk interface list until a good interface is reached
    */ 
   /* Notice: recycle meaning of "len" in here */
-  for ( ptr = buf; ptr < buf + ifc.ifc_len; ) {
+  for ( ptr = ifc.ifc_buf; ptr < ifc.ifc_buf + ifc.ifc_len; ) {
     struct ifreq* ifr = (struct ifreq*) ptr;
-    len = sizeof(*ifr);
-    if ( getif_debug ) debug( "DEBUG: stepping by %d\n", len );
+    size_t len = sizeof(*ifr);
+    if ( getif_debug ) debugmsg( "DEBUG: stepping by %d\n", len );
     ptr += len;
 
     /* report current entry's interface name */
-    if ( getif_debug ) debug( "DEBUG: interface %s\n", ifr->ifr_name );
+    if ( getif_debug ) debugmsg( "DEBUG: interface %s\n", ifr->ifr_name );
 
     /* interested in IPv4 interfaces only */
     if ( ifr->ifr_addr.sa_family != AF_INET ) {
       if ( getif_debug ) 
-	debug( "DEBUG: interface has wrong family, skipping\n" );
+	debugmsg( "DEBUG: interface has wrong family, skipping\n" );
       continue;
     }
 
     memcpy( &sa, &(ifr->ifr_addr), sizeof(struct sockaddr_in) );
-    if ( getif_debug ) debug( "DEBUG: address %s\n", inet_ntoa(sa.sin_addr) );
+    if ( getif_debug ) debugmsg( "DEBUG: address %s\n", inet_ntoa(sa.sin_addr) );
 
     /* Do not use localhost aka loopback interfaces. While loopback
      * interfaces traditionally start with "lo", this is not mandatory.
@@ -234,7 +209,7 @@ primary_interface( void )
      * network. */
     if ( (sa.sin_addr.s_addr & vpn_netmask[0]) == vpn_network[0] ) {
       if ( getif_debug ) 
-	debug( "DEBUG: interface is localhost, skipping\n" );
+	debugmsg( "DEBUG: interface is localhost, skipping\n" );
       continue;
     }
 
@@ -242,7 +217,7 @@ primary_interface( void )
     result = *ifr;
     if ( ioctl( sockfd, SIOCGIFFLAGS, &result ) < 0 ) {
       if ( getif_debug ) 
-	debug( "DEBUG: ioctl SIOCGIFFLAGS %s: %s\n", 
+	debugmsg( "DEBUG: ioctl SIOCGIFFLAGS %s: %s\n", 
 	       ifr->ifr_name, strerror(errno) );
     }
 
@@ -251,7 +226,7 @@ primary_interface( void )
       if ( ! flag ) {
 	/* remember first found primary interface */
 	if ( getif_debug )
-	  debug( "DEBUG: first primary interface %s\n", ifr->ifr_name );
+	  debugmsg( "DEBUG: first primary interface %s\n", ifr->ifr_name );
 	primary = result;
 	flag = 1;
       }
@@ -261,27 +236,27 @@ primary_interface( void )
 	   (sa.sin_addr.s_addr & vpn_netmask[2]) == vpn_network[2] ||
 	   (sa.sin_addr.s_addr & vpn_netmask[3]) == vpn_network[3] ) {
 	if ( getif_debug )
-	  debug( "DEBUG: interface has VPN address, trying next\n" );
+	  debugmsg( "DEBUG: interface has VPN address, trying next\n" );
       } else {
 	if ( getif_debug ) 
-	  debug( "DEBUG: interface is good\n" );
+	  debugmsg( "DEBUG: interface is good\n" );
 	flag = 2;
 	break;
       }
     } else {
-      if ( getif_debug ) debug( "DEBUG: interface is down\n" );
+      if ( getif_debug ) debugmsg( "DEBUG: interface is down\n" );
     }
   }
 
   /* check for loop exceeded - if yes, fall back on first primary */
-  if ( flag == 1 && ptr >= buf + ifc.ifc_len ) {
+  if ( flag == 1 && ptr >= ifc.ifc_buf + ifc.ifc_len ) {
     if ( getif_debug ) 
-      debug( "DEBUG: no better interface found, falling back\n" );
+      debugmsg( "DEBUG: no better interface found, falling back\n" );
     result = primary;
   }
 
   /* clean up */
-  free((void*) buf);
+  free((void*) ifc.ifc_buf);
   close(sockfd);
 
   /* create a freshly allocated copy */

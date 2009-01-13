@@ -12,6 +12,7 @@ VERSION = $(shell uname -r)
 MARCH	= $(shell uname -m | tr '[A-Z]' '[a-z]')
 MAJOR   = $(firstword $(subst ., ,$(VERSION)))
 MINOR   = $(strip $(word 2,$(subst ., ,$(VERSION))))
+EXTRA_OBJ = machine/basic.o 
 SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 LFS_CFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE 
 LFS_LDFLAGS = 
@@ -37,8 +38,9 @@ V9FLAGS	= -xtarget=ultra -xarch=v9
 CFLAGS  = -dalign -ftrap=%none -fsimple -xlibmil $(EXTRACFLAGS)
 #EXTRACFLAGS = $(V7FLAGS)
 CFLAGS := -DSOLARIS $(CFLAGS) -xO4 -D__EXTENSIONS__=1
-LOADLIBES += -lnsl -lsocket
+LOADLIBES += -lkstat -lnsl -lsocket
 INSTALL = /usr/ucb/install
+EXTRA_OBJ += machine/sunos-swap.o machine/sunos.o 
 else
 # old Solaris 1 not supported!
 endif
@@ -62,7 +64,12 @@ endif
 
 ifeq (DARWIN,${SYSTEM})
 #CFLAGS	+= -DDEBUG_WAIT=1 -DDEBUG_EVENTLOOP=1
-CFLAGS	+= -DMUST_USE_SELECT_NOT_POLL=1
+CFLAGS	+= -DMUST_USE_SELECT_NOT_POLL=1 -ggdb
+LOADLIBES += -ggdb
+EXTRA_OBJ += machine/darwin.o
+endif
+ifeq (CYGWINNT51, ${SYSTEM})
+CFLAGS += -DSYS_NMLN=20
 endif
 
 ifeq (LINUX,${SYSTEM})
@@ -87,6 +94,7 @@ endif
 #LOADLIBES += -Wl,-Bstatic -lefence -Wl,-Bdynamic 
 LFS_CFLAGS = $(shell getconf LFS_CFLAGS 2>>/dev/null)
 LFS_LDFLAGS = $(shell getconf LFS_LDFLAGS 2>>/dev/null)
+EXTRA_OBJ += machine/linux.o 
 endif
 
 #
@@ -101,6 +109,7 @@ CFLAGS += -DUSE_PARSE=1 # -ggdb
 
 # add large file support
 ifneq (,${LFS_CFLAGS})
+NOLFS_CFLAGS := $(CFLAGS)
 CFLAGS += $(LFS_CFLAGS)
 endif
 ifneq (,${LFS_LDFLAGS})
@@ -118,29 +127,31 @@ endif
 
 all : kickstart $(GENDOC)
 
-kickstart: getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o event.o jobinfo.o limitinfo.o appinfo.o parse.o mysystem.o mylist.o invoke.o kickstart.o
+kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o event.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o kickstart.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-show-if: show-if.o getif.o
+show-if: show-if.o getif.o debug.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 try-parse: try-parse.o parse.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 
-appinfo.o: appinfo.c getif.h rwio.h tools.h useinfo.h jobinfo.h \
+appinfo.o: appinfo.c getif.h rwio.h tools.h useinfo.h machine.h jobinfo.h \
   statinfo.h appinfo.h limitinfo.h mynss.h
+debug.o: debug.c debug.h
 event.o: event.c rwio.h tools.h event.h statinfo.h mysignal.h
 fail.o: fail.c
-getif.o: getif.c getif.h
+getif.o: getif.c debug.h getif.h
 invoke.o: invoke.c invoke.h
 jobinfo.o: jobinfo.c getif.h tools.h useinfo.h jobinfo.h statinfo.h \
   parse.h
 kickstart.o: kickstart.c appinfo.h statinfo.h jobinfo.h limitinfo.h \
-  mysystem.h rwio.h mylist.h invoke.h
+  machine.h mysystem.h rwio.h mylist.h invoke.h
 limitinfo.o: limitinfo.c tools.h limitinfo.h
+machine.o: machine.c machine.h machine/*.h
 meminfo.o: meminfo.c meminfo.h
 mylist.o: mylist.c mylist.h
 mynss.o: mynss.c mynss.h
 mysystem.o: mysystem.c tools.h appinfo.h statinfo.h jobinfo.h limitinfo.h \
-  event.h mysystem.h mysignal.h
+  machine.h event.h mysystem.h mysignal.h
 parse.o: parse.c parse.h
 rwio.o: rwio.c rwio.h
 show-if.o: show-if.c getif.h
@@ -153,6 +164,15 @@ try-parse.o: try-parse.c parse.h
 useinfo.o: useinfo.c tools.h useinfo.h
 zio.o: zio.c zio.h
 
+machine/basic.o: machine/basic.c machine/basic.h machine/../tools.h
+machine/sunos.o: machine/sunos.c machine/basic.c machine/sunos.h \
+  machine/sunos-swap.h machine/../tools.h
+machine/sunos-swap.o: machine/sunos-swap.c machine/sunos-swap.h
+	$(CC) $(NOLFS_CFLAGS) $< -c -o $@
+machine/linux.o: machine/linux.c machine/basic.c machine/linux.h \
+  machine/../tools.h
+machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
+  machine/../tools.h
 
 $(GENDOC): kickstart.1
 
@@ -170,7 +190,7 @@ install.all: install install.man install.doc
 doc: $(GENDOC)
 
 clean:
-	$(RM) *.o $(GENDOC) core core.*
+	$(RM) *.o machine/*.o $(GENDOC) core core.*
 
 distclean: clean
 	$(RM) kickstart fail test-post test-pre test-ascii show-if
