@@ -12,13 +12,13 @@
 .\" Southern California. All rights reserved.
 .\" 
 .\" $Id$
-.TH "pegasus-get-sites" "1" "1.3.9" "Jens-S. Vöckler" "GriPhyN PEGASUS Planner"
+.TH "pegasus-get-sites-old" "1" "2.2.0" "Jens-S. Vöckler" "GriPhyN PEGASUS Planner"
 .SH "NAME"
 .LP 
-pegasus\-get\-sites \- generates a site catalog from gridcat sources.
+pegasus\-get\-sites\-old \- generates a site catalog from gridcat sources.
 .SH "SYNTAX"
 .LP 
-.B pegasus\-get\-sites [\-Dprops] [\-\-grid gid] [\-\-euryale] [\-\-cutoff|\-C n] [\-\-debug|\-d] [\-\-globus] [\-\-with\-mis] [\-\-tc|\-t fn] [\-\-sc|\-s fn] [\-\-tc\-style mode] [\-\-sc\-style mode] [\-\-app|\-a ttc [\-\-keep]] [\-\-default\-rls rls] [\-\-default\-arch a::os] [\-\-default\-inst inst] [\-\-default\-version m.m.p]
+.B pegasus\-get\-sites\-old [\-Dprops] [\-\-grid gid] [\-\-euryale] [\-\-cutoff|\-C n] [\-\-debug|\-d] [\-\-globus] [\-\-with\-mis] [\-\-tc|\-t fn] [\-\-sc|\-s fn] [\-\-tc\-style mode] [\-\-sc\-style mode] [\-\-app|\-a ttc [\-\-keep]] [\-\-default\-rls rls] [\-\-default\-arch a::os] [\-\-default\-inst inst] [\-\-default\-version m.m.p]
 .LP 
 The following options modify each \fI\-\-grid\fR option they were
 specified after:
@@ -32,25 +32,25 @@ variables like $data etc.:
 .B 
 [\-\-workdir|\-w rdir] [\-\-pegasus|\-v rdir] [\-\-kick|\-k rks]
 .LP 
-.B pegasus\-get\-sites \-\-help
+.B pegasus\-get\-sites\-old \-\-help
 .SH "DESCRIPTION"
 .LP 
 Each grid has its own grid handle, currently an identifier chosen by
-pegasus\-get\-sites. Each grid hosts its own gridcat. Each gridcat contains
+pegasus\-get\-sites\-old. Each grid hosts its own gridcat. Each gridcat contains
 the configuration of all clusters associated with that grid.
 .LP 
 Gridcat provides in its tables \fIsites\fR and \fIsiteinfo\fR the
 necessary configuration information to describe a remote cluster. The
-\fBpegasus\-get\-sites\fR software extracts the configuration information
+\fBpegasus\-get\-sites\-old\fR software extracts the configuration information
 about the special directories $app, $data, $grid3, $tmp and $wntmp, the
 addresses of gatekeeper and gridftp services, the jobmanagers available,
 the number of CPUs at the site, and the \fIsite handle\fR assigned to
 the site. The site handle is a unique identifier for the site. At the
 moment, it has to be globally unique, too.
 .LP 
-\fBpegasus\-get\-sites\fR queries one or more remote gridcat databases. It
+\fBpegasus\-get\-sites\-old\fR queries one or more remote gridcat databases. It
 produces a site catalog (SC) and transformation catalog (TC) for all
-valid sites found on all chosen grids. \fBpegasus\-get\-sites\fR permits to
+valid sites found on all chosen grids. \fBpegasus\-get\-sites\-old\fR permits to
 query multiple gridcats, modifying information pertaining to the gridcat
 in the process.
 .SH "OPTIONS"
@@ -594,7 +594,7 @@ transformation catalog and chooses not to keep the example
 transformations:
 .nf 
 \f(CB
-$ pegasus\-get\-sites \-\-grid osg\-itb \-\-app my.ttc 
+$ pegasus\-get\-sites\-old \-\-grid osg\-itb \-\-app my.ttc 
 # local hostname "griodine.uchicago.edu"
 # reading transformation mappings from /dev/null
 # assembling information for grid "osg\-itb".
@@ -615,7 +615,7 @@ files. Only sites with 10 or more CPUs are included. Please note that
 the RLS override will also affect the local site: 
 .nf 
 \f(CB
-$ pegasus\-get\-sites \-\-default\-rls rls://griodine.uchicago.edu \-\-cutoff 10 \\
+$ pegasus\-get\-sites\-old \-\-default\-rls rls://griodine.uchicago.edu \-\-cutoff 10 \\
  \-\-sc\-style xml \-\-sc sites.xml \-\-tc\-style new \-\-tc tc.data \\
  \-\-grid osg \-\-grid osg\-itb
 ...

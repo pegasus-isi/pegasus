@@ -16,7 +16,7 @@
 .\"
 .\" Authors: Jens-S. Vöckler, Yong Zhao, Karan Vahi
 .\"
-.TH "rc\-client" "1" "1.4.5" "GriPhyN PEGASUS Planner"
+.TH "rc\-client" "1" "2.2.0" "Pegasus Workflow Planner"
 .SH NAME
 rc\-client \- shell client for replica implementations
 .SH SYNOPSIS
@@ -145,30 +145,37 @@ Please make sure that your
 includes pointer to the replica implementation required jar files.
 .SH "PROPERTIES"
 The complete branch of properties 
-.I pegasus.rc
+.I pegasus.catalog.replica
 including itself are interpreted by the prototype. While the 
-.I pegasus.rc
+.I pegasus.catalog.replica
 property itself steers the backend to connect to, any meaning of
 branched keys is dependent on the backend. The same key may have
 different meanings for different backends. 
 .TP
-.B pegasus.rc
+.B pegasus.catalog.replica
 determines the name of the implementing class to load at run-time. If
 the class resides in 
-.I org.griphyn.common.catalog
+.I org.griphyn.common.catalog.replica
 no prefix is required. Otherwise, the fully qualified class name must be
-specified. 
+specified.
 .TP
-.B pegasus.rc.driver
+.B pegasus.catalog.replica.url
+is used by the RLS|LRC implementations. It determines the RLI / LRC
+url to use.
+.TP
+.B pegasus.catalog.replica.file
+is used by the SimpleFile implementation. It specifies the path to the
+file to use as the backend for the catalog.
+.TP
+.B pegasus.catalog.replica.db.driver
 is used by a simple rDBMs implementation. The string is the
 fully-qualified class name of the JDBC driver used by the rDBMS
 implementer. 
 .TP
-.B pegasus.rc.url
-is used by a simple rDBMS implementation. The string determines the JDBC
-contact URI to use. 
+.B pegasus.catalog.replica.db.url
+is the jdbc url to use to connect to the database.
 .TP
-.B pegasus.rc.user
+.B pegasus.catalog.replica.db.user
 is used by a simple rDBMS implementation. It constitutes the database
 user account that contains the 
 .I RC_LFN
@@ -176,7 +183,7 @@ and
 .I RC_ATTR
 tables.
 .TP
-.B pegasus.rc.password
+.B pegasus.catalog.replica.db.password
 is used by a simple rDBMS implementation. It constitutes the database
 user account that contains the 
 .I RC_LFN
@@ -184,14 +191,10 @@ and
 .I RC_ATTR
 tables.
 .TP
-.B pegasus.rc.chunk.size
+.B pegasus.catalog.replica.chunk.size
 is used by the rc-client for the bulk insert and delete
 operations. The value determines the number of lines that are read in
 at a time, and worked upon at together.
-.TP
-.B pegasus.rc.*
-are other keys a JDBC driver may make use of. The keys are
-driver-specific. 
 .SH "COMMANDS"
 The commandline tool provides a simplified shell-wrappable interface to
 manage a replica catalog backend. The commands can either be specified
@@ -280,17 +283,12 @@ concerned with the database have a suffix
 .SH "RESTRICTIONS"
 Plenty. 
 .SH "AUTHORS"
-Gaurang Mehta       <gmetha at isi dot edu>
-.br
 Karan Vahi          <vahi at isi dot edu>
 .br
-.\" Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
-Jens-S. V\(:ockler    <voeckler at cs dot uchicago dot edu>
+Gaurang Mehta       <gmetha at isi dot edu>
 .br
-Yong Zhao           <yongzh at cs dot uchicago dot edu>
+.\" Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
+Jens-S. V\(:ockler    <voeckler at isi dot dot edu>
 .PP
 PEGASUS     -
 .BR http://pegasus.isi.edu/
-.br
-GriPhyN -
-.BR http://www.griphyn.org/

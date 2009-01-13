@@ -19,7 +19,7 @@
 .\" $REVISION$
 .\" 
 .\" 
-.TH "tc-client" "1" "Aug, 26th 2004 $Revision$" "Gaurang Mehta gmehta@isi.edu" ""
+.TH "tc-client" "1" "2.2.0" "PEGASUS Workflow Planner"
 .SH "NAME"
 \fBtc\-client\fR \- A full featured generic client to handle adds, delete and queries to the \fITransformation Catalog (TC).
 .SH "SYNOPSIS"
@@ -217,25 +217,25 @@ This are the properties you will need to set to use either the \fBFile\fR or \fB
 .br 
 For more details please check the \fB$PEGASUS_HOME/etc/sample.properties\fR file.
 .TP 
-\fBpegasus.tc
+\fBpegasus.catalog.transformation
 Identifies what impelemntation of TC will be used. If relative name is used then the path org.griphyn.cPlanner.tc is prefixed to the name and used as the class name to load. The default value if \fBFile\fR. Other supported mode is \fBDatabase\fR
 .TP 
-\fBpegasus.tc.file
+\fBpegasus.catalog.transformation.file
 The file path where the text based TC is located. By default the path \fB$PEGASUS_HOME/var/tc.data\fR is used.
 .TP 
-.B pegasus.db.tc.driver
+.B pegasus.catalog.transformation.db.driver
 Specifies which db driver to use. No defaults. Currently TC is only implemented on MySQL
 .TP 
-.B pegasus.db.tc.driver.url
+.B pegasus.catalog.transformation.db.url
 Specifies the url of the database to connect to. E.g. jdbc://mysql:hostname.foo.com/tc
 .TP 
-.B pegasus.db.tc.driver.user
+.B pegasus.catalog.transformation.db.user
 Specifies the username to use to connect to the Database.
 .TP 
-.B pegasus.db.tc.driver.password
+.B pegasus.catalog.transformation.db.password
 Specifies the password to use to connect to the Database.
 .TP 
-.B pegasus.db.*.driver.*.
+.B pegasus.catalog.*.db.*
 Specified other database driver specific properties. See the \fB$PEGASUS_HOME/etc/sample.properties\fR file for more information.
 .SH "FILES"
 .TP 
@@ -257,13 +257,10 @@ Path to the JAVA 1.4.x installation directory.
 The classpath should be set to contain all necessary PEGASUS files for the execution environment.
 To automatically add the \fICLASSPATH\fR to you environment, in the \fI$PEGASUS_HOME\fR directory run the script \fIsource setup\-user\-env.csh\fR or \fIsource setup\-user\-env.sh\fR.
 .SH "AUTHORS"
-Gaurang Mehta <gmehta at isi dot edu>,
+Gaurang Mehta <gmehta at isi dot edu>
+.br
+Karan Vahi <vahi at isi dot edu>
 .PP 
 Pegasus
 .B http://pegasus.isi.edu
-.br 
-PEGASUS Planner
-.B http://pegasus.isi.edu
-.br 
-GriPhyN
-.BR http://www.griphyn.org/
+
