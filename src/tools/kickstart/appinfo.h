@@ -19,23 +19,12 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <sys/utsname.h>
 #include "statinfo.h"
 #include "jobinfo.h"
 #include "limitinfo.h"
 #include <unistd.h>
 
-#ifndef SOLARIS
-#include <stdint.h> /* uint64_t */
-#endif
-
-#ifndef SYS_NMLN
-#ifdef _SYS_NAMELEN /* DARWIN */
-#define SYS_NMLN 65
-#else
-#error "No SYS_NMLN nor _SYS_NAMELEN: check <sys/utsname.h>"
-#endif /* _SYS_NAMELEN */
-#endif /* SYS_NMLN */
+#include "machine.h"
 
 typedef struct {
   struct timeval start;      /* point of time that app was started */
@@ -77,12 +66,8 @@ typedef struct {
   mode_t         umask;      /* currently active umask */
 
   struct rusage  usage;      /* rusage record for myself */
-  struct utsname uname;      /* system environment */
-  char   archmode[SYS_NMLN]; /* IA32, IA64, ILP32, LP64, ... */
   LimitInfo      limits;     /* hard- and soft limits */
-#if defined(DARWIN) || defined(_SC_PHYS_PAGES)
-  uint64_t       pram;       /* physical memory in bytes */
-#endif /* DARWIN */
+  MachineInfo    machine;    /* more system information */
 } AppInfo;
 
 extern

@@ -16,6 +16,7 @@
 #include "rwio.h"
 #include "tools.h"
 #include "useinfo.h"
+#include "machine.h"
 #include "jobinfo.h"
 #include "statinfo.h"
 #include "appinfo.h"
@@ -39,42 +40,11 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#ifdef DARWIN
-#include <sys/sysctl.h>
-#endif /* DARWIN */
-
 extern int isExtended; /* timestamp format concise or extended */
 extern int isLocal;    /* timestamp time zone, UTC or local */
 
 static const char* RCS_ID =
 "$Id$";
-
-static
-size_t
-mystrlen( const char* s, size_t max )
-{
-#if 0
-  /* pointer version */
-  const char* t = s;
-  while ( t-s < max && *t ) ++t;
-  return t-s;
-#else
-  /* array version */
-  size_t i = 0;
-  while ( i < max && s[i] ) ++i;
-  return i;
-#endif
-}
-
-static
-char*
-mytolower( char* s, size_t max )
-{
-  /* array version */
-  size_t i;
-  for ( i=0; i < max && s[i]; ++i ) s[i] = tolower(s[i]);
-  return s;
-}
 
 static
 int
@@ -88,9 +58,6 @@ static
 size_t
 convert2XML( char* buffer, size_t size, const AppInfo* run )
 {
-#if defined(_SC_PHYS_PAGES) || defined(DARWIN)
-  char b[32];
-#endif /* DARWIN || _SC_PHYS_PAGES */
   size_t i;
   struct passwd* user = wrap_getpwuid( getuid() );
   struct group* group = wrap_getgrgid( getgid() );
@@ -160,11 +127,6 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
       myprint( buffer, size, &len, " hostname=\"%s\"", h->h_name );
   }
 
-#if defined(_SC_PHYS_PAGES) || defined(DARWIN)
-  sizer( b, sizeof(b), sizeof(run->pram), &run->pram );
-  myprint( buffer, size, &len, " ram=\"%s\"", b );
-#endif /* DARWIN || _SC_PHYS_PAGES */
-
   /* optional attributes for root element: application process id */
   if ( run->child != 0 )
     myprint( buffer, size, &len, " pid=\"%d\"", run->child );
@@ -207,29 +169,8 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   /* <usage> own resources */
   printXMLUseInfo( buffer, size, &len, 2, "usage", &run->usage );
 
-  /* <uname> */
-  append( buffer, size, &len, "  <uname system=\"" );
-  full_append( buffer, size, &len, run->uname.sysname, mystrlen(run->uname.sysname,SYS_NMLN) );
-  if ( *run->archmode ) {
-    append( buffer, size, &len, "\" archmode=\"" );
-    full_append( buffer, size, &len, run->archmode, mystrlen(run->archmode,SYS_NMLN) );
-  }
-
-  append( buffer, size, &len, "\" nodename=\"" );
-  full_append( buffer, size, &len, run->uname.nodename, mystrlen(run->uname.nodename,SYS_NMLN) );
-  append( buffer, size, &len, "\" release=\"" );
-  full_append( buffer, size, &len, run->uname.release, mystrlen(run->uname.release,SYS_NMLN) );
-  append( buffer, size, &len, "\" machine=\"" );
-  full_append( buffer, size, &len, run->uname.machine, mystrlen(run->uname.machine,SYS_NMLN) );
-#ifdef _GNU_SOURCE
-  if ( *run->uname.domainname ) {
-    append( buffer, size, &len, "\" domainname=\"" );
-    full_append( buffer, size, &len, run->uname.domainname, mystrlen(run->uname.domainname,SYS_NMLN) );
-  }
-#endif
-  append( buffer, size, &len, "\">" );
-  full_append( buffer, size, &len, run->uname.version, mystrlen(run->uname.version,SYS_NMLN) );
-  append( buffer, size, &len, "</uname>\n" );
+  if ( ! run->noHeader )
+    printXMLMachineInfo( buffer, size, &len, 2, "machine", &run->machine ); 
 
   /* <statcall> records */
   printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdin", &run->input );
@@ -310,12 +251,6 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
  *          argv (IN): from main()
  */
 {
-#ifdef DARWIN
-  int mib[2];
-  size_t plen;
-#else
-  long   ppages;
-#endif /* DARWIN */
   size_t tempsize = getpagesize();
   char* tempname = (char*) malloc(tempsize);
 
@@ -332,6 +267,9 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
   /* obtain umask */
   appinfo->umask = umask(0);
   umask(appinfo->umask);
+
+  /* obtain system information */
+  initMachineInfo( &appinfo->machine ); 
 
   /* initialize some data for myself */
   initStatInfoFromName( &appinfo->gridstart, argv[0], O_RDONLY, 0 );
@@ -372,59 +310,9 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
   /* where do I run -- guess the primary interface IPv4 dotted quad */
   /* find out where we run at (might stall for some time on DNS probs?) */
   whoami( appinfo->ipv4, sizeof(appinfo->ipv4) );
-  if ( uname( &appinfo->uname ) == -1 ) {
-    memset( &appinfo->uname, 0, sizeof(appinfo->uname) );
-  } else {
-    /* downcase most things */
-    mytolower( appinfo->uname.sysname, SYS_NMLN );
-    mytolower( appinfo->uname.nodename, SYS_NMLN );
-    mytolower( appinfo->uname.machine, SYS_NMLN );
-#ifdef _GNU_SOURCE
-    mytolower( appinfo->uname.domainname, SYS_NMLN );
-#endif
-  }
-
-#if defined(AIX)
-  strncpy( appinfo->archmode, "AIX", SYS_NMLN );
-#elif defined(SUNOS)
-#if defined(_LP64)
-  strncpy( appinfo->archmode, "LP64", SYS_NMLN );
-#elif defined(_ILP32)
-  strncpy( appinfo->archmode, "ILP32", SYS_NMLN );
-#else
-  strncpy( appinfo->archmode, "SUNOS", SYS_NMLN );
-#endif /* SunOS architecture */
-#elif defined(LINUX) && #machine(i386)
-  switch ( sizeof(int) ) {
-  case 4:
-    strncpy( appinfo->archmode, "IA32", SYS_NMLN );
-    break;
-  case 8:
-    strncpy( appinfo->archmode, "IA64", SYS_NMLN );
-    break;
-  default:
-    /* strncpy( appinfo->archmode, "unknown", SYS_NMLN ); */
-    break; /* GNUC nag-nag-nag */
-  }
-#else /* LINUX architecture */
-  strncpy( appinfo->archmode, "unknown", SYS_NMLN );
-#endif /* SUNOS */
 
   /* record resource limits */
   initLimitInfo( &appinfo->limits );
-
-#ifdef _SC_PHYS_PAGES
-  if ( (ppages = sysconf(_SC_PHYS_PAGES)) != -1 )
-    appinfo->pram = ((unsigned) ppages) * getpagesize();
-#else
-#ifdef DARWIN
-  mib[0] = CTL_HW;
-  mib[1] = HW_PHYSMEM;
-  plen = sizeof(appinfo->pram);
-  if ( sysctl( mib, 2, &appinfo->pram, &plen, NULL, 0 ) == -1 )
-    appinfo->pram = 0;
-#endif /* DARWIN */
-#endif /* _SC_PHYS_PAGES */
 
   /* which process is me */
   appinfo->child = getpid();
@@ -570,6 +458,9 @@ deleteAppInfo( AppInfo* runinfo )
     runinfo->envp = NULL;
     runinfo->envc = 0;
   }
+
+  /* release system information */
+  deleteMachineInfo( &runinfo->machine ); 
 
   memset( runinfo, 0, sizeof(AppInfo) );
 }
