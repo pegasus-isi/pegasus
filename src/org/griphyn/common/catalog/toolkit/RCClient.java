@@ -192,6 +192,7 @@ public class RCClient extends Toolkit
     // private logger
     m_log = Logger.getLogger( RCClient.class );
     m_rls_logger =  LogManagerFactory.loadSingletonInstance();
+    m_rls_logger.logEventStart("rc-client", "planner.version", Version.instance().toString() );
     m_log.debug( "starting instance" );
     determineChunkFactor();
   }
@@ -903,6 +904,9 @@ public class RCClient extends Toolkit
       me.close();
       RCClient.log( Level.DEBUG, "disconnected from backend" );
     }
+    
+    //log event completion in rls logger
+    me.m_rls_logger.logEventCompletion();
 
     // get out
     if ( result != 0 ) {
