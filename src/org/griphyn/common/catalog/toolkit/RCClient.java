@@ -192,7 +192,8 @@ public class RCClient extends Toolkit
     // private logger
     m_log = Logger.getLogger( RCClient.class );
     m_rls_logger =  LogManagerFactory.loadSingletonInstance();
-    m_rls_logger.logEventStart("rc-client", "planner.version", Version.instance().toString() );
+    m_rls_logger.setLevel( Level.WARN );
+    m_rls_logger.logEventStart( "rc-client", "planner.version", Version.instance().toString() );
     m_log.debug( "starting instance" );
     determineChunkFactor();
   }
@@ -215,6 +216,8 @@ public class RCClient extends Toolkit
 "                The special filename hyphen reads from pipes" + linefeed +
 " -p|--pref k=v  enters the specified mapping into preferences (multi-use)." + linefeed +
 "                remember quoting, e.g. -p 'format=%l %p %a'" + linefeed +
+"                To set logging use the level key. For example to set info logging pass " + linefeed +
+"                --pref level=info " + linefeed + 
 " -i|--insert fn the path to the file containing the mappings to be inserted." + linefeed +
 "                Each line in the file denotes one mapping of format <LFN> <PFN> [k=v [..]]" + linefeed +
 " -d|--delete fn the path to the file containing the mappings to be deleted." + linefeed +
