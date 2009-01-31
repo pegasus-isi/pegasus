@@ -206,7 +206,7 @@ public class RCClient extends Toolkit
     String linefeed = System.getProperty( "line.separator", "\r\n" );
     System.out.println(
 "$Id$" + linefeed +
-"VDS version " + Version.instance().toString() + linefeed );
+"Pegasus version " + Version.instance().toString() + linefeed );
 
     System.out.println(
 "Usage: " + this.m_application + " [-p k=v] [ [-f fn] | [-i|-d fn] | [cmd [args]] ]" + linefeed +
