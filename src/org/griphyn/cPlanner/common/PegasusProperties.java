@@ -1411,11 +1411,11 @@ public class PegasusProperties {
      * Referred to by "pegasus.gridstart.label" property.
      *
      * @return the boolean value specified in the property file,
-     *         else false if not specified or non boolean specified.
+     *         else true if not specified or non boolean specified.
      */
     public boolean generateKickstartExtraOptions(){
         return Boolean.parse( mProps.getProperty( "pegasus.gridstart.label"),
-                              false );
+                              true );
     }
 
     /**

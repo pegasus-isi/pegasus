@@ -226,6 +226,11 @@ public class Kickstart implements GridStart {
      * A boolean indicating whether kickstart is deployed dynamically or not.
      */
     private boolean mDynamicDeployment;
+    
+    /**
+     * The label that is passed to kickstart.
+     */
+    private String mKickstartLabel;
 
     /**
      * Initializes the GridStart implementation.
@@ -239,6 +244,9 @@ public class Kickstart implements GridStart {
         mPOptions     = bag.getPlannerOptions();
         mLogger       = bag.getLogger();
         mSubmitDir    = mPOptions.getSubmitDirectory();
+        mKickstartLabel = ( dag == null ) ? null :
+                                            ( mPOptions.getBasenamePrefix() == null )? dag.getLabel():
+                                                                                       mPOptions.getBasenamePrefix() ;
         mInvokeAlways = mProps.useInvokeInGridStart();
         mInvokeLength = mProps.getGridStartInvokeLength();
         mDoStat       = mProps.doStatWithKickstart();
@@ -592,7 +600,7 @@ public class Kickstart implements GridStart {
         }
 
         if(mProps.generateKickstartExtraOptions() && mConcDAG != null){
-            gridStartArgs.append("-L ").append(mConcDAG.getLabel()).append(" ");
+            gridStartArgs.append("-L ").append( mKickstartLabel ).append(" ");
             gridStartArgs.append("-T ").append(mConcDAG.getMTime()).append(" ");
         }
 
