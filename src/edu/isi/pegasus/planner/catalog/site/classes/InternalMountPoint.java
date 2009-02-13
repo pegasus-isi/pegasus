@@ -93,8 +93,12 @@ public class InternalMountPoint extends FileSystemType {
         writer.write( "<internal-mount-point" );
       
         writeAttribute( writer, "mount-point", mMountPoint );
-        writeAttribute( writer, "free-size", mFreeSize );        
-        writeAttribute( writer, "total-size", mTotalSize );
+        if( mFreeSize != null ){
+            writeAttribute( writer, "free-size", mFreeSize );  
+        }
+        if( mTotalSize != null ){
+            writeAttribute( writer, "total-size", mTotalSize );
+        }
         
         writer.write( "/>" );
         writer.write( newLine );

@@ -1,0 +1,363 @@
+/*
+ * 
+ *   Copyright 2007-2008 University Of Southern California
+ * 
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *   Unless required by applicable law or agreed to in writing,
+ *   software distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ * 
+ */
+package edu.isi.pegasus.planner.catalog.site.impl;
+
+import edu.clemson.SiteCatalogGenerator;
+
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+
+import edu.isi.pegasus.common.logging.LogManager;
+
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
+
+import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
+
+import org.griphyn.cPlanner.common.StreamGobbler;
+import org.griphyn.cPlanner.common.StreamGobblerCallback;
+
+
+import org.griphyn.cPlanner.classes.GridFTPServer;
+import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.JobManager;
+import org.griphyn.cPlanner.classes.LRC;
+import org.griphyn.cPlanner.classes.Profile;
+
+import org.griphyn.common.classes.SysInfo;
+
+import org.griphyn.cPlanner.classes.WorkDir;
+
+import java.io.IOException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+
+
+/**
+ * The Engage implementation of the Site Catalog interface.
+ *
+ * @author Karan Vahi
+ * @version $Revision$
+ */
+public class Engage implements SiteCatalog {
+
+    /**
+     * The condor status command to query the central manager.
+     */
+    private static final String CONDOR_STATUS_COMMAND = "condor_status -any -pool engage-central.renci.org " +
+            "-format %s GlueSiteName " +
+            "-format ; 1 " + // to force a semicolon, even if the attribute was not found
+            "-format %s OSGMM_Globus_Location " +
+            "-format ; 1 " +
+            "-format %s GlueCEInfoContactString " +
+            "-format ; 1 " +
+            "-format %s GlueClusterTmpDir " +
+            "-format ; 1 " +
+            "-format %s GlueCEInfoHostName " +
+            "-format ; 1 " +
+            "-format %s GlueCEInfoApplicationDir " +
+            "-format ; 1 " +
+            "-format %s GlueCEInfoDataDir " +
+            "-format ; 1 " +
+            "-format %s GlueClusterTmpDir " +
+            "-format ; 1 " +
+            "-format %s GlueClusterWNTmpDir " +
+            "-format ;\\n 1 ";
+    
+    /**
+     * An adapter method that converts the Site object to the SiteInfo object
+     * corresponding to the site catalog schema version 2.
+     * 
+     * @param s  the Site object to convert.
+     * 
+     * @return  the coverted SiteInfo object
+     */
+    private static SiteInfo convertToSiteInfo( SiteCatalogGenerator.Site s ) throws Exception{
+        SiteInfo site = new SiteInfo();
+        site.setInfo( SiteInfo.HANDLE, s.siteName );
+        site.setInfo( SiteInfo.GRIDLAUNCH, s.gridlaunch );
+        site.setInfo( SiteInfo.SYSINFO, new SysInfo( s.sysinfo ));
+        site.setInfo( SiteInfo.LRC, new LRC(s.lrcUrl) );
+        
+        //fork jobmanager
+        JobManager forkJM = new JobManager( );
+        forkJM.setInfo( JobManager.UNIVERSE, JobManager.FORK_JOBMANAGER_TYPE );
+        forkJM.setInfo( JobManager.URL, s.transferUniverseJobManager );
+        site.setInfo( SiteInfo.JOBMANAGER,  forkJM );
+        
+        //compute jobmanager
+        JobManager computeJM = new JobManager( );
+        computeJM.setInfo( JobManager.UNIVERSE, JobManager.VANILLA_JOBMANAGER_TYPE );
+        computeJM.setInfo( JobManager.URL, s.VanillaUniverseJobManager );
+        site.setInfo( SiteInfo.JOBMANAGER,  computeJM );
+        
+        
+        //set the gridftp server
+        GridFTPServer server = new GridFTPServer();
+        server.setInfo( GridFTPServer.GRIDFTP_URL, s.gridFtpUrl );
+        server.setInfo( GridFTPServer.STORAGE_DIR, s.gridFtpStorage );
+        site.setInfo( SiteInfo.GRIDFTP, server );
+        
+        //set the environment profiles
+        if( s.app != null ){
+            site.setInfo( SiteInfo.PROFILE, new Profile( Profile.ENV, "app", s.app ) );
+        }
+        if( s.data != null ){
+            site.setInfo( SiteInfo.PROFILE, new Profile( Profile.ENV, "data", s.data ) );
+        }
+        if( s.tmp != null ){
+            site.setInfo( SiteInfo.PROFILE, new Profile( Profile.ENV, "tmp", s.tmp ) );
+        }
+        if( s.wntmp != null ){
+            site.setInfo( SiteInfo.PROFILE, new Profile( Profile.ENV, "wntmp", s.wntmp ) );
+        }
+        
+        //set the working directory
+        WorkDir dir = new WorkDir();
+        dir.setInfo( WorkDir.WORKDIR, s.workingDirectory );
+        site.setInfo( SiteInfo.WORKDIR, dir );
+        return site;
+    }
+    
+    /**
+     * The List storing the output of condor-status.
+     */
+    List<String> mCondorStatusOutput;
+    
+    
+    /**
+     * The List storing the stderr of condor-status.
+     */
+    List<String> mCondorStatusError;
+    
+    /**
+     * The SiteStore object where information about the sites is stored.
+     */
+    private SiteStore mSiteStore;
+    
+    /**
+     * The handle to the log manager.
+     */
+    private LogManager mLogger;
+
+    public Engage() {
+        mLogger = LogManagerFactory.loadSingletonInstance();
+        mSiteStore = new SiteStore();
+    }
+
+    /* (non-Javadoc)
+     * @see edu.isi.pegasus.planner.catalog.SiteCatalog#insert(edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry)
+     */
+    public int insert(SiteCatalogEntry entry) throws SiteCatalogException {
+        mSiteStore.addEntry(entry);
+        return 1;
+    }
+
+    /* (non-Javadoc)
+     * @see edu.isi.pegasus.planner.catalog.SiteCatalog#list()
+     */
+    public Set<String> list() throws SiteCatalogException {
+        return mSiteStore.list();
+    }
+
+    /**
+     * Loads up the Site Catalog implementation  with the sites whose
+     * site handles are specified. This is a convenience method, that can 
+     * allow the backend implementations to maintain soft state if required.
+     * 
+     * If the implementation chooses not to implement this, just do an empty
+     * implementation.
+     * 
+     * The site handle * is a special handle designating all sites are to be 
+     * loaded.
+     * 
+     * @param sites   the list of sites to be loaded.
+     * 
+     * @return the number of sites loaded.
+     * 
+     * @throws SiteCatalogException in case of error.
+     */
+    public int load( List<String> sites ) throws SiteCatalogException {
+        if( this.isClosed() ){
+            throw new SiteCatalogException( "Need to connect to site catalog before loading" );
+        }
+        SiteCatalogGenerator sg = new SiteCatalogGenerator( (ArrayList)mCondorStatusOutput );
+        List<SiteCatalogGenerator.Site> sgSites = sg.loadSites( sites );
+        
+        int result = 0;
+        for( SiteCatalogGenerator.Site s : sgSites ){
+            SiteInfo site;
+            try {
+                //some sanity check before attempting to convert
+                if ( s.globusLocation == null || s.VanillaUniverseJobManager == null) {
+                    mLogger.log( "Skipping site " + s.siteName, LogManager.INFO_MESSAGE_LEVEL );
+                    continue;
+                }
+                
+                mLogger.log( "Adding site " + s.siteName, LogManager.INFO_MESSAGE_LEVEL );
+                site = Engage.convertToSiteInfo(s);
+                mSiteStore.addEntry( SiteInfo2SiteCatalogEntry.convert( site, mLogger ) );
+                result++;
+            } catch (Exception ex) {
+                mLogger.log( " While converting Site object for site " + s.siteName, 
+                              ex,
+                              LogManager.ERROR_MESSAGE_LEVEL );
+            }
+        }
+        
+        return result;
+    }
+    
+    /* (non-Javadoc)
+     * @see edu.isi.pegasus.planner.catalog.SiteCatalog#lookup(java.lang.String)
+     */
+    public SiteCatalogEntry lookup(String handle) throws SiteCatalogException {
+        return mSiteStore.lookup(handle);
+    }
+
+    /* (non-Javadoc)
+     * @see edu.isi.pegasus.planner.catalog.SiteCatalog#remove(java.lang.String)
+     */
+    public int remove(String handle) throws SiteCatalogException {
+        throw new UnsupportedOperationException("Method remove( String , String ) not yet implmented");
+    }
+
+    
+    /**
+     * Closes the connection. It resets the internal buffers that contain output
+     * of the condor_status command.
+     */
+    public void close() {
+        mCondorStatusOutput = null;
+        mCondorStatusError  = null;
+    }
+
+    /**
+     * Issues the condor status command, and stores the results retrieved back
+     * into a List.
+     * 
+     * @param props is the property table with sufficient settings to
+     *              to connect to the implementation.
+     * 
+     * @return true if connected, false if failed to connect.
+     *
+     * @throws SiteCatalogException
+     */
+    public boolean connect(Properties props) throws SiteCatalogException {
+        Runtime r = Runtime.getRuntime();
+        ListCallback ic = new ListCallback();
+        ListCallback ec = new ListCallback();
+        
+        
+        try{
+            Process p = r.exec( Engage.CONDOR_STATUS_COMMAND );
+
+            //spawn off the gobblers
+            StreamGobbler ips = new StreamGobbler( p.getInputStream(), ic );
+            StreamGobbler eps = new StreamGobbler( p.getErrorStream(), ec );
+            
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            mCondorStatusOutput = ic.getContents();
+            eps.join();
+            mCondorStatusError  = ec.getContents();
+
+            //get the status
+            int status = p.waitFor();
+            if( status != 0){
+                mLogger.log("condor_status command  exited with status " + status,
+                            LogManager.WARNING_MESSAGE_LEVEL);
+            }
+        }
+        catch(IOException ioe){
+            mLogger.log( "IOException while calling out to condor_status. Probably" +
+                         " condor-status not in path.", ioe,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            //also dump the stderr
+            mLogger.log( "stderr for command invocation " + mCondorStatusError,
+                         LogManager.ERROR_MESSAGE_LEVEL );
+            return false;
+        }
+        catch( InterruptedException ie){
+            //ignore
+        }
+        return true;
+    }
+
+    /**
+     * Returns if the connection is closed or not.
+     * 
+     * @return
+     */
+    public boolean isClosed() {
+        return ( mCondorStatusOutput == null );
+    }
+
+    /**
+     * An inner class, that implements the StreamGobblerCallback to store all
+     * the lines in a List
+     *
+     */
+    private class ListCallback implements StreamGobblerCallback{
+
+        
+        /**
+         * The ArrayList where the lines are stored.
+         */
+        List <String> mList;
+        
+        /**
+         * Default Constructor.
+         *
+         */
+        public ListCallback( ){
+            mList = new ArrayList<String>();
+        }
+
+        /**
+         * Callback whenever a line is read from the stream by the StreamGobbler.
+         * Adds the line to the list.
+         * 
+         * @param line   the line that is read.
+         */
+        public void work( String line ){
+            mList.add( line );
+            
+        }
+
+        /**
+         * Returns the contents captured.
+         *
+         * @return  List<String>
+         */
+        public List<String> getContents(){
+            return mList;
+        }
+
+    }
+
+}

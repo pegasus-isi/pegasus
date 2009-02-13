@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.toolkit.Executable;
 import org.griphyn.common.util.Version;
@@ -110,7 +111,7 @@ public class PegasusGetSites extends Executable{
             me.log("Time taken to execute is " + execTime + " seconds",
                          LogManager.INFO_MESSAGE_LEVEL);
         }
-
+        me.mLogger.logEventCompletion();
         System.exit( result );
     }
 
@@ -132,7 +133,7 @@ public class PegasusGetSites extends Executable{
              append( "\n" ).append( " [-v] [-h]" ).
              append( "\n" ).
              append( "\n Mandatory Options " ).
-             append( "\n -s |--source     the source to query for information. Valid sources are VORS" ).
+             append( "\n -s |--source     the source to query for information. Valid sources are VORS|Engage" ).
              append( "\n" ). 
              append( "\n Other Options  " ).
              append( "\n -g |--grid       the grid for which to generate the site catalog ").
@@ -166,12 +167,9 @@ public class PegasusGetSites extends Executable{
     public void executeCommand(String[] args) {
         parseCommandLineArguments(args);
         PegasusProperties p =  PegasusProperties.nonSingletonInstance();
-        if(!mSource.equals("VORS")){
-            throw new RuntimeException( "Invalid source "+ mSource );
-        }
-        else{
-            p.setProperty( "pegasus.catalog.site", "VORS" );
-        }
+        
+        p.setProperty( "pegasus.catalog.site", mSource );
+        
         if(mFile == null){
             //no sc path is passed using command line                                
             //sc path is not set in the properties file go to default
@@ -215,7 +213,7 @@ public class PegasusGetSites extends Executable{
                          LogManager.INFO_MESSAGE_LEVEL );
             store.toXML( scFw, "" );
             scFw.close();
-
+           
   
         }
         catch ( SiteCatalogException e ){
@@ -224,8 +222,20 @@ public class PegasusGetSites extends Executable{
         catch( IOException ioe ){
             ioe.printStackTrace();
         }
-     
+        
     }
+    
+    /**
+     * Sets up the logging options for this class. Looking at the properties
+     * file, sets up the appropriate writers for output and stderr.
+     */
+    protected void setupLogging(){
+        //setup the logger for the default streams.
+        mLogger = LogManagerFactory.loadSingletonInstance( mProps );
+        mLogger.logEventStart( "event.pegasus.pegasus-get-sites", "pegasus.version",  mVersion );
+
+    }
+    
    /**
      * Parses the command line arguments using GetOpt and sets the class
      * member variables.
