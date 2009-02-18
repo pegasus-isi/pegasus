@@ -1,8 +1,8 @@
----
---- schema: all
---- driver: MySQL 4.0.*
---- $Revision$
----
+--
+-- schema: all
+-- driver: MySQL 4.0.*
+-- $Revision$
+--
 
 CREATE TABLE sequences (
 	name		VARCHAR(32) NOT NULL,
