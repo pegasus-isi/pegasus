@@ -25,14 +25,51 @@ package org.griphyn.vdl.invocation;
 public class Uname extends MachineInfo implements HasText{
 
     /**
-     * The text value
-     */
-    private StringBuffer mValue;
-    
-    /**
      * The element name
      */
     public static final String ELEMENT_NAME = "uname";
+    
+    /**
+     * The system attribute for the uname
+     */
+    public static final String SYSTEM_ATTRIBUTE_KEY = "system";
+    
+    /**
+     * The nodename attribute for the uname
+     */
+    public static final String NODENAME_ATTRIBUTE_KEY = "nodename";
+    
+    /**
+     * The release attribute for the uname
+     */
+    public static final String RELEASE_ATTRIBUTE_KEY = "release";
+    
+    /**
+     * The release attribute for the uname
+     */
+    public static final String MACHINE_ATTRIBUTE_KEY = "machine";
+    
+    /**
+     * An adapter method to convert the uname object to the architecture object.
+     * 
+     * @param uname  the object to be converted
+     * 
+     * @return the converted <code>Architecture</code> object
+     */
+    public static Architecture unameToArchitecture(  Uname uname ){
+        Architecture arch = new Architecture();
+        arch.setMachine( uname.get( Uname.MACHINE_ATTRIBUTE_KEY ) );
+        arch.setNodeName( uname.get( Uname.NODENAME_ATTRIBUTE_KEY ) );
+        arch.setRelease( uname.get( Uname.RELEASE_ATTRIBUTE_KEY ) );
+        arch.setSystemName( uname.get( Uname.SYSTEM_ATTRIBUTE_KEY ) );
+        arch.setValue( uname.getValue() );
+        return arch;
+    }
+    
+    /**
+     * The text value
+     */
+    private StringBuffer mValue;
     
     /**
      * The default constructor
@@ -102,6 +139,16 @@ public class Uname extends MachineInfo implements HasText{
      */
     public void setValue(String value) {
         this.mValue = (value == null ? null : new StringBuffer(value));
+    }
+
+   /**
+     * An adapter method to convert the uname object to the architecture object.
+     * 
+     * 
+     * @return the converted <code>Architecture</code> object
+     */
+    public  Architecture toArchitecture() {
+        return Uname.unameToArchitecture( this );
     }
 
 }

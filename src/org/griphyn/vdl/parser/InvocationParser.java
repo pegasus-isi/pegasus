@@ -14,15 +14,12 @@
  */
 package org.griphyn.vdl.parser;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.griphyn.vdl.invocation.*;
 import org.griphyn.vdl.util.Logging;
 
 // Xerces
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
-import javax.xml.parsers.*;
 import java.io.*;
 import java.util.*;
 import java.text.*;
@@ -1410,15 +1407,17 @@ public class InvocationParser extends DefaultHandler
 	}
         else if ( child instanceof Machine ) {
 	  invocation.setMachine((Machine) child);
-          /*
-          StringWriter s = new StringWriter();
-                try {
-                    ((Machine) child).toXML(s, "", null);
-                } catch (IOException ex) {
-                    Logger.getLogger(InvocationParser.class.getName()).log(Level.SEVERE, null, ex);
-                }
-          System.out.println( s );
-	  */
+          
+          //convert uname object to Architecture object
+          //reqd for Pegasus Bug 39
+          Machine machine = (Machine)child;
+          for( Iterator<MachineInfo> it = machine.getMachineInfoIterator(); it.hasNext(); ){
+             MachineInfo mi = it.next();
+             if( mi instanceof Uname ){
+                 invocation.setArchitecture( ((Uname)mi).toArchitecture() );
+             }
+          }
+          
           return true;
 	}
       }
