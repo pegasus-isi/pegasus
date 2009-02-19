@@ -71,6 +71,11 @@ public class SeqExec extends Abstract {
      * Flag indicating whether to fail on first hard error or not.
      */
     private boolean mFailOnFirstError;
+    
+    /**
+     * Flag to indicate whether to log progress or not.
+     */
+    private boolean mLogProgress;
 
     /**
      * The default constructor.
@@ -88,7 +93,8 @@ public class SeqExec extends Abstract {
      */
     public void initialize( ADag dag , PegasusBag bag  ){
         super.initialize( dag, bag );
-        mGlobalLog = bag.getPegasusProperties().jobAggregatorLogGlobal();
+        mGlobalLog = mProps.logJobAggregatorProgressToGlobal();
+        mLogProgress = mProps.logJobAggregatorProgress();
         //set abort of first job failure
         this.setAbortOnFirstJobFailure( mProps.abortOnFirstJobFailure() );
 
@@ -230,9 +236,11 @@ public class SeqExec extends Abstract {
         }
 
         //track the progress of the seqexec job
-        arguments.append( " -R ").append( logFile(job) );
-
-
+        //if specified in properties
+        if( mLogProgress ){
+            arguments.append( " -R ").append( logFile(job) );
+        }
+        
         return arguments.toString();
     }
 

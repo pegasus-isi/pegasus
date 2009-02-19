@@ -1965,19 +1965,34 @@ public class PegasusProperties {
         return mProps.getProperty("pegasus.clusterer.job.aggregator",DEFAULT_JOB_AGGREGATOR);
     }
 
-
     /**
-     * Returns what job aggregator is to be used to aggregate multiple
-     * compute jobs into a single condor job.
+     * Returns whether the seqexec job aggregator should log progress to a log or not.
      *
-     * Referred to by the "pegasus.cluster.job.aggregator.seqexec.log.global" property.
+     * Referred to by the "pegasus.clusterer.job.aggregator.seqexec.log" property.
      *
      * @return the value specified in the properties file, else true
      *
      */
-    public boolean jobAggregatorLogGlobal(){
-        return Boolean.parse( mProps.getProperty( "pegasus.clusterer.job.aggregator.seqexec.hasgloballog" ),
-                              true );
+    public boolean logJobAggregatorProgress(){
+        return Boolean.parse( getProperty( "pegasus.clusterer.job.aggregator.seqexec.log" ),
+                              false );
+    }
+
+
+    /**
+     * Returns whether the seqexec job aggregator should write to a global log or not.
+     * This comes into play only if "pegasus.clusterer.job.aggregator.seqexec.log" 
+     * is set to true.
+     *
+     * Referred to by the "pegasus.clusterer.job.aggregator.seqexec.log.global" property.
+     *
+     * @return the value specified in the properties file, else true
+     *
+     */
+    public boolean logJobAggregatorProgressToGlobal(){
+        return Boolean.parse( getProperty( "pegasus.clusterer.job.aggregator.seqexec.log.global", 
+                                           "pegasus.clusterer.job.aggregator.seqexec.hasgloballog"),
+                                            true );
     }
 
     /**
