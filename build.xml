@@ -151,7 +151,13 @@
 	</or>
       </and>
     </condition>
+    <condition property="latex.notavailable">
+      <not>
+	<isset property="latex.available"/> 
+      </not>
+    </condition>
     <echo>latex.available=${latex.available}</echo>
+    <echo>latex.notavailable=${latex.notavailable}</echo>
   </target>
   
   <target name="latex-pre" depends="version">
@@ -171,6 +177,15 @@
       <arg file="${dist.doc}/properties.pdf"/>
     </exec>
   </target>
+
+  <target name="withoutlatex" depends="validate-latex,jar"
+          description="Copies properties to document if latex is not installed" 
+	  if="latex.notavailable">
+     <mkdir dir="${dist.doc}"/>
+     <copy preservelastmodified="true" todir="${dist.doc}" file="doc/properties.pdf"/> 
+  </target>
+
+
 
   <target name="javadoc-pre" depends="version">
     <uptodate property="pegasus.predicate.doc">
@@ -386,7 +401,7 @@
     </chmod>
   </target>
 
-  <target name="dist" depends="jar,latex,javadoc,man-roff,ctools-all,getsystem"
+  <target name="dist" depends="jar,latex,withoutlatex,javadoc,man-roff,ctools-all,getsystem"
           description="Sets up the dist directory">
     <!-- bin -->
     <mkdir dir="${dist.dir}/bin"/>
