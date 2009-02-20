@@ -490,6 +490,7 @@ public class ParseKickstart extends Directive
     me.log( "kickstart", 2, extract.size() + " records extracted" );
 
     // testme: for each record obtained, work on it
+    Architecture cachedUname = null;
     for ( int j=1; j-1 < extract.size(); ++j ) {
       String temp = (String) extract.get(j-1);
       me.log( "kickstart", 2, "content[" + j + "] extracted, length " + 
@@ -517,6 +518,18 @@ public class ParseKickstart extends Directive
       if ( m_wf_mtime != null ) 
 	invocation.setWorkflowTimestamp( m_wf_mtime );
 
+      // Fix for Pegasus Bug 39
+      // the machine information tag is created only once for a cluster
+      // the -H flag disables the generation of machine information 
+      Architecture uname = invocation.getArchitecture();
+      if( uname == null ){
+          //attempt to update with cachedUname
+          invocation.setArchitecture( cachedUname );
+      }
+      else{
+         cachedUname = uname;
+      }
+      
       // insert into database -- iff it is available
       if ( ! m_noDBase && m_dbschema != null && m_dbschema instanceof PTC ) {
 	PTC ptc = (PTC) m_dbschema;

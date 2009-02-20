@@ -50,6 +50,16 @@ public class Uname extends MachineInfo implements HasText{
     public static final String MACHINE_ATTRIBUTE_KEY = "machine";
     
     /**
+     * The archmode attribute for the uname
+     */
+    public static final String ARCHMODE_ATTRIBUTE_KEY = "archmode";
+    
+    /**
+     * The undefined value for archmode attribute.
+     */
+    public static final String UNDEFINED_ARCHMODE_VALUE = "UNDEFINED";
+    
+    /**
      * An adapter method to convert the uname object to the architecture object.
      * 
      * @param uname  the object to be converted
@@ -62,6 +72,9 @@ public class Uname extends MachineInfo implements HasText{
         arch.setNodeName( uname.get( Uname.NODENAME_ATTRIBUTE_KEY ) );
         arch.setRelease( uname.get( Uname.RELEASE_ATTRIBUTE_KEY ) );
         arch.setSystemName( uname.get( Uname.SYSTEM_ATTRIBUTE_KEY ) );
+        arch.setArchMode( uname.get( Uname.ARCHMODE_ATTRIBUTE_KEY) == null ?
+                          Uname.UNDEFINED_ARCHMODE_VALUE:
+                          uname.get( Uname.ARCHMODE_ATTRIBUTE_KEY )  );
         arch.setValue( uname.getValue() );
         return arch;
     }
