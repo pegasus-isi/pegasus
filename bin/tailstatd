@@ -664,11 +664,14 @@ sub process ($) {
 	    my ($event,$jobid,$condor) = ($1,$2,$3);
 	    add( $main::stamp, $jobid, $event, $condor );
 
-	} elsif ( /\d{2}\sRunning (PRE|POST) script of (?:Job|Node) ([^.]+)/ ) {
+	# change in regexec to account for . in the jobnames
+	#} elsif ( /\d{2}\sRunning (PRE|POST) script of (?:Job|Node) ([^.]+)/ ) {
+	 } elsif ( /\d{2}\sRunning (PRE|POST) script of (?:Job|Node) (.+)\.{3}/ ) {
 	    # pre scripts are not a regular Condor event
 	    # starting of scripts is not a regular Condor event
 	    my $script = uc($1);
 	    my $jobid = $2;
+	    #print ("[DEBUG]Script $script JobID $jobid\n");
 	    add( $main::stamp, $jobid, $script . '_SCRIPT_STARTED' );
 
 	} elsif ( /\d{2}\s(PRE|POST) Script of (?:Job|Node) (\S+)/ ) {
