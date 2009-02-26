@@ -525,7 +525,10 @@ foreach my $app ( qw(ploticus) ) {
     $app{$app} = find_exec($app) || die "ERROR: Unable to locate $app\n";
 }
 foreach my $app ( qw(convert) ) {
-    $app{$app} = find_exec($app) || warn "WARNING: convert not available. Only eps file will be generated.\n";
+    $app{$app} = find_exec($app);
+    if( ! defined $app{$app} ){
+	warn "WARNING: convert not available. Only eps file will be generated.\n";
+    }
 }
 
 my %submit = slurp_dagfile($dagfn);
