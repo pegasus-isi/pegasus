@@ -99,9 +99,12 @@ sub load_job_colors( $ ){
 	my ($job, $color);
 	while ( <CS> ) {
 	    chomp;
-	    ($job,$color)=split /\s+/, $_ ;	    
-	    #print("For job $job color coding is $color \n");
-	    $main::color{$job}=$color;
+	    #work on non empty strings
+	    if( $_ ){
+		($job,$color)=split /\s+/, $_ ;	    
+		#print("For job $job color coding is $color \n");
+		$main::color{$job}=$color;
+	    }
 	}
     }
     else{
@@ -226,6 +229,7 @@ sub slurp_jobstate($) {
     my (%result,@x);
     while ( <JOB> ) {
 	my ($stamp,$jobid,$state,$condorid,$site) = split;
+	#print( "[DEBUG] $stamp  $jobid $state $condorid $site\n" );
 	if ( $stamp !~ /^\d+$/ && $stamp > 0 ) {
 	    warn "Warning: Ignoring illegal input line $_";
 	    next;
@@ -517,8 +521,11 @@ END
 
 # sanity check: find apps first, and fail early
 my %app = ();
-foreach my $app ( qw(ploticus convert) ) {
+foreach my $app ( qw(ploticus) ) {
     $app{$app} = find_exec($app) || die "ERROR: Unable to locate $app\n";
+}
+foreach my $app ( qw(convert) ) {
+    $app{$app} = find_exec($app) || warn "WARNING: convert not available. Only eps file will be generated.\n";
 }
 
 my %submit = slurp_dagfile($dagfn);
@@ -626,9 +633,12 @@ for ( my $y=1; $y <= 2; ++$y ) {
     warn "# @arg\n";
     system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
 
-    @arg = ( $app{convert}, '-density', '96x96', $epsfn, $jpgfn );
-    warn "# @arg\n";
-    system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
+    #only convert to png if covert is available
+    if( $app{convert} ){
+	@arg = ( $app{convert}, '-density', '96x96', $epsfn, $jpgfn );
+	warn "# @arg\n";
+	system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
+    }
     unlink $cfn unless $nounlink;
 }
 
