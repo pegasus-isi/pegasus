@@ -362,6 +362,27 @@ sub processJobstateLog {
                     $jobsRef->{$job}->{'ksruntime'} += $line;
                 }
             }
+	    #for clustered jobs try to get seqexec progress at end of .out
+	    if( $job =~ /merge_/ ){
+		my $tail = `tail -n 1  $job.out.* 2>&1`;
+		chomp($tail);
+		print "tail is $tail\n";
+		if( index($tail, "[struct") == 0 ){
+      		     my $i1 = index($tail, "duration=");
+		     $tail = substr($tail, $i1 + 9);
+		     my $i2 = index($tail, ",");
+		     $tail=substr( $tail, 0, $i2);
+		     if ($tail =~ /^[\.0-9]*$/) {
+			 $jobsRef->{$job}->{'seqexec'} = $tail;
+			 $jobsRef->{$job}->{'seqexec-delay'} = sprintf( "%.2f", $tail - $jobsRef->{$job}->{'ksruntime'});
+			 print "Seqexec duration for $job is $jobsRef->{$job}->{'seqexec'}\n";
+		     }
+		}
+	    }
+	    else{
+		$jobsRef->{$job}->{'seqexec'} = "-";
+	        $jobsRef->{$job}->{'seqexec-delay'} = "-";
+	    }
         }
         if (defined $jobsRef->{$job}->{'POST_SCRIPT_TERMINATED'}) {
             if (!defined $jobsRef->{$job}->{'POST_SCRIPT_STARTED'}) {
@@ -428,18 +449,18 @@ sub writeJobs {
     my $jobsFile = "$outputDir/jobs";
     open(JOBS, ">$jobsFile") || die "Could not open $jobsFile\n";
     if ($longJobNames) {
-        print JOBS sprintf("#%-79s %20s %8s %8s %8s %8s %8s %8s %5s\n", "Job", "Site", "Kickstrt", "Post", "DAGMan", "Condor", "Res", "Runtime", "CQLen");
+        print JOBS sprintf("#%-79s %20s %8s %8s %8s %8s %8s %8s %5s %7s %13s\n", "Job", "Site", "Kickstrt", "Post", "DAGMan", "Condor", "Res", "Runtime", "CQLen", "Seqexec", "Seqexec-Delay");
     } else {
-        print JOBS sprintf("#%-39s %20s %8s %8s %8s %8s %8s %8s %5s\n", "Job", "Site", "Kickstart", "Post", "DAGMan", "Condor", "Resource", "Runtime", "CondorQLen");
+        print JOBS sprintf("#%-39s %20s %8s %8s %8s %8s %8s %8s %10s %7s %13s\n", "Job", "Site", "Kickstart", "Post", "DAGMan", "Condor", "Resource", "Runtime", "CondorQLen", "Seqexec", "Seqexec-Delay");
     }
     foreach my $job (sort keys %{$jobsRef}) {
         if (!defined($jobsRef->{$job}->{"site"})) {
             $jobsRef->{$job}->{"site"} = "local";
         }
         if ($longJobNames) {
-            print JOBS sprintf("%-80s %20s %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f % 5d\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'ksruntime'}, $jobsRef->{$job}->{'postscripttime'}, $jobsRef->{$job}->{'dagmanDelay'}, $jobsRef->{$job}->{'condorDelay'}, $jobsRef->{$job}->{'resourceDelay'}, $jobsRef->{$job}->{'runtime'}, $jobsRef->{$job}->{'condorQLength'});
+            print JOBS sprintf("%-80s %20s %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %5d %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'ksruntime'}, $jobsRef->{$job}->{'postscripttime'}, $jobsRef->{$job}->{'dagmanDelay'}, $jobsRef->{$job}->{'condorDelay'}, $jobsRef->{$job}->{'resourceDelay'}, $jobsRef->{$job}->{'runtime'}, $jobsRef->{$job}->{'condorQLength'}, $jobsRef->{$job}->{'seqexec'}, $jobsRef->{$job}->{'seqexec-delay'});
         } else {
-            print JOBS sprintf("%-40s %20s %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f % 5d\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'ksruntime'}, $jobsRef->{$job}->{'postscripttime'}, $jobsRef->{$job}->{'dagmanDelay'}, $jobsRef->{$job}->{'condorDelay'}, $jobsRef->{$job}->{'resourceDelay'}, $jobsRef->{$job}->{'runtime'}, $jobsRef->{$job}->{'condorQLength'});
+            print JOBS sprintf("%-40s %20s %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %5d %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'ksruntime'}, $jobsRef->{$job}->{'postscripttime'}, $jobsRef->{$job}->{'dagmanDelay'}, $jobsRef->{$job}->{'condorDelay'}, $jobsRef->{$job}->{'resourceDelay'}, $jobsRef->{$job}->{'runtime'}, $jobsRef->{$job}->{'condorQLength'}, $jobsRef->{$job}->{'seqexec'},$jobsRef->{$job}->{'seqexec-delay'});
         }
     }
     close(JOBS);
