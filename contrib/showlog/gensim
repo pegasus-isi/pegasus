@@ -375,7 +375,6 @@ sub processJobstateLog {
 		     if ($tail =~ /^[\.0-9]*$/) {
 			 $jobsRef->{$job}->{'seqexec'} = $tail;
 			 $jobsRef->{$job}->{'seqexec-delay'} = sprintf( "%.2f", $tail - $jobsRef->{$job}->{'ksruntime'});
-			 print "Seqexec duration for $job is $jobsRef->{$job}->{'seqexec'}\n";
 		     }
 		     else{
 			 #some problem with the parsing of .out files
