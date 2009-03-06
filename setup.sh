@@ -66,6 +66,17 @@ else
 fi
 export PERL5LIB
 
+if [ "X${PYTHONPATH}" = "X" ]; then
+    PYTHONPATH=$PEGASUS_HOME/lib/python
+else
+    x=$PEGASUS_HOME/lib/python
+    if ! echo $PYTHONPATH | egrepq "(^|:)$x($|:)" ; then
+	PYTHONPATH="$x:$PYTHONPATH"
+    fi
+    unset x
+fi
+export PYTHONPATH
+
 #if [ -d "$VDS_HOME/contrib/gstar" ]; then
 #    # add G* tools to environment
 #    GSTAR_LOCATION="$VDS_HOME/contrib/gstar"

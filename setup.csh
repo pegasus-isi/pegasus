@@ -63,6 +63,18 @@ else
     unset x
 endif
 
+if ( ! $?PYTHONPATH ) then
+    setenv PYTHONPATH "${PEGASUS_HOME}/lib/python"
+else
+    set x="${PEGASUS_HOME}/lib/python"
+    set y=`echo $PYTHONPATH | egrep '(^|:)'$x'($|:)' >>& /dev/null`
+    if ( $? != 0 ) then
+	setenv PYTHONPATH "${x}:${PYTHONPATH}"
+    endif
+    unset y
+    unset x
+endif
+
 #if ( -d "${PEGASUS_HOME}/contrib/gstar" ) then
 #    # add G* tools to environment
 #    setenv GSTAR_LOCATION "${VDS_HOME}/contrib/gstar"
