@@ -34,7 +34,8 @@ public class CondorVersion {
     /**
      * The condor version command to be executed.
      */
-    public static final String CONDOR_VERSION_COMMAND = "/opt/condor/7.1.0/bin/condor_version";
+    public static final String CONDOR_VERSION_COMMAND = "condor_version";
+    
     
      /**
       * Store the regular expressions necessary to parse the output of
@@ -44,10 +45,41 @@ public class CondorVersion {
     private static final String mRegexExpression =
                                      "\\$CondorVersion:\\s*([0-9][.][0-9][.][0-9])[a-zA-Z:0-9\\s]*\\$";
 
+
     /**
      * Stores compiled patterns at first use, quasi-Singleton.
      */
     private static Pattern mPattern = null;
+   
+    /**
+     * Converts a string into the corresponding integer value.
+     * 
+     * @param version
+     * 
+     * @return int value of the version, else -1 in case of null version 
+     *         or incorrect formatted string
+     */
+    public static int intValue( String version ){
+        int result = 0;
+        if( version == null ){
+            return -1;
+        }
+        
+        //split on .
+        try{
+            String[] subs = version.split( "\\." );
+            int index = subs.length;
+            for( int i = 0, y = subs.length - 1; y >= 0; y--,i++){
+                result += (int) (Math.pow(10, y) * (Integer.parseInt(subs[i])));
+            }
+        }
+        catch( NumberFormatException nfe ){
+            result = -1;
+        }
+        
+        return result;
+    }
+    
     
     /**
      * The default logger.
@@ -55,10 +87,32 @@ public class CondorVersion {
     private LogManager mLogger;
     
     /**
-     * The default constructor.
+     * Factory method to instantiate the class.
      */
-    public CondorVersion(){
-        mLogger =  LogManagerFactory.loadSingletonInstance();
+    public static CondorVersion getInstance( ){
+        return getInstance( null );
+    }
+    
+    /**
+     * Factory method to instantiate the class.
+     * 
+     * 
+     * @param logger   the logger object
+     */
+    public static CondorVersion getInstance( LogManager logger ){
+        if( logger == null ){
+            logger = LogManagerFactory.loadSingletonInstance();
+        }
+        return new CondorVersion( logger );
+    }
+    
+    /**
+     * The default constructor.
+     * 
+     * @param logger   the logger object
+     */
+    private CondorVersion( LogManager logger ){
+        mLogger = logger;
         if( mPattern == null ){
              mPattern = Pattern.compile( mRegexExpression );
          }
@@ -68,9 +122,19 @@ public class CondorVersion {
      * Returns the condor version parsed by executing the condor_version 
      * command. 
      * 
+     * @return the version number as int else -1 if unable to determine.
+     */
+    public int versionAsInt(){
+        return CondorVersion.intValue( version() );
+    }
+    
+    /**
+     * Returns the condor version parsed by executing the condor_version 
+     * command. 
+     * 
      * @return the version number as String else null if unable to determine.
      */
-    public String determineVersion(){
+    public String version(){
         String version = null;
         
         try{
@@ -166,19 +230,19 @@ public class CondorVersion {
             return mVersion;
         }
 
-        /**
-         * Resets the internal counters.
-         */
-        public void reset(){
-        }
+        
 
     }
     
     public static void main( String[] args ){
-        CondorVersion cv = new CondorVersion();
-        
         LogManager logger =  LogManagerFactory.loadSingletonInstance();
+        CondorVersion cv = CondorVersion.getInstance();
+        
         logger.logEventStart( "CondorVersion", "CondorVersion", "Version");
-        System.out.println( "Condor Version is " + cv.determineVersion() );
+        System.out.println( "Condor Version is " + cv.version() );
+        
+        System.out.println( CondorVersion.intValue( "7.1.2") ); 
+        System.out.println( CondorVersion.intValue( "7.1.5s" ) ); 
+        logger.logEventCompletion();
     }
 }

@@ -27,6 +27,9 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
+
+import edu.isi.pegasus.common.util.CondorVersion;
+
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
@@ -92,6 +95,12 @@ public class PDAX2MDAG implements Callback {
      * The prefix for the submit directory.
      */
     public static final String SUBMIT_DIRECTORY_PREFIX = "run";
+    
+    /**
+     * Predefined Constant for condor version 7.1.2
+     */
+    public static final int CONDOR_VERSION_7_1_2 = CondorVersion.intValue( "7.1.2" );
+            
 
 
     /**
@@ -252,6 +261,11 @@ public class PDAX2MDAG implements Callback {
     private String mDAGManKnobs;
 
     /**
+     * The int value of condor version.
+     */
+    private int mCondorVersion;
+    
+    /**
      * Bag of initialization objects.
      */
     //private PegasusBag mBag;
@@ -280,29 +294,20 @@ public class PDAX2MDAG implements Callback {
         mUser = mProps.getProperty( "user.name" ) ;
         if ( mUser == null ){ mUser = "user"; }
 
-
-        //initialize the transformation mapper
-//        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode() );
-
-        //intialize the bag of objects and load the site selector
-        //Moved to CPlanner Karan April 1, 2008
-        /*
-        mBag = new PegasusBag();
-        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
-        mBag.add( PegasusBag.PLANNER_OPTIONS, options );
-        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
-//        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-
-        mBag.add( PegasusBag.SITE_CATALOG, SiteFactory.loadInstance( properties, false ) );
-        */
-
         //the default gobbler callback always log to debug level
         mDefaultCallback =
                new DefaultStreamGobblerCallback(LogManager.DEBUG_MESSAGE_LEVEL);
 
         mDAGManKnobs = constructDAGManKnobs( properties );
+        
+        mCondorVersion = CondorVersion.getInstance( mLogger ).versionAsInt();
+        if( mCondorVersion == -1 ){
+            mLogger.log( "Unable to determine the version of condor " , LogManager.WARNING_MESSAGE_LEVEL );
+        }
+        else{
+            mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.INFO_MESSAGE_LEVEL );
+        }
+        
     }
 
 
@@ -764,9 +769,13 @@ public class PDAX2MDAG implements Callback {
 
         sb.append(" -f -l . -Debug 3").
            append(" -Lockfile ").append( getBasename( partition, ".dag.lock") ).
-           append(" -Dag ").append( getBasename( partition, ".dag")).
-           append(" -Condorlog ").append(getBasename( partition, ".log"));
-
+           append(" -Dag ").append( getBasename( partition, ".dag"));
+        
+        //specify condor log for condor version less than 7.1.2
+        if( mCondorVersion < PDAX2MDAG.CONDOR_VERSION_7_1_2 ){
+           sb.append(" -Condorlog ").append(getBasename( partition, ".log"));
+        }
+        
         //we append the Rescue DAG option only if old version
         //of Condor is used < 7.1.0.  To detect we check for a non
         //zero value of --rescue option to pegasus-plan

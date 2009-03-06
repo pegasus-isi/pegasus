@@ -41,6 +41,7 @@ import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
 import org.griphyn.cPlanner.code.generator.condor.style.CondorStyleFactory;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.CondorVersion;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.StreamGobblerCallback;
@@ -98,6 +99,12 @@ public class CondorGenerator extends Abstract {
      */
     public  static final String mSeparator =
         "######################################################################";
+    
+    
+    /**
+     * Predefined Constant for condor version 7.1.2
+     */
+    public static final int CONDOR_VERSION_7_1_2 = CondorVersion.intValue( "7.1.2" );
 
     /**
      * The namespace to use for condor dagman.
@@ -199,6 +206,10 @@ public class CondorGenerator extends Abstract {
      */
     protected boolean mInitializeGridStart;
 
+    /**
+     * The int value of condor version.
+     */
+    private int mCondorVersion;
 
     /**
      * The default constructor.
@@ -235,6 +246,17 @@ public class CondorGenerator extends Abstract {
 
         //instantiate and intialize the style factory
         mStyleFactory.initialize( mProps, mSiteStore );
+        
+        //determine the condor version
+        mCondorVersion = CondorVersion.getInstance( mLogger ).versionAsInt();
+        if( mCondorVersion == -1 ){
+            mLogger.log( "Unable to determine the version of condor " ,
+                          LogManager.WARNING_MESSAGE_LEVEL );
+        }
+        else{
+            mLogger.log( "Condor Version detected is " + mCondorVersion ,
+                         LogManager.INFO_MESSAGE_LEVEL );
+        }
     }
 
 
@@ -693,9 +715,13 @@ public class CondorGenerator extends Abstract {
 
         sb.append(" -f -l . -Debug 3").
            append(" -Lockfile ").append( getBasename( dagBasename, ".lock") ).
-           append(" -Dag ").append(  dagBasename ).
+           append(" -Dag ").append(  dagBasename );
            //append(" -Rescue ").append( getBasename( dagBasename, ".rescue")).
-           append(" -Condorlog ").append( getBasename( dagBasename, ".log"));
+        
+        //specify condor log for condor version less than 7.1.2
+        if( mCondorVersion < CondorGenerator.CONDOR_VERSION_7_1_2 ){
+           sb.append(" -Condorlog ").append( getBasename( dagBasename, ".log"));
+        }
 
        //for condor 7.1.0
        sb.append( " -AutoRescue 1 -DoRescueFrom 0 ");
