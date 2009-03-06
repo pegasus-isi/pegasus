@@ -105,6 +105,12 @@ public class CondorGenerator extends Abstract {
      * Predefined Constant for condor version 7.1.2
      */
     public static final int CONDOR_VERSION_7_1_2 = CondorVersion.intValue( "7.1.2" );
+    
+    
+    /**
+     * Predefined Constant for condor version 7.1.3
+     */
+    public static final int CONDOR_VERSION_7_1_3 = CondorVersion.intValue( "7.1.3" );
 
     /**
      * The namespace to use for condor dagman.
@@ -721,6 +727,12 @@ public class CondorGenerator extends Abstract {
         //specify condor log for condor version less than 7.1.2
         if( mCondorVersion < CondorGenerator.CONDOR_VERSION_7_1_2 ){
            sb.append(" -Condorlog ").append( getBasename( dagBasename, ".log"));
+        }
+        
+        //allow for version mismatch as after 7.1.3 condor does tight 
+        //checking on dag.condor.sub file and the condor version used
+        if( mCondorVersion >= CondorGenerator.CONDOR_VERSION_7_1_3 ){
+            sb.append( " -AllowVersionMismatch " );
         }
 
        //for condor 7.1.0

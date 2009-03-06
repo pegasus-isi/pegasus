@@ -101,7 +101,12 @@ public class PDAX2MDAG implements Callback {
      */
     public static final int CONDOR_VERSION_7_1_2 = CondorVersion.intValue( "7.1.2" );
             
-
+    
+    /**
+     * Predefined Constant for condor version 7.1.3
+     */
+    public static final int CONDOR_VERSION_7_1_3 = CondorVersion.intValue( "7.1.3" );
+    
 
     /**
      * The number of jobs into which each job in the partition graph is
@@ -776,6 +781,12 @@ public class PDAX2MDAG implements Callback {
            sb.append(" -Condorlog ").append(getBasename( partition, ".log"));
         }
         
+        //allow for version mismatch as after 7.1.3 condor does tight 
+        //checking on dag.condor.sub file and the condor version used
+        if( mCondorVersion >= PDAX2MDAG.CONDOR_VERSION_7_1_3 ){
+            sb.append( " -AllowVersionMismatch " );
+        }
+        
         //we append the Rescue DAG option only if old version
         //of Condor is used < 7.1.0.  To detect we check for a non
         //zero value of --rescue option to pegasus-plan
@@ -1391,11 +1402,11 @@ public class PDAX2MDAG implements Callback {
 
         //get all the values for the dagman knows
         int value;
-        for( int i = 0; i < this.DAGMAN_KNOBS.length; i++ ){
-            value = parseInt( properties.getProperty( this.DAGMAN_KNOBS[i][0] ) );
+        for( int i = 0; i < PDAX2MDAG.DAGMAN_KNOBS.length; i++ ){
+            value = parseInt( properties.getProperty( PDAX2MDAG.DAGMAN_KNOBS[i][0] ) );
             if ( value > 0 ){
                 //add the option
-                sb.append( this.DAGMAN_KNOBS[i][1] );
+                sb.append( PDAX2MDAG.DAGMAN_KNOBS[i][1] );
                 sb.append( value );
             }
         }
