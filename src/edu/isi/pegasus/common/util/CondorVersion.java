@@ -204,7 +204,6 @@ public class CondorVersion {
          */
         public CondorVersionCallback(  ){
             mVersion = null;
-            System.out.println( "Pattern is  " + CondorVersion.mRegexExpression );
         }
 
         /**
