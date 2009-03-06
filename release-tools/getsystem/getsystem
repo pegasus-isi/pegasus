@@ -112,7 +112,7 @@ sub getPlatform(){
     }
     elsif($short_os{$os} eq "macos") { # need something like 'ppc_macos_10.3' 
      # find if processor is 64 bit.
-        my $x64=`/usr/sbin/sysctl -a -n hw.cpu64bit_capable`;
+        my $x64=`/usr/sbin/sysctl -a -n hw.cpu64bit_capable 2>/dev/null`;
         my $vers = `/usr/bin/sw_vers -productVersion`;
 	chomp $vers;
 	$vers =~ s/(^\d+\.\d+).*/$1/;
