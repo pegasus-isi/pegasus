@@ -396,6 +396,10 @@
     <copy preservelastmodified="true" todir="${dist.lib}/perl">
       <fileset dir="lib/perl" includes="**/*.pm"/>
     </copy>
+    <mkdir dir="${dist.lib}/python"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/python">
+      <fileset dir="lib/python" includes="**/*.py"/>
+    </copy>
     <chmod perm="ugo+rx" type="file">
       <fileset dir="${dist.lib}" includes="*.jar"/>
     </chmod>
