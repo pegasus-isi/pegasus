@@ -255,7 +255,7 @@ public class CondorGenerator extends Abstract {
         }
         else{
             mLogger.log( "Condor Version detected is " + mCondorVersion ,
-                         LogManager.INFO_MESSAGE_LEVEL );
+                         LogManager.DEBUG_MESSAGE_LEVEL );
         }
     }
 

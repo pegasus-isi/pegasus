@@ -305,7 +305,7 @@ public class PDAX2MDAG implements Callback {
             mLogger.log( "Unable to determine the version of condor " , LogManager.WARNING_MESSAGE_LEVEL );
         }
         else{
-            mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.INFO_MESSAGE_LEVEL );
+            mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.DEBUG_MESSAGE_LEVEL );
         }
         
     }
