@@ -1345,6 +1345,9 @@ public class Job extends DAX implements Cloneable
       result.append(" type=\"")
       .append(LFN.typeString( f.getType() )).append('"');
 
+      if( f.getOptional() )
+        result.append( " optional=\"" ).append( f.getOptional() ).append( "\"" );
+                
       if ( f.getTemporary() != null )
 	result.append(" temporaryHint=\"")
 	  .append(quote(f.getTemporary(),true)).append('"');
