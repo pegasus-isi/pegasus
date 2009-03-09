@@ -230,7 +230,7 @@ class Profile:
 		xml.write(u'</profile>')
 		result = xml.getvalue()
 		xml.close()
-		return xml.getvalue()
+		return result
 		
 	def __str__(self):
 		return u'%s:%s = %s' % (self._namespace, self._key, self._value)
@@ -494,7 +494,7 @@ class Job:
 			for pro in self._profiles:
 				xml.write(indentation)
 				xml.write(indent)
-				xml.write(u'%s\n', pro.toXML())
+				xml.write(u'%s\n' % pro.toXML())
 		
 		# Stdin/xml/err
 		if self._stdin is not None:
@@ -603,6 +603,24 @@ class DAX:
 		self._filenames = []
 		self._lookup = {} # A lookup table for dependencies
 		self._dependencies = []
+
+	def getName(self):
+		return self._name
+
+	def setName(self,name):
+		self._name = name
+
+	def getCount(self):
+		return self._count
+
+	def setCount(self,count):
+		self._count = count
+
+	def getIndex(self):
+		return self._index
+
+	def setIndex(self,index):
+		self._index = index
 
 	def addJob(self,job):
 		"""Add a job to the list of jobs in the DAX"""
