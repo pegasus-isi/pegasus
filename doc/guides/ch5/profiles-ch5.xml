@@ -52,18 +52,18 @@
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">condor <emphasis>sets Condor configuration
-        parameters for the submit file. </emphasis></emphasis></para>
+        <para><emphasis role="bold">condor</emphasis> sets Condor
+        configuration parameters for the submit file.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">dagman <emphasis>introduces Condor DAGMan
-        configuration parameters.</emphasis></emphasis></para>
+        <para><emphasis role="bold">dagman</emphasis> introduces Condor DAGMan
+        configuration parameters.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">pegasus <emphasis>configures the behaviour
-        of various planner/mapper components.</emphasis></emphasis></para>
+        <para><emphasis role="bold">pegasus</emphasis> configures the
+        behaviour of various planner/mapper components.</para>
       </listitem>
     </itemizedlist>
 
@@ -693,8 +693,8 @@
   &lt;argument&gt;-a top -T10  -i &lt;filename file="voeckler.f.a"/&gt; 
  -o &lt;filename file="voeckler.f.b1"/&gt;
  &lt;filename file="voeckler.f.b2"/&gt;&lt;/argument&gt;
-  <emphasis role="bold">&lt;profile namespace="vds" key="walltime"&gt;2&lt;/profile&gt;
-  &lt;profile namespace="vds" key="diskspace"&gt;1&lt;/profile&gt;</emphasis>
+  <emphasis role="bold">&lt;profile namespace="pegasus" key="walltime"&gt;2&lt;/profile&gt;
+  &lt;profile namespace="pegasus" key="diskspace"&gt;1&lt;/profile&gt;</emphasis>
   …
 &lt;/job&gt;
 </programlisting>
@@ -725,7 +725,7 @@
       pool element. If the element ordering is wrong, the XML parser will
       produce errors and warnings:</para>
 
-      <programlisting>&lt;pool handle="isi_condor" gridlaunch="/home/shared/vds/bin/kickstart"&gt;
+      <programlisting>&lt;pool handle="isi_condor" gridlaunch="/home/shared/pegasus/bin/kickstart"&gt;
   <emphasis role="bold">&lt;profile namespace="env"
    key="GLOBUS_LOCATION"&gt;/home/shared/globus/&lt;/profile&gt;
   &lt;profile namespace="env"
@@ -744,7 +744,7 @@
       Profiles can appear anywhere:</para>
 
       <programlisting>pool isi_condor {
-  gridlaunch "/home/shared/vds/bin/kickstart"
+  gridlaunch "/home/shared/pegasus/bin/kickstart"
   <emphasis role="bold">profile env "GLOBUS_LOCATION" "/home/shared/globus"
   profile env "LD_LIBRARY_PATH" "/home/shared/globus/lib"</emphasis>
   …
@@ -866,7 +866,7 @@
 ######################################################################
 globusrsl = (jobtype=single)
 <emphasis role="bold">environment=GLOBUS_LOCATION=/shared/globus;LD_LIBRARY_PATH=/shared/globus/lib;</emphasis>
-executable = /shared/software/linux/vds/default/bin/kickstart
+executable = /shared/software/linux/pegasus/default/bin/kickstart
 globusscheduler = columbus.isi.edu/jobmanager-condor
 remote_initialdir = /shared/CONDOR/workdir/isi_hourglass
 universe = globus
@@ -901,7 +901,7 @@ queue
 # SUBMIT FILE NAME : findrange_ID000002.sub
 ######################################################################
 <emphasis role="bold">globusrsl = (jobtype=single)(queue=fast)(project=nvo)</emphasis>
-executable = /shared/software/linux/vds/default/bin/kickstart
+executable = /shared/software/linux/pegasus/default/bin/kickstart
 globusscheduler = columbus.isi.edu/jobmanager-condor
 remote_initialdir = /shared/CONDOR/workdir/isi_hourglass
 universe = globus
