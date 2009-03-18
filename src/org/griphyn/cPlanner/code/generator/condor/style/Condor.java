@@ -94,7 +94,7 @@ public class Condor extends Abstract {
         String universe = job.condorVariables.containsKey( this.UNIVERSE_KEY )?
                               (String)job.condorVariables.get( this.UNIVERSE_KEY):
                               //default is Scheduler universe for condor style
-                              Condor.SCHEDULER_UNIVERSE;
+                              Condor.LOCAL_UNIVERSE;
 
 
         //set the universe for the job
@@ -148,17 +148,39 @@ public class Condor extends Abstract {
 // Karan Vahi January 16,2008
 //                job.condorVariables.construct("universe",Condor.SCHEDULER_UNIVERSE);
 
+                String ipFiles = job.condorVariables.getIPFilesForTransfer();
+                
                 //check if the job can be run in the workdir or not
                 //and whether intial dir is populated before hand or not.
                 if(job.runInWorkDirectory() && !job.condorVariables.containsKey("initialdir")){
                     //for local jobs we need initialdir
                     //instead of remote_initialdir
                     job.condorVariables.construct("initialdir", workdir);
+                    
+                    if( ipFiles !=  null ){
+                        //log a warning message
+                        StringBuffer sb = new StringBuffer();
+                        sb.append( "Condor File Transfer Mechanism does not work in universe " ).
+                           append( universe ).append( "IP Files " ).append( ipFiles ).
+                           append( " for job " ).append( job.getID() ).append( " wont be transferred" );
+                        mLogger.log( sb.toString(), LogManager.WARNING_MESSAGE_LEVEL );
+                        job.condorVariables.removeIPFilesForTransfer();
+                    }
                 }
+                
                 // Let Condor figure out the current working directory on submit host
                 // bwSubmit.println("initialdir = " + workdir);
-
-
+                
+                //check explicitly for any input files transferred via condor
+                //file transfer mechanism
+                if( ipFiles != null ){
+                    //log a debug message before removing the files
+                    StringBuffer sb = new StringBuffer();
+                    sb.append( "Removing the following ip files from condor file tx for job " ).
+                       append( job.getID() ).append( " " ).append( ipFiles );
+                    mLogger.log(  sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL ); 
+                    job.condorVariables.removeIPFilesForTransfer();
+                }
 //           }
 //           else{
 //               //invalid state. throw an exception??
