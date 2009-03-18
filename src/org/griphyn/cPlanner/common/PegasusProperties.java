@@ -1970,7 +1970,7 @@ public class PegasusProperties {
      *
      * Referred to by the "pegasus.clusterer.job.aggregator.seqexec.log" property.
      *
-     * @return the value specified in the properties file, else true
+     * @return the value specified in the properties file, else false
      *
      */
     public boolean logJobAggregatorProgress(){
