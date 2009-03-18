@@ -175,7 +175,6 @@ public class CondorVersion {
         catch(IOException ioe){
             mLogger.log("IOException while determining condor_version ", ioe,
                         LogManager.ERROR_MESSAGE_LEVEL);
-            ioe.printStackTrace();
         }
         catch( InterruptedException ie){
             //ignore
