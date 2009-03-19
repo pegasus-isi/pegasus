@@ -17,6 +17,17 @@
 
 #include <sys/types.h>
 
+#ifndef ARG_MAX
+#ifdef POSIX_ARG_MAX
+#define ARG_MAX (POSIX_ARG_MAX)
+#else
+#define ARG_MAX (4096)
+#endif
+#endif
+
+
+
+
 extern
 int
 append_arg( char* data, char*** arg, size_t* index, size_t* capacity );
