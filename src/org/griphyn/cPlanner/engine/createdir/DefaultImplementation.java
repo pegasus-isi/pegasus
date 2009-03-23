@@ -210,11 +210,8 @@ public class DefaultImplementation implements Implementation {
             argString = "--create --dir " +
                         mSiteStore.getWorkDirectory( site );
             
-            //set transfer_executable only if create dir
-            //is for non local site
-            if( !site.equals( "local") ){
-                newJob.condorVariables.setExecutableForTransfer();
-            }
+            newJob.condorVariables.setExecutableForTransfer();
+            
         }
         else{
             execPath = entry.getPhysicalTransformation();

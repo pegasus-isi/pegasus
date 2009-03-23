@@ -58,6 +58,9 @@ public class Condor extends Abstract {
     public static final String PARALLEL_UNIVERSE =
                          org.griphyn.cPlanner.namespace.Condor.PARALLEL_UNIVERSE;
 
+    
+    public static final String TRANSFER_EXECUTABLE_KEY =
+                         org.griphyn.cPlanner.namespace.Condor.TRANSFER_EXECUTABLE_KEY;
 
     //
 
@@ -180,6 +183,14 @@ public class Condor extends Abstract {
                        append( job.getID() ).append( " " ).append( ipFiles );
                     mLogger.log(  sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL ); 
                     job.condorVariables.removeIPFilesForTransfer();
+                }
+                
+                //check for transfer_executable and remove if set
+                //transfer_executable does not work in local/scheduler universe
+                if( job.condorVariables.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
+                    job.condorVariables.removeKey( Condor.TRANSFER_EXECUTABLE_KEY );
+                    job.condorVariables.removeKey( "should_transfer_files" );
+                    job.condorVariables.removeKey( "when_to_transfer_output" );
                 }
 //           }
 //           else{

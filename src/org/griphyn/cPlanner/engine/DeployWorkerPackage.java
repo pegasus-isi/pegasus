@@ -875,7 +875,10 @@ public class DeployWorkerPackage
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = argString;
-        newJob.jobClass = SubInfo.STAGE_IN_JOB;
+        //hack for Pegasus bug 41. for local site the untar job
+        //needs to have initialdir specified. that is only set for 
+        //compute jobs.
+        newJob.jobClass = SubInfo.COMPUTE_JOB;
         newJob.jobID = jobName;
 
         //the profile information from the pool catalog needs to be
