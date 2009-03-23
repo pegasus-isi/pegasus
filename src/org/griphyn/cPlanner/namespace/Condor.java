@@ -86,6 +86,11 @@ public class Condor extends Namespace{
      */
     public static final String TRANSFER_OP_FILES_KEY = "transfer_output_files";
 
+    /**
+     * The name of the key that specifies transfer of executable
+     */
+    public static final String TRANSFER_EXECUTABLE_KEY = "transfer_executable";
+
 
     /**
      * The name of the key that specifies the priority for the job.
@@ -186,7 +191,9 @@ public class Condor extends Namespace{
         Object obj = this.removeKey( Condor.TRANSFER_IP_FILES_KEY );
         if( obj != null ){
             //delete stf and wto only if no output files tx
-            if( !this.containsKey( Condor.TRANSFER_OP_FILES_KEY ) ){
+            //and transfer_executable is not set
+            if( !this.containsKey( Condor.TRANSFER_OP_FILES_KEY ) &&
+                !this.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
                 this.removeKey( "should_transfer_files" );
                 this.removeKey( "when_to_transfer_output" );
             }
@@ -438,7 +445,7 @@ public class Condor extends Namespace{
                 break;
 
             case 't':
-                if (key.compareTo("transfer_executable") == 0 ||
+                if (key.compareTo(TRANSFER_EXECUTABLE_KEY) == 0 ||
                     key.compareTo(TRANSFER_IP_FILES_KEY) == 0){
                     res = VALID_KEY;
                 }
