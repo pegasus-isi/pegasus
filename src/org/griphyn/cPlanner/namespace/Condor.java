@@ -201,6 +201,17 @@ public class Condor extends Namespace{
     }
     
     /**
+     * Adds the executable for transfer via the condor file transfer mechanism.
+     *
+     * 
+     */
+    public void setExecutableForTransfer( ){
+        this.construct( Condor.TRANSFER_EXECUTABLE_KEY, "true" );
+        this.construct("should_transfer_files","YES");
+        this.construct("when_to_transfer_output","ON_EXIT");
+    }
+    
+    /**
      * Adds an input file that is to be transferred from the submit host via
      * the Condor File Transfer Mechanism. It also sets the associated condor
      * keys like when_to_transfer and should_transfer_files.

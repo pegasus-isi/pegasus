@@ -209,7 +209,7 @@ public class DefaultImplementation implements Implementation {
             execPath = sb.toString();
             argString = "--create --dir " +
                         mSiteStore.getWorkDirectory( site );
-            newJob.condorVariables.construct( "transfer_executable", "true" );
+            newJob.condorVariables.setExecutableForTransfer();
         }
         else{
             execPath = entry.getPhysicalTransformation();
