@@ -96,16 +96,7 @@ public class PDAX2MDAG implements Callback {
      */
     public static final String SUBMIT_DIRECTORY_PREFIX = "run";
     
-    /**
-     * Predefined Constant for condor version 7.1.2
-     */
-    public static final int CONDOR_VERSION_7_1_2 = CondorVersion.intValue( "7.1.2" );
-            
     
-    /**
-     * Predefined Constant for condor version 7.1.3
-     */
-    public static final int CONDOR_VERSION_7_1_3 = CondorVersion.intValue( "7.1.3" );
     
 
     /**
@@ -266,9 +257,9 @@ public class PDAX2MDAG implements Callback {
     private String mDAGManKnobs;
 
     /**
-     * The int value of condor version.
+     * The long value of condor version.
      */
-    private int mCondorVersion;
+    private long mCondorVersion;
     
     /**
      * Bag of initialization objects.
@@ -305,7 +296,7 @@ public class PDAX2MDAG implements Callback {
 
         mDAGManKnobs = constructDAGManKnobs( properties );
         
-        mCondorVersion = CondorVersion.getInstance( mLogger ).versionAsInt();
+        mCondorVersion = CondorVersion.getInstance( mLogger ).numericValue();
         if( mCondorVersion == -1 ){
             mLogger.log( "Unable to determine the version of condor " , LogManager.WARNING_MESSAGE_LEVEL );
         }
@@ -777,13 +768,13 @@ public class PDAX2MDAG implements Callback {
            append(" -Dag ").append( getBasename( partition, ".dag"));
         
         //specify condor log for condor version less than 7.1.2
-        if( mCondorVersion < PDAX2MDAG.CONDOR_VERSION_7_1_2 ){
+        if( mCondorVersion < CondorVersion.v_7_1_2 ){
            sb.append(" -Condorlog ").append(getBasename( partition, ".log"));
         }
         
         //allow for version mismatch as after 7.1.3 condor does tight 
         //checking on dag.condor.sub file and the condor version used
-        if( mCondorVersion >= PDAX2MDAG.CONDOR_VERSION_7_1_3 ){
+        if( mCondorVersion >= CondorVersion.v_7_1_3 ){
             sb.append( " -AllowVersionMismatch " );
         }
         
@@ -791,7 +782,9 @@ public class PDAX2MDAG implements Callback {
         //of Condor is used < 7.1.0.  To detect we check for a non
         //zero value of --rescue option to pegasus-plan
         //Karan June 27, 2007
-        if( mPOptions.getNumberOfRescueTries() > 0 ){            
+        mLogger.log( "Number of Resuce retries " + mPOptions.getNumberOfRescueTries() ,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        if( mCondorVersion >= CondorVersion.v_7_1_0 || mPOptions.getNumberOfRescueTries() > 0 ){            
             mLogger.log( "Constructing arguments to dagman in 7.1.0 and later style",
                          LogManager.DEBUG_MESSAGE_LEVEL );
             sb.append( " -AutoRescue 1 -DoRescueFrom 0 ");

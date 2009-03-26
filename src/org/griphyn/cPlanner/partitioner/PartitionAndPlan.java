@@ -130,6 +130,9 @@ public class PartitionAndPlan{
      */
     public Collection<File> doPartitionAndPlan( String arguments ){
         String [] args = arguments.split( " " );
+        mLogger.log( "Arguments passed to Partition and Plan are " + arguments,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        
         //convert the args to pegasus-plan options
         PlannerOptions options = new CPlanner().parseCommandLineArguments( args, false );
 

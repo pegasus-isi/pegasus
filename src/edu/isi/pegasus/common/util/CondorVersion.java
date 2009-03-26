@@ -32,6 +32,34 @@ import org.griphyn.cPlanner.common.StreamGobblerCallback;
 public class CondorVersion {
 
     /**
+     * Predefined Constant for condor version 7.1.0
+     */
+    public static final long v_7_1_0 = CondorVersion.numericValue( "7.1.0" );
+            
+    
+    /**
+     * Predefined Constant for condor version 7.1.2
+     */
+    public static final long v_7_1_2 = CondorVersion.numericValue( "7.1.2" );
+            
+    
+    /**
+     * Predefined Constant for condor version 7.1.3
+     */
+    public static final long v_7_1_3 = CondorVersion.numericValue( "7.1.3" );
+    
+    /**
+     * The maximum number of components version can have. MAJOR, MINOR, PATCH
+     */
+    private static final  int MAX_NUMBER_OF_VERSION_COMPONENTS = 3;
+    
+    /**
+     * The maximum number of digits each component of version can have.
+     */
+    private static final  int MAX_VERSION_PRECISION = 2;
+    
+    
+    /**
      * The condor version command to be executed.
      */
     public static final String CONDOR_VERSION_COMMAND = "condor_version";
@@ -58,6 +86,8 @@ public class CondorVersion {
      * 
      * @return int value of the version, else -1 in case of null version 
      *         or incorrect formatted string
+     * 
+     * @deprecated
      */
     public static int intValue( String version ){
         int result = 0;
@@ -80,6 +110,72 @@ public class CondorVersion {
         return result;
     }
     
+    /**
+     * Converts a string into the corresponding numeric value.
+     * 
+     * @param version in form of major.minor.patch. You can opt to omit the 
+     *                minor and patch versions if you want
+     * 
+     * @return float value of the version, else -1 in case of null version 
+     *         or incorrect formatted string
+     */
+    public static long numericValue( String version ){
+        long result = 0;
+        if( version == null ){
+            return -1;
+        }
+        
+        //we are converting to XX.XX.XX 
+        //add extra padding that is leading zero if only one digit
+        char[] arr = new char[6];
+        
+        //split on .
+        try{
+            String[] subs = version.split( "\\." );
+            int y = subs.length;
+            if ( y > CondorVersion.MAX_NUMBER_OF_VERSION_COMPONENTS ){
+                throw new IllegalArgumentException( 
+                        "Only version numbers with max two dots are accepted i.e ( MAJOR.MINOR.PATCH ) " + version );
+            }
+            
+            int i = 0;
+           
+                //for each sub convert to a two digit form
+                for( int z = 0; z < y; z++ ){
+                    
+                    //compute the sub length
+                    int len = subs[z].length();
+                    if( len > CondorVersion.MAX_VERSION_PRECISION ){
+                        throw new IllegalArgumentException( "Only two digit precision is allowed in version numbers "  + version);
+                    }
+                    
+                    //add leading zeros if required
+                    for ( int d = CondorVersion.MAX_VERSION_PRECISION - len; d > 0; d--){
+                        arr[i++] = '0';
+                    }
+                    
+                    //copy into arr the sub[z]
+                    for( int d = 0; d < len; d++){
+                        char ch = subs[z].charAt( d );
+                        if( !Character.isDigit(ch) ){
+                            throw new IllegalArgumentException( "Non digit specified in version "  + version);
+                        }
+                        arr[i++] = ch;
+                    }
+                }
+            
+            //add trailing zeroes if required
+            while( i < 6 ){  
+                arr[i++] = '0';
+            }
+            
+        }
+        catch( NumberFormatException nfe ){
+            result = -1;
+        }
+        
+        return Long.parseLong( new String(arr) );
+    }
     
     /**
      * The default logger.
@@ -124,8 +220,16 @@ public class CondorVersion {
      * 
      * @return the version number as int else -1 if unable to determine.
      */
-    public int versionAsInt(){
-        return CondorVersion.intValue( version() );
+    public long numericValue(){
+        long result = -1;
+        try{
+            result = CondorVersion.numericValue( version() );
+        }
+        catch( Exception e ){
+            mLogger.log("Exception while parsing condor_version ", e,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+        }
+        return result;
     }
     
     /**
@@ -239,8 +343,12 @@ public class CondorVersion {
         logger.logEventStart( "CondorVersion", "CondorVersion", "Version");
         System.out.println( "Condor Version is " + cv.version() );
         
-        System.out.println( CondorVersion.intValue( "7.1.2") ); 
-        System.out.println( CondorVersion.intValue( "7.1.5s" ) ); 
+        System.out.println( "10.0.0 is " + CondorVersion.numericValue( "10.0.0") );
+        System.out.println( "7.1.2 is " + CondorVersion.numericValue( "7.1.2") );
+        System.out.println( "7.1.18 is " + CondorVersion.numericValue( "7.1.18" ) ); 
+        System.out.println( "7.1.19 is " + CondorVersion.numericValue( "7.1.19" ) ); 
+        System.out.println( "6.99.9 is " + CondorVersion.numericValue( "6.99.9" ) ); 
+        System.out.println( "7 is " + CondorVersion.numericValue( "7.2.2s" ) ); 
         logger.logEventCompletion();
     }
 }

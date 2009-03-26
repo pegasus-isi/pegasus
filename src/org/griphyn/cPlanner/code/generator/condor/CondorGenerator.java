@@ -23,8 +23,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.PCRelation;
-import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
@@ -44,7 +42,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CondorVersion;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.StreamGobbler;
-import org.griphyn.cPlanner.common.StreamGobblerCallback;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
 
 import org.griphyn.cPlanner.namespace.Condor;
@@ -54,7 +51,6 @@ import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.partitioner.PartitionAndPlan;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
@@ -101,16 +97,7 @@ public class CondorGenerator extends Abstract {
         "######################################################################";
     
     
-    /**
-     * Predefined Constant for condor version 7.1.2
-     */
-    public static final int CONDOR_VERSION_7_1_2 = CondorVersion.intValue( "7.1.2" );
     
-    
-    /**
-     * Predefined Constant for condor version 7.1.3
-     */
-    public static final int CONDOR_VERSION_7_1_3 = CondorVersion.intValue( "7.1.3" );
 
     /**
      * The namespace to use for condor dagman.
@@ -213,9 +200,9 @@ public class CondorGenerator extends Abstract {
     protected boolean mInitializeGridStart;
 
     /**
-     * The int value of condor version.
+     * The long value of condor version.
      */
-    private int mCondorVersion;
+    private long mCondorVersion;
 
     /**
      * The default constructor.
@@ -254,7 +241,7 @@ public class CondorGenerator extends Abstract {
         mStyleFactory.initialize( mProps, mSiteStore );
         
         //determine the condor version
-        mCondorVersion = CondorVersion.getInstance( mLogger ).versionAsInt();
+        mCondorVersion = CondorVersion.getInstance( mLogger ).numericValue();
         if( mCondorVersion == -1 ){
             mLogger.log( "Unable to determine the version of condor " ,
                           LogManager.WARNING_MESSAGE_LEVEL );
@@ -725,17 +712,17 @@ public class CondorGenerator extends Abstract {
            //append(" -Rescue ").append( getBasename( dagBasename, ".rescue")).
         
         //specify condor log for condor version less than 7.1.2
-        if( mCondorVersion < CondorGenerator.CONDOR_VERSION_7_1_2 ){
+        if( mCondorVersion < CondorVersion.v_7_1_2 ){
            sb.append(" -Condorlog ").append( getBasename( dagBasename, ".log"));
         }
         
         //allow for version mismatch as after 7.1.3 condor does tight 
         //checking on dag.condor.sub file and the condor version used
-        if( mCondorVersion >= CondorGenerator.CONDOR_VERSION_7_1_3 ){
+        if( mCondorVersion >= CondorVersion.v_7_1_3 ){
             sb.append( " -AllowVersionMismatch " );
         }
 
-       //for condor 7.1.0
+        //for condor 7.1.0 
        sb.append( " -AutoRescue 1 -DoRescueFrom 0 ");
         
        //pass any dagman knobs that were specified in properties file
