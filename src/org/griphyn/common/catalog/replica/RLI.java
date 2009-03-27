@@ -104,12 +104,6 @@ public class RLI implements ReplicaCatalog {
     public static final String SITE_ATTRIBUTE = "pool";
 
     /**
-     * The undefined pool attribute value. The pool attribute is assigned this
-     * value if the pfn queried does not have a pool associated with it.
-     */
-    public static final String UNDEFINED_SITE = "UNDEFINED_POOL";
-
-    /**
      * The key that is used to get hold of the url from the properties object.
      */
     public static final String URL_KEY = "url";
@@ -257,6 +251,9 @@ public class RLI implements ReplicaCatalog {
         //try to see if a proxy cert has been specified or not
         String proxy = props.getProperty(PROXY_KEY);
         mConnectProps = props;//??
+        
+        mLogger.log( "[RLI-RC] Connection properties passed are " + props,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
 
         mLRCIgnoreList   = this.getRLSLRCIgnoreURLs( props );
         mLRCRestrictList = this.getRLSLRCRestrictURLs( props );

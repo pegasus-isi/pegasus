@@ -17,11 +17,13 @@
 package org.griphyn.common.catalog.replica;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
+
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 import org.griphyn.common.catalog.CatalogException;
 
-import edu.isi.pegasus.common.logging.LogManager;
+import org.griphyn.common.util.VDSProperties;
 
 import org.globus.replica.rls.RLSClient;
 import org.globus.replica.rls.RLSException;
@@ -41,9 +43,7 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.Iterator;
-import java.util.TreeMap;
 
 /**
  * This class implements the VDS replica catalog interface on top of the
@@ -82,11 +82,18 @@ public class LRC implements ReplicaCatalog {
      */
     public static final String LRC_TIMEOUT_KEY = "lrc.timeout";
 
+    /**
+     * The properties key that allow us to associate a site with a LRC URL,
+     * and hence providing a value for the SITE_ATTRIBUTE. 
+     * User will specify lrc.site.isi_viz rls://isi.edu  to associate
+     * site isi_viz with rls://isi.edu
+     */
+    public static final String LRC_SITE_TO_LRC_URL_KEY = "lrc.site.";
 
     /**
      * The attribute in RLS that maps to a site handle.
      */
-    public static final String SITE_ATTRIBUTE = "pool";
+    public static final String SITE_ATTRIBUTE = ReplicaCatalogEntry.RESOURCE_HANDLE;
 
     /**
      * The undefined pool attribute value. The pool attribute is assigned this
@@ -147,6 +154,11 @@ public class LRC implements ReplicaCatalog {
      * The timeout in seconds while querying to the LRC.
      */
     private int mTimeout;
+    
+    /**
+     * The default site attribute to be associated with the results.
+     */
+    private String mDefaultSiteAttribute;
 
     /**
      * The default constructor, that creates an object which is not linked with
@@ -158,8 +170,8 @@ public class LRC implements ReplicaCatalog {
         mRLS = null;
         mLRC = null;
         mLogger =  LogManagerFactory.loadSingletonInstance();
-        mBatchSize = this.RLS_BULK_QUERY_SIZE;
-        mTimeout   = Integer.parseInt(this.DEFAULT_LRC_TIMEOUT);
+        mBatchSize = LRC.RLS_BULK_QUERY_SIZE;
+        mTimeout   = Integer.parseInt(LRC.DEFAULT_LRC_TIMEOUT);
     }
 
     /**
@@ -188,7 +200,23 @@ public class LRC implements ReplicaCatalog {
 
         //set the batch size for querie
         setBatchSize(props);
-
+        
+        //stripe out the properties that assoicate site handle to lrc url
+        Properties site2LRC = VDSProperties.matchingSubset( props, LRC.LRC_SITE_TO_LRC_URL_KEY, false);
+        //traverse through the properties to figure out
+        //the default site attribute for the URL
+        for( Iterator it = site2LRC.entrySet().iterator(); it.hasNext(); ){
+            Map.Entry<String,String> entry = (Map.Entry<String,String>)it.next();
+            if( entry.getValue().equalsIgnoreCase( mLRCURL ) ){
+                mDefaultSiteAttribute = entry.getKey();
+            }
+        }
+        
+        if( mDefaultSiteAttribute != null ){
+            mLogger.log( "Default Site attribute is " + mDefaultSiteAttribute,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        
         return connect(mLRCURL, proxy);
     }
 
@@ -1888,10 +1916,56 @@ public class LRC implements ReplicaCatalog {
     private String getSiteHandle(RLSClient.LRC lrc, String pfn) {
         String poolAttr = getAttribute(lrc, pfn, SITE_ATTRIBUTE);
         return (poolAttr == null) ?
-            UNDEFINED_SITE :
+            defaultResourceHandle() :
             poolAttr;
     }
 
+    
+    
+    /**
+     * Returns the default value that is to be assigned to site handle
+     * for a replica catalog entry.
+     * 
+     * @return default site handle
+     */
+    private String defaultResourceHandle(){
+        return ( this.mDefaultSiteAttribute == null ) ?
+                 LRC.UNDEFINED_SITE:
+                 this.mDefaultSiteAttribute;
+    }
+    
+    /**
+     * Sets the  resource handle in an attribute map.
+     * The resource handle is set to the default site handle if the map
+     * does not contain the site attribute key.
+     * 
+     * @param m the attribute map.
+     * 
+     * @see #defaultResourceHandle() 
+     */
+    private void setResourceHandle( Map<String,String> m ){
+        if( !m.containsKey( LRC.SITE_ATTRIBUTE ) ){
+            //populate the default site handle
+            m.put( LRC.SITE_ATTRIBUTE, defaultResourceHandle() );
+        }
+    }
+    
+    /**
+     * Sets the  resource handle in an attribute map.
+     * The resource handle is set to the default site handle if the map
+     * does not contain the site attribute key.
+     * 
+     * @param rce   the <code>ReplicaCatalogEntry</code>
+     * 
+     * @see #defaultResourceHandle() 
+     */
+    private void setResourceHandle( ReplicaCatalogEntry rce ){
+        if( ! rce.hasAttribute( LRC.SITE_ATTRIBUTE ) ){
+            //populate the default site handle
+            rce.setResourceHandle( defaultResourceHandle() );
+        }
+    }
+    
     /**
      * Retrieves from the lrc, associated with this instance all the
      * attributes associated with the <code>pfn</code> in a map. All the
@@ -2047,6 +2121,10 @@ public class LRC implements ReplicaCatalog {
                 result.put(prev, l);
                 l = new ArrayList();
             }
+            
+            //set a site handle if not already set
+            setResourceHandle( entry );
+            
             l.add(entry);
             //if this was the last one push it in result
             if(!it.hasNext()){
@@ -2089,6 +2167,10 @@ public class LRC implements ReplicaCatalog {
                 mLogMsg = "getAttributes(RLSClient.LRC,String)";
                 log(mLogMsg, e,LogManager.ERROR_MESSAGE_LEVEL);
             }
+            
+            //associate a default value if required.
+            setResourceHandle( m );
+            
             return m;
         }
 
@@ -2096,9 +2178,17 @@ public class LRC implements ReplicaCatalog {
         //the attributes in the map
         for (Iterator it = attrList.iterator(); it.hasNext(); ) {
             att = (RLSAttribute) it.next();
-            m.put(att.name, att.GetStrVal());
+            //the list can contain a null attribute key
+            //we dont want that.
+            if( att.name != null ){
+                m.put(att.name, att.GetStrVal());
+            }
         }
 
+        //populate default site handle if
+        //site attribute is not specified
+        setResourceHandle( m );
+        
         return m;
     }
 
