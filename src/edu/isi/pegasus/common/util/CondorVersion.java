@@ -62,7 +62,7 @@ public class CondorVersion {
     /**
      * The condor version command to be executed.
      */
-    public static final String CONDOR_VERSION_COMMAND = "condor_version";
+    public static final String CONDOR_VERSION_COMMAND = "/opt/condor/7.1.0/bin/condor_version";
     
     
      /**
@@ -71,7 +71,7 @@ public class CondorVersion {
       * e.g. $CondorVersion: 7.1.0 Apr  1 2008 BuildID: 80895 
       */
     private static final String mRegexExpression =
-                                     "\\$CondorVersion:\\s*([0-9][.][0-9][.][0-9])[a-zA-Z:0-9\\s]*\\$";
+                                     "\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[a-zA-Z:0-9\\s]*\\$";
 
 
     /**
@@ -284,6 +284,7 @@ public class CondorVersion {
             //ignore
         }
         
+        mLogger.log( "Condor Version as string " + version, LogManager.DEBUG_MESSAGE_LEVEL );
         return version;
     }
     
