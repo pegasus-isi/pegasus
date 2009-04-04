@@ -72,6 +72,7 @@ import java.util.regex.Pattern;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import org.griphyn.cPlanner.namespace.Condor;
 
 /**
  * This callback ends up creating the megadag that contains the smaller dags
@@ -860,6 +861,10 @@ public class PDAX2MDAG implements Callback {
        job.vdsNS.construct( VDS.GRIDSTART_KEY,
                             GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
+       //the job needs to be explicitly launched in 
+       //scheduler universe instead of local universe
+       job.condorVariables.construct( Condor.UNIVERSE_KEY, Condor.SCHEDULER_UNIVERSE );
+       
        return job;
     }
 
