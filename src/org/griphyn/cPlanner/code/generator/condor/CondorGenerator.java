@@ -756,6 +756,10 @@ public class CondorGenerator extends Abstract {
 //                                     dagName + "_" + dagIndex + ".log");
 
 
+       //the job needs to be explicitly launched in 
+       //scheduler universe instead of local universe
+       job.condorVariables.construct( Condor.UNIVERSE_KEY, Condor.SCHEDULER_UNIVERSE );
+       
        //incorporate profiles from the transformation catalog
        //and properties for the time being. Not from the site catalog.
 
@@ -775,9 +779,7 @@ public class CondorGenerator extends Abstract {
        job.vdsNS.construct( VDS.GRIDSTART_KEY,
                             GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
-       //the job needs to be explicitly launched in 
-       //scheduler universe instead of local universe
-       job.condorVariables.construct( Condor.UNIVERSE_KEY, Condor.SCHEDULER_UNIVERSE );
+       
        
        return job;
     }
