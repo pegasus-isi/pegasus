@@ -140,6 +140,11 @@ public class PegasusProperties {
     public static final String ALL_TRANSFER_PRIORITY_PROPERTY =
                                                       "pegasus.transfer.*.priority";
 
+    
+    /**
+     * An enum defining The scope for cleanup algorithm
+     */
+    public enum CLEANUP_SCOPE{ fullahead, deferred };
 
 
     /**
@@ -661,6 +666,34 @@ public class PegasusProperties {
         
         return mProps.getProperty( "pegasus.file.cleanup.impl", "Cleanup" );
                              
+    }
+    
+    /**
+     * Returns the scope for file cleanup. It is used to trigger cleanup in case
+     * of deferred planning. The vaild property values accepted are
+     *     - fullahead
+     *     - deferred
+     * 
+     * Referred to by the property "pegasus.file.cleanup.scope"
+     * 
+     * 
+     * @return the value in property file if specified, else fullahead
+     */
+    public CLEANUP_SCOPE getCleanupScope(){
+        CLEANUP_SCOPE scope = CLEANUP_SCOPE.fullahead;
+        String value = mProps.getProperty(  "pegasus.file.cleanup.scope" );
+        if( value == null ){
+            return scope;
+        }
+        
+        //try to assign a cleanup value
+        try{
+            scope = CLEANUP_SCOPE.valueOf( value );
+        }catch( IllegalArgumentException iae ){
+            //ignore do nothing.
+        }
+        
+        return scope;
     }
     
     //PROPERTIES RELATED TO THE TRANSFORMATION CATALOG

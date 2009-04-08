@@ -74,6 +74,7 @@ import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import org.griphyn.cPlanner.namespace.Condor;
 
+
 /**
  * This callback ends up creating the megadag that contains the smaller dags
  * each corresponding to the one level as identified in the pdax file
@@ -263,6 +264,11 @@ public class PDAX2MDAG implements Callback {
     private long mCondorVersion;
     
     /**
+     * The cleanup scope for the workflows.
+     */
+    private PegasusProperties.CLEANUP_SCOPE mCleanupScope;
+    
+    /**
      * Bag of initialization objects.
      */
     //private PegasusBag mBag;
@@ -296,6 +302,7 @@ public class PDAX2MDAG implements Callback {
                new DefaultStreamGobblerCallback(LogManager.DEBUG_MESSAGE_LEVEL);
 
         mDAGManKnobs = constructDAGManKnobs( properties );
+        mCleanupScope = mProps.getCleanupScope();
         
         mCondorVersion = CondorVersion.getInstance( mLogger ).numericValue();
         if( mCondorVersion == -1 ){
@@ -990,7 +997,7 @@ public class PDAX2MDAG implements Callback {
      * @param version   the version of the replanner to be picked up.
      *
      */
-    protected void setPrescript(SubInfo job,
+     protected void setPrescript(SubInfo job,
                                   String daxURL,
                                   String log,
                                   String namespace,
@@ -1064,8 +1071,10 @@ public class PDAX2MDAG implements Callback {
         mClonedPOptions.setPartOfDeferredRun( true );
 
         //in case of deferred planning cleanup wont work
-        //explicitly turn it off
-        mClonedPOptions.setCleanup( false );
+        //explicitly turn it off if the file cleanup scope if fullahead
+        if( mCleanupScope.equals( PegasusProperties.CLEANUP_SCOPE.fullahead ) ){
+            mClonedPOptions.setCleanup( false );
+        }
 
         //we want monitoring to happen
         mClonedPOptions.setMonitoring( true );
@@ -1542,7 +1551,6 @@ public class PDAX2MDAG implements Callback {
 
     }
 }
-
 /**
  * A filename filter for identifying the run directory
  *
