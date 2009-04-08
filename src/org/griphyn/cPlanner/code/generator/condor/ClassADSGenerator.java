@@ -20,6 +20,8 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 
+import org.griphyn.cPlanner.namespace.VDS;
+
 import org.griphyn.common.util.Version;
 
 import java.io.PrintWriter;
@@ -93,6 +95,11 @@ public class ClassADSGenerator {
      * @see org.griphyn.cPlanner.classes.SubInfo#jobID
      */
     public static final String JOB_ID_AD_KEY = "pegasus_job_id";
+    
+    /**
+     * The class ad for the expected job runtime
+     */
+    public static final String JOB_RUNTIME_AD_KEY = "pegasus_job_runtime";
 
     /**
      * The class ad to store the execution pool at which the job is run. The
@@ -213,7 +220,7 @@ public class ClassADSGenerator {
 
         //the tranformation name
         writer.println(
-            generateClassAdAttribute( XFORMATION_AD_KEY, job.getCompleteTCName() ) );
+            generateClassAdAttribute( ClassADSGenerator.XFORMATION_AD_KEY, job.getCompleteTCName() ) );
 
         //the derivation name
 // No longer required. As we do not have to worry about VDL
@@ -221,14 +228,19 @@ public class ClassADSGenerator {
 //            generateClassAdAttribute( DERIVATION_AD_KEY, job.getCompleteDVName() ) );
 
         //the class of the job
-        writer.println(generateClassAdAttribute( JOB_CLASS_AD_KEY, job.getJobType() ) );
+        writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_CLASS_AD_KEY, job.getJobType() ) );
 
         //the supernode id
-        writer.println(generateClassAdAttribute( JOB_ID_AD_KEY, job.jobID ));
+        writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_ID_AD_KEY, job.jobID ));
 
         //the resource on which the job is scheduled
-        writer.println(generateClassAdAttribute( RESOURCE_AD_KEY, job.getSiteHandle() ) );
+        writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
 
+        //add the pegasus runtime if defined.
+        String runtime = (String)job.vdsNS.getStringValue( VDS.RUNTIME_KEY );
+        runtime = ( runtime == null ) ? "" : runtime;
+        writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_RUNTIME_AD_KEY, runtime ) );
+        
     }
 
 

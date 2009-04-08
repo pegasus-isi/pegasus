@@ -24,6 +24,8 @@ import org.griphyn.cPlanner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
+import org.griphyn.cPlanner.namespace.aggregator.Aggregator;
+import org.griphyn.cPlanner.namespace.aggregator.Sum;
 
 
 /**
@@ -208,6 +210,11 @@ public class VDS extends Namespace {
      * glidein execution.
      */
     public static final String GLIDEIN_STYLE = "glidein";
+    
+    /**
+     * Static Handle to the sum aggregator.
+     */
+    private static Aggregator SUM_AGGREGATOR = new Sum();
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -223,6 +230,7 @@ public class VDS extends Namespace {
     protected static Map mDeprecatedTable = null;
 
 
+    
     /**
      * The default constructor.
      * Note that the map is not allocated memory at this stage. It is done so
@@ -441,14 +449,15 @@ public class VDS extends Namespace {
 	if(value!=null){
 	    //no strict type check required
 	    //populate directly
-	    this.construct(this.TRANSFER_ARGUMENTS_KEY,value);
+	    this.construct(VDS.TRANSFER_ARGUMENTS_KEY,value);
 	}
 
     }
 
     /**
      * Merge the profiles in the namespace in a controlled manner.
-     * In case of intersection, the new profile value overrides, the existing
+     * In case of intersection, the new profile value (except for key runtime where
+     * the values are summed ) overrides, the existing
      * profile value.
      *
      * @param profiles  the <code>Namespace</code> object containing the profiles.
@@ -463,7 +472,15 @@ public class VDS extends Namespace {
         for ( Iterator it = profiles.getProfileKeyIterator(); it.hasNext(); ){
             //construct directly. bypassing the checks!
             key = (String)it.next();
-            this.construct( key, (String)profiles.get( key ) );
+            
+            if( key.equals( VDS.RUNTIME_KEY ) ){
+                this.construct( key, 
+                                SUM_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), "0" )
+                               );
+            }
+            else{
+                this.construct( key, (String)profiles.get( key ) );
+            }
         }
     }
 
