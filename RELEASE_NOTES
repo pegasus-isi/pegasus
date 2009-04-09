@@ -1,6 +1,253 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 2.3.0
+===============================
+ 
+NEW FEATURES
+--------------
+1) Regex Based Replica Selection
+   Pegasus now allows users to use regular expression based replica
+   selection. To use this replica selector, users need to set the
+   following property 
+   
+   pegasus.selector.replica  Regex 
+
+   The Regex replica selector allows the user allows the user to
+   specifiy the regex expressions to use for ranking various PFNs
+   returned from the Replica Catalog for a particular LFN. This
+   replica selector selects the highest ranked PFN i.e the replica
+   with the lowest rank value. 
+
+   The regular expressions are assigned different rank, that determine
+   the order in which the expressions are employed. The rank values
+   for the regex can expressed in user properties using the property. 
+
+   pegasus.selector.replica.regex.rank.[value]
+
+   The value is an integer value that denotes the rank of an
+   expression with a rank value of 1 being the highest rank. 
+
+   For example, a user can specify the following regex expressions
+   that will ask Pegasus to prefer file URL's over gsiftp url's from
+   example.isi.edu 
+   
+   pegasus.selector.replica.regex.rank.1 file://.*
+   pegasus.selector.replica.regex.rank.2 gsiftp://example\.isi\.edu.*
+
+   User can specify as many regex expressions as they want.
+   Since Pegasus is in Java , the regex expression support is what
+   Java supports. It is pretty close to what is supported by
+   Perl. More details can be found at
+   http://java.sun.com/j2se/1.5.0/docs/api/java/util/regex/Pattern.html 
+
+   There is documentation about the new replica selector in the
+   properties document . It can also be found at
+   $PEGASUS_HOME/etc/sample.properties 
+
+   To use this set pegasus.selector.replica Regex
+
+
+2) Automatic Determination of pool attributes in RLS Replica Catalog
+
+   Pegasus can now associate a pool attribute with the replica catalog
+   entries returned from querying a LRC if the pool attribute is not
+   already specified. 
+
+   This is achieved by associating the site handles with corresponding
+   LRC url's in the properties file. This mapping tells us what
+   default pool attribute should be assigned while querying a
+   particular LRC. For example
+
+   pegasus.catalog.replica.lrc.site.llo rls://ldas.ligo-la.caltech.edu:39281
+   pegasus.catalog.replica.lrc.site.lho rls://ldas.ligo-wa.caltech.edu:39281
+
+   tells Pegasus that all results from LRC
+   rls://ldas.ligo-la.caltech.edu:39281 are associated with site llo 
+
+   Using this feature only makes sense, when a LRC *ONLY* contains
+   mapping for data on one site, as in case of LIGO LDR deployment.
+
+3) Pegasus auxillary jobs on submit host now execute in local universe
+
+   All the scheduler universe jobs are now executed in local
+   universe. Also any job planned for site local will by default run
+   in local universe instead of scheduler universe.
+
+   Additionally, extra checks were put in to handle the Condor File
+   Transfer Mechansim issues in case local/scheduler universe. This
+   was tracked in bugzilla at
+   http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=40 
+
+   A user can override the local universe generation by specifying the
+   condor profile key universe and setting it to the value desired.
+
+4) Python API for generating DAX and PDAX
+   
+   Pegasus now includes a Python API for generating DAXes and PDAXes.
+
+   An example can be found online at
+   http://vtcpc.isi.edu/pegasus/index.php/ChangeLog#Added_Python_API_for_DAX_and_PDAX 
+
+   For more information on the DAX API type: pydoc Pegasus.DAX2
+   For more information on the PDAX API type: pydoc Pegasus.PDAX2
+
+
+5) Interface to Engage VO for OSG
+
+   There is a new Site Catalog Implementation called Engage that
+   interfaces with the Engage VO to discover resource information
+   about OSG from the information published in RENCI glue classads.
+
+   To use it set
+   pegasus.catalog.site Engage
+
+   To generate a site catalog using pegasus-get-sites set the source
+   option to Engage 
+
+   pegasus-get-sites --source Engage --sc engage.sc.xml
+
+6) Gensim now reports Seqexec Times and Seqexec Delays
+
+
+   Gensim script ($PEGASUS_HOME/contrib/showlog/gensim) now reports
+   the seqexec time and the seqexec delay for the clustered jobs. 
+
+   There are two new columns in the jobs file created by seqexec
+   - seqexec
+   - seqexec delay.
+
+   The seqexec time is determined from the last line of the .out file
+   of the clustered jobs. E.g format [struct stat="OK", lines=4,
+   count=4, failed=0,
+   duration=21.836,start="2009-02-20T16:14:56-08:00"] 
+
+   The seqexec delay is the seqexec time - kickstart time. 
+   
+   This useful for analyzing large scale workflow runs.
+
+7) Properties to turn on or off the seqexec progress logging
+
+   The property  pegasus.clusterer.job.aggregator.seqexec.hasgloballog
+   is now deprecated.
+
+   It has been replaced by  two boolean properties
+   - pegasus.clusterer.job.aggregator.seqexec.log whether to log
+     progress or not 
+   - pegasus.clusterer.job.aggregator.seqexec.log.global whether to
+     log progress to global file or not. 
+
+     The pegasus.clusterer.job.aggregator.seqexec.log.global only
+     comes into effect when
+     pegasus.clusterer.job.aggregator.seqexec.log is set to true 
+
+
+8) Passing of the DAX label to kickstart invocation
+
+   Now, the kickstart invocation for the jobs is always passed the dax
+   label using the -L option. To disable the passing of the DAX label,
+   user needs to set pegasus.gridstart.label to false
+
+   Additionally, the basename option to pegasus-plan overrides the
+   label value retrieved from the DAX. 
+
+9) show-job works on MAC OSX platform
+
+   $PEGASUS_HOME/contrib/showlog/show-job now does not fail on
+   unavailability of convert program. It only logs a warning and
+   creates the    EPS File , but not the png files. This allows us to
+   run show-job on MAC OSX systems. 
+
+10) Enabling InPlace cleanup in deferred planning
+
+    By default in case of deferred planning cleanup is turned off as
+    the cleanup algorithm does not work across partitions. 
+    However, in scenarios where the partitions themseleves are
+    independant ( i.e. dont share files ), user can safely turn on
+    cleanup. 
+
+    This can now be done by setting
+    pegasus.file.cleanup.scope  deferred
+
+    If the property is set to deferred, and the users wants to disable
+    cleanup , they can still specify --nocleanup option on command
+    line and that is honored. 
+
+    However in case of scope fullahead for deferred planning, the
+    command line options are ignored and always nocleanup is set.
+    
+11) New Pegasus Job Classad
+    
+    Pegasus now publishes a job runtime classad with the jobs. The
+    class ad key name is pegasus_job_runtime. The value passed to it
+    is picked up from the Pegasus Profile runtime. If the Pegaus
+    Profile is not associated, then the globus maxwalltime profile key
+    is used. If both are not set, then a value of zero is published.
+
+    This job classad can be used for users in case of glidein, to
+    ensure that the jobs complete before the nodes expire. 
+
+    For the coral glidein service the sub expression to job
+    requirement swould look something like this 
+
+    (CorralTimeLeft > MY.pegasus_job_runtime)
+
+ 
+BUGS FIXED
+----------
+1)  Critical Bug Fix to rc-client
+
+    SCEC reported a bug with the rc-client while doing bulk inserts
+    into RLS. The bug was related to how logging is initialized
+    internally in the client. 
+
+    Details of the bug fix can be found at
+    http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=38
+
+2)  Bug Fix to tailstatd for parsing jobnames with . in them
+
+    There was a bug where tailstatd incorrectly generated events in
+    the jobstate.log while parsing condor logs. This was due to an
+    errorneous regex expression for determining the event
+    POST|PRE SCRIPT STARTED. 
+
+    The earlier expression did not allow for . in jobnames. This is
+    especially prevalent in LIGO workflows where the DAX labels have
+    . in them. 
+
+    An example of the problem line in DAGMan log
+    1/24 10:11:21 Running POST script of Node
+    inspiral_hipe_eobinj_cat2_veto.EOBINJ_CAT_2_VETO.daxlalapps_sire_ID000731...
+
+    Earlier the job id was parsed as inspiral_hipe_eobinj_cat2_veto
+    instead of
+    inspiral_hipe_eobinj_cat2_veto.EOBINJ_CAT_2_VETO.daxlalapps_sire_ID000731 
+
+3) Pegasus Builds on FC10
+
+   Earlier the Pegasus builds were failed on FC10 as the invoke c tool
+   did not build correctly. This is now fixed. 
+
+   Details at
+   http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=41
+
+DOCUMENTATION
+--------------
+
+1) User Guides
+   The release has new user guides about the following
+   - Pegasus Job Clustering
+   - Pegasus Profiles
+   - Pegasus Replica Selection
+
+   The guides are checked in $PEGASUS_HOME/doc/guides
+
+   They can be found online at
+   http://pegasus.isi.edu/mapper/doc.php
+   
+2) Property Document was updated with the new properties introduced.
+
+===============================
 Release Notes for PEGASUS 2.2.0
 ===============================
  
