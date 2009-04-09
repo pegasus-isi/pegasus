@@ -62,7 +62,7 @@ public class CondorVersion {
     /**
      * The condor version command to be executed.
      */
-    public static final String CONDOR_VERSION_COMMAND = "/opt/condor/7.1.0/bin/condor_version";
+    public static final String CONDOR_VERSION_COMMAND = "condor_version";
     
     
      /**

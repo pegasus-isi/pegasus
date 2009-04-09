@@ -32,7 +32,7 @@ import java.util.ArrayList;
 public class SiteWriterMain {
 
 			
-	private String command="/opt/condor/7.1.0/bin/condor_status -any -pool engage-central.renci.org " +
+	private String command="condor_status -any -pool engage-central.renci.org " +
 			               "-format %s GlueSiteName " +
 			               "-format ; 1 "+                         // to force a semicolon, even if the attribute was not found
 			               "-format %s OSGMM_Globus_Location "+
