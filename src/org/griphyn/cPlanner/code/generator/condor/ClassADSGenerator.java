@@ -97,7 +97,7 @@ public class ClassADSGenerator {
     public static final String JOB_ID_AD_KEY = "pegasus_job_id";
     
     /**
-     * The class ad for the expected job runtime
+     * The class ad for the expected job value
      */
     public static final String JOB_RUNTIME_AD_KEY = "pegasus_job_runtime";
 
@@ -236,10 +236,18 @@ public class ClassADSGenerator {
         //the resource on which the job is scheduled
         writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
 
-        //add the pegasus runtime if defined.
-        String runtime = (String)job.vdsNS.getStringValue( VDS.RUNTIME_KEY );
-        runtime = ( runtime == null ) ? "" : runtime;
-        writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_RUNTIME_AD_KEY, runtime ) );
+        //add the pegasus value if defined.
+        String value = (String)job.vdsNS.getStringValue( VDS.RUNTIME_KEY );
+        //else see if globus maxwalltime defined
+        value = ( value == null )? (String)job.globusRSL.get( "maxwalltime" ) : value;
+        int runtime = 0;
+        try{
+            runtime = ( value ==  null )? 0: Integer.parseInt(value);
+        }
+        catch( Exception e ){
+            //ignore
+        }
+        writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_RUNTIME_AD_KEY, runtime  ) );
         
     }
 
