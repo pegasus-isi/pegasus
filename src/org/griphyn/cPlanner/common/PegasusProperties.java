@@ -922,7 +922,18 @@ public class PegasusProperties {
                value;
     }
 
-
+    /**
+     * Returns the base source URL where pointing to the directory where the
+     * worker package executables for pegasus releases are kept.
+     * 
+     * Referred to by the "pegasus.transfer.setup.source.base.url
+     * 
+     * @return the value in the property file, else null
+     */
+    public String getBaseSourceURLForSetupTransfers( ){
+        return mProps.getProperty( "pegasus.transfer.setup.source.base.url" );
+    }
+    
     /**
      * Returns the transfer refiner that is to be used for adding in the
      * transfer jobs in the workflow

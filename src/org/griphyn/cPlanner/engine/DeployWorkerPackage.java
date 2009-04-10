@@ -25,9 +25,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.NameValue;
-import org.griphyn.cPlanner.classes.SiteInfo;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -37,7 +35,6 @@ import org.griphyn.cPlanner.partitioner.graph.Graph;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
@@ -304,7 +301,17 @@ public class DeployWorkerPackage
      * been untarred during workflow execution.
      */
     protected Map<String,String> mSiteToPegasusHomeMap;
+    
+    /**
+     * The user specified location from where to stage the worker packages.
+     */
+    protected String mUserSpecifiedSourceLocation;
 
+    /**
+     * Boolean indicating whether to use the user specified location or not
+     */
+    private boolean mUseUserSpecifiedSourceLocation;
+    
     /**
      * Loads the implementing class corresponding to the mode specified by the
      * user at runtime.
@@ -356,7 +363,9 @@ public class DeployWorkerPackage
                                                           bag,
                                                           ImplementationFactory.TYPE_SETUP );
         
-        
+        mUserSpecifiedSourceLocation = mProps.getBaseSourceURLForSetupTransfers();
+        mUseUserSpecifiedSourceLocation =
+                  !( mUserSpecifiedSourceLocation == null || mUserSpecifiedSourceLocation.trim().length()== 0 );
     }
 
 
@@ -408,7 +417,7 @@ public class DeployWorkerPackage
             //try and create a default entry for pegasus::worker if 
              //not specified in transformation catalog
             if( selectedEntries == null || selectedEntries.size() == 0 ){
-                this.defaultTCEntryForPegasusWebsite( site, DeployWorkerPackage.TRANSFORMATION_NAME );
+                this.addDefaultTCEntryForPegasusWebsite( site, DeployWorkerPackage.TRANSFORMATION_NAME );
             }
             
         }
@@ -448,7 +457,7 @@ public class DeployWorkerPackage
             //now create transformation catalog entry objects for each
             //worker package executable
             for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
-                TransformationCatalogEntry entry = defaultTCEntry( site,  pegasusHome.getAbsolutePath(), selected.getSysInfo(), PEGASUS_WORKER_EXECUTABLES[i] );
+                TransformationCatalogEntry entry = addDefaultTCEntry( site,  pegasusHome.getAbsolutePath(), selected.getSysInfo(), PEGASUS_WORKER_EXECUTABLES[i] );
                 mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
             }
 
@@ -902,7 +911,8 @@ public class DeployWorkerPackage
     
     /**
      * Returns a default TC entry to be used in case entry is not found in the
-     * transformation catalog.
+     * transformation catalog. It also attempts to add the transformation catalog 
+     * entry to the underlying TC store.
      *
      * @param site   the site for which the default entry is required.
      * @param pegasusHome  the path to deployed worker package
@@ -912,7 +922,7 @@ public class DeployWorkerPackage
      *
      * @return  the default entry.
      */
-    private  TransformationCatalogEntry defaultTCEntry( String site,
+    private  TransformationCatalogEntry addDefaultTCEntry( String site,
                                                         String pegasusHome,
                                                         SysInfo sysinfo,
                                                         String name ){
@@ -968,7 +978,8 @@ public class DeployWorkerPackage
 
     /**
      * Returns a default TC entry for the pegasus site. The entry points to 
-     * the http webserver on the pegasus website.    
+     * the http webserver on the pegasus website. It also attempts to add 
+     * the transformation catalog entry to the TC store.   
      * 
      * @param site    the execution site for which we need a matching static binary.
      * @param name    name of the executable
@@ -976,7 +987,7 @@ public class DeployWorkerPackage
      *
      * @return  the default entry.
      */
-    protected TransformationCatalogEntry defaultTCEntryForPegasusWebsite( 
+    protected TransformationCatalogEntry addDefaultTCEntryForPegasusWebsite( 
                                                                 String site,
                                                                 String name ){
         TransformationCatalogEntry defaultTCEntry = null;
@@ -985,7 +996,7 @@ public class DeployWorkerPackage
         SysInfo sysinfo = mSiteStore.getSysInfo( site );
 
         //construct the path to the executable
-        String path = constructURLToPegasusWebsite( name, sysinfo );
+        String path = constructDefaultURLToPegasusWorkerPackage( name, sysinfo );
         if( path == null ){
             mLogger.log( "Unable to determine path for worker package for " + sysinfo,
                          LogManager.DEBUG_MESSAGE_LEVEL );
@@ -1032,7 +1043,10 @@ public class DeployWorkerPackage
     }
     
     /**
-     * Constructs the URL to pegasus website where the executable is stored.
+     * Constructs the default URL's for the pegasus worker package. If the user
+     * has not specified the URL to the source directory in Pegaus Properties then
+     * the URL constructed points to the  pegasus website.
+     * 
      * The version of Pegasus retrieved is the one against which the planner
      * is executing.
      * 
@@ -1041,7 +1055,7 @@ public class DeployWorkerPackage
      * 
      * @return url
      */
-    protected String constructURLToPegasusWebsite( String name, SysInfo sysinfo ) {
+    protected String constructDefaultURLToPegasusWorkerPackage( String name, SysInfo sysinfo ) {
         //get the matching architecture
         String arch = ( String )DeployWorkerPackage.archToNMIArch().get( sysinfo.getArch() );
         String os   = ( String )DeployWorkerPackage.osToNMIOS().get( sysinfo.getOs() );
@@ -1055,9 +1069,14 @@ public class DeployWorkerPackage
         StringBuffer url = new StringBuffer();
         
         //construct the base path
-        url.append( PEGASUS_VERSION.endsWith( "cvs" ) ?
+        if( mUseUserSpecifiedSourceLocation ){
+            url.append( mUserSpecifiedSourceLocation ).append( File.separator);   
+        }
+        else{
+            url.append( PEGASUS_VERSION.endsWith( "cvs" ) ?
                     DeployWorkerPackage.NIGHTLY_BUILD_DIRECTORY_URL :
                     DeployWorkerPackage.STABLE_BUILD_DIRECTORY_URL );
+        }
         
         url.append( "pegasus-" ).append( name ).append( "-" ).
             append( PEGASUS_VERSION ).append( "-" ).
@@ -1101,7 +1120,7 @@ public class DeployWorkerPackage
         defaultTCEntry.setType( TCType.INSTALLED );
 
         //add path as an environment variable
-        //defaultTCEntry.setProfile( new Profile( Profile.ENV, "PATH", DeployWorkerPackage.PATH_VALUE ));
+        //addDefaultTCEntry.setProfile( new Profile( Profile.ENV, "PATH", DeployWorkerPackage.PATH_VALUE ));
 
         
         //register back into the transformation catalog
