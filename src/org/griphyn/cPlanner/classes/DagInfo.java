@@ -520,17 +520,29 @@ public class DagInfo extends Data {
      * to the XML parser tripping while parsing the invocation record generated
      * by Kickstart.
      *
-     * @param path            the path to the DAX|PDAX file.
+     * @param f  the file descriptor to the DAX|PDAX file.
      */
-    public void setDAXMTime(String path){
-        File f = new File(path);
+    public void setDAXMTime( File f ){
         long time = f.lastModified();
         mDAXMTime = Currently.iso8601(false,true,false,
                                           new java.util.Date(time));
     }
 
 
-
+    /**
+     * Sets the mtime (last modified time) for the DAX. It is the time, when
+     * the DAX file was last modified. If the DAX file does not exist or an
+     * IO error occurs, the MTime is set to OL i.e . The DAX mTime is always
+     * generated in an extended format. Generating not in extended format, leads
+     * to the XML parser tripping while parsing the invocation record generated
+     * by Kickstart.
+     *
+     * @param time  iso formatted time string indicating the last modified time
+     *              of DAX
+     */
+    public void setDAXMTime( String time ){
+        mDAXMTime = time;
+    }
 
     /**
      * Grabs the release version from VDS.Properties file.

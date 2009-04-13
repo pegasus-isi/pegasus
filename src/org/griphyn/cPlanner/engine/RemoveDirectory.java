@@ -167,6 +167,7 @@ public class RemoveDirectory extends Engine {
         ADag cDAG = new ADag();
         cDAG.dagInfo.nameOfADag = this.CLEANUP_DAG_PREFIX + dag.dagInfo.nameOfADag;
         cDAG.dagInfo.index      = dag.dagInfo.index;
+        cDAG.dagInfo.setDAXMTime( dag.getMTime() );
 
         Set pools = this.getCreateDirSites(dag);
         String pool    = null;
@@ -326,7 +327,11 @@ public class RemoveDirectory extends Engine {
         StringBuffer arguments = new StringBuffer();
         arguments.append( "--verbose --remove --dir \"" );       
         for( Iterator it = files.iterator(); it.hasNext(); ){
-            arguments.append( it.next() ).append( " " );
+            arguments.append( it.next() );
+            //append only if there is another file
+            if( it.hasNext()){
+                arguments.append( " " );
+            }
         }
         arguments.append( "\"" );
         

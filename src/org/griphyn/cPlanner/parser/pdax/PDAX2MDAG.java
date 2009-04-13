@@ -602,7 +602,7 @@ public class PDAX2MDAG implements Callback {
         //for the Mega DAG
         mMegaDAG.dagInfo.generateFlowName();
         mMegaDAG.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
-        mMegaDAG.dagInfo.setDAXMTime(mPOptions.getPDAX());
+        mMegaDAG.dagInfo.setDAXMTime( new File( mPOptions.getPDAX() ) );
         mMegaDAG.dagInfo.generateFlowID();
         mMegaDAG.dagInfo.setReleaseVersion();
 

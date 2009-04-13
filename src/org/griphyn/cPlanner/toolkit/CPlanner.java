@@ -373,7 +373,7 @@ public class CPlanner extends Executable{
             //generate the flow ids for the classads information
             orgDag.dagInfo.generateFlowName();
             orgDag.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
-            orgDag.dagInfo.setDAXMTime( dax );
+            orgDag.dagInfo.setDAXMTime( new File(dax) );
             orgDag.dagInfo.generateFlowID();
             orgDag.dagInfo.setReleaseVersion();
 
