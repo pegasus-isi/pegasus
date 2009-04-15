@@ -85,7 +85,8 @@ my $fuse = $props->property('pegasus.tailstatd.fuse') || 300;
 $fuse = 60 if $fuse < 60;
 
 # remove jobs after xxxx seconds in PENDING
-my $starvation = $props->property('pegasus.max.idletime') || 14400;
+my $idletime = $props->property('pegasus.max.idletime');
+my $starvation=defined($idletime) ? $idletime  :14400;
 
 my $last_check = time();	# marker for starvation checks
 my $jsd;			# location of jobstate.log file
