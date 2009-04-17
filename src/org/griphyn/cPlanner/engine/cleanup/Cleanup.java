@@ -190,15 +190,15 @@ public class Cleanup implements CleanupImplementation{
         cJob.setArguments( "" );
 
         //inconsistency between job name and logical name for now
-        cJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
-                                this.TRANSFORMATION_NAME,
-                                this.TRANSFORMATION_VERSION );
+        cJob.setTransformation( Cleanup.TRANSFORMATION_NAMESPACE,
+                                Cleanup.TRANSFORMATION_NAME,
+                                Cleanup.TRANSFORMATION_VERSION );
 
-        cJob.setDerivation( this.DERIVATION_NAMESPACE,
-                            this.DERIVATION_NAME,
-                            this.DERIVATION_VERSION );
+        cJob.setDerivation( Cleanup.DERIVATION_NAMESPACE,
+                            Cleanup.DERIVATION_NAME,
+                            Cleanup.DERIVATION_VERSION );
 
-        cJob.setLogicalID( id );
+        //cJob.setLogicalID( id );
 
         //set the list of files as input files
         //to change function signature to reflect a set only
