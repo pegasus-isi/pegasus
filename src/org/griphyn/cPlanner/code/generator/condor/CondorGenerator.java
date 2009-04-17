@@ -79,6 +79,7 @@ import java.util.Vector;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import org.griphyn.cPlanner.code.generator.NetloggerJobMapper;
 
 /**
  * This class generates the condor submit files for the DAG which has to
@@ -361,6 +362,10 @@ public class CondorGenerator extends Abstract {
         mLogger.log( "Writing out the DOT file ", LogManager.DEBUG_MESSAGE_LEVEL );
         this.writeDOTFile( getDAGFilename( dag, ".dot"), dag );
 
+        //write out the netlogger file
+        mLogger.log( "Written out job.map file", LogManager.DEBUG_MESSAGE_LEVEL );
+        this.writeJobMapFile( getDAGFilename( dag, ".job.map"), dag );
+        
         //we are done
         mDone = true;
 
@@ -904,6 +909,33 @@ public class CondorGenerator extends Abstract {
 
     }
 
+    /**
+     * Writes out the job map file in the submit directory.
+     *
+     * @param filename  basename of dot file to be written .
+     * @param dag       the <code>ADag</code> object.
+     *
+     * @throws CodeGeneratorException in case of any error occuring code generation.
+     */
+    protected void writeJobMapFile( String filename, ADag dag )
+                                                       throws CodeGeneratorException{
+        // initialize file handler
+
+        filename = mSubmitFileDir + File.separator + filename;
+
+
+        try {
+            Writer stream = new PrintWriter( new BufferedWriter ( new FileWriter( filename ) ) );
+            NetloggerJobMapper njm = new NetloggerJobMapper();
+            njm.writeOutMappings( stream, dag );
+            stream.close();
+
+        } catch (Exception e) {
+            throw new CodeGeneratorException( "While writing to DOT FILE " + filename,
+                                              e);
+        }
+
+    }
 
 
     /**
