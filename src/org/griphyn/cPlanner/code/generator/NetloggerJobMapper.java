@@ -108,7 +108,7 @@ public class NetloggerJobMapper{
                         "";
         mLogFormatter.add( getKey( prefix, "task.id" ), taskID );
         mLogFormatter.add( getKey( prefix, "job.class" ), Integer.toString( job.getJobType() ) );
-        mLogFormatter.add( getKey( prefix, "job.type" ), job.getJobTypeDescription() );
+        mLogFormatter.add( getKey( prefix, "job.class.description" ), job.getJobTypeDescription() );
         mLogFormatter.add( getKey( prefix, "job.transformation" ), job.getCompleteTCName() );
         result = mLogFormatter.createLogMessage();
         return result;
