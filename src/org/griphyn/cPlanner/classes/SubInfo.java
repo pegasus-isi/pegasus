@@ -781,6 +781,10 @@ public class SubInfo extends Data implements GraphNodeContent{
             case STAGED_COMPUTE_JOB:
                 desc = "Staged Compute job";
                 break;
+                
+            case CLEANUP_JOB:
+                desc = "Cleanup Job";
+                break;
 
             default:
                 desc = "Unknown Job";
