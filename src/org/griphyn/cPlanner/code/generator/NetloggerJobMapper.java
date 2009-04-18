@@ -65,7 +65,7 @@ public class NetloggerJobMapper{
         for( Iterator<SubInfo> it = dag.jobIterator(); it.hasNext(); ){
             SubInfo job = it.next();
             mLogFormatter.addEvent( "pegasus.job", LoggingKeys.JOB_ID, job.getID() );
-            writer.write( generateLogEvent( job, "" ) );
+            writer.write( generateLogEvent( job, "job." ) );
             writer.write( "\n" );
             mLogFormatter.popEvent();
             
@@ -83,7 +83,7 @@ public class NetloggerJobMapper{
                     SubInfo cJob = jit.next();
                     
                     mLogFormatter.addEvent( "pegasus.job.map", LoggingKeys.JOB_ID, job.getID() );                            
-                    writer.write( generateLogEvent( cJob,  "constituent." ) );
+                    writer.write( generateLogEvent( cJob,  "task." ) );
                     writer.write( "\n" );
                     mLogFormatter.popEvent();
                 }
@@ -106,10 +106,10 @@ public class NetloggerJobMapper{
                                 !(job instanceof AggregatedJob) )?
                         job.getLogicalID():
                         "";
-        mLogFormatter.add( getKey( prefix, "task.id" ), taskID );
-        mLogFormatter.add( getKey( prefix, "job.class" ), Integer.toString( job.getJobType() ) );
-        mLogFormatter.add( getKey( prefix, "job.class.description" ), job.getJobTypeDescription() );
-        mLogFormatter.add( getKey( prefix, "job.transformation" ), job.getCompleteTCName() );
+        mLogFormatter.add( "task.id" , taskID );
+        mLogFormatter.add( getKey( prefix, "class" ), Integer.toString( job.getJobType() ) );
+        mLogFormatter.add( getKey( prefix, "desc" ), job.getJobTypeDescription() );
+        mLogFormatter.add( getKey( prefix, "xform" ), job.getCompleteTCName() );
         result = mLogFormatter.createLogMessage();
         return result;
     }
