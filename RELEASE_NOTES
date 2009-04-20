@@ -192,7 +192,49 @@ NEW FEATURES
 
     (CorralTimeLeft > MY.pegasus_job_runtime)
 
- 
+12) [workflow].job.map file
+
+    Pegasus now creates a [workflow].job.map file that links jobs in
+    the DAG with the jobs in the DAX. The contents of the file are in
+    netlogger format. 
+
+    The [workflow] is replaced by the name of the workflow i.e. same
+    prefix as the .dag file 
+    
+    In the file there are two types of events.
+    a) pegasus.job 
+    b) pegasus.job.map
+
+    pegasus.job - This event is for all the jobs in the DAG. The
+    following information is associated with this event. 
+    - job.id the id of the job in the DAG
+    - task.id the id of the job in the DAX if a compute job, else an
+    empty quoted string 
+    - job.class an integer designating the type of the job 
+    - job.desc a textual description of the job class
+    - job.xform the logical transformation which the job refers to.
+
+    pegasus.job.map - This event allows us to associate a clustered
+    job with it's constituent jobs. The following information is
+    associated with this event. 
+    - job.id the id of clustered job in the DAG
+    - task.id the id of the constituent job in the DAX if a compute
+    job, else an empty quoted string 
+    - task.class an integer designating the type of the constituent
+    job 
+    - task.desc a textual description of the job class
+    - task.xform the logical transformation which the constituent job
+    refers to. 
+
+13) Source Directory for Worker Package Staging
+
+    Users now can specify the  property
+    pegasus.transfer.setup.source.base.url to specify the URL to the
+    source directory containing the pegasus worker packages. If it is
+    not specified, then the worker packages are pulled from the http
+    server at pegasus.isi.edu during staging of executables. 
+
+
 BUGS FIXED
 ----------
 1)  Critical Bug Fix to rc-client
@@ -231,7 +273,21 @@ BUGS FIXED
    Details at
    http://vtcpc.isi.edu/bugzilla/show_bug.cgi?id=41
 
-DOCUMENTATION
+4) tailstatd killing jobs by detecting starvation
+
+   tailstatd removes a job after four hours when the job has been
+   waiting in the queue WITHOUT being marked as EXECUTE in the condor
+   log. To override tailstatd has an option of setting starvation time
+   to 0 via command line or via pegasus.max.idletime property.  The if
+   condition in the perl script was not accepting 0 as a value when
+   trying to override the default 4 hour starvation time. This fix
+   allows the value to be set to 0 (turn of starvation checks) or any
+   other value via the property pegasus.max.idletime. 
+
+   This was tracked in pegasus jira as bug 40
+   http://pegasus.isi.edu/jira/browse/PM-40
+
+Documentation
 --------------
 
 1) User Guides
