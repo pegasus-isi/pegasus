@@ -926,7 +926,7 @@ public class CondorGenerator extends Abstract {
 
         try {
             Writer stream = new PrintWriter( new BufferedWriter ( new FileWriter( filename ) ) );
-            NetloggerJobMapper njm = new NetloggerJobMapper();
+            NetloggerJobMapper njm = new NetloggerJobMapper( mLogger );
             njm.writeOutMappings( stream, dag );
             stream.close();
 

@@ -18,6 +18,7 @@ package org.griphyn.cPlanner.code.generator;
 
 import edu.isi.pegasus.common.logging.LogFormatterFactory;
 import edu.isi.pegasus.common.logging.LogFormatter;
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 
 import org.griphyn.cPlanner.classes.ADag;
@@ -44,12 +45,20 @@ public class NetloggerJobMapper{
      * The handle to the netlogger log formatter.
      */
     private LogFormatter mLogFormatter;
+    
+    /**
+     * The handle to pegasus logger used for run.
+     */
+    private LogManager mLogger;
             
     /**
      * The default constructor.
+     * 
+     * @param logger  the logger instance to use for logging
      */
-    public NetloggerJobMapper(){
+    public NetloggerJobMapper( LogManager logger ){
         mLogFormatter = LogFormatterFactory.loadInstance( NETLOGGER_LOG_FORMATTER_IMPLEMENTOR );
+        mLogger = logger;
     }
     
     /**
@@ -64,26 +73,34 @@ public class NetloggerJobMapper{
         
         for( Iterator<SubInfo> it = dag.jobIterator(); it.hasNext(); ){
             SubInfo job = it.next();
+            int type = job.getJobType();
             mLogFormatter.addEvent( "pegasus.job", LoggingKeys.JOB_ID, job.getID() );
-            writer.write( generateLogEvent( job, "job." ) );
+            mLogFormatter.add( "job.class" , Integer.toString( type ) );
+            mLogFormatter.add( "job.xform" , job.getCompleteTCName() );
+            //determine count of jobs
+            int taskCount = getTaskCount( job );
+      
+            mLogFormatter.add( "task.count", Integer.toString( taskCount ) );
+            writer.write( mLogFormatter.createLogMessage() );
             writer.write( "\n" );
             mLogFormatter.popEvent();
             
-            if ( job instanceof AggregatedJob ){
-                //explicitly exclude cleanup jobs that are instance
-                //of aggregated jobs. This is because while creating
-                //the cleanup job we use the clone method. To be fixed.
-                //Karan April 17 2009
-                if( job.getJobType() == SubInfo.CLEANUP_JOB ){
-                    continue;
-                }
-                
-                AggregatedJob j = (AggregatedJob)job;
-                for( Iterator<SubInfo> jit = j.constituentJobsIterator(); jit.hasNext(); ){
-                    SubInfo cJob = jit.next();
+            // add mapping events only if task count > 0
+            if( taskCount > 0 ){
+                if ( job instanceof AggregatedJob ){
+                  AggregatedJob j = (AggregatedJob)job;
+                    for( Iterator<SubInfo> jit = j.constituentJobsIterator(); jit.hasNext(); ){
+                        SubInfo cJob = jit.next();
                     
-                    mLogFormatter.addEvent( "pegasus.job.map", LoggingKeys.JOB_ID, job.getID() );                            
-                    writer.write( generateLogEvent( cJob,  "task." ) );
+                        mLogFormatter.addEvent( "pegasus.job.map", LoggingKeys.JOB_ID, job.getID() ); 
+                        writer.write( generateLogEvent( cJob, "task." ) );
+                        writer.write( "\n" );
+                        mLogFormatter.popEvent();
+                    }
+                }
+                else{                
+                     mLogFormatter.addEvent( "pegasus.job.map", LoggingKeys.JOB_ID, job.getID() ); 
+                     writer.write( generateLogEvent( job, "task." ) );
                     writer.write( "\n" );
                     mLogFormatter.popEvent();
                 }
@@ -101,14 +118,14 @@ public class NetloggerJobMapper{
      */
     private String generateLogEvent ( SubInfo job,  String prefix ) {
         String result = null;
-        String taskID = (( job.getJobType() == SubInfo.COMPUTE_JOB || 
+        /*String taskID = (( job.getJobType() == SubInfo.COMPUTE_JOB || 
                               job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ) &&
                                 !(job instanceof AggregatedJob) )?
                         job.getLogicalID():
                         "";
-        mLogFormatter.add( "task.id" , taskID );
+         */
+        mLogFormatter.add( "task.id" , job.getLogicalID() );
         mLogFormatter.add( getKey( prefix, "class" ), Integer.toString( job.getJobType() ) );
-        mLogFormatter.add( getKey( prefix, "desc" ), job.getJobTypeDescription() );
         mLogFormatter.add( getKey( prefix, "xform" ), job.getCompleteTCName() );
         result = mLogFormatter.createLogMessage();
         return result;
@@ -129,5 +146,40 @@ public class NetloggerJobMapper{
         StringBuffer result = new StringBuffer();
         result.append( prefix ).append( key);
         return result.toString();
+    }
+
+    /**
+     * Returns the task count for a job. The task count is the number of
+     * jobs associated with the job in the DAX
+     * 
+     * @param job
+     * 
+     * @return task count
+     */
+    private int getTaskCount( SubInfo job ) {
+        int count = 0;
+        int type = job.getJobType();
+        //explicitly exclude cleanup jobs that are instance
+        //of aggregated jobs. This is because while creating
+        //the cleanup job we use the clone method. To be fixed.
+        //Karan April 17 2009
+        if ( job instanceof AggregatedJob && type != SubInfo.CLEANUP_JOB ){
+            //a clustered job the number of constituent is count
+            count = ((AggregatedJob)job).numberOfConsitutentJobs();
+        }
+        else if ( type == SubInfo.COMPUTE_JOB || type == SubInfo.STAGED_COMPUTE_JOB ){
+            //non clustered job check whether compute or not 
+            //and make sure there is dax job associated with it
+            if( job.getLogicalID().length() == 0 ){
+                //takes care of the untar job that is tagged as compute
+                mLogger.log( "Not creating event pegasus.job.map for job " + job.getID(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                count = 0;
+            }
+            else{
+                count = 1;
+            }
+        }   
+        return count;
     }
 }

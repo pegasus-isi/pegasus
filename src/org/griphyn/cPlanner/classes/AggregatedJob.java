@@ -104,6 +104,14 @@ public class AggregatedJob extends SubInfo {
     }
 
     /**
+     * Returns the number of constituent jobs.
+     *
+     * @return Iterator
+     */
+    public int numberOfConsitutentJobs(){
+        return mConstituentJobs.size();
+    }
+    /**
      * Returns a textual description of the object.
      *
      * @return textual description of the job.
