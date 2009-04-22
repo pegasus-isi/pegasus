@@ -207,24 +207,22 @@ NEW FEATURES
 
     pegasus.job - This event is for all the jobs in the DAG. The
     following information is associated with this event. 
-    - job.id the id of the job in the DAG
-    - task.id the id of the job in the DAX if a compute job, else an
-    empty quoted string 
-    - job.class an integer designating the type of the job 
-    - job.desc a textual description of the job class
-    - job.xform the logical transformation which the job refers to.
 
-    pegasus.job.map - This event allows us to associate a clustered
-    job with it's constituent jobs. The following information is
+    - job.id the id of the job in the DAG
+    - job.class an integer designating the type of the job
+    - job.xform the logical transformation which the job refers to.
+    - task.count the number of tasks associated with the job. This is
+       equal to the number of pegasus.job.task events created for that
+     job.
+ 
+    pegasus.job.map - This event allows us to associate a job in the
+    DAG with the jobs in the DAX. The following information is
     associated with this event. 
-    - job.id the id of clustered job in the DAG
-    - task.id the id of the constituent job in the DAX if a compute
-    job, else an empty quoted string 
-    - task.class an integer designating the type of the constituent
-    job 
-    - task.desc a textual description of the job class
-    - task.xform the logical transformation which the constituent job
-    refers to. 
+
+    -task.id the id of the job in the DAG
+    -task.class an integer designating the type of the job
+    -task.xform the logical transformation which the job refers to.
+
 
 13) Source Directory for Worker Package Staging
 
