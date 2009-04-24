@@ -41,7 +41,7 @@
 
   <target name="checkjava" depends="init">
   <property name="build.source" value="${ant.java.version}"/>
-  <property name="build.target" value="1.5"/>   
+  <property name="build.target" value="${ant.java.version}"/>   
   <condition property="build.target" value="${build.target}" else="1.5">
         <os arch="ia64"/>
      </condition>
