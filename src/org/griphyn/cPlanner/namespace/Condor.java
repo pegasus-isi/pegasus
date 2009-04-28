@@ -98,6 +98,11 @@ public class Condor extends Namespace{
     public static final String PRIORITY_KEY = "priority";
 
     /**
+     * The condor key for designation the grid_resource.
+     */
+    public static final String GRID_RESOURCE_KEY = "grid_resource";
+    
+    /**
      * The condor universe key value for vanilla universe.
      */
     public static final String VANILLA_UNIVERSE = "vanilla";
@@ -308,6 +313,7 @@ public class Condor extends Namespace{
      * transfer_input_files - supported, especially used to transfer proxies in
      *                        case of glide in pools.
      * universe         - supported, especially used to incorporate glide in pools.
+     * +xxxx            - supported, this is used to add extra classads with the jobs.
      * </pre>
      *
      * @param key is the key within the globus namespace, must be lowercase!
@@ -473,6 +479,10 @@ public class Condor extends Namespace{
                     res = UNKNOWN_KEY;
 
                 }
+                break;
+                
+            case '+':
+                res = VALID_KEY;
                 break;
 
             default:

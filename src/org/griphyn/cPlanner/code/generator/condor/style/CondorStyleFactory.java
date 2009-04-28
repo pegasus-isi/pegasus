@@ -69,6 +69,12 @@ public class CondorStyleFactory {
      * The name of the class implementing the CondorG Style.
      */
     private static final String GLOBUS_STYLE_IMPLEMENTING_CLASS = "CondorG";
+    
+    
+    /**
+     * The name of the class implementing the CondorG Style.
+     */
+    private static final String GLITE_STYLE_IMPLEMENTING_CLASS = "GLite";
 
 
     /**
@@ -257,6 +263,7 @@ public class CondorStyleFactory {
             mImplementingClassNameTable.put( VDS.CONDOR_STYLE, CONDOR_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( VDS.GLIDEIN_STYLE, GLIDEIN_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( VDS.GLOBUS_STYLE, GLOBUS_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( VDS.GLITE_STYLE, GLITE_STYLE_IMPLEMENTING_CLASS);
         }
         return mImplementingClassNameTable;
     }

@@ -478,7 +478,8 @@ public class Kickstart implements GridStart {
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
             String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))?
+                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE) ||
+                                style.equalsIgnoreCase(VDS.GLITE_STYLE))?
                      (String)job.condorVariables.removeKey("remote_initialdir"):
                      (String)job.condorVariables.removeKey("initialdir");
 
@@ -496,7 +497,8 @@ public class Kickstart implements GridStart {
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
             String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))?
+                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE) ||
+                                style.equalsIgnoreCase(VDS.GLITE_STYLE))?
                      (String)job.condorVariables.removeKey("remote_initialdir"):
                      (String)job.condorVariables.removeKey("initialdir");
 

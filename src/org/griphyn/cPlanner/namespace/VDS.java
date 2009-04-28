@@ -212,6 +212,12 @@ public class VDS extends Namespace {
     public static final String GLIDEIN_STYLE = "glidein";
     
     /**
+     * The style indicating that the submit files are to be generated for a
+     * glite execution.
+     */
+    public static final String GLITE_STYLE = "glite";
+    
+    /**
      * Static Handle to the sum aggregator.
      */
     private static Aggregator SUM_AGGREGATOR = new Sum();
