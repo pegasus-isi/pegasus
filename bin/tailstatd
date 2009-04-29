@@ -86,6 +86,7 @@ $fuse = 60 if $fuse < 60;
 
 # remove jobs after xxxx seconds in PENDING
 my $idletime = $props->property('pegasus.max.idletime');
+
 my $starvation=defined($idletime) ? $idletime  :14400;
 
 my $last_check = time();	# marker for starvation checks
@@ -94,7 +95,9 @@ my $nodaemon;			# foreground mode
 my $logfile;			# location of tailstatd.log file
 my $millisleep;			# emulated run mode delay
 my $job_check_interval = 300;	# interval to check for starvation
-my $liedetector = 5.0;		# remove after 5.0 * walltime in RUN
+my $liedetect = $props->property('pegasus.max.runtime.multiplier');
+my $liedetector = defined($liedetect)  ? $liedetect : 5.0;		# remove after 5.0 * walltime in RUN
+
 my %config = ();		# braindump database (textual file)
 my $adjustment = 0;		# time zone adjustment (@#~! Condor)
 
@@ -906,9 +909,13 @@ sub check_starvation(;$) {
 	condor_rm($condor) if ( $diff > $starvation );
     }
     
+    
     # candidates for hidden starvation entered EXECUTE a lot longer ago
     # than they intended to obtain walltime for. However, we can do this
     # check only for "nice" jobs that declare their walltime in Globus RSL!
+
+    return if $liedetector == 0;	# skip walltime starvation execution checks for Pegasus
+
     my $n = 0.75 * $liedetector;
     foreach my $jobid ( # 4) order by worst case first
 			sort { $main::running{$a}->[0] <=> 
