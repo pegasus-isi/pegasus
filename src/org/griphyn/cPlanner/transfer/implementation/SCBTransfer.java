@@ -126,13 +126,14 @@ public class SCBTransfer extends Transfer {
     *
     * @param job  the <code>TransferJob</code> that has been created.
     */
-    /*
+   
    public void postProcess( TransferJob job ){       
-       File f = new File( mPOptions.getSubmitDirectory(), job.getStdIn() );
+       /*File f = new File( mPOptions.getSubmitDirectory(), job.getStdIn() );
        //add condor key transfer_input_files to transfer the file
        job.condorVariables.addIPFileForTransfer( f.getAbsolutePath() );
+        */
        job.setStdIn( "" );
-   }*/
+   }
 
 
     /**
