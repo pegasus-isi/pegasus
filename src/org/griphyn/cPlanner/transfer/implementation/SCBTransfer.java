@@ -111,8 +111,10 @@ public class SCBTransfer extends Transfer {
 
         sb.append(" base-uri se-mount-point");
         //specify the name of the stdin file on command line
-        //and trigger the condor file transfer in the post process function
-        sb.append( " " ).append( job.getStdIn() );
+        //since this transfer mode only executes on submit node
+        //we can give full path to the stdin
+        File f = new File( mPOptions.getSubmitDirectory(), job.getStdIn() );
+        sb.append( " " ).append( f.getAbsolutePath() );
 
         return sb.toString();
     }
@@ -124,12 +126,13 @@ public class SCBTransfer extends Transfer {
     *
     * @param job  the <code>TransferJob</code> that has been created.
     */
-   public void postProcess( TransferJob job ){
+    /*
+   public void postProcess( TransferJob job ){       
        File f = new File( mPOptions.getSubmitDirectory(), job.getStdIn() );
        //add condor key transfer_input_files to transfer the file
        job.condorVariables.addIPFileForTransfer( f.getAbsolutePath() );
        job.setStdIn( "" );
-   }
+   }*/
 
 
     /**
