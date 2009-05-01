@@ -143,6 +143,53 @@ public class GLite extends Abstract {
          +remote_cerequirements = blah */
         job.condorVariables.construct( "+remote_cerequirements", getCERequirementsForJob( job ) );
 
+        /* do special handling for jobs scheduled to local site
+         * as condor file transfer mechanism does not work
+         * Special handling for the JPL cluster */
+        if( job.getSiteHandle().equals( "local" ) ){
+            
+                String ipFiles = job.condorVariables.getIPFilesForTransfer();
+                
+                //check if the job can be run in the workdir or not
+                //and whether intial dir is populated before hand or not.
+                if(job.runInWorkDirectory() && !job.condorVariables.containsKey("initialdir")){
+                    //for local jobs we need initialdir
+                    //instead of remote_initialdir
+                    job.condorVariables.construct("initialdir", workdir);
+                    
+                    if( ipFiles !=  null ){
+                        //log a warning message
+                        StringBuffer sb = new StringBuffer();
+                        sb.append( "Condor File Transfer Mechanism does not work with glite blahp " ).
+                           append( "IP Files " ).append( ipFiles ).
+                           append( " for job " ).append( job.getID() ).append( " wont be transferred" );
+                        mLogger.log( sb.toString(), LogManager.WARNING_MESSAGE_LEVEL );
+                        job.condorVariables.removeIPFilesForTransfer();
+                    }
+                }
+                
+                // Let Condor figure out the current working directory on submit host
+                // bwSubmit.println("initialdir = " + workdir);
+                
+                //check explicitly for any input files transferred via condor
+                //file transfer mechanism
+                if( ipFiles != null ){
+                    //log a debug message before removing the files
+                    StringBuffer sb = new StringBuffer();
+                    sb.append( "Removing the following ip files from condor file tx for job " ).
+                       append( job.getID() ).append( " " ).append( ipFiles );
+                    mLogger.log(  sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL ); 
+                    job.condorVariables.removeIPFilesForTransfer();
+                }
+                
+                //check for transfer_executable and remove if set
+                //transfer_executable does not work in local/scheduler universe
+                if( job.condorVariables.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
+                    job.condorVariables.removeKey( Condor.TRANSFER_EXECUTABLE_KEY );
+                    job.condorVariables.removeKey( "should_transfer_files" );
+                    job.condorVariables.removeKey( "when_to_transfer_output" );
+                }
+        }
     }
     
    
