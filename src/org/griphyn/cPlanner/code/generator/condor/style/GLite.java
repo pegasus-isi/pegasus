@@ -153,6 +153,14 @@ public class GLite extends Abstract {
                 job.vdsNS.construct( VDS.CHANGE_DIR_KEY, "false" );
                 job.condorVariables.removeKey( "remote_initialdir" );
         }
+        
+        /* similar handling for registration jobs */
+        if( job.getSiteHandle().equals( "local" ) && job.getJobType() == SubInfo.REPLICA_REG_JOB ){
+                /* remove the change dir requirments for the 
+                 * third party transfer on local host */
+                job.vdsNS.construct( VDS.CHANGE_DIR_KEY, "false" );
+                job.condorVariables.removeKey( "remote_initialdir" );
+        }
     }
     
    
