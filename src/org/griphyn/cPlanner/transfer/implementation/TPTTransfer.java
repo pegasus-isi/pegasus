@@ -44,12 +44,12 @@ import java.util.Iterator;
  * <p>
  * In order to use the transfer implementation implemented by this class, the
  * property <code>pegasus.transfer.*.impl</code> must be set to
- * value <code>SCBTransfer</code>.
+ * value <code>TPTTransfer</code>.
  *
  * @author Karan Vahi
  * @version $Revision: 907 $
  */
-public class SCBTransfer extends Transfer {
+public class TPTTransfer extends Transfer {
 
 
 
@@ -60,7 +60,7 @@ public class SCBTransfer extends Transfer {
      *
      * @param bag   the bag of initialization objects.
      */
-    public SCBTransfer( PegasusBag bag ){
+    public TPTTransfer( PegasusBag bag ){
         super( bag );
         
     }
