@@ -75,6 +75,11 @@ public abstract class Namespace extends Data{
     * The key is deprecated. Support is for a limited time.
     */
    public static final int DEPRECATED_KEY     = 3;
+   
+   /**
+    * The key value is empty . 
+    */
+   public static final int EMPTY_KEY = 4;
 
    /**
     * The Map object that contains the profiles for a particular namespace.
@@ -298,6 +303,10 @@ public abstract class Namespace extends Data{
             case Namespace.DEPRECATED_KEY:
                 deprecatedKey(key,value);
                 break;
+                        
+            case Namespace.EMPTY_KEY:
+                emptyKey( key );
+                break;
         }
 
    }
@@ -423,6 +432,20 @@ public abstract class Namespace extends Data{
             "profile " + namespaceName() + "." + key +
             " is not permitted, ignoring!", LogManager.WARNING_MESSAGE_LEVEL);
    }
+   
+   /**
+    * Deletes the key from the namespace.
+    * 
+    * @param key  the key with empty value
+    */
+   public void emptyKey( String key ) {
+        mLogger.log(
+            "profile " + namespaceName() + "." + key +
+            " is empty, Removing!",
+            LogManager.WARNING_MESSAGE_LEVEL);
+        this.removeKey( key );
+    }
+
 
    /**
     * Warns about a namespace profile key-value pair that is malformed.
@@ -436,6 +459,7 @@ public abstract class Namespace extends Data{
             " with value " + value + " is malformed, ignoring!",
             LogManager.WARNING_MESSAGE_LEVEL);
    }
+   
    
    /**
      * Returns the clone of the object.
@@ -460,6 +484,7 @@ public abstract class Namespace extends Data{
         return obj;
     }
 
+    
    /**
      * An empty iterator that allows me to traverse in case of null objects.
      */

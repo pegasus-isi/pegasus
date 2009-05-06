@@ -323,14 +323,20 @@ public class Condor extends Namespace{
      *           VALID_KEY
      *           UNKNOWN_KEY
      *           NOT_PERMITTED_KEY
+     *           DEPRECATED_KEY
+     *           EMPTY_KEY
      */
     public  int checkKey(String key, String value) {
         // sanity checks first
         int res = 0;
 
-        if (key == null || key.length() < 2 ||
-            value == null || value.length() < 1) {
+        if (key == null || key.length() < 2 ) {
             res = MALFORMED_KEY ;
+            return res;
+        }
+        
+        if( value == null || value.length() < 1 ){
+            res = EMPTY_KEY;
             return res;
         }
 
@@ -612,6 +618,10 @@ public class Condor extends Namespace{
                             "\"" + value + "\"";
                 }
                 construct(key, value);
+                break;
+                
+            case Namespace.EMPTY_KEY:
+                emptyKey( key );
                 break;
         }
 

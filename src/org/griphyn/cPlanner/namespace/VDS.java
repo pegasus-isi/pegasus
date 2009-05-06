@@ -291,15 +291,20 @@ public class VDS extends Namespace {
      * @param  value (right hand side)
      *
      * @return Namespace.VALID_KEY
-     * @return Namespace.UNKNOWN_KEY
+     *         Namespace.UNKNOWN_KEY
+     *         Namespace.EMPTY_KEY
      *
      */
     public int checkKey(String key, String value) {
         int res = 0;
 
-        if (key == null || key.length() < 2 ||
-            value == null || value.length() < 1) {
+        if (key == null || key.length() < 2 ) {
             res = MALFORMED_KEY ;
+            return res;
+        }
+        
+        if( value == null || value.length() < 1 ){
+            res = EMPTY_KEY;
             return res;
         }
 

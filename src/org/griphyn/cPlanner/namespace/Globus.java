@@ -173,12 +173,17 @@ public class Globus extends Namespace {
     public int checkKey(String key, String value) {
         // sanity checks first
         int res = 0;
-
-        if (key == null || key.length() < 2 ||
-            value == null || value.length() < 1) {
+        
+        if (key == null || key.length() < 2 ) {
             res = MALFORMED_KEY ;
             return res;
         }
+        
+        if( value == null || value.length() < 1 ){
+            res = EMPTY_KEY;
+            return res;
+        }
+
 
         //before checking convert the key to lower case
         key = key.toLowerCase();
