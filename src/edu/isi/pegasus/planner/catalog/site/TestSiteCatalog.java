@@ -19,12 +19,17 @@
 package edu.isi.pegasus.planner.catalog.site;
 
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
-import java.util.ArrayList;
-import java.util.List;
+
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+
+import org.griphyn.common.util.Version;
+
+import org.griphyn.cPlanner.common.PegasusProperties;
 
 import java.util.Properties;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A Test program that shows how to load a Site Catalog, and query for all sites.
@@ -45,6 +50,10 @@ public class TestSiteCatalog {
      */
     public static void main( String[] args ) {
         SiteCatalog catalog = null;
+        //setup the logger for the default streams.
+        LogManager logger = LogManagerFactory.loadSingletonInstance( PegasusProperties.nonSingletonInstance() );
+        logger.logEventStart( "event.pegasus.catalog.site.test", "planner.version", Version.instance().toString() );
+
         
         /* load the catalog using the factory */
         try{
