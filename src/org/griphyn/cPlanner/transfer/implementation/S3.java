@@ -144,10 +144,11 @@ public class S3 extends Abstract
         //should probably go through the factory
         mS3Transfer = new S3Cmd( bag );
         
-        //just to pass the label have to send an empty ADag.
+        //just to pass the label and timestamp have to send an empty ADag.
         //should be fixed
         ADag dag = new ADag();
         dag.dagInfo.setLabel( "s3" );
+        dag.dagInfo.setDAXMTime( new File( bag.getPlannerOptions().getDAX() ) );
 
         mSeqExecAggregator = JobAggregatorFactory.loadInstance( JobAggregatorFactory.SEQ_EXEC_CLASS,
                                                                 dag,
