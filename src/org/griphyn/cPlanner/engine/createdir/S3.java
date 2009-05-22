@@ -205,7 +205,7 @@ public class S3 implements Implementation {
         
         execPath = entry.getPhysicalTransformation();
 
-        argString = " mb " +   mBucketName;
+        argString = " mb " + "s3://" +   mBucketName;
             
         newJob.jobName = name;
         newJob.setTransformation( S3.TRANSFORMATION_NAMESPACE,

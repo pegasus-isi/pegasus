@@ -340,6 +340,14 @@ public class S3   implements SLS {
             for( Iterator it = files.iterator(); it.hasNext(); ){
             
                 pf = ( PegasusFile ) it.next();
+                
+                //skip sls input and output file as they are
+                //transferred as part of gridstart prejob 
+                if( pf.getLFN().equals( getSLSInputLFN(job) ) ||
+                    pf.getLFN().equals( getSLSOutputLFN(job) ) ){
+                    continue;
+                }
+                
                 FileTransfer ft = new FileTransfer( pf );
                 //we just need to add the destination
                 //i.e directory on the worker node
@@ -517,8 +525,8 @@ public class S3   implements SLS {
     }
 
     /**
-     * Modifies a compute job for second level staging. The only modification
-     * it does is add the appropriate environment varialbes to the job
+     * Modifies a compute job for second level staging. The appropriate 
+     * environment variables are added to the job
      *
      * @param job the job to be modified.
      * @param headNodeURLPrefix the url prefix for the server on the headnode
@@ -542,7 +550,7 @@ public class S3   implements SLS {
         if( envs == null || envs.isEmpty()){
             //cannot create default TC
             mLogger.log( "Unable to set the necessary environment " +
-                         Separator.combine( this.TRANSFORMATION_NAMESPACE, this.TRANSFORMATION_NAME, this.TRANSFORMATION_VERSION ) ,
+                         Separator.combine( S3.TRANSFORMATION_NAMESPACE, S3.TRANSFORMATION_NAME, S3.TRANSFORMATION_VERSION ) ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return false;
         }
@@ -552,6 +560,15 @@ public class S3   implements SLS {
             job.envVariables.checkKeyInNS( (Profile)it.next() );
         }
 
+        /*for( Iterator<PegasusFile> it = job.getInputFiles().iterator(); it.hasNext() ; ){
+            PegasusFile pf = it.next();
+            System.out.println( "File is " + pf );
+            if( pf.getLFN().equals( getSLSInputLFN(job) ) ||
+                pf.getLFN().equals( getSLSOutputLFN(job) ) ){
+                System.out.println( "Removing file" + pf );
+                it.remove();
+            }
+        }*/
         return true;
 
     }
