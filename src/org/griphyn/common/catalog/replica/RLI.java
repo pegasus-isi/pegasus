@@ -17,12 +17,13 @@
 package org.griphyn.common.catalog.replica;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
+
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 import org.griphyn.common.catalog.CatalogException;
 
-import edu.isi.pegasus.common.logging.LogManager;
-
+import org.griphyn.common.util.Version;
 import org.globus.replica.rls.RLSClient;
 import org.globus.replica.rls.RLSException;
 import org.globus.replica.rls.RLSAttribute;
@@ -256,6 +257,9 @@ public class RLI implements ReplicaCatalog {
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         mLRCIgnoreList   = this.getRLSLRCIgnoreURLs( props );
+        for( int i = 0; i < mLRCIgnoreList.length; i++ ){
+            System.out.println( mLRCIgnoreList[i] );
+        }
         mLRCRestrictList = this.getRLSLRCRestrictURLs( props );
 
 
@@ -385,7 +389,7 @@ public class RLI implements ReplicaCatalog {
 
         return null;
     }
-
+    
     /**
      * Retrieves all entries for a given LFN from the replica catalog.
      * Each entry in the result set is a tuple of a PFN and all its
@@ -399,65 +403,17 @@ public class RLI implements ReplicaCatalog {
      * @see ReplicaCatalogEntry
      */
     public Collection lookup(String lfn) {
-        //sanity check
-        if (this.isClosed()) {
-            //probably an exception should be thrown here!!
-            throw new RuntimeException(RLI_NOT_CONNECTED_MSG + this.mRLIURL);
-        }
-
-        Collection result = null;
-        ArrayList lrcList = null;
-        try {
-            lrcList = mRLI.getLRC(lfn);
-            result = new ArrayList(lrcList.size());
-
-            for (Iterator it = lrcList.iterator(); it.hasNext(); ) {
-                //connect to an lrc
-                String lrcURL = ( (RLSString2) it.next()).s2;
-
-                //push the lrcURL to the properties object
-                mConnectProps.setProperty(this.URL_KEY,lrcURL);
-                LRC lrc     = new LRC();
-                if(!lrc.connect(mConnectProps)){
-                    //log an error/warning message
-                    mLogger.log("Unable to connect to LRC " + lrcURL,
-                                LogManager.ERROR_MESSAGE_LEVEL);
-                    continue;
-                }
-
-                //query the lrc
-                try{
-                    Collection l = lrc.lookup(lfn);
-                    if ( l != null)
-                        result.addAll(l);
-                }
-                catch(Exception ex){
-                    mLogger.log("lookup(String)", ex,
-                                LogManager.ERROR_MESSAGE_LEVEL);
-                }
-                finally{
-                    //disconnect
-                    lrc.close();
-                }
-            }
-        }
-        catch (RLSException ex) {
-            if(ex.GetRC() == RLSClient.RLS_LFN_NEXIST ||
-               ex.GetRC() == RLSClient.RLS_MAPPING_NEXIST){
-                mLogger.log("lookup(String) :Mapping for lfn " +
-                            lfn + " does not exist in RLI",
-                            LogManager.ERROR_MESSAGE_LEVEL);
-            }
-            else{
-                mLogger.log("lookup(String)", ex,
-                            LogManager.ERROR_MESSAGE_LEVEL);
-            }
-            result = new ArrayList(1);
-        }
-
-        return result;
-
+        Set lfns = new HashSet();
+        lfns.add( lfn );
+        
+        Map<String, Collection<ReplicaCatalogEntry>> result = this.lookup( lfns );
+        return ( result == null )?
+                null:
+                result.get( lfn );
+     
     }
+
+    
 
     /**
      * Retrieves all entries for a given LFN from the replica catalog.
@@ -470,69 +426,16 @@ public class RLI implements ReplicaCatalog {
      *
      */
     public Set lookupNoAttributes(String lfn) {
-        //sanity check
-        if (this.isClosed()) {
-            //probably an exception should be thrown here!!
-            throw new RuntimeException(RLI_NOT_CONNECTED_MSG + this.mRLIURL);
-        }
-
-        Set result = null;
-        ArrayList lrcList = null;
-        try {
-            lrcList = mRLI.getLRC(lfn);
-            result  = new HashSet(lrcList.size());
-
-            for (Iterator it = lrcList.iterator(); it.hasNext(); ) {
-                //connect to an lrc
-                String lrcURL = ( (RLSString2) it.next()).s2;
-
-                //push the lrcURL to the properties object
-                mConnectProps.setProperty(this.URL_KEY,lrcURL);
-                LRC lrc     = new LRC();
-                if(!lrc.connect(mConnectProps)){
-                    //log an error/warning message
-                    mLogger.log("Unable to connect to LRC " + lrcURL,
-                                LogManager.ERROR_MESSAGE_LEVEL);
-                    continue;
-                }
-
-                //query the lrc
-                try{
-                    Collection l = lrc.lookupNoAttributes(lfn);
-                      if ( l != null)
-                          result.addAll(l);
-
-                }
-                catch(Exception ex){
-                    mLogger.log("lookupNoAttributes(String,String)",ex,
-                                LogManager.ERROR_MESSAGE_LEVEL);
-                }
-                finally{
-                    //disconnect
-                    lrc.close();
-                }
-            }
-        }
-        catch (RLSException ex) {
-            if(ex.GetRC() == RLSClient.RLS_LFN_NEXIST ||
-               ex.GetRC() == RLSClient.RLS_MAPPING_NEXIST){
-                mLogger.log("lookupNoAttributes(String,String): " +
-                            "Mapping for lfn " +
-                            lfn + " does not exist in RLI",
-                            LogManager.ERROR_MESSAGE_LEVEL);
-            }
-            else{
-                mLogger.log(
-                    "lookupNoAttributes(String,String)", ex,
-                    LogManager.ERROR_MESSAGE_LEVEL);
-            }
-            result = new HashSet(1);
-        }
-
-        return result;
-
+        Set lfns = new HashSet();
+        lfns.add( lfn );
+        
+        Map<String, Set<String>> result = this.lookupNoAttributes( lfns );
+        return ( result == null )?
+                null:
+                result.get( lfn );
+     
     }
-
+  
     /**
      * Retrieves multiple entries for a given logical filename, up to the
      * complete LRC. It uses the bulk query api to the LRC to query for stuff.
@@ -644,7 +547,7 @@ public class RLI implements ReplicaCatalog {
      *
      * @param lfns is a set of logical filename strings to look up.
      * @return a map indexed by the LFN. Each value is a collection
-     * of replica catalog entries for the LFN.
+     * of PFN's for the LFN.
      */
     public Map lookupNoAttributes(Set lfns) {
         //Map indexed by lrc url and each value a collection
@@ -1800,12 +1703,12 @@ public class RLI implements ReplicaCatalog {
      * @return tristate
      */
     private int determineQueryType(String url){
-        int type = this.LRC_QUERY_NORMAL;
+        int type = RLI.LRC_QUERY_NORMAL;
 
         if(mLRCRestrictList != null){
             for ( int j = 0; j < mLRCRestrictList.length; j++ ) {
                 if ( url.indexOf( mLRCRestrictList[ j ] ) != -1 ) {
-                    type = this.LRC_QUERY_RESTRICT;
+                    type = RLI.LRC_QUERY_RESTRICT;
                     break;
                 }
             }
@@ -1813,7 +1716,7 @@ public class RLI implements ReplicaCatalog {
         if(mLRCIgnoreList != null){
             for ( int j = 0; j < mLRCIgnoreList.length; j++ ) {
                 if ( url.indexOf( mLRCIgnoreList[ j ] ) != -1 ) {
-                    type = this.LRC_QUERY_IGNORE;
+                    type = RLI.LRC_QUERY_IGNORE;
                     break;
                 }
             }
@@ -1979,14 +1882,28 @@ public class RLI implements ReplicaCatalog {
      * @param args String[]
      */
     public static void main(String[] args) {
+        //setup the logger for the default streams.
+        LogManager logger = LogManagerFactory.loadSingletonInstance(  );
+        logger.logEventStart( "event.pegasus.catalog.replica.RLI", "planner.version", Version.instance().toString() );
+
         RLI rli = new RLI();
+        Properties props = new Properties();
+        props.setProperty( RLI.URL_KEY, "rls://dataserver.phy.syr.edu" );
+        props.setProperty( RLI.LRC_IGNORE_KEY, "rls://ldas-cit.ligo.caltech.edu:39281" );
+        rli.connect(props);
+        System.out.println( "Complete Lookup "  + rli.lookup("H-H1_RDS_C03_L2-847608132-128.gwf" ) );
+        System.out.println( "Lookup without attributes "  + rli.lookupNoAttributes("H-H1_RDS_C03_L2-847608132-128.gwf" ) );
+        rli.close();
+        
+        
+        //RLI rli = new RLI();
         String lfn = "test";
         Set s = new HashSet();
         s.add(lfn);s.add("testX");s.add("vahi.f.a");
         System.out.println("Connecting " + rli.connect("rls://sukhna"));
         boolean insert = false;
-        LogManagerFactory.loadSingletonInstance().setLevel(LogManager.DEBUG_MESSAGE_LEVEL);
-
+        
+        
         if(insert){
             ReplicaCatalogEntry rce = new ReplicaCatalogEntry(
                 "gsiftp://sukhna.isi.edu/tmp/test");
