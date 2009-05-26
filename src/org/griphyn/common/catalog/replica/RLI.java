@@ -257,9 +257,6 @@ public class RLI implements ReplicaCatalog {
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         mLRCIgnoreList   = this.getRLSLRCIgnoreURLs( props );
-        for( int i = 0; i < mLRCIgnoreList.length; i++ ){
-            System.out.println( mLRCIgnoreList[i] );
-        }
         mLRCRestrictList = this.getRLSLRCRestrictURLs( props );
 
 
