@@ -30,7 +30,6 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
 
 /**
  * The default replica selector that is used if non is specifed by the user.
@@ -118,8 +117,12 @@ public class Default implements ReplicaSelector {
         int locSelected;
         String site = null;
 
-//        mLogger.log("Selecting a pfn for lfn " + lfn + "\n amongst" + locations ,
-//                    LogManager.DEBUG_MESSAGE_LEVEL);
+        //create a shallow clone as we will be removing
+        //using Iterator.remove() methods
+        rl = (ReplicaLocation)rl.clone();
+        
+        mLogger.log("Selecting a pfn for lfn " + rl.getLFN() + "\n amongst" + rl.getPFNList() ,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
 
         for ( Iterator it = rl.pfnIterator(); it.hasNext(); ) {
             rce = ( ReplicaCatalogEntry ) it.next();
@@ -141,7 +144,7 @@ public class Default implements ReplicaSelector {
                 //starts with file url. if it is , we need
                 //to remove it from list, as file urls make sense
                 //only if associated with the preference pool
-                if ( rce.getPFN().startsWith( FILE_URL_SCHEME ) ) {
+                if ( rce.getPFN().startsWith( FILE_URL_SCHEME ) ){ 
                     it.remove();
                 }
                 /*

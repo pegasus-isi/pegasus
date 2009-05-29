@@ -151,27 +151,27 @@ public class Restricted extends Default {
     public ReplicaCatalogEntry selectReplica( ReplicaLocation rl,
                                               String preferredSite ){
 
-//    public ReplicaLocation select( String lfn,
-//                                   Vector locations,
-//                                   String preferredSite ) {
-
         String lfn = rl.getLFN();
         String site;
         ArrayList prefLocs = new ArrayList();
         int locSelected;
 
-
+        //create a shallow clone as we will be removing
+        //using Iterator.remove() methods
+        rl = (ReplicaLocation)rl.clone();
+        
         //build state on the basis of preferred sites
         populateSiteMaps( preferredSite );
 
         mLogger.log( "[RestrictedReplicaSelector] Selecting a pfn for lfn " + lfn
                      + "\n amongst" + rl , LogManager.DEBUG_MESSAGE_LEVEL );
-
+        
         ReplicaCatalogEntry rce;
         for ( Iterator it = rl.pfnIterator(); it.hasNext(); ) {
             rce = ( ReplicaCatalogEntry ) it.next();
             site = rce.getResourceHandle();
 
+            
             //check if equal to the execution site
             //or site is preferred to stage to execution site.
             if ( prefer( site, preferredSite ) ) {

@@ -130,8 +130,10 @@ public class Regex extends Default {
         ArrayList prefLocs = new ArrayList();
         int locSelected;
 
-
-
+        //create a shallow clone as we will be removing
+        //using Iterator.remove() methods
+        rl = (ReplicaLocation)rl.clone();
+        
         mLogger.log( "[RegexReplicaSelector] Selecting a pfn for lfn " + lfn
                      + "\n amongst " + rl , LogManager.DEBUG_MESSAGE_LEVEL );
 

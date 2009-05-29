@@ -221,16 +221,17 @@ public class ReplicaLocation
             throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
                                        e );
         }
+        rc.mPFNList = new ArrayList();
         rc.setLFN( this.mLFN );
 
         //add all the RCE's
         for( Iterator it = this.pfnIterator(); it.hasNext(); ){
-            //rc.addPFN( (( ReplicaCatalogEntry )it.next()).clone() );
+            //creating a shallow clone here.
+            rc.addPFN( ( ReplicaCatalogEntry )it.next() );
         }
         //clone is not implemented fully.
-        throw new RuntimeException( "Clone not implemented for " + this.getClass().getName() );
-
-//        return rc;
+        //throw new RuntimeException( "Clone not implemented for " + this.getClass().getName() );
+        return rc;
     }
 
     /**
