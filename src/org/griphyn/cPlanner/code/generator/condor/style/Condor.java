@@ -94,19 +94,29 @@ public class Condor extends Abstract {
         String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
         workdir = (workdir == null)?execSiteWorkDir:workdir;
 
-        String universe = job.condorVariables.containsKey( this.UNIVERSE_KEY )?
-                              (String)job.condorVariables.get( this.UNIVERSE_KEY):
+        String universe = job.condorVariables.containsKey( Condor.UNIVERSE_KEY )?
+                              (String)job.condorVariables.get( Condor.UNIVERSE_KEY):
                               //default is Scheduler universe for condor style
                               Condor.LOCAL_UNIVERSE;
 
 
+        //extra check for standard universe
+        if( universe.equals( Condor.STANDARD_UNIVERSE ) ){
+            //standard universe should be only applied for compute jobs
+            int type = job.getJobType();
+            if (!( type == SubInfo.COMPUTE_JOB || type == SubInfo.STAGED_COMPUTE_JOB)) {
+                //set universe to vanilla universe
+                universe = Condor.VANILLA_UNIVERSE;
+            }
+        }
+        
         //set the universe for the job
         // Karan Jan 28, 2008
         job.condorVariables.construct( "universe", universe );
 
-        if( universe.equalsIgnoreCase( this.VANILLA_UNIVERSE )  ||
-            universe.equalsIgnoreCase( this.STANDARD_UNIVERSE ) ||
-            universe.equalsIgnoreCase( this.PARALLEL_UNIVERSE ) ){
+        if( universe.equalsIgnoreCase( Condor.VANILLA_UNIVERSE )  ||
+            universe.equalsIgnoreCase( Condor.STANDARD_UNIVERSE ) ||
+            universe.equalsIgnoreCase( Condor.PARALLEL_UNIVERSE ) ){
             //the glide in/ flocking case
             //submitting directly to condor
             //check if it is a glide in job.
