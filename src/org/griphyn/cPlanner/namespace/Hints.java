@@ -47,7 +47,22 @@ public class Hints extends Namespace {
     /**
      * The jobmanager universe key.
      */
-    public static final String JOBMANAGER_UNIVERSE = "jobmanager.universe";
+    public static final String JOBMANAGER_UNIVERSE_KEY = "jobmanager.universe";
+    
+    /**
+     * The execution pool key
+     */
+    public static final String EXECUTION_POOL_KEY = "executionPool";
+    
+    /**
+     * The globus scheduler hints key
+     */
+    public static final String GLOBUS_SCHEDULER_KEY = "globusScheduler";
+    
+    /**
+     * The pfnHint key
+     */
+    public static final String PFN_HINT_KEY = "pfnHint";
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -153,7 +168,7 @@ public class Hints extends Namespace {
 
         switch (key.charAt(0)) {
             case 'e':
-                if (key.compareTo("executionPool") == 0) {
+                if (key.compareTo( Hints.EXECUTION_POOL_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -162,7 +177,7 @@ public class Hints extends Namespace {
                 break;
 
             case 'g':
-                if (key.compareTo("globusScheduler") == 0) {
+                if (key.compareTo( Hints.GLOBUS_SCHEDULER_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -171,7 +186,7 @@ public class Hints extends Namespace {
                 break;
 
             case 'j':
-                if (key.compareTo( JOBMANAGER_UNIVERSE ) == 0 ) {
+                if (key.compareTo( Hints.JOBMANAGER_UNIVERSE_KEY  ) == 0 ) {
                     res = VALID_KEY;
                 }
                 else {
@@ -181,7 +196,7 @@ public class Hints extends Namespace {
 
 
             case 'p':
-                if (key.compareTo("pfnHint") == 0 /*||
+                if (key.compareTo( Hints.PFN_HINT_KEY ) == 0 /*||
                     key.compareTo("pfnUniverse") == 0*/) {
                     res = VALID_KEY;
                 }
@@ -245,7 +260,19 @@ public class Hints extends Namespace {
      * @return String
      */
     public String toString() {
-        return null;
+        StringBuffer st = new StringBuffer();
+        String key = null;
+        String value = null;
+        if(mProfileMap == null)
+            return "";
+
+        for ( Iterator it = mProfileMap.keySet().iterator(); it.hasNext(); ){
+            key = (String)it.next();
+            value = (String)mProfileMap.get(key);
+            st.append(key).append(" = ").append(value).append("\n");
+        }
+
+        return st.toString();
 
     }
 

@@ -611,6 +611,13 @@ public class TransferEngine extends Engine {
 
             ft.addSource(execPool,sourceURL);
 
+            //if the PegasusFile is already an instance of
+            //FileTransfer the user has specified the destination
+            //that they want to use in the DAX 3.0 
+            if( pf instanceof FileTransfer ){
+                ft.addDestination( ((FileTransfer)pf).removeDestURL() );
+                return ft;
+            }
 
             //add all the possible destination urls iterating through
             //the list of grid ftp servers associated with the dest pool.
@@ -865,13 +872,21 @@ public class TransferEngine extends Engine {
                 //nv contains both the source pool and the url.
                 //This happens in case of AI Planner or transfer of executables
                 nv = ((FileTransfer)pf).getSourceURL();
-                destURL = ((FileTransfer)pf).removeDestURL().getValue();
-                destURL = (isSiteThirdParty(ePool, SubInfo.STAGE_IN_JOB))?
-                           //the destination URL is already third party
-                           //enabled. use as it is
-                           destURL:
-                           //explicitly convert to file URL scheme
-                           scheme + "://" + Utility.getAbsolutePath(destURL);
+                
+                NameValue destNV = ((FileTransfer)pf).removeDestURL();
+                if( destNV == null ){
+                    //the source URL was specified in the DAX
+                    //no transfer of executables case
+                }
+                else{//staging of executables case
+                    destURL = destNV.getValue();
+                    destURL = (isSiteThirdParty(ePool, SubInfo.STAGE_IN_JOB))?
+                               //the destination URL is already third party
+                               //enabled. use as it is
+                               destURL:
+                               //explicitly convert to file URL scheme
+                               scheme + "://" + Utility.getAbsolutePath(destURL);
+                }
             }
             else{
                 //query the replica services and get hold of pfn
@@ -906,7 +921,7 @@ public class TransferEngine extends Engine {
                                         //we have the replica already selected
                                         new ReplicaCatalogEntry( nv.getValue(), nv.getKey() );
 
-
+                                        
             //get the file to the job's execution pool
             //this is assuming that there are no directory paths
             //in the pfn!!!

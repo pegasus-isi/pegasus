@@ -295,7 +295,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
 //          replaced with jobmanager-type
 //            incorporateHint(job, "pfnUniverse");
-            incorporateHint(job, Hints.JOBMANAGER_UNIVERSE );
+            incorporateHint(job, Hints.JOBMANAGER_UNIVERSE_KEY  );
             if (incorporateHint(job, "executionPool")) {
                 //i++;
                 incorporateProfiles(job);
@@ -399,101 +399,124 @@ public class InterPoolEngine extends Engine implements Refiner {
         job.updateProfiles( mSiteStore.lookup( siteHandle ).getProfiles() );
 
 
-        //query the TCMapper and get hold of all the valid TC
-        //entries for that site
-        tcEntries = mTCMapper.getTCList(job.namespace,job.logicalName,
-                                        job.version,siteHandle);
+        //we now query the TCMapper only if there is no hint available
+        //by the user in the DAX 3.0 .  
+        if( job.getRemoteExecutable() == null || job.getRemoteExecutable().length() == 0 ){ 
+        
+            //query the TCMapper and get hold of all the valid TC
+            //entries for that site
+            tcEntries = mTCMapper.getTCList(job.namespace,job.logicalName,
+                                            job.version,siteHandle);
 
-        StringBuffer error;
-        FileTransfer fTx = null;
-        if(tcEntries != null && tcEntries.size() > 0){
-            //select a tc entry calling out to
-            //the transformation selector
-            tcEntry = selectTCEntry(tcEntries,job,mProps.getTXSelectorMode());
-            if(tcEntry == null){
-                error = new StringBuffer();
-                error.append( "Transformation selection operation for job  ").
-                      append( job.getCompleteTCName() ).append(" for site " ).
-                      append( job.getSiteHandle() ).append( " unsuccessful." );
-                mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
-                throw new RuntimeException( error.toString() );
-            }
-
-            //something seriously wrong in this code line below.
-            //Need to verify further after more runs. (Gaurang 2-7-2006).
-//            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
-            if(tcEntry.getType().equals(TCType.STATIC_BINARY)){
-//                SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,"vanilla");
-                SiteCatalogEntry site = mSiteStore.lookup( siteHandle );
-                //construct a file transfer object and add it
-                //as an input file to the job in the dag
-                fTx = new FileTransfer(job.getStagedExecutableBaseName(),
-                                                    job.jobName);
-                fTx.setType(FileTransfer.EXECUTABLE_FILE);
-                //the physical transformation points to
-                //guc or the user specified transfer mechanism
-                //accessible url
-                fTx.addSource(tcEntry.getResourceId(),
-                              tcEntry.getPhysicalTransformation());
-                //the destination url is the working directory for
-                //pool where it needs to be staged to
-                //always creating a third party transfer URL
-                //for the destination.
-                String stagedPath =  mSiteStore.getWorkDirectory(job)
-                    + File.separator + job.getStagedExecutableBaseName();
-//                fTx.addDestination(siteHandle,
-//                                   site.getURLPrefix(false) + stagedPath);
-                fTx.addDestination( siteHandle,
-                                    site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
-
-
-                //added in the end now after dependant executables
-                //have been handled Karan May 31 2007
-                //job.addInputFile(fTx);
-
-                if( mWorkerNodeExecution ){
-                    //do not specify the full path as we do not know worker
-                    //node directory
-
-                    if( mSLS.doesCondorModifications() ){
-                        //we need to take the basename of the source url
-                        //as condor file transfer mech does not allow to
-                        //specify destination filenames
-                        job.setRemoteExecutable( new File( tcEntry.getPhysicalTransformation() ).getName() );
-                    }
-                    else{
-                        //do this only when kickstart executable existance check is fixed
-                        //Karan Nov 30 2007
-                        //job.setRemoteExecutable(job.getStagedExecutableBaseName());
-                        job.setRemoteExecutable(  stagedPath );
-                    }
+            StringBuffer error;
+            if(tcEntries != null && tcEntries.size() > 0){
+                //select a tc entry calling out to
+                //the transformation selector
+                tcEntry = selectTCEntry(tcEntries,job,mProps.getTXSelectorMode());
+                if(tcEntry == null){
+                    error = new StringBuffer();
+                    error.append( "Transformation selection operation for job  ").
+                          append( job.getCompleteTCName() ).append(" for site " ).
+                          append( job.getSiteHandle() ).append( " unsuccessful." );
+                    mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
+                    throw new RuntimeException( error.toString() );
                 }
-                else{
-                    //the jobs executable is the path to where
-                    //the executable is going to be staged
-                    job.executable = stagedPath;
-                }
-                //setting the job type of the job to
-                //denote the executable is being staged
-                job.setJobType(SubInfo.STAGED_COMPUTE_JOB);
             }
             else{
-                //the executable needs to point to the physical
-                //path gotten from the selected transformantion
-                //entry
-                job.executable = tcEntry.getPhysicalTransformation();
+                //mismatch. should be unreachable code!!!
+                //as error should have been thrown in the site selector
+                mLogger.log(
+                    "Site selector mapped job " +
+                    job.getCompleteTCName() + " to pool " +
+                    job.executionPool + " for which no mapping exists in " +
+                    "transformation mapper.",LogManager.FATAL_MESSAGE_LEVEL);
+                return false;
             }
         }
         else{
-            //mismatch. should be unreachable code!!!
-            //as error should have been thrown in the site selector
-            mLogger.log(
-                "Site selector mapped job " +
-                job.getCompleteTCName() + " to pool " +
-                job.executionPool + " for which no mapping exists in " +
-                "transformation mapper.",LogManager.FATAL_MESSAGE_LEVEL);
-            return false;
+            //create a transformation catalog entry object
+            //corresponding to the executable set
+            String executable = job.getRemoteExecutable();
+            tcEntry = new TransformationCatalogEntry();
+            tcEntry.setLogicalTransformation( job.getTXNamespace(),
+                                              job.getTXName(), 
+                                              job.getTXVersion() );
+            tcEntry.setResourceId( job.getSiteHandle() );
+            tcEntry.setPhysicalTransformation( executable );
+            //hack to determine whether an executable is 
+            //installed or static binary
+            tcEntry.setType( executable.startsWith( "/" ) ?
+                             TCType.INSTALLED:
+                             TCType.STATIC_BINARY );
+                
         }
+
+        FileTransfer fTx = null;
+        //something seriously wrong in this code line below.
+        //Need to verify further after more runs. (Gaurang 2-7-2006).
+//            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
+        if(tcEntry.getType().equals( TCType.STATIC_BINARY )){
+            SiteCatalogEntry site = mSiteStore.lookup( siteHandle );
+            //construct a file transfer object and add it
+            //as an input file to the job in the dag
+            fTx = new FileTransfer( job.getStagedExecutableBaseName(),
+                                                 job.jobName);
+            fTx.setType(FileTransfer.EXECUTABLE_FILE);
+                
+            //the physical transformation points to
+            //guc or the user specified transfer mechanism
+            //accessible url
+            fTx.addSource( tcEntry.getResourceId(),
+                           tcEntry.getPhysicalTransformation());
+            
+            //the destination url is the working directory for
+            //pool where it needs to be staged to
+            //always creating a third party transfer URL
+            //for the destination.
+            String stagedPath =  mSiteStore.getWorkDirectory(job)
+                                + File.separator + job.getStagedExecutableBaseName();
+
+            fTx.addDestination( siteHandle,
+                                site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
+
+            //added in the end now after dependant executables
+            //have been handled Karan May 31 2007
+            //job.addInputFile(fTx);
+
+            if( mWorkerNodeExecution ){
+                //do not specify the full path as we do not know worker
+                //node directory
+
+                if( mSLS.doesCondorModifications() ){
+                    //we need to take the basename of the source url
+                    //as condor file transfer mech does not allow to
+                    //specify destination filenames
+                    job.setRemoteExecutable( new File( tcEntry.getPhysicalTransformation() ).getName() );
+                }
+                else{
+                    //do this only when kickstart executable existance check is fixed
+                    //Karan Nov 30 2007
+                    //job.setRemoteExecutable(job.getStagedExecutableBaseName());
+                    job.setRemoteExecutable(  stagedPath );
+                }
+            }
+            else{
+                //the jobs executable is the path to where
+                //the executable is going to be staged
+                job.executable = stagedPath;
+            }
+            //setting the job type of the job to
+            //denote the executable is being staged
+            job.setJobType(SubInfo.STAGED_COMPUTE_JOB);
+        }
+        else{
+            //the executable needs to point to the physical
+            //path gotten from the selected transformantion
+            //entry
+            job.executable = tcEntry.getPhysicalTransformation();
+        }
+        
+        
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
@@ -707,47 +730,52 @@ public class InterPoolEngine extends Engine implements Refiner {
                     job.executionPool = (String) job.hints.removeKey(
                         "executionPool");
 
-                    incorporateHint(job, "globusScheduler");
+                    incorporateHint( job, "globusScheduler");
+                    incorporateHint( job, Hints.PFN_HINT_KEY );
                     return true;
                 }
                 break;
 
             case 'g':
                 if (key.equals("globusScheduler")) {
-                    job.globusScheduler = (job.hints.containsKey(
-                        "globusScheduler")) ?
-                        //take the globus scheduler that the user
-                        //specified in the DAX
-                        (String) job.hints.removeKey("globusScheduler") :
-                        //select one from the pool handle
-//                        mPoolHandle.getPoolEntry(job.executionPool,
-//                                                 job.condorUniverse).
-//                        selectJobManager(job.condorUniverse,true).getInfo(JobManager.URL);
-                          mSiteStore.lookup( job.getSiteHandle() ).
-                                     selectGridGateway( GridGateway.JOB_TYPE.valueOf(job.condorUniverse)).
-                                     getContact();  
-
+                    if( job.hints.containsKey( Hints.GLOBUS_SCHEDULER_KEY ) ){
+                        //user specified the jobmanager on which they want 
+                        //the job to execute on
+                        job.globusScheduler = (String) job.hints.removeKey("globusScheduler");
+                    }
+                    else{
+                        //try to lookup in the site catalog
+                        SiteCatalogEntry s = mSiteStore.lookup( job.getSiteHandle() );
+                        if( s == null ){
+                            throw new RuntimeException( "Unable to find entry for site in site catalog " + job.getSiteHandle() );
+                        }
+                        job.globusScheduler =  s.selectGridGateway( 
+                                                    GridGateway.JOB_TYPE.valueOf(job.condorUniverse)).
+                                                                 getContact();
+                    }
                     return true;
                 }
                 break;
 
-            /*//not required any longer
+            
             case 'p':
 
-                if (key.equals("pfnUniverse")) {
-                    job.condorUniverse = job.hints.containsKey("pfnUniverse") ?
-                        (String) job.hints.removeKey("pfnUniverse") :
-                        job.condorUniverse;
+                if (key.equals( Hints.PFN_HINT_KEY )) {
+                    job.setRemoteExecutable( 
+                            job.hints.containsKey( Hints.PFN_HINT_KEY ) ?
+                                (String) job.hints.removeKey( Hints.PFN_HINT_KEY ) :
+                                null
+                            );
 
                     return true;
 
                 }
                 break;
-            */
+                
             case 'j':
-                if (key.equals( Hints.JOBMANAGER_UNIVERSE )) {
-                 job.condorUniverse = job.hints.containsKey( Hints.JOBMANAGER_UNIVERSE ) ?
-                     (String) job.hints.removeKey( Hints.JOBMANAGER_UNIVERSE ) :
+                if (key.equals( Hints.JOBMANAGER_UNIVERSE_KEY  )) {
+                 job.condorUniverse = job.hints.containsKey( Hints.JOBMANAGER_UNIVERSE_KEY  ) ?
+                     (String) job.hints.removeKey( Hints.JOBMANAGER_UNIVERSE_KEY  ) :
                      job.condorUniverse;
 
                  return true;
