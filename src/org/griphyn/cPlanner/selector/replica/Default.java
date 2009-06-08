@@ -60,13 +60,7 @@ public class Default implements ReplicaSelector {
      */
     protected static final String FILE_URL_SCHEME = "file:";
 
-    /**
-     * This member variable if set causes the source url for the pull nodes from
-     * the RLS to have file:// url if the pool attributed associated with the pfn
-     * is same as a particular jobs execution pool.
-     */
-    protected boolean mUseSymLinks;
-
+    
     /**
      * The handle to the logging object that is used to log the various debug
      * messages.
@@ -89,7 +83,6 @@ public class Default implements ReplicaSelector {
     public Default( PegasusProperties properties ){
         mProps       = properties;
         mLogger      =  LogManagerFactory.loadSingletonInstance( properties );
-        mUseSymLinks = mProps.getUseOfSymbolicLinks();
     }
 
 
@@ -182,9 +175,13 @@ public class Default implements ReplicaSelector {
             //he wants to create symbolic
             //links instead of going thru the
             //grid ftp server
+            //create symbolic links instead of going through gridftp server
+            //moved to Transfer Engine Karan June 8th, 2009
+            /*
             if (mUseSymLinks) {
                 rce = replaceProtocolFromURL( rce );
             }
+            */
         }
 
         return rce;
@@ -245,36 +242,7 @@ public class Default implements ReplicaSelector {
 
     }
 
-    /**
-     * Replaces the gsiftp URL scheme from the url, and replaces it with the
-     * file url scheme and returns in a new object. The original object
-     * passed as a parameter still remains the same.
-     *
-     * @param rce  the <code>ReplicaCatalogEntry</code> object whose url need to be
-     *             replaced.
-     *
-     * @return  the object with the url replaced.
-     */
-    protected ReplicaCatalogEntry replaceProtocolFromURL( ReplicaCatalogEntry rce ) {
-        String pfn = rce.getPFN();
-        StringBuffer newPFN = new StringBuffer();
-        String hostName = Utility.getHostName( pfn );
-
-        newPFN.append( FILE_URL_SCHEME ).append( "//" );
-        //we want to skip out the hostname
-        newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
-
-        //we do not need a full clone, just the PFN
-        ReplicaCatalogEntry result = new ReplicaCatalogEntry( newPFN.toString(),
-                                                              rce.getResourceHandle() );
-        String key;
-        for( Iterator it = rce.getAttributeIterator(); it.hasNext();){
-            key = (String)it.next();
-            result.addAttribute( key, rce.getAttribute( key ) );
-        }
-
-        return result;
-    }
+    
 
     /**
      * Returns a short description of the replica selector.

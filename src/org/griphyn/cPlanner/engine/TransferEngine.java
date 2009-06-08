@@ -24,6 +24,7 @@ import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.ReplicaLocation;
 import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.Utility;
@@ -53,6 +54,7 @@ import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -61,8 +63,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import java.util.Properties;
-import java.io.IOException;
-import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 
@@ -90,6 +90,14 @@ public class TransferEngine extends Engine {
      */
     public static final String TRANSIENT_REPLICA_CATALOG_IMPLEMENTER = "SimpleFile";
 
+    
+    /**
+     * The scheme name for file url.
+     */
+    public static final String FILE_URL_SCHEME = "file:";
+
+    
+    
 
     /**
      * The classname of the class that stores the file transfer information for
@@ -180,6 +188,14 @@ public class TransferEngine extends Engine {
      * the storage directory or not.
      */
     protected boolean mDeepStorageStructure;
+    
+    /**
+     * This member variable if set causes the source url for the pull nodes from
+     * the RLS to have file:// url if the pool attributed associated with the pfn
+     * is same as a particular jobs execution pool.
+     */
+    protected boolean mUseSymLinks;
+
 
     /**
      * Overloaded constructor.
@@ -200,6 +216,7 @@ public class TransferEngine extends Engine {
         mWorkDir = mProps.getExecDirectory();
         mStorageDir = mProps.getStorageDirectory();
         mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
+        mUseSymLinks = mProps.getUseOfSymbolicLinks();
         
         mDag = reducedDag;
         mvDelLeafJobs = vDelLJobs;
@@ -915,12 +932,18 @@ public class TransferEngine extends Engine {
                 //we have the replica already selected
                 new ReplicaLocation(nv.getValue(),nv.getKey());
             */
-           ReplicaCatalogEntry selLoc = (nv == null)?
+            ReplicaCatalogEntry selLoc = (nv == null)?
                                         //select from the various replicas
                                         mReplicaSelector.selectReplica( rl, job.getSiteHandle() ):
                                         //we have the replica already selected
                                         new ReplicaCatalogEntry( nv.getValue(), nv.getKey() );
 
+            //check if we need to replace url prefix for 
+            //symbolic linking
+            if ( mUseSymLinks && selLoc.getResourceHandle().equals( job.getSiteHandle() )) {
+                //create symbolic links instead of going through gridftp server
+                selLoc = replaceProtocolFromURL( selLoc );
+            }
                                         
             //get the file to the job's execution pool
             //this is assuming that there are no directory paths
@@ -990,6 +1013,37 @@ public class TransferEngine extends Engine {
         }
     }
 
+    /**
+     * Replaces the gsiftp URL scheme from the url, and replaces it with the
+     * file url scheme and returns in a new object. The original object
+     * passed as a parameter still remains the same.
+     *
+     * @param rce  the <code>ReplicaCatalogEntry</code> object whose url need to be
+     *             replaced.
+     *
+     * @return  the object with the url replaced.
+     */
+    protected ReplicaCatalogEntry replaceProtocolFromURL( ReplicaCatalogEntry rce ) {
+        String pfn = rce.getPFN();
+        StringBuffer newPFN = new StringBuffer();
+        String hostName = Utility.getHostName( pfn );
+
+        newPFN.append( FILE_URL_SCHEME ).append( "//" );
+        //we want to skip out the hostname
+        newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
+
+        //we do not need a full clone, just the PFN
+        ReplicaCatalogEntry result = new ReplicaCatalogEntry( newPFN.toString(),
+                                                              rce.getResourceHandle() );
+        String key;
+        for( Iterator it = rce.getAttributeIterator(); it.hasNext();){
+            key = (String)it.next();
+            result.addAttribute( key, rce.getAttribute( key ) );
+        }
+
+        return result;
+    }
+    
     /**
      * It gets the output files for all the nodes which are specified in
      * the Vector nodes passed.

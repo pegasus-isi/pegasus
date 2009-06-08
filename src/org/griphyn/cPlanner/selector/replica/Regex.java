@@ -134,8 +134,12 @@ public class Regex extends Default {
         //using Iterator.remove() methods
         rl = (ReplicaLocation)rl.clone();
         
-        mLogger.log( "[RegexReplicaSelector] Selecting a pfn for lfn " + lfn
-                     + "\n amongst " + rl , LogManager.DEBUG_MESSAGE_LEVEL );
+        //log message
+        StringBuffer sb = new StringBuffer();
+        sb.append( "[RegexReplicaSelector] Selecting a pfn for lfn ").append( lfn ).
+           append( " at site ").append( preferredSite ).append( "\n amongst ").
+           append( rl );
+        mLogger.log( sb.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
 
         ReplicaCatalogEntry selectedRCE = null;
         Rank lowestRank = new Rank( Regex.LOWEST_RANK_VALUE, ".*" );
@@ -149,7 +153,7 @@ public class Regex extends Default {
             if( pfn.startsWith( Regex.FILE_URL_SCHEME ) ){
                 if( !site.equalsIgnoreCase( preferredSite ) ){
                     it.remove();
-                    System.out.println( "Ignoring PFN " + pfn );
+                    System.out.println( "Ignoring PFN " + rce );
                     continue;
                 }
             }
@@ -197,7 +201,7 @@ public class Regex extends Default {
         }
 
         //log message
-        StringBuffer sb = new StringBuffer();
+        sb = new StringBuffer();
         sb.append( "[RegexReplicaSelector] Selected for LFN " ).append( rl.getLFN() ).
            append( " " ).append( selectedRCE ).append( " matching " ).append( lowestRank.getRegex() );
         mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );

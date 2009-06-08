@@ -218,9 +218,12 @@ public class Restricted extends Default {
             rce = ( ReplicaCatalogEntry ) prefLocs.get( locSelected );
 
             //create symbolic links instead of going through gridftp server
+            //moved to Transfer Engine Karan June 8th, 2009
+            /*
             if (mUseSymLinks) {
                 rce = replaceProtocolFromURL( rce );
             }
+            */
         }
 
         return rce;
