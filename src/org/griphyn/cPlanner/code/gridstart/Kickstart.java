@@ -752,13 +752,8 @@ public class Kickstart implements GridStart {
 
             String directory = (String)job.condorVariables.removeKey( key );
 
-            String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
-            destDir = ( destDir == null ) ? "/tmp" : destDir;
-
-            String relativeDir = mPOptions.getRelativeSubmitDirectory();
-            String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
-
-
+            String workerNodeDir = getWorkerNodeDirectory( job );
+            
             //pass the worker node directory as an argument to kickstart
             //because most jobmanagers cannot handle worker node tmp
             //as they check for existance on the head node
@@ -880,6 +875,28 @@ public class Kickstart implements GridStart {
         }
     }
 
+    
+
+    /**
+     * Returns the directory in which the job executes on the worker node.
+     * 
+     * @param job
+     * 
+     * @return  the full path to the directory where the job executes
+     */
+    protected String getWorkerNodeDirectory( SubInfo job ){
+        StringBuffer workerNodeDir = new StringBuffer();
+        String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
+        destDir = ( destDir == null ) ? "/tmp" : destDir;
+
+        String relativeDir = mPOptions.getRelativeSubmitDirectory();
+        
+        workerNodeDir.append( destDir ).append( File.separator ).
+                      append( relativeDir.replaceAll( "/" , "-" ) ).
+                      append( File.separator ).append( job.getCompleteTCName().replaceAll( ":[:]*", "-") );
+
+        return workerNodeDir.toString();
+    }
 
     /**
      * Indicates whether the enabling mechanism can set the X bit
@@ -902,7 +919,7 @@ public class Kickstart implements GridStart {
      * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
      */
     public  String getVDSKeyValue(){
-        return this.CLASSNAME;
+        return Kickstart.CLASSNAME;
     }
 
 
@@ -912,7 +929,7 @@ public class Kickstart implements GridStart {
      * @return  short textual description.
      */
     public String shortDescribe(){
-        return this.SHORT_NAME;
+        return Kickstart.SHORT_NAME;
     }
 
     /**
@@ -942,7 +959,7 @@ public class Kickstart implements GridStart {
     private boolean useInvoke(SubInfo job,StringBuffer args){
         boolean result = true;
 
-        String inputBaseName = job.jobName + "." + this.KICKSTART_INPUT_SUFFIX;
+        String inputBaseName = job.jobName + "." + Kickstart.KICKSTART_INPUT_SUFFIX;
 
         //writing the stdin file
         try {
