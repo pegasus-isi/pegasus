@@ -318,7 +318,7 @@ public class S3 implements CleanupImplementation{
         //we want the S3 cleanup jobs only execute in /tmp since
         //there is no remote directory being created in S3 environment
         cJob.vdsNS.construct( VDS.REMOTE_INITIALDIR_KEY, "/tmp" );
-        System.out.println( cJob );
+        //System.out.println( cJob );
         
         return cJob;
     }
