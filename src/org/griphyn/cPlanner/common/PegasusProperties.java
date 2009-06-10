@@ -608,6 +608,20 @@ public class PegasusProperties {
     public String getExecDirectory() {
         return mProps.getProperty( "pegasus.dir.exec", DEFAULT_EXEC_DIR );
     }
+    
+    /**
+     * Returns the the path to the logs directory on the submit host.
+     * This is the directory where the condor logs for the workflows are
+     * created. The logs directory should be on the local filesystem else 
+     * condor may complain
+     * 
+     * Referred to by the "pegasus.dir.submit.logs" property
+     * 
+     * @return the value in the properties file, else null
+     */
+    public String getSubmitLogsDirectory(){
+        return mProps.getProperty( "pegasus.dir.submit.logs" );
+    }
 
     /**
      * Returns the storage directory suffix or absolute specified

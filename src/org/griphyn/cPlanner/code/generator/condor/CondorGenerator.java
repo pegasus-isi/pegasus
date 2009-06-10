@@ -300,12 +300,29 @@ public class CondorGenerator extends Abstract {
             printDagString( this.getCategoryDAGManKnobs( mProps ) );
         }
 
-
-        //Create a file in the /tmp for the log and symlink it to the submit directory.
+        //figure out the logs directory for condor logs
+        String dir = mProps.getSubmitLogsDirectory();
+        File directory = null;
+        if( dir != null ){
+            directory = new File( dir );
+            
+            //try to create this directory if it does not exist
+            if( !directory.exists() && !directory.mkdirs() ){
+                //directory does not exist and cannot be created
+                directory = null;
+            }
+        }
+        mLogger.log( "Condor logs directory to be used is " + directory,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        //Create a file in the submit logs directory for the log 
+        //and symlink it to the submit directory.
         try{
-           File f = File.createTempFile( dag.dagInfo.nameOfADag + "-" +
-                                         dag.dagInfo.index,".log", null );
-           mTempLogFile=f.getAbsolutePath();
+          
+            File f = File.createTempFile( dag.dagInfo.nameOfADag + "-" +
+                                          dag.dagInfo.index,".log", 
+                                          directory );
+            mTempLogFile=f.getAbsolutePath();
         } catch (IOException ioe) {
             mLogger.log("Error while creating an empty log file in " +
                         "the local temp directory " + ioe.getMessage(),
