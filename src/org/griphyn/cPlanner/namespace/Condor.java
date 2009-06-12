@@ -57,6 +57,11 @@ public class Condor extends Namespace{
      * The name of the key that denotes the condor universe key.
      */
     public static final String UNIVERSE_KEY = "universe";
+    
+    /**
+     * The name of the key that denotes the remote condor universe key.
+     */
+    public static final String REMOTE_UNIVERSE_KEY = "remote_universe";
 
     /**
      * The name of the key that denotes the File System Domain. Is actually
@@ -76,6 +81,28 @@ public class Condor extends Namespace{
      */
     public static final String JOBMANAGER_TYPE_KEY = "jobmanager_type";
 
+    /**
+     * The name of the key that designates that files should be transferred
+     * via Condor File Transfer mechanism.
+     */
+    public static final String SHOULD_TRANSFER_FILES_KEY = "should_transfer_files";
+    
+    /**
+     * The corresponding remote kye name that designates that files should be
+     * transferred via Condor File Transfer mechanism.
+     */
+    public static final String REMOTE_SHOULD_TRANSFER_FILES_KEY = "+remote_ShouldTransferFiles";
+    
+    /**
+     * The name of key that designates when to transfer output.
+     */
+    public static final String WHEN_TO_TRANSFER_OUTPUT_KEY =  "when_to_transfer_output";
+    
+    /**
+     * The corresponding name of the remote key that designated when to transfer output.
+     */
+    public static final String REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY = "+remote_WhenToTransferOutput";
+    
     /**
      * The name of the key that specifies transfer of input files.
      */
