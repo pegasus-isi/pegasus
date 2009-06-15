@@ -130,6 +130,11 @@ public class Condor extends Namespace{
     public static final String GRID_RESOURCE_KEY = "grid_resource";
     
     /**
+     * The key that designates the collector associated with the job.
+     */
+    public static final String COLLECTOR_KEY = "condor_collector";
+    
+    /**
      * The condor universe key value for vanilla universe.
      */
     public static final String VANILLA_UNIVERSE = "vanilla";

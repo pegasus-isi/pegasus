@@ -76,6 +76,13 @@ public class CondorC extends Condor {
     public static final String REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY = 
             org.griphyn.cPlanner.namespace.Condor.REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY;
     
+    
+    /**
+     * The key that designates the collector associated with the job
+     */
+    public static final String COLLECTOR_KEY =
+            org.griphyn.cPlanner.namespace.Condor.COLLECTOR_KEY;
+    
     /**
      * The name of the style being implemented.
      */
@@ -107,6 +114,9 @@ public class CondorC extends Condor {
         //the universe for CondorC is always grid
         job.condorVariables.construct( CondorC.UNIVERSE_KEY, "grid" );
         
+        //construct the grid_resource for the job
+        String gridResource = constructGridResource( job );
+        
         //check if s_t_f and w_t_f keys are associated.
         try {
             String s_t_f = (String)job.condorVariables.removeKey( CondorC.SHOULD_TRANSFER_FILES_KEY );
@@ -135,6 +145,42 @@ public class CondorC extends Condor {
                 throw new CondorStyleException( "Condor Quote Exception", ex);
         }
         
+    }
+
+    /**
+     * Constructs the grid_resource entry for the job. The grid resource is a 
+     * tuple consisting of three fields. 
+     * 
+     * The first field is the grid type, which is condor. 
+     * The second field is the name of the remote condor_schedd daemon. 
+     * The third field is the name of the remote pool's condor_collector.
+     * 
+     * @param job  the job
+     * 
+     * @return the grid_resource entry
+     * @throws CondorStyleException in case of any error occuring code generation.
+     */
+    protected String constructGridResource( SubInfo job ) throws CondorStyleException{
+        StringBuffer gridResource = new StringBuffer();
+        
+        //first field is always condor
+        gridResource.append( "condor" ).append( " " );
+        
+        //the second field is the remote condor schedd
+        //specified in the grid gateway for the site
+        gridResource.append( job.globusScheduler ).append( " " );
+        
+        //the job should have the collector key associated
+        String collector = (String) job.condorVariables.removeKey( CondorC.COLLECTOR_KEY );
+        if( collector == null ){
+            StringBuffer error = new StringBuffer();
+            error.append( "Condor Profile " ).append( CondorC.COLLECTOR_KEY ).
+                  append( " not associated with job " ).append( job.getID() );
+            throw new CondorStyleException( error.toString() );
+        }
+        gridResource.append( collector );
+        
+        return gridResource.toString();
     }
 
 }

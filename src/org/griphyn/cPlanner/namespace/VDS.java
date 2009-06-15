@@ -198,6 +198,12 @@ public class VDS extends Namespace {
      * a vanilla condor execution.
      */
     public static final String CONDOR_STYLE = "condor";
+    
+    /**
+     * The style indicating that the submit files are to be generated for
+     * a CondorC submission to remote schedds.
+     */
+    public static final String CONDORC_STYLE = "condorc";
 
     /**
      * The style indicating that the submit files are to be generated for
