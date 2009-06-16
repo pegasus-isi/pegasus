@@ -22,6 +22,7 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import java.util.List;
 import java.util.Iterator;
+import org.griphyn.cPlanner.namespace.Hints;
 
 /**
  * The base class for the site selectors that want to map one job at a time.
@@ -43,7 +44,14 @@ public abstract class AbstractPerJob extends Abstract {
         //iterate through the jobs in BFS
         for (Iterator it = workflow.iterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
-            mapJob( (SubInfo) node.getContent(), sites);
+            
+            SubInfo job = (SubInfo) node.getContent();
+            
+            //only map a job for which execute site hint
+            //is not specified in the DAX
+            if( !job.hints.containsKey( Hints.EXECUTION_POOL_KEY ) ){
+                mapJob( job, sites);
+            }
         }
 
     }

@@ -1125,6 +1125,13 @@ public class SubInfo extends Data implements GraphNodeContent{
     }
 
     /**
+     * Sets the job to be recursive.
+     */
+    public void setTypeRecursive(){
+        this.vdsNS.construct( VDS.TYPE_KEY, "recursive" );
+    }
+    
+    /**
      * Returns whether the job type value for the job is in range or not.
      *
      * @param type the job type.

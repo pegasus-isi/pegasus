@@ -189,6 +189,12 @@ public class PartitionAndPlan{
             DaxParser daxParser = new DaxParser(options.getDAX(), mBag, cb);
         }
         catch( RuntimeException e ){
+            //check explicity for file not found exception
+            if( e.getCause() != null && e.getCause() instanceof java.io.IOException){
+                //rethrow 
+                throw e;
+            }
+            
             //ignore only if the parsing is completed
             mLogger.log( e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL );
         }
