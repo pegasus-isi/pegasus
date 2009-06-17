@@ -1944,9 +1944,16 @@ public class LRC implements ReplicaCatalog {
      * @see #defaultResourceHandle() 
      */
     private void setResourceHandle( Map<String,String> m ){
-        if( !m.containsKey( LRC.SITE_ATTRIBUTE ) ){
+        String dflt = defaultResourceHandle();
+        //update the site attribute only if the default
+        //attribute is other than undefined site
+        if( m.containsKey( LRC.SITE_ATTRIBUTE) && !dflt.equals(LRC.UNDEFINED_SITE ) ){
             //populate the default site handle
-            m.put( LRC.SITE_ATTRIBUTE, defaultResourceHandle() );
+            m.put( LRC.SITE_ATTRIBUTE, dflt );
+        }
+        else if( !m.containsKey( LRC.SITE_ATTRIBUTE ) ){
+            //populate the default site handle
+            m.put( LRC.SITE_ATTRIBUTE, dflt );
         }
     }
     
@@ -1960,9 +1967,16 @@ public class LRC implements ReplicaCatalog {
      * @see #defaultResourceHandle() 
      */
     private void setResourceHandle( ReplicaCatalogEntry rce ){
-        if( ! rce.hasAttribute( LRC.SITE_ATTRIBUTE ) ){
+        String dflt = defaultResourceHandle();
+        //update the site attribute only if the default
+        //attribute is other than undefined site
+        if( rce.hasAttribute( LRC.SITE_ATTRIBUTE) && !dflt.equals(LRC.UNDEFINED_SITE ) ){
             //populate the default site handle
-            rce.setResourceHandle( defaultResourceHandle() );
+            rce.setResourceHandle( dflt );
+        }
+        else if( ! rce.hasAttribute( LRC.SITE_ATTRIBUTE ) ){
+            //populate the default site handle
+            rce.setResourceHandle( dflt );
         }
     }
     
