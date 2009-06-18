@@ -624,8 +624,15 @@ public class CPlanner extends Executable{
                     options.setDAX(g.getOptarg());
                     break;
 
-                case 'D': //dir
-                    options.setSubmitDirectory( g.getOptarg(), null );
+                case 'D': //dir or -Dpegasus.blah=
+                    String optarg = g.getOptarg();
+                    if( optarg.matches(  "pegasus\\..*=.*"  ) ){
+                        options.setProperty( optarg );
+                        
+                    }
+                    else{
+                        options.setSubmitDirectory( g.getOptarg(), null );
+                    }
                     break;
 
                 case '2'://relative-dir

@@ -1085,6 +1085,8 @@ public class PDAX2MDAG implements Callback {
         arguments./*append( mPOptions.toJVMOptions())*/
                   append(" -Dpegasus.user.properties=").append( mMDAGPropertiesFile ).
                   append( " -Dpegasus.log.*=").append(log).
+                  //add other jvm options that user may have specified
+                  append( mClonedPOptions.toJVMOptions() ).
                   //the dax argument is diff for each partition
                   append(" --dax ").append( daxURL ).
                   //put in all the other options.

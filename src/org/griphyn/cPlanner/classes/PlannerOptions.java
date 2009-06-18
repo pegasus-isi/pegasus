@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.StringTokenizer;
+import java.util.Properties;
+
 import org.griphyn.common.util.Currently;
 
 /**
@@ -198,6 +200,12 @@ public class PlannerOptions extends Data implements Cloneable{
      * The numer of rescue's to try before replanning.
      */
     private int mNumOfRescueTries;
+    
+    /**
+     * The properties container for properties specified on the commandline
+     * in the DAX dax elements.
+     */
+    private Properties mProperties;
 
     /**
      * Default Constructor.
@@ -232,6 +240,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mSanitizePath     = true;
         mJobPrefix        = null;
         mNumOfRescueTries = 0;
+        mProperties       = new Properties();
     }
 
     /**
@@ -434,6 +443,20 @@ public class PlannerOptions extends Data implements Cloneable{
             return this.getRandomDir();
         }
         return null;
+    }
+
+    /**
+     * Sets  a property passed on the command line.
+     * 
+     * @param optarg  key=value property specification
+     */
+    public void setProperty( String optarg ) {
+        String[] args = optarg.split( "=" );
+        if( args.length != 2 ){
+            throw new RuntimeException( "Wrong format for property specification on command line" + optarg );
+        }
+        mProperties.setProperty( args[0], args[1] );
+        
     }
     
     /**
@@ -1051,15 +1074,19 @@ public class PlannerOptions extends Data implements Cloneable{
     public String toJVMOptions(){
         StringBuffer sb = new StringBuffer();
 
-        Iterator it = (mVDSProps == null)?null:mVDSProps.iterator();
-
-        if(it != null){
-            while(it.hasNext()){
+        if(mVDSProps != null){
+            for( Iterator it = mVDSProps.iterator(); it.hasNext(); ){
                 NameValue nv = (NameValue)it.next();
                 sb.append(" -D").append(nv.getKey()).append("=").append(nv.getValue());
             }
         }
 
+        //add all the properties specified in the dax elements
+        for(Iterator<Object> it = mProperties.keySet().iterator(); it.hasNext() ; ){
+            String key = (String) it.next();
+            sb.append(" -D").append( key ).append("=").append( mProperties.getProperty(key));
+        }
+        
         return sb.toString();
     }
 
@@ -1127,7 +1154,9 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mDate           = (Date)this.mDate.clone();
         pOpt.mPartitioningType = this.mPartitioningType;
         pOpt.mNumOfRescueTries = this.mNumOfRescueTries;
-        //Note not cloning the vdsProps
+        
+        pOpt.mProperties     = (Properties)this.mProperties.clone();
+        //Note not cloning the vdsProps or mProperties
         pOpt.mVDSProps       = null;
         return pOpt;
     }
