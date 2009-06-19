@@ -64,7 +64,7 @@ public class Horizontal implements Clusterer,
      * The default collapse factor for collapsing jobs with same logical name
      * scheduled onto the same execution pool.
      */
-    public static final int DEFAULT_COLLAPSE_FACTOR = 3;
+    public static final int DEFAULT_COLLAPSE_FACTOR = 1;
 
     /**
      * A short description about the partitioner.
