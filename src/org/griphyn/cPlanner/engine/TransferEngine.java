@@ -1025,6 +1025,13 @@ public class TransferEngine extends Engine {
      */
     protected ReplicaCatalogEntry replaceProtocolFromURL( ReplicaCatalogEntry rce ) {
         String pfn = rce.getPFN();
+        
+        //if the pfn starts with a file url we 
+        //dont need to replace . a sanity check
+        if( pfn.startsWith( FILE_URL_SCHEME ) ){
+            return rce;
+        }
+        
         StringBuffer newPFN = new StringBuffer();
         String hostName = Utility.getHostName( pfn );
 
