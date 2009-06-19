@@ -762,9 +762,11 @@ public class DaxParser extends Parser {
             pf.setTransferFlag( transfer, mUseDoubleNegative );
         }
         //handling the dR flag
-        if( !register )
-            pf.setTransientRegFlag();
-
+//        if( !register ){
+//            pf.setTransientRegFlag();
+//        }
+        pf.setRegisterFlag( register );
+            
         //handling the optional attribute
         if(optionalFile)
             pf.setFileOptional();

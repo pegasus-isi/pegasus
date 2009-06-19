@@ -517,7 +517,7 @@ public class PegasusFile extends Data {
     public  String toString(){
         String st = "\n Logical Name :" + this.mLogicalFile +
                     "\n Type         :" + typeToString() +
-                    "\n Transient Flags (transfer,dontRegister,optional):" +
+                    "\n Transient Flags (transfer,optional,dontRegister):" +
                     " ( ";
 
         st += getTransferFlag() + ",";

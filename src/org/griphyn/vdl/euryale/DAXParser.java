@@ -626,7 +626,12 @@ public class DAXParser extends DefaultHandler
 	} else if (name.equals("dontRegister")) {
 	  this.log( e, name, value );
 	  fn.setDontRegister( new Boolean(value).booleanValue() );
-	} else if (name.equals("dontTransfer")) {
+	} 
+        //handle the register flag
+        else if ( name.equals( "register" ) ){
+            fn.setRegister( new Boolean(value).booleanValue() );
+        }
+        else if (name.equals("dontTransfer")) {
 	  // parse tri-state
 	  if ( value.equals("false") ) {
 	    this.log( e, name, value );
@@ -640,7 +645,24 @@ public class DAXParser extends DefaultHandler
 	  } else {
 	    this.complain( e, name, value );
 	  }
-	} else if (name.equals("isTemporary")) {
+	} 
+        //handle the transfer flag
+        else if (name.equals("transfer")) {
+	  // parse tri-state
+	  if ( value.equals("false") ) {
+	    this.log( e, name, value );
+	    fn.setTransfer( LFN.XFER_NOT );
+	  } else if ( value.equals("true") ) {
+	    this.log( e, name, value );
+	    fn.setTransfer( LFN.XFER_MANDATORY );
+	  } else if ( value.equals("optional") ) {
+	    this.log( e, name, value );
+	    fn.setTransfer( LFN.XFER_OPTIONAL );
+	  } else {
+	    this.complain( e, name, value );
+	  }
+	} 
+        else if (name.equals("isTemporary")) {
 	  this.log( e, name, value );
 	  boolean temp = (new Boolean(value)).booleanValue();
 	  fn.setDontRegister( temp );
