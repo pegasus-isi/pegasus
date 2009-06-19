@@ -17,6 +17,7 @@
 package org.griphyn.cPlanner.partitioner;
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
+
 import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
 import org.griphyn.cPlanner.parser.dax.Callback;
 
@@ -25,24 +26,23 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import java.io.BufferedReader;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
 
-import org.griphyn.common.util.FactoryException;
-
 import org.griphyn.cPlanner.parser.DaxParser;
 
-import org.griphyn.cPlanner.parser.dax.DAX2Metadata;
 
 import org.griphyn.cPlanner.toolkit.CPlanner;
 import org.griphyn.cPlanner.toolkit.PartitionDAX;
 
 import java.util.Map;
-import java.util.Date;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.util.Collection;
@@ -181,7 +181,7 @@ public class PartitionAndPlan{
      * @return the Collection of <code>File</code> objects for the files written
      *         out.
      */
-    public Collection<File> doPartitionAndPlan( PegasusProperties properties, PlannerOptions options ){
+    public Collection<File> doPartitionAndPlan( PegasusProperties properties, PlannerOptions options ) {
         //we first need to get the label of DAX
         Callback cb =  DAXCallbackFactory.loadInstance( properties, options.getDAX(), "DAX2Metadata" );
 
@@ -228,11 +228,65 @@ public class PartitionAndPlan{
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARTITION, LoggingKeys.DAX_ID, label );
         PartitionDAX partitionDAX = new PartitionDAX();
         File dir = new File( options.getSubmitDirectory(), "dax" );
-        String pdax = partitionDAX.partitionDAX(
-                                                  properties,
-                                                  options.getDAX(),
-                                                  dir.getAbsolutePath(),
-                                                  options.getPartitioningType() );
+        
+        String pdax = null;
+        
+        //bypass partitioning for time being
+        //as the dax is already created
+        boolean partitionWorkflow = false;
+        
+        if( partitionWorkflow ){
+            pdax = partitionDAX.partitionDAX(
+                                              properties,
+                                              options.getDAX(),
+                                              dir.getAbsolutePath(),
+                                              options.getPartitioningType() );
+        }
+        else{
+            try {
+                //create a shallow pdax file and a symbolic link
+                //to the dax in the dax directory referred to by the dir variable
+                String dax = options.getDAX();
+                String daxBasename = new File(dax).getName();
+                WriterCallback callback = new WriterCallback();
+                
+                //create the dir if it does not exist
+                sanityCheck( dir );
+                
+                callback.initialize(properties, dax, daxBasename, dir.getAbsolutePath());
+                pdax = callback.getPDAX();
+                PDAXWriter writer = callback.getHandletoPDAXWriter(dax, label, dir.getAbsolutePath());
+                writer.writeHeader();
+                
+                //create an empty Partition
+                Partition p = new Partition();
+                String id = "1";
+                String partitionLabel = "partition_" + label;
+                p.setName(partitionLabel);
+                p.setIndex( Integer.parseInt( id ) );
+                p.setID( id );
+                p.constructPartition();
+                
+                //write out the partition and close
+                writer.write(p);
+                writer.close();
+                
+                //we have the partition written out
+                //now create a symlink to the DAX file
+                // partition_blackdiamond_1.dax
+                StringBuffer destinationDAX = new StringBuffer();
+                destinationDAX.append( dir ).append( File.separator ).
+                               append( "partition_" ).append( label ).
+                               append( "_" ).append( id ).append( ".dax" );
+                if ( !createSymbolicLink( dax , destinationDAX.toString() ) ){
+                    throw new RuntimeException( "Unable to create symbolic link between " +
+                                                dax + " and " + destinationDAX.toString() );
+                }
+            } catch ( IOException ioe ) {
+                String error = "Unable to generate the pdax file" ;
+                throw new RuntimeException( error + options.getSubmitDirectory() , ioe );
+            }
+        }
 
         mLogger.log( "PDAX file generated is " + pdax , LogManager.DEBUG_MESSAGE_LEVEL );
         mLogger.logEventCompletion();
@@ -374,6 +428,57 @@ public class PartitionAndPlan{
                                        dir.getPath() );
             }
         }
+    }
+
+    
+    /**
+     * This method generates a symlink between two files
+     *
+     * @param source       the file that has to be symlinked 
+     * @param destination  the destination of the symlink
+     * 
+     * @return boolean indicating if creation of symlink was successful or not
+     */
+    protected boolean createSymbolicLink( String source, String destination ) {
+        try{
+            Runtime rt = Runtime.getRuntime();
+            String command = "ln -sf " + source + " " + destination;
+            mLogger.log( "Creating symlink between " + source + " " + destination,
+                         LogManager.DEBUG_MESSAGE_LEVEL);
+            Process p = rt.exec( command, null );
+
+            // set up to read subprogram output
+            InputStream is = p.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
+
+            // set up to read subprogram error
+            InputStream er = p.getErrorStream();
+            InputStreamReader err = new InputStreamReader(er);
+            BufferedReader ebr = new BufferedReader(err);
+
+            // read output from subprogram
+            // and display it
+
+            String s,se=null;
+            while ( ((s = br.readLine()) != null) || ((se = ebr.readLine()) != null ) ) {
+               if(s!=null){
+                   mLogger.log(s,LogManager.DEBUG_MESSAGE_LEVEL);
+               }
+               else {
+                   mLogger.log(se,LogManager.ERROR_MESSAGE_LEVEL );
+               }
+            }
+
+            br.close();
+            return true;
+        }
+        catch(Exception ex){
+            mLogger.log("Unable to create symlink to the log file" , ex,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            return false;
+       }
+
     }
 
 
