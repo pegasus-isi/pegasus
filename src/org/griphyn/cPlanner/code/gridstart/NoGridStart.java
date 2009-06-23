@@ -19,9 +19,15 @@ package org.griphyn.cPlanner.code.gridstart;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
+
+import java.io.BufferedWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.code.GridStart;
+import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+
 import org.griphyn.cPlanner.code.POSTScript;
 
 import org.griphyn.cPlanner.classes.ADag;
@@ -40,12 +46,18 @@ import org.griphyn.cPlanner.namespace.Dagman;
 
 import java.io.File;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.io.IOException;
 import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.namespace.ENV;
 /**
  * This class ends up running the job directly on the grid, without wrapping
  * it in any other launcher executable.
@@ -58,6 +70,8 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
  */
 
 public class NoGridStart implements GridStart {
+    private PegasusBag mBag;
+    private ADag mDAG;
 
     /**
      * The basename of the class that is implmenting this. Could have
@@ -134,6 +148,8 @@ public class NoGridStart implements GridStart {
      * @param dag   the concrete dag so far.
      */
     public void initialize( PegasusBag bag, ADag dag ){
+        mBag       = bag;
+        mDAG       = dag;
         mLogger    = bag.getLogger();
         mSiteStore   = bag.getHandleToSiteStore();
         mPOptions  = bag.getPlannerOptions();
@@ -175,6 +191,7 @@ public class NoGridStart implements GridStart {
 
         for (Iterator it = jobs.iterator(); it.hasNext(); ) {
             SubInfo job = (SubInfo)it.next();
+            
             //always pass isGlobus true as always
             //interested only in executable strargs
             this.enable(job, true);
@@ -265,47 +282,126 @@ public class NoGridStart implements GridStart {
             }
         }
 
-        if ( mWorkerNodeExecution && !mEnablingPartOfAggregatedJob ){
-            if( job.getJobType() == SubInfo.COMPUTE_JOB ||
-                job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+        //handle stuff differently for clustered jobs
+        //for non condor modified SLS
+        if( mWorkerNodeExecution && !mSLS.doesCondorModifications() ){
+            if( job instanceof AggregatedJob ){
+                try {
+                    //this approach only works for S3 for time being!
+                    //do a sanity check
+                    if (!(mSLS instanceof org.griphyn.cPlanner.transfer.sls.S3)) {
+                        throw new RuntimeException("Second Level Staging with NoGridStart for clustered jobs only works with S3");
+                    }
+                    
+                    String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
+                    //remove the remote or initial dir's for the compute jobs
+                    String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
+                                   "remote_initialdir" :
+                                   "initialdir";
+                    
+                    //always have the remote dir set to /tmp as
+                    //we are banking on kickstart to change directory 
+                    //for us for compute jobs
+                    job.condorVariables.construct( key, "/tmp" );
 
-                if( !mSLS.doesCondorModifications() ){
-                    throw new RuntimeException( "Second Level Staging with NoGridStart only works with Condor SLS" );
+                    AggregatedJob clusteredJob = (AggregatedJob) job;
+                    SubInfo firstJob = clusteredJob.getConstituentJob(0);
+
+                    GridStartFactory factory = new GridStartFactory();
+                    factory.initialize(mBag, mDAG);
+                    GridStart gs = factory.loadGridStart(firstJob, "/tmp");
+                    
+                    //gs.enable( clusteredJob, isGlobusJob );
+                    //System.out.println( clusteredJob.envVariables );
+                    //enable the whole clustered job via kickstart
+                    SubInfo j = (SubInfo) clusteredJob.clone();
+                    gs.enable(j, isGlobusJob);
+                    
+                    //enable all constitutents jobs through the factory
+                    for (Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext();) {
+                        SubInfo cJob = (SubInfo) it.next();
+                        gs.enable(cJob, isGlobusJob);
+                    }
+
+                    //we merge the sls input and sls output files into
+                    //the stdin of the clustered job
+                    File slsInputFile = new File( mSubmitDir, mSLS.getSLSInputLFN(job));
+                    File slsOutputFile = new File( mSubmitDir, mSLS.getSLSOutputLFN(job));
+                    File stdin = new File( mSubmitDir, job.getStdIn());
+
+                    //create a temp file first
+                    File temp = File.createTempFile("sls", null, new File( mSubmitDir ));
+                    
+                    //add an entry to create the worker node directory
+                    PrintWriter writer = new PrintWriter( new FileWriter( temp ) );
+                    writer.println( "/bin/mkdir " + gs.getWorkerNodeDirectory( job ) );
+                    writer.close();
+                    
+                    OutputStream tmpOStream = new FileOutputStream( temp , true );
+                    //append the sls input file to temp file
+                    addToFile( slsInputFile, tmpOStream );
+                    //append the stdin to the tmp file
+                    addToFile( stdin, tmpOStream );
+                    //append the sls output to temp file
+                    addToFile( slsOutputFile, tmpOStream );
+                    tmpOStream.close();
+                    
+                    //delete the stdin file and sls files
+                    stdin.delete();
+                    slsInputFile.delete();
+                    slsOutputFile.delete();
+                    
+                    //rename tmp to stdin
+                    temp.renameTo( stdin );
+                    
+                } catch (IOException ex) {
+                    
                 }
-
-                String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
-
-                //remove the remote or initial dir's for the compute jobs
-                String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
-                               "remote_initialdir" :
-                               "initialdir";
-
-                String directory = (String)job.condorVariables.removeKey( key );
-
-                String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
-                destDir = ( destDir == null ) ? "/tmp" : destDir;
-
-                String relativeDir = mPOptions.getRelativeSubmitDirectory();
-                String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
-
-
-
-                //always have the remote dir set to /tmp as we are
-                //banking upon kickstart to change the directory for us
-                job.condorVariables.construct( key, "/tmp" );
-
-
-                //modify the job if required
-                if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                            //mSiteHandle.getURLPrefix( job.getSiteHandle() ),
-                                                            mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
-                                                            directory,
-                                                            workerNodeDir ) ){
-                    throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
-                }
-
-
+                 
+                
             }
+            else if( !mEnablingPartOfAggregatedJob ){
+                if( job.getJobType() == SubInfo.COMPUTE_JOB ||
+                    job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+
+                    if( !mSLS.doesCondorModifications() ){
+                        throw new RuntimeException( "Second Level Staging with NoGridStart only works with Condor SLS" );
+                    }
+
+                    String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
+
+                    //remove the remote or initial dir's for the compute jobs
+                    String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
+                                   "remote_initialdir" :
+                                   "initialdir";
+
+                    String directory = (String)job.condorVariables.removeKey( key );
+
+                    String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
+                    destDir = ( destDir == null ) ? "/tmp" : destDir;
+                    
+                    String relativeDir = mPOptions.getRelativeSubmitDirectory();
+                    String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
+
+
+
+                    //always have the remote dir set to /tmp as we are
+                    //banking upon kickstart to change the directory for us
+                    job.condorVariables.construct( key, "/tmp" );
+
+
+                    //modify the job if required
+                    if ( !mSLS.modifyJobForWorkerNodeExecution( job,
+                                                            //mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                                mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
+                                                                directory,
+                                                                workerNodeDir ) ){
+                        throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
+                    }
+
+
+                }
+            }//end of enabling worker node execution for non clustered jobs
         }//end of worker node execution
 
 
@@ -463,5 +559,49 @@ public class NoGridStart implements GridStart {
 
         return result;
      }
+
+     /**
+      * Adds contents to an output stream.
+      * @param src
+      * @param out
+      * @throws java.io.IOException
+      */
+     private void addToFile( File src, OutputStream out ) throws IOException{
+      
+        InputStream in = new FileInputStream(src);
+    
+        // Transfer bytes from in to out
+        byte[] buf = new byte[1024];
+        int len;
+        while ((len = in.read(buf)) > 0) {
+            out.write(buf, 0, len);
+        }
+        in.close();
+     }
+     
+     
+     
+     /**
+     * Returns the directory in which the job executes on the worker node.
+     * 
+     * @param job
+     * 
+     * @return  the full path to the directory where the job executes
+     */
+    public String getWorkerNodeDirectory( SubInfo job ){
+        StringBuffer workerNodeDir = new StringBuffer();
+        String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
+        destDir = ( destDir == null ) ? "/tmp" : destDir;
+
+        String relativeDir = mPOptions.getRelativeSubmitDirectory();
+        
+        workerNodeDir.append( destDir ).append( File.separator ).
+                      append( relativeDir.replaceAll( "/" , "-" ) ).
+                      //append( File.separator ).append( job.getCompleteTCName().replaceAll( ":[:]*", "-") );
+                      append( File.separator ).append( job.getID() );
+
+
+        return workerNodeDir.toString();
+    }
 
 }

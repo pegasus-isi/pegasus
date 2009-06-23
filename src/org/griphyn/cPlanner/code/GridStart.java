@@ -123,6 +123,16 @@ public interface  GridStart {
     public boolean canSetXBit();
 
     /**
+     * Returns the directory in which the job executes on the worker node.
+     * 
+     * @param job
+     * 
+     * @return  the full path to the directory where the job executes
+     */
+    public String getWorkerNodeDirectory( SubInfo job );
+
+    
+    /**
      * Returns the value of the vds profile with key as VDS.GRIDSTART_KEY,
      * that would result in the loading of this particular implementation.
      * It is usually the name of the implementing class without the

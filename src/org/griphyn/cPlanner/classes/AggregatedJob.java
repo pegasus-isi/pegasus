@@ -38,7 +38,7 @@ public class AggregatedJob extends SubInfo {
     /**
      * The collection of jobs that are contained in the aggregated job.
      */
-    private Collection mConstituentJobs;
+    private List mConstituentJobs;
 
 
     /**
@@ -102,7 +102,16 @@ public class AggregatedJob extends SubInfo {
     public Iterator constituentJobsIterator(){
         return mConstituentJobs.iterator();
     }
-
+    
+    /**
+     * Returns a job from a particular position in the list of constituent jobs
+     * 
+     * @param index    the index to retrieve from
+     */
+    public SubInfo getConstituentJob( int index ){
+        return (SubInfo) this.mConstituentJobs.get( index );
+    }
+    
     /**
      * Returns the number of constituent jobs.
      *

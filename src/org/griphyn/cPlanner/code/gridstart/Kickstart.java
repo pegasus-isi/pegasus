@@ -302,12 +302,23 @@ public class Kickstart implements GridStart {
                 job.vdsNS.construct(VDS.GRIDSTART_ARGUMENTS_KEY,"-H");
             }
 
-
+            
             //always pass isGlobus true as always
             //interested only in executable strargs
             //due to the fact that seqexec does not allow for setting environment
             //per constitutent job, we cannot set the postscript removal option
             this.enable( job, true, mDoStat, false );
+            
+            //for worker node execution prepend an extra
+            //option -w to get kickstart to change directories
+            if( mWorkerNodeExecution ){
+                StringBuffer args = new StringBuffer( );
+                args.append( " -w " ).append( getWorkerNodeDirectory(job) ).
+                     append( " " ).append( job.condorVariables.removeKey( "arguments" ) );
+                construct(job, "arguments", args.toString());
+            }
+
+            
             aggJob.add( job );
             //check if any files are being transferred via
             //Condor and add to Aggregated Job
@@ -884,7 +895,7 @@ public class Kickstart implements GridStart {
      * 
      * @return  the full path to the directory where the job executes
      */
-    protected String getWorkerNodeDirectory( SubInfo job ){
+    public String getWorkerNodeDirectory( SubInfo job ){
         StringBuffer workerNodeDir = new StringBuffer();
         String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
         destDir = ( destDir == null ) ? "/tmp" : destDir;
