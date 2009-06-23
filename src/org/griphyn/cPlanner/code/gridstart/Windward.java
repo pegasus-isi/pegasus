@@ -374,5 +374,15 @@ public class Windward implements GridStart{
         return mKickstartLauncher.canSetXBit();
     }
 
+     /**
+     * Returns the directory in which the job executes on the worker node.
+     * 
+     * @param job
+     * 
+     * @return  the full path to the directory where the job executes
+     */
+    public String getWorkerNodeDirectory( SubInfo job ){
+        throw new RuntimeException( "Method not implemented getWorkerNodeDirectory(SubInfo)");
+    }
     
 }
