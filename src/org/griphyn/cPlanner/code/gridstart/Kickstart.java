@@ -312,10 +312,13 @@ public class Kickstart implements GridStart {
             //for worker node execution prepend an extra
             //option -w to get kickstart to change directories
             if( mWorkerNodeExecution ){
-                StringBuffer args = new StringBuffer( );
-                args.append( " -w " ).append( getWorkerNodeDirectory(job) ).
-                     append( " " ).append( job.condorVariables.removeKey( "arguments" ) );
-                construct(job, "arguments", args.toString());
+                //add a -w only for compute or staged compute jobs
+                if( job.getJobType() == SubInfo.COMPUTE_JOB || job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+                     StringBuffer args = new StringBuffer( );
+                     args.append( " -w " ).append( getWorkerNodeDirectory(aggJob) ).
+                          append( " " ).append( job.condorVariables.removeKey( "arguments" ) );
+                     construct(job, "arguments", args.toString());
+                }
             }
 
             

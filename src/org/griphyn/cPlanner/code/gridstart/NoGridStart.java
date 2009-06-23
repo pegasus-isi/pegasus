@@ -334,7 +334,7 @@ public class NoGridStart implements GridStart {
                     
                     //add an entry to create the worker node directory
                     PrintWriter writer = new PrintWriter( new FileWriter( temp ) );
-                    writer.println( "/bin/mkdir " + gs.getWorkerNodeDirectory( job ) );
+                    writer.println( "/bin/mkdir -p " + gs.getWorkerNodeDirectory( job ) );
                     writer.close();
                     
                     OutputStream tmpOStream = new FileOutputStream( temp , true );
@@ -345,6 +345,12 @@ public class NoGridStart implements GridStart {
                     //append the sls output to temp file
                     addToFile( slsOutputFile, tmpOStream );
                     tmpOStream.close();
+                    
+                    //we need to remove the directory
+                    writer = new PrintWriter( new FileWriter( temp, true ) );
+                    writer.println( "/bin/rm -rf " + gs.getWorkerNodeDirectory( job ) );
+                    writer.close();
+                    
                     
                     //delete the stdin file and sls files
                     stdin.delete();

@@ -289,6 +289,9 @@ public abstract class Abstract implements JobAggregator {
 //        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,  gridStartPath );
 //        mergedJob = gridStart.enable( mergedJob, jobs );
 
+        //inconsistency between job name and logical name for now
+        mergedJob.setName( mergedJobName );
+
         mergedJob = enable( mergedJob, jobs  );
 
         try {
@@ -345,9 +348,7 @@ public abstract class Abstract implements JobAggregator {
             throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
         }
 
-        //inconsistency between job name and logical name for now
-        mergedJob.setName( mergedJobName );
-
+        
         mergedJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
                                      mergeLFN,
                                      this.TRANSFORMATION_VERSION  );
