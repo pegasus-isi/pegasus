@@ -57,6 +57,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.ENV;
 /**
  * This class ends up running the job directly on the grid, without wrapping
@@ -233,7 +234,7 @@ public class NoGridStart implements GridStart {
         //in the Condor namespace and not printed to the
         //file so that they can be overriden if desired
         //later through profiles and key transfer_executable
-        construct(job,"executable", job.executable);
+        construct(job,"executable", handleTransferOfExecutable( job ) );
 
         //sanity check for the arguments
         if(job.strargs != null && job.strargs.length() > 0){
@@ -434,6 +435,45 @@ public class NoGridStart implements GridStart {
         return true;
     }
 
+    /**
+     * It changes the paths to the executable depending on whether we want to
+     * transfer the executable or not. Currently, the transfer_executable is only
+     * handled for staged compute jobs, where Pegasus is staging the binaries
+     * to the remote site.
+     * 
+     * @param job   the <code>SubInfo</code> containing the job description.
+     *
+     * @return the path that needs to be set as the executable key. If 
+     *         transfer_executable is not set the path to the executable is
+     *         returned as is.
+     */
+    protected String handleTransferOfExecutable( SubInfo job  ) {
+        Condor cvar = job.condorVariables;
+        String path = job.executable;
+        
+        if ( cvar.getBooleanValue( "transfer_executable" )) {
+            
+            //explicitly check for whether the job is a staged compute job or not
+            if( job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+                //the executable is being staged to the remote site.
+                //all we need to do is unset transfer_executable
+                cvar.construct( "transfer_executable", "false" );
+            }
+            else{
+                mLogger.log( "Transfer of Executables in NoGridStart only works for staged computes jobs ",
+                             LogManager.ERROR_MESSAGE_LEVEL );
+                
+            }
+        }
+        else{
+            //the executable paths are correct and
+            //point to the executable on the remote pool
+        }
+        return path;
+    }
+
+
+    
     /**
      * Indicates whether the enabling mechanism can set the X bit
      * on the executable on the remote grid site, in addition to launching
