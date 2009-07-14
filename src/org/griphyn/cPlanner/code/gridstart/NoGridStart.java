@@ -285,8 +285,8 @@ public class NoGridStart implements GridStart {
 
         //handle stuff differently for clustered jobs
         //for non condor modified SLS
-        if( mWorkerNodeExecution && !mSLS.doesCondorModifications() ){
-            if( job instanceof AggregatedJob ){
+        if( mWorkerNodeExecution  ){
+            if( job instanceof AggregatedJob && !mSLS.doesCondorModifications()){
                 try {
                     //this approach only works for S3 for time being!
                     //do a sanity check
