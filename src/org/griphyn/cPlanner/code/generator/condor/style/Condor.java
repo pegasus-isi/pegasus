@@ -100,6 +100,10 @@ public class Condor extends Abstract {
                               Condor.LOCAL_UNIVERSE;
 
 
+        //boolean to indicate whether to use remote_initialdir or not
+        //remote_initialdir does not work for standard universe
+        boolean useRemoteInitialDir = !universe.equals( Condor.STANDARD_UNIVERSE );
+        
         //extra check for standard universe
         if( universe.equals( Condor.STANDARD_UNIVERSE ) ){
             //standard universe should be only applied for compute jobs
@@ -130,7 +134,11 @@ public class Condor extends Abstract {
                 //set remote_initialdir for the job only for non transfer jobs
                 //this is removed later when kickstart is enabling.
 
-                job.condorVariables.construct("initialdir", workdir);
+                if( useRemoteInitialDir ){
+                    job.condorVariables.construct("remote_initialdir", workdir);
+                }else{
+                    job.condorVariables.construct("initialdir", workdir);
+                }
             }
             else{
                 //we need to set s_t_f and w_t_f_o to ensure

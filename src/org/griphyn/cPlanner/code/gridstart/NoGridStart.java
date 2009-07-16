@@ -294,11 +294,7 @@ public class NoGridStart implements GridStart {
                         throw new RuntimeException("Second Level Staging with NoGridStart for clustered jobs only works with S3");
                     }
                     
-                    String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
-                    //remove the remote or initial dir's for the compute jobs
-                    String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
-                                   "remote_initialdir" :
-                                   "initialdir";
+                    String key = getDirectoryKey( job );
                     
                     //always have the remote dir set to /tmp as
                     //we are banking on kickstart to change directory 
@@ -375,12 +371,10 @@ public class NoGridStart implements GridStart {
                         throw new RuntimeException( "Second Level Staging with NoGridStart only works with Condor SLS" );
                     }
 
-                    String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
+                    
 
                     //remove the remote or initial dir's for the compute jobs
-                    String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
-                                   "remote_initialdir" :
-                                   "initialdir";
+                    String key = getDirectoryKey( job );
 
                     String directory = (String)job.condorVariables.removeKey( key );
 
@@ -518,6 +512,28 @@ public class NoGridStart implements GridStart {
      */
     public String defaultPOSTScript(){
         return NoPOSTScript.SHORT_NAME;
+    }
+
+    /**
+     * Returns the directory that is associated with the job to specify
+     * the directory in which the job needs to run
+     * 
+     * @param job  the job
+     * 
+     * @return the condor key . can be initialdir or remote_initialdir
+     */
+    private String getDirectoryKey(SubInfo job) {
+        /*
+        String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
+                    //remove the remote or initial dir's for the compute jobs
+                    String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
+                                   "remote_initialdir" :
+                                   "initialdir";
+         */
+        String universe = (String) job.condorVariables.get( Condor.UNIVERSE_KEY );
+        return ( universe.equals( Condor.STANDARD_UNIVERSE ) )?
+                "initialdir" :
+                "remote_initialdir";
     }
 
 

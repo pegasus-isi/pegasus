@@ -483,20 +483,14 @@ public class Kickstart implements GridStart {
 
         //handle the -w option that asks kickstart to change
         //directory before launching an executable.
-        String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
         if(job.vdsNS.getBooleanValue(VDS.CHANGE_DIR_KEY) && !mWorkerNodeExecution ){
-	    style = (String)job.vdsNS.get(VDS.STYLE_KEY);
 
 //            Commented to take account of submitting to condor pool
 //            directly or glide in nodes. However, does not work for
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
-            String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLITE_STYLE))?
-                     (String)job.condorVariables.removeKey("remote_initialdir"):
-                     (String)job.condorVariables.removeKey("initialdir");
-
+              String key = getDirectoryKey( job );
+              String directory = (String)job.condorVariables.removeKey( key );
 
             //pass the directory as an argument to kickstart
             gridStartArgs.append("-w ").append(directory).append(' ');
@@ -510,12 +504,8 @@ public class Kickstart implements GridStart {
 //            directly or glide in nodes. However, does not work for
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
-            String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLITE_STYLE))?
-                     (String)job.condorVariables.removeKey("remote_initialdir"):
-                     (String)job.condorVariables.removeKey("initialdir");
-
+            String key = getDirectoryKey( job );
+            String directory = (String)job.condorVariables.removeKey( key );
 
             //pass the directory as an argument to kickstart
             gridStartArgs.append(" -W ").append(directory).append(' ');
@@ -749,8 +739,7 @@ public class Kickstart implements GridStart {
      * @param args    the arguments constructed so far.
      */
     protected void enableForWorkerNodeExecution( SubInfo job, StringBuffer args ){
-        String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
-
+        
         if( job.getJobType() == SubInfo.COMPUTE_JOB ||
             job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
             mLogger.log( "Enabling job for worker node execution " + job.getName() ,
@@ -760,9 +749,7 @@ public class Kickstart implements GridStart {
             //and clustered jobs
 
             //remove the remote or initial dir's for the compute jobs
-            String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
-                          "remote_initialdir" :
-                          "initialdir";
+            String key = getDirectoryKey( job );
 
             String directory = (String)job.condorVariables.removeKey( key );
 
@@ -959,6 +946,28 @@ public class Kickstart implements GridStart {
     public String defaultPOSTScript(){
         return ExitPOST.SHORT_NAME;
     }
+    
+    /**
+     * Returns the directory that is associated with the job to specify
+     * the directory in which the job needs to run
+     * 
+     * @param job  the job
+     * 
+     * @return the condor key . can be initialdir or remote_initialdir
+     */
+    private String getDirectoryKey(SubInfo job) {
+        /*String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
+                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE) ||
+                                style.equalsIgnoreCase(VDS.GLITE_STYLE))?
+                     (String)job.condorVariables.removeKey("remote_initialdir"):
+                     (String)job.condorVariables.removeKey("initialdir");
+        */ 
+        String universe = (String) job.condorVariables.get( Condor.UNIVERSE_KEY );
+        return ( universe.equals( Condor.STANDARD_UNIVERSE ) )?
+                "initialdir" :
+                "remote_initialdir";
+    }
+
 
 
     /**

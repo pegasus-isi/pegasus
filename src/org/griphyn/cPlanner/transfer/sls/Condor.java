@@ -288,9 +288,11 @@ public class Condor   implements SLS {
         }
 
         //remove any directory. let condor figure it out
-        job.condorVariables.removeKey( "initialdir" );
+        job.condorVariables.removeKey( "remote_initialdir" );
 
         //set the initial dir to the headnode directory
+        //as this is the directory where we are staging 
+        //the input and output data
         job.condorVariables.construct( "initialdir", headNodeDirectory );
 
         //iterate through all the input files
