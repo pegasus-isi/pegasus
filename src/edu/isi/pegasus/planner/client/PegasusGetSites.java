@@ -133,7 +133,7 @@ public class PegasusGetSites extends Executable{
              append( "\n" ).append( " [-v] [-h]" ).
              append( "\n" ).
              append( "\n Mandatory Options " ).
-             append( "\n -s |--source     the source to query for information. Valid sources are VORS|Engage" ).
+             append( "\n -s |--source     the source to query for information. Valid sources are VORS|Engage|MYOSG" ).
              append( "\n" ). 
              append( "\n Other Options  " ).
              append( "\n -g |--grid       the grid for which to generate the site catalog ").
