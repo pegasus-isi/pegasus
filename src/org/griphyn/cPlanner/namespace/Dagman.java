@@ -92,6 +92,13 @@ public class Dagman extends Namespace {
      * submit file for the job.
      */
     public static final String JOB_KEY = "JOB";
+    
+    
+    /**
+     * The name of the key that indicates the path to the external subdag
+     */
+    public static final String SUBDAG_EXTERNAL_KEY = "SUBDAG EXTERNAL";
+    
 
     /**
      * The key name for the post script that is put in the .dag file.
@@ -264,6 +271,14 @@ public class Dagman extends Namespace {
                 }
                 break;
 
+            case 'S':
+                if (key.compareTo( Dagman.SUBDAG_EXTERNAL_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = NOT_PERMITTED_KEY;
+                }
+                break;
 
             default:
                 res = NOT_PERMITTED_KEY;

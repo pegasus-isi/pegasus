@@ -79,6 +79,7 @@ import java.util.Vector;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import org.griphyn.cPlanner.classes.DAGJob;
 import org.griphyn.cPlanner.code.generator.NetloggerJobMapper;
 
 /**
@@ -349,6 +350,20 @@ public class CondorGenerator extends Abstract {
                 dagString.append( sinfo.getName() ).append( ".stork" );
                 printDagString( dagString.toString() );
                 storkGenerator.generateCode( dag, sinfo );
+            }
+            //for dag jobs we dont need to generate submit file
+            else if( sinfo instanceof DAGJob ){
+                //SUBDAG EXTERNAL  B  inner.dag
+                DAGJob djob = ( DAGJob )sinfo;
+                
+                //djob.dagmanVariables.checkKeyInNS( Dagman.SUBDAG_EXTERNAL_KEY,
+                //                                  djob.getDAGFile() );
+                StringBuffer sb = new StringBuffer();
+                sb.append( "SUBDAG EXTERNAL " ).append( sinfo.getName() ).
+                   append( " " ).append( djob.getDAGFile() );
+                printDagString( sb.toString() );
+            
+                printDagString( sinfo.dagmanVariables.toString( sinfo.getName()) );
             }
             else {
                 //write out a condor submit file
