@@ -178,11 +178,13 @@ public class PegasusGetSites extends Executable{
                 
         }            
         
+        //pass on the VO and Grid information as properties
+        //to site catalog back end.
         if(mVO != null){
-            p.setProperty( "pegasus.catalog.site.vors.vo", mVO  );
+            p.setProperty( getPropertyKey( mSource, "vo" ), mVO  );
         }
         if(mGrid != null){
-            p.setProperty( "pegasus.catalog.site.vors.grid", mGrid  );
+            p.setProperty( getPropertyKey( mSource, "grid" ), mGrid  );
         }
         
         try{                                    
@@ -223,6 +225,26 @@ public class PegasusGetSites extends Executable{
             ioe.printStackTrace();
         }
         
+    }
+    
+    /**
+     * Returns the full name of the property key with the appropriate prefix
+     * 
+     * @param source  the source i.e type of site catalog 
+     * @param key     the basename of the key
+     * @return
+     */
+    protected String getPropertyKey( String source, String key ){
+        //"pegasus.catalog.site.vors.grid"
+        String lSource = source.toLowerCase();
+        
+        StringBuffer property = new StringBuffer();
+        property.append( "pegasus.catalog.site" ).append( "." ).
+                 append( lSource ).append( "." ).
+                 append( key );
+        
+        return property.toString();
+                
     }
     
     /**

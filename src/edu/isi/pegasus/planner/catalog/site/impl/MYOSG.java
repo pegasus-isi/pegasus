@@ -30,13 +30,24 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.impl.myosg.classes.MYOSGSiteInfo;
 import edu.isi.pegasus.planner.catalog.site.impl.myosg.classes.MYOSGSiteInfoFacade;
 
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.DateUtils;
 import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.URLParamConstants;
 import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteCatalogParser;
 import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteCatalogUtil;
 import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteConstants;
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGURLGenerator;
 
+
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.SiteScrapper;
+
+import org.griphyn.common.util.Boolean;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import java.net.URLEncoder;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,9 +60,24 @@ import java.util.Set;
  * 
  * 
  * @author Prasanth Thomas
+ * @author Karan Vahi
+ * 
+ * @version $Revision$
  */
 public class MYOSG implements SiteCatalog {
+    
+    /**
+     * The date format to be used while passing dates to the URL construction.
+     */
+    public static final String DATE_FORMAT  ="MM/dd/yyyy";
 
+    /**
+     * The name of the key that determines whether we keep the tmp xml file
+     * around or not.
+     */
+    public static final String KEEP_TMP_FILE_KEY = "myosg.keep.tmp.file";
+    
+    
     private Map<String, MYOSGSiteInfo> mMYOSGInfo = null;
 	
     /**
@@ -60,9 +86,19 @@ public class MYOSG implements SiteCatalog {
     private LogManager mLogger;
     
     /**
+     * A boolean variable tracking whether catalog is connected or not
+     */
+    private boolean mConnected;
+    
+    /**
+     * A boolean variable that tracks whether to keep the temp xml file or not.
+     */
+    private boolean mKeepTmpFile;
+    
+    /**
      * The Site Catalog file to be parser.
      */
-    private String mFilename;
+    //private String mFilename;
     
     /**
      * The SiteStore object where information about the sites is stored.
@@ -72,6 +108,8 @@ public class MYOSG implements SiteCatalog {
     public MYOSG() {
         mLogger = LogManagerFactory.loadSingletonInstance();
         mSiteStore = new SiteStore();
+        mConnected = false;
+        mKeepTmpFile = false;
     }
 
 
@@ -123,8 +161,6 @@ public class MYOSG implements SiteCatalog {
             throw new SiteCatalogException(
 					"Need to connect to site catalog before loading");
 	}
-	mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG,
-				"site-catalog.id", mFilename, LogManager.DEBUG_MESSAGE_LEVEL);
 		
         int ret = 0;
 		 
@@ -156,7 +192,7 @@ public class MYOSG implements SiteCatalog {
             }
         }
 	
-        mLogger.logEventCompletion(LogManager.DEBUG_MESSAGE_LEVEL);
+        
 	return ret;
     }
 
@@ -186,7 +222,7 @@ public class MYOSG implements SiteCatalog {
      * 
      * @throws edu.isi.pegasus.planner.catalog.site.SiteCatalogException
      */
-    public int remove(String handle) throws SiteCatalogException {
+    public int remove( String handle ) throws SiteCatalogException {
 	throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -194,7 +230,7 @@ public class MYOSG implements SiteCatalog {
      * Close the connection to back end file.
      */
     public void close() {
-	mFilename = null;
+	mConnected = false;
     }
 
     /**
@@ -210,18 +246,42 @@ public class MYOSG implements SiteCatalog {
      * 
      * @throws SiteCatalogException
      */
-    public boolean connect(Properties props) throws SiteCatalogException {
+    public boolean connect( Properties props ) throws SiteCatalogException {
+        /*
+        for( Iterator it = props.keySet().iterator(); it.hasNext(); ){
+            String key = (String)it.next();
+            System.out.println( key + " -> " + props.getProperty( key ));
+        }
+        */
         
-        if (!props.containsKey("file")){
-            return false; 
-	}
-	connect(props.getProperty("file"));
+        if( props.containsKey( MYOSG.KEEP_TMP_FILE_KEY ) ){
+            String value = props.getProperty( MYOSG.KEEP_TMP_FILE_KEY );
+            mKeepTmpFile = Boolean.parse( value, false );
+        }
         
+        /*generate the HTTP URL to the MYOSG website.*/
+	String urlString = new MYOSGURLGenerator().getURL( this.createConnectionURLProperties() );
+        mLogger.log( "HTTP URL constructed to the MYOSG website " + urlString,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        /* grab the XML on the web url and populate to a temp file*/
+        File temp;
+        try{
+            temp = File.createTempFile( "myosg-", ".xml" );
+        }
+        catch( IOException ioe ){
+            throw new SiteCatalogException( "Unable to create a temp file ", ioe );
+        }
+        
+        String tempPath = temp.getAbsolutePath();
+        SiteScrapper.scrapeSite( urlString , tempPath );
+        mLogger.log( "Webpage retrieved to " + tempPath, LogManager.DEBUG_MESSAGE_LEVEL );
+		
         
 	MYOSGSiteCatalogParser myOSGCatalogCreator = new MYOSGSiteCatalogParser();
-	mLogger.logEventStart(LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG,
-				"site-catalog.id", mFilename, LogManager.DEBUG_MESSAGE_LEVEL);
-	myOSGCatalogCreator.startParser(mFilename);
+	mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG,
+				"site-catalog.id", tempPath, LogManager.DEBUG_MESSAGE_LEVEL);
+	myOSGCatalogCreator.startParser( tempPath );
 	mLogger.logEventCompletion(LogManager.DEBUG_MESSAGE_LEVEL);
 	for( Iterator <MYOSGSiteInfo> itr =  myOSGCatalogCreator.getSites().iterator();	itr.hasNext();){
             if(mMYOSGInfo == null){
@@ -231,30 +291,86 @@ public class MYOSG implements SiteCatalog {
             mMYOSGInfo.put((String)myOSGSiteInfo.getProperty(MYOSGSiteConstants.SITE_NAME_ID), myOSGSiteInfo); 			
 	}
 	
+        /* delete the temp file if required */
+        if( !mKeepTmpFile ){
+            temp.delete();
+        }
+        
+        mConnected = true;
         return true;
 
     }
     
-    
+    /**
+     * Creates the properties that are required to compose the HTTP URL to the 
+     * MYOSG website.
+     * 
+     * @return
+     */
+    private Properties createConnectionURLProperties(){
+        Properties properties = new Properties();
+        
+        properties.setProperty(""+URLParamConstants.PARAM_SUMMARY_ATTRS_SHOWSERVICE,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_SUMMARY_ATTRS_SHOWRSVSTATUS,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_SUMMARY_ATTRS_SHOWFQDN,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_SUMMARY_ATTRS_SHOWVOMEMBERSHIP,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_SUMMARY_ATTRS_SHOWVOOWNERSHIP,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_SUMMARY_ATTRS_SHOWENVIRONMNENT,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_GIP_STATUS_ATTRS_SHOWTESTRESULTS,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_GIP_STATUS_ATTRS_SHOWFQDN,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_ACCOUNT_TYPE ,"cumulative_hours");
+	properties.setProperty(""+URLParamConstants.PARAM_CE_ACCOUNT_TYPE,"gip_vo");
+	properties.setProperty(""+URLParamConstants.PARAM_SE_ACCOUNT_TYPE,"vo_transfer_volume");
+	properties.setProperty(""+URLParamConstants.PARAM_START_TYPE,"7daysago");
+	properties.setProperty(""+URLParamConstants.PARAM_START_DATE,getStartDate());
+	properties.setProperty(""+URLParamConstants.PARAM_END_TYPE,"now");
+	properties.setProperty(""+URLParamConstants.PARAM_END_DATE,getDateAfter(7));
+	properties.setProperty(""+URLParamConstants.PARAM_RESOURCE_TO_DISPLAY_ALL_RESOURCES,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_FILTER_GRID_TYPE,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_FILTER_GRID_TYPE_OPTION,"1");
+	properties.setProperty(""+URLParamConstants.PARAM_FILTER_CURRENT_RSV_STATUS,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_FILTER_CURRENT_RSV_STATUS_OPTION,"1");
+	properties.setProperty(""+URLParamConstants.PARAM_FILTER_VO_SUPPORT,"on");
+	properties.setProperty(""+URLParamConstants.PARAM_FILTER_VO_SUPPORT_OPTION,"23");
+	properties.setProperty(""+URLParamConstants.PARAM_FILTER_ACTIVE_STATUS_OPTION,"1");
+	properties.setProperty(""+URLParamConstants.PARAM_FILTER_DISABLE_STATUS_OPTION,"1");
+        
+        return properties;
+    }
     
     /**
-     * Initializes the Site Catalog Parser instance for the file.
+     * Returns the start date formatted as MM/dd/yyyy.
      * 
-     * @param filename
-     *            is the name of the file to read.
-     * 
-     * @return true,
-     */ 
-    private boolean connect(String filename) {
-        mFilename = filename;
-	File f = new File(filename);
-	if (f.exists() && f.canRead()) {
-            return true;
-	} else {
-            throw new RuntimeException("Cannot read or access file " + filename);
+     * @return
+     */
+    private String getStartDate(){
+	String now = null;
+	try {
+            now =  URLEncoder.encode( DateUtils.now(DATE_FORMAT),"UTF-8");
+	} catch (UnsupportedEncodingException e) {
+            throw new SiteCatalogException( "Problem encoding the date after", e );
 	}
+	return now;
     }
-
+	
+    /**
+     * Returns the date after n days formatted as MM/dd/yyyy.
+     * 
+     * @param day  the days after.
+     * @return
+     */
+    private static String getDateAfter(int days){
+        String now = null;
+	try {
+            now =  URLEncoder.encode(DateUtils.after(days,DATE_FORMAT),"UTF-8");
+	} catch (UnsupportedEncodingException e) {
+            throw new SiteCatalogException( "Problem encoding the date after", e );
+	}
+	return now;
+    }
+    
+    
+   
 
     /**
      * Returns if the connection is closed or not.
@@ -263,7 +379,7 @@ public class MYOSG implements SiteCatalog {
      */
     public boolean isClosed() {
         // TODO Auto-generated method stub
-	return (mFilename == null);
+	return !mConnected;
     }
 
 }
