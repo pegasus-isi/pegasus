@@ -209,7 +209,8 @@ public class MYOSG implements SiteCatalog {
 						.createSiteCatalogEntry(new MYOSGSiteInfoFacade(temp)));
 				ret++;
 			} else {
-				mLogger.log(sitename + " site information is incomplete.",
+				mLogger.log( "Not constructing entry for site " + sitename + " "+  
+							  myOSiteInfoFacade.getSitesMissingInformation(sitename),
 						LogManager.INFO_MESSAGE_LEVEL);
 
 			}

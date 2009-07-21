@@ -51,8 +51,26 @@ public class MYOSGSiteInfoFacade {
 		
 	}
 	
+	public String getSitesMissingInformation(String siteName){
+		String missingInformation = "Following environment variables are not specified for the site " ;
+		 if(data_loc.equals("")){
+			 missingInformation += " $OSG_DATA ";
+		 }
+		 if(globus_loc.equals("")){
+			 missingInformation += " $GLOBUS_LOCATION ";
+		 }
+		 if(exec_jm.equals("")){
+			 missingInformation += " $OSG_JOB_CONTACT ";
+		 }
+		 
+		 return missingInformation;
+	}
+	
+	/*
+	 * Checks if the site has all the required information.
+	 */
 	public boolean isValidSite(){
-		if(app_loc.equals("") || data_loc.equals("") || globus_loc.equals("")|| exec_jm.equals("")){
+		if( data_loc.equals("") || globus_loc.equals("")|| exec_jm.equals("")){
 			return false;
 		}
 		return true;
@@ -110,8 +128,9 @@ public class MYOSGSiteInfoFacade {
 	 */
 	private String getUtilJobManager(String exec_jm){
 		String jobManager ="";
-		if(exec_jm.equals(""))
+		if(exec_jm.equals("")) {
 			return jobManager;
+		}
 		int index = exec_jm.lastIndexOf("/");
 		if(index != -1){
 			jobManager = exec_jm.substring(0, index) +"/jobmanager-fork";
@@ -132,8 +151,9 @@ public class MYOSGSiteInfoFacade {
 		while (iterator.hasNext()) {
 			MYOSGSiteServiceInfo serviceInfo = iterator.next();
 			if (serviceInfo.getProperty(MYOSGSiteConstants.SERVICE_NAME_ID)
-					.equals("CE"))
+					.equals("CE")) {
 				return serviceInfo;
+			}
 		}
 		return null;
 
@@ -151,8 +171,9 @@ public class MYOSGSiteInfoFacade {
 		while (iterator.hasNext()) {
 			MYOSGSiteServiceInfo serviceInfo = iterator.next();
 			if (serviceInfo.getProperty(MYOSGSiteConstants.SERVICE_NAME_ID)
-					.equals("GridFtp"))
+					.equals("GridFtp")) {
 				return serviceInfo;
+			}
 		}
 		return null;
 

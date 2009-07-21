@@ -54,12 +54,12 @@ public class MYOSGSiteCatalogUtil {
 	    	String host = sitInfo.getGsiftp_server();
 	    	String port = sitInfo.getGsiftp_port();
 	    	if(host == null || host.equals("")){
-	    		mLogger.log( "Gridftp hostname missing in site "+ sitInfo.getShortname() +" using gatekeeper entry.",
+	    		mLogger.log( "Gridftp hostname missing in site "+ sitInfo.getShortname() +" .Using gatekeeper entry.",
 	                     LogManager.CONFIG_MESSAGE_LEVEL);
 	    		host = (sitInfo.getGatekeeper().split(":"))[0];
 	    	}
 	    	if(port == null || port.equals("")){
-	    		mLogger.log( "Gridftp hostname missing in site " + sitInfo.getShortname() + " using default 2811.",
+	    		mLogger.log( "Gridftp hostname missing in site " + sitInfo.getShortname() + " .Using default 2811.",
 	                     LogManager.CONFIG_MESSAGE_LEVEL);
 	    		port = "2811";
 	    	}    	
