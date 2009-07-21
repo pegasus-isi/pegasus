@@ -33,6 +33,7 @@ public class MYOSGSiteInfoFacade {
 	private String tmp_loc;      			//tmp_loc
 	private String gatekeeper;			 	//gatekeeper
 	private String gk_port;     			//gk_port	
+	private String gsiftp_server;           // gk_server
 	private String gsiftp_port;         	//gsiftp_port	
 	private String sponsor_vo;             	//sponsor_vo
 	private String vdt_version; 			//vdt_version
@@ -78,6 +79,12 @@ public class MYOSGSiteInfoFacade {
 		 else{
 			 gk_port ="2119";
 		 }
+		 if(myOSGSiteServiceInfoGridFtp == null || ((String)myOSGSiteServiceInfoGridFtp.getProperty(MYOSGSiteConstants.SERVICE_URI_ID)).equals("")){
+			 gsiftp_server =""; 
+		 }else{
+			 gsiftp_server = ((String)myOSGSiteServiceInfoGridFtp.getProperty(MYOSGSiteConstants.SERVICE_URI_ID));
+		 }
+		 
 		 if(myOSGSiteServiceInfoGridFtp == null || ((String)myOSGSiteServiceInfoGridFtp.getProperty(MYOSGSiteConstants.SERVICE_URI_ID)).equals("")){
 			 gsiftp_port = "2811";
 		 }
@@ -280,6 +287,14 @@ public class MYOSGSiteInfoFacade {
 	}
 	public void setTmp_space(String tmp_space) {
 		this.tmp_space = tmp_space;
+	}
+	
+	public String getGsiftp_server() {
+		return gsiftp_server;
+	}
+
+	public void setGsiftp_server(String gsiftp_server) {
+		this.gsiftp_server = gsiftp_server;
 	}
 }
 	
