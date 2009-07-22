@@ -328,8 +328,10 @@ public class MYOSG implements SiteCatalog {
 		}
 
 		/* delete the temp file if required */
-		if (!mKeepTmpFile) {
-			temp.delete();
+		if (!mKeepTmpFile){
+                    mLogger.log( "Deleting temp file " + tempPath, 
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    temp.delete();
 		}
 
 		mConnected = true;
