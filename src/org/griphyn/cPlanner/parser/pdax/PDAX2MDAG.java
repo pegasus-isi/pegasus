@@ -73,6 +73,7 @@ import java.util.regex.Pattern;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import org.griphyn.cPlanner.namespace.Condor;
+import org.griphyn.cPlanner.namespace.ENV;
 
 
 /**
@@ -668,6 +669,8 @@ public class PDAX2MDAG implements Callback {
     protected SubInfo constructDAGJob( Partition partition ,
                                        File directory,
                                        String dax){
+        
+    
         //for time being use the old functions.
         SubInfo job = new SubInfo();
         //the parent directory where the submit file for condor dagman has to
@@ -726,14 +729,20 @@ public class PDAX2MDAG implements Callback {
 
         //get the path to condor dagman
         try{
-            entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
-                                             job.version, job.getSiteHandle(),
-                                             TCType.INSTALLED);
-            entry = (entries == null) ?
-                null :
-                //Gaurang assures that if no record is found then
-                //TC Mechanism returns null
-                (TransformationCatalogEntry) entries.get(0);
+            //try to construct the path from the environment
+            entry = constructTCEntryFromEnvironment( );
+            
+            //try to construct from the TC
+            if( entry == null ){
+                entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
+                                                 job.version, job.getSiteHandle(),
+                                                 TCType.INSTALLED);
+                entry = (entries == null) ?
+                    defaultTCEntry( "local") ://construct from site catalog
+                    //Gaurang assures that if no record is found then
+                    //TC Mechanism returns null
+                    (TransformationCatalogEntry) entries.get(0);
+            }
         }
         catch(Exception e){
             throw new RuntimeException( "ERROR: While accessing the Transformation Catalog",e);
@@ -874,6 +883,102 @@ public class PDAX2MDAG implements Callback {
                             GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
        return job;
+    }
+
+
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCEntry( String site ){
+        //not implemented as we dont have handle to site catalog in this class
+        return null;
+    }
+
+    /**
+     * Returns a tranformation catalog entry object constructed from the environment
+     * 
+     * An entry is constructed if either of the following environment variables
+     * are defined
+     * 1) CONDOR_HOME
+     * 2) CONDOR_LOCATION
+     * 
+     * CONDOR_HOME takes precedence over CONDOR_LOCATION
+     *
+     *
+     * @return  the constructed entry else null.
+     */
+    private  TransformationCatalogEntry constructTCEntryFromEnvironment( ){
+        //construct environment profiles 
+        Map<String,String> m = System.getenv();
+        ENV env = new ENV();
+        String key = "CONDOR_HOME";
+        if( m.containsKey( key ) ){
+            env.construct( key, m.get( key ) );
+        }
+        
+        key = "CONDOR_LOCATION";
+        if( m.containsKey( key ) ){
+            env.construct( key, m.get( key ) );
+        }
+        
+        return constructTCEntryFromEnvProfiles( env );
+    }
+    
+    /**
+     * Returns a tranformation catalog entry object constructed from the environment
+     * 
+     * An entry is constructed if either of the following environment variables
+     * are defined
+     * 1) CONDOR_HOME
+     * 2) CONDOR_LOCATION
+     * 
+     * CONDOR_HOME takes precedence over CONDOR_LOCATION
+     * 
+     * @param env  the environment profiles.
+     *
+     *
+     * @return  the entry constructed else null if environment variables not defined.
+     */
+    private TransformationCatalogEntry constructTCEntryFromEnvProfiles( ENV env ) {
+        TransformationCatalogEntry entry = null;
+        
+        //check if either CONDOR_HOME or CONDOR_LOCATION is defined
+        String key = null;
+        if( env.containsKey( "CONDOR_HOME") ){
+            key = "CONDOR_HOME";
+        }
+        else if( env.containsKey( "CONDOR_LOCATION") ){
+            key = "CONDOR_LOCATION";
+        }
+        
+        if( key == null ){
+            //environment variables are not defined.
+            return entry;
+        }
+        
+        mLogger.log( "Constructing path to dagman on basis of env variable " + key,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        entry = new TransformationCatalogEntry();
+        entry.setLogicalTransformation( CONDOR_DAGMAN_NAMESPACE,
+                                        CONDOR_DAGMAN_LOGICAL_NAME,
+                                        null );
+        entry.setType( TCType.INSTALLED );
+        entry.setResourceId( "local" );
+        
+        //construct path to condor dagman
+        StringBuffer path = new StringBuffer();
+        path.append( env.get( key ) ).append( File.separator ).
+             append( "bin" ).append( File.separator).
+             append( "condor_dagman" );
+        entry.setPhysicalTransformation( path.toString() );
+        
+        return entry;
     }
 
 
