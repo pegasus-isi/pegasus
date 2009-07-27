@@ -367,7 +367,9 @@ public class NoGridStart implements GridStart {
                 if( job.getJobType() == SubInfo.COMPUTE_JOB ||
                     job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
 
-                    if( !mSLS.doesCondorModifications() ){
+                    if( !mSLS.doesCondorModifications() && 
+                            //do the check only if input/output files are not empty
+                            !( job.getInputFiles().isEmpty() && job.getOutputFiles().isEmpty())){
                         throw new RuntimeException( "Second Level Staging with NoGridStart only works with Condor SLS" );
                     }
 
