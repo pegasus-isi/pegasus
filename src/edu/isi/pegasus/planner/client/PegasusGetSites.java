@@ -203,15 +203,19 @@ public class PegasusGetSites extends Executable{
             List toLoad = new ArrayList( mCatalog.list() );
             toLoad.add( "local" );            
             //load into SiteStore from the catalog.
+            int num = 0;
             for( Iterator<String> it = toLoad.iterator(); it.hasNext(); ){
                 SiteCatalogEntry se = mCatalog.lookup( it.next() );
                 if( se != null ){
                     store.addEntry( se );
+                    num++;
                 }
             }        
-                 //write DAX to file
+                 
+            mLogger.log( "Loaded " + num + " sites ", LogManager.INFO_MESSAGE_LEVEL );
+            //write DAX to file
             FileWriter scFw = new FileWriter( mFile  );
-            mLogger.log( "Writing out site catalog to " + mFile ,
+            mLogger.log( "Writing out site catalog to " + new File( mFile ).getAbsolutePath() ,
                          LogManager.INFO_MESSAGE_LEVEL );
             store.toXML( scFw, "" );
             scFw.close();

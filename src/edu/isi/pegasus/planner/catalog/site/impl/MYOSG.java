@@ -17,6 +17,32 @@
  */
 package edu.isi.pegasus.planner.catalog.site.impl;
 
+
+import org.griphyn.common.util.Boolean;
+
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LoggingKeys;
+
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
+
+import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
+
+import edu.isi.pegasus.planner.catalog.site.classes.LocalSiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.classes.MYOSGSiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.classes.MYOSGSiteInfoFacade;
+
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.DateUtils;
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteCatalogParser;
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteCatalogUtil;
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteConstants;
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGURLGenerator;
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.SiteScrapper;
+import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.URLParamConstants;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -27,25 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import org.griphyn.common.util.Boolean;
-
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.common.logging.LoggingKeys;
-import edu.isi.pegasus.planner.catalog.SiteCatalog;
-import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.classes.MYOSGSiteInfo;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.classes.MYOSGSiteInfoFacade;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.DateUtils;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteCatalogParser;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteCatalogUtil;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGSiteConstants;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.MYOSGURLGenerator;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.SiteScrapper;
-import edu.isi.pegasus.planner.catalog.site.impl.myosg.util.URLParamConstants;
 
 /**
  * This class implements the SiteCatalog interface
@@ -170,8 +177,7 @@ public class MYOSG implements SiteCatalog {
 	 * The site handle * is a special handle designating all sites are to be
 	 * loaded.
 	 * 
-	 * @param sites
-	 *            the list of sites to be loaded.
+	 * @param sites the list of sites to be loaded.
 	 * 
 	 * @return the number of sites loaded.
 	 * 
@@ -215,6 +221,12 @@ public class MYOSG implements SiteCatalog {
 
 			}
 		}
+                
+                //always add local site.
+                mLogger.log( "Site LOCAL . Creating default entry" , LogManager.INFO_MESSAGE_LEVEL );
+                mSiteStore.addEntry( LocalSiteCatalogEntry.create( mVO, mGrid ) );
+                ret++;
+                
 
 		return ret;
 	}
