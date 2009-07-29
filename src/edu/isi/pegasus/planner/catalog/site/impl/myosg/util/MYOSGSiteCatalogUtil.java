@@ -56,7 +56,7 @@ public class MYOSGSiteCatalogUtil {
 	    	if(host == null || host.equals("")){
 	    		mLogger.log( "Gridftp hostname missing in site "+ sitInfo.getShortname() +" .Using gatekeeper entry.",
 	                     LogManager.CONFIG_MESSAGE_LEVEL);
-	    		host = (sitInfo.getGatekeeper().split(":"))[0];
+	    		host = (sitInfo.getGatekeeper().split("/"))[0];
 	    	}
 	    	if(port == null || port.equals("")){
 	    		mLogger.log( "Gridftp hostname missing in site " + sitInfo.getShortname() + " .Using default 2811.",
