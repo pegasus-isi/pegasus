@@ -26,6 +26,10 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import java.io.File;
+import java.util.Properties;
+import org.griphyn.common.catalog.ReplicaCatalog;
+import org.griphyn.common.catalog.replica.ReplicaFactory;
 
 
 /**
@@ -39,6 +43,18 @@ import edu.isi.pegasus.common.logging.LogManager;
  */
 public class MainEngine
     extends Engine {
+
+        /**
+     * The name of the source key for Replica Catalog Implementer that serves as
+     * cache
+     */
+    public static final String TRANSIENT_REPLICA_CATALOG_KEY = "file";
+
+    /**
+     * The name of the Replica Catalog Implementer that serves as the source for
+     * cache files.
+     */
+    public static final String TRANSIENT_REPLICA_CATALOG_IMPLEMENTER = "SimpleFile";
 
     /**
      * The Original Dag object which is constructed by parsing the dag file.
@@ -205,12 +221,16 @@ public class MainEngine
 
 
         message = "Grafting transfer nodes in the workflow";
+        ReplicaCatalog transientRC  = initializeTransientRC( mReducedDag ) ;
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );       
         mTransEng = new TransferEngine( mReducedDag, vDelLeafJobs, mBag );
-        mTransEng.addTransferNodes( mRCBridge );
+        mTransEng.addTransferNodes( mRCBridge , transientRC );
         mTransEng = null;
         mLogger.logEventCompletion();
+        
+        //populate the transient RC into PegasusBag
+        mBag.add( PegasusBag.TRANSIENT_REPLICA_CATALOG, transientRC );
         
         //close the connection to RLI explicitly
         mRCBridge.closeConnection();
@@ -277,6 +297,72 @@ public class MainEngine
         return mBag;
     }
 
+    /**
+     * Initializes the transient replica catalog and returns a handle to it.
+     * 
+     * @param dag  the workflow being planned
+     * 
+     * @return handle to transient catalog
+     */
+    private ReplicaCatalog initializeTransientRC( ADag dag ){
+        ReplicaCatalog rc = null;
+        mLogger.log("Initialising Transient Replica Catalog",
+                    LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+        Properties cacheProps = mProps.getVDSProperties().matchingSubset(
+                                                              ReplicaCatalog.c_prefix,
+                                                              false );
+        String file = mPOptions.getSubmitDirectory() + File.separatorChar +
+                          getCacheFileName( dag );
+
+        //set the appropriate property to designate path to file
+        cacheProps.setProperty( MainEngine.TRANSIENT_REPLICA_CATALOG_KEY, file );
+
+        try{
+            rc = ReplicaFactory.loadInstance(
+                                          TRANSIENT_REPLICA_CATALOG_IMPLEMENTER,
+                                          cacheProps);
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "Unable to initialize the transient replica catalog  " + file,
+                                         e );
+        
+        }
+        return rc;
+    }
+    
+     /**
+     * Constructs the basename to the cache file that is to be used
+     * to log the transient files. The basename is dependant on whether the
+     * basename prefix has been specified at runtime or not.
+     *
+     * @param adag  the ADag object containing the workflow that is being
+     *              concretized.
+     *
+     * @return the name of the cache file
+     */
+    private String getCacheFileName(ADag adag){
+        StringBuffer sb = new StringBuffer();
+        String bprefix = mPOptions.getBasenamePrefix();
+
+        if(bprefix != null){
+            //the prefix is not null using it
+            sb.append(bprefix);
+        }
+        else{
+            //generate the prefix from the name of the dag
+            sb.append(adag.dagInfo.nameOfADag).append("_").
+           append(adag.dagInfo.index);
+        }
+        //append the suffix
+        sb.append(".cache");
+
+        return sb.toString();
+
+    }
+
+    
     /**
      * Unmarks the arguments , that are tagged in the DaxParser. At present there are
      * no tagging.

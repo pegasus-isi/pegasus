@@ -101,6 +101,13 @@ public class PegasusBag
      * handle to the Site Store
      */
     public static final Integer SITE_STORE = new Integer( 7 );
+    
+    
+    /**
+     * The constant to be passed to the accessor functions to get or set the
+     * handle to the transient replica catalog
+     */
+    public static final Integer TRANSIENT_REPLICA_CATALOG = new Integer( 8 );
 
     /**
      * The handle to the <code>PegasusProperties</code>.
@@ -142,6 +149,12 @@ public class PegasusBag
      */
     private SiteStore mSiteStore;
 
+    /**
+     * The transient replica catalog that tracks the files created or transferred
+     * during the workflow
+     */
+    private ReplicaCatalog mTransientRC;
+    
     /**
      * The default constructor.
      */
@@ -220,6 +233,13 @@ public class PegasusBag
                     valid = false;
                 break;
 
+            case 8: //TRANSIENT_REPLICA_CATALOG
+                if ( value != null && value instanceof ReplicaCatalog )
+                    mTransientRC = ( ReplicaCatalog ) value;
+                else
+                    valid = false;
+                break;
+                
             default:
                 throw new RuntimeException(
                       " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -290,7 +310,10 @@ public class PegasusBag
                 
             case 7: //SITE_STORE
                 return this.mSiteStore;
-
+                
+            case 8://TRANSIENT_RC
+                return this.mTransientRC;
+                
             default:
                 throw new RuntimeException(
                     " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -343,6 +366,15 @@ public class PegasusBag
      */
     public SiteStore getHandleToSiteStore(){
         return ( SiteStore )get( PegasusBag.SITE_STORE );
+    }
+    
+    /**
+     * A convenice method to get the handle to the transient replica catalog
+     *
+     * @return  the handle to transient replica catalog
+     */
+    public ReplicaCatalog getHandleToTransientReplicaCatalog(){
+        return ( ReplicaCatalog )get( PegasusBag.TRANSIENT_REPLICA_CATALOG );
     }
     
     /**

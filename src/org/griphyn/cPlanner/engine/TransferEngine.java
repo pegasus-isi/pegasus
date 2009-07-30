@@ -77,19 +77,6 @@ import java.util.Properties;
  *
  */
 public class TransferEngine extends Engine {
-
-    /**
-     * The name of the source key for Replica Catalog Implementer that serves as
-     * cache
-     */
-    public static final String TRANSIENT_REPLICA_CATALOG_KEY = "file";
-
-    /**
-     * The name of the Replica Catalog Implementer that serves as the source for
-     * cache files.
-     */
-    public static final String TRANSIENT_REPLICA_CATALOG_IMPLEMENTER = "SimpleFile";
-
     
     /**
      * The scheme name for file url.
@@ -195,6 +182,11 @@ public class TransferEngine extends Engine {
      * is same as a particular jobs execution pool.
      */
     protected boolean mUseSymLinks;
+    
+    /**
+     * A boolean indicating whether we are doing worker node execution or not.
+     */
+    private boolean mWorkerNodeExecution;
 
 
     /**
@@ -217,6 +209,7 @@ public class TransferEngine extends Engine {
         mStorageDir = mProps.getStorageDirectory();
         mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
+        mWorkerNodeExecution = mProps.executeOnWorkerNode();
         
         mDag = reducedDag;
         mvDelLeafJobs = vDelLJobs;
@@ -272,10 +265,14 @@ public class TransferEngine extends Engine {
     /**
      * Adds the transfer nodes to the workflow.
      *
-     * @param rcb  the bridge to the ReplicaCatalog.
+     * @param rcb                the bridge to the ReplicaCatalog.
+     * @param transientCatalog   an instance of the replica catalog that will
+     *                           store the locations of the files on the remote
+     *                           sites.
      */
-    public void addTransferNodes( ReplicaCatalogBridge rcb ) {
+    public void addTransferNodes( ReplicaCatalogBridge rcb, ReplicaCatalog transientCatalog ) {
         mRCBridge = rcb;
+        mTransientRC = transientCatalog;
 
         SubInfo currentJob;
         String currentJobName;
@@ -359,7 +356,7 @@ public class TransferEngine extends Engine {
 
 
         //close the handle to the cache file if it is written
-        closeTransientRC();
+        //closeTransientRC();
     }
 
     /**
@@ -960,7 +957,7 @@ public class TransferEngine extends Engine {
             destURL   = (destURL == null)?
                         destDir + File.separator + lfn:
                         destURL;
-
+            
 
             //we have all the chopped up combos of the urls.
             //do some funky matching on the basis of the fact
@@ -980,7 +977,22 @@ public class TransferEngine extends Engine {
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 continue;
             }
-
+                
+            //add locations of input data on the remote site to the transient RC
+            if( mWorkerNodeExecution && selLoc.getResourceHandle().equals( job.getSiteHandle() ) ){
+                //the selected replica already exists on
+                //the compute site.  we can bypass first level
+                //staging of the data
+                //we add into transient RC the source URL
+                trackInTransientRC( lfn, sourceURL, job.getSiteHandle() );
+                continue;
+            }
+            else{
+                //track the location where the data is staged as 
+                //part of the first level staging
+                trackInTransientRC( lfn, destURL, job.getSiteHandle() );
+            }
+            
             //construct the file transfer object
             FileTransfer ft = (pf instanceof FileTransfer) ?
                                (FileTransfer)pf:
@@ -1076,34 +1088,6 @@ public class TransferEngine extends Engine {
         }
 
         return files;
-    }
-
-    /**
-     * Initializes the transient replica catalog.
-     */
-    private void initializeTransientRC(){
-        mLogger.log("Initialising Transient Replica Catalog",
-                    LogManager.DEBUG_MESSAGE_LEVEL );
-
-
-        Properties cacheProps = mProps.getVDSProperties().matchingSubset(
-                                                              ReplicaCatalog.c_prefix,
-                                                              false );
-        String file = mPOptions.getSubmitDirectory() + File.separatorChar +
-                          getCacheFileName(mDag);
-
-        //set the appropriate property to designate path to file
-        cacheProps.setProperty( this.TRANSIENT_REPLICA_CATALOG_KEY, file );
-
-        try{
-            mTransientRC = ReplicaFactory.loadInstance(
-                                          TRANSIENT_REPLICA_CATALOG_IMPLEMENTER,
-                                          cacheProps);
-        }
-        catch( Exception e ){
-            throw new RuntimeException( "Unable to initialize the transient replica catalog  " + file,
-                                         e );
-        }
     }
 
 
@@ -1205,51 +1189,15 @@ public class TransferEngine extends Engine {
     private void trackInTransientRC( String lfn, String pfn, String site){
 
         //check if the cache handle is initialized
-        if( mTransientRC == null)
-            this.initializeTransientRC();
+        /*if( mTransientRC == null)
+            this.initializeTransientRC();*/
 
         mTransientRC.insert( lfn, pfn, site );
     }
 
 
-    /**
-     * Closes and writes out to the Transient Replica Catalog.
-     */
-    private void  closeTransientRC(){
-        if( mTransientRC != null)
-            mTransientRC.close();
-    }
 
-
-    /**
-     * Constructs the basename to the cache file that is to be used
-     * to log the transient files. The basename is dependant on whether the
-     * basename prefix has been specified at runtime or not.
-     *
-     * @param adag  the ADag object containing the workflow that is being
-     *              concretized.
-     *
-     * @return the name of the cache file
-     */
-    private String getCacheFileName(ADag adag){
-        StringBuffer sb = new StringBuffer();
-        String bprefix = mPOptions.getBasenamePrefix();
-
-        if(bprefix != null){
-            //the prefix is not null using it
-            sb.append(bprefix);
-        }
-        else{
-            //generate the prefix from the name of the dag
-            sb.append(adag.dagInfo.nameOfADag).append("_").
-           append(adag.dagInfo.index);
-        }
-        //append the suffix
-        sb.append(".cache");
-
-        return sb.toString();
-
-    }
+   
 
     /**
      * Return the storage mount point for a particular pool.

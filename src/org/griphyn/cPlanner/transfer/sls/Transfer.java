@@ -18,6 +18,9 @@ package org.griphyn.cPlanner.transfer.sls;
 
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
+import edu.isi.pegasus.common.logging.LogManager;
+
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -27,16 +30,12 @@ import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import edu.isi.pegasus.common.logging.LogManager;
-
-import org.griphyn.cPlanner.code.GridStart;
 
 import org.griphyn.cPlanner.transfer.SLS;
 
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
-
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+import org.griphyn.common.catalog.ReplicaCatalog;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,7 +97,6 @@ public class Transfer   implements SLS {
     /**
      * The handle to the site catalog.
      */
-//    protected PoolInfoProvider mSiteHandle;
     protected SiteStore mSiteStore;
 
     /**
@@ -130,6 +128,11 @@ public class Transfer   implements SLS {
      * The local url prefix for the submit host.
      */
     protected String mLocalURLPrefix;
+    
+    /**
+     * The handle to the transient replica catalog.
+     */
+    protected ReplicaCatalog mTransientRC;
 
 
     /**
@@ -147,7 +150,6 @@ public class Transfer   implements SLS {
     public void initialize( PegasusBag bag ) {
         mProps      = bag.getPegasusProperties();
         mLogger     = bag.getLogger();
-//        mSiteHandle = bag.getHandleToSiteCatalog();
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
         mLocalUserProxy = getPathToUserProxy();
@@ -155,8 +157,8 @@ public class Transfer   implements SLS {
                                   null :
                                   new File(mLocalUserProxy).getName();
 
-//        mLocalURLPrefix = mSiteHandle.getURLPrefix( "local" );
         mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
+        mTransientRC = bag.getHandleToTransientReplicaCatalog();
     }
 
     /**
@@ -318,9 +320,7 @@ public class Transfer   implements SLS {
         //figure out the remote site's headnode gridftp server
         //and the working directory on it.
         //the below should be cached somehow
-//        String sourceURLPrefix = mSiteHandle.getURLPrefix( job.getSiteHandle() );
-         String sourceURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
-        //String sourceDir = mSiteHandle.getExecPoolWorkDir( job );
+        String sourceURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         String sourceDir = headNodeDirectory;
         String destDir = workerNodeDirectory;
 
@@ -334,18 +334,31 @@ public class Transfer   implements SLS {
             //To do. distinguish the sls file from the other input files
             for( Iterator it = files.iterator(); it.hasNext(); ){
                 pf = ( PegasusFile ) it.next();
+                String lfn = pf.getLFN();
 
-                if( pf.getLFN().equals( ENV.X509_USER_PROXY_KEY ) ){
+                if( lfn.equals( ENV.X509_USER_PROXY_KEY ) ){
                     //ignore the proxy file for time being
                     //as we picking it from the head node directory
                     continue;
                 }
 
-
-                input.write( sourceURLPrefix ); input.write( File.separator );
-                input.write( sourceDir ); input.write( File.separator );
-                input.write( pf.getLFN() );
+                //check if the input file is in the transient RC
+                //all files in the DAX should be in the transient RC
+                String transientPFN =  mTransientRC.lookup( lfn, job.getSiteHandle() );
+                if( transientPFN == null ){
+                    //create the default path from the directory 
+                    //on the head node
+                    input.write( sourceURLPrefix ); input.write( File.separator );
+                    input.write( sourceDir ); input.write( File.separator );
+                    input.write( lfn );
+                }
+                else{
+                    //use the location specified in 
+                    //the transient replica catalog
+                    input.write( transientPFN );
+                }
                 input.write( "\n" );
+                
 
                 //destination
                 input.write( "file://" );
@@ -399,9 +412,7 @@ public class Transfer   implements SLS {
         //figure out the remote site's headnode gridftp server
         //and the working directory on it.
         //the below should be cached somehow
-//        String destURLPrefix = mSiteHandle.getURLPrefix( job.getSiteHandle() );
         String destURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
-        //String sourceDir = mSiteHandle.getExecPoolWorkDir( job );
         String destDir = headNodeDirectory;
         String sourceDir = workerNodeDirectory;
 
@@ -483,9 +494,6 @@ public class Transfer   implements SLS {
             //the destination URL is the working directory on the filesystem
             //on the head node where the job is to be run.
             StringBuffer destURL = new StringBuffer();
-//            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-//                    append( mSiteHandle.getExecPoolWorkDir(job)).append( separator ).
-//                    append( slsInputLFN );
             destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() ).
                     append( separator ).
                     append( mSiteStore.getWorkDirectory( job ) ).append( separator ).
@@ -512,9 +520,6 @@ public class Transfer   implements SLS {
             //the destination URL is the working directory on the filesystem
             //on the head node where the job is to be run.
             StringBuffer destURL = new StringBuffer();
-//            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-//                    append( mSiteHandle.getExecPoolWorkDir( job ) ).append( separator ).
-//                    append( slsOutputLFN );
             destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() )
                     .append( separator ).
                     append( mSiteStore.getWorkDirectory( job ) ).append( separator ).
@@ -534,9 +539,6 @@ public class Transfer   implements SLS {
             proxy.addSource( "local" , sourceURL.toString() );
 
             StringBuffer destURL = new StringBuffer();
-//            destURL.append( mSiteHandle.getURLPrefix( job.getSiteHandle() ) ).append( separator ).
-//                    append( mSiteHandle.getExecPoolWorkDir( job ) ).append( separator ).
-//                    append( mLocalUserProxyBasename );
             
             destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() ).append( separator ).
                     append( mSiteStore.getWorkDirectory( job ) ).append( separator ).

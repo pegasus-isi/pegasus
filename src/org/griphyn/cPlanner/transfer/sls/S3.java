@@ -18,21 +18,27 @@ package org.griphyn.cPlanner.transfer.sls;
 
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
+import edu.isi.pegasus.common.logging.LogManager;
+
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusFile;
-
+import org.griphyn.cPlanner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.Profile;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import edu.isi.pegasus.common.logging.LogManager;
-
 
 import org.griphyn.cPlanner.transfer.SLS;
 
 import org.griphyn.common.catalog.TransformationCatalog;
 import org.griphyn.common.catalog.TransformationCatalogEntry;
+import org.griphyn.common.catalog.ReplicaCatalog;
 
+import org.griphyn.common.classes.TCType;
+
+import org.griphyn.common.util.Separator;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,14 +46,11 @@ import java.io.FileWriter;
 
 import java.util.Iterator;
 import java.util.Set;
-import org.griphyn.cPlanner.classes.Profile;
 import java.util.List;
-import org.griphyn.common.classes.TCType;
-import org.griphyn.common.util.Separator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
-import org.griphyn.cPlanner.classes.TransferJob;
+
 
 /**
  * This implementation of the SLS API allows us to use S3cmd to retrieve
@@ -154,6 +157,11 @@ public class S3   implements SLS {
     protected String mWorkerNodeDirectory;
     
     /**
+     * The handle to the transient replica catalog.
+     */
+    protected ReplicaCatalog mTransientRC;
+    
+    /**
      * The default constructor.
      */
     public S3() {
@@ -170,14 +178,15 @@ public class S3   implements SLS {
         mLogger     = bag.getLogger();
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
+        mTransientRC = bag.getHandleToTransientReplicaCatalog();
 
         mS3Transfer = new org.griphyn.cPlanner.transfer.implementation.S3Cmd( bag );
        
-        //mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         mBucketName = bag.getPlannerOptions().getRelativeSubmitDirectory();
 
         //replace file separators in directory with -
         mBucketName = mBucketName.replace( File.separatorChar,  '-' );
+        
     }
 
     /**
@@ -576,7 +585,10 @@ public class S3   implements SLS {
 
     
     /**
-     * It constructs the arguments to the s3 transfer executable
+     * It constructs the arguments to the s3 transfer executable. For the get
+     * command, the source URL is created according to the bucket name only
+     * if the file is not in the transient replica catalog that tracks the 
+     * locations of the file referred in the DAX.
      * 
      *
      * @param site  the site for which the invocation is required.
@@ -607,6 +619,7 @@ public class S3   implements SLS {
         sb.append( command );
         sb.append( " " );
         
+        String lfn = file.getLFN();
         if( command.equals( "put" ) ){
             //stagein data to the bucket
             sb.append(  " " );
@@ -616,15 +629,26 @@ public class S3   implements SLS {
             sb.append( "s3://" ).
                append( mBucketName ).
                append( "/" ).
-               append( file.getLFN() );
+               append( lfn );
         } 
         else{
             //stagein data to the bucket
-            sb.append( "s3://" ).
-               append( mBucketName ).
-               append( "/" ).
-               append( file.getLFN() );
             
+            //check if the input file is in the transient RC
+            //all files in the DAX should be in the transient RC
+            String transientPFN =  mTransientRC.lookup( lfn, site );
+            if( transientPFN == null ){
+                //create the default path. refer to bucket on 
+                //the head node.
+                sb.append( "s3://" ).
+                   append( mBucketName ).
+                   append( "/" ).
+                   append( lfn );
+            }
+            else{
+                //use the trasient PFN
+                sb.append( transientPFN );
+            }
             
             String dest = file.getDestURL().getValue();
             //some sanitization if reqd 

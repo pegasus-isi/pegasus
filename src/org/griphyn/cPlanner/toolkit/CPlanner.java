@@ -494,6 +494,10 @@ public class CPlanner extends Executable{
             catch ( Exception e ){
                 throw new RuntimeException( "Unable to generate code", e );
             }
+            finally{
+                //close the connection to transient replica catalog
+                mBag.getHandleToTransientReplicaCatalog().close();
+            }
             mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
 
             //create the submit files for cleanup dag if
