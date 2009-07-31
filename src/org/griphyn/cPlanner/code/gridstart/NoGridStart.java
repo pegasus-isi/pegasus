@@ -664,7 +664,7 @@ public class NoGridStart implements GridStart {
         workerNodeDir.append( destDir ).append( File.separator ).
                       append( relativeDir.replaceAll( "/" , "-" ) ).
                       //append( File.separator ).append( job.getCompleteTCName().replaceAll( ":[:]*", "-") );
-                      append( File.separator ).append( job.getID() );
+                      append( "-" ).append( job.getID() );
 
 
         return workerNodeDir.toString();
