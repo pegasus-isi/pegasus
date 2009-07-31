@@ -990,7 +990,11 @@ public class TransferEngine extends Engine {
             else{
                 //track the location where the data is staged as 
                 //part of the first level staging
-                trackInTransientRC( lfn, destURL, job.getSiteHandle() );
+                //we always store the thirdparty url
+                //trackInTransientRC( lfn, destURL, job.getSiteHandle() );
+                trackInTransientRC( lfn, 
+                                    dDirURL, 
+                                    job.getSiteHandle());
             }
             
             //construct the file transfer object
