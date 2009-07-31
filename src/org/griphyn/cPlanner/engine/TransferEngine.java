@@ -993,7 +993,7 @@ public class TransferEngine extends Engine {
                 //we always store the thirdparty url
                 //trackInTransientRC( lfn, destURL, job.getSiteHandle() );
                 trackInTransientRC( lfn, 
-                                    dDirURL, 
+                                    dDirURL + File.separator + lfn, 
                                     job.getSiteHandle());
             }
             
