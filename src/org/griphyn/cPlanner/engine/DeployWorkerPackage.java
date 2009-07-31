@@ -869,8 +869,15 @@ public class DeployWorkerPackage
 
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
         jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
-        String argString = "zxvf " + wpBasename;
-
+        //String argString = "zxvf " + wpBasename;
+        // tar -C /tmp/ -zxvf pegasus-worker-2.4.0cvs-x86_rhas_3.tar.gz 
+        //we want to fully specify the directory where we want tar file
+        //untarred
+        StringBuffer arguments = new StringBuffer();
+        arguments.append( " -C " ).append( mSiteStore.getWorkDirectory( site ) ).
+                  append( " -zxvf " ).append( mSiteStore.getWorkDirectory( site ) ).
+                  append( File.separator ).append( wpBasename );
+        
         newJob.jobName = jobName;
         newJob.setTransformation( DeployWorkerPackage.UNTAR_TRANSFORMATION_NAMESPACE,
                                   DeployWorkerPackage.UNTAR_TRANSFORMATION_NAME,
@@ -883,7 +890,8 @@ public class DeployWorkerPackage
         newJob.globusScheduler = jobManager.getContact();
         newJob.executable = execPath;
         newJob.executionPool = site;
-        newJob.strargs = argString;
+        newJob.strargs = arguments.toString();
+        
         //hack for Pegasus bug 41. for local site the untar job
         //needs to have initialdir specified. that is only set for 
         //compute jobs.
