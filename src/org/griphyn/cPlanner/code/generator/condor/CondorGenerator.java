@@ -360,8 +360,16 @@ public class CondorGenerator extends Abstract {
                 //djob.dagmanVariables.checkKeyInNS( Dagman.SUBDAG_EXTERNAL_KEY,
                 //                                  djob.getDAGFile() );
                 StringBuffer sb = new StringBuffer();
-                sb.append( "SUBDAG EXTERNAL " ).append( sinfo.getName() ).
+                sb.append( Dagman.SUBDAG_EXTERNAL_KEY ).append( " " ).append( sinfo.getName() ).
                    append( " " ).append( djob.getDAGFile() );
+                
+                //check if dag needs to run in a specific directory
+                String dagDir = djob.getDirectory();
+                if( dagDir != null){
+                    sb.append( " " ).append( Dagman.DIRECTORY_EXTERNAL_KEY ).
+                       append( " " ).append( dagDir );
+                }
+                
                 printDagString( sb.toString() );
             
                 printDagString( sinfo.dagmanVariables.toString( sinfo.getName()) );

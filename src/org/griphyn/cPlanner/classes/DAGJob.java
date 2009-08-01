@@ -33,15 +33,21 @@ public class DAGJob extends SubInfo {
     private String mDAGFile;
 
     /**
+     * The directory in which the DAG needs to execute.
+     */
+    private String mDirectory;
+    
+    /**
      * The default constructor.
      */
     public DAGJob() {
         super();
         mDAGFile = null;
+        mDirectory = null;
     }
 
     /**
-     * The overloaded construct that constructs a GRMS job by wrapping around
+     * The overloaded construct that constructs a DAG job by wrapping around
      * the <code>SubInfo</code> job.
      *
      * @param job  the original job description.
@@ -61,6 +67,25 @@ public class DAGJob extends SubInfo {
     }
 
     /**
+     * Sets the directory in which the dag needs to execute.
+     *
+     * @param directory  the path to the DAG file.
+     */
+    public void setDirectory( String file ){
+        mDirectory = file ;
+    }
+
+    
+    /**
+     * Returns the directory the job refers to.
+     *
+     * @return the directory.
+     */
+    public String getDirectory(){
+        return mDirectory;
+    }
+
+    /**
      * Sets the DAG file
      *
      * @param file  the path to the DAG file.
@@ -68,7 +93,7 @@ public class DAGJob extends SubInfo {
     public void setDAGFile(String file ){
         mDAGFile = file ;
     }
-
+    
     /**
      * Returns a textual description of the Transfer Job.
      *
@@ -92,6 +117,7 @@ public class DAGJob extends SubInfo {
     public Object clone(){
         DAGJob newJob = new DAGJob((SubInfo)super.clone());
         newJob.setDAGFile( this.getDAGFile() );
+        newJob.setDirectory( this.getDirectory() );
         return newJob;
     }
 

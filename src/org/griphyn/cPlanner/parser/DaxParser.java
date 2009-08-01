@@ -52,6 +52,7 @@ import java.util.Iterator;
 import java.util.Map;
 import org.griphyn.cPlanner.classes.DAGJob;
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.VDS;
 
 /**
@@ -1059,6 +1060,10 @@ public class DaxParser extends Parser {
                                         mCurrentJobSubInfo.getLogicalID() );
         }
         ((DAGJob)mCurrentJobSubInfo).setDAGFile( dag );
+        //set the directory if specified
+        ((DAGJob)mCurrentJobSubInfo).setDirectory(
+                (String)mCurrentJobSubInfo.dagmanVariables.removeKey( Dagman.DIRECTORY_EXTERNAL_KEY ));
+        
         
         handleJobTagEnd();
         

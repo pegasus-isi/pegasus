@@ -99,6 +99,12 @@ public class Dagman extends Namespace {
      */
     public static final String SUBDAG_EXTERNAL_KEY = "SUBDAG EXTERNAL";
     
+    /**
+     * The name of the key that indicates the directory in which the 
+     * DAG has to be execute
+     */
+    public static final String DIRECTORY_EXTERNAL_KEY = "DIR";
+    
 
     /**
      * The key name for the post script that is put in the .dag file.
@@ -224,6 +230,15 @@ public class Dagman extends Namespace {
 
             case 'C':
                 if ( key.compareTo( this.CATEGORY_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else {
+                    res = NOT_PERMITTED_KEY;
+                }
+                break;
+                
+            case 'D':
+                if( key.compareTo( this.DIRECTORY_EXTERNAL_KEY) == 0 ){
                     res = VALID_KEY;
                 }
                 else {
