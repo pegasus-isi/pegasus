@@ -60,6 +60,13 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
  */
 public class SimpleFile implements ReplicaCatalog
 {
+    
+    /**
+     * The name of the key that disables writing back to the cache file.
+     * Designates a static file. i.e. read only
+     */
+    public static final String READ_ONLY_KEY = "read.only";
+    
   /**
    * Records the quoting mode for LFNs and PFNs. If false, only quote as
    * necessary. If true, always quote all LFNs and PFNs.
@@ -75,6 +82,11 @@ public class SimpleFile implements ReplicaCatalog
    * Maintains a memory slurp of the file representation.
    */
   protected Map m_lfn = null;
+  
+  /**
+   * A boolean indicating whether the catalog is read only or not.
+   */
+  boolean m_readonly;
 
   /**
    * Default empty constructor creates an object that is not yet connected
@@ -88,6 +100,7 @@ public class SimpleFile implements ReplicaCatalog
     // make connection defunc
     m_lfn = null;
     m_filename = null;
+    m_readonly = false;
   }
 
   /**
@@ -319,6 +332,12 @@ public class SimpleFile implements ReplicaCatalog
     // quote mode
     m_quote = Boolean.parse( props.getProperty("quote") );
 
+    //update the m_writeable flag if specified
+    if ( props.containsKey( SimpleFile.READ_ONLY_KEY ) ){
+        m_readonly = Boolean.parse( props.getProperty( SimpleFile.READ_ONLY_KEY ),
+                                     false );
+    }
+    
     if ( props.containsKey("file") )
       return connect( props.getProperty("file") );
     return false;
@@ -376,8 +395,19 @@ public class SimpleFile implements ReplicaCatalog
 
     // sanity check
     if ( m_lfn == null ) return;
+    
+    
+    //check if the file is writeable or not
+    if( m_readonly ){
+      m_lfn.clear();
+      m_lfn = null;
+      m_filename = null;
+      return;
+    }
 
     try {
+      
+        
       // open
       Writer out = new BufferedWriter(new FileWriter(m_filename));
 

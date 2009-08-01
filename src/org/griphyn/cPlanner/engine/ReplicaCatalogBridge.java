@@ -117,6 +117,12 @@ public class ReplicaCatalogBridge
      * cache
      */
     public static final String CACHE_REPLICA_CATALOG_KEY = "file";
+    
+    /**
+     * The name of the key that disables writing back to the cache file.
+     * Designates a static file. i.e. read only
+     */
+    public static final String CACHE_READ_ONLY_KEY = "read.only";
 
 
     /**
@@ -782,12 +788,15 @@ public class ReplicaCatalogBridge
 
         ReplicaCatalog simpleFile;
         Map wildcardConstraint = null;
-
+        
+        //all cache files are loaded in readonly mode
+        cacheProps.setProperty( ReplicaCatalogBridge.CACHE_READ_ONLY_KEY, "true" );
+        
         for ( Iterator it = cacheFiles.iterator(); it.hasNext() ; ) {
             //read each of the cache file and load in memory
             String  file = ( String ) it.next();
             //set the appropriate property to designate path to file
-            cacheProps.setProperty( this.CACHE_REPLICA_CATALOG_KEY, file );
+            cacheProps.setProperty( ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_KEY, file );
 
             mLogger.log("Loading cache file: " + file,  LogManager.DEBUG_MESSAGE_LEVEL);
             try{
