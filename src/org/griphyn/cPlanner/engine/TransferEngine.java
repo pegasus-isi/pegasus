@@ -27,6 +27,8 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
+
+import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.Utility;
 
 import org.griphyn.cPlanner.namespace.VDS;
@@ -57,9 +59,11 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.Properties;
@@ -83,8 +87,25 @@ public class TransferEngine extends Engine {
      */
     public static final String FILE_URL_SCHEME = "file:";
 
+    /**
+     * The property prefix for retrieving SRM properties.
+     */
+    public static final String SRM_PROPERTIES_PREFIX = "pegasus.transfer.srm";
     
+    /**
+     * The suffix to retrive the service url for SRM server.
+     */
+    public static final String SRM_SERVICE_URL_PROPERTIES_SUFFIX = "service.url";
     
+    /**
+     * The suffix to retrive the mount point for SRM server.
+     */
+    public static final String SRM_MOUNT_POINT_PROPERTIES_SUFFIX = "mountpoint";
+    
+    /**
+     * A map that associates the site name with the SRM server url and mount point. 
+     */ 
+    private Map<String, NameValue> mSRMServiceURLToMountPointMap;
 
     /**
      * The classname of the class that stores the file transfer information for
@@ -211,6 +232,8 @@ public class TransferEngine extends Engine {
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         
+        mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
+        
         mDag = reducedDag;
         mvDelLeafJobs = vDelLJobs;
 
@@ -250,6 +273,8 @@ public class TransferEngine extends Engine {
 
         return mTXRefiner.isSiteThirdParty(site,type);
     }
+
+   
 
     /**
      * Returns the SubInfo object for the job specified.
@@ -1048,12 +1073,30 @@ public class TransferEngine extends Engine {
             return rce;
         }
         
+        /* special handling for SRM urls */
         StringBuffer newPFN = new StringBuffer();
-        String hostName = Utility.getHostName( pfn );
+        if( mSRMServiceURLToMountPointMap.containsKey( rce.getResourceHandle() ) ){
+            //try to do replacement of URL with internal mount point
+            NameValue nv = mSRMServiceURLToMountPointMap.get( rce.getResourceHandle() );
+            String urlPrefix = nv.getKey();
+            if( pfn.startsWith( urlPrefix ) ){
+                //replace the starting with the mount point
+                newPFN.append( FILE_URL_SCHEME ).append( "//" );
+                newPFN.append( nv.getValue() );
+                newPFN.append( pfn.substring( urlPrefix.length(), pfn.length() ));
+                
+            }
+        }
+        
+        if( newPFN.length() == 0 ){
+            //we have to the manual replacement 
+            String hostName = Utility.getHostName( pfn );
 
-        newPFN.append( FILE_URL_SCHEME ).append( "//" );
-        //we want to skip out the hostname
-        newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
+            newPFN.append( FILE_URL_SCHEME ).append( "//" );
+       
+            //we want to skip out the hostname
+            newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
+        }
 
         //we do not need a full clone, just the PFN
         ReplicaCatalogEntry result = new ReplicaCatalogEntry( newPFN.toString(),
@@ -1065,6 +1108,68 @@ public class TransferEngine extends Engine {
         }
 
         return result;
+    }
+    
+    /**
+     * Constructs a Properties objects by parsing the relevant SRM 
+     * pegasus properties. 
+     * 
+     * For example, if users have the following specified in properties file
+     * <pre>
+     * pegasus.transfer.srm.ligo-cit.service.url          srm://osg-se.ligo.caltech.edu:10443/srm/v2/server?SFN=/mnt/hadoop
+     * pegasus.transfer.srm.ligo-cit.service.mountpoint   /mnt/hadoop
+     * </pre>
+     * 
+     * then, a Map is create the associates ligo-cit with NameValue object 
+     * containing the service url and mount point ( ).
+     * 
+     * @param props   the <code>PegasusProperties</code> object
+     * 
+     * @return  Map that maps a site name to a NameValue object that has the
+     *          URL prefix and the mount point
+     */
+    private Map<String, NameValue> constructSiteToSRMServerMap( PegasusProperties props ) {
+        Map<String, NameValue> m = new HashMap();
+        
+        //first strip of prefix from properties and get matching subset
+        Properties siteProps = props.matchingSubset( TransferEngine.SRM_PROPERTIES_PREFIX, false );
+        
+        //retrieve all the sites for which SRM servers are specified
+        Map<String, String> m1 = new HashMap(); //associates site name to url prefix
+        Map<String, String> m2 = new HashMap(); //associates site name to mount point
+        for( Iterator it = siteProps.keySet().iterator(); it.hasNext(); ){
+            String key = (String) it.next();
+            //determine the site name
+            String site = key.substring( 0, key.indexOf( "." ) );
+            
+            if( key.endsWith( TransferEngine.SRM_SERVICE_URL_PROPERTIES_SUFFIX ) ){
+                m1.put( site, siteProps.getProperty( key ) );
+            }
+            else if( key.endsWith( TransferEngine.SRM_MOUNT_POINT_PROPERTIES_SUFFIX ) ){
+                m2.put( site, siteProps.getProperty( key ) );
+            }
+        }
+        
+        //now merge the information into m and return
+        for( Iterator <Map.Entry<String, String>>it = m1.entrySet().iterator(); it.hasNext(); ){
+            Map.Entry<String, String> entry = it.next();
+            String site = entry.getKey();
+            String url = entry.getValue();
+            String mountPoint = m2.get( site );
+            
+            if( mountPoint == null ){
+                mLogger.log( "Mount Point for SRM server not specified in properties for site " + site,
+                             LogManager.WARNING_MESSAGE_LEVEL );
+                continue;
+            }
+            
+            m.put( site, new NameValue( url, mountPoint ) );
+        }
+        
+        mLogger.log( "SRM Server map is " + m,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        
+        return m;
     }
     
     /**
