@@ -60,6 +60,11 @@ public  class ImplementationFactory {
      * The constant designating the implementation to be loaded for setup tx jobs.
      */
     public static final int TYPE_SETUP = 3;
+    
+    /**
+     * The constant designating the implementation to be loaded for symbolic tx jobs.
+     */
+    public static final int TYPE_SYMLINK_STAGE_IN = 4;
 
     /**
      * Loads the implementing class corresponding to the type specified by the user.
@@ -182,6 +187,9 @@ public  class ImplementationFactory {
         }
         else if( type == TYPE_SETUP ){
             property = "pegasus.transfer.setup.impl";
+        }
+        else if( type == TYPE_SYMLINK_STAGE_IN ){
+            property = "pegasus.transfer.symlink.impl";
         }
         else{
             throw new java.lang.IllegalArgumentException(

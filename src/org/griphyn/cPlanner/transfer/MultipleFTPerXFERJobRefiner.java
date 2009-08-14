@@ -89,6 +89,12 @@ public abstract class MultipleFTPerXFERJobRefiner extends AbstractRefiner {
                                                ImplementationFactory.TYPE_STAGE_OUT);
         this.mTXStageOutImplementation.setRefiner(this);
         checkCompatibility(this.mTXStageOutImplementation);
+        
+        this.mTXSymbolicLinkImplementation = ImplementationFactory.loadInstance(
+                                                bag,
+                                                ImplementationFactory.TYPE_SYMLINK_STAGE_IN  );
+        this.mTXSymbolicLinkImplementation.setRefiner( this );
+        checkCompatibility( this.mTXSymbolicLinkImplementation );
 
         //log config messages message
         super.logConfigMessages();

@@ -112,6 +112,12 @@ public class SubInfo extends Data implements GraphNodeContent{
     public static final int CLEANUP_JOB = 8;
 
     /**
+     * Denotes a symbolic link stagein job
+     */
+    public static int SYMLINK_STAGE_IN_JOB = 9;
+
+
+    /**
      * The delimiter that has to be used to combine the name for the staged
      * executable.
      */

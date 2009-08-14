@@ -25,6 +25,8 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
+import java.util.Collection;
+import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.common.TPT;
 
 import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
@@ -49,6 +51,11 @@ public abstract class AbstractRefiner implements Refiner{
      * The stage-in transfer implementation that the refiner requires.
      */
     protected Implementation mTXStageInImplementation ;
+    
+    /**
+     * The stage-in symbolic link transfer implementation that refiner requires.
+     */
+    protected Implementation mTXSymbolicLinkImplementation;
 
     /**
      * The inter transfer implementation that the refiner requires.
@@ -124,7 +131,46 @@ public abstract class AbstractRefiner implements Refiner{
     public ADag getWorkflow(){
         return this.mDAG;
     }
+    
+    /**
+     * Default behaviour to preserve backward compatibility when the stage in 
+     * and symbolic link jobs were not separated. The symlink transfer files 
+     * are added back into the files collection and passed onto 
+     * legacy implementations. Refiners that want to distinguish between 
+     * symlink and stagein jobs should over ride this method.
+     *
+     * @param job   <code>SubInfo</code> object corresponding to the node to
+     *              which the files are to be transferred to.
+     * @param files Collection of <code>FileTransfer</code> objects containing the
+     *              information about source and destURL's.
+     * @param symlinkFiles Collection of <code>FileTransfer</code> objects containing
+     *                     source and destination file url's for symbolic linking
+     *                     on compute site.
+     */
+    public  void addStageInXFERNodes( SubInfo job,
+                                      Collection<FileTransfer> files,
+                                      Collection<FileTransfer> symlinkFiles ){
+        
+        files.addAll( symlinkFiles );
+        addStageInXFERNodes( job, files );
+    }
 
+    /**
+     * Default behaviour to preserve backward compatibility when the stage in 
+     * and symbolic link jobs were not separated. 
+     *
+     * @param job   <code>SubInfo</code> object corresponding to the node to
+     *              which the files are to be transferred to.
+     * @param files Collection of <code>FileTransfer</code> objects containing the
+     *              information about source and destURL's.
+     */
+    public  void addStageInXFERNodes( SubInfo job,
+                                      Collection<FileTransfer> files ){
+        
+        throw new UnsupportedOperationException( 
+                "Refiner does not implement the function addStageInXFERNodes( SubInfo, Collection<FileTransfer>)");
+    }
+    
     /**
      * Returns a reference to the XMLProducer, that generates the XML fragment
      * capturing the actions of the refiner. This is used for provenace
@@ -172,6 +218,10 @@ public abstract class AbstractRefiner implements Refiner{
         else if(type == SubInfo.STAGE_OUT_JOB){
             implementation = mTXStageOutImplementation;
             useTPT         = mTPT.stageOutThirdParty(site);
+        }
+        else if(type == SubInfo.SYMLINK_STAGE_IN_JOB){
+            implementation = mTXSymbolicLinkImplementation;
+            useTPT         = false;
         }
         else{
             throw new java.lang.IllegalArgumentException(
@@ -236,6 +286,9 @@ public abstract class AbstractRefiner implements Refiner{
         mLogger.log("Transfer Implementation loaded for Stage-In   [" +
                     mTXStageInImplementation.getDescription() + "]",
                     LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log("Transfer Implementation loaded for symbolic linking Stage-In  [" +
+                            mTXSymbolicLinkImplementation.getDescription() + "]",
+                            LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("Transfer Implementation loaded for Inter Site [" +
                     mTXInterImplementation.getDescription() + "]",
                     LogManager.CONFIG_MESSAGE_LEVEL);

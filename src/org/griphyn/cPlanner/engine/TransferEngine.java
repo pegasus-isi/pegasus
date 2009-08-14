@@ -58,10 +58,12 @@ import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -863,6 +865,7 @@ public class TransferEngine extends Engine {
      */
     private void getFilesFromRC( SubInfo job, Vector searchFiles ) {
         Vector vFileTX = new Vector();
+        Collection<FileTransfer> symLinkFileTransfers = new LinkedList();
         String jobName = job.logicalName;
         String ePool   = job.executionPool;
         //contains the remote_initialdir if specified for the job
@@ -888,6 +891,11 @@ public class TransferEngine extends Engine {
 //        String dDirURL = ep.getURLPrefix(true) + dAbsPath;
         String dDirURL = ep.getHeadNodeFS().selectScratchSharedFileServer( ).getURLPrefix() + dAbsPath;
         String sDirURL = null;
+        
+        
+        //file dest dir is destination dir accessed as a file URL
+        String fileDestDir = scheme + "://" + mSiteStore.getWorkDirectory( ePool, eRemoteDir );
+                
         //check if the execution pool is third party or not
         String destDir = (isSiteThirdParty(ePool, SubInfo.STAGE_IN_JOB)) ?
             //use the full networked url to the directory
@@ -895,7 +903,7 @@ public class TransferEngine extends Engine {
             :
             //use the default pull mode
 //            scheme + "://" + mPoolHandle.getExecPoolWorkDir(ePool,eRemoteDir);
-            scheme + "://" + mSiteStore.getWorkDirectory( ePool, eRemoteDir );
+            fileDestDir;
 
         for( Iterator it = searchFiles.iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile) it.next();
@@ -962,7 +970,10 @@ public class TransferEngine extends Engine {
 
             //check if we need to replace url prefix for 
             //symbolic linking
-            if ( mUseSymLinks && selLoc.getResourceHandle().equals( job.getSiteHandle() )) {
+            boolean symLinkSelectedLocation;
+            
+            if ( symLinkSelectedLocation = 
+                    (mUseSymLinks && selLoc.getResourceHandle().equals( job.getSiteHandle() )) ) {
                 //create symbolic links instead of going through gridftp server
                 selLoc = replaceProtocolFromURL( selLoc );
             }
@@ -979,9 +990,27 @@ public class TransferEngine extends Engine {
 
             //the final source and destination url's to the file
             sourceURL = selLoc.getPFN();
-            destURL   = (destURL == null)?
-                        destDir + File.separator + lfn:
-                        destURL;
+            
+            
+//            destURL   = (destURL == null)?
+//                        destDir + File.separator + lfn:
+//                        destURL;
+            if( destURL == null ){
+                //no staging of executables case. 
+                //we construct destination URL to file.
+                StringBuffer destPFN = new StringBuffer();
+                if( symLinkSelectedLocation ){
+                    //we use the file URL location to dest dir
+                    //in case we are symlinking
+                    destPFN.append( fileDestDir );
+                }
+                else{
+                    //we use whatever destDir was set to earlier
+                    destPFN.append( destDir );
+                }
+                destPFN.append( File.separator).append( lfn );
+                destURL = destPFN.toString();
+            }
             
 
             //we have all the chopped up combos of the urls.
@@ -1042,14 +1071,21 @@ public class TransferEngine extends Engine {
             //to prevent duplicate destination urls
             if(ft.getDestURL() == null)
                 ft.addDestination(ePool,destURL);
-            vFileTX.add(ft);
+            
+            if( symLinkSelectedLocation ){
+                symLinkFileTransfers.add(ft);
+            }
+            else{
+                vFileTX.add(ft);
+            }
+            
             //we need to set destURL to null
             destURL = null;
         }
 
         //call addTransferNode
-        if (!vFileTX.isEmpty()) {
-            mTXRefiner.addStageInXFERNodes(job, vFileTX);
+        if (!vFileTX.isEmpty() || !symLinkFileTransfers.isEmpty()) {
+            mTXRefiner.addStageInXFERNodes(job, vFileTX, symLinkFileTransfers );
 
         }
     }

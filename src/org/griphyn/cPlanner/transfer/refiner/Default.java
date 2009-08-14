@@ -44,6 +44,8 @@ import java.util.TreeMap;
 import java.util.Map;
 import java.util.List;
 import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.transfer.Implementation;
+import org.griphyn.cPlanner.transfer.Refiner;
 
 /**
  * The default transfer refiner, that implements the multiple refiner.
@@ -129,17 +131,49 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
+     * @param symlinkFiles Collection of <code>FileTransfer</code> objects containing
+     *                     source and destination file url's for symbolic linking
+     *                     on compute site.
      */
-    public  void addStageInXFERNodes(SubInfo job,
-                                     Collection files){
+    public  void addStageInXFERNodes( SubInfo job,
+                                      Collection<FileTransfer> files,
+                                      Collection<FileTransfer> symlinkFiles ){
+        
+        addStageInXFERNodes( job, files, Refiner.STAGE_IN_PREFIX , this.mTXStageInImplementation);
+        
+        addStageInXFERNodes( job, symlinkFiles, Refiner.SYMBOLIC_LINK_PREFIX, this.mTXSymbolicLinkImplementation );
+        
+    }
+    
+    /**
+     * Adds the stage in transfer nodes which transfer the input files for a job,
+     * from the location returned from the replica catalog to the job's execution
+     * pool.
+     *
+     * @param job   <code>SubInfo</code> object corresponding to the node to
+     *              which the files are to be transferred to.
+     * @param files Collection of <code>FileTransfer</code> objects containing the
+     *              information about source and destURL's.
+     * @param prefix the prefix to be used while constructing the transfer jobname.
+     * @param implementation  the transfer implementation to use
+     * 
+     */
+    public  void addStageInXFERNodes( SubInfo job,
+                                      Collection<FileTransfer> files,
+                                      String prefix,
+                                      Implementation implementation ){
         String jobName = job.getName();
         String pool = job.getSiteHandle();
         int counter = 0;
-        String newJobName = this.STAGE_IN_PREFIX + jobName + "_" + counter;
+        String newJobName = prefix + jobName + "_" + counter;
         String key = null;
         String msg = "Adding stagein transfer nodes for job " + jobName;
         String par = null;
         Collection stagedFiles = new ArrayList(1);
+        
+        //the job class is always stage in , as we dont want 
+        //later modules to treat symlink jobs different from stagein jobs
+        int jobClass = SubInfo.STAGE_IN_JOB;
 
         //to prevent duplicate dependencies
         java.util.HashSet tempSet = new java.util.HashSet();
@@ -183,12 +217,12 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                     stagedFiles.add(ft);
                     //the staged execution file should be having the setup
                     //job as parent if it does not preserve x bit
-                    if(mTXStageInImplementation.doesPreserveXBit()){
+                    if( implementation.doesPreserveXBit() ){
                         mFileTable.put(key,newJobName);
                     }
                     else{
                         mFileTable.put(key,
-                                       mTXStageInImplementation.getSetXBitJobName(jobName,staged++));
+                                       implementation.getSetXBitJobName(jobName,staged++));
                     }
                 }
                 else{
@@ -214,9 +248,9 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             if(stagedFiles.isEmpty()){
                 //add the direct relation
                 addRelation(newJobName, jobName, pool, true);
-                SubInfo siJob = mTXStageInImplementation.createTransferJob(job, files,null,
+                SubInfo siJob = implementation.createTransferJob( job, files,null,
                                                                   newJobName,
-                                                                  SubInfo.STAGE_IN_JOB);
+                                                                  jobClass );
                 addJob( siJob );
 
                 //record the action in the provenance store.
@@ -225,9 +259,9 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             else{
                 //the dependency to stage in job is added via the
                 //the setup job that does the chmod
-                SubInfo siJob = mTXStageInImplementation.createTransferJob(job,files,stagedFiles,
+                SubInfo siJob = implementation.createTransferJob( job,files,stagedFiles,
                                                                   newJobName,
-                                                                  SubInfo.STAGE_IN_JOB);
+                                                                  jobClass );
 
                 addJob( siJob );
                 //record the action in the provenance store.
