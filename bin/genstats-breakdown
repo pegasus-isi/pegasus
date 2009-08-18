@@ -1,0 +1,117 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+use List::Util qw[min max];
+use File::Basename qw(dirname basename);
+use File::Path;
+use File::Copy;
+use File::Spec;
+use Cwd;
+use POSIX qw(ceil floor);
+
+sub usage(;$) {
+    my $ec = shift || 0;
+    my $basename = basename($0);
+    print << "EOF";
+
+Usage: $basename --help --output=<output file>
+
+Optional arguments:
+-h|--help           Print this help message.
+-o|--output file    Write outputs to specified file.
+-x|--extra          Generate individual statistics for each run directory.
+EOF
+    exit($ec);
+}
+
+$extra = 0;
+$result = GetOptions(
+    "help|h" => \&usage,
+    "output|o=s" => \$output,
+    "extra|x" => sub { $extra++; },
+);
+
+if ($#ARGV < 0) {
+    push @ARGV, getcwd();
+}
+
+%samples = ();
+$allKey = "__ALL__";
+$samples{$allKey} = ();
+
+$cur = getcwd();
+for $dir (@ARGV) {
+    chdir $dir;
+    $samples{$dir} = ();
+    @kickstartFiles = glob "*.out.[0-9]*";
+    for $file (@kickstartFiles) {
+        if (open(FILE, $file)) {
+            while ($line = <FILE>) {
+                chomp $line;
+                if ($line =~ /.* duration=\"([\.0-9]*)\" transformation=\"([_A-Za-z0-9:\.]*)\" .*/) {
+                    $duration = $1;
+                    $transformation = $2;
+                    if (!defined($samples{$dir}{$transformation})) {
+                        $samples{$dir}{$transformation}{'count'} = 0;
+                        $samples{$dir}{$transformation}{'mean'} = 0;
+                        $samples{$dir}{$transformation}{'diff'} = 0;
+
+                        if (!defined($samples{$allKey}{$transformation})) {
+                            $samples{$allKey}{$transformation}{'count'} = 0;
+                            $samples{$allKey}{$transformation}{'mean'} = 0;
+                            $samples{$allKey}{$transformation}{'diff'} = 0;
+                        }
+                    }
+                    $samples{$allKey}{$transformation}{'count'}++;
+                    $delta = $duration - $samples{$allKey}{$transformation}{'mean'};
+                    $samples{$allKey}{$transformation}{'mean'} += $delta / $samples{$allKey}{$transformation}{'count'};
+                    $samples{$allKey}{$transformation}{'diff'} += $delta * ($duration - $samples{$allKey}{$transformation}{'mean'});
+
+                    $samples{$dir}{$transformation}{'count'}++;
+                    $delta = $duration - $samples{$dir}{$transformation}{'mean'};
+                    $samples{$dir}{$transformation}{'mean'} += $delta / $samples{$dir}{$transformation}{'count'};
+                    $samples{$dir}{$transformation}{'diff'} += $delta * ($duration - $samples{$dir}{$transformation}{'mean'});
+                }
+            }
+        }
+    }
+	chdir $cur;
+}
+
+if (defined($output)) {
+    open $oldout, ">&STDOUT" or die "Can't dup STDOUT $!";
+    open STDOUT, '>', $output or die "Can't redirect STDOUT $!";
+}
+
+if ($extra) {
+    for $dir (@ARGV) {
+        print sprintf("\n#$dir\n#%-39s % 6s % 12s % 16s\n", "Transformation", "Count", "Mean", "Variance");
+        for $transformation (keys %{$samples{$dir}}) {
+            if ($samples{$dir}{$transformation}{'count'} == 1) {
+                $denom = 1;
+            } else {
+                $denom = $samples{$dir}{$transformation}{'count'} - 1;
+            }
+
+            $out = sprintf("%-40s % 6d % 12.2f % 16.2f\n", $transformation, $samples{$dir}{$transformation}{'count'}, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom);
+            print $out;
+        }
+    }
+}
+
+print sprintf("\n#All\n#%-39s % 6s % 12s % 16s\n", "Transformation", "Count", "Mean", "Variance");
+for $transformation (keys %{$samples{$allKey}}) {
+    if ($samples{$allKey}{$transformation}{'count'} == 1) {
+        $denom = 1;
+    } else {
+        $denom = $samples{$allKey}{$transformation}{'count'} - 1;
+    }
+
+    $out = sprintf("%-40s % 6d % 12.2f % 16.2f\n", $transformation, $samples{$allKey}{$transformation}{'count'}, $samples{$allKey}{$transformation}{'mean'}, $samples{$allKey}{$transformation}{'diff'} / $denom);
+    print $out;
+}
+
+if (defined($output)) {
+    open STDOUT, '>&', $oldout or die "Can't dup \$oldout $!";
+    close $oldout;
+}
