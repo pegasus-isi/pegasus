@@ -133,7 +133,12 @@ public class VDS extends Namespace {
      * stagein transfer node.
      */
     public static final String BUNDLE_STAGE_IN_KEY = "bundle.stagein";
-
+    
+    /**
+     * The name of the key that determines the bundling parameter for the
+     * stagein transfer node.
+     */
+    public static final String BUNDLE_STAGE_IN_SYMLINK_KEY = "bundle.symlink";
     /**
      * The name of the key that determines the bundling parameter for the
      * stageout transfer node.
@@ -322,7 +327,8 @@ public class VDS extends Namespace {
             case 'b':
                 if ( (key.compareTo(BUNDLE_KEY) == 0) ||
                      (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
-                     (key.compareTo(BUNDLE_STAGE_OUT_KEY) == 0 )) {
+                     (key.compareTo(BUNDLE_STAGE_OUT_KEY) == 0 ) ||
+                     (key.compareTo( BUNDLE_STAGE_IN_SYMLINK_KEY) == 0 )) {
                     res = VALID_KEY;
                 }
                 else if( key.compareTo(DEPRECATED_BUNDLE_STAGE_IN_KEY) == 0){

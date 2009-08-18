@@ -114,7 +114,7 @@ public class SubInfo extends Data implements GraphNodeContent{
     /**
      * Denotes a symbolic link stagein job
      */
-    public static int SYMLINK_STAGE_IN_JOB = 9;
+    public static final int SYMLINK_STAGE_IN_JOB = 9;
 
 
     /**
@@ -1147,7 +1147,7 @@ public class SubInfo extends Data implements GraphNodeContent{
      */
     public boolean typeInRange(int type){
         return ( type >= this.UNASSIGNED_JOB &&
-                 type <= this.CLEANUP_JOB );
+                 type <= this.SYMLINK_STAGE_IN_JOB );
     }
 
 

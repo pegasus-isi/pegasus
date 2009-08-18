@@ -41,8 +41,10 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
+
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
+import org.griphyn.cPlanner.transfer.Implementation;
 
 /**
  * An extension of the default refiner, that allows the user to specify
@@ -68,6 +70,14 @@ public class Bundle extends Default {
      */
     public static final String DEFAULT_STAGE_IN_BUNDLE_FACTOR = "1";
 
+    
+    /**
+     * The default bundling factor that identifies the number of transfer jobs
+     * that are being created per execution pool for stageing in data for
+     * the workflow.
+     */
+    public static final String DEFAULT_STAGE_IN_SYMLINK_BUNDLE_FACTOR = "1";
+    
     /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool while stageing data out.
@@ -80,6 +90,12 @@ public class Bundle extends Default {
      * created for the workflow indexed by the execution poolname.
      */
     private Map mStageInMap;
+    
+    /**
+     * The map containing the list of stage in transfer jobs that are being
+     * created for the workflow indexed by the execution poolname.
+     */
+    private Map mStageInSymlinkMap;
 
     /**
      * The map indexed by compute jobnames that contains the list of stagin job
@@ -93,8 +109,19 @@ public class Bundle extends Default {
      * The map containing the stage in bundle values indexed by the name of the
      * pool. If the bundle value is not specified, then null is stored.
      */
-    private Map mSIBundleMap;
+//    private Map mSIBundleMap;
+    
+    /**
+     * The BundleValue that evaluates for stage in jobs.
+     */
+    private BundleValue mStageinBundleValue;
 
+    /**
+     * The BundleValue that evaluates for symlink jobs.
+     */
+    private BundleValue mStageInSymlinkBundleValue;
+
+    
     /**
      * The map indexed by staged executable logical name. Each entry is the
      * name of the corresponding setup job, that changes the XBit on the staged
@@ -136,11 +163,54 @@ public class Bundle extends Default {
     public Bundle( ADag dag, PegasusBag bag ){
         super( dag, bag );
         mStageInMap   = new HashMap( mPOptions.getExecutionSites().size());
-        mSIBundleMap  = new HashMap();
+        mStageInSymlinkMap   = new HashMap( mPOptions.getExecutionSites().size());
+//        mSIBundleMap  = new HashMap();
+        
+        mStageinBundleValue = new BundleValue();
+        mStageinBundleValue.initialize( VDS.BUNDLE_STAGE_IN_KEY, 
+                                        Bundle.DEFAULT_STAGE_IN_BUNDLE_FACTOR );
+        
+        mStageInSymlinkBundleValue = new BundleValue();
+        mStageInSymlinkBundleValue.initialize( VDS.BUNDLE_STAGE_IN_SYMLINK_KEY, 
+                                        Bundle.DEFAULT_STAGE_IN_SYMLINK_BUNDLE_FACTOR );
+        
         mRelationsMap = new HashMap();
         mSetupMap     = new HashMap();
         mCurrentSOLevel = -1;
         mJobPrefix    = mPOptions.getJobnamePrefix();
+    }
+    
+    /**
+     * Adds the stage in transfer nodes which transfer the input files for a job,
+     * from the location returned from the replica catalog to the job's execution
+     * pool.
+     *
+     * @param job   <code>SubInfo</code> object corresponding to the node to
+     *              which the files are to be transferred to.
+     * @param files Collection of <code>FileTransfer</code> objects containing the
+     *              information about source and destURL's.
+     * @param symlinkFiles Collection of <code>FileTransfer</code> objects containing
+     *                     source and destination file url's for symbolic linking
+     *                     on compute site.
+     */
+    public  void addStageInXFERNodes( SubInfo job,
+                                      Collection<FileTransfer> files,
+                                      Collection<FileTransfer> symlinkFiles ){
+        
+        addStageInXFERNodes( job, 
+                             files,
+                             SubInfo.STAGE_IN_JOB , 
+                             this.mStageInMap, 
+                             this.mStageinBundleValue,
+                             this.mTXStageInImplementation );
+        
+        addStageInXFERNodes( job,
+                             symlinkFiles, 
+                             SubInfo.SYMLINK_STAGE_IN_JOB,
+                             this.mStageInSymlinkMap,
+                             this.mStageInSymlinkBundleValue,
+                             this.mTXSymbolicLinkImplementation  );
+        
     }
 
     /**
@@ -153,8 +223,13 @@ public class Bundle extends Default {
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
      */
-    public  void addStageInXFERNodes(SubInfo job,
-                                     Collection files){
+    public  void addStageInXFERNodes( SubInfo job,
+                                      Collection files, 
+                                      int type,
+                                      Map<String,PoolTransfer> stageInMap,
+                                      BundleValue bundleValue,
+                                      Implementation implementation ){
+
         String jobName    = job.getName();
         String siteHandle = job.getSiteHandle();
         String key = null;
@@ -201,21 +276,22 @@ public class Bundle extends Default {
 
             } else {
                 //get the name of the transfer job
-                boolean contains = mStageInMap.containsKey(siteHandle);
+                boolean contains = stageInMap.containsKey(siteHandle);
                 //following pieces need rearragnement!
                 if(!contains){
-                    bundle = getSISiteBundleValue(siteHandle,
-                                                job.vdsNS.getStringValue(VDS.BUNDLE_STAGE_IN_KEY));
-                    mSIBundleMap.put(siteHandle,Integer.toString(bundle));
+//                    bundle = getSISiteBundleValue(siteHandle,
+//                                                job.vdsNS.getStringValue(VDS.BUNDLE_STAGE_IN_KEY));
+//                    mSIBundleMap.put(siteHandle,Integer.toString(bundle));
+                    bundle = bundleValue.determine( implementation, job );
                 }
                 PoolTransfer pt = (contains)?
-                                  (PoolTransfer)mStageInMap.get(siteHandle):
+                                  (PoolTransfer)stageInMap.get(siteHandle):
                                   new PoolTransfer(siteHandle,bundle);
                 if(!contains){
-                    mStageInMap.put(siteHandle,pt);
+                    stageInMap.put(siteHandle,pt);
                 }
                 //add the FT to the appropriate transfer job.
-                String newJobName = pt.addTransfer(ft);
+                String newJobName = pt.addTransfer( ft, type );
 
                 if(ft.isTransferringExecutableFile()){
                     //currently we have only one file to be staged per
@@ -230,10 +306,10 @@ public class Bundle extends Default {
 //                                                            execFiles,
 //                                                            SubInfo.STAGE_IN_JOB);
                     mLogger.log("Entered " + key + "->" +
-                                mTXStageInImplementation.getSetXBitJobName(job.getName(),staged),
+                                implementation.getSetXBitJobName(job.getName(),staged),
                                 LogManager.DEBUG_MESSAGE_LEVEL);
                     mSetupMap.put(key,
-                                  mTXStageInImplementation.getSetXBitJobName(job.getName(),staged));
+                                  implementation.getSetXBitJobName(job.getName(),staged));
                     staged++;
                 }
 
@@ -256,7 +332,7 @@ public class Bundle extends Default {
         for( Iterator it = stagedFiles.iterator(); it.hasNext(); index++){
             Collection execFiles = new ArrayList(1);
             execFiles.add( it.next() );
-            mTXStageInImplementation.addSetXBitJobs(job, (String)jobIt.next(),
+            implementation.addSetXBitJobs(job, (String)jobIt.next(),
                                                          execFiles,
                                                          SubInfo.STAGE_IN_JOB,
                                                          index);
@@ -392,7 +468,47 @@ public class Bundle extends Default {
      * transfer nodes are actually constructed traversing through the transfer
      * containers and the stdin of the transfer jobs written.
      */
-    public void done(){
+    public void done( ){
+        doneStageIn( this.mStageInMap,
+                     this.mTXStageInImplementation , 
+                     SubInfo.STAGE_IN_JOB );
+        
+        doneStageIn( this.mStageInSymlinkMap, 
+                     this.mTXSymbolicLinkImplementation, 
+                     SubInfo.SYMLINK_STAGE_IN_JOB );
+       
+        //adding relations that tie in the stagin
+        //jobs to the compute jobs.
+        for(Iterator it = mRelationsMap.entrySet().iterator();it.hasNext();){
+            Map.Entry entry = (Map.Entry)it.next();
+            String key   = (String)entry.getKey();
+            mLogger.log("Adding relations for job " + key,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            for(Iterator pIt = ((Collection)entry.getValue()).iterator();
+                                                              pIt.hasNext();){
+                String value = (String)pIt.next();
+                addRelation( value, key );
+            }
+        }
+
+        
+        //reset the stageout map too
+        this.resetStageOutMap();
+    }
+    
+    /**
+     * 
+     * Signals that the traversal of the workflow is done. At this point the
+     * transfer nodes are actually constructed traversing through the transfer
+     * containers and the stdin of the transfer jobs written.
+     * 
+     * @param stageInMap       maps site names to PoolTransfer
+     * @param implementation   the transfer implementation to use
+     * @param stageInJobType   whether a stagein or symlink stagein job
+     */
+    public void doneStageIn( Map<String,PoolTransfer> stageInMap,
+                             Implementation implementation,
+                             int stageInJobType ){
         //traverse through the stagein map and
         //add transfer nodes per pool
         String key; String value;
@@ -401,7 +517,7 @@ public class Bundle extends Default {
         Map.Entry entry;
         SubInfo job = new SubInfo();
 
-        for(Iterator it = mStageInMap.entrySet().iterator();it.hasNext();){
+        for(Iterator it = stageInMap.entrySet().iterator();it.hasNext();){
             entry = (Map.Entry)it.next();
             key = (String)entry.getKey();
             pt   = (PoolTransfer)entry.getValue();
@@ -420,32 +536,19 @@ public class Bundle extends Default {
                 //mDag.addNewJob(tc.getName());
                 //we just need the execution pool in the job object
                 job.executionPool = key;
-                addJob(mTXStageInImplementation.createTransferJob(job,tc.getFileTransfers(),
+                
+                SubInfo tJob =  implementation.createTransferJob(job,tc.getFileTransfers(),
                                                            null,tc.getTXName(),
-                                                           SubInfo.STAGE_IN_JOB));
+                                                           stageInJobType );
+                //always set the type to stagein after it is created
+                tJob.setJobType( stageInJobType );
+                addJob( tJob );
 
             }
         }
 
-        //adding relations that tie in the stagin
-        //jobs to the compute jobs.
-        for(Iterator it = mRelationsMap.entrySet().iterator();it.hasNext();){
-            entry = (Map.Entry)it.next();
-            key   = (String)entry.getKey();
-            mLogger.log("Adding relations for job " + key,
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            for(Iterator pIt = ((Collection)entry.getValue()).iterator();
-                                                              pIt.hasNext();){
-                value = (String)pIt.next();
-                mLogMsg = "Adding relation " + value + " -> " + key;
-                mLogger.log(mLogMsg, LogManager.DEBUG_MESSAGE_LEVEL);
-//                mDag.addNewRelation(value,key);
-                addRelation(value,key);
-            }
-        }
-
-        //reset the stageout map too
-        this.resetStageOutMap();
+        
+        
     }
 
     /**
@@ -856,10 +959,11 @@ public class Bundle extends Default {
          *
          * @param transfer  the <code>FileTransfer</code> containing the
          *                  information about a single transfer.
+         * @param type      the type of transfer job
          *
          * @return  the name of the transfer job to which the transfer is added.
          */
-        public String addTransfer(FileTransfer transfer){
+        public String addTransfer(FileTransfer transfer, int type ){
             //we add the transfer to the container pointed
             //by next
             Object obj = mTXContainers.get(mNext);
@@ -868,7 +972,7 @@ public class Bundle extends Default {
                 //on demand add a new transfer container to the end
                 //is there a scope for gaps??
                 tc = new TransferContainer();
-                tc.setTXName( getTXJobName( mNext, SubInfo.STAGE_IN_JOB ) );
+                tc.setTXName( getTXJobName( mNext, type ) );
                 mTXContainers.set(mNext,tc);
             }
             else{
@@ -912,6 +1016,10 @@ public class Bundle extends Default {
                     sb.append( Refiner.STAGE_IN_PREFIX );
                     break;
 
+               case SubInfo.SYMLINK_STAGE_IN_JOB:
+                    sb.append( Refiner.SYMBOLIC_LINK_PREFIX );
+                    break;
+                    
                 case SubInfo.STAGE_OUT_JOB:
                     sb.append( Refiner.STAGE_OUT_PREFIX );
                     break;
@@ -976,6 +1084,10 @@ public class Bundle extends Default {
                 case SubInfo.STAGE_IN_JOB:
                     sb.append( Refiner.STAGE_IN_PREFIX );
                     break;
+                    
+                case SubInfo.SYMLINK_STAGE_IN_JOB:
+                    sb.append( Refiner.SYMBOLIC_LINK_PREFIX );
+                    break;
 
                 case SubInfo.STAGE_OUT_JOB:
                     sb.append( Refiner.STAGE_OUT_PREFIX );
@@ -997,5 +1109,108 @@ public class Bundle extends Default {
 
 
     }
+    
+   
+    
+    private static class BundleValue {
+        
+       
+        /**
+         * The pegasus profile key to use for lookup
+         */
+        private String mProfileKey;
+       
+        /**
+         * The default bundle value to use.
+         */
+        private String mDefaultBundleValue;
+        
+        /**
+         * The default constructor.
+         */
+        public BundleValue(){
+            
+        }
+        
+        /**
+         * Initializes the implementation
+         * 
+         * @param key     the Pegasus Profile key to be used for lookup of bundle values.
+         * @param default the default value to be associated if no key is found.
+         */
+        public void initialize( String key, String dflt ){
+            mProfileKey     = key;
+            mDefaultBundleValue = dflt;
+        }
+        
+      
+       
+       
+        
+        
+       /**
+        * Determines the bundle factor for a particular site on the basis of the
+        * stage in bundle value associcated with the underlying transfer
+        * transformation in the transformation catalog. If the key is not found,
+        * then the default value is returned. In case of the default value being
+        * null the global default is returned.
+        * 
+        * The value is tored internally to ensure that a subsequent
+        * call to get(String site) returns the value determined.
+        * 
+        * @param implementation  the transfer implementation being used
+        * @param job   the compute job for which the bundle factor needs to 
+        *              be determined.
+        * 
+        * @return the bundle factor.
+        */
+        public int determine(  Implementation implementation, SubInfo job  ){
+            return determine( implementation,
+                              job.getSiteHandle(), 
+                              job.vdsNS.getStringValue( mProfileKey ));
+        }
+       
+       /**
+        * Determines the bundle factor for a particular site on the basis of the
+        * stage in bundle value associcated with the underlying transfer
+        * transformation in the transformation catalog. If the key is not found,
+        * then the default value is returned. In case of the default value being
+        * null the global default is returned.
+        * 
+        * The value is tored internally to ensure that a subsequent
+        * call to get(String site) returns the value determined.
+        *
+        * 
+        * @param implementation  the transfer implementation being used
+        * @param site    the site at which the value is desired.
+        * @param deflt   the default value.
+        *
+        * @return the bundle factor.
+        *
+        * @see #DEFAULT_FACTOR
+        */
+        public  int determine( Implementation implementation, String site, String deflt ){
+            //this should be parameterised Karan Dec 20,2005
+           TransformationCatalogEntry entry  =
+             implementation.getTransformationCatalogEntry(site);
+        
+           SubInfo sub = new SubInfo();
+           String value = (deflt == null)?
+                           mDefaultBundleValue:
+                           deflt;
+
+            if(entry != null){
+                sub.updateProfiles(entry);
+                value = (sub.vdsNS.containsKey( mProfileKey ))?
+                         sub.vdsNS.getStringValue( mProfileKey ):
+                         value;
+            }
+
+            return Integer.parseInt(value);
+        }
+    
+    }
+    
+    
 
 }
