@@ -150,6 +150,12 @@ public class VDS extends Namespace {
      * stagein transfer node.
      */
     public static final String CLUSTER_STAGE_IN_TX_KEY = "cluster.stagein";
+    
+    /**
+     * The name of the key that determines the clustering parameter for the
+     * stagein transfer node.
+     */
+    public static final String CLUSTER_STAGE_IN_SYMLINK_TX_KEY = "cluster.symlink";
 
     /**
      * The name of the key that determines the clustering parameter for the

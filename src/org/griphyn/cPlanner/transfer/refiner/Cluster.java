@@ -20,25 +20,20 @@ package org.griphyn.cPlanner.transfer.refiner;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.FileTransfer;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.common.catalog.TransformationCatalogEntry;
 
-import org.griphyn.cPlanner.transfer.Refiner;
 
-import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Vector;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
@@ -50,6 +45,7 @@ import java.util.Map;
 import java.util.HashMap;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import org.griphyn.cPlanner.transfer.Implementation;
 
 
 /**
@@ -90,6 +86,14 @@ public class Cluster extends Bundle {
     public static final String DEFAULT_STAGE_IN_CLUSTER_FACTOR = "1";
 
     /**
+     * The default clustering factor that identifies the number of transfer jobs
+     * that are being created per execution pool for stageing in data for
+     * the workflow.
+     */
+    public static final String DEFAULT_STAGE_IN_SYMLINK_CLUSTER_FACTOR = "1";
+
+    
+    /**
      * The default bundling factor that identifies the number of transfer jobs
      * that are being created per execution pool while stageing data out.
      */
@@ -101,6 +105,13 @@ public class Cluster extends Bundle {
      * PoolTransfer objects for that site. This is per level of the workflow.
      */
     protected Map<String,PoolTransfer> mStageInMapPerLevel;
+    
+    
+    /**
+     * A map indexed by site name, that contains the pointer to the symlink stage
+     * in PoolTransfer objects for that site. This is per level of the workflow.
+     */
+    protected Map<String,PoolTransfer> mStageInSymlinkMapPerLevel;
     
     /**
      * The current level of the jobs being traversed.
@@ -124,6 +135,54 @@ public class Cluster extends Bundle {
         mCurrentSILevel = -1;
         mSyncJobMap = new HashMap< String, SubInfo >();
     }
+    
+    /**
+     * Initializes the bundle value variables, that are responsible determining
+     * the bundle values.
+     */
+    protected  void initializeBundleValues() {
+        mStageinBundleValue = new BundleValue();
+        mStageinBundleValue.initialize( VDS.CLUSTER_STAGE_IN_TX_KEY, 
+                                        Cluster.DEFAULT_STAGE_IN_CLUSTER_FACTOR );
+        
+        mStageInSymlinkBundleValue = new BundleValue();
+        mStageInSymlinkBundleValue.initialize( VDS.CLUSTER_STAGE_IN_SYMLINK_TX_KEY, 
+                                        Cluster.DEFAULT_STAGE_IN_SYMLINK_CLUSTER_FACTOR );
+    }
+
+    
+    /**
+     * Adds the stage in transfer nodes which transfer the input files for a job,
+     * from the location returned from the replica catalog to the job's execution
+     * pool.
+     *
+     * @param job   <code>SubInfo</code> object corresponding to the node to
+     *              which the files are to be transferred to.
+     * @param files Collection of <code>FileTransfer</code> objects containing the
+     *              information about source and destURL's.
+     * @param symlinkFiles Collection of <code>FileTransfer</code> objects containing
+     *                     source and destination file url's for symbolic linking
+     *                     on compute site.
+     */
+    public  void addStageInXFERNodes( SubInfo job,
+                                      Collection<FileTransfer> files,
+                                      Collection<FileTransfer> symlinkFiles ){
+        
+        addStageInXFERNodes( job, 
+                             files, 
+                             SubInfo.STAGE_IN_JOB, 
+                             this.mStageInMapPerLevel,
+                             this.mStageinBundleValue,
+                             this.mTXStageInImplementation );
+        
+        
+        addStageInXFERNodes( job, 
+                             symlinkFiles, 
+                             SubInfo.SYMLINK_STAGE_IN_JOB, 
+                             this.mStageInSymlinkMapPerLevel,
+                             this.mStageInSymlinkBundleValue,
+                             this.mTXSymbolicLinkImplementation );
+    }
 
     /**
      * Adds the stage in transfer nodes which transfer the input files for a job,
@@ -134,9 +193,18 @@ public class Cluster extends Bundle {
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
+     * @param jobType  the type of transfer job being created
+     * @param staginMap  Map indexed by site name that gives all the transfers for
+     *                   that site.
+     * @param cValue   used to determine the bundling factor to employ for a job.
+     * @param implmentation  the transfer implementation to use.
      */
     public  void addStageInXFERNodes( SubInfo job,
-                                      Collection files ){
+                                      Collection files,
+                                      int jobType, 
+                                      Map<String,PoolTransfer> stageInMap,
+                                      BundleValue cValue,
+                                      Implementation implementation ){
         
 
         //sanity check
@@ -207,10 +275,12 @@ public class Cluster extends Bundle {
         
         int level   = job.getLevel();
         String site = job.getSiteHandle();
-        int bundleValue = getSISiteBundleValue( site,
+        int clusterValue = cValue.determine( implementation, job );
+        /*
+        int clusterValue = getSISiteBundleValue( site,
                                                 job.vdsNS.getStringValue( VDS.CLUSTER_STAGE_IN_TX_KEY ) );
-
-        mLogger.log( "The Cluster value for site " + site + " is " + bundleValue,
+        */
+        mLogger.log( "The Cluster value for site " + site + " is " + clusterValue,
                      LogManager.DEBUG_MESSAGE_LEVEL
                      );
         
@@ -218,7 +288,18 @@ public class Cluster extends Bundle {
             mCurrentSILevel = level;
             //we are starting on a new level of the workflow.
             //reinitialize stuff
-            this.resetStageInMap();
+            this.resetStageInMaps();
+            //the stagein map needs to point to the correct reinitialized one
+            if( jobType == SubInfo.STAGE_IN_JOB ){
+                stageInMap = this.mStageInMapPerLevel;
+            }
+            else if ( jobType == SubInfo.SYMLINK_STAGE_IN_JOB ){
+                stageInMap = this.mStageInSymlinkMapPerLevel;
+            }
+            else{
+                //error 
+                throw new RuntimeException( "Invalide job type specified " + jobType );
+            }
         }
 
 
@@ -226,9 +307,10 @@ public class Cluster extends Bundle {
         if ( makeTNode ) {
 
             //get the appropriate pool transfer object for the site
-            PoolTransfer pt = this.getStageInPoolTransfer(  site, bundleValue );
+            PoolTransfer pt = this.getStageInPoolTransfer( stageInMap, site, clusterValue  );
             //we add all the file transfers to the pool transfer
-            siTC = pt.addTransfer( txFiles, level, SubInfo.STAGE_IN_JOB );
+            siTC = pt.addTransfer( txFiles, level, jobType );
+            siTC.setTransferType( jobType );
             String siJob = siTC.getTXName();
 
             //traverse through all files to be staged
@@ -241,12 +323,12 @@ public class Cluster extends Bundle {
                 if( ft.isTransferringExecutableFile() ){
                     //the staged execution file should be having the setup
                     //job as parent if it does not preserve x bit
-                    if(mTXStageInImplementation.doesPreserveXBit()){
+                    if( implementation.doesPreserveXBit()){
                         mFileTable.put( key, siJob );
                     }
                     else{
                         mFileTable.put( key,
-                                        mTXStageInImplementation.getSetXBitJobName( jobName,staged++) );
+                                        implementation.getSetXBitJobName( jobName,staged++) );
                     }
                 }
                 else{
@@ -268,10 +350,10 @@ public class Cluster extends Bundle {
             if( !stagedExecFiles.isEmpty() ){
                 //create en-mass the setXBit jobs
                 //if there were any staged files
-               mTXStageInImplementation.addSetXBitJobs( job, 
-                                                        siJob,
-                                                        stagedExecFiles,
-                                                        SubInfo.STAGE_IN_JOB );
+               implementation.addSetXBitJobs( job, 
+                                              siJob,
+                                              stagedExecFiles,
+                                              SubInfo.STAGE_IN_JOB );
             }
             
            
@@ -283,25 +365,75 @@ public class Cluster extends Bundle {
        
     }
        
+       
     /**
-     * Resets the stage in map.
+     * Resets the stage in map and adds the stage in jobs for each site per level.
+     * 
      */
-    protected void resetStageInMap(){
-        if ( this.mStageInMapPerLevel != null ){
+    protected void resetStageInMaps( ){
+        
+        //stores the mapping of site to synch job per call
+        //to resetStagInMaps
+        Map< String, SubInfo > tempSynchJobMap = new HashMap<String,SubInfo>();
+        
+        //reset both the stagein and symlink stage in maps
+        this.mStageInMapPerLevel = resetStageInMap( this.mStageInMapPerLevel,
+                                                    this.mTXStageInImplementation,
+                                                    tempSynchJobMap,
+                                                    SubInfo.STAGE_IN_JOB,
+                                                    true );
+        //we dont want any synch jobs to be created while creating symlink jobs
+        this.mStageInSymlinkMapPerLevel = resetStageInMap( this.mStageInSymlinkMapPerLevel,
+                                                           this.mTXSymbolicLinkImplementation,
+                                                           tempSynchJobMap,
+                                                           SubInfo.SYMLINK_STAGE_IN_JOB,
+                                                           false
+                                                          );
+        
+        //populate the contents of temp synch jobmap
+        //into the main synch job map
+        this.mSyncJobMap.putAll( tempSynchJobMap );
+    }
+    
+    /**
+     * Resets the stage in map and adds the stage in jobs for each site per level.
+     * 
+     * @param stageInMap      the stagein map per level to be reset
+     * @param implementation  the transfer implementation corresponding to the map 
+     *                        being reset
+     * @param transientSynchJobMap  transient map to keep track of synch jobs per site.
+     * @param jobType         the type of Transfer Job created
+     * @param createChildSyncJob  boolean indicating whether to create a child synch job or not.
+     * 
+     * @return  the reset map
+     */
+    protected Map<String,PoolTransfer> resetStageInMap( 
+                                    Map<String,PoolTransfer> stageInMap, 
+                                    Implementation implementation,
+                                    Map<String,SubInfo> transientSynchJobMap,
+                                    int jobType,
+                                    boolean createChildSyncJob 
+                                    ){
+        if ( stageInMap != null ){
             
             SubInfo job = new SubInfo();
             //before flushing add the stage in nodes to the workflow
-            for( Iterator it = mStageInMapPerLevel.values().iterator(); it.hasNext(); ){
+            for( Iterator it = stageInMap.values().iterator(); it.hasNext(); ){
                 PoolTransfer pt = ( PoolTransfer ) it.next();
                 String site = pt.getPoolName() ;
                 job.setSiteHandle( site );
 
                 SubInfo parentSyncJob = this.getSyncJob( site );
-                //add a child synch job for this level
-                SubInfo childSyncJob = createSyncJobBetweenLevels( getSyncJobBetweenLevelsName( site,
-                                                                                        mCurrentSILevel - 1 ) );
-                addJob( childSyncJob );
-                mLogger.log( "Added synch job " + childSyncJob.getName(), LogManager.DEBUG_MESSAGE_LEVEL );
+                
+                
+                //add a child synch job for this level if required
+                SubInfo childSyncJob = null;
+                if( createChildSyncJob ){
+                    childSyncJob = createSyncJobBetweenLevels( 
+                                                    getSyncJobBetweenLevelsName( site, mCurrentSILevel - 1 ) );
+                    addJob( childSyncJob );
+                    mLogger.log( "Added synch job " + childSyncJob.getName(), LogManager.DEBUG_MESSAGE_LEVEL );
+                }
                 
                 mLogger.log( "Adding jobs for staging in data to site " + pt.getPoolName(),
                              LogManager.DEBUG_MESSAGE_LEVEL );
@@ -319,9 +451,11 @@ public class Cluster extends Bundle {
                     if( !tc.getFileTransfers().isEmpty() ){
                         mLogger.log( "Adding stage-in job " + tc.getTXName(),
                                      LogManager.DEBUG_MESSAGE_LEVEL);
-                        siJob = mTXStageInImplementation.createTransferJob(
+                        siJob = implementation.createTransferJob(
                                                              job, tc.getFileTransfers(), null,
-                                                             tc.getTXName(), SubInfo.STAGE_IN_JOB );
+                                                             tc.getTXName(), jobType );
+                        //always set job type to stage in even for symlink after creation
+                        siJob.setJobType( SubInfo.STAGE_IN_JOB );
                         addJob( siJob );
                     }
                     
@@ -329,17 +463,26 @@ public class Cluster extends Bundle {
                     if( parentSyncJob != null ){
                         addRelation( parentSyncJob.getName(), siJob.getName() );
                     }
-                    //stagein job is parent to child synch
-                    addRelation( siJob.getName(), childSyncJob.getName() );
+                    
+                    
+                    //stagein job is parent to child synch i.e if it was created
+                    if( createChildSyncJob ){
+                        addRelation( siJob.getName(), childSyncJob.getName() );
+                    }
 
                 }//end of traversal thru all transfer containers
                 
-                //update the synch job map
-                mSyncJobMap.put( site, childSyncJob );
+                //update the synch job map if child synch job is created
+                if( createChildSyncJob ){
+                    //mSyncJobMap.put( site, childSyncJob );
+                    //populate to the transient job map not the main one
+                    transientSynchJobMap.put( site, childSyncJob );
+                }
                 
             }//end of traversal thru all pool transfers
         }
-        mStageInMapPerLevel = new HashMap< String, PoolTransfer >();
+        stageInMap = new HashMap< String, PoolTransfer >();
+        return stageInMap;
     }
 
     /**
@@ -356,19 +499,22 @@ public class Cluster extends Bundle {
     /**
      * Returns the appropriate stagein pool transfer for a particular site.
      *
+     * 
+     * @param stageinMap  map that indexes site to PoolTransfer objects
      * @param site  the site for which the PT is reqd.
      * @param num   the number of stage in jobs required for that Pool.
      *
      * @return the PoolTransfer
      */
-    protected PoolTransfer getStageInPoolTransfer( String site, int num  ){
-
-        if ( this.mStageInMapPerLevel.containsKey( site ) ){
-            return ( PoolTransfer ) this.mStageInMapPerLevel.get( site );
+    protected PoolTransfer getStageInPoolTransfer( Map<String,PoolTransfer> stageInMap,
+                                                   String site, int num  ){
+        
+        if ( stageInMap.containsKey( site ) ){
+            return ( PoolTransfer ) stageInMap.get( site );
         }
         else{
             PoolTransfer pt = new PoolTransfer( site, num );
-            this.mStageInMapPerLevel.put( site, pt );
+            stageInMap.put( site, pt );
             return pt;
         }
     }
@@ -383,7 +529,7 @@ public class Cluster extends Bundle {
         this.mCurrentSILevel++;
         
         //reset the stageout stagein map too
-        this.resetStageInMap();
+        this.resetStageInMaps();
         this.resetStageOutMap();
     }
 

@@ -114,12 +114,12 @@ public class Bundle extends Default {
     /**
      * The BundleValue that evaluates for stage in jobs.
      */
-    private BundleValue mStageinBundleValue;
+    protected BundleValue mStageinBundleValue;
 
     /**
      * The BundleValue that evaluates for symlink jobs.
      */
-    private BundleValue mStageInSymlinkBundleValue;
+    protected BundleValue mStageInSymlinkBundleValue;
 
     
     /**
@@ -166,6 +166,19 @@ public class Bundle extends Default {
         mStageInSymlinkMap   = new HashMap( mPOptions.getExecutionSites().size());
 //        mSIBundleMap  = new HashMap();
         
+        mRelationsMap = new HashMap();
+        mSetupMap     = new HashMap();
+        mCurrentSOLevel = -1;
+        mJobPrefix    = mPOptions.getJobnamePrefix();
+        
+        initializeBundleValues();
+    }
+    
+    /**
+     * Initializes the bundle value variables, that are responsible determining
+     * the bundle values.
+     */
+    protected  void initializeBundleValues() {
         mStageinBundleValue = new BundleValue();
         mStageinBundleValue.initialize( VDS.BUNDLE_STAGE_IN_KEY, 
                                         Bundle.DEFAULT_STAGE_IN_BUNDLE_FACTOR );
@@ -173,12 +186,9 @@ public class Bundle extends Default {
         mStageInSymlinkBundleValue = new BundleValue();
         mStageInSymlinkBundleValue.initialize( VDS.BUNDLE_STAGE_IN_SYMLINK_KEY, 
                                         Bundle.DEFAULT_STAGE_IN_SYMLINK_BUNDLE_FACTOR );
-        
-        mRelationsMap = new HashMap();
-        mSetupMap     = new HashMap();
-        mCurrentSOLevel = -1;
-        mJobPrefix    = mPOptions.getJobnamePrefix();
     }
+
+    
     
     /**
      * Adds the stage in transfer nodes which transfer the input files for a job,
@@ -222,6 +232,11 @@ public class Bundle extends Default {
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
+     * @param type  the type of transfer job being created
+     * @param staginMap  Map indexed by site name that gives all the transfers for
+     *                   that site.
+     * @param bundleValue   used to determine the bundling factor to employ for a job.
+     * @param implmentation  the transfer implementation to use.
      */
     public  void addStageInXFERNodes( SubInfo job,
                                       Collection files, 
@@ -706,6 +721,7 @@ public class Bundle extends Default {
         mStageOutMapPerLevel = new HashMap();
     }
 
+    
     /**
      * A container class for storing the name of the transfer job, the list of
      * file transfers that the job is responsible for.
@@ -1112,7 +1128,7 @@ public class Bundle extends Default {
     
    
     
-    private static class BundleValue {
+    protected static class BundleValue {
         
        
         /**
