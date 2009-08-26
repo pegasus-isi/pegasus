@@ -1109,18 +1109,7 @@ public class DaxParser extends Parser {
         mCurrentJobSubInfo.setInputFiles(  mVJobInpFiles );
         mCurrentJobSubInfo.setOutputFiles( mVJobOutFiles );
 
-        //update the namespaces information
-        //that is gotten through the profiles.
-        //namespace class member variables removed
-        /*
-        mCurrentJobSubInfo.envVariables = mEnvNS;
-        mCurrentJobSubInfo.hints        = mHintNS;
-        mCurrentJobSubInfo.condorVariables = mCondorNS;
-        mCurrentJobSubInfo.dagmanVariables = mDagmanNS;
-        mCurrentJobSubInfo.vdsNS        = mVdsNS;
-        mCurrentJobSubInfo.globusRSL = mGlobusNS; // shallow copy!
-         */ 
-
+        
         //The job id for the compute jobs
         //is the name of the job itself.
         //All the jobs in the DAX are
@@ -1128,20 +1117,11 @@ public class DaxParser extends Parser {
         mCurrentJobSubInfo.jobClass = SubInfo.COMPUTE_JOB;
         mCurrentJobSubInfo.jobID = mCurrentJobSubInfo.jobName;
  
+        
+        
         //send the job to the appropriate callback implementing class
         mCallback.cbJob(mCurrentJobSubInfo);
         
-        //reset the variables
-        //namespace class member variables removed
-        /*
-        mCondorNS = new Condor();
-        mGlobusNS = new Globus();
-        mVdsNS    = new VDS();
-        mEnvNS    = new ENV();
-        mHintNS   = new Hints();
-        mDagmanNS = new Dagman();
-         */
-
         mVJobInpFiles = new HashSet();
         mVJobOutFiles = new HashSet();
     }

@@ -19,11 +19,18 @@ package org.griphyn.cPlanner.engine;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
+
+
+import org.griphyn.common.classes.Arch;
+import org.griphyn.common.classes.Os;
+import org.griphyn.common.classes.SysInfo;
+
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -62,7 +69,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.Vector;
-
 /**
  * This engine calls out to the Site Selector selected by the user and maps the
  * jobs in the workflow to the execution pools.
@@ -258,6 +264,30 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     public void scheduleJobs( ADag dag, List sites ) {
+        
+        //before loading the site selector we need to
+        //update the transformation with the hints in the 
+        //DAX for the job.
+        for( Iterator it = dag.jobIterator(); it.hasNext(); ){
+            SubInfo job = ( SubInfo ) it.next();
+            //some sanity check for hints namespace
+            if( job.hints.containsKey( Hints.PFN_HINT_KEY ) &&
+                !job.hints.containsKey( Hints.EXECUTION_POOL_KEY )    ){
+                try {
+                    //insert an entry into the transformation catalog
+                    //for the mapper to pick up later on
+                    TransformationCatalogEntry tcEntry = constructTCEntryFromJobHints( job );
+                    mLogger.log( "Addding entry into transformation catalog " + tcEntry, LogManager.DEBUG_MESSAGE_LEVEL);
+            
+                    if (!mTCHandle.addTCEntry(tcEntry)) {
+                        mLogger.log("Unable to add entry to transformation catalog " + tcEntry, LogManager.WARNING_MESSAGE_LEVEL);
+                    }
+                } catch (Exception ex) {
+                    throw new RuntimeException( "Exception while inserting into TC in Interpool Engine ");
+                }
+            }
+        }
+        
 
         mSiteSelector = SiteSelectorFactory.loadInstance( mBag );
         mSiteSelector.mapWorkflow( dag, sites );
@@ -369,6 +399,31 @@ public class InterPoolEngine extends Engine implements Refiner {
             throw new RuntimeException( "PASOA Exception", e );
         }
 
+    }
+
+    /**
+     * Constructs a TC entry object from the contents of a job. 
+     * The architecture assigned to this entry is default ( INTEL32::LINUX )
+     * and resource id is set to unknown.
+     * 
+     * @param job  the job object
+     * 
+     * @return constructed TransformationCatalogEntry 
+     */
+    private TransformationCatalogEntry constructTCEntryFromJobHints( SubInfo job ){ 
+        String executable = (String) job.hints.get( Hints.PFN_HINT_KEY );
+        TransformationCatalogEntry entry = new TransformationCatalogEntry();
+        entry.setLogicalTransformation(job.getTXNamespace(), job.getTXName(), job.getTXVersion());
+        entry.setResourceId( "unknown" );
+        entry.setSysInfo( new SysInfo( Arch.INTEL32, Os.LINUX, "", "" ) );
+        entry.setPhysicalTransformation( executable );
+        //hack to determine whether an executable is
+        //installed or static binary
+        entry.setType( executable.startsWith("/") ?
+                            TCType.INSTALLED : 
+                            TCType.STATIC_BINARY);
+                    
+        return entry;
     }
 
 
