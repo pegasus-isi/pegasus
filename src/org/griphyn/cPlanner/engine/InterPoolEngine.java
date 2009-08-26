@@ -415,7 +415,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
         entry.setLogicalTransformation(job.getTXNamespace(), job.getTXName(), job.getTXVersion());
         entry.setResourceId( "unknown" );
-        entry.setSysInfo( new SysInfo( Arch.INTEL32, Os.LINUX, "", "" ) );
+        entry.setSysInfo( new SysInfo( Arch.INTEL64, Os.LINUX, "", "" ) );
         entry.setPhysicalTransformation( executable );
         //hack to determine whether an executable is
         //installed or static binary
