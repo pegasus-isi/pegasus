@@ -357,6 +357,11 @@ public class Bundle extends Default {
 
         //add the temp set to the relations
         //relations are added to the workflow in the end.
+        if( mRelationsMap.containsKey( jobName )){
+            //the map already has some relations for the job
+            //add those to temp set to 
+            tempSet.addAll( (Set) mRelationsMap.get( jobName ) );
+        }
         mRelationsMap.put(jobName,tempSet);
 
 
