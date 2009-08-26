@@ -99,7 +99,7 @@ public class Tentacles extends AbstractStrategy {
             //or are compute jobs running on local site
             type = job.getJobType();
             local = pool.equals("local");
-            if( (job instanceof TransferJob && type == SubInfo.STAGE_IN_JOB)
+            if( (job instanceof TransferJob &&  type != SubInfo.STAGE_OUT_JOB )
                 || (!local
                           || (type == SubInfo.COMPUTE_JOB || type == SubInfo.STAGED_COMPUTE_JOB))){
                 mLogger.log("Adding relation " + parent + " -> " + jobName,
