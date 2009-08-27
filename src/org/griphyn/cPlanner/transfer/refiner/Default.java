@@ -373,6 +373,12 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                         mLogger.log(mLogMsg,LogManager.DEBUG_MESSAGE_LEVEL);
                         addRelation(ft.getJobName(), newJobName);
                     }
+                    else{
+                    	mLogger.log( "NOT ADDED relation "+ ft.getJobName() +
+                            " -> " + newJobName, LogManager.DEBUG_MESSAGE_LEVEL );
+                    	mLogger.log( "Previous parent " + prevParent  + " " + ft.getLFN(),
+                    			     LogManager.DEBUG_MESSAGE_LEVEL );
+                    }
 
                     //we only need to add the relation between a
                     //inter tx node and a node once.
@@ -387,9 +393,11 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                         toAdd = false;
                     }
 
+                    //moved to the inner loop Karan Aug 26, 2009
+                    //else in some cases relations between compute job
+                    //and inter pool job are not added even though they shoud be
+                    prevParent = ft.getJobName();
                 }
-
-                prevParent = ft.getJobName();
             }
 
             //add the new job and construct it's
@@ -635,6 +643,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                             String child){
         mLogger.log("Adding relation " + parent + " -> " + child,
                     LogManager.DEBUG_MESSAGE_LEVEL);
+        
         mDAG.addNewRelation(parent,child);
 
     }
