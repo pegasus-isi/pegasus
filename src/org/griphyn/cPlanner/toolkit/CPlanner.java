@@ -319,12 +319,23 @@ public class CPlanner extends Executable{
         if( mPOptions.getOutputSite() != null ){
             toLoad.add( mPOptions.getOutputSite() );
         }
+        if( eSites.isEmpty() ) {
+            mLogger.log("No sites given by user. Will use sites from the site catalog",
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            toLoad.add( "*" );
+        }
         mLogger.log( "Sites to load in site store " + toLoad, LogManager.DEBUG_MESSAGE_LEVEL );        
-        mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
         
         //load the site catalog and transformation catalog accordingly
         SiteStore s = loadSiteStore( toLoad );
         s.setForPlannerUse( mProps, mPOptions);
+        
+        if( toLoad.contains( "*" ) ){
+            //set execution sites to all sites that are loaded into site store
+            eSites.addAll( s.list() );
+        }
+        mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
+        
         
         mBag.add( PegasusBag.SITE_STORE, s );
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, 
@@ -1383,20 +1394,16 @@ public class CPlanner extends Executable{
      * @param sites
      * @return SiteStore object containing the information about the sites.
      */
-    private SiteStore loadSiteStore( Collection<String> sites ) {
+    private SiteStore loadSiteStore( Set<String> sites ) {
         SiteStore result = new SiteStore();
-        if( sites.isEmpty() ) {
-            mLogger.log("No sites given by user. Will use sites from the site catalog",
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            sites.add( "*" );
-        }
+        
         SiteCatalog catalog = null;
         
         /* load the catalog using the factory */
         catalog = SiteFactory.loadInstance( mProps );
         
         /* always load local site */
-        List<String> toLoad = new ArrayList<String>( sites );
+        Set<String> toLoad = new HashSet<String>( sites );
         toLoad.add( "local" );
 
         /* add the windward allegro graph site if reqd
@@ -1411,9 +1418,13 @@ public class CPlanner extends Executable{
         
         /* load the sites in site catalog */
         try{
-            catalog.load( toLoad );
+            catalog.load( new LinkedList( toLoad) );
             
             //load into SiteStore from the catalog.
+            if( toLoad.contains( "*" ) ){
+                //we need to load all sites into the site store
+                toLoad.addAll( catalog.list() );
+            }
             for( Iterator<String> it = toLoad.iterator(); it.hasNext(); ){
                 SiteCatalogEntry s = catalog.lookup( it.next() );
                 if( s != null ){

@@ -159,6 +159,14 @@ public class PartitionAndPlan{
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
+        if( options.getExecutionSites().isEmpty() ){
+            //for JIRA feature request PM-64
+            //no sites are specified. use the execution sites for
+            //the parent workflow
+            mLogger.log( "Setting list of execution sites to the same as outer workflow",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            options.getExecutionSites().addAll( mPegasusPlanOptions.getExecutionSites() );
+        }
 
         options.setPartitioningType( "Whole" );
 
