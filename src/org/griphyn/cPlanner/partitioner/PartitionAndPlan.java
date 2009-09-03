@@ -147,8 +147,13 @@ public class PartitionAndPlan{
             innerRelative = ( innerRelative == null && mPegasusPlanOptions.partOfDeferredRun() )?
                              mPegasusPlanOptions.getRandomDir(): //the random dir is the relative submit dir?
                              innerRelative;
-            innerRelative += File.separator + submit  ;
-
+            
+            //FIX for JIRA bug 65 to ensure innerRelative is resolved correctly
+            //in case of innerRelative being ./ . We dont want inner relative
+            //to compute to .// Instead we want it to compute to ././
+            //innerRelative += File.separator + submit  ;
+            innerRelative =  new File( innerRelative, submit ).getPath();
+            
             //options.setSubmitDirectory( mPegasusPlanOptions.getSubmitDirectory(), submit );
             options.setSubmitDirectory( innerBase, innerRelative );
             mLogger.log( "Base Submit directory for inner workflow set to " + innerBase,
