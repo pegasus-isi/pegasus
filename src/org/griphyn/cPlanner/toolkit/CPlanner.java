@@ -170,7 +170,16 @@ public class CPlanner extends Executable{
      * Default constructor.
      */
     public CPlanner(){
-        super();
+        this( null );
+    }
+    
+    /**
+     * The overload constructor.
+     * 
+     * @param logger the logger object to use. can be null.
+     */
+    public CPlanner( LogManager logger ){
+        super( logger );
         mLogMsg = new String();
         mVersion = Version.instance().toString();
         mNumFormatter = new DecimalFormat( "0000" );

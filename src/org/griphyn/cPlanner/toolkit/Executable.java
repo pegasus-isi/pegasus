@@ -26,6 +26,9 @@ import org.griphyn.common.util.Version;
 import org.griphyn.common.util.VDSProperties;
 
 import gnu.getopt.LongOpt;
+import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 /**
  * The interface which defines all the methods , any executable should implement.
@@ -58,15 +61,24 @@ public abstract class Executable {
      * The error message to be logged.
      */
     protected String mLogMsg;
+    
+    /**
+     * The default constructor.
+     */
+    public Executable(){
+        this( null );
+    }
 
     /**
      * The constructor which ends up initialising the PegasusProperties object.
+     * 
+     * @param logger  the logger to use. Can be null.
      */
-    public Executable() {
+    public Executable( LogManager logger ) {
         mProps = PegasusProperties.getInstance();
         mVersion = Version.instance().toString();
         //setup logging before doing anything with properties
-        setupLogging();
+        setupLogging( logger );
         mLogMsg = new String();
         loadProperties();
     }
@@ -101,8 +113,15 @@ public abstract class Executable {
     /**
      * Sets up the logging options for this class. Looking at the properties
      * file, sets up the appropriate writers for output and stderr.
+     * 
+     * @param logger   the logger to use. Can be null.
      */
-    protected void setupLogging(){
+    protected void setupLogging( LogManager logger ){
+        if( logger != null ){
+            mLogger = logger;
+            return;
+        }
+        
         //setup the logger for the default streams.
         mLogger = LogManagerFactory.loadSingletonInstance( mProps );
         mLogger.logEventStart( "event.pegasus.planner", "planner.version", mVersion );
@@ -119,6 +138,30 @@ public abstract class Executable {
             return;
         }
         else{
+            //take a backup of the log if required.
+            File f = new File( value );
+            File dir = f.getParentFile();
+            String basename = f.getName();
+            if( f.exists() ){
+                //check if value.??? exists.
+                NumberFormat formatter = new DecimalFormat( "000" );
+                File backupFile = null;
+                //start from 000 onwards and check for existence
+                for( int i = 0; i < 999 ; i++ ){
+                    StringBuffer backup = new StringBuffer();
+                    backup.append( basename ).append( "." ).append( formatter.format(i) );
+                    
+                    //check if backup file exists.
+                    backupFile = new File( dir, backup.toString() );
+                    if( !backupFile.exists() ){
+                        break;
+                    }
+                }
+                System.out.println( "Backing up existing log file to " + backupFile );
+                //move file to backup file
+                f.renameTo( backupFile );
+            }
+            
             //log both output and error messages to value specified
             mLogger.setWriters(value);
         }
