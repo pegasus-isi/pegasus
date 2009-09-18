@@ -1512,7 +1512,7 @@ public class PDAX2MDAG implements Callback {
      *
      * @return any arguments to be added, else empty string
      */
-    protected String constructDAGManKnobs( PegasusProperties properties ){
+    public static String constructDAGManKnobs( PegasusProperties properties ){
         StringBuffer sb = new StringBuffer();
 
         //get all the values for the dagman knows
@@ -1536,7 +1536,7 @@ public class PDAX2MDAG implements Callback {
      *
      * @return the int value if valid, else -1
      */
-    protected int parseInt( String s ){
+    protected static int parseInt( String s ){
         int value = -1;
         try{
             value = Integer.parseInt( s );

@@ -20,6 +20,7 @@ package org.griphyn.cPlanner.code.generator.condor;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.util.CondorVersion;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
@@ -41,8 +42,10 @@ import org.griphyn.common.catalog.TransformationCatalogEntry;
 import org.griphyn.common.classes.TCType;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -55,6 +58,11 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Properties;
 import java.util.Map;
+import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import org.griphyn.cPlanner.namespace.Condor;
+import org.griphyn.cPlanner.namespace.ENV;
+import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.parser.pdax.PDAX2MDAG;
 
 /**
  * The class that takes in a dax job specified in the DAX and renders it into
@@ -65,6 +73,40 @@ import java.util.Map;
  */
 public class SUBDAXGenerator{
 
+    /**
+     * Whether to generate the SUBDAG keyword or not.
+     */
+    public static final boolean GENERATE_SUBDAG_KEYWORD = false;
+    
+    /**
+     * The logical name with which to query the transformation catalog for
+     * cPlanner executable.
+     */
+    public static final String CPLANNER_LOGICAL_NAME = "pegasus-plan";
+
+    /**
+     * The namespace to use for condor dagman.
+     */
+    public static final String CONDOR_DAGMAN_NAMESPACE = "condor";
+
+    /**
+     * The logical name with which to query the transformation catalog for the
+     * condor_dagman executable, that ends up running the mini dag as one
+     * job.
+     */
+    public static final String CONDOR_DAGMAN_LOGICAL_NAME = "dagman";
+
+    /**
+     * The namespace to which the job in the MEGA DAG being created refer to.
+     */
+    public static final String NAMESPACE = "pegasus";
+
+    /**
+     * The planner utility that needs to be called as a prescript.
+     */
+    public static final String RETRY_LOGICAL_NAME = "pegasus-plan";
+
+    
 
     /**
      * The username of the user running the program.
@@ -112,6 +154,18 @@ public class SUBDAXGenerator{
     private PegasusProperties.CLEANUP_SCOPE mCleanupScope;
     
     /**
+     * The long value of condor version.
+     */
+    private long mCondorVersion;
+    
+    /**
+     * Any extra arguments that need to be passed to dagman, as determined
+     * from the properties file.
+     */
+    private String mDAGManKnobs;
+
+    
+    /**
      * The default constructor.
      */
     public SUBDAXGenerator() {
@@ -140,20 +194,31 @@ public class SUBDAXGenerator{
 
         //hardcoded options for time being.
         mPegasusPlanOptions.setPartitioningType( "Whole" );
-
+        
+        mCondorVersion = CondorVersion.getInstance( mLogger ).numericValue();
+        if( mCondorVersion == -1 ){
+            mLogger.log( "Unable to determine the version of condor " , LogManager.WARNING_MESSAGE_LEVEL );
+        }
+        else{
+            mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        
+        mDAGManKnobs = PDAX2MDAG.constructDAGManKnobs( mProps );
     }
 
-
+    
+   
     /**
      * This function is passed command line arguments. In this function you
      * generate the valid options and parse the options specified at run time.
      *
      * @param arguments  the arguments passed at runtime
      *
-     * @return the Collection of <code>File</code> objects for the files written
-     *         out.
+     * @return a <code>SubInfo</code> if a submit file needs to be generated 
+     *         for the job. Else return null.
+     * 
      */
-    public void generateCode( SubInfo job ){
+    public SubInfo generateCode( SubInfo job ){
         String arguments = job.getArguments();
         String [] args = arguments.split( " " );
         mLogger.log( "Arguments passed to SUBDAX Generator are " + arguments,
@@ -257,19 +322,348 @@ public class SUBDAXGenerator{
         String prescript = constructPegasusPlanPrescript( job, options, propertiesFile, log.toString() );
         job.setPreScript( prescript );
         
-        //determine the path to the dag file that will be constructed.
-        StringBuffer dag = new StringBuffer();
-        dag.append( options.getSubmitDirectory() ).append( File.separator ).
-            append( CondorGenerator.getDAGFilename( options, label, index, ".dag") );
+        //determine the path to the dag file that will be constructed
+        if( GENERATE_SUBDAG_KEYWORD ){
+            StringBuffer dag = new StringBuffer();
+            dag.append( options.getSubmitDirectory() ).append( File.separator ).
+                append( CondorGenerator.getDAGFilename( options, label, index, ".dag") );
         
-        //print out the SUBDAG keyword for the job
-        StringBuffer sb = new StringBuffer();
-        sb.append( Dagman.SUBDAG_EXTERNAL_KEY ).append( " " ).append( job.getName() ).
-                   append( " " ).append( dag.toString() );
-        mDAGWriter.println( sb.toString() );
-        
+            //print out the SUBDAG keyword for the job
+            StringBuffer sb = new StringBuffer();
+            sb.append( Dagman.SUBDAG_EXTERNAL_KEY ).append( " " ).
+               append( job.getName() ).append( " " ).
+               append( dag.toString() );
+            mDAGWriter.println( sb.toString() );
+            return null;
+        }
+        else{
+            StringBuffer basenamePrefix = new StringBuffer();
+            basenamePrefix.append( label ).append( "-" ).append( index );
+            SubInfo dagJob = constructDAGJob( job,
+                                    new File( mPegasusPlanOptions.getSubmitDirectory() ),
+                                    new File( options.getSubmitDirectory()),
+                                    basenamePrefix.toString()
+                                  );
+            //set the prescript
+            dagJob.setPreScript( prescript );
+            return dagJob;
+        }
 
     }
+    
+    /**
+     * Constructs a job that plans and submits the partitioned workflow,
+     * referred to by a Partition. The main job itself is a condor dagman job
+     * that submits the concrete workflow. The concrete workflow is generated by
+     * running the planner in the prescript for the job.
+     *
+     * @param subdaxJob         the original subdax job.
+     * @param directory   the directory where the submit file for dagman job has
+     *                    to be written out to.
+     * @param subdaxDirectory   the submit directory where the submit files for the
+     *                          subdag reside.
+     * @param basenamePrefix    the basename to be assigned to the files associated 
+     *                          with DAGMan
+     * 
+     * @return the constructed DAG job.
+     */
+    protected SubInfo constructDAGJob( SubInfo subdaxJob,
+                                       File directory,
+                                       File subdaxDirectory,
+                                       String basenamePrefix){
+        
+    
+        //for time being use the old functions.
+        SubInfo job = new SubInfo();
+        //the parent directory where the submit file for condor dagman has to
+        //reside. the submit files for the corresponding partition are one level
+        //deeper.
+        String parentDir = directory.getAbsolutePath();
+
+        //set the logical transformation
+        job.setTransformation(CONDOR_DAGMAN_NAMESPACE,
+                              CONDOR_DAGMAN_LOGICAL_NAME,
+                              null);
+
+        //set the logical derivation attributes of the job.
+        job.setDerivation(CONDOR_DAGMAN_NAMESPACE,
+                          CONDOR_DAGMAN_LOGICAL_NAME,
+                          null);
+
+        //always runs on the submit host
+        job.setSiteHandle("local");
+
+        //set the partition id only as the unique id
+        //for the time being.
+//        job.setName(partition.getID());
+
+        //set the logical id for the job same as the partition id.
+        job.setLogicalID( subdaxJob.getLogicalID() );
+
+        //construct the name of the DAG job as same as subdax job
+        job.setName( subdaxJob.getName() );
+
+        List entries;
+        TransformationCatalogEntry entry = null;
+
+        //get the path to condor dagman
+        try{
+            //try to construct the path from the environment
+            entry = constructTCEntryFromEnvironment( );
+            
+            //try to construct from the TC
+            if( entry == null ){
+                entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
+                                                 job.version, job.getSiteHandle(),
+                                                 TCType.INSTALLED);
+                entry = (entries == null) ?
+                    defaultTCEntry( "local") ://construct from site catalog
+                    //Gaurang assures that if no record is found then
+                    //TC Mechanism returns null
+                    (TransformationCatalogEntry) entries.get(0);
+            }
+        }
+        catch(Exception e){
+            throw new RuntimeException( "ERROR: While accessing the Transformation Catalog",e);
+        }
+        if(entry == null){
+            //throw appropriate error
+            throw new RuntimeException("ERROR: Entry not found in tc for job " +
+                                        job.getCompleteTCName() +
+                                        " on site " + job.getSiteHandle());
+        }
+
+        //set the path to the executable and environment string
+        job.executable = entry.getPhysicalTransformation();
+        //the environment variable are set later automatically from the tc
+        //job.envVariables = entry.envString;
+
+        //the job itself is the main job of the super node
+        //construct the classad specific information
+        job.jobID = job.getName();
+        job.jobClass = SubInfo.COMPUTE_JOB;
+
+
+        //directory where all the dagman related files for the nested dagman
+        //reside. Same as the directory passed as an input parameter
+        String subdaxDir = subdaxDirectory.getAbsolutePath();
+
+        //make the initial dir point to the submit file dir for the subdag
+        //we can do this as we are running this job both on local host, and scheduler
+        //universe. Hence, no issues of shared filesystem or anything.
+        job.condorVariables.construct("initialdir", subdaxDir );
+
+
+        //construct the argument string, with all the dagman files
+        //being generated in the partition directory. Using basenames as
+        //initialdir has been specified for the job.
+        StringBuffer sb = new StringBuffer();
+
+        sb.append(" -f -l . -Debug 3").
+           append(" -Lockfile ").append( getBasename( basenamePrefix, ".dag.lock") ).
+           append(" -Dag ").append( getBasename( basenamePrefix, ".dag"));
+        
+        //specify condor log for condor version less than 7.1.2
+        if( mCondorVersion < CondorVersion.v_7_1_2 ){
+           sb.append(" -Condorlog ").append(getBasename( basenamePrefix, ".log"));
+        }
+        
+        //allow for version mismatch as after 7.1.3 condor does tight 
+        //checking on dag.condor.sub file and the condor version used
+        if( mCondorVersion >= CondorVersion.v_7_1_3 ){
+            sb.append( " -AllowVersionMismatch " );
+        }
+        
+        //we append the Rescue DAG option only if old version
+        //of Condor is used < 7.1.0.  To detect we check for a non
+        //zero value of --rescue option to pegasus-plan
+        //Karan June 27, 2007
+        mLogger.log( "Number of Resuce retries " + mPegasusPlanOptions.getNumberOfRescueTries() ,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        if( mCondorVersion >= CondorVersion.v_7_1_0 || mPegasusPlanOptions.getNumberOfRescueTries() > 0 ){            
+            mLogger.log( "Constructing arguments to dagman in 7.1.0 and later style",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            sb.append( " -AutoRescue 1 -DoRescueFrom 0 ");
+        }
+        else{
+            mLogger.log( "Constructing arguments to dagman in pre 7.1.0 style",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            sb.append(" -Rescue ").append(getBasename( basenamePrefix, ".dag.rescue"));
+        }
+        
+       //pass any dagman knobs that were specified in properties file
+       sb.append( this.mDAGManKnobs );
+
+       //put in the environment variables that are required
+       job.envVariables.construct("_CONDOR_DAGMAN_LOG",
+                                  new File( subdaxDir, 
+                                            getBasename( basenamePrefix, ".dag.dagman.out")).getAbsolutePath()
+                                            );
+       job.envVariables.construct("_CONDOR_MAX_DAGMAN_LOG","0");
+
+       //set the arguments for the job
+       job.setArguments(sb.toString());
+
+       //the environment need to be propogated for exitcode to be picked up
+       job.condorVariables.construct("getenv","TRUE");
+
+       job.condorVariables.construct("remove_kill_sig","SIGUSR1");
+
+
+       //the log file for condor dagman for the dagman also needs to be created
+       //it is different from the log file that is shared by jobs of
+       //the partition. That is referred to by Condorlog
+
+//       keep the log file common for all jobs and dagman albeit without
+//       dag.dagman.log suffix
+//       job.condorVariables.construct("log", getAbsolutePath( partition, dir,".dag.dagman.log"));
+
+//       String dagName = mMegaDAG.dagInfo.nameOfADag;
+//       String dagIndex= mMegaDAG.dagInfo.index;
+//       job.condorVariables.construct("log", dir + mSeparator +
+//                                     dagName + "_" + dagIndex + ".log");
+
+       
+       //the job needs to be explicitly launched in 
+       //scheduler universe instead of local universe
+       job.condorVariables.construct( Condor.UNIVERSE_KEY, Condor.SCHEDULER_UNIVERSE );
+       
+
+       //incorporate profiles from the transformation catalog
+       //and properties for the time being. Not from the site catalog.
+
+       //the profile information from the transformation
+       //catalog needs to be assimilated into the job
+       //overriding the one from pool catalog.
+       job.updateProfiles( entry );
+
+       //the profile information from the properties file
+       //is assimilated overidding the one from transformation
+       //catalog.
+       job.updateProfiles(mProps);
+       
+       //we do not want the job to be launched via kickstart
+       //Fix for VDS bug number 143
+       //http://bugzilla.globus.org/vds/show_bug.cgi?id=143
+       job.vdsNS.construct( VDS.GRIDSTART_KEY,
+                            GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
+
+       return job;
+    }
+    
+    /**
+     * Returns the basename of a dagman (usually) related file for a particular
+     * partition.
+     *
+     * @param partition  the partition for which the dagman is responsible for
+     *                   execution.
+     * @param suffix     the suffix for the file basename.
+     *
+     * @return the basename.
+     */
+    protected String getBasename( String prefix, String suffix ){
+        StringBuffer sb = new StringBuffer( 16 );
+        //add a prefix P
+        sb.append( prefix ).append( suffix );
+        return sb.toString();
+    }
+
+
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCEntry( String site ){
+        //not implemented as we dont have handle to site catalog in this class
+        return null;
+    }
+
+    /**
+     * Returns a tranformation catalog entry object constructed from the environment
+     * 
+     * An entry is constructed if either of the following environment variables
+     * are defined
+     * 1) CONDOR_HOME
+     * 2) CONDOR_LOCATION
+     * 
+     * CONDOR_HOME takes precedence over CONDOR_LOCATION
+     *
+     *
+     * @return  the constructed entry else null.
+     */
+    private  TransformationCatalogEntry constructTCEntryFromEnvironment( ){
+        //construct environment profiles 
+        Map<String,String> m = System.getenv();
+        ENV env = new ENV();
+        String key = "CONDOR_HOME";
+        if( m.containsKey( key ) ){
+            env.construct( key, m.get( key ) );
+        }
+        
+        key = "CONDOR_LOCATION";
+        if( m.containsKey( key ) ){
+            env.construct( key, m.get( key ) );
+        }
+        
+        return constructTCEntryFromEnvProfiles( env );
+    }
+    
+    /**
+     * Returns a tranformation catalog entry object constructed from the environment
+     * 
+     * An entry is constructed if either of the following environment variables
+     * are defined
+     * 1) CONDOR_HOME
+     * 2) CONDOR_LOCATION
+     * 
+     * CONDOR_HOME takes precedence over CONDOR_LOCATION
+     * 
+     * @param env  the environment profiles.
+     *
+     *
+     * @return  the entry constructed else null if environment variables not defined.
+     */
+    private TransformationCatalogEntry constructTCEntryFromEnvProfiles( ENV env ) {
+        TransformationCatalogEntry entry = null;
+        
+        //check if either CONDOR_HOME or CONDOR_LOCATION is defined
+        String key = null;
+        if( env.containsKey( "CONDOR_HOME") ){
+            key = "CONDOR_HOME";
+        }
+        else if( env.containsKey( "CONDOR_LOCATION") ){
+            key = "CONDOR_LOCATION";
+        }
+        
+        if( key == null ){
+            //environment variables are not defined.
+            return entry;
+        }
+        
+        mLogger.log( "Constructing path to dagman on basis of env variable " + key,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        entry = new TransformationCatalogEntry();
+        entry.setLogicalTransformation( CONDOR_DAGMAN_NAMESPACE,
+                                        CONDOR_DAGMAN_LOGICAL_NAME,
+                                        null );
+        entry.setType( TCType.INSTALLED );
+        entry.setResourceId( "local" );
+        
+        //construct path to condor dagman
+        StringBuffer path = new StringBuffer();
+        path.append( env.get( key ) ).append( File.separator ).
+             append( "bin" ).append( File.separator).
+             append( "condor_dagman" );
+        entry.setPhysicalTransformation( path.toString() );
+        
+        return entry;
+    }
+
 
 
     /**
@@ -398,6 +792,8 @@ public class SUBDAXGenerator{
         
         return destinationDAX.toString();
     }
+    
+    
     
     /**
      * Returns the metadata stored in the root adag element in the DAX

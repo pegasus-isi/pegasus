@@ -415,9 +415,20 @@ public class CondorGenerator extends Abstract {
             
                 printDagString( sinfo.dagmanVariables.toString( sinfo.getName()) );
             }
-            else {
-                //write out a condor submit file
-                generateCode( dag, sinfo );
+            else{ //normal jobs and subdax jobs
+                
+                if( sinfo.typeRecursive() ){
+                    SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
+                    subdaxGen.initialize( mBag, mDagWriter );
+                    sinfo = subdaxGen.generateCode( sinfo );
+                }
+                
+                if( sinfo != null ){
+                    //the submit file for the job needs to be written out
+                    //write out a condor submit file
+                    generateCode( dag, sinfo );
+                }
+                
                 //write out all the dagman profile variables associated
                 //with the job to the .dag file.
                 printDagString( sinfo.dagmanVariables.toString( sinfo.getName()) );
@@ -513,13 +524,7 @@ public class CondorGenerator extends Abstract {
             return;
         }
         */
-        if( job.typeRecursive() ){
-            SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
-            subdaxGen.initialize( mBag, mDagWriter );
-            subdaxGen.generateCode( job );
-            
-            return;
-        }
+        
 
         // intialize the print stream to the file
         PrintWriter writer = null;
