@@ -413,6 +413,8 @@ public class SUBDAXGenerator{
             
             //try to construct from the TC
             if( entry == null ){
+                mLogger.log( "Unable to construct path to dagman from the environment. CONDOR_HOME and CONDOR_LOCATION not set.",
+                             LogManager.DEBUG_MESSAGE_LEVEL );
                 entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
                                                  job.version, job.getSiteHandle(),
                                                  TCType.INSTALLED);
