@@ -33,6 +33,11 @@ import java.lang.reflect.InvocationTargetException;
  * @version $Revision$
  */
 public class DAXCallbackFactory {
+    
+    /**
+     * The default callback for label partitioning.
+     */
+    public static String LABEL_CALLBACK_CLASS = "DAX2LabelGraph";
 
     /**
      * Package to prefix "just" class names with.
@@ -43,10 +48,12 @@ public class DAXCallbackFactory {
     /**
      * Loads the implementing class corresponding to the type specified by the user.
      * The properties object passed should not be null. The callback that is
-     * loaded, is the one referred to in the properties by the user.
+     * loaded, is the one referred to in the properties by the user, unless the
+     * type of partitioning is label. In that case DAX2LabelGraph is loaded always.
      *
      * @param properties the <code>PegasusProperties</code> object containing all
      *                   the properties required by Pegasus.
+     * @param type       the type of partitioning the user specified.
      * @param dax        the path to the DAX file that has to be parsed.
      *
      * @return the instance of the class implementing this interface.
@@ -57,11 +64,22 @@ public class DAXCallbackFactory {
      * @see #DEFAULT_PACKAGE_NAME
      * @see org.griphyn.cPlanner.common.PegasusProperties#getDAXCallback()
      */
-    public static Callback loadInstance( PegasusProperties properties,
+    public static Callback loadInstance( String type,
+                                         PegasusProperties properties,
                                          String dax )
         throws DAXCallbackFactoryException{
 
-        return loadInstance( properties, dax, properties.getDAXCallback());
+        String callbackClass = null;
+        
+        //for type label always load DAX2LabelGraph
+        if ( type.equalsIgnoreCase("label") ){
+            callbackClass = LABEL_CALLBACK_CLASS; //graph with labels populated
+        }else{
+            //pick up the value passed in properties
+            callbackClass = properties.getPartitionerDAXCallback();
+        }
+        
+        return loadInstance( properties,  dax, callbackClass );
 
     }
 
@@ -83,9 +101,9 @@ public class DAXCallbackFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static  Callback loadInstance(PegasusProperties properties,
-                                         String dax,
-                                         String className)
+    public static  Callback loadInstance( PegasusProperties properties,
+                                          String dax,
+                                          String className)
         throws DAXCallbackFactoryException{
 
         //try loading the class dynamically

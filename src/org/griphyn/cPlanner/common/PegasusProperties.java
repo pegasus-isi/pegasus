@@ -2072,15 +2072,15 @@ public class PegasusProperties {
     /**
      * Returns the DAXCallback that is to be used while parsing the DAX.
      *
-     * Referred to by the "pegasus.parser.dax.callback" property.
+     * Referred to by the "pegasus.partitioner.parser.dax.callback" property.
      *
      * @return the value specified in the properties file, else
      *         DEFAULT_DAX_CALLBACK
      *
      * @see #DEFAULT_DAX_CALLBACK
      */
-    public String getDAXCallback(){
-        return mProps.getProperty("pegasus.parser.dax.callback",DEFAULT_DAX_CALLBACK);
+    public String getPartitionerDAXCallback(){
+        return mProps.getProperty("pegasus.partitioner.parser.dax.callback",DEFAULT_DAX_CALLBACK);
     }
 
     /**

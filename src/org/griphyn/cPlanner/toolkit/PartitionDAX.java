@@ -225,9 +225,9 @@ public class PartitionDAX extends Executable {
         dir.mkdirs();
 
         //build up the partition graph
-        String callbackClass = ( type.equalsIgnoreCase("label") ) ?
-                                "DAX2LabelGraph": //graph with labels populated
-                                "DAX2Graph";
+        //String callbackClass = ( type.equalsIgnoreCase("label") ) ?
+        //                        "DAX2LabelGraph": //graph with labels populated
+        //                        "DAX2Graph";
 
 
         //load the appropriate partitioner
@@ -236,9 +236,9 @@ public class PartitionDAX extends Executable {
         String daxName          = null;
         int state = 0;
         try{
-            callback = DAXCallbackFactory.loadInstance( properties,
-                                                        daxFile,
-                                                        callbackClass );
+            callback = DAXCallbackFactory.loadInstance( type,
+                                                        properties,
+                                                        daxFile );
 
             //set the appropriate key that is to be used for picking up the labels
             if( callback instanceof DAX2LabelGraph ){
