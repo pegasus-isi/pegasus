@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.classes.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 
 import org.griphyn.common.classes.Arch;
@@ -41,6 +42,7 @@ import java.io.File;
 import java.io.Writer;
 import java.io.IOException;
 import org.griphyn.cPlanner.namespace.Namespace;
+import org.griphyn.cPlanner.namespace.VDS;
         
 /**
  * This data class describes a site in the site catalog.
@@ -485,6 +487,17 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return value if set else null
      */
     public String getKickstartPath() {
+        
+        //check to see if user specified gridstart.path profile 
+        //in the site catalog.
+        String profile = (String) this.getProfiles().get( NAMESPACES.pegasus ).get( VDS.GRIDSTART_PATH_KEY );
+        if( profile != null ){
+            //return the path specified in profile
+            return profile;
+        }
+        
+        //try to construct the default path on basis of
+        //PEGASUS_HOME environment variable.
         String home = this.getPegasusHome();
         if( home == null ){
             return null;
