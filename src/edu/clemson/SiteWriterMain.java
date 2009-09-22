@@ -83,6 +83,7 @@ public class SiteWriterMain {
 	       {
 		     	
 		    	Runtime runtime=Runtime.getRuntime();  
+                        System.out.println( "Command to be run is \n" + command );
 		        Process process=runtime.exec(command);
 	
 		        StreamGobbler outputGobbler=new StreamGobbler(process.getInputStream(),this.outputArray);
