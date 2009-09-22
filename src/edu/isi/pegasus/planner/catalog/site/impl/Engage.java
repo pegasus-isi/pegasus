@@ -271,6 +271,8 @@ public class Engage implements SiteCatalog {
         
         
         try{
+            mLogger.log( "condor_status command is \n " + Engage.CONDOR_STATUS_COMMAND,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
             Process p = r.exec( Engage.CONDOR_STATUS_COMMAND );
 
             //spawn off the gobblers
