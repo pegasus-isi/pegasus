@@ -137,6 +137,11 @@ public class PegasusFile extends Data {
      * in the dax.
      */
     protected BitSet mFlags;
+    
+    /**
+     * The size of the file.
+     */
+    protected double mSize;
 
 
     /**
@@ -150,6 +155,7 @@ public class PegasusFile extends Data {
         //and transfers are mandatory
         mType        = DATA_FILE;
         mTransferFlag= this.TRANSFER_MANDATORY;
+        mSize        = -1;
     }
 
     /**
@@ -165,6 +171,7 @@ public class PegasusFile extends Data {
         //and transfers are mandatory
         mType        = DATA_FILE;
         mTransferFlag= this.TRANSFER_MANDATORY;
+        mSize        = -1;
     }
 
     /**
@@ -186,6 +193,29 @@ public class PegasusFile extends Data {
         mLogicalFile = lfn;
     }
 
+    /**
+     * Sets the size for the file.
+     * 
+     * @param size  the size of the file.
+     */
+    public void setSize( String size ) {
+        if( size == null ){
+            mSize = -1;
+        }
+        else{
+            mSize = Double.parseDouble( size );
+        }
+    }
+
+    /**
+     * Returns the size for the file. Can be -1 if not set.
+     * 
+     * @return size if set else -1.
+     */
+    public double getSize(){
+        return mSize;
+    }
+    
     /**
      * Returns whether the type of file value is valid or not.
      *
@@ -480,6 +510,7 @@ public class PegasusFile extends Data {
         pf.mFlags        = (BitSet)this.mFlags.clone();
         pf.mType         = mType;
         pf.mTransferFlag = mTransferFlag;
+        pf.mSize         = mSize;
         return pf;
     }
 
@@ -517,6 +548,7 @@ public class PegasusFile extends Data {
     public  String toString(){
         String st = "\n Logical Name :" + this.mLogicalFile +
                     "\n Type         :" + typeToString() +
+                    "\n Size         :" + mSize +
                     "\n Transient Flags (transfer,optional,dontRegister):" +
                     " ( ";
 
@@ -532,4 +564,4 @@ public class PegasusFile extends Data {
         return st;
     }
 
-    }
+}

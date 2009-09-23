@@ -296,6 +296,11 @@ public class SubInfo extends Data implements GraphNodeContent{
      * from the final child node.
      */
     public int level;
+    
+    /**
+     * The expected runtime for a job.
+     */
+    private double mRuntime;
 
     /**
      * The relative path to the submit directory for the job, from the workflows
@@ -335,6 +340,7 @@ public class SubInfo extends Data implements GraphNodeContent{
         vdsNS            = new VDS();
         jobClass         = UNASSIGNED_JOB;
         level            = -1;
+        mRuntime = -1;
 //        submitDirectory  = null;
     }
 
@@ -371,6 +377,7 @@ public class SubInfo extends Data implements GraphNodeContent{
         vdsNS            = job.vdsNS;
         jobClass         = job.getJobType();
         level            = job.level;
+        mRuntime = job.mRuntime;
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -420,11 +427,69 @@ public class SubInfo extends Data implements GraphNodeContent{
         newSub.dvVersion    = this.dvVersion;
 
         newSub.level        = this.level;
+        newSub.mRuntime = this.mRuntime;
 //        newSub.submitDirectory = this.submitDirectory == null ? null : new String(this.submitDirectory);
 
         return newSub;
     }
+    
+    /**
+     * Sets the expected runtime for the job.
+     * 
+     * @param runtime  the runtime for the job.
+     */
+    public void setRuntime( String  runtime ) {
+        if( runtime == null ){
+            mRuntime = -1;
+        }
+        else{
+            mRuntime = Double.parseDouble( runtime );
+        }
+    }
 
+    /**
+     * Sets the expected runtime for the job.
+     * 
+     * @param runtime  the runtime for the job.
+     */
+    public void setRuntime( double  runtime ) {
+        mRuntime = runtime;
+    }
+
+    /**
+     * Returns the expected runtime for the job that is set using the
+     * setRuntime method.
+     * 
+     * @param runtime  the runtime for the job.
+     */
+    public double getRuntime( ) {
+        return mRuntime;
+    }
+    
+    /**
+     * Returns the runtime associated with the job. If the runtime variable with
+     * the job is set to -ve then, it also attempts to check on the value
+     * specified in Pegasus Profile key runtime for the job. If there is 
+     * a value associated with profile key, that the runtime value is set to that
+     * using setRuntime( String ) function.
+     * 
+     * @return the expected runtime.
+     * @see org.griphyn.cPlanner.namespace.VDS.RUNTIME_KEY
+     */
+    public double computeRuntime( ){
+        if( mRuntime < 0 ){
+            //attempt to look up the value from pegasus profile
+            String value = this.vdsNS.getStringValue(  VDS.RUNTIME_KEY );
+            if( value == null ){
+                return -1;
+            }
+            else{
+                setRuntime( value );
+            }
+        }
+        return mRuntime;
+    }
+    
     /**
      * Set the universe associated with the job.
      *
@@ -1399,6 +1464,7 @@ public class SubInfo extends Data implements GraphNodeContent{
         append( sb, "Level", new Integer(this.level).toString() , newline );
         append( sb, "Job Type Description", getJobTypeDescription(this.jobClass) , newline );
         append( sb, "Job Id" , this.jobID , newline );
+        append( sb, "Runtime", this.mRuntime, newline  );
         append( sb, "Executable" , this.executable , newline );
         append( sb, "Condor Universe" , this.condorUniverse , newline );
         append( sb, "Globus Scheduler" , this.globusScheduler , newline );

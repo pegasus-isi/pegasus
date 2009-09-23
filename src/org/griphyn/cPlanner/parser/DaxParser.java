@@ -733,6 +733,7 @@ public class DaxParser extends Parser {
         String linkType = attrs.getValue("", "link");
         String isTemp   = attrs.getValue("", "isTemporary");
         String type     = attrs.getValue("", "type");
+        String size     = attrs.getValue("", "size" );
         
         mUsesLinkType = linkType;
         
@@ -788,6 +789,9 @@ public class DaxParser extends Parser {
         if( type != null )
             pf.setType( type );
 
+        //handle the size of file
+        pf.setSize( size );
+        
         //store for later reference in endUses method
         mUsesPegasusFile = pf;
         
@@ -982,6 +986,7 @@ public class DaxParser extends Parser {
         
         
         mCurrentJobSubInfo.setLogicalID( attrs.getValue("", "id") );
+        mCurrentJobSubInfo.setRuntime( attrs.getValue("","runtime") );
         
         handleJobTagStart( mCurrentJobSubInfo );
     }
