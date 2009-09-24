@@ -18,6 +18,9 @@ package org.griphyn.cPlanner.engine;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+
+import edu.isi.pegasus.common.logging.LogManager;
+
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.NameValue;
@@ -26,7 +29,6 @@ import org.griphyn.cPlanner.classes.ReplicaLocation;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.Utility;
@@ -43,11 +45,10 @@ import org.griphyn.cPlanner.selector.replica.ReplicaSelectorFactory;
 import org.griphyn.cPlanner.transfer.Refiner;
 import org.griphyn.cPlanner.transfer.refiner.RefinerFactory;
 
+import org.griphyn.cPlanner.engine.createdir.Implementation;
+
 import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
-
-import org.griphyn.common.catalog.replica.ReplicaFactory;
-
 
 import org.griphyn.common.util.FactoryException;
 
@@ -69,7 +70,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.Properties;
-
 
 
 
@@ -123,15 +123,6 @@ public class TransferEngine extends Engine {
      * reduced Dag, which is got from the Reduction Engine.
      */
     private ADag mDag;
-
-    /**
-     * The original Dag object constructed after running the DaxParser. This is
-     * required to transfer files to the output pool for any leaf jobs that may
-     * have been deleted.
-     */
-//    private ADag mOriginalDag;
-
-
 
     /**
      * The bridge to the Replica Catalog.
@@ -211,6 +202,11 @@ public class TransferEngine extends Engine {
      */
     private boolean mWorkerNodeExecution;
 
+    /**
+     * The name of the s3 bucket being used in case of S3 execution.
+     */
+    private String mS3BucketURL;
+    
 
     /**
      * Overloaded constructor.
@@ -222,9 +218,6 @@ public class TransferEngine extends Engine {
     public TransferEngine( ADag reducedDag,
                            Vector vDelLJobs,
                            PegasusBag bag ){
-//                           PegasusProperties properties,
-//                           PlannerOptions options ) {
-        //call the super class constructor for initializations
         super( bag );
 
         
@@ -239,6 +232,8 @@ public class TransferEngine extends Engine {
         mDag = reducedDag;
         mvDelLeafJobs = vDelLJobs;
 
+        mS3BucketURL = getS3BucketURL( bag );
+        
         try{
             mTXRefiner = RefinerFactory.loadInstance( reducedDag,
                                                       bag );
@@ -274,6 +269,25 @@ public class TransferEngine extends Engine {
     public boolean isSiteThirdParty(String site, int type) {
 
         return mTXRefiner.isSiteThirdParty(site,type);
+    }
+
+    /**
+     * Returns the name of the bucket in S3 that is being used in case of
+     * execution on EC2. 
+     * 
+     * @param bag   the bag of initialization objects.
+     * 
+     * @return the bucket name, else null if execution is not on the cloud.
+     */
+    private String getS3BucketURL(PegasusBag bag) {
+        
+        Implementation createDirImpl = 
+                CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
+        if( createDirImpl instanceof org.griphyn.cPlanner.engine.createdir.S3 ){
+            return ((org.griphyn.cPlanner.engine.createdir.S3)createDirImpl).getBucketNameURL();
+        }
+    
+        return null;
     }
 
    
@@ -315,10 +329,6 @@ public class TransferEngine extends Engine {
         Graph workflow = Adapter.convert( mDag );
 
         //go through each job in turn
-//        Enumeration eSubs = mDagSubInfos.elements();
-//        while (eSubs.hasMoreElements() && counter < noOfJobs) {
-//            counter++;
-//            currentJob = (SubInfo) eSubs.nextElement();
 
         boolean stageOut = (( outputSite != null ) && ( outputSite.trim().length() > 0 ));
 
@@ -536,45 +546,7 @@ public class TransferEngine extends Engine {
     }
 
 
-    /**
-     * Tracks the files created by a job in the Transient Replica Catalog.
-     *
-     * @param job  the job whose input files need to be tracked.
-     */
-    protected void trackInTransientRC( SubInfo job ){
-
-
-        //check if there is a remote initialdir set
-        String path  = job.vdsNS.getStringValue(
-                                                 VDS.REMOTE_INITIALDIR_KEY );
-
-//        SiteInfo ePool = mPoolHandle.getPoolEntry( job.getSiteHandle(), "vanilla" );
-        SiteCatalogEntry ePool = mSiteStore.lookup( job.getSiteHandle() );
-        if ( ePool == null ) {
-            this.poolNotFoundMsg( job.getSiteHandle(), "vanilla" ) ;
-            mLogger.log( mLogMsg, LogManager.ERROR_MESSAGE_LEVEL );
-            throw new RuntimeException( mLogMsg );
-        }
-
-
-        for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
-            PegasusFile pf = (PegasusFile) it.next();
-            String lfn = pf.getLFN();
-
-            //definite inconsitency as url prefix and mount point
-            //are not picked up from the same server
-            StringBuffer execURL = new StringBuffer();
-            FileServer server = ePool.getHeadNodeFS().selectScratchSharedFileServer();
-            execURL.append( server.getURLPrefix() ).
-                    append( mSiteStore.getWorkDirectory( job.getSiteHandle(), path ) ).
-                    append( File.separatorChar ).append( lfn );
-
-            //write out the exec url to the cache file
-            trackInTransientRC( lfn, execURL.toString(), job.getSiteHandle() );
-
-        }
-    }
-
+    
     /**
      * Constructs the FileTransfer object on the basis of the transiency
      * information. If the transient flag for transfer is set, the destURL for the
@@ -1037,8 +1009,8 @@ public class TransferEngine extends Engine {
                 //the selected replica already exists on
                 //the compute site.  we can bypass first level
                 //staging of the data
-                //we add into transient RC the source URL
-                trackInTransientRC( lfn, sourceURL, job.getSiteHandle() );
+                //we add into transient RC the source URL without any modifications
+                trackInTransientRC( lfn, sourceURL, job.getSiteHandle(), false );
                 continue;
             }
             else{
@@ -1322,21 +1294,92 @@ public class TransferEngine extends Engine {
         }
 
     }
-
-
+    
+    
     /**
-     * Inserts an entry into the Transient RC.
+     * Tracks the files created by a job in the Transient Replica Catalog.
+     *
+     * @param job  the job whose input files need to be tracked.
+     */
+    protected void trackInTransientRC( SubInfo job ){
+
+
+        //check if there is a remote initialdir set
+        String path  = job.vdsNS.getStringValue(
+                                                 VDS.REMOTE_INITIALDIR_KEY );
+
+//        SiteInfo ePool = mPoolHandle.getPoolEntry( job.getSiteHandle(), "vanilla" );
+        SiteCatalogEntry ePool = mSiteStore.lookup( job.getSiteHandle() );
+        if ( ePool == null ) {
+            this.poolNotFoundMsg( job.getSiteHandle(), "vanilla" ) ;
+            mLogger.log( mLogMsg, LogManager.ERROR_MESSAGE_LEVEL );
+            throw new RuntimeException( mLogMsg );
+        }
+
+
+        for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
+            PegasusFile pf = (PegasusFile) it.next();
+            String lfn = pf.getLFN();
+
+            //definite inconsitency as url prefix and mount point
+            //are not picked up from the same server
+            StringBuffer execURL = new StringBuffer();
+            FileServer server = ePool.getHeadNodeFS().selectScratchSharedFileServer();
+            execURL.append( server.getURLPrefix() ).
+                    append( mSiteStore.getWorkDirectory( job.getSiteHandle(), path ) ).
+                    append( File.separatorChar ).append( lfn );
+
+            
+            trackInTransientRC( lfn, execURL.toString(), job.getSiteHandle() );
+
+        }
+    }
+
+
+
+    
+    /**
+     * Inserts an entry into the Transient RC. It modifies the PFN if the
+     * workflow is running on the cloud and S3 is being used for storage..
      *
      * @param lfn  the logical name of the file.
      * @param pfn  the pfn
      * @param site the site handle
      */
-    private void trackInTransientRC( String lfn, String pfn, String site){
+    private void trackInTransientRC( String lfn, 
+                                     String pfn,
+                                     String site ){
 
-        //check if the cache handle is initialized
-        /*if( mTransientRC == null)
-            this.initializeTransientRC();*/
+        this.trackInTransientRC( lfn, pfn, site, true );
+    }
+    
+    /**
+     * Inserts an entry into the Transient RC. It modifies the PFN if the
+     * workflow is running on the cloud and S3 is being used for storage, 
+     * dependant on the modifyURL parameter passed.
+     *
+     * @param lfn  the logical name of the file.
+     * @param pfn  the pfn
+     * @param site the site handle
+     * @param modifyURL whether to modify URL in case of S3 or not.
+     */
+    private void trackInTransientRC( String lfn, 
+                                     String pfn,
+                                     String site, 
+                                     boolean modifyURL ){
 
+        if( this.mS3BucketURL != null ){
+            //modify the PFN only for non raw input files.
+            //This takes care of the case, where
+            //the data already might be on the cloud , and first level 
+            //staging is bypassed.
+            if( modifyURL ){
+                StringBuffer execURL = new StringBuffer();
+                execURL.append( mS3BucketURL ).append( File.separatorChar ).append( lfn );
+                pfn = execURL.toString();
+            }
+        }
+        
         mTransientRC.insert( lfn, pfn, site );
     }
 
@@ -1352,7 +1395,7 @@ public class TransferEngine extends Engine {
      *
      * @return    String corresponding to the mount point if the pool is found.
      *            null if pool entry is not found.
-     */
+     *//*
     public String getStorageMountPoint( SiteCatalogEntry site ) {
         String storageDir = mStorageDir;
         String mount_point = storageDir;
@@ -1389,7 +1432,7 @@ public class TransferEngine extends Engine {
 
         return mount_point;
 
-    }
+    }*/
 
 
 }

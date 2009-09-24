@@ -148,6 +148,17 @@ public class S3 implements Implementation {
     }
     
     /**
+     * Return the s3 accessible URL for the bucket created by this implementation.
+     * 
+     * @return
+     */
+    public String getBucketNameURL(){
+        StringBuffer url = new StringBuffer();
+        url.append( "s3://" ).append( mBucketName );
+        return url.toString();
+    }
+    
+    /**
      * It creates a make directory job that creates a directory on the remote pool
      * using the perl executable that Gaurang wrote. It access mkdir underneath.
      * 
