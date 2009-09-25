@@ -573,7 +573,7 @@ class DAX:
 			indentation = ''.join([indent for x in range(0,level)])
 			
 			xml.write(indentation)
-			xml.write(u'<child ref="%s"/>\n' % self._child.getID())
+			xml.write(u'<child ref="%s">\n' % self._child.getID())
 			for parent in self._parents:
 				xml.write(indentation)
 				xml.write(indent)
