@@ -704,7 +704,7 @@ sub process ($) {
 	    # found a retry, save maxed-out retries for later...
 	    $main::flag{$1}=$3 if ( $2 == $3 );
 
-	} elsif ( /\(condor_DAGMAN\) EXITING WITH STATUS (\d+)$/ ) {
+	} elsif ( /\(condor_DAGMAN\) [\w\s]+ EXITING WITH STATUS (\d+)$/ ) {
 	    # DAG finished -- done parsing
 	    $main::terminate = $1;
 	    log( 'DAGMan finished with exit code ', $main::terminate );
