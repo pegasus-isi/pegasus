@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.catalog.SiteCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
+import edu.isi.pegasus.planner.catalog.site.classes.LocalSiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
@@ -84,6 +85,16 @@ public class OSGMM implements SiteCatalog {
      * The default VO to use to query the condor collector.
      */
     public static final String DEFAULT_VO = "ligo";
+    
+    /**
+     * The property key without the pegasus prefix'es to get the grid.
+     */
+    public static final String DEFAULT_GRID_PROPERTY_KEY = "osgmm.grid";
+    
+    /**
+     * The default Grid to retreive the sites for.
+     */
+    public static final String DEFAULT_GRID = "osg";
     
     
     /**
@@ -182,11 +193,17 @@ public class OSGMM implements SiteCatalog {
      * The VO to which the user belongs to.
      */
     private String mVO;
+    
+    /**
+     * The grid to which the user belongs to.
+     */
+    private String mGrid;
 
     public OSGMM() {
         mLogger = LogManagerFactory.loadSingletonInstance();
         mSiteStore = new SiteStore();
         mVO        = OSGMM.DEFAULT_VO;
+        mGrid      = OSGMM.DEFAULT_GRID;
     }
 
     /* (non-Javadoc)
@@ -251,6 +268,11 @@ public class OSGMM implements SiteCatalog {
             }
         }
         
+        //always add local site.
+        mLogger.log( "Site LOCAL . Creating default entry" , LogManager.INFO_MESSAGE_LEVEL );
+        mSiteStore.addEntry( LocalSiteCatalogEntry.create( mVO, mGrid ) );
+        result++;
+        
         return result;
     }
     
@@ -300,19 +322,20 @@ public class OSGMM implements SiteCatalog {
         //String collectorHost = "engage-central.renci.org";
         String collectorHost = props.getProperty( OSGMM.DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY,
                                                   OSGMM.DEFAULT_CONDOR_COLLECTOR);
-        String vo = props.getProperty( OSGMM.DEFAULT_VO_PROPERTY_KEY,
+        mVO = props.getProperty( OSGMM.DEFAULT_VO_PROPERTY_KEY,
                                        OSGMM.DEFAULT_VO  );
+        mGrid = props.getProperty( OSGMM.DEFAULT_GRID_PROPERTY_KEY, OSGMM.DEFAULT_GRID );
         boolean onlyOSGMMValidatedSites = Boolean.parse( props.getProperty( OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES_PROPERTY_KEY),
                                                          OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES  );
         
         mLogger.log( "The Condor Collector Host is " + collectorHost, 
                      LogManager.DEBUG_MESSAGE_LEVEL );
-        mLogger.log( "The VO is " + vo, 
+        mLogger.log( "The VO is " + mVO, 
                      LogManager.DEBUG_MESSAGE_LEVEL );
         mLogger.log( "Retrieve only validated sites " + onlyOSGMMValidatedSites,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
-        String constraint = "StringlistIMember(\"VO:" + vo + "\";GlueCEAccessControlBaseRule)";
+        String constraint = "StringlistIMember(\"VO:" + mVO + "\";GlueCEAccessControlBaseRule)";
         if (onlyOSGMMValidatedSites) {
             constraint += " && SiteVerified==True";
         }
