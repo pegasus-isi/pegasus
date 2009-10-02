@@ -154,7 +154,7 @@ public class SiteWriterMain {
 		    System.out.println("Discovering sites from RENCI, writing to site catalog\n");
 		    try 
 		    {
-				new SiteCatalogGenerator(outputArray,fileWriter).generateSiteCatalog();
+				new SiteCatalogGenerator(outputArray,fileWriter).generateSiteCatalog( "engage" );
 			} 
 		    catch (Exception e) 
 		    {

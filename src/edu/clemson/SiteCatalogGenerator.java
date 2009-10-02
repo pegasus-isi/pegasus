@@ -24,6 +24,8 @@ import java.io.IOException;
 
 import java.text.SimpleDateFormat;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
@@ -47,6 +49,12 @@ public class SiteCatalogGenerator {
     private Set<String> mSites;
     
     /**
+     * Maps OSG site handles to a numeric index
+     */
+    private Map<String,Integer> mSiteNameToIndex;
+    
+    /**
+     * Overloaded Constructor.
      * 
      * @param outputArray
      * @param fileWriter
@@ -54,6 +62,7 @@ public class SiteCatalogGenerator {
     public SiteCatalogGenerator(ArrayList<String> outputArray, FileWriter fileWriter) {
         this.outputArray = outputArray;
         this.fileWriter = fileWriter;
+        this.mSiteNameToIndex = new HashMap<String,Integer>();
     }
     
     /**
@@ -69,7 +78,7 @@ public class SiteCatalogGenerator {
      */
     public SiteCatalogGenerator( ArrayList<String> outputArray){
         this.outputArray = outputArray;
-        
+        this.mSiteNameToIndex = new HashMap<String,Integer>();
     }
     
     
@@ -81,20 +90,21 @@ public class SiteCatalogGenerator {
      * The site handle * is a special handle designating all sites are to be 
      * loaded.
      * 
-     * @param  sites       the sites to be parsed.
+     * @param  sites  the sites to be parsed.
+     * @param  vo     the VO to which the user belongs to.   
      * 
      * 
      * @return List of SiteCatalogEntry objects containing the site information for loaded
      *         sites.
      */
-    public List<Site> loadSites( List<String> sites )  {
+    public List<Site> loadSites( List<String> sites, String vo )  {
         List<Site> result = new ArrayList<Site>();
         this.mSites  = new HashSet<String>( sites );
         boolean all = mSites.contains( "*" );
         for (int i = 0; !outputArray.isEmpty() && i < outputArray.size(); i++) {
             String line = outputArray.get(i);
             if (!(line == null || line.equals(""))) {
-                Site site = parseSiteInfo(line);
+                Site site = parseSiteInfo(line, vo);
                 if( all || mSites.contains( site.siteName ) ){
                     result.add( site );
                 }
@@ -102,36 +112,29 @@ public class SiteCatalogGenerator {
         }
         return result;
     }
-    
 
-    private Site parseSiteInfo(String line) {
+
+    private Site parseSiteInfo(String line, String vo) {
         Site site = new Site();
         try {
             String[] siteInfoArray = new String[10];
 
-            int siteInfoArrayIndex = 0;
+            // split the line into individual fields
+            siteInfoArray = line.split(";");
 
-            site.siteName = siteInfoArray[0];
-
-            String line2 = line;
-            int startPos = 0, endPos = 0;
-            while (!line2.equals("")) {
-                endPos = line2.indexOf(";");
-                siteInfoArray[siteInfoArrayIndex++] = line2.substring(startPos, endPos);
-
-                line2 = line2.substring(endPos + 1); //endPos refers to ";"
-                startPos = 0;
-
-            }
-
-            if (siteInfoArray[0] != null && !siteInfoArray[0].equals("")) {
-                site.siteName = siteInfoArray[0];
-            } else {
+            // do we have a valid site name?
+            if (siteInfoArray[0] == null || siteInfoArray[0].equals("")) {
                 return site;
             }
+
+            // Site names (e.g. CIT_CMS_T2) are not unique in OSG as a site can have
+            // multiple gatekeepers. We make them unique by appending the unique CE name.
+            //site.siteName = siteInfoArray[0]  + "_" + siteInfoArray[1]; 
+            site.siteName = getSiteName( siteInfoArray[0]  );
+
             String globusLocation = null;
-            if (siteInfoArray[1] != null && !siteInfoArray[1].equals("") && siteInfoArray[1].lastIndexOf("/") != -1 && !siteInfoArray[1].equals("UNAVAILABLE")) {
-                globusLocation = siteInfoArray[1];
+            if (siteInfoArray[2] != null && !siteInfoArray[2].equals("") && siteInfoArray[2].lastIndexOf("/") != -1 && !siteInfoArray[2].equals("UNAVAILABLE")) {
+                globusLocation = siteInfoArray[2];
             } else {
                 //System.out.println(site.siteName+": Error fetching globusLocation from ... Ignoring site");
                 return site;
@@ -156,40 +159,45 @@ public class SiteCatalogGenerator {
                 site.gridlaunch = site.pegasusHome + "/bin/kickstart";
             }
 
-            if (siteInfoArray[2] != null && !siteInfoArray[2].equals("")) {
-                String jobmanager = siteInfoArray[2];
+            if (siteInfoArray[3] != null && !siteInfoArray[3].equals("")) {
+                String jobmanager = siteInfoArray[3];
                 site.VanillaUniverseJobManager = jobmanager;
                 site.transferUniverseJobManager = jobmanager.substring(0, jobmanager.indexOf("/jobmanager")) + "/jobmanager-fork";
             }
 
-            if (siteInfoArray[3] != null && !siteInfoArray[3].equals("")) {
-                site.workingDirectory = siteInfoArray[3];
-
-            } else {
-                site.workingDirectory = "/tmp";
+            if (siteInfoArray[5] != null && !siteInfoArray[5].equals("")) {
+                site.gridFtpUrl = "gsiftp" + "://" + siteInfoArray[5];
             }
 
-            site.gridFtpStorage = site.workingDirectory;
-            if (siteInfoArray[4] != null && !siteInfoArray[4].equals("")) {
-                site.gridFtpUrl = "gsiftp"/*siteInfoArray[4]*/ + "://" + siteInfoArray[4];
-            }
-
-            if ((siteInfoArray[5] != null && !siteInfoArray[5].equals("")) &&
-                    !siteInfoArray[5].equals("UNAVAILABLE")) {
-                site.app = siteInfoArray[5];
-            }
             if ((siteInfoArray[6] != null && !siteInfoArray[6].equals("")) &&
                     !siteInfoArray[6].equals("UNAVAILABLE")) {
-                site.data = siteInfoArray[6];
+                site.app = siteInfoArray[6] + "/" + vo;
             }
             if ((siteInfoArray[7] != null && !siteInfoArray[7].equals("")) &&
                     !siteInfoArray[7].equals("UNAVAILABLE")) {
-                site.tmp = siteInfoArray[7];
+                // $OSG_DATA/{vo_name}/tmp/{hostname}
+                // Respects the shared nature (across VO, and across VO members) of OSG_DATA
+                // by using a VO specific temporary work directory. Also, for sites with
+                // multiple gatekeepers, keep separate work directories for each gatekeeper.
+                site.data = siteInfoArray[7] + "/" + vo + "/tmp/" + siteInfoArray[1]; 
             }
             if ((siteInfoArray[8] != null && !siteInfoArray[8].equals("")) &&
                     !siteInfoArray[8].equals("UNAVAILABLE")) {
-                site.wntmp = siteInfoArray[8];
+                // is this the same as site.data?
+                site.tmp = siteInfoArray[8] + "/" + vo + "/tmp/" + siteInfoArray[1];
             }
+            if ((siteInfoArray[9] != null && !siteInfoArray[9].equals("")) &&
+                    !siteInfoArray[9].equals("UNAVAILABLE")) {
+                site.wntmp = siteInfoArray[9];
+            }
+
+            // work directory and gridFtpStorage is under OSG_DATA
+            if (site.data != null && !("").equals(site.data)) {
+                site.workingDirectory = site.data;
+            } else {
+                site.workingDirectory = "/tmp";
+            }
+            site.gridFtpStorage = site.workingDirectory;
 
 
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -198,14 +206,14 @@ public class SiteCatalogGenerator {
         return site;
     }
 
-    public void generateSiteCatalog() throws IOException {
+    public void generateSiteCatalog(String vo) throws IOException {
         //fileWriter= new FileWriter(file);
         addHeaderInformationToSiteCatalog();
         int outputArraySize = outputArray.size();
         for (int i = 0; !outputArray.isEmpty() && i < outputArraySize; i++) {
             String line = outputArray.get(i);
             if (!(line == null || line.equals(""))) {
-                Site site = parseSiteInfo(line);
+                Site site = parseSiteInfo(line, vo);
                 addSiteToCatalog(site);
             }
         }
@@ -336,6 +344,39 @@ public class SiteCatalogGenerator {
 
     }
 
+    
+    /**
+     * Returns the site handle for the site, on the basis of the OSG site handle
+     * retrieved from Ress. OSG Site names (e.g. CIT_CMS_T2) are not unique in OSG
+     * as a site can have  multiple gatekeepers. We make them unique by appending 
+     * a numeric suffix if in a site already exists in the site catalog.
+     * 
+     * @param osgSiteName    the osg site name
+     * 
+     * @return the site name to use for OSG
+     */
+    private String getSiteName( String osgSiteName ) {
+        StringBuffer name = new StringBuffer();
+        
+        //always append the osg site name
+        name.append( osgSiteName );
+        
+        //do we need to add a suffix.
+        if( mSiteNameToIndex.containsKey( osgSiteName ) ){
+            //append the suffix and update the index
+            int index = mSiteNameToIndex.get( osgSiteName );
+            name.append( "__" ).append( ++index );
+            mSiteNameToIndex.put( osgSiteName, new Integer( index ) );
+        }
+        else{
+            //the first entry for the site
+            mSiteNameToIndex.put( osgSiteName, new Integer( 0 ) );
+        }
+        
+        return name.toString();
+    }
+    
+    
     public class Site {
 
         public String siteName;

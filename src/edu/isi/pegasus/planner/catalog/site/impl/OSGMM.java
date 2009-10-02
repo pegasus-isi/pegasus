@@ -41,11 +41,13 @@ import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.LRC;
 import org.griphyn.cPlanner.classes.Profile;
+import org.griphyn.cPlanner.classes.WorkDir;
 
 import org.griphyn.common.classes.SysInfo;
 
-import org.griphyn.cPlanner.classes.WorkDir;
+import org.griphyn.common.util.Boolean;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -55,36 +57,45 @@ import java.util.Set;
 
 
 /**
- * The Engage implementation of the Site Catalog interface.
+ * The OSGMM implementation of the Site Catalog interface.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Engage implements SiteCatalog {
-
-    /**
-     * The condor status command to query the central manager.
-     */
-    private static final String CONDOR_STATUS_COMMAND = "condor_status -any -pool engage-central.renci.org " +
-            "-format %s GlueSiteName " +
-            "-format ; 1 " + // to force a semicolon, even if the attribute was not found
-            "-format %s OSGMM_Globus_Location " +
-            "-format ; 1 " +
-            "-format %s GlueCEInfoContactString " +
-            "-format ; 1 " +
-            "-format %s GlueClusterTmpDir " +
-            "-format ; 1 " +
-            "-format %s GlueCEInfoHostName " +
-            "-format ; 1 " +
-            "-format %s GlueCEInfoApplicationDir " +
-            "-format ; 1 " +
-            "-format %s GlueCEInfoDataDir " +
-            "-format ; 1 " +
-            "-format %s GlueClusterTmpDir " +
-            "-format ; 1 " +
-            "-format %s GlueClusterWNTmpDir " +
-            "-format ;\\n 1 ";
+public class OSGMM implements SiteCatalog {
     
+    /**
+     * The property key without the pegasus prefix'es to get the condor collector host.
+     */
+    public static final String DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY = "osgmm.collector.host";
+    
+    /**
+     * The default condor collector to query to
+     */
+    public static final String DEFAULT_CONDOR_COLLECTOR = "ligo-osgmm.renci.org";
+
+    
+    /**
+     * The property key without the pegasus prefix'es to get the VO.
+     */
+    public static final String DEFAULT_VO_PROPERTY_KEY = "osgmm.vo";
+    
+    /**
+     * The default VO to use to query the condor collector.
+     */
+    public static final String DEFAULT_VO = "ligo";
+    
+    
+    /**
+     * The property key without the pegasus prefix'es to get the VO.
+     */
+    public static final String DEFAULT_RETRIEVE_VALIDATED_SITES_PROPERTY_KEY = "osgmm.retrieve.validated.sites";
+    
+    /**
+     * The default VO to use to query the condor collector.
+     */
+    public static final boolean DEFAULT_RETRIEVE_VALIDATED_SITES = true;
+            
     /**
      * An adapter method that converts the Site object to the SiteInfo object
      * corresponding to the site catalog schema version 2.
@@ -132,6 +143,12 @@ public class Engage implements SiteCatalog {
         if( s.wntmp != null ){
             site.setInfo( SiteInfo.PROFILE, new Profile( Profile.ENV, "wntmp", s.wntmp ) );
         }
+        if( s.globusLocation != null ){
+            site.setInfo( SiteInfo.PROFILE, new Profile( Profile.ENV, "GLOBUS_LOCATION", s.globusLocation ) );
+            site.setInfo( SiteInfo.PROFILE, new Profile( Profile.ENV, 
+                                                         "LD_LIBRARY_PATH", 
+                                                         s.globusLocation + File.separator + "lib" ) );
+        }
         
         //set the working directory
         WorkDir dir = new WorkDir();
@@ -160,10 +177,16 @@ public class Engage implements SiteCatalog {
      * The handle to the log manager.
      */
     private LogManager mLogger;
+    
+    /**
+     * The VO to which the user belongs to.
+     */
+    private String mVO;
 
-    public Engage() {
+    public OSGMM() {
         mLogger = LogManagerFactory.loadSingletonInstance();
         mSiteStore = new SiteStore();
+        mVO        = OSGMM.DEFAULT_VO;
     }
 
     /* (non-Javadoc)
@@ -202,8 +225,10 @@ public class Engage implements SiteCatalog {
         if( this.isClosed() ){
             throw new SiteCatalogException( "Need to connect to site catalog before loading" );
         }
+        
+        // TODO: these should come from either the command line or a config file
         SiteCatalogGenerator sg = new SiteCatalogGenerator( (ArrayList)mCondorStatusOutput );
-        List<SiteCatalogGenerator.Site> sgSites = sg.loadSites( sites );
+        List<SiteCatalogGenerator.Site> sgSites = sg.loadSites( sites, mVO );
         
         int result = 0;
         for( SiteCatalogGenerator.Site s : sgSites ){
@@ -216,7 +241,7 @@ public class Engage implements SiteCatalog {
                 }
                 
                 mLogger.log( "Adding site " + s.siteName, LogManager.INFO_MESSAGE_LEVEL );
-                site = Engage.convertToSiteInfo(s);
+                site = OSGMM.convertToSiteInfo(s);
                 mSiteStore.addEntry( SiteInfo2SiteCatalogEntry.convert( site, mLogger ) );
                 result++;
             } catch (Exception ex) {
@@ -268,12 +293,63 @@ public class Engage implements SiteCatalog {
         Runtime r = Runtime.getRuntime();
         ListCallback ic = new ListCallback();
         ListCallback ec = new ListCallback();
+
+        mLogger.log( "Properties passed at connection " + props , LogManager.DEBUG_MESSAGE_LEVEL );
         
+        // TODO: these should come from either the command line or a config file
+        //String collectorHost = "engage-central.renci.org";
+        String collectorHost = props.getProperty( OSGMM.DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY,
+                                                  OSGMM.DEFAULT_CONDOR_COLLECTOR);
+        String vo = props.getProperty( OSGMM.DEFAULT_VO_PROPERTY_KEY,
+                                       OSGMM.DEFAULT_VO  );
+        boolean onlyOSGMMValidatedSites = Boolean.parse( props.getProperty( OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES_PROPERTY_KEY),
+                                                         OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES  );
+        
+        mLogger.log( "The Condor Collector Host is " + collectorHost, 
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.log( "The VO is " + vo, 
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.log( "Retrieve only validated sites " + onlyOSGMMValidatedSites,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        String constraint = "StringlistIMember(\"VO:" + vo + "\";GlueCEAccessControlBaseRule)";
+        if (onlyOSGMMValidatedSites) {
+            constraint += " && SiteVerified==True";
+        }
+        
+        String condorStatusCmd[] = {"condor_status", "-any",  "-pool", collectorHost,
+                                    "-constraint", constraint,
+                                    "-format", "%s", "GlueSiteName",
+                                    "-format", ";", "1",  // to force a semicolon, even if the attribute was not found
+                                    "-format", "%s", "GlueClusterUniqueID",
+                                    "-format", ";", "1",
+                                    "-format", "%s", "OSGMM_Globus_Location",
+                                    "-format", ";", "1",
+                                    "-format", "%s", "GlueCEInfoContactString",
+                                    "-format", ";", "1",
+                                    "-format", "%s", "GlueClusterTmpDir",
+                                    "-format", ";", "1",
+                                    "-format", "%s", "GlueCEInfoHostName",
+                                    "-format", ";", "1",
+                                    "-format", "%s", "GlueCEInfoApplicationDir",
+                                    "-format", ";", "1",
+                                    "-format", "%s", "GlueCEInfoDataDir",
+                                    "-format", ";", "1",
+                                    "-format", "%s", "GlueClusterTmpDir",
+                                    "-format", ";", "1",
+                                    "-format", "%s", "GlueClusterWNTmpDir",
+                                    "-format", ";\\n", "1"};
+
+        String cmdPretty = "";
+        for(int i=0; i < condorStatusCmd.length; i++)
+        {
+            cmdPretty += condorStatusCmd[i] + " ";
+        }
         
         try{
-            mLogger.log( "condor_status command is \n " + Engage.CONDOR_STATUS_COMMAND,
+            mLogger.log( "condor_status command is \n " + cmdPretty,
                          LogManager.DEBUG_MESSAGE_LEVEL );
-            Process p = r.exec( Engage.CONDOR_STATUS_COMMAND );
+            Process p = r.exec( condorStatusCmd );
 
             //spawn off the gobblers
             StreamGobbler ips = new StreamGobbler( p.getInputStream(), ic );
@@ -293,6 +369,9 @@ public class Engage implements SiteCatalog {
             if( status != 0){
                 mLogger.log("condor_status command  exited with status " + status,
                             LogManager.WARNING_MESSAGE_LEVEL);
+                //also dump the stderr
+                mLogger.log( "stderr for command invocation " + mCondorStatusError,
+                            LogManager.ERROR_MESSAGE_LEVEL );
             }
         }
         catch(IOException ioe){
