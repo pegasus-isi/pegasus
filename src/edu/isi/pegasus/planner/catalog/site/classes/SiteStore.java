@@ -433,7 +433,13 @@ public class SiteStore extends AbstractSiteData{
         if(jobClass == SubInfo.CREATE_DIR_JOB ){
             //the create dir jobs always run in the
             //workdir specified in the site catalog
-            return execPool.getHeadNodeFS().getScratch().getSharedDirectory().getInternalMountPoint().getMountPoint();
+            //return execPool.getHeadNodeFS().getScratch().getSharedDirectory().getInternalMountPoint().getMountPoint();
+    
+            //Related to JIRA PM-67 http://pegasus.isi.edu/jira/browse/PM-67
+            //pegasus-get-sites generates site catalog with VO specific
+            // storage mount points and work directories. These dont exist
+            //by default. Hence the job needs to be launched in /tmp
+            return File.separator + "tmp";
         }
 
         if ( mWorkDir.length() == 0 || mWorkDir.charAt( 0 ) != '/' ) {
