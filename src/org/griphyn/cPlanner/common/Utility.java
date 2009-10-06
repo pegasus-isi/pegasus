@@ -103,7 +103,7 @@ public  class Utility {
         }
         return ( u == null ) ?
             //try to do some inhouse magic
-            url.substring( url.lastIndexOf( hostName ) +
+            url.substring( url.indexOf( hostName ) +
             hostName.length() ).trim()
             :
             //malformed execption caught. most probably due to
