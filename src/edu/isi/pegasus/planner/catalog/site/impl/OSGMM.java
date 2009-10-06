@@ -323,7 +323,7 @@ public class OSGMM implements SiteCatalog {
         String collectorHost = props.getProperty( OSGMM.DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY,
                                                   OSGMM.DEFAULT_CONDOR_COLLECTOR);
         mVO = props.getProperty( OSGMM.DEFAULT_VO_PROPERTY_KEY,
-                                       OSGMM.DEFAULT_VO  );
+                                       OSGMM.DEFAULT_VO  ).toLowerCase();
         mGrid = props.getProperty( OSGMM.DEFAULT_GRID_PROPERTY_KEY, OSGMM.DEFAULT_GRID );
         boolean onlyOSGMMValidatedSites = Boolean.parse( props.getProperty( OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES_PROPERTY_KEY),
                                                          OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES  );
