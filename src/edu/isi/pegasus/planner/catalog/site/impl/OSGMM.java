@@ -346,7 +346,7 @@ public class OSGMM implements SiteCatalog {
                                     "-format", ";", "1",  // to force a semicolon, even if the attribute was not found
                                     "-format", "%s", "GlueClusterUniqueID",
                                     "-format", ";", "1",
-                                    "-format", "%s", "OSGMM_Globus_Location",
+                                    "-format", "%s", "OSGMM_Globus_Location_Fork",
                                     "-format", ";", "1",
                                     "-format", "%s", "GlueCEInfoContactString",
                                     "-format", ";", "1",
