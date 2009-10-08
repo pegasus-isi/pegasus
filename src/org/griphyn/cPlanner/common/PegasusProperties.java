@@ -1389,6 +1389,21 @@ public class PegasusProperties {
         return mProps.getProperty("pegasus.gridstart",DEFAULT_GRIDSTART_MODE);
     }
 
+    /**
+     * Returns a boolean indicating whether kickstart should set x bit on
+     * staged executables before launching them.
+     * 
+     * Referred to by the "pegasus.gridstart.kickstart.set.xbit" property.
+     *
+     * @return the value specified in the property file,
+     *         else false
+     *
+     */
+    public boolean setXBitWithKickstart(){
+        return Boolean.parse( mProps.getProperty( "pegasus.gridstart.kickstart.set.xbit" ),
+                              false );
+                
+    }
 
     /**
      * Return a boolean indicating whether to turn the stat option for kickstart

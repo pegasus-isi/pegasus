@@ -164,6 +164,11 @@ public abstract class Abstract implements Implementation{
     protected Set mDisabledChmodSites;
 
     /**
+     * A boolean indicating whether chmod is disabled for all sites.
+     */
+    protected boolean mChmodDisabledForAllSites;
+    
+    /**
      * The overloaded constructor, that is called by the Factory to load the
      * class.
      *
@@ -178,6 +183,7 @@ public abstract class Abstract implements Implementation{
         
         //build up the set of disabled chmod sites
         mDisabledChmodSites = determineDisabledChmodSites( mProps.getChmodDisabledSites() );
+        mChmodDisabledForAllSites = mDisabledChmodSites.contains( "*" );
 
         mLocalUserProxy = getPathToUserProxy();
         mLocalUserProxyBasename = (mLocalUserProxy == null) ?
@@ -726,7 +732,7 @@ public abstract class Abstract implements Implementation{
      * @return boolean
      */
     protected boolean disableChmodJobCreation( String site ){
-        return this.mDisabledChmodSites.contains( site );
+        return this.mChmodDisabledForAllSites || this.mDisabledChmodSites.contains( site );
     }
 
     /**

@@ -82,7 +82,7 @@ import java.io.IOException;
  * @version $Revision$
  */
 public class Kickstart implements GridStart {
-
+    
 
     /**
      * The transformation namespace for the kickstart
@@ -233,13 +233,19 @@ public class Kickstart implements GridStart {
     private String mKickstartLabel;
 
     /**
+     * Whether kickstart should set the X Bit on the staged executables.
+     */
+    private boolean mSetXBit;
+
+
+    /**
      * Initializes the GridStart implementation.
      *
      * @param bag   the bag of objects that is used for initialization.
      * @param dag   the concrete dag so far.
      */
     public void initialize( PegasusBag bag, ADag dag ){
-
+        
         mProps        = bag.getPegasusProperties();
         mPOptions     = bag.getPlannerOptions();
         mLogger       = bag.getLogger();
@@ -265,6 +271,7 @@ public class Kickstart implements GridStart {
             mSLS = SLSFactory.loadInstance( bag );
         }
         mEnablingPartOfAggregatedJob = false;
+        mSetXBit = mProps.setXBitWithKickstart();
     }
 
 
@@ -525,13 +532,14 @@ public class Kickstart implements GridStart {
         }
 
         //check if the job type indicates staging of executable
-//        The -X functionality is handled by the setup jobs that
-//        are added as childern to the stage in jobs.
-//        Karan November 22, 2005
-//        if(job.getJobClassInt() == SubInfo.STAGED_COMPUTE_JOB){
-//            //add the -X flag to denote turning on
-//            gridStartArgs.append("-X ");
-//       }
+        //The -X functionality is handled by the setup jobs that
+        //are added as childern to the stage in jobs, unless they are 
+        //disabled and users set a property to set the xbit
+        //Karan November 22, 2005
+        if( mSetXBit && job.getJobType() == SubInfo.STAGED_COMPUTE_JOB  ){
+            //add the -X flag to denote turning on
+            gridStartArgs.append( " -X " );
+       }
 
         //add the stat options to kickstart only for certain jobs for time being
         //and if the input variable is true
