@@ -265,7 +265,7 @@ public class GridStartFactory {
                 "GridStartFactory needs to be initialized first before using" );
         }
         GridStart gs = null;
-        if ( gridStartPath == null || job.isMPIJob()){
+        if ( /*gridStartPath == null ||*/ job.isMPIJob()){
             //return NoGridStart implementation
             gs = (GridStart)this.gridStart( GRIDSTART_SHORT_NAMES[ NO_GRIDSTART_INDEX ] );
         }

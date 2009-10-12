@@ -403,7 +403,13 @@ public class Kickstart implements GridStart {
         //In the new format the gridstart is associated with the
         //pool not pool, condor universe
         SiteCatalogEntry site = mSiteStore.lookup( job.getSiteHandle() );
-        String gridStartPath = site.getKickstartPath();
+        
+        //the executable path and arguments are put
+        //in the Condor namespace and not printed to the
+        //file so that they can be overriden if desired
+        //later through profiles and key transfer_executable
+        String gridStartPath = handleTransferOfExecutable( job, site.getKickstartPath() );
+        
         //sanity check
         if (gridStartPath == null){
             return false;
@@ -643,7 +649,7 @@ public class Kickstart implements GridStart {
         //in the Condor namespace and not printed to the
         //file so that they can be overriden if desired
         //later through profiles and key transfer_executable
-        construct(job, "executable", handleTransferOfExecutable( job, gridStartPath ) );
+        construct(job, "executable", gridStartPath );
         construct(job, "arguments", gridStartArgs.toString());
 
         //all finished successfully
