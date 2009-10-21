@@ -39,6 +39,7 @@ import org.griphyn.common.catalog.ReplicaCatalog;
 import org.griphyn.common.classes.TCType;
 
 import org.griphyn.common.util.Separator;
+import org.griphyn.common.util.Boolean;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,6 +107,12 @@ public class S3   implements SLS {
     public static final String DESCRIPTION = "Seqexec around s3";
 
     /**
+     * Name of the property key that determines whether to bypass staging
+     * of the sls files or not.
+     */
+    public static final String STAGE_SLS_FILE_PROPERTY_KEY = "pegasus.transfer.sls.s3.stage.sls.file";
+
+    /**
      * The handle to the site catalog.
      */
 //    protected PoolInfoProvider mSiteHandle;
@@ -160,6 +167,11 @@ public class S3   implements SLS {
      * The handle to the transient replica catalog.
      */
     protected ReplicaCatalog mTransientRC;
+
+    /**
+     * Boolean to track whether to stage sls file or not
+     */
+    protected boolean mStageSLSFile;
     
     /**
      * The default constructor.
@@ -186,6 +198,8 @@ public class S3   implements SLS {
 
         //replace file separators in directory with -
         mBucketName = mBucketName.replace( File.separatorChar,  '-' );
+        mStageSLSFile = Boolean.parse( mProps.getProperty( S3.STAGE_SLS_FILE_PROPERTY_KEY ),
+                                       true );
         
     }
 
@@ -225,22 +239,29 @@ public class S3   implements SLS {
         }
 
         String slsBasename = slsFile.getName();
+
+
+        //we only grab sls file if it has been staged in the
+        //first place by first level staging.
+        if( mStageSLSFile ){
+            invocation.append( "/bin/bash -c \"" );
         
-        invocation.append( "/bin/bash -c \"" );
-        
-        //construct the s3 cmd invocation for
-        //get the sls file to worker node
-        FileTransfer ft = new FileTransfer( slsBasename, "dummy");
-        ft.addDestination( "s3", mWorkerNodeDirectory);
-        invocation.append( this.generateS3InvocationString( job.getSiteHandle(), ft, SubInfo.STAGE_OUT_JOB ) );
+            //construct the s3 cmd invocation for
+            //get the sls file to worker node
+            FileTransfer ft = new FileTransfer( slsBasename, "dummy");
+            ft.addDestination( "s3", mWorkerNodeDirectory);
+            invocation.append( this.generateS3InvocationString( job.getSiteHandle(), ft, SubInfo.STAGE_OUT_JOB ) );
        
-        invocation.append(" && ");
-        
+            invocation.append(" && ");
+        }
+
         invocation.append( entry.getPhysicalTransformation() ).
                    append( " " ). 
                    append( slsBasename );
 
-        invocation.append( "\"" );
+        if( mStageSLSFile ){
+            invocation.append( "\"" );
+        }
         
         return invocation.toString();
 
@@ -458,6 +479,8 @@ public class S3   implements SLS {
      * any files that needs to be staged to the head node for a job specific
      * to the SLS implementation. If any file needs to be added, a <code>FileTransfer</code>
      * object should be created and added as an input or an output file.
+     * A job is not modified the staging of the sls file is turned of by
+     * setting the property specified by STAGE_SLS_FILE_PROPERTY_KEY
      *
      *
      * @param job           the job
@@ -467,11 +490,18 @@ public class S3   implements SLS {
      * @param slsOutputLFN  the sls output file if required, that is used
      *                      for staging in from the head node to worker node directory.
      * @return boolean
+     *
+     * @see #STAGE_SLS_FILE_PROPERTY_KEY
      */
     public boolean modifyJobForFirstLevelStaging( SubInfo job,
                                                   String submitDir,
                                                   String slsInputLFN,
                                                   String slsOutputLFN ) {
+
+        //sanity check
+        if( !this.mStageSLSFile ){
+            return true;
+        }
 
         String separator = File.separator;
 
