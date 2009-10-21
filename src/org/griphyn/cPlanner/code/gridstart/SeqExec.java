@@ -395,6 +395,17 @@ public class SeqExec implements GridStart {
         return true;
     }
 
+    /**
+     * Enables jobs for worker node execution.
+     *
+     *
+     *
+     * @param job           the job to be enabled.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     */
     private void enableForWorkerNodeExecution(SubInfo job, boolean isGlobusJob ) {
 
         //this approach only works for S3 for time being!
@@ -432,6 +443,24 @@ public class SeqExec implements GridStart {
 
     }
 
+    /**
+     * Enables a clustered job for worker node execution.  It creates a single
+     * input file for the seqexec invocation. The input file contains commands to
+     *
+     * <pre>
+     * 1) create directory on worker node
+     * 2) fetch input data files
+     * 3) execute the job
+     * 4) transfer the output data files
+     * 5) cleanup the directory
+     * </pre>
+     *
+     * @param job          the job to be enabled.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     */
     protected void enableClusteredJobForWorkerNodeExecution( AggregatedJob job, boolean isGlobusJob) {
         
 
@@ -750,10 +779,24 @@ public class SeqExec implements GridStart {
      * the commands to put in the input file from the environment variables specified
      * for kickstart.
      *
-     * @param job
-     * @param isGlobusJob
+     * It creates a single input file for the seqexec invocation.
+     * The input file contains commands to
      *
-     * @return
+     * <pre>
+     * 1) create directory on worker node
+     * 2) fetch input data files
+     * 3) execute the job
+     * 4) transfer the output data files
+     * 5) cleanup the directory
+     * </pre>
+     *
+     * @param job          the job to be enabled.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     * 
+     * @return the file handle to the seqexec input file
      */
     private File enableAndGenerateSeqexecInputFile(SubInfo job, boolean isGlobusJob) {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
