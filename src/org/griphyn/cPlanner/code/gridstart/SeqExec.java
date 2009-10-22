@@ -473,6 +473,14 @@ public class SeqExec implements GridStart {
             SubInfo firstJob = clusteredJob.getConstituentJob(0);
 
             GridStart gs = this.mKickstartGridStartImpl;
+
+            //add the -f option always
+            if( !mProps.abortOnFirstJobFailure() ){
+                //the clustering module did not add the -f option
+                //we add ourselves here
+                //we want seqexec to fail hard on first error (non-zero exit code or signal death)
+                construct( job, "arguments", job.getArguments() + " -f " );
+            }
             
             //gs.enable( clusteredJob, isGlobusJob );
             //System.out.println( clusteredJob.envVariables );
@@ -480,11 +488,6 @@ public class SeqExec implements GridStart {
             SubInfo j = (SubInfo) clusteredJob.clone();
             gs.enable(j, isGlobusJob);
 
-            //enable all constitutents jobs through the factory
-            for (Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext();) {
-                SubInfo cJob = (SubInfo) it.next();
-                //gs.enable(cJob, isGlobusJob);
-            }
 
             //we merge the sls input and sls output files into
             //the stdin of the clustered job
