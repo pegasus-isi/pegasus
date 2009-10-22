@@ -60,7 +60,8 @@ public class GridStartFactory {
      */
     public static String[] GRIDSTART_SHORT_NAMES = {
                                            "kickstart",
-                                           "none"
+                                           "none",
+                                           "seqexec"
                                           };
 
     /**
@@ -72,6 +73,11 @@ public class GridStartFactory {
      * The index in the constant arrays for NoGridStart.
      */
     public static final int NO_GRIDSTART_INDEX = 1;
+
+    /**
+     * The index in constant arrays for SeqExec
+     */
+    public static final int SEQEXEC_INDEX = 2;
 
     /**
      * The postscript mode in which post scripts are added only for essential
@@ -91,8 +97,9 @@ public class GridStartFactory {
      */
     public static String[] GRIDSTART_IMPLEMENTING_CLASSES = {
                                                      "Kickstart",
-                                                     "NoGridStart"
-                                                   };
+                                                     "NoGridStart",
+                                                     "SeqExec"
+                                                    };
 
     //
 

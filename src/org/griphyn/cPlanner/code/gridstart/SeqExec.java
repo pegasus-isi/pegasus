@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import java.io.BufferedReader;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.code.GridStart;
@@ -53,6 +54,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.FileWriter;
 import java.io.InputStream;
@@ -176,11 +178,7 @@ public class SeqExec implements GridStart {
      */
     private Kickstart mKickstartGridStartImpl;
 
-    /**
-     * Instance to SeqExec Job Aggregator that is used to cluster the jobs.
-     */
-    private JobAggregator mSeqExecAggregator;
-
+   
      /**
      * Handle to Transformation Catalog.
      */
@@ -212,8 +210,7 @@ public class SeqExec implements GridStart {
         mEnablingPartOfAggregatedJob = false;
         mKickstartGridStartImpl = new Kickstart();
         mKickstartGridStartImpl.initialize( bag, dag );
-        mSeqExecAggregator = JobAggregatorFactory.loadInstance( CLASSNAME, dag, bag );
-    }
+   }
 
     /**
      * Enables a collection of jobs and puts them into an AggregatedJob.
@@ -735,6 +732,27 @@ public class SeqExec implements GridStart {
       * @param out
       * @throws java.io.IOException
       */
+     private void addToFile( File src, PrintWriter out ) throws IOException{
+
+        BufferedReader in = new BufferedReader( new FileReader( src ) );
+
+        String line = null;
+
+        while(( line = in.readLine() ) != null ){
+            //System.out.println( line );
+            out.println( line );
+        }
+
+        in.close();
+     }
+
+
+     /**
+      * Adds contents to an output stream.
+      * @param src
+      * @param out
+      * @throws java.io.IOException
+      */
      private void addToFile( File src, OutputStream out ) throws IOException{
       
         InputStream in = new FileInputStream(src);
@@ -826,7 +844,7 @@ public class SeqExec implements GridStart {
                 String name  = cmdArray[ cmdArray.length - 1 ];
                 File slsFile = new File ( mSubmitDir, name );
                 //add contents to stdin
-                addToFile( slsFile , ostream );
+                addToFile( slsFile , writer );
                 ostream.flush();
 
                 //we delete the sls file now
@@ -848,7 +866,7 @@ public class SeqExec implements GridStart {
                 File slsFile = new File ( mSubmitDir, name );
 
                 //add contents to stdin
-                addToFile( slsFile, ostream );
+                addToFile( slsFile, writer );
                 ostream.flush();
 
                 //delete the sls file
@@ -858,7 +876,7 @@ public class SeqExec implements GridStart {
             //write out the cleanup command
             writer.println( cleanupCmd );
             writer.close();
-
+            ostream.close();
         }
         catch( IOException ioe ){
             throw new RuntimeException( "[SEQEXEC GRIDSTART] Error while writing out seqexec input file " + stdIn , ioe );
