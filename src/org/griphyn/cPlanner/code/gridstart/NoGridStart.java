@@ -293,7 +293,9 @@ public class NoGridStart implements GridStart {
                     if (!(mSLS instanceof org.griphyn.cPlanner.transfer.sls.S3)) {
                         throw new RuntimeException("Second Level Staging with NoGridStart for clustered jobs only works with S3");
                     }
-                    
+
+
+
                     String key = getDirectoryKey( job );
                     
                     //always have the remote dir set to /tmp as
@@ -308,8 +310,17 @@ public class NoGridStart implements GridStart {
                     factory.initialize(mBag, mDAG);
                     GridStart gs = factory.loadGridStart(firstJob, "/tmp");
                     
-                    //gs.enable( clusteredJob, isGlobusJob );
-                    //System.out.println( clusteredJob.envVariables );
+                    //now that we have a seqxec gridlaunch 
+                    //let the figure out how to handle clustered jobs
+                    if( gs instanceof SeqExec ){
+                        return gs.enable( job, isGlobusJob );
+                    }
+                    
+                    //if gs is  not of type seqexec we revert to 
+                    //the original solution as implemented for
+                    //JIRA Bug PM-59
+                    //http://jira.pegasus.isi.edu/browse/PM-59
+
                     //enable the whole clustered job via kickstart
                     SubInfo j = (SubInfo) clusteredJob.clone();
                     gs.enable(j, isGlobusJob);

@@ -483,7 +483,7 @@ public class SeqExec implements GridStart {
             //enable all constitutents jobs through the factory
             for (Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext();) {
                 SubInfo cJob = (SubInfo) it.next();
-                gs.enable(cJob, isGlobusJob);
+                //gs.enable(cJob, isGlobusJob);
             }
 
             //we merge the sls input and sls output files into
