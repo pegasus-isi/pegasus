@@ -349,15 +349,7 @@ public class Kickstart implements GridStart {
         return aggJob;
     }
 
-    /**
-     * A backdoor to set the enabling boolean variable to the value passed.
-     * Used in SeqExec Gridstart module. Should be used with care.
-     * 
-     * @param value the boolean value.
-     */
-    public void setEnablePartOfAggregatedJob( boolean value ){
-        mEnablingPartOfAggregatedJob = value;
-    }
+   
 
     /**
      * Enables a job to run on the grid by launching it through kickstart.

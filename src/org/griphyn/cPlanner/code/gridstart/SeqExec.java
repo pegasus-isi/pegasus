@@ -174,9 +174,9 @@ public class SeqExec implements GridStart {
     protected boolean mEnablingPartOfAggregatedJob;
 
     /**
-     *
+     * Handle to kickstart GridStart implementation.
      */
-    private Kickstart mKickstartGridStartImpl;
+    private GridStart mKickstartGridStartImpl;
 
    
      /**
@@ -231,9 +231,10 @@ public class SeqExec implements GridStart {
             construct( aggJob, "arguments", aggJob.strargs);
         }
 
+        this.mKickstartGridStartImpl.enable( aggJob, jobs );
         //we do not want the jobs being clustered to be enabled
         //for worker node execution just yet.
-        mEnablingPartOfAggregatedJob = true;
+        /*mEnablingPartOfAggregatedJob = true;
         this.mKickstartGridStartImpl.setEnablePartOfAggregatedJob( true );
 
         for (Iterator it = jobs.iterator(); it.hasNext(); ) {
@@ -249,6 +250,7 @@ public class SeqExec implements GridStart {
         //set the flag back to false
         mEnablingPartOfAggregatedJob = false;
         this.mKickstartGridStartImpl.setEnablePartOfAggregatedJob( false );
+        */
 
         return aggJob;
     }
@@ -500,29 +502,62 @@ public class SeqExec implements GridStart {
 
             //add an entry to create the worker node directory
             PrintWriter writer = new PrintWriter( new FileWriter( temp ) );
-            writer.println( "/bin/mkdir -p " + gs.getWorkerNodeDirectory( job ) );
-            writer.close();
-
-            OutputStream tmpOStream = new FileOutputStream( temp , true );
+            writer.println(   enableCommandViaKickstart(  "/bin/mkdir -p " + gs.getWorkerNodeDirectory( job ),
+                                                          "mkdir",
+                                                          job.getSiteHandle(),
+                                                          SubInfo.CREATE_DIR_JOB,
+                                                          false )
+                            );
 
             //append the sls input file to temp file
-            addToFile( slsInputFile, tmpOStream );
-            //append the stdin to the tmp file
-            addToFile( stdin, tmpOStream );
+            BufferedReader in = new BufferedReader( new FileReader( slsInputFile ) );
+            String line = null;
+            while(( line = in.readLine() ) != null ){
+                    writer.println( enableCommandViaKickstart(  line,
+                                                                "s3cmd",
+                                                                job.getSiteHandle(),
+                                                                SubInfo.STAGE_IN_JOB,
+                                                                true) );
+            }
+            in.close();
+            slsInputFile.delete();
+
+
+            //append the stdin to the tmp file and add -H kickstart options
+//            addToFile( stdin, tmpOStream );
+            in = new BufferedReader( new FileReader( stdin ) );
+            line = null;
+            while(( line = in.readLine() ) != null ){
+                //figure out the executable and the arguments first.
+                int index = line.indexOf( ' ' ); //the first space
+                String executable = line.substring( 0, index );
+                String arguments = line.substring(index);
+                writer.println ( executable + " -H " + arguments );
+            }
+            in.close();
+            stdin.delete();
+
+
             //append the sls output to temp file
-            addToFile( slsOutputFile, tmpOStream );
-            tmpOStream.close();
+            in = new BufferedReader( new FileReader( slsOutputFile ) );
+            line = null;
+            while(( line = in.readLine() ) != null ){
+                    writer.println( enableCommandViaKickstart(  line,
+                                                                "s3cmd",
+                                                                job.getSiteHandle(),
+                                                                SubInfo.STAGE_OUT_JOB,
+                                                                true) );
+            }
+            in.close();
+            slsOutputFile.delete();
 
             //we need to remove the directory
-            writer = new PrintWriter( new FileWriter( temp, true ) );
-            writer.println( "/bin/rm -rf " + gs.getWorkerNodeDirectory( job ) );
+            writer.println( enableCommandViaKickstart( "/bin/rm -rf " + gs.getWorkerNodeDirectory( job ),
+                                                       "rm",
+                                                       job.getSiteHandle(),
+                                                       SubInfo.CREATE_DIR_JOB,
+                                                       true ) );
             writer.close();
-
-
-            //delete the stdin file and sls files
-            stdin.delete();
-            slsInputFile.delete();
-            slsOutputFile.delete();
 
             //rename tmp to stdin
             temp.renameTo( stdin );
@@ -750,6 +785,7 @@ public class SeqExec implements GridStart {
      }
 
 
+
      /**
       * Adds contents to an output stream.
       * @param src
@@ -834,7 +870,12 @@ public class SeqExec implements GridStart {
         try{
             OutputStream ostream = new FileOutputStream( stdIn , true );
             PrintWriter writer = new PrintWriter( new BufferedWriter(new OutputStreamWriter(ostream)) );
-            writer.println( "/bin/mkdir -p " + directory );
+            writer.println( enableCommandViaKickstart(  "/bin/mkdir -p " + directory,
+                                                        "mkdir",
+                                                        job.getSiteHandle(),
+                                                        SubInfo.CREATE_DIR_JOB,
+                                                        false )
+                           );
             writer.flush();
 
             //retrieve name of seqxec prejob file
@@ -846,16 +887,26 @@ public class SeqExec implements GridStart {
                 //the last token is the sls file
                 String name  = cmdArray[ cmdArray.length - 1 ];
                 File slsFile = new File ( mSubmitDir, name );
-                //add contents to stdin
-                addToFile( slsFile , writer );
-                ostream.flush();
+                
+                //add contents of sle file to stdin
+                BufferedReader in = new BufferedReader( new FileReader( slsFile ) );
+                String line = null;
+                while(( line = in.readLine() ) != null ){
+                    writer.println( enableCommandViaKickstart(  line,
+                                                                "s3cmd",
+                                                                job.getSiteHandle(),
+                                                                SubInfo.STAGE_IN_JOB,
+                                                                true) );
+                }
+                in.close();
 
                 //we delete the sls file now
                 slsFile.delete();
             }
 
             //write out the main command that needs to be invoked
-            writer.println( job.condorVariables.get( "executable" ) + " " + job.condorVariables.get( "arguments" ) );
+            //add the kickstart -H option
+            writer.println( job.condorVariables.get( "executable" ) + " -H " + job.condorVariables.get( "arguments" ) );
             writer.flush();
             
             //retrieve name of seqxec postjob file
@@ -869,15 +920,28 @@ public class SeqExec implements GridStart {
                 File slsFile = new File ( mSubmitDir, name );
 
                 //add contents to stdin
-                addToFile( slsFile, writer );
-                ostream.flush();
+                //add contents of sle file to stdin
+                BufferedReader in = new BufferedReader( new FileReader( slsFile ) );
+                String line = null;
+                while(( line = in.readLine() ) != null ){
+                    writer.println( enableCommandViaKickstart(   line,
+                                                                 "s3cmd",
+                                                                 job.getSiteHandle(),
+                                                                 SubInfo.STAGE_OUT_JOB,
+                                                                 true ) );
+                }
+                in.close();
 
                 //delete the sls file
                 slsFile.delete();
             }
             
             //write out the cleanup command
-            writer.println( cleanupCmd );
+            writer.println( enableCommandViaKickstart(   cleanupCmd,
+                                                         "rm",
+                                                         job.getSiteHandle(),
+                                                         SubInfo.CREATE_DIR_JOB,
+                                                         true ));
             writer.close();
             ostream.close();
         }
@@ -888,6 +952,48 @@ public class SeqExec implements GridStart {
         return stdIn;
     }
 
+     /**
+      * Enables a command via kickstart. This is used to enable commands that
+      * are retrieved from the SLS files.
+      *
+      * @param command   the command that needs to be invoked via kickstart.
+      * @param name      a logical name to assign to the command
+      * @param site      the site on which the command executes
+      * @param type      the type of job that the command refers to.
+      * @param supressXMLHeader   get kickstart to disable XML header creation
+      *
+      *
+      * @return   the command enabled via kickstart
+      */
+     protected String enableCommandViaKickstart( String command,
+                                                 String name,
+                                                 String site,
+                                                 int type,
+                                                 boolean supressXMLHeader
+                                                 ){
+         //figure out the executable and the arguments first.
+         int index = command.indexOf( ' ' ); //the first space
+         String executable = command.substring( 0, index );
+         String arguments = command.substring(index);
+
+         //create a job corresponding to the command.
+         SubInfo job = new SubInfo();
+         job.setTransformation( null, name, null );
+         job.setJobType( type );
+         job.setSiteHandle( site );
+         job.setRemoteExecutable( executable );
+         job.setArguments( arguments );
+         this.mKickstartGridStartImpl.enable( job, true );
+
+         StringBuffer result = new StringBuffer();
+         result.append( job.condorVariables.get( "executable" ) ).append( " " );
+         if ( supressXMLHeader ){
+             result.append( " -H " );
+         }
+         result.append( job.condorVariables.get( "arguments" ) );
+
+         return result.toString();
+     }
 
 
 
