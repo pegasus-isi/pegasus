@@ -339,12 +339,12 @@ public class SUBDAXGenerator{
         else{
             StringBuffer basenamePrefix = new StringBuffer();
             if( options.getBasenamePrefix() == null ){
-                basenamePrefix.append( label );
+                basenamePrefix.append( label );                
+                basenamePrefix.append( "-" ).append( index );
             }else{
                 //add the prefix from options
                 basenamePrefix.append( options.getBasenamePrefix() );
             }
-            basenamePrefix.append( "-" ).append( index );
             
             mLogger.log( "Basename prefix for the sub workflow is " + basenamePrefix,
                          LogManager.DEBUG_MESSAGE_LEVEL );
