@@ -338,7 +338,17 @@ public class SUBDAXGenerator{
         }
         else{
             StringBuffer basenamePrefix = new StringBuffer();
-            basenamePrefix.append( label ).append( "-" ).append( index );
+            if( options.getBasenamePrefix() == null ){
+                basenamePrefix.append( label );
+            }else{
+                //add the prefix from options
+                basenamePrefix.append( options.getBasenamePrefix() );
+            }
+            basenamePrefix.append( "-" ).append( index );
+            
+            mLogger.log( "Basename prefix for the sub workflow is " + basenamePrefix,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            
             SubInfo dagJob = constructDAGJob( job,
                                     new File( mPegasusPlanOptions.getSubmitDirectory() ),
                                     new File( options.getSubmitDirectory()),
