@@ -404,10 +404,19 @@ public class RLI implements ReplicaCatalog {
         lfns.add( lfn );
         
         Map<String, Collection<ReplicaCatalogEntry>> result = this.lookup( lfns );
-        return ( result == null )?
-                null:
-                result.get( lfn );
-     
+
+        if( result == null ){
+            return null;
+        }
+        else{
+            Collection values = result.get( lfn );
+            if( values == null ){
+                //JIRA PM-74
+                values = new ArrayList();
+            }
+            return values;
+        }
+        
     }
 
     
@@ -427,9 +436,18 @@ public class RLI implements ReplicaCatalog {
         lfns.add( lfn );
         
         Map<String, Set<String>> result = this.lookupNoAttributes( lfns );
-        return ( result == null )?
-                null:
-                result.get( lfn );
+
+        if( result == null ){
+            return null;
+        }
+        else{
+            Set values = result.get( lfn );
+            if( values == null ){
+                //JIRA PM-74
+                values = new HashSet();
+            }
+            return values;
+        }
      
     }
   

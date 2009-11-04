@@ -679,7 +679,10 @@ public class RCClient extends Toolkit
         } while ( rce != null );
         result = 1;
       } catch ( RuntimeException rte ) {
-        RCClient.log( Level.ERROR, rte.getMessage() );
+          do {
+          RCClient.log( Level.ERROR, rte.getClass() + " " + rte.getMessage() );
+          rte =     (RuntimeException) rte.getCause();
+        } while ( rte != null );
         result = 1;
       }
       if ( prompt ) System.out.print( "rc> " );
@@ -897,7 +900,10 @@ public class RCClient extends Toolkit
       } while ( rce != null );
       result = 1;
     } catch ( RuntimeException rte ) {
-      RCClient.log( Level.ERROR, rte.getMessage() );
+        do {
+          RCClient.log( Level.ERROR, rte.getClass() + " " + rte.getMessage() );
+          rte =     (RuntimeException) rte.getCause();
+        } while ( rte != null );
       result = 1;
     } catch ( Exception e ) {
       RCClient.log( Level.ERROR, e.getMessage() );
