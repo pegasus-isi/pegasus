@@ -54,6 +54,11 @@ public class RCClient extends Toolkit
 {
 
   /**
+   * The message for LFN's not found.
+   */
+  private static final String LFN_DOES_NOT_EXIST_MSG = "LFN doesn't exist:";
+
+  /**
    * The default chunk factor that is used for biting off chunks of large files.
    */
   private static final int DEFAULT_CHUNK_FACTOR = 1000;
@@ -222,6 +227,8 @@ public class RCClient extends Toolkit
 "                Each line in the file denotes one mapping of format <LFN> <PFN> [k=v [..]]" + linefeed +
 " -d|--delete fn the path to the file containing the mappings to be deleted." + linefeed +
 "                Each line in the file denotes one mapping of format <LFN> <PFN> [k=v [..]]." + linefeed +
+" -l|--lookup fn the path to the file containing the LFN's to be looked up." + linefeed +
+"                Each line in the file denotes one LFN" + linefeed +
 "                For now attributes are not matched to determine the entries to delete." + linefeed +
 " cmd [args]     exactly one of the commands below with arguments." );
 
@@ -243,7 +250,7 @@ public class RCClient extends Toolkit
    */
   protected LongOpt[] generateValidOptions()
   {
-    LongOpt[] lo = new LongOpt[6];
+    LongOpt[] lo = new LongOpt[7];
 
     lo[0] = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
     lo[1] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
@@ -251,6 +258,8 @@ public class RCClient extends Toolkit
     lo[3] = new LongOpt( "pref", LongOpt.REQUIRED_ARGUMENT, null, 'p' );
     lo[4] = new LongOpt( "insert",LongOpt.REQUIRED_ARGUMENT,null,'i');
     lo[5] = new LongOpt( "delete",LongOpt.REQUIRED_ARGUMENT,null,'d');
+    lo[6] = new LongOpt( "lookup", LongOpt.REQUIRED_ARGUMENT, null, 'l' );
+
     return lo;
   }
 
@@ -379,6 +388,15 @@ public class RCClient extends Toolkit
   }
 
   /**
+   * Writes out a message about LFN not existing.
+   *
+   * @param lfn  the lfn.
+   */
+  private void lfnDoesNotExist( String lfn ){
+      System.err.println( LFN_DOES_NOT_EXIST_MSG + " " + lfn );
+  }
+
+  /**
    * Preliminary implementation of output method.
    *
    * @param lfn is the logical filename to show
@@ -481,6 +499,39 @@ public class RCClient extends Toolkit
         m_log.info( "deleted " + result + " entries" );
       }
 
+    }
+    else if( command.equals( "lookup" ) ){
+        
+        Set<String> lfns = new HashSet();
+        //each line has a single LFN
+        for( Iterator it = lines.iterator(); it.hasNext(); ){
+            List<String> words = (List)it.next();
+            if ( words.size() != 1 ) {
+                m_log.warn( c_argnum );
+            }
+            String lfn = words.get( 0 );
+            lfns.add( lfn );
+        }
+        Map<String,Collection<ReplicaCatalogEntry>> results = m_rc.lookup( lfns );
+        result = results.size();
+
+        //display results for LFN
+        for ( Iterator<Map.Entry<String,Collection<ReplicaCatalogEntry>> > it =results.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<String,Collection<ReplicaCatalogEntry>> entry = it.next();
+            String lfn = entry.getKey();
+            Collection rces = entry.getValue();
+
+            for( Iterator j = rces.iterator(); j.hasNext() ; ){
+                show( lfn, (ReplicaCatalogEntry) j.next() );
+            }
+	}
+
+        //try and figure out LFN's for which mappings were not found
+        //and display them
+        lfns.removeAll( results.keySet() );
+        for( String lfn : lfns ){
+            lfnDoesNotExist( lfn );
+        }
     }
     return result;
   }
@@ -782,7 +833,7 @@ public class RCClient extends Toolkit
           mappings.clear();
       }
       m_log.info("Worked till line " + m_total_lines_worked);
-      System.out.println();
+      //System.out.println();
 
       //get out of the loop if end
       if(line == null ) break;
@@ -814,7 +865,7 @@ public class RCClient extends Toolkit
 
       // get the commandline options
       Getopt opts = new Getopt( me.m_application, args,
-				"f:hp:Vi:d:", me.generateValidOptions() );
+				"f:hp:Vi:d:l:", me.generateValidOptions() );
       opts.setOpterr(false);
 
       String arg;
@@ -853,6 +904,12 @@ public class RCClient extends Toolkit
             if(arg != null) filename = arg;
             break;
 
+        case 'l':
+            arg = opts.getOptarg();
+            command = "lookup";
+            if(arg != null) filename = arg;
+            break;
+
 	case 'h':
 	default:
 	  me.showUsage();
@@ -869,7 +926,7 @@ public class RCClient extends Toolkit
 	// there are CLI arguments
 	if ( filename != null ) {
 	  // you must not use -f and CLI extra args
-	  throw new RuntimeException( "The -f|-i|-d option and CLI arguments " +
+	  throw new RuntimeException( "The -f|-i|-d|-l option and CLI arguments " +
 				      "are mutually exclusive" );
 	} else {
 	  // just work on one (virtual, already shell-spit) line
@@ -883,7 +940,7 @@ public class RCClient extends Toolkit
       } else {
 	// no CLI args, use single command or interactive mode
         if(interactive && command != null){
-            throw new RuntimeException("The -f and -i|-d options are mutually exclusive");
+            throw new RuntimeException("The -f and -i|-d|-l options are mutually exclusive");
         }
         //in interactive mode parse each line
         if(interactive)	me.parse( filename );
