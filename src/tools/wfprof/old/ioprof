@@ -1,0 +1,613 @@
+#!/usr/bin/env python
+#
+#  Copyright 2009 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+"""This program traces the I/O of an application and prints a
+summary of files accessed and various I/O operations. It wraps
+the application in strace and parses the strace output.
+
+You use it like this:
+
+$ ioprof ls -al
+
+That will trace all the I/O performed by the 'ls' command and
+print a summary of all the files opened and how much I/O was
+performed on each of them.
+
+This is meant as a replacement for kickstart in Pegasus so that
+we can collect I/O statistics of our workflow applications. As
+such it is a drop-in replacement for kickstart. You just set
+gridstart="/path/to/ioprof" in your site catalog instead of
+gridstart="/path/to/kickstart". As long as the job has PEGASUS_HOME
+in its environment ioprof will use kickstart to invoke strace
+so you will still get an invocation record.
+
+OUTPUT:
+
+Kickstart writes all of its output to stdout and ioprof writes all
+its output to stderr. ioprof output consists of a table with:
+
+XFORM - The name of the transformation (via Kickstart args) or 'None'
+PID - The process ID
+EXE - The executable name passed to execve()
+FNAME - The file name
+BREAD - Number of bytes read
+NREAD - Number of read()s performed
+BWRITE - Number of bytes written
+NWRITE - Number of write()s performed
+NSEEK - Number of lseek()s performed
+MODE - Mode passed to open()
+FLAGS - Flags passed to open()
+
+ERRORS:
+
+ioprof does not currently keep track of statistics on I/O 
+errors, but this is planned for the future. Currently all failed
+I/O syscalls are ignored.
+
+SHARED LIBRARIES:
+
+ioprof does not report I/O performed on shared libraries. This 
+includes anything in /lib, /lib64, /usr/lib, /usr/lib64, etc.
+It also tries to ignore files called 'lib*.so.*', python files
+(*.py, *.pyc), and files in /etc, /usr, /sys, /dev, and /proc.
+Note that it tries to track all open file descriptors, but it 
+doesn't collect or report statistics on everything.
+
+STDIN/STDOUT/STDERR:
+
+Yes, it traces I/O on stdin/stdout/stderr.
+
+PIPES:
+
+Yes, it does trace I/O performed on pipes.
+
+SOCKETS:
+
+Yes, it traces I/O performed on sockets, but the implementation
+is incomplete. It doesn't currently handle some operations that
+could potentially create socket descriptors like accept() and 
+recvmsg().
+
+FORK/CLONE/VFORK:
+
+Yes, it traces children and reports their I/O separately. However,
+it is not currently able to figure out exactly which descriptors 
+are inherited by children. For example, it doesn't keep track of
+files opened with O_CLOEXEC, so it may think that a child has
+an open descriptor when it actually does not (this probably
+won't make a difference in practice because a child won't 
+successfully read and write from/to a descriptor it doesn't have).
+
+THREADS:
+
+Yes, it can deal with threads on Linux created using clone. It
+assumes that if clone() is called with CLONE_FILES, then the 
+child is a thread that shares its descriptors with its parent.
+Note that, although threads are technically different processes
+under Linux, their I/O is not reported separately by ioprof.
+"""
+
+__author__ = "Gideon Juve <juve@usc.edu>"
+__all__ = []
+__version__ = "1.0"
+
+import sys
+if not hasattr(sys, 'version_info') or \
+   tuple(sys.version_info[:2]) < (2,4):
+  sys.stderr.write('Please use Python 2.4 or later.\n')
+  sys.exit(1)
+
+import os, re, signal, time
+from subprocess import Popen, call
+try:
+  from uuid import uuid4
+except:
+  # use uuidgen if we can
+  if os.path.isfile('/usr/bin/uuidgen'):
+    import commands
+    def uuid4():
+      return commands.getoutput('/usr/bin/uuidgen')
+  else:
+    raise
+
+# TODO Accept arguments on the command line or in an environment variable
+# TODO Optionally write report in XML
+# TODO Keep track of I/O for sockets better
+# TODO Track error statistics (e.g. number of failed close, etc.)
+# TODO Make kickstart optional
+# TODO Make SYSCALLS table a dictionary and use it to map the regexes and parse_* functions
+# TODO Implement and test handlers for currently unhandled syscalls
+# TODO Add an argument to optionally ignore certain file patterns
+# TODO Add arguments to optionally ignore sockets, pipes, and stdio
+# TODO Add a feature so that if you CTRL^c ioprof prints out its current stats before exiting
+# TODO Keep track of O_CLOEXEC and its various aliases (fcntl may set this too)
+
+MODULE = sys.modules[__name__]
+
+# system calls to trace
+SYSCALLS = [
+  'open',
+  'openat',
+  'creat',
+  'close',
+  'read',
+  'write',
+  'lseek',
+  'dup',
+  'dup2',
+  'vfork',
+  'clone',
+  'execve',
+  'pipe',
+  'fcntl', # only F_DUPFD
+  'fcntl64', # likewise
+  'socket',
+  'socketpair',
+
+  # These could create descriptors but 
+  # are not handled yet because I haven't
+  # seen them in anything
+  #'pread', # not on 2.6.18
+  'pread64',
+  #'pwrite', # not on 2.6.18
+  'pwrite64',
+  'readv',
+  'writev',
+  'fork', # aliased to clone on linux?
+  'accept',
+  'signalfd',
+  'mq_open',
+  'eventfd',
+  'epoll_create'
+  #'timerfd_create'
+]
+
+
+# List of valid kickstart arguments
+# The flag indicates if they have a value
+KICKSTART_ARGS = {
+  '-i':True, # asi
+  '-o':True, # aso
+  '-e':True, # ase
+  '-l':True, # log
+  '-n':True, # xid
+  '-N':True, # did
+  '-R':True, # res
+  '-B':True, # sz
+  '-L':True, # lbl
+  '-T':True, # iso
+  '-H':False,
+  '-I':True, # fn
+  '-V':False,
+  '-X':False,
+  '-w':True, # cwd
+  '-W':True, # cwd
+  '-S':True, # l=p
+  '-s':True  # l=p
+}
+
+
+# Files to ignore if they are opened by the app
+IGNORE = [
+  re.compile(r'^/lib(64)?/'),
+  re.compile(r'^/usr/'),
+  re.compile(r'^/sys/'),
+  re.compile(r'^/proc/'),
+  re.compile(r'^/etc/'),
+  re.compile(r'^/dev/'),
+  re.compile(r'^/selinux/'),
+  re.compile(r'\.pyc?$'),
+  re.compile(r'/lib[^/]+\.so'),
+  re.compile(r'\.jar$')
+]
+
+# Process map
+PIDS = {}
+
+class ParseError(Exception): pass
+
+# Stats about files
+class FileStat:
+  def __init__(self,fname):
+    self.fname = fname
+    self.flags = None
+    self.mode = None
+    self.nread = 0
+    self.bread = 0
+    self.nwrite = 0
+    self.bwrite = 0
+    self.nseek = 0
+
+# Stats about processes
+class PidStat:
+  def __init__(self,pid):
+    self.ppid = None
+    self.pid = pid
+    self.thread = False
+    self.exe = None
+    self.files = []
+    self.fds = {}
+
+  # Is the fd open in the pid?
+  def check_open(self,fd):
+    if not fd in self.fds:
+      raise ParseError('unknown fd %d for pid %d\n'%(fd,self.pid))
+
+
+# Regular expressions to match each system call
+match_syscall = re.compile(r'^(\d+)\s+(\w+)\(.*\)\s+=\s+([-0-9?]+)')
+match_signal = re.compile(r'^(\d+)\s+---.*---')
+match_clone = re.compile(r'^\d+\s+clone\(.*, flags=(.+), .*\)\s+=\s+(-?\d+)')
+match_vfork = re.compile(r'^\d+\s+vfork\(.*\)\s+=\s+(-?\d+)')
+match_execve = re.compile(r'^\d+\s+execve\("(.+)".*\)\s+=\s+(-?\d+)')
+match_open = re.compile(r'^\d+\s+open\("(.+)", ([^,)]+),? ?(.+)?\)\s+=\s+(-?\d+)')
+match_openat = re.compile(r'^\d+\s+openat\(.+, "(.+)", ([^,)]+),? ?(.+)?\)\s+=\s+(-?\d+)')
+match_close = re.compile(r'^\d+\s+close\((\d+)\)\s+=\s+(-?\d+)')
+match_read = re.compile(r'^\d+\s+read\((\d+), ".*"\.?\.?\.?, \d+\)\s+=\s+(-?\d+)')
+match_write = re.compile(r'^\d+\s+write\((\d+), ".*"\.?\.?\.?, \d+\)\s+=\s+(-?\d+)')
+match_lseek = re.compile(r'^\d+\s+lseek\((\d+), (-?\d+), (\w+)\)\s+=\s+(-?\d+)')
+match_dup = re.compile(r'^\d+\s+dup\((\d+)\)\s+=\s+(-?\d+)')
+match_dup2 = re.compile(r'^\d+\s+dup2\((\d+), (\d+)\)\s+=\s+(-?\d+)')
+match_pipe = re.compile(r'^\d+\s+pipe\(\[(\d+), (\d+)\]\)\s+=\s+(-?\d+)')
+match_fcntl = re.compile(r'^\d+\s+fcntl\((\d+), ([^,]+)(, .+)?\)\s+=\s+(-?\d+)')
+match_fcntl64 = re.compile(r'^\d+\s+fcntl64\((\d+), ([^,]+)(, .+)?\)\s+=\s+(-?\d+)')
+match_socket = re.compile(r'^\d+\s+socket\([^\)]+\)\s+=\s+(-?\d+)')
+match_socketpair = re.compile(r'^\d+\s+socketpair\([^\[]+\[(\d+), (\d+)\]\)\s+=\s+(-?\d+)')
+match_writev = re.compile(r'^\d+\s+writev\((\d+),.*\)\s+=\s+(-?\d+)')
+match_readv = re.compile(r'^\d+\s+readv\((\d+),.*\)\s+=\s+(-?\d+)')
+
+
+def usage():
+  sys.stderr.write('Usage: %s [kickstart args] app [app args]\n' % sys.argv[0])
+  sys.exit(1)
+
+
+# Search PATH for an executable
+def which(exe):
+  # Search PATH for exe
+  PATH = os.getenv('PATH', '/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin')
+  PATH = PATH.split(':')
+  for d in PATH:
+    abspath = os.path.join(d,exe)
+    if os.path.isfile(abspath):
+      return abspath
+  return None # not found!
+
+
+# Create process if it doesn't exist
+def check_pid(pid):
+  if not type(pid).__name__ == 'int':
+    raise TypeError('pid must be an int')
+  if not pid in PIDS:
+    p = PidStat(pid)
+    PIDS[pid] = p
+    if len(PIDS) == 1:
+      # Set up std* for first process
+      stdin = FileStat('<stdin>')
+      stdout = FileStat('<stdout>')
+      stderr = FileStat('<stderr>')
+      p.files = p.files + [stdin, stdout, stderr]
+      p.fds[0] = stdin
+      p.fds[1] = stdout
+      p.fds[2] = stderr
+  return PIDS[pid]
+
+
+# Return true if we should ignore this file
+def should_ignore(fname):
+  for i in IGNORE:
+    if i.search(fname):
+      return True
+  return False
+
+
+# Parse a system call
+def parse_syscall(call,proc,line):
+  try:
+    re = getattr(MODULE,'match_'+call)
+    m = re.match(line)
+    if not m:
+      raise ParseError(call+':\n'+line)
+    record = m.groups()
+    parsefn = getattr(MODULE,'parse_'+call)
+    apply(parsefn,[proc,record])
+  except AttributeError:
+    raise ParseError('Unhandled system call: %s\n%s'%(call,line))
+
+
+def parse_clone(p,rec):
+  flags = rec[0]
+  child = int(rec[1])
+  c = check_pid(child)
+
+  c.ppid = p.pid
+  c.exe = p.exe # In case no execve
+
+  if 'CLONE_THREAD' in flags:
+    # Child is a thread
+    c.thread = True
+
+  if 'CLONE_FILES' in flags:
+    # Parent and child have same descriptor table
+    c.fds = p.fds
+    c.files = p.files
+  else:
+    # Child gets copy of descriptor table
+    for fd in p.fds:
+      if not fd in c.fds:
+        fname = p.fds[fd].fname
+        file = FileStat(fname)
+        c.fds[fd] = file
+        if should_ignore(fname):
+          continue
+        c.files.append(file)
+
+parse_vfork = parse_clone
+parse_fork = parse_clone
+
+
+def parse_execve(p,rec):
+  exe = rec[0]
+  if p.thread:
+    raise ParseException('pid %d is a thread, but it did execve' % p.pid)
+  p.exe = exe
+
+
+def parse_open(p,rec):
+  fname = rec[0]
+  flags = rec[1]
+  mode = rec[2]
+  fd = int(rec[3])
+  file = FileStat(fname)
+  file.mode = mode
+  file.flags = flags
+  p.fds[fd] = file
+  if should_ignore(fname):
+    return
+  p.files.append(file)
+
+parse_openat = parse_open
+
+
+def parse_close(p,rec):
+  fd = int(rec[0])
+  if fd in p.fds:
+    del p.fds[fd]
+  else:
+    # if you get this its probably because of some untraced
+    # socket operation like recvmsg that I am not handling
+    sys.stderr.write("WARNING: fd %d not open in pid %d\n"%(fd,p.pid))
+  
+
+def parse_dup(p,rec):
+  old = int(rec[0])
+  new = int(rec[1])
+  p.check_open(old)
+  p.fds[new] = p.fds[old]
+
+parse_dup2 = parse_dup
+
+def parse_read(p,rec):
+  fd = int(rec[0])
+  read = int(rec[1])
+  p.check_open(fd)
+  file = p.fds[fd]
+  file.bread = file.bread + read
+  file.nread = file.nread + 1
+
+parse_readv = parse_read
+
+def parse_write(p,rec):
+  fd = int(rec[0])
+  written = int(rec[1])
+  p.check_open(fd)
+  file = p.fds[fd]
+  file.bwrite = file.bwrite + written
+  file.nwrite = file.nwrite + 1
+
+parse_writev = parse_write
+
+def parse_lseek(p,rec):
+  fd = int(rec[0])
+  offset = int(rec[1])
+  whence = rec[2]
+  p.check_open(fd)
+  file = p.fds[fd]
+  file.nseek = file.nseek + 1
+
+
+def parse_pipe(p,rec):
+  read = int(rec[0])
+  write = int(rec[1])
+  readf = FileStat('<pipe>')
+  p.fds[read] = readf
+  p.files.append(readf)
+  writef = FileStat('<pipe>')
+  p.fds[write] = writef
+  p.files.append(writef)
+
+
+def parse_fcntl(p,rec):
+  fd = int(rec[0])
+  cmd = rec[1]
+  newfd = int(rec[3])
+  # Only if its creating a new fd
+  if 'F_DUPFD' in cmd:
+    p.check_open(fd)
+    p.fds[newfd] = p.fds[fd]
+
+def parse_fcntl64(p,rec):
+  parse_fcntl(p,rec)
+
+def parse_socket(p,rec):
+  fd = int(rec[0])
+  sock = FileStat('<socket>')
+  p.fds[fd] = sock
+  p.files.append(sock)
+
+
+def parse_socketpair(p,rec):
+  sv0 = int(rec[0])
+  sv1 = int(rec[1])
+  sock0 = FileStat('<socket>')
+  sock1 = FileStat('<socket>')
+  p.fds[sv0] = sock0
+  p.fds[sv1] = sock1
+  p.files = p.files + [sock0, sock1]
+
+
+def join_lines(unfinished,resumed):
+  unfinished = unfinished[0:unfinished.find('<unfinished')]
+  resumed = resumed[resumed.rfind('>')+1:]
+  joined = " ".join((unfinished+resumed).split())
+  return joined.replace(' )',')').replace('( ','(')
+
+
+# Parse strace output from log file
+def parse_strace_output(log):
+  for line in open(log):
+    line = line[:-1]
+
+    # Correct unfinished lines
+    if '...>' in line:
+      pid = int(line.split(None,1)[0])
+      p = check_pid(pid)
+      p.unfinished = line
+      continue
+    if '<...' in line:
+      pid = int(line.split(None,1)[0])
+      p = check_pid(pid)
+      line = join_lines(p.unfinished,line)
+
+    # Is line a system call?
+    m = match_syscall.match(line)
+    if m:
+      pid = int(m.group(1))
+      call = m.group(2)
+      ret = m.group(3)
+      # skip unknown lines
+      if '?' in ret: continue
+      result = int(m.group(3))
+      # skip failed calls
+      if result < 0: continue
+      p = check_pid(pid)
+      parse_syscall(call,p,line)
+      continue
+
+    # Is line a signal?
+    if match_signal.match(line): continue
+  
+    # Don't know what it is? log it!
+    raise ParseError('Unrecognized strace line:\n'+line)
+
+def main():
+
+  # Look for kickstart in locak directory
+  KICKSTART = './kickstart'
+  if not (os.path.isfile(KICKSTART) and os.access(KICKSTART, os.X_OK)):
+    # Check for PEGASUS_HOME
+    PEGASUS_HOME = os.getenv('PEGASUS_HOME')
+    if not PEGASUS_HOME:
+      sys.stderr.write('Please set PEGASUS_HOME\n')
+      sys.exit(1)
+    
+    # Look for kickstart in $PEGASUS_HOME/bin
+    KICKSTART = os.path.join(PEGASUS_HOME,'bin','kickstart')
+    if not (os.path.isfile(KICKSTART) and os.access(KICKSTART, os.X_OK)):
+      sys.stderr.write('Kickstart not found: %s\n' % KICKSTART)
+      sys.exit(1)
+
+  # Check for strace
+  STRACE = which('strace')
+  if not STRACE:
+    sys.stderr.write('strace not found: %s\n', STRACE)
+    sys.exit(1)
+  if not os.access(STRACE, os.X_OK):
+    sys.stderr.write('strace is not executable: %s\n', STRACE)
+    sys.exit(1)
+
+  # Separate kickstart arguments from normal arguments
+  XFORM = None
+  args = sys.argv[1:]
+  if len(args) == 0:
+    usage()
+  kargs = []
+  while len(args)>0:
+    arg = args[0]
+    if arg in KICKSTART_ARGS:
+      # Get the transformation name if available
+      if args[0] == '-n': XFORM = args[1]
+      kargs.append(args.pop(0))
+      if KICKSTART_ARGS[arg]:
+        kargs.append(args.pop(0))
+    else:
+      break
+  if len(args) == 0:
+    usage()
+
+  # Generate a random name for the fifo
+  TMPDIR = os.getenv('TMPDIR','/tmp')
+  fifo = os.path.join(TMPDIR,'strace-'+str(uuid4()))
+
+  # Make a fifo for strace to write to
+  os.mkfifo(fifo, 0600)
+
+  # Construct complete argument string
+  myargs = [KICKSTART] + kargs + \
+           [STRACE,'-o',fifo,'-f','-F','-s','-x','-e',','.join(SYSCALLS)] + args
+
+  # Launch kickstart + strace + application
+  p = Popen(myargs)
+
+  # Make sure it didn't fail immediately
+  time.sleep(0.5)
+  if p.poll() is not None:
+    os.unlink(fifo)
+    sys.exit(p.wait())
+
+  try:
+    try:
+      # parse strace output
+      parse_strace_output(fifo)
+    except Exception:
+      # Kill kickstart, no need to continue
+      os.kill(p.pid, signal.SIGTERM)
+      raise
+  finally:
+    # Remove the fifo
+    os.unlink(fifo)
+
+  # Wait for kickstart
+  result = p.wait()
+
+  # Print stats if result OK
+  if result == 0:
+    print >> sys.stderr,'xform','pid','exe','file','bread','nread','bwrite','nwrite','nseek','mode','flags'
+    keys = PIDS.keys()
+    keys.sort()
+    for pid in keys:
+      p = PIDS[pid]
+      # Skip threads
+      if p.thread: continue
+      for file in p.files:
+        print >> sys.stderr,XFORM,pid,p.exe,file.fname,file.bread,file.nread,file.bwrite,file.nwrite,file.nseek,file.mode,file.flags
+
+  # Report the status from kickstart
+  sys.exit(result)
+
+
+if __name__ == '__main__':
+  main()
