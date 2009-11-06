@@ -343,7 +343,8 @@
       <fileset dir="bin">
 	<include name="dirmanager"/>
         <include name="cleanup"/>
-        
+        <include name="symlink"/>
+	<include name="osg-srm-wrapper"/>
 	<!-- add script files to copy as necessary -->
       </fileset>
     </copy>
