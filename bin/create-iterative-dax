@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# generate a Concrete Dag by providing a DAX
+#
+# $Id$
+
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java "-Dpegasus.home=${PEGASUS_HOME}" $addon examples.iterative.CreateIterativeDAX "$@"
