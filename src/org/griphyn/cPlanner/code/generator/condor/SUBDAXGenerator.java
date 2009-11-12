@@ -268,12 +268,31 @@ public class SUBDAXGenerator{
         //if it is a relative path, then ???
         options.setSanitizePath( true );
         
-        //retrieve the metadata in the subdax.
-        //means the the dax needs to be generated beforehand.
-        Map metadata = getDAXMetadata( options.getDAX() ); 
-       
-        String label = (String) metadata.get( "name" );
-        String index = (String) metadata.get( "index" );
+        //figure out the label and index for SUBDAX
+        String label = null;
+        String index = null;
+        File dax = new File( options.getDAX() );
+        if( dax.exists() ){
+            //retrieve the metadata in the subdax.
+            //means the the dax needs to be generated beforehand.
+            Map metadata = getDAXMetadata( options.getDAX() ); 
+            label = (String) metadata.get( "name" );
+            index = (String) metadata.get( "index" );
+        }
+        else{
+            //try and construct on basis of basename prefix option
+            String basenamePrefix = options.getBasenamePrefix() ;
+            if( basenamePrefix == null ){
+                StringBuffer error = new StringBuffer();
+                error.append( "DAX file for subworkflow does not exist " ).append( dax ).
+                      append( " . Either set the --basename option to subworkflow or make sure dax exists" );
+                throw new RuntimeException( error.toString() );
+            }
+            label = options.getBasenamePrefix();
+            index = "0";
+            mLogger.log( "DAX File for subworkflow does not exist. Set label value to the basename option passed ",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
 
         String baseDir = options.getBaseSubmitDirectory();
         String relativeDir = null;
