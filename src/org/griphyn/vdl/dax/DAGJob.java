@@ -223,7 +223,7 @@ public class DAGJob extends Job implements Cloneable{
              result.append( newindent );
 
              result.append( "<pfn url=\"" ).append( this.mPFN ).append( "\"" ).
-                    append( "site=\"").append( this.mSite ).append(  "\"" ).
+                    append( " site=\"").append( this.mSite ).append(  "\"" ).
                     append( "/>" );
 
              result.append( newline);
