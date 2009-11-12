@@ -227,16 +227,19 @@ public class DAGJob extends Job implements Cloneable{
                     append( "/>" );
 
              result.append( newline);
+             if ( indent != null && indent.length() > 0 ) result.append( indent );
+
+             result.append("</" ).append( tag ).append( ">");
 
          }
          else{// add newline and done
-            result.append("</" ).append( tag ).append( ">");
-             }
-
-        if ( indent != null )
+            result.append("/>" );
+         }
+         
+         if ( indent != null )
             result.append( newline );
 
-        return result.toString();
+         return result.toString();
 
      }
 
