@@ -54,6 +54,17 @@ public class CreateOrchestratingDAX{
     }
 
     public String constructDAX( String daxBasename , String computeDAX, int iteration ){
+        
+        // check for end of iteration
+        //create the LEAF DAX and exit
+        if( iteration == mMaxIterations ){
+            String leafDAXFile = getOrchestratingDAXPFN( mDirectory,
+                                                      getDAXLFN( daxBasename, iteration ));
+            CreateLeafDAX createLeafDAX = new CreateLeafDAX();
+            createLeafDAX.constructDAX( leafDAXFile  );  
+            return leafDAXFile;
+        }
+            
         String daxFile = null;
 	try{
 	    //construct a dax object

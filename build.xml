@@ -109,7 +109,7 @@
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
 	   encoding="UTF-8" debug="true"
-	   includes="*.java,edu/**/*.java,org/**/*.java"/>
+	   includes="*.java,edu/**/*.java,examples/**/*.java,org/**/*.java"/>
   </target>
 
   <target name="deprecation" depends="checkjava"

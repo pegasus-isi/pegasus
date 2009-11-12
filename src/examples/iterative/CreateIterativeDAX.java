@@ -71,8 +71,8 @@ public class CreateIterativeDAX {
         mDirectory = dir.getAbsolutePath();
 
         //sanity check
-        if( currentIteration == mMaxIterations ){
-            //create the LEAF DAX and exit
+        if( currentIteration > mMaxIterations ){
+            throw new RuntimeException( "Current Iteration cannot be greater than max iterations" );
         }
 
         String computeDAXFile = new File( mDirectory, getDAXLFN( COMPUTE_DAX_BASENAME, currentIteration )).getAbsolutePath();
