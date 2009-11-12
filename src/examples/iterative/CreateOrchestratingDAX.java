@@ -5,7 +5,6 @@ package examples.iterative;
  * and open the template in the editor.
  */
 
-import examples.iterative.CreateDAX;
 import java.io.File;
 import org.griphyn.vdl.dax.ADAG;
 import org.griphyn.vdl.dax.Job;
@@ -77,7 +76,7 @@ public class CreateOrchestratingDAX{
             DAXJob job1 = new DAXJob( id1, daxLFN );
             job1.setDAXPFN( computeDAX, "local" );
             //add some arguments
-            job1.addArgument( new PseudoText( "--dir " + "iteration_" + iteration  + " -vvvvv --force") );
+            job1.addArgument( new PseudoText( getDAXArguments( iteration ) ) );
 	    //add the job to the dax
 	    dax.addJob( job1 );
 
@@ -107,7 +106,7 @@ public class CreateOrchestratingDAX{
 	    DAXJob job3 = new DAXJob( id3, nextDAXLFN );
             job3.setDAXPFN( getOrchestratingDAXPFN( mDirectory, nextDAXLFN), "local" );
             //add some arguments
-            job3.addArgument( new PseudoText( "--dir " + "iteration-" + nextIteration  + " -vvvvv ") );
+            job3.addArgument( new PseudoText( getDAXArguments( nextIteration ) ) );
 	    //add the job to the dax
 	    dax.addJob( job3 );
 
@@ -130,6 +129,21 @@ public class CreateOrchestratingDAX{
         return daxFile;
         }
 
+    /**
+     * Returns the arguments for the DAX job.
+     * 
+     * @param iteration  the iteration number
+     * 
+     * @return
+     */
+    protected String getDAXArguments( int iteration ){
+        StringBuffer args = new StringBuffer();
+        args.append( " --dir ").append( "iteration_" + iteration ).
+             append( " -vvvvv" ).
+             append( " --force" ).
+             append( " --basename " ).append( "iteration-" + iteration );
+        return args.toString();
+    }
     /**
      * Usage : CreateDAX daxfile
      *
