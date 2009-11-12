@@ -77,7 +77,7 @@ public class CreateOrchestratingDAX{
             DAXJob job1 = new DAXJob( id1, daxLFN );
             job1.setDAXPFN( computeDAX, "local" );
             //add some arguments
-            job1.addArgument( new PseudoText( "--dir " + "iteration_" + iteration  + " -vvvvv ") );
+            job1.addArgument( new PseudoText( "--dir " + "iteration_" + iteration  + " -vvvvv --force") );
 	    //add the job to the dax
 	    dax.addJob( job1 );
 
