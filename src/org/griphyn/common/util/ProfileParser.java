@@ -19,8 +19,6 @@ package org.griphyn.common.util;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.Iterator;
 import org.griphyn.cPlanner.classes.Profile;
 
@@ -45,7 +43,7 @@ public class ProfileParser
    * -----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
    *   0  | -,F |Cn,0 | -,E1| -,E1| -,1 | -,E1| -,E1| -,E1| -,E1|
    *   1  | -,E2| -,E1| -,E1| -,E1| -,2 | -,E1| -,E1| -,E1| -,E1|
-   *   2  | -,F |Ck,2 | -,E1| -,E1| -,E1| -,E1| -,E1| -,3 | -,E1|
+   *   2  | -,F |Ck,2 | -,E1| -,E1| -,E1| -,E1| -,E1| -,3 |Ck,E1|
    *   3  | -,E2|Cv,6 | -E1 | -,E1| -,E1| -,E1| -,4 | -,E1|Cv,6 |
    *   4  | -,E2|Cv,4 |Cv,4 |Cv,4 |Cv,4 | -,5 | -,7 |Cv,4 |Cv,4 |
    *   5  | -,E2|Cv,4 |Cv,4 |Cv,4 |Cv,4 |Cv,4 |Cv,4 |Cv,4 |Cv,4 |
@@ -131,6 +129,7 @@ public class ProfileParser
       case '.':  charset = 1; break;
       case '@':  charset = 1; break;
       case '-':  charset = 1; break;
+      case '+':  charset = 1; break;
       case '/':  charset = 1; break;
       case ',':  charset = 2; break;
       case ';':  charset = 3; break;
@@ -207,44 +206,6 @@ public class ProfileParser
   {
     StringBuffer result = new StringBuffer();
 
-//     // phase 1: convert list into map of maps
-//     Map m = new TreeMap();
-//     for ( Iterator i=l.iterator(); i.hasNext(); ) {
-//       Profile p = (Profile) i.next();
-//       String ns = p.getProfileNamespace();
-//       if ( ! m.containsKey(ns) ) m.put( ns, new TreeMap() );
-//       Map kv = (Map) m.get(ns);
-//       kv.put( p.getProfileKey(), p.getProfileValue() );
-//     }
-//
-//     // phase 2: convert map of maps into string using minimal space
-//     boolean flag1 = false;
-//     for ( Iterator i=m.keySet().iterator(); i.hasNext(); ) {
-//       String ns = (String) i.next();
-//       Map kv = (Map) m.get(ns);
-//       if ( flag1 ) result.append(';');
-//       result.append(ns).append("::");
-//
-//       boolean flag2 = false;
-//       for ( Iterator j=kv.keySet().iterator(); j.hasNext(); ) {
-// 	String key = (String) j.next();
-// 	String value = (String) kv.get(key);
-// 	if ( flag2 ) result.append(',');
-// 	result.append(key).append('=').append('"');
-//
-// 	// escape all dquote and backslash with backslash
-// 	for ( int k=0; k<value.length(); ++k ) {
-// 	  char ch = value.charAt(k);
-// 	  if ( ch == '"' || ch == '\\' ) result.append('\\');
-// 	  result.append(ch);
-// 	}
-//
-// 	result.append('"');
-// 	flag2 = true;
-//       }
-//       flag1 = true;
-//     }
-
     // faster, shorter, less mem, retains ordering; alas, no minimal output
     boolean flag = false;
     String previous = "invalid namespace";
@@ -282,7 +243,8 @@ public class ProfileParser
   public static void main( String args[] )
   {
     ProfileParser me = new ProfileParser();
-
+    args=new String[1];
+    args[0] = "condor::+version=\"2.0\"";
     for ( int i=0; i<args.length; ++i ) {
       System.out.println( "input string in next line\n" + args[i] );
       List l = null;
