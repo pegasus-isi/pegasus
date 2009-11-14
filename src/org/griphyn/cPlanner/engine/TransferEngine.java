@@ -917,6 +917,12 @@ public class TransferEngine extends Engine {
                 //check to see if the input file is optional
                 if(pf.fileOptional()){
                     //no need to add a transfer node for it if no location found
+
+                    //remove the PegasusFile object from the list of
+                    //input files for the job
+                    boolean removed = job.getInputFiles().remove( pf );
+                    //System.out.println( "Removed " + pf.getLFN() + " " + removed );
+
                     continue;
                 }
 
