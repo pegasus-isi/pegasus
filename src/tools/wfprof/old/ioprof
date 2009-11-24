@@ -76,10 +76,7 @@ Yes, it does trace I/O performed on pipes.
 
 SOCKETS:
 
-Yes, it traces I/O performed on sockets, but the implementation
-is incomplete. It doesn't currently handle some operations that
-could potentially create socket descriptors like accept() and 
-recvmsg().
+Yes, it traces I/O performed on sockets.
 
 FORK/CLONE/VFORK:
 
@@ -125,7 +122,6 @@ except:
 
 # TODO Accept arguments on the command line or in an environment variable
 # TODO Optionally write report in XML
-# TODO Keep track of I/O for sockets better
 # TODO Track error statistics (e.g. number of failed close, etc.)
 # TODO Make kickstart optional
 # TODO Make SYSCALLS table a dictionary and use it to map the regexes and parse_* functions
@@ -156,6 +152,11 @@ SYSCALLS = [
   'fcntl64', # likewise
   'socket',
   'socketpair',
+  'accept', # creates a client fd
+  'bind', # just for addr info
+  'connect', # just for addr info
+  'recvfrom',
+  'recvmsg',
 
   # These could create descriptors but 
   # are not handled yet because I haven't
@@ -167,7 +168,6 @@ SYSCALLS = [
   'readv',
   'writev',
   'fork', # aliased to clone on linux?
-  'accept',
   'signalfd',
   'mq_open',
   'eventfd',
@@ -268,6 +268,11 @@ match_socket = re.compile(r'^\d+\s+socket\([^\)]+\)\s+=\s+(-?\d+)')
 match_socketpair = re.compile(r'^\d+\s+socketpair\([^\[]+\[(\d+), (\d+)\]\)\s+=\s+(-?\d+)')
 match_writev = re.compile(r'^\d+\s+writev\((\d+),.*\)\s+=\s+(-?\d+)')
 match_readv = re.compile(r'^\d+\s+readv\((\d+),.*\)\s+=\s+(-?\d+)')
+match_accept = re.compile(r'^\d+\s+accept\(.*,\s({.*}),.*\)\s+=\s+(-?\d+)')
+match_bind = re.compile(r'^\d+\s+bind\((\d+),\s({.*}),.*\)\s+=\s+(-?\d+)')
+match_connect = re.compile(r'^\d+\s+connect\((\d+),\s({.*}),.*\)')
+match_recvmsg = re.compile(r'^\d+\s+recvmsg\((\d+),.*\)\s+=\s+(-?\d+)')
+match_recvfrom = re.compile(r'^\d+\s+recvfrom\((\d+),.*\)\s+=\s+(-?\d+)')
 
 
 def usage():
@@ -449,8 +454,8 @@ def parse_fcntl(p,rec):
     p.check_open(fd)
     p.fds[newfd] = p.fds[fd]
 
-def parse_fcntl64(p,rec):
-  parse_fcntl(p,rec)
+parse_fcntl64 = parse_fcntl
+
 
 def parse_socket(p,rec):
   fd = int(rec[0])
@@ -467,6 +472,41 @@ def parse_socketpair(p,rec):
   p.fds[sv0] = sock0
   p.fds[sv1] = sock1
   p.files = p.files + [sock0, sock1]
+
+
+def parse_bind(p,rec):
+  fd = int(rec[0])
+  sock = p.fds[fd]
+  sock.flags = rec[1]
+  sock.mode = 'bind'
+
+
+def parse_connect(p,rec):
+  fd = int(rec[0])
+  addr = rec[1]
+  sock = p.fds[fd]
+  sock.flags = addr
+  sock.mode = 'connect'
+
+
+def parse_accept(p,rec):
+  addr = rec[0]
+  fd = int(rec[1])
+  sock = FileStat('<socket>')
+  sock.flags = addr
+  sock.mode = 'accept'
+  p.fds[fd] = sock
+  p.files.append(sock)
+
+
+def parse_recvmsg(p,rec):
+  fd = int(rec[0])
+  bread = int(rec[1])
+  sock = p.fds[fd]
+  sock.bread += bread
+  sock.nread += 1
+
+parse_recvfrom = parse_recvmsg
 
 
 def join_lines(unfinished,resumed):
@@ -501,8 +541,11 @@ def parse_strace_output(log):
       # skip unknown lines
       if '?' in ret: continue
       result = int(m.group(3))
-      # skip failed calls
-      if result < 0: continue
+      # skip failed calls except connect
+      # connect is a special case because if the socket is
+      # set to non-blocking, then connect will return -1 with
+      # errno = EINPROGRESS. So just ignore errors on connect.
+      if result < 0 and not call == 'connect': continue
       p = check_pid(pid)
       parse_syscall(call,p,line)
       continue
