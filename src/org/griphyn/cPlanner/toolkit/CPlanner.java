@@ -344,7 +344,17 @@ public class CPlanner extends Executable{
             eSites.addAll( s.list() );
         }
         mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
-        
+
+        //sanity check to make sure that output site is loaded
+        if( mPOptions.getOutputSite() != null ){
+            String site = mPOptions.getOutputSite();
+            if( !s.list().contains( site ) ){
+                StringBuffer error = new StringBuffer( );
+                error.append( "The output site ["  ).append(  site ).
+                      append( "] not loaded from the site catalog." );
+                throw new  RuntimeException( error.toString() );
+            }
+        }
         
         mBag.add( PegasusBag.SITE_STORE, s );
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, 
