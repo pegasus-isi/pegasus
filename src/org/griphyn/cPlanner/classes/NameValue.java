@@ -59,6 +59,24 @@ implements Comparable{
     }
 
     /**
+     * Sets the key associated with this tuple.
+     *
+     * @param key the key associated with the tuple.
+     */
+    public void setKey( String key ){
+         this.name = key;
+    }
+
+    /**
+     * Sets the value associated with this tuple.
+     *
+     * @param value the value associated with the tuple.
+     */
+    public void setValue( String value ){
+         this.value = value;
+    }
+
+    /**
      * Returns the key associated with this tuple.
      *
      * @return the key associated with the tuple.

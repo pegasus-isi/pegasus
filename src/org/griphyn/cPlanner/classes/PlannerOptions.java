@@ -208,6 +208,11 @@ public class PlannerOptions extends Data implements Cloneable{
     private Properties mProperties;
 
     /**
+     * The options that need to be passed forward to pegasus-run.
+     */
+    private List<NameValue> mForwardOptions;
+
+    /**
      * Default Constructor.
      */
     public PlannerOptions(){
@@ -218,6 +223,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mPDAXFile         = null;
         mvExecPools       = new java.util.HashSet();
         mCacheFiles       = new java.util.HashSet();
+        mForwardOptions   = new java.util.LinkedList<NameValue>();
         mOutputPool       = null;
         mDisplayHelp      = false;
         mLoggingLevel     = 0;
@@ -742,6 +748,34 @@ public class PlannerOptions extends Data implements Cloneable{
     }
 
     /**
+     * Parses the argument in form of option=[value] and adds to the
+     * options that are to be passed ahead to pegasus-run.
+     *
+     * @param argument   the argument to be passed.
+     */
+    public void addToForwardOptions( String  argument ) {
+        //split on =
+        String[] arr = argument.split( "=" );
+        NameValue nv = new NameValue();
+        nv.setKey( arr[0] );
+        if( arr.length == 2 ){
+            //set the value
+            nv.setValue( arr[1] );
+        }
+        this.mForwardOptions.add( nv );
+    }
+
+    /**
+     * Returns the forward options set
+     *
+     * @return List<NameValue> containing the option and the value.
+     */
+    public List<NameValue> getForwardOptions(  ) {
+        return this.mForwardOptions;
+    }
+
+
+    /**
      * Sets the cleanup option for the planner.
      *
      * @param cleanup  boolean value.
@@ -1154,13 +1188,15 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mDate           = (Date)this.mDate.clone();
         pOpt.mPartitioningType = this.mPartitioningType;
         pOpt.mNumOfRescueTries = this.mNumOfRescueTries;
-        
+
+        //a shallow clone for forward options
+        pOpt.mForwardOptions  = this.mForwardOptions;
+
         pOpt.mProperties     = (Properties)this.mProperties.clone();
         //Note not cloning the vdsProps or mProperties
         pOpt.mVDSProps       = null;
         return pOpt;
     }
-
 
     /**
      * Generates a Set by parsing a comma separated string.
@@ -1227,6 +1263,7 @@ public class PlannerOptions extends Data implements Cloneable{
 
         return absPath;
     }
+
 
 
 }

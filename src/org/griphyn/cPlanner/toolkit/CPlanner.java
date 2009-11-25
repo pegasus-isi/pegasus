@@ -618,7 +618,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:",
+                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -679,6 +679,10 @@ public class CPlanner extends Executable{
                     
                 case 'f'://force
                     options.setForce(true);
+                    break;
+
+                case 'F'://forward
+                    options.addToForwardOptions( g.getOptarg() );
                     break;
 
                 case 'g': //group
@@ -939,7 +943,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[24];
+        LongOpt[] longopts = new LongOpt[25];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -968,6 +972,7 @@ public class CPlanner extends Executable{
         longopts[21]  = new LongOpt( "pap", LongOpt.NO_ARGUMENT, null, 'p' );
         longopts[22]  = new LongOpt( "job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j' );
         longopts[23]  = new LongOpt( "rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
+        longopts[24]  = new LongOpt( "forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
         return longopts;
     }
 
@@ -983,7 +988,7 @@ public class CPlanner extends Executable{
           " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
           "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] [-j <job-prefix>] " +
           " [ --relative-dir <relative directory to base directory> ][-g <vogroup>] [-o <output site>] " +
-          "\n [-r[dir name]] [--monitor] [-S] [-n]  [-v] [-V] [-h]";
+          "\n [-r[dir name]] [--monitor] [-F option[=value] ] [-S] [-n]  [-v] [-V] [-h]";
 
         System.out.println(text);
     }
@@ -1000,7 +1005,7 @@ public class CPlanner extends Executable{
            "\n pegasus-plan - The main class which is used to run  Pegasus. "  +
            "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " +
            "\n [--authenticate] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] " +
-           "\n [--dir <dir for o/p files>] [--force] [--group vogroup] [--megadag style] [--monitor] [--nocleanup] " +
+           "\n [--dir <dir for o/p files>] [--force] [--forward option=[value] ] [--group vogroup] [--megadag style] [--monitor] [--nocleanup] " +
            "\n [--output output site] [--randomdir=[dir name]] [--verbose] [--version][--help] " +
            "\n" +
            "\n Mandatory Options " +
@@ -1017,6 +1022,9 @@ public class CPlanner extends Executable{
            "\n -D |--dir          the directory where to generate the concrete workflow." +
            "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." +
            "\n -f |--force        skip reduction of the workflow, resulting in build style dag." +
+           "\n -F |--forward      any options that need to be passed ahead to pegasus-run in format option[=value] " +
+           "\n                    where value can be optional. e.g -F nogrid will result in --nogrid . The option " +
+           "\n                    can be repeated multiple times." +
            "\n -g |--group        the VO Group to which the user belongs " +
            "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames " +
            "\n -m |--megadag      type of style to use while generating the megadag in deferred planning." +
@@ -1519,8 +1527,18 @@ public class CPlanner extends Executable{
 
         result.append( "pegasus-run ").
                append( "-Dpegasus.user.properties=" ).append( mProps.getPropertiesInSubmitDirectory() ).
-               append( nodatabase ? " --nodatabase"  : "" ).
-               append( " " ).append( mPOptions.getSubmitDirectory() );
+               append( nodatabase ? " --nodatabase"  : "" );
+
+        //check if we need to add any other options to pegasus-run
+        for( Iterator<NameValue> it = mPOptions.getForwardOptions().iterator(); it.hasNext() ; ){
+            NameValue nv = it.next();
+            result.append( " --" ).append( nv.getKey() );
+            if( nv.getValue() != null ){
+                result.append( " " ).append( nv.getValue() );
+            }
+        }
+
+        result.append( " " ).append( mPOptions.getSubmitDirectory() );
 
         return result.toString();
 
