@@ -135,7 +135,11 @@ public class SiteInfo2SiteCatalogEntry {
             }
             else if( url.endsWith( "lsf" ) ){
                 gw.setScheduler( GridGateway.SCHEDULER_TYPE.LSF );
-            }  
+            }
+            else if( url.endsWith( "sge" ) ){
+                gw.setScheduler( GridGateway.SCHEDULER_TYPE.SGE);
+            }
+
             gw.setIdleNodes( (String)jm.getInfo( JobManager.IDLE_NODES ) );            
             gw.setTotalNodes( (String)jm.getInfo( JobManager.TOTAL_NODES ) );
             

@@ -413,7 +413,7 @@ public class SiteCatalogParser extends Parser {
                  	    this.log( element, name, value );                              
                         }                        
                         else if ( name.equals( "scheduler" ) ) {
-                            gw.setScheduler( GridGateway.SCHEDULER_TYPE.valueOf( value ));
+                            gw.setScheduler( value );
                  	    this.log( element, name, value );                              
                         }                                    
                         else if ( name.equals( "jobtype" ) ) {

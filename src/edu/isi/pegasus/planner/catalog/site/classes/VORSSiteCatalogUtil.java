@@ -330,7 +330,10 @@ public class VORSSiteCatalogUtil {
 	        }
 	        else if( url.endsWith( "lsf" ) ){
 	            return GridGateway.SCHEDULER_TYPE.LSF ;
-	        }  
+	        }
+                else if( url.endsWith( "sge" ) ){
+                    return GridGateway.SCHEDULER_TYPE.SGE;
+                }
 	        //if nothing is there than return fork
 	        return GridGateway.SCHEDULER_TYPE.Fork ;
 		}

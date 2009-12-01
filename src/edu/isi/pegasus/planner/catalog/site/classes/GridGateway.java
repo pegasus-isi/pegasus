@@ -34,6 +34,8 @@ import java.io.IOException;
  */
 public class GridGateway extends AbstractSiteData{
 
+
+
     /**
      * An enumeration of valid types of grid gateway.
      */
@@ -48,7 +50,7 @@ public class GridGateway extends AbstractSiteData{
     /**
      * An enumeration of valid schedulers on the grid gateway.
      */
-    public static enum SCHEDULER_TYPE{ Fork, LSF, PBS, Condor };
+    public static enum SCHEDULER_TYPE{ Fork, LSF, PBS, Condor, SGE, Unknown };
     
     
     /**
@@ -254,6 +256,25 @@ public class GridGateway extends AbstractSiteData{
         return mIdleNodes;
     }
     
+    /**
+     * Sets the the underlying scheduler that gateway talks to.
+     * In case the value does not match any of the predefined enumeration,
+     * the SCHEDULER_TYPE is set to Unknown.
+     *
+     * @param value  the string value
+     *
+     * @see SCHEDULER_TYPE
+     */
+    public void setScheduler(String value) {
+        try{
+           mScheduler = GridGateway.SCHEDULER_TYPE.valueOf( value );
+        }
+        catch( IllegalArgumentException iae ){
+            //set the scheduler to unknown
+            mScheduler = GridGateway.SCHEDULER_TYPE.Unknown;
+        }
+    }
+
     /**
      * Sets the the underlying scheduler that gateway talks to.
      * 
