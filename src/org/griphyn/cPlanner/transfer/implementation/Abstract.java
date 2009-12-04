@@ -262,8 +262,17 @@ public abstract class Abstract implements Implementation{
                 job.condorVariables.addIPFileForTransfer(mLocalUserProxy);
 
                 //set the environment variable to basefile name
-                job.envVariables.checkKeyInNS(ENV.X509_USER_PROXY_KEY,
-                                              mLocalUserProxyBasename);
+                //only for transfer jobs that dont execute on the local site
+                if( job.getSiteHandle().equalsIgnoreCase( "local" ) ){
+                    //the full path
+                    job.envVariables.checkKeyInNS(ENV.X509_USER_PROXY_KEY,
+                                                   this.mLocalUserProxy );
+                }
+                else{
+                    //just the basename
+                    job.envVariables.checkKeyInNS(ENV.X509_USER_PROXY_KEY,
+                                                   mLocalUserProxyBasename);
+                }
 
                 if(!condition2){
                     //means the transfer job is not being run in

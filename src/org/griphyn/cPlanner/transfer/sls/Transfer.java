@@ -198,9 +198,14 @@ public class Transfer   implements SLS {
 
         //we need to set the x bit on proxy correctly first
         if( mLocalUserProxyBasename != null ){
+            StringBuffer proxy = new StringBuffer( );
+            proxy.append( slsFile.getParent() ).append( File.separator ).
+                  append( mLocalUserProxyBasename);
             invocation.append( "/bin/bash -c \"chmod 600 " ).
-                              append( slsFile.getParent() ).append( File.separator ).
-                              append( mLocalUserProxyBasename).append(" && ");
+                              append( proxy.toString() ).append(" && ");
+
+            //backdoor to set the X509_USER_PROXY
+            job.envVariables.construct( ENV.X509_USER_PROXY_KEY, proxy.toString() );
         }
         invocation.append( entry.getPhysicalTransformation() );
 

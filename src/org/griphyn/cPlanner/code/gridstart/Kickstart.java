@@ -495,42 +495,47 @@ public class Kickstart implements GridStart {
         //to kickstart as argument
         gridStartArgs.append("-R ").append(job.executionPool).append(' ');
 
-        //handle the -w option that asks kickstart to change
-        //directory before launching an executable.
-        if(job.vdsNS.getBooleanValue(VDS.CHANGE_DIR_KEY) && !mWorkerNodeExecution ){
+        
+        //check for removing the directory keys only if worker node
+        //execution is disabled. JIRA Bug 80.
+        if( !mWorkerNodeExecution ){
+            String key = getDirectoryKey( job );
+
+
+            //handle the -w option that asks kickstart to change
+            //directory before launching an executable.
+            if(job.vdsNS.getBooleanValue(VDS.CHANGE_DIR_KEY) /*&& !mWorkerNodeExecution*/ ){
 
 //            Commented to take account of submitting to condor pool
 //            directly or glide in nodes. However, does not work for
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
-              String key = getDirectoryKey( job );
-              String directory = (String)job.condorVariables.removeKey( key );
+                String directory = (String)job.condorVariables.removeKey( key );
 
-            //pass the directory as an argument to kickstart
-            gridStartArgs.append("-w ").append(directory).append(' ');
-        }
-        
-        //handle the -W option that asks kickstart to create and change
-        //directory before launching an executable.
-        if(job.vdsNS.getBooleanValue(VDS.CREATE_AND_CHANGE_DIR_KEY ) && !mWorkerNodeExecution ){
+                //pass the directory as an argument to kickstart
+                gridStartArgs.append("-w ").append(directory).append(' ');
+            }
+
+            //handle the -W option that asks kickstart to create and change
+            //directory before launching an executable.
+            if(job.vdsNS.getBooleanValue(VDS.CREATE_AND_CHANGE_DIR_KEY ) /*&&  !mWorkerNodeExecution*/){
 	    
 //            Commented to take account of submitting to condor pool
 //            directly or glide in nodes. However, does not work for
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
-            String key = getDirectoryKey( job );
-            String directory = (String)job.condorVariables.removeKey( key );
+                String directory = (String)job.condorVariables.removeKey( key );
 
-            //pass the directory as an argument to kickstart
-            gridStartArgs.append(" -W ").append(directory).append(' ');
-        }
+                //pass the directory as an argument to kickstart
+                gridStartArgs.append(" -W ").append(directory).append(' ');
+            }
 
-        if(job.vdsNS.getBooleanValue(VDS.TRANSFER_PROXY_KEY)){
-            //just remove the remote_initialdir key
-            //the job needs to be run in the directory
-            //Condor or GRAM decides to run
-            job.condorVariables.removeKey("remote_initialdir");
-
+            if(job.vdsNS.getBooleanValue(VDS.TRANSFER_PROXY_KEY)){
+                //just remove the remote_initialdir key
+                //the job needs to be run in the directory
+                //Condor or GRAM decides to run
+                job.condorVariables.removeKey( key );
+            }
         }
 
 
@@ -1141,7 +1146,7 @@ public class Kickstart implements GridStart {
      * @param slsFile String
      *
      * @return String containing the postscript invocation
-     */
+     *//*
     protected String constructPOSTJob( SubInfo job,
                                        String headNodeURLPrefix,
                                        String headNodeDirectory,
@@ -1189,7 +1194,7 @@ public class Kickstart implements GridStart {
 
 
        return postJob.toString();
-   }
+   }*/
 
 
     /**
