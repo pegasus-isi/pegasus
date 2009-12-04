@@ -280,9 +280,18 @@ public abstract class Abstract implements Implementation{
                     //all probability the proxy is being transferred
                     //by gass_cache, and that does not preserve file
                     //permissions correctly
-                    job.envVariables.checkKeyInNS(ENV.GRIDSTART_PREJOB,
-                                                  "/bin/chmod 600 " +
-                                                  mLocalUserProxyBasename);
+                    if( job.getSiteHandle().equalsIgnoreCase( "local" ) ){
+                        //the full path
+                        job.envVariables.checkKeyInNS( ENV.GRIDSTART_PREJOB,
+                                                      "/bin/chmod 600 " +
+                                                      mLocalUserProxy );
+
+                    }
+                    else{
+                        job.envVariables.checkKeyInNS(ENV.GRIDSTART_PREJOB,
+                                                      "/bin/chmod 600 " +
+                                                      mLocalUserProxyBasename);
+                    }
                 }
                 if(!condition1){
                     //for glide in jobs also tag we are
