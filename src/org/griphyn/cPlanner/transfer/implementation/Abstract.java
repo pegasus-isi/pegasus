@@ -281,7 +281,7 @@ public abstract class Abstract implements Implementation{
                     //by gass_cache, and that does not preserve file
                     //permissions correctly
                     job.envVariables.checkKeyInNS(ENV.GRIDSTART_PREJOB,
-                                                  "chmod 600 " +
+                                                  "/bin/chmod 600 " +
                                                   mLocalUserProxyBasename);
                 }
                 if(!condition1){
