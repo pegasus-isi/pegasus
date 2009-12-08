@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -59,6 +60,16 @@ import java.util.Set;
 
 /**
  * The OSGMM implementation of the Site Catalog interface.
+ * This implementation also has a method to generate the SRM property mappings
+ * to be used by Pegasus.
+ *
+ * The following pegasus properties are created for the sites that have the SRM
+ * information available.
+ *
+ * <pre>
+ * pegasus.transfer.srm.[sitename].service.url
+ * pegasus.transfer.srm.[sitename].service.mountpoint
+ * </pre>
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -70,6 +81,11 @@ public class OSGMM implements SiteCatalog {
      */
     public static final String DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY = "osgmm.collector.host";
     
+    /**
+     * The pegasus property prefix.
+     */
+    public static final String PEGASUS_PROPERTY_PREFIX = "pegasus.transfer.srm";
+
     /**
      * The default condor collector to query to
      */
@@ -193,6 +209,11 @@ public class OSGMM implements SiteCatalog {
      * The VO to which the user belongs to.
      */
     private String mVO;
+
+    /**
+     * The collector host to query to.
+     */
+    private String mCollectorHost;
     
     /**
      * The grid to which the user belongs to.
@@ -320,7 +341,7 @@ public class OSGMM implements SiteCatalog {
         
         // TODO: these should come from either the command line or a config file
         //String collectorHost = "engage-central.renci.org";
-        String collectorHost = props.getProperty( OSGMM.DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY,
+        mCollectorHost = props.getProperty( OSGMM.DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY,
                                                   OSGMM.DEFAULT_CONDOR_COLLECTOR);
         mVO = props.getProperty( OSGMM.DEFAULT_VO_PROPERTY_KEY,
                                        OSGMM.DEFAULT_VO  ).toLowerCase();
@@ -328,7 +349,7 @@ public class OSGMM implements SiteCatalog {
         boolean onlyOSGMMValidatedSites = Boolean.parse( props.getProperty( OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES_PROPERTY_KEY),
                                                          OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES  );
         
-        mLogger.log( "The Condor Collector Host is " + collectorHost, 
+        mLogger.log( "The Condor Collector Host is " + mCollectorHost,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         mLogger.log( "The VO is " + mVO, 
                      LogManager.DEBUG_MESSAGE_LEVEL );
@@ -340,7 +361,7 @@ public class OSGMM implements SiteCatalog {
             constraint += " && SiteVerified==True";
         }
         
-        String condorStatusCmd[] = {"condor_status", "-any",  "-pool", collectorHost,
+        String condorStatusCmd[] = {"/opt/condor/default/bin/condor_status", "-any",  "-pool", mCollectorHost,
                                     "-constraint", constraint,
                                     "-format", "%s", "GlueSiteName",
                                     "-format", ";", "1",  // to force a semicolon, even if the attribute was not found
@@ -370,7 +391,7 @@ public class OSGMM implements SiteCatalog {
         }
         
         try{
-            mLogger.log( "condor_status command is \n " + cmdPretty,
+            mLogger.log( "condor_status command  is \n " + cmdPretty,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             Process p = r.exec( condorStatusCmd );
 
@@ -410,6 +431,205 @@ public class OSGMM implements SiteCatalog {
             //ignore
         }
         return true;
+    }
+
+    /**
+     * Generates SRM properties that can be used by Pegasus to do SRM URL
+     * substitution for the case where all the data is accessible on the
+     * worker nodes locally.
+     *
+     * @return Properties object containing the relevant Properties.
+     */
+    public Properties generateSRMProperties( ){
+        Properties result = new Properties( );
+
+        if( this.isClosed() ){
+            throw new SiteCatalogException( "Need to connect to site catalog before properties can be generated" );
+        }
+
+
+        String constraint = "regexp(\"file://\",GlueSEAccessProtocolEndpoint) && GlueSAPath=!=UNDEFINED && GlueSEControlProtocolEndpoint=!=UNDEFINED";
+
+
+        //condor_status -l -pool ligo-osgmm.renci.org -constraint 'regexp("file://", GlueSEAccessProtocolEndpoint) && GlueSAPath =!= UNDEFINED && GlueSEControlProtocolEndpoint =!= UNDEFINED' -format %s GlueSiteName -format ";" 1  -format "srm://%s?SFN=" 'substr(GlueSEControlProtocolEndpoint, 8)' -format "%s"  'ifThenElse(GlueVOInfoPath =!= UNDEFINED, GlueVOInfoPath, GlueSAPath)' -format ";" 1 -format "%s" GlueSAPath -format ";" 1   -format "%s" GlueVOInfoPath -format ";" 1   -format "%s" GlueCESEBindMountInfo   -format ";\n" 1
+        String condorStatusCmd[] = { "/opt/condor/default/bin/condor_status", "-l",  "-pool", mCollectorHost,
+                                     "-constraint", constraint,
+                                     "-format", "%s", "GlueSiteName", //retrieve the site name
+                                     "-format", ";", "1", // to force a semicolon, even if the attribute was not found
+                                     "-format", "srm://%s?SFN=", "substr(GlueSEControlProtocolEndpoint, 8)",
+                                     //"-format", "\";\"", "1", this is incorrect. java trips badly on this style
+                                     "-format", "%s" , "ifThenElse(GlueVOInfoPath =!= UNDEFINED, GlueVOInfoPath, GlueSAPath)",
+                                     "-format", ";", "1",
+                                     "-format", "%s", "GlueSAPath",
+                                     "-format", ";", "1",
+                                     "-format", "%s", "GlueVOInfoPath",
+                                     "-format", ";", "1",
+                                     "-format", "%s", "GlueCESEBindMountInfo",
+                                     "-format", ";\\n", "1" };
+
+        String cmdPretty = "";
+        for(int i=0; i < condorStatusCmd.length; i++)
+        {
+            cmdPretty += condorStatusCmd[i] + " ";
+        }
+        Runtime r = Runtime.getRuntime();
+        ListCallback ic = new ListCallback();
+        ListCallback ec = new ListCallback();
+
+        try{
+            mLogger.log( "condor_status command issued to retrieve SRM mappings is \n " + cmdPretty,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            Process p = r.exec( condorStatusCmd );
+
+            //spawn off the gobblers
+            StreamGobbler ips = new StreamGobbler( p.getInputStream(), ic );
+            StreamGobbler eps = new StreamGobbler( p.getErrorStream(), ec );
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            List<String> stdout = ic.getContents();
+            eps.join();
+            List<String> stderr = ec.getContents();
+
+            //get the status
+            int status = p.waitFor();
+
+            if( status != 0){
+                mLogger.log("condor_status command  exited with status " + status,
+                            LogManager.WARNING_MESSAGE_LEVEL);
+                //also dump the stderr
+                mLogger.log( "stderr for command invocation " + ec.getContents(),
+                            LogManager.ERROR_MESSAGE_LEVEL );
+                throw new RuntimeException( "condor-status command exited with non zero status "  + status );
+            }
+
+            //System.out.println( "The Stdout is " + stdout );
+            for( Iterator it = stdout.iterator(); it.hasNext(); ){
+                //create properties for each site
+                result.putAll( generateSRMProperties( (String)it.next() ) );
+            }
+
+
+        }
+        catch(IOException ioe){
+            mLogger.log( "IOException while calling out to condor_status. Probably" +
+                         " condor-status not in path.", ioe,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            //also dump the stderr
+            mLogger.log( "stderr for command invocation " + ec.getContents(),
+                         LogManager.ERROR_MESSAGE_LEVEL );
+            throw new RuntimeException( "IOException while invoking condor-status command", ioe );
+        }
+        catch( InterruptedException ie){
+            //ignore
+        }
+
+        return result;
+    }
+
+    /**
+     * Generates SRM properties that can be used by Pegasus to do SRM URL
+     * substitution for the case where all the data is accessible on the
+     * worker nodes locally for a particular site.
+     * The condor status output for a single site site is passed as input.
+     *
+     * Example condor_status output for a site
+     * <pre>
+     * CIT_CMS_T2;srm://cit-se.ultralight.org:8443/srm/v2/server?SFN=/mnt/hadoop/osg;/mnt/hadoop/osg;/mnt/hadoop/osg;/mnt/hadoop,/mnt/hadoop;
+     * </pre>
+     *
+     * The properties created have the following keys
+     * <pre>
+     * pegasus.transfer.srm.[sitename].service.url
+     * pegasus.transfer.srm.[sitename].service.mountpoint
+     * </pre>
+     * where [sitename] is replaced by the name of the site.
+     *
+     * @param line   the line from condor_status output for a site.
+     *
+     * @return Properties object containing the relevant Properties.
+     */
+    public Properties generateSRMProperties( String line ){
+        Properties result = new Properties();
+        mLogger.log( "Line being worked on is " + line,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+        //split the line first
+        String contents[]  = line.split(";");
+
+        // do we have a valid site name?
+        if (contents[0] == null || contents[0].equals("")) {
+                return result;
+        }
+        String site = contents[0];
+
+        
+        //do another sanity check
+        if( contents.length < 4 ){
+            //ignore the length
+            mLogger.log( "Ignoring line " + line,
+                         LogManager.WARNING_MESSAGE_LEVEL );
+            return result;
+        }
+
+        String srmURLPrefix = contents[ 1 ]; //the srm url prefix
+        String glueSAPath = contents[ 2 ]; //the storage access path
+        String glueVOPath = contents[ 3 ]; //the vo specific path . it is a subset of sa path
+        //figure out the mount point
+        String mountPoint = glueVOPath;
+        
+        if( contents.length == 5 ){
+           String bindMountInfo = contents[ 4 ]; //tells how to get to the path on file system.
+
+           //check if any replacement needs to be done
+            contents = bindMountInfo.split( "," );
+            if( contents.length == 2 ){
+                //we have to do replacement
+                //However we dont do any replacement for time being as it is incorrect.
+            }
+        }
+
+        //some sanity check on the srmURLPrefix
+        contents = srmURLPrefix.split( "," );
+        if( contents.length > 1 ){
+            //handling the following case
+            //UFlorida-PG;srm://srmb.ihepa.ufl.edu:8443/srm/v2/server,httpg://srmb.ihepa.ufl.edu:8443/srm/v2/server?SFN=/lustre/raidl/user/ligo;/lustre/raidl/user/;/lustre/raidl/user/ligo;;
+            mLogger.log( "Ignoring line " + line,
+                         LogManager.WARNING_MESSAGE_LEVEL );
+            return result;
+        }
+
+        //create the properties
+        String key = createPropertyKey( site, "service.url");
+        result.setProperty( key , srmURLPrefix );
+        mLogger.log( "Created property " + key + " -> " + srmURLPrefix,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        key = createPropertyKey( site, "service.mountpoint");
+        result.setProperty( key , mountPoint );
+        mLogger.log( "Created property " + key + " -> " + mountPoint,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        return result;
+    }
+
+    /**
+     * Creates the property key
+     * 
+     * @param site    the name of site
+     * @param suffix  the suffix to be added to site.
+     * @return
+     */
+    private String createPropertyKey( String site, String suffix ){
+        StringBuffer key = new StringBuffer();
+
+        key.append( OSGMM.PEGASUS_PROPERTY_PREFIX ).append( "." ).append( site ).
+            append( "." ).append( suffix );
+
+        return key.toString();
     }
 
     /**

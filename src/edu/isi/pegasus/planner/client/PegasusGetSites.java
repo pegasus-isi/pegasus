@@ -20,6 +20,8 @@ package edu.isi.pegasus.planner.client;
 
 
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
+import edu.isi.pegasus.planner.catalog.site.impl.OSGMM;
+
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
@@ -37,12 +39,16 @@ import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * The client that replaces the perl based pegasus-get-sites. 
@@ -58,7 +64,8 @@ public class PegasusGetSites extends Executable{
     private String mGrid ="";
     private String mSource="";
     private SiteCatalog mCatalog = null;
-    private String mFile = null;
+    private String mSCFile = null;
+    private String mPropertiesFilename;
     
     /**
      * The default constructor.
@@ -76,7 +83,7 @@ public class PegasusGetSites extends Executable{
      */
     public static void main( String[] args ){        
     	PegasusGetSites me = new PegasusGetSites();
-    	     int result = 0;
+    	int result = 0;
         double starttime = new Date().getTime();
         double execTime  = -1;
 
@@ -129,7 +136,7 @@ public class PegasusGetSites extends Executable{
         StringBuffer text = new StringBuffer();
         text.append( "\n" ).append( " $Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
-             append( "\n" ).append( "Usage : pegasus-get-sites --source <source> --grid <grid> --vo <vo> --sc <filename> " ).
+             append( "\n" ).append( "Usage : pegasus-get-sites --source <source> --grid <grid> --vo <vo> --sc <filename> --properties <properties file>" ).
              append( "\n" ).append( " [-v] [-h]" ).
              append( "\n" ).
              append( "\n Mandatory Options " ).
@@ -139,6 +146,7 @@ public class PegasusGetSites extends Executable{
              append( "\n -g |--grid       the grid for which to generate the site catalog ").
              append( "\n -o |--vo         the virtual organization to which the user belongs " ).
              append( "\n -s |--sc         the path to the created site catalog file" ).
+             append( "\n -p |--properties the properties file to be created" ).
              append( "\n -v |--verbose    increases the verbosity of messages about what is going on" ).
              append( "\n -V |--version    displays the version of the Pegasus Workflow Management System" ).
              append( "\n -h |--help       generates this help." );          
@@ -153,7 +161,7 @@ public class PegasusGetSites extends Executable{
             StringBuffer text = new StringBuffer();
         text.append( "\n" ).append( " $Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
-             append( "\n" ).append( "Usage : pegasus-get-sites -source <site> -g <grid> -o <vo> -s <filename> " ).
+             append( "\n" ).append( "Usage : pegasus-get-sites -source <site> -g <grid> -o <vo> -s <filename> -p <filename>" ).
              append( "\n" ).append( " [-v] [-h]" );
         
        System.out.println( text.toString() );
@@ -170,11 +178,11 @@ public class PegasusGetSites extends Executable{
         
         p.setProperty( "pegasus.catalog.site", mSource );
         
-        if(mFile == null){
+        if(mSCFile == null){
             //no sc path is passed using command line                                
             //sc path is not set in the properties file go to default
             File f = new File(p.getPegasusHome(), "var/sites.xml");
-            mFile = f.getAbsolutePath();                                    
+            mSCFile = f.getAbsolutePath();
                 
         }            
         
@@ -198,7 +206,9 @@ public class PegasusGetSites extends Executable{
         /* load all sites in site catalog */
         try{        	                   
             List s = new ArrayList(1);
-            s.add( "*" );   
+            s.add( "*" );
+
+            
             mCatalog.load( s ); 
             List toLoad = new ArrayList( mCatalog.list() );
             toLoad.add( "local" );            
@@ -214,13 +224,36 @@ public class PegasusGetSites extends Executable{
                  
             mLogger.log( "Loaded " + num + " sites ", LogManager.INFO_MESSAGE_LEVEL );
             //write DAX to file
-            FileWriter scFw = new FileWriter( mFile  );
-            mLogger.log( "Writing out site catalog to " + new File( mFile ).getAbsolutePath() ,
+            FileWriter scFw = new FileWriter( mSCFile  );
+            mLogger.log( "Writing out site catalog to " + new File( mSCFile ).getAbsolutePath() ,
                          LogManager.INFO_MESSAGE_LEVEL );
             store.toXML( scFw, "" );
             scFw.close();
            
   
+            //generate the SRM properties file only if
+            //interfacing with OSGMM.
+            if( mCatalog instanceof OSGMM ){
+                Properties properties =  ((OSGMM)mCatalog).generateSRMProperties();
+                mLogger.log( "Number of SRM Properties retrieved " + properties.entrySet().size() ,
+                             LogManager.INFO_MESSAGE_LEVEL );
+                mLogger.log( properties.toString(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+
+                File file = ( mPropertiesFilename == null )?
+                            //default one in the working directory
+                            //create a temporary file in directory
+                            File.createTempFile( "pegasus.", ".properties", new File( "." ) ):
+                            new File( mPropertiesFilename );
+                
+                OutputStream os = new FileOutputStream( file );
+                mLogger.log( "Writing out properties to " + file.getAbsolutePath() ,
+                             LogManager.INFO_MESSAGE_LEVEL );
+
+                properties.store( os, "Pegasus SRM Properties" );
+                os.close();
+            }
+
         }
         catch ( SiteCatalogException e ){
             e.printStackTrace();
@@ -273,7 +306,7 @@ public class PegasusGetSites extends Executable{
     public void parseCommandLineArguments(String[] args){
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("pegasus-get-sites", args, "1:g:o:s:hvV", longOptions, false);
+        Getopt g = new Getopt("pegasus-get-sites", args, "1:g:o:s:p:hvV", longOptions, false);
         g.setOpterr(false);
 
         int option = 0;
@@ -295,9 +328,13 @@ public class PegasusGetSites extends Executable{
                     break;
                     
                 case 's': //--sc
-                    mFile = g.getOptarg();
+                    mSCFile = g.getOptarg();
                     break;
-                    
+
+                case 'p': //--properties
+                    mPropertiesFilename = g.getOptarg();
+                    break;
+
                 case 'v': //--verbose
                     level++;
                     break;
@@ -329,7 +366,7 @@ public class PegasusGetSites extends Executable{
      * @return
      */
     public LongOpt[] generateValidOptions() {
-          LongOpt[] longopts = new LongOpt[7];
+          LongOpt[] longopts = new LongOpt[8];
 
         longopts[0]   = new LongOpt( "source", LongOpt.REQUIRED_ARGUMENT, null, '1' );
         longopts[1]   = new LongOpt( "grid", LongOpt.REQUIRED_ARGUMENT, null, 'g' );
@@ -338,6 +375,7 @@ public class PegasusGetSites extends Executable{
         longopts[4]   = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[5]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[6]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
+        longopts[6]   = new LongOpt( "properties", LongOpt.REQUIRED_ARGUMENT, null, 'p' );
         
         return longopts;
     }
