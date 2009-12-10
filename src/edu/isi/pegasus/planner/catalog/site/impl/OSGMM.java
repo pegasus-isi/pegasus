@@ -361,7 +361,7 @@ public class OSGMM implements SiteCatalog {
             constraint += " && SiteVerified==True";
         }
         
-        String condorStatusCmd[] = {"/opt/condor/default/bin/condor_status", "-any",  "-pool", mCollectorHost,
+        String condorStatusCmd[] = {"condor_status", "-any",  "-pool", mCollectorHost,
                                     "-constraint", constraint,
                                     "-format", "%s", "GlueSiteName",
                                     "-format", ";", "1",  // to force a semicolon, even if the attribute was not found
@@ -452,7 +452,7 @@ public class OSGMM implements SiteCatalog {
 
 
         //condor_status -l -pool ligo-osgmm.renci.org -constraint 'regexp("file://", GlueSEAccessProtocolEndpoint) && GlueSAPath =!= UNDEFINED && GlueSEControlProtocolEndpoint =!= UNDEFINED' -format %s GlueSiteName -format ";" 1  -format "srm://%s?SFN=" 'substr(GlueSEControlProtocolEndpoint, 8)' -format "%s"  'ifThenElse(GlueVOInfoPath =!= UNDEFINED, GlueVOInfoPath, GlueSAPath)' -format ";" 1 -format "%s" GlueSAPath -format ";" 1   -format "%s" GlueVOInfoPath -format ";" 1   -format "%s" GlueCESEBindMountInfo   -format ";\n" 1
-        String condorStatusCmd[] = { "/opt/condor/default/bin/condor_status", "-l",  "-pool", mCollectorHost,
+        String condorStatusCmd[] = { "condor_status", "-l",  "-pool", mCollectorHost,
                                      "-constraint", constraint,
                                      "-format", "%s", "GlueSiteName", //retrieve the site name
                                      "-format", ";", "1", // to force a semicolon, even if the attribute was not found
@@ -590,6 +590,13 @@ public class OSGMM implements SiteCatalog {
             if( contents.length == 2 ){
                 //we have to do replacement
                 //However we dont do any replacement for time being as it is incorrect.
+                StringBuffer message = new StringBuffer();
+                message.append( "Replacing " ).append( contents[0] ).append( " with ").
+                        append( contents[1] ).append( " for site " ).append( site ).
+                        append( " to get to the local filesystem path ");
+                mLogger.log( message.toString(),  LogManager.DEBUG_MESSAGE_LEVEL );
+                mountPoint = mountPoint.replace( contents[0], contents[1]);
+
             }
         }
 
