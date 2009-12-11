@@ -23,13 +23,15 @@ import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.common.util.Version;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import java.util.Properties;
+import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * A Test program that shows how to load a Site Catalog, and query for all sites.
@@ -39,6 +41,15 @@ import java.util.List;
  *      pegasus.catalog.site       Text|XML|XML3
  *      pegasus.catalog.site.file  path to the site catalog.
  *  </pre>
+ *
+ * The Pegasus Properties can be picked from property files at various locations.
+ * The priorities are explained below.
+ * <pre>
+ *   - The default path for the properties file is $PEGASUS_HOME/etc/properties.
+ *   - A properties file if found at ${user.home}/.pegasusrc has higher property.
+ *   - Finally a user can specify the path to the properties file by specifying 
+ *     the JVM  property pegasus.user.properties . This has the higher priority.
+ * </pre>
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -50,10 +61,20 @@ public class TestSiteCatalog {
      */
     public static void main( String[] args ) {
         SiteCatalog catalog = null;
+        PegasusProperties properties = PegasusProperties.nonSingletonInstance();
+
         //setup the logger for the default streams.
-        LogManager logger = LogManagerFactory.loadSingletonInstance( PegasusProperties.nonSingletonInstance() );
+        LogManager logger = LogManagerFactory.loadSingletonInstance( properties );
         logger.logEventStart( "event.pegasus.catalog.site.test", "planner.version", Version.instance().toString() );
 
+
+        //set debug level to maximum
+        //set if something is going wrong
+        //logger.setLevel( LogManager.DEBUG_MESSAGE_LEVEL );
+
+        /* print out all the relevant site catalog properties that were specified*/
+        Properties siteProperties = properties.matchingSubset( "pegasus.catalog.site", true );
+        System.out.println( "Site Catalog Properties specified are " + siteProperties );
         
         /* load the catalog using the factory */
         try{
@@ -71,7 +92,16 @@ public class TestSiteCatalog {
             System.out.println( "Loaded  " + catalog.load( s ) + " number of sites " );
         
             /* query for the sites, and print them out */
-            System.out.println( "Sites loaded are "  + catalog.list( ) );
+            Set<String> sites = catalog.list();
+            System.out.println( "Sites loaded are "  + sites );
+
+            /* get detailed information about all the sites */
+            for( String site: sites ){
+                SiteCatalogEntry entry = catalog.lookup( site );
+                System.out.println( entry );
+            }
+            
+
         }
         catch ( SiteCatalogException e ){
             e.printStackTrace();
