@@ -291,6 +291,11 @@ public abstract class Abstract implements JobAggregator {
 
         //inconsistency between job name and logical name for now
         mergedJob.setName( mergedJobName );
+        
+        //fix for JIRA bug 83
+        //the site handle needs to be set for the aggregated job 
+        //before it is enabled.
+        mergedJob.setSiteHandle( firstJob.getSiteHandle() );
 
         mergedJob = enable( mergedJob, jobs  );
 
@@ -358,7 +363,6 @@ public abstract class Abstract implements JobAggregator {
 
         mergedJob.setLogicalID( id );
 
-        mergedJob.setSiteHandle( firstJob.getSiteHandle() );
         mergedJob.setUniverse( firstJob.getUniverse() );
         mergedJob.setJobManager( firstJob.getJobManager() );
         mergedJob.setJobType( SubInfo.COMPUTE_JOB );
