@@ -1160,6 +1160,20 @@ public class PegasusProperties {
     public String getTransferArguments() {
 	return mProps.getProperty("pegasus.transfer.arguments");
     }
+    
+    /**
+     * Returns the extra arguments with which the SLS transfer executables needs
+     * to be invoked.
+     *
+     * Referred to by "pegasus.transfer.sls.arguments" property.
+     *
+     * @return the arguments specified in the properties file,
+     *         else null if property is not specified.
+     */
+    public String getSLSTransferArguments() {
+	return mProps.getProperty("pegasus.transfer.sls.arguments");
+    }
+    
 
     /**
      * Returns the priority to be set for the stage in transfer job.

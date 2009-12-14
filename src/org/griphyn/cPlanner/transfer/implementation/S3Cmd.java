@@ -41,6 +41,7 @@ import java.util.Properties;
 
 import java.io.File;
 import java.util.List;
+import org.griphyn.cPlanner.namespace.VDS;
 
 /**
  * The implementation that creates transfer jobs that retrieve data from the 
@@ -223,6 +224,10 @@ public class S3Cmd extends AbstractSingleFTPerXFERJob {
     protected String generateArgumentString( TransferJob job, FileTransfer file ){
         StringBuffer sb = new StringBuffer();
                
+        //add any arguments that might have been passed through properties
+        if( job.vdsNS.containsKey( VDS.TRANSFER_ARGUMENTS_KEY) ){
+            sb.append( " " ).append( ( String )job.vdsNS.get( VDS.TRANSFER_ARGUMENTS_KEY ) );
+        }
         
         //determine the type of command to issue on the basis of 
         //type of transfer job

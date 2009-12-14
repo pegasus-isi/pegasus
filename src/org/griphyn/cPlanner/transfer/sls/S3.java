@@ -174,6 +174,11 @@ public class S3   implements SLS {
     protected boolean mStageSLSFile;
     
     /**
+     * Any extra arguments that need to be passed ahead to the s3 client invocation.
+     */
+    protected String mExtraArguments;
+    
+    /**
      * The default constructor.
      */
     public S3() {
@@ -200,7 +205,7 @@ public class S3   implements SLS {
         mBucketName = mBucketName.replace( File.separatorChar,  '-' );
         mStageSLSFile = Boolean.parse( mProps.getProperty( S3.STAGE_SLS_FILE_PROPERTY_KEY ),
                                        true );
-        
+        mExtraArguments = mProps.getSLSTransferArguments();
     }
 
     /**
@@ -638,6 +643,12 @@ public class S3   implements SLS {
         
         sb.append( entry.getPhysicalTransformation() ).append( " " );
         
+        //prepend any extra arguments set by user
+        //in properties
+        if( mExtraArguments != null ){
+            sb.append( mExtraArguments ).append( " " );
+        }
+        
         //determine the type of command to issue on the basis of 
         //type of transfer job
         String command = ( type == TransferJob.STAGED_COMPUTE_JOB ||
@@ -645,7 +656,7 @@ public class S3   implements SLS {
                            "put" : //used for stagein
                            "get" ; //used for stageout
         
-        sb.append(  " " );
+        
         sb.append( command );
         sb.append( " " );
         

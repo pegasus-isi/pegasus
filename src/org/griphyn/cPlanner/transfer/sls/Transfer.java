@@ -134,6 +134,10 @@ public class Transfer   implements SLS {
      */
     protected ReplicaCatalog mTransientRC;
 
+    /**
+     * Any extra arguments that need to be passed ahead to the s3 client invocation.
+     */
+    protected String mExtraArguments;
 
     /**
      * The default constructor.
@@ -159,6 +163,7 @@ public class Transfer   implements SLS {
 
         mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         mTransientRC = bag.getHandleToTransientReplicaCatalog();
+        mExtraArguments = mProps.getSLSTransferArguments();
     }
 
     /**
@@ -209,17 +214,13 @@ public class Transfer   implements SLS {
         }
         invocation.append( entry.getPhysicalTransformation() );
 
-        //add any arguments that might have been passed through properties
-        //String propArgs = mProps.getTransferArguments();
-        //if( propArgs != null  ){
-          //  invocation.append( " " ).append( propArgs );
-        //}
-
-
-        //add any arguments that might have been passed through properties
-        if( job.vdsNS.containsKey( VDS.TRANSFER_ARGUMENTS_KEY) ){
-            invocation.append( " " ).append( ( String )job.vdsNS.get( VDS.TRANSFER_ARGUMENTS_KEY ) );
+        
+        //append any extra arguments set by user
+        //in properties
+        if( mExtraArguments != null ){
+            invocation.append( " " ).append( mExtraArguments );
         }
+        
 
         //add the required arguments to transfer
         invocation.append( " base mnt " ).append( slsFile.getAbsolutePath() );
