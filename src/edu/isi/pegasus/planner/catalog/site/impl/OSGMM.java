@@ -452,7 +452,7 @@ public class OSGMM implements SiteCatalog {
 
 
         //condor_status -l -pool ligo-osgmm.renci.org -constraint 'regexp("file://", GlueSEAccessProtocolEndpoint) && GlueSAPath =!= UNDEFINED && GlueSEControlProtocolEndpoint =!= UNDEFINED' -format %s GlueSiteName -format ";" 1  -format "srm://%s?SFN=" 'substr(GlueSEControlProtocolEndpoint, 8)' -format "%s"  'ifThenElse(GlueVOInfoPath =!= UNDEFINED, GlueVOInfoPath, GlueSAPath)' -format ";" 1 -format "%s" GlueSAPath -format ";" 1   -format "%s" GlueVOInfoPath -format ";" 1   -format "%s" GlueCESEBindMountInfo   -format ";\n" 1
-        String condorStatusCmd[] = { "condor_status", "-l",  "-pool", mCollectorHost,
+        String condorStatusCmd[] = { "condor_status", "-pool", mCollectorHost,
                                      "-constraint", constraint,
                                      "-format", "%s", "GlueSiteName", //retrieve the site name
                                      "-format", ";", "1", // to force a semicolon, even if the attribute was not found
