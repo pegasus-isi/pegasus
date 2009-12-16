@@ -497,10 +497,11 @@ public class Kickstart implements GridStart {
 
         
         //check for removing the directory keys only if worker node
-        //execution is disabled. JIRA Bug 80.
-        if( !mWorkerNodeExecution ){
+        //execution is disabled and the constituent job is not enabled
+        //during clustering. JIRA Bug 80.
+        if( !mWorkerNodeExecution && !mEnablingPartOfAggregatedJob ){
+            
             String key = getDirectoryKey( job );
-
 
             //handle the -w option that asks kickstart to change
             //directory before launching an executable.
