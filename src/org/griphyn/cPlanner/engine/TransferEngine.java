@@ -33,6 +33,8 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.Utility;
 
+import org.griphyn.cPlanner.engine.createdir.S3;
+
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
@@ -202,10 +204,16 @@ public class TransferEngine extends Engine {
      */
     private boolean mWorkerNodeExecution;
 
+            
     /**
-     * The name of the s3 bucket being used in case of S3 execution.
+     * A Boolean indicating whether S3 is being used for backend storage.
      */
-    private String mS3BucketURL;
+    private boolean mS3BucketUsedForStorage;
+    
+    /**
+     * An instance to the Create Direcotry Implementation being used in Pegasus.
+     */
+    private Implementation mCreateDirImpl;
     
 
     /**
@@ -232,7 +240,15 @@ public class TransferEngine extends Engine {
         mDag = reducedDag;
         mvDelLeafJobs = vDelLJobs;
 
-        mS3BucketURL = getS3BucketURL( bag );
+        //mS3BucketURL = getS3BucketURL( bag );
+        //figure out if we are creating any s3 buckets or not
+        mCreateDirImpl = 
+                CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
+        mS3BucketUsedForStorage =  mCreateDirImpl instanceof org.griphyn.cPlanner.engine.createdir.S3 ?
+                                   true:
+                                   false;
+           
+        
         
         try{
             mTXRefiner = RefinerFactory.loadInstance( reducedDag,
@@ -270,27 +286,6 @@ public class TransferEngine extends Engine {
 
         return mTXRefiner.isSiteThirdParty(site,type);
     }
-
-    /**
-     * Returns the name of the bucket in S3 that is being used in case of
-     * execution on EC2. 
-     * 
-     * @param bag   the bag of initialization objects.
-     * 
-     * @return the bucket name, else null if execution is not on the cloud.
-     */
-    private String getS3BucketURL(PegasusBag bag) {
-        
-        Implementation createDirImpl = 
-                CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
-        if( createDirImpl instanceof org.griphyn.cPlanner.engine.createdir.S3 ){
-            return ((org.griphyn.cPlanner.engine.createdir.S3)createDirImpl).getBucketNameURL();
-        }
-    
-        return null;
-    }
-
-   
 
     /**
      * Returns the SubInfo object for the job specified.
@@ -1374,15 +1369,16 @@ public class TransferEngine extends Engine {
                                      String site, 
                                      boolean modifyURL ){
 
-        if( this.mS3BucketURL != null ){
+        if( this.mS3BucketUsedForStorage ){
             //modify the PFN only for non raw input files.
             //This takes care of the case, where
             //the data already might be on the cloud , and first level 
             //staging is bypassed.
             if( modifyURL ){
                 StringBuffer execURL = new StringBuffer();
-                execURL.append( mS3BucketURL ).append( File.separatorChar ).append( lfn );
+                execURL.append( ((S3)mCreateDirImpl).getBucketNameURL( site ) ).append( File.separatorChar ).append( lfn );
                 pfn = execURL.toString();
+                System.out.println( execURL.toString() );
             }
         }
         

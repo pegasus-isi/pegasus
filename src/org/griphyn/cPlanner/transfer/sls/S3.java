@@ -30,6 +30,9 @@ import org.griphyn.cPlanner.classes.Profile;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
+import org.griphyn.cPlanner.engine.CreateDirectory;
+import org.griphyn.cPlanner.engine.createdir.Implementation;
+
 import org.griphyn.cPlanner.transfer.SLS;
 
 import org.griphyn.common.catalog.TransformationCatalog;
@@ -156,7 +159,7 @@ public class S3   implements SLS {
     /**
      * The name of the bucket that is created.
      */
-    protected String mBucketName;
+    //protected String mBucketName;
     
     /**
      * The worker node directory where the jobs execute. Same for all jobs.
@@ -177,6 +180,13 @@ public class S3   implements SLS {
      * Any extra arguments that need to be passed ahead to the s3 client invocation.
      */
     protected String mExtraArguments;
+    
+    
+    /**
+     * An instance to the Create Direcotry Implementation being used in Pegasus.
+     */
+    private org.griphyn.cPlanner.engine.createdir.S3 mS3CreateDirImpl;
+    
     
     /**
      * The default constructor.
@@ -199,10 +209,16 @@ public class S3   implements SLS {
 
         mS3Transfer = new org.griphyn.cPlanner.transfer.implementation.S3Cmd( bag );
        
-        mBucketName = bag.getPlannerOptions().getRelativeSubmitDirectory();
-
-        //replace file separators in directory with -
-        mBucketName = mBucketName.replace( File.separatorChar,  '-' );
+        //mS3BucketURL = getS3BucketURL( bag );
+        //figure out if we are creating any s3 buckets or not
+        Implementation createDirImpl = 
+                CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
+        //sanity check on the implementation
+        if ( !( createDirImpl instanceof org.griphyn.cPlanner.engine.createdir.S3 )){
+            throw new RuntimeException( "Only S3 Create Dir implementation can be used with S3 SLS" );
+        }
+        mS3CreateDirImpl = (org.griphyn.cPlanner.engine.createdir.S3 )createDirImpl;
+        
         mStageSLSFile = Boolean.parse( mProps.getProperty( S3.STAGE_SLS_FILE_PROPERTY_KEY ),
                                        true );
         mExtraArguments = mProps.getSLSTransferArguments();
@@ -438,7 +454,6 @@ public class S3   implements SLS {
         }
 
         File sls = null;
-        
         String sourceDir = workerNodeDirectory;
 
 
@@ -666,9 +681,12 @@ public class S3   implements SLS {
             sb.append(  " " );
             sb.append( file.getSourceURL().getValue() );
             sb.append( " " );
-            
+        
+            /*
             sb.append( "s3://" ).
-               append( mBucketName ).
+               append( mBucketName ).*/
+            
+            sb.append( this.mS3CreateDirImpl.getBucketNameURL(site) ).
                append( "/" ).
                append( lfn );
         } 
@@ -681,8 +699,10 @@ public class S3   implements SLS {
             if( transientPFN == null ){
                 //create the default path. refer to bucket on 
                 //the head node.
+                /*
                 sb.append( "s3://" ).
-                   append( mBucketName ).
+                   append( mBucketName ).*/
+                sb.append( this.mS3CreateDirImpl.getBucketNameURL(site) ).
                    append( "/" ).
                    append( lfn );
             }
@@ -906,5 +926,5 @@ public class S3   implements SLS {
         return result;
     }
 
-
+    
 }

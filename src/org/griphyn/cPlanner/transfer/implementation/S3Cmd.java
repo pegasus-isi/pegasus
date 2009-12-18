@@ -41,6 +41,8 @@ import java.util.Properties;
 
 import java.io.File;
 import java.util.List;
+import org.griphyn.cPlanner.engine.CreateDirectory;
+import org.griphyn.cPlanner.engine.createdir.Implementation;
 import org.griphyn.cPlanner.namespace.VDS;
 
 /**
@@ -114,10 +116,12 @@ public class S3Cmd extends AbstractSingleFTPerXFERJob {
                     "S3 transfer client that allows us to put and retreive data from S3 buckets";
     
     
+    
     /**
-     * The name of the bucket that is created.
+     * An instance to the Create Direcotry Implementation being used in Pegasus.
      */
-    protected String mBucketName;
+    private org.griphyn.cPlanner.engine.createdir.S3 mS3CreateDirImpl;
+    
     
     /**
      * The overloaded constructor, that is called by the Factory to load the
@@ -129,10 +133,14 @@ public class S3Cmd extends AbstractSingleFTPerXFERJob {
         super( bag );
         Properties p = mProps.matchingSubset( WindwardImplementation.ALLEGRO_PROPERTIES_PREFIX, false  );
         
-        mBucketName = bag.getPlannerOptions().getRelativeSubmitDirectory();
-
-        //replace file separators in directory with -
-        mBucketName = mBucketName.replace( File.separatorChar,  '-' );
+        Implementation createDirImpl = 
+                CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
+        //sanity check on the implementation
+        if ( !( createDirImpl instanceof org.griphyn.cPlanner.engine.createdir.S3 )){
+            throw new RuntimeException( "Only S3 Create Dir implementation can be used with S3 First Level Staging" );
+        }
+        mS3CreateDirImpl = (org.griphyn.cPlanner.engine.createdir.S3 )createDirImpl;
+        
     }
 
     /**
@@ -246,15 +254,19 @@ public class S3Cmd extends AbstractSingleFTPerXFERJob {
             sb.append( file.getSourceURL().getValue() );
             sb.append( " " );
             
+            /*
             sb.append( "s3://" ).
-               append( mBucketName ).
+               append( mBucketName ).*/
+            sb.append( this.mS3CreateDirImpl.getBucketNameURL( job.getNonThirdPartySite() )).
                append( "/" ).
                append( file.getLFN() );
         } 
         else{
             //stagein data to the bucket
+            /*
             sb.append( "s3://" ).
-               append( mBucketName ).
+               append( mBucketName ).*/
+            sb.append( this.mS3CreateDirImpl.getBucketNameURL( job.getNonThirdPartySite() )).
                append( "/" ).
                append( file.getLFN() );
             
