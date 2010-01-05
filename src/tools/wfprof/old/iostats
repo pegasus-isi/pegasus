@@ -1,0 +1,136 @@
+#!/usr/bin/env python
+#
+#  Copyright 2009 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+"""This program parses the output of ioprof and produces summary statistics.
+
+Usage: iostats [-d dir] [file1 [file 2 ...]]
+
+The -d argument specifies a directory to read. It looks in all .err files in
+that directory. Otherwise, you can pipe the contents of the file to iostats,
+or you can provide a list of .err files to read.
+"""
+
+__author__ = "Gideon Juve <juve@usc.edu>"
+__all__ = []
+__version__ = "1.0"
+
+import sys, os
+
+class Stat:
+  def __init__(self,name):
+    self.name = name
+    self.bread = 0
+    self.nread = 0
+    self.nwrite = 0
+    self.bwrite = 0
+    self.nseek = 0
+
+  def write(self):
+    mread = float(self.bread) / (1024 * 1024)
+    mwrite = float(self.bwrite) / (1024 * 1024)
+    print self.name,mread,self.nread,mwrite,self.nwrite,self.nseek
+
+exes = {}
+xforms = {}
+
+def process_file(file):
+  for line in file.readlines():
+    # Skip lines
+    if 'xform' in line: continue
+    if 'WARNING' in line: continue
+
+    tok = line.split(' ',9)
+    if len(tok) != 10:
+      continue
+
+    if tok[0] in xforms:
+      xform = xforms[tok[0]]
+    else:
+      xform = Stat(tok[0])
+      xforms[tok[0]] = xform
+    if tok[2] in exes:
+      exe = exes[tok[2]]
+    else:
+      exe = Stat(tok[2])
+      exes[tok[2]] = exe
+
+    bread = int(tok[4])
+    nread = int(tok[5])
+    bwrite = int(tok[6])
+    nwrite = int(tok[7])
+    nseek = int(tok[8])
+
+    xform.bread += bread
+    xform.nread += nread
+    xform.bwrite += bwrite
+    xform.nwrite += nwrite
+    xform.nseek += nseek
+
+    exe.bread += bread
+    exe.nread += nread
+    exe.bwrite += bwrite
+    exe.nwrite += nwrite
+    exe.nseek += nseek
+
+
+def process_dir(dir):
+  if not os.path.isdir(dir):
+    raise Exception('not a dir: %s' % dir)
+  for file in os.listdir(dir):
+    if file.endswith('.err'):
+      fname = os.path.join(dir,file)
+      f = open(fname,'r')
+      process_file(f)
+      f.close()
+
+
+def main():
+  if len(sys.argv) == 1:
+    fn = sys.stdin.readline()[:-1]
+    while fn:
+      f = open(fn, 'r')
+      process_file(f)
+      f.close()
+      fn = sys.stdin.readline()[:-1]
+  else:
+    i = 1
+    while i < len(sys.argv):
+      arg = sys.argv[i]
+      if arg == '-d':
+        d = sys.argv[i+1]
+	process_dir(d)
+	i += 2
+      else:
+        f = open(arg,'r')
+        process_file(f)
+        f.close()
+	i += 1
+
+  print "executable","read","nread","write","nwrite","nseek"
+  for exn in exes:
+    exe = exes[exn]
+    exe.write()
+
+  print "\n"
+
+  print "transformation","read","nread","write","nwrite","nseek"
+  for xfn in xforms:
+    xform = xforms[xfn]
+    xform.write()
+
+
+if __name__ == '__main__':
+  main()
