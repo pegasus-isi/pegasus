@@ -33,17 +33,17 @@ from stats import Variable
 class Statistic:
 	def __init__(self,name):
 		self.name = name
-		self.read = Variable()
-		self.write = Variable()
+		self.mread = Variable()
+		self.mwrite = Variable()
 	
 	def write(self):
-		print "%s,%s,%s" % (self.name,self.read,self.write)
+		print "%s,%s,%s" % (self.name,self.mread,self.mwrite)
 
 exes = {}
 xforms = {}
 
 def print_stats():
-	print ",read,,,,,write"
+	print ",mread,,,,,mwrite"
 	print "executable,count,min,max,avg,stddev,count,min,max,avg,stddev"
 	for exn in exes:
 		exe = exes[exn]
@@ -51,7 +51,7 @@ def print_stats():
 
 	print "\n"
 
-	print ",read,,,,,write"
+	print ",mread,,,,,mwrite"
 	print "transformation,count,min,max,avg,stddev,count,min,max,avg,stddev"
 	for xfn in xforms:
 		xform = xforms[xfn]
@@ -80,14 +80,14 @@ def process_file(file):
 			exe = Statistic(tok[2])
 			exes[tok[2]] = exe
 
-		read = float(tok[4])/(1024*1024)
-		write = float(tok[6])/(1024*1024)
+		mread = float(tok[4])/(1024*1024)
+		mwrite = float(tok[6])/(1024*1024)
 
-		xform.read.update(read)
-		xform.write.update(write)
+		xform.mread.update(mread)
+		xform.mwrite.update(mwrite)
 
-		exe.read.update(read)
-		exe.write.update(write)
+		exe.mread.update(mread)
+		exe.mwrite.update(mwrite)
 
 
 def process_dir(dir):
