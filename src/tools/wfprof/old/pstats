@@ -42,15 +42,15 @@ xforms = {}
 
 def print_stats():
 	print ",util"
-	print "executable,count,min,max,avg,stddev"
+	print "executable,count,min,max,avg,stddev,sum"
 	for exn in exes:
 		exe = exes[exn]
 		print "%s,%s" % (exe.name,exe.avgutil)
 
 	print "\n"
 
-	print ",avgutil,,,,,myutil"
-	print "transformation,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	print ",avgutil,,,,,,myutil"
+	print "transformation,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
 	for xfn in xforms:
 		xform = xforms[xfn]
 		print "%s,%s,%s" % (xform.name,xform.avgutil,xform.myutil)

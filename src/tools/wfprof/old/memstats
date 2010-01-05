@@ -50,16 +50,16 @@ exes = {}
 xforms = {}
 
 def print_stats():
-	print ",vmpeak,,,,,rsspeak"
-	print "executable,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	print ",vmpeak,,,,,,rsspeak"
+	print "executable,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
 	for exn in exes:
 		exe = exes[exn]
 		exe.write()
 
 	print "\n"
 
-	print ",vmpeak,,,,,rsspeak"
-	print "transformation,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	print ",vmpeak,,,,,,rsspeak"
+	print "transformation,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
 	for xfn in xforms:
 		xform = xforms[xfn]
 		xform.write()

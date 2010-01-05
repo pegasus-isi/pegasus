@@ -29,6 +29,7 @@ class Variable:
 		self.min = 1e100
 		self.mean = 0
 		self.M2 = 0
+		self.sum = 0
 
 	def update(self, x):
 		self.min = min(self.min, x)
@@ -37,10 +38,11 @@ class Variable:
 		delta = x - self.mean
 		self.mean = self.mean + (delta/self.n)
 		self.M2 = self.M2 + (delta*(x-self.mean))
+		self.sum += x
 
 	def __str__(self):
 		if self.n <= 1:
 			stddev = 0.0
 		else:
 			stddev = sqrt(self.M2/(self.n - 1))
-		return "%d,%f,%f,%f,%f" % (self.n, self.min, self.max, self.mean, stddev)
+		return "%d,%f,%f,%f,%f,%f" % (self.n, self.min, self.max, self.mean, stddev, self.sum)

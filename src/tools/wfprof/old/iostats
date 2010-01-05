@@ -50,16 +50,16 @@ exes = {}
 xforms = {}
 
 def print_stats():
-	print ",mread,,,,,mwrite"
-	print "executable,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	print ",mread,,,,,,mwrite"
+	print "executable,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
 	for exn in exes:
 		exe = exes[exn]
 		exe.write()
 
 	print "\n"
 
-	print ",mread,,,,,mwrite"
-	print "transformation,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	print ",mread,,,,,,mwrite"
+	print "transformation,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
 	for xfn in xforms:
 		xform = xforms[xfn]
 		xform.write()
@@ -125,20 +125,21 @@ def process_transformation(file):
 		mread = float(tok[4])/(1024*1024)
 		mwrite = float(tok[6])/(1024*1024)
 		
-		# Skip non-files
-		if fname in ['<stdin>','<stdout>','<stderr>','<socket>','<pipe>']:
-			line = file.readline()
-			continue
-		
 		# if new process was encountered
 		if pid != lpid:
 			if lpid is not None:
 				update_exe(exe_name,exe_mread,exe_mwrite) # process the old one
 			exe_mread = 0.0
 			exe_mwrite = 0.0
+			lpid = pid
 			
 		xform_name = xform
 		exe_name = exe
+		
+		# Skip non-files
+		if fname in ['<stdin>','<stdout>','<stderr>','<socket>','<pipe>']:
+			line = file.readline()
+			continue
 		
 		# add up everything
 		exe_mread += mread
