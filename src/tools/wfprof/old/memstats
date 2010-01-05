@@ -14,7 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-"""This program parses the output of memusage and produces summary statistics.
+"""This program parses the output of pprof and produces summary memory
+statistics.
 
 Usage: memstats [-d dir] [file1 [file 2 ...]]
 
@@ -28,182 +29,162 @@ __all__ = []
 __version__ = "1.0"
 
 import sys, os
-from math import sqrt
-
-class Variable:
-  def __init__(self):
-    self.n = 0
-    self.max = 0
-    self.min = 1e100
-    self.mean = 0
-    self.M2 = 0
-
-  def update(self, x):
-    self.min = min(self.min, x)
-    self.max = max(self.max, x)
-    self.n += 1
-    delta = x - self.mean
-    self.mean = self.mean + (delta/self.n)
-    self.M2 = self.M2 + (delta*(x-self.mean))
-
-  def __str__(self):
-    if self.n <= 1:
-      stddev = 0.0
-    else:
-      stddev = sqrt(self.M2/(self.n - 1))
-    return "%d,%f,%f,%f,%f" % (self.n, self.min, self.max, self.mean, stddev)
+from stats import Variable
 
 class Event:
-  def __init__(self,op,time,rec):
-    self.op = op
-    self.time = time
-    self.rec = rec
+	def __init__(self,op,time,rec):
+		self.op = op
+		self.time = time
+		self.rec = rec
 
 class Statistic:
-  def __init__(self,name):
-    self.name = name
-    self.vmpeak = Variable()
-    self.rsspeak = Variable()
+	def __init__(self,name):
+		self.name = name
+		self.vmpeak = Variable()
+		self.rsspeak = Variable()
 
-  def write(self):
-    print "%s,%s,%s" % (self.name,self.vmpeak,self.rsspeak)
+	def write(self):
+		print "%s,%s,%s" % (self.name,self.vmpeak,self.rsspeak)
 
 exes = {}
 xforms = {}
 
 def print_stats():
-  print ",vmpeak,,,,,rsspeak"
-  print "executable,count,min,max,avg,stddev,count,min,max,avg,stddev"
-  for exn in exes:
-    exe = exes[exn]
-    exe.write()
+	print ",vmpeak,,,,,rsspeak"
+	print "executable,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	for exn in exes:
+		exe = exes[exn]
+		exe.write()
 
-  print "\n"
+	print "\n"
 
-  print ",vmpeak,,,,,rsspeak"
-  print "transformation,count,min,max,avg,stddev,count,min,max,avg,stddev"
-  for xfn in xforms:
-    xform = xforms[xfn]
-    xform.write()
+	print ",vmpeak,,,,,rsspeak"
+	print "transformation,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	for xfn in xforms:
+		xform = xforms[xfn]
+		xform.write()
 
 def process_file(file):
-  line = file.readline()
-  while line:
-    if 'xform' in line:
-      process_invocation(file)
-    line = file.readline()
+	line = file.readline()
+	while line:
+		if 'xform' in line:
+			process_invocation(file)
+		line = file.readline()
 
 
 def process_invocation(file):
-  events = {}
+	events = {}
 
-  # Read lines
-  line = file.readline()
-  while line:
-    # Skip lines
-    if 'xform' in line:
-      file.seek(len(line) * -1, os.SEEK_CUR)
-      break
-    if 'WARNING' in line:
-      line = file.readline()
-      continue
-    if 'PTRACE_' in line:
-      line = file.readline()
-      continue
+	# Read lines
+	line = file.readline()
+	while line:
+		# Skip lines
+		if 'xform' in line:
+			file.seek(len(line) * -1, os.SEEK_CUR)
+			break
+		if 'WARNING' in line:
+			line = file.readline()
+			continue
+		if 'PTRACE_' in line:
+			line = file.readline()
+			continue
 
-    #xform pid ppid exe lstart lstop tstart tstop vmpeak rsspeak utime stime wtime cutime cstime
-    tok = line.split(' ')
-    if len(tok) != 15:
-      continue
+		#xform pid ppid exe lstart lstop tstart tstop vmpeak rsspeak utime stime wtime cutime cstime
+		tok = line.split(' ')
+		if len(tok) != 15:
+			continue
 
-    xfn = tok[0]
-    exn = tok[3]
-    start = int(tok[4])
-    stop = int(tok[5])
-    vmpeak = float(tok[8])/1024
-    rsspeak = float(tok[9])/1024
+		xfn = tok[0]
+		exn = tok[3]
+		start = int(tok[4])
+		stop = int(tok[5])
+		vmpeak = float(tok[8])/1024
+		rsspeak = float(tok[9])/1024
 
-    if xfn in events:
-      tline = events[xfn]
-    else:
-      tline = []
-      events[xfn] = tline
+		if xfn in events:
+			tline = events[xfn]
+		else:
+			tline = []
+			events[xfn] = tline
 
-    if xfn in xforms:
-      xform = xforms[xfn]
-    else:
-      xform = Statistic(xfn)
-      xforms[xfn] = xform
+		if xfn in xforms:
+			xform = xforms[xfn]
+		else:
+			xform = Statistic(xfn)
+			xforms[xfn] = xform
 
-    if exn in exes:
-      exe = exes[exn]
-    else:
-      exe = Statistic(exn)
-      exes[exn] = exe
+		if exn in exes:
+			exe = exes[exn]
+		else:
+			exe = Statistic(exn)
+			exes[exn] = exe
 
-    tline.append(Event('add',start,(vmpeak,rsspeak)))
-    tline.append(Event('sub',stop,(vmpeak,rsspeak)))
-    
-    exe.vmpeak.update(vmpeak)
-    exe.rsspeak.update(rsspeak)
+		tline.append(Event('add',start,(vmpeak,rsspeak)))
+		tline.append(Event('sub',stop,(vmpeak,rsspeak)))
+		
+		exe.vmpeak.update(vmpeak)
+		exe.rsspeak.update(rsspeak)
 
-    line = file.readline()
+		line = file.readline()
 
-  # Process events for each xform
-  for xfn in events:
-    tline = events[xfn]
-    tline.sort(lambda x,y: x.time - y.time)
-    vmpeak = 0
-    rsspeak = 0
-    maxpeak = 0
-    maxhwm = 0
-    for event in tline:
-      if event.op == 'add':
-        vmpeak = vmpeak + event.rec[0]
-        rsspeak = rsspeak + event.rec[1]
-      elif event.op == 'sub':
-        vmpeak = vmpeak - event.rec[0]
-	rsspeak = rsspeak - event.rec[1]
-      maxpeak = max(maxpeak, vmpeak)
-      maxhwm = max(maxhwm, rsspeak)
-    xform = xforms[xfn]
-    xform.vmpeak.update(maxpeak)
-    xform.rsspeak.update(maxhwm)
+	# Process events for each xform
+	for xfn in events:
+		tline = events[xfn]
+		tline.sort(lambda x,y: x.time - y.time)
+		vmpeak = 0
+		rsspeak = 0
+		maxpeak = 0
+		maxhwm = 0
+		for event in tline:
+			if event.op == 'add':
+				vmpeak = vmpeak + event.rec[0]
+				rsspeak = rsspeak + event.rec[1]
+			elif event.op == 'sub':
+				vmpeak = vmpeak - event.rec[0]
+				rsspeak = rsspeak - event.rec[1]
+			maxpeak = max(maxpeak, vmpeak)
+			maxhwm = max(maxhwm, rsspeak)
+		xform = xforms[xfn]
+		xform.vmpeak.update(maxpeak)
+		xform.rsspeak.update(maxhwm)
 
 def process_dir(dir):
-  if not os.path.isdir(dir):
-    raise Exception('not a dir: %s' % dir)
-  for file in os.listdir(dir):
-    if file.endswith('.err'):
-      fname = os.path.join(dir,file)
-      f = open(fname,'r')
-      process_file(f)
-      f.close()
+	if not os.path.isdir(dir):
+		raise Exception('not a dir: %s' % dir)
+	for file in os.listdir(dir):
+		if file.endswith('.err'):
+			fname = os.path.join(dir,file)
+			f = open(fname,'r')
+			process_file(f)
+			f.close()
 
 
 def main():
-  if len(sys.argv) == 1:
-    fn = sys.stdin.readline()[:-1]
-    while fn:
-      f = open(fn, 'r')
-      process_file(f)
-      f.close()
-      fn = sys.stdin.readline()[:-1]
-  else:
-    i = 1
-    while i < len(sys.argv):
-      arg = sys.argv[i]
-      if arg == '-d':
-        d = sys.argv[i+1]
-        process_dir(d)
-        i += 2
-      else:
-        f = open(arg,'r')
-        process_file(f)
-        f.close()
-        i += 1
-  print_stats()
+	if len(sys.argv) == 1:
+		fn = sys.stdin.readline()[:-1]
+		while fn:
+			f = open(fn, 'r')
+			process_file(f)
+			f.close()
+			fn = sys.stdin.readline()[:-1]
+	else:
+		i = 1
+		while i < len(sys.argv):
+			arg = sys.argv[i]
+			if arg == '-d':
+				d = sys.argv[i+1]
+				process_dir(d)
+				i += 2
+			elif arg == '-h':
+				print "Usage: %s [-d dir] [file1 [file 2 ...]] [< list_of_filenames]" % sys.argv[0]
+				sys.exit(1)
+			else:
+				f = open(arg,'r')
+				process_file(f)
+				f.close()
+				i += 1
+	print_stats()
 
 
 if __name__ == '__main__':
-  main()
+	main()

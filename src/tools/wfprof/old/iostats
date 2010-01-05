@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-"""This program parses the output of ioprof and produces summary statistics.
+"""This program parses the output of ioprof and produces summary IO statistics.
 
 Usage: iostats [-d dir] [file1 [file 2 ...]]
 
@@ -28,109 +28,106 @@ __all__ = []
 __version__ = "1.0"
 
 import sys, os
+from stats import Variable
 
-class Stat:
-  def __init__(self,name):
-    self.name = name
-    self.bread = 0
-    self.nread = 0
-    self.nwrite = 0
-    self.bwrite = 0
-    self.nseek = 0
-
-  def write(self):
-    mread = float(self.bread) / (1024 * 1024)
-    mwrite = float(self.bwrite) / (1024 * 1024)
-    print self.name,mread,self.nread,mwrite,self.nwrite,self.nseek
+class Statistic:
+	def __init__(self,name):
+		self.name = name
+		self.read = Variable()
+		self.write = Variable()
+	
+	def write(self):
+		print "%s,%s,%s" % (self.name,self.read,self.write)
 
 exes = {}
 xforms = {}
 
+def print_stats():
+	print ",read,,,,,write"
+	print "executable,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	for exn in exes:
+		exe = exes[exn]
+		exe.write()
+
+	print "\n"
+
+	print ",read,,,,,write"
+	print "transformation,count,min,max,avg,stddev,count,min,max,avg,stddev"
+	for xfn in xforms:
+		xform = xforms[xfn]
+		xform.write()
+		
+
 def process_file(file):
-  for line in file.readlines():
-    # Skip lines
-    if 'xform' in line: continue
-    if 'WARNING' in line: continue
+	for line in file.readlines():
+		# Skip lines
+		if 'xform' in line: continue
+		if 'WARNING' in line: continue
 
-    tok = line.split(' ',9)
-    if len(tok) != 10:
-      continue
+		#xform pid exe file bread nread bwrite nwrite nseek mode flags
+		tok = line.split(' ',9)
+		if len(tok) != 10:
+			continue
 
-    if tok[0] in xforms:
-      xform = xforms[tok[0]]
-    else:
-      xform = Stat(tok[0])
-      xforms[tok[0]] = xform
-    if tok[2] in exes:
-      exe = exes[tok[2]]
-    else:
-      exe = Stat(tok[2])
-      exes[tok[2]] = exe
+		if tok[0] in xforms:
+			xform = xforms[tok[0]]
+		else:
+			xform = Statistic(tok[0])
+			xforms[tok[0]] = xform
+		if tok[2] in exes:
+			exe = exes[tok[2]]
+		else:
+			exe = Statistic(tok[2])
+			exes[tok[2]] = exe
 
-    bread = int(tok[4])
-    nread = int(tok[5])
-    bwrite = int(tok[6])
-    nwrite = int(tok[7])
-    nseek = int(tok[8])
+		read = float(tok[4])/(1024*1024)
+		write = float(tok[6])/(1024*1024)
 
-    xform.bread += bread
-    xform.nread += nread
-    xform.bwrite += bwrite
-    xform.nwrite += nwrite
-    xform.nseek += nseek
+		xform.read.update(read)
+		xform.write.update(write)
 
-    exe.bread += bread
-    exe.nread += nread
-    exe.bwrite += bwrite
-    exe.nwrite += nwrite
-    exe.nseek += nseek
+		exe.read.update(read)
+		exe.write.update(write)
 
 
 def process_dir(dir):
-  if not os.path.isdir(dir):
-    raise Exception('not a dir: %s' % dir)
-  for file in os.listdir(dir):
-    if file.endswith('.err'):
-      fname = os.path.join(dir,file)
-      f = open(fname,'r')
-      process_file(f)
-      f.close()
+	if not os.path.isdir(dir):
+		raise Exception('not a dir: %s' % dir)
+	for file in os.listdir(dir):
+		if file.endswith('.err'):
+			fname = os.path.join(dir,file)
+			f = open(fname,'r')
+			process_file(f)
+			f.close()
 
 
 def main():
-  if len(sys.argv) == 1:
-    fn = sys.stdin.readline()[:-1]
-    while fn:
-      f = open(fn, 'r')
-      process_file(f)
-      f.close()
-      fn = sys.stdin.readline()[:-1]
-  else:
-    i = 1
-    while i < len(sys.argv):
-      arg = sys.argv[i]
-      if arg == '-d':
-        d = sys.argv[i+1]
-	process_dir(d)
-	i += 2
-      else:
-        f = open(arg,'r')
-        process_file(f)
-        f.close()
-	i += 1
+	if len(sys.argv) == 1:
+		fn = sys.stdin.readline()[:-1]
+		while fn:
+			f = open(fn, 'r')
+			process_file(f)
+			f.close()
+			fn = sys.stdin.readline()[:-1]
+	else:
+		i = 1
+		while i < len(sys.argv):
+			arg = sys.argv[i]
+			if arg == '-d':
+				d = sys.argv[i+1]
+				process_dir(d)
+				i += 2
+			elif arg == '-h':
+				print "Usage: %s [-d dir] [file1 [file 2 ...]] [< list_of_filenames]" % sys.argv[0]
+				sys.exit(1)
+			else:
+				f = open(arg,'r')
+				process_file(f)
+				f.close()
+				i += 1
 
-  print "executable","read","nread","write","nwrite","nseek"
-  for exn in exes:
-    exe = exes[exn]
-    exe.write()
-
-  print "\n"
-
-  print "transformation","read","nread","write","nwrite","nseek"
-  for xfn in xforms:
-    xform = xforms[xfn]
-    xform.write()
+	print_stats()
 
 
 if __name__ == '__main__':
-  main()
+	main()
