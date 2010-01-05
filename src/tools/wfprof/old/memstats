@@ -20,15 +20,14 @@ statistics.
 Usage: memstats [-d dir] [file1 [file 2 ...]]
 
 The -d argument specifies a directory to read. It looks in all .err files in
-that directory. Otherwise, you can pipe the contents of the file to memstats,
-or you can provide a list of .err files to read.
+that directory. Otherwise, you can pipe a list of .err files to read.
 """
 
 __author__ = "Gideon Juve <juve@usc.edu>"
 __all__ = []
 __version__ = "1.0"
 
-import sys, os
+import sys, os, re
 from stats import Variable
 
 class Event:
@@ -149,10 +148,11 @@ def process_invocation(file):
 		xform.rsspeak.update(maxhwm)
 
 def process_dir(dir):
+	file_re = re.compile("\.err(\.[0-9]{3})?$")
 	if not os.path.isdir(dir):
 		raise Exception('not a dir: %s' % dir)
 	for file in os.listdir(dir):
-		if file.endswith('.err'):
+		if file_re.search(file):
 			fname = os.path.join(dir,file)
 			f = open(fname,'r')
 			process_file(f)
