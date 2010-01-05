@@ -30,6 +30,13 @@ __version__ = "1.0"
 import sys, os
 from stats import Variable
 
+class Process:
+	def __init__(self,exe,pid):
+		self.exe = exe
+		self.pid = pid
+		self.mread = 0.0
+		self.mwrite = 0.0
+		
 class Statistic:
 	def __init__(self,name):
 		self.name = name
@@ -57,37 +64,97 @@ def print_stats():
 		xform = xforms[xfn]
 		xform.write()
 		
+		
+def update_xform(xform_name,mread,mwrite):
+	# Update transformation stats
+	if xform_name in xforms:
+		xform = xforms[xform_name]
+	else:
+		xform = Statistic(xform_name)
+		xforms[xform_name] = xform
+	xform.mread.update(mread)
+	xform.mwrite.update(mwrite)
+	
+	
+def update_exe(exe_name,mread,mwrite):
+	if exe_name in exes:
+		exe = exes[exe_name]
+	else:
+		exe = Statistic(exe_name)
+		exes[exe_name] = exe
+
+	exe.mread.update(mread)
+	exe.mwrite.update(mwrite)
+
 
 def process_file(file):
-	for line in file.readlines():
-		# Skip lines
-		if 'xform' in line: continue
-		if 'WARNING' in line: continue
+	line = file.readline()
+	while line:
+		if 'xform' in line:
+			process_transformation(file)
+		line = file.readline()
+			
+			
+def process_transformation(file):
+	xform_name = None
+	xform_mread = 0.0
+	xform_mwrite = 0.0
+	
+	lpid = None
+	
+	line = file.readline()
+	while line:
+		# New transformation encountered
+		if 'xform' in line:
+			file.seek(len(line) * -1, os.SEEK_CUR)
+			break
+		# Skip non-data lines
+		if 'WARNING' in line:
+			line = file.readline()
+			continue
 
 		#xform pid exe file bread nread bwrite nwrite nseek mode flags
 		tok = line.split(' ',9)
 		if len(tok) != 10:
 			continue
-
-		if tok[0] in xforms:
-			xform = xforms[tok[0]]
-		else:
-			xform = Statistic(tok[0])
-			xforms[tok[0]] = xform
-		if tok[2] in exes:
-			exe = exes[tok[2]]
-		else:
-			exe = Statistic(tok[2])
-			exes[tok[2]] = exe
-
+			
+		xform = tok[0]
+		pid = tok[1]
+		exe = tok[2]
+		fname = tok[3]
 		mread = float(tok[4])/(1024*1024)
 		mwrite = float(tok[6])/(1024*1024)
-
-		xform.mread.update(mread)
-		xform.mwrite.update(mwrite)
-
-		exe.mread.update(mread)
-		exe.mwrite.update(mwrite)
+		
+		# Skip non-files
+		if fname in ['<stdin>','<stdout>','<stderr>','<socket>','<pipe>']:
+			line = file.readline()
+			continue
+		
+		# if new process was encountered
+		if pid != lpid:
+			if lpid is not None:
+				update_exe(exe_name,exe_mread,exe_mwrite) # process the old one
+			exe_mread = 0.0
+			exe_mwrite = 0.0
+			
+		xform_name = xform
+		exe_name = exe
+		
+		# add up everything
+		exe_mread += mread
+		exe_mwrite += mwrite
+		xform_mread += mread
+		xform_mwrite += mwrite
+		
+		line = file.readline()
+	#end of loop
+	
+	# process last exe
+	if lpid is not None:
+		update_exe(exe_name,exe_mread,exe_mwrite)
+	
+	# process xform
+	update_xform(xform_name,xform_mread,xform_mwrite)
 
 
 def process_dir(dir):
