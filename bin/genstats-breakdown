@@ -55,22 +55,35 @@ for $dir (@ARGV) {
                         $samples{$dir}{$transformation}{'count'} = 0;
                         $samples{$dir}{$transformation}{'mean'} = 0;
                         $samples{$dir}{$transformation}{'diff'} = 0;
+						$samples{$dir}{$transformation}{'min'} = 1e100;
+						$samples{$dir}{$transformation}{'max'} = 0;
 
                         if (!defined($samples{$allKey}{$transformation})) {
                             $samples{$allKey}{$transformation}{'count'} = 0;
                             $samples{$allKey}{$transformation}{'mean'} = 0;
                             $samples{$allKey}{$transformation}{'diff'} = 0;
+							$samples{$allKey}{$transformation}{'min'} = 1e100;
+							$samples{$allKey}{$transformation}{'max'} = 0;
                         }
                     }
                     $samples{$allKey}{$transformation}{'count'}++;
                     $delta = $duration - $samples{$allKey}{$transformation}{'mean'};
                     $samples{$allKey}{$transformation}{'mean'} += $delta / $samples{$allKey}{$transformation}{'count'};
                     $samples{$allKey}{$transformation}{'diff'} += $delta * ($duration - $samples{$allKey}{$transformation}{'mean'});
+					$min = $samples{$allKey}{$transformation}{'min'};
+					$samples{$allKey}{$transformation}{'min'} = ($duration < $min) ? $duration : $min;
+					$max = $samples{$allKey}{$transformation}{'max'};
+					$samples{$allKey}{$transformation}{'max'} = ($duration > $max) ? $duration : $max;
 
                     $samples{$dir}{$transformation}{'count'}++;
                     $delta = $duration - $samples{$dir}{$transformation}{'mean'};
                     $samples{$dir}{$transformation}{'mean'} += $delta / $samples{$dir}{$transformation}{'count'};
                     $samples{$dir}{$transformation}{'diff'} += $delta * ($duration - $samples{$dir}{$transformation}{'mean'});
+					$min = $samples{$dir}{$transformation}{'min'};
+					$samples{$dir}{$transformation}{'min'} = ($duration < $min) ? $duration : $min;
+					$max = $samples{$dir}{$transformation}{'max'};
+					$samples{$dir}{$transformation}{'max'} = ($duration > $max) ? $duration : $max;
+
                 }
             }
         }
@@ -85,29 +98,31 @@ if (defined($output)) {
 
 if ($extra) {
     for $dir (@ARGV) {
-        print sprintf("\n#$dir\n#%-39s % 6s % 12s % 16s\n", "Transformation", "Count", "Mean", "Variance");
+        print sprintf("\n#$dir\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
         for $transformation (keys %{$samples{$dir}}) {
-            if ($samples{$dir}{$transformation}{'count'} == 1) {
+			$count = $samples{$dir}{$transformation}{'count'};
+            if ($count == 1) {
                 $denom = 1;
             } else {
-                $denom = $samples{$dir}{$transformation}{'count'} - 1;
+                $denom = $count - 1;
             }
 
-            $out = sprintf("%-40s % 6d % 12.2f % 16.2f\n", $transformation, $samples{$dir}{$transformation}{'count'}, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom);
+            $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
             print $out;
         }
     }
 }
 
-print sprintf("\n#All\n#%-39s % 6s % 12s % 16s\n", "Transformation", "Count", "Mean", "Variance");
+print sprintf("\n#All\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
 for $transformation (keys %{$samples{$allKey}}) {
-    if ($samples{$allKey}{$transformation}{'count'} == 1) {
+	$count = $samples{$allKey}{$transformation}{'count'};
+    if ($count == 1) {
         $denom = 1;
     } else {
-        $denom = $samples{$allKey}{$transformation}{'count'} - 1;
+        $denom = $count - 1;
     }
 
-    $out = sprintf("%-40s % 6d % 12.2f % 16.2f\n", $transformation, $samples{$allKey}{$transformation}{'count'}, $samples{$allKey}{$transformation}{'mean'}, $samples{$allKey}{$transformation}{'diff'} / $denom);
+    $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$allKey}{$transformation}{'mean'}, $samples{$allKey}{$transformation}{'diff'} / $denom, $samples{$allKey}{$transformation}{'min'}, $samples{$allKey}{$transformation}{'max'}, $count * $samples{$allKey}{$transformation}{'mean'});
     print $out;
 }
 
