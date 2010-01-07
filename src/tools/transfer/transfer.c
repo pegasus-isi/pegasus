@@ -358,6 +358,7 @@ helpMe( const char* programname, int rc )
 " -G o,v\tPasses option o, prefixed with hyphen, to g-u-c with value v\n"
 "\tNote: Use just -G o for an option without value. Use multiple times\n"
 " -N\tAvoid the batch mode, even if it is available (debugging)\n"
+" -n\tDo not add -fast to globus-url-copy (use when client is behind firewall)\n"
 " -P n\tUse n as maximum number of parallel processes for g-u-c, default %d\n"
 " -f\tUse the -f option with ln -s for local files, default is not\n"
 " -t n\tUse n as TCP buffer size for g-u-c\'s -tcp-bs option, default %u\n"
@@ -388,7 +389,7 @@ parseCommandline( int argc, char* argv[], char* envp[], unsigned* parallel,
 		  int* nobatch )
 {
   size_t len;
-  int option, showme = 0;
+  int option, showme = 0, nofast = 0;
   char* e, *ptr = strrchr(argv[0],'/');
   double temp;
   unsigned long capabilities;
@@ -407,7 +408,7 @@ parseCommandline( int argc, char* argv[], char* envp[], unsigned* parallel,
   global.guc = NULL;
 
   opterr = 0;
-  while ( (option = getopt( argc, argv, "?G:NP:RT:fg:hi:p:qr:sSt:v" )) != -1 ) {
+  while ( (option = getopt( argc, argv, "?G:NnP:RT:fg:hi:p:qr:sSt:v" )) != -1 ) {
     switch ( option ) {
     case 'G':
       if ( optarg && *optarg ) {
@@ -426,6 +427,9 @@ parseCommandline( int argc, char* argv[], char* envp[], unsigned* parallel,
       break;
     case 'N':
       *nobatch = 1;
+      break;
+    case 'n':
+      nofast = 1;
       break;
     case 'P':
       *parallel = max_procs( strtoul( optarg, 0, 0 ) );
@@ -533,6 +537,12 @@ parseCommandline( int argc, char* argv[], char* envp[], unsigned* parallel,
   global.version = guc_versions( NULL, global.guc, envp );
 #endif
 
+  if ( nofast == 1 ) {
+    /* Remove FAST mode as requested by -n command line option */
+    if ( global.quiet < 0 )
+      printf("# Removing --fast capability as requested by -n command line option\n" );
+    global.guc_caps &= ~GUC_FAST;
+  }
   if ( global.guc_caps == 0x0fff ) {
     /* Remove FAST mode as bug-fix for 3.2.* */
     if ( global.quiet < 0 ) 
