@@ -541,7 +541,8 @@ parseCommandline( int argc, char* argv[], char* envp[], unsigned* parallel,
     /* Remove FAST mode as requested by -n command line option */
     if ( global.quiet < 0 )
       printf("# Removing --fast capability as requested by -n command line option\n" );
-    global.guc_caps &= ~GUC_FAST;
+    if ( (global.guc_caps & GUC_FAST) != 0 )
+      global.guc_caps &= ~GUC_FAST;
   }
   if ( global.guc_caps == 0x0fff ) {
     /* Remove FAST mode as bug-fix for 3.2.* */
