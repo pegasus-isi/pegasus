@@ -210,6 +210,16 @@ public class Condor extends Abstract {
                     job.condorVariables.removeKey( "should_transfer_files" );
                     job.condorVariables.removeKey( "when_to_transfer_output" );
                 }
+                
+                //for local or scheduler universe we never should have
+                //should_transfer_file or w_t_f
+                //the keys can appear if a user in site catalog for local sites
+                //specifies these keys for the vanilla universe jobs
+                if( job.condorVariables.containsKey( "should_transfer_files" ) || 
+                        job.condorVariables.containsKey( "when_to_transfer_output" )){
+                    job.condorVariables.removeKey( "should_transfer_files" );
+                    job.condorVariables.removeKey( "when_to_transfer_output" );
+                }
 //           }
 //           else{
 //               //invalid state. throw an exception??
