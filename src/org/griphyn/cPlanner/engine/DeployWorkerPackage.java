@@ -71,6 +71,7 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import org.griphyn.cPlanner.common.TPT;
 
 /**
  * The refiner that is responsible for adding 
@@ -379,6 +380,8 @@ public class DeployWorkerPackage
     public void initialize( ADag scheduledDAG ) {
         Mapper m = mBag.getHandleToTransformationMapper();
         SiteStore siteStore = mBag.getHandleToSiteStore();
+        TPT tpt = new TPT( mProps ); //allows us to check whether we need to construct 3rd party URL's
+        tpt.buildState();
 
         //figure if we need to deploy or not
         if( !m.isStageableMapper() ){
@@ -466,10 +469,21 @@ public class DeployWorkerPackage
             FileTransfer ft = new FileTransfer( COMPLETE_TRANSFORMATION_NAME, null );
             ft.addSource( selected.getResourceId(), sourceURL );
             String baseName = sourceURL.substring( sourceURL.lastIndexOf( "/" ) + 1 );
-            ft.addDestination( site, 
+
+
+            /*ft.addDestination( site,
                                //siteCatalog.getURLPrefix( site ) + 
                                siteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
                                new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
+            */
+            //figure out the URL prefix depending on
+            //the TPT configuration
+            String urlPrefix = ( tpt.stageInThirdParty( site ) )?
+                               //lookup the site catalog to get the URL prefix
+                               siteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix():
+                               //push pull mode. File URL will do
+                               "file://";
+            ft.addDestination( site, urlPrefix + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
             mFTMap.put( site, ft );
         }
     }
