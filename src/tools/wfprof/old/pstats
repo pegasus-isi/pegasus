@@ -14,14 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-"""This program parses the output of pprof and produces summary utilization 
-statistics.
-
-Usage: pstats [-d dir] [file1 [file 2 ...]]
-
-The -d argument specifies a directory to read. It looks in all .err files in
-that directory. Otherwise, you can pipe a list of .err files to read.
-"""
+"""Parses the output of pprof and produces summary utilization statistics."""
 
 __author__ = "Gideon Juve <juve@usc.edu>"
 __all__ = []
@@ -29,6 +22,7 @@ __version__ = "1.0"
 
 import sys, os, re
 from stats import Variable
+from analysis import Analysis
 
 class Statistic:
 	def __init__(self,name):
@@ -36,140 +30,109 @@ class Statistic:
 		self.avgutil = Variable()
 		self.myutil = Variable()
 
-exes = {}
-xforms = {}
+class ProcAnalysis(Analysis):
+	def __init__(self):
+		self.exes = {}
+		self.xforms = {}
+		self.file_re = re.compile("\.err(\.[0-9]{3})?$")
 
-def print_stats():
-	print ",util"
-	print "executable,count,min,max,avg,stddev,sum"
-	for exn in exes:
-		exe = exes[exn]
-		print "%s,%s" % (exe.name,exe.avgutil)
+	def print_stats(self):
+		print ",util"
+		print "executable,count,min,max,avg,stddev,sum"
+		for exn in self.exes:
+			exe = self.exes[exn]
+			print "%s,%s" % (exe.name,exe.avgutil)
 
-	print "\n"
+		print "\n"
 
-	print ",avgutil,,,,,,myutil"
-	print "transformation,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
-	for xfn in xforms:
-		xform = xforms[xfn]
-		print "%s,%s,%s" % (xform.name,xform.avgutil,xform.myutil)
+		print ",avgutil,,,,,,myutil"
+		print "transformation,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
+		for xfn in self.xforms:
+			xform = self.xforms[xfn]
+			print "%s,%s,%s" % (xform.name,xform.avgutil,xform.myutil)
 
-def process_file(file):
-	line = file.readline()
-	while line:
-		if 'xform' in line:
-			process_invocation(file)
+	def is_datafile(self, file):
+		return self.file_re.search(file) is not None
+
+	def process_datafile(self,file):
+		f = open(file,'r')
+		line = f.readline()
+		while line:
+			if 'xform' in line:
+				self.process_invocation(f)
+			line = f.readline()
+		f.close()
+
+	def process_invocation(self,file):
+		xfn = None
+		tstart = 1.0e100
+		tstop = 0.0
+		sum_utime = 0.0
+		sum_stime = 0.0
+		avgutil = 0.0
+		n = 0
+
+		# Read lines
 		line = file.readline()
-
-
-def process_invocation(file):
-	xfn = None
-	tstart = 1.0e100
-	tstop = 0.0
-	sum_utime = 0.0
-	sum_stime = 0.0
-	avgutil = 0.0
-	n = 0
-
-	# Read lines
-	line = file.readline()
-	while line:
-		# Skip lines
-		if 'xform' in line:
-			file.seek(len(line) * -1, os.SEEK_CUR)
-			break
-		if 'WARNING' in line:
-			line = file.readline()
-			continue
-		if 'PTRACE_' in line:
-			line = file.readline()
-			continue
-
-		#xform pid ppid exe lstart lstop tstart tstop vmpeak rsspeak utime stime wtime cutime cstime
-		tok = line.split(' ')
-		if len(tok) != 15:
-			line = file.readline()
-			continue
-
-		if xfn is not None:
-			if xfn != tok[0]:
-				raise Exception("Transformation changed")
-		else:
-			xfn = tok[0]
-
-		exn = tok[3]
-		tstart = min(float(tok[6]), tstart)
-		tstop = max(float(tok[7]), tstop)
-		utime = float(tok[10])
-		stime = float(tok[11])
-		wtime = float(tok[12])
-
-		if exn in exes:
-			exe = exes[exn]
-		else:
-			exe = Statistic(exn)
-			exes[exn] = exe
-
-		util = (utime + stime) / wtime
-
-		exe.avgutil.update(util)
-
-		sum_utime += utime
-		sum_stime += stime
-
-		n += 1
-		avgutil = avgutil + ((util - avgutil)/n)
-
-		line = file.readline()
-	#end of loop
-
-	if xfn in xforms:
-		xform = xforms[xfn]
-	else:
-		xform = Statistic(xfn)
-		xforms[xfn] = xform
-
-	xform.avgutil.update(avgutil)
-	xform.myutil.update((sum_utime+sum_stime)/(tstop-tstart))
-
-def process_dir(dir):
-	file_re = re.compile("\.err(\.[0-9]{3})?$")
-	if not os.path.isdir(dir):
-		raise Exception('not a dir: %s' % dir)
-	for file in os.listdir(dir):
-		if file_re.search(file):
-			fname = os.path.join(dir,file)
-			f = open(fname,'r')
-			process_file(f)
-			f.close()
-
-
-def main():
-	if len(sys.argv) == 1:
-		fn = sys.stdin.readline()[:-1]
-		while fn:
-			f = open(fn, 'r')
-			process_file(f)
-			f.close()
-			fn = sys.stdin.readline()[:-1]
-	else:
-		i = 1
-		while i < len(sys.argv):
-			arg = sys.argv[i]
-			if arg == '-d':
-				d = sys.argv[i+1]
-				process_dir(d)
-				i += 2
-			elif arg == '-h':
-				print "Usage: %s [-d dir] [file1 [file 2 ...]] [< list_of_filenames]" % sys.argv[0]
-				sys.exit(1)
+		while line:
+			# Skip lines
+			if 'xform' in line:
+				file.seek(len(line) * -1, os.SEEK_CUR)
+				break
+			if 'WARNING' in line:
+				line = file.readline()
+				continue
+			if 'PTRACE_' in line:
+				line = file.readline()
+				continue
+	
+			#xform pid ppid exe lstart lstop tstart tstop vmpeak rsspeak utime stime wtime cutime cstime
+			tok = line.split(' ')
+			if len(tok) != 15:
+				line = file.readline()
+				continue
+	
+			if xfn is not None:
+				if xfn != tok[0]:
+					raise Exception("Transformation changed")
 			else:
-				f = open(arg,'r')
-				process_file(f)
-				f.close()
-				i += 1
-	print_stats()
-
+				xfn = tok[0]
+	
+			exn = os.path.basename(tok[3])
+			tstart = min(float(tok[6]), tstart)
+			tstop = max(float(tok[7]), tstop)
+			utime = float(tok[10])
+			stime = float(tok[11])
+			wtime = float(tok[12])
+	
+			if exn in self.exes:
+				exe = self.exes[exn]
+			else:
+				exe = Statistic(exn)
+				self.exes[exn] = exe
+	
+			util = (utime + stime) / wtime
+	
+			exe.avgutil.update(util)
+	
+			sum_utime += utime
+			sum_stime += stime
+	
+			n += 1
+			avgutil = avgutil + ((util - avgutil)/n)
+	
+			line = file.readline()
+		#end of loop
+	
+		if xfn in self.xforms:
+			xform = self.xforms[xfn]
+		else:
+			xform = Statistic(xfn)
+			self.xforms[xfn] = xform
+	
+		xform.avgutil.update(avgutil)
+		xform.myutil.update((sum_utime+sum_stime)/(tstop-tstart))
+	
 
 if __name__ == '__main__':
-	main()
+	ProcAnalysis().analyze()

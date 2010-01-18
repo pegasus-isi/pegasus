@@ -14,14 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-"""This program parses the output of kickstart and produces summary runtime
-statistics. It is similar to gentimes, but produces more info.
-
-Usage: runstats [-d dir] [file1 [file 2 ...]]
-
-The -d argument specifies a directory to read. It looks in all .out files in
-that directory. Otherwise, you can pipe a list of .out files to read.
-"""
+"""Parses the output of kickstart and produces summary runtime statistics."""
 
 __author__ = "Gideon Juve <juve@usc.edu>"
 __all__ = []
@@ -29,6 +22,7 @@ __version__ = "1.0"
 
 import sys, os, re
 from stats import Variable
+from analysis import Analysis
 
 class Statistic:
 	def __init__(self,name):
@@ -38,73 +32,39 @@ class Statistic:
 	def write(self):
 		print "%s,%s" % (self.name,self.runtime)
 
-xforms = {}
+class RunAnalysis(Analysis):
+	def __init__(self):
+		self.xforms = {}
+		self.file_re = re.compile("\.out(\.[0-9]{3})?$")
+		self.regex = re.compile("^.* duration=\"([\.0-9]*)\" transformation=\"([_A-Za-z0-9:\.]*)\" .*$")		
 
+	def print_stats(self):
+		print ",runtime"
+		print "transformation,count,min,max,avg,stddev,sum"
+		for xfn in self.xforms:
+			xform = self.xforms[xfn]
+			xform.write()
 
-def print_stats():
-	print ",runtime"
-	print "transformation,count,min,max,avg,stddev,sum"
-	for xfn in xforms:
-		xform = xforms[xfn]
-		xform.write()
+	def is_datafile(self,file):
+		return self.file_re.search(file) is not None
 
-
-regex = re.compile("^.* duration=\"([\.0-9]*)\" transformation=\"([_A-Za-z0-9:\.]*)\" .*$")		
-def process_file(file):
-	for line in file.readlines():
-		match = regex.match(line)
-		if match:
-			xform_name = match.group(2)
-			runtime = float(match.group(1))
+	def process_datafile(self,file):
+		f = open(file,'r')
+		for line in f.readlines():
+			match = self.regex.match(line)
+			if match:
+				xform_name = match.group(2)
+				runtime = float(match.group(1))
 		
-			# Update transformation stats
-			if xform_name in xforms:
-				xform = xforms[xform_name]
-			else:
-				xform = Statistic(xform_name)
-				xforms[xform_name] = xform
-			xform.runtime.update(runtime)
-	
-
-def process_dir(dir):
-	file_re = re.compile("\.out(\.[0-9]{3})?$")
-	if not os.path.isdir(dir):
-		raise Exception('not a dir: %s' % dir)
-	for file in os.listdir(dir):
-		if file_re.search(file):
-			fname = os.path.join(dir,file)
-			f = open(fname,'r')
-			process_file(f)
-			f.close()
-
-
-def main():
-	if len(sys.argv) == 1:
-		fn = sys.stdin.readline()[:-1]
-		while fn:
-			f = open(fn, 'r')
-			process_file(f)
-			f.close()
-			fn = sys.stdin.readline()[:-1]
-	else:
-		i = 1
-		while i < len(sys.argv):
-			arg = sys.argv[i]
-			if arg == '-d':
-				d = sys.argv[i+1]
-				process_dir(d)
-				i += 2
-			elif arg == '-h':
-				print "Usage: %s [-d dir] [file1 [file 2 ...]] [< list_of_filenames]" % sys.argv[0]
-				sys.exit(1)
-			else:
-				f = open(arg,'r')
-				process_file(f)
-				f.close()
-				i += 1
-
-	print_stats()
+				# Update transformation stats
+				if xform_name in self.xforms:
+					xform = self.xforms[xform_name]
+				else:
+					xform = Statistic(xform_name)
+					self.xforms[xform_name] = xform
+				xform.runtime.update(runtime)
+		f.close()
 
 
 if __name__ == '__main__':
-	main()
+	RunAnalysis().analyze()

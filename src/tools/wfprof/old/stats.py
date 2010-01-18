@@ -17,7 +17,7 @@
 """This module contains utilities for computing summary statistics"""
 
 __author__ = "Gideon Juve <juve@usc.edu>"
-__all__ = []
+__all__ = ["Variable"]
 __version__ = "1.0"
 
 from math import sqrt
