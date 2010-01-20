@@ -22,7 +22,7 @@ __version__ = "1.0"
 
 import sys, os, re
 from stats import Variable
-from analysis import Analysis
+from analysis import Analysis, sorteditems
 
 class Process:
 	def __init__(self,exe,pid):
@@ -31,14 +31,18 @@ class Process:
 		self.mread = 0.0
 		self.mwrite = 0.0
 		
-class Statistic:
+class Executable:
+	def __init__(self,xform,name):
+		self.xform = xform
+		self.name = name
+		self.mread = Variable()
+		self.mwrite = Variable()
+
+class Transformation:
 	def __init__(self,name):
 		self.name = name
 		self.mread = Variable()
 		self.mwrite = Variable()
-	
-	def write(self):
-		print "%s,%s,%s" % (self.name,self.mread,self.mwrite)
 
 class IOAnalysis(Analysis):
 	def __init__(self):
@@ -47,36 +51,35 @@ class IOAnalysis(Analysis):
 		self.file_re = re.compile("\.err(\.[0-9]{3})?$")
 
 	def print_stats(self):
-		print ",mread,,,,,,mwrite"
-		print "executable,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
-		for exn in self.exes:
-			exe = self.exes[exn]
-			exe.write()
+		print ",,mread,,,,,,mwrite"
+		print "transformation,executable,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
+		for exe in sorteditems(self.exes):
+			print "%s,%s,%s,%s" % (exe.xform,exe.name,exe.mread,exe.mwrite)
 
 		print "\n"
 
 		print ",mread,,,,,,mwrite"
 		print "transformation,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
-		for xfn in self.xforms:
-			xform = self.xforms[xfn]
-			xform.write()
+		for xform in sorteditems(self.xforms):
+			print "%s,%s,%s" % (xform.name,xform.mread,xform.mwrite)
 		
 	def update_xform(self,xform_name,mread,mwrite):
 		# Update transformation stats
 		if xform_name in self.xforms:
 			xform = self.xforms[xform_name]
 		else:
-			xform = Statistic(xform_name)
+			xform = Transformation(xform_name)
 			self.xforms[xform_name] = xform
 		xform.mread.update(mread)
 		xform.mwrite.update(mwrite)
 	
-	def update_exe(self,exe_name,mread,mwrite):
-		if exe_name in self.exes:
-			exe = self.exes[exe_name]
+	def update_exe(self,xform_name,exe_name,mread,mwrite):
+		id = xform_name+"$"+exe_name
+		if id in self.exes:
+			exe = self.exes[id]
 		else:
-			exe = Statistic(exe_name)
-			self.exes[exe_name] = exe
+			exe = Executable(xform_name,exe_name)
+			self.exes[id] = exe
 		exe.mread.update(mread)
 		exe.mwrite.update(mwrite)
 
@@ -125,7 +128,7 @@ class IOAnalysis(Analysis):
 			# if new process was encountered
 			if pid != lpid:
 				if lpid is not None:
-					self.update_exe(exe_name,exe_mread,exe_mwrite) # process the old one
+					self.update_exe(xform_name,exe_name,exe_mread,exe_mwrite) # process the old one
 				exe_mread = 0.0
 				exe_mwrite = 0.0
 				lpid = pid
@@ -149,7 +152,7 @@ class IOAnalysis(Analysis):
 		
 		# process last exe
 		if lpid is not None:
-			self.update_exe(exe_name,exe_mread,exe_mwrite)
+			self.update_exe(xform_name,exe_name,exe_mread,exe_mwrite)
 	
 		# process xform
 		self.update_xform(xform_name,xform_mread,xform_mwrite)

@@ -22,34 +22,37 @@ __version__ = "1.0"
 
 import sys, os, re
 from stats import Variable
-from analysis import Analysis
+from analysis import Analysis, sorteditems
 
-class Statistic:
+class Executable:
+	def __init__(self,xform,name):
+		self.xform = xform
+		self.name = name
+		self.util = Variable()
+
+class Transformation:
 	def __init__(self,name):
 		self.name = name
-		self.avgutil = Variable()
-		self.myutil = Variable()
+		self.util = Variable()
 
-class ProcAnalysis(Analysis):
+class UtilizationAnalysis(Analysis):
 	def __init__(self):
 		self.exes = {}
 		self.xforms = {}
 		self.file_re = re.compile("\.err(\.[0-9]{3})?$")
 
 	def print_stats(self):
-		print ",util"
-		print "executable,count,min,max,avg,stddev,sum"
-		for exn in self.exes:
-			exe = self.exes[exn]
-			print "%s,%s" % (exe.name,exe.avgutil)
+		print ",,util"
+		print "transformation,executable,count,min,max,avg,stddev,sum"
+		for exe in sorteditems(self.exes):
+			print "%s,%s,%s" % (exe.xform,exe.name,exe.util)
 
 		print "\n"
 
-		print ",avgutil,,,,,,myutil"
-		print "transformation,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
-		for xfn in self.xforms:
-			xform = self.xforms[xfn]
-			print "%s,%s,%s" % (xform.name,xform.avgutil,xform.myutil)
+		print ",util"
+		print "transformation,count,min,max,avg,stddev,sum"
+		for xform in sorteditems(self.xforms):
+			print "%s,%s" % (xform.name,xform.util)
 
 	def is_datafile(self, file):
 		return self.file_re.search(file) is not None
@@ -69,8 +72,6 @@ class ProcAnalysis(Analysis):
 		tstop = 0.0
 		sum_utime = 0.0
 		sum_stime = 0.0
-		avgutil = 0.0
-		n = 0
 
 		# Read lines
 		line = file.readline()
@@ -104,22 +105,20 @@ class ProcAnalysis(Analysis):
 			utime = float(tok[10])
 			stime = float(tok[11])
 			wtime = float(tok[12])
-	
-			if exn in self.exes:
-				exe = self.exes[exn]
+
+			id = xfn+"$"+exn	
+			if id in self.exes:
+				exe = self.exes[id]
 			else:
-				exe = Statistic(exn)
-				self.exes[exn] = exe
+				exe = Executable(xfn,exn)
+				self.exes[id] = exe
 	
 			util = (utime + stime) / wtime
 	
-			exe.avgutil.update(util)
+			exe.util.update(util)
 	
 			sum_utime += utime
 			sum_stime += stime
-	
-			n += 1
-			avgutil = avgutil + ((util - avgutil)/n)
 	
 			line = file.readline()
 		#end of loop
@@ -127,12 +126,11 @@ class ProcAnalysis(Analysis):
 		if xfn in self.xforms:
 			xform = self.xforms[xfn]
 		else:
-			xform = Statistic(xfn)
+			xform = Transformation(xfn)
 			self.xforms[xfn] = xform
 	
-		xform.avgutil.update(avgutil)
-		xform.myutil.update((sum_utime+sum_stime)/(tstop-tstart))
+		xform.util.update((sum_utime+sum_stime)/(tstop-tstart))
 	
 
 if __name__ == '__main__':
-	ProcAnalysis().analyze()
+	UtilizationAnalysis().analyze()

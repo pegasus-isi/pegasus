@@ -20,6 +20,11 @@ __version__ = "1.0"
 
 import sys, os, re
 
+def sorteditems(dict):
+	keys = dict.keys()
+	keys.sort()
+	return map(dict.get, keys)
+
 class Analysis:
 	def __init__(self):
 		pass

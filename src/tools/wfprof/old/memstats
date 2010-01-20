@@ -22,7 +22,7 @@ __version__ = "1.0"
 
 import sys, os, re
 from stats import Variable
-from analysis import Analysis
+from analysis import Analysis, sorteditems
 
 class Event:
 	def __init__(self,op,time,rec):
@@ -30,14 +30,18 @@ class Event:
 		self.time = time
 		self.rec = rec
 
-class Statistic:
-	def __init__(self,name):
+class Executable:
+	def __init__(self,xform,name):
+		self.xform = xform
 		self.name = name
 		self.vmpeak = Variable()
 		self.rsspeak = Variable()
 
-	def write(self):
-		print "%s,%s,%s" % (self.name,self.vmpeak,self.rsspeak)
+class Transformation:
+	def __init__(self,name):
+		self.name = name
+		self.vmpeak = Variable()
+		self.rsspeak = Variable()
 
 class MemAnalysis(Analysis):
 	def __init__(self):
@@ -46,19 +50,17 @@ class MemAnalysis(Analysis):
 		self.file_re = re.compile("\.err(\.[0-9]{3})?$")
 
 	def print_stats(self):
-		print ",vmpeak,,,,,,rsspeak"
-		print "executable,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
-		for exn in self.exes:
-			exe = self.exes[exn]
-			exe.write()
+		print ",,vmpeak,,,,,,rsspeak"
+		print "transformation,executable,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
+		for exe in sorteditems(self.exes):
+			print "%s,%s,%s,%s" % (exe.xform,exe.name,exe.vmpeak,exe.rsspeak)
 
 		print "\n"
 
 		print ",vmpeak,,,,,,rsspeak"
 		print "transformation,count,min,max,avg,stddev,sum,count,min,max,avg,stddev,sum"
-		for xfn in self.xforms:
-			xform = self.xforms[xfn]
-			xform.write()
+		for xform in sorteditems(self.xforms):
+			print "%s,%s,%s" % (xform.name,xform.vmpeak,xform.rsspeak)
 
 	def is_datafile(self, file):
 		return self.file_re.search(file) is not None
@@ -110,14 +112,15 @@ class MemAnalysis(Analysis):
 			if xfn in self.xforms:
 				xform = self.xforms[xfn]
 			else:
-				xform = Statistic(xfn)
+				xform = Transformation(xfn)
 				self.xforms[xfn] = xform
 
-			if exn in self.exes:
-				exe = self.exes[exn]
+			id = xfn+"$"+exn
+			if id in self.exes:
+				exe = self.exes[id]
 			else:
-				exe = Statistic(exn)
-				self.exes[exn] = exe
+				exe = Executable(xfn,exn)
+				self.exes[id] = exe
 
 			tline.append(Event('add',start,(vmpeak,rsspeak)))
 			tline.append(Event('sub',stop,(vmpeak,rsspeak)))
