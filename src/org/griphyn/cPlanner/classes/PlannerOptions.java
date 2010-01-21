@@ -211,6 +211,11 @@ public class PlannerOptions extends Data implements Cloneable{
      * The options that need to be passed forward to pegasus-run.
      */
     private List<NameValue> mForwardOptions;
+    
+    /**
+     * The set of non standard java options that need to be passed to the JVM
+     */
+    private Set<String> mNonStandardJavaOptions;
 
     /**
      * Default Constructor.
@@ -223,6 +228,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mPDAXFile         = null;
         mvExecPools       = new java.util.HashSet();
         mCacheFiles       = new java.util.HashSet();
+        mNonStandardJavaOptions =  new java.util.HashSet();
         mForwardOptions   = new java.util.LinkedList<NameValue>();
         mOutputPool       = null;
         mDisplayHelp      = false;
@@ -972,6 +978,30 @@ public class PlannerOptions extends Data implements Cloneable{
     }
     
     /**
+     * Adds to the Set of non standard JAVA options that need to be passed
+     * to the JVM.  The list of non standard java options can be retrieved 
+     * by doing java -X .
+     * 
+     * The option is always prefixed by -X internally. If mx1024m is passed, 
+     * internally option will be set to -Xmx1024m
+     * 
+     * @param option  the non standard option.
+     */
+    public void addToNonStandardJavaOptions( String option ){
+        
+        this.mNonStandardJavaOptions.add( "-X" + option );
+    }
+    
+    /**
+     * Returns the Set of non standard java options.
+     * 
+     * @return Set<String>
+     */
+    public Set<String> getNonStandardJavaOptions( ){
+        return this.mNonStandardJavaOptions;
+    }
+    
+    /**
      * Returns the textual description of all the options that were set for
      * the planner.
      *
@@ -1001,7 +1031,8 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Monitor Workflow     " + mMonitor +
                     "\n VO Group             " + mVOGroup +
                     "\n Rescue Tries         " + mNumOfRescueTries +
-                    "\n VDS Properties       " + mVDSProps;
+                    "\n VDS Properties       " + mVDSProps + 
+                    "\n Non Standard JVM Options " + this.mNonStandardJavaOptions;
         return st;
     }
 
@@ -1121,6 +1152,11 @@ public class PlannerOptions extends Data implements Cloneable{
             sb.append(" -D").append( key ).append("=").append( mProperties.getProperty(key));
         }
         
+        //pass on all the -X options to jvm
+        for( Iterator<String> it = this.mNonStandardJavaOptions.iterator(); it.hasNext() ;){
+            sb.append( " " ).append( it.next() );
+        }
+        
         return sb.toString();
     }
 
@@ -1169,6 +1205,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mPDAXFile       = this.mPDAXFile;
         pOpt.mvExecPools     = cloneSet(this.mvExecPools);
         pOpt.mCacheFiles     = cloneSet(this.mCacheFiles);
+        pOpt.mNonStandardJavaOptions = cloneSet( this.mNonStandardJavaOptions );
         pOpt.mOutputPool     = this.mOutputPool;
         pOpt.mDisplayHelp    = this.mDisplayHelp;
         pOpt.mLoggingLevel   = this.mLoggingLevel;
