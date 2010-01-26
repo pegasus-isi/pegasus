@@ -430,6 +430,18 @@ public class PartitionAndPlan{
                                            dir.getPath() );
                 }
             } else {
+                //try to get around JVM bug. JIRA PM-91
+                if( dir.getPath().endsWith( "." ) ){
+                    //just try to create the parent directory
+                    if( !dir.getParentFile().mkdirs() ){
+                        //tried everything and failed
+                        throw new IOException( "Unable to create  directory " +
+                                       dir.getPath() );
+                    }
+                    return;
+                }
+
+
                 // exists but not a directory
                 throw new IOException( "Destination " + dir.getPath() + " already " +
                                        "exists, but is not a directory." );

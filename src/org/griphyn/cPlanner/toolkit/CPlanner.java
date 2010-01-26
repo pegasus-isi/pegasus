@@ -1272,6 +1272,17 @@ public class CPlanner extends Executable{
         } else {
             // does not exist, try to make it
             if ( ! dir.mkdirs() ) {
+
+                //try to get around JVM bug. JIRA PM-91
+                if( dir.getPath().endsWith( "." ) ){
+                    //just try to create the parent directory
+                    if( !dir.getParentFile().mkdirs() ){
+                        throw new IOException( "Unable to create  directory " +
+                                       dir.getPath() );
+                    }
+                    return;
+                }
+
                 throw new IOException( "Unable to create  directory " +
                                        dir.getPath() );
             }
