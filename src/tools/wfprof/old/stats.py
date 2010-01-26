@@ -40,9 +40,13 @@ class Variable:
 		self.M2 = self.M2 + (delta*(x-self.mean))
 		self.sum += x
 
+	def stddev(self):
+		if self.n <= 1: return 0.0
+		else: return sqrt(self.M2/(self.n - 1))
+
+	def variance(self):
+		if self.n <= 1: return 0.0
+		else: return self.M2/(self.n - 1)
+
 	def __str__(self):
-		if self.n <= 1:
-			stddev = 0.0
-		else:
-			stddev = sqrt(self.M2/(self.n - 1))
-		return "%d,%f,%f,%f,%f,%f" % (self.n, self.min, self.max, self.mean, stddev, self.sum)
+		return "%d,%f,%f,%f,%f,%f" % (self.n, self.min, self.max, self.mean, self.stddev(), self.sum)
