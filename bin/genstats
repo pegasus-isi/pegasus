@@ -351,7 +351,7 @@ sub processJobstateLog {
         #}
 	else {
             $jobsRef->{$job}->{'ksruntime'} = 0;
-            my @grepLines = `grep -h '<invocation' $job.out.* 2>&1`;
+            my @grepLines = `grep -h '<invocation' $job.out* 2>&1`;
             foreach my $line (@grepLines) {
                 chomp($line);
                 my $i1 = index($line, "duration=\"");
@@ -364,7 +364,7 @@ sub processJobstateLog {
             }
 	    #for clustered jobs try to get seqexec progress at end of .out
 	    if( $job =~ /merge_/ ){
-		my $tail = `tail -n 1  $job.out.* 2>&1`;
+		my $tail = `tail -n 1  $job.out* 2>&1`;
 		chomp($tail);
 		print "tail is $tail\n";
 		if( index($tail, "[struct") == 0 ){
