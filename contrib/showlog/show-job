@@ -560,6 +560,7 @@ my ($dfh,$dfn) = tempfile( 'sj-XXXXXX', SUFFIX => '.dat',
 			   DIR => File::Spec->tmpdir() );
 die "ERROR: Unable to create temporary file\n" unless defined $dfh;
 
+
 for ( my $j=0; $j < @keylist; ++$j ) {
     my $jobid = $keylist[$j];
     printf $dfh "%*d %*d", $jsize, $j, $jsize, $start{$jobid};
@@ -574,7 +575,10 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 	}
     }
 
-    #print "DFN is $dfn";
+    #print "DFN is $dfn\n";
+
+
+    #check to see if the number of elements in array holding timestamps from jobstate are equal to 8
     if ( @{$job{$jobid}} == 8 ) {
 	#my $kfn = substr( $submit{$jobid}, 0, -4 ) . '.out';
 	my $kfn = find_job_out_file( substr( $submit{$jobid}, 0, -4 ) );
@@ -593,9 +597,6 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 		$main::kmax = $ksf if $main::kmax < $ksf;
 		$kss -= $main::min; $ksf -= $main::min;
 		if ( $kss > -100 && $ksf > -10 ) {
-		    #print "$dfn , $dsize, $kss\n";
-		    #print "$dfn , $dsize, $ksf\n";
-		    #print "$dfn  $main::color{$txn}\n";
 
 		    printf $dfh " %*d", $dsize, $kss;
 		    printf $dfh " %*d", $dsize, $ksf;
@@ -613,6 +614,44 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 	}
     } else {
 	warn "Warning: job $jobid is underspecified\n";
+	#added by karan jan 28,2010
+	#most probably missing the postscript started and finished events
+	#take kickstart start and finish as EXECUTE and JOB_TERMINATED
+	my ($pss, $psf, $kss,$ksf,$txn);
+	$kss = $job{$jobid}[4];
+	$ksf = $job{$jobid}[5];
+
+	#subtract the dag start time as we plot from when dag started
+	$kss -= $main::min; $ksf -= $main::min;
+	#print "For $jobid Execute $kss JOB_TERMINATED $ksf\n";
+
+	#assign postscript start and finish to JOB_TERMINATED if not
+	#POSTSCRIPT_STARTED is not defined and printout to .dat file
+	printf $dfh " %*d %*d", $dsize, $ksf, $dsize,$ksf unless defined( $job{$jobid}[6] ) ;
+	
+	#print out kickstart start and end time
+	printf $dfh " %*d %*d", $dsize, $kss, $dsize, $ksf;
+
+	#determine the transformation name from submit file
+	my $sub = sprintf( "%s.sub",$jobid);
+        #try and open the file to detect                                                                                                                                                                                                                                    
+        if( open( SF, "<$sub" ) ){
+	    while( <SF> ){
+		next unless /\+pegasus_wf_xformation\s/;
+
+		my($key,$value)=split /=/, $_ ;
+
+		#strip out the enclosing quotes
+		if($value =~ m/\"(.*)\"/) {
+		    my $txn = $1;
+		    #print "transformation name is $txn \n";
+		    printf $dfh " %s", defined($main::color{$txn})?$main::color{$txn}:$main::color{"unknown"};
+		}
+
+	    }
+	    close SF;
+	}
+
     }
     print $dfh "\n";
 }
