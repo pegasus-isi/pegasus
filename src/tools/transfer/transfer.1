@@ -184,9 +184,9 @@ all arguments were parsed. This permits to check defaults.
 .TP
 .B \-n
 When this option is specified, transfer will not use the -fast option
-of globus-url-copy, even if that capability is detected. This disables
-the passive FTP mode as it is known not to work with various firewalls
-and NATs.
+of globus-url-copy, even if that capability is detected. In addition,
+it will not use the -p flag. This disables the passive FTP mode as it
+is known not to work with various firewalls and NATs. 
 .TP
 .B baseuri
 specifies the URI prefix of the host that the instance of the
