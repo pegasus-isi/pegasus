@@ -65,15 +65,23 @@ while(<STDIN>){
 	    print STDOUT "CHOPPED SRC:", $src,"\n";
 	    print STDOUT "CHOPPED DES:", $dest,"\n";
 	    
-	    # symlink source to dest
-	    my $cmd="/bin/ln -s -f ".$src." ".$dest;
-	    print STDOUT "COMMAND IS ",$cmd,"\n" if $main::DEBUG;
-	    if(system($cmd)==0){
-		print STDOUT "SYMLINK success\n";
+	    # check and see if the files are the same
+	    my $src_inode = (stat($src))[2];
+	    my $dest_inode = (stat($dest))[2];
+	    if ($src_inode == $dest_inode){
+	        print STDOUT "SRC and DEST are same file\n";
 		$success++;
 	    } else {
-		print STDERR "SYMLINK ERROR",parse_exit($?),"\n";
-		$failures++;
+	        # symlink source to dest
+	        my $cmd="/bin/ln -s -f ".$src." ".$dest;
+	        print STDOUT "COMMAND IS ",$cmd,"\n" if $main::DEBUG;
+	        if(system($cmd)==0){
+		    print STDOUT "SYMLINK success\n";
+		    $success++;
+	        } else {
+		    print STDERR "SYMLINK ERROR",parse_exit($?),"\n";
+		    $failures++;
+	        }
 	    }
 	    # reset all the variables
 	    $src=undef;
