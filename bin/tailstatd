@@ -55,6 +55,7 @@ $main::workid = undef;		# workflow ID in workflow database
 $main::line = 0;		# line number from DAGMan debug file
 $main::stamp = 0;		# time stamp from log file
 $main::pid = 0;			# DAGMan's pid -- set later
+$main::replay_mode = 0;		# disable checking if DAGMan's pid is gone while running tailstatd
 %main::subfn = ();		# all submitfiles of not-DONE jobs
 %main::seen = ();		# how often a job was seen
 %main::pending = ();		# remember when GLOBUS_SUBMIT was entered
@@ -114,7 +115,8 @@ GetOptions( "help|h" => \&usage,
 	    "database!"=>\$database,
 	    "fuse=i" => \$fuse,
 	    "no-daemon|n" => sub { $nodaemon=1 },
-	    "foreground|N" => sub { $nodaemon=2 } );
+	    "foreground|N" => sub { $nodaemon=2 },
+    	    "replay|r" => sub { $main::replay_mode=1 });
 
 # sanity check
 $fuse=60 if $fuse < 60;
@@ -222,6 +224,7 @@ Optional arguments:
                  Required keys include @{[join(", ",@{$main::brainkeys{required}})]}. 
                  Suggested keys include @{[join(", ",@{$main::brainkeys{optional}})]}. 
  -D| --database  Turn on Database entries for work DB.
+ -r| --replay    disables checking for DAGMan\'s pid while running tailstatd.
 Developer arguments: 
  -Dprop=val      Overrides for properties, must be initial (multi-option). 
  -S|--sim ms     simulate delays between reads by sleeping ms milliseconds.
@@ -704,7 +707,7 @@ sub process ($) {
 	    # found a retry, save maxed-out retries for later...
 	    $main::flag{$1}=$3 if ( $2 == $3 );
 
-	} elsif ( /\(condor_DAGMAN\) [\w\s]+ EXITING WITH STATUS (\d+)$/ ) {
+	} elsif ( /\(condor_DAGMAN\)[\w\s]+EXITING WITH STATUS (\d+)$/ ) {
 	    # DAG finished -- done parsing
 	    $main::terminate = $1;
 	    log( 'DAGMan finished with exit code ', $main::terminate );
@@ -712,7 +715,10 @@ sub process ($) {
 
 	} elsif ( /\*\* PID = (\d+)$/ ) {
 	    # DAGMan's pid
-	    $main::pid = $1;
+	    if ( $main::replay_mode == 0 ) {
+		# Only set pid if not running in replay mode (otherwise pid may belong to another process)
+		$main::pid = $1;
+	    }
 	    undef $main::terminate;
 	    log( 'DAGMan runs at pid ', $main::pid );
 	    syswrite( JSDB, $main::stamp . " INTERNAL *** DAGMAN_STARTED ***\n" );
