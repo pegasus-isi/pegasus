@@ -19,7 +19,7 @@ sub usage {
     my $base = basename($0,'.pl');
     print "Usage: $base [options] dot-dag-file\n\n";
     print "Mandatory arguments:\n";
-    print " dot-dat-file  path to the DAGMan input file. This path is also\n";
+    print " dot-dag-file  path to the DAGMan input file. This path is also\n";
     print "               used to derive the location of the jobstate.log.\n";
     print "\n";
     print "Optional arguments:\n";
@@ -28,6 +28,7 @@ sub usage {
     print " -k|--keep     don't unlink temporary data files.\n";
     print " -a|--adjust s adjust time information by s seconds.\n";
     print " -c|--color-file <file> the file mapping job transformation names to color.\n";
+    print " -t|--title <title name> the title to be assigned to generated graph. Replaces the default title.\n";
     print "\n";
     exit(1);
 }
@@ -36,11 +37,13 @@ sub usage {
 my $adjustment = 0;		# time zone adjustment (@#~! Condor)
 my $nounlink = 0;		# remove temporary files later
 my $color_fn ; # the path to the file containing color scheme for jobs
+my $user_title; # the user provided title to be applied to the graph
 GetOptions( 'help|h' => \&usage, 
 	    'version|V' => sub { print "$main::version\n"; exit(0); },
 	    "keep|k!" => \$nounlink,
 	    "adjust|a=i" => \$adjustment,
-	    "color-file|c=s" => \$color_fn );
+	    "color-file|c=s" => \$color_fn,
+	    "title|t=s" => \$user_title );
 
 # determine dag filename to find kickstart records
 my $dagfn = shift || die "ERROR: Need the name of the DAG file\n";
@@ -313,7 +316,7 @@ sub gen_data($$$\%) {
 	die "ERROR: $diff s workflow is just too long!\n";
     }
 
-    my $title = default_title($dagfn);
+    my $title = defined( $user_title )? $user_title : default_title($dagfn);
     my $height = ( $n <= 101 ? 5.0 : $n / 20 );
     warn "# xstubs=$xstubs, xticks=$xtics, width=$width, height=$height\n";
 
