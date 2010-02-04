@@ -655,6 +655,7 @@ public class TransferEngine extends Engine {
                 //assumption of same se mount point for each gridftp server
                 destURL += this.getPathOnStageoutSite( lfn );//  + File.separator + lfn;
 
+
                 //if the paths match of dest URI
                 //and execDirURL we return null
                 if (execURL.equalsIgnoreCase(destURL)) {
@@ -990,19 +991,32 @@ public class TransferEngine extends Engine {
             //do some funky matching on the basis of the fact
             //that each pool has one shared filesystem
 
+
             //match the source and dest 3rd party urls or
             //match the directory url knowing that lfn and
             //(source and dest pool) are same
-            if(sourceURL.equalsIgnoreCase(dDirURL + File.separator + lfn)||
-               ( selLoc.getResourceHandle().equalsIgnoreCase( ePool ) &&
-                lfn.equals( sourceURL.substring(sourceURL.lastIndexOf(File.separator) + 1)) &&
-                sAbsPath.equals( dAbsPath )
-                )){
-                //do not need to add any transfer node
-                mLogger.log("Not transferring ip file " + lfn +
-                            " for job " + job.jobName + " to site " + ePool,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-                continue;
+            try{
+                if(sourceURL.equalsIgnoreCase(dDirURL + File.separator + lfn)||
+                     ( selLoc.getResourceHandle().equalsIgnoreCase( ePool ) &&
+                       lfn.equals( sourceURL.substring(sourceURL.lastIndexOf(File.separator) + 1)) &&
+                       //sAbsPath.equals( dAbsPath )
+                       new File( sAbsPath ).getCanonicalPath().equals(  new File( dAbsPath).getCanonicalPath())
+                     )
+                 ){
+                    //do not need to add any transfer node
+                    StringBuffer message = new StringBuffer( );
+                    
+                    message.append( sAbsPath ).append( " same as " ).append( dAbsPath );
+                    mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
+                    message = new StringBuffer();
+                    message.append( " Not transferring ip file as ").append( lfn ).
+                            append( " for job " ).append( job.jobName ).append( " to site " ).append( ePool);
+                    
+                    mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
+                    continue;
+                }
+            }catch( IOException ioe ){
+                /*ignore */
             }
                 
             //add locations of input data on the remote site to the transient RC
