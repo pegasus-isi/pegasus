@@ -180,8 +180,14 @@ public class ReplicaFactory{
       throw new RuntimeException( "You need to specify the " +
 				  ReplicaCatalog.c_prefix + " property" );
     // for Karan: 2005-10-27
-    if ( catalogImplementor.equalsIgnoreCase("rls") )
+    if ( catalogImplementor.equalsIgnoreCase("rls") ){
       catalogImplementor = "RLI";
+    }
+
+    //File also means SimpleFile
+    if( catalogImplementor.equalsIgnoreCase( "File" ) ){
+      catalogImplementor = "SimpleFile";
+    }
 
     // syntactic sugar adds absolute class prefix
     if ( catalogImplementor.indexOf('.') == -1 )
