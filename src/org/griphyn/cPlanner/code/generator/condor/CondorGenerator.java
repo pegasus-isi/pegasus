@@ -1508,7 +1508,7 @@ public class CondorGenerator extends Abstract {
                 mLogger.log("Unquoted arguments are " + args,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 //insert a comment for the old args
-                sinfo.condorVariables.construct("#arguments",args);
+                //sinfo.condorVariables.construct("#arguments",args);
                 args = CondorQuoteParser.quote(args, true);
                 sinfo.condorVariables.construct("arguments", args);
                 mLogger.log("Quoted arguments are " + args,
