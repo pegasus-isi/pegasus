@@ -1,0 +1,283 @@
+#!/usr/bin/env python
+
+"""
+Pegasus utility for pasing jobstate.log and reporting succesful and failed jobs
+
+Usage: pegasus-analyzer [options]
+"""
+
+# Import Python modules (some not currently needed, but included for future expansion)
+import os
+import re
+import sys
+import time
+import errno
+import logging
+import commands
+import optparse
+
+# --- regular expressions -------------------------------------------------------------
+
+re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
+
+# --- classes -------------------------------------------------------------------------
+
+class Job:
+
+    name = ""			# Job name
+    state = ""			# Job state
+    sub_file = ""	    	# Submit file for this job
+    out_file = ""		# Output file for this job
+    err_file = ""		# Error file for this job
+    sub_file_parsed = False 	# Flag to tell if we were able to parse this job's submit file
+    site = ""			# Site where the job ran
+    dagman_out = ""		# dagman.out file for this job (only for clustered jobs)
+
+    def __init__(self, job_name, job_state=""):
+	"""
+	Initializes the Job class, setting job name, sub_file,
+	and state, if provided
+	"""
+	self.name = job_name
+	self.state = job_state
+
+    def set_state(self, new_state):
+	"""
+	This function updates a job state
+	"""
+	self.state = new_state
+
+# --- global variables ----------------------------------------------------------------
+
+prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
+input_dir = None				# Directory given in -i command line option
+jsdl_path = None				# Path of the jobstate.log file
+jsdl_filename = "jobstate.log"			# Default name of the log file to use
+sub_filename = ""				# Filename for the submit file
+jobs = {}					# List of jobs found in the jobstate.log file
+success = 0					# Number of successful jobs
+failed_jobs = []				# List of jobs that failed
+unknown_jobs = []				# List of jobs that neither succeeded nor failed
+
+# --- functions -----------------------------------------------------------------------
+
+def has_seen(job_name):
+    """
+    This function returns true if we are already tracking job_name
+    """
+    if job_name in jobs:
+	return True
+    return False
+
+def add_job(job_name, job_state=""):
+    """
+    This function adds a job to our list
+    """
+    # Don't add the same job twice
+    if job_name in jobs:
+	return
+
+    newjob = Job(job_name, job_state)
+    jobs[job_name] = newjob
+
+def update_job_state(job_name, job_state=""):
+    """
+    This function updates the job state of a given job
+    """
+    # Make sure we have this job
+    if not job_name in jobs:
+	# Print a warning message
+	print "error: could not find job %s" % (job_name)
+	return
+
+    jobs[job_name].set_state(job_state)
+
+def analyze():
+    """
+    This function processes all currently known jobs, generating some statistics
+    """
+    global success
+
+    for my_job in jobs:
+	if (jobs[my_job].state == "POST_SCRIPT_SUCCESS" or
+	    jobs[my_job].state == "JOB_SUCCESS"):
+	    success = success + 1
+	elif (jobs[my_job].state == "POST_SCRIPT_FAILURE" or
+	      jobs[my_job].state == "JOB_FAILURE"):
+	    failed_jobs.append(my_job)
+	else:
+	    # It seems we don't have a final result for this job
+	    unknown_jobs.append(my_job)
+
+def process_failed_job(my_job):
+    """
+    This function opens a submit file and reads site
+    and condor dagman log information
+    """
+    # Create full path for the submit file
+    my_job.sub_file = os.path.join(input_dir, my_job.name + ".sub")
+    my_job.out_file = os.path.join(input_dir, my_job.name + ".out")
+    my_job.err_file = os.path.join(input_dir, my_job.name + ".err")
+
+    submit_fn = my_job.sub_file
+    # Try to access submit file
+    if os.access(submit_fn, os.R_OK):
+	# Open submit file
+	try:
+	    SUB = open(submit_fn, "r")
+	except:
+	    # print "error opening submit file: %s" % (submit_fn)
+	    # fail silently for now...
+	    return
+	
+	# submit file found
+	my_job.sub_file_parsed = True
+
+	# Check if this job includes sub workflows
+	if my_job.name.startswith("pegasus-plan"):
+	    has_sub_workflow = True
+	else:
+	    has_sub_workflow = False
+
+	# Parse submit file
+	for line in SUB:
+	    # First we need to do some trimming...
+	    line = line.strip(" \t") # Remove leading and trailing spaces
+	    if line.startswith('#'):
+		# Skip comments
+		continue
+	    line = line.rstrip("\n\r") # Remove new lines, if any
+	    line = line.split('#')[0] # Remove inline comments too
+	    line = line.strip() # Remove any remaining spaces at both ends
+	    if len(line) == 0:
+		# Skip empty lines
+		continue
+	    prop = re_parse_property.search(line)
+	    if prop:
+		# Parse successful
+		k = prop.group(1)
+		v = prop.group(2)
+
+		# See if it is one of the properties we are looking for...
+		if k == "+pegasus_site":
+		    my_job.site = v.strip('"')
+		    continue
+		if k == "environment" and has_sub_workflow:
+		    # Ok, we need to find the CONDOR_DAGMAN_LOG entry now...
+		    sub_props = v.split(';')
+		    for sub_prop_line in sub_props:
+			sub_prop_line = sub_prop_line.strip() # Remove any spaces
+			if len(sub_prop_line) == 0:
+			    continue
+			sub_prop = re_parse_property.search(sub_prop_line)
+			if sub_prop:
+			    if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
+				my_job.dagman_out = sub_prop.group(2)
+
+	SUB.close()
+    else:
+	# Was not able to access submit file
+	# fail silently for now...
+	# print "cannot access submit file: %s" % (submit_fn)
+	pass
+
+def parse_jobstate_log(jobstate_fn):
+    """
+    This function parses the jobstate.log file, loading all job information
+    """
+    # Open log file
+    try:
+	JSDL = open(jobstate_fn, "r")
+    except:
+	print "could not open file %s: exiting..." % (jobstate_fn)
+	sys.exit(1)
+
+    # Loop through the log file
+    for line in JSDL:
+	sp = line.split()
+	# Skip lines that don't have enough items
+	if len(sp) < 6:
+	    continue
+	# Skip tailstatd comments
+	if sp[1] == "INTERNAL":
+	    continue
+
+	# Ok, we have a valid job
+	jobname = sp[1]
+	jobstate = sp[2]
+
+	# Add to job list if we have never seen this job before
+	if not has_seen(jobname):
+	    add_job(jobname, jobstate)
+	else:
+	    # Update job state
+	    update_job_state(jobname, jobstate)
+
+    # Close log file
+    JSDL.close()
+
+def print_jobs_info(job_list):
+    for job in job_list:
+	print "    ===> %s" % (job)
+	print "         last state: %s" % (jobs[job].state)
+	process_failed_job(jobs[job])
+	if jobs[job].sub_file_parsed == False:
+	    print "               site: submit file not available"
+	else:
+	    print "               site: %s" % (jobs[job].site or '-')
+	print "        submit file: %s" % (jobs[job].sub_file)
+	print "        output file: %s" % (jobs[job].out_file)
+	print "         error file: %s" % (jobs[job].err_file)
+	if len(jobs[job].dagman_out) > 0:
+	    # This job has a sub workflow
+	    print "         This job contains sub workflows!"
+	    print "         Please run the command below for more information:"
+	    print "         %s -i %s" % (prog_base, os.path.split(jobs[job].dagman_out)[0])
+	    print
+    print
+
+def print_summary():
+
+    # Print simple summary
+    print "pegasus-analyzer analysis completed!"
+    print
+    print " Total jobs       : % 6d (%3.2f%%)" % (len(jobs), 100 * (1.0 * len(jobs)/(len(jobs) or 1)))
+    print
+    print " # jobs succeeded : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(len(jobs) or 1)))
+    print
+    print " # jobs failed    : % 6d (%3.2f%%)" % (len(failed_jobs), 100 * (1.0 * len(failed_jobs)/(len(jobs) or 1)))
+    # Print information about failed jobs
+    print_jobs_info(failed_jobs)
+    if len(unknown_jobs):
+	print " # jobs unknown   : % 6d (%3.2f%%)" % (len(unknown_jobs), 100 * (1.0 * len(unknown_jobs)/(len(jobs) or 1)))
+	# Print information about unknown jobs
+	print_jobs_info(unknown_jobs)
+
+# --- main ----------------------------------------------------------------------------
+
+# Configure command line option parser
+prog_usage = "usage: %s [options]" % (prog_base)
+parser = optparse.OptionParser(usage=prog_usage)
+parser.add_option("-i", action = "store", type = "string", dest = "input_dir",
+		  help = "input directory where the jobstate.log file is located, default is the current directory")
+
+# Parse command line options
+(options, args) = parser.parse_args()
+
+# Select directory where jobstate.log is located
+if options.input_dir is not None:
+    input_dir = options.input_dir
+else:
+    input_dir = os.getcwd()
+
+# Combine directory and filename
+jsdl_path = os.path.join(input_dir, jsdl_filename)
+
+# Read logfile
+parse_jobstate_log(jsdl_path)
+
+# Process our jobs
+analyze()
+
+# Print summary of our analysis
+print_summary()
