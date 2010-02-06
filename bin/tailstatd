@@ -573,9 +573,11 @@ sub add ($$$;$) {
 	    $state = 'P';
 	} elsif ( $running{$event} ) {
 	    $state = 'R';
-	} elsif ( $event eq 'POST_SCRIPT_SUCCESS' ) {
+	} elsif ( $event eq 'POST_SCRIPT_SUCCESS' ) { #||
+		 # $event eq 'SUCCESS' ) {
 	    $state = 'S';
 	} elsif ( $event eq 'POST_SCRIPT_FAILURE' || 
+		  $event eq 'JOB_FAILURE' ||
 		  $event eq 'JOB_ABORTED' ) {
 	    $state = 'F';
 	} else {
@@ -702,6 +704,19 @@ sub process ($) {
 		# ignore
 		log( 'warning: unknown pscript state: ', substr($_,14) );
 	    }
+
+	} elsif ( /\d{2}\sNode (\S+) job proc \(([0-9\.]+)\) failed with status\s+(-?\d+)\.$/ ) {
+	    # job has failed
+	    my $jobid = $1;
+	    my $jobstatus = $3;
+	    # remember failure with artificial jobstate
+	    add ( $main::stamp, $jobid, 'JOB_FAILURE', $jobstatus );
+
+	} elsif ( /\d{2}\sNode (\S+) job proc \(([0-9\.]+)\) completed successfully\.$/ ) {
+	    # job succeeded
+	    my $jobid = $1;
+	    # remember success with artificial jobstate
+	    add ( $main::stamp, $jobid, 'JOB_SUCCESS' );
 
 	} elsif ( /Retrying node (\S+) \(retry \#(\d+) of (\d+)\)/ ) {
 	    # found a retry, save maxed-out retries for later...
