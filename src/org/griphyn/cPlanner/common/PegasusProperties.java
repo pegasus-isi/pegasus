@@ -140,6 +140,7 @@ public class PegasusProperties {
     public static final String ALL_TRANSFER_PRIORITY_PROPERTY =
                                                       "pegasus.transfer.*.priority";
 
+
     
     /**
      * An enum defining The scope for cleanup algorithm
@@ -2191,14 +2192,31 @@ public class PegasusProperties {
     /**
      * Writes out the properties to a temporary file in the directory passed.
      *
-     * @param directory   the directory in which the properties file needs to
-     *                    be written to.
+     * @param directory    the directory in which the properties file needs to
+     *                     be written to.
+     * 
+     * 
+     * @return the absolute path to the properties file written in the directory.
+     *
+     * @throws IOException in case of error while writing out file.
+     */
+    public String writeOutProperties( String directory  ) throws IOException{
+        return this.writeOutProperties( directory, true );
+    }
+
+    /**
+     * Writes out the properties to a temporary file in the directory passed.
+     *
+     * @param directory    the directory in which the properties file needs to
+     *                     be written to.
+     * @param sanitizePath boolean indicating whether to sanitize paths for
+     *                     certain properties or not.
      *
      * @return the absolute path to the properties file written in the directory.
      *
      * @throws IOException in case of error while writing out file.
      */
-    public String writeOutProperties( String directory ) throws IOException{
+    public String writeOutProperties( String directory , boolean sanitizePath ) throws IOException{
         File dir = new File(directory);
 
         //sanity check on the directory
@@ -2206,6 +2224,13 @@ public class PegasusProperties {
 
         //we only want to write out the VDS properties for time being
         Properties properties = mProps.matchingSubset( "pegasus", true );
+
+        //check if we need to sanitize paths for certain properties or not
+        if( sanitizePath ){
+            sanitizePathForProperty( properties, "pegasus.catalog.site.file" );
+            sanitizePathForProperty( properties, "pegasus.catalog.replica.file" );
+            sanitizePathForProperty( properties, "pegasus.catalog.transformation.file" );
+        }
 
         //create a temporary file in directory
         File f = File.createTempFile( "pegasus.", ".properties", dir );
@@ -2223,6 +2248,21 @@ public class PegasusProperties {
         //also set it to the internal variable
         mPropsInSubmitDir  = f.getAbsolutePath();
         return mPropsInSubmitDir;
+    }
+
+    /**
+     * Santizes the value in the properties . Ensures that the path is absolute.
+     * 
+     * @param properties  the properties 
+     * @param key         the key whose value needs to be sanitized
+     */
+    private void sanitizePathForProperty(Properties properties, String key ) {
+        if( properties.containsKey(key) ){
+            String value = properties.getProperty( key );
+            if( value != null ){
+                properties.setProperty( key, new File( value ).getAbsolutePath() );
+            }
+        }
     }
 
 
