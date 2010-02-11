@@ -23,6 +23,8 @@
 			<xs:enumeration value="PBS"/>
 			<xs:enumeration value="LSF"/>
 			<xs:enumeration value="Condor"/>
+			<xs:enumeration value="SGE"/> 
+			<xs:enumeration value="unkown"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="GridType">
