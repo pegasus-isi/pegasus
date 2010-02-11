@@ -6,7 +6,7 @@ Pegasus utility for pasing jobstate.log and reporting succesful and failed jobs
 Usage: pegasus-analyzer [options]
 """
 
-# Revision : $Revision: $
+# Revision : $Revision$
 
 # Import Python modules (some not currently needed, but included for future expansion)
 import os
@@ -33,6 +33,8 @@ class Job:
     err_file = ""		# Error file for this job
     sub_file_parsed = False 	# Flag to tell if we were able to parse this job's submit file
     site = ""			# Site where the job ran
+    is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
+    subdag_dir = ""		# Subdag directory from a SUBDAG job in the dag file
     dagman_out = ""		# dagman.out file for this job (only for clustered jobs)
 
     def __init__(self, job_name, job_state=""):
@@ -63,6 +65,7 @@ quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 jsdl_filename = "jobstate.log"			# Default name of the log file to use
 jobs = {}					# List of jobs found in the jobstate.log file
 success = 0					# Number of successful jobs
+unsubmitted = 0					# Number of unsubmitted jobs
 failed_jobs = []				# List of jobs that failed
 unknown_jobs = []				# List of jobs that neither succeeded nor failed
 
@@ -103,7 +106,7 @@ def analyze():
     """
     This function processes all currently known jobs, generating some statistics
     """
-    global success
+    global success, unsubmitted
 
     for my_job in jobs:
 	if (jobs[my_job].state == "POST_SCRIPT_SUCCESS" or
@@ -112,6 +115,8 @@ def analyze():
 	elif (jobs[my_job].state == "POST_SCRIPT_FAILURE" or
 	      jobs[my_job].state == "JOB_FAILURE"):
 	    failed_jobs.append(my_job)
+	elif (jobs[my_job].state == "UNSUBMITTED"):
+	    unsubmitted = unsubmitted + 1
 	else:
 	    # It seems we don't have a final result for this job
 	    unknown_jobs.append(my_job)
@@ -121,6 +126,11 @@ def process_failed_job(my_job):
     This function opens a submit file and reads site
     and condor dagman log information
     """
+    # First we check if this is a SUBDAG job from the dag file
+    if my_job.is_subdag:
+	# Nothing to do here
+	return
+
     # Create full path for the submit file
     my_job.sub_file = os.path.join(input_dir, my_job.name + ".sub")
     my_job.out_file = os.path.join(input_dir, my_job.name + ".out")
@@ -232,6 +242,7 @@ def parse_dag_file(dag_fn):
 	    # Skip empty lines
 	    continue
 	if line.startswith("JOB"):
+	    # This is a job line, let's parse it
 	    my_job = line.split()
 	    if len(my_job) != 3:
 		print "warning: confused parsing dag line: %s" % (line)
@@ -240,6 +251,18 @@ def parse_dag_file(dag_fn):
 		add_job(my_job[1], "UNSUBMITTED")
 	    else:
 		print "warning: job appears twice in dag file: %s" % (my_job[1])
+	if line.startswith("SUBDAG EXTERNAL"):
+	    # This is a subdag line, parse it to get job name and directory
+	    my_job = line.split()
+	    if len(my_job) != 6:
+		print "warning: confused parsing dag line: %s" % (line)
+		continue
+	    if not has_seen(my_job[2]):
+		add_job(my_job[2], "UNSUBMITTED")
+		jobs[my_job[2]].is_subdag = True
+		jobs[my_job[2]].subdag_dir = my_job[5]
+	    else:
+		print "warning: job appears twice in dag file: %s" % (my_job[2])
 
 def parse_jobstate_log(jobstate_fn):
     """
@@ -405,6 +428,15 @@ def print_job_info(job):
     print
     print " last state: %s" % (jobs[job].state)
     process_failed_job(jobs[job])
+
+    # Handle subdag jobs from the dag file
+    if jobs[job].is_subdag == True:
+	print " This is not a pegasus job."
+	print " For more information, please look at the directory below:"
+	print " %s" % (jobs[job].subdag_dir)
+	print
+	return
+
     if jobs[job].sub_file_parsed == False:
 	print "       site: submit file not available"
     else:
@@ -420,30 +452,15 @@ def print_job_info(job):
 	print
     print
 
-def print_long_job_info(job):
-    """
-    This function prints information about a particular job, and
-    also displays its output and error files on the terminal
-    """
-    print
-    print job.center(80, '=')
-    print
-    print " last state: %s" % (jobs[job].state)
-    process_failed_job(jobs[job])
-    if jobs[job].sub_file_parsed == False:
-	print "       site: submit file not available"
-    else:
-	print "       site: %s" % (jobs[job].site or '-')
-    print "submit file: %s" % (jobs[job].sub_file)
-    print
+    # Now dump file contents to screen if we are not in quiet mode
+    if not quiet_mode:
+	# Print outfile to screen
+	out_file = find_latest_log(jobs[job].out_file)
+	dump_file(out_file)
 
-    # Print outfile to screen
-    out_file = find_latest_log(jobs[job].out_file)
-    dump_file(out_file)
-
-    # Print errfile to screen
-    err_file = find_latest_log(jobs[job].err_file)
-    dump_file(err_file)
+	# Print errfile to screen
+	err_file = find_latest_log(jobs[job].err_file)
+	dump_file(err_file)
 
 def print_top_summary():
     """
@@ -454,11 +471,12 @@ def print_top_summary():
     print
     print "Summary".center(80, '*')
     print
-    print " Total jobs       : % 6d (%3.2f%%)" % (len(jobs), 100 * (1.0 * len(jobs)/(len(jobs) or 1)))
-    print " # jobs succeeded : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(len(jobs) or 1)))
-    print " # jobs failed    : % 6d (%3.2f%%)" % (len(failed_jobs), 100 * (1.0 * len(failed_jobs)/(len(jobs) or 1)))
+    print " Total jobs         : % 6d (%3.2f%%)" % (len(jobs), 100 * (1.0 * len(jobs)/(len(jobs) or 1)))
+    print " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(len(jobs) or 1)))
+    print " # jobs failed      : % 6d (%3.2f%%)" % (len(failed_jobs), 100 * (1.0 * len(failed_jobs)/(len(jobs) or 1)))
+    print " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(len(jobs) or 1)))
     if len(unknown_jobs):
-	print " # jobs unknown   : % 6d (%3.2f%%)" % (len(unknown_jobs), 100 * (1.0 * len(unknown_jobs)/(len(jobs) or 1)))
+	print " # jobs unknown     : % 6d (%3.2f%%)" % (len(unknown_jobs), 100 * (1.0 * len(unknown_jobs)/(len(jobs) or 1)))
     print
 
 
@@ -474,19 +492,13 @@ def print_summary():
     if len(failed_jobs):
 	print "Failed jobs' details".center(80, '*')
 	for job in failed_jobs:
-	    if quiet_mode:
-		print_job_info(job)
-	    else:
-		print_long_job_info(job)
+	    print_job_info(job)
 
     # Print information about unknown jobs
     if len(unknown_jobs):
 	print "Unknown jobs' details".center(80, '*')
 	for job in unknown_jobs:
-	    if quiet_mode:
-		print_job_info(job)
-	    else:
-		print_long_job_info(job)
+	    print_job_info(job)
 
 # --- main ----------------------------------------------------------------------------
 
