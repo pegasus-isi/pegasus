@@ -448,7 +448,7 @@ def print_job_info(job):
 	# This job has a sub workflow
 	print " This job contains sub workflows!"
 	print " Please run the command below for more information:"
-	print " %s -i -t %s" % (prog_base, os.path.split(jobs[job].dagman_out)[0])
+	print " %s -t -i %s" % (prog_base, os.path.split(jobs[job].dagman_out)[0])
 	print
     print
 
