@@ -6,6 +6,8 @@ Pegasus utility for pasing jobstate.log and reporting succesful and failed jobs
 Usage: pegasus-analyzer [options]
 """
 
+# Revision : $Revision: $
+
 # Import Python modules (some not currently needed, but included for future expansion)
 import os
 import re
@@ -35,7 +37,7 @@ class Job:
 
     def __init__(self, job_name, job_state=""):
 	"""
-	Initializes the Job class, setting job name, sub_file,
+	Initializes the Job class, setting job name,
 	and state, if provided
 	"""
 	self.name = job_name
@@ -47,13 +49,18 @@ class Job:
 	"""
 	self.state = new_state
 
+# --- constants -----------------------------------------------------------------------
+
+MAXLOGFILE = 1000				# For log file rotation, check files .000 to .999
+
 # --- global variables ----------------------------------------------------------------
 
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 input_dir = None				# Directory given in -i command line option
 jsdl_path = None				# Path of the jobstate.log file
+run_tailstatd = 0				# Run tailstatd before trying to analyze the output
+quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 jsdl_filename = "jobstate.log"			# Default name of the log file to use
-sub_filename = ""				# Filename for the submit file
 jobs = {}					# List of jobs found in the jobstate.log file
 success = 0					# Number of successful jobs
 failed_jobs = []				# List of jobs that failed
@@ -181,6 +188,59 @@ def process_failed_job(my_job):
 	# print "cannot access submit file: %s" % (submit_fn)
 	pass
 
+def find_dag_file(input_dir):
+    """
+    This function finds the dag file in a given directory.
+    We assume there is just one .dag file in the input
+    directory.
+    """
+    try:
+	file_list = os.listdir(input_dir)
+    except:
+	print "error: cannot read directory: %s" % (input_dir)
+	sys.exit(1)
+
+    for file in file_list:
+	if file.endswith(".dag"):
+	    return os.path.join(input_dir, file)
+
+    print "error: could not find any .dag file in %s" % (input_dir)
+    sys.exit(1)
+
+def parse_dag_file(dag_fn):
+    """
+    This function walks through the dag file, learning about
+    all jobs before hand.
+    """
+    # Open dag file
+    try:
+	DAG = open(dag_fn, "r")
+    except:
+	print "error: could not open dag file %s: exiting..." % (dag_fn)
+	sys.exit(1)
+
+    # Loop through the dag file
+    for line in DAG:
+	line = line.strip(" \t")
+	if line.startswith("#"):
+	    # Skip comments
+	    continue
+	line = line.rstrip("\n\r") # Remove new lines, if any
+	line = line.split('#')[0] # Remove inline comments too
+	line = line.strip() # Remove any remaining spaces at both ends
+	if len(line) == 0:
+	    # Skip empty lines
+	    continue
+	if line.startswith("JOB"):
+	    my_job = line.split()
+	    if len(my_job) != 3:
+		print "warning: confused parsing dag line: %s" % (line)
+		continue
+	    if not has_seen(my_job[1]):
+		add_job(my_job[1], "UNSUBMITTED")
+	    else:
+		print "warning: job appears twice in dag file: %s" % (my_job[1])
+
 def parse_jobstate_log(jobstate_fn):
     """
     This function parses the jobstate.log file, loading all job information
@@ -208,6 +268,7 @@ def parse_jobstate_log(jobstate_fn):
 
 	# Add to job list if we have never seen this job before
 	if not has_seen(jobname):
+	    print "warning: job %s not present in dag file" % (jobname)
 	    add_job(jobname, jobstate)
 	else:
 	    # Update job state
@@ -216,42 +277,154 @@ def parse_jobstate_log(jobstate_fn):
     # Close log file
     JSDL.close()
 
-def print_jobs_info(job_list):
-    for job in job_list:
-	print "    ===> %s" % (job)
-	print "         last state: %s" % (jobs[job].state)
-	process_failed_job(jobs[job])
-	if jobs[job].sub_file_parsed == False:
-	    print "               site: submit file not available"
+def find_latest_log(log_file_base):
+    """
+    This function tries to locate the latest log file
+    """
+    last_log = None
+    curr_log = None
+
+    if os.access(log_file_base, os.F_OK):
+	last_log = log_file_base
+
+    # Starts from .000
+    sf = 0
+
+    while (sf < MAXLOGFILE):
+	curr_log = log_file_base + ".%03d" % (sf)
+	if os.access(curr_log, os.F_OK):
+	    last_log = curr_log
+	    sf = sf + 1
 	else:
-	    print "               site: %s" % (jobs[job].site or '-')
-	print "        submit file: %s" % (jobs[job].sub_file)
-	print "        output file: %s" % (jobs[job].out_file)
-	print "         error file: %s" % (jobs[job].err_file)
-	if len(jobs[job].dagman_out) > 0:
-	    # This job has a sub workflow
-	    print "         This job contains sub workflows!"
-	    print "         Please run the command below for more information:"
-	    print "         %s -i %s" % (prog_base, os.path.split(jobs[job].dagman_out)[0])
+	    break
+
+    return last_log
+
+def dump_file(file):
+    """
+    This function dumps a file to our stdout
+    """
+    if file is not None:
+	try:
+	    OUT = open(file, 'r')
+	except:
+	    print "*** Cannot access: %s" % (file)
 	    print
+	else:
+	    print os.path.split(file)[1].center(80, '-')
+	    print
+	    # Dump file contents to terminal
+	    line = OUT.readline()
+	    while line:
+		line = line.strip()
+		print line
+		line = OUT.readline()
+
+	    OUT.close()
+	    print
+
+def print_job_info(job):
+    """
+    This function prints the information about a particular job
+    """
+    print
+    print job.center(80, '=')
+    print
+    print " last state: %s" % (jobs[job].state)
+    process_failed_job(jobs[job])
+    if jobs[job].sub_file_parsed == False:
+	print "       site: submit file not available"
+    else:
+	print "       site: %s" % (jobs[job].site or '-')
+    print "submit file: %s" % (jobs[job].sub_file)
+    print "output file: %s" % (find_latest_log(jobs[job].out_file))
+    print " error file: %s" % (find_latest_log(jobs[job].err_file))
+    if len(jobs[job].dagman_out) > 0:
+	# This job has a sub workflow
+	print " This job contains sub workflows!"
+	print " Please run the command below for more information:"
+	print " %s -i %s" % (prog_base, os.path.split(jobs[job].dagman_out)[0])
+	print
     print
 
-def print_summary():
+def print_long_job_info(job):
+    """
+    This function prints information about a particular job, and
+    also displays its output and error files on the terminal
+    """
+    print
+    print job.center(80, '=')
+    print
+    print " last state: %s" % (jobs[job].state)
+    process_failed_job(jobs[job])
+    if jobs[job].sub_file_parsed == False:
+	print "       site: submit file not available"
+    else:
+	print "       site: %s" % (jobs[job].site or '-')
+    print "submit file: %s" % (jobs[job].sub_file)
+    print
 
-    # Print simple summary
-    print "pegasus-analyzer analysis completed!"
+    # Print outfile to screen
+    out_file = find_latest_log(jobs[job].out_file)
+    dump_file(out_file)
+
+    # Print errfile to screen
+    err_file = find_latest_log(jobs[job].err_file)
+    dump_file(err_file)
+
+def print_top_summary():
+    """
+    This function prints the summary for the analyzer report,
+    which is the same for the long and short output versions
+    """
+    print "pegasus-analyzer: analysis completed!"
+    print
+    print "Summary".center(80, '*')
     print
     print " Total jobs       : % 6d (%3.2f%%)" % (len(jobs), 100 * (1.0 * len(jobs)/(len(jobs) or 1)))
-    print
     print " # jobs succeeded : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(len(jobs) or 1)))
-    print
     print " # jobs failed    : % 6d (%3.2f%%)" % (len(failed_jobs), 100 * (1.0 * len(failed_jobs)/(len(jobs) or 1)))
-    # Print information about failed jobs
-    print_jobs_info(failed_jobs)
     if len(unknown_jobs):
 	print " # jobs unknown   : % 6d (%3.2f%%)" % (len(unknown_jobs), 100 * (1.0 * len(unknown_jobs)/(len(jobs) or 1)))
-	# Print information about unknown jobs
-	print_jobs_info(unknown_jobs)
+    print
+
+
+def print_short_summary():
+    """
+    This function prints the short version of the analyzer report
+    """
+    # First print the summary section
+    print_top_summary()
+
+    # Print information about failed jobs
+    if len(failed_jobs):
+	print "Failed jobs' details".center(80, '*')
+	for job in failed_jobs:
+	    print_job_info(job)
+
+    # Print information about unknown jobs
+    if len(unknown_jobs):
+	print "Unknown jobs' details".center(80, '*')
+	for job in unknown_jobs:
+	    print_job_info(job)
+
+def print_long_summary():
+    """
+    This function prints a longer version of the analyzer report
+    """
+
+    # First print the summary section
+    print_top_summary()
+
+    if len(failed_jobs):
+	print "Failed jobs' details".center(80, '*')
+	for job in failed_jobs:
+	    print_long_job_info(job)
+	
+    if len(unknown_jobs):
+	print "Unknown jobs' details".center(80, '*')
+	for job in unknown_jobs:
+	    print_long_job_info(job)
 
 # --- main ----------------------------------------------------------------------------
 
@@ -260,10 +433,19 @@ prog_usage = "usage: %s [options]" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
 parser.add_option("-i", action = "store", type = "string", dest = "input_dir",
 		  help = "input directory where the jobstate.log file is located, default is the current directory")
+parser.add_option("-t", "--tailstatd", action = "store_const", const = 1, dest = "run_tailstatd",
+		  help = "run tailstatd before analyzing the output")
+parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "quiet_mode",
+		  help = "output out/err filenames instead of their contents")
 
 # Parse command line options
 (options, args) = parser.parse_args()
 
+# Copy options from the command line parser
+if options.run_tailstatd is not None:
+    run_tailstatd = options.run_tailstatd
+if options.quiet_mode is not None:
+    quiet_mode = options.quiet_mode
 # Select directory where jobstate.log is located
 if options.input_dir is not None:
     input_dir = options.input_dir
@@ -273,6 +455,10 @@ else:
 # Combine directory and filename
 jsdl_path = os.path.join(input_dir, jsdl_filename)
 
+# First we learn about jobs by going through the dag file
+dag_path = find_dag_file(input_dir)
+parse_dag_file(dag_path)
+
 # Read logfile
 parse_jobstate_log(jsdl_path)
 
@@ -280,4 +466,7 @@ parse_jobstate_log(jsdl_path)
 analyze()
 
 # Print summary of our analysis
-print_summary()
+if quiet_mode:
+    print_short_summary()
+else:
+    print_long_summary()
