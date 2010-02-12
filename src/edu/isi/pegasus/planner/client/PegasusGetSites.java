@@ -140,7 +140,7 @@ public class PegasusGetSites extends Executable{
              append( "\n" ).append( " [-v] [-h]" ).
              append( "\n" ).
              append( "\n Mandatory Options " ).
-             append( "\n -s |--source     the source to query for information. Valid sources are VORS|Engage|MYOSG" ).
+             append( "\n  --source     the source to query for information. Valid sources are OSGMM|MYOSG|VORS" ).
              append( "\n" ). 
              append( "\n Other Options  " ).
              append( "\n -g |--grid       the grid for which to generate the site catalog ").
@@ -375,7 +375,7 @@ public class PegasusGetSites extends Executable{
         longopts[4]   = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[5]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[6]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
-        longopts[6]   = new LongOpt( "properties", LongOpt.REQUIRED_ARGUMENT, null, 'p' );
+        longopts[7]   = new LongOpt( "properties", LongOpt.REQUIRED_ARGUMENT, null, 'p' );
         
         return longopts;
     }
