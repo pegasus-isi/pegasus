@@ -74,6 +74,8 @@ $main::failure = 0;
       IMAGE_SIZE => 4,
       JOB_TERMINATED => 5,
       JOB_ABORTED => 5,
+      JOB_SUCCESS => 5, #success and failure go to JOB_TERMINATED
+      JOB_FAILURE => 5,
       POST_SCRIPT_STARTED => 6,
       POST_SCRIPT_SUCCESS => 7,
       POST_SCRIPT_TERMINATED => -1,
@@ -253,7 +255,7 @@ sub slurp_jobstate($) {
 		if ( $state eq 'PRE_SCRIPT_FAILURE' ) {
 		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[0], $stamp ] );
 		    $main::failure++;
-		} elsif ( $state eq 'POST_SCRIPT_FAILURE' ) {
+		} elsif ( $state eq 'POST_SCRIPT_FAILURE' || $state eq 'JOB_FAILURE' ) {
 		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[6], $stamp ] );
 		    $main::failure++;
 		} elsif ( $state eq 'JOB_ABORTED' ) {
@@ -572,23 +574,27 @@ for ( my $j=0; $j < @keylist; ++$j ) {
     for ( my $i=0; $i < @{$job{$jobid}}; ++$i ) {
 	if ( defined $job{$jobid}[$i] && $job{$jobid}[$i] > 0 ) {
 	    printf $dfh " %*d", $dsize, $job{$jobid}[$i] - $main::min;
-	} else {
-	    # printf $dfh " %*d", $dsize, $diff;
+     	} else {
 	    printf $dfh " %*d", $dsize, $dpo;
 	}
     }
 
-    #print "DFN is $dfn\n";
+    #print "\n $jobid ";
+    #for my $timestamp (@{$job{$jobid}}) {
+    #    print "$timestamp : ";
+    #}
 
-
+    my $ksfound; #tracks whether valid kickstart output found
     #check to see if the number of elements in array holding timestamps from jobstate are equal to 8
     if ( @{$job{$jobid}} == 8 ) {
 	#my $kfn = substr( $submit{$jobid}, 0, -4 ) . '.out';
 	my $kfn = find_job_out_file( substr( $submit{$jobid}, 0, -4 ) );
+
 	if ( -r $kfn && -s _ && open( KS, "<$kfn" ) ) {
 	    my ($kss,$ksf,$d, $txn);
 	    while ( <KS> ) {
 		next unless /<invocation\s/;
+		$ksfound = "true";
 		$kss = iso2unix($1) if /start=\"([^\"]+)\"/;
 	        $ksf = $kss+($d=$1) if /duration=\"([^\"]+)\"/;
 		#get the transformation name
@@ -615,7 +621,10 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 	    warn "Warning: Not reading kickstart $kfn: $!\n";
 	    print $dfh " %*d %*d", $dsize, $dpo, $dsize, $dpo;
 	}
-    } else {
+    } 
+    
+    
+    if( @{$job{$jobid}} != 8 || !defined( $ksfound ) ) {
 	warn "Warning: job $jobid is underspecified\n";
 	#added by karan jan 28,2010
 	#most probably missing the postscript started and finished events
@@ -628,7 +637,7 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 	$kss -= $main::min; $ksf -= $main::min;
 	#print "For $jobid Execute $kss JOB_TERMINATED $ksf\n";
 
-	#assign postscript start and finish to JOB_TERMINATED if not
+	#assign postscript start and finish to JOB_TERMINATED if 
 	#POSTSCRIPT_STARTED is not defined and printout to .dat file
 	printf $dfh " %*d %*d", $dsize, $ksf, $dsize,$ksf unless defined( $job{$jobid}[6] ) ;
 	
