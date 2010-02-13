@@ -255,12 +255,17 @@ sub slurp_jobstate($) {
 		if ( $state eq 'PRE_SCRIPT_FAILURE' ) {
 		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[0], $stamp ] );
 		    $main::failure++;
-		} elsif ( $state eq 'POST_SCRIPT_FAILURE' || $state eq 'JOB_FAILURE' ) {
+		} elsif ( $state eq 'POST_SCRIPT_FAILURE' ) {
 		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[6], $stamp ] );
 		    $main::failure++;
 		} elsif ( $state eq 'JOB_ABORTED' ) {
 		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[2], $stamp ] );
 		    $main::failure++;
+		}
+		elsif( $state eq 'JOB_FAILURE' ){
+		    #display between EXECUTE and JOB_FAILURE
+		    push( @{$main::fail{$jobid}}, [ $result{$jobid}[4], $stamp ] );
+                    $main::failure++;
 		}
 
 		if ( $main::state{$state} >= 0 ) {
@@ -483,6 +488,12 @@ END
 	    foreach my $item ( @{$main::fail{$jobid}} ) {
 		print OUT ( $flag ? "\t" : "data:\t" );
 		$flag=1;
+		print "$main::min\n";
+		print "$p->{$jobid} $item->[0] $item->[1]\n";
+		for my $timestamp ($p->{$jobid}) {
+		    print "$timestamp:";
+		}
+
 		printf OUT " %d", $p->{$jobid};
 		printf OUT " %d", $item->[0] - $main::min;
 		printf OUT " %d\n", $item->[1] - $main::min;
