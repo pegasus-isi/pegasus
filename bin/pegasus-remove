@@ -43,7 +43,7 @@ sub usage(;$) {
     print "ERROR: $msg\n" if defined $msg && lc($msg) ne 'help';
 
     print << "EOF";
-Usage: @{[basename($0)]} [options | dagdir]
+Usage: @{[basename($0)]} -d <dagid> | dagdir
  Pegasus_remove helps remove your your entire workflow.. 
  -d|--dagid N    The id of the dag to be removed
  -v|--verbose   Enter verbose mode, default is not
@@ -96,9 +96,9 @@ if (defined $run){
     $SIG{'__DIE__'} = sub {
 	chdir($here) if defined $here;
     };
-    chdir($run) || die "ERROR: chdir $run: $!\n";
+    chdir($run) || die "ERROR: Cannot Change to directory $run: $!\n";
 
-    my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
+    my %config = slurp_braindb( $run ) or die "ERROR: Cannot Open braindb: $!\n";
 
     my $original;
     my @rescue = check_rescue($run,$config{dag});
@@ -128,12 +128,11 @@ if (defined $run){
 
     my $daglogfile=$config{dag}.".dagman.out";
 
-    open(DID,"<$daglogfile") || die "Error: Cannot open file $daglogfile: $! \n";
+    open(DID,"$daglogfile") || die "Error: Cannot open file $daglogfile: $! \n";
     while (<DID>) {
-	if($_ =~ "condor_scheduniv_exec"){
+	if($_ =~ /\(CONDOR_DAGMAN\) STARTING UP/){
 	    $dagid=(split /\./,  (split)[3],2)[1];
-	    last;
-	}
+          }
     }
     chdir($here);
 }
@@ -152,5 +151,5 @@ if(defined $dagid){
     print "$_\n" foreach ( @result );
     exit(parse_exit($?));
 } else {
-    die "Error: Cannot find dagid to remove the workflow\n";
+    usage("Error: You need to provide either a dagid or dagdirectory to remove the workflow\n");
 }
