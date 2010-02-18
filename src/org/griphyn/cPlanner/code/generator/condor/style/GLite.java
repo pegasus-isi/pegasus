@@ -199,10 +199,22 @@ public class GLite extends Abstract {
      */
     protected String getCERequirementsForJob( SubInfo job ) throws CondorStyleException {
         StringBuffer value = new StringBuffer();
-        
-        
+
+        //do quoting ourselves
+        value.append( "\"" );
+
         /* append the job name */
-        addSubExpression( value, "JOBNAME" , job.getID()  );
+        /* job name cannot have - or _ */
+        String id = job.getID().replace( "-", "" );
+        id = id.replace( "_", "" );
+        addSubExpression( value, "JOBNAME" , id   );
+
+        /* specifically pass the queue in the requirement since
+           some versions dont handle +remote_queue correctly */
+        if( job.globusRSL.containsKey( "queue" ) ){
+            value.append( " && ");
+            addSubExpression( value, "QUEUE", (String)job.globusRSL.get( "queue" ) );
+        }
         
         /* always have PASSENV to true */
         value.append( " && ");
@@ -246,8 +258,15 @@ public class GLite extends Abstract {
             addSubExpression( value, "MYENV" , env.toString() );
         }
         
-        return this.quote( value.toString() );
-        
+        //No quoting to be applied
+        // JIRA PM-109
+        //return this.quote( value.toString() );
+
+
+        //do quoting ourselves
+        value.append( "\"" );
+
+        return value.toString();
     }
     
    
@@ -260,7 +279,9 @@ public class GLite extends Abstract {
      */
     protected void addSubExpression( StringBuffer sb, String key, String value ) {
         sb.append( key ).append( "==" ).
-           append( "\"" ).append( value ).append( "\"" );
+           append( "\\" ).append( "\"" ).
+           append( value ).
+           append( "\\" ).append( "\"" );
     }
 
     
