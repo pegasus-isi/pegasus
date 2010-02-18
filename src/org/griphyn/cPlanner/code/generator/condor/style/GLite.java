@@ -207,6 +207,8 @@ public class GLite extends Abstract {
         /* job name cannot have - or _ */
         String id = job.getID().replace( "-", "" );
         id = id.replace( "_", "" );
+        //the jobname in case of pbs can only be 15 characters long
+        id = ( id.length() > 15 )? id.substring( 0, 15 ) : id;
         addSubExpression( value, "JOBNAME" , id   );
 
         /* specifically pass the queue in the requirement since
