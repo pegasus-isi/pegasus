@@ -209,7 +209,15 @@ public class GLite extends Abstract {
         id = id.replace( "_", "" );
         //the jobname in case of pbs can only be 15 characters long
         id = ( id.length() > 15 )? id.substring( 0, 15 ) : id;
+
+        /* Not adding JOBNAME the GAHP keeps on crashing if specified
+         * on pollux. Karan Feb 18, 2010
         addSubExpression( value, "JOBNAME" , id   );
+         */
+
+        /* always have PASSENV to true */
+        //value.append( " && ");
+        addSubExpression( value, "PASSENV", 1 );
 
         /* specifically pass the queue in the requirement since
            some versions dont handle +remote_queue correctly */
@@ -218,9 +226,6 @@ public class GLite extends Abstract {
             addSubExpression( value, "QUEUE", (String)job.globusRSL.get( "queue" ) );
         }
         
-        /* always have PASSENV to true */
-        value.append( " && ");
-        addSubExpression( value, "PASSENV", 1 );
         
         /* the globus key hostCount is PROCS */
         if( job.globusRSL.containsKey( "hostcount" ) ){
