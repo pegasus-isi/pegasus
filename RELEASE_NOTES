@@ -1,6 +1,596 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 2.4.0
+===============================
+ 
+NEW FEATURES
+--------------
+
+1) Support for Pegasus DAX 3.0 
+
+   Pegasus now also can accept DAX'es in Pegasus 3.0 format 
+
+   Some salient features of the new format are
+   - Users can specify locations of the files in the DAX
+   - Users can specify what executables to use in the DAX
+   - Users can specify sub dax in the DAX using the dax element. The
+     dax jobs result in a separate subworkflow being launched with the 
+     appropriate pegasus-plan command as the prescript
+   - Users can specify condor DAG's in the DAX using the dag
+     element. The dag job is passed on the Condor DAGMAN as a SUBDAG
+     for execution.
+
+   A sample 3.0  DAX can be found at 
+   http://pegasus.isi.edu/mapper/docs/schemas/dax-3.0/two_node_dax-3.0_v6.xml
+
+   In the next Pegasus release ( Pegasus 3.0 ) a JAVA DAX API will be
+   made available. Certain more extensions will be added to the
+   schema. For feature requests email pegasus@isi.edu
+
+2) Support for running workflows on EC2 using S3 for storage
+
+   Users while running on Amazon EC2 can use S3 for storage backend
+   for the workflow execution. The details below assume that a user
+   configures a condor pool on the nodes allocated from EC3
+
+   To enable Pegasus for S3 the following properties need to be set.
+
+   - pegasus.execute.*.filesystem.local = true
+   - pegasus.transfer.*.impl = S3
+   - pegasus.transfer.sls.*.impl = S3
+   - pegasus.dir.create.impl = S3
+   - pegasus.file.cleanup.impl = S3
+   - pegasus.gridstart = SeqExec
+   - pegasus.transfer.sls.s3.stage.sls.file = false
+
+   For data stagein and creating S3 buckets for workflows pegasus
+   relies on the amazon provided s3cmd command line client.
+   
+   Pegasus looks for a transformation with namespace amazon and
+   logical name as s3cmd in the transformation catalog to figure out
+   the location of the s3cmd client. for e.g in the File based
+   Transformation Catalog the full name for transformation will be 
+   amazon::s3cmd
+
+   In order to enable stdtout and stderr streaming correctly from
+   Condor on EC2 we recommend adding certain profiles in the site
+   catalog for the cloud site.
+   Here is a sample site catalog
+
+   <site handle="ec2" sysinfo="INTEL32::LINUX">
+      <profile namespace="env" key="PEGASUS_HOME">/usr/local/pegasus/default</profile>
+      <profile namespace="env" key="GLOBUS_LOCATION">/usr/local/globus/default</profile>
+      <profile namespace="env" key="LD_LIBRARY_PATH">/usr/local/globus/default/lib</profile>
+   
+       <!-- the directory where a user wants to run the jobs on the
+   	nodes retrived from ec2 -->
+       <profile namespace="env" key="wntmp">/mnt</profile>
+     
+       <profile namespace="pegasus" key="style">condor</profile>
+    
+       <!-- to be set to ensure condor streams stdout and stderr back
+	to submit host -->	
+       <profile namespace="condor" key="should_transfer_files">YES</profile>
+       <profile namespace="condor" key="transfer_output">true</profile>
+       <profile namespace="condor" key="transfer_error">true</profile>
+       <profile namespace="condor" key="WhenToTransferOutput">ON_EXIT</profile>
+       
+       <profile namespace="condor" key="universe">vanilla</profile>
+
+       <profile namespace="condor" key="requirements">(Arch==Arch)&amp;&amp;(Disk!=0)&amp;&amp;(Memory!=0)&amp;&amp;(OpSys==OpSys)&amp;&amp;(FileSystemDomain!="")</profile>
+       <profile namespace="condor" key="rank">SlotID</profile>
+   
+       <lrc url="rls://example.com"/>
+       <gridftp url="s3://" storage="" major="2" minor="4" patch="3"/>
+       <jobmanager universe="vanilla" url="example.com/jobmanager-pbs" major="2" minor="4" patch="3"/>
+       <jobmanager universe="transfer" url="example.com/jobmanager-fork" major="2" minor="4" patch="3"/>
+
+       <!-- create a new bucket for each wf
+           <workdirectory >/</workdirectory>
+        -->
+        <!-- use an existing bucket -->
+   	<workdirectory>existing-bucket</workdirectory>
+   </site>
+   
+   Relevant JIRA links
+   http://jira.pegasus.isi.edu/browse/PM-68
+   http://jira.pegasus.isi.edu/browse/PM-20
+   http://jira.pegasus.isi.edu/browse/PM-85
+
+
+
+3) pegasus-analyzer
+
+   There is a new tool called pegasus-analyzer. It helps the users to
+   analyze the workflows after the workflow has finished executing. 
+
+   It is not meant to be run while the workflow is still running. To
+   track the status of a running workflow for now, the users are
+   recommended to use pegasus-status. 
+
+   pegasus-analyzer looks at the workflow submit directory and parses
+   the condor dagman logs and the job.out files to print a summary of
+   the workflow execution. 
+
+   The tool prints out the following summary of the workflow
+
+   Total jobs
+   jobs succeeded
+   jobs failed
+   jobs unsubmitted
+
+   For all the failed jobs the tool prints out the contents of job.out
+   and job.err file. 
+
+   The user can use the --quiet option to display only the paths to
+   the .out and .err files. This is useful when the job output is
+   particularly big or when kickstart is used to launch the jobs. 
+
+   For pegasus 3.0 the tool will be updated to parse kickstart output
+   files and provide a concise view rather than displaying the whole
+   output 
+
+4) Support for Condor Glite
+
+   Pegasus now supports a new style named glite for generating the submit
+   files. This allows pegasus to create submit files for a glite
+   environment where a glite blahp talks to the scheduler instead of
+   GRAM. At a minimum the following profiles need to be associated with
+   the job. 
+
+   pegasus profile style - value set to glite
+   condor profile grid_resource - value set to the remote scheduler to
+   	  	  		  which glite blahp talks to .
+
+    This style should only be used when the condor on the submit host
+    can directly talk to scheduler running on the cluster. In Pegasus
+    site  catalog there should be a separate compute site that has
+    this style associated with it. This style should not be specified
+    for the local site. 
+
+    As part of applying the style to the job, this style adds the
+    following classads expressions to the job description 
+
+    +remote_queue - value picked up from globus profile queue
+    +remote_cerequirements - See below
+
+    The remote CE requirements are constructed from the following
+    profiles associated with the job. The profiles for a job are
+    derived from various sources 
+
+    - user properties
+    - transformation catalog
+    - site catalog
+    - DAX
+
+    Note it is upto the user to specify these or a subset of them.
+
+    The following globus profiles if associated with the job are picked up
+
+    hostcount -> PROCS
+    count -> NODES
+    maxwalltime-> WALLTIME
+
+    The following condor profiles if associated with the job are picked up
+
+    priority -> PRIORITY
+
+    All the env profiles are translated to MYENV
+
+    For e.g. the expression in the submit file may look as
+
+    +remote_cerequirements = "PROCS==18 && NODES==1 && PRIORITY==10 && WALLTIME==3600
+       && PASSENV==1 && JOBNAME==\"TEST JOB\" && MYENV ==\"FOO=BAR,HOME=/home/user\""
+ 
+    All the jobs that have this style applied dont have a remote
+    directory specified in the submit directory. They rely on
+    kickstart to change to the working directory when the job is
+    launched on the remote node. 
+
+
+5) Generating a site catalog for OSG using OSGMM
+   The pegasus-get-sites tool has been modified to query the OSGMM (
+   OSG Match Maker) to generate a site catalog for a VO 
+
+   It builds upon the earlier Engage implementation. It has now been
+   generalized and renamed to OSGMM 
+
+   To pegasus-get-sites the source option now needs to be OSGMM
+   instead of Engage 
+
+   Some of the changes are
+
+   The condor collector host can be specified at command line or in
+   properties by specifying the property pegasus.catalog.site.osgmm.collector.host .
+   It defaults to ligo-osgmm.renci.org 
+
+   If a user is part of the Engage VO they should set 
+   pegasus.catalog.site.osgmm.collector.host=engage-central.renci.org
+
+   The default VO used is LIGO. Can be overriden by specifying the
+   --vo option to pegasus-get-sites , or specifying the property
+   pegasus.catalog.site.osgmm.vo 
+
+   By default the implementation always returns validated sites. 
+   To retrieve all sites for a VO set
+   pegasus.catalog.site.osgmm.retrieve.validated.sites to false.
+
+   In case of multiple gatekeepers are associated with the same osg
+   site, multiple site catalog entries are created in the site
+   catalog. A suffix is added to the extra sites (__index , where
+   index starts from 1) 
+
+   Sample Usage
+   pegasus-get-sites --source OSGMM --sc osg-sites.xml --vo LIGO --grid OSG
+
+   Tracked in JIRA athttp://pegasus.isi.edu/jira/browse/PM-67
+
+   Currently, there is no way to filter sites according to the grid ( OSG|OSG-ITB ) in OSGMM
+
+   The site catalog generated has storage directories that have a VO component in them.
+
+ 
+6) Generating a site catalog for OSG using MYOSG
+   pegasus-get-sites has now been modified to generate a site catalog by querying MyOSG
+
+   To use MYOSG as the backend the source option needs to be set to MYOSG
+
+   Sample usage
+
+   pegasus-get-sites --source MYOSG --sc myosg-sites-new.xml -vvvvv --vo  ligo --grid osg
+   
+   This was tracked in JIRA
+   http://pegasus.isi.edu/jira/browse/PM-61
+   
+   Pegasus Team recommends using OSGMM for generating a site catalog.
+
+7) Separation of Symlink and Stagein Transfer Jobs
+
+   The following transfer refiners
+   - Default
+   - Bundle
+   - Cluster
+   now support the separation of the symlink jobs from the stage in
+   jobs. While using these refiners, the files that need to be
+   symlinked against existing files on a compute site will have a
+   separate symlink job. The files that need to be actually copied to
+   a remote site, will appear in the stage_in_ jobs. 
+
+   This distinction, allows for the users to stage in data using third
+   party transfers that run on the submit host, and at the same time
+   be able to symlink against existing datasets. 
+   
+   The symlink jobs run on the remote compute sites. Earlier this was
+   not possible, and hence for a user to use symlinking they had to
+   turn off third party transfers. This resulted in an increased load
+   on the head node as the stage in jobs executed there. 
+
+   By default, Pegasus will use the transfer executable shipped with
+   the worker package to do the symbolic linking . 
+
+   If the user wants to change the executable to use , they can set the following property
+
+   pegasus.transfer.symlink.impl
+
+   The above also allows us to use separate executables for staging in
+   data and for symbolic linking. 
+   For e.g. we can use GUC to stage in data by setting
+
+   pegasus.transfer.stagein.impl GUC
+
+   To control the symlinking granularity in the Bundle and Cluster
+   refiners the following Pegasus profile keys can be associated 
+
+   bundle.symlink
+   cluster.symlink
+
+   The feature implementation was tracked in JIRA at
+   http://pegasus.isi.edu/jira/browse/PM-54
+
+8) Bypassing First Level Staging of Files for worker node execution
+
+   Pegasus now has  capability to bypass first level staging if the
+   input files in the replica catalog have a pool attribute matching
+   the site at which a job is being run. This applies in case of
+   worker node execution. 
+
+   The cache file generated in the submit directory is the transient
+   replica catalog. It also now has locations of where the inpute
+   files are staged on the remote sites. Earlier it was only the files
+   that were generated by the workflow. 
+
+   Tracked in JIRA here
+   http://pegasus.isi.edu/jira/browse/PM-20
+   http://pegasus.isi.edu/jira/browse/PM-62 
+
+9) Resolving SRM URL's for file URL's on a filesystem
+   
+   There is now support to resolve the SRM urls in the replica catalog to
+   the file url on a site. The user needs to specify the URL prefix
+   and the mount point of the filesystem.
+
+   This can be done by specifying the properties
+
+   pegasus.transfer.srm.[sitename].service.url
+   pegasus.transfer.srm.[sitename].service.mountpoint
+
+   Pegasus will then map SRM URL's associate with site to a paht on
+   the filesytem by replacing the service url component with the mount
+   point. 
+
+   For example if user has this specified
+
+   pegasus.transfer.srm.ligo-cit.service.url          srm://osg-se.ligo.caltech.edu:10443/srm/v2/server?SFN=/mnt/hadoop
+   pegasus.transfer.srm.ligo-cit.service.mountpoint   /mnt/hadoop/
+   
+   then url
+   srm://osg-se.ligo.caltech.edu:10443/srm/v2/server?SFN=/mnt/hadoop/ligo/frames/S5/test.gwf
+   will resolve to 
+
+   /mnt/hadoop/ligo/frames/S5/test.gwf
+
+10) New Transfer implementation Symlink
+
+   Pegasus has now support for a perl executable called symlink
+   shipped with the Pegasus worker package, that can be used to create
+   multiple symlinks against input datasets in a single invocation 
+
+   The Transfer implementation that uses the transfer executable also
+   has the same functionality. 
+   However, the transfer executable complains if it cannot find the
+   Globus client libraries. 
+
+   In order to use this executable for the symlink jobs, users need to
+   set the following property 
+   
+   pegasus.transfer.symlink.impl Symlink
+
+   Later on ( pegasus 3.0 release onwards ) this will be made the
+   default executable to be used for symlinking jobs. 
+
+11) Passing options forward to pegasus-run in pegasus-plan
+
+   Users can now pass forward option to pegasus-run invocation that is
+   used to submit the workflows in case of successful mapping.
+
+   There is a  --forward option[=value] to pegasus-plan . This option
+   allows a user to forward options to pegasus-run.
+   For e.g. nogrid option can be passed to pegasus-run as follows
+   pegasus-plan --forward nogrid
+
+   The option can be repeated multiple times to forward multiple
+   options to pegasus-run. The longopt version should always be
+   specified for pegasus-run. 
+
+12) Passing extra arguments SLS transfer implementations
+
+   Users now can specify pegasus.transfer.sls.arguments to pass extra
+   options at runtime to the SLS Implementations used by Pegasus. 
+   The following SLS transfer implementations accept the above property.
+
+   S3
+   Transfer
+
+13) Passing non standard java options to dax jobs in DAX 3.0
+
+   The non standard jvm options (-X[option]) can now be specified for
+   the sub workflows in the arguments section for the dax jobs. 
+
+   For example for the DAX jobs , user can set the java max heap size
+   to 1024m by specifying -X1024m in the arguments for the DAX job 
+
+
+
+14) Location of Condor Logs directory on the submit host
+   
+   By default, pegasus designates the condor logs to be created in the
+   /tmp directory. This is done to ensure that the logs are created in
+   a local directory even though the submit directory maybe on NFS. 
+
+   In the submit directory the symbolic link to the appropriate log
+   file in the /tmp exists. However, since /tmp is automatically
+   purged in most cases, users may want to preserve their condor logs
+   in a directory on the local filesystem other than /tmp 
+
+   The new property
+
+   pegasus.dir.submit.logs
+
+   allows a user to designate the logs directory on the submit host
+   for condor logs. 
+
+15) Removing profile keys as part of overriding profiles
+
+   There is now a notion of empty profile key valus in Pegasus.  The
+   default action on empty key value is to remove the key. Currently
+   the following namespaces follow this convention 
+
+       - Condor
+       - Globus
+       - Pegasus
+
+   This allows a user to unset values as part of overriding
+   profiles. Normally a user can only update a profile value i.e they
+   can update the value of a key, but the key remains associated with
+   the job This allows the user to remove the key from the profile
+   namespace. 
+
+   For e.g.
+
+   A user may have a profile X set in the site catalog.
+
+   Now for a particular job a user does not want that profile key to
+   be used. He can now specify the same profile X with empty value in
+   the transformation catalog for that job. This results in the
+   profile key X being removed from the job. 
+
+16) Constructing Paths to Condor DAGMan for recursive/hierarichal
+   workflows
+
+   The entry for condor::dagman is no longer required for site local
+   in the transformation catalog. 
+   Instead pegasus constructs path from the following environment
+   variables. CONDOR_HOME, CONDOR_LOCATION
+
+   The priority order is as follows
+
+   1) CONDOR_HOME defined in the environment
+   2) CONDOR_LOCATION defined in the environment
+   3) entry for condor::dagman for site local
+
+   This is useful when running workflows that refer to sub workflows
+   as in the new DAX 3.0 format.
+
+   This was tracked in JIRA
+   http://pegasus.isi.edu/jira/browse/PM-50
+
+17) Constructing path to kickstart
+
+   By default the path to kickstart is determined on the basis of the
+   environment variable PEGASUS_HOME associated with a site entry in
+   the site catalog. 
+
+   However, in some cases a user might want to use their own modified
+   version of kickstart. 
+
+   In order to enable that
+
+   The path to kickstart will be constructed according to the following rule	
+   1) pegasus profile gridstart.path specified in the site catalog for
+      the site in question. 
+   2) If 1 is not specified, then a path is constructed on the basis
+   of the environment variable PEGASUS_HOME for the site in the site
+   catalog. 
+
+   The above was tracked in JIRA
+   http://pegasus.isi.edu/jira/browse/PM-60
+
+18) Bulk Lookups to Replica Catalog using rc-client
+   
+   rc-client now can do bulk lookups similar to how it does bulk
+   inserts and deletes
+
+   Details at
+   http://jira.pegasus.isi.edu/browse/PM-75
+
+19) Additions to show-job workflow visualization script
+
+   show-job now has a --title option to list add a user provided title for the generated gantt chart.
+
+   show-job can also visualize workflow of workflows
+
+20) Absolute paths for certain properties in the properties file
+
+   The properties file that is written out now in the submit directory
+   has absolute paths specified for the following property values. 
+
+   pegasus.catalog.replica.file
+   pegasus.catalog.transformation.file
+   pegasus.catalog.site.file
+
+   This is even though user may have specified relative paths in properties file.
+
+
+21) The default horizontal clustering factor
+
+   Updated the default clustering factor as collapse with value = 1, instead of earlier value of 3
+
+   This ensures, that users can cluster only jobs of certain types,
+   and let others remain unclustered. Another way was to specify the
+   collapse factor as 1 explicitly for jobs that users dont want
+   clustering for. 
+
+BUGS FIXED
+----------
+1) Handling of standard universe in condor style
+   In Condor style , standard universe if specified for a job is ONLY
+   associated for compute jobs. This ensures that pegasus auxillary
+   jobs never execute in standard universe. 
+
+2) Bug Fix for replica selection bug 43
+   Checked in the fix for JIRA bug 43 http://pegasus.isi.edu/jira/browse/PM-43
+
+   The ReplicaLocation class now has a clone method that does a
+   shallow clone 
+   This clone method is called in the selectReplica methods in the replica selectors.
+
+3) rc-client did not implement  pegasus.catalog.replica.lrc.ignore property
+   This is now fixed.
+   This bug was tracked in JIRA http://pegasus.isi.edu/jira/browse/PM-42
+
+4) DAX'es created while partitioning a workflow
+   During the partitioning of the workflows , the DAX for a partition
+   was created incorrectly as the register flags were not correctly
+   parsed by the VDL DAX parser. 
+
+   This was tracked in JIRA
+   http://pegasus.isi.edu/jira/browse/PM-48
+
+5) Handling of initialdir and remote_initialdir keys
+   Changed the internal handling for the initialdir and
+   remote_initialdir keys. The initialdir key is now only associated
+   for standard universe jobs. For glidein and condor style we now
+   associate remote_initialdir unless it is a standard universe job. 
+
+   This was tracked in JIRA
+   http://pegasus.isi.edu/jira/browse/PM-58
+
+6) Querying RLI for non existent LFN using rc-client
+   rc-client had inconsistent behavior when querying RLI for a LFN
+   that does not exist in the RLS. 
+   This affected the rc-client lookup command option.
+
+   Details at
+   http://jira.pegasus.isi.edu/browse/PM-74
+
+7) Running clustered jobs on the cloud in directory other than /tmp
+   There was a bug whereby the clustered jobs executing in worker node
+   execution mode did not honor the wntmp environment variable
+   specified in the Site Catalog for the site. 
+
+   The bug fix was tracked through JIRA
+   http://jira.isi.edu/browse/PM-83
+
+8) Bug Fix for worker package deployment
+   The regex employed to determine the pegasus version from a URL to a
+   worker package was insufficient. It only took care of x86 builds. 
+
+   For e.g. it could not parse the following
+   urlhttp://pegasus.isi.edu/mapper/download/nightly/pegasus-worker-2.4.0cvs-ia64_rhas_3.tar.gz
+   STATIC_BINARY INTEL64::LINUX NULL 
+
+   This is now fixed.
+   Related to JIRA PM-33
+
+9) Destination URL construction for worker package staging
+   Earlier the worker package input files always had third party
+   URL's, even if the worker package deployment job executed on the
+   remote site ( in push / pull mode ). 
+
+   Now, the third party URL's are only constructed if the worker
+   package deployment job is actually run in third party mode.		
+   In push-pull mode, the destination URL's are file URLs	 
+
+   Tracked in JIRA athttp://jira.isi.edu/browse/PM-89
+
+Documentation
+--------------
+
+1) User Guides
+   The Running on different Grids Guide now has information on how to
+   run workflows using glite.   
+   - Pegasus Replica Selection
+
+   The guides are checked in $PEGASUS_HOME/doc/guides
+
+   They can be found online at
+   http://pegasus.isi.edu/mapper/doc.php
+   
+2) Property Document was updated with the new properties introduced.
+
+
+===============================
 Release Notes for PEGASUS 2.3.0
 ===============================
  
