@@ -40,12 +40,12 @@ public class Version
   /**
    * This constant defines the major version number.
    */
-  public static final int MAJOR = 2;
+  public static final int MAJOR = 3;
 
   /**
    * This constant defines the minor version number.
    */
-  public static final int MINOR = 4;
+  public static final int MINOR = 0;
 
   /**
    * This constant defines the patch level version.
@@ -84,7 +84,7 @@ public class Version
   public String toString()
   {
     return ( Integer.toString(MAJOR) + '.' + Integer.toString(MINOR) + 
-	     '.' + Integer.toString(PLEVEL) + "" ); // !! HERE !!
+	     '.' + Integer.toString(PLEVEL) + "cvs" ); // !! HERE !!
   }
 
   /**
