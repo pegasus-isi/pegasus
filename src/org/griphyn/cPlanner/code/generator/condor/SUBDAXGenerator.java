@@ -264,12 +264,6 @@ public class SUBDAXGenerator{
                         new File( relative, label ).getPath();
 
             options.setRelativeSubmitDirectory( relative );
-
-            //for time being for LIGO , try and create a symlink for
-            //the cache file that is created during sub workflow execution
-            //in parent directory of the submit directory
-            //JIRA PM-116
-            this.createSymbolicLinktoCacheFile( options, label, index);
         }
         String submit = options.getSubmitDirectory();
 
@@ -348,6 +342,14 @@ public class SUBDAXGenerator{
         
         //update options with the linked dax
         options.setDAX( linkedDAX );
+        
+        //for time being for LIGO , try and create a symlink for
+        //the cache file that is created during sub workflow execution
+        //in parent directory of the submit directory
+        //JIRA PM-116
+        if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
+            this.createSymbolicLinktoCacheFile( options, label, index);
+        }
         
         //write out the properties in the submit directory
         String propertiesFile = null;
