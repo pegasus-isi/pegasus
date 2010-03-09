@@ -264,6 +264,12 @@ public class SUBDAXGenerator{
                         new File( relative, label ).getPath();
 
             options.setRelativeSubmitDirectory( relative );
+
+            //for time being for LIGO , try and create a symlink for
+            //the cache file that is created during sub workflow execution
+            //in parent directory of the submit directory
+            //JIRA PM-116
+            this.createSymbolicLinktoCacheFile( options, label, index);
         }
         String submit = options.getSubmitDirectory();
 
@@ -619,6 +625,37 @@ public class SUBDAXGenerator{
         return sb.toString();
     }
 
+    /**
+     * Constructs the basename to the cache file that is to be used
+     * to log the transient files. The basename is dependant on whether the
+     * basename prefix has been specified at runtime or not.
+     *
+     * @param options   the options for the sub workflow.
+     * @param label     the label for the workflow.
+     * @param index     the index for the workflow.
+     *
+     * @return the name of the cache file
+     */
+    protected String getCacheFileName( PlannerOptions options, String label , String index ){
+        StringBuffer sb = new StringBuffer();
+        String bprefix = options.getBasenamePrefix();
+
+        if(bprefix != null){
+            //the prefix is not null using it
+            sb.append(bprefix);
+        }
+        else{
+            //generate the prefix from the name of the dag
+            sb.append( label ).append("_").
+           append( index );
+        }
+        //append the suffix
+        sb.append(".cache");
+
+        return sb.toString();
+
+    }
+
 
     /**
      * Returns a default TC entry to be used in case entry is not found in the
@@ -804,7 +841,34 @@ public class SUBDAXGenerator{
         
         return prescript.toString();
     }
-    
+
+
+    /**
+     * Creates a symbolic link to the DAX file in a dax sub directory in the
+     * submit directory
+     *
+     * @param options   the options for the sub workflow.
+     * @param label     the label for the workflow.
+     * @param index     the index for the workflow.
+     *
+     * @return  boolean whether symlink is created or not
+     */
+    public boolean createSymbolicLinktoCacheFile( PlannerOptions options , String label, String index ){
+        File f = new File( options.getSubmitDirectory() );
+        String cache  = this.getCacheFileName(options, label, index);
+        File source =  new File( f, cache );
+        File  dest  =  new File ( f.getParent(), cache );
+
+        StringBuffer sb = new StringBuffer();
+        sb.append( "Creating symlink " ).append( source.getAbsolutePath() ).
+           append( " -> ").append( dest.getAbsolutePath() );
+        mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+
+        return this.createSymbolicLink( source.getAbsolutePath(), dest.getAbsolutePath(), true );
+    }
+
+
+
     /**
      * Creates a symbolic link to the DAX file in a dax sub directory in the 
      * submit directory 
@@ -1048,16 +1112,30 @@ public class SUBDAXGenerator{
         }
     }
 
-    
+    /**
+     * This method generates a symlink between two files
+     *
+     * @param source       the file that has to be symlinked
+     * @param destination  the destination of the symlink
+     *
+     * @return boolean indicating if creation of symlink was successful or not
+     *
+     */
+    protected boolean createSymbolicLink( String source, String destination  ) {
+        return this.createSymbolicLink( source, destination, false );
+    }
+
     /**
      * This method generates a symlink between two files
      *
      * @param source       the file that has to be symlinked 
      * @param destination  the destination of the symlink
-     * 
+     * @param logErrorToDebug  whether to log messeage to debug or not
+     *
      * @return boolean indicating if creation of symlink was successful or not
+     *
      */
-    protected boolean createSymbolicLink( String source, String destination ) {
+    protected boolean createSymbolicLink( String source, String destination , boolean logErrorToDebug ) {
         try{
             Runtime rt = Runtime.getRuntime();
             String command = "ln -sf " + source + " " + destination;
@@ -1084,7 +1162,12 @@ public class SUBDAXGenerator{
                    mLogger.log(s,LogManager.DEBUG_MESSAGE_LEVEL);
                }
                else {
-                   mLogger.log(se,LogManager.ERROR_MESSAGE_LEVEL );
+                   if( logErrorToDebug ){
+                       mLogger.log( se, LogManager.DEBUG_MESSAGE_LEVEL );
+                   }
+                   else{
+                       mLogger.log(se,LogManager.ERROR_MESSAGE_LEVEL );
+                   }
                }
             }
 
@@ -1092,8 +1175,13 @@ public class SUBDAXGenerator{
             return true;
         }
         catch(Exception ex){
-            mLogger.log("Unable to create symlink to the log file" , ex,
-                        LogManager.ERROR_MESSAGE_LEVEL);
+            if( logErrorToDebug ){
+                mLogger.log("Unable to create symlink to the log file" , ex,
+                            LogManager.DEBUG_MESSAGE_LEVEL );
+            }else{
+                mLogger.log("Unable to create symlink to the log file" , ex,
+                            LogManager.ERROR_MESSAGE_LEVEL);
+            }
             return false;
        }
 
