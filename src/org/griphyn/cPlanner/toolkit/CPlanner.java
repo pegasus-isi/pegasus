@@ -473,6 +473,12 @@ public class CPlanner extends Executable{
                 //the relative directory constructed on the submit host
                 //is the one required for remote sites
                 mPOptions.setRandomDir( relativeSubmitDir );
+
+                //also for time being set the relative dir option to
+                //same as the relative submit directory.
+                //Eventually we should have getRelativeExecDir function also
+                //SLS interfaces use getRelativeDir for time being.
+                mPOptions.setRelativeDirectory( relativeSubmitDir );
             }
 
             //populate the singleton instance for user options
