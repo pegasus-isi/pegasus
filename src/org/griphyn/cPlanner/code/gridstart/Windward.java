@@ -163,7 +163,7 @@ public class Windward implements GridStart{
         mAllegroPort = p.getProperty( "port" );
         
         String base  = p.getProperty( "basekb" );
-        File f = new File( base, bag.getPlannerOptions().getRelativeSubmitDirectory() );
+        File f = new File( base, bag.getPlannerOptions().getRelativeDirectory() );
         mAllegroKB = f.getAbsolutePath();
         mWorkflowID  = dag.getExecutableWorkflowID();
         //set it in the properties for postscript to pick up

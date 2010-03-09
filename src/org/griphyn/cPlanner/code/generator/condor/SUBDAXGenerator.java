@@ -227,7 +227,46 @@ public class SUBDAXGenerator{
         //convert the args to pegasus-plan options
         PlannerOptions options = new CPlanner( mLogger ).parseCommandLineArguments( args, false );
 
+        //figure out the label and index for SUBDAX
+        String label = null;
+        String index = null;
+        File dax = new File( options.getDAX() );
+        if( dax.exists() ){
+            //retrieve the metadata in the subdax.
+            //means the the dax needs to be generated beforehand.
+            Map metadata = getDAXMetadata( options.getDAX() );
+            label = (String) metadata.get( "name" );
+            index = (String) metadata.get( "index" );
+        }
+        else{
+            //try and construct on basis of basename prefix option
+            String basenamePrefix = options.getBasenamePrefix() ;
+            if( basenamePrefix == null ){
+                StringBuffer error = new StringBuffer();
+                error.append( "DAX file for subworkflow does not exist " ).append( dax ).
+                      append( " . Either set the --basename option to subworkflow or make sure dax exists" );
+                throw new RuntimeException( error.toString() );
+            }
+            label = options.getBasenamePrefix();
+            index = "0";
+            mLogger.log( "DAX File for subworkflow does not exist. Set label value to the basename option passed ",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+
+
+        //check if we want a label based submit directory for the sub workflow
+        if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
+            String relative = options.getRelativeSubmitDirectoryOption();
+
+            relative = ( relative == null )?
+                        label ://no relative-submit-dir option specified. set to label
+                        new File( relative, label ).getPath();
+
+            options.setRelativeSubmitDirectory( relative );
+        }
         String submit = options.getSubmitDirectory();
+
         mLogger.log( "Submit directory in sub dax specified is " + submit,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -268,32 +307,7 @@ public class SUBDAXGenerator{
         //if it is a relative path, then ???
         options.setSanitizePath( true );
         
-        //figure out the label and index for SUBDAX
-        String label = null;
-        String index = null;
-        File dax = new File( options.getDAX() );
-        if( dax.exists() ){
-            //retrieve the metadata in the subdax.
-            //means the the dax needs to be generated beforehand.
-            Map metadata = getDAXMetadata( options.getDAX() ); 
-            label = (String) metadata.get( "name" );
-            index = (String) metadata.get( "index" );
-        }
-        else{
-            //try and construct on basis of basename prefix option
-            String basenamePrefix = options.getBasenamePrefix() ;
-            if( basenamePrefix == null ){
-                StringBuffer error = new StringBuffer();
-                error.append( "DAX file for subworkflow does not exist " ).append( dax ).
-                      append( " . Either set the --basename option to subworkflow or make sure dax exists" );
-                throw new RuntimeException( error.toString() );
-            }
-            label = options.getBasenamePrefix();
-            index = "0";
-            mLogger.log( "DAX File for subworkflow does not exist. Set label value to the basename option passed ",
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-        }
-
+        
         String baseDir = options.getBaseSubmitDirectory();
         String relativeDir = null;
         //construct the submit directory structure for subdax
@@ -315,6 +329,12 @@ public class SUBDAXGenerator{
 
         options.setSubmitDirectory( baseDir, relativeDir  );
         mLogger.log( "Submit Directory for SUB DAX  is " + options.getSubmitDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
+
+        if( options.getRelativeDirectory() == null ){
+            //set the relative execution directory to relative submit directory
+            options.setRelativeDirectory( options.getRelativeSubmitDirectory() );
+        }
+        mLogger.log( "Relative Execution Directory for SUB DAX is " + options.getRelativeDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
 
         //create a symbolic link to dax in the subdax submit directory
         String linkedDAX = createSymbolicLinktoDAX( options.getSubmitDirectory(),

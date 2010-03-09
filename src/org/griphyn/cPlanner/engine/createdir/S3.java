@@ -155,7 +155,7 @@ public class S3 implements Implementation {
         
         mBucketMap  = new HashMap<String,String>();
         
-        mRelativeBucketDir = bag.getPlannerOptions().getRelativeSubmitDirectory();
+        mRelativeBucketDir = bag.getPlannerOptions().getRelativeDirectory();
 
         //replace file separators in directory with -
         mRelativeBucketDir = mRelativeBucketDir.replace( File.separatorChar,  '-' );

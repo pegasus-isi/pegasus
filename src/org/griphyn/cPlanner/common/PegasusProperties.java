@@ -625,6 +625,19 @@ public class PegasusProperties {
     }
 
     /**
+     * Returns a boolean indicating whether the submit directory for the sub
+     * workflows should include the label of the sub workflow or not.
+     *
+     * Referred to by the "pegasus.dir.submit.subwf.labelbased" property
+     *
+     * @return the value in the properties file, else false
+     */
+    public boolean labelBasedSubmitDirectoryForSubWorkflows(){
+        return Boolean.parse( mProps.getProperty( "pegasus.dir.submit.subwf.labelbased" ),
+                              false );
+    }
+
+    /**
      * Returns the storage directory suffix or absolute specified
      * that is appended/replaced to the storage-mount-point specified in the
      * pool catalog for the various pools.

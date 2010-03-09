@@ -668,9 +668,9 @@ public abstract class PoolInfoProvider {
             String leaf = ( this.mUserOpts.getOptions().partOfDeferredRun() )?
                              //if a deferred run then pick up the relative random directory
                              //this.mUserOpts.getOptions().getRandomDir():
-                             this.mUserOpts.getOptions().getRelativeSubmitDirectory():
+                             this.mUserOpts.getOptions().getRelativeDirectory():
                              //for a normal run add the relative submit directory
-                             this.mUserOpts.getOptions().getRelativeSubmitDirectory();
+                             this.mUserOpts.getOptions().getRelativeDirectory();
             File f = new File( mount_point, leaf );
             mount_point = f.getAbsolutePath();
         }

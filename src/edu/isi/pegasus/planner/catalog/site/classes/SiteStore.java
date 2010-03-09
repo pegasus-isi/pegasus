@@ -341,9 +341,9 @@ public class SiteStore extends AbstractSiteData{
             String leaf = ( this.mPlannerOptions.partOfDeferredRun() )?
                              //if a deferred run then pick up the relative random directory
                              //this.mUserOpts.getOptions().getRandomDir():
-                             this.mPlannerOptions.getRelativeSubmitDirectory():
+                             this.mPlannerOptions.getRelativeDirectory():
                              //for a normal run add the relative submit directory
-                             this.mPlannerOptions.getRelativeSubmitDirectory();
+                             this.mPlannerOptions.getRelativeDirectory();
             File f = new File( mount_point, leaf );
             mount_point = f.getAbsolutePath();
         }

@@ -83,7 +83,7 @@ public class Windward extends MultipleFTPerXFERJobRefiner {
         mLogger.log( "Allegro Graph properties set are " + p, LogManager.DEBUG_MESSAGE_LEVEL );
         
         String base  = p.getProperty( "basekb" );
-        File f = new File( base, mPOptions.getRelativeSubmitDirectory() );
+        File f = new File( base, mPOptions.getRelativeDirectory() );
         mAllegroKB = f.getAbsolutePath();
     }
 
