@@ -330,9 +330,26 @@ public class SUBDAXGenerator{
         options.setSubmitDirectory( baseDir, relativeDir  );
         mLogger.log( "Submit Directory for SUB DAX  is " + options.getSubmitDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
 
-        if( options.getRelativeDirectory() == null ){
-            //set the relative execution directory to relative submit directory
-            options.setRelativeDirectory( options.getRelativeSubmitDirectory() );
+         
+        if( options.getRelativeDirectory() == null || !options.getRelativeDirectory().startsWith( File.separator ) ){
+            //then set the relative directory relative to the parent workflow relative dir
+            String baseRelativeExecDir = mPegasusPlanOptions.getRelativeDirectory();
+            if( baseRelativeExecDir == null ){
+                //set the relative execution directory to relative submit directory
+                options.setRelativeDirectory( options.getRelativeSubmitDirectory() );
+            }
+            else{
+                //the else look should not be there.
+                //construct path from base relative exec dir
+                File innerRelativeExecDir = new File( baseRelativeExecDir, options.getRelativeSubmitDirectory() );
+                if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
+                    //this is temporary till LIGO fixes it's dax
+                    //and above property will go away.
+                    //we dont want label in the exec dir
+                    innerRelativeExecDir = innerRelativeExecDir.getParentFile();
+                }
+                options.setRelativeDirectory(innerRelativeExecDir.getPath() );
+            }
         }
         mLogger.log( "Relative Execution Directory for SUB DAX is " + options.getRelativeDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
 
