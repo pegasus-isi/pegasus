@@ -67,11 +67,18 @@ public class CondorVersion {
     
      /**
       * Store the regular expressions necessary to parse the output of
-      * condor_version
-      * e.g. $CondorVersion: 7.1.0 Apr  1 2008 BuildID: 80895 
+      * condor_version. The rule for the format is
+      *
+      * $CondorVersion: 7.4.1 Dec 17 2009 <ANY_ARBITRARY_STRING> $
+      * where <ANY_ARBITRARY_STRING> may or may not be there, and can include spaces but is
+      * really completely arbitrary.
+      *
+      * e.g. $CondorVersion: 7.1.0 Apr  1 2008 BuildID: 80895$
       */
     private static final String mRegexExpression =
-                                     "\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[a-zA-Z:0-9\\s]*\\$";
+//                                     "\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[a-zA-Z:0-9\\s]*\\$";
+                                         //"\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[\\w\\W\\s]*\\$";
+                                         "\\$CondorVersion:\\s*([0-9][\\.][0-9][\\.][0-9])[\\p{ASCII}\\s]*\\$";
 
 
     /**
@@ -349,7 +356,21 @@ public class CondorVersion {
         System.out.println( "7.1.18 is " + CondorVersion.numericValue( "7.1.18" ) ); 
         System.out.println( "7.1.19 is " + CondorVersion.numericValue( "7.1.19" ) ); 
         System.out.println( "6.99.9 is " + CondorVersion.numericValue( "6.99.9" ) ); 
-        System.out.println( "7 is " + CondorVersion.numericValue( "7.2.2s" ) ); 
+        System.out.println( "7 is " + CondorVersion.numericValue( "7.2.2" ) );
         logger.logEventCompletion();
+
+        //some sanity checks on the Regex
+        String version = "$CondorVersion: 7.4.1 Dec 17 2009 UWCS-PRE $";
+        Matcher matcher = cv.mPattern.matcher( version );
+        if( matcher.matches() ){
+            System.out.println( "Version for " + version + " is " + matcher.group( 1 ));
+        }
+
+
+        version = "$CondorVersion: 7.4.1 Dec 17 2009 BuildID: 204351 $";
+        matcher = cv.mPattern.matcher( version );
+        if( matcher.matches() ){
+            System.out.println( "Version for " + version + " is " + matcher.group( 1 ));
+        }
     }
 }
