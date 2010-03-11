@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import org.griphyn.common.util.Separator;
 
 /**
  * The implementation that creates transfer jobs referring to the symlink
@@ -225,5 +226,46 @@ public class Symlink extends Transfer {
     protected List getEnvironmentVariables( String site ){
         return new ArrayList() ;
     }
-    
+
+    /**
+     * Returns the complete name for the transformation.
+     *
+     * @return the complete name.
+     */
+    protected String getCompleteTCName(){
+        return Separator.combine(Symlink.TRANSFORMATION_NAMESPACE,
+                                 Symlink.TRANSFORMATION_NAME,
+                                 this.TRANSFORMATION_VERSION);
+    }
+
+    /**
+     * Returns the namespace of the derivation that this implementation
+     * refers to.
+     *
+     * @return the namespace of the derivation.
+     */
+    protected String getDerivationNamespace(){
+        return Symlink.DERIVATION_NAMESPACE;
+    }
+
+
+    /**
+     * Returns the logical name of the derivation that this implementation
+     * refers to.
+     *
+     * @return the name of the derivation.
+     */
+    protected String getDerivationName(){
+        return Symlink.DERIVATION_NAME;
+    }
+
+    /**
+     * Returns the version of the derivation that this implementation
+     * refers to.
+     *
+     * @return the version of the derivation.
+     */
+    protected String getDerivationVersion(){
+        return Symlink.DERIVATION_VERSION;
+    }
 }

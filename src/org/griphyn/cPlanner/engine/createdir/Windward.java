@@ -166,7 +166,7 @@ public class Windward extends AbstractStrategy{
         String site = p.getProperty( "site" );
         String base = p.getProperty( "basekb" );
         String directory = new File( base, 
-                                     mPOptions.getRelativeSubmitDirectory()  ).getAbsolutePath();
+                                     mPOptions.getRelativeDirectory()  ).getAbsolutePath();
         
         SubInfo kbJob = makeCreateGUKBJob( kbJobname, site, directory );
         result.add( kbJob );

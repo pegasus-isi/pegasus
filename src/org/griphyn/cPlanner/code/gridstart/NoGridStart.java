@@ -394,7 +394,7 @@ public class NoGridStart implements GridStart {
                     String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
                     destDir = ( destDir == null ) ? "/tmp" : destDir;
                     
-                    String relativeDir = mPOptions.getRelativeSubmitDirectory();
+                    String relativeDir = mPOptions.getRelativeDirectory();
                     String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
 
 
@@ -670,7 +670,7 @@ public class NoGridStart implements GridStart {
         String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
         destDir = ( destDir == null ) ? "/tmp" : destDir;
 
-        String relativeDir = mPOptions.getRelativeSubmitDirectory();
+        String relativeDir = mPOptions.getRelativeDirectory();
         
         workerNodeDir.append( destDir ).append( File.separator ).
                       append( relativeDir.replaceAll( "/" , "-" ) ).

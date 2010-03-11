@@ -175,7 +175,7 @@ public class S3 implements CleanupImplementation{
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
         
-        mBucketName = bag.getPlannerOptions().getRelativeSubmitDirectory();
+        mBucketName = bag.getPlannerOptions().getRelativeDirectory();
 
         //replace file separators in directory with -
         mBucketName = mBucketName.replace( File.separatorChar,  '-' );

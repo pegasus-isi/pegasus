@@ -73,7 +73,9 @@ public class Random extends AbstractPerJob {
         }
         else{
             job.setSiteHandle(selectRandomSite(rsites));
-            mLogger.log( "[Random Selector] Mapped to " + job.getSiteHandle(),
+            StringBuffer message = new StringBuffer( );
+            message.append( "[Random Selector] Mapped " ).append( job.getID() ).append( " to " ).append( job.getSiteHandle() );
+            mLogger.log( message.toString(),
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
     }

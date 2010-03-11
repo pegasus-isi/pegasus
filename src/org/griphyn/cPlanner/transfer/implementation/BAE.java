@@ -179,7 +179,7 @@ public class BAE extends AbstractSingleFTPerXFERJob {
         mAllegroHost = p.getProperty( "host" );
         mAllegroPort = p.getProperty( "port" );
         String base  = p.getProperty( "basekb" );
-        File f = new File( base, mPOptions.getRelativeSubmitDirectory() );
+        File f = new File( base, mPOptions.getRelativeDirectory() );
         mAllegroKB        = f.getAbsolutePath();
         mAllegroDirectory = f.getParent();
         mAllegroDatabase  = f.getName();

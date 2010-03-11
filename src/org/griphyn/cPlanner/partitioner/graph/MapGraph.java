@@ -206,6 +206,11 @@ public class MapGraph implements Graph{
      * @param child    the child node ID.
      */
     public void addEdge( String parent, String child ){
+        //sanity check
+        if( parent.equals( child )){
+            throw new IllegalArgumentException( "Invalid Edge Specification. An Edge specified from a node to itself  for " + parent );
+        }
+
         GraphNode childNode = (GraphNode)getNode( child );
         GraphNode parentNode = (GraphNode)getNode( parent );
 
@@ -231,6 +236,11 @@ public class MapGraph implements Graph{
      * @param parents list of parent identifiers as <code>String</code>.
      */
     public void addEdges( String child, List parents ){
+        //sanity check
+        if( parents.contains( child )){
+            throw new IllegalArgumentException( "Invalid Edge Specification. Parents " + parents + " include the child " + child );
+        }
+
         GraphNode childNode = (GraphNode)getNode( child );
 
         if( childNode == null ) {

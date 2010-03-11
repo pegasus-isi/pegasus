@@ -413,10 +413,10 @@ public class CPlanner extends Executable{
 
             //write out a the relevant properties to submit directory
             int state = 0;
-            String relativeDir; //the submit directory relative to the base specified
+            String relativeSubmitDir; //the submit directory relative to the base specified
             try{
                 //create the base directory if required
-                relativeDir = /*( mPOptions.partOfDeferredRun() )?
+                relativeSubmitDir = /*( mPOptions.partOfDeferredRun() )?
                                         null:*/
                                         ( mPOptions.getRelativeSubmitDirectory() == null )?
                                                 //create our own relative dir
@@ -426,7 +426,7 @@ public class CPlanner extends Executable{
                                                                        mPOptions.getVOGroup(),
                                                                        mProps.useTimestampForDirectoryStructure() ):
                                                 mPOptions.getRelativeSubmitDirectory();
-                mPOptions.setSubmitDirectory( baseDir, relativeDir  );
+                mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
 
@@ -464,10 +464,21 @@ public class CPlanner extends Executable{
             else if( mPOptions.getRandomDir() != null ){
                 //keep the name that the user passed
             }
-            else if( relativeDir != null ){
+            else if( mPOptions.getRelativeDirectory() != null ){
+                //the relative-dir option  is used to construct
+                //the remote directory name
+                mPOptions.setRandomDir( mPOptions.getRelativeDirectory() );
+            }
+            else if( relativeSubmitDir != null ){
                 //the relative directory constructed on the submit host
                 //is the one required for remote sites
-                mPOptions.setRandomDir( relativeDir );
+                mPOptions.setRandomDir( relativeSubmitDir );
+
+                //also for time being set the relative dir option to
+                //same as the relative submit directory.
+                //Eventually we should have getRelativeExecDir function also
+                //SLS interfaces use getRelativeDir for time being.
+                mPOptions.setRelativeDirectory( relativeSubmitDir );
             }
 
             //populate the singleton instance for user options
@@ -558,7 +569,7 @@ public class CPlanner extends Executable{
             }
 
             //log entry in to the work catalog
-            boolean nodatabase = logEntryInWorkCatalog( finalDag, baseDir, relativeDir );
+            boolean nodatabase = logEntryInWorkCatalog( finalDag, baseDir, relativeSubmitDir );
 
             //write out  the planner metrics  to global log
             mPMetrics.setEndTime( new Date() );
@@ -618,7 +629,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:",
+                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -670,11 +681,15 @@ public class CPlanner extends Executable{
                     break;
 
                 case '2'://relative-dir
-                    options.setRelativeSubmitDirectory( g.getOptarg() );
+                    options.setRelativeDirectory( g.getOptarg() );
                     break;
 
                 case '3'://rescue
                     options.setNumberOfRescueTries( g.getOptarg() );
+                    break;
+
+                case '4'://relative-submit-dir
+                    options.setRelativeSubmitDirectory( g.getOptarg() );
                     break;
                     
                 case 'f'://force
@@ -758,7 +773,7 @@ public class CPlanner extends Executable{
      *
      * @param dag ADag
      * @param baseDir String
-     * @param relativeDir String
+     * @param relativeSubmitDir String
      *
      * @return boolean
      */
@@ -867,14 +882,14 @@ public class CPlanner extends Executable{
         String relativeDir = null;
         //construct the submit directory structure
         try{
-            relativeDir = (options.getRelativeSubmitDirectory() == null) ?
+            relativeDir = (options.getRelativeDirectory() == null) ?
                                  //create our own relative dir
                                  createSubmitDirectory(label,
                                                        baseDir,
                                                        mUser,
                                                        options.getVOGroup(),
                                                        properties.useTimestampForDirectoryStructure()) :
-                                 options.getRelativeSubmitDirectory();
+                                 options.getRelativeDirectory();
         }
         catch( IOException ioe ){
             String error = "Unable to write  to directory" ;
@@ -946,7 +961,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[26];
+        LongOpt[] longopts = new LongOpt[27];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -977,6 +992,7 @@ public class CPlanner extends Executable{
         longopts[23]  = new LongOpt( "rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
         longopts[24]  = new LongOpt( "forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
         longopts[25]  = new LongOpt( "X", LongOpt.REQUIRED_ARGUMENT, null, 'X' );
+        longopts[26]  = new LongOpt( "relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4' );
         return longopts;
     }
 
@@ -991,8 +1007,9 @@ public class CPlanner extends Executable{
           "\n Usage : pegasus-plan [-Dprop  [..]] -d|-P <dax file|pdax file> " +
           " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
           "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] [-j <job-prefix>] " +
-          " [ --relative-dir <relative directory to base directory> ][-g <vogroup>] [-o <output site>] " +
-          "\n [-r[dir name]] [--monitor] [-F option[=value] ] [-S] [-n]  [-v] [-V] [-X[non standard jvm option] [-h]";
+          "\n [ --relative-dir <relative directory to base directory> ] [ --relative-submit-dir <relative submit directory to base directory> ]" +
+          "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]] [--monitor] [-F option[=value] ] " +
+          "\n [-S] [-n]  [-v] [-V] [-X[non standard jvm option] [-h]";
 
         System.out.println(text);
     }
@@ -1025,6 +1042,7 @@ public class CPlanner extends Executable{
            "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads." +
            "\n -D |--dir          the directory where to generate the concrete workflow." +
            "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." +
+           "\n --relative-submit-dir  the relative submit directory where to generate the concrete workflow. Overrids --relative-dir ." +
            "\n -f |--force        skip reduction of the workflow, resulting in build style dag." +
            "\n -F |--forward      any options that need to be passed ahead to pegasus-run in format option[=value] " +
            "\n                    where value can be optional. e.g -F nogrid will result in --nogrid . The option " +
@@ -1148,7 +1166,7 @@ public class CPlanner extends Executable{
 
         this.logSuccessfulCompletion( this.logEntryInWorkCatalog( megaDAG,
                                                                   mPOptions.getBaseSubmitDirectory(),
-                                                                  mPOptions.getRelativeSubmitDirectory() ));
+                                                                  mPOptions.getRelativeDirectory() ));
 
         return result;
     }

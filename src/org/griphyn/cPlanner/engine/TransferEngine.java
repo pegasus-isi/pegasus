@@ -1438,9 +1438,9 @@ public class TransferEngine extends Engine {
             String leaf = ( this.mPOptions.partOfDeferredRun() )?
                              //if a deferred run then pick up the relative random directory
                              //this.mUserOpts.getOptions().getRandomDir():
-                             this.mPOptions.getRelativeSubmitDirectory():
+                             this.mPOptions.getRelativeDirectory():
                              //for a normal run add the relative submit directory
-                             this.mPOptions.getRelativeSubmitDirectory();
+                             this.mPOptions.getRelativeDirectory();
             File f = new File( mount_point, leaf );
             mount_point = f.getAbsolutePath();
         }

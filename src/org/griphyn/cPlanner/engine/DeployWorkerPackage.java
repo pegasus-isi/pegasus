@@ -107,7 +107,7 @@ public class DeployWorkerPackage
      * Array storing the names of the executables in the $PEGASUS_HOME/bin directory
      */
     public static final String PEGASUS_WORKER_EXECUTABLES[] = {
-        "T2", "transfer", "kickstart", "cleanup", "seqexec", "dirmanager", "invoke",  "keg" };
+        "T2", "transfer", "kickstart", "cleanup", "seqexec", "dirmanager", "invoke",  "keg" ,"symlink"};
 
     /**
      * Store the regular expressions necessary to parse the basename from the worker

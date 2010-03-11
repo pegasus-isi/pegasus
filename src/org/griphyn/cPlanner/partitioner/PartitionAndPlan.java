@@ -143,7 +143,7 @@ public class PartitionAndPlan{
         if( submit == null || !submit.startsWith( File.separator ) ){
             //then set the submit directory relative to the parent workflow basedir
             String innerBase     = mPegasusPlanOptions.getBaseSubmitDirectory();
-            String innerRelative = mPegasusPlanOptions.getRelativeSubmitDirectory();
+            String innerRelative = mPegasusPlanOptions.getRelativeDirectory();
             innerRelative = ( innerRelative == null && mPegasusPlanOptions.partOfDeferredRun() )?
                              mPegasusPlanOptions.getRandomDir(): //the random dir is the relative submit dir?
                              innerRelative;
@@ -219,14 +219,14 @@ public class PartitionAndPlan{
         String relativeDir = null;
         //construct the submit directory structure
         try{
-            relativeDir = (options.getRelativeSubmitDirectory() == null) ?
+            relativeDir = (options.getRelativeDirectory() == null) ?
                                  //create our own relative dir
                                  createSubmitDirectory(label,
                                                        baseDir,
                                                        mUser,
                                                        options.getVOGroup(),
                                                        properties.useTimestampForDirectoryStructure()) :
-                                 options.getRelativeSubmitDirectory();
+                                 options.getRelativeDirectory();
         }
         catch( IOException ioe ){
             String error = "Unable to write  to directory" ;

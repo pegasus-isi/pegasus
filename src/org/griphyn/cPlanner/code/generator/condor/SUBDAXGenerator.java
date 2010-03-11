@@ -227,7 +227,46 @@ public class SUBDAXGenerator{
         //convert the args to pegasus-plan options
         PlannerOptions options = new CPlanner( mLogger ).parseCommandLineArguments( args, false );
 
+        //figure out the label and index for SUBDAX
+        String label = null;
+        String index = null;
+        File dax = new File( options.getDAX() );
+        if( dax.exists() ){
+            //retrieve the metadata in the subdax.
+            //means the the dax needs to be generated beforehand.
+            Map metadata = getDAXMetadata( options.getDAX() );
+            label = (String) metadata.get( "name" );
+            index = (String) metadata.get( "index" );
+        }
+        else{
+            //try and construct on basis of basename prefix option
+            String basenamePrefix = options.getBasenamePrefix() ;
+            if( basenamePrefix == null ){
+                StringBuffer error = new StringBuffer();
+                error.append( "DAX file for subworkflow does not exist " ).append( dax ).
+                      append( " . Either set the --basename option to subworkflow or make sure dax exists" );
+                throw new RuntimeException( error.toString() );
+            }
+            label = options.getBasenamePrefix();
+            index = "0";
+            mLogger.log( "DAX File for subworkflow does not exist. Set label value to the basename option passed ",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+
+
+        //check if we want a label based submit directory for the sub workflow
+        if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
+            String relative = options.getRelativeSubmitDirectoryOption();
+
+            relative = ( relative == null )?
+                        label ://no relative-submit-dir option specified. set to label
+                        new File( relative, label ).getPath();
+
+            options.setRelativeSubmitDirectory( relative );
+        }
         String submit = options.getSubmitDirectory();
+
         mLogger.log( "Submit directory in sub dax specified is " + submit,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -268,32 +307,7 @@ public class SUBDAXGenerator{
         //if it is a relative path, then ???
         options.setSanitizePath( true );
         
-        //figure out the label and index for SUBDAX
-        String label = null;
-        String index = null;
-        File dax = new File( options.getDAX() );
-        if( dax.exists() ){
-            //retrieve the metadata in the subdax.
-            //means the the dax needs to be generated beforehand.
-            Map metadata = getDAXMetadata( options.getDAX() ); 
-            label = (String) metadata.get( "name" );
-            index = (String) metadata.get( "index" );
-        }
-        else{
-            //try and construct on basis of basename prefix option
-            String basenamePrefix = options.getBasenamePrefix() ;
-            if( basenamePrefix == null ){
-                StringBuffer error = new StringBuffer();
-                error.append( "DAX file for subworkflow does not exist " ).append( dax ).
-                      append( " . Either set the --basename option to subworkflow or make sure dax exists" );
-                throw new RuntimeException( error.toString() );
-            }
-            label = options.getBasenamePrefix();
-            index = "0";
-            mLogger.log( "DAX File for subworkflow does not exist. Set label value to the basename option passed ",
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-        }
-
+        
         String baseDir = options.getBaseSubmitDirectory();
         String relativeDir = null;
         //construct the submit directory structure for subdax
@@ -316,12 +330,43 @@ public class SUBDAXGenerator{
         options.setSubmitDirectory( baseDir, relativeDir  );
         mLogger.log( "Submit Directory for SUB DAX  is " + options.getSubmitDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
 
+         
+        if( options.getRelativeDirectory() == null || !options.getRelativeDirectory().startsWith( File.separator ) ){
+            //then set the relative directory relative to the parent workflow relative dir
+            String baseRelativeExecDir = mPegasusPlanOptions.getRelativeDirectory();
+            if( baseRelativeExecDir == null ){
+                //set the relative execution directory to relative submit directory
+                options.setRelativeDirectory( options.getRelativeSubmitDirectory() );
+            }
+            else{
+                //the else look should not be there.
+                //construct path from base relative exec dir
+                File innerRelativeExecDir = new File( baseRelativeExecDir, options.getRelativeSubmitDirectory() );
+                if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
+                    //this is temporary till LIGO fixes it's dax
+                    //and above property will go away.
+                    //we dont want label in the exec dir
+                    innerRelativeExecDir = innerRelativeExecDir.getParentFile();
+                }
+                options.setRelativeDirectory(innerRelativeExecDir.getPath() );
+            }
+        }
+        mLogger.log( "Relative Execution Directory for SUB DAX is " + options.getRelativeDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
+
         //create a symbolic link to dax in the subdax submit directory
         String linkedDAX = createSymbolicLinktoDAX( options.getSubmitDirectory(),
                                                     options.getDAX() );
         
         //update options with the linked dax
         options.setDAX( linkedDAX );
+        
+        //for time being for LIGO , try and create a symlink for
+        //the cache file that is created during sub workflow execution
+        //in parent directory of the submit directory
+        //JIRA PM-116
+        if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
+            this.createSymbolicLinktoCacheFile( options, label, index);
+        }
         
         //write out the properties in the submit directory
         String propertiesFile = null;
@@ -599,6 +644,37 @@ public class SUBDAXGenerator{
         return sb.toString();
     }
 
+    /**
+     * Constructs the basename to the cache file that is to be used
+     * to log the transient files. The basename is dependant on whether the
+     * basename prefix has been specified at runtime or not.
+     *
+     * @param options   the options for the sub workflow.
+     * @param label     the label for the workflow.
+     * @param index     the index for the workflow.
+     *
+     * @return the name of the cache file
+     */
+    protected String getCacheFileName( PlannerOptions options, String label , String index ){
+        StringBuffer sb = new StringBuffer();
+        String bprefix = options.getBasenamePrefix();
+
+        if(bprefix != null){
+            //the prefix is not null using it
+            sb.append(bprefix);
+        }
+        else{
+            //generate the prefix from the name of the dag
+            sb.append( label ).append("_").
+           append( index );
+        }
+        //append the suffix
+        sb.append(".cache");
+
+        return sb.toString();
+
+    }
+
 
     /**
      * Returns a default TC entry to be used in case entry is not found in the
@@ -784,7 +860,34 @@ public class SUBDAXGenerator{
         
         return prescript.toString();
     }
-    
+
+
+    /**
+     * Creates a symbolic link to the DAX file in a dax sub directory in the
+     * submit directory
+     *
+     * @param options   the options for the sub workflow.
+     * @param label     the label for the workflow.
+     * @param index     the index for the workflow.
+     *
+     * @return  boolean whether symlink is created or not
+     */
+    public boolean createSymbolicLinktoCacheFile( PlannerOptions options , String label, String index ){
+        File f = new File( options.getSubmitDirectory() );
+        String cache  = this.getCacheFileName(options, label, index);
+        File source =  new File( f, cache );
+        File  dest  =  new File ( f.getParent(), cache );
+
+        StringBuffer sb = new StringBuffer();
+        sb.append( "Creating symlink " ).append( source.getAbsolutePath() ).
+           append( " -> ").append( dest.getAbsolutePath() );
+        mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+
+        return this.createSymbolicLink( source.getAbsolutePath(), dest.getAbsolutePath(), true );
+    }
+
+
+
     /**
      * Creates a symbolic link to the DAX file in a dax sub directory in the 
      * submit directory 
@@ -1028,16 +1131,30 @@ public class SUBDAXGenerator{
         }
     }
 
-    
+    /**
+     * This method generates a symlink between two files
+     *
+     * @param source       the file that has to be symlinked
+     * @param destination  the destination of the symlink
+     *
+     * @return boolean indicating if creation of symlink was successful or not
+     *
+     */
+    protected boolean createSymbolicLink( String source, String destination  ) {
+        return this.createSymbolicLink( source, destination, false );
+    }
+
     /**
      * This method generates a symlink between two files
      *
      * @param source       the file that has to be symlinked 
      * @param destination  the destination of the symlink
-     * 
+     * @param logErrorToDebug  whether to log messeage to debug or not
+     *
      * @return boolean indicating if creation of symlink was successful or not
+     *
      */
-    protected boolean createSymbolicLink( String source, String destination ) {
+    protected boolean createSymbolicLink( String source, String destination , boolean logErrorToDebug ) {
         try{
             Runtime rt = Runtime.getRuntime();
             String command = "ln -sf " + source + " " + destination;
@@ -1064,7 +1181,12 @@ public class SUBDAXGenerator{
                    mLogger.log(s,LogManager.DEBUG_MESSAGE_LEVEL);
                }
                else {
-                   mLogger.log(se,LogManager.ERROR_MESSAGE_LEVEL );
+                   if( logErrorToDebug ){
+                       mLogger.log( se, LogManager.DEBUG_MESSAGE_LEVEL );
+                   }
+                   else{
+                       mLogger.log(se,LogManager.ERROR_MESSAGE_LEVEL );
+                   }
                }
             }
 
@@ -1072,8 +1194,13 @@ public class SUBDAXGenerator{
             return true;
         }
         catch(Exception ex){
-            mLogger.log("Unable to create symlink to the log file" , ex,
-                        LogManager.ERROR_MESSAGE_LEVEL);
+            if( logErrorToDebug ){
+                mLogger.log("Unable to create symlink to the log file" , ex,
+                            LogManager.DEBUG_MESSAGE_LEVEL );
+            }else{
+                mLogger.log("Unable to create symlink to the log file" , ex,
+                            LogManager.ERROR_MESSAGE_LEVEL);
+            }
             return false;
        }
 

@@ -374,13 +374,13 @@ public class PDAX2MDAG implements Callback {
         // create files in the directory, unless anything else is known.
         try {
             //create a submit directory structure if required
-            String relativeDir = ( mPOptions.getRelativeSubmitDirectory() == null ) ?
+            String relativeDir = ( mPOptions.getRelativeDirectory() == null ) ?
                                           this.createSubmitDirectory( mMegaDAG.getLabel(),
                                                                       mPOptions.getSubmitDirectory(),
                                                                       mUser,
                                                                       mPOptions.getVOGroup(),
                                                                       mProps.useTimestampForDirectoryStructure() ):
-                                          mPOptions.getRelativeSubmitDirectory();
+                                          mPOptions.getRelativeDirectory();
 
             //set the directory structure
             mPOptions.setSubmitDirectory( mPOptions.getBaseSubmitDirectory(), relativeDir);
@@ -1165,7 +1165,7 @@ public class PDAX2MDAG implements Callback {
 
         //set the base and relative submit dir
         mClonedPOptions.setBaseSubmitDirectory( mPOptions.getBaseSubmitDirectory() );
-        mClonedPOptions.setRelativeSubmitDirectory( remoteWorkDir );
+        mClonedPOptions.setRelativeDirectory( remoteWorkDir );
 
         //set the basename for the nested dag as the ID of the job.
         //which is actually the basename of the deep lfn job name!!

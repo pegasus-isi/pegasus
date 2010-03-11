@@ -47,9 +47,16 @@ public class PlannerOptions extends Data implements Cloneable{
     private String mBaseDir;
 
     /**
-     * The relative submit directory.
+     * The relative directory for the submit directory and remote execution directory
      */
     private String mRelativeDir;
+
+
+    /**
+     * The relative directory for the submit directory. Overrides relative dir if
+     * both are specified.
+     */
+    private String mRelativeSubmitDir;
 
     /**
      * This is the directory where the submit files are generated on the submit
@@ -224,6 +231,7 @@ public class PlannerOptions extends Data implements Cloneable{
 //        mSubmitFileDir    = ".";
         mBaseDir          = ".";
         mRelativeDir      = null;
+        mRelativeSubmitDir= null;
         mDAXFile          = null;
         mPDAXFile         = null;
         mvExecPools       = new java.util.HashSet();
@@ -509,11 +517,11 @@ public class PlannerOptions extends Data implements Cloneable{
     }
 
     /**
-     * Returns the relative submit directory.
+     * Returns the relative  directory.
      *
-     * @return the relative submit directory
+     * @return the relative  directory
      */
-    public String getRelativeSubmitDirectory(){
+    public String getRelativeDirectory(){
         return mRelativeDir;
 
 //        return ( mBaseDir == null ) ?
@@ -522,23 +530,50 @@ public class PlannerOptions extends Data implements Cloneable{
     }
 
 
+    /**
+     * Returns the relative submit directory option.
+     *
+     * @return the relative submit directory option if specified else null
+     */
+    public String getRelativeSubmitDirectoryOption(){
+        return  mRelativeSubmitDir;
+    }
+
+
+    /**
+     * Returns the relative submit directory.
+     *
+     * @return the relative submit directory if specified else the relative dir.
+     */
+    public String getRelativeSubmitDirectory(){
+        return ( mRelativeSubmitDir == null )?
+                                mRelativeDir:  //pick the relative dir
+                                mRelativeSubmitDir;//pick the relative submit directory
+    }
+
+
 
     /**
      * Returns the path to the directory where the submit files are to be
-     * generated.
+     * generated. The relative submit directory if specified overrides the
+     * relative directory.
      *
      * @return the path to the directory.
      */
     public String getSubmitDirectory(){
+        String relative = ( mRelativeSubmitDir == null )?
+                                mRelativeDir:  //pick the relative dir
+                                mRelativeSubmitDir;//pick the relative submit directory
+
         if( mSanitizePath ){
-            return ( mRelativeDir == null )?
+            return ( relative == null )?
                                        new File( mBaseDir ).getAbsolutePath():
-                                       new File( mBaseDir, mRelativeDir ).getAbsolutePath();
+                                       new File( mBaseDir, relative ).getAbsolutePath();
         }
         else{
-            return (mRelativeDir == null )?
+            return (relative == null )?
                                        mBaseDir:
-                                       new File( mBaseDir, mRelativeDir ).getPath();
+                                       new File( mBaseDir, relative ).getPath();
         }
 
     }
@@ -903,7 +938,11 @@ public class PlannerOptions extends Data implements Cloneable{
                          new File( base ).getAbsolutePath():
                          new File( base, relative ).getAbsolutePath();
          */
-        mRelativeDir = relative;
+
+//not clear what it should be .
+//        mRelativeDir = relative;
+        mRelativeSubmitDir = relative;
+
         mBaseDir  = base;
     }
 
@@ -920,15 +959,25 @@ public class PlannerOptions extends Data implements Cloneable{
 
 
     /**
+     * Sets the path to the relative directory where the submit files are to be
+     * generated. The submit directory can be overridden by
+     * setRelativeSubmitDirectory( String)
+     *
+     * @param relative   the directory relative to the base where submit files are generated.
+     */
+    public void setRelativeDirectory( String relative ){
+        mRelativeDir = relative;
+    }
+
+    /**
      * Sets the path to the directory where the submit files are to be
      * generated.
      *
      * @param relative   the directory relative to the base where submit files are generated.
      */
     public void setRelativeSubmitDirectory( String relative ){
-        mRelativeDir = relative;
+        mRelativeSubmitDir = relative;
     }
-
 
 
     /**
@@ -1050,7 +1099,14 @@ public class PlannerOptions extends Data implements Cloneable{
 //        if( mSubmitFileDir != null){ sb.append(" --dir ").append(mSubmitFileDir);}
         //confirm how this plays in deferred planning. not clear. Karan Oct 31 2007
         sb.append(" --dir ").append( this.getBaseSubmitDirectory() );
-        if( mRelativeDir != null){ sb.append(" --relative-dir ").append( this.getRelativeSubmitDirectory() );}
+
+        if( mRelativeDir != null){ 
+            sb.append(" --relative-dir ").append( this.getRelativeDirectory() );
+        }
+
+        if( mRelativeSubmitDir != null ){ 
+            sb.append( " --relative-submit-dir " ).append( mRelativeSubmitDir );
+        }
 
         //the basename prefix
         if(mBasenamePrefix != null){ sb.append(" --basename ").append(mBasenamePrefix);}
