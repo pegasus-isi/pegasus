@@ -962,7 +962,7 @@ public class Kickstart implements GridStart {
      *
      * @return  the identifier for the ExitPOST POSTScript implementation.
      *
-     * @see POSTScript#shortDescribe()
+     *
      */
     public String defaultPOSTScript(){
         return ExitPOST.SHORT_NAME;

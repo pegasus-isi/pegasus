@@ -41,7 +41,9 @@ public interface LogFormatter {
     /**
      * Returns the program name for the software whose log statement are logged.
      * 
-     * @param name 
+     * @param name
+     *
+     * @return name of the program
      */
     public String getProgramName( String name );
     
@@ -116,6 +118,8 @@ public interface LogFormatter {
     
     /**
      * Creates a log message with the contents of the internal log buffer.
+     *
+     * @return log message
      */
     public String createLogMessage();
     
@@ -124,7 +128,7 @@ public interface LogFormatter {
      * Creates a log message with the contents of the internal log buffer.
      * It then resets the buffer before returning the log message
      * 
-     * @return 
+     * @return the log message
      */
     public String createLogMessageAndReset();
     
@@ -137,7 +141,8 @@ public interface LogFormatter {
      * @param parentID     the id of the parent entity
      * @param childIdType  the type of children entities
      * @param childIDs     Collection of children id's
-     * @return
+     * 
+     * @return entity hierarchy message.
      */
     public String createEntityHierarchyMessage( String parentType,
                                                 String parentID,

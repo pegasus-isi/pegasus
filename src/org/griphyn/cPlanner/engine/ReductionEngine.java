@@ -275,7 +275,6 @@ public class ReductionEngine extends Engine implements Refiner{
      *
      * @return a Vector of jobNames (Strings)
      *
-     * @see org.griphyn.cPlanner.classes.ReplicaLocations
      * @see org.griphyn.cPlanner.classes.SubInfo
      */
     private Vector getJobsInRC(Vector vSubInfos,Set filesInRC){

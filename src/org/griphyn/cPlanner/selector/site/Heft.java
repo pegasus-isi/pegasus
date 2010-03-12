@@ -53,7 +53,7 @@ import org.griphyn.cPlanner.partitioner.graph.Adapter;
  * @see Algorithm#RUNTIME_PROFILE_KEY
  * @see Algorithm#DEFAULT_NUMBER_OF_FREE_NODES
  * @see Algorithm#AVERAGE_DATA_SIZE_BETWEEN_JOBS
- * @see org.griphyn.cPlanner.classes.JobManager.IDLE_NODES
+ * @see org.griphyn.cPlanner.classes.JobManager#IDLE_NODES
  */
 public class Heft extends Abstract {
 
@@ -104,7 +104,6 @@ public class Heft extends Abstract {
      * @param sites     the list of <code>String</code> objects representing the
      *                  execution sites that can be used.
      * 
-     * @param label  the label of the workflow
      */
     public void mapWorkflow( Graph workflow, List sites ){
         throw new UnsupportedOperationException( "Heft needs the DAX label to work" );

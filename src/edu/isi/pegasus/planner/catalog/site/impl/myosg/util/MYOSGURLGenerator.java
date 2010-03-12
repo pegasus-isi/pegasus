@@ -31,7 +31,7 @@ public class MYOSGURLGenerator {
 	/**
 	 * Returns the default parameters
 	 * 
-	 * @return
+	 * @return  default parameters.
 	 */
 	private String defaultParameters() {
 		return "datasource=summary";

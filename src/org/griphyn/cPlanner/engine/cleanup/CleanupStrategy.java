@@ -38,7 +38,7 @@ public interface CleanupStrategy {
      * Intializes the class.
      *
      * @param bag    bag of initialization objects
-     * @param imp    the implementation instance that creates file cleanup job 
+     * @param impl    the implementation instance that creates file cleanup job
      */
     public void initialize( PegasusBag bag, CleanupImplementation impl ) ;
     

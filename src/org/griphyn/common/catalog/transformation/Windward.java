@@ -152,10 +152,6 @@ public class Windward  implements TransformationCatalog {
      * @param sysinfo SysInfo The System information associated with a
      *   physical transformation.
      * @throws Exception
-     * @return boolean Returns true if succesfully added, returns false if
-     *   error and throws exception.
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean addTCEntry(String namespace, String name, String version,
                               String physicalname, TCType type,
@@ -173,8 +169,6 @@ public class Windward  implements TransformationCatalog {
      * @throws Exception
      * @return boolean Return true if succesful, false if error. Exception
      *   is thrown when error occurs.
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean addTCEntry(List tcentry) throws Exception {
         return false;
@@ -189,8 +183,6 @@ public class Windward  implements TransformationCatalog {
      * @throws Exception
      * @return boolean Return true if succesful, false if error. Exception
      *   is thrown when error occurs.
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean addTCEntry(TransformationCatalogEntry tcentry, boolean write) throws
         Exception {
@@ -205,8 +197,6 @@ public class Windward  implements TransformationCatalog {
      * @throws Exception
      * @return boolean Return true if succesful, false if error. Exception
      *   is thrown when error occurs.
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean addTCEntry(TransformationCatalogEntry tcentry) throws
         Exception {
@@ -225,8 +215,6 @@ public class Windward  implements TransformationCatalog {
      *   to the transformation.
      * @return boolean Returns true if success, false if error.
      * @throws Exception
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean addTCLfnProfile(String namespace, String name,
                                    String version, List profiles) throws
@@ -246,8 +234,6 @@ public class Windward  implements TransformationCatalog {
      *   to the transformation.
      * @return boolean Returns true for success, false for error.
      * @throws Exception
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean addTCPfnProfile(String pfn, TCType type, String resourcename,
                                    List profiles) throws Exception {
@@ -257,7 +243,7 @@ public class Windward  implements TransformationCatalog {
     /**
      * Explicitely free resources before the garbage collection hits.
      *
-     * @todo Implement this org.griphyn.common.catalog.Catalog method
+     *
      */
     public void close() {
     }
@@ -291,8 +277,6 @@ public class Windward  implements TransformationCatalog {
      * @return boolean Returns true if delete succeeds, false if any error
      *   occurs.
      * @throws Exception
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean deleteTC() throws Exception {
         return false;
@@ -310,8 +294,6 @@ public class Windward  implements TransformationCatalog {
      *   deleted.
      * @return boolean Returns true if success, false if any error occurs.
      * @throws Exception
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean deleteTCLfnProfile(String namespace, String name,
                                       String version, List profiles) throws
@@ -331,8 +313,6 @@ public class Windward  implements TransformationCatalog {
      *   deleted.
      * @return boolean Returns true if success, false if any error occurs.
      * @throws Exception
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean deleteTCPfnProfile(String physicalname, TCType type,
                                       String resourceid, List profiles) throws
@@ -356,8 +336,6 @@ public class Windward  implements TransformationCatalog {
      *   then all types are deleted for the transformation.
      * @throws Exception
      * @return boolean Returns true if success , false if there is any error.
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean deleteTCbyLogicalName(String namespace, String name,
                                          String version, String resourceid,
@@ -381,8 +359,6 @@ public class Windward  implements TransformationCatalog {
      *   search and deletes entries for all types.
      * @throws Exception
      * @return boolean Returns true if sucess, false if any error occurs.
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean deleteTCbyPhysicalName(String physicalname, String namespace,
                                           String name, String version,
@@ -398,8 +374,6 @@ public class Windward  implements TransformationCatalog {
      * @param resourceid String The resource which you want to remove.
      * @throws Exception
      * @return boolean Returns true if successm false if any error occurs.
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean deleteTCbyResourceId(String resourceid) throws Exception {
         return false;
@@ -413,8 +387,6 @@ public class Windward  implements TransformationCatalog {
      *   delete
      * @return boolean Returns true for success, false if any error occurs.
      * @throws Exception
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean deleteTCbySysInfo(SysInfo sysinfo) throws Exception {
         return false;
@@ -430,8 +402,6 @@ public class Windward  implements TransformationCatalog {
      *   from all the resources.
      * @throws Exception
      * @return boolean Returns true if success, false if any error occurs.
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public boolean deleteTCbyType(TCType type, String resourceid) throws
         Exception {
@@ -443,8 +413,6 @@ public class Windward  implements TransformationCatalog {
      *
      * @return List Returns a List of TransformationCatalogEntry objects.
      * @throws Exception
-     * @todo Implement this org.griphyn.common.catalog.TransformationCatalog
-     *   method
      */
     public List getTC() throws Exception {
         return null;
@@ -686,7 +654,6 @@ public class Windward  implements TransformationCatalog {
      * implementation is still active.
      *
      * @return true, if the implementation is disassociated, false otherwise.
-     * @todo Implement this org.griphyn.common.catalog.Catalog method
      */
     public boolean isClosed() {
         return mProcessCatalog == null;

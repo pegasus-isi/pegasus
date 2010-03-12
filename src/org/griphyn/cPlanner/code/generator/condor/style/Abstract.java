@@ -69,7 +69,7 @@ public abstract class Abstract implements CondorStyle {
      *
      * @param properties  the <code>PegasusProperties</code> object containing all
      *                    the properties required by Pegasus.
-     * @param siteCatalog a handle to the Site Catalog being used. 
+     * @param siteStore a handle to the Site Catalog being used.
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */

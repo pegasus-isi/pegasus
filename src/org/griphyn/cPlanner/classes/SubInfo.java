@@ -460,7 +460,7 @@ public class SubInfo extends Data implements GraphNodeContent{
      * Returns the expected runtime for the job that is set using the
      * setRuntime method.
      * 
-     * @param runtime  the runtime for the job.
+     * @return   the runtime for the job.
      */
     public double getRuntime( ) {
         return mRuntime;
@@ -474,7 +474,7 @@ public class SubInfo extends Data implements GraphNodeContent{
      * using setRuntime( String ) function.
      * 
      * @return the expected runtime.
-     * @see org.griphyn.cPlanner.namespace.VDS.RUNTIME_KEY
+     * @see org.griphyn.cPlanner.namespace.VDS#RUNTIME_KEY
      */
     public double computeRuntime( ){
         if( mRuntime < 0 ){
@@ -657,7 +657,7 @@ public class SubInfo extends Data implements GraphNodeContent{
      *
      * @return the jobmanager url.
      *
-     * @see #setJobManager()
+     * @see #setJobManager(java.lang.String)
      */
     public String getJobManager( ){
         return this.globusScheduler;

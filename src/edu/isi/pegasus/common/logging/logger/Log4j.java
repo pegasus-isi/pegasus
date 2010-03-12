@@ -228,7 +228,6 @@ public class Log4j extends LogManager{
      * <code>stdout</code> and <code>stderr</code>, which map to the
      * system's respective streams.
      *
-     * @see #setWriters(OutputStream)
      */
     public void setWriters(String out){
         throw new UnsupportedOperationException( "Log4jLogger does not support setWriters(out)" );
@@ -290,7 +289,6 @@ public class Log4j extends LogManager{
      * @param level    the level on which the message has to be logged.
      *
      * @see #setLevel(int)
-     * @see #log(String,int,boolean)
      */
     protected void logAlreadyFormattedMessage(String message, int level){
         
@@ -327,7 +325,6 @@ public class Log4j extends LogManager{
      /**
       * Logs the completion message on the basis of the debug level.
       *
-      * @param message the message to be logged.
       * @param level  the debug level of the start message for whose completion
       *                    you want.
       */

@@ -87,7 +87,7 @@ public class MYOSGSiteCatalogUtil {
              * </pre>
              * 
              * @param sitInfo
-             * @return
+             * @return SiteCatalogEntry object.
              */
 	    public static SiteCatalogEntry createSiteCatalogEntry(MYOSGSiteInfoFacade sitInfo){
 	    	mLogger.logEventStart(LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG,

@@ -758,7 +758,6 @@ public class LFN extends Leaf implements Cloneable, Serializable
    * @deprecated
    *
    * @see #setRegister( boolean )
-   * @see #getRegister( boolean )
    */
   public void setDontRegister( boolean dontRegister )
   { this.m_dontRegister = dontRegister; }

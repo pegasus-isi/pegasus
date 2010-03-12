@@ -254,7 +254,8 @@ public class VORSSiteCatalogUtil {
              * </pre>
              * 
              * @param sitInfo
-             * @return
+             *
+             * @return  SiteCatalogEntry object.
              */
 	    public static SiteCatalogEntry createSiteCatalogEntry(VORSSiteInfo sitInfo){
 	        SiteCatalogEntry entry = new SiteCatalogEntry( sitInfo.getShortname());

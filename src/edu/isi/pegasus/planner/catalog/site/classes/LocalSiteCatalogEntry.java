@@ -31,7 +31,7 @@ public class LocalSiteCatalogEntry{
      * Creates a default site catalog entry for site local with the VO 
      * set to pegasus.
      *
-     * @return
+     * @return  SiteCatalogEntry for the local site.
      */
     public static SiteCatalogEntry create(){
         return create( "pegasus" , null );
@@ -45,7 +45,7 @@ public class LocalSiteCatalogEntry{
      * @param vo    the VO to create the entry for.
      * @param grid  the grid to create entry for
      * 
-     * @return
+     * @return SiteCatalogEntry for the local site.
      */
     public static SiteCatalogEntry create( String vo, String grid ){
         //always add local site.

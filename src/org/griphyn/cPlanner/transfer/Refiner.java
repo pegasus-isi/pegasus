@@ -159,7 +159,7 @@ public interface Refiner
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
-     * @param symlinkFiles Collection of <code>FileTransfer</code> objects containing
+     * @param symLinkFiles Collection of <code>FileTransfer</code> objects containing
      *                     source and destination file url's for symbolic linking
      *                     on compute site.
      */

@@ -266,7 +266,7 @@ public class WindwardImplementation implements Implementation {
      * 
      * @param site
      * @param directory
-     * @return
+     * @return create GUKB job.
      */
     protected SubInfo makeCreateGUKBJob( String site , String directory ) {
         SiteCatalogEntry s = mSiteStore.lookup( site );

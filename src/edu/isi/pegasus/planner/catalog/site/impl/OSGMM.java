@@ -220,6 +220,9 @@ public class OSGMM implements SiteCatalog {
      */
     private String mGrid;
 
+    /**
+     * The default constructor.
+     */
     public OSGMM() {
         mLogger = LogManagerFactory.loadSingletonInstance();
         mSiteStore = new SiteStore();
@@ -628,7 +631,8 @@ public class OSGMM implements SiteCatalog {
      * 
      * @param site    the name of site
      * @param suffix  the suffix to be added to site.
-     * @return
+     *
+     * @return the property key.
      */
     private String createPropertyKey( String site, String suffix ){
         StringBuffer key = new StringBuffer();
@@ -642,7 +646,7 @@ public class OSGMM implements SiteCatalog {
     /**
      * Returns if the connection is closed or not.
      * 
-     * @return
+     * @return  boolean indicating connection is closed.
      */
     public boolean isClosed() {
         return ( mCondorStatusOutput == null );

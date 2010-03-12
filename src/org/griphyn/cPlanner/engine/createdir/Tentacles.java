@@ -52,7 +52,7 @@ public class Tentacles extends AbstractStrategy {
      * Intializes the class.
      *
      * @param bag    bag of initialization objects
-     * @param imp    the implementation instance that creates create dir job 
+     * @param impl    the implementation instance that creates create dir job
      */
     public void initialize( PegasusBag bag, Implementation impl ){
         super.initialize( bag , impl );

@@ -70,7 +70,7 @@ public class ReplicaLocation
      * Intializes the member variables to the values passed.
      *
      * @param lfn  the logical filename.
-     * @paran pfns the list of <code>ReplicaCatalogEntry</code> objects.
+     * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
     public ReplicaLocation( String lfn , List pfns ){
         mLFN     = lfn;
@@ -84,7 +84,7 @@ public class ReplicaLocation
      * Intializes the member variables to the values passed.
      *
      * @param lfn  the logical filename.
-     * @paran pfns the list of <code>ReplicaCatalogEntry</code> objects.
+     * @param pfns the list of <code>ReplicaCatalogEntry</code> objects.
      */
     public ReplicaLocation( String lfn , Collection pfns ){
         mLFN     = lfn;

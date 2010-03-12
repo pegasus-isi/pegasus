@@ -63,9 +63,10 @@ public class Database
     /**
      * Used for a singleton access to the implementation
      * 
-     * @return
+     * @return instance to TransformationCatalog.
      * 
      * @deprecated
+     *
      */
     public static TransformationCatalog getInstance() {
         try {

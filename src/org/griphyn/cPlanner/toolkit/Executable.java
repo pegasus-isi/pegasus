@@ -43,7 +43,6 @@ public abstract class Executable {
     /**
      * The LogManager object which is used to log all the messages.
      *
-     * @see org.griphyn.cPlanner.common.LogManager
      */
     protected LogManager mLogger ;
 

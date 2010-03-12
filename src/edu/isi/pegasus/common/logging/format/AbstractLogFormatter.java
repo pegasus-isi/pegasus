@@ -69,7 +69,9 @@ public abstract class AbstractLogFormatter implements LogFormatter {
     /**
      * Returns the program name for the software whose log statement are logged.
      * 
-     * @param name 
+     * @param name
+     *
+     * @return  name of the program
      */
     public String getProgramName( String name ){
         return mProgram;
@@ -149,6 +151,8 @@ public abstract class AbstractLogFormatter implements LogFormatter {
     
     /**
      * Creates a log message with the contents of the internal log buffer.
+     *
+     * @return the log message
      */
     public String createLogMessage(){
         return mStack.peek().createLogMessage();
@@ -159,7 +163,7 @@ public abstract class AbstractLogFormatter implements LogFormatter {
      * Creates a log message with the contents of the internal log buffer.
      * It then resets the buffer before returning the log message
      * 
-     * @return 
+     * @return log message.
      */
     public String createLogMessageAndReset(){
         return mStack.peek().createLogMessageAndReset();
@@ -174,7 +178,8 @@ public abstract class AbstractLogFormatter implements LogFormatter {
      * @param parentID     the id of the parent entity
      * @param childIdType  the type of children entities
      * @param childIDs     Collection of children id's
-     * @return
+     *
+     * @return the entity hierarchy message
      */
     public String createEntityHierarchyMessage( String parentType,
                                                 String parentID,

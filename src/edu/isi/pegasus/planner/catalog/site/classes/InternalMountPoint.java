@@ -63,7 +63,7 @@ public class InternalMountPoint extends FileSystemType {
      * uninitialized or empty strings. Useful for serializing the object as
      * XML.
      * 
-     * @return
+     * @return boolean
      */
     public boolean isEmpty(){
         return ( this.getFreeSize() == null || this.getFreeSize().length() == 0 ) && 

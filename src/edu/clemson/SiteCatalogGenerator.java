@@ -72,9 +72,7 @@ public class SiteCatalogGenerator {
      * loaded.
      * 
      * @param  outputArray
-     * @param  sites       the sites to be parsed.
      * 
-     * @return
      */
     public SiteCatalogGenerator( ArrayList<String> outputArray){
         this.outputArray = outputArray;
@@ -206,6 +204,11 @@ public class SiteCatalogGenerator {
         return site;
     }
 
+    /**
+     *
+     * @param vo
+     * @throws IOException
+     */
     public void generateSiteCatalog(String vo) throws IOException {
         //fileWriter= new FileWriter(file);
         addHeaderInformationToSiteCatalog();
@@ -377,23 +380,71 @@ public class SiteCatalogGenerator {
     }
     
     
+    /**
+     *
+     */
     public class Site {
 
+        /**
+         *
+         */
         public String siteName;
+        /**
+         *
+         */
         public String sysinfo = "INTEL32::LINUX"; //default value
+        /**
+         *
+         */
         public String globusLocation;
         public String globusLib;
+        /**
+         *
+         */
         public String gridlaunch;
+        /**
+         *
+         */
         public String pegasusHome;
+        /**
+         *
+         */
         public String lrcUrl = "rlsn://dummyValue.url.edu";
+        /**
+         *
+         */
         public String gridFtpUrl;
+        /**
+         *
+         */
         public String gridFtpStorage;
+        /**
+         *
+         */
         public String transferUniverseJobManager;
+        /**
+         *
+         */
         public String VanillaUniverseJobManager;
+        /**
+         *
+         */
         public String workingDirectory;
+        /**
+         *
+         */
         public String app;
+        /**
+         *
+         */
         public String data;
+        /**
+         *
+         */
         public String tmp;
+        /**
+         *
+         */
         public String wntmp;
     }
 

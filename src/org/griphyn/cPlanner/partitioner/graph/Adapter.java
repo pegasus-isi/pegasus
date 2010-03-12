@@ -20,16 +20,10 @@ package org.griphyn.cPlanner.partitioner.graph;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PCRelation;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 
 import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Vector;
-import java.util.List;
 
 /**
  * A Adapter class that converts the <code>ADag</code> to <code>Graph</code> and
@@ -46,7 +40,7 @@ public class Adapter {
     /**
      * Converts the <code>ADag</code> to <code>Graph</code> instance.
      *
-     * @param adag  the <code>ADag</code> object.
+     * @param dag  the <code>ADag</code> object.
      *
      * @return  it's representation as a <code>Graph</code> instance.
      */

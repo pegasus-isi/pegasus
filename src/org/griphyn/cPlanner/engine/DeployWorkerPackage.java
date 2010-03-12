@@ -631,8 +631,9 @@ public class DeployWorkerPackage
     /**
      * Adds cleanup nodes in the workflow for sites specified.
      * 
-     * @param sites      the sites where the workflow has been scheduled.
-     * @return 
+     * @param dag  the workflow
+     *
+     * @return workflow with cleanup jobs added
      */
     public ADag addCleanupNodesForWorkerPackage( ADag dag ) {
         Mapper m = mBag.getHandleToTransformationMapper();

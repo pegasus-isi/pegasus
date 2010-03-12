@@ -387,7 +387,7 @@ public class Ploticus implements Plot {
     /**
      * Returns an entry that needs to be plotted in the graph.
      *
-     * @param  jobname        the name of the associated job.
+     * @param  job        the name of the associated job.
      * @param  time           the time
      * @param  clnup_size     the size with cleanup
      * @param  no_clnup_size  the size without cleanup
@@ -440,7 +440,7 @@ public class Ploticus implements Plot {
     /**
      * Returns a boolean indicating if a valid time unit or not.
      *
-     * @param unit  the time unit.
+     * @param units  the time unit.
      *
      * @return boolean
      */

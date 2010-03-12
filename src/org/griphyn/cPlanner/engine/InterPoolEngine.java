@@ -130,7 +130,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      * Default constructor.
      *
      *
-     * @param props   the properties to be used.
+     * @param bag  the bag of initialization objects.
      */
     public InterPoolEngine( PegasusBag bag ) {
         super( bag  );

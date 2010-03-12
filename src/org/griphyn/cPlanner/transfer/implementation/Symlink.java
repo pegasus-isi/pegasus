@@ -117,7 +117,6 @@ public class Symlink extends Transfer {
      *
      * @return false always
      *
-     * @see PegasusProperties#getThirdPartySites(String)
      */
     public boolean useThirdPartyTransferAlways(){
         return false;

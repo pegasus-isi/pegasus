@@ -69,10 +69,10 @@ public class DAGJob extends SubInfo {
     /**
      * Sets the directory in which the dag needs to execute.
      *
-     * @param directory  the path to the DAG file.
+     * @param directory  the directory where dag needs to execute
      */
-    public void setDirectory( String file ){
-        mDirectory = file ;
+    public void setDirectory( String directory ){
+        mDirectory = directory ;
     }
 
     

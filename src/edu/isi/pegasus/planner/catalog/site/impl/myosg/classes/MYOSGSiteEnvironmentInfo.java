@@ -168,8 +168,7 @@ public class MYOSGSiteEnvironmentInfo extends AbstractSiteCatalogResource {
 	/**
 	 * Add child resources to a site catalog resource
 	 * 
-	 * @param childResource
-	 *            child resource
+	 * @param ID  child resource
 	 */
 	public void addChildResource(AbstractSiteCatalogResource ID) {
 

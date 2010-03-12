@@ -226,7 +226,7 @@ public class CondorGenerator extends Abstract {
      * basename prefix has been specified at runtime or not by command line
      * options.
      *
-     * @param dag    the dag for which the .dag file has to be created.
+     * @param options  the options passed to the planner.
      * @param name   the name attribute in dax
      * @param index  the index attribute in dax.
      * @param suffix the suffix to be applied at the end.

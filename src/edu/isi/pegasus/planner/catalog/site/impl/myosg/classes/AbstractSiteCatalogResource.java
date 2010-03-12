@@ -23,17 +23,30 @@ package edu.isi.pegasus.planner.catalog.site.impl.myosg.classes;
  *
  */
 public abstract class AbstractSiteCatalogResource {
-	protected int mDepth;
+    /**
+     *
+     */
+    protected int mDepth;
 	
 	/**
 	 * Add child resources to a site catalog resource
 	 * @param childResource child resource
 	 */
 	abstract public void addChildResource(AbstractSiteCatalogResource childResource);
-	public void setDepth(int depth){
+
+        /**
+         * Set the depth
+         *
+         * @param depth
+         */
+        public void setDepth(int depth){
 		mDepth = depth;
 	}
-	public int getDepth(){
+        /**
+         *
+         * @return the depth
+         */
+        public int getDepth(){
 		return mDepth;
 	}
 	
@@ -48,7 +61,7 @@ public abstract class AbstractSiteCatalogResource {
 	/**
 	 * Returns the property value
 	 * @param ID
-	 * @return
+	 * @return object.
 	 */
 	public Object getProperty(int ID){
 		return null;

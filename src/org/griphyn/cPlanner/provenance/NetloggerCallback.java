@@ -244,7 +244,7 @@ public class NetloggerCallback implements Callback {
      * @param m
      * @param key
      * 
-     * @return
+     * @return the first value.
      */
     private String getListValueFromMetadata(Map m, String  key ) {
         Object obj =  m.get( key );

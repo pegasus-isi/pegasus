@@ -99,7 +99,7 @@ public abstract class DirectoryType extends AbstractSiteData{
     /**
      * Selects a random file server and returns it.
      * 
-     * @return
+     * @return FileServer
      */
     public FileServer selectFileServer(){
         return ( this.mFileServers == null || this.mFileServers.size() == 0 )?
@@ -139,7 +139,7 @@ public abstract class DirectoryType extends AbstractSiteData{
      * uninitialized or empty strings. Useful for serializing the object as
      * XML.
      * 
-     * @return
+     * @return boolean
      */
     public boolean isEmpty(){
         return this.mFileServers.isEmpty() && this.getInternalMountPoint().isEmpty();

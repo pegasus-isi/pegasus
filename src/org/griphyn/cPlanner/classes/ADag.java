@@ -199,7 +199,7 @@ public class ADag extends Data {
 
     /**
      * Returns the workflow id
-     * @return
+     * @return the abstract workflow id
      */
     public String getAbstractWorkflowID(){
         StringBuffer id = new StringBuffer();
@@ -209,7 +209,7 @@ public class ADag extends Data {
 
     /**
      * Returns the workflow id
-     * @return
+     * @return the executable workflow id
      */
     public String getExecutableWorkflowID(){
         StringBuffer id = new StringBuffer();
@@ -487,7 +487,7 @@ public class ADag extends Data {
         String newIndent = ( indent == null ) ? null : indent + "\t";
 
         //write out the header and static stuff for now
-        if ( indent != null && indent.length() > 0 ) {stream.write( indent ) ;};
+        if ( indent != null && indent.length() > 0 ) {stream.write( indent ) ;}
         stream.write( "digraph E {");
         stream.write( newLine );
 
@@ -497,17 +497,17 @@ public class ADag extends Data {
         stream.write( newLine );
 
         //write out the ratio
-        if ( newIndent != null && newIndent.length() > 0 ) { stream.write( newIndent );};
+        if ( newIndent != null && newIndent.length() > 0 ) { stream.write( newIndent );}
         stream.write( "ratio=fill");
         stream.write( newLine );
 
         //write out what the shape of the nodes need to be like
-        if ( newIndent != null && newIndent.length() > 0 ) { stream.write( newIndent );};
+        if ( newIndent != null && newIndent.length() > 0 ) { stream.write( newIndent );}
         stream.write( "node [shape=ellipse]");
         stream.write( newLine );
 
         //write out how edges are to be rendered.
-        if ( newIndent != null && newIndent.length() > 0 ) { stream.write( newIndent );};
+        if ( newIndent != null && newIndent.length() > 0 ) { stream.write( newIndent );}
         stream.write( "edge [arrowhead=normal, arrowsize=1.0]");
         stream.write( newLine );
 

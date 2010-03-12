@@ -107,6 +107,8 @@ public class AggregatedJob extends SubInfo {
      * Returns a job from a particular position in the list of constituent jobs
      * 
      * @param index    the index to retrieve from
+     *
+     * @return   a constituent job.
      */
     public SubInfo getConstituentJob( int index ){
         return (SubInfo) this.mConstituentJobs.get( index );

@@ -36,7 +36,6 @@ public abstract class Data implements Cloneable {
     /**
      * The LogManager object which is used to log all the messages.
      *
-     * @see org.griphyn.cPlanner.common.LogManager
      */
     public LogManager mLogger = LogManagerFactory.loadSingletonInstance( );
 

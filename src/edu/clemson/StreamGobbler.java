@@ -17,7 +17,6 @@
  */
 package edu.clemson;
 
-import edu.clemson.SiteWriterMain;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -41,6 +40,7 @@ public class StreamGobbler extends Thread
 	 this.outputArrayList=outputArrayList;
    }
    
+    @Override
    public void run()
    {
 	  try{ 

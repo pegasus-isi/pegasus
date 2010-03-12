@@ -38,8 +38,6 @@ import org.griphyn.common.catalog.replica.ReplicaFactory;
  * @author Karan Vahi
  * @author Gaurang Mehta
  * @version $Revision$
- *
- * @see org.griphyn.cPlanner.classes.ReplicaLocations
  */
 public class MainEngine
     extends Engine {

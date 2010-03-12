@@ -262,7 +262,6 @@ public class Database
      * @param password is the database account password to use.
      * @throws SQLException if something goes awry with the database.
      * Callers must catch this exception.
-     * @see #JDBCRC( String, String, String, String )
      * @see java.sql.DriverManager#getConnection( String, String, String )
      */
     public void connect(String url, String username, String password) throws

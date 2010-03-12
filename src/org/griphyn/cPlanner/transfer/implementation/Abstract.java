@@ -153,7 +153,6 @@ public abstract class Abstract implements Implementation{
     /**
      * The logging object which is used to log all the messages.
      *
-     * @see org.griphyn.cPlanner.common.LogManager
      */
     protected LogManager mLogger;
 

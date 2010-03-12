@@ -82,7 +82,6 @@ public class TPTGUC extends GUC {
     *
     * @return true always
     *
-    * @see PegasusProperties#getThirdPartySites(String)
     */
    public boolean useThirdPartyTransferAlways(){
        return true;

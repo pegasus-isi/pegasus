@@ -116,13 +116,13 @@ public class GetDAX {
      */
     public boolean connect( PegasusProperties properties ){
         VDSProperties props = properties.getVDSProperties();
-        Properties connect = props.matchingSubset( this.c_prefix, false );
+        Properties connect = props.matchingSubset( GetDAX.c_prefix, false );
 
         //get the default db driver properties in first pegasus.catalog.*.db.driver.*
         Properties db = props.matchingSubset( Catalog.DB_ALL_PREFIX, false );
         //now overload with the work catalog specific db properties.
         //pegasus.catalog.work.db.driver.*
-        db.putAll( props.matchingSubset( this.DB_PREFIX , false ) );
+        db.putAll( props.matchingSubset( GetDAX.DB_PREFIX , false ) );
 
 
         //to make sure that no confusion happens.
@@ -151,7 +151,6 @@ public class GetDAX {
      *
      * @see java.sql.DriverManager#getConnection( String, Properties )
      *
-     * @throws Error subclasses for runtime errors in the class loader.
      */
     public boolean connect( Properties props ) {
         boolean result = false;

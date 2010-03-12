@@ -67,7 +67,6 @@ public class WorkFactory{
      * throws an exception while being dynamically loaded.
      *
      * @see org.griphyn.common.util.VDSProperties
-     * @see #loadInstance()
      */
     static public WorkCatalog loadInstance( PegasusProperties props )
            throws WorkFactoryException {
@@ -96,7 +95,6 @@ public class WorkFactory{
      * throws an exception while being dynamically loaded.
      *
      * @see org.griphyn.common.util.VDSProperties
-     * @see #loadInstance()
      */
     static public WorkCatalog loadInstance( VDSProperties props )
       throws WorkFactoryException
@@ -155,7 +153,6 @@ public class WorkFactory{
    * throws an exception while being dynamically loaded.
    *
    * @see org.griphyn.common.util.VDSProperties
-   * @see #loadInstance()
    */
   static private WorkCatalog loadInstance( String catalogImplementor,
                                           Properties props )

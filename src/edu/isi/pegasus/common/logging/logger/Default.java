@@ -178,23 +178,23 @@ public class Default extends LogManager{
         int value = level.toInt();
         switch(value){
             case Level.DEBUG_INT:
-                value = this.DEBUG_MESSAGE_LEVEL;
+                value = Default.DEBUG_MESSAGE_LEVEL;
                 break;
 
             case Level.INFO_INT:
-                value = this.INFO_MESSAGE_LEVEL;
+                value = Default.INFO_MESSAGE_LEVEL;
                 break;
 
             case Level.WARN_INT:
-                value = this.WARNING_MESSAGE_LEVEL;
+                value = Default.WARNING_MESSAGE_LEVEL;
                 break;
 
             case Level.ERROR_INT:
-                value = this.ERROR_MESSAGE_LEVEL;
+                value = Default.ERROR_MESSAGE_LEVEL;
                 break;
 
             default:
-                value = this.FATAL_MESSAGE_LEVEL;
+                value = Default.FATAL_MESSAGE_LEVEL;
                 break;
         }
         setLevel(value,false);

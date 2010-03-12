@@ -216,14 +216,29 @@ public class SiteCatalogEntry extends AbstractSiteData{
         initialize( id );
     }
 
+    /**
+     * Not implmented as yet.
+     *
+     * @return UnsupportedOperationException
+     */
     public Iterator getFileServerIterator() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    /**
+     * Not implemented as yet.
+     *
+     * @return UnsupportedOperationException
+     */
     public List getFileServers() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    /**
+     * Not implemented as yet
+     *
+     * @return UnsupportedOperationException
+     */
     public List getGridGateways() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
@@ -395,7 +410,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * Returns the headnode filesystem.
      * 
-     * @returm   the head node filesystem.
+     * @return   the head node filesystem.
      */
     public HeadNodeFS getHeadNodeFS(  ){
         return mHeadFS;
@@ -414,7 +429,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * Returns the worker node filesystem.
      * 
-     * @returm   the worker node filesystem.
+     * @return   the worker node filesystem.
      */
     public WorkerNodeFS getWorkerNodeFS(  ){
         return mWorkerFS;
@@ -425,7 +440,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * Currently, the work directory is picked up from the head node shared filesystem.
      * 
-     * @return
+     * @return the internal mount point.
      */
     public String getInternalMountPointOfWorkDirectory() {
         return this.getHeadNodeFS().getScratch().getSharedDirectory().getInternalMountPoint().getMountPoint();
@@ -434,7 +449,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * Adds a profile.
      * 
-     * @param profile  the profile to be added
+     * @param p  the profile to be added
      */
     public void addProfile( Profile p ){
         //retrieve the appropriate namespace and then add
@@ -584,7 +599,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * Add a GridGateway to the site.
      * 
-     * @param gateway   the grid gateway to be added.
+     * @param g   the grid gateway to be added.
      */
     public void addGridGateway( GridGateway g ){
         mGridGateways.put( g.getJobType(), g );
@@ -625,7 +640,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * Add a Replica Catalog to the site.
      * 
-     * @param gateway   the grid gateway to be added.
+     * @param catalog   the replica catalog to be added.
      */
     public void addReplicaCatalog( ReplicaCatalog catalog ){
         mReplicaCatalogs.add( catalog );

@@ -27,7 +27,7 @@ import java.io.IOException;
  * from the headnode storage is that it additionally has a worker shared directory
  * that designates the shared directory amongst the worker nodes.
  * 
- * @revision $Revision$
+ * @version $Revision$
  * @author Karan Vahi
  */
 public class WorkerNodeStorage extends StorageType {

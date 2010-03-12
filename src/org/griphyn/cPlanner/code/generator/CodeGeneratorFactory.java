@@ -16,7 +16,6 @@
 
 package org.griphyn.cPlanner.code.generator;
 
-import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
@@ -25,9 +24,7 @@ import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.common.util.DynamicLoader;
 
-import java.io.IOException;
 
-import java.lang.reflect.InvocationTargetException;
 
 
 /**
@@ -68,7 +65,6 @@ public class CodeGeneratorFactory {
      *            might occur during the instantiation of the implementation.
      *
      * @see #DEFAULT_PACKAGE_NAME
-     * @see org.griphyn.cPlanner.common.PegasusProperties#getDAXCallback()
      */
     public static CodeGenerator loadInstance( PegasusBag bag )
         throws CodeGeneratorFactoryException{

@@ -23,9 +23,7 @@ import org.apache.log4j.Level;
 import java.io.File;
 import java.io.IOException;
 
-import edu.isi.pegasus.common.logging.LogFormatter;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
@@ -80,7 +78,10 @@ public abstract class LogManager {
      * Prefix for the property subset to use with the LogManager
      */
     public static final String PROPERTIES_PREFIX = "pegasus.log.manager";
-    
+
+    /**
+     * Suffx for an event completion message.
+     */
     public static final String MESSAGE_DONE_PREFIX = " -DONE";
 
 
@@ -154,17 +155,7 @@ public abstract class LogManager {
         mDebugLevel    = 0;
     }
     
-    /**
-     * To get a reference to the the object.
-     *
-     * 
-     * 
-     * @return a singleton access to the object.
-     */
-   /* public static LogManager getInstance( ){
-        return getInstance( "Log4j", "Simple" );
-    }
-    * /
+   
 
     /**
      * To get a reference to the the object.
@@ -283,23 +274,23 @@ public abstract class LogManager {
         int value = level.toInt();
         switch(value){
             case Level.DEBUG_INT:
-                value = this.DEBUG_MESSAGE_LEVEL;
+                value = LogManager.DEBUG_MESSAGE_LEVEL;
                 break;
 
             case Level.INFO_INT:
-                value = this.INFO_MESSAGE_LEVEL;
+                value = LogManager.INFO_MESSAGE_LEVEL;
                 break;
 
             case Level.WARN_INT:
-                value = this.WARNING_MESSAGE_LEVEL;
+                value = LogManager.WARNING_MESSAGE_LEVEL;
                 break;
 
             case Level.ERROR_INT:
-                value = this.ERROR_MESSAGE_LEVEL;
+                value = LogManager.ERROR_MESSAGE_LEVEL;
                 break;
 
             default:
-                value = this.FATAL_MESSAGE_LEVEL;
+                value = LogManager.FATAL_MESSAGE_LEVEL;
                 break;
         }
         setLevel(value,false);
@@ -345,7 +336,6 @@ public abstract class LogManager {
      * <code>stdout</code> and <code>stderr</code>, which map to the
      * system's respective streams.
      *
-     * @see #setWriters(OutputStream)
      */
     public abstract void setWriters( String out );
 
@@ -392,6 +382,9 @@ public abstract class LogManager {
     
     /**
      * A stop gap function .
+     *
+     * @param message already formatted message
+     * @param level   the level on which to log.
      */
     protected abstract void logAlreadyFormattedMessage( String message, int level );
     
@@ -405,7 +398,6 @@ public abstract class LogManager {
      * @param level    the level on which the message has to be logged.
      *
      * @see #setLevel(int)
-     * @see #log(String,int,boolean)
      */
     public  void log ( String message, int level){
         mLogFormatter.add( message );
@@ -442,7 +434,6 @@ public abstract class LogManager {
      * @param name     the name of the event to be associated
      * @param map      Map indexed by entity name . The values is corresponding 
      *                 EntityID    
-     * @param level    the level to log to
      *  
      */
     public void logEventStart( String name, Map<String,String> map ){
@@ -454,7 +445,8 @@ public abstract class LogManager {
      * 
      * @param name     the name of the event to be associated
      * @param map      Map indexed by entity name . The values is corresponding 
-     *                 EntityID     
+     *                 EntityID
+     * @param level    the level to log to
      */
     public void logEventStart( String name, Map<String,String> map , int level ){
        mLogFormatter.addEvent( name, map );

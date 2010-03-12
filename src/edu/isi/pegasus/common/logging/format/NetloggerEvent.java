@@ -69,7 +69,9 @@ public class NetloggerEvent implements Event{
     /**
      * Returns the program name for the software whose log statement are logged.
      * 
-     * @param name 
+     * @param name
+     *
+     * @return the name of the program
      */
     public String getProgramName( String name ){
         return mProgram;
@@ -151,6 +153,8 @@ public class NetloggerEvent implements Event{
     
     /**
      * Creates a log message with the contents of the internal log buffer.
+     *
+     * @return the log message
      */
     public String createLogMessage(){
         return mMessage.toString();
@@ -161,7 +165,7 @@ public class NetloggerEvent implements Event{
      * Creates a log message with the contents of the internal log buffer.
      * It then resets the buffer before returning the log message
      * 
-     * @return 
+     * @return the log message
      */
     public String createLogMessageAndReset(){
         String result = mMessage.toString();
@@ -178,7 +182,8 @@ public class NetloggerEvent implements Event{
      * @param parentID     the id of the parent entity
      * @param childIdType  the type of children entities
      * @param childIDs     Collection of children id's
-     * @return
+     *
+     * @return entity hierarch message.
      */
     public String createEntityHierarchyMessage( String parentType,
                                                 String parentID,

@@ -47,7 +47,7 @@ public class LogFormatterFactoryException extends FactoryException {
      */
     public LogFormatterFactoryException( String msg ) {
         super( msg );
-        mClassname = this.DEFAULT_NAME;
+        mClassname = LogFormatterFactoryException.DEFAULT_NAME;
     }
 
     /**
@@ -78,7 +78,7 @@ public class LogFormatterFactoryException extends FactoryException {
      */
     public LogFormatterFactoryException(String msg, Throwable cause) {
         super(msg, cause);
-        mClassname = this.DEFAULT_NAME;
+        mClassname = LogFormatterFactoryException.DEFAULT_NAME;
     }
 
 

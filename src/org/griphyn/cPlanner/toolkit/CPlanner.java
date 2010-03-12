@@ -773,7 +773,7 @@ public class CPlanner extends Executable{
      *
      * @param dag ADag
      * @param baseDir String
-     * @param relativeSubmitDir String
+     * @param relativeDir String
      *
      * @return boolean
      */

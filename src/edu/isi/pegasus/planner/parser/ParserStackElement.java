@@ -23,7 +23,6 @@ package edu.isi.pegasus.planner.parser;
  * @author Karan Vahi
  * @version $Revision$
  *
- * @see InvocationParser
  */
 public class ParserStackElement{
     private String mElement;
@@ -51,6 +50,8 @@ public class ParserStackElement{
     
     /**
      * Returns the object referred to by the element.
+     *
+     * @return  the object
      */
     public Object getElementObject(){
         return mObject;

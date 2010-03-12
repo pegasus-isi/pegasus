@@ -301,7 +301,7 @@ public class Regex extends Default {
          * Compares the Rank object with another rank object.
          * 
          * @param o   the object to be compared.
-         * @return
+         * @return int
          */
         public int compareTo(Object o) {
             if ( o instanceof Rank ) {
