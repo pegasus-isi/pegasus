@@ -87,9 +87,24 @@ public class OSGMM implements SiteCatalog {
     public static final String PEGASUS_PROPERTY_PREFIX = "pegasus.transfer.srm";
 
     /**
-     * The default condor collector to query to
+     * The name of the ENGAGE VO
      */
-    public static final String DEFAULT_CONDOR_COLLECTOR = "ligo-osgmm.renci.org";
+    public static final String ENGAGE_VO = "engage";
+
+    /**
+     * The default condor collector to query to for non LIGO VO's
+     */
+    public static final String DEFAULT_CONDOR_COLLECTOR = "engage-central.renci.org";
+
+    /**
+     * The name of the LIGO VO
+     */
+    public static final String LIGO_VO = "ligo";
+
+    /**
+     * The default condor collector to query to for LIGO VO
+     */
+    public static final String DEFAULT_LIGO_CONDOR_COLLECTOR = "ligo-osgmm.renci.org";
 
     
     /**
@@ -220,6 +235,7 @@ public class OSGMM implements SiteCatalog {
      */
     private String mGrid;
 
+
     /**
      * The default constructor.
      */
@@ -344,22 +360,41 @@ public class OSGMM implements SiteCatalog {
         
         // TODO: these should come from either the command line or a config file
         //String collectorHost = "engage-central.renci.org";
-        mCollectorHost = props.getProperty( OSGMM.DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY,
-                                                  OSGMM.DEFAULT_CONDOR_COLLECTOR);
+        mCollectorHost = props.getProperty( OSGMM.DEFAULT_CONDOR_COLLECTOR_PROPERTY_KEY );
+
         mVO = props.getProperty( OSGMM.DEFAULT_VO_PROPERTY_KEY,
                                        OSGMM.DEFAULT_VO  ).toLowerCase();
+
+        if( mCollectorHost == null){
+            //user did not specify in the properties.
+            //assign a collector host on basis of VO.
+            if( mVO.equals( OSGMM.LIGO_VO ) ){
+                mCollectorHost = OSGMM.DEFAULT_LIGO_CONDOR_COLLECTOR;
+            }
+            else{
+                 mCollectorHost =  OSGMM.DEFAULT_CONDOR_COLLECTOR;
+            }
+        }
         mGrid = props.getProperty( OSGMM.DEFAULT_GRID_PROPERTY_KEY, OSGMM.DEFAULT_GRID );
         boolean onlyOSGMMValidatedSites = Boolean.parse( props.getProperty( OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES_PROPERTY_KEY),
                                                          OSGMM.DEFAULT_RETRIEVE_VALIDATED_SITES  );
         
         mLogger.log( "The Condor Collector Host is " + mCollectorHost,
                      LogManager.DEBUG_MESSAGE_LEVEL );
-        mLogger.log( "The VO is " + mVO, 
+        mLogger.log( "The User specified VO is " + mVO,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         mLogger.log( "Retrieve only validated sites " + onlyOSGMMValidatedSites,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
-        String constraint = "StringlistIMember(\"VO:" + mVO + "\";GlueCEAccessControlBaseRule)";
+        String voToQueryFor = mVO;
+        //if the collector is the default collector
+        //then vo to query for is always engage 
+        if( mCollectorHost.equals( OSGMM.DEFAULT_CONDOR_COLLECTOR )  ){
+            voToQueryFor = OSGMM.ENGAGE_VO;
+        }
+        mLogger.log( "The condor collector will be queried for VO " + voToQueryFor, LogManager.DEBUG_MESSAGE_LEVEL );
+
+        String constraint = "StringlistIMember(\"VO:" + voToQueryFor + "\";GlueCEAccessControlBaseRule)";
         if (onlyOSGMMValidatedSites) {
             constraint += " && SiteVerified==True";
         }
