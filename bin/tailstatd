@@ -88,7 +88,7 @@ $fuse = 60 if $fuse < 60;
 # remove jobs after xxxx seconds in PENDING
 my $idletime = $props->property('pegasus.max.idletime');
 
-my $starvation=defined($idletime) ? $idletime  :14400;
+my $starvation=defined($idletime) ? $idletime  :0;
 
 my $last_check = time();	# marker for starvation checks
 my $jsd;			# location of jobstate.log file
