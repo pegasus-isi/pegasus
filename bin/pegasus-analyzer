@@ -23,7 +23,7 @@ Usage: pegasus-analyzer [options]
 #  limitations under the License.
 ##
 
-# Revision : $Revision$
+# Revision : $Revision: 2012 $
 
 # Import Python modules (some not currently needed, but included for future expansion)
 import os
