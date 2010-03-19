@@ -186,9 +186,13 @@ my $condor_rm = find_exec('condor_rm') ||
 
 # maintain database of removed Condor jobs (for restarts)
 my $rmdb = File::Spec->catfile( $run, 'remove.db' );
-tie( %main::remove, 'DB_File', $rmdb ) || 
-    die "ERROR: Unable to create DB file $rmdb: $!\n";
-END { untie %main::remove }
+if ( $main::replay_mode == 0 ) {
+    tie( %main::remove, 'DB_File', $rmdb ) || 
+        die "ERROR: Unable to create DB file $rmdb: $!\n";
+} else {
+    %main::remove = ();
+}
+END { untie %main::remove if $main::replay_mode == 0;}
 
 #
 # --- functions ---------------------------------------------------
@@ -1384,7 +1388,10 @@ $SIG{USR2} = sub { $main::DEBUG-- };
 
 # create server socket for communication with site selector
 my $sockfn = File::Spec->catfile( dirname($out), 'tailstatd.sock' );
-my $server = server_socket( 49152, 65536 );
+my $server = undef;
+if ( $main::replay_mode == 0 ) {
+    $server = server_socket( 49152, 65536 );
+}
 END { 
     if ( defined $server ) {
 	close($server);
@@ -1405,7 +1412,7 @@ if ( defined $server ) {
 # Warning: Due to %SIG, we need to make atexit signal safe
 END {
     # Attempt to copy the Condor common logfile to the current directory
-    if ( $main::condorlog && -r $main::condorlog && 
+    if ( $main::replay_mode == 0 && $main::condorlog && -r $main::condorlog && 
 	 index($main::condorlog,'/')==0 ) {
 	# copy common Condor log to local directory
 	my $log = out2log( $out );
@@ -1421,7 +1428,7 @@ END {
     }
 
     # remember to tell me that it is ok to run post-processing now
-    if ( defined $main::terminate && defined $run ) {
+    if ( $main::replay_mode == 0 && defined $main::terminate && defined $run ) {
 	my $touch = File::Spec->catfile( $run, 'tailstatd.done' );
 	if ( sysopen( TOUCH, $touch, O_WRONLY | O_CREAT | O_TRUNC ) ) {
 	    $main::stamp ||= time();
@@ -1554,16 +1561,18 @@ for (;;) {
 }
 close DMOF;
 
-# finish trailing connection requests
-while ( check_request($server) ) { }
-close $server;
-unlink $sockfn;
-undef $server;
+if ( $main::replay_mode == 0 ) {
+    # finish trailing connection requests
+    while ( check_request($server) ) { }
+    close $server;
+    unlink $sockfn;
+    undef $server;
 
-# NEW: dump siteinfo at end
-if ( open( SI, ">$run/sitedump.txt" ) ) {
-    service_request_site(SI,undef);
-    close SI;
+    # NEW: dump siteinfo at end
+    if ( open( SI, ">$run/sitedump.txt" ) ) {
+	service_request_site(SI,undef);
+	close SI;
+    }
 }
 
 $main::terminate += 0;		# make numeric
