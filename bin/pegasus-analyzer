@@ -484,7 +484,7 @@ def print_job_info(job):
 	user_cmd = " %s -t " % (prog_base)
 	if keep_log:
 	    user_cmd = user_cmd + " -k"
-	print "%s -f %s" % (jobs[job].dag_path)
+	print "%s -f %s" % (user_cmd, jobs[job].dag_path)
 	print
 	return
 
@@ -511,7 +511,7 @@ def print_job_info(job):
 	user_cmd = " %s -t " % (prog_base)
 	if keep_log:
 	    user_cmd = user_cmd + " -k"
-	print "%s -d %s" % (os.path.split(jobs[job].dagman_out)[0])
+	print "%s -d %s" % (user_cmd, os.path.split(jobs[job].dagman_out)[0])
 	print
     print
 
