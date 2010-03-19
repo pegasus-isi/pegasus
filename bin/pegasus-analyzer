@@ -39,6 +39,7 @@ import tempfile
 # --- regular expressions -------------------------------------------------------------
 
 re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
+re_parse_script_pre = re.compile(r"^SCRIPT PRE (\S+) (.*)")
 
 # --- classes -------------------------------------------------------------------------
 
@@ -55,7 +56,9 @@ class Job:
     arguments = ""		# Job's arguments
     is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
     subdag_dir = ""		# Subdag directory from a SUBDAG job in the dag file
+    dag_path = ""		# Full path to the dag file from a SUBDAG job
     dagman_out = ""		# dagman.out file for this job (only for clustered jobs)
+    pre_script = ""		# SCRIPT PRE line from the dag file
 
     def __init__(self, job_name, job_state=""):
 	"""
@@ -88,6 +91,7 @@ run_directory_writable = False			# Flag to indicate if we can write to the run d
 quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 keep_log = 0					# Keeps temporaty jobstate.log file created by tailstatd in /tmp directory
 print_invocation = 0				# Prints invocation command for failed jobs
+print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
 jsdl_filename = "jobstate.log"			# Default name of the log file to use
 jobs = {}					# List of jobs found in the jobstate.log file
 success = 0					# Number of successful jobs
@@ -307,9 +311,25 @@ def parse_dag_file(dag_fn):
 	    if not has_seen(my_job[2]):
 		add_job(my_job[2], "UNSUBMITTED")
 		jobs[my_job[2]].is_subdag = True
+		jobs[my_job[2]].dag_path = my_job[3]
 		jobs[my_job[2]].subdag_dir = my_job[5]
 	    else:
 		print "warning: job appears twice in dag file: %s" % (my_job[2])
+	if line.startswith("SCRIPT PRE"):
+	    # This is a SCRIPT PRE line, parse it to get the script for the job
+	    my_script = re_parse_script_pre.search(line)
+	    if my_script is None:
+		# Couldn't parse line
+		print "warning: confused parsing dag line: %s" % (line)
+		continue
+	    # Get job name, and check if we have it
+	    my_job = my_script.group(1)
+	    if not has_seen(my_job):
+		# Cannot find this job, ignore this line
+		print "warning: couldn't find job: %s for PRE SCRIPT line in dag file" % (my_job)
+		continue
+	    # Good, copy PRE script line to our job structure
+	    jobs[my_job].pre_script = my_script.group(2)
 
 def parse_jobstate_log(jobstate_fn):
     """
@@ -459,9 +479,12 @@ def print_job_info(job):
 
     # Handle subdag jobs from the dag file
     if jobs[job].is_subdag == True:
-	print " This is not a pegasus job."
-	print " For more information, please look at the directory below:"
-	print " %s" % (jobs[job].subdag_dir)
+	print " This is a SUBDAG job:"
+	print " For more information, please run the following command:"
+	user_cmd = " %s -t " % (prog_base)
+	if keep_log:
+	    user_cmd = user_cmd + " -k"
+	print "%s -f %s" % (jobs[job].dag_path)
 	print
 	return
 
@@ -475,6 +498,11 @@ def print_job_info(job):
     if print_invocation:
 	print
 	print "To re-run this job, use: %s %s" % (jobs[job].executable, jobs[job].arguments)
+	print
+    if print_pre_script and len(jobs[job].pre_script) > 0:
+	print
+	print "SCRIPT PRE:"
+	print jobs[job].pre_script
 	print
     if len(jobs[job].dagman_out) > 0:
 	# This job has a sub workflow
@@ -550,8 +578,8 @@ parser.add_option("-k", "--keep", action = "store_const", const = 1, dest = "kee
 		  help = "keeps temporary jobstate.log file created by tailstatd in the /tmp directory")
 parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "quiet_mode",
 		  help = "output out/err filenames instead of their contents")
-parser.add_option("-p", "--print-invocation", action = "store_const", const = 1, dest = "print_invocation",
-		  help = "prints invocation command for failed jobs")
+parser.add_option("-p", "--print", action = "store", type = "string" , dest = "print_options",
+		  help = "specifies print options from pre,invocation")
 
 # Parse command line options
 (options, args) = parser.parse_args()
@@ -565,8 +593,12 @@ if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
 if options.keep_log is not None:
     keep_log = options.keep_log
-if options.print_invocation is not None:
-    print_invocation = options.print_invocation
+if options.print_options is not None:
+    my_options = options.print_options.split(",")
+    if "pre" in my_options:
+	print_pre_script = 1
+    if "invocation" in my_options:
+	print_invocation = 1
 if options.dag_filename is not None:
     dag_path = options.dag_filename
     input_dir = os.path.split(dag_path)[0]
