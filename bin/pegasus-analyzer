@@ -595,9 +595,9 @@ if options.keep_log is not None:
     keep_log = options.keep_log
 if options.print_options is not None:
     my_options = options.print_options.split(",")
-    if "pre" in my_options:
+    if "pre" in my_options or "all" in my_options:
 	print_pre_script = 1
-    if "invocation" in my_options:
+    if "invocation" in my_options or "all" in my_options:
 	print_invocation = 1
 if options.dag_filename is not None:
     dag_path = options.dag_filename
