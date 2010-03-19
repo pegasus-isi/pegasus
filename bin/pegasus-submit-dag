@@ -165,7 +165,7 @@ sub salvage_logfile($) {
 		    close LOG;
 		} else {
 		    # file does not exist, use that
-		    warn "Rescued $result as $newfn\n" 
+		    print STDOUT "Rescued $result as $newfn\n" 
 			if rename( $result, $newfn );
 		    last;
 		}
