@@ -1452,6 +1452,14 @@ log( 'env: GLOBUS_LOCATION=', $ENV{'GLOBUS_LOCATION'} );
 # phase: wait for .out file to appear
 my @stat;
 my $retries = 0;
+
+# Test if dagman.out file is there in case we are running in replay_mode
+if ( $main::replay_mode == 1 ) {
+    if ( @stat=stat($out) == 0 ) {
+	fatal( "error: workflow not started, exiting..." );
+    }
+}
+
 while ( (@stat=stat($out)) == 0 ) {
     fatal( "stat $out" ) unless $!{ENOENT};
     fatal( "$out never made an appearance") if ( ++$retries > 100 );
