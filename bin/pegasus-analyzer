@@ -426,14 +426,11 @@ def rotate_log(source_file):
     # Done!
     return
 
-def invoke_tailstatd(dagman_out_file, output_log, replay=False):
+def invoke_tailstatd(dagman_out_file, output_log):
     """
     This function runs tailstatd on the given dagman_out_file.
     """
-    tailstatd_cmd = "tailstatd -n --nodatabase"
-    if replay:
-	# Add replay option to tailstatd
-	tailstatd_cmd = tailstatd_cmd + " -r"
+    tailstatd_cmd = "tailstatd -n --nodatabase -r"
     tailstatd_cmd = tailstatd_cmd + " -j " + output_log
     tailstatd_cmd = tailstatd_cmd + " " + dagman_out_file
     print "running: %s" % (tailstatd_cmd)
@@ -631,7 +628,7 @@ if run_tailstatd:
 	    print "error: could not create temporaty jobstate.log file in the /tmp directory"
 	    sys.exit(1)
 	temp_log = jsdl_path
-	invoke_tailstatd("%s.dagman.out" % (dag_path), jsdl_path, True)
+	invoke_tailstatd("%s.dagman.out" % (dag_path), jsdl_path)
 else:
     jsdl_path = os.path.join(input_dir, jsdl_filename)
 
