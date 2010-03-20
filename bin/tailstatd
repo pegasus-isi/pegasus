@@ -1455,8 +1455,10 @@ my $retries = 0;
 
 # Test if dagman.out file is there in case we are running in replay_mode
 if ( $main::replay_mode == 1 ) {
-    if ( @stat=stat($out) == 0 ) {
-	fatal( "error: workflow not started, exiting..." );
+    @stat=stat($out);
+    if ( @stat == 0 ) {
+        log( "error: workflow not started, $out does not exist, exiting..." );
+        exit(42);
     }
 }
 
