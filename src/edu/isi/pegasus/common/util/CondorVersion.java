@@ -191,6 +191,8 @@ public class CondorVersion {
     
     /**
      * Factory method to instantiate the class.
+     *
+     * @return  instance to the class
      */
     public static CondorVersion getInstance( ){
         return getInstance( null );
@@ -201,6 +203,8 @@ public class CondorVersion {
      * 
      * 
      * @param logger   the logger object
+     *
+     * @return  instance to the class.
      */
     public static CondorVersion getInstance( LogManager logger ){
         if( logger == null ){
@@ -343,7 +347,12 @@ public class CondorVersion {
         
 
     }
-    
+
+    /**
+     * The main program to test.
+     *
+     * @param args
+     */
     public static void main( String[] args ){
         LogManager logger =  LogManagerFactory.loadSingletonInstance();
         CondorVersion cv = CondorVersion.getInstance();

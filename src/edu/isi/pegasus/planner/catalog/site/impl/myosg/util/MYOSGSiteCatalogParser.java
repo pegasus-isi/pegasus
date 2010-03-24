@@ -57,8 +57,7 @@ public class MYOSGSiteCatalogParser extends Parser {
 	/**
 	 * The default Constructor.
 	 * 
-	 * @param sites
-	 *            the list of sites to be parsed. * means all.
+	 * 
 	 * 
 	 */
 	
@@ -94,9 +93,9 @@ public class MYOSGSiteCatalogParser extends Parser {
      * The parser is at the end of an element. Triggers the association of
      * the child elements with the appropriate parent elements.
      *
-     * @param namespaceURI is the URI of the namespace for the element
+     * @param uri is the URI of the namespace for the element
      * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
+     * @param name is the element name as it appears in the docment
      */  
 	public void endElement(String uri, String localName, String name)
 			throws SAXException {
@@ -139,7 +138,7 @@ public class MYOSGSiteCatalogParser extends Parser {
 	 * @param site
 	 *            the <code>SiteCatalogEntry</code> object.
 	 * 
-	 * @return
+	 * @return boolean
 	 */
 	private boolean loadSite(AbstractSiteCatalogResource site) {
 		return (mLoadAll || mSites.contains(site
@@ -154,10 +153,10 @@ public class MYOSGSiteCatalogParser extends Parser {
      * This method defines the action to take when the parser begins to parse
      * an element.
      *
-     * @param namespaceURI is the URI of the namespace for the element
-     * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
-     * @param atts has the names and values of all the attributes
+     * @param uri is the URI of the namespace for the element
+     * @param local is the element name without namespace
+     * @param name is the element name as it appears in the docment
+     * @param attrs has the names and values of all the attributes
      */
 	public void startElement(String uri, String local, String name,
 			Attributes attrs) throws SAXException {

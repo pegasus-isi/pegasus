@@ -54,7 +54,7 @@ public class Globus extends Namespace {
      * The table that maps the various globus profile keys to their aggregator
      * functions.
      *
-     * @see #Aggregator
+     * 
      */
     public static Map mAggregatorTable;
 

@@ -310,7 +310,7 @@ public class RFT extends AbstractMultipleFTPerXFERJob {
      * generic function prepareIPFile to do this.
      *
      *
-     * @job  the <code>TransferJob</code> that has been created.
+     * @param job  the <code>TransferJob</code> that has been created.
      */
     public void postProcess( TransferJob job ){
         File f = new File( mPOptions.getSubmitDirectory(), job.getStdIn() );

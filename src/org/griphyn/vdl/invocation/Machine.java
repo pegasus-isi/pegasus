@@ -96,7 +96,7 @@ public  class Machine extends Invocation {
     /**
      * Add a <code>MachineInfo</code> element.
      * 
-     * @param machineinfo  the machine info element
+     * @param info  the machine info element
      */
     public void addMachineInfo( MachineInfo info ){
         mMachineInfoList.add( info );

@@ -241,7 +241,7 @@ public class RemoveDirectory extends Engine {
      * using the perl executable that Gaurang wrote. It access mkdir underneath.
      * It gets the name of the random directory from the Pool handle.
      *
-     * @param execPool  the execution pool for which the create dir job is to be
+     * @param site  the execution pool for which the create dir job is to be
      *                  created.
      * @param jobName   the name that is to be assigned to the job.
      *

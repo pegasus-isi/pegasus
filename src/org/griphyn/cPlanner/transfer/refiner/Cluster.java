@@ -194,10 +194,10 @@ public class Cluster extends Bundle {
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
      * @param jobType  the type of transfer job being created
-     * @param staginMap  Map indexed by site name that gives all the transfers for
+     * @param stageInMap  Map indexed by site name that gives all the transfers for
      *                   that site.
      * @param cValue   used to determine the bundling factor to employ for a job.
-     * @param implmentation  the transfer implementation to use.
+     * @param implementation  the transfer implementation to use.
      */
     public  void addStageInXFERNodes( SubInfo job,
                                       Collection files,
@@ -500,7 +500,7 @@ public class Cluster extends Bundle {
      * Returns the appropriate stagein pool transfer for a particular site.
      *
      * 
-     * @param stageinMap  map that indexes site to PoolTransfer objects
+     * @param stageInMap  map that indexes site to PoolTransfer objects
      * @param site  the site for which the PT is reqd.
      * @param num   the number of stage in jobs required for that Pool.
      *
@@ -555,7 +555,7 @@ public class Cluster extends Bundle {
      *
      * @return the bundle factor.
      *
-     * @see #DEFAULT_BUNDLE_STAGE_IN_FACTOR
+     * @see #DEFAULT_STAGE_IN_CLUSTER_FACTOR
      */
     protected int getSISiteBundleValue(String site,  String deflt){
         //this should be parameterised Karan Dec 20,2005
@@ -639,7 +639,7 @@ public class Cluster extends Bundle {
     /**
      * It creates a NoOP synch job that runs on the submit host.
      *
-     * @name of the job
+     * @param name of the job
      *
      * @return  the noop job.
      */

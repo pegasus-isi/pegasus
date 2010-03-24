@@ -14,6 +14,11 @@ import org.griphyn.vdl.dax.PseudoText;
 import java.io.FileWriter;
 import java.io.File;
 
+/**
+ * Creates a diamond dax.
+ *
+ * @author vahi
+ */
 public class CreateDAX{
 
 
@@ -29,9 +34,17 @@ public class CreateDAX{
     public static String FC2="f.c2";
     public static String FD="f.d";
 
+    /**
+     * The default constructor.
+     */
     public CreateDAX(){
     }
 
+    /**
+     * Construct the dax.
+     *
+     * @param daxfile  the dax file to be constructed.
+     */
     public void constructDAX(String daxfile){
 
 	try{

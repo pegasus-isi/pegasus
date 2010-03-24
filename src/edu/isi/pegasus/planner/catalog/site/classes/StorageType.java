@@ -99,7 +99,7 @@ public  class StorageType extends AbstractSiteData{
     /**
      * Sets the shared directory.
      * 
-     * @param local  the shared directory.
+     * @param shared  the shared directory.
      */
     public void setSharedDirectory( SharedDirectory shared ){
         mSharedDirectory = shared;

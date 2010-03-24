@@ -25,7 +25,7 @@ import java.io.IOException;
 /**
  * This data class describes the storage area on a node.
  * 
- * @revision $Revision$
+ * @version $Revision$
  * @author Karan Vahi
  */
 public class HeadNodeStorage extends StorageType {

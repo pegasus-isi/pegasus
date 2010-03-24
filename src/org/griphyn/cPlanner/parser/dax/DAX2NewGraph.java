@@ -152,7 +152,7 @@ public class DAX2NewGraph implements Callback {
     /**
      * Returns the <code>GraphNode</code> of the corresponding id.
      *
-     * @param id   the id of the node.
+     * @param key   the id of the node.
      *
      * @return <code>GraphNode</code>.
      */

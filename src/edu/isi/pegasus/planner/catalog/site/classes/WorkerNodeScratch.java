@@ -28,7 +28,7 @@ import java.io.IOException;
  * that designates the shared directory amongst the worker nodes.
  * 
  * 
- * @revision $Revision$
+ * @version $Revision$
  * @author Karan Vahi
  */
 public class WorkerNodeScratch extends StorageType {

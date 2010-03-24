@@ -50,7 +50,7 @@ public interface Plot {
      * Plot out the space usage.
      *
      * @param su          the SpaceUsage.
-     * @param sizeUnits   the size unit.
+     * @param u   the size unit.
      * @param timeUnits   the time unit.
      *
      * @return List of file pathnames for the files that are written out.

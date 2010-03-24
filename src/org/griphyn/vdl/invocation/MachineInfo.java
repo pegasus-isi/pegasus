@@ -82,7 +82,7 @@ public abstract class MachineInfo extends Invocation {
     /**
      * Returns Iterator for attribute keys.
      * 
-     * @return
+     * @return iterator
      */
     public Iterator<String> getAttributeKeysIterator(){
         return mAttributeMap.keySet().iterator();
@@ -93,7 +93,7 @@ public abstract class MachineInfo extends Invocation {
      * 
      * @param key
      * 
-     * @return
+     * @return value
      */
     public String get( String key ){
         return mAttributeMap.get(key);

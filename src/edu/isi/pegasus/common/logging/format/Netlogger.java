@@ -18,8 +18,7 @@
 package edu.isi.pegasus.common.logging.format;
 
 import edu.isi.pegasus.common.logging.*;
-import edu.isi.pegasus.common.logging.format.AbstractLogFormatter;
-import java.util.List;
+
 import java.util.Map;
 
 /**

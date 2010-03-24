@@ -72,6 +72,7 @@ public  class ImplementationFactory {
      * properties file. The properties object passed should not be null.
      *
      * @param bag   the bag of initialization objects.
+     * @param type  the type.
      *
      * @return the instance of the class implementing this interface.
      *
@@ -95,9 +96,7 @@ public  class ImplementationFactory {
      * at runtime in the properties file. The properties object passed should not
      * be null.
      *
-     * @param properties the <code>PegasusProperties</code> object containing all
-     *                   the properties required by Pegasus.
-     * @param options    the options passed to the planner at runtime.
+     * @param bag  bag of initialization objects.
      *
      * @return the instance of the class implementing this interface.
      *

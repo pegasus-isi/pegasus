@@ -132,7 +132,10 @@ public class MYOSG implements SiteCatalog {
 	 * The grid for which to query MYOSG
 	 */
 	private String mGrid;
-	
+
+        /**
+         * The default constructor.
+         */
 	public MYOSG() {
 		mLogger = LogManagerFactory.loadSingletonInstance();
 		mSiteStore = new SiteStore();
@@ -146,7 +149,8 @@ public class MYOSG implements SiteCatalog {
 	 * 
 	 * @param entry
 	 * 
-	 * @return
+	 * @return  number of entries inserted
+         *
 	 * @throws edu.isi.pegasus.planner.catalog.site.SiteCatalogException
 	 */
 	public int insert(SiteCatalogEntry entry) throws SiteCatalogException {
@@ -252,8 +256,8 @@ public class MYOSG implements SiteCatalog {
 	 * Not yet implemented as yet.
 	 * 
 	 * @param handle
-	 * 
-	 * @return
+	 *
+	 * @return  Exception
 	 * 
 	 * @throws edu.isi.pegasus.planner.catalog.site.SiteCatalogException
 	 */
@@ -355,7 +359,7 @@ public class MYOSG implements SiteCatalog {
 	 * Creates the properties that are required to compose the HTTP URL to the
 	 * MYOSG website.
 	 * 
-	 * @return
+	 * @return Properties containing the connection URL Properties
 	 */
 	private Properties createConnectionURLProperties() {
 		Properties properties = new Properties();
@@ -429,7 +433,7 @@ public class MYOSG implements SiteCatalog {
 	/**
 	 * Returns the start date formatted as MM/dd/yyyy.
 	 * 
-	 * @return
+	 * @return  the start date.
 	 */
 	private String getStartDate() {
 		String now = null;
@@ -444,9 +448,9 @@ public class MYOSG implements SiteCatalog {
 	/**
 	 * Returns the date after n days formatted as MM/dd/yyyy.
 	 * 
-	 * @param day
-	 *            the days after.
-	 * @return
+	 * @param days the days after.
+         *
+	 * @return the added date
 	 */
 	private static String getDateAfter(int days) {
 		String now = null;
@@ -462,7 +466,7 @@ public class MYOSG implements SiteCatalog {
 	/**
 	 * Returns if the connection is closed or not.
 	 * 
-	 * @return
+	 * @return boolean
 	 */
 	public boolean isClosed() {
 		// TODO Auto-generated method stub

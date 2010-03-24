@@ -426,7 +426,7 @@ public class SCClient
      * 
      * @param file text file to parse.
      * 
-     * @return
+     * @return PoolConfig
      */
     public PoolConfig getTextToPoolConfig( String file ) {
         PoolConfig result = new PoolConfig();

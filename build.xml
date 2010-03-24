@@ -57,7 +57,7 @@
 	     classpath="${build.src}"
 	     classname="VersionTask"/>
     <versiontask/>
-    <echo>${pegasus.version}</echo>
+    <echo>Pegasus Version: ${pegasus.version}</echo>
     <property name="dist.dir" location="dist/pegasus-${pegasus.version}"/>
     <property name="dist.lib" location="${dist.dir}/lib"/> 
     <property name="dist.doc" location="${dist.dir}/doc"/>

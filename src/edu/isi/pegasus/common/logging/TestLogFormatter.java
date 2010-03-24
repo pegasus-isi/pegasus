@@ -68,6 +68,10 @@ public class TestLogFormatter {
         System.out.println( fm.getEndEventMessage() );
     }
   
+    /**
+     * 
+     * @param args
+     */
     public static void main(String[] args) {
         TestLogFormatter test = new TestLogFormatter();
         System.out.println("\n Logs in Netlogger Format");

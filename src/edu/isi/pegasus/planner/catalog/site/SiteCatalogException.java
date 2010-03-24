@@ -28,9 +28,10 @@ import org.griphyn.common.catalog.CatalogException;
  * @see edu.isi.pegasus.planner.catalog.SiteCatalog
  */
 public class SiteCatalogException  extends CatalogException{
-    /*
-     * Constructs a <code>SiteCatalogException</code> with no detail
-     * message.
+    
+   /**
+    * Constructs a <code>SiteCatalogException</code> with no detail
+    * message.
     */
     public SiteCatalogException() {
         super();

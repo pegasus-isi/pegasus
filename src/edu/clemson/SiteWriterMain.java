@@ -17,7 +17,6 @@
  */
 package edu.clemson;
 
-import edu.clemson.SiteCatalogGenerator;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -57,7 +56,11 @@ public class SiteWriterMain {
 	ArrayList<String> outputArray=new ArrayList<String>();
 	ArrayList<String> errorArray=new ArrayList<String>();
 	
-	public static void main(String[] args) 
+        /**
+         *
+         * @param args
+         */
+        public static void main(String[] args)
 	{
 	   
 		SiteWriterMain siteWriter=new SiteWriterMain();

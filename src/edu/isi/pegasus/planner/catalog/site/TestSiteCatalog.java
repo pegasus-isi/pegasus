@@ -58,6 +58,8 @@ public class TestSiteCatalog {
     
     /**
      * The main program.
+     *
+     * @param args  arguments passed at runtime
      */
     public static void main( String[] args ) {
         SiteCatalog catalog = null;

@@ -64,7 +64,6 @@ public class SLSFactory {
      *            might occur during the instantiation of the implementation.
      *
      * @see #DEFAULT_PACKAGE_NAME
-     * @see org.griphyn.cPlanner.common.PegasusProperties#getDAXCallback()
      *
      * @throws SLSFactoryException
      */

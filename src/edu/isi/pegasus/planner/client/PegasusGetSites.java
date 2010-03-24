@@ -269,7 +269,8 @@ public class PegasusGetSites extends Executable{
      * 
      * @param source  the source i.e type of site catalog 
      * @param key     the basename of the key
-     * @return
+     *
+     * @return the property key.
      */
     protected String getPropertyKey( String source, String key ){
         //"pegasus.catalog.site.vors.grid"
@@ -363,7 +364,7 @@ public class PegasusGetSites extends Executable{
     /**
      * Generates valid LongOpts.
      * 
-     * @return
+     * @return  LongOpt[]
      */
     public LongOpt[] generateValidOptions() {
           LongOpt[] longopts = new LongOpt[8];

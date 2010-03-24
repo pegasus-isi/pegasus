@@ -436,6 +436,8 @@ public class Kickstart implements GridStart {
                 org.griphyn.cPlanner.transfer.implementation.Transfer.TRANSFORMATION_NAME)
                 ||job.logicalName.equals(
                 org.griphyn.cPlanner.transfer.implementation.T2.TRANSFORMATION_NAME)
+                || job.logicalName.equals(org.griphyn.cPlanner.transfer.implementation.Symlink.TRANSFORMATION_NAME )
+
                 ||job.logicalName.equals(org.griphyn.cPlanner.cluster.aggregator.SeqExec.
                                          COLLAPSE_LOGICAL_NAME)
                 ||job.logicalName.equals(org.griphyn.cPlanner.cluster.aggregator.MPIExec.
@@ -962,7 +964,7 @@ public class Kickstart implements GridStart {
      *
      * @return  the identifier for the ExitPOST POSTScript implementation.
      *
-     * @see POSTScript#shortDescribe()
+     *
      */
     public String defaultPOSTScript(){
         return ExitPOST.SHORT_NAME;

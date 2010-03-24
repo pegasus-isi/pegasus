@@ -88,6 +88,9 @@ public class VORS implements SiteCatalog {
     private LogManager mLogger;
 	
 
+    /**
+     * The default constructor.
+     */
 	public VORS() {		
             mLogger = LogManagerFactory.loadSingletonInstance();       
 	    mSiteStore = new SiteStore();		

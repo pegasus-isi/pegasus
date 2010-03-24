@@ -36,7 +36,6 @@ import org.griphyn.common.catalog.TransformationCatalogEntry;
 import org.griphyn.common.catalog.transformation.Mapper;
 import org.griphyn.common.catalog.transformation.Windward;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
@@ -48,7 +47,6 @@ import edu.isi.ikcap.workflows.ac.ProcessCatalog;
 import edu.isi.ikcap.workflows.ac.classes.TransformationCharacteristics;
 
 import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
-import edu.isi.ikcap.workflows.util.FactoryException;
 
 import edu.isi.ikcap.workflows.sr.util.WorkflowGenerationProvenanceCatalog;
 
@@ -93,7 +91,7 @@ import org.griphyn.cPlanner.classes.Profile;
  * @see #RUNTIME_PROFILE_KEY
  * @see #DEFAULT_NUMBER_OF_FREE_NODES
  * @see #AVERAGE_DATA_SIZE_BETWEEN_JOBS
- * @see org.griphyn.cPlanner.classes.JobManager.IDLE_NODES
+ * @see org.griphyn.cPlanner.classes.JobManager#IDLE_NODES
  *
  */
 public class Algorithm {

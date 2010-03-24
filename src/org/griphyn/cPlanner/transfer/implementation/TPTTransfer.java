@@ -75,7 +75,6 @@ public class TPTTransfer extends Transfer {
      *
      * @return true always
      *
-     * @see PegasusProperties#getThirdPartySites(String)
      */
     public boolean useThirdPartyTransferAlways(){
         return true;

@@ -154,7 +154,7 @@ sub salvage_logfile($) {
 	}
 
 	# try to preserve log file
-	if ( defined $result && -e $result ) {
+	if ( defined $result && -s $result ) {
 	    my $newfn;
 	    print STDERR "# log $result exists, rescuing from DAGMan.\n" 
 		if $main::DEBUG;
@@ -165,7 +165,7 @@ sub salvage_logfile($) {
 		    close LOG;
 		} else {
 		    # file does not exist, use that
-		    warn "Rescued $result as $newfn\n" 
+		    print STDOUT "Rescued $result as $newfn\n" 
 			if rename( $result, $newfn );
 		    last;
 		}

@@ -246,7 +246,7 @@ public class TailStatd extends SpaceUsageCallback{
     /**
      * Returns the event type matching a particular job type
      *
-     * @param type the state of the job
+     * @param state the state of the job
      *
      * @return the corresponding event type
      */

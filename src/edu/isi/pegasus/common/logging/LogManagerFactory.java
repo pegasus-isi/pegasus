@@ -21,12 +21,10 @@ package edu.isi.pegasus.common.logging;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.catalog.*;
 import org.griphyn.common.util.*;
 
 import java.util.Properties;
 
-import edu.isi.pegasus.common.logging.LogManager;
 
 /**
  * A factory class to load the appropriate implementation of Logger API
@@ -129,8 +127,10 @@ public class LogManagerFactory {
      * Loads the Log Formatter specified.
      * 
      * @param implementor  the name of the class implementing LogManager
+     * @param formatImplementor   the name of the class implementing the formatting technique
+     * @param properties    properties
      *
-     * @return handle to the Site Catalog.
+     * @return handle to the LogManager
      *
      * @throws LogManagerFactoryException that nests any error that
      *         might occur during the instantiation

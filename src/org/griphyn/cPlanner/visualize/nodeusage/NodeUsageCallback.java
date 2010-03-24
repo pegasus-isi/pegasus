@@ -262,7 +262,7 @@ public class NodeUsageCallback implements Callback {
      *
      * @param site  the name of the site.
      *
-     * @return
+     * @return number of jobs
      */
     private int getCurrentNumOfJobs( String site ){
         if( site == null ){ throw new RuntimeException( "Null site specified");}
@@ -351,7 +351,7 @@ public class NodeUsageCallback implements Callback {
     /**
      * Returns the event type matching a particular job type
      *
-     * @param type the state of the job
+     * @param state the state of the job
      *
      * @return the corresponding event type
      */

@@ -209,10 +209,9 @@ public class SUBDAXGenerator{
     
    
     /**
-     * This function is passed command line arguments. In this function you
-     * generate the valid options and parse the options specified at run time.
+     * Generates code for a job
      *
-     * @param arguments  the arguments passed at runtime
+     * @param job  the job for which code has to be generated.
      *
      * @return a <code>SubInfo</code> if a submit file needs to be generated 
      *         for the job. Else return null.
@@ -631,8 +630,7 @@ public class SUBDAXGenerator{
      * Returns the basename of a dagman (usually) related file for a particular
      * partition.
      *
-     * @param partition  the partition for which the dagman is responsible for
-     *                   execution.
+     * @param prefix  the prefix.
      * @param suffix     the suffix for the file basename.
      *
      * @return the basename.

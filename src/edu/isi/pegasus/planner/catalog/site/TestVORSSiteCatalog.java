@@ -46,6 +46,8 @@ public class TestVORSSiteCatalog {
     
     /**
      * The main program.
+     *
+     * @param args passed at runtime
      */
     public static void main( String[] args ) {
     	SiteCatalog catalog = null;

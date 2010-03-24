@@ -130,7 +130,7 @@ public class XML3 implements SiteCatalog {
     /**
      * Returns if the connection is closed or not.
      * 
-     * @return
+     * @return  boolean
      */
     public boolean isClosed() {
         return mFilename == null;
@@ -171,7 +171,7 @@ public class XML3 implements SiteCatalog {
      * Not implemented as yet.
      * 
      * @param entry
-     * @return
+     * @return number of entries inserted.
      * @throws edu.isi.pegasus.planner.catalog.site.SiteCatalogException
      */
     public int insert(SiteCatalogEntry entry) throws SiteCatalogException {
@@ -214,7 +214,7 @@ public class XML3 implements SiteCatalog {
      * Not yet implemented as yet.
      * 
      * @param handle
-     * @return
+     * @return number of entries removed.
      * @throws edu.isi.pegasus.planner.catalog.site.SiteCatalogException
      */
     public int remove( String handle ) throws SiteCatalogException {

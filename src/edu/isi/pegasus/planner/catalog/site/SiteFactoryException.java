@@ -47,7 +47,7 @@ public class SiteFactoryException extends FactoryException {
      */
     public SiteFactoryException( String msg ) {
         super( msg );
-        mClassname = this.DEFAULT_NAME;
+        mClassname = SiteFactoryException.DEFAULT_NAME;
     }
 
     /**
@@ -78,7 +78,7 @@ public class SiteFactoryException extends FactoryException {
      */
     public SiteFactoryException(String msg, Throwable cause) {
         super(msg, cause);
-        mClassname = this.DEFAULT_NAME;
+        mClassname = SiteFactoryException.DEFAULT_NAME;
     }
 
 

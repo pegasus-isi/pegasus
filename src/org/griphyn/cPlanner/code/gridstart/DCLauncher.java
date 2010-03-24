@@ -152,7 +152,7 @@ public class DCLauncher
      *
      * @return  the identifier for the NoPOSTScript POSTScript implementation.
      *
-     * @see POSTScript#shortDescribe()
+     *
      */
     public String defaultPOSTScript(){
         return NoPOSTScript.SHORT_NAME;

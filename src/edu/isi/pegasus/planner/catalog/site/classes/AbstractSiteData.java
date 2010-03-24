@@ -60,7 +60,7 @@ public abstract class AbstractSiteData extends SiteData
      *
      * @return string description
      *
-     * @exception IOException if something fishy happens to the stream.
+     * 
      */
     public String toString(){
         StringWriter writer = new StringWriter( );

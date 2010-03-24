@@ -178,7 +178,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
   /**
    * Accessor.
    *
-   * @param m_umask
+   * @param umask
    * @see #getUMask()
    */
   public void setUMask( int umask )
@@ -260,7 +260,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * Accessor.
    *
    * @return  machine
-   * @see #setMachine()
+   * @see #setMachine(org.griphyn.vdl.invocation.Machine)
    */
   public Machine getMachine(  )
   { return this.m_machine; }

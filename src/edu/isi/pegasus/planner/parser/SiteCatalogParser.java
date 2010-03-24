@@ -631,7 +631,7 @@ public class SiteCatalogParser extends Parser {
      * 
      * @param site   the <code>SiteCatalogEntry</code> object.
      * 
-     * @return
+     * @return boolean
      */
     private boolean loadSite(SiteCatalogEntry site) {
         return ( mLoadAll || mSites.contains( site.getSiteHandle() ));
@@ -643,7 +643,7 @@ public class SiteCatalogParser extends Parser {
      * Usually it involves adding the object to the parent's child object
      * list.
      *
-     * @param elment name  is the  the child element name
+     * @param childElement name  is the  the child element name
      * @param parent is a reference to the parent's Java object
      * @param child is the completed child object to connect to the parent
      * 

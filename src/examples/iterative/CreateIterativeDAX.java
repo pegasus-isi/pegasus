@@ -17,7 +17,7 @@ package examples.iterative;
  *   limitations under the License.
  *
  */
-import examples.iterative.CreateDAX;
+
 import java.io.File;
 
 
@@ -52,16 +52,37 @@ public class CreateIterativeDAX {
      */
     private String mDirectory;
 
+    /**
+     * The overloaded constructor.
+     *
+     * @param maxIterations  maximum number of iterations.
+     */
     public CreateIterativeDAX( int maxIterations ){
         mMaxIterations = maxIterations;
     }
 
+    /**
+     * Returns the LFN for a DAX
+     *
+     * @param basename            the basename
+     * @param currentIteration    the current iteration
+     *
+     * @return the DAX LFN
+     */
     public static String getDAXLFN( String basename, int currentIteration ){
         StringBuffer lfn = new StringBuffer();
         lfn.append( basename ).append( "-" ).append( currentIteration ).append( ".dax" );
         return lfn.toString();
     }
 
+    /**
+     * Constructs at iterative DAX.
+     *
+     * @param directory        the directory in which to create the DAX
+     * @param currentIteration the current iteration.
+     *
+     * @return the path to the iterative DAX file
+     */
     public String constructIterativeDAX( String directory, int currentIteration ){
         mDirectory = directory;
         //create the directory if does not exist
@@ -87,7 +108,11 @@ public class CreateIterativeDAX {
 
     }
 
-
+    /**
+     * The main program.
+     *
+     * @param args   arguments passed at runtime.
+     */
     public static void main( String[] args ){
 
         if (args.length == 3) {

@@ -233,10 +233,10 @@ public class Bundle extends Default {
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
      * @param type  the type of transfer job being created
-     * @param staginMap  Map indexed by site name that gives all the transfers for
+     * @param stageInMap  Map indexed by site name that gives all the transfers for
      *                   that site.
      * @param bundleValue   used to determine the bundling factor to employ for a job.
-     * @param implmentation  the transfer implementation to use.
+     * @param implementation  the transfer implementation to use.
      */
     public  void addStageInXFERNodes( SubInfo job,
                                       Collection files, 
@@ -593,7 +593,7 @@ public class Bundle extends Default {
      *
      * @return the bundle factor.
      *
-     * @see #DEFAULT_BUNDLE_STAGE_IN_FACTOR
+     * @see #DEFAULT_STAGE_IN_BUNDLE_FACTOR
      */
     protected int getSISiteBundleValue(String site,  String deflt){
         //this should be parameterised Karan Dec 20,2005
@@ -1084,7 +1084,7 @@ public class Bundle extends Default {
         /**
          * Return the pool for which the transfers are grouped
          * 
-         * @retrun name of pool.
+         * @return name of pool.
          */
         public String getPoolName(){
             return this.mPool;
@@ -1157,7 +1157,7 @@ public class Bundle extends Default {
          * Initializes the implementation
          * 
          * @param key     the Pegasus Profile key to be used for lookup of bundle values.
-         * @param default the default value to be associated if no key is found.
+         * @param dflt the default value to be associated if no key is found.
          */
         public void initialize( String key, String dflt ){
             mProfileKey     = key;
@@ -1208,7 +1208,6 @@ public class Bundle extends Default {
         *
         * @return the bundle factor.
         *
-        * @see #DEFAULT_FACTOR
         */
         public  int determine( Implementation implementation, String site, String deflt ){
             //this should be parameterised Karan Dec 20,2005

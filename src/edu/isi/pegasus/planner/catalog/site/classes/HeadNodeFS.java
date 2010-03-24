@@ -126,7 +126,7 @@ public class HeadNodeFS extends AbstractSiteData {
      * If that is null, it then selects a FileServer associated with the 
      * Shared Directory.
      * 
-     * @return
+     * @return  storage FileServer for stageout.
      */
     public FileServer selectStorageFileServerForStageout() {
         HeadNodeStorage s = this.getStorage();
@@ -171,7 +171,7 @@ public class HeadNodeFS extends AbstractSiteData {
     /**
      * Adds a profile.
      * 
-     * @param profile  the profile to be added
+     * @param p  the profile to be added
      */
     public void addProfile( Profile p ){
         //retrieve the appropriate namespace and then add

@@ -464,7 +464,7 @@ public class Filename extends Leaf implements Cloneable
    *
    * @deprecated
    *
-   * @see #setRegister()
+   * @see #setRegister(boolean)
    *
    * @since 1.6
    */
@@ -495,7 +495,7 @@ public class Filename extends Leaf implements Cloneable
    *
    * @deprecated
    *
-   * @see #setTransfer( )
+   * @see #setTransfer(int) 
    * @see org.griphyn.vdl.classes.LFN#XFER_MANDATORY
    * @see org.griphyn.vdl.classes.LFN#XFER_OPTIONAL
    * @see org.griphyn.vdl.classes.LFN#XFER_NOT

@@ -126,7 +126,7 @@ public interface SLS {
      *
      * @return the full path to lof file created, else null if no file is written out.
      *
-     * @see #needsSLSFile( SubInfo )
+     * @see #needsSLSInput( SubInfo)
      */
     public File generateSLSInputFile( SubInfo job,
                                       String fileName,
@@ -146,7 +146,7 @@ public interface SLS {
      *
      * @return the full path to lof file created, else null if no file is written out.
      *
-     * @see #needsSLSFile( SubInfo )
+     * @see #needsSLSOutput( SubInfo) 
      */
     public File generateSLSOutputFile( SubInfo job,
                                        String fileName,

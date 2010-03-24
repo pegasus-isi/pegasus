@@ -26,7 +26,7 @@ import java.io.IOException;
 /**
  * This data class describes the scratch area on a head node.
  * 
- * @revision $Revision$
+ * @version $Revision$
  * @author Karan Vahi
  */
 public class HeadNodeScratch extends StorageType {

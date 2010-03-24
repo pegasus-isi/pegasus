@@ -284,7 +284,7 @@ public class ReplicaStore
     /**
      * Returns an entry corresponding to the LFN
      *
-     * @param lfn  the LFN
+     * @param key  the LFN
      *
      * @return <code>ReplicaLocation</code> object if exists, else null.
      */

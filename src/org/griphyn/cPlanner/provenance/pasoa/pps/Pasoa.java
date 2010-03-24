@@ -264,7 +264,7 @@ public class Pasoa implements PPS {
      * called a data accessor, and this method constructs the fragment for a given
      * job ID.
      *
-     * @param causeJobID The job ID
+     * @param jobID The job ID
      * @return An XML (DOM) fragment representing a reference to that job in an XML workflow representation
      */
     public Element createDataAccessor (String jobID) throws IOException, SAXException {
@@ -287,9 +287,9 @@ public class Pasoa implements PPS {
     /**
      * Creates an interaction key to identify an interaction between two actors.
      *
-     * @refinementID The unique identifier for this workflow refinement (run of Pegasus)
-     * @refinementAddress The URI of the particular refinement step (site selection, cluster etc.)
-     * @preRefinement True if the interaction is pre-refinement, i.e. from Pegasus to a refiner, rather than the other way round
+     * @param refinementID The unique identifier for this workflow refinement (run of Pegasus)
+     * @param refinementAddress The URI of the particular refinement step (site selection, cluster etc.)
+     * @param preRefinement True if the interaction is pre-refinement, i.e. from Pegasus to a refiner, rather than the other way round
      */
     public InteractionKey createInteractionKey (String refinementID, String refinementAddress, boolean preRefinement) {
         if (preRefinement) {

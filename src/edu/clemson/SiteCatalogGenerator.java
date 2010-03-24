@@ -31,6 +31,9 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 
 /**
  * 
@@ -72,9 +75,7 @@ public class SiteCatalogGenerator {
      * loaded.
      * 
      * @param  outputArray
-     * @param  sites       the sites to be parsed.
      * 
-     * @return
      */
     public SiteCatalogGenerator( ArrayList<String> outputArray){
         this.outputArray = outputArray;
@@ -140,7 +141,10 @@ public class SiteCatalogGenerator {
                 return site;
             }
 
-
+            String hostname = siteInfoArray[3];
+            Pattern pattern = Pattern.compile("[:\\/]+.*");
+            Matcher matcher = pattern.matcher(hostname);
+            hostname = matcher.replaceAll("");
 
             if (globusLocation != null) {
                 site.globusLocation = globusLocation;
@@ -179,12 +183,12 @@ public class SiteCatalogGenerator {
                 // Respects the shared nature (across VO, and across VO members) of OSG_DATA
                 // by using a VO specific temporary work directory. Also, for sites with
                 // multiple gatekeepers, keep separate work directories for each gatekeeper.
-                site.data = siteInfoArray[7] + "/" + vo + "/tmp/" + siteInfoArray[1]; 
+                site.data = siteInfoArray[7] + "/" + vo + "/tmp/" + hostname; 
             }
             if ((siteInfoArray[8] != null && !siteInfoArray[8].equals("")) &&
                     !siteInfoArray[8].equals("UNAVAILABLE")) {
                 // is this the same as site.data?
-                site.tmp = siteInfoArray[8] + "/" + vo + "/tmp/" + siteInfoArray[1];
+                site.tmp = siteInfoArray[8] + "/" + vo + "/tmp/" + hostname;
             }
             if ((siteInfoArray[9] != null && !siteInfoArray[9].equals("")) &&
                     !siteInfoArray[9].equals("UNAVAILABLE")) {
@@ -206,6 +210,11 @@ public class SiteCatalogGenerator {
         return site;
     }
 
+    /**
+     *
+     * @param vo
+     * @throws IOException
+     */
     public void generateSiteCatalog(String vo) throws IOException {
         //fileWriter= new FileWriter(file);
         addHeaderInformationToSiteCatalog();
@@ -377,23 +386,71 @@ public class SiteCatalogGenerator {
     }
     
     
+    /**
+     *
+     */
     public class Site {
 
+        /**
+         *
+         */
         public String siteName;
+        /**
+         *
+         */
         public String sysinfo = "INTEL32::LINUX"; //default value
+        /**
+         *
+         */
         public String globusLocation;
         public String globusLib;
+        /**
+         *
+         */
         public String gridlaunch;
+        /**
+         *
+         */
         public String pegasusHome;
+        /**
+         *
+         */
         public String lrcUrl = "rlsn://dummyValue.url.edu";
+        /**
+         *
+         */
         public String gridFtpUrl;
+        /**
+         *
+         */
         public String gridFtpStorage;
+        /**
+         *
+         */
         public String transferUniverseJobManager;
+        /**
+         *
+         */
         public String VanillaUniverseJobManager;
+        /**
+         *
+         */
         public String workingDirectory;
+        /**
+         *
+         */
         public String app;
+        /**
+         *
+         */
         public String data;
+        /**
+         *
+         */
         public String tmp;
+        /**
+         *
+         */
         public String wntmp;
     }
 

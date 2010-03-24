@@ -252,7 +252,7 @@ public class Windward implements GridStart{
      * 
      * @param job the compute job
      * 
-     * @return
+     * @return  the wrapper arguments for the GU wrapper
      */
     protected String getGUWrapperArguments( SubInfo job ){
         StringBuffer args = new StringBuffer();
@@ -339,7 +339,7 @@ public class Windward implements GridStart{
      *
      * @return  the identifier for the Kickstart postscript
      *
-     * @see POSTScript#shortDescribe()
+     *
      */
     public String defaultPOSTScript(){
         return NetloggerPostScript.SHORT_NAME;
@@ -352,7 +352,7 @@ public class Windward implements GridStart{
      * 
      * @param aggJob
      * @param jobs
-     * @return
+     * @return the enabled clustered job
      */
     public AggregatedJob enable(AggregatedJob aggJob, Collection jobs) {
         //set the postscript always to default
@@ -368,7 +368,7 @@ public class Windward implements GridStart{
 
     /**
      * 
-     * @return
+     * @return  boolean
      */
     public boolean canSetXBit() {
         return mKickstartLauncher.canSetXBit();

@@ -59,6 +59,7 @@ public class SiteInfo2SiteCatalogEntry {
      * <code>SiteCatalogEntry</code> object.
      * 
      * @param s  <code>SiteInfo</code> to be converted.
+     * @param logger  the hande to the LogManager
      * 
      * @return the converted <code>SiteCatalogEntry</code> object.
      */

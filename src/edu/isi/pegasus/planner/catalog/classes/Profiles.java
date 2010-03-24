@@ -84,7 +84,7 @@ public class Profiles {
     /**
      * Adds a profile.
      * 
-     * @param profile  the profile to be added
+     * @param p  the profile to be added
      */
     public void addProfile( Profile p ){
         //retrieve the appropriate namespace and then add
@@ -96,6 +96,8 @@ public class Profiles {
      * Returns a  iterator over the profile keys corresponding to a particular namespace.
      * 
      * @param n   the namespace
+     *
+     * @return  iterator
      */
     public Iterator getProfileKeyIterator( NAMESPACES n ){
         return (( Namespace )mProfileMap.get( n )).getProfileKeyIterator();
@@ -103,7 +105,9 @@ public class Profiles {
     
     /**
      * Returns the namespace object corresponding to a namespace
-     * 
+     *
+     * @param n   the namespace
+     *
      * @return Namespace
      */
     public Namespace get( NAMESPACES n ){

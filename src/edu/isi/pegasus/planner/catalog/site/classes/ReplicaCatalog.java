@@ -242,6 +242,8 @@ public class ReplicaCatalog extends AbstractSiteData {
      *               be a StringWriter for efficient output.
      * @param indent the indent to be used.
      * @param value   the value to use.
+     *
+     * @exception IOException if something fishy happens to the stream.
      */
     protected void writeAlias( Writer writer, String indent, String value ) throws IOException {        
         String newLine = System.getProperty( "line.separator", "\r\n" );

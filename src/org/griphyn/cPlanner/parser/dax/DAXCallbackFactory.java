@@ -62,7 +62,7 @@ public class DAXCallbackFactory {
      *            might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
-     * @see org.griphyn.cPlanner.common.PegasusProperties#getDAXCallback()
+     * @see org.griphyn.cPlanner.common.PegasusProperties#getPartitionerDAXCallback()
      */
     public static Callback loadInstance( String type,
                                          PegasusProperties properties,

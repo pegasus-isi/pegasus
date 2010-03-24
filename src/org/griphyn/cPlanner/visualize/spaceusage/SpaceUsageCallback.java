@@ -463,7 +463,6 @@ public class SpaceUsageCallback implements Callback {
      * directory sizes, we only mainjob and postjob markers are valid.
      *
      * @param token  the token to be matched.
-     * @param state  the current header being processed
      *
      * @return boolean
      */
@@ -516,7 +515,7 @@ public class SpaceUsageCallback implements Callback {
     /**
      * Returns the event type matching a header.
      *
-     * @param header
+     * @param marker   the marker
      *
      * @return the corresponding event type
      */

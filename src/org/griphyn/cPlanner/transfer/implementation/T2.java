@@ -165,8 +165,6 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      *
      * @return boolean indicating whether to always use third party transfers
      *         or not.
-     *
-     * @see PegasusProperties#getThirdPartySites(String)
      */
     public boolean useThirdPartyTransferAlways(){
         return false;

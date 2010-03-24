@@ -28,19 +28,13 @@ import gnu.getopt.LongOpt;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.HashMap;
@@ -888,7 +882,7 @@ public class VDS2PegasusProperties extends Executable {
      * @return a property dictionary matching the filter key. May be
      * an empty dictionary, if no prefix matches were found.
      *
-     * @see #getProperty( String ) is used to assemble matches
+     *
      */
     public Properties matchingSubset( Properties properties, String prefix, boolean keepPrefix ) {
         Properties result = new Properties();

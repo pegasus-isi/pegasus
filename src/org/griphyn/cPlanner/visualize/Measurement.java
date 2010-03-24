@@ -53,7 +53,7 @@ public interface Measurement {
     /**
      * Sets the job for which the measurement was taken.
      *
-     * @param sets the name of the job.
+     * @param name set the name of the job.
      */
     public void setJobName( String name );
 

@@ -198,9 +198,7 @@ public class ReplicaCatalogBridge
      * The overloaded constructor.
      *
      * @param dag         the workflow that is being worked on.
-     * @param properties  the properties passed to the planner.
-     * @param options     the options passed to the planner at runtime.
-     *
+     * @param bag of initialization objects.
      *
      */
     public ReplicaCatalogBridge( ADag dag ,

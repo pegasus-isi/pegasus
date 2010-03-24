@@ -6,7 +6,6 @@
 package edu.isi.pegasus.common.logging;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,7 +26,9 @@ public interface Event extends Cloneable{
     /**
      * Returns the program name for the software whose log statement are logged.
      * 
-     * @param name 
+     * @param name
+     *
+     * @return  the name of the program
      */
     public String getProgramName( String name );
     
@@ -92,6 +93,8 @@ public interface Event extends Cloneable{
     
     /**
      * Creates a log message with the contents of the internal log buffer.
+     *
+     * @return   log message.
      */
     public String createLogMessage();
     
@@ -100,7 +103,7 @@ public interface Event extends Cloneable{
      * Creates a log message with the contents of the internal log buffer.
      * It then resets the buffer before returning the log message
      * 
-     * @return 
+     * @return  the log message
      */
     public String createLogMessageAndReset();
     
@@ -113,7 +116,8 @@ public interface Event extends Cloneable{
      * @param parentID     the id of the parent entity
      * @param childIdType  the type of children entities
      * @param childIDs     Collection of children id's
-     * @return
+     *
+     * @return the entity hierarchy message.
      */
     public String createEntityHierarchyMessage( String parentType,
                                                 String parentID,

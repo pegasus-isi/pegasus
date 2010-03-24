@@ -839,7 +839,7 @@ public class TransferEngine extends Engine {
         //contains the remote_initialdir if specified for the job
         String eRemoteDir = job.vdsNS.getStringValue(
                                                  VDS.REMOTE_INITIALDIR_KEY);
-        String sourceURL,destURL=null;
+        
 //        SiteInfo ep        = mPoolHandle.getPoolEntry(ePool, "vanilla");
         SiteCatalogEntry ep        = mSiteStore.lookup( ePool );
         //we are using the pull mode for data transfer
@@ -874,6 +874,7 @@ public class TransferEngine extends Engine {
             fileDestDir;
 
         for( Iterator it = searchFiles.iterator(); it.hasNext(); ){
+            String sourceURL,destURL=null;
             PegasusFile pf = (PegasusFile) it.next();
             List  pfns   = null;
             ReplicaLocation rl = null;

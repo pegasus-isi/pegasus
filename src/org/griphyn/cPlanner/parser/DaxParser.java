@@ -851,7 +851,7 @@ public class DaxParser extends Parser {
      * Invoked when start of the pfn element nested in uses element is encountered
      * 
      * @param local      the local name of the element
-     * @param attribute  the map of attributes and values in the element tag
+     * @param attrs  the map of attributes and values in the element tag
      */
     private void handleUsesPFNTagStart( String local, Attributes attrs ){
         String url  = attrs.getValue( "", "url" );
@@ -1001,8 +1001,6 @@ public class DaxParser extends Parser {
      * version   : the version of the transformation.
      * 
      * @param job    the <code>SubInfo</code> object
-     * @param local  the local name of the element
-     * @param attrs  the attributes
      */
     private void handleJobTagStart( SubInfo job ) {
         String jobId = job.getLogicalID();

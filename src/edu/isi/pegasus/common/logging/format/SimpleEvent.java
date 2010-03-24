@@ -73,7 +73,9 @@ public class SimpleEvent implements Event{
     /**
      * Returns the program name for the software whose log statement are logged.
      * 
-     * @param name 
+     * @param name
+     *
+     * @return program name
      */
     public String getProgramName( String name ){
         return mProgram;
@@ -173,6 +175,8 @@ public class SimpleEvent implements Event{
     
     /**
      * Creates a log message with the contents of the internal log buffer.
+     *
+     * @return the log message
      */
     public String createLogMessage(){
         StringBuffer message = new StringBuffer();
@@ -184,7 +188,7 @@ public class SimpleEvent implements Event{
      * Creates a log message with the contents of the internal log buffer.
      * It then resets the buffer before returning the log message
      * 
-     * @return 
+     * @return the log message
      */
     public String createLogMessageAndReset(){
         String result = this.createLogMessage();
@@ -201,7 +205,7 @@ public class SimpleEvent implements Event{
      * @param parentID     the id of the parent entity
      * @param childIdType  the type of children entities
      * @param childIDs     Collection of children id's
-     * @return
+     * @return entity hierarchy message.
      */
     public String createEntityHierarchyMessage( String parentType,
                                                 String parentID,

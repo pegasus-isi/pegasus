@@ -29,6 +29,11 @@ import java.util.List;
 import java.util.Properties;
 
 
+/**
+ * Testing class to test the MyOSG implementation.
+ *
+ * @author vahi
+ */
 public class TestMyOSG {
 
     private static final String TMP_FILE_NAME  ="MYOSG_SC.xml";

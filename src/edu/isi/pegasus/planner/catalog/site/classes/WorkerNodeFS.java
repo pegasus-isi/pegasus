@@ -160,7 +160,7 @@ public class WorkerNodeFS extends AbstractSiteData {
     /**
      * Adds a profile.
      * 
-     * @param profile  the profile to be added
+     * @param p  the profile to be added
      */
     public void addProfile( Profile p ){
         //retrieve the appropriate namespace and then add

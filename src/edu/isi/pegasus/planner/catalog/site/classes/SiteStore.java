@@ -125,7 +125,7 @@ public class SiteStore extends AbstractSiteData{
     /**
      * Adds a site catalog entry to the store.
      * 
-     * @param site  the site catalog entry.
+     * @param entry  the site catalog entry.
      * 
      * @return previous value associated with specified key, or null 
      *         if there was no mapping for key
@@ -146,7 +146,7 @@ public class SiteStore extends AbstractSiteData{
     /**
      * Returns the list of sites, in the store.
      * 
-     * @return
+     * @return list of sites
      */
     public Set<String> list() {
         return mStore.keySet();
@@ -155,6 +155,8 @@ public class SiteStore extends AbstractSiteData{
     /**
      * Returns SiteCatalogEntry matching a site handle.
      * 
+     * @param handle  the handle of the site to be looked up.
+     *
      * @return SiteCatalogEntry if exists else null.
      */
     public SiteCatalogEntry lookup ( String handle ){
@@ -175,9 +177,10 @@ public class SiteStore extends AbstractSiteData{
     
     /**
      * 
-     * @param site the list of site identifiers for which sysinfo is required.
+     * @param sites the list of site identifiers for which sysinfo is required.
+     *
      * 
-     * @return
+     * @return  the sysinfo map
      */
     public Map getSysInfos( List<String> sites ) {
         HashMap result = new HashMap();
@@ -246,6 +249,7 @@ public class SiteStore extends AbstractSiteData{
      * Returns an environment variable associated with the site.
      *
      * @param handle   the site handle / identifier.
+     * @param variable the name of the environment variable.
      *
      * @return value of the environment variable if found, else null
      */
