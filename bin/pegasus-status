@@ -29,14 +29,18 @@ $main::DEBUG = 0;
 $_ = '$Revision$';      # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
 
-
-
 sub myversion() {
     my $version = version();
     print "Pegasus $version, @{[basename($0)]} $main::revision\n";
     exit 0;
 }
 
+sub longstatus(;$) {
+    my $ddir = shift || "./";   
+    my $cmd='for i in `find '.$ddir.' -name "*.dag.dagman.out" `; do echo $i | sed -e "s/.\/\///" -e "s/.dagman.out//"; grep -A 2 Done $i | tail -3 ; done';
+    my $result=system($cmd);
+    exit 0;
+}
 
 sub usage(;$) {
     my $msg = shift;
@@ -53,6 +57,7 @@ Usage: @{[basename($0)]} [options ] [dagdir]
  -j|--jobtype type  Monitor jobs of one of these types [compute, stagein, stageout, replica,cleanup,intersitetx,computestaged, createdir] . Default is all types.
  -v|--verbose   Enter verbose mode, default is not
  -V|--version   Print version number and exit.
+ -l|--long      Print Status of jobs from the dagman out file
 EOF
     exit(1);
 }
@@ -85,7 +90,7 @@ my $jobtype=undef;
 my $user=$ENV{'USER'};
 my $notify=undef;
 my $condor_q=find_exec('condor_q');
-
+my $longstatus="false";
 GetOptions( "workflow|w=s"    => \$workflow,
 	    "time|t=s"   => \$time,
 	    "user|u=s"  => \$user,
@@ -93,11 +98,19 @@ GetOptions( "workflow|w=s"    => \$workflow,
 	    "jobtype|j=s" => \$jobtype,
 	    "notify|n=s" => \$notify,
 	    "version|V" => \&myversion,
+	    "long|l" => \$longstatus,
 	    "verbose|v" => \$main::DEBUG,
 	    "help|h|?" => \&usage );
 
 
+
 my $run=shift || undef;
+
+if ($longstatus) {
+    longstatus($run);
+}
+
+
 warn "# Got run dir $run\n" if $main::DEBUG;
 #  
 # JOBTYPE to num mappings
