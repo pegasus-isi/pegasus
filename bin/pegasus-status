@@ -90,7 +90,7 @@ my $jobtype=undef;
 my $user=$ENV{'USER'};
 my $notify=undef;
 my $condor_q=find_exec('condor_q');
-my $longstatus="false";
+my $longstatus=0;
 GetOptions( "workflow|w=s"    => \$workflow,
 	    "time|t=s"   => \$time,
 	    "user|u=s"  => \$user,
