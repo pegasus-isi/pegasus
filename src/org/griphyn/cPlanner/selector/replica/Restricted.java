@@ -28,7 +28,6 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -143,13 +142,16 @@ public class Restricted extends Default {
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param preferredSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
      *
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
     public ReplicaCatalogEntry selectReplica( ReplicaLocation rl,
-                                              String preferredSite ){
+                                              String preferredSite,
+                                              boolean allowLocalFileURLs ){
 
         String lfn = rl.getLFN();
         String site;
@@ -176,23 +178,27 @@ public class Restricted extends Default {
             //or site is preferred to stage to execution site.
             if ( prefer( site, preferredSite ) ) {
 
-                prefLocs.add( rce );
-
-                //return the one with file url for ligo stuff
-                //is temporary till new api coded
-                if ( rce.getPFN().startsWith( FILE_URL_SCHEME ) ) {
-                    //this is the one which is reqd for ligo
-                    //return the location instead of breaking
-                    return rce;
+                //check for file URL
+                if( this.removeFileURL(rce, preferredSite, allowLocalFileURLs) ){
+                     it.remove();
                 }
+                else{
+                    if ( rce.getPFN().startsWith( FILE_URL_SCHEME ) ) {
+                        //this is the one which is reqd for ligo
+                        //return the location instead of breaking
+                        return rce;
+                    }
+                    prefLocs.add( rce );
+                }
+                
             }
 
-            //remove a URL if it is a file URL not associated
-            //with compute site or a URL with a site that is
+            //remove a URL with a site that is
             //to be ignored for staging data to any site.
-            else if ( rce.getPFN().startsWith( FILE_URL_SCHEME ) ||
-                     ignore( site, preferredSite ) ) {
-                    it.remove();
+            // or if it is a file url
+            else if ( ignore( site, preferredSite )  ||
+                      this.removeFileURL( rce, preferredSite, allowLocalFileURLs)) {
+                it.remove();
             }
 
         }

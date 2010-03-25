@@ -29,7 +29,6 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
 
 /**
  * This replica selector only prefers replicas from the local host and that
@@ -54,7 +53,12 @@ public class Local implements ReplicaSelector {
     /**
      * A short description of the replica selector.
      */
-    private static String mDescription = "Local from submit host";
+    private static final String mDescription = "Local from submit host";
+
+    /**
+     * Sanity Check Error Message.
+     */
+    public static final String SANITY_CHECK_ERROR_MESSAGE = "Local Replica Selector selects only local file URL's. Set transfers to run on submit host";
 
     /**
      * The scheme name for file url.
@@ -94,14 +98,22 @@ public class Local implements ReplicaSelector {
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param preferredSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
      *
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
     public ReplicaCatalogEntry selectReplica( ReplicaLocation rl,
-                                              String preferredSite ){
+                                              String preferredSite,
+                                              boolean allowLocalFileURLs ){
 
+        //sanity check
+        if( !allowLocalFileURLs && !preferredSite.equals( ReplicaSelector.LOCAL_SITE_HANDLE )){
+            throw new RuntimeException( SANITY_CHECK_ERROR_MESSAGE );
+        }
+        
         ReplicaCatalogEntry rce;
         ArrayList prefPFNs = new ArrayList();
         int locSelected;
@@ -161,13 +173,21 @@ public class Local implements ReplicaSelector {
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param preferredSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
      *
      * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
     public ReplicaLocation selectReplicas( ReplicaLocation rl,
-                                           String preferredSite ){
+                                           String preferredSite,
+                                           boolean allowLocalFileURLs ){
+
+        //sanity check
+        if( !allowLocalFileURLs && !preferredSite.equals( ReplicaSelector.LOCAL_SITE_HANDLE )){
+            throw new RuntimeException( SANITY_CHECK_ERROR_MESSAGE );
+        }
 
         String lfn = rl.getLFN();
         ReplicaLocation result = new ReplicaLocation();

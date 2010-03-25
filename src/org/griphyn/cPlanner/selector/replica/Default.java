@@ -97,13 +97,16 @@ public class Default implements ReplicaSelector {
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param preferredSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
      *
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
     public ReplicaCatalogEntry selectReplica( ReplicaLocation rl,
-                                              String preferredSite ){
+                                              String preferredSite,
+                                              boolean allowLocalFileURLs ){
 
         ReplicaCatalogEntry rce;
         ArrayList prefPFNs = new ArrayList();
@@ -132,20 +135,17 @@ public class Default implements ReplicaSelector {
                     return rce;
                 }
             }
-            else {
-                //we again need to check if a location
-                //starts with file url. if it is , we need
-                //to remove it from list, as file urls make sense
-                //only if associated with the preference pool
-                if ( rce.getPFN().startsWith( FILE_URL_SCHEME ) ){ 
-                    it.remove();
-                }
+            //check if we need to remove a file url or not
+            else if ( removeFileURL(rce, preferredSite, allowLocalFileURLs) ){
+                it.remove();
+                   
+            }
                 /*
                 mLogger.log(
                     "pool attribute not specified for the location objects" +
                     " in the Replica Catalog",LogManager.WARNING_MESSAGE_LEVEL);
                  */
-            }
+            
         }
 
         int noOfLocs = rl.getPFNCount();
@@ -188,6 +188,9 @@ public class Default implements ReplicaSelector {
 
     }
 
+
+
+
     /**
      * This chooses a location amongst all the locations returned by the
      * Replica Mechanism. If a location is found with re/pool attribute same
@@ -200,13 +203,16 @@ public class Default implements ReplicaSelector {
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param preferredSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
      *
      * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
     public ReplicaLocation selectReplicas( ReplicaLocation rl,
-                                           String preferredSite ){
+                                           String preferredSite,
+                                           boolean allowLocalFileURLs ){
 
         String lfn = rl.getLFN();
         ReplicaLocation result = new ReplicaLocation();
@@ -242,6 +248,74 @@ public class Default implements ReplicaSelector {
 
     }
 
+
+    /**
+     * A convenience function that determines whether we should be removing a
+     * file URL from replica selection or not. The file urls make sense only
+     *
+     * <pre>
+     *      - if associated with the preference site or
+     *      - if local File URL are allowed and rce is associated
+     *        with local site
+     * </pre>
+     * 
+     * @param rce                   the ReplicaCatalogEntry object.
+     * @param preferredSite         the preferred site.
+     * @param allowLocalFileURLs    indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
+     * 
+     * @return boolean
+     */
+    public boolean removeFileURL( ReplicaCatalogEntry rce, 
+                                  String preferredSite,
+                                  boolean allowLocalFileURLs ){
+        return this.removeFileURL( rce.getPFN(), rce.getResourceHandle(), preferredSite, allowLocalFileURLs );
+    }
+
+    /**
+     * A convenience function that determines whether we should be removing a
+     * file URL from replica selection or not. The file urls make sense only
+     *
+     * <pre>
+     *      - if associated with the preference site or
+     *      - if local File URL are allowed and rce is associated
+     *        with local site
+     * </pre>
+     *
+     * @param pfn                   the file url
+     * @param site                  the site associated with the pfn.
+     * @param preferredSite         the preferred site.
+     * @param allowLocalFileURLs    indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
+     *
+     * @return boolean
+     */
+    protected boolean removeFileURL( String pfn,
+                                     String site,
+                                     String preferredSite,
+                                     boolean allowLocalFileURLs ){
+
+        boolean result = false;
+
+        if ( !pfn.startsWith( FILE_URL_SCHEME )  ){
+            //not a file url . dont remove
+            return result;
+        }
+
+        if( site == null ){
+            //remove the url and continue
+            //nothing can be done
+            result = true;
+        }
+        else if( !site.equalsIgnoreCase( preferredSite ) ){
+            //the URL is not from a preferred site.
+            //we can still use it if local file urls are allowed
+            //and url is from a local site.
+            result =  !( allowLocalFileURLs && site.equals( LOCAL_SITE_HANDLE ) );
+        }
+
+        return result;
+    }
     
 
     /**

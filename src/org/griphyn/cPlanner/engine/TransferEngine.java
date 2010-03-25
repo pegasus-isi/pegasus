@@ -273,7 +273,7 @@ public class TransferEngine extends Engine {
      * Returns whether a site is third party enabled or not. A site is determined
      * to be third party enabled if the transfer mode is a thirdparty based
      * transfer mode like RFT or if it is specified a third party site in the
-     * by the property "vds.transfer.thirdparty.sites".
+     * by the property "pegasus.transfer.thirdparty.*.sites".
      *
      * @param site  the site handle of the site for which you want to detect
      *              third party capability.
@@ -415,7 +415,10 @@ public class TransferEngine extends Engine {
 
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
-            ReplicaLocation selLocs = mReplicaSelector.selectReplicas( rl, pool );
+            ReplicaLocation selLocs = mReplicaSelector.selectReplicas( rl,
+                                                                       pool,
+                                                                       this.isSiteThirdParty( pool, SubInfo.STAGE_OUT_JOB ));
+
 
             boolean flag = false;
 
@@ -939,7 +942,9 @@ public class TransferEngine extends Engine {
             */
             ReplicaCatalogEntry selLoc = (nv == null)?
                                         //select from the various replicas
-                                        mReplicaSelector.selectReplica( rl, job.getSiteHandle() ):
+                                        mReplicaSelector.selectReplica( rl, 
+                                                                        job.getSiteHandle(),
+                                                                        this.isSiteThirdParty( job.getSiteHandle(), SubInfo.STAGE_IN_JOB )):
                                         //we have the replica already selected
                                         new ReplicaCatalogEntry( nv.getValue(), nv.getKey() );
 

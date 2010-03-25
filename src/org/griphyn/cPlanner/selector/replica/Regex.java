@@ -116,13 +116,16 @@ public class Regex extends Default {
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param preferredSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
      *
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
     public ReplicaCatalogEntry selectReplica( ReplicaLocation rl,
-                                              String preferredSite ){
+                                              String preferredSite,
+                                              boolean allowLocalFileURLs ){
 
 
         String lfn = rl.getLFN();
@@ -150,12 +153,10 @@ public class Regex extends Default {
             
             //if a PFN starts with file url and does
             //not match the preferredSite ignore.
-            if( pfn.startsWith( Regex.FILE_URL_SCHEME ) ){
-                if( !site.equalsIgnoreCase( preferredSite ) ){
-                    it.remove();
-                    System.out.println( "Ignoring PFN " + rce );
-                    continue;
-                }
+            if( this.removeFileURL( rce, preferredSite, allowLocalFileURLs) ){
+                //remove the url and continue
+                it.remove();
+                continue;                
             }
 
             //System.out.println( "PFN is " + pfn );

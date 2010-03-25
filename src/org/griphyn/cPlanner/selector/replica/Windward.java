@@ -29,7 +29,6 @@ import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
 
 /**
  * This replica selector that takes into account availability times returned by
@@ -48,7 +47,7 @@ import java.util.Vector;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Windward implements ReplicaSelector {
+public abstract class Windward implements ReplicaSelector {
 
     /**
      * A short description of the replica selector.

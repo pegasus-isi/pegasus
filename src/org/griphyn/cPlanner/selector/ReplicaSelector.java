@@ -20,7 +20,6 @@ import org.griphyn.cPlanner.classes.ReplicaLocation;
 
 import org.griphyn.common.catalog.ReplicaCatalogEntry;
 
-import java.util.Vector;
 
 
 /**
@@ -36,7 +35,12 @@ public interface ReplicaSelector {
     /**
      * The version of this API.
      */
-    public static final String VERSION ="1.3";
+    public static final String VERSION ="1.5";
+
+    /**
+     * The local site handle.
+     */
+    public static final String LOCAL_SITE_HANDLE = "local";
 
     /**
      * Selects a replica amongst all the replicas returned by the implementing
@@ -52,13 +56,16 @@ public interface ReplicaSelector {
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param prefferedSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
      *
      * @return <code>ReplicaLocation</code> corresponding to the replicas selected.
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
     public abstract ReplicaLocation selectReplicas( ReplicaLocation rl,
-                                                    String prefferedSite );
+                                                    String prefferedSite,
+                                                    boolean allowLocalFileURLs );
 
     /**
      * Selects a single replica amongst all the replicas returned by the implementing
@@ -69,13 +76,16 @@ public interface ReplicaSelector {
      * @param rl         the <code>ReplicaLocation</code> object containing all
      *                   the pfn's associated with that LFN.
      * @param prefferedSite the preffered site for picking up the replicas.
+     * @param allowLocalFileURLs indicates whether Replica Selector can select a replica
+     *                      on the local site / submit host.
      *
      * @return <code>ReplicaCatalogEntry</code> corresponding to the location selected.
      *
      * @see org.griphyn.cPlanner.classes.ReplicaLocation
      */
     public abstract ReplicaCatalogEntry selectReplica( ReplicaLocation rl,
-                                                       String prefferedSite );
+                                                       String prefferedSite,
+                                                       boolean allowLocalFileURLs );
 
     /**
      * Returns a short description of the replica selector, that is being
