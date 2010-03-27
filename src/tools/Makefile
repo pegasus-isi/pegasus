@@ -3,7 +3,7 @@
 #
 # $Id$
 #
-TARGET	= kickstart k.2 keg transfer T2 cluster invoke # free
+TARGET	= kickstart keg transfer cluster invoke # free
 CONDOR_VERSION	= $(shell condor_version | awk '{ print $2; exit }')
 MARCH   = $(shell uname -m | tr '[A-Z]' '[a-z]')
 

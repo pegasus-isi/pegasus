@@ -45,7 +45,7 @@ fi
 export PATH
 
 if [ "X${MANPATH}" = "X" ]; then
-    MANPATH=$PEGASUS_HOME/man
+    MANPATH=/usr/man:/usr/share/man:/usr/local/man:/usr/local/share/man:/usr/X11R6/man:$PEGASUS_HOME/man
 else
     x=$PEGASUS_HOME/man
     if ! echo $MANPATH | egrepq "(^|:)$x($|:)" ; then

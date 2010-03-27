@@ -47,7 +47,7 @@ else
 endif
 
 if ( ! $?MANPATH ) then
-    setenv MANPATH "${PEGASUS_HOME}/man"
+    setenv MANPATH "/usr/man:/usr/share/man:/usr/local/man:/usr/local/share/man:/usr/X11R6/man:$PEGASUS_HOME/man"
 else
     set x="${PEGASUS_HOME}/man"
     set y=`echo $MANPATH | egrep '(^|:)'$x'($|:)' >>& /dev/null`
