@@ -42,7 +42,7 @@ import org.griphyn.cPlanner.transfer.Implementation;
 import org.griphyn.cPlanner.transfer.implementation.ImplementationFactory;
 import org.griphyn.cPlanner.transfer.refiner.RefinerFactory;
 
-import org.griphyn.cPlanner.selector.TransformationSelector;
+import edu.isi.pegasus.planner.selector.TransformationSelector;
 
 import org.griphyn.common.util.DynamicLoader;
 import org.griphyn.common.util.FactoryException;

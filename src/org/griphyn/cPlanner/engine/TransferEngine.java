@@ -41,8 +41,8 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Graph;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
-import org.griphyn.cPlanner.selector.ReplicaSelector;
-import org.griphyn.cPlanner.selector.replica.ReplicaSelectorFactory;
+import edu.isi.pegasus.planner.selector.ReplicaSelector;
+import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
 
 import org.griphyn.cPlanner.transfer.Refiner;
 import org.griphyn.cPlanner.transfer.refiner.RefinerFactory;

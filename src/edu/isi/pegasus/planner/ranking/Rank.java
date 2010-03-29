@@ -17,7 +17,7 @@ package edu.isi.pegasus.planner.ranking;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.selector.site.heft.Algorithm;
+import edu.isi.pegasus.planner.selector.site.heft.Algorithm;
 
 import org.griphyn.cPlanner.classes.ADag;
 

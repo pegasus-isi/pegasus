@@ -34,11 +34,11 @@ import org.griphyn.common.classes.SysInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.selector.SiteSelector;
+import edu.isi.pegasus.planner.selector.SiteSelector;
 
-import org.griphyn.cPlanner.selector.site.SiteSelectorFactory;
+import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
 
-import org.griphyn.cPlanner.selector.TransformationSelector;
+import edu.isi.pegasus.planner.selector.TransformationSelector;
 
 import org.griphyn.cPlanner.namespace.Hints;
 
