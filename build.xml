@@ -343,11 +343,17 @@
       <fileset dir="bin">
 	<include name="dirmanager"/>
         <include name="cleanup"/>
+	<include name="cleanup.py"/>
         <include name="symlink"/>
-	<include name="osg-srm-wrapper"/>
+	<include name="s3cmd"/>
 	<!-- add script files to copy as necessary -->
       </fileset>
     </copy>
+    <copy preservelastmodified="true" todir="${dist.dir}/lib">
+      <fileset dir="lib">
+	<include name="python/S3/*"/>
+	</fileset>
+      </copy>
     <antcall target="dist-setup-app"/>
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
     <copy preservelastmodified="true" todir="${dist.dir}" file="GTPL"/>
@@ -539,4 +545,6 @@
     <delete dir="build"/>
     <delete file="stamp"/>
   </target>
+ <target name="build" depends="ctools-all, jar"/>
 </project>
+

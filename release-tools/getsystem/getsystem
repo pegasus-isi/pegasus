@@ -153,26 +153,11 @@ sub get_linux_distro () {
         my @distro_strs = split(" ", $line);
 
         if($line =~ m!Red Hat!) {
-            if($line =~ m!Red Hat Enterprise Linux AS release!) {
+            if($line =~ m!Red Hat Enterprise Linux!) {
                 $distro{"long"} = "$distro_strs[0]$distro_strs[1]$distro_strs[4]";
                 $distro{"version"} = "$distro_strs[6]";
-                $distro{"short"} = "rhas";
+                $distro{"short"} = "rhel";
             }
-            elsif($line =~ m!Red Hat Enterprise Linux ES release!) {
-                $distro{"long"} = "$distro_strs[0]$distro_strs[1]$distro_strs[4]";
-                $distro{"version"} = "$distro_strs[6]";
-                $distro{"short"} = "rhes";
-            }
-            elsif($line =~ m!Red Hat Enterprise Linux WS release!) {
-                $distro{"long"} = "$distro_strs[0]$distro_strs[1]$distro_strs[4]";
-                $distro{"version"} = "$distro_strs[6]";
-                $distro{"short"} = "rhws";
-            }
-            elsif($line =~ m!Red Hat Enterprise Linux Server release!) {
-                $distro{"long"} = "$distro_strs[0]$distro_strs[1]$distro_strs[4]";
-                $distro{"version"} = "$distro_strs[6]";
-                $distro{"short"} = "rhap";
-            }           
             else {
                 $distro{"long"} = "$distro_strs[0]$distro_strs[1]";
                 $distro{"version"} = "$distro_strs[4]";

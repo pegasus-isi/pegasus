@@ -1,6 +1,130 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 2.4.1
+===============================
+This is minor release, that fixes some critical bugs discovered 
+after 2.4.0 release and some feature enhancements.
+
+NEW FEATURES
+--------------
+
+1) Specifying different relative submit and execution directories
+   
+   Earlier --relative-dir was used to determine the relative submit
+   directory for a workflow and the relative execution directory on
+   the remote site. Users now can optionally specify --relative-submit-dir
+   if they want the relative submit directory to be different from
+   the remtoe execution directory.
+
+   This is useful when a user wants certain sub workflows in a 
+   DAX 3.0 dax to be executed in the same execution directory , while 
+   having the submit directories different.
+
+   This feature addition was tracked in JIRA via PM-116
+
+   http://jira.isi.edu/browse/PM-116
+
+2) Python tools to visualize the DAX and DAG
+
+   There are new tools dag2dot.py and dax2dot.py in the bin directory.
+   - dag2dot.py reads a DAGMan .dag file (and the corresponding .sub files, if present). 
+   - dax2dot.py reads a Pegasus DAX file.
+
+   Notable features of the new scripts include:
+   - Removal of redundant edges in the workflow to make the 
+     resulting diagrams easier to look at.
+   - Coloring by transformation type.
+   - Removal of nodes by transformation type.
+
+   The new scripts are in the $PEGASUS_HOME/bin directory.
+
+3) Generating a site catalog for OSG for VO other than LIGO/Engage
+
+   pegasus-get-sites can now generate a site catalog for OSG for any 
+   VO using the OSGMM backend. Earlier a user could only generate
+   a site catalog for LIGO and Engage VO.
+
+   This feature addition was tracked in JIRA via PM-67
+   http://jira.isi.edu/browse/PM-67
+
+4) New features to pegasus-analyzer
+
+   pegasus-analyzer can now run on other users submit directories.
+
+   - Earlier pegasus-analyzer could not analyze workflow submit
+     directories for which the user running pegasus-analyzer did 
+     not have the write permissions. This was because pegasus-analyzer
+     tried to generate a jobstate.log file in the workflow submit
+     directory. This is now directed to a tmp file in the /tmp directory
+
+   - pegasus-analyzer can be used to analyze SUBDAGS/workflows that
+     are not planned via Pegasus
+
+   - New command line option --print option that optionally can print
+     the invocation and prescript for the failed jobs.
+
+5) pegasus-status has a --long option
+
+   If the --long option is set,  pegasus-status retrieves the last updated
+   status of the workflow from the dagman out file, instead of displaying
+   the running jobs in the condorq.
+
+   For e.g here is how the sample output looks like
+
+   $ pegasus-status --long .
+   ./inspiral_hipe_datafind-0.dag
+   03/25 04:24:22 Done Pre Queued Post Ready Un-Ready Failed
+   03/25 04:24:22 === === === === === === ===
+   03/25 04:24:22 5 0 50 0 43 0 0
+
+
+BUGS FIXED
+----------
+
+1) Mismatched source and destination urls in input files for stagein jobs
+
+   In certain cases, it was found that the source and destination pair in
+   the input files for the stagein jobs were mismatched.
+
+   The source url referred to one file and the destination file to another.
+
+   This was triggered when pegasus detected circular symlinks . i.e a file 
+   that was to be symlinked in the remote execution directory already existed
+   ( accd to the entry in the replica catalog )
+
+   More details athttp://jira.isi.edu/browse/PM-125
+
+2) symlink jobs were not launched correctly via kickstart
+
+   The symlink jobs while being launched via kickstart did not have the stdin 
+   file transferred correctly from the submit host.
+
+   This is now fixed.
+
+   More details athttp://jira.isi.edu/browse/PM-124
+
+3) Determining Condor Version
+   
+   Pegasus executes the condor_version command to determine the version of
+   condor running on the submit host. This is used to create the correct 
+   version of the dagman.sub files, when workflows of workflows are executed.
+
+   Pegasus did not parse the following output correctly
+
+   $CondorVersion: 7.4.1 Dec 17 2009 UWCS-PRE $
+
+   The internal regex was updated to follow the following rule
+   $CondorVersion: 7.4.1 Dec 17 2009 <ANY_ARBITRARY_STRING> $
+
+   the version number and date will always be there.
+
+   <ANY_ARBITRARY_STRING> may or may not be there, and can 
+   include spaces but is really completely arbitrary. don't rely
+   on that for the version information.just use the version and date.
+
+
+===============================
 Release Notes for PEGASUS 2.4.0
 ===============================
  
