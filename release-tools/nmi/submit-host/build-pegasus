@@ -1,0 +1,173 @@
+#!/usr/bin/env perl
+
+use strict;
+use Cwd;
+use DirHandle;
+use FileHandle;
+
+
+my $top_dir = cwd();
+my $src_dir = "$top_dir/pegasus";
+my $PEG_VER=$ENV{NMI_component_version};
+my $buildtype=$ARGV[0];
+
+
+if ($ENV{_NMI_STEP_FAILED}) {
+    die "Previous step failed, exiting\n";
+}
+
+print_info();
+
+build();
+
+bundle();
+
+########################################################################
+
+sub print_info
+{
+    announce("Information for Task '$ENV{_NMI_TASKNAME}' =====");
+
+    logmsg("top_dir = $top_dir");
+    logmsg("src_dir = $src_dir");
+
+    logmsg("PEGASUS_VERSION = $PEG_VER");
+
+    cmd("ls -l", 1, 1);
+}
+
+
+sub build
+{
+    $ENV{CLASSPATH} = "";
+    $ENV{PEGASUS_HOME} = $src_dir;
+
+    cd($src_dir);
+
+    my $JAVA_HOME="";
+    my $ANT_HOME="";
+    my $VACPP_HOME="";
+    my $VAC_HOME="";
+ 
+    for my $key ( keys %ENV){
+	if ($key=~ m/_NMI_PREREQ_([A-Za-z0-9]+_)*java/) {
+	    $JAVA_HOME=$ENV{$key};
+	    $ENV{JAVA_HOME}=$JAVA_HOME;
+	}
+	if ($key=~ m/_NMI_PREREQ_apache_ant/) {
+	    $ANT_HOME=$ENV{$key};
+	    $ENV{ANT_HOME}=$ANT_HOME;
+	}
+	if ($key=~ m/_NMI_PREREQ_vac_ROOT/){
+	    $VAC_HOME=$ENV{$key};
+	}
+	if ($key=~ m/_NMI_PREREQ_vacpp_ROOT/){
+	    $VACPP_HOME=$ENV{$key};
+	}
+    }
+    $ENV{PATH} = "$ENV{JAVA_HOME}/bin:$ENV{ANT_HOME}/bin:$ENV{PATH}";
+    if ($ENV{NMI_PLATFORM} =~ m/aix/){
+	$ENV{PATH}="/usr/vac/bin:/usr/vacpp/bin:$VAC_HOME/bin:$VACPP_HOME/bin/:$ENV{PATH}";
+    }
+
+    announce("env");
+    cmd("env", 1, 1);
+
+    announce("ls -l");
+    cmd("ls -l", 1, 1);
+
+    announce("build");
+    cmd("chmod 755 ./release-tools/nmi/nmi-build-all", 1, 1);
+    cmd("./release-tools/nmi/nmi-build-all", 1, 1);
+}
+
+
+sub bundle
+{
+    announce("Bundle");
+    cd("$src_dir/tarballs");
+
+    cmd("ls -l", 1, 1);
+
+    cmd("tar czf $top_dir/results.tar.gz *.gz", 1, 1);
+}
+
+sub cmd
+{
+    my $cmd = shift;
+    my $log = shift;
+    my $fatal = shift;
+    my $rc = 0;
+
+    if (!defined($log) or $log != 0) {
+        $log = 1;
+    }
+
+    if (!defined($fatal) or $fatal != 0) {
+        $fatal = 1;
+    }
+
+    if ($log) {
+        logmsg($cmd);
+    }
+
+    system("$cmd");
+    $rc = $? >> 8;
+    if ($fatal and $? & 127) {
+        print "\n\n";
+        printf "'$cmd' died with signal %d, %s coredump\n",
+               ($? & 127),  ($? & 128) ? 'with' : 'without';
+        fatal_error("\n");
+    }
+    if ($rc != 0) {
+        if ($fatal) {
+            print "\n\n";
+            fatal_error("'$cmd' failed with return code $rc\n");
+        }
+        else {
+            logmsg("Ignoring return code $rc. Continuing...");
+        }
+    }
+
+    return ($rc);
+}
+
+sub cd
+{
+    my $dir = shift;
+    logmsg("cd $dir");
+    chdir($dir) or fatal_error("Unable to cd to $dir");
+}
+
+
+sub announce
+{
+    my $m = shift;
+    print "\n";
+    print "################################################################\n";
+    print "#\n";
+    print "#  $m\n";
+    print "#\n";
+    print "\n";
+}
+
+
+sub logmsg
+{
+    my $m = shift;
+    my $date = `/bin/date +'\%y\%m\%d \%H:\%M'`;
+    chomp($date);
+    print "[$date]:  $m\n";
+}
+
+
+sub fatal_error
+{
+    my $msg = shift;
+
+    print STDERR "$msg\n\n";
+
+    exit(1);
+}
+
+

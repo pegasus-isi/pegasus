@@ -1,0 +1,4 @@
+method = nmi
+input_runids = 204351
+ignore_missing_platforms = true
+

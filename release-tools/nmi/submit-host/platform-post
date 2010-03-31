@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+TOP_DIR=`pwd`
+
+rm -rf tarballs
+mkdir -p tarballs
+cd tarballs
+tar xzf ../results.tar.gz
+
+echo
+echo "Tarballs in result set:"
+ls -lh
+
+# upload to pegasus.isi.edu
+scp *.tar.gz nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/nmibuilds/
+
