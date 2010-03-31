@@ -258,6 +258,7 @@ def emit_dot(dag, use_xforms=False, outfile="/dev/stdout"):
 	
 	for id in dag:
 		j = dag[id]
+		j.id = j.id.replace("-","_")
 		if use_xforms:
 			label = j.name
 		else:
