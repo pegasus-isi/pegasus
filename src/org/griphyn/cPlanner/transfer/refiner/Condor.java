@@ -46,6 +46,8 @@ import java.util.HashSet;
 
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**
@@ -191,10 +193,26 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
                                       Collection files,
                                       ReplicaCatalogBridge rcb ) {
 
-        Set outputFiles = job.getOutputFiles();
         String destinationDirectory = null;
+        List<FileTransfer> txFiles = new LinkedList();
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer)it.next();
+            
+            //sanity check. warn user about limited capability
+            if ( !ft.getTransientRegFlag() ){
+                mLogger.log( "Condor Refiner does not support registration of output files " + ft.getLFN(),
+                             LogManager.WARNING_MESSAGE_LEVEL );
+            }
+
+            //check if need to stageout the file or not
+            if ( ft.getTransientTransferFlag()) {
+                continue;
+            }
+            else{
+                txFiles.add(ft);
+            }
+            
+           
 
             String url = ((NameValue)ft.getDestURL()).getValue();
 
@@ -220,10 +238,10 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
             }
         }
 
-        if( !files.isEmpty() ){
-            String txName = this.STAGE_OUT_PREFIX + job.getName() + "_0" ;
+        if( !txFiles.isEmpty() ){
+            String txName = Condor.STAGE_OUT_PREFIX + job.getName() + "_0" ;
             SubInfo txJob = this.createStageOutTransferJob( job,
-                                                            files,
+                                                            txFiles,
                                                             destinationDirectory,
                                                             txName );
 
