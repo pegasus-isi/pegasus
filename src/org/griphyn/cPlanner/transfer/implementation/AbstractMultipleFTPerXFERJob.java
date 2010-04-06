@@ -178,6 +178,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
             mLogger.log("Unable to write the stdIn file for job " +
                         txJob.getCompleteTCName() + " " + e.getMessage(),
                         LogManager.ERROR_MESSAGE_LEVEL);
+            mLogger.log( "Files that were being written out " + files,
+                         LogManager.ERROR_MESSAGE_LEVEL );
         }
 
         //the profile information from the pool catalog needs to be

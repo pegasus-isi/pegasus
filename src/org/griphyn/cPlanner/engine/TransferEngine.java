@@ -653,7 +653,13 @@ public class TransferEngine extends Engine {
 
             //add all the possible destination urls iterating through
             //the list of grid ftp servers associated with the dest pool.
-            Iterator it = mSiteStore.lookup( destPool ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator();
+            Iterator it = mSiteStore.lookup( destPool ).getHeadNodeFS().getStorage().getSharedDirectory().getFileServersIterator();
+            //sanity check
+            if( !it.hasNext() ){
+                // no file servers were returned
+                throw new RuntimeException( " No File Servers specified for Shared Storage on Headnode for site " + destPool );
+            }
+            
             String destURL = null;
             boolean first = true;
             while(it.hasNext()){
