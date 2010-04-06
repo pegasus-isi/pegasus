@@ -193,6 +193,28 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
                                       Collection files,
                                       ReplicaCatalogBridge rcb ) {
 
+        this.addStageOutXFERNodes ( job, files, rcb, false );
+    }
+
+    /**
+     * Adds the stageout transfer nodes, that stage data to an output site
+     * specified by the user.
+     *
+     * @param job   <code>SubInfo</code> object corresponding to the node to
+     *              which the files are to be transferred to.
+     * @param files Collection of <code>FileTransfer</code> objects containing the
+     *              information about source and destURL's.
+     * @param rcb   bridge to the Replica Catalog. Used for creating registration
+     *              nodes in the workflow.
+     * @param deletedLeaf to specify whether the node is being added for
+     *                      a deleted node by the reduction engine or not.
+     *                      default: false
+     */
+    public  void addStageOutXFERNodes(SubInfo job,
+                                      Collection files,
+                                      ReplicaCatalogBridge rcb,
+                                      boolean deletedLeaf){
+        
         String destinationDirectory = null;
         List<FileTransfer> txFiles = new LinkedList();
         for( Iterator it = files.iterator(); it.hasNext(); ){
@@ -246,10 +268,18 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
                                                             txName );
 
             this.mDAG.add( txJob );
-            this.addRelation( job.getName(), txName );
+            
+            //add an edge between compute and stageout
+            //only if compute job still in the wf
+            if( !deletedLeaf ){
+                this.addRelation( job.getName(), txName );
+            }
         }
 
+        
+
     }
+
 
 
     /**
@@ -362,31 +392,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
     }
 
 
-    /**
-     *
-     *
-     *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
-     *              which the files are to be transferred to.
-     * @param files Collection of <code>FileTransfer</code> objects containing the
-     *              information about source and destURL's.
-     * @param rcb   bridge to the Replica Catalog. Used for creating registration
-     *              nodes in the workflow.
-     * @param deletedLeaf to specify whether the node is being added for
-     *                      a deleted node by the reduction engine or not.
-     *                      default: false
-     */
-    public  void addStageOutXFERNodes(SubInfo job,
-                                      Collection files,
-                                      ReplicaCatalogBridge rcb,
-                                      boolean deletedLeaf){
-
-        throw new java.lang.UnsupportedOperationException( "Stageout operation is not supported for " +
-                                                            this.getDescription()  );
-
-    }
-
-
+    
     /**
      * Signals that the traversal of the workflow is done. This would allow
      * the transfer mechanisms to clean up any state that they might be keeping

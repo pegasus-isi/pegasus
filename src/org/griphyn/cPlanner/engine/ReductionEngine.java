@@ -39,6 +39,8 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Vector;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 
@@ -317,25 +319,24 @@ public class ReductionEngine extends Engine implements Refiner{
             if(vJobOutputFiles.isEmpty()){
                 mLogger.log("Job "  + subInfo.getName() + " has no o/p files",
                             LogManager.DEBUG_MESSAGE_LEVEL);
+                continue;
             }
 
-            for( Iterator temp = vJobOutputFiles.iterator(); temp.hasNext(); ){
-                temp.next();
-                noOfOutputFilesInJob++;
-            }
+            noOfOutputFilesInJob = vJobOutputFiles.size();
 
             //traversing through the output files of that particular job
             for( Iterator en = vJobOutputFiles.iterator(); en.hasNext(); ){
                 PegasusFile pf = (PegasusFile)en.next();
                 //jobName = pf.getLFN();
                 //if(stringInList(jobName,filesInRC)){
-                if(filesInRC.contains(pf.getLFN())){
+                if(filesInRC.contains(pf.getLFN()) /*|| pf.getTransientTransferFlag()*/ ){
                     noOfSuccessfulMatches++;
                 }
             }
 
-            //if the noOfOutputFilesInJob and noOfSuccessfulMatches are equal
-            //this means that all files required by job is in RC
+            //we add a job to list of jobs whose output files already exist
+            //only if noOfSuccessFulMatches is equal to the number of output
+            //files in job 
             if(noOfOutputFilesInJob == noOfSuccessfulMatches){
                 mLogger.log("\t" + subInfo.jobName,
                             LogManager.DEBUG_MESSAGE_LEVEL);
@@ -478,22 +479,32 @@ public class ReductionEngine extends Engine implements Refiner{
 
 
     /**
-     * All the deleted jobs which
-     * happen to be leaf nodes. This
-     * entails that the output files
-     * of these jobs be transferred
-     * from the location returned
-     * by the Replica Catalog to the
-     * pool specified.
-     * This is a subset of mAllDeletedJobs
-     * Also to determine the deleted
-     * leaf jobs it refers the original
+     * This returns all the jobs deleted from the workflow after the reduction
+     * algorithm has run.
+     *
+     * @return  List containing the <code>SubInfo</code> of deleted leaf jobs.
+     */
+    public List<SubInfo> getDeletedJobs(){
+        List<SubInfo> deletedJobs = new LinkedList();
+        for( Iterator it = mAllDeletedJobs.iterator(); it.hasNext(); ){
+            String job = (String)it.next();
+            deletedJobs.add( mOriginalDag.getSubInfo(job) );
+        }
+        return deletedJobs;
+    }
+    
+    /**
+     * This returns all the deleted jobs that happen to be leaf nodes. This
+     * entails that the output files  of these jobs be transferred
+     * from the location returned by the Replica Catalog to the
+     * pool specified. This is a subset of mAllDeletedJobs
+     * Also to determine the deleted leaf jobs it refers the original
      * dag, not the reduced dag.
      *
-     * @return  Vector containing the <code>SubInfo</code> of deleted leaf jobs.
+     * @return  List containing the <code>SubInfo</code> of deleted leaf jobs.
      */
-    public Vector getDeletedLeafJobs(){
-        Vector delLeafJobs = new Vector();
+    public List<SubInfo> getDeletedLeafJobs(){
+        List<SubInfo> delLeafJobs = new LinkedList();
 
         mLogger.log("Finding deleted leaf jobs",LogManager.DEBUG_MESSAGE_LEVEL);
         for( Iterator it = mAllDeletedJobs.iterator(); it.hasNext(); ){
@@ -502,7 +513,7 @@ public class ReductionEngine extends Engine implements Refiner{
                 //means a leaf job
                 String msg = "Found deleted leaf job :" + job;
                 mLogger.log(msg,LogManager.DEBUG_MESSAGE_LEVEL);
-                delLeafJobs.addElement( mOriginalDag.getSubInfo(job) );
+                delLeafJobs.add( mOriginalDag.getSubInfo(job) );
 
             }
         }

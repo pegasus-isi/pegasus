@@ -178,15 +178,12 @@ public class MainEngine
             mPOptions.setExecutionSites(authenticatedSet);
         }
 
-        Vector vDelLeafJobs = new Vector();
         String message = null;
         mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mBag );
 
 
         mRedEng = new ReductionEngine( mOriginalDag, mBag );
         mReducedDag = mRedEng.reduceDag( mRCBridge );
-        vDelLeafJobs = mRedEng.getDeletedLeafJobs();
-        mRedEng = null;
 
         //unmark arg strings
         //unmarkArgs();
@@ -222,9 +219,13 @@ public class MainEngine
         ReplicaCatalog transientRC  = initializeTransientRC( mReducedDag ) ;
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );       
-        mTransEng = new TransferEngine( mReducedDag, vDelLeafJobs, mBag );
+        mTransEng = new TransferEngine( mReducedDag, 
+                                        mBag,
+                                        mRedEng.getDeletedJobs(),
+                                        mRedEng.getDeletedLeafJobs());
         mTransEng.addTransferNodes( mRCBridge , transientRC );
         mTransEng = null;
+        mRedEng = null;
         mLogger.logEventCompletion();
         
         //populate the transient RC into PegasusBag
