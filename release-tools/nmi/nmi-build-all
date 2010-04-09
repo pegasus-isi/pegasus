@@ -61,7 +61,7 @@ ls -l -h
 if [ -e /etc/debian_version ]; then
     echo
     echo "##### Building Debian package #####"
-    cd $PEGASUS_HOME/../build-results/
+    cd $PEGASUS_HOME/build-results/
     $PEGASUS_HOME/release-tools/nmi/deb/build-pegasus-deb `pwd`/*.tar
 fi
 
