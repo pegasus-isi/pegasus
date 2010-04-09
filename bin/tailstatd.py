@@ -182,6 +182,7 @@ class Job:
     # get their values from the kickstart output file when a job
     # finished
     _wf_uuid = None
+    _job_submit_seq = None
     _condor_id = None
     _name = None
     _jobtype = None
@@ -194,23 +195,23 @@ class Job:
     _job_state = None
     _job_state_timestamp = None
 
-    def __init__(self, wf_uuid, name, condor_id):
+    def __init__(self, wf_uuid, name, job_submit_seq):
 	"""
 	This function initializes the job parameters with the information
-	available when a job is detected "SUBMIT" state. Other parameters
-	will remain None until a job finishes and a kickstart output file
-	can be parsed.
+	available when a job is detected in the "PRE_SCRIPT_STARTED" or the
+	"SUBMIT" state. Other parameters will remain None until a job
+	finishes and a kickstart output file can be parsed.
 	"""
 	self._wf_uuid = wf_uuid
 	self._name = name
-	self._condor_id = condor_id
+	self._job_submit_seq = job_submit_seq
 
     def set_job_state(self, job_state, timestamp):
 	"""
 	This function sets the job state for this job
 	"""
 	self._job_state = job_state
-	self._job_state_timestamp = timestamp
+	self._job_state_timestamp = int(timestamp)
 
 class Workflow:
     """
@@ -231,6 +232,7 @@ class Workflow:
     _parent_workflow_id = None
     _jobs_map = {}
     _jobs = {}
+    _job_submit_seq = 1
 
     def __init__(self, wfparams=None):
 	"""
@@ -245,14 +247,36 @@ class Workflow:
 	    # If _wf_uuid is not defined, we create a random uuid for this workflow
 	    if self._wf_uuid is None:
 		self._wf_uuid = uuid.uuid4()
-	    if "label" in wfparams:
-		self._timestamp = wfparams["label"]
-	    if "pegasus_wf_time" in wfparams:
-		self._timestamp = wfparams["pegasus_wf_time"]
-	    if "run" in wfparams:
-		self._submit_dir = wfparams["run"]
-	    if "pegasus_version" in wfparams:
-		self._planner_version = wfparams["pegasus_version"]
+	    if "dax_label" in wfparams:
+		self._dax_label = wfparams["dax_label"]
+	    else:
+		# Use "label" if "dax_label" not found
+		if "label" in wfparams:
+		    self._dax_label = wfparams["label"]
+	    if "timestamp" in wfparams:
+		self._timestamp = wfparams["timestamp"]
+	    else:
+		# Use "pegasus_wf_time" if "timestamp" not found
+		if "pegasus_wf_time" in wfparams:
+		    self._timestamp = wfparams["pegasus_wf_time"]
+	    if "submit_dir" in wfparams:
+		self._submit_dir = wfparams["submit_dir"]
+	    else:
+		# Use "run" if "submit_dir" not found
+		if "run" in wfparams:
+		    self._submit_dir = wfparams["run"]
+	    if "planner_version" in wfparams:
+		self._planner_version = wfparams["planner_version"]
+	    else:
+		# Use "pegasus_version" if "planner_version" not found
+		if "pegasus_version" in wfparams:
+		    self._planner_version = wfparams["pegasus_version"]
+	    if "submit_hostname" in wfparams:
+		self._submit_hostname = wfparams["submit_hostname"]
+	    if "user" in wfparams:
+		self._user = wfparams["user"]
+	    if "grid_dn" in wfparams:
+		self._grid_dn = wfparams["grid_dn"]
 
     def db_send_wf_info(self):
 	"""
@@ -285,27 +309,36 @@ class Workflow:
 	# Send workflow event to database
 	workdb.write(event="workflow", **kwargs)
 
-    def add_job(self, jobid, condor_id, job_state, timestamp):
+    def add_job(self, jobid, job_state, timestamp, condor_id=None):
 	"""
 	This function adds a new job to our list of jobs. It
 	also sets the job state to job_state.
 	"""
+	my_job_submit_seq = self._job_submit_seq
+
 	# Make sure job is not already there
-	if (jobid, condor_id) in self._jobs:
-	    logmsg("warning: trying to add job twice: %s, %s" % (jobid, condor_id))
+	if (jobid, my_job_submit_seq) in self._jobs:
+	    logmsg("add_job: warning: trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
 	    return
 
 	# Create new job container
-	new_job = Job(self._wf_uuid, jobid, condor_id)
+	new_job = Job(self._wf_uuid, jobid, my_job_submit_seq)
 	# Set job state
 	new_job.set_job_state(job_state, timestamp)
+	# Set condor_id
+	new_job._condor_id = condor_id
 	# Add job to our list of jobs
-	self._jobs[jobid, condor_id] = new_job
+	self._jobs[jobid, my_job_submit_seq] = new_job
 
 	# Add/Update job in our job map
-	self._jobs_map[jobid] = condor_id
+	self._jobs_map[jobid] = my_job_submit_seq
 
-    def db_send_job_info(self, jobid, condor_id):
+	# Update job_submit_seq
+	self._job_submit_seq = self._job_submit_seq + 1
+
+	return my_job_submit_seq
+
+    def db_send_job_info(self, jobid, job_submit_seq):
 	"""
 	This function sends to the DB information about a particular job
 	"""
@@ -313,16 +346,18 @@ class Workflow:
 	kwargs = {}
 
 	# Find job
-	if not (jobid, condor_id) in self._jobs:
-	    logmsg("warning: cannot find job: %s, %s" % (jobid, condor_id))
+	if not (jobid, job_submit_seq) in self._jobs:
+	    logmsg("db_send_job_info: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
 	    return
 	# Got it
-	my_job = self._jobs[jobid, condor_id]
+	my_job = self._jobs[jobid, job_submit_seq]
 
-	# Make sure we include the wf_uuid, name, and condor_id
+	# Make sure we include the wf_uuid, name, and job_submit_seq
 	kwargs["wf_uuid"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
-	kwargs["condor_id"] = my_job._condor_id
+	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	if my_job._condor_id is not None:
+	    kwargs["condor_id"] = my_job._condor_id
 	if my_job._jobtype is not None:
 	    kwargs["jobtype"] = my_job._jobtype
 	if my_job._clustered is not None:
@@ -341,24 +376,80 @@ class Workflow:
 	# Send job event to database
 	workdb.write(event="job", **kwargs)
 
-    def update_job_state(self, jobid, condor_id, job_state, timestamp):
+    def job_update_info(self, jobid, job_submit_seq, condor_id=None):
+	"""
+	This function adds info to an exising job.
+	"""
+
+	# Make sure job is already there
+	if not (jobid, job_submit_seq) in self._jobs:
+	    logmsg("job_update_info: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
+	    print self._jobs
+	    return
+
+	my_job = self._jobs[jobid, job_submit_seq]
+	# Set condor_id
+	my_job._condor_id = condor_id
+
+	# Everything done
+	return
+
+    def find_jobid(self, jobid):
+	"""
+	This function finds the job_submit_seq of a given jobid by checking
+	the _jobs_map dict. Since add_job will update _jobs_map, this function
+	will return the job_submit_seq of the latest jobid added to the workflow
+	"""
+	if jobid in self._jobs_map:
+	    return self._jobs_map[jobid]
+
+	# Not found, return None
+	return None
+
+    def find_job_submit_seq(self, jobid):
+	"""
+	If a jobid already exists and is in the PRE_SCRIPT_SUCCESS mode, this
+	function returns its job_submit_seq. Otherwise, it returns None, meaning
+	a new job needs to be created
+	"""
+	# Look for a jobid
+	my_job_submit_seq = self.find_jobid(jobid)
+
+	# No such job, return None
+	if my_job_submit_seq is None:
+	    return None
+
+	# Make sure the job is there
+	if not (jobid, my_job_submit_seq) in self._jobs:
+	    logmsg("find_job_submit_seq: warning: cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+	    return None
+
+	my_job = self._jobs[jobid, my_job_submit_seq]
+	if my_job._job_state == "PRE_SCRIPT_SUCCESS":
+	    # jobid is in "PRE_SCRIPT_SUCCESS" state, return job_submit_seq
+	    return my_job_submit_seq
+
+	# jobid is in another state, return None
+	return None
+
+    def update_job_state(self, jobid, job_submit_seq, job_state, timestamp):
 	"""
 	This function updates a job's state
 	"""
 	# Find job
-	if condor_id is None:
-	    # Need to get condor_id from our hash table
+	if job_submit_seq is None:
+	    # Need to get job_submit_seq from our hash table
 	    if jobid in self._jobs_map:
-		condor_id = self._jobs_map[jobid]
-	if not (jobid, condor_id) in self._jobs:
-	    logmsg("warning: cannot find job: %s, %s" % (jobid, condor_id))
+		job_submit_seq = self._jobs_map[jobid]
+	if not (jobid, job_submit_seq) in self._jobs:
+	    logmsg("update_job_state: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
 	    return
 	# Got it
-	my_job = self._jobs[jobid, condor_id]
+	my_job = self._jobs[jobid, job_submit_seq]
 	# Update job state
 	my_job.set_job_state(job_state, timestamp)
 
-    def db_send_job_state(self, jobid, condor_id):
+    def db_send_job_state(self, jobid, job_submit_seq):
 	"""
 	This function sends to the DB job state information for a particular job
 	"""
@@ -366,20 +457,20 @@ class Workflow:
 	kwargs = {}
 
 	# Find job
-	if condor_id is None:
-	    # Need to get condor_id from our hash table
+	if job_submit_seq is None:
+	    # Need to get job_submit_seq from our hash table
 	    if jobid in self._jobs_map:
-		condor_id = self._jobs_map[jobid]
-	if not (jobid, condor_id) in self._jobs:
-	    logmsg("warning: cannot find job: %s, %s" % (jobid, condor_id))
+		job_submit_seq = self._jobs_map[jobid]
+	if not (jobid, job_submit_seq) in self._jobs:
+	    logmsg("db_send_job_state: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
 	    return
 	# Got it
-	my_job = self._jobs[jobid, condor_id]
+	my_job = self._jobs[jobid, job_submit_seq]
 
-	# Make sure we include the wf_uuid, name, and condor_id
+	# Make sure we include the wf_uuid, name, and job_submit_seq
 	kwargs["wf_uuid"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
-	kwargs["condor_id"] = my_job._condor_id
+	kwargs["job_submit_seq"] = my_job._job_submit_seq
 	kwargs["state"] = my_job._job_state
 	kwargs["timestamp"] = my_job._job_state_timestamp
 
@@ -750,7 +841,7 @@ def extract_knowledge(stamp, info):
 	    my_site = re_site_parse_gvds.search(my_line).group(4)
 	elif re_site_parse_euryale.search(my_line):
 	    # Euryale specific comment
-	    my_site = re.site_parse_euryale.search(my_line).group(1)
+	    my_site = re_site_parse_euryale.search(my_line).group(1)
 
     SUB.close()
 
@@ -779,7 +870,7 @@ def aggregate(site, stamp, pending):
 
     if debug_level > 1:
 	my_n = waiting[site][my_slot][0]
-	logmsg("%s:%s %s / %d = %.3f" % (site, slot, my_diff, my_n, my_diff / my_n))
+	logmsg("%s:%s %s / %d = %.3f" % (site, my_slot, my_diff, my_n, my_diff / my_n))
 
 def add(stamp, jobid, event, condor_id=None, addon=None):
     # purpose: append atomically a line to the jobstate file
@@ -793,6 +884,7 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
     my_site = None
     my_time = None
     my_info = None
+    my_job_submit_seq = None
 
     # Remove existing site info during replanning
     if event in unsubmitted_events:
@@ -806,6 +898,14 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
 	my_site = job_site[jobid]
     if jobid in walltime:
 	my_time = walltime[jobid]
+
+    # A PRE_SCRIPT_START event always means a new job
+    if event == "PRE_SCRIPT_STARTED":
+	# This is a new job, we need to add it to the workflow
+	my_job_submit_seq = wf.add_job(jobid, event, stamp)
+	if database == 1:
+	    # Send job event to database
+	    wf.db_send_job_info(jobid, my_job_submit_seq)
 
     # Obtain planning information from submit file when entering Condor
     if event == "SUBMIT":
@@ -835,17 +935,32 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
 	else:
 	    logmsg("job %s does not have a site information!" % (jobid))
 
-	# Add job to our workflow
-	wf.add_job(jobid, condor_id, event, stamp)
+	# Check if we need to add job to our workflow
+	my_job_submit_seq = wf.find_job_submit_seq(jobid)
+
+	if my_job_submit_seq is None:
+	    # Add job to our workflow
+	    my_job_submit_seq = wf.add_job(jobid, event, stamp, condor_id=condor_id)
+	else:
+	    # Set condor id for this job
+	    wf.job_update_info(jobid, my_job_submit_seq, condor_id=condor_id)
+
 	if database == 1:
 	    # Send job event to database
-	    wf.db_send_job_info(jobid, condor_id)
+	    wf.db_send_job_info(jobid, my_job_submit_seq)
+
+    # Get job_submit_seq if we don't already have it
+    if my_job_submit_seq is None:
+	my_job_submit_seq = wf.find_jobid(jobid)
+
+    if my_job_submit_seq is None:
+	logmsg("add: cannot find job_submit_seq for job: %s" % (jobid))
 
     # Make sure job has the updated state
-    wf.update_job_state(jobid, condor_id, event, stamp)
+    wf.update_job_state(jobid, my_job_submit_seq, event, stamp)
     if database == 1:
 	# Send jobstate event to database
-	wf.db_send_job_state(jobid, condor_id)
+	wf.db_send_job_state(jobid, my_job_submit_seq)
 
     # Remember when we changed into a pending state
     if event in pending_job_events:
@@ -889,17 +1004,14 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
 	    del running[jobid]
 
     # Create content -- use one space only
-    my_line = "%d %s %s %s %s %s" % (stamp, jobid, event, addon or '-', my_site or '-', my_time or '-')
+    my_line = "%d %s %s %s %s %s %d" % (stamp, jobid, event, addon or '-', my_site or '-',
+					my_time or '-', my_job_submit_seq or '-')
     if debug_level > 1:
 	logmsg("new state %s" % (my_line))
 
     # Prepare for atomic append
     JSDB.write("%s\n" % (my_line))
     jobstate[jobid] = [stamp, event, addon, my_time, my_site]
-
-    # Send jobstate event to database
-    if database == 1:
-	pass
 
     # NEW: maintain site statistics
     if my_site is not None:
