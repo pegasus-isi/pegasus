@@ -228,7 +228,7 @@ class Properties:
 		    logger.warn("%s does not point to a(n accessible) directory!" % (my_tmp))
 	    else:
 		# Print message and exit
-		logger.warn("Your environmental variable PEGASUS_HOME is not set!")
+		logger.fatal("Your environmental variable PEGASUS_HOME is not set!")
 		sys.exit(1)
 
 	    # system properties go first
