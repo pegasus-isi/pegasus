@@ -3,6 +3,7 @@
 set -e
 
 PEGASUS_TAR=$1
+echo "Input tar file: $PEGASUS_TAR"
 
 START_DIR=`pwd`
 
