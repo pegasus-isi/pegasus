@@ -4,15 +4,15 @@ set -e
 
 TOP_DIR=`pwd`
 
-rm -rf tarballs
-mkdir -p tarballs
-cd tarballs
+rm -rf build-results
+mkdir -p build-results
+cd build-results
 tar xzf ../results.tar.gz
 
 echo
-echo "Tarballs in result set:"
-ls -lh
+echo "Files in result set:"
+find . -type f -exec ls -l -h {} \;
 
 # upload to pegasus.isi.edu
-scp *.tar.gz nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/nmibuilds/
+scp *.tar.gz nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/nightly/
 

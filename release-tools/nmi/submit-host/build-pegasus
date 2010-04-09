@@ -85,7 +85,7 @@ sub build
 sub bundle
 {
     announce("Bundle");
-    cd("$src_dir/tarballs");
+    cd("$src_dir/build-results");
 
     cmd("ls -l", 1, 1);
 

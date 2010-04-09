@@ -1,0 +1,19 @@
+Package: pegasus
+Version:
+Architecture:
+Maintainer: Mats Rynge <rynge@isi.edu>
+Installed-Size:
+Depends: openjdk-6-jre
+Homepage: http://pegasus.isi.edu/
+Description: Pegasus Workflow Management System
+ The Pegasus project encompasses a set of technologies the help
+ workflow-based applications execute in a number of different
+ environments including desktops, campus clusters, grids, and now
+ clouds. Scientific workflows allow users to easily express
+ multi-step computations, for example retrieve data from a
+ database, reformat the data, and run an analysis. Once an
+ application is formalized as a workflow the Pegasus Workflow
+ Management Service can map it onto available compute resources
+ and execute the steps in appropriate order. Pegasus can handle
+ 1 to 1 million computational tasks.
+

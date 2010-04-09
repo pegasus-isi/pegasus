@@ -1,0 +1,79 @@
+#!/bin/bash
+
+set -e
+
+PEGASUS_TAR=$1
+
+START_DIR=`pwd`
+
+BASE_DIR=`dirname $0`
+BASE_DIR=`(cd $BASE_DIR && pwd)`
+
+WORK_DIR=`mktemp -d $START_DIR/deb.XXXXXX`
+
+# os name (debian/ubuntu/...) and codename
+OS_NAME=`lsb_release -i -s | tr "[:upper:]" "[:lower:]"`
+OS_CODENAME=`lsb_release -c -s | tr "[:upper:]" "[:lower:]"`
+
+# arch
+ARCH=`uname -m`
+if [ $ARCH = "x86_64" ]; then
+    ARCH="amd64"
+else
+    ARCH="i386"
+fi
+
+# output target dir
+DIST_DIR="$OS_NAME/dists/$OS_CODENAME/main/binary-$ARCH"
+echo "Output directory: $DIST_DIR"
+
+# untar the pegasus original tarball
+cd $WORK_DIR
+if [ "x$PEGASUS_TAR" = "x" -o ! -e "$PEGASUS_TAR" ]; then
+    echo "The pegasus tar file specified as the first arg does not exist"
+    echo "or it was not specified with the full path."
+    exit 1
+fi
+tar xzf $PEGASUS_TAR
+
+# pegasus version
+VERSION=`ls $PEGASUS_TAR | sed 's/.*binary-//' | sed 's/-.*//'`
+MAJOR_VERSION=`echo $VERSION | sed -r 's/\.[0-9]+$//' | sed -r 's/\.[0-9]+cvs$/cvs/'`
+echo "Pegasus version: $VERSION"
+echo "Pegasus major version: $MAJOR_VERSION"
+
+# base structure
+DEB_NAME=pegasus-${MAJOR_VERSION}_${VERSION}_${ARCH}
+mkdir -p $DEB_NAME/opt/pegasus
+mv pegasus-$VERSION $DEB_NAME/opt/pegasus/$MAJOR_VERSION
+cd $DEB_NAME
+
+# debian control files
+cp -r $BASE_DIR/DEBIAN ./
+
+# package name
+perl -p -i -e "s/^Package:.*/Package: pegasus-${MAJOR_VERSION}/" DEBIAN/control
+
+# machine arch
+perl -p -i -e "s/^Architecture:.*/Architecture: $ARCH/" DEBIAN/control
+
+# checksums
+find opt -type f -exec md5sum {} \; >DEBIAN/md5sums
+
+# version
+perl -p -i -e "s/^Version:.*/Version: $VERSION/" DEBIAN/control
+
+# size
+SIZE=`du -s opt | awk '{print $1}'`
+perl -p -i -e "s/^Installed-Size:.*/Installed-Size: $SIZE/" DEBIAN/control
+
+# now build the deb
+cd $WORK_DIR
+dpkg-deb --build $DEB_NAME
+ls -l -h *.deb
+mkdir -p $START_DIR/$DIST_DIR
+mv *.deb $START_DIR/$DIST_DIR
+
+cd $START_DIR
+rm -rf $WORK_DIR
+

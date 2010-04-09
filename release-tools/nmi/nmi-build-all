@@ -43,8 +43,8 @@ PEGASUS_SYSTEM=`$PEGASUS_HOME/release-tools/getsystem/getsystem`
 echo
 echo "##### Cleaning up from previous builds #####"
 ant clean
-rm -rf tarballs dist/*
-mkdir tarballs
+rm -rf build-results/ dist/*
+mkdir build-results
 
 # create binary
 echo
@@ -53,9 +53,17 @@ cd $PEGASUS_HOME
 ant clean dist
 cd dist
 rm -rf pegasus-$PEGASUS_VERSION
-mv *.tar.gz ../tarballs/
-cd ../tarballs/
+mv *.tar.gz ../build-results/
+cd ../build-results/
 ls -l -h
+
+# debian package
+if [ -e /etc/debian_version ]; then
+    echo
+    echo "##### Building Debian package #####"
+    cd $PEGASUS_HOME/../build-results/
+    $PEGASUS_HOME/release-tools/nmi/deb/build-pegasus-deb `pwd`/*.tar
+fi
 
 # create worker
 echo
@@ -64,8 +72,8 @@ cd $PEGASUS_HOME
 ant clean dist-worker
 cd dist
 rm -rf pegasus-$PEGASUS_VERSION
-mv *.tar.gz ../tarballs/
-cd ../tarballs/
+mv *.tar.gz ../build-results/
+cd ../build-results/
 ls -l -h
 
 # wms
@@ -107,7 +115,7 @@ else
     export CONDOR_DIR=`pwd`
     
     cd $PEGASUS_HOME/dist
-    tar xzf ../tarballs/pegasus-binary-$PEGASUS_VERSION-$PEGASUS_SYSTEM.tar.gz
+    tar xzf ../build-results/pegasus-binary-$PEGASUS_VERSION-$PEGASUS_SYSTEM.tar.gz
     mv pegasus-$PEGASUS_VERSION pegasus-wms-binary-$PEGASUS_VERSION
     export PEGASUS_DIR=`pwd`/pegasus-wms-binary-$PEGASUS_VERSION
     
@@ -183,7 +191,7 @@ EOF
     
     # tar up the results
     cd $PEGASUS_HOME/dist/
-    tar czf ../tarballs/pegasus-wms-binary-$PEGASUS_VERSION-$PEGASUS_SYSTEM.tar.gz \
+    tar czf ../build-results/pegasus-wms-binary-$PEGASUS_VERSION-$PEGASUS_SYSTEM.tar.gz \
             pegasus-wms-binary-$PEGASUS_VERSION
     rm -rf pegasus-wms-binary-$PEGASUS_VERSION condor-*
 fi
@@ -191,7 +199,7 @@ fi
 echo
 echo "##### Build completed successfully #####"
 echo
-echo "The resulting tar files are:"
-(cd $PEGASUS_HOME/tarballs && ls -l -h)
+echo "The resulting files are:"
+(cd $PEGASUS_HOME/build-results && find . -type f -exec ls -l -h {} \;)
 exit 0
 
