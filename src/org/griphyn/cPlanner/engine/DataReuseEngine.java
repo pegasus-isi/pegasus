@@ -62,12 +62,11 @@ import java.util.List;
  * A node is marked for deletion if -
  *
  * <pre>
- *  ( It is already marked for deletion in pass 1 OR
- *      ( ALL of it's children have been marked for deletion AND
- *          ( an output file that is generated is in the replica catalog somewhere
- *            OR
- *            nodes output files have transfer flags set to false
- *          )
+ *  ( It is already marked for deletion in pass 1
+ *      OR
+ *      ( ALL of it's children have been marked for deletion
+ *        AND
+ *        Node's output files have transfer flags set to false
  *      )
  *  )
  * </pre>
@@ -399,18 +398,17 @@ public class DataReuseEngine extends Engine implements Refiner{
      * deletion if -
      *
      * <pre>
-     *  ( It is already marked for deletion OR
-     *      ( ALL of it's children have been marked for deletion AND
-     *          ( an output file that is generated is in the replica catalog somewhere
-     *            OR
-     *            nodes output files have transfer flags set to false
-     *          )
+     *  ( It is already marked for deletion
+     *      OR
+     *      ( ALL of it's children have been marked for deletion
+     *        AND
+     *        Node's output files have transfer flags set to false
      *      )
      *  )
      * </pre>
      * 
-     * @param workflow
-     * @param originalJobsInRC
+     * @param workflow          the worfklow to be deduced
+     * @param originalJobsInRC  list of nodes found to be in the Replica Catalog.
      */
     protected Graph cascadeDeletionUpwards(Graph workflow, List<GraphNode> originalJobsInRC) {
         LinkedList<GraphNode> queue = new LinkedList();
@@ -444,7 +442,7 @@ public class DataReuseEngine extends Engine implements Refiner{
 
             int depth  = node.getDepth();
 
-//            System.out.println( "Traversing " + node.getID() );
+            System.out.println( "Traversing " + node.getID() );
 
             //traverse through all the parents and add to the queue
             for( Iterator it = node.getParents().iterator(); it.hasNext(); ){
@@ -466,11 +464,10 @@ public class DataReuseEngine extends Engine implements Refiner{
 
 
             if( !node.isColor( GraphNode.BLACK_COLOR ) ){
-                //a node can be marked for deletion if all it's children have
-                //been marked for deletion AND
-                //  ( an output file that is generated is in the replica catalog somewhere
-                //      OR
-                //    nodes output files have transfer flags set to false )
+                //If a node is not already marked for deletion , it  can be marked
+                //for deletion if
+                //    a) all it's children have been marked for deletion AND
+                //    b) node's output files have transfer flags set to false
                 boolean delete = true;
                 for( Iterator cit = node.getChildren().iterator(); cit.hasNext(); ){
                     GraphNode child = (GraphNode)cit.next();
@@ -481,10 +478,8 @@ public class DataReuseEngine extends Engine implements Refiner{
                 }
                 if( delete ){
                     //all the children are deleted. However delete only if
-                    //the node is already colored BLACK ( i.e outputs were discovered to be in the replica catalog )
-                    //or all the output files
-                    //have transfer flags set to false
-                    if( node.isColor( GraphNode.BLACK_COLOR ) || !transferOutput( node ) ){
+                    // all the output files have transfer flags set to false
+                    if( /*node.isColor( GraphNode.BLACK_COLOR ) ||*/ !transferOutput( node ) ){
                         mLogger.log( "Node can be deleted "  + node.getID() ,
                                      LogManager.DEBUG_MESSAGE_LEVEL );
                         node.setColor( GraphNode.BLACK_COLOR );
