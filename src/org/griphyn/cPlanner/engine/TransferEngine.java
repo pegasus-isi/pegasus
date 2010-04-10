@@ -62,7 +62,6 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -379,7 +378,7 @@ public class TransferEngine extends Engine {
         if (outputSite != null &&
             outputSite.trim().length() > 0) {
 
-            for( Iterator it = this.mDeletedLeafJobs.iterator(); it.hasNext() ;) {
+            for( Iterator it = this.mDeletedJobs.iterator(); it.hasNext() ;) {
                 currentJob = (SubInfo)it.next();
                 currentJob.setLevel( 0 );
                 

@@ -35,7 +35,7 @@ public interface Graph
     /**
      * The version number associated with this Graph API.
      */
-    public static final String VERSION = "1.1";
+    public static final String VERSION = "1.2";
 
 
     /**
@@ -98,7 +98,7 @@ public interface Graph
      *
      * @return Iterator
      */
-    public Iterator nodeIterator();
+    public Iterator<GraphNode> nodeIterator();
 
     /**
      * Returns an iterator that traverses through the graph using a graph
@@ -106,7 +106,7 @@ public interface Graph
      *
      * @return Iterator through the nodes of the graph.
      */
-    public Iterator iterator();
+    public Iterator<GraphNode> iterator();
 
     /**
      * Returns the root nodes of the Graph.
@@ -114,7 +114,7 @@ public interface Graph
      * @return  a list containing <code>GraphNode</code> corressponding to the
      *          root nodes.
      */
-    public List getRoots();
+    public List<GraphNode> getRoots();
 
 
     /**
@@ -123,7 +123,14 @@ public interface Graph
      * @return  a list containing <code>GraphNode</code> corressponding to the
      *          leaf nodes.
      */
-    public List getLeaves();
+    public List<GraphNode> getLeaves();
 
+
+    /**
+     * Returns a boolean if there are no nodes in the graph.
+     *
+     * @return boolean
+     */
+    public boolean isEmpty();
 
 }

@@ -20,7 +20,6 @@ package org.griphyn.cPlanner.engine;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Vector;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
@@ -74,10 +73,7 @@ public class MainEngine
      */
     private Set mExecPools;
 
-    /**
-     * The pool on which all the output data should be transferred.
-     */
-    private String mOutputPool;
+    
 
     /**
      * The bridge to the Replica Catalog.
@@ -93,7 +89,7 @@ public class MainEngine
     /**
      * The handle to the Reduction Engine that performs reduction on the graph.
      */
-    private ReductionEngine mRedEng;
+    private DataReuseEngine mRedEng;
 
     /**
      * The handle to the Transfer Engine that adds the transfer nodes in the
@@ -182,8 +178,10 @@ public class MainEngine
         mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mBag );
 
 
-        mRedEng = new ReductionEngine( mOriginalDag, mBag );
-        mReducedDag = mRedEng.reduceDag( mRCBridge );
+        mRedEng = new DataReuseEngine( mOriginalDag, mBag );
+        mReducedDag = mRedEng.reduceWorkflow(mOriginalDag, mRCBridge );
+        //mReducedDag = new ReductionEngine( mOriginalDag, mBag ).reduceDag(mRCBridge);
+        //System.out.print( mReducedDag );
 
         //unmark arg strings
         //unmarkArgs();
