@@ -269,7 +269,7 @@ public class DeployWorkerPackage
         //singleton access
         if( mOSToNMIOS == null ){
             mOSToNMIOS = new HashMap();
-            mOSToNMIOS.put( Os.LINUX, "rhas_3" );
+            mOSToNMIOS.put( Os.LINUX, "rhel_4" );
         }
         return mOSToNMIOS;
     }
