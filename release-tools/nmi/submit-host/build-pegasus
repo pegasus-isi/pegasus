@@ -89,7 +89,7 @@ sub bundle
 
     cmd("ls -l", 1, 1);
 
-    cmd("tar czf $top_dir/results.tar.gz *.gz", 1, 1);
+    cmd("tar czf $top_dir/results.tar.gz *", 1, 1);
 }
 
 sub cmd

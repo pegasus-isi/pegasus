@@ -14,5 +14,5 @@ echo "Files in result set:"
 find . -type f -exec ls -l -h {} \;
 
 # upload to pegasus.isi.edu
-scp *.tar.gz nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/nightly/
+scp -r * nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/nightly/
 

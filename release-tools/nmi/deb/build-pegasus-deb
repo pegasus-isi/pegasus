@@ -40,11 +40,20 @@ tar xzf $PEGASUS_TAR
 # pegasus version
 VERSION=`ls $PEGASUS_TAR | sed 's/.*binary-//' | sed 's/-.*//'`
 MAJOR_VERSION=`echo $VERSION | sed -r 's/\.[0-9]+$//' | sed -r 's/\.[0-9]+cvs$/cvs/'`
+
+DEB_VERSION="$VERSION"
+# cvs versions get a timestamp in the version to help dpkg figure out updates
+if echo $VERSION | grep cvs >/dev/null 2>&1; then
+    TS=`date +'%Y%m%d%H%M'`
+    DEB_VERSION="$VERSION.$TS"
+fi
+
 echo "Pegasus version: $VERSION"
-echo "Pegasus major version: $MAJOR_VERSION"
+echo "Debian package version: $DEB_VERSION"
+echo "Debian package major version: $MAJOR_VERSION"
 
 # base structure
-DEB_NAME=pegasus-${MAJOR_VERSION}_${VERSION}_${ARCH}
+DEB_NAME=pegasus-${MAJOR_VERSION}_${DEB_VERSION}_${ARCH}
 mkdir -p $DEB_NAME/opt/pegasus
 mv pegasus-$VERSION $DEB_NAME/opt/pegasus/$MAJOR_VERSION
 cd $DEB_NAME
@@ -62,7 +71,7 @@ perl -p -i -e "s/^Architecture:.*/Architecture: $ARCH/" DEBIAN/control
 find opt -type f -exec md5sum {} \; >DEBIAN/md5sums
 
 # version
-perl -p -i -e "s/^Version:.*/Version: $VERSION/" DEBIAN/control
+perl -p -i -e "s/^Version:.*/Version: $DEB_VERSION/" DEBIAN/control
 
 # size
 SIZE=`du -s opt | awk '{print $1}'`
