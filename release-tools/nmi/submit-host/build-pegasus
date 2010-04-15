@@ -26,7 +26,7 @@ bundle();
 
 sub print_info
 {
-    announce("Information for Task '$ENV{_NMI_TASKNAME}' =====");
+    announce("Information for Task '$ENV{_NMI_TASKNAME}'");
 
     logmsg("top_dir = $top_dir");
     logmsg("src_dir = $src_dir");

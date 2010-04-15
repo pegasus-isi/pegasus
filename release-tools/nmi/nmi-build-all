@@ -91,7 +91,8 @@ else
     ls -l
 
     echo "Removing files we do _not_ want..."
-    rm -f *.rpm *.sha1 *.md5
+    rm -rf native
+    rm -f *.deb *.rpm *.sha1 *.md5
     rm -f *unstripped*
     rm -f *debug*
     echo "Files left after first round of removal:"

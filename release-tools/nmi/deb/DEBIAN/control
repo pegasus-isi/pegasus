@@ -1,10 +1,9 @@
 Package: pegasus
 Version:
 Architecture:
-Maintainer: Mats Rynge <rynge@isi.edu>
+Maintainer: Pegasus Team <pegasus-support@isi.edu>
 Installed-Size:
 Depends: openjdk-6-jre
-Homepage: http://pegasus.isi.edu/
 Description: Pegasus Workflow Management System
  The Pegasus project encompasses a set of technologies the help
  workflow-based applications execute in a number of different

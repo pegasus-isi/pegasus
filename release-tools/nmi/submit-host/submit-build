@@ -41,7 +41,7 @@ platform_post = platform-post
 
 remote_default_timeout=2h
 
-platforms = ia64_rhas_4, ia64_sles_9, x86_64_deb_4.0, x86_64_deb_5.0,  x86_64_macos_10.5, x86_64_rhap_5.2, x86_64_rhap_5, x86_64_rhas_4, x86_64_sles_9,  x86_deb_4.0, x86_deb_5.0, x86_macos_10.4, x86_rhap_5, x86_rhas_4, x86_sles_9
+platforms = ia64_rhas_4, ia64_sles_9, x86_64_deb_4.0, x86_64_deb_5.0,  x86_64_macos_10.5, x86_64_rhap_5, x86_64_rhas_4, x86_64_sles_9, x86_64_ubuntu_8.04.3, x86_deb_4.0, x86_deb_5.0, x86_macos_10.4, x86_rhap_5, x86_rhas_4
 
 prereqs = apache-ant-1.7.0
 
@@ -60,6 +60,7 @@ prereqs_x86_64_fedora_8 = java-1.5.0_08
 prereqs_x86_64_fedora_9 = java-1.5.0_08
 prereqs_x86_64_fedora_11 = java-1.5.0_08
 prereqs_x86_64_macos_10.5 = java-1.5.0_13
+prereqs_x86_64_rhap_5.3 = java-1.5.0_08
 prereqs_x86_64_rhap_5.2 = java-1.5.0_08
 prereqs_x86_64_rhap_5 = java-1.5.0_08
 prereqs_x86_64_rhas_3 = java-1.5.0_08
