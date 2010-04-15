@@ -80,8 +80,8 @@ ls -l -h
 echo
 echo "##### Creating WMS package #####"
 
-if [ ! -e $PEGASUS_HOME/../public ]; then
-    echo "WARNING: Skipping WMS package on this platform as Condor is missing"
+if [ "x$PEGASUS_SKIP_WMS" != "x" ]; then
+    echo "WARNING: Skipping WMS package on this platform as PEGASUS_SKIP_WMS=$PEGASUS_SKIP_WMS" >&2
 else
 
     # we need to get condor from the NMI input
