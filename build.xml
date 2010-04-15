@@ -357,7 +357,6 @@
     <antcall target="dist-setup-app"/>
     <copy preservelastmodified="true" todir="${dist.dir}" file="LICENSE"/>
     <copy preservelastmodified="true" todir="${dist.dir}" file="GTPL"/>
-    <copy preservelastmodified="true" todir="${dist.dir}" file="MIGRATING_FROM_VDS"/>
     <copy preservelastmodified="true" todir="${dist.dir}" file="RELEASE_NOTES"/>
 
     <!-- creates the worker tarball -->
