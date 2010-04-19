@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.SiteInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 
 import java.util.Iterator;
 import java.util.List;

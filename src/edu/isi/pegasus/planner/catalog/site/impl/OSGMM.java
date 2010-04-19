@@ -44,7 +44,7 @@ import org.griphyn.cPlanner.classes.LRC;
 import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.WorkDir;
 
-import org.griphyn.common.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 
 import org.griphyn.common.util.Boolean;
 

@@ -36,13 +36,13 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.namespace.Condor;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.catalog.transformation.TransformationFactory;
-import org.griphyn.common.catalog.transformation.TransformationFactoryException;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import org.griphyn.common.util.Separator;
 

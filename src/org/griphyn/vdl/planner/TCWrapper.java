@@ -19,10 +19,10 @@ import java.io.*;
 import java.util.*;
 
 import org.griphyn.common.util.*;
-import org.griphyn.common.classes.TCType;
-import org.griphyn.common.catalog.transformation.TCMode;
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.TCMode;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 /**
  * This class wraps the shell planner's request into the new TC API.

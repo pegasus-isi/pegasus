@@ -15,19 +15,15 @@
 
 package org.griphyn.vdl.planner;
 
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import java.io.*;
 import java.util.*;
-import org.griphyn.common.util.Version;
 import org.griphyn.common.util.Currently;
 import org.griphyn.common.util.Separator;
-import org.griphyn.common.util.VDSProperties;
-import org.griphyn.vdl.Chimera;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.util.Logging;
-import org.griphyn.common.catalog.*;
-import org.griphyn.common.catalog.replica.*;
-import org.griphyn.common.catalog.transformation.TCMode;
+
 
 /**
  * This class generates the shell scripts from a DAX. There is a script

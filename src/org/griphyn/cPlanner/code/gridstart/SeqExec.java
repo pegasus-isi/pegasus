@@ -42,10 +42,10 @@ import org.griphyn.cPlanner.namespace.VDS;
 import org.griphyn.cPlanner.transfer.sls.SLSFactory;
 import org.griphyn.cPlanner.transfer.SLS;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import org.griphyn.common.util.Separator;
 

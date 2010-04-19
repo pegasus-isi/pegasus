@@ -52,13 +52,13 @@ import org.griphyn.cPlanner.namespace.VDS;
 import org.griphyn.cPlanner.partitioner.PartitionAndPlan;
 
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import org.griphyn.vdl.euryale.VTorInUseException;
 
-import org.griphyn.common.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import java.io.BufferedWriter;
 import java.io.File;

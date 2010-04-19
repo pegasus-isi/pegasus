@@ -23,9 +23,9 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 
-import org.griphyn.common.classes.Arch;
-import org.griphyn.common.classes.Os;
-import org.griphyn.common.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
+import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 
 import org.griphyn.cPlanner.classes.Profile;
 

@@ -34,5 +34,5 @@ if "%has:~0,2%" == "-D" (
 )
 set has=
 
-%JAVA_HOME%\bin\java "-Dpegasus.home=%PEGASUS_HOME%" %addon% org.griphyn.cPlanner.toolkit.TCClient "%*"
+%JAVA_HOME%\bin\java "-Dpegasus.home=%PEGASUS_HOME%" %addon%  edu.isi.pegasus.planner.client.TCClient "%*"
 

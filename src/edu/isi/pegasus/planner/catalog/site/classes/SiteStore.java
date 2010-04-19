@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.common.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
         
 import org.griphyn.common.util.Currently;
 

@@ -27,8 +27,8 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import edu.isi.pegasus.common.logging.LogManager;
 import java.io.File;
 import java.util.Properties;
-import org.griphyn.common.catalog.ReplicaCatalog;
-import org.griphyn.common.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 
 
 /**

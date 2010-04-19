@@ -17,8 +17,8 @@ package edu.isi.pegasus.planner.selector.transformation;
 
 import edu.isi.pegasus.planner.selector.TransformationSelector;
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import java.util.ArrayList;
 import java.util.Iterator;

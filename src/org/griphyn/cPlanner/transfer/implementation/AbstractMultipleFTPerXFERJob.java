@@ -29,9 +29,9 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.transfer.MultipleFTPerXFERJob;
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import org.griphyn.common.util.Separator;
 

@@ -17,7 +17,7 @@
 package org.griphyn.cPlanner.classes;
 
 
-import org.griphyn.common.catalog.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import java.util.Iterator;
 import java.util.Map;

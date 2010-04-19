@@ -37,9 +37,9 @@ import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
 
 import org.griphyn.cPlanner.toolkit.CPlanner;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

@@ -49,14 +49,14 @@ import org.griphyn.common.util.FactoryException;
 import org.griphyn.common.util.Separator;
 import org.griphyn.common.util.Version;
 
-import org.griphyn.common.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.classes.TCType;
-import org.griphyn.common.classes.SysInfo;
-import org.griphyn.common.classes.Arch;
-import org.griphyn.common.classes.Os;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 
 import java.util.List;
 import java.util.ArrayList;

@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.TransferJob;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import java.util.Collection;
 

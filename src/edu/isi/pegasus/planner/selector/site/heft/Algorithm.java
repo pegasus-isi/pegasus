@@ -30,11 +30,11 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 import org.griphyn.cPlanner.partitioner.graph.Bag;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.catalog.transformation.Mapper;
-import org.griphyn.common.catalog.transformation.Windward;
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.catalog.transformation.Windward;
 
 
 import org.griphyn.cPlanner.namespace.VDS;

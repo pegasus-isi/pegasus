@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.namespace.VDS;
 import edu.isi.pegasus.common.logging.LogManager;
 
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 
 import java.util.Map;

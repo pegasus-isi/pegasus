@@ -37,7 +37,7 @@ import org.griphyn.cPlanner.engine.Engine;
 import org.griphyn.cPlanner.namespace.Namespace;
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.common.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 
 import java.io.File;
 

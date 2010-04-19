@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.PegRandom;
 import org.griphyn.cPlanner.common.Utility;
 
-import org.griphyn.common.catalog.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import java.util.ArrayList;
 import java.util.Iterator;

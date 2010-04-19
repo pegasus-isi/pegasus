@@ -31,7 +31,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.common.util.Separator;
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import java.util.Iterator;
 import java.util.List;

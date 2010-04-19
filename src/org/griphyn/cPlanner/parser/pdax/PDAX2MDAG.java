@@ -40,16 +40,16 @@ import org.griphyn.cPlanner.namespace.VDS;
 import org.griphyn.cPlanner.partitioner.Partition;
 import org.griphyn.cPlanner.partitioner.DAXWriter;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.catalog.transformation.TransformationFactory;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.HashedFileFactory;
 import org.griphyn.vdl.euryale.FlatFileFactory;
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 
 import java.io.File;

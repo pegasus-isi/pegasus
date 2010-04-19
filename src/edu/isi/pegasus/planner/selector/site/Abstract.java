@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.planner.selector.SiteSelector;
 
-import org.griphyn.common.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 import java.util.List;
 

@@ -34,8 +34,8 @@ import org.griphyn.cPlanner.toolkit.Executable;
 
 
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.transformation.TransformationFactory;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 
 import gnu.getopt.LongOpt;
 import gnu.getopt.Getopt;
@@ -55,7 +55,7 @@ import java.util.Date;
 import org.griphyn.cPlanner.toolkit.CPlanner;
 
 import org.griphyn.common.util.FactoryException;
-import org.griphyn.common.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 
 /**

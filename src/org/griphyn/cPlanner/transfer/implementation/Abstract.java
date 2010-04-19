@@ -40,10 +40,10 @@ import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.transfer.Implementation;
 import org.griphyn.cPlanner.transfer.Refiner;
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 
 import java.io.File;

@@ -27,10 +27,10 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
-import org.griphyn.common.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 /**
  * A bag of objects that needs to be passed to various refiners.

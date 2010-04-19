@@ -35,11 +35,11 @@ import org.griphyn.cPlanner.engine.createdir.Implementation;
 
 import org.griphyn.cPlanner.transfer.SLS;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import org.griphyn.common.util.Separator;
 import org.griphyn.common.util.Boolean;

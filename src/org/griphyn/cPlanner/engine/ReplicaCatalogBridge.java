@@ -39,14 +39,14 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.ENV;
 
-import org.griphyn.common.catalog.ReplicaCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 
 
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import org.griphyn.common.util.Separator;
 

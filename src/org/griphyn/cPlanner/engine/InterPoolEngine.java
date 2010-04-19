@@ -27,9 +27,9 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 
-import org.griphyn.common.classes.Arch;
-import org.griphyn.common.classes.Os;
-import org.griphyn.common.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
+import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -49,12 +49,12 @@ import org.griphyn.cPlanner.provenance.pasoa.PPS;
 import org.griphyn.cPlanner.provenance.pasoa.pps.PPSFactory;
 
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import org.griphyn.common.catalog.transformation.Mapper;
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 import org.griphyn.common.util.Separator;
 

@@ -18,7 +18,7 @@
 package org.griphyn.cPlanner.classes;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import org.griphyn.common.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 
 import org.griphyn.cPlanner.common.PegRandom;
 import org.griphyn.cPlanner.common.Utility;

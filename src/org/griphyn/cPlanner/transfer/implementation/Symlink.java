@@ -25,8 +25,8 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import java.io.FileWriter;
 

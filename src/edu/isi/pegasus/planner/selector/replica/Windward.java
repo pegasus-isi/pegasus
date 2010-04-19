@@ -25,7 +25,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.PegRandom;
 
-import org.griphyn.common.catalog.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -113,7 +113,7 @@ public abstract class Windward implements ReplicaSelector {
             ReplicaCatalogEntry rce = ( ReplicaCatalogEntry ) it.next();
             site = rce.getResourceHandle();
 
-            Double availTime = (Double)rce.getAttribute( org.griphyn.common.catalog.replica.Windward.DATA_AVAILABILITY_KEY );
+            Double availTime = (Double)rce.getAttribute( edu.isi.pegasus.planner.catalog.replica.impl.Windward.DATA_AVAILABILITY_KEY );
 
             if( availTime == null ){
                 //skip to next replica

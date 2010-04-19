@@ -24,7 +24,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.common.util.VDSProperties;
 
-import org.griphyn.common.catalog.Catalog;
+import edu.isi.pegasus.planner.catalog.Catalog;
 
 import java.util.Properties;
 import java.util.Collection;

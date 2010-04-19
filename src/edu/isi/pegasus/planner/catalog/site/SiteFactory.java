@@ -28,7 +28,6 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.catalog.*;
 import org.griphyn.common.util.*;
 
 import java.util.Properties;

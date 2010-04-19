@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.selector;
 
 import org.griphyn.cPlanner.classes.ReplicaLocation;
 
-import org.griphyn.common.catalog.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 
 

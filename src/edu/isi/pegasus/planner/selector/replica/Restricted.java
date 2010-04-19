@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.common.PegRandom;
 import org.griphyn.cPlanner.classes.ReplicaLocation;
 
 
-import org.griphyn.common.catalog.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 
 import java.util.ArrayList;

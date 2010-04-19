@@ -17,7 +17,7 @@
  */
 
 package edu.isi.pegasus.planner.catalog.site;
-import org.griphyn.common.catalog.CatalogException;
+import edu.isi.pegasus.planner.catalog.CatalogException;
 
 /**
  * Class to notify of failures. Exceptions are chained like the

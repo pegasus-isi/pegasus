@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.poolinfo.PoolMode;
 
-import org.griphyn.common.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import java.util.ArrayList;
 import java.util.Enumeration;

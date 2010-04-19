@@ -32,11 +32,11 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.cluster.JobAggregator;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 
 import java.io.File;

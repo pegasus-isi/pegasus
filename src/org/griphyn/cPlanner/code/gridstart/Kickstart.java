@@ -48,10 +48,10 @@ import org.griphyn.cPlanner.transfer.sls.SLSFactory;
 
 import org.griphyn.common.util.Separator;
 
-import org.griphyn.common.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import org.griphyn.common.catalog.TransformationCatalog;
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import java.util.Collection;
 import java.util.Iterator;

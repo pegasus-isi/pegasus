@@ -18,7 +18,7 @@ package org.griphyn.cPlanner.common;
 import org.griphyn.cPlanner.classes.NameValue;
 
 
-import org.griphyn.common.catalog.transformation.TCMode;
+import edu.isi.pegasus.planner.catalog.transformation.TCMode;
 
 import org.griphyn.common.util.VDSProperties;
 import org.griphyn.common.util.Boolean;

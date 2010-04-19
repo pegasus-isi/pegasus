@@ -56,10 +56,10 @@ import org.griphyn.cPlanner.parser.pdax.PDAXCallbackFactory;
 import org.griphyn.cPlanner.parser.DaxParser;
 import org.griphyn.cPlanner.parser.PDAXParser;
 
-import org.griphyn.common.catalog.work.WorkFactory;
-import org.griphyn.common.catalog.WorkCatalog;
+import edu.isi.pegasus.planner.catalog.work.WorkFactory;
+import edu.isi.pegasus.planner.catalog.WorkCatalog;
 
-import org.griphyn.common.catalog.transformation.TransformationFactory;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 
 import org.griphyn.common.util.Version;
 import org.griphyn.common.util.Currently;

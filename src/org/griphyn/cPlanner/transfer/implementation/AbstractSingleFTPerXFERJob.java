@@ -29,7 +29,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.transfer.SingleFTPerXFERJob;
 
-import org.griphyn.common.catalog.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 
 import java.util.Collection;

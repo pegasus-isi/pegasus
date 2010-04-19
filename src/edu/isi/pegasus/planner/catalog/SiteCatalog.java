@@ -24,7 +24,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
 import java.util.List;
-import org.griphyn.common.catalog.Catalog;
 
 
 import java.util.Set;

@@ -49,8 +49,8 @@ import org.griphyn.cPlanner.transfer.refiner.RefinerFactory;
 
 import org.griphyn.cPlanner.engine.createdir.Implementation;
 
-import org.griphyn.common.catalog.ReplicaCatalog;
-import org.griphyn.common.catalog.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import org.griphyn.common.util.FactoryException;
 

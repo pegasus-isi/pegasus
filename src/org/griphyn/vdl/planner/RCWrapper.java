@@ -15,14 +15,14 @@
 
 package org.griphyn.vdl.planner;
 
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import java.io.*;
 import java.util.*;
 import java.lang.reflect.*;
-import org.griphyn.vdl.util.Logging;
 
 import org.griphyn.common.util.*;
-import org.griphyn.common.catalog.*;
-import org.griphyn.common.catalog.replica.*;
 
 /**
  * This class wraps the shell planner's request into the new RC API.

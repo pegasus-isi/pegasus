@@ -21,10 +21,9 @@ package edu.isi.pegasus.common.logging;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.catalog.*;
+
 import org.griphyn.common.util.*;
 
-import java.util.Properties;
 
 /**
  * A factory class to load the appropriate implementation of LogFormatter
