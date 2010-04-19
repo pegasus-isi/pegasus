@@ -19,9 +19,9 @@
 package edu.isi.pegasus.common.logging;
 
 
+import edu.isi.pegasus.common.util.DynamicLoader;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.*;
 
 import java.util.Properties;
 

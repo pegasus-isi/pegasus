@@ -17,7 +17,7 @@ package org.griphyn.vdl.directive;
 
 import java.io.*;
 import java.util.MissingResourceException;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.classes.Definitions;

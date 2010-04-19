@@ -46,7 +46,7 @@ import org.griphyn.cPlanner.classes.WorkDir;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 
-import org.griphyn.common.util.Boolean;
+import edu.isi.pegasus.common.util.Boolean;
 
 import java.io.File;
 import java.io.IOException;

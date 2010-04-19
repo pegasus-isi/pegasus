@@ -54,7 +54,7 @@ import java.util.Date;
 
 import org.griphyn.cPlanner.toolkit.CPlanner;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 

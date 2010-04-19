@@ -34,7 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 
 /**

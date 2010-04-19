@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.classes;
 
-import org.griphyn.common.util.Escape;
+import edu.isi.pegasus.common.util.Escape;
 
 import java.util.ArrayList;
 import java.util.List;

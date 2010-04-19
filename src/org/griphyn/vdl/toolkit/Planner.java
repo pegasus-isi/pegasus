@@ -17,7 +17,7 @@ package org.griphyn.vdl.toolkit;
 
 import java.io.*;
 import java.util.*;
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.parser.DAXParser;
@@ -118,7 +118,7 @@ public class Planner extends Toolkit
 
 	case 'V':
 	  System.out.println( "$Id$" );
-	  System.out.println( "VDS version " + Version.instance().toString() );
+	  System.out.println( "Pegasus version " + Version.instance().toString() );
 	  return;
 
 	case 'b':

@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.transfer.SLS;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 
 

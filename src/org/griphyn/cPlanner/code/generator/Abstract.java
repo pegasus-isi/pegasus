@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.code.CodeGeneratorException;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 import java.io.BufferedWriter;
 import java.io.File;

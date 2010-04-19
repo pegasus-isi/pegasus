@@ -21,7 +21,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 /**
  *  This class defines all the constants

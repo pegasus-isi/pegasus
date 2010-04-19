@@ -21,8 +21,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.griphyn.common.util.Version;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.common.util.Currently;
 import org.griphyn.vdl.parser.InvocationParser;
 import org.griphyn.vdl.invocation.*;
 import org.griphyn.vdl.dbschema.*;

@@ -31,8 +31,8 @@ import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import org.griphyn.common.util.ProfileParser;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.ProfileParser;
+import edu.isi.pegasus.common.util.Separator;
 
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 

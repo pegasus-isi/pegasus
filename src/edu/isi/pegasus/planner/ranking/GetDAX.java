@@ -22,7 +22,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.VDSProperties;
 
 import edu.isi.pegasus.planner.catalog.Catalog;
 

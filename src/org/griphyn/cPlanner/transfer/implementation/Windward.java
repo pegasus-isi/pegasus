@@ -34,7 +34,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
 import org.griphyn.cPlanner.cluster.JobAggregator;

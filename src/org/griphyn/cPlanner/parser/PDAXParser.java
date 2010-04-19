@@ -27,7 +27,7 @@ import org.griphyn.cPlanner.partitioner.Partition;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

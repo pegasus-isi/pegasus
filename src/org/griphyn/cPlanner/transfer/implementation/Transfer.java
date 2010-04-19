@@ -31,7 +31,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 
 

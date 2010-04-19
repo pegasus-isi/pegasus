@@ -22,7 +22,7 @@ package edu.isi.pegasus.planner.catalog.replica;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 

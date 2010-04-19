@@ -20,8 +20,8 @@ import org.griphyn.cPlanner.classes.NameValue;
 
 import edu.isi.pegasus.planner.catalog.transformation.TCMode;
 
-import org.griphyn.common.util.VDSProperties;
-import org.griphyn.common.util.Boolean;
+import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.Boolean;
 
 import java.io.File;
 import java.io.IOException;

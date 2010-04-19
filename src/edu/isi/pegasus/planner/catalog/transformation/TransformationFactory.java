@@ -18,12 +18,12 @@
 
 package edu.isi.pegasus.planner.catalog.transformation;
 
+import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.common.*;
-import org.griphyn.common.util.*;
 
 /**
  * A factory class to load the appropriate implementation of Transformation

@@ -18,6 +18,7 @@
 
 package edu.isi.pegasus.planner.catalog.site;
 
+import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -27,8 +28,6 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
-
-import org.griphyn.common.util.*;
 
 import java.util.Properties;
 import java.util.ArrayList;

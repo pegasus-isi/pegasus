@@ -24,7 +24,7 @@ import java.util.List;
 import java.io.*;
 import java.lang.reflect.*;
 import java.sql.SQLException;
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.FileHelper;
 import org.griphyn.vdl.util.Logging;

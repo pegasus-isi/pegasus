@@ -18,7 +18,7 @@ package org.griphyn.cPlanner.parser.dax;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 import java.io.IOException;
 

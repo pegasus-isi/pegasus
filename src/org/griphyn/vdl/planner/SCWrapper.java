@@ -18,7 +18,6 @@ package org.griphyn.vdl.planner;
 import java.io.*;
 import java.util.*;
 
-import org.griphyn.common.util.*;
 import org.griphyn.vdl.util.Logging;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.Profile;

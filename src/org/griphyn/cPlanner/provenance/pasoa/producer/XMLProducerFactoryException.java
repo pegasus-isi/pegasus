@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.provenance.pasoa.producer;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 
 import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;

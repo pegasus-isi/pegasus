@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 import java.util.Iterator;
 import java.util.Properties;

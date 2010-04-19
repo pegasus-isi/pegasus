@@ -18,8 +18,8 @@ package org.griphyn.cPlanner.classes;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.util.Currently;
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Currently;
+import edu.isi.pegasus.common.util.Version;
 
 import java.io.File;
 

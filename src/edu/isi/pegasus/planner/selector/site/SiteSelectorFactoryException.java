@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.selector.site;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 /**
  * Class to notify of failures while instantiating SiteSelector implementations.

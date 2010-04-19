@@ -19,7 +19,7 @@ import edu.isi.pegasus.common.logging.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 
 /**
  * A Simple LogEvent implementation that is back by a StringBuffer.

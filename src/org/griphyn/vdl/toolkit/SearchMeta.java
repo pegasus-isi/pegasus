@@ -28,8 +28,8 @@ import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.directive.*;
 import org.griphyn.vdl.annotation.*;
-import org.griphyn.common.util.Separator;
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.common.util.Version;
 
 /**
  * This class searches definitions or LFNs which match a query.

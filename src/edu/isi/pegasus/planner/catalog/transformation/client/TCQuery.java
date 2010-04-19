@@ -32,7 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import org.griphyn.common.util.ProfileParser;
+import edu.isi.pegasus.common.util.ProfileParser;
 import java.util.Date;
 import java.util.Comparator;
 import java.util.Collections;

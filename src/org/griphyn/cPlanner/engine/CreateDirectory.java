@@ -24,8 +24,8 @@ import org.griphyn.cPlanner.engine.createdir.Strategy;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.DynamicLoader;
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.FactoryException;
 
 /**
  * This common interface that identifies the basic functions that need to be

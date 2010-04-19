@@ -15,7 +15,7 @@
 package org.griphyn.vdl.workflow;
 
 import java.util.*;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 
 /**
  * This class is the container for a job state record.<p>

@@ -18,7 +18,7 @@
 
 package edu.isi.pegasus.common.logging;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 /**
  * Class to notify of failures while instantiating Log Formatter

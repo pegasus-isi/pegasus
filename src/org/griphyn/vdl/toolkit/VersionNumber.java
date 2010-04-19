@@ -16,7 +16,7 @@
 package org.griphyn.vdl.toolkit;
 
 import java.io.*;
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 import gnu.getopt.*;
 
 /**

@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.util.Properties;
 
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 
 /**
  * Holds the information about thevarious options which user specifies to

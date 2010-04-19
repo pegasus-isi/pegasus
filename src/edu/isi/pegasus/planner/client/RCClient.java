@@ -16,6 +16,8 @@
 
 package edu.isi.pegasus.planner.client;
 
+import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
@@ -29,7 +31,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.PatternLayout;
 
-import org.griphyn.common.util.*;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;

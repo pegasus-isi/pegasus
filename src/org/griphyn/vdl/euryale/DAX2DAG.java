@@ -14,8 +14,8 @@
  */
 package org.griphyn.vdl.euryale;
 
-import org.griphyn.common.util.Separator;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.common.util.Currently;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.util.*;
 import gnu.getopt.*;

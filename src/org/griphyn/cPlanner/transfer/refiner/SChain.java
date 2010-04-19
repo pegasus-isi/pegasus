@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 /**
  * This transfer refiner incorporates chaining for the impelementations that

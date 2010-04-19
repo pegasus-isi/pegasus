@@ -21,8 +21,8 @@ package org.griphyn.cPlanner.toolkit;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.util.Version;
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.common.util.FactoryException;
 
 import org.griphyn.cPlanner.visualize.Callback;
 import org.griphyn.cPlanner.visualize.KickstartParser;

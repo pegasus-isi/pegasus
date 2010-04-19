@@ -20,8 +20,8 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.DynamicLoader;
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.FactoryException;
 
 import java.io.BufferedWriter;
 import java.io.File;

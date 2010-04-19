@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.namespace.VDS;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
         
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 
 
 import java.io.IOException;

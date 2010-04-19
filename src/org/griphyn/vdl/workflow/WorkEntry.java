@@ -14,7 +14,7 @@
  */
 package org.griphyn.vdl.workflow;
 
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 import java.util.*;
 
 /**

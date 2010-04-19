@@ -27,7 +27,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 

@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.parser.dax.Callback;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 
 /**
  * A Test Class to demonstrate use of DAXParser and illustrates how to use

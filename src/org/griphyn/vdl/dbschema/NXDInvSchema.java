@@ -41,7 +41,7 @@ import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.invocation.*;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 import org.xml.sax.InputSource;
 /**
  * This class provides basic functionalities to interact with the

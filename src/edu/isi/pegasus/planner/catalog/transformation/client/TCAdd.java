@@ -27,10 +27,10 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import org.griphyn.common.util.ProfileParser;
+import edu.isi.pegasus.common.util.ProfileParser;
 
-import org.griphyn.common.util.ProfileParserException;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.ProfileParserException;
+import edu.isi.pegasus.common.util.Separator;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

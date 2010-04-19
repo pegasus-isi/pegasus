@@ -23,7 +23,7 @@ import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
 import org.griphyn.vdl.directive.*;
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 
 import java.io.Writer;
 import java.io.PrintWriter;

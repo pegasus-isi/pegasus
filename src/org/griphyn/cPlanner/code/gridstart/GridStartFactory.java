@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.namespace.VDS;
 import org.griphyn.cPlanner.namespace.Dagman;
 
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 import java.util.Map;
 import java.util.HashMap;

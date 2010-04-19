@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 /**
  * The implementation that creates transfer jobs referring to the symlink

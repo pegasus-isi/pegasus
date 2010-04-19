@@ -16,13 +16,15 @@
 
 package edu.isi.pegasus.planner.catalog.replica;
 
+import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.VDSProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import java.lang.reflect.*;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.MissingResourceException;
 
-import org.griphyn.common.util.*;
+
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import java.util.Enumeration;
@@ -36,9 +38,9 @@ import java.util.Enumeration;
  * @author Jens-S. Vöckler
  * @version $Revision$
  *
- * @see org.griphyn.common.catalog.ReplicaCatalog
- * @see org.griphyn.common.catalog.ReplicaCatalogEntry
- * @see org.griphyn.common.catalog.replica.JDBCRC
+ * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalog
+ * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry
+ * @see edu.isi.pegasus.planner.catalog.replica.impl.JDBCRC
  */
 public class ReplicaFactory{
 

@@ -15,7 +15,7 @@
 
 package org.griphyn.vdl.dax;
 
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.classes.LFN;
 import org.griphyn.vdl.classes.Derivation;

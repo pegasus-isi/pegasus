@@ -27,7 +27,7 @@ import org.griphyn.cPlanner.partitioner.PartitionerFactory;
 import org.griphyn.cPlanner.partitioner.PartitionerFactoryException;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 import java.util.Map;
 import java.util.HashMap;

@@ -33,7 +33,7 @@ import org.griphyn.cPlanner.namespace.Namespace;
 
 import org.griphyn.cPlanner.parser.dax.Callback;
 
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

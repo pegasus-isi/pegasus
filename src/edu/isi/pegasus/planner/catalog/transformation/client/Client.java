@@ -26,9 +26,9 @@ package edu.isi.pegasus.planner.catalog.transformation.client;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
-import org.griphyn.common.util.ProfileParser;
-import org.griphyn.common.util.ProfileParserException;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.ProfileParser;
+import edu.isi.pegasus.common.util.ProfileParserException;
+import edu.isi.pegasus.common.util.Separator;
 
 import java.util.List;
 import java.util.Map;

@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.CatalogException;
 
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 import org.globus.replica.rls.RLSClient;
 import org.globus.replica.rls.RLSException;
 import org.globus.replica.rls.RLSAttribute;

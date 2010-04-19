@@ -19,7 +19,7 @@ import java.util.*;
 import java.io.*;
 import java.lang.reflect.*;
 import org.griphyn.vdl.util.ChimeraProperties;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 import org.griphyn.vdl.workflow.*;
 import org.griphyn.vdl.util.Logging;
 

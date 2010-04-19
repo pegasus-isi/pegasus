@@ -20,10 +20,10 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
-import org.griphyn.common.util.Version;
-import org.griphyn.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.common.util.VDSProperties;
 
 import gnu.getopt.LongOpt;
 import java.io.File;

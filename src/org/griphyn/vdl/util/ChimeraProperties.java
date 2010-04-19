@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.io.File;
 import java.util.*;
 
-import org.griphyn.common.util.Currently;
-import org.griphyn.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.Currently;
+import edu.isi.pegasus.common.util.VDSProperties;
 import org.griphyn.vdl.util.Logging;
 
 /**

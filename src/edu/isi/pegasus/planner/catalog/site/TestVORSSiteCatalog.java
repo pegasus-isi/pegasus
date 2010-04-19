@@ -25,7 +25,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 
 import java.util.ArrayList;
 import java.util.List;

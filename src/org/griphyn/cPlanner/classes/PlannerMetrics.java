@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.classes;
 
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 
 import java.util.Date;
 

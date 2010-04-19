@@ -18,7 +18,7 @@ package org.griphyn.vdl.router;
 import java.io.*;
 import java.util.*;
 import java.sql.SQLException;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.util.*;

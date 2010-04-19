@@ -55,7 +55,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 /**
  * An abstract implementation that implements some of the common functions in

@@ -14,7 +14,7 @@
  */
 package org.griphyn.vdl.invocation;
 
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 import java.util.*;
 import java.io.Writer;
 import java.io.IOException;

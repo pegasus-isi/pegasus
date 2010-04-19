@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.MissingResourceException;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.dbdriver.*;
 import org.griphyn.vdl.dbschema.*;

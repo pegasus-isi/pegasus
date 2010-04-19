@@ -16,11 +16,12 @@
 
 package edu.isi.pegasus.planner.catalog.work;
 
+import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.VDSProperties;
 import edu.isi.pegasus.planner.catalog.WorkCatalog;
 import java.util.Properties;
 import java.util.Enumeration;
 
-import org.griphyn.common.util.*;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 

@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.sql.SQLException;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 import org.griphyn.vdl.parser.VDLxParser;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;

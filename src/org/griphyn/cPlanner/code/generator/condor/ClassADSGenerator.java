@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 
 import java.io.PrintWriter;
 

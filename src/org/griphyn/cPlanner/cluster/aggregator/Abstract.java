@@ -50,7 +50,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.Iterator;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 /**
  * An abstract implementation of the JobAggregator interface, which the other

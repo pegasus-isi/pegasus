@@ -20,8 +20,8 @@ package org.griphyn.cPlanner.poolinfo;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.util.DynamicLoader;
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.FactoryException;
 
 import java.lang.reflect.Method;
 
@@ -161,7 +161,7 @@ public class PoolMode {
 
         Object argList[] = new Object[2 ];
         argList[ 0 ] = poolProvider;
-        argList[ 1 ] = org.griphyn.common.util.VDSProperties.PROPERTY_FILENAME;
+        argList[ 1 ] = edu.isi.pegasus.common.util.VDSProperties.PROPERTY_FILENAME;
 
         return loadPoolInstance( poolClass, lMode, argList );
 

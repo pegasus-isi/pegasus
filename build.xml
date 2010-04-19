@@ -30,11 +30,11 @@
 
     <!-- substitute built timestamp into Version.java -->
     <exec executable="perl" 
-	  output="src/org/griphyn/common/util/Version.java">
+	  output="src/edu/isi/pegasus/common/util/Version.java">
       <arg value="-CS"/>
       <arg value="-pe"/>
       <arg value="s/BUILDTIMESTAMP/${ISODATE.utc}/; s/BUILDARCHITECTURE/${dist.arch}/; s/DONOTEDITWARNING/DO NOT EDIT! This file is generated automatically/"/>
-      <arg value="src/org/griphyn/common/util/Version.in"/>
+      <arg value="src/edu/isi/pegasus/common/util/Version.in"/>
     </exec>
   </target>
 
@@ -73,7 +73,7 @@
     <javac destdir="${build.src}" srcdir="src" 
 	   encoding="UTF-8" debug="true"
            target="${build.target}" source="${build.source}"
-	   includes="org/griphyn/common/util/Version.java,*.java"
+	   includes="src/edu/isi/pegasus/common/util/Version.java,*.java"
 	   excludes="org/griphyn/common/**/*Test.java,*Test.java"/>
   </target>
 

@@ -18,7 +18,6 @@ package org.griphyn.vdl.planner;
 import java.io.*;
 import java.util.*;
 
-import org.griphyn.common.util.*;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.TCMode;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;

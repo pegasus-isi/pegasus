@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.poolinfo;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 /**
  * Class to notify of failures while instantiating Site Catalog

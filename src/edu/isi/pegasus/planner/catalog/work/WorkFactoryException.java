@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.catalog.work;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 /**
  * Class to notify of failures while instantiating Transformation Catalog

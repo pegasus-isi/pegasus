@@ -15,8 +15,8 @@
 package org.griphyn.vdl.toolkit;
 
 import java.io.*;
-import org.griphyn.common.util.Version;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.common.util.Currently;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.classes.Definitions;

@@ -18,7 +18,7 @@
 package org.griphyn.cPlanner.provenance.pasoa.producer;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 
 import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;

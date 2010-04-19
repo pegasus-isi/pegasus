@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.catalog.site.impl;
 
 
-import org.griphyn.common.util.Boolean;
+import edu.isi.pegasus.common.util.Boolean;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;

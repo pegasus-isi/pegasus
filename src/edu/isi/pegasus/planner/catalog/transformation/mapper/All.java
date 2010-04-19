@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 import java.util.Iterator;
 import java.util.List;

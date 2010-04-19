@@ -33,7 +33,7 @@ import org.griphyn.cPlanner.namespace.VDS;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 
 import java.util.Collection;

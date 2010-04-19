@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.poolinfo;
 
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
@@ -126,7 +126,7 @@ public class SiteFactory {
         args[ 0 ] = properties.getPoolFile();
         /* this should not be reqd. the Site Catalog interface should take
            the properties object while being instantiated */
-        args[ 1 ] = org.griphyn.common.util.VDSProperties.PROPERTY_FILENAME;
+        args[ 1 ] = edu.isi.pegasus.common.util.VDSProperties.PROPERTY_FILENAME;
 
 
         PoolInfoProvider catalog;

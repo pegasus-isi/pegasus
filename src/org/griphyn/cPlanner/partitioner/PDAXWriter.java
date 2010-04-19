@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 
 /**
  * It writes out the partition graph in xml form.

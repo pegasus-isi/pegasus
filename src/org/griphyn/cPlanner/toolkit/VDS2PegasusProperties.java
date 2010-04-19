@@ -19,8 +19,8 @@ package org.griphyn.cPlanner.toolkit;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.util.FactoryException;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.Currently;
 
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;

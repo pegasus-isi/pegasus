@@ -200,7 +200,7 @@ public abstract class PoolInfoProvider {
         mPoolProvider = new String();
         mProps = PegasusProperties.getInstance( ( propFileName == null ) ?
             //load the default properties file
-            org.griphyn.common.util.VDSProperties.PROPERTY_FILENAME :
+            edu.isi.pegasus.common.util.VDSProperties.PROPERTY_FILENAME :
             //load the file with this name from $PEGASUS_HOME/etc directory
             propFileName );
 

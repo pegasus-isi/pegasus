@@ -46,7 +46,7 @@ import org.griphyn.cPlanner.transfer.SLS;
 
 import org.griphyn.cPlanner.transfer.sls.SLSFactory;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 

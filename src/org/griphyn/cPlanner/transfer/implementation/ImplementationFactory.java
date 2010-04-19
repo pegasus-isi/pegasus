@@ -20,7 +20,7 @@ package org.griphyn.cPlanner.transfer.implementation;
 
 import org.griphyn.cPlanner.transfer.Implementation;
 
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 
 import org.griphyn.cPlanner.classes.PegasusBag;

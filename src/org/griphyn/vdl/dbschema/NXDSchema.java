@@ -42,7 +42,7 @@ import org.griphyn.vdl.util.Logging;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.router.Cache;
 import org.griphyn.vdl.annotation.*;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 import org.xml.sax.InputSource;
 
 /**

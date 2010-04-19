@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.*;
 import java.lang.reflect.*;
 import org.griphyn.vdl.util.ChimeraProperties;
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 import org.griphyn.vdl.classes.Definitions;
 import org.griphyn.vdl.dbdriver.*;
 import org.griphyn.vdl.util.Logging;

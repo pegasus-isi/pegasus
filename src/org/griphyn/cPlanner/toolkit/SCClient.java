@@ -52,7 +52,7 @@ import java.util.StringTokenizer;
 import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.common.PegasusProperties;
 //import javax.naming.directory.SearchControls;
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 //import javax.naming.ldap.LdapContext;
 
 /**

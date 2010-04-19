@@ -32,7 +32,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.toolkit.Executable;
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 
 
 import gnu.getopt.Getopt;

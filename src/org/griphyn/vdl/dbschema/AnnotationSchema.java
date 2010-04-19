@@ -20,7 +20,7 @@ import java.util.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.InetAddress;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.annotation.*;
 import org.griphyn.vdl.classes.*;

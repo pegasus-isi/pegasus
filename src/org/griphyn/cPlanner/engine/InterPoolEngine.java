@@ -56,7 +56,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 
 import org.griphyn.cPlanner.transfer.SLS;
 

@@ -31,7 +31,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 import org.griphyn.vdl.dbschema.DatabaseSchema;
 
 import java.io.IOException;

@@ -41,8 +41,8 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import org.griphyn.common.util.Separator;
-import org.griphyn.common.util.Boolean;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.common.util.Boolean;
 
 import java.io.File;
 import java.io.IOException;

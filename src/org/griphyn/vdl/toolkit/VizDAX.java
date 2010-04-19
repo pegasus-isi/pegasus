@@ -17,7 +17,7 @@ package org.griphyn.vdl.toolkit;
 
 import java.io.*;
 import java.util.*;
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 import org.griphyn.vdl.dax.*;
 import org.griphyn.vdl.parser.DAXParser;
 import org.griphyn.vdl.util.Logging;

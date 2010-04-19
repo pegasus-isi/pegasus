@@ -16,7 +16,7 @@
 
 package org.griphyn.cPlanner.engine.cleanup;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 /**
  * Class to notify of failures while instantiating Cleanup Strategy and Implementation

@@ -14,7 +14,7 @@
  */
 package org.griphyn.vdl.directive;
 
-import org.griphyn.common.util.*;
+
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.dbschema.*;

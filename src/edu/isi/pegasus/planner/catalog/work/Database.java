@@ -23,7 +23,7 @@ import java.sql.*;
 
 import edu.isi.pegasus.planner.catalog.WorkCatalog;
 
-import org.griphyn.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.VDSProperties;
 
 import edu.isi.pegasus.common.logging.LogManager;
 

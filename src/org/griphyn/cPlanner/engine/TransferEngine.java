@@ -52,7 +52,7 @@ import org.griphyn.cPlanner.engine.createdir.Implementation;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;

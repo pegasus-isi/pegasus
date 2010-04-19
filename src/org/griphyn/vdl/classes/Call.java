@@ -14,7 +14,7 @@
  */
 package org.griphyn.vdl.classes;
 
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 import org.griphyn.vdl.util.SequenceGenerator;
 
 import java.util.*;

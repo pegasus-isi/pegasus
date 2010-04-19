@@ -22,7 +22,7 @@ import java.util.StringTokenizer;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.MissingResourceException;
-import org.griphyn.common.util.Separator;
+import edu.isi.pegasus.common.util.Separator;
 import org.griphyn.vdl.parser.VDLxParser;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.router.*;

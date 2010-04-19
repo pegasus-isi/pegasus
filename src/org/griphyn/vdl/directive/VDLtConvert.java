@@ -13,7 +13,7 @@
  * Southern California. All rights reserved.
  */
 package org.griphyn.vdl.directive;
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 import org.griphyn.vdl.parser.*;
 import org.griphyn.vdl.classes.*;
 import org.griphyn.vdl.util.Logging;

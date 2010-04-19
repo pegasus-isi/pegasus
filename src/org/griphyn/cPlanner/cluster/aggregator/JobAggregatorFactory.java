@@ -24,7 +24,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.common.util.DynamicLoader;
+import edu.isi.pegasus.common.util.DynamicLoader;
 
 
 /**

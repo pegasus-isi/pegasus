@@ -20,7 +20,7 @@ package org.griphyn.cPlanner.visualize.nodeusage;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.common.util.Currently;
+import edu.isi.pegasus.common.util.Currently;
 
 import org.griphyn.cPlanner.visualize.Callback;
 import org.griphyn.cPlanner.visualize.JobMeasurements;

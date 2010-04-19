@@ -29,8 +29,8 @@ import org.griphyn.cPlanner.visualize.KickstartParser;
 
 import org.griphyn.cPlanner.provenance.NetloggerCallback;
 
-import org.griphyn.common.util.Version;
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.common.util.FactoryException;
 
 import org.griphyn.vdl.toolkit.FriendlyNudge;
 
@@ -43,7 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.griphyn.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.VDSProperties;
 
 /**
  * This parses the kickstart records and logs via Log4j the kickstart record

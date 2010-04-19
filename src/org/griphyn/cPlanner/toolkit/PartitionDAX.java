@@ -34,7 +34,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.common.util.FactoryException;
+import edu.isi.pegasus.common.util.FactoryException;
 
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
