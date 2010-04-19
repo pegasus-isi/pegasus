@@ -13,7 +13,7 @@
  * Southern California. All rights reserved.
  */
 import org.apache.tools.ant.*;
-import org.griphyn.common.util.Version;
+import edu.isi.pegasus.common.util.Version;
 
 /**
  * This class exists only for compilation-with-ant purpose. It extends
