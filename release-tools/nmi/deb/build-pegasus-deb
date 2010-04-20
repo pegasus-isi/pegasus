@@ -10,7 +10,7 @@ START_DIR=`pwd`
 BASE_DIR=`dirname $0`
 BASE_DIR=`(cd $BASE_DIR && pwd)`
 
-WORK_DIR=`mktemp -t -d $START_DIR/deb.XXXXXX`
+WORK_DIR=`mktemp -t -d deb.XXXXXX`
 
 # os name (debian/ubuntu/...) and codename
 OS_NAME=`lsb_release -i -s | tr "[:upper:]" "[:lower:]"`
