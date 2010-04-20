@@ -10,7 +10,7 @@ START_DIR=`pwd`
 BASE_DIR=`dirname $0`
 BASE_DIR=`(cd $BASE_DIR && pwd)`
 
-WORK_DIR=`mktemp -d $START_DIR/deb.XXXXXX`
+WORK_DIR=`mktemp -t -d $START_DIR/deb.XXXXXX`
 
 # os name (debian/ubuntu/...) and codename
 OS_NAME=`lsb_release -i -s | tr "[:upper:]" "[:lower:]"`
@@ -35,7 +35,8 @@ if [ "x$PEGASUS_TAR" = "x" -o ! -e "$PEGASUS_TAR" ]; then
     echo "or it was not specified with the full path."
     exit 1
 fi
-tar xzf $PEGASUS_TAR
+tar -x -z --no-same-owner -f $PEGASUS_TAR
+ls -al pegasus-*
 
 # pegasus version
 VERSION=`ls $PEGASUS_TAR | sed 's/.*binary-//' | sed 's/-.*//'`
