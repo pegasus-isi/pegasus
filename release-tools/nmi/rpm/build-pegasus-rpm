@@ -134,7 +134,7 @@ EOF
 
 
 # now build the rpm
-rpmbuild -v --define="_topdir $WORK_DIR" -bb SPECS/pegasus.spec
+rpmbuild --define="_topdir $WORK_DIR" -bb SPECS/pegasus.spec
 
 find . -name \*.rpm
 mkdir -p $START_DIR/$DIST_DIR
