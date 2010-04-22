@@ -46,11 +46,10 @@ fi
 VERSION=`ls $PEGASUS_TAR | sed 's/.*binary-//' | sed 's/-.*//' | sed 's/\.tar.*//'`
 MAJOR_VERSION=`echo $VERSION | sed -r 's/\.[0-9]+$//' | sed -r 's/\.[0-9]+cvs$/cvs/'`
 
-DEB_VERSION="$VERSION"
+RPM_VERSION="1"
 # cvs versions get a timestamp in the version to help yum figure out updates
 if echo $VERSION | grep cvs >/dev/null 2>&1; then
-    TS=`date +'%Y%m%d%H%M'`
-    RPM_VERSION="$VERSION.$TS"
+    RPM_VERSION=`date +'%Y%m%d%H%M'`
 fi
 
 echo "Pegasus version: $VERSION"
@@ -61,6 +60,7 @@ echo "Pegasus package major version: $MAJOR_VERSION"
 cd $WORK_DIR
 mkdir SOURCES SPECS BUILD SRPMS
 mkdir -p RPMS/i386 RPMS/i486 RPMS/i586 RPMS/i686 RPMS/x86_64 RPMS/noarch
+mkdir tmp
 
 # input tar
 tar xzf $PEGASUS_TAR
@@ -76,7 +76,7 @@ Name: pegasus-$MAJOR_VERSION
 Packager: Pegasus Team <pegasus-support@isi.edu>
 License: Apache License 
 Version: $VERSION
-Release: 1
+Release: $RPM_VERSION
 URL: http://pegasus.isi.edu/wms/
 Group: Applications/Internet
 
@@ -134,7 +134,7 @@ EOF
 
 
 # now build the rpm
-rpmbuild --define="_topdir $WORK_DIR" -bb SPECS/pegasus.spec
+rpmbuild --define="_topdir $WORK_DIR" --define="_tmppath $WORK_DIR/tmp" -bb SPECS/pegasus.spec
 
 find . -name \*.rpm
 mkdir -p $START_DIR/$DIST_DIR
