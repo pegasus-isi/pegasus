@@ -104,6 +104,8 @@ Management Service can map it onto available compute resources
 and execute the steps in appropriate order. Pegasus can handle
 1 to 1 million computational tasks.
 
+%define __jar_repack %{nil}
+
 %prep
 
 %setup
@@ -121,7 +123,7 @@ rm -rf \$RPM_BUILD_ROOT
 %post 
 
 %files 
-%defattr(-,nobody,nobody)
+%defattr(-,root,root)
 /opt
 
 %changelog
