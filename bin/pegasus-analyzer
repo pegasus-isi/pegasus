@@ -177,8 +177,9 @@ def process_failed_job(my_job):
 	# Nothing to do here
 	return
 
-    # Create full path for the submit file
-    my_job.sub_file = os.path.join(input_dir, my_job.name + ".sub")
+    if my_job.sub_file == "":
+	# Create full path for the submit file if we already don't have the sub file set up
+	my_job.sub_file = os.path.join(input_dir, my_job.name + ".sub")
     my_job.out_file = os.path.join(input_dir, my_job.name + ".out")
     my_job.err_file = os.path.join(input_dir, my_job.name + ".err")
 
@@ -300,6 +301,8 @@ def parse_dag_file(dag_fn):
 		continue
 	    if not has_seen(my_job[1]):
 		add_job(my_job[1], "UNSUBMITTED")
+		# Get submit file information from dag file
+		jobs[my_job[1]].sub_file = os.path.join(input_dir, my_job[2])
 	    else:
 		print "warning: job appears twice in dag file: %s" % (my_job[1])
 	if line.startswith("SUBDAG EXTERNAL"):

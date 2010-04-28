@@ -38,7 +38,9 @@ import shelve
 import signal
 import socket
 import logging
+import calendar
 import commands
+import datetime
 import operator
 import optparse
 
@@ -71,6 +73,7 @@ if sys.version_info < (2, 5):
 
 # Used in initialization code, while checking for rescue DAGs
 re_parse_dag_submit_files = re.compile(r"JOB\s+(\S+)\s(\S+)(\s+DONE)?", re.IGNORECASE)
+re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
 
 # Used in out2log
 re_remove_extensions = re.compile(r"(?:\.(?:rescue|dag))+$")
@@ -82,10 +85,12 @@ re_clean_content = re.compile(r"([^-a-zA-z0-9_\s.,\[\]^\*\?\/\+])")
 re_condor_id = re.compile(r"^\d+(\.\d+)?$")
 re_condor_rm_output = re.compile(r"(?:Job|Node) [0-9.]+ already marked for removal")
 
-# Used in extract_knowledge
+# Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
 re_rsl_clean = re.compile(r"([-_])")
 re_site_parse_gvds = re.compile(r"^\s*\+(pegasus|wf)_(site|resource)\s*=\s*([\'\"])?(\S+)\3")
+re_parse_jobtype = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
+re_parse_transformation = re.compile(r"^\s*\+pegasus_wf_xformation\s*=\s*(\S+)")
 re_site_parse_euryale = re.compile(r"^\#!\s+site=(\S+)")
 
 # Used in process
@@ -142,20 +147,18 @@ timestamp = 0 			# time stamp from log file
 pid = 0 			# DAGMan's pid -- set later
 replay_mode = 0			# disable checking if DAGMan's pid is gone
 database = 1			# flag for using the database
-subfn = {} 			# all submit files of not-done jobs
-seen = {} 			# how often a job was seen
 pending = {} 			# remember when GLOBUS_SUBMIT was entered
-				# jid --> [stamp, addon, wtime, site]
+				# jid --> [stamp, condor_id, wtime, site]
 running = {}			# ditto for EXECUTE for hidden starvation
-				# jid --> [stamp, addon, wtime, site]
+				# jid --> [stamp, condor_id, wtime, site]
 done = {}			# jid --> stamp
 flag = {}			# jid --> retries
 job_site = {}			# last site a job was planned for
-jobstate = {}			# jid --> [stamp, event, addon, wtime, site]
+jobstate = {}			# jid --> [stamp, event, condor_id, wtime, site]
 siteinfo = {}			# site --> { [RPSF] --> [ #, mtime] }
 walltime = {}			# jid --> walltime
 waiting = {}			# site --> stamp/60 --> [ #P->R, sum(ptime)]
-remove = {}			# used with shelve, dabase of removed Condor jobs
+remove = {}			# used with shelve, database of removed Condor jobs
 
 # Revision handling
 revision = "$Revision$" # Let cvs handle this, do not edit manually
@@ -171,6 +174,33 @@ condor_version = 0		# Track DAGMan's version
 condor_major = 0		# Track DAGMan's major version
 multiline_file_flag = False	# Track multiline user log files, DAGMan > 6.6
 workdb = None			# Instance of the database
+
+jobtypes = {0: "unassigned",
+	    1: "compute",
+	    2: "stage-in",
+	    3: "stage-out",
+	    4: "replica registration",
+	    5: "inter pool",
+	    6: "create dir",
+	    7: "staged compute",
+	    8: "cleanup",
+	    9: "symlink stage-in job"}
+
+def translate_job_type(my_jobtype_id):
+    """
+    This function translates an integer jobtype into its more
+    user-friendly string representation that can be used in databases.
+    """
+    try:
+	my_jt = int(my_jobtype_id)
+    except:
+	# Failed to convert string into integer
+	return None
+    if my_jt in jobtypes:
+	# Found it, return the appropriate string
+	return jobtypes[my_jt]
+    # my_jt is not in the jobtypes conversion map, return None
+    return None
 
 class Job:
     """
@@ -194,6 +224,20 @@ class Job:
     _cluster_duration = None
     _job_state = None
     _job_state_timestamp = None
+    _walltime = None
+    _job_site = None
+    _job_info = [-1, -1, -1, -1]
+    _job_output_counter = None
+    _pre_script_start = None
+    _pre_script_done = None
+    _pre_script_exitcode = None
+    _main_job_start = None
+    _main_job_done = None
+    _main_job_transformation = None
+    _main_job_exitcode = None
+    _post_script_start = None
+    _post_script_done = None
+    _post_script_exitcode = None
 
     def __init__(self, wf_uuid, name, job_submit_seq):
 	"""
@@ -206,12 +250,110 @@ class Job:
 	self._name = name
 	self._job_submit_seq = job_submit_seq
 
-    def set_job_state(self, job_state, timestamp):
+    def set_job_state(self, job_state, timestamp, status):
 	"""
-	This function sets the job state for this job
+	This function sets the job state for this job. It also updates the
+        times the main job and PRE/POST scripts start and finish.
 	"""
 	self._job_state = job_state
 	self._job_state_timestamp = int(timestamp)
+
+	# Record timestamp for certain job states
+	if job_state == "PRE_SCRIPT_STARTED":
+	    self._pre_script_start = int(timestamp)
+	elif job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
+	    self._pre_script_done = int(timestamp)
+	    self._pre_script_exitcode = status
+	elif job_state == "POST_SCRIPT_STARTED":
+	    self._post_script_start = int(timestamp)
+	elif job_state == "POST_SCRIPT_TERMINATED":
+	    self._post_script_done = int(timestamp)
+	elif job_state == "EXECUTE":
+	    self._main_job_start = int(timestamp)
+	elif job_state == "JOB_TERMINATED":
+	    self._main_job_done = int(timestamp)
+	elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
+	    self._main_job_exitcode = status
+	elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
+	    self._post_script_exitcode = status
+
+    def parse_sub_file(self, stamp, my_fn):
+	"""
+	This function parses a job's submit file and returns job
+	planning information. In addition, we try to populate the job
+	type from information in the submit file.
+	# paramtr: stamp(IN): timestamp associated with the log line
+	# paramtr: my_fn(IN): submit file name
+	# class m: _job_info(MODIFIED): [dev#, ino#, size, mtime]
+	# globals: good_rsl(IN): which RSL keys constitute time requirements
+	# returns: (largest job time requirement in minutes, destination site, job type)
+	# returns: (None, None) if sub file not found
+	"""
+	my_result = None
+	my_site = None
+
+	# Update stat record for submit file
+	try:
+	    my_stats = os.stat(my_fn)
+	except:
+	    # Could not stat file
+	    logmsg("Error: stat %s" % (my_fn))
+	    return my_result, my_site
+
+	self._job_info[0] = my_stats[2] # dev #
+	self._job_info[1] = my_stats[1] # inode #
+	self._job_info[2] = my_stats[6] # Size
+	self._job_info[3] = my_stats[8] # mtime
+
+	if stamp < self._job_info[3]:
+	    if debug_level > 1:
+		logmsg("stamp=%d, mtime=%d, diff = %d" % (stamp, self._job_info[3], self._job_info[3]-stamp))
+	    logmsg("skipping %s (reparsing events)" % (my_fn))
+	    return my_result, my_site
+
+	try:
+	    SUB = open(my_fn, "r")
+	except:
+	    logmsg("unable to parse %s" % (my_fn))
+	    return my_result, my_site
+
+	for my_line in SUB:
+	    if re_rsl_string.search(my_line):
+		# Found RSL string, do parse now
+		for my_match in re.findall(r"\(([^)]+)\)", my_line):
+		    # Split into key and value
+		    my_k, my_v = my_match.split("=", 1)
+		    # Remove _- characters from string
+		    my_k = re_rsl_clean.sub('', my_k)
+		    if my_k.lower() in good_rsl and my_v > my_result:
+			try:
+			    my_result = int(my_v)
+			except:
+			    my_result = None
+	    elif re_site_parse_gvds.search(my_line):
+		# GVDS agreement
+		my_site = re_site_parse_gvds.search(my_line).group(4)
+	    elif re_site_parse_euryale.search(my_line):
+		# Euryale specific comment
+		my_site = re_site_parse_euryale.search(my_line).group(1)
+	    elif re_parse_jobtype.search(my_line):
+		# Found line with jobtype information
+		my_jobtype_id = re_parse_jobtype.search(my_line).group(1)
+		# Convert jobtype_id into a string jobtype
+		my_jobtype = translate_job_type(my_jobtype_id)
+		if my_jobtype is not None:
+		    self._jobtype = my_jobtype
+	    elif re_parse_transformation.search(my_line):
+		# Found line with job transformation
+		my_transformation = re_parse_transformation.search(my_line).group(1)
+		# Remove quotes, if any
+		my_transformation = my_transformation.strip('"')
+		self._main_job_transformation = my_transformation
+
+	SUB.close()
+
+	# All done!
+	return my_result, my_site
 
 class Workflow:
     """
@@ -233,13 +375,94 @@ class Workflow:
     _jobs_map = {}
     _jobs = {}
     _job_submit_seq = 1
+    _run_dir = None			# run directory for this workflow
+    _out_file = None			# dagman.out file for this workflow
+    _dag_file = None			# dag file
+    _log_file = None			# tailstatd.log file
+    _jsd_file = None			# jobstate.log file
+    _job_counters = {}			# Job counters for figuring out which output file to parse
+    _job_info = {}			# jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args]
 
-    def __init__(self, wfparams=None):
+    def parse_dag_file(self):
+	"""
+	This function parses the DAG file and determines submit file
+	locations
+	"""
+
+	try:
+	    DAG = open(self._dag_file, "r")
+	except:
+	    logger.warn("ERROR: Unable to read %s!" % (self._dag_file))
+	else:
+	    for dag_line in DAG:
+		if (dag_line.lower()).find("job") >= 0:
+		    # Found Job line, parse it
+		    my_match = re_parse_dag_submit_files.search(dag_line)
+		    if my_match:
+			if not my_match.group(3):
+			    my_jobid = my_match.group(1)
+			    my_sub = os.path.join(self._run_dir, my_match.group(2))
+			    # Found submit file for not-DONE job
+			    if my_jobid in self._job_info:
+				# Entry already exists for this job, just collect submit file info
+				self._job_info[my_jobid][0] = my_sub
+			    else:
+				# No entry for this job, let's create a new one
+				self._job_info[my_jobid] = [my_sub, None, None, None, None]
+		if (dag_line.lower()).find("script post") >= 0:
+		    # Found SCRIPT POST line, parse it
+		    my_match = re_parse_dag_script.search(dag_line)
+		    if my_match:
+			my_jobid = my_match.group(1)
+			my_exec = my_match.group(2)
+			my_args = my_match.group(3)
+			if my_jobid in self._job_info:
+			    # Entry already exists for this job, just collect post script info
+			    self._job_info[my_jobid][3] = my_exec
+			    self._job_info[my_jobid][4] = my_args
+			else:
+			    # No entry for this job, let's create a new one
+			    self._job_info[my_jobid] = [None, None, None, my_exec, my_args]
+		if (dag_line.lower()).find("script pre") >= 0:
+		    # Found SCRIPT PRE line, parse it
+		    my_match = re_parse_dag_script.search(dag_line)
+		    if my_match:
+			my_jobid = my_match.group(1)
+			my_exec = my_match.group(2)
+			my_args = my_match.group(3)
+			if my_jobid in self._job_info:
+			    # Entry already exists for this job, just collect pre script info
+			    self._job_info[my_jobid][1] = my_exec
+			    self._job_info[my_jobid][2] = my_args
+			else:
+			    # No entry for this job, let's create a new one
+			    self._job_info[my_jobid] = [None, my_exec, my_args, None, None]
+			
+	    DAG.close()
+
+	# POST-CONDITION: _job_info contains only submit-files of jobs
+	# that are not yet done. Normally, this are all submit
+	# files. In rescue DAGS, that is an arbitrary subset of all
+	# jobs. In addition, _job_info should contain all PRE and POST
+	# script information for job in this workflow
+
+    def __init__(self, run, out, wfparams=None):
 	"""
 	This function initializes the workflow parameters according to the
 	keys present in wfparams (if provided). Parameters not present in
 	wfparams will remain as None
 	"""
+	# Initialize run directory and dagman.out
+	self._run_dir = run
+	self._out_file = out
+
+	# Get the dag file location
+	self._dag_file = out[:out.find(".dagman.out")]
+	self._dag_file = os.path.normpath(os.path.join(run, self._dag_file))
+
+	# Now, we parse the dag file and get submit file locations
+	self.parse_dag_file()
+
 	if wfparams is not None:
 	    if "wf_uuid" in wfparams:
 		if wfparams["wf_uuid"] is not None:
@@ -259,6 +482,25 @@ class Workflow:
 		# Use "pegasus_wf_time" if "timestamp" not found
 		if "pegasus_wf_time" in wfparams:
 		    self._timestamp = wfparams["pegasus_wf_time"]
+	    # Convert timestamp from YYYYMMDDTHHMMSSZZZZZ to Epoch
+	    if self._timestamp is not None:
+		try:
+		    # Split date/time and timezone information
+		    dt = self._timestamp[:-5]
+		    tz = self._timestamp[-5:]
+		    # Convert date/time to datetime format
+		    my_time = datetime.datetime.strptime(dt, "%Y%m%dT%H%M%S")
+		    # Split timezone in hours and minutes
+		    my_hour = int(tz[:-2])
+		    my_min = int(tz[-2:])
+		    # Calculate offset
+		    my_offset = datetime.timedelta(hours=my_hour, minutes=my_min)
+		    # Subtract offset
+		    my_time = my_time - my_offset
+		    # Turn my_time into Epoch format
+		    self._timestamp = int(calendar.timegm(my_time.timetuple()))
+		except:
+		    logger.warn("ERROR: Converting timestamp %s to Epoch format" % self._timestamp)
 	    if "submit_dir" in wfparams:
 		self._submit_dir = wfparams["submit_dir"]
 	    else:
@@ -309,32 +551,106 @@ class Workflow:
 	# Send workflow event to database
 	workdb.write(event="workflow", **kwargs)
 
+    def find_jobid(self, jobid):
+	"""
+	This function finds the job_submit_seq of a given jobid by checking
+	the _jobs_map dict. Since add_job will update _jobs_map, this function
+	will return the job_submit_seq of the latest jobid added to the workflow
+	"""
+	if jobid in self._jobs_map:
+	    return self._jobs_map[jobid]
+
+	# Not found, return None
+	return None
+
+    def find_job_submit_seq(self, jobid):
+	"""
+	If a jobid already exists and is in the PRE_SCRIPT_SUCCESS mode, this
+	function returns its job_submit_seq. Otherwise, it returns None, meaning
+	a new job needs to be created
+	"""
+	# Look for a jobid
+	my_job_submit_seq = self.find_jobid(jobid)
+
+	# No such job, return None
+	if my_job_submit_seq is None:
+	    return None
+
+	# Make sure the job is there
+	if not (jobid, my_job_submit_seq) in self._jobs:
+	    logmsg("find_job_submit_seq: warning: cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+	    return None
+
+	my_job = self._jobs[jobid, my_job_submit_seq]
+	if my_job._job_state == "PRE_SCRIPT_SUCCESS":
+	    # jobid is in "PRE_SCRIPT_SUCCESS" state, return job_submit_seq
+	    return my_job_submit_seq
+
+	# jobid is in another state, return None
+	return None
+
     def add_job(self, jobid, job_state, timestamp, condor_id=None):
 	"""
-	This function adds a new job to our list of jobs. It
-	also sets the job state to job_state.
+	This function adds a new job to our list of jobs. It first checks if
+	the job is already in our list in the PRE_SCRIPT_SUCCESS state, if so,
+	we just update its condor id. Otherwise we create a new Job container.
+	In any case, we always set the job state to job_state.
 	"""
-	my_job_submit_seq = self._job_submit_seq
 
-	# Make sure job is not already there
-	if (jobid, my_job_submit_seq) in self._jobs:
-	    logmsg("add_job: warning: trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
-	    return
+	my_job_submit_seq = self.find_job_submit_seq(jobid)
 
-	# Create new job container
-	new_job = Job(self._wf_uuid, jobid, my_job_submit_seq)
-	# Set job state
-	new_job.set_job_state(job_state, timestamp)
-	# Set condor_id
-	new_job._condor_id = condor_id
-	# Add job to our list of jobs
-	self._jobs[jobid, my_job_submit_seq] = new_job
+	if my_job_submit_seq is not None:
+	    # Job already exists
+	    if not (jobid, my_job_submit_seq) in self._jobs:
+		logmsg("add_job: warning: cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+		return
 
-	# Add/Update job in our job map
-	self._jobs_map[jobid] = my_job_submit_seq
+	    my_job = self._jobs[jobid, my_job_submit_seq]
 
-	# Update job_submit_seq
-	self._job_submit_seq = self._job_submit_seq + 1
+	    # Set condor_id
+	    if condor_id is not None:
+		my_job._condor_id = condor_id
+
+	    # Update job state
+	    my_job._job_state = job_state
+	    my_job._job_state_timestamp = int(timestamp)
+	else:
+	    # This is a new job, we have to do everything from scratch
+	    my_job_submit_seq = self._job_submit_seq
+
+	    # Make sure job is not already there
+	    if (jobid, my_job_submit_seq) in self._jobs:
+		logmsg("add_job: warning: trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
+		return
+
+	    # Create new job container
+	    my_job = Job(self._wf_uuid, jobid, my_job_submit_seq)
+	    # Set job state
+	    my_job._job_state = job_state
+	    my_job._job_state_timestamp = int(timestamp)
+	    # Set condor_id
+	    my_job._condor_id = condor_id
+	    # Set job type as "compute" for now, will change when submit file is parsed
+	    my_job._jobtype = "compute"
+	    # Add job to our list of jobs
+	    self._jobs[jobid, my_job_submit_seq] = my_job
+
+	    # Add/Update job in our job map
+	    self._jobs_map[jobid] = my_job_submit_seq
+
+	    # Update job_submit_seq
+	    self._job_submit_seq = self._job_submit_seq + 1
+
+	# Update job counter if this job is in the SUBMIT state
+	if job_state == "SUBMIT":
+	    if jobid in self._job_counters:
+		# Counter already exists for this job, just increate it by 1
+		self._job_counters[jobid] = self._job_counters[jobid] + 1
+	    else:
+		# No counter for this job yet
+		self._job_counters[jobid] = 0
+	    # Now, we set the job output counter for this particular job
+	    my_job._job_output_counter = self._job_counters[jobid]
 
 	return my_job_submit_seq
 
@@ -384,7 +700,6 @@ class Workflow:
 	# Make sure job is already there
 	if not (jobid, job_submit_seq) in self._jobs:
 	    logmsg("job_update_info: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
-	    print self._jobs
 	    return
 
 	my_job = self._jobs[jobid, job_submit_seq]
@@ -394,45 +709,7 @@ class Workflow:
 	# Everything done
 	return
 
-    def find_jobid(self, jobid):
-	"""
-	This function finds the job_submit_seq of a given jobid by checking
-	the _jobs_map dict. Since add_job will update _jobs_map, this function
-	will return the job_submit_seq of the latest jobid added to the workflow
-	"""
-	if jobid in self._jobs_map:
-	    return self._jobs_map[jobid]
-
-	# Not found, return None
-	return None
-
-    def find_job_submit_seq(self, jobid):
-	"""
-	If a jobid already exists and is in the PRE_SCRIPT_SUCCESS mode, this
-	function returns its job_submit_seq. Otherwise, it returns None, meaning
-	a new job needs to be created
-	"""
-	# Look for a jobid
-	my_job_submit_seq = self.find_jobid(jobid)
-
-	# No such job, return None
-	if my_job_submit_seq is None:
-	    return None
-
-	# Make sure the job is there
-	if not (jobid, my_job_submit_seq) in self._jobs:
-	    logmsg("find_job_submit_seq: warning: cannot find job: %s, %s" % (jobid, my_job_submit_seq))
-	    return None
-
-	my_job = self._jobs[jobid, my_job_submit_seq]
-	if my_job._job_state == "PRE_SCRIPT_SUCCESS":
-	    # jobid is in "PRE_SCRIPT_SUCCESS" state, return job_submit_seq
-	    return my_job_submit_seq
-
-	# jobid is in another state, return None
-	return None
-
-    def update_job_state(self, jobid, job_submit_seq, job_state, timestamp):
+    def update_job_state(self, jobid, job_submit_seq, job_state, timestamp, status):
 	"""
 	This function updates a job's state
 	"""
@@ -447,7 +724,7 @@ class Workflow:
 	# Got it
 	my_job = self._jobs[jobid, job_submit_seq]
 	# Update job state
-	my_job.set_job_state(job_state, timestamp)
+	my_job.set_job_state(job_state, timestamp, status)
 
     def db_send_job_state(self, jobid, job_submit_seq):
 	"""
@@ -476,6 +753,85 @@ class Workflow:
 
 	# Send job state event to database
 	workdb.write(event="jobstate", **kwargs)
+
+    def parse_job_sub_file(self, jobid, job_submit_seq, stamp):
+	"""
+	This function calls a function in the Job class to parse
+	a job's submit file and extract planning information
+	"""
+
+	# Find job
+	if not (jobid, job_submit_seq) in self._jobs:
+	    logmsg("parse_job_sub_file: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
+	    return None, None
+
+	# Check if we have an entry for this job
+	if not jobid in self._job_info:
+	    return None, None
+
+	# Make sure if we have a file for this entry (should always be there)
+	if self._job_info[jobid][0] is None:
+	    return None, None
+
+	# Got everything
+	my_job = self._jobs[jobid, job_submit_seq]
+
+	# Parse sub file
+	my_diff, my_site = my_job.parse_sub_file(stamp, self._job_info[jobid][0])
+
+	# All done
+	return my_diff, my_site
+
+    def db_send_task_info(self, jobid, job_submit_seq, task_type):
+	"""
+	This function sends to the database task
+	information. task_type is either "PRE SCRIPT", "MAIN JOB", or
+	"POST SCRIPT"
+	"""
+	# Start empty
+	kwargs = {}
+
+	# Sanity check, verify task type
+	if task_type != "PRE SCRIPT" and task_type != "POST SCRIPT" and task_type != "MAIN JOB":
+	    logmsg("db_send_task_info: warning: unknown task type: %s" % (task_type))
+	    return
+
+	# Find job
+	if not (jobid, job_submit_seq) in self._jobs:
+	    logmsg("db_send_task_info: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
+	    return
+	# Got it
+	my_job = self._jobs[jobid, job_submit_seq]
+
+	# Make sure we include the wf_uuid, name, and job_submit_seq
+	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["name"] = my_job._name
+	kwargs["job_submit_seq"] = my_job._job_submit_seq
+
+	if task_type == "PRE SCRIPT":
+	    # This is a PRE SCRIPT task
+	    kwargs["transformation"] = "dagman::pre"
+	    kwargs["start_time"] = my_job._pre_script_start
+	    kwargs["duration"] = my_job._pre_script_done - my_job._pre_script_start
+	    kwargs["exitcode"] = my_job._pre_script_exitcode
+	    if jobid in self._job_info:
+		kwargs["executable"] = self._job_info[jobid][1]
+		kwargs["arguments"] = self._job_info[jobid][2]
+	elif task_type == "POST SCRIPT":
+	    # This is a POST SCRIPT task
+	    kwargs["transformation"] = "dagman::post"
+	    kwargs["start_time"] = my_job._post_script_start
+	    kwargs["duration"] = my_job._post_script_done - my_job._post_script_start
+	    kwargs["exitcode"] = my_job._post_script_exitcode
+	    if jobid in self._job_info:
+		kwargs["executable"] = self._job_info[jobid][3]
+		kwargs["arguments"] = self._job_info[jobid][4]
+	elif task_type == "MAIN JOB":
+	    # This is a MAIN JOB task
+	    pass
+
+	# Send job event to database
+	workdb.write(event="task", **kwargs)
 
 def make_boolean(value):
     # purpose: convert an input string into something boolean
@@ -622,7 +978,9 @@ out = os.path.abspath(out)
 # Infer run directory
 run = os.path.dirname(out)
 
-# Sanity check contents, at least for keys
+# Using --config/-C allows users to bypass the braindump.txt file.
+# In this case, we check if all required keys are given on the
+# command line, and complain otherwise.
 if len(config) > 0:
     for k in brainkeys["required"]:
 	if not k in config:
@@ -663,28 +1021,6 @@ try:
 except:
     logger.fatal("Error appending to %s!" % (jsd))
     sys.exit(1)
-
-# Check for rescue DAG presence; determine submit file location
-dag = out[:out.find(".dagman.out")]
-dag = os.path.normpath(os.path.join(run, dag))
-
-try:
-    DAG = open(dag, "r")
-except:
-    logger.warn("ERROR: Unable to read %s!" % (dag))
-else:
-    for dag_line in DAG:
-	if (dag_line.lower()).find("job") >=0:
-	    my_match = re_parse_dag_submit_files.search(dag_line)
-	    if my_match:
-		if not my_match.group(3):
-		    # Found submit file for not-DONE job
-		    subfn[my_match.group(1)] = [os.path.join(run, my_match.group(2)), -1, -1, -1, -1]
-    DAG.close()
-
-# POST-CONDITION: subfn contains only submit-files of jobs that are not yet done
-# Normally, this is all submit files.
-# In rescue DAGS, that is an arbitrary subset of all jobs.
 
 # Check for condor_rm
 condor_rm = utils.find_exec("condor_rm")
@@ -779,74 +1115,6 @@ def out2log(out):
 
     return my_log, my_base
 
-def extract_knowledge(stamp, info):
-    # purpose: Extract any walltime and site info from a given submit file
-    # paramtr: stamp(IN): timestamp associated with the log line
-    # paramtr: info(IN, MODIFIED): [subfn, dev#, ino#, size, mtime] reference
-    # globals: good_rsl(IN): which RSL keys constitute time requirements
-    # returns: (largest job time requirement in minutes, destination site)
-    # returns: (None, None) if info not found
-
-    my_result = None
-    my_site = None
-
-    if info is None:
-	return my_result, my_site
-
-    my_fn = info[0]
-
-    if my_fn is None:
-	return my_result, my_site
-
-    # Update stat record for submit file
-    try:
-	my_stats = os.stat(my_fn)
-    except:
-	# Could not stat file
-	logmsg("Error: stat %s" % (my_fn))
-	return my_result, my_site
-
-    info[1] = my_stats[2] # dev #
-    info[2] = my_stats[1] # inode #
-    info[3] = my_stats[6] # Size
-    info[4] = my_stats[8] # mtime
-
-    if stamp < info[4]:
-	if debug_level > 1:
-	    logmsg("stamp=%d, mtime=%d, diff = %d" % (stamp, info[4], info[4]-stamp))
-	logmsg("skipping %s (reparsing events)" % (my_fn))
-	return my_result, my_site
-
-    try:
-	SUB = open(my_fn, "r")
-    except:
-	logmsg("unable to parse %s" % (my_fn))
-	return my_result, my_site
-
-    for my_line in SUB:
-	if re_rsl_string.search(my_line):
-	    # Found RSL string, do parse now
-	    for my_match in re.findall(r"\(([^)]+)\)", my_line):
-		# Split into key and value
-		my_k, my_v = my_match.split("=", 1)
-		# Remove _- characters from string
-		my_k = re_rsl_clean.sub('', my_k)
-		if my_k.lower() in good_rsl and my_v > my_result:
-		    try:
-			my_result = int(my_v)
-		    except:
-			my_result = None
-	elif re_site_parse_gvds.search(my_line):
-	    # GVDS agreement
-	    my_site = re_site_parse_gvds.search(my_line).group(4)
-	elif re_site_parse_euryale.search(my_line):
-	    # Euryale specific comment
-	    my_site = re_site_parse_euryale.search(my_line).group(1)
-
-    SUB.close()
-
-    return my_result, my_site
-
 def aggregate(site, stamp, pending):
     # purpose: aggregates pending information into raster intervals
     # paramtr: site(IN): run site
@@ -872,18 +1140,17 @@ def aggregate(site, stamp, pending):
 	my_n = waiting[site][my_slot][0]
 	logmsg("%s:%s %s / %d = %.3f" % (site, my_slot, my_diff, my_n, my_diff / my_n))
 
-def add(stamp, jobid, event, condor_id=None, addon=None):
+def add(stamp, jobid, event, condor_id=None, status=None):
     # purpose: append atomically a line to the jobstate file
     # paramtr: stamp(IN): time stamp when the state change was seen
     # paramtr: jobid(IN): what job
     # paramtr: event(IN): new status of job
     # paramtr: condor_id(IN, OPT): condor id
-    # paramtr: addon(IN, OPT): additional data
+    # paramtr: status(IN, OPT): exitcode
     # returns: Nothing
 
     my_site = None
     my_time = None
-    my_info = None
     my_job_submit_seq = None
 
     # Remove existing site info during replanning
@@ -907,12 +1174,15 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
 	    # Send job event to database
 	    wf.db_send_job_info(jobid, my_job_submit_seq)
 
-    # Obtain planning information from submit file when entering Condor
+    # A SUBMIT event brings condor id and job type information (it can also be
+    # a new job for us when there is no PRE_SCRIPT)
     if event == "SUBMIT":
+	# Add job to our workflow (if not alredy there), will update condor_id in both cases
+	my_job_submit_seq = wf.add_job(jobid, event, stamp, condor_id=condor_id)
+
+	# Obtain planning information from the submit file when entering Condor,
 	# Figure out how long the job _intends_ to run maximum
-	if jobid in subfn:
-	    my_info = subfn[jobid]
-	my_time, my_site = extract_knowledge(stamp, my_info)
+	my_time, my_site = wf.parse_job_sub_file(jobid, my_job_submit_seq, stamp)
 
 	if my_site == "!!SITE!!":
 	    my_site = None
@@ -935,16 +1205,6 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
 	else:
 	    logmsg("job %s does not have a site information!" % (jobid))
 
-	# Check if we need to add job to our workflow
-	my_job_submit_seq = wf.find_job_submit_seq(jobid)
-
-	if my_job_submit_seq is None:
-	    # Add job to our workflow
-	    my_job_submit_seq = wf.add_job(jobid, event, stamp, condor_id=condor_id)
-	else:
-	    # Set condor id for this job
-	    wf.job_update_info(jobid, my_job_submit_seq, condor_id=condor_id)
-
 	if database == 1:
 	    # Send job event to database
 	    wf.db_send_job_info(jobid, my_job_submit_seq)
@@ -957,16 +1217,28 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
 	logmsg("add: cannot find job_submit_seq for job: %s" % (jobid))
 
     # Make sure job has the updated state
-    wf.update_job_state(jobid, my_job_submit_seq, event, stamp)
+    wf.update_job_state(jobid, my_job_submit_seq, event, stamp, status)
     if database == 1:
 	# Send jobstate event to database
 	wf.db_send_job_state(jobid, my_job_submit_seq)
+
+    # Check if we need to send any tasks to the database
+    if database == 1:
+	if event == "POST_SCRIPT_FAILURE" or event == "POST_SCRIPT_SUCCESS":
+	    # POST script finished
+	    wf.db_send_task_info(jobid, my_job_submit_seq, "POST SCRIPT")
+	elif event == "PRE_SCRIPT_FAILURE" or event == "PRE_SCRIPT_SUCCESS":
+	    # PRE script finished
+	    wf.db_send_task_info(jobid, my_job_submit_seq, "PRE SCRIPT")
+	elif event == "JOB_TERMINATED":
+	    # Main job has ended
+	    pass
 
     # Remember when we changed into a pending state
     if event in pending_job_events:
 	if not jobid in pending:
 	    # Remember when -- and which Condor ID
-	    pending[jobid] = [stamp, addon, my_time, my_site]
+	    pending[jobid] = [stamp, condor_id, my_time, my_site]
 	else:
 	    if debug_level > 1:
 		logmsg("%s remains a pending event for %s" % (event, jobid))
@@ -984,7 +1256,7 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
     if event in running_job_events:
 	if not jobid in running:
 	    # Remember when -- and which Condor ID
-	    running[jobid] = [stamp, addon, my_time, my_site]
+	    running[jobid] = [stamp, condor_id, my_time, my_site]
 
 	    # Increase the window size when in slow start
 	    # WARNING: This may be blocking forever!!!!!
@@ -1003,15 +1275,19 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
 	if jobid in running:
 	    del running[jobid]
 
+    # Make status a string so we can print properly
+    if status is not None:
+	status = str(status)
+
     # Create content -- use one space only
-    my_line = "%d %s %s %s %s %s %d" % (stamp, jobid, event, addon or '-', my_site or '-',
+    my_line = "%d %s %s %s %s %s %d" % (stamp, jobid, event, status or condor_id or '-', my_site or '-',
 					my_time or '-', my_job_submit_seq or '-')
     if debug_level > 1:
 	logmsg("new state %s" % (my_line))
 
     # Prepare for atomic append
     JSDB.write("%s\n" % (my_line))
-    jobstate[jobid] = [stamp, event, addon, my_time, my_site]
+    jobstate[jobid] = [stamp, event, condor_id, my_time, my_site]
 
     # NEW: maintain site statistics
     if my_site is not None:
@@ -1059,12 +1335,6 @@ def add(stamp, jobid, event, condor_id=None, addon=None):
 	siteinfo[my_site][jobid] = my_state
 	siteinfo[my_site]["mtime"] = stamp
 
-    # Count how many times this job changed states
-    if jobid in seen:
-	seen[jobid] = seen[jobid] + 1
-    else:
-	seen[jobid] = 1
-
     return
 
 def process(log_line):
@@ -1101,10 +1371,10 @@ def process(log_line):
 	if re_parse_event.search(log_line) is not None:
 	    # Found Event
 	    my_expr = re_parse_event.search(log_line)
-	    # groups = jobid, event, condor
-	    add(timestamp, my_expr.group(2), my_expr.group(1), condor_id=my_expr.group(3), addon=my_expr.group(3))
+	    # groups = jobid, event, condor_id
+	    add(timestamp, my_expr.group(2), my_expr.group(1), condor_id=my_expr.group(3))
 	elif re_parse_script_running.search(log_line) is not None:
-	    # Pre scripts are not a regular Condor event
+	    # Pre scripts are not regular Condor event
 	    # Starting of scripts is not a regular Condor event
 	    my_expr = re_parse_script_running.search(log_line)
 	    # groups = script, jobid
@@ -1116,20 +1386,20 @@ def process(log_line):
 	    my_jobid = my_expr.group(2)
 	    if re_parse_script_successful.search(log_line) is not None:
 		# Remember success with artificial jobstate
-		add(timestamp, my_jobid, "%s_SCRIPT_SUCCESS" % (my_script))
+		add(timestamp, my_jobid, "%s_SCRIPT_SUCCESS" % (my_script), status=0)
 		if my_script == "POST":
 		    done[my_jobid] = timestamp
 	    elif re_parse_script_failed.search(log_line) is not None:
 		# Remember failure with artificial jobstate
 		my_expr = re_parse_script_failed.search(log_line)
 		# groups = exit code (error status)
-		add(timestamp, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), addon=my_expr.group(1))
 		try:
 		    my_exit_code = int(my_expr.group(1))
 		except:
 		    # Unable to convert exit code to integer -- should not happen
 		    logger.warn("unable to convert exit code to integer!")
-		    my_exit_code = 0
+		    my_exit_code = 1
+		add(timestamp, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code)
 		if my_exit_code == 42 or my_jobid in flag and flag[my_jobid] > 0:
 		    # Detect permanent failure
 		    logmsg("detected permanent failure for %s" % (my_jobid))
@@ -1144,16 +1414,21 @@ def process(log_line):
 	    # groups = jobid, condorid, jobstatus
 	    my_jobid = my_expr.group(1)
 	    my_condorid = my_expr.group(2)
-	    my_jobstatus = my_expr.group(3)
+	    try:
+		my_jobstatus = int(my_expr.group(3))
+	    except:
+		# Unable to convert exit code to integet -- should not happen
+		logger.warn("unable to convert exit code to integer!")
+		my_jobstatus = 1
 	    # remember failure with artificial jobstate
-	    add(timestamp, my_jobid, "JOB_FAILURE", condor_id=my_condorid, addon=my_jobstatus);
+	    add(timestamp, my_jobid, "JOB_FAILURE", condor_id=my_condorid, status=my_jobstatus)
 	elif re_parse_job_successful.search(log_line) is not None:
 	    # Job succeeded
 	    my_expr = re_parse_job_successful.search(log_line)
 	    my_jobid = my_expr.group(1)
 	    my_condorid = my_expr.group(2)
 	    # remember success with artificial jobstate
-	    add(timestamp, my_jobid, "JOB_SUCCESS", condor_id=my_condorid, addon=my_condorid);
+	    add(timestamp, my_jobid, "JOB_SUCCESS", condor_id=my_condorid, status=0)
 	elif re_parse_retry.search(log_line) is not None:
 	    # Found a retry, save maxed-out retried for later
 	    my_expr = re_parse_retry.search(log_line)
@@ -1956,7 +2231,7 @@ if millisleep is not None:
 JSDB.write("%d INTERNAL *** TAILSTATD_STARTED ***\n" % (int(time.time())))
 
 # Instantiate workflow class
-wf = Workflow(config)
+wf = Workflow(run, out, config)
 if database == 1:
     # Add workflow info to database
     wf.db_send_wf_info()
@@ -2017,6 +2292,13 @@ else:
 # Now we wait for the .out file to appear
 f_stat = None
 n_retries = 0
+
+# Test if dagman.out file is there in case we are running in replay_mode
+if replay_mode:
+    try:
+	f_stat = os.stat(out)
+    except:
+	fatal("error: workflow not started, %s does not exist, exiting..." % (out))
 
 # Start looking for the file
 while True:
