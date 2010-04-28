@@ -19,8 +19,8 @@ package org.griphyn.cPlanner.cluster.aggregator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
-import org.griphyn.cPlanner.code.gridstart.ExitPOST;
+import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.code.gridstart.ExitPOST;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.AggregatedJob;
@@ -32,7 +32,7 @@ import org.griphyn.cPlanner.namespace.VDS;
 import org.griphyn.cPlanner.namespace.Dagman;
 
 
-import org.griphyn.cPlanner.code.GridStart;
+import edu.isi.pegasus.planner.code.GridStart;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 

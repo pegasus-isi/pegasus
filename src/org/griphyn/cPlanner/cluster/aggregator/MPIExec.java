@@ -25,10 +25,10 @@ import org.griphyn.cPlanner.classes.AggregatedJob;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import java.util.List;
-import org.griphyn.cPlanner.code.GridStart;
+import edu.isi.pegasus.planner.code.GridStart;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**

@@ -20,7 +20,7 @@ package org.griphyn.cPlanner.cluster.aggregator;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;

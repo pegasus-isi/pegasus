@@ -18,9 +18,9 @@ package org.griphyn.cPlanner.parser.pdax;
 
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
+import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;

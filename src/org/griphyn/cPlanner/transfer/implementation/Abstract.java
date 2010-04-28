@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.Utility;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.VDS;

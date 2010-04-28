@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.common.logging.LogManager;
 

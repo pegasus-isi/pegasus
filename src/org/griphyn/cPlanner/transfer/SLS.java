@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.transfer;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.code.GridStart;
+import edu.isi.pegasus.planner.code.GridStart;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;

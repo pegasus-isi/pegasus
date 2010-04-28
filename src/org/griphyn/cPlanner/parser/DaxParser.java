@@ -51,7 +51,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import org.griphyn.cPlanner.classes.DAGJob;
-import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.VDS;
 

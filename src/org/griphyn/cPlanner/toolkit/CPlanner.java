@@ -27,8 +27,8 @@ import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
-import org.griphyn.cPlanner.code.CodeGenerator;
-import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
+import edu.isi.pegasus.planner.code.CodeGenerator;
+import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
