@@ -53,6 +53,9 @@ sub env_setup
     my $VAC_HOME="";
  
     for my $key ( keys %ENV){
+	if ($key=~ m/_NMI_PREREQ_wget/) {
+	    $ENV{'PATH'} = $ENV{$key} . "/bin:" . $ENV{'PATH'};
+	}
 	if ($key=~ m/_NMI_PREREQ_([A-Za-z0-9]+_)*java/) {
 	    $JAVA_HOME=$ENV{$key};
 	    $ENV{JAVA_HOME}=$JAVA_HOME;
@@ -93,11 +96,11 @@ sub build_binary
     
     cd($src_dir);
 
-    cmd(". setup-devel.sh && ant clean", 1, 0);
+    cmd(". ./setup-devel.sh && ant clean", 1, 0);
     cmd("rm -rf dist/*", 1, 0);
     cmd("mkdir -p build-results", 1, 1);
 
-    cmd(". setup-devel.sh && ant dist", 1, 1);
+    cmd(". ./setup-devel.sh && ant dist", 1, 1);
     cmd("mv dist/*.tar.gz build-results/", 1, 1);
     cmd("cd build-results/ && ls -l -h", 1, 1);
 }
@@ -109,11 +112,11 @@ sub build_worker
     
     cd($src_dir);
 
-    cmd(". setup-devel.sh && ant clean", 1, 0);
+    cmd(". ./setup-devel.sh && ant clean", 1, 0);
     cmd("rm -rf dist/*", 1, 0);
     cmd("mkdir -p build-results", 1, 1);
 
-    cmd(". setup-devel.sh && ant dist-worker", 1, 1);
+    cmd(". ./setup-devel.sh && ant dist-worker", 1, 1);
     cmd("mv dist/*.tar.gz build-results/", 1, 1);
     cmd("cd build-results/ && ls -l -h", 1, 1);
 }
@@ -288,13 +291,19 @@ sub test_wms
 {
     my $rc = 0; 
 
+    announce("fake globus location for Pegasus to be happy");
+    $ENV{'GLOBUS_LOCATION'} = "$top_dir/globus";
+    cmd("mkdir -p \$GLOBUS_LOCATION/bin", 1, 1);
+    cmd("touch \$GLOBUS_LOCATION/bin/globus-url-copy", 1, 1);
+    cmd("touch \$GLOBUS_LOCATION/bin/grid-proxy-info", 1, 1);
+
     announce("installing the wms package");
     cmd("mkdir -p $top_dir/wms/", 1, 1);
     cd("$top_dir/wms");
     cmd("tar xzf $src_dir/build-results/pegasus-wms-*", 1, 1);
     my $dir = `ls`;
     chomp($dir);
-    $ENV{PEGASUS_HOME} = "$top_dir/wms/$dir";
+    $ENV{'PEGASUS_HOME'} = "$top_dir/wms/$dir";
     logmsg("PEGASUS_HOME set to " . $ENV{PEGASUS_HOME});
 
     announce("setting up and starting the master");
@@ -310,6 +319,28 @@ sub test_wms
     announce("simple condor tests");
     $rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_status", 1, 0);
     $rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_q", 1, 0);
+
+    #announce("black diamond test");
+    #$rc += cmd("wget -nv http://yggdrasil.isi.edu/~rynge/pegasus-testing/blackdiamond.tar.gz" .
+    #           " && tar xzf blackdiamond.tar.gz", 1, 0);
+    #cd("blackdiamond");
+    #$rc += cmd(". \$PEGASUS_HOME/setup.sh && ./submit-local 2>&1", 1, 0);
+    #sleep(180);
+    #$dir = `(cd workdir-localcondor/pegasusexec/*/pegasus/black-diamond/*/ && pwd)`;
+    #chomp($dir);
+    #if ( -e "$dir/f.d" ) {
+    #    logmsg("black diamond test successful!");
+    #}
+    #else {
+    #    logmsg("black diamond test failed!");
+    #    $rc++;
+    #    $dir = `(cd dags/*/pegasus/black-diamond/*/ && pwd)`;
+    #    chomp($dir);
+    #    cd($dir);
+    #    cmd(". \$PEGASUS_HOME/setup.sh && condor_q", 1, 0);
+    #    cmd("ls -l $dir/", 1, 0);
+    #    cmd(". \$PEGASUS_HOME/setup.sh && pegasus-analyzer -q", 1, 0);
+    #}
     
     announce("stopping condor");
     cmd(". \$PEGASUS_HOME/setup.sh && condor_off -master", 1, 0);
