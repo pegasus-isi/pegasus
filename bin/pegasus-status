@@ -113,12 +113,13 @@ sub longstatus(;$) {
     my $done=$statnum[2];
     my $percent=(100*$done)/$total;
     if($running){
-	print "WORKFLOW RUNNING : $done/$total ( $percent%) DONE\n";
+	print sprintf("WORKFLOW RUNNING : %d/%d ( %.0f%% ) DONE\n",$done,$total,$percent);
     } else {
 	if ($total == $done){
 	    print "WORKFLOW COMPLETED/n";
 	} else {
-	    print "WORKFLOW FAILED : $done/$total ( $percent%) DONE\n";
+	print sprintf ("WORKFLOW FAILED : %d/%d ( %.0f%% ) DONE\n",$done,$total,$percent) ;
+#	    print "WORKFLOW FAILED : $done/$total ( $percent%) DONE\n";
 	}
     }
     exit 0;
