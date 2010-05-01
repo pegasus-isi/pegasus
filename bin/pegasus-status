@@ -21,8 +21,10 @@ use strict;
 
 use File::Basename; 		# standard module since 5.005
 use File::Spec;			# standard module since 5.005 or 5.6.0
+use Cwd;
 use Getopt::Long qw(:config bundling no_ignore_case);
 use Work::Common;
+use Data::Dumper;
 
 # debug off
 $main::DEBUG = 0;
@@ -35,10 +37,90 @@ sub myversion() {
     exit 0;
 }
 
+# this magic needed for recursive function (as per Jens)
+sub recurse(\@$$); # {};
+sub recurse(\@$$) {
+    local(*DIR); 
+    my $dref = shift; 
+    my $dir = shift; 
+    my $level = shift;
+
+    opendir( DIR, $dir ); # FIXME in case of error 
+    while ( defined ($_ = readdir(DIR)) ) {
+	next if $_ eq '.' || $_ eq '..';
+
+	my $full = File::Spec->catfile( $dir, $_ ); 
+	if ( -d $full ) {
+	    recurse( @{ $dref }, $full, $level+1 );
+	} elsif ( $_ =~ /\.dag\.dagman\.out/ ) {
+	    push( @{ $dref->[$level] }, $full ); 
+	}
+    }
+    closedir DIR;
+}
+
 sub longstatus(;$) {
-    my $ddir = shift || "./";   
-    my $cmd='for i in `find '.$ddir.' -name "*.dag.dagman.out" `; do echo $i | sed -e "s/.\/\///" -e "s/.dagman.out//"; grep -A 2 Done $i | tail -3 ; done';
-    my $result=system($cmd);
+    my $ddir = shift || getcwd; 
+    my @dirs = (); 
+    recurse(@dirs,$ddir,0);
+
+    my @statnum;
+    my $running=0;
+    my @list = (); 
+    foreach my $a ( reverse @dirs ) { 
+	next unless defined $a; 
+	foreach my $fn ( @{$a} ) { 
+	    my $short = substr( $fn, length($ddir)+1, -length('.dagman.out') ); 
+
+	    open( F, "<$fn" ); 
+	    my ($start,$final,$pid,$status,@tab);
+	    while ( <F> ) {
+		$start = $1 if /\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP/;
+		($final,$pid,$status) = ($1,$2,$3) 
+		    if /\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s(\d+)\sEXITING\sWITH\sSTATUS\s(\S+)/; 
+
+		if ( /Done/ ) {
+		    $tab[0] = $_; 
+		    $tab[1] = <F>;
+		    $tab[2] = <F>;
+		}
+	    }
+	    close F; 
+
+	    # Status numbers
+	    @statnum=split('\s+',$tab[2]);
+	    if ( $start ne $final ) {
+		warn "# $start $final\n"; 
+		if ( kill( 0, $pid ) ) {
+		    print "$short is running.\n" ;
+		    $running++;
+		} else {
+		    print "$short -- can't say\n";
+		}
+	    } else {
+		if ( $status ) {
+		    print "$short FAILED (status $status)\n"; 
+		} else {
+		    print "$short succeeded\n";
+		}
+	    }
+	    print join('',@tab), "\n"; 
+	}
+	
+    }
+    
+    my $total=$statnum[2]+$statnum[4]+$statnum[6]+$statnum[7]+$statnum[8];
+    my $done=$statnum[2];
+    my $percent=(100*$done)/$total;
+    if($running){
+	print "WORKFLOW RUNNING : $done/$total ( $percent%) DONE\n";
+    } else {
+	if ($total == $done){
+	    print "WORKFLOW COMPLETED/n";
+	} else {
+	    print "WORKFLOW FAILED : $done/$total ( $percent%) DONE\n";
+	}
+    }
     exit 0;
 }
 
@@ -72,6 +154,11 @@ sub handler {
     warn "# Signal $sig found\n" if $main::DEBUG;
     die "ERROR: Killed by SIG$sig\n";
 }
+
+
+
+
+
 
 #
 # --- main
