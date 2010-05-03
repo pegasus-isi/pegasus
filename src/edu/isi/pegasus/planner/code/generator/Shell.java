@@ -21,7 +21,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
@@ -30,9 +29,7 @@ import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.ENV;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -41,10 +38,6 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.Vector;
-import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 import org.griphyn.cPlanner.partitioner.graph.Graph;
@@ -60,33 +53,7 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
  */
 public class Shell extends Abstract {
 
-    /**
-     * The "official" namespace URI of the GRMS workflow schema.
-     */
-    public static final String SCHEMA_NAMESPACE = "";
-
-    /**
-     * The "not-so-official" location URL of the GRMS workflow schema definition.
-     */
-    public static final String SCHEMA_LOCATION = "";
-
-    /**
-     * The workflow schema to which this writer conforms.
-     */
-    public static final String SCHEMA = "grms-workflow-schema_10.xsd";
-
-    /**
-     * The prefix that needs to be added to the stdout to make GRMS aware of
-     * a kickstart output.
-     */
-    public static final String STDOUT_PREFIX = "kickstart__exitcode__of__";
-
-    /**
-     * The version to report.
-     */
-    public static final String SCHEMA_VERSION = "10";
-
-
+   
     /**
      * The LogManager object which is used to log all the messages.
      */
@@ -97,15 +64,6 @@ public class Shell extends Abstract {
      */
     private PrintWriter mWriteHandle;
 
-    /**
-     * The handle to the properties file.
-     */
-    private PegasusProperties mProps;
-
-    /**
-     * Handle to the pool provider.
-     */
-    //private PoolInfoProvider mPoolHandle;
     
     /**
      * Handle to the Site Store.
