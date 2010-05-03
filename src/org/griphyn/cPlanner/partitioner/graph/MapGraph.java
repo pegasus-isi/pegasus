@@ -270,6 +270,14 @@ public class MapGraph implements Graph{
 
     }
 
+    /**
+     * Returns the number of nodes in the graph.
+     *
+     * @return the number of nodes
+     */
+    public int size(){
+        return mStore.values().size();
+    }
 
     /**
      * Returns an iterator for the nodes in the Graph.
@@ -289,6 +297,16 @@ public class MapGraph implements Graph{
      */
     public Iterator iterator(){
         return new MapGraphIterator();
+    }
+
+    /**
+     * Returns an iterator for the graph that traverses in topological sort
+     * order.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator<GraphNode> topologicalSortIterator(){
+        return new TopologicalSortIterator( this );
     }
 
 

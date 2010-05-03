@@ -35,7 +35,7 @@ public interface Graph
     /**
      * The version number associated with this Graph API.
      */
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.3";
 
 
     /**
@@ -107,6 +107,20 @@ public interface Graph
      * @return Iterator through the nodes of the graph.
      */
     public Iterator<GraphNode> iterator();
+
+    /**
+     * Returns an iterator for the graph that traverses in topological sort
+     * order.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator<GraphNode> topologicalSortIterator();
+
+
+    /**
+     * Returns the number of nodes in the graph.
+     */
+    public int size();
 
     /**
      * Returns the root nodes of the Graph.
