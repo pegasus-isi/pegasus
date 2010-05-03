@@ -39,6 +39,9 @@ sub myversion() {
 
 # this magic needed for recursive function (as per Jens)
 sub recurse(\@$$); # {};
+
+
+
 sub recurse(\@$$) {
     local(*DIR); 
     my $dref = shift; 
@@ -61,7 +64,8 @@ sub recurse(\@$$) {
 
 sub longstatus(;$) {
     my $ddir = shift || getcwd; 
-    my @dirs = (); 
+    my @dirs = ();
+ 
     recurse(@dirs,$ddir,0);
 
     my @statnum;
@@ -113,12 +117,12 @@ sub longstatus(;$) {
     my $done=$statnum[2];
     my $percent=(100*$done)/$total;
     if($running){
-	print sprintf("WORKFLOW RUNNING : %d/%d ( %.0f%% ) DONE\n",$done,$total,$percent);
+	print sprintf("WORKFLOW STATUS : %d/%d ( %.0f%% ) RUNNING (condor processing workflow)\n",$done,$total,$percent);
     } else {
 	if ($total == $done){
-	    print "WORKFLOW COMPLETED/n";
+	    print sprintf("WORKFLOW STATUS : %d%d ( %.0f%% ) COMPLETED (all jobs finished successfully)\n",$done,$total,$percent);
 	} else {
-	print sprintf ("WORKFLOW FAILED : %d/%d ( %.0f%% ) DONE\n",$done,$total,$percent) ;
+	print sprintf ("WORKFLOW STATUS : %d/%d ( %.0f%% ) FAILED (rescue needs to be submitted)\n",$done,$total,$percent);
 #	    print "WORKFLOW FAILED : $done/$total ( $percent%) DONE\n";
 	}
     }
