@@ -1993,13 +1993,13 @@ public class PegasusProperties {
     /**
      * Returns which submit mode to be used to submit the jobs on to the grid.
      *
-     * Referred to by the "pegasus.submit" property.
+     * Referred to by the "pegasus.code.generator" property.
      *
      * @return the submit mode specified in the property file,
      *         else the default i.e condor.
      */
     public String getSubmitMode() {
-        return mProps.getProperty( "pegasus.submit", "condor" );
+        return mProps.getProperty( "pegasus.code.generator", "condor" );
     }
 
     /**
