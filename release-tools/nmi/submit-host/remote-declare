@@ -1,0 +1,20 @@
+#!/usr/bin/env perl
+
+use strict;
+
+open( LIST, ">tasklist.nmi" ) || die "Can't open tasklist.nmi: $!\n";
+print LIST "build-binary\n";
+print LIST "build-worker\n";
+print LIST "build-wms\n";
+print LIST "clean-sources\n";
+if ($ENV{NMI_PLATFORM} =~ /deb/ || $ENV{NMI_PLATFORM} =~ /ubuntu/) {
+    print LIST "build-deb\n";
+}
+if ($ENV{NMI_PLATFORM} =~ /rhas/ || $ENV{NMI_PLATFORM} =~ /rhap/) {
+    print LIST "build-rpm\n";
+}
+print LIST "test-binary\n";
+print LIST "test-worker\n";
+print LIST "test-wms\n";
+close( LIST );
+

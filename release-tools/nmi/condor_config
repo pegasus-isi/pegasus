@@ -54,7 +54,7 @@ CONDOR_HOST	= $(FULL_HOSTNAME)
 ##  Pathnames:
 ##--------------------------------------------------------------------
 ##  Where have you installed the bin, sbin and lib condor directories?   
-RELEASE_DIR		= !!PEGASUS_HOME!!
+RELEASE_DIR		= !!PEGASUS_HOME_DIR!!/condor
 
 ##  Where is the local condor directory for each host?  
 ##  This is where the local config file(s), logs and
@@ -76,7 +76,7 @@ LOCAL_CONFIG_FILE	= $(RELEASE_DIR)/etc/condor_config.local
 ##--------------------------------------------------------------------
 ##  When something goes wrong with condor at your site, who should get
 ##  the email?
-CONDOR_ADMIN		= !!USER!!
+CONDOR_ADMIN		= !!VALID_EMAIL_ADDRESS!!
 
 ##  Full path to a mail delivery program that understands that "-s"
 ##  means you want to specify a subject:
@@ -214,7 +214,7 @@ HOSTALLOW_READ = *
 ##    HOSTALLOW_WRITE = *
 ##  but note that this will allow anyone to submit jobs or add
 ##  machines to your pool and is serious security risk.
-HOSTALLOW_WRITE = *
+HOSTALLOW_WRITE = $(FULL_HOSTNAME)
 #HOSTALLOW_WRITE = *.your.domain, your-friend's-machine.other.domain
 #HOSTDENY_WRITE = bad-machine.your.domain
 
@@ -930,7 +930,7 @@ RESERVED_DISK		= 5
 ##  condor_master
 ##--------------------------------------------------------------------
 ##  Daemons you want the master to keep running for you:
-DAEMON_LIST			= MASTER, SCHEDD
+DAEMON_LIST			= MASTER, STARTD, SCHEDD, COLLECTOR, NEGOTIATOR
 
 ##  Which daemons use the Condor DaemonCore library (i.e., not the
 ##  checkpoint server or custom user daemons)?
@@ -2045,4 +2045,17 @@ MAX_VM_GAHP_LOG	= 1000000
 #ALWAYS_VM_UNIV_USE_NOBODY = FALSE
 
 
+#######################################################################
+#
+# special settings for Pegasus WMS package
+#
+
+START = True
+SUSPEND = False
+CONTINUE = True
+PREEMPT = False
+KILL = False
+
 DAGMAN_LOG_ON_NFS_IS_ERROR = FALSE
+
+

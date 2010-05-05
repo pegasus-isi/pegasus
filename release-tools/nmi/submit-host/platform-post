@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e
+
+/usr/bin/env
+
+if [ "x$_NMI_STEP_FAILED" != "x" ]; then
+    echo "Previous step failed, exiting\n" >&2
+    exit 1
+fi
+
+TOP_DIR=`pwd`
+
+rm -rf build-results
+mkdir -p build-results
+cd build-results
+tar xzf ../results.tar.gz
+
+echo
+echo "Files in result set:"
+find . -type f -exec ls -l -h {} \;
+
+# upload to pegasus.isi.edu
+scp -r * nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/nightly/
+
