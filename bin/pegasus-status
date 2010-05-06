@@ -49,6 +49,7 @@ sub recurse(\@$$) {
     my $level = shift;
 
     opendir( DIR, $dir ); # FIXME in case of error 
+   
     while ( defined ($_ = readdir(DIR)) ) {
 	next if $_ eq '.' || $_ eq '..';
 
@@ -62,20 +63,47 @@ sub recurse(\@$$) {
     closedir DIR;
 }
 
-sub longstatus(;$) {
-    my $ddir = shift || getcwd; 
+sub getsubdagfromdag(\@$$){
+    my $dref=shift;
+    my $dag=shift;
+    my $level=shift;
+    my @subdags=();
+
+    open(F,"<$dag") || die "Could not read dag file $dag $! \n";
+    
+    while (<F>) {
+	push (@subdags,$1)  if /^SUBDAG EXTERNAL \S+ (\S+.dag)$/ || /^SUBDAG EXTERNAL \S+ (\S+.dag) DIR/; 
+    }
+    close F;
+    foreach my $sdag ( @subdags ) {
+	my $dagman=$sdag.".dagman.out";
+	push ( @{$dref->[$level]}, $dagman) if -e $dagman && -f _ && -r _ && ! -z _;
+    }
+}
+
+
+sub longstatus(;$$) {
+    my $ddir = shift || getcwd;
+    my $dag= shift || undef;
     my @dirs = ();
  
     recurse(@dirs,$ddir,0);
+    getsubdagfromdag(@dirs,File::Spec->catfile($ddir,$dag),1);
 
+    
     my @statnum;
     my $running=0;
     my @list = (); 
     foreach my $a ( reverse @dirs ) { 
 	next unless defined $a; 
-	foreach my $fn ( @{$a} ) { 
-	    my $short = substr( $fn, length($ddir)+1, -length('.dagman.out') ); 
-
+	foreach my $fn ( @{$a} ) {
+	    my $short;
+	    if ($fn =~ /^$ddir/) {
+		$short = substr( $fn, length($ddir)+1, -length('.dagman.out') ); 
+	    } 
+	    else {
+	       $short = substr($fn,0,-length('.dagman.out'));
+	    }
 	    open( F, "<$fn" ); 
 	    my ($start,$final,$pid,$status,@tab);
 	    while ( <F> ) {
@@ -94,7 +122,7 @@ sub longstatus(;$) {
 	    # Status numbers
 	    @statnum=split('\s+',$tab[2]);
 	    if ( $start ne $final ) {
-		warn "# $start $final\n"; 
+		warn "# $start $final\n" if $main::DEBUG; 
 		if ( kill( 0, $pid ) ) {
 		    print "$short is running.\n" ;
 		    $running++;
@@ -161,10 +189,6 @@ sub handler {
 }
 
 
-
-
-
-
 #
 # --- main
 #
@@ -183,6 +207,7 @@ my $user=$ENV{'USER'};
 my $notify=undef;
 my $condor_q=find_exec('condor_q');
 my $longstatus=0;
+my $dag=undef;
 GetOptions( "workflow|w=s"    => \$workflow,
 	    "time|t=s"   => \$time,
 	    "user|u=s"  => \$user,
@@ -196,11 +221,8 @@ GetOptions( "workflow|w=s"    => \$workflow,
 
 
 
-my $run=shift || undef;
+my $run=shift || getcwd;
 
-if ($longstatus) {
-    longstatus($run);
-}
 
 
 warn "# Got run dir $run\n" if $main::DEBUG;
@@ -220,9 +242,13 @@ if(defined $run){
     my %config=slurp_braindb($run) or die "ERROR: open braindb: $!\n";
     $workflow=$config{pegasus_wf_name};
     $time=$config{pegasus_wf_time};
-
+    $dag=$config{dag};
     warn "#Got workflow = $workflow, time =$time from rundir\n" if $main::DEBUG;  
 } 
+
+if ($longstatus) {
+    longstatus($run,$dag);
+}
 
 my ($rc,$errors,@result);
 
