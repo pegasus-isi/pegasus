@@ -83,7 +83,7 @@ sub getsubdagfromdag(\@$$){
 
 
 sub longstatus(;$$) {
-    my $ddir = shift || getcwd;
+    my $ddir = shift;
     my $dag= shift || undef;
     my @dirs = ();
  
@@ -221,7 +221,7 @@ GetOptions( "workflow|w=s"    => \$workflow,
 
 
 
-my $run=shift || getcwd;
+my $run=shift || undef;
 
 
 
@@ -238,6 +238,7 @@ my %jobtypes=("compute",1,
 	      "cleanup",8);
 
 
+
 if(defined $run){
     my %config=slurp_braindb($run) or die "ERROR: open braindb: $!\n";
     $workflow=$config{pegasus_wf_name};
@@ -247,6 +248,11 @@ if(defined $run){
 } 
 
 if ($longstatus) {
+    if ( ! defined($run)) {
+	print "Error: Rundir not defined.\n\tPlease define workflow rundirectory for getting longstatus\n" ;
+	exit(1);
+    }
+
     longstatus($run,$dag);
 }
 
