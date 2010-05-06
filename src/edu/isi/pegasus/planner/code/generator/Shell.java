@@ -20,16 +20,25 @@ package edu.isi.pegasus.planner.code.generator;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusBag;
-
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
+import edu.isi.pegasus.planner.code.POSTScript;
+
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
+
+
+import org.griphyn.cPlanner.namespace.Condor;
+import org.griphyn.cPlanner.namespace.Dagman;
+
+import org.griphyn.cPlanner.partitioner.graph.Adapter;
+import org.griphyn.cPlanner.partitioner.graph.Graph;
+import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -38,10 +47,6 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Iterator;
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.partitioner.graph.Adapter;
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 /**
  * This code generator generates a shell script in the submit directory.
@@ -53,7 +58,23 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
  */
 public class Shell extends Abstract {
 
-   
+    /**
+     * The prefix for events associated with job in jobstate.log file
+     */
+    public static final String JOBSTATE_JOB_PREFIX = "JOB";
+    
+    
+    /**
+     * The prefix for events associated with POST_SCRIPT in jobstate.log file
+     */
+    public static final String JOBSTATE_POST_SCRIPT_PREFIX = "POST_SCRIPT";
+    
+    
+    /**
+     * The prefix for events associated with job in jobstate.log file
+     */
+    public static final String JOBSTATE_PRE_SCRIPT_PREFIX = "PRE_SCRIPT";
+    
     /**
      * The LogManager object which is used to log all the messages.
      */
@@ -80,6 +101,7 @@ public class Shell extends Abstract {
      */
     protected boolean mInitializeGridStart;
 
+    
     /**
      * The default constructor.
      */
@@ -195,24 +217,115 @@ public class Shell extends Abstract {
             mLogger.log( msg, LogManager.FATAL_MESSAGE_LEVEL );
             throw new CodeGeneratorException( msg );
         }
+        
+        //apply the appropriate POSTScript
+        POSTScript ps       = mGridStartFactory.loadPOSTScript( job, gridStart );
+        boolean constructed = ps.construct( job, Dagman.POST_SCRIPT_KEY );
 
+        //generate call to executeJob
+        writeString( generateCallToExecuteJob( job, execDir ) );
+        if( constructed ){
+            //execute postscript and check for exitcode
+            writeString( generateCallToExecutePostScript( job, mSubmitFileDir ) );
+            writeString( generateCallToCheckExitcode( job, JOBSTATE_POST_SCRIPT_PREFIX ) );
+        }
+        else{
+            //no postscript generated
+            //generate the call to check_exitcode
+            //check_exitcode  test1 JOB $?
+            writeString( generateCallToCheckExitcode( job, JOBSTATE_JOB_PREFIX ) );
+        }
+        writeString( "" );
+    }   
+
+    /**
+     * Generates a call to check_exitcode function that is used
+     * 
+     * @param job      the associated job
+     * @param prefix   the prefix for the jobstate.log events
+     * 
+     * @return the call to execute job function.
+     */
+    protected String generateCallToCheckExitcode( SubInfo job,
+                                                  String prefix ){
+        StringBuffer sb = new StringBuffer();
+            sb.append( "check_exitcode" ).append( " " ).
+               append(  job.getID() ).append( " " ).
+               append(  prefix ).append( " " ).
+               append(  "$?" );
+            
+        return sb.toString();
+    }
+    
+    /**
+     * Generates a call to execute_post_script function , that is used to launch
+     * a job from the shell script.
+     * 
+     * @param job        the job to be launched
+     * @param directory  the directory in which the job needs to be launched.
+     * 
+     * @return the call to execute job function.
+     */
+    protected String generateCallToExecutePostScript( SubInfo job,
+                                                      String directory ){
+        StringBuffer sb = new StringBuffer();
+        
         //gridstart modules right now store the executable
         //and arguments as condor profiles. Should be fixed.
-        //Should only happen in Condor Generator
+        //This setting should happen only in Condor Generator
+        String executable = (String) job.dagmanVariables.get( Dagman.POST_SCRIPT_KEY );
+        StringBuffer args = new StringBuffer();
+        args.append( (String)job.dagmanVariables.get( Dagman.POST_SCRIPT_ARGUMENTS_KEY ) ).
+             append( " " ).append( (String)job.dagmanVariables.get( Dagman.OUTPUT_KEY)  ); 
+        
+        String arguments = args.toString();
+
+        //generate the call to execute job function
+        //execute_job $jobstate test1 /tmp /bin/echo "Karan Vahi" "stdin file" "k=v" "g=m"
+        sb.append( "execute_post_script" ).append( " " ).
+           append( job.getID() ).append( " " ).//the job id
+           append( directory ).append( " " ).    //the directory in which we want the job to execute
+           append( executable ).append( " " ). //the executable to be invoked
+           append( "\"" ).append( arguments ).append( "\"" ).append( " " );//the arguments
+
+
+        //handle stdin
+        sb.append( "\"\"" );
+        sb.append( " " );
+
+        
+        //add the environment variables
+        
+        return sb.toString();
+    }
+    
+    /**
+     * Generates a call to execute_job function , that is used to launch
+     * a job from the shell script.
+     * 
+     * @param job        the job to be launched
+     * @param directory  the directory in which the job needs to be launched.
+     * 
+     * @return the call to execute job function.
+     */
+    protected String generateCallToExecuteJob( SubInfo job,
+                                               String directory ){
+        StringBuffer sb = new StringBuffer();
+        
+        //gridstart modules right now store the executable
+        //and arguments as condor profiles. Should be fixed.
+        //This setting should happen only in Condor Generator
         String executable = (String) job.condorVariables.get( "executable" );
         String arguments = (String)job.condorVariables.get( Condor.ARGUMENTS_KEY );
         arguments = ( arguments == null ) ? "" : arguments;
 
-        
-        StringBuffer sb = new StringBuffer();
-
         //generate the call to execute job function
         //execute_job $jobstate test1 /tmp /bin/echo "Karan Vahi" "stdin file" "k=v" "g=m"
         sb.append( "execute_job" ).append( " " ).
-           append( job.getID() ).append( " " ).
-           append( execDir ).append( " " ).
-           append( executable ).append( " " ).
-           append( "\"" ).append( arguments ).append( "\"" ).append( " " );
+           append( job.getID() ).append( " " ).//the job id
+           append( directory ).append( " " ).    //the directory in which we want the job to execute
+           append( executable ).append( " " ). //the executable to be invoked
+           append( "\"" ).append( arguments ).append( "\"" ).append( " " );//the arguments
 
 
         //handle stdin for jobs
@@ -239,18 +352,8 @@ public class Shell extends Abstract {
                append( "\"" ).append( " " );
         }
 
-        sb.append( "\n" );
-
-        //generate the call to check_exitcode
-        //check_exitcode $jobstate test1 $?
-        sb.append( "check_exitcode" ).append( " " ).
-           append(  job.getID() ).append( " " ).
-           append(  "$?" );
-        sb.append( "\n" );
-
-        writeString( sb.toString() );
+        return sb.toString();
     }
-
     
  
     /**
@@ -279,6 +382,13 @@ public class Shell extends Abstract {
            append( "\n" );
 
 
+        //check for common shell script before sourcing
+        sb.append( "if [ ! -e ${PEGASUS_HOME}/bin/common-sh-plan.sh ];then" ).append( "\n" ).
+           append( "   echo \"Unable to find common-sh-plan.sh file.\"" ).append( "\n" ).
+           append( "   echo   \"You need to use Pegasus Version 3.0 or higher\"").append( "\n" ).
+           append( "   exit 1 " ).append( "\n" ).
+           append( "fi" ).append( "\n" );
+        
         //source the common shell script
         sb.append( ".  ${PEGASUS_HOME}/bin/common-sh-plan.sh" ).append( "\n" ).
            append( "" ).append( "\n" );
