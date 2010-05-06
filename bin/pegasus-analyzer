@@ -50,6 +50,8 @@ class Job:
     sub_file = ""	    	# Submit file for this job
     out_file = ""		# Output file for this job
     err_file = ""		# Error file for this job
+    cluster = ""		# Cluster id for this job (from Condor)
+    process = ""		# Process id for this job (from Condor)
     sub_file_parsed = False 	# Flag to tell if we were able to parse this job's submit file
     site = ""			# Site where the job ran
     executable = ""		# Job's executable
@@ -89,6 +91,7 @@ temp_log = None					# Temporary log file created
 run_tailstatd = 0				# Run tailstatd before trying to analyze the output
 run_directory_writable = False			# Flag to indicate if we can write to the run directory
 quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
+strict_mode = 0					# Gets out/err filenames from submit file
 keep_log = 0					# Keeps temporaty jobstate.log file created by tailstatd in /tmp directory
 print_invocation = 0				# Prints invocation command for failed jobs
 print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
@@ -148,6 +151,30 @@ def update_job_state(job_name, job_state=""):
 
     jobs[job_name].set_state(job_state)
 
+def update_job_condor_info(job_name, condor_id="-"):
+    """
+    This function updates a job's condor_id (it splits it into process
+    and cluster)
+    """
+    # Make sure we have this job
+    if not job_name in jobs:
+	# Print a warning message
+	print "error: could not find job %s" % (job_name)
+	return
+
+    # Nothing to do if condor_id is not defined
+    if condor_id == "-":
+	return
+
+    my_split = condor_id.split(".")
+
+    # First part is cluster id
+    jobs[job_name].cluster = my_split[0]
+
+    # If we have two pieces, second piece is process
+    if len(my_split) >= 2:
+	jobs[job_name].process = my_split[1]
+
 def analyze():
     """
     This function processes all currently known jobs, generating some statistics
@@ -183,14 +210,13 @@ def process_failed_job(my_job):
     my_job.out_file = os.path.join(input_dir, my_job.name + ".out")
     my_job.err_file = os.path.join(input_dir, my_job.name + ".err")
 
-    submit_fn = my_job.sub_file
     # Try to access submit file
-    if os.access(submit_fn, os.R_OK):
+    if os.access(my_job.sub_file, os.R_OK):
 	# Open submit file
 	try:
-	    SUB = open(submit_fn, "r")
+	    SUB = open(my_job.sub_file, "r")
 	except:
-	    # print "error opening submit file: %s" % (submit_fn)
+	    # print "error opening submit file: %s" % (my_job.sub_file)
 	    # fail silently for now...
 	    return
 	
@@ -241,12 +267,28 @@ def process_failed_job(my_job):
 			if sub_prop:
 			    if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
 				my_job.dagman_out = sub_prop.group(2)
+		if strict_mode:
+		    # Only parse error and output if we are running in strict mode
+		    if k == "output" or k == "error":
+			# Take care of substitutions
+			v = v.replace("$(cluster)", my_job.cluster)
+			v = v.replace("$(process)", my_job.process)
+
+			# Make sure we have an absolute path
+			if not os.path.isabs(v):
+			    v = os.path.join(input_dir, v)
+
+			# Done! Replace out/err filenames with what we have
+			if k == "output":
+			    my_job.out_file = v
+			else:
+			    my_job.err_file = v
 
 	SUB.close()
     else:
 	# Was not able to access submit file
 	# fail silently for now...
-	# print "cannot access submit file: %s" % (submit_fn)
+	# print "cannot access submit file: %s" % (my_job.sub_file)
 	pass
 
 def find_file(input_dir, file_type):
@@ -358,6 +400,7 @@ def parse_jobstate_log(jobstate_fn):
 	# Ok, we have a valid job
 	jobname = sp[1]
 	jobstate = sp[2]
+	condor_id = sp[3]
 
 	# Add to job list if we have never seen this job before
 	if not has_seen(jobname):
@@ -366,6 +409,10 @@ def parse_jobstate_log(jobstate_fn):
 	else:
 	    # Update job state
 	    update_job_state(jobname, jobstate)
+
+	# Update condor id if we reached the SUBMIT state
+	if jobstate == "SUBMIT":
+	    update_job_condor_info(jobname, condor_id)
 
     # Close log file
     JSDL.close()
@@ -481,7 +528,7 @@ def print_job_info(job):
     if jobs[job].is_subdag == True:
 	print " This is a SUBDAG job:"
 	print " For more information, please run the following command:"
-	user_cmd = " %s -t " % (prog_base)
+	user_cmd = " %s -t -s " % (prog_base)
 	if keep_log:
 	    user_cmd = user_cmd + " -k"
 	print "%s -f %s" % (user_cmd, jobs[job].dag_path)
@@ -530,7 +577,6 @@ def print_top_summary():
     This function prints the summary for the analyzer report,
     which is the same for the long and short output versions
     """
-    print "%s: analysis completed!" % (prog_base)
     print
     print "Summary".center(80, '*')
     print
@@ -580,6 +626,8 @@ parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "qu
 		  help = "output out/err filenames instead of their contents")
 parser.add_option("-p", "--print", action = "store", type = "string" , dest = "print_options",
 		  help = "specifies print options from pre,invocation")
+parser.add_option("-s", "--strict", action = "store_const", const = 1, dest = "strict_mode",
+		  help = "gets a job's out and err files from the submit file")
 
 # Parse command line options
 (options, args) = parser.parse_args()
@@ -589,6 +637,8 @@ print "%s: initializing..." % (prog_base)
 # Copy options from the command line parser
 if options.run_tailstatd is not None:
     run_tailstatd = options.run_tailstatd
+if options.strict_mode is not None:
+    strict_mode = options.strict_mode
 if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
 if options.keep_log is not None:
@@ -650,7 +700,7 @@ print_summary()
 # Done!
 print "Done".center(80, '*')
 print
-print "%s: analysis completed!" % (prog_base)
+print "%s: end of status report" % (prog_base)
 
 # Handle temporary log files created by pegasus-analyzer
 if temp_log is not None:
