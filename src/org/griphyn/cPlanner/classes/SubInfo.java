@@ -1344,7 +1344,7 @@ public class SubInfo extends Data implements GraphNodeContent{
             else if(profile.getProfileNamespace().equals(Profile.DAGMAN))
                 dagmanVariables.checkKeyInNS(profile);
             else{
-                //unkown profile.
+                //unknown profile.
                 mLogger.log("Unknown Profile: " + profile + " for job" +
                             this.jobName,LogManager.WARNING_MESSAGE_LEVEL);
             }

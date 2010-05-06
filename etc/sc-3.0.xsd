@@ -24,7 +24,7 @@
 			<xs:enumeration value="LSF"/>
 			<xs:enumeration value="Condor"/>
 			<xs:enumeration value="SGE"/> 
-			<xs:enumeration value="unkown"/>
+			<xs:enumeration value="unknown"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="GridType">
