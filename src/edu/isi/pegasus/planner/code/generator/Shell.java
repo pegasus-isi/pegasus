@@ -46,7 +46,9 @@ import java.io.PrintWriter;
 
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * This code generator generates a shell script in the submit directory.
@@ -75,10 +77,6 @@ public class Shell extends Abstract {
      */
     public static final String JOBSTATE_PRE_SCRIPT_PREFIX = "PRE_SCRIPT";
     
-    /**
-     * The LogManager object which is used to log all the messages.
-     */
-    private LogManager mLogger;
 
     /**
      * The handle to the output file that is being written to.
@@ -143,8 +141,7 @@ public class Shell extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
-        String opFileName = this.mSubmitFileDir + File.separator +
-                            dag.dagInfo.nameOfADag + ".sh";
+        String opFileName = this.getPathToShellScript( dag ) ;
 
 
         initializeWriteHandle( opFileName );
@@ -169,6 +166,9 @@ public class Shell extends Abstract {
         writeString(this.getScriptFooter());
         mWriteHandle.close();
 
+        //write out the braindump file
+        this.writeOutBraindump( dag );
+        
         return result;
     }
 
@@ -237,6 +237,23 @@ public class Shell extends Abstract {
         }
         writeString( "" );
     }   
+    
+    /**
+     * Returns a Map containing additional braindump entries that are specific
+     * to a Code Generator
+     * 
+     * @param workflow  the executable workflow
+     * 
+     * @return Map
+     */
+    public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
+        Map entries = new HashMap();
+        entries.put( Braindump.GENERATOR_TYPE_KEY, "Shell" );
+        entries.put( "script", this.getPathToShellScript( workflow ) );
+        
+        return entries;
+    }
+    
 
     /**
      * Generates a call to check_exitcode function that is used
@@ -417,6 +434,19 @@ public class Shell extends Abstract {
 
         return sb.toString();
 
+    }
+
+    /**
+     * Returns path to the shell script that is generated
+     * 
+     * @param dag  the workflow 
+     * @return path
+     */
+    protected String getPathToShellScript(ADag dag) {
+        StringBuffer script = new StringBuffer();
+        script.append( this.mSubmitFileDir ).append( File.separator ).
+               append( dag.dagInfo.nameOfADag ).append( ".sh" );
+        return script.toString();
     }
 
     /**

@@ -22,8 +22,6 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import edu.isi.pegasus.common.util.Version;
-
 import java.io.PrintWriter;
 
 /**
@@ -140,63 +138,6 @@ public class ClassADSGenerator {
             writer.println(
                 generateClassAdAttribute(WF_TIME_AD_KEY, dinfo.getFlowTimestamp()));
         }
-    }
-
-    /**
-     * Writes out the classads for a workflow to corresponding writer stream.
-     *
-     * @param writer is an open stream for the Condor submit file.
-     * @param dag    the workflow object containing metadata about the workflow
-     *               like the workflow id and the release version.
-     */
-    public static void generateBraindumpEntries( PrintWriter writer, ADag dag ) {
-        //get hold of the object holding the metadata
-        //information about the workflow
-        DagInfo dinfo = dag.dagInfo;
-
-        //pegasus is the generator
-        writer.println(generateBraindumpEntry( GENERATOR_AD_KEY, GENERATOR ));
-
-        //the pegasus version
-        writer.println( generateBraindumpEntry( VERSION_AD_KEY,
-                                                Version.instance().toString() ));
-
-        //determine built
-        writer.println( generateBraindumpEntry( BUILD_AD_KEY,
-                                                Version.instance().determineBuilt() ));
-//        if (dinfo.releaseVersion != null) {
-//            writer.println(
-//                generateBraindumpEntry( VERSION_AD_KEY, dinfo.releaseVersion ));
-//        }
-
-        //the workflow name
-        if (dinfo.flowIDName != null) {
-            writer.println(
-                generateBraindumpEntry( WF_NAME_AD_KEY, dinfo.flowIDName ));
-        }
-        //the workflow time
-        if (dinfo.getMTime() != null) {
-            writer.println(
-                generateBraindumpEntry( WF_TIME_AD_KEY, dinfo.getFlowTimestamp() ));
-        }
-    }
-
-
-    /**
-     * Generates a braindump entry given the name and the value. It by default
-     * adds a new line character at start of each attribute.
-     *
-     * @param name  the attribute name.
-     * @param value the value/expression making the classad attribute.
-     *
-     * @return  the classad attriubute.
-     */
-    private static String generateBraindumpEntry(String name, String value) {
-        StringBuffer sb = new StringBuffer(10);
-
-        sb.append(name).append("  ");
-        sb.append(value);
-        return sb.toString();
     }
 
 

@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.code.generator;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PlannerOptions;
@@ -26,15 +27,17 @@ import edu.isi.pegasus.planner.code.CodeGeneratorException;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import edu.isi.pegasus.common.util.DynamicLoader;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import org.griphyn.cPlanner.classes.PegasusBag;
-
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 /**
  * An Abstract Base class implementing the CodeGenerator interface. Introduces
  * helper methods for determining basenames of files, that contain concrete
@@ -69,6 +72,12 @@ public abstract class Abstract implements CodeGenerator{
      * at runtime.
      */
     protected PlannerOptions mPOptions;
+    
+     /**
+     * The LogManager object which is used to log all the messages.
+     */
+    protected LogManager mLogger;
+
 
 
     /**
@@ -83,6 +92,7 @@ public abstract class Abstract implements CodeGenerator{
         mProps         = bag.getPegasusProperties();
         mPOptions      = bag.getPlannerOptions();
         mSubmitFileDir = mPOptions.getSubmitDirectory();
+        mLogger      = bag.getLogger();
     }
 
 
@@ -102,7 +112,47 @@ public abstract class Abstract implements CodeGenerator{
         return false;
     }
 
+  
+    /**
+     * Writes out the braindump file for the workflow
+     * 
+     * @param workflow      the workflow whose braindump file needs to be generated.
+     */
+    protected void writeOutBraindump( ADag workflow ){
+        
+        //generate some extra keys for braindump file
+        Map<String,String> entries = getAdditionalBraindumpEntries( workflow );
+                
+        
+        try{
+            Braindump braindump = new Braindump();
+            braindump.initialize(mBag);
+        
+            Collection result = braindump.generateCode(workflow, entries);
+            for( Iterator it = result.iterator(); it.hasNext() ;){
+                mLogger.log("Written out braindump to " + it.next(), LogManager.DEBUG_MESSAGE_LEVEL);
+            }
+        }
+        catch(CodeGeneratorException ioe){
+            //log the message and return
+            mLogger.log("Unable to write out the braindump file for tailstatd",
+                        ioe, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+    }
+    
+    /**
+     * Returns a Map containing additional braindump entries that are specific
+     * to a Code Generator
+     *
+     * @param workflow      the workflow whose braindump file needs to be generated.
+     *  
+     * @return Map
+     */
+    public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ){
+        return new HashMap();
+    }
 
+    
     /**
      * Resets the Code Generator implementation.
      *
@@ -152,5 +202,7 @@ public abstract class Abstract implements CodeGenerator{
         return sb.toString();
     }
 
+    
+    
 
 }

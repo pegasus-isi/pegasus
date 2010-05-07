@@ -18,27 +18,35 @@
 package edu.isi.pegasus.planner.code.generator.condor;
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
+
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.DagInfo;
-import org.griphyn.cPlanner.classes.PCRelation;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.POSTScript;
-
 import edu.isi.pegasus.planner.code.GridStartFactory;
-
 import edu.isi.pegasus.planner.code.generator.Abstract;
 import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
+import edu.isi.pegasus.planner.code.generator.Braindump;
 
+import edu.isi.pegasus.planner.code.generator.NetloggerJobMapper;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CondorVersion;
+
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.DagInfo;
+import org.griphyn.cPlanner.classes.PCRelation;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.DAGJob;
+import org.griphyn.cPlanner.classes.PlannerOptions;
+
 import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
@@ -47,17 +55,9 @@ import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.Globus;
 import org.griphyn.cPlanner.namespace.VDS;
-
-import org.griphyn.cPlanner.partitioner.PartitionAndPlan;
-
-
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import org.griphyn.cPlanner.namespace.ENV;
 
 import org.griphyn.vdl.euryale.VTorInUseException;
-
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -78,11 +78,7 @@ import java.util.Vector;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
-import org.griphyn.cPlanner.classes.DAGJob;
-import org.griphyn.cPlanner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.code.generator.NetloggerJobMapper;
-import org.griphyn.cPlanner.namespace.ENV;
-
+import java.util.HashMap;
 /**
  * This class generates the condor submit files for the DAG which has to
  * be submitted to the Condor DagMan.
@@ -119,11 +115,7 @@ public class CondorGenerator extends Abstract {
      */
     public static final String DAGMAN_PROPERTIES_PREFIX = "pegasus.dagman.";
 
-    /**
-     * The LogManager object which is used to log all the messages.
-     */
-    protected LogManager mLogger;
-
+   
     /**
      * Handle to the Transformation Catalog.
      */
@@ -207,6 +199,8 @@ public class CondorGenerator extends Abstract {
      */
     private long mCondorVersion;
 
+    
+    
     /**
      * The default constructor.
      */
@@ -217,6 +211,7 @@ public class CondorGenerator extends Abstract {
         mGridStartFactory = new GridStartFactory();
     }
     
+   
      /**
      * Returns the name of the file on the basis of the metadata associated
      * with the DAG.
@@ -273,7 +268,6 @@ public class CondorGenerator extends Abstract {
         File wdir = new File(mSubmitFileDir);
         wdir.mkdirs();
 
-        mLogger      = bag.getLogger();
         mTCHandle    = bag.getHandleToTransformationCatalog();
         mSiteStore   = bag.getHandleToSiteStore();
         mProjectMap  = constructMap(mProps.getRemoteSchedulerProjects());
@@ -458,7 +452,10 @@ public class CondorGenerator extends Abstract {
         mLogger.log( "Written out job.map file", LogManager.DEBUG_MESSAGE_LEVEL );
         this.writeJobMapFile( getDAGFilename( dag, ".job.map"), dag );
         
-        //we are done
+        //write out the braindump file
+        this.writeOutBraindump( dag );
+        
+        //we are donedirectory
         mDone = true;
 
         return result;
@@ -600,7 +597,7 @@ public class CondorGenerator extends Abstract {
 
         //tailstatd requires the braindump file first
         boolean result = false;
-        String bdump;
+        /*String bdump;
         try{
             bdump = writeOutBraindump(new File(mSubmitFileDir),
                                            mConcreteWorkflow,
@@ -615,7 +612,7 @@ public class CondorGenerator extends Abstract {
             mLogger.log("Unable to write out the braindump file for tailstatd",
                         ioe, LogManager.ERROR_MESSAGE_LEVEL );
             return false;
-        }
+        }*/
 
         //No longer launching tailstatd directly for the time being
         //Karan May 21, 2007
@@ -1227,65 +1224,23 @@ public class CondorGenerator extends Abstract {
        return sb.toString();
     }
 
-
+    
     /**
-     * Writes out the braindump.txt file for a partition in the partition submit
-     * directory. The braindump.txt file is used for passing to the tailstatd
-     * daemon that monitors the state of execution of the workflow.
-     *
-     * @param directory  the directory in which the braindump file needs to
-     *                   be written to.
-     * @param workflow   the concerte workflow.
-     * @param dax        the corresponding DAX file containing the abstract workflow.
-     * @param dagFile    the basename of the .dag file that is written out while
-     *                   generating output.
-     *
-     * @return the absolute path to the braindump file.txt written in the directory.
-     *
-     * @throws IOException in case of error while writing out file.
+     * Returns a Map containing additional braindump entries that are specific
+     * to a Code Generator
+     * 
+     * @param workflow  the executable workflow
+     * 
+     * @return Map
      */
-    protected String writeOutBraindump( File directory,
-                                        ADag workflow,
-                                        String dax,
-                                        String dagFile)
-                                        throws IOException{
-
-
-        //create a writer to the braindump.txt in the directory.
-        File f = new File( directory , "braindump.txt");
-        PrintWriter writer =
-                  new PrintWriter(new BufferedWriter(new FileWriter(f)));
-
-        //get absolute directory just once
-        String absPath = directory.getAbsolutePath();
-        char sep = File.separatorChar;
-
-        //assemble all the contents in a buffer before writing out
-        StringBuffer contents = new StringBuffer();
-        contents.append( "dax " ).append(dax).append("\n").
-                 append( "dag " ).append(dagFile).append("\n").
-                 append( "basedir ").append( mPOptions.getBaseSubmitDirectory() ).append("\n").
-                 append( "run ").append(absPath).append("\n").
-                 append( "jsd ").append(absPath).append(sep).append("jobstate.log").append("\n").
-                 append( "rundir ").append(directory.getName()).append("\n").
-                 append( "pegasushome ").append(mProps.getPegasusHome()).append("\n").
-                 append( "vogroup ").append( mPOptions.getVOGroup()).append("\n").//for time being
-                 append( "label " + workflow.getLabel()).append("\n").
-                 append( "planner " ).append(mProps.getPegasusHome()).append(sep).
-                                    append("bin").append(sep).append("pegasus-plan").
-                 append( "\n" );
-
-        writer.write( contents.toString());
-
-        //write out the classads that are required to be
-        //inserted in the dagman condor submit file
-        ClassADSGenerator.generateBraindumpEntries( writer, workflow );
-
-        writer.close();
-
-        return f.getAbsolutePath();
+    public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
+        Map entries = new HashMap();
+        entries.put( Braindump.GENERATOR_TYPE_KEY, "Condor" );
+        entries.put( "dag", this.getDAGFilename( workflow, ".dag") );
+        
+        return entries;
     }
-
+    
 
     /**
      * This method generates a symlink to the actual log file written in the
