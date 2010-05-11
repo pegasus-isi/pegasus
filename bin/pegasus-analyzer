@@ -38,8 +38,10 @@ import tempfile
 
 # --- regular expressions -------------------------------------------------------------
 
-re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
-re_parse_script_pre = re.compile(r"^SCRIPT PRE (\S+) (.*)")
+re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
+re_parse_script_pre = re.compile(r'^SCRIPT PRE (\S+) (.*)')
+re_parse_condor_subs = re.compile(r'(\S+)="([^"]+)"')
+re_collapse_condor_subs = re.compile(r'\$\([^\)]*\)') 
 
 # --- classes -------------------------------------------------------------------------
 
@@ -61,6 +63,7 @@ class Job:
     dag_path = ""		# Full path to the dag file from a SUBDAG job
     dagman_out = ""		# dagman.out file for this job (only for clustered jobs)
     pre_script = ""		# SCRIPT PRE line from the dag file
+    condor_subs = {}		# Lits of condor substitutions rom DAG VARS line
 
     def __init__(self, job_name, job_state=""):
 	"""
@@ -270,9 +273,16 @@ def process_failed_job(my_job):
 		if strict_mode:
 		    # Only parse error and output if we are running in strict mode
 		    if k == "output" or k == "error":
-			# Take care of substitutions
+			# Take care of basic substitutions first
 			v = v.replace("$(cluster)", my_job.cluster)
 			v = v.replace("$(process)", my_job.process)
+
+			# Now we do any substitutions from the DAG's VAR line (if any)
+			for my_key in my_job.condor_subs:
+			    v = v.replace("$(%s)" % (my_key), my_job.condor_subs[my_key])
+
+			# Now, we collapse any remaining substitutions (not found in the VAR line)
+			v = re_collapse_condor_subs.sub('', v)
 
 			# Make sure we have an absolute path
 			if not os.path.isabs(v):
@@ -375,6 +385,18 @@ def parse_dag_file(dag_fn):
 		continue
 	    # Good, copy PRE script line to our job structure
 	    jobs[my_job].pre_script = my_script.group(2)
+	if line.startswith("VARS"):
+	    # This is a VARS line, parse it to get the condor substitutions
+	    if len(line.split()) > 2:
+		# Line looks promising...
+		my_job = line.split()[1]
+		if not has_seen(my_job):
+		    # Cannot find this job, ignore this line
+		    print "warning: couldn't find job: %s for VARS line in dag file" % (my_job)
+		    continue
+		# Good, parse the condor substitutions, and create substitution dictionary
+		for my_key, my_val in re_parse_condor_subs.findall(line):
+		    jobs[my_job].condor_subs[my_key] = my_val
 
 def parse_jobstate_log(jobstate_fn):
     """
@@ -713,5 +735,4 @@ if temp_log is not None:
 	    # Ignore error silently
 	    pass
 
-print "%s: finished!" % (prog_base)
 print
