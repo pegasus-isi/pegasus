@@ -1,5 +1,30 @@
 $Id$
 
+Release Notes for PEGASUS 2.4.2
+===============================
+This is minor release, that has some feature enhancements to pegasus-status
+and pegasus-analyzer for working with Condor SUBDAG's.
+
+NEW FEATURES
+--------------
+
+1) pegasus-status tracks workflows of workflows better now
+  
+   pegasus-status now always shows top most level dag last in the long
+   output. It also displays the percentage  of work done on the outer
+   most dag. It tracks SUBDAG correctly, even if the submit directory
+   for those workflows is not rooted in the top level dag's submit
+   directory.
+
+
+2) pegasus-analyzer
+
+   pegasus-analyzer now parses the VARS lines in the DAG file to perform
+   variable substitution while figuring out the output and error files for
+   the failed jobs. This is triggered when --strict option is passed to 
+   pegasus-analyzer. In case of workflows of workflows all invocations
+   of pegasus-analyzer for SUBDAGS have the --strict option included.
+
 ===============================
 Release Notes for PEGASUS 2.4.1
 ===============================
