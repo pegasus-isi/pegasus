@@ -61,6 +61,7 @@ cd $DEB_NAME
 
 # debian control files
 cp -r $BASE_DIR/DEBIAN ./
+rm -rf DEBIAN/.svn
 
 # package name
 perl -p -i -e "s/^Package:.*/Package: pegasus-${MAJOR_VERSION}/" DEBIAN/control
