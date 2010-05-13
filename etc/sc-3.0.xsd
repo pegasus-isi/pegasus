@@ -255,13 +255,10 @@
 		</xs:annotation>
 		<xs:restriction base="xs:NMTOKENS">
 			<xs:enumeration value="x86"/>
-			<xs:enumeration value="intel32"/>
 			<xs:enumeration value="x86_64"/>
-			<xs:enumeration value="intel64"/>
 			<xs:enumeration value="ppc"/>
 			<xs:enumeration value="ppc_64"/>
 			<xs:enumeration value="ia64"/>
-			<xs:enumeration value="ia32"/>
 			<xs:enumeration value="sparcv7"/>
 			<xs:enumeration value="sparcv9"/>
 			<xs:enumeration value="amd64"/>
