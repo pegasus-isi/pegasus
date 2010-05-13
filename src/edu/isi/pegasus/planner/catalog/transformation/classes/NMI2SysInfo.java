@@ -27,7 +27,7 @@ import java.util.Map;
  * specifications to VDS ( VDS era ) Arch and Os objects
  *
  * @author Karan Vahi
- * @version $ID$
+ * @version $Revision$
  */
 public class NMI2SysInfo {
 
@@ -47,8 +47,12 @@ public class NMI2SysInfo {
             mNMIArchToVDSArchMap = new HashMap< Architecture,Arch >();
             mNMIArchToVDSArchMap.put( Architecture.x86, Arch.INTEL32  );
             mNMIArchToVDSArchMap.put( Architecture.x86_64, Arch.INTEL64  );
+            mNMIArchToVDSArchMap.put( Architecture.amd64, Arch.AMD64  );
             //mNMIArchToVDSArch.put( Architecture.x86_64, Arch.AMD64 );
-            //mNMIArchToVDSArchMap.put(Architecture.ia64, Arch.INTEL64 );
+            
+            //VDS arch INTEL64 actually meant IA64
+            mNMIArchToVDSArchMap.put(Architecture.ia64, Arch.INTEL64 );
+
             mNMIArchToVDSArchMap.put(Architecture.sparcv7, Arch.SPARCV7 );
             mNMIArchToVDSArchMap.put(Architecture.sparcv9, Arch.SPARCV9 );
         }

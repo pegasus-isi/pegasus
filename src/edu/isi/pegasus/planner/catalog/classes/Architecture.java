@@ -25,5 +25,5 @@ package edu.isi.pegasus.planner.catalog.classes;
  * @author Karan Vahi
  */
 public  enum Architecture {
-    x86, intel32, x86_64, intel64, ppc, ppc_64, ia64, ia32, sparcv7, sparcv9
+    x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64
 }

@@ -27,7 +27,7 @@ import java.util.Map;
  * to the new NMI based Architecture and OS objects.
  *
  * @author Karan Vahi
- * @version  $ID$
+ * @version  $Revision$
  */
 public class SysInfo2NMI {
 
@@ -47,7 +47,7 @@ public class SysInfo2NMI {
             mVDSArchToNMIArch = new HashMap();
             mVDSArchToNMIArch.put( Arch.INTEL32, Architecture.x86 );
             mVDSArchToNMIArch.put( Arch.INTEL64, Architecture.x86_64 );
-            mVDSArchToNMIArch.put( Arch.AMD64, Architecture.x86_64 );
+            mVDSArchToNMIArch.put( Arch.AMD64, Architecture.amd64 );
             mVDSArchToNMIArch.put( Arch.SPARCV7, Architecture.sparcv7 );
             mVDSArchToNMIArch.put( Arch.SPARCV9, Architecture.sparcv9 );
         }
