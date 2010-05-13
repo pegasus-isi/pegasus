@@ -19,17 +19,21 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 import edu.isi.pegasus.planner.catalog.classes.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo2NMI;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
-import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2SysInfo;
 
 import org.griphyn.cPlanner.classes.Profile;
 
 import org.griphyn.cPlanner.common.PegRandom;
+
+
+import org.griphyn.cPlanner.namespace.Namespace;
+import org.griphyn.cPlanner.namespace.VDS;
 
 import java.util.List;
 import java.util.LinkedList;
@@ -41,8 +45,6 @@ import java.util.Map.Entry;
 import java.io.File;
 import java.io.Writer;
 import java.io.IOException;
-import org.griphyn.cPlanner.namespace.Namespace;
-import org.griphyn.cPlanner.namespace.VDS;
         
 /**
  * This data class describes a site in the site catalog.
@@ -61,89 +63,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * The name of the environment variable VDS_HOME.
      */
     public static final String VDS_HOME = "VDS_HOME";
-    
-    /**
-     * The map storing architecture to corresponding NMI architecture platforms.
-     */
-    private static Map< Architecture,Arch > mNMIArchToOldArch = null;
-    
-    /**
-     * Singleton access to the  NMI arch to old arch map.
-     * @return map
-     */
-    public static Map NMIArchToOldArch(){
-        //singleton access
-        if( mNMIArchToOldArch == null ){
-            mNMIArchToOldArch = new HashMap< Architecture,Arch >();
-            mNMIArchToOldArch.put( Architecture.x86, Arch.INTEL32  );
-            mNMIArchToOldArch.put( Architecture.x86_64, Arch.INTEL64  );
-            //mNMIArchToOldArch.put( Architecture.x86_64, Arch.AMD64 );
-            
-        }
-        return mNMIArchToOldArch;
-    }
-
-    
-    /**
-     * The map storing OS to corresponding NMI OS platforms.
-     */
-    private static Map<OS,Os> mNMIOSToOldOS = null;
-    
-    /**
-     * Singleton access to the os to NMI os map.
-     * @return map
-     */
-    public static Map NMIOSToOldOS(){
-        //singleton access
-        if( mNMIOSToOldOS == null ){
-            mNMIOSToOldOS = new HashMap<OS,Os>();
-            //mNMIOSToOldOS.put( "rhas_3", Os.LINUX );
-            mNMIOSToOldOS.put( OS.LINUX, Os.LINUX );
-            mNMIOSToOldOS.put( OS.WINDOWS, Os.WINDOWS );
-        }
-        return mNMIOSToOldOS;
-    }
-    
-     /**
-     * The map storing architecture to corresponding NMI architecture platforms.
-     */
-    private static Map mArchToNMIArch = null;
-    
-    /**
-     * Singleton access to the architecture to NMI arch map.
-     * @return map
-     */
-    public static Map oldArchToNMIArch(){
-        //singleton access
-        if( mArchToNMIArch == null ){
-            mArchToNMIArch = new HashMap();
-            mArchToNMIArch.put( Arch.INTEL32, Architecture.x86 );
-            mArchToNMIArch.put( Arch.INTEL64, Architecture.x86_64 );
-            mArchToNMIArch.put( Arch.AMD64, Architecture.x86_64 );
-            
-        }
-        return mArchToNMIArch;
-    }
-
-    
-    /**
-     * The map storing OS to corresponding NMI OS platforms.
-     */
-    private static Map mOSToNMIOS = null;
-    
-    /**
-     * Singleton access to the os to NMI os map.
-     * @return map
-     */
-    public static Map oldOSToNMIOS(){
-        //singleton access
-        if( mOSToNMIOS == null ){
-            mOSToNMIOS = new HashMap();
-            mOSToNMIOS.put( Os.LINUX, OS.LINUX );
-        }
-        return mOSToNMIOS;
-    }
-    
+  
+   
     /**
      * The site identifier. 
      */
@@ -323,18 +244,19 @@ public class SiteCatalogEntry extends AbstractSiteData{
     public void setSysInfo( SysInfo sysinfo ){
         this.setOSVersion( sysinfo.getOsversion() );
         this.setGlibc( sysinfo.getGlibc() );
-        this.setOS( (OS)oldOSToNMIOS().get( sysinfo.getOs() ) );
-        this.setArchitecture( (Architecture)oldArchToNMIArch().get( sysinfo.getArch() ) );
+        this.setOS( SysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() ) );
+        this.setArchitecture( SysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() ) );
                             
     }
+
     /**
      * Returns the sysinfo for the site.
      * 
      * @return getSysInfo
      */
     public SysInfo getSysInfo(){
-        return new SysInfo( (Arch)NMIArchToOldArch().get( this.getArchitecture() ),
-                            (Os)NMIOSToOldOS().get( this.getOS() ),
+        return new SysInfo( NMI2SysInfo.nmiArchToVDSArch( this.getArchitecture() ),
+                            NMI2SysInfo.nmiOSToVDSOS( this.getOS() ),
                             this.getOSVersion(),
                             this.getGlibc() );
                             

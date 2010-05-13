@@ -28,11 +28,18 @@ package edu.isi.pegasus.planner.catalog.transformation;
  */
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.catalog.classes.Architecture;
+import edu.isi.pegasus.planner.catalog.classes.OS;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo2NMI;
+
 import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2SysInfo;
+
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
+
+import org.griphyn.cPlanner.classes.Profile;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -40,6 +47,16 @@ import java.util.List;
 
 public class TransformationCatalogEntry
     implements CatalogEntry {
+
+    /**
+     * The default OS the entry is associated with if none is specified
+     */
+    public static final OS DEFAULT_OS = OS.LINUX;
+
+    /**
+     * The default Architecture the entry is associated with if none is specified
+     */
+    public static final Architecture DEFAULT_ARCHITECTURE = Architecture.intel32;
 
     /**
      * The logical namespace of the transformation
@@ -76,7 +93,23 @@ public class TransformationCatalogEntry
     /**
      * The System Info for the transformation.
      */
-    private SysInfo sysinfo;
+    //private SysInfo sysinfo;
+
+    /**
+     * The OS of the site.
+     */
+    private OS mOS;
+
+    /**
+     * The architecture of the site.
+     */
+    private Architecture mArch;
+
+    /**
+     * Optional information about the glibc.
+     */
+    private String mGlibc;
+
 
     /**
      * The type of transformation. Takes one of the predefined enumerated type TCType.
@@ -93,7 +126,10 @@ public class TransformationCatalogEntry
         resourceid = null;
         physicalname = null;
         profiles = null;
-        sysinfo = null;
+//        sysinfo = null;
+        mOS = TransformationCatalogEntry.DEFAULT_OS;
+        mArch = TransformationCatalogEntry.DEFAULT_ARCHITECTURE;
+        mGlibc = "";
     }
 
     /**
@@ -132,7 +168,12 @@ public class TransformationCatalogEntry
         this.resourceid = resourceid;
         this.physicalname = physicalname;
         this.profiles = profiles;
-        this.sysinfo = sysinfo;
+
+        //       this.sysinfo = sysinfo;
+        this.mArch = SysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() );
+        this.mOS   = SysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() );
+        this.mGlibc = sysinfo.getGlibc();
+
         this.type = type;
 
     }
@@ -147,7 +188,7 @@ public class TransformationCatalogEntry
     public Object clone() {
         return new TransformationCatalogEntry( namespace, name, version,
             resourceid, physicalname,
-            type, profiles, sysinfo );
+            type, profiles, this.getSysInfo() );
     }
 
     /**
@@ -162,7 +203,9 @@ public class TransformationCatalogEntry
             "\n Version           : " + this.version +
             "\n Resource Id       : " + this.resourceid +
             "\n Physical Name     : " + this.physicalname +
-            "\n SysInfo           : " + ((this.sysinfo == null) ? "" : this.sysinfo.toString()) +
+//            "\n SysInfo           : " + ((this.sysinfo == null) ? "" : this.sysinfo.toString()) +
+            "\n SysInfo           : " + this.getSysInfo() +
+
             "\n TYPE              : " + ((this.type == null) ? "" : type.toString());
         if(profiles != null){
             for (Iterator i = profiles.listIterator(); i.hasNext(); ) {
@@ -294,8 +337,21 @@ public class TransformationCatalogEntry
      * @param sysinfo SysInfo
      */
     public void setSysInfo( SysInfo sysinfo ) {
-        this.sysinfo = ( sysinfo == null ) ? new SysInfo() : sysinfo;
+        if( sysinfo == null ){
+            //set to default
+            this.mArch = TransformationCatalogEntry.DEFAULT_ARCHITECTURE;
+            this.mOS   = TransformationCatalogEntry.DEFAULT_OS;
+            this.mGlibc= "";
+        }
+        else{
+            this.mArch = SysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() );
+            this.mOS   = SysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() );
+            this.mGlibc= sysinfo.getGlibc();
+        }
+//        this.sysinfo = ( sysinfo == null ) ? new SysInfo() : sysinfo;
     }
+
+
 
     /**
      * Allows you to add one profile at a time to the transformation.
@@ -380,11 +436,14 @@ public class TransformationCatalogEntry
     }
 
     /**
-     * Returns the system information associated with the transformation in the formation ARCH::OS:OSver:GlibVer
+     * Returns the System Information in the old VDS format associated with the
+     * transformation.
+     *
+     *
      * @return SysInfo
      */
-    public SysInfo getSysInfo() {
-        return this.sysinfo;
+    public SysInfo getSysInfo(  ) {
+        return NMI2SysInfo.nmiToSysInfo( mArch, mOS, mGlibc );
     }
 
     /**
