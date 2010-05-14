@@ -23,18 +23,18 @@ package edu.isi.pegasus.planner.catalog.transformation;
  * @author Gaurang Mehta
  * @$Revision$
  *
- * @see org.griphyn.common.classes.SysInfo
+ * @see org.griphyn.common.classes.VDSSysInfo
  * @see org.griphyn.common.classes.TCType
  */
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import edu.isi.pegasus.planner.catalog.classes.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.OS;
-import edu.isi.pegasus.planner.catalog.classes.SysInfo2NMI;
+import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
@@ -93,7 +93,7 @@ public class TransformationCatalogEntry
     /**
      * The System Info for the transformation.
      */
-    //private SysInfo sysinfo;
+    //private VDSSysInfo sysinfo;
 
     /**
      * The OS of the site.
@@ -155,13 +155,13 @@ public class TransformationCatalogEntry
      * @param physicalname String
      * @param type TCType
      * @param profiles List
-     * @param sysinfo SysInfo
+     * @param sysinfo VDSSysInfo
      */
     public TransformationCatalogEntry( String namespace, String name,
         String version,
         String resourceid, String physicalname, TCType type,
         List profiles,
-        SysInfo sysinfo ) {
+        VDSSysInfo sysinfo ) {
         this.namespace = namespace;
         this.version = version;
         this.name = name;
@@ -170,8 +170,8 @@ public class TransformationCatalogEntry
         this.profiles = profiles;
 
         //       this.sysinfo = sysinfo;
-        this.mArch = SysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() );
-        this.mOS   = SysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() );
+        this.mArch = VDSSysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() );
+        this.mOS   = VDSSysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() );
         this.mGlibc = sysinfo.getGlibc();
 
         this.type = type;
@@ -188,7 +188,7 @@ public class TransformationCatalogEntry
     public Object clone() {
         return new TransformationCatalogEntry( namespace, name, version,
             resourceid, physicalname,
-            type, profiles, this.getSysInfo() );
+            type, profiles, this.getVDSSysInfo() );
     }
 
     /**
@@ -203,8 +203,8 @@ public class TransformationCatalogEntry
             "\n Version           : " + this.version +
             "\n Resource Id       : " + this.resourceid +
             "\n Physical Name     : " + this.physicalname +
-//            "\n SysInfo           : " + ((this.sysinfo == null) ? "" : this.sysinfo.toString()) +
-            "\n SysInfo           : " + this.getSysInfo() +
+//            "\n VDSSysInfo           : " + ((this.sysinfo == null) ? "" : this.sysinfo.toString()) +
+            "\n SysInfo           : " + this.getVDSSysInfo() +
 
             "\n TYPE              : " + ((this.type == null) ? "" : type.toString());
         if(profiles != null){
@@ -226,7 +226,7 @@ public class TransformationCatalogEntry
             this.getLogicalTransformation() + "\t" +
             this.getPhysicalTransformation() + "\t" +
             this.getType() + "\t" +
-            this.getSysInfo() + "\t";
+            this.getVDSSysInfo() + "\t";
         if ( profiles != null ) {
             st += ProfileParser.combine( profiles );
         } else {
@@ -244,7 +244,7 @@ public class TransformationCatalogEntry
             this.getPhysicalTransformation() + "\""
             + " siteid=\"" + this.getResourceId() + "\""
             + " type=\"" + this.getType() + "\""
-            + " sysinfo=\"" + this.getSysInfo() + "\"";
+            + " sysinfo=\"" + this.getVDSSysInfo() + "\"";
         if ( this.profiles != null ) {
             xml += " >\n";
             for ( Iterator iter = this.profiles.iterator(); iter.hasNext(); ) {
@@ -334,9 +334,9 @@ public class TransformationCatalogEntry
 
     /**
      * Set the System Information associated with the transformation.
-     * @param sysinfo SysInfo
+     * @param sysinfo VDSSysInfo
      */
-    public void setSysInfo( SysInfo sysinfo ) {
+    public void setVDSSysInfo( VDSSysInfo sysinfo ) {
         if( sysinfo == null ){
             //set to default
             this.mArch = TransformationCatalogEntry.DEFAULT_ARCHITECTURE;
@@ -344,11 +344,11 @@ public class TransformationCatalogEntry
             this.mGlibc= "";
         }
         else{
-            this.mArch = SysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() );
-            this.mOS   = SysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() );
+            this.mArch = VDSSysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() );
+            this.mOS   = VDSSysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() );
             this.mGlibc= sysinfo.getGlibc();
         }
-//        this.sysinfo = ( sysinfo == null ) ? new SysInfo() : sysinfo;
+//        this.sysinfo = ( sysinfo == null ) ? new VDSSysInfo() : sysinfo;
     }
 
 
@@ -440,10 +440,10 @@ public class TransformationCatalogEntry
      * transformation.
      *
      *
-     * @return SysInfo
+     * @return VDSSysInfo
      */
-    public SysInfo getSysInfo(  ) {
-        return NMI2SysInfo.nmiToSysInfo( mArch, mOS, mGlibc );
+    public VDSSysInfo getVDSSysInfo(  ) {
+        return NMI2VDSSysInfo.nmiToSysInfo( mArch, mOS, mGlibc );
     }
 
     /**

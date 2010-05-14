@@ -24,7 +24,7 @@ package edu.isi.pegasus.planner.catalog.transformation.classes;
  * @version $Revision$
  */
 
-public class SysInfo{
+public class VDSSysInfo{
 
     /**
      * Architecture of the system.
@@ -55,7 +55,7 @@ public class SysInfo{
      * @see Arch
      * @see Os
      */
-    public SysInfo(Arch arch, Os os, String osversion, String glibc) {
+    public VDSSysInfo(Arch arch, Os os, String osversion, String glibc) {
         this.arch = (arch == null) ? Arch.INTEL32 : arch;
         this.os = (os == null) ? Os.LINUX : os;
 
@@ -76,7 +76,7 @@ public class SysInfo{
      * @param os String
      * @param glibc String
      */
-    public SysInfo(String arch, String os, String glibc) {
+    public VDSSysInfo(String arch, String os, String glibc) {
         this( arch, os, null, glibc );
     }
 
@@ -87,7 +87,7 @@ public class SysInfo{
      * @param osversion String
      * @param glibc String
      */
-    public SysInfo(String arch, String os, String osversion, String glibc) {
+    public VDSSysInfo(String arch, String os, String osversion, String glibc) {
         this.arch = (arch == null) ? Arch.INTEL32 : Arch.fromString(arch);
         this.os = (os == null) ? Os.LINUX : Os.fromString(os);
         this.osversion = (osversion == null || osversion.equals("") ) ?
@@ -102,7 +102,7 @@ public class SysInfo{
 
 
 
-    public SysInfo(String system) {
+    public VDSSysInfo(String system) {
         if (system != null) {
             String s1[] = system.split("::", 2);
             if (s1.length == 2) {
@@ -131,7 +131,7 @@ public class SysInfo{
      * The default constructor.
      * Sets the sysinfo to INTEL32::LINUX
      */
-    public SysInfo() {
+    public VDSSysInfo() {
         this.arch=Arch.INTEL32;
         this.os=Os.LINUX;
     }
@@ -209,7 +209,7 @@ public class SysInfo{
      * @return Object
      */
     public Object clone() {
-        return new SysInfo(arch, os, osversion, glibc);
+        return new VDSSysInfo(arch, os, osversion, glibc);
     }
 
     /**
@@ -219,8 +219,8 @@ public class SysInfo{
      */
     public boolean equals(Object obj) {
         boolean result = false;
-        if(obj instanceof SysInfo){
-            SysInfo sysinfo = (SysInfo)obj;
+        if(obj instanceof VDSSysInfo){
+            VDSSysInfo sysinfo = (VDSSysInfo)obj;
             result = (arch.equals(sysinfo.getArch())
                       && os.equals(sysinfo.getOs()));
         }

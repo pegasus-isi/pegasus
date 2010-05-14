@@ -18,7 +18,7 @@
 package org.griphyn.cPlanner.classes;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
 import org.griphyn.cPlanner.common.PegRandom;
 import org.griphyn.cPlanner.common.Utility;
@@ -58,7 +58,7 @@ import java.util.Iterator;
  *  <td>the list of <code>Profile</code> objects each containing one profile.</td>
  * </tr>
  * <tr align="left"><th>system info</th>
- *  <td>the <code>SysInfo</code> object containing the remote sites system
+ *  <td>the <code>VDSSysInfo</code> object containing the remote sites system
  *   information.</td>
  * </tr>
  * </table>
@@ -76,7 +76,7 @@ import java.util.Iterator;
  * @see LRC
  * @see Profile
  * @see SiteInfo
- * @see org.griphyn.common.classes.SysInfo
+ * @see org.griphyn.common.classes.VDSSysInfo
  * @see WorkDir
  */
 public class SiteInfo {
@@ -128,7 +128,7 @@ public class SiteInfo {
 
     /**
      * The constant to be passed to the accessor functions to get or set the
-     * <code>SysInfo</code> site.
+     * <code>VDSSysInfo</code> site.
      */
     public static final int SYSINFO = 6;
 
@@ -175,7 +175,7 @@ public class SiteInfo {
     /**
      *  The system information of the remote site.
      */
-    private SysInfo mSysInfo;
+    private VDSSysInfo mSysInfo;
 
     /**
      * The handle to the site, usually name of the site.
@@ -191,7 +191,7 @@ public class SiteInfo {
         mProfileList    = new ArrayList(3);
         mGridFTPList    = new ArrayList(3);
         mJobManagerList = new ArrayList(5);
-        mSysInfo        = new SysInfo();
+        mSysInfo        = new VDSSysInfo();
         mWorkDir        = new WorkDir();
     }
 
@@ -406,9 +406,9 @@ public class SiteInfo {
             case SYSINFO:
 
                 if(object != null && object instanceof String)
-                    mSysInfo = new SysInfo((String) object);
-                else if(object != null && object instanceof SysInfo){
-                    mSysInfo = (SysInfo)object;
+                    mSysInfo = new VDSSysInfo((String) object);
+                else if(object != null && object instanceof VDSSysInfo){
+                    mSysInfo = (VDSSysInfo)object;
                 }
                 else{
                     valid = false;

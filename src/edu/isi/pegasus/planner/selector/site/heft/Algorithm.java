@@ -662,7 +662,7 @@ public class Algorithm {
         List tcs =  mProcessCatalog.getPredictedPerformance(
                           mWGPC.getJobInformation( mRequestID, mLabel, job.getLogicalID() ),
                           entry.getResourceId(),
-                          entry.getSysInfo().getArch().toString()
+                          entry.getVDSSysInfo().getArch().toString()
                               );
 
 

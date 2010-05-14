@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.catalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
@@ -113,7 +113,7 @@ public interface TransformationCatalog
      *                    Returns <B>NULL</B> if no results found.
      * @throws Exception  NotImplementedException if not implemented.
      * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      */
     List getTCPhysicalNames( String namespace, String name,
         String version,
@@ -217,18 +217,18 @@ public interface TransformationCatalog
      * @param resourceid   String The resource location id where the transformation is located.
      * @param lfnprofiles     List   The List of Profile objects associated with a Logical Transformation. (can be null)
      * @param pfnprofiles     List   The List of Profile objects associated with a Physical Transformation. (can be null)
-     * @param sysinfo     SysInfo  The System information associated with a physical transformation.
+     * @param sysinfo     VDSSysInfo  The System information associated with a physical transformation.
      * @throws Exception
      * @return boolean   Returns true if succesfully added, returns false if error and throws exception.
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
     boolean addTCEntry( String namespace, String name, String version,
         String physicalname, TCType type,
         String resourceid,
         List lfnprofiles, List pfnprofiles,
-        SysInfo sysinfo ) throws
+        VDSSysInfo sysinfo ) throws
         Exception;
 
     /**
@@ -319,12 +319,12 @@ public interface TransformationCatalog
 
     /**
      * Deletes entries from the catalog which have a particular system information.
-     * @param sysinfo SysInfo The System Information by which you want to delete
+     * @param sysinfo VDSSysInfo The System Information by which you want to delete
      * @return boolean Returns true for success, false if any error occurs.
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      * @throws Exception
      */
-    boolean deleteTCbySysInfo( SysInfo sysinfo ) throws Exception;
+    boolean deleteTCbySysInfo( VDSSysInfo sysinfo ) throws Exception;
 
     /**
      * Deletes the entire transformation catalog. CLEAN............. USE WITH CAUTION.

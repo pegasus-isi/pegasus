@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.classes.Profile;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 
@@ -117,7 +117,7 @@ public class TestTransformationCatalog {
             tce.setPhysicalTransformation( pfn );
             tce.setResourceId( handle );
             tce.setType( TCType.INSTALLED ); //executable is installed
-            tce.setSysInfo( new SysInfo( Arch.INTEL32, Os.LINUX, null, null ) );
+            tce.setVDSSysInfo( new VDSSysInfo( Arch.INTEL32, Os.LINUX, null, null ) );
             //add an environment profile with the entry
             tce.setProfile( new Profile( Profile.ENV, "PEGASUS_HOME", "/usr/pegasus/bin" ));
 

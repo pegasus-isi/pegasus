@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
         
 import edu.isi.pegasus.common.util.Currently;
 
@@ -187,25 +187,25 @@ public class SiteStore extends AbstractSiteData{
         for ( Iterator i = sites.iterator(); i.hasNext(); ) {
             SiteCatalogEntry site = this.lookup (( String ) i.next());
             if( site != null ){
-                result.put( site.getSiteHandle(), site.getSysInfo() );
+                result.put( site.getSiteHandle(), site.getVDSSysInfo() );
             }
         }
         return result;
     }
     
     /**
-     * Returns the <code>SysInfo</code> for the site
+     * Returns the <code>VDSSysInfo</code> for the site
      * 
      * @param handle the site handle / identifier.
-     * @return the SysInfo else null
+     * @return the VDSSysInfo else null
      */
-    public SysInfo getSysInfo( String handle ){
+    public VDSSysInfo getSysInfo( String handle ){
         //sanity check
         if( !this.contains( handle ) ) {
             return null;
         }
         else{
-            return this.lookup( handle ).getSysInfo();
+            return this.lookup( handle ).getVDSSysInfo();
         }
         
     }

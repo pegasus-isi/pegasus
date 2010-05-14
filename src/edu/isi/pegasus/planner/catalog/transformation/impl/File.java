@@ -21,7 +21,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.ProfileParserException;
@@ -508,7 +508,7 @@ public class File
      *                    Returns <B>NULL</B> if no results found.
      *
      * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      */
     public List getTCPhysicalNames(String namespace, String name,
                                    String version,
@@ -551,7 +551,7 @@ public class File
                         entry.getResourceId(),
                         entry.getPhysicalTransformation(),
                         entry.getType().toString(),
-                        entry.getSysInfo().toString()};
+                        entry.getVDSSysInfo().toString()};
                     columnLength(s, count);
                     if (results == null) {
                         results = new ArrayList();
@@ -762,7 +762,7 @@ public class File
                          String[] s = {tc.getResourceId(),
                              tc.getLogicalTransformation(),
                              tc.getPhysicalTransformation(),
-         tc.getType().toString(), tc.getSysInfo().toString(),
+         tc.getType().toString(), tc.getVDSSysInfo().toString(),
                              ( ( tc.getProfiles() != null ) ?
          ProfileParser.combine( tc.getProfiles() ) : "NULL" )};
                          columnLength( s, length );
@@ -822,7 +822,7 @@ public class File
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo());
+                        entry.getProfiles(), entry.getVDSSysInfo());
         return true;
     }
 
@@ -845,7 +845,7 @@ public class File
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo(), write);
+                        entry.getProfiles(), entry.getVDSSysInfo(), write);
         return true;
     }
 
@@ -870,7 +870,7 @@ public class File
      * @throws Exception
      *
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
     public boolean addTCEntry(String namespace, String name,
@@ -878,7 +878,7 @@ public class File
                               String physicalname, TCType type,
                               String resourceid,
                               List pfnprofiles, List lfnprofiles,
-                              SysInfo system) throws
+                              VDSSysInfo system) throws
         Exception {
         return this.addTCEntry(namespace, name, version, physicalname, type,
                                resourceid, lfnprofiles, pfnprofiles, system, true);
@@ -906,7 +906,7 @@ public class File
      * @throws Exception
      *
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
     public boolean addTCEntry(String namespace, String name,
@@ -914,7 +914,7 @@ public class File
                               String physicalname, TCType type,
                               String resourceid,
                               List pfnprofiles, List lfnprofiles,
-                              SysInfo system, boolean write) throws
+                              VDSSysInfo system, boolean write) throws
         Exception {
 
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
@@ -926,7 +926,7 @@ public class File
         entry.setResourceId(resourceid);
         entry.setProfiles(lfnprofiles);
         entry.setProfiles(pfnprofiles);
-        entry.setSysInfo(system);
+        entry.setVDSSysInfo(system);
 
         Map lfnMap = null;
         if (mTreeMap.containsKey(resourceid)) {
@@ -1058,12 +1058,12 @@ public class File
     /**
      * Delete entries in the catalog of a particular systeminfo.
      *
-     * @param sysinfo SysInfo
+     * @param sysinfo VDSSysInfo
      *
      * @throws Exception as function not implemented.
      * @return boolean
      */
-    public boolean deleteTCbySysInfo(SysInfo sysinfo) throws
+    public boolean deleteTCbySysInfo(VDSSysInfo sysinfo) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
@@ -1264,10 +1264,10 @@ public class File
                                            TCType.fromString(tokens[i]));
                                 break;
                             case 4: //systeminfo
-                                tc.setSysInfo( (tokens[i].equalsIgnoreCase(
+                                tc.setVDSSysInfo( (tokens[i].equalsIgnoreCase(
                                     "null")) ?
-                                              new SysInfo(null) :
-                                              new SysInfo(tokens[i]));
+                                              new VDSSysInfo(null) :
+                                              new VDSSysInfo(tokens[i]));
                                 break;
                             case 5: //profile string
                                 if (!tokens[i].equalsIgnoreCase("null")) {

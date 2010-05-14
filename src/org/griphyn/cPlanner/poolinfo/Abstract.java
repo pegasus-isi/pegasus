@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.SiteInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
 import java.util.Iterator;
 import java.util.List;
@@ -54,9 +54,9 @@ public abstract class Abstract extends PoolInfoProvider {
      *
      * @param siteids List The siteid whose system information is required
      *
-     * @return Map  The key is the siteid and the value is a SysInfo object
+     * @return Map  The key is the siteid and the value is a VDSSysInfo object
      *
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      */
     public Map getSysinfos( List siteids ) {
         logMessage("Map getSysinfos(List siteIDS)");
@@ -80,16 +80,16 @@ public abstract class Abstract extends PoolInfoProvider {
      *
      * @param siteID String The site whose system information is requested
      *
-     * @return SysInfo The system information as a SysInfo object
+     * @return VDSSysInfo The system information as a VDSSysInfo object
      *
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      */
-    public SysInfo getSysinfo( String siteID ) {
+    public VDSSysInfo getSysinfo( String siteID ) {
         logMessage("SysInfo getSysinfo(String siteID)");
         logMessage("\t getSysinfo(" + siteID + ")");
         SiteInfo siteinfo = mPoolConfig.get( siteID );
         if ( siteinfo != null ) {
-            return ( SysInfo ) siteinfo.getInfo( SiteInfo.SYSINFO );
+            return ( VDSSysInfo ) siteinfo.getInfo( SiteInfo.SYSINFO );
         }
         return null;
     }

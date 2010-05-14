@@ -29,7 +29,7 @@ import java.util.Map;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class NMI2SysInfo {
+public class NMI2VDSSysInfo {
 
     /**
      * The map storing architecture to corresponding NMI architecture platforms.
@@ -85,16 +85,16 @@ public class NMI2SysInfo {
     }
 
     /**
-     * Returns the VDS SysInfo object corresponding to the NMI arch and OS
+     * Returns the VDS VDSSysInfo object corresponding to the NMI arch and OS
      *
      * @param arch  architecture in the new NMI format
      * @param os    the os in NMI format
      * @param glibc the glibc version
      *
-     * @return the SysInfo object
+     * @return the VDSSysInfo object
      */
-    public static SysInfo nmiToSysInfo( Architecture arch, OS os, String glibc ){
-        SysInfo result = new SysInfo();
+    public static VDSSysInfo nmiToSysInfo( Architecture arch, OS os, String glibc ){
+        VDSSysInfo result = new VDSSysInfo();
         result.setArch( nmiArchToVDSArch(arch) );
         result.setOs( nmiOSToVDSOS( os ) );
         result.setGlibc(glibc);

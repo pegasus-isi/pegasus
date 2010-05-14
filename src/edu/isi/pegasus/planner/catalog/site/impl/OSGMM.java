@@ -44,7 +44,7 @@ import org.griphyn.cPlanner.classes.LRC;
 import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.WorkDir;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
 import edu.isi.pegasus.common.util.Boolean;
 
@@ -150,7 +150,7 @@ public class OSGMM implements SiteCatalog {
         SiteInfo site = new SiteInfo();
         site.setInfo( SiteInfo.HANDLE, s.siteName );
         site.setInfo( SiteInfo.GRIDLAUNCH, s.gridlaunch );
-        site.setInfo( SiteInfo.SYSINFO, new SysInfo( s.sysinfo ));
+        site.setInfo( SiteInfo.SYSINFO, new VDSSysInfo( s.sysinfo ));
         site.setInfo( SiteInfo.LRC, new LRC(s.lrcUrl) );
         
         //fork jobmanager

@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
@@ -120,12 +120,12 @@ public class Submit
             if ( sysinfomap != null ) {
                 for ( Iterator i = siteids.iterator(); i.hasNext(); ) {
                     String site = ( String ) i.next();
-                    SysInfo sitesysinfo = ( SysInfo ) sysinfomap.get( site );
+                    VDSSysInfo sitesysinfo = ( VDSSysInfo ) sysinfomap.get( site );
                     for ( Iterator j = tcentries.iterator(); j.hasNext(); ) {
                         TransformationCatalogEntry entry = (
                             TransformationCatalogEntry ) j.next();
                         //get the required stuff from the TCentry.
-                        SysInfo txsysinfo = entry.getSysInfo();
+                        VDSSysInfo txsysinfo = entry.getVDSSysInfo();
 
                         //check for static binary executables at the local site.
                         if ( txsysinfo.equals( sitesysinfo ) ) {

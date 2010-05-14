@@ -29,7 +29,7 @@ import java.util.Map;
  * @author Karan Vahi
  * @version  $Revision$
  */
-public class SysInfo2NMI {
+public class VDSSysInfo2NMI {
 
      /**
      * The map storing architecture to corresponding NMI architecture platforms.

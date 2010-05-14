@@ -20,7 +20,7 @@ import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -148,14 +148,14 @@ public class Windward  implements TransformationCatalog {
      *   Logical Transformation. (can be null)
      * @param pfnprofiles List The List of Profile objects associated with a
      *   Physical Transformation. (can be null)
-     * @param sysinfo SysInfo The System information associated with a
+     * @param sysinfo VDSSysInfo The System information associated with a
      *   physical transformation.
      * @throws Exception
      */
     public boolean addTCEntry(String namespace, String name, String version,
                               String physicalname, TCType type,
                               String resourceid, List lfnprofiles,
-                              List pfnprofiles, SysInfo sysinfo) throws
+                              List pfnprofiles, VDSSysInfo sysinfo) throws
         Exception {
         return false;
     }
@@ -382,12 +382,12 @@ public class Windward  implements TransformationCatalog {
      * Deletes entries from the catalog which have a particular system
      * information.
      *
-     * @param sysinfo SysInfo The System Information by which you want to
+     * @param sysinfo VDSSysInfo The System Information by which you want to
      *   delete
      * @return boolean Returns true for success, false if any error occurs.
      * @throws Exception
      */
-    public boolean deleteTCbySysInfo(SysInfo sysinfo) throws Exception {
+    public boolean deleteTCbySysInfo(VDSSysInfo sysinfo) throws Exception {
         return false;
     }
 
@@ -695,7 +695,7 @@ class Adapter{
         }
 
         //set the sysinfo
-        result.setSysInfo( new SysInfo( (String)from.getCharacteristic( TransformationCharacteristics.ARCHITECTURE ),
+        result.setVDSSysInfo( new VDSSysInfo( (String)from.getCharacteristic( TransformationCharacteristics.ARCHITECTURE ),
                                         (String)from.getCharacteristic( TransformationCharacteristics.OPERATING_SYSTEM ),
                                         glibc
                            ) );

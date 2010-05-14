@@ -54,7 +54,7 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 
@@ -460,7 +460,7 @@ public class DeployWorkerPackage
             //now create transformation catalog entry objects for each
             //worker package executable
             for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
-                TransformationCatalogEntry entry = addDefaultTCEntry( site,  pegasusHome.getAbsolutePath(), selected.getSysInfo(), PEGASUS_WORKER_EXECUTABLES[i] );
+                TransformationCatalogEntry entry = addDefaultTCEntry( site,  pegasusHome.getAbsolutePath(), selected.getVDSSysInfo(), PEGASUS_WORKER_EXECUTABLES[i] );
                 mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
             }
 
@@ -947,7 +947,7 @@ public class DeployWorkerPackage
      */
     private  TransformationCatalogEntry addDefaultTCEntry( String site,
                                                         String pegasusHome,
-                                                        SysInfo sysinfo,
+                                                        VDSSysInfo sysinfo,
                                                         String name ){
         TransformationCatalogEntry defaultTCEntry = null;
 
@@ -973,7 +973,7 @@ public class DeployWorkerPackage
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );
         defaultTCEntry.setType( TCType.INSTALLED );
-        defaultTCEntry.setSysInfo( sysinfo );
+        defaultTCEntry.setVDSSysInfo( sysinfo );
 
         //add pegasus home as an environment variable
         defaultTCEntry.setProfile( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ));
@@ -1016,7 +1016,7 @@ public class DeployWorkerPackage
         TransformationCatalogEntry defaultTCEntry = null;
        
         //String site = "pegasus";
-        SysInfo sysinfo = mSiteStore.getSysInfo( site );
+        VDSSysInfo sysinfo = mSiteStore.getSysInfo( site );
 
         //construct the path to the executable
         String path = constructDefaultURLToPegasusWorkerPackage( name, sysinfo );
@@ -1041,7 +1041,7 @@ public class DeployWorkerPackage
         defaultTCEntry.setPhysicalTransformation( path );
         defaultTCEntry.setResourceId( "pegasus" );
         defaultTCEntry.setType( TCType.STATIC_BINARY );
-        defaultTCEntry.setSysInfo( sysinfo );
+        defaultTCEntry.setVDSSysInfo( sysinfo );
 
 
         
@@ -1078,7 +1078,7 @@ public class DeployWorkerPackage
      * 
      * @return url
      */
-    protected String constructDefaultURLToPegasusWorkerPackage( String name, SysInfo sysinfo ) {
+    protected String constructDefaultURLToPegasusWorkerPackage( String name, VDSSysInfo sysinfo ) {
         //get the matching architecture
         String arch = ( String )DeployWorkerPackage.archToNMIArch().get( sysinfo.getArch() );
         String os   = ( String )DeployWorkerPackage.osToNMIOS().get( sysinfo.getOs() );

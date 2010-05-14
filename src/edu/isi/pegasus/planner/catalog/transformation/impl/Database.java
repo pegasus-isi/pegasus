@@ -29,7 +29,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.common.util.Separator;
 import org.griphyn.vdl.dbschema.DatabaseSchema;
@@ -292,7 +292,7 @@ public class Database
                 String qresourceid = pfnresult[0];
                 String qpfn = pfnresult[1];
                 String qtype = pfnresult[2];
-                SysInfo qsysinfo = new SysInfo(pfnresult[3]);
+                VDSSysInfo qsysinfo = new VDSSysInfo(pfnresult[3]);
                 List pfnprofiles = this.getTCPfnProfiles(qpfn, qresourceid,
                     TCType.fromString(qtype));
                 TransformationCatalogEntry tc = new TransformationCatalogEntry(
@@ -390,7 +390,7 @@ public class Database
             //          String lfn = Separator.combine( namespace, name, version );
             String pfn = rs.getString(5);
             String type = rs.getString(6);
-            String sysinfo = new SysInfo(rs.getString(7), rs.getString(8),
+            String sysinfo = new VDSSysInfo(rs.getString(7), rs.getString(8),
                                          rs.getString(9), rs.getString(10)).
                 toString();
             List pfnprofiles = this.getTCPfnProfiles(pfn, resourceid,
@@ -417,7 +417,7 @@ public class Database
             //add them to the array.
             TransformationCatalogEntry tcentry = new TransformationCatalogEntry(
                 namespace, name, version, resourceid, pfn,
-                TCType.fromValue(type), allprofiles, new SysInfo(sysinfo));
+                TCType.fromValue(type), allprofiles, new VDSSysInfo(sysinfo));
             //caculate the max length of each column
 //            columnLength( s, count );
             //add the array to the list to be returned.
@@ -505,7 +505,7 @@ public class Database
      * he column lengths for pretty print.
      *                    Returns <B>NULL</B> if no results found.
      * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      */
 
     public List getTCPhysicalNames(String namespace, String name,
@@ -538,7 +538,7 @@ public class Database
             String[] s = {
                 rs.getString(1), rs.getString(2), rs.getString(3),
                 (new
-                 SysInfo(rs.getString(4), rs.getString(5), rs.getString(6),
+                 VDSSysInfo(rs.getString(4), rs.getString(5), rs.getString(6),
                          rs.getString(7))).toString()};
             result.add(s);
             columnLength(s, count);
@@ -714,7 +714,7 @@ public class Database
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo());
+                        entry.getProfiles(), entry.getVDSSysInfo());
         return true;
     }
 
@@ -737,7 +737,7 @@ public class Database
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo(), write);
+                        entry.getProfiles(), entry.getVDSSysInfo(), write);
         return true;
     }
 
@@ -759,13 +759,13 @@ public class Database
      * a Logical Transformation. (can be null)
      * @param pfnprofiles     List   The List of Profile objects associated with
      * a Physical Transformation. (can be null)
-     * @param system    SysInfo  The System information associated with a
+     * @param system    VDSSysInfo  The System information associated with a
      * physical transformation.
      * @throws Exception
      * @return boolean   Returns true if succesfully added, returns false if
      * error and throws exception.
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
     public boolean addTCEntry(String namespace, String name,
@@ -773,7 +773,7 @@ public class Database
                               String physicalname, TCType type,
                               String resourceid,
                               List lfnprofiles, List pfnprofiles,
-                              SysInfo system) throws
+                              VDSSysInfo system) throws
         Exception {
         return this.addTCEntry(namespace, name, version, physicalname, type,
                                resourceid, lfnprofiles, pfnprofiles, system, true);
@@ -798,14 +798,14 @@ public class Database
      * a Logical Transformation. (can be null)
      * @param pfnprofiles     List   The List of Profile objects associated with
      * a Physical Transformation. (can be null)
-     * @param system    SysInfo  The System information associated with a
+     * @param system    VDSSysInfo  The System information associated with a
      * physical transformation.
      * @param write boolean to commit changes to the backend catalog
      * @throws Exception
      * @return boolean   Returns true if succesfully added, returns false if
      * error and throws exception.
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
     public boolean addTCEntry(String namespace, String name,
@@ -813,7 +813,7 @@ public class Database
                               String physicalname, TCType type,
                               String resourceid,
                               List lfnprofiles, List pfnprofiles,
-                              SysInfo system, boolean write) throws
+                              VDSSysInfo system, boolean write) throws
         Exception {
 if(!write) return false;
         //ADD LFN
@@ -1338,12 +1338,12 @@ if(!write) return false;
 
     /**
      * Deletes entries from the catalog which have a particular system information.
-     * @param sysinfo SysInfo The System Information by which you want to delete
+     * @param sysinfo VDSSysInfo The System Information by which you want to delete
      * @throws Exception
      * @return boolean Returns true for success, false if any error occurs.
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      */
-    public boolean deleteTCbySysInfo(SysInfo sysinfo) throws Exception {
+    public boolean deleteTCbySysInfo(VDSSysInfo sysinfo) throws Exception {
         if (sysinfo == null) {
             mLogger.log(
                 "The system information cannot be null",
@@ -1736,12 +1736,12 @@ if(!write) return false;
 
     /**
      * Gets the id for the system information entry.
-     * @param system SysInfo
+     * @param system VDSSysInfo
      * @throws Exception
      * @return long Returns -1 if it does not exist
-     * @see org.griphyn.common.classes.SysInfo
+     * @see org.griphyn.common.classes.VDSSysInfo
      */
-    private long getSysInfoId(SysInfo system) throws
+    private long getSysInfoId(VDSSysInfo system) throws
         Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.query.sysid");
@@ -1763,11 +1763,11 @@ if(!write) return false;
 
     /**
      * Adds a system information entry into the TC.
-     * @param system SysInfo
+     * @param system VDSSysInfo
      * @throws Exception
      * @return boolean Returns true if success, false if error occurs.
      */
-    private long addSysInfo(SysInfo system) throws Exception {
+    private long addSysInfo(VDSSysInfo system) throws Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.add.sysinfo");
         long id = -1;

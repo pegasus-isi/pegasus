@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.JobManager;
 import org.griphyn.cPlanner.classes.LRC;
 import org.griphyn.cPlanner.classes.Profile;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -69,9 +69,9 @@ public class SiteInfo2SiteCatalogEntry {
         /* set the handle */
         site.setSiteHandle( (String)s.getInfo( SiteInfo.HANDLE ) );
         
-        SysInfo sysinfo = ( SysInfo )s.getInfo( SiteInfo.SYSINFO ) ;
+        VDSSysInfo sysinfo = ( VDSSysInfo )s.getInfo( SiteInfo.SYSINFO ) ;
         if( sysinfo !=null) {
-            site.setSysInfo( sysinfo );
+            site.setVDSSysInfo( sysinfo );
         }
         
         // describe the head node filesystem

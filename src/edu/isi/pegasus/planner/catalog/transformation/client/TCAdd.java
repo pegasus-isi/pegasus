@@ -25,7 +25,7 @@ package edu.isi.pegasus.planner.catalog.transformation.client;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.common.util.ProfileParser;
 
@@ -160,7 +160,7 @@ public class TCAdd
             name + ":" + version +
             " " + pfn + " " + t + " " + resource + " " + system +
             " " + profiles, LogManager.DEBUG_MESSAGE_LEVEL);
-        SysInfo s = ( system == null ) ? new SysInfo() : system;
+        VDSSysInfo s = ( system == null ) ? new VDSSysInfo() : system;
         return ( tc.addTCEntry( namespace, name, version,
             pfn, t,
             resource, null, profiles, s ) ) ? true : false;
@@ -215,8 +215,8 @@ public class TCAdd
                                 break;
                             case 4: //systeminfo
                                 system = ( tokens[ i ].equalsIgnoreCase( "null" ) ) ?
-                                    new SysInfo( null ) :
-                                    new SysInfo( tokens[ i ] );
+                                    new VDSSysInfo( null ) :
+                                    new VDSSysInfo( tokens[ i ] );
                                 systemstring = system.toString();
                                 break;
                             case 5: //profile string

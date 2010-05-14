@@ -25,7 +25,7 @@ package edu.isi.pegasus.planner.catalog.transformation.client;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
@@ -56,7 +56,7 @@ public class Client {
 
     protected List profiles = null;
 
-    protected SysInfo system = null;
+    protected VDSSysInfo system = null;
 
     protected String file = null;
 
@@ -99,7 +99,7 @@ public class Client {
             }
         }
         if ( systemstring == null ) {
-            system = new SysInfo( systemstring );
+            system = new VDSSysInfo( systemstring );
         }
     }
 

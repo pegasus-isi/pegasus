@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -415,7 +415,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
         entry.setLogicalTransformation(job.getTXNamespace(), job.getTXName(), job.getTXVersion());
         entry.setResourceId( "unknown" );
-        entry.setSysInfo( new SysInfo( Arch.INTEL64, Os.LINUX, "", "" ) );
+        entry.setVDSSysInfo( new VDSSysInfo( Arch.INTEL64, Os.LINUX, "", "" ) );
         entry.setPhysicalTransformation( executable );
         //hack to determine whether an executable is
         //installed or static binary

@@ -311,7 +311,7 @@ public class TCQuery
                     String[] s = {tcentry.getResourceId(),
                         tcentry.getLogicalTransformation(),
                         tcentry.getPhysicalTransformation(),
-                        tcentry.getType().toString(), tcentry.getSysInfo().toString(),
+                        tcentry.getType().toString(), tcentry.getVDSSysInfo().toString(),
                         ( ( tcentry.getProfiles() != null ) ?
                         ProfileParser.combine( tcentry.getProfiles() ) : "NULL" )};
                     columnLength( s, count );
@@ -339,8 +339,8 @@ public class TCQuery
                     sb.append(getSpace(count[2],tcentry.getPhysicalTransformation().length()));
                     sb.append(tcentry.getType());
                     sb.append(getSpace(count[3],tcentry.getType().toString().length()));
-                    sb.append(tcentry.getSysInfo());
-                    sb.append(getSpace(count[4],tcentry.getSysInfo().toString().length()));
+                    sb.append(tcentry.getVDSSysInfo());
+                    sb.append(getSpace(count[4],tcentry.getVDSSysInfo().toString().length()));
                     if( tcentry.getProfiles() != null ) {
                         sb.append(ProfileParser.combine( tcentry.getProfiles()));
                     } else {

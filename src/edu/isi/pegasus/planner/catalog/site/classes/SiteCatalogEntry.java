@@ -19,13 +19,13 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 import edu.isi.pegasus.planner.catalog.classes.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
-import edu.isi.pegasus.planner.catalog.classes.SysInfo2NMI;
+import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.SysInfo;
-import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 
 import org.griphyn.cPlanner.classes.Profile;
 
@@ -241,22 +241,22 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * @param  sysinfo
      */
-    public void setSysInfo( SysInfo sysinfo ){
+    public void setVDSSysInfo( VDSSysInfo sysinfo ){
         this.setOSVersion( sysinfo.getOsversion() );
         this.setGlibc( sysinfo.getGlibc() );
-        this.setOS( SysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() ) );
-        this.setArchitecture( SysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() ) );
+        this.setOS( VDSSysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() ) );
+        this.setArchitecture( VDSSysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() ) );
                             
     }
 
     /**
      * Returns the sysinfo for the site.
      * 
-     * @return getSysInfo
+     * @return getVDSSysInfo
      */
-    public SysInfo getSysInfo(){
-        return new SysInfo( NMI2SysInfo.nmiArchToVDSArch( this.getArchitecture() ),
-                            NMI2SysInfo.nmiOSToVDSOS( this.getOS() ),
+    public VDSSysInfo getVDSSysInfo(){
+        return new VDSSysInfo( NMI2VDSSysInfo.nmiArchToVDSArch( this.getArchitecture() ),
+                            NMI2VDSSysInfo.nmiOSToVDSOS( this.getOS() ),
                             this.getOSVersion(),
                             this.getGlibc() );
                             
