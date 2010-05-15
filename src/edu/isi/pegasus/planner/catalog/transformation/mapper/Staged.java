@@ -21,13 +21,13 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class Staged
         //stores the string arrays mapping a site to an entry.
         Map sitemap = null;
         //stores the system information obtained from RIC
-        Map sysinfomap = null;
+        Map<String,SysInfo>  sysinfomap = null;
 
         //the fully qualified lfn
         String lfn = Separator.combine( namespace, name, version );
@@ -113,13 +113,13 @@ public class Staged
             if ( sysinfomap != null ) {
                 for ( Iterator i = siteids.iterator(); i.hasNext(); ) {
                     String site = ( String ) i.next();
-                    VDSSysInfo sitesysinfo = ( VDSSysInfo ) sysinfomap.get( site );
+                    SysInfo sitesysinfo = ( SysInfo ) sysinfomap.get( site );
                     for ( Iterator j = tcentries.iterator(); j.hasNext(); ) {
                         TransformationCatalogEntry entry = (
                             TransformationCatalogEntry ) j.next();
                         //get the required stuff from the TCentry.
                         String txsiteid = entry.getResourceId();
-                        VDSSysInfo txsysinfo = entry.getVDSSysInfo();
+                        SysInfo txsysinfo = entry.getSysInfo();
 
                         //check for static binary executables at each site.
                         if ( txsysinfo.equals( sitesysinfo ) ) {

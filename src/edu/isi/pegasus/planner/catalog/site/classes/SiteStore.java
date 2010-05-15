@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.common.util.Currently;
 
 
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -174,6 +175,24 @@ public class SiteStore extends AbstractSiteData{
     public boolean contains( String handle ){
         return this.mStore.containsKey( handle );
     }
+
+    /**
+     *
+     * @param sites the list of site identifiers for which sysinfo is required.
+     *
+     *
+     * @return  the sysinfo map
+     */
+    public Map<String,SysInfo> getSysInfos( List<String> sites ) {
+        HashMap result = new HashMap();
+        for ( Iterator i = sites.iterator(); i.hasNext(); ) {
+            SiteCatalogEntry site = this.lookup (( String ) i.next());
+            if( site != null ){
+                result.put( site.getSiteHandle(), site.getSysInfo() );
+            }
+        }
+        return result;
+    }
     
     /**
      * 
@@ -182,7 +201,7 @@ public class SiteStore extends AbstractSiteData{
      * 
      * @return  the sysinfo map
      */
-    public Map getSysInfos( List<String> sites ) {
+    /*private Map<String,VDSSysInfo> getVDSSysInfos( List<String> sites ) {
         HashMap result = new HashMap();
         for ( Iterator i = sites.iterator(); i.hasNext(); ) {
             SiteCatalogEntry site = this.lookup (( String ) i.next());
@@ -192,6 +211,7 @@ public class SiteStore extends AbstractSiteData{
         }
         return result;
     }
+     */
     
     /**
      * Returns the <code>VDSSysInfo</code> for the site
@@ -199,7 +219,7 @@ public class SiteStore extends AbstractSiteData{
      * @param handle the site handle / identifier.
      * @return the VDSSysInfo else null
      */
-    public VDSSysInfo getSysInfo( String handle ){
+    public VDSSysInfo getVDSSysInfo( String handle ){
         //sanity check
         if( !this.contains( handle ) ) {
             return null;

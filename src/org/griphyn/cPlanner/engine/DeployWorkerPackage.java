@@ -1016,7 +1016,7 @@ public class DeployWorkerPackage
         TransformationCatalogEntry defaultTCEntry = null;
        
         //String site = "pegasus";
-        VDSSysInfo sysinfo = mSiteStore.getSysInfo( site );
+        VDSSysInfo sysinfo = mSiteStore.getVDSSysInfo( site );
 
         //construct the path to the executable
         String path = constructDefaultURLToPegasusWorkerPackage( name, sysinfo );

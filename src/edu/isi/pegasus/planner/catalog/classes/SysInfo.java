@@ -173,6 +173,27 @@ public class SysInfo implements Cloneable {
     }
 
     /**
+     * Check if the system information matches.
+     *
+     * @param obj to be compared.
+     *
+     * @return boolean
+     */
+    public boolean equals(Object obj) {
+        boolean result = false;
+        if( obj instanceof SysInfo ){
+            SysInfo sysinfo = (SysInfo)obj;
+
+            result = this.getArchitecture().equals( sysinfo.getArchitecture() ) &&
+                     this.getOS().equals( sysinfo.getOS() ) &&
+                     this.getOSRelease().equals( sysinfo.getOSRelease() ) &&
+                     this.getOSVersion().equals( sysinfo.getOSVersion() ) &&
+                     this.getGlibc().equals( sysinfo.getGlibc() );
+        }
+        return result;
+    }
+
+    /**
      * Returns the clone of the object.
      *
      * @return the clone

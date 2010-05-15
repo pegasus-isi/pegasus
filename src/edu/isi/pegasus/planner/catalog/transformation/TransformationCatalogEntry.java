@@ -396,6 +396,16 @@ public class TransformationCatalogEntry
     }
 
     /**
+     * Returns the System Information associated with the transformation.
+     *
+     *
+     * @return SysInfo
+     */
+    public SysInfo getSysInfo(  ) {
+        return   mSysInfo;
+    }
+
+    /**
      * Returns the System Information in the old VDS format associated with the
      * transformation.
      *

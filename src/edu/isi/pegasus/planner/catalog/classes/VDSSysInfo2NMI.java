@@ -96,7 +96,11 @@ public class VDSSysInfo2NMI {
         SysInfo result = new SysInfo();
         result.setArchitecture( vdsArchToNMIArch( sysinfo.getArch() ) );
         result.setOS( vdsOsToNMIOS( sysinfo.getOs() ) );
-        result.setGlibc( sysinfo.getGlibc() );
+
+        String glibc = sysinfo.getGlibc();
+        if( glibc != null ){
+            result.setGlibc( glibc );
+        }
 
         //what we call os release and version now was called os version!
         String osVersion = sysinfo.getOsversion();
