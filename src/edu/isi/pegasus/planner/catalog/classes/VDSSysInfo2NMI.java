@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.catalog.classes;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
 import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +31,11 @@ import java.util.Map;
  * @version  $Revision$
  */
 public class VDSSysInfo2NMI {
+
+    /**
+     * The separator used to combine OS version and release.
+     */
+    public static final String OS_COMBINE_SEPARATOR = "_";
 
      /**
      * The map storing architecture to corresponding NMI architecture platforms.
@@ -76,6 +82,38 @@ public class VDSSysInfo2NMI {
             mVDSOSToNMIOS.put( Os.WINDOWS, OS.WINDOWS );
         }
         return mVDSOSToNMIOS;
+    }
+
+
+    /**
+     * Converts VDS SysInfo to NMI based SysInfo object
+     *
+     * @param sysinfo  VDS based SysInfo object
+     *
+     * @return NMI SysInfo object.
+     */
+    public static SysInfo vdsSysInfo2NMI(VDSSysInfo sysinfo) {
+        SysInfo result = new SysInfo();
+        result.setArchitecture( vdsArchToNMIArch( sysinfo.getArch() ) );
+        result.setOS( vdsOsToNMIOS( sysinfo.getOs() ) );
+        result.setGlibc( sysinfo.getGlibc() );
+
+        //what we call os release and version now was called os version!
+        String osVersion = sysinfo.getOsversion();
+        if( osVersion != null && osVersion.length() != 0){
+            
+            if( osVersion.contains( OS_COMBINE_SEPARATOR ) ){
+                //split on _
+                int last = osVersion.lastIndexOf( OS_COMBINE_SEPARATOR );
+                result.setOSRelease( osVersion.substring( 0, last ));
+                result.setOSVersion( osVersion.substring( last + 1 ));
+            }
+            else{
+                result.setOSRelease( osVersion  );
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -126,5 +164,21 @@ public class VDSSysInfo2NMI {
     public static OS vdsOsToNMIOS( String os ){
         return vdsOsToNMIOSMap().get( Os.fromValue(os) );
     }
-    
+
+
+    public static void main( String[] args ){
+        VDSSysInfo v = new VDSSysInfo();
+        v.setArch(Arch.AMD64);
+        v.setOs(Os.LINUX);
+        v.setOsversion( "rhel_4" );
+        SysInfo s = VDSSysInfo2NMI.vdsSysInfo2NMI(v);
+        System.out.println( s.getOSRelease() );
+        System.out.println( s.getOSVersion() );
+
+        v.setOsversion( "rhel_" );
+        s = VDSSysInfo2NMI.vdsSysInfo2NMI(v);
+        System.out.println( s.getOSRelease() );
+        System.out.println( s.getOSVersion() );
+
+    }
 }

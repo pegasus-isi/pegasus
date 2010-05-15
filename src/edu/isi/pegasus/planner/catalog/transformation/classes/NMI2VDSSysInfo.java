@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.catalog.transformation.classes;
 import edu.isi.pegasus.planner.catalog.classes.Architecture;
 import edu.isi.pegasus.planner.catalog.classes.OS;
 
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +36,12 @@ public class NMI2VDSSysInfo {
      * The map storing architecture to corresponding NMI architecture platforms.
      */
     private static Map< Architecture,Arch > mNMIArchToVDSArchMap = null;
+
+
+    /**
+     * The separator used to combine OS version and release.
+     */
+    public static final String OS_COMBINE_SEPARATOR = "_";
 
     /**
      * Singleton access to the  NMI arch to VDS arch map.
@@ -83,6 +90,40 @@ public class NMI2VDSSysInfo {
         }
         return mNMIOSToVDSOSMap;
     }
+
+    /**
+     * Returns the VDSSysInfo object.
+     *
+     * @param sysinfo   the sysinfo object
+     *
+     * @return VDSSysInfo object
+     */
+    public static VDSSysInfo nmiToSysInfo(SysInfo sysinfo) {
+        VDSSysInfo result = new VDSSysInfo();
+        result.setArch( nmiArchToVDSArch( sysinfo.getArchitecture() ) );
+        result.setOs( nmiOSToVDSOS( sysinfo.getOS() ) );
+        result.setGlibc( sysinfo.getGlibc() );
+
+        //in VDS days os version was release and version.
+        StringBuffer osVersion = new StringBuffer();
+        String rel = sysinfo.getOSRelease();
+        if( rel != null && rel.length() != 0 ){
+            osVersion.append( rel );
+
+            String ver = sysinfo.getOSVersion();
+            if( ver != null && ver.length() != 0 ){
+                //combine version and release
+                osVersion.append( NMI2VDSSysInfo.OS_COMBINE_SEPARATOR );
+                osVersion.append( ver );
+            }
+        }
+
+        result.setOsversion( osVersion.toString() );
+
+        return result;
+    }
+
+
 
     /**
      * Returns the VDS VDSSysInfo object corresponding to the NMI arch and OS

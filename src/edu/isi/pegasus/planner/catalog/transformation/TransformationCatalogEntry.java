@@ -28,8 +28,6 @@ package edu.isi.pegasus.planner.catalog.transformation;
  */
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
-import edu.isi.pegasus.planner.catalog.classes.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
@@ -39,6 +37,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import org.griphyn.cPlanner.classes.Profile;
 
 import java.util.ArrayList;
@@ -48,16 +47,7 @@ import java.util.List;
 public class TransformationCatalogEntry
     implements CatalogEntry {
 
-    /**
-     * The default OS the entry is associated with if none is specified
-     */
-    public static final OS DEFAULT_OS = OS.LINUX;
-
-    /**
-     * The default Architecture the entry is associated with if none is specified
-     */
-    public static final Architecture DEFAULT_ARCHITECTURE = Architecture.x86;
-
+    
     /**
      * The logical namespace of the transformation
      */
@@ -93,24 +83,9 @@ public class TransformationCatalogEntry
     /**
      * The System Info for the transformation.
      */
-    //private VDSSysInfo sysinfo;
+    private SysInfo mSysInfo;
 
-    /**
-     * The OS of the site.
-     */
-    private OS mOS;
-
-    /**
-     * The architecture of the site.
-     */
-    private Architecture mArch;
-
-    /**
-     * Optional information about the glibc.
-     */
-    private String mGlibc;
-
-
+    
     /**
      * The type of transformation. Takes one of the predefined enumerated type TCType.
      */
@@ -127,9 +102,7 @@ public class TransformationCatalogEntry
         physicalname = null;
         profiles = null;
 //        sysinfo = null;
-        mOS = TransformationCatalogEntry.DEFAULT_OS;
-        mArch = TransformationCatalogEntry.DEFAULT_ARCHITECTURE;
-        mGlibc = "";
+        mSysInfo = null;
     }
 
     /**
@@ -170,9 +143,7 @@ public class TransformationCatalogEntry
         this.profiles = profiles;
 
         //       this.sysinfo = sysinfo;
-        this.mArch = VDSSysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() );
-        this.mOS   = VDSSysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() );
-        this.mGlibc = sysinfo.getGlibc();
+        mSysInfo  = VDSSysInfo2NMI.vdsSysInfo2NMI( sysinfo );
 
         this.type = type;
 
@@ -337,18 +308,7 @@ public class TransformationCatalogEntry
      * @param sysinfo VDSSysInfo
      */
     public void setVDSSysInfo( VDSSysInfo sysinfo ) {
-        if( sysinfo == null ){
-            //set to default
-            this.mArch = TransformationCatalogEntry.DEFAULT_ARCHITECTURE;
-            this.mOS   = TransformationCatalogEntry.DEFAULT_OS;
-            this.mGlibc= "";
-        }
-        else{
-            this.mArch = VDSSysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() );
-            this.mOS   = VDSSysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() );
-            this.mGlibc= sysinfo.getGlibc();
-        }
-//        this.sysinfo = ( sysinfo == null ) ? new VDSSysInfo() : sysinfo;
+        this.mSysInfo = ( sysinfo == null ) ? new SysInfo() : VDSSysInfo2NMI.vdsSysInfo2NMI(sysinfo);
     }
 
 
@@ -443,7 +403,7 @@ public class TransformationCatalogEntry
      * @return VDSSysInfo
      */
     public VDSSysInfo getVDSSysInfo(  ) {
-        return NMI2VDSSysInfo.nmiToSysInfo( mArch, mOS, mGlibc );
+        return NMI2VDSSysInfo.nmiToSysInfo( mSysInfo );
     }
 
     /**

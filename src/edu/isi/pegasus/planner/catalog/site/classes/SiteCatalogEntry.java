@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
@@ -71,30 +72,10 @@ public class SiteCatalogEntry extends AbstractSiteData{
     private String mID;
     
     /**
-     * The OS of the site. 
+     * The System Information for the Site.
      */
-    private OS mOS;
-    
-    /**
-     * The architecture of the site.
-     */
-    private Architecture mArch;
-    
-    /**
-     * Optional information about the os release.
-     */
-    private String mOSRelease;
-    
-    /**
-     * Optional information about the version.
-     */
-    private String mOSVersion;
-    
-    /**
-     * Optional information about the glibc.
-     */
-    private String mGlibc;
-    
+    private SysInfo mSysInfo;
+
     /**
      * The profiles asscociated with the site.
      */
@@ -171,8 +152,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      */
     public void initialize( String id ){        
         mID       = id;
-        mArch     = Architecture.x86;
-        mOS       = OS.LINUX;      
+        mSysInfo  = new SysInfo();
         mProfiles        = new Profiles();
         mGridGateways    = new HashMap();
         mReplicaCatalogs = new LinkedList();
@@ -196,14 +176,35 @@ public class SiteCatalogEntry extends AbstractSiteData{
     public String getSiteHandle( ){
         return mID;
     }
-    
+
+
+    /**
+     * Sets the System Information associated with the Site.
+     *
+     *
+     * @param sysinfo  the system information of the site.
+     */
+    public void setSysInfo( SysInfo sysinfo  ) {
+        mSysInfo = sysinfo;
+    }
+
+    /**
+     * Returns the System Information associated with the Site.
+     *
+     *
+     * @return SysInfo the system information.
+     */
+    public SysInfo getSysInfo(  ) {
+        return mSysInfo;
+    }
+
     /**
      * Sets the architecture of the site.
      * 
      * @param arch  the architecture.
      */
     public void setArchitecture( Architecture arch ){
-        mArch = arch;
+        mSysInfo.setArchitecture(arch);
     }
     
     
@@ -213,7 +214,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return  the architecture.
      */
     public Architecture getArchitecture( ){
-        return mArch;
+        return mSysInfo.getArchitecture();
     }
     
     
@@ -223,7 +224,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @param os the os of the site.
      */
     public void setOS( OS os ){
-        mOS = os;
+        mSysInfo.setOS(os);
     }
     
     
@@ -233,7 +234,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return  the OS
      */
     public OS getOS( ){
-        return mOS;
+        return mSysInfo.getOS();
     }
     
     /**
@@ -242,11 +243,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @param  sysinfo
      */
     public void setVDSSysInfo( VDSSysInfo sysinfo ){
-        this.setOSVersion( sysinfo.getOsversion() );
-        this.setGlibc( sysinfo.getGlibc() );
-        this.setOS( VDSSysInfo2NMI.vdsOsToNMIOS( sysinfo.getOs() ) );
-        this.setArchitecture( VDSSysInfo2NMI.vdsArchToNMIArch( sysinfo.getArch() ) );
-                            
+        this.setSysInfo( VDSSysInfo2NMI.vdsSysInfo2NMI(sysinfo));
     }
 
     /**
@@ -255,10 +252,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return getVDSSysInfo
      */
     public VDSSysInfo getVDSSysInfo(){
-        return new VDSSysInfo( NMI2VDSSysInfo.nmiArchToVDSArch( this.getArchitecture() ),
-                            NMI2VDSSysInfo.nmiOSToVDSOS( this.getOS() ),
-                            this.getOSVersion(),
-                            this.getGlibc() );
+        return  NMI2VDSSysInfo.nmiToSysInfo(mSysInfo);
                             
     }
     
@@ -268,7 +262,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @param release the os releaseof the site.
      */
     public void setOSRelease( String release ){
-        mOSRelease = release;
+        mSysInfo.setOSRelease(release);
     }
     
     
@@ -278,7 +272,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return  the OS
      */
     public String getOSRelease( ){
-        return mOSRelease;
+        return mSysInfo.getOSRelease();
     }
     
     /**
@@ -287,7 +281,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @param version  the os versionof the site.
      */
     public void setOSVersion( String version ){
-        mOSVersion = version;
+        mSysInfo.setOSVersion(version);
     }
     
     
@@ -297,7 +291,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return  the OS
      */
     public String getOSVersion( ){
-        return mOSVersion;
+        return mSysInfo.getOSVersion();
     }
     
     /**
@@ -306,7 +300,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @param version  the glibc version of the site.
      */
     public void setGlibc( String version ){
-        mGlibc = version;
+        mSysInfo.setGlibc(version);
     }
     
     
@@ -316,7 +310,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return  the OS
      */
     public String getGlibc( ){
-        return mGlibc;
+        return mSysInfo.getGlibc();
     }
     
     /**
@@ -656,12 +650,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
         try{
             obj = ( SiteCatalogEntry ) super.clone();
             obj.initialize( this.getSiteHandle() );
-            obj.setArchitecture( this.getArchitecture() );
-            obj.setOS( this.getOS() );
-        
-            obj.setOSRelease( this.getOSRelease() );
-            obj.setOSVersion( this.getOSVersion() );
-            obj.setGlibc( this.getGlibc() );
+            obj.setSysInfo( (SysInfo)this.getSysInfo().clone());
         
             //list all the gridgateways
             for( Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext(); ){
