@@ -86,7 +86,7 @@ endif
 #
 # just add all jars to the CLASSPATH. 
 #
-set cp=`( find ${PEGASUS_HOME}/lib -perm -0500 -name '*.jar' | tr '\012' ':' ; echo "" ) | sed -e 's/::/:/g' -e 's/^://' -e 's/:$//'`
+set cp=`( find ${PEGASUS_HOME}/lib -name '*.jar' | tr '\012' ':' ; echo "" ) | sed -e 's/::/:/g' -e 's/^://' -e 's/:$//'`
 
 # merge CLASSPATH, avoid FQPN duplicates
 if ( $?CLASSPATH ) then
