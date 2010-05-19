@@ -61,6 +61,7 @@ prog_base = os.path.split(sys.argv[0])[1]
 from Pegasus.tools import filelock
 from Pegasus.tools import utils
 from Pegasus.tools import properties
+from Pegasus.tools import kickstart_parser
 
 # Import netlogger api
 from netlogger import nlapi
@@ -218,6 +219,7 @@ class Job:
     _jobtype = None
     _clustered = None
     _site_name = None
+    _host_id = None
     _remote_user = None
     _remote_working_dir = None
     _cluster_start_time = None
@@ -355,6 +357,52 @@ class Job:
 	# All done!
 	return my_result, my_site
 
+    def extract_job_info(self, buffer):
+	"""
+	This function reads the output from the kickstart output parser and populates
+	extracts the job information for the Stampede schema.
+	"""
+
+	# Check if we have anything
+	if len(buffer) == 0:
+	    return None
+
+	# Check if first record is an invocation record (it should be!)
+	if not "invocation" in buffer[0]:
+	    logmsg("extract_job_info: warning: cannot find invocation record!")
+	    return None
+
+	# Ok, we have an invocation record, extract the information we need
+	my_record = buffer[0]
+	if "resource" in my_record:
+	    self._site_name = my_record["resource"]
+	if "user" in my_record:
+	    self._remote_user = my_record["user"]
+	if "cwd" in my_record:
+	    self._remote_working_dir = my_record["cwd"]
+	if "hostname" in my_record:
+	    self._host_id = my_record["hostname"]
+
+	# Set clustered flag
+	if len(buffer) > 1:
+	    self._clustered = True
+	else:
+	    self._clustered = False
+
+	# Fill in cluster parameters
+	if "clustered" in buffer[len(buffer) - 1]:
+	    my_record = buffer[len(buffer) - 1]
+	    if "duration" in my_record:
+		self._cluster_duration = my_record["duration"]
+	    if "start" in my_record:
+		# Convert timestamp to EPOCH
+		my_start = utils.epochdate(my_record["start"], short=False)
+		if my_start is not None:
+		    self._cluster_start_time = my_start
+
+	# Done populating Job class with information from the kickstart output file
+	return True
+	
 class Workflow:
     """
     Class used to keep everything needed to track a particular workflow
@@ -782,7 +830,7 @@ class Workflow:
 	# All done
 	return my_diff, my_site
 
-    def db_send_task_info(self, jobid, job_submit_seq, task_type):
+    def db_send_task_info(self, jobid, job_submit_seq, task_type, invocation_record=None):
 	"""
 	This function sends to the database task
 	information. task_type is either "PRE SCRIPT", "MAIN JOB", or
@@ -828,10 +876,58 @@ class Workflow:
 		kwargs["arguments"] = self._job_info[jobid][4]
 	elif task_type == "MAIN JOB":
 	    # This is a MAIN JOB task
-	    pass
+	    if "transformation" in invocation_record:
+		kwargs["transformation"] = invocation_record["transformation"]
+	    if "start" in invocation_record:
+		my_start = utils.epochdate(invocation_record["start"])
+		if my_start is not None:
+		    kwargs["start_time"] = my_start
+	    if "duration" in invocation_record:
+		kwargs["duration"] = invocation_record["duration"]
+	    if "exitcode" in invocation_record:
+		kwargs["exitcode"] = invocation_record["exitcode"]
+	    if "name" in invocation_record:
+		kwargs["executable"] = invocation_record["name"]
+	    if "argument-vector" in invocation_record:
+		kwargs["arguments"] = invocation_record["argument-vector"]
 
 	# Send job event to database
 	workdb.write(event="task", **kwargs)
+
+    def parse_job_output(self, jobid, job_submit_seq):
+	"""
+	This function tries to parse the kickstart output file of a given job and
+	collect information for the stampede schema.
+	"""
+
+	# Find job
+	if not (jobid, job_submit_seq) in self._jobs:
+	    logmsg("parse_job_output: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
+	    return
+
+	# Got it
+	my_job = self._jobs[jobid, job_submit_seq]
+
+	# Compose kickstart output file name (base is the filename before rotation)
+	my_job_output_fn_base = os.path.join(self._run_dir, jobid) + ".out"
+	my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+
+	my_parser = kickstart_parser.Parser(my_job_output_fn)
+	my_output = my_parser.parse_stampede()
+
+	# Add job information to the Job class
+	if my_job.extract_job_info(my_output) == True:
+	    # Send updated info to the database
+	    self.db_send_job_info(jobid, job_submit_seq)
+
+	# Loop through all records
+	for record in my_output:
+	    # Skip non-invocation records
+	    if not "invocation" in record:
+		continue
+	
+	    # Send task information to the database
+	    self.db_send_task_info(jobid, job_submit_seq, "MAIN JOB", record)
 
 def make_boolean(value):
     # purpose: convert an input string into something boolean
@@ -1231,6 +1327,7 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 	    # PRE script finished
 	    wf.db_send_task_info(jobid, my_job_submit_seq, "PRE SCRIPT")
 	elif event == "JOB_TERMINATED":
+	    wf.parse_job_output(jobid, my_job_submit_seq)
 	    # Main job has ended
 	    pass
 

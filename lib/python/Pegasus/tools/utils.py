@@ -23,7 +23,9 @@ utils.py: Provides common functions used by all workflow programs
 import os
 import time
 import logging
+import calendar
 import commands
+import datetime
 import subprocess
 
 # Module variables
@@ -47,6 +49,47 @@ def isodate(now=int(time.time()), utc=False, short=False):
         return time.strftime("%Y%m%dT%H%M%S%z", my_time)
     else:
         return time.strftime("%Y-%m-%dT%H:%M:%S%z", my_time)
+
+def epochdate(timestamp, short=False):
+    """
+    This function converts an ISO timestamp into seconds since epoch
+    Set short to False when the timestamp is in the YYYY-MM-DDTHH:MM:SSZZZ:ZZ format
+    Set short to True when the timestamp is in the YYYYMMDDTHHMMSSZZZZZ format
+    """
+    
+    try:
+	# Split date/time and timezone information
+	if short == True:
+	    dt = timestamp[:-5]
+	    tz = timestamp[-5:]
+	else:
+	    dt = timestamp[:-6]
+	    tz = timestamp[-6:]
+	    tz = tz[:-3] + tz[-2:]
+	    
+	# Convert date/time to datetime format
+	if short == False:
+	    # Delete microseconds, if any
+	    if dt.find('.'):
+		dt = dt[:dt.find('.')]
+	    my_time = datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
+	else:
+	    my_time = datetime.datetime.strptime(dt, "%Y%m%dT%H%M%S")
+
+	# Split timezone in hours and minutes
+	my_hour = int(tz[:-2])
+	my_min = int(tz[-2:])
+
+	# Calculate offset
+	my_offset = datetime.timedelta(hours=my_hour, minutes=my_min)
+	# Subtract offset
+	my_time = my_time - my_offset
+
+	# Turn my_time into Epoch format
+	return int(calendar.timegm(my_time.timetuple()))
+    except:
+	logger.warn("ERROR: Converting timestamp %s to epoch format" % timestamp)
+	return None
 
 def find_exec(program, curdir=False):
     """
