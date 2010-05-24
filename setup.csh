@@ -5,26 +5,26 @@
 
 # If JAVA_HOME is not set, try some system defaults. This is useful for
 # RPMs and DEBs which have explicit Java dependencies
-if ( ! $?JAVA_HOME ) then
+if ( ! "$?JAVA_HOME" ) then
     foreach TARGET ( \
         /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/jre \
         /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0/jre \
         /usr/lib/jvm/java-6-openjdk/jre \
     )
-        if ( -e $TARGET && -x $TARGET/bin/java ) then
-            setenv JAVA_HOME $TARGET
+        if ( -e "$TARGET" && -x "$TARGET/bin/java" ) then
+            setenv JAVA_HOME "$TARGET"
         endif
     end
     
     # macos
-    if ( ! $?JAVA_HOME && -x /usr/libexec/java_home ) then
+    if ( ! "$?JAVA_HOME" && -x /usr/libexec/java_home ) then
         setenv JAVA_HOME `/usr/libexec/java_home -version 1.6`
     endif
 endif
 
 # make sure we have a JAVA_HOME
-if ( ! $?JAVA_HOME ) then
-    if ( ! $?JDK_HOME ) then
+if ( ! "$?JAVA_HOME" ) then
+    if ( ! "$?JDK_HOME" ) then
 	echo "Error! Please set your JAVA_HOME variable"
 	return 1
     else
@@ -35,8 +35,8 @@ if ( ! $?JAVA_HOME ) then
 endif
 
 # define PEGASUS_HOME or die
-if ( ! $?PEGASUS_HOME ) then
-     if ( ! $?VDS_HOME ) then
+if ( ! "$?PEGASUS_HOME" ) then
+     if ( ! "$?VDS_HOME" ) then
     echo "ERROR! You must set PEGASUS_HOME env variable."
     return 1
     else 
