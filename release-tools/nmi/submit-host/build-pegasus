@@ -314,7 +314,7 @@ sub test_wms
     $rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_master", 1, 0);
 
     # wait for the daemons to register
-    sleep(60);
+    sleep(120);
 
     announce("simple condor tests");
     $rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_status", 1, 0);
