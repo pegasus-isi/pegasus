@@ -34,7 +34,6 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
-import edu.isi.pegasus.planner.catalog.transformation.Windward;
 
 
 import org.griphyn.cPlanner.namespace.VDS;
@@ -254,6 +253,11 @@ public class Algorithm {
     protected ProcessCatalog loadProcessCatalog( String type, Properties props ) {
         ProcessCatalog result = null;
 
+        return result;
+
+        //The Windward backend for Transformation Catalog is no longer
+        //supported in Pegasus 3.0
+        /*
         //only load process catalog if TC implementation loaded is of type windward.
         if( ! (mTCHandle instanceof Windward ) ) {
             return result;
@@ -276,6 +280,7 @@ public class Algorithm {
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
         return result;
+         */
     }
 
 
