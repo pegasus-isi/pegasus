@@ -27,10 +27,17 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
+
+
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+
+
 import edu.isi.pegasus.common.util.Separator;
 import org.griphyn.vdl.dbschema.DatabaseSchema;
 
@@ -714,7 +721,7 @@ public class Database
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getVDSSysInfo());
+                        entry.getProfiles(), entry.getSysInfo());
         return true;
     }
 
@@ -737,7 +744,7 @@ public class Database
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getVDSSysInfo(), write);
+                        entry.getProfiles(), entry.getSysInfo(), write);
         return true;
     }
 
@@ -759,7 +766,7 @@ public class Database
      * a Logical Transformation. (can be null)
      * @param pfnprofiles     List   The List of Profile objects associated with
      * a Physical Transformation. (can be null)
-     * @param system    VDSSysInfo  The System information associated with a
+     * @param system    SysInfo  The System information associated with a
      * physical transformation.
      * @throws Exception
      * @return boolean   Returns true if succesfully added, returns false if
@@ -773,7 +780,7 @@ public class Database
                               String physicalname, TCType type,
                               String resourceid,
                               List lfnprofiles, List pfnprofiles,
-                              VDSSysInfo system) throws
+                              SysInfo system) throws
         Exception {
         return this.addTCEntry(namespace, name, version, physicalname, type,
                                resourceid, lfnprofiles, pfnprofiles, system, true);
@@ -798,7 +805,7 @@ public class Database
      * a Logical Transformation. (can be null)
      * @param pfnprofiles     List   The List of Profile objects associated with
      * a Physical Transformation. (can be null)
-     * @param system    VDSSysInfo  The System information associated with a
+     * @param system    SysInfo  The System information associated with a
      * physical transformation.
      * @param write boolean to commit changes to the backend catalog
      * @throws Exception
@@ -813,7 +820,7 @@ public class Database
                               String physicalname, TCType type,
                               String resourceid,
                               List lfnprofiles, List pfnprofiles,
-                              VDSSysInfo system, boolean write) throws
+                              SysInfo system, boolean write) throws
         Exception {
 if(!write) return false;
         //ADD LFN
@@ -834,9 +841,10 @@ if(!write) return false;
         //ADD SYSINFO
         //now since the lfn is in lets check if the architecture info is there.
         long archid = -1;
-        if ( (archid = this.getSysInfoId(system)) == -1) {
+        VDSSysInfo vdsSystem = NMI2VDSSysInfo.nmiToVDSSysInfo(system);
+        if ( (archid = this.getSysInfoId(vdsSystem)) == -1) {
             //this means sytem information does not exist and we have to add it.
-            if ( (archid = this.addSysInfo(system)) == -1) {
+            if ( (archid = this.addSysInfo(vdsSystem)) == -1) {
                 return false;
             }
             // archid = this.getSysInfoId( system );
@@ -1343,7 +1351,7 @@ if(!write) return false;
      * @return boolean Returns true for success, false if any error occurs.
      * @see org.griphyn.common.classes.VDSSysInfo
      */
-    public boolean deleteTCbySysInfo(VDSSysInfo sysinfo) throws Exception {
+    public boolean deleteTCbySysInfo( SysInfo sysinfo) throws Exception {
         if (sysinfo == null) {
             mLogger.log(
                 "The system information cannot be null",
@@ -1352,10 +1360,12 @@ if(!write) return false;
         }
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.delete.sysinfo");
-        ps.setString(1, this.makeNotNull(sysinfo.getArch().toString()));
-        ps.setString(2, this.makeNotNull(sysinfo.getOs().toString()));
-        ps.setString(3, this.makeNotNull(sysinfo.getOsversion()));
-        ps.setString(4, this.makeNotNull(sysinfo.getGlibc()));
+        VDSSysInfo vdsSysInfo = NMI2VDSSysInfo.nmiToVDSSysInfo(sysinfo);
+
+        ps.setString(1, this.makeNotNull(vdsSysInfo.getArch().toString()));
+        ps.setString(2, this.makeNotNull(vdsSysInfo.getOs().toString()));
+        ps.setString(3, this.makeNotNull(vdsSysInfo.getOsversion()));
+        ps.setString(4, this.makeNotNull(vdsSysInfo.getGlibc()));
         try {
             int i = ps.executeUpdate();
             if (i < 1) {

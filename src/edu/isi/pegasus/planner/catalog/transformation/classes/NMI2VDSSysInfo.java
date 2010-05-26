@@ -98,7 +98,7 @@ public class NMI2VDSSysInfo {
      *
      * @return VDSSysInfo object
      */
-    public static VDSSysInfo nmiToSysInfo(SysInfo sysinfo) {
+    public static VDSSysInfo nmiToVDSSysInfo(SysInfo sysinfo) {
         VDSSysInfo result = new VDSSysInfo();
         result.setArch( nmiArchToVDSArch( sysinfo.getArchitecture() ) );
         result.setOs( nmiOSToVDSOS( sysinfo.getOS() ) );
@@ -134,7 +134,7 @@ public class NMI2VDSSysInfo {
      *
      * @return the VDSSysInfo object
      */
-    public static VDSSysInfo nmiToSysInfo( Architecture arch, OS os, String glibc ){
+    public static VDSSysInfo nmiToVDSSysInfo( Architecture arch, OS os, String glibc ){
         VDSSysInfo result = new VDSSysInfo();
         result.setArch( nmiArchToVDSArch(arch) );
         result.setOs( nmiOSToVDSOS( os ) );

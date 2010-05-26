@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.catalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
@@ -42,7 +42,7 @@ public interface TransformationCatalog
     /**
      * The version of the API
      */
-    public static final String VERSION = "1.1";
+    public static final String VERSION = "1.2";
     
     /**
      * Initialize the implementation, and return an instance of the implementation.
@@ -61,10 +61,10 @@ public interface TransformationCatalog
      * @param type TCType The type of the transformation to search for. If <B>NULL</b> it returns all types.
      * @return List Returns a list of TransformationCatalogEntry objects containing the corresponding entries from the TC. Returns null if no entry found.
      * @throws Exception
-     * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    List getTCEntries( String namespace, String name, String version,
+    public List getTCEntries( String namespace, String name, String version,
         String resourceid, TCType type ) throws Exception;
 
     /**
@@ -76,10 +76,10 @@ public interface TransformationCatalog
      * @param type TCType The type of the transformation to search for. If <b>NULL</b> it returns all types.
      * @return List Returns a list of TransformationCatalogEntry objects containing the corresponding entries from the TC. Returns null if no entry found.
      * @throws Exception
-     * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    List getTCEntries( String namespace, String name, String version,
+    public List getTCEntries( String namespace, String name, String version,
         List resourceids, TCType type ) throws Exception;
 
     /**
@@ -92,9 +92,9 @@ public interface TransformationCatalog
      *                     If <B>NULL</B> it returns all types.
      * @return  List      Returns a list of Resource Id's as strings. Returns <B>NULL</B> if no results found.
      * @throws  Exception NotImplementedException if not implemented
-     * @see org.griphyn.common.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
-    List getTCResourceIds( String namespace, String name, String version,
+    public List getTCResourceIds( String namespace, String name, String version,
         TCType type ) throws Exception;
 
     /**
@@ -112,10 +112,10 @@ public interface TransformationCatalog
      *                    The last entry in the List is a int array containing the column lengths for pretty print.
      *                    Returns <B>NULL</B> if no results found.
      * @throws Exception  NotImplementedException if not implemented.
-     * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.classes.VDSSysInfo
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      */
-    List getTCPhysicalNames( String namespace, String name,
+    public List getTCPhysicalNames( String namespace, String name,
         String version,
         String resourceid, TCType type ) throws
         Exception;
@@ -133,7 +133,7 @@ public interface TransformationCatalog
      *                   Returns <B>NULL</B> if no results found.
      * @throws Exception  NotImplementedException if not implemented.
      */
-    List getTCLogicalNames( String resourceid, TCType type ) throws
+    public List getTCLogicalNames( String resourceid, TCType type ) throws
         Exception;
 
     /**
@@ -146,7 +146,7 @@ public interface TransformationCatalog
      * @throws Exception NotImplementedException if not implemented.
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    List getTCLfnProfiles( String namespace, String name, String version ) throws
+    public List getTCLfnProfiles( String namespace, String name, String version ) throws
         Exception;
 
     /**
@@ -160,7 +160,7 @@ public interface TransformationCatalog
      *                   Returns <B>NULL</B> if no profiless found.
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    List getTCPfnProfiles( String pfn, String resourceid, TCType type ) throws
+    public List getTCPfnProfiles( String pfn, String resourceid, TCType type ) throws
         Exception;
 
     /**
@@ -169,7 +169,7 @@ public interface TransformationCatalog
      * @return List Returns a List of TransformationCatalogEntry objects.
      * @throws Exception
      */
-    List getTC() throws Exception;
+    public List getTC() throws Exception;
 
     /**
      *  ADDITIONS
@@ -180,9 +180,9 @@ public interface TransformationCatalog
      * @param tcentry List Takes a list of TransformationCatalogEntry objects as input
      * @throws Exception
      * @return boolean Return true if succesful, false if error. Exception is thrown when error occurs.
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    boolean addTCEntry( List tcentry ) throws Exception;
+    public boolean addTCEntry( List tcentry ) throws Exception;
 
 
     /**
@@ -190,9 +190,9 @@ public interface TransformationCatalog
      * @param tcentry Takes a single TransformationCatalogEntry object as input
      * @throws Exception
      * @return boolean Return true if succesful, false if error. Exception is thrown when error occurs.
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    boolean addTCEntry( TransformationCatalogEntry tcentry ) throws Exception;
+    public boolean addTCEntry( TransformationCatalogEntry tcentry ) throws Exception;
 
 
     /**
@@ -202,9 +202,9 @@ public interface TransformationCatalog
      * @param write boolean enable write commits to backed catalog or not.
      * @throws Exception
      * @return boolean Return true if succesful, false if error. Exception is thrown when error occurs.
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    boolean addTCEntry( TransformationCatalogEntry tcentry,boolean write) throws Exception;
+    public boolean addTCEntry( TransformationCatalogEntry tcentry,boolean write) throws Exception;
 
     /**
      * Add an single entry into the transformation catalog.
@@ -220,15 +220,15 @@ public interface TransformationCatalog
      * @param sysinfo     VDSSysInfo  The System information associated with a physical transformation.
      * @throws Exception
      * @return boolean   Returns true if succesfully added, returns false if error and throws exception.
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.VDSSysInfo
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    boolean addTCEntry( String namespace, String name, String version,
+    public boolean addTCEntry( String namespace, String name, String version,
         String physicalname, TCType type,
         String resourceid,
         List lfnprofiles, List pfnprofiles,
-        VDSSysInfo sysinfo ) throws
+        SysInfo sysinfo ) throws
         Exception;
 
     /**
@@ -241,7 +241,7 @@ public interface TransformationCatalog
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    boolean addTCLfnProfile( String namespace, String name,
+    public boolean addTCLfnProfile( String namespace, String name,
         String version,
         List profiles ) throws Exception;
 
@@ -255,7 +255,7 @@ public interface TransformationCatalog
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    boolean addTCPfnProfile( String pfn, TCType type, String resourcename,
+    public boolean addTCPfnProfile( String pfn, TCType type, String resourcename,
         List profiles ) throws Exception;
 
     /**
@@ -273,9 +273,9 @@ public interface TransformationCatalog
      * @param type TCType The type of the transformation. If <B>NULL</B> then all types are deleted for the transformation.
      * @throws Exception
      * @return boolean Returns true if success , false if there is any error.
-     * @see org.griphyn.common.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
-    boolean deleteTCbyLogicalName( String namespace, String name,
+    public boolean deleteTCbyLogicalName( String namespace, String name,
         String version, String resourceid,
         TCType type ) throws Exception;
 
@@ -290,9 +290,9 @@ public interface TransformationCatalog
      * @param type TCType The type of transformation. If <B>NULL</B> then it search and deletes entries for all types.
      * @throws Exception
      * @return boolean Returns true if sucess, false if any error occurs.
-     * @see org.griphyn.common.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
-    boolean deleteTCbyPhysicalName( String physicalname, String namespace,
+    public boolean deleteTCbyPhysicalName( String physicalname, String namespace,
         String name, String version,
         String resourceid, TCType type ) throws
         Exception;
@@ -304,9 +304,9 @@ public interface TransformationCatalog
      *                           If <B>NULL</B> then that type of transformation is deleted from all the resources.
      * @throws Exception
      * @return boolean Returns true if success, false if any error occurs.
-     * @see org.griphyn.common.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
-    boolean deleteTCbyType( TCType type, String resourceid ) throws
+    public boolean deleteTCbyType( TCType type, String resourceid ) throws
         Exception;
 
     /**
@@ -315,23 +315,23 @@ public interface TransformationCatalog
      * @throws Exception
      * @return boolean  Returns true if successm false if any error occurs.
      */
-    boolean deleteTCbyResourceId( String resourceid ) throws Exception;
+    public boolean deleteTCbyResourceId( String resourceid ) throws Exception;
 
     /**
      * Deletes entries from the catalog which have a particular system information.
      * @param sysinfo VDSSysInfo The System Information by which you want to delete
      * @return boolean Returns true for success, false if any error occurs.
-     * @see org.griphyn.common.classes.VDSSysInfo
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      * @throws Exception
      */
-    boolean deleteTCbySysInfo( VDSSysInfo sysinfo ) throws Exception;
+   public  boolean deleteTCbySysInfo( SysInfo sysinfo ) throws Exception;
 
     /**
      * Deletes the entire transformation catalog. CLEAN............. USE WITH CAUTION.
      * @return boolean Returns true if delete succeeds, false if any error occurs.
      * @throws Exception
      */
-    boolean deleteTC() throws Exception;
+   public  boolean deleteTC() throws Exception;
 
     /**
      * Delete a list of profiles or all the profiles associated with a pfn on a resource and of a type.
@@ -343,7 +343,7 @@ public interface TransformationCatalog
      * @see org.griphyn.cPlanner.classes.Profile
      * @throws Exception
      */
-    boolean deleteTCPfnProfile( String physicalname, TCType type,
+    public boolean deleteTCPfnProfile( String physicalname, TCType type,
         String resourceid, List profiles ) throws
         Exception;
 
@@ -357,7 +357,7 @@ public interface TransformationCatalog
      * @see org.griphyn.cPlanner.classes.Profile
      * @throws Exception
      */
-    boolean deleteTCLfnProfile( String namespace, String name,
+    public boolean deleteTCLfnProfile( String namespace, String name,
         String version, List profiles ) throws
         Exception;
 
@@ -365,6 +365,6 @@ public interface TransformationCatalog
      * Returns the TC implementation being used
      * @return String
      */
-    String getTCMode();
+    public String getTCMode();
 
 }

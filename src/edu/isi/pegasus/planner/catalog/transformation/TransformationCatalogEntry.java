@@ -413,7 +413,7 @@ public class TransformationCatalogEntry
      * @return VDSSysInfo
      */
     public VDSSysInfo getVDSSysInfo(  ) {
-        return NMI2VDSSysInfo.nmiToSysInfo( mSysInfo );
+        return NMI2VDSSysInfo.nmiToVDSSysInfo( mSysInfo );
     }
 
     /**

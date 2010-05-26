@@ -23,6 +23,9 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
+import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
+
+
 import java.util.Map;
 
 /**
@@ -240,15 +243,15 @@ public class TCDelete
                         System.exit( 1 );
                     } else {
                         mLogger.log(
-                            "Trying to delete the TC by SysInfo " +
+                            "Trying to delete the TC by VDSSysInfo " +
                             systemstring, LogManager.DEBUG_MESSAGE_LEVEL);
-                        if ( tc.deleteTCbySysInfo( system ) ) {
+                        if ( tc.deleteTCbySysInfo( VDSSysInfo2NMI.vdsSysInfo2NMI(system) ) ) {
                             mLogger.log(
-                                "Deleted the TC entries for SysInfo " +
+                                "Deleted the TC entries for VDSSysInfo " +
                                 systemstring ,LogManager.INFO_MESSAGE_LEVEL);
                         } else {
                             mLogger.log(
-                                "Unable to delete the TC by SysInfo",
+                                "Unable to delete the TC by VDSSysInfo",
                                LogManager.FATAL_MESSAGE_LEVEL );
                             System.exit( 1 );
                         }

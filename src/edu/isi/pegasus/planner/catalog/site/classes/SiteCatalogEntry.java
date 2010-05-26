@@ -252,7 +252,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return getVDSSysInfo
      */
     public VDSSysInfo getVDSSysInfo(){
-        return  NMI2VDSSysInfo.nmiToSysInfo(mSysInfo);
+        return  NMI2VDSSysInfo.nmiToVDSSysInfo(mSysInfo);
                             
     }
     

@@ -32,6 +32,7 @@ import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -163,7 +164,7 @@ public class TCAdd
         VDSSysInfo s = ( system == null ) ? new VDSSysInfo() : system;
         return ( tc.addTCEntry( namespace, name, version,
             pfn, t,
-            resource, null, profiles, s ) ) ? true : false;
+            resource, null, profiles, VDSSysInfo2NMI.vdsSysInfo2NMI(s) ) ) ? true : false;
     }
 
     /**
@@ -239,7 +240,7 @@ public class TCAdd
                                  LogManager.ERROR_MESSAGE_LEVEL);
                 }
                     if ( !tc.addTCEntry( namespace, name, version, pfn, ttype,
-                        resource, null, profiles, system ) ) {
+                        resource, null, profiles, VDSSysInfo2NMI.vdsSysInfo2NMI( system ) ) ) {
                         mLogger.log(
                             "Unable to bulk entries into tc on line " +
                             linecount ,LogManager.ERROR_MESSAGE_LEVEL);

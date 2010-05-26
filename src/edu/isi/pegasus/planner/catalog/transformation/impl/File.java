@@ -18,11 +18,18 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
+
 import org.griphyn.cPlanner.common.PegasusProperties;
+
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
+
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
@@ -822,7 +829,7 @@ public class File
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getVDSSysInfo());
+                        entry.getProfiles(), entry.getSysInfo());
         return true;
     }
 
@@ -845,7 +852,7 @@ public class File
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getVDSSysInfo(), write);
+                        entry.getProfiles(), entry.getSysInfo(), write);
         return true;
     }
 
@@ -878,7 +885,7 @@ public class File
                               String physicalname, TCType type,
                               String resourceid,
                               List pfnprofiles, List lfnprofiles,
-                              VDSSysInfo system) throws
+                              SysInfo system) throws
         Exception {
         return this.addTCEntry(namespace, name, version, physicalname, type,
                                resourceid, lfnprofiles, pfnprofiles, system, true);
@@ -914,7 +921,7 @@ public class File
                               String physicalname, TCType type,
                               String resourceid,
                               List pfnprofiles, List lfnprofiles,
-                              VDSSysInfo system, boolean write) throws
+                              SysInfo system, boolean write) throws
         Exception {
 
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
@@ -926,7 +933,7 @@ public class File
         entry.setResourceId(resourceid);
         entry.setProfiles(lfnprofiles);
         entry.setProfiles(pfnprofiles);
-        entry.setVDSSysInfo(system);
+        entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
 
         Map lfnMap = null;
         if (mTreeMap.containsKey(resourceid)) {
@@ -1058,12 +1065,12 @@ public class File
     /**
      * Delete entries in the catalog of a particular systeminfo.
      *
-     * @param sysinfo VDSSysInfo
+     * @param sysinfo SysInfo
      *
      * @throws Exception as function not implemented.
      * @return boolean
      */
-    public boolean deleteTCbySysInfo(VDSSysInfo sysinfo) throws
+    public boolean deleteTCbySysInfo( SysInfo sysinfo) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
