@@ -1,5 +1,26 @@
 $Id$
 
+===============================
+Release Notes for PEGASUS 2.4.3
+===============================
+This is minor release, that fixes some RPM and DEB packaging bugs
+
+BUGS FIXED
+----------
+
+1) RPMs had mismatched permissions on the jars versus the setup.sh/
+   setup.csh scripts. The result was empty CLASSPATHs after sourcing
+   the setup scripts. The scripts have now been opened up to allow
+   for the permissions of the files in the RPMs
+
+2) A Debian packaging problem due to .svn files being left in the deb
+
+3) The setup scripts can now guess JAVA_HOME using a common system
+   install locations. This is useful for RPMs and DEBs which already
+   have declared dependencies on certain JREs
+
+
+===============================
 Release Notes for PEGASUS 2.4.2
 ===============================
 This is minor release, that has some feature enhancements to pegasus-status
