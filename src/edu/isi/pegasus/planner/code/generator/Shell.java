@@ -248,7 +248,7 @@ public class Shell extends Abstract {
      */
     public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
         Map entries = new HashMap();
-        entries.put( Braindump.GENERATOR_TYPE_KEY, "Shell" );
+        entries.put( Braindump.GENERATOR_TYPE_KEY, "shell" );
         entries.put( "script", this.getPathToShellScript( workflow ) );
         
         return entries;

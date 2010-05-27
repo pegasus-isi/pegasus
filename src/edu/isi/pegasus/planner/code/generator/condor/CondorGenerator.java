@@ -1235,7 +1235,7 @@ public class CondorGenerator extends Abstract {
      */
     public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
         Map entries = new HashMap();
-        entries.put( Braindump.GENERATOR_TYPE_KEY, "Condor" );
+        entries.put( Braindump.GENERATOR_TYPE_KEY, "dag" );
         entries.put( "dag", this.getDAGFilename( workflow, ".dag") );
         
         return entries;
