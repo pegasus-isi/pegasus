@@ -14,44 +14,39 @@
  *  limitations under the License.
  */
 
-/**
- * <p>Title: Pegasus</p>
- * <p>Description: </p>
- * <p>Copyright: Copyright (c) 2003</p>
- * <p>Company: ISI/USC</p>
- * @author Jens Vöckler
- * @version 1.0
- */
-
-
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser.tokens;
 
 import java.io.LineNumberReader;
 
 /**
  * This class is used to signal errors while scanning or parsing.
+ *
+ *
  * @see org.griphyn.cPlanner.classes.PoolConfigScanner
  * @see org.griphyn.cPlanner.classes.PoolConfigParser2
+ *
+ * @author Jens Voeckler
+ * @author Karan Vahi
+ * @author Gaurang Mehta
+ *
+ * @version $Revision$
  */
-public class PoolConfigException
-  extends java.lang.RuntimeException
-{
-  private int m_lineno;
+public class ScannerException
+        extends java.lang.RuntimeException {
 
-  public PoolConfigException( LineNumberReader stream, String message )
-  {
-    super("line " + stream.getLineNumber() + ": " + message);
-    this.m_lineno = stream.getLineNumber();
-  }
+    private int m_lineno;
 
-  public PoolConfigException( int lineno, String message )
-  {
-    super("line " + lineno + ": " + message);
-    this.m_lineno = lineno;
-  }
+    public ScannerException(LineNumberReader stream, String message) {
+        super("line " + stream.getLineNumber() + ": " + message);
+        this.m_lineno = stream.getLineNumber();
+    }
 
-  public int getLineNumber()
-  {
-    return this.m_lineno;
-  }
+    public ScannerException(int lineno, String message) {
+        super("line " + lineno + ": " + message);
+        this.m_lineno = lineno;
+    }
+
+    public int getLineNumber() {
+        return this.m_lineno;
+    }
 }

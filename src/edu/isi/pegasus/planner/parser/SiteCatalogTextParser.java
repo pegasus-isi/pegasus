@@ -14,8 +14,16 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser;
 
+import org.griphyn.cPlanner.classes.*;
+import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
+import edu.isi.pegasus.planner.parser.tokens.ScannerException;
+import edu.isi.pegasus.planner.parser.tokens.SiteCatalogReservedWord;
+import edu.isi.pegasus.planner.parser.tokens.Token;
+import edu.isi.pegasus.planner.parser.tokens.QuotedString;
+import edu.isi.pegasus.planner.parser.tokens.Identifier;
+import edu.isi.pegasus.planner.parser.tokens.CloseBrace;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -32,20 +40,20 @@ import java.util.StringTokenizer;
  * @author Karan Vahi
  * @version $Revision$
  *
- * @see org.griphyn.cPlanner.classes.PoolConfigScanner
- * @see org.griphyn.cPlanner.classes.PoolConfigToken
+ * @see org.griphyn.cPlanner.classes.SiteCatalogTextScanner
+ * @see org.griphyn.cPlanner.classes.Token
  */
-public class PoolConfigParser2 {
+public class SiteCatalogTextParser {
 
     /**
      * The access to the lexical scanner is stored here.
      */
-    private PoolConfigScanner m_scanner = null;
+    private SiteCatalogTextScanner m_scanner = null;
 
     /**
      * Stores the look-ahead symbol.
      */
-    private PoolConfigToken m_lookAhead = null;
+    private Token m_lookAhead = null;
 
     /**
      * The handle to the logger used to log messages.
@@ -58,11 +66,11 @@ public class PoolConfigParser2 {
      * @param r is the stream opened for reading.
      *
      * @throws IOException
-     * @throws PoolConfigException
+     * @throws ScannerException
      */
-    public PoolConfigParser2(Reader r) throws IOException, PoolConfigException {
+    public SiteCatalogTextParser(Reader r) throws IOException, ScannerException {
         m_logger  = LogManagerFactory.loadSingletonInstance();
-        m_scanner = new PoolConfigScanner(r);
+        m_scanner = new SiteCatalogTextScanner(r);
         m_lookAhead = m_scanner.nextToken();
     }
 
@@ -72,12 +80,12 @@ public class PoolConfigParser2 {
      *
      * @return a map indexed by the site handle strings.
      * @throws IOException
-     * @throws PoolConfigException
+     * @throws ScannerException
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.PoolConfig
      */
     public PoolConfig parse() throws IOException,
-        PoolConfigException, Exception {
+        ScannerException, Exception {
         //to check more
         PoolConfig sites = new PoolConfig();
         String handle   = null;
@@ -89,14 +97,14 @@ public class PoolConfigParser2 {
 
                 SiteInfo site = new SiteInfo();
                 site.setInfo(SiteInfo.HANDLE, handle);
-                while (! (m_lookAhead instanceof PoolConfigCloseBrace)) {
+                while (! (m_lookAhead instanceof CloseBrace)) {
                     //populate all the rest of the attributes
                     //associated with the site
                     populate(site);
                 }
 
-                if (! (m_lookAhead instanceof PoolConfigCloseBrace)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+                if (! (m_lookAhead instanceof CloseBrace)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                                                   "expecting a closing brace");
                 }
                 //we have information about one complete site!
@@ -162,96 +170,96 @@ public class PoolConfigParser2 {
      * @throws even more mystery
      */
     private void populate(SiteInfo site) throws IOException,
-        PoolConfigException, Exception {
+        ScannerException, Exception {
 
-        if (! (m_lookAhead instanceof PoolConfigReservedWord)) {
-            throw new PoolConfigException(m_scanner.getLineNumber(),
+        if (! (m_lookAhead instanceof SiteCatalogReservedWord)) {
+            throw new ScannerException(m_scanner.getLineNumber(),
                 "expecting a reserved word describing a site attribute instead of "+
                 m_lookAhead);
         }
-        int word = ( (PoolConfigReservedWord) m_lookAhead).getValue();
+        int word = ( (SiteCatalogReservedWord) m_lookAhead).getValue();
         m_lookAhead = m_scanner.nextToken();
 
         switch (word) {
-            case PoolConfigReservedWord.UNIVERSE:
-                if (! (m_lookAhead instanceof PoolConfigIdentifier)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+            case SiteCatalogReservedWord.UNIVERSE:
+                if (! (m_lookAhead instanceof Identifier)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"universe\" requires an identifier as first argument");
                 }
                 JobManager jbminfo = new JobManager();
-                String universe = ( (PoolConfigIdentifier) m_lookAhead).
+                String universe = ( (Identifier) m_lookAhead).
                                     getValue();
                 m_lookAhead = m_scanner.nextToken();
                 jbminfo.setInfo(JobManager.UNIVERSE, universe);
 
                 // System.out.println("universe="+universe );
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"universe\" requires a quoted string as second argument");
                 }
 
-                // System.out.println("url="+((PoolConfigQuotedString) m_lookAhead).getValue() );
+                // System.out.println("url="+((QuotedString) m_lookAhead).getValue() );
                 jbminfo.setInfo(JobManager.URL,
-                                niceString( ( (PoolConfigQuotedString)
+                                niceString( ( (QuotedString)
                                              m_lookAhead).getValue()));
                 m_lookAhead = m_scanner.nextToken();
 
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"universe\" requires a quoted string for version as third argument");
                 }
                 jbminfo.setInfo(JobManager.GLOBUS_VERSION,
-                                niceString( ( (PoolConfigQuotedString)
+                                niceString( ( (QuotedString)
                                              m_lookAhead).getValue()));
                 m_lookAhead = m_scanner.nextToken();
                 site.setInfo(SiteInfo.JOBMANAGER, jbminfo);
                 break;
 
-            case PoolConfigReservedWord.LRC:
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+            case SiteCatalogReservedWord.LRC:
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"lrc\" requires a quoted string argument");
                 }
-                LRC lrc = new LRC(niceString( ( (PoolConfigQuotedString)
+                LRC lrc = new LRC(niceString( ( (QuotedString)
                                                m_lookAhead).getValue()));
                 site.setInfo(SiteInfo.LRC, lrc);
                 m_lookAhead = m_scanner.nextToken();
                 break;
 
-            case PoolConfigReservedWord.GRIDLAUNCH:
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+            case SiteCatalogReservedWord.GRIDLAUNCH:
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"gridlaunch\" requires a quoted string argument");
                 }
                 site.setInfo(SiteInfo.GRIDLAUNCH,
-                                 niceString( ( (PoolConfigQuotedString)
+                                 niceString( ( (QuotedString)
                                               m_lookAhead).getValue()));
                 m_lookAhead = m_scanner.nextToken();
                 break;
 
-            case PoolConfigReservedWord.WORKDIR:
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+            case SiteCatalogReservedWord.WORKDIR:
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"workdir\" requires a quoted string argument");
                 }
                 WorkDir gdw = new WorkDir();
                 gdw.setInfo(WorkDir.WORKDIR,
-                            niceString( ( (PoolConfigQuotedString) m_lookAhead).
+                            niceString( ( (QuotedString) m_lookAhead).
                                        getValue()));
                 site.setInfo(SiteInfo.WORKDIR, gdw);
 
-                //System.out.println("workdir ="+((PoolConfigQuotedString) m_lookAhead).getValue() );
+                //System.out.println("workdir ="+((QuotedString) m_lookAhead).getValue() );
                 m_lookAhead = m_scanner.nextToken();
                 break;
 
-            case PoolConfigReservedWord.GRIDFTP:
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+            case SiteCatalogReservedWord.GRIDFTP:
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"gridftp\" requires a quoted string argument for url");
                 }
                 GridFTPServer gftp = new GridFTPServer();
                 String gftp_url = new String(niceString( ( (
-                    PoolConfigQuotedString) m_lookAhead).getValue()));
+                    QuotedString) m_lookAhead).getValue()));
                 StringTokenizer stt = new StringTokenizer(gftp_url, "/");
                 String gridftpurl = stt.nextToken() + "//" + stt.nextToken();
                 String storagedir = "";
@@ -261,102 +269,102 @@ public class PoolConfigParser2 {
                 gftp.setInfo(GridFTPServer.GRIDFTP_URL, gridftpurl);
                 gftp.setInfo(GridFTPServer.STORAGE_DIR, storagedir);
 
-                // System.out.println(" gridftp url="+((PoolConfigQuotedString) m_lookAhead).getValue() );
+                // System.out.println(" gridftp url="+((QuotedString) m_lookAhead).getValue() );
                 m_lookAhead = m_scanner.nextToken();
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"gridftp\" requires a quoted string argument for globus version");
                 }
                 gftp.setInfo(GridFTPServer.GLOBUS_VERSION,
-                             niceString( ( (PoolConfigQuotedString) m_lookAhead).
+                             niceString( ( (QuotedString) m_lookAhead).
                                         getValue()));
 
-                // System.out.println("version="+((PoolConfigQuotedString) m_lookAhead).getValue() );
+                // System.out.println("version="+((QuotedString) m_lookAhead).getValue() );
                 site.setInfo(SiteInfo.GRIDFTP, gftp);
                 m_lookAhead = m_scanner.nextToken();
                 break;
 
-            case PoolConfigReservedWord.PROFILE:
-                if (! (m_lookAhead instanceof PoolConfigIdentifier)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+            case SiteCatalogReservedWord.PROFILE:
+                if (! (m_lookAhead instanceof Identifier)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"profile\" requires a namespace identifier as first argument");
                 }
-                String namespace = ( (PoolConfigIdentifier) m_lookAhead).
+                String namespace = ( (Identifier) m_lookAhead).
                     getValue();
                 m_lookAhead = m_scanner.nextToken();
 
                 //  System.out.println("profile namespace="+namespace );
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"profile\" requires a quoted string argument");
                 }
-                String key = ( (PoolConfigQuotedString) m_lookAhead).getValue();
+                String key = ( (QuotedString) m_lookAhead).getValue();
 
-                //   System.out.println("key="+((PoolConfigQuotedString) m_lookAhead).getValue() );
+                //   System.out.println("key="+((QuotedString) m_lookAhead).getValue() );
                 m_lookAhead = m_scanner.nextToken();
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"profile\" requires a quoted string argument");
                 }
-                String value = ( (PoolConfigQuotedString) m_lookAhead).getValue();
+                String value = ( (QuotedString) m_lookAhead).getValue();
 
-                //   System.out.println("value="+((PoolConfigQuotedString) m_lookAhead).getValue() );
+                //   System.out.println("value="+((QuotedString) m_lookAhead).getValue() );
                 m_lookAhead = m_scanner.nextToken();
                 Profile profile = new Profile(namespace,
                                               niceString(key), niceString(value));
                 site.setInfo(SiteInfo.PROFILE, profile);
                 break;
 
-            case PoolConfigReservedWord.SYSINFO:
-                if (! (m_lookAhead instanceof PoolConfigQuotedString)) {
-                    throw new PoolConfigException(m_scanner.getLineNumber(),
+            case SiteCatalogReservedWord.SYSINFO:
+                if (! (m_lookAhead instanceof QuotedString)) {
+                    throw new ScannerException(m_scanner.getLineNumber(),
                         "the \"sysinfo\" requires a quoted string argument");
                 }
-                String sysinfo = ( (PoolConfigQuotedString) m_lookAhead).
+                String sysinfo = ( (QuotedString) m_lookAhead).
                     getValue();
 
-                //   System.out.println("key="+((PoolConfigQuotedString) m_lookAhead).getValue() );
+                //   System.out.println("key="+((QuotedString) m_lookAhead).getValue() );
                 m_lookAhead = m_scanner.nextToken();
                 site.setInfo(SiteInfo.SYSINFO, niceString(sysinfo));
                 break;
 
             default:
-                throw new PoolConfigException(m_scanner.getLineNumber(),
+                throw new ScannerException(m_scanner.getLineNumber(),
                     "invalid reserved word used to configure a site entry");
         }
     }
 
     /**
      * Returns the site handle for a site, and moves the scanner to hold the next
-     * <code>PoolConfigReservedWord</code>.
+     * <code>SiteCatalogReservedWord</code>.
      *
      * @return  the site handle for a site, usually the name of the site.
      *
      * @throws plenty
      */
     private String getSiteHandle() throws IOException,
-        PoolConfigException {
+        ScannerException {
         String handle = null;
-        if (! (m_lookAhead instanceof PoolConfigReservedWord) ||
-            ( (PoolConfigReservedWord) m_lookAhead).getValue() !=
-            PoolConfigReservedWord.SITE) {
-            throw new PoolConfigException(m_scanner.getLineNumber(),
+        if (! (m_lookAhead instanceof SiteCatalogReservedWord) ||
+            ( (SiteCatalogReservedWord) m_lookAhead).getValue() !=
+            SiteCatalogReservedWord.SITE) {
+            throw new ScannerException(m_scanner.getLineNumber(),
                                           "expecting reserved word \"site\"");
         }
         m_lookAhead = m_scanner.nextToken();
 
         // proceed with next token
-        if (! (m_lookAhead instanceof PoolConfigIdentifier)) {
-            throw new PoolConfigException(m_scanner.getLineNumber(),
+        if (! (m_lookAhead instanceof Identifier)) {
+            throw new ScannerException(m_scanner.getLineNumber(),
                 "expecting the pool handle identifier");
         }
 
-        handle = ( (PoolConfigIdentifier) m_lookAhead).getValue();
+        handle = ( (Identifier) m_lookAhead).getValue();
         m_lookAhead = m_scanner.nextToken();
 
         // proceed with next token
-        if (! (m_lookAhead instanceof PoolConfigOpenBrace)) {
-            throw new PoolConfigException(m_scanner.getLineNumber(),
+        if (! (m_lookAhead instanceof OpenBrace)) {
+            throw new ScannerException(m_scanner.getLineNumber(),
                                           "expecting an opening brace");
         }
         m_lookAhead = m_scanner.nextToken();

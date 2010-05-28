@@ -14,33 +14,24 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser.tokens;
+
 /**
- * Class to capture the content within a quoted string.
+ * Class to convey a closed paranthesis, no token value necessary.
+ *
+ * @author Jens Voeckler
+ * @author Karan Vahi
+ * @author Gaurang Mehta
+ *
+ * @version $Revision$
  */
-class PoolConfigQuotedString
-  implements PoolConfigToken
-{
-  /**
-   * This instance variable captures the token value for the quoted string.
-   */
-  private String m_value;
 
-  /**
-   * Initializes an instance of a quoted string.
-   * @param tokenValue is the string content to remember.
-   */
-  public PoolConfigQuotedString( String tokenValue )
-  {
-    m_value = tokenValue;
-  }
+public class CloseParanthesis implements Token{
 
-  /**
-   * Obtains the token value of a given string token.
-   * @return the token value.
-   */
-  public String getValue()
-  {
-    return this.m_value;
-  }
+    /**
+     * Default Constructor
+     */
+    public CloseParanthesis() {
+
+    }
 }

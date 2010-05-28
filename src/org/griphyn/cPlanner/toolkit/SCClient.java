@@ -18,8 +18,8 @@
 package org.griphyn.cPlanner.toolkit;
 
 import org.griphyn.cPlanner.classes.PoolConfig;
-import org.griphyn.cPlanner.classes.PoolConfigException;
-import org.griphyn.cPlanner.classes.PoolConfigParser2;
+import edu.isi.pegasus.planner.parser.tokens.ScannerException;
+import edu.isi.pegasus.planner.parser.SiteCatalogTextParser;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -433,11 +433,11 @@ public class SCClient
         try {
             
             mLogger.log( "Reading " + file, LogManager.INFO_MESSAGE_LEVEL);
-            PoolConfigParser2 p = new PoolConfigParser2( new FileReader( file ) );
+            SiteCatalogTextParser p = new SiteCatalogTextParser( new FileReader( file ) );
             result.add(p.parse());
             mLogger.log( "Reading " + file + " -DONE",
                              LogManager.INFO_MESSAGE_LEVEL);
-        } catch ( PoolConfigException pce ) {
+        } catch ( ScannerException pce ) {
            mLogger.log( file + ": " + pce.getMessage() ,
                              LogManager.ERROR_MESSAGE_LEVEL);
            mLogger.log(

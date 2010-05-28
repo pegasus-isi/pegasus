@@ -14,16 +14,21 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser.tokens;
 
 /**
  * Class to convey a opened brace, no token value necessary.
+ *
+ * @author Jens Voeckler
+ * @author Karan Vahi
+ * @author Gaurang Mehta
+ *
+ * @version $Revision$
  */
-class PoolConfigOpenBrace
-  implements PoolConfigToken
-{
-  public PoolConfigOpenBrace()
-  {
-    // empty
-  }
+public class OpenBrace
+        implements Token {
+
+    public OpenBrace() {
+        // empty
+    }
 }

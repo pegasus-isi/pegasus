@@ -14,21 +14,22 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser.tokens;
 
 /**
+ * Class to convey a closed paranthesis, no token value necessary.
  *
- * @author Jens Vöckler
+ *
+ * @author Jens Voeckler
+ * @author Karan Vahi
  * @author Gaurang Mehta
+ *
  * @version $Revision$
  */
 
+public class OpenParanthesis implements Token{
 
-class PoolConfigCloseParanthesis implements PoolConfigToken{
-  /**
-   * Class to convey a closed paranthesis,
-   * no token value necessary.
-   */
-  public PoolConfigCloseParanthesis() {
-  }
+    public OpenParanthesis() {
+    }
+
 }

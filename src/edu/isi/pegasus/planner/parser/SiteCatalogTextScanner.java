@@ -14,8 +14,17 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser;
 
+import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
+import edu.isi.pegasus.planner.parser.tokens.ScannerException;
+import edu.isi.pegasus.planner.parser.tokens.SiteCatalogReservedWord;
+import edu.isi.pegasus.planner.parser.tokens.Token;
+import edu.isi.pegasus.planner.parser.tokens.QuotedString;
+import edu.isi.pegasus.planner.parser.tokens.OpenParanthesis;
+import edu.isi.pegasus.planner.parser.tokens.Identifier;
+import edu.isi.pegasus.planner.parser.tokens.CloseParanthesis;
+import edu.isi.pegasus.planner.parser.tokens.CloseBrace;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
@@ -27,7 +36,7 @@ import java.io.Reader;
  *
  * @author Jens Vöckler
  */
-class PoolConfigScanner
+class SiteCatalogTextScanner
 {
   /**
    * Stores the stream from which we are currently scanning.
@@ -44,7 +53,7 @@ class PoolConfigScanner
    *
    * @param reader  the reader stream from which we are reading the site catalog.
    */
-  public PoolConfigScanner( Reader reader )
+  public SiteCatalogTextScanner( Reader reader )
     throws IOException
   {
     this.m_in = new LineNumberReader(reader);
@@ -101,10 +110,10 @@ class PoolConfigScanner
    *
    * @return an instance conforming to the token interface, or null for eof.
    * @throws IOException if something went wrong while reading
-   * @throws PoolConfigException if a lexical error was encountered.
+   * @throws Exception if a lexical error was encountered.
    */
-  public PoolConfigToken nextToken()
-    throws IOException, PoolConfigException
+  public Token nextToken()
+    throws IOException, ScannerException
   {
     // sanity check
     skipWhitespace();
@@ -124,33 +133,33 @@ class PoolConfigScanner
       // done parsing identifier or reserved word
       skipWhitespace();
       String s = identifier.toString().toLowerCase();
-      if ( PoolConfigReservedWord.symbolTable().containsKey(s) ) {
+      if ( SiteCatalogReservedWord.symbolTable().containsKey(s) ) {
 	// isa reserved word
-	return (PoolConfigReservedWord) PoolConfigReservedWord.symbolTable().get(s);
+	return (SiteCatalogReservedWord) SiteCatalogReservedWord.symbolTable().get(s);
       } else {
 	// non-reserved identifier
-	return new PoolConfigIdentifier(identifier.toString());
+	return new Identifier(identifier.toString());
       }
 
     } else if ( m_lookAhead == '{' ) {
       m_lookAhead = m_in.read();
       skipWhitespace();
-      return new PoolConfigOpenBrace();
+      return new OpenBrace();
 
     } else if ( m_lookAhead == '}' ) {
       m_lookAhead = m_in.read();
       skipWhitespace();
-      return new PoolConfigCloseBrace();
+      return new CloseBrace();
 
     } else if ( m_lookAhead == '(' ) {
       m_lookAhead = m_in.read();
       skipWhitespace();
-      return new PoolConfigOpenParanthesis();
+      return new OpenParanthesis();
 
     } else if ( m_lookAhead == ')' ) {
       m_lookAhead = m_in.read();
       skipWhitespace();
-      return new PoolConfigCloseParanthesis();
+      return new CloseParanthesis();
 
     } else if ( m_lookAhead == '"' ) {
       // parser quoted string
@@ -159,11 +168,11 @@ class PoolConfigScanner
 	m_lookAhead = m_in.read();
 	if ( m_lookAhead == -1 || m_lookAhead == '\r' || m_lookAhead == '\n' ) {
 	  // eof is an unterminated string
-	  throw new PoolConfigException( m_in, "unterminated quoted string" );
+	  throw new ScannerException( m_in, "unterminated quoted string" );
 	} else if ( m_lookAhead == '\\' ) {
 	  int temp = m_in.read();
 	  if ( temp == -1 ) {
-	    throw new PoolConfigException( m_in, "unterminated escape in quoted string" );
+	    throw new ScannerException( m_in, "unterminated escape in quoted string" );
 	  } else {
 	    // always add whatever is after the backslash
 	    // FIXME: We could to fancy C-string style \012 \n \r escapes here ;-P
@@ -177,11 +186,11 @@ class PoolConfigScanner
       // skip over final quote
       m_lookAhead = m_in.read();
       skipWhitespace();
-      return new PoolConfigQuotedString( result.toString() );
+      return new QuotedString( result.toString() );
 
     } else {
       // unknown material
-      throw new PoolConfigException( m_in, "unknown character " + m_lookAhead );
+      throw new ScannerException( m_in, "unknown character " + m_lookAhead );
     }
   }
 }

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser.tokens;
 
 /**
  * Class to capture reserved words.
@@ -22,8 +22,8 @@ package org.griphyn.cPlanner.classes;
  * @author Jens Vöckler
  * @author Gaurang Mehta
  */
-class PoolConfigReservedWord
-  implements PoolConfigToken
+public class SiteCatalogReservedWord
+  implements Token
 {
   /**
    * token value for the reserved word "site".
@@ -87,23 +87,23 @@ class PoolConfigReservedWord
       // only initialize once and only once, as needed.
       m_symbolTable = new java.util.TreeMap();
       m_symbolTable.put( "site",
-	 new PoolConfigReservedWord(PoolConfigReservedWord.SITE) );
+	 new SiteCatalogReservedWord(SiteCatalogReservedWord.SITE) );
       m_symbolTable.put( "version",
-	 new PoolConfigReservedWord(PoolConfigReservedWord.VERSION) );
+	 new SiteCatalogReservedWord(SiteCatalogReservedWord.VERSION) );
       m_symbolTable.put( "lrc",
-	 new PoolConfigReservedWord(PoolConfigReservedWord.LRC) );
+	 new SiteCatalogReservedWord(SiteCatalogReservedWord.LRC) );
       m_symbolTable.put( "universe",
-	 new PoolConfigReservedWord(PoolConfigReservedWord.UNIVERSE) );
+	 new SiteCatalogReservedWord(SiteCatalogReservedWord.UNIVERSE) );
       m_symbolTable.put( "gridlaunch",
-	 new PoolConfigReservedWord(PoolConfigReservedWord.GRIDLAUNCH) );
+	 new SiteCatalogReservedWord(SiteCatalogReservedWord.GRIDLAUNCH) );
       m_symbolTable.put( "workdir",
-	 new PoolConfigReservedWord(PoolConfigReservedWord.WORKDIR) );
+	 new SiteCatalogReservedWord(SiteCatalogReservedWord.WORKDIR) );
       m_symbolTable.put( "gridftp",
-                         new PoolConfigReservedWord(PoolConfigReservedWord.GRIDFTP) );
+                         new SiteCatalogReservedWord(SiteCatalogReservedWord.GRIDFTP) );
       m_symbolTable.put( "profile",
-                         new PoolConfigReservedWord(PoolConfigReservedWord.PROFILE) );
+                         new SiteCatalogReservedWord(SiteCatalogReservedWord.PROFILE) );
       m_symbolTable.put("sysinfo",
-                        new PoolConfigReservedWord(PoolConfigReservedWord.SYSINFO));
+                        new SiteCatalogReservedWord(SiteCatalogReservedWord.SYSINFO));
     }
 
     return m_symbolTable;
@@ -121,7 +121,7 @@ class PoolConfigReservedWord
    * @param tokenValue is the token value to memorize.
    * @see #symbolTable()
    */
-  protected PoolConfigReservedWord( int tokenValue )
+  protected SiteCatalogReservedWord( int tokenValue )
   {
     m_value = tokenValue;
   }

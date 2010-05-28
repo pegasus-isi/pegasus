@@ -14,26 +14,25 @@
  *  limitations under the License.
  */
 
-/**
- * <p>Title: Pegasus</p>
- * <p>Description: </p>
- * <p>Copyright: Copyright (c) 2003</p>
- * <p>Company: ISI/USC</p>
- * @author Jens Vöckler
- * @version 1.0
- */
 
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser.tokens;
 
 /**
  * Class to convey a closed brace, no token value necessary.
+ *
+ * @author Jens Voeckler
+ * @author Karan Vahi
+ * @author Gaurang Mehta
+ * 
+ * @version $Revision$
  */
-class PoolConfigCloseBrace
-  implements PoolConfigToken
-{
-  public PoolConfigCloseBrace()
-  {
-    // empty
-  }
+public class CloseBrace
+  implements Token{
+
+
+    public CloseBrace(){
+        // empty
+    }
+
 }

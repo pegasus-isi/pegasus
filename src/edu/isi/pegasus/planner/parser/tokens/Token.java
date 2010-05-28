@@ -14,13 +14,17 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.parser.tokens;
 
 /**
- * Base class for the tokens passed from the scanner to the parser. This
- * class is module-local on purpose.
+ * Base class for the tokens passed from the Text Scanner to the parser.
+ *
+ * @author Jens Voeckler
+ * @author Karan Vahi
+ * @author Gaurang Mehta
+ * @version $Revision$
  */
-interface PoolConfigToken
+public interface Token
 {
   // empty
 }
