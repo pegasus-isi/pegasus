@@ -42,6 +42,7 @@ class Parser:
     _kickstart_output_file = None
     _parsing_arguments = False
     _parsing_main_job = False
+    _parsing_machine = False
     _parsing_cwd = False
     _arguments = ""
     _keys = {}
@@ -168,6 +169,8 @@ class Parser:
 	# Keep track if we are parsing the main job element
 	if name == "mainjob":
 	    self._parsing_main_job = True
+	if name == "machine":
+	    self._parsing_machine = True
 
 	if name == "argument-vector" and name in self._ks_elements:
 	    # Start parsing arguments
@@ -178,6 +181,18 @@ class Parser:
 	elif name == "file" and name in self._ks_elements:
 	    if self._parsing_main_job == True:
 		# Special case for name inside the mainjob element (will change this later)
+		for my_element in self._ks_elements[name]:
+		    if my_element in attrs:
+			self._keys[my_element] = attrs[my_element]
+	elif name == "ram" and name in self._ks_elements:
+	    if self._parsing_machine == True:
+		# Special case for ram inside the machine element (will change this later)
+		for my_element in self._ks_elements[name]:
+		    if my_element in attrs:
+			self._keys[my_element] = attrs[my_element]
+	elif name == "uname" and name in self._ks_elements:
+	    if self._parsing_machine == True:
+		# Special case for uname inside the machine element (will change this later)
 		for my_element in self._ks_elements[name]:
 		    if my_element in attrs:
 			self._keys[my_element] = attrs[my_element]
@@ -199,6 +214,8 @@ class Parser:
 	    self._parsing_cwd = False
 	elif name == "mainjob":
 	    self._parsing_main_job = False
+	elif name == "machine":
+	    self._parsing_machine = False
 
     def char_data(self, data=''):
 	"""
@@ -329,6 +346,8 @@ class Parser:
 
 	stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation"],
 			     "mainjob": ["duration", "start"],
+			     "ram": ["total"],
+			     "uname": ["system", "release", "machine"],
 			     "file": ["name"],
 			     "regular": ["exitcode"],
 			     "argument-vector": [],

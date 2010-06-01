@@ -82,10 +82,6 @@ re_remove_extensions = re.compile(r"(?:\.(?:rescue|dag))+$")
 # Used in untaint
 re_clean_content = re.compile(r"([^-a-zA-z0-9_\s.,\[\]^\*\?\/\+])")
 
-# Used in condor_rm
-re_condor_id = re.compile(r"^\d+(\.\d+)?$")
-re_condor_rm_output = re.compile(r"(?:Job|Node) [0-9.]+ already marked for removal")
-
 # Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
 re_rsl_clean = re.compile(r"([-_])")
@@ -147,7 +143,7 @@ line = 0 			# line number from DAGMan debug file
 timestamp = 0 			# time stamp from log file
 pid = 0 			# DAGMan's pid -- set later
 replay_mode = 0			# disable checking if DAGMan's pid is gone
-database = 1			# flag for using the database
+use_db = 1			# flag for using the database
 pending = {} 			# remember when GLOBUS_SUBMIT was entered
 				# jid --> [stamp, condor_id, wtime, site]
 running = {}			# ditto for EXECUTE for hidden starvation
@@ -162,7 +158,7 @@ waiting = {}			# site --> stamp/60 --> [ #P->R, sum(ptime)]
 remove = {}			# used with shelve, database of removed Condor jobs
 
 # Revision handling
-revision = "$Revision$" # Let cvs handle this, do not edit manually
+revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
 
 # Remaining variables
 out = None			# .dag.dagman.out file
@@ -410,6 +406,7 @@ class Workflow:
 
     # Variables that describe a workflow, as per the Stampede schema
     # These are initialized in the init method
+    _db = None
     _wf_uuid = None
     _dax_label = None
     _timestamp = None
@@ -494,12 +491,67 @@ class Workflow:
 	# jobs. In addition, _job_info should contain all PRE and POST
 	# script information for job in this workflow
 
-    def __init__(self, run, out, wfparams=None):
+    def db_send_wf_info(self):
+	"""
+	This function sends to the DB information about the workflow
+	"""
+	# Start empty
+	kwargs = {}
+	# Make sure we include the wf_uuid
+	kwargs["wf_uuid"] = self._wf_uuid
+	# Now include others, if they are defined
+	if self._dax_label is not None:
+	    kwargs["dax_label"] = self._dax_label
+	if self._timestamp is not None:
+	    kwargs["ts"] = self._timestamp
+	if self._submit_hostname is not None:
+	    kwargs["submit_hostname"] = self._submit_hostname
+	if self._submit_dir is not None:
+	    kwargs["submit_dir"] = self._submit_dir
+	if self._planner_arguments is not None:
+	    kwargs["planner_arguments"] = self._planner_arguments
+	if self._user is not None:
+	    kwargs["user"] = self._user
+	if self._grid_dn is not None:
+	    kwargs["grid_dn"] = self._grid_dn
+	if self._planner_version is not None:
+	    kwargs["planner_version"] = self._planner_version
+	if self._parent_workflow_id is not None:
+	    kwargs["parent_workflow_id"] = self._parent_workflow_id
+
+	# Send workflow event to database
+	self._db.write(event="workflow.plan", **kwargs)
+
+    def db_send_wf_state(self, state, timestamp):
+	"""
+	This function sends to the DB information about the current workflow state
+	"""
+	# Check if database is configured
+	if self._db is None:
+	    return
+	# Make sure parameters are not None
+	if state is None or timestamp is None:
+	    return
+
+	# Start empty
+	kwargs = {}
+	# Make sure we include the wf_uuid
+	kwargs["wf_uuid"] = self._wf_uuid
+	kwargs["ts"] = timestamp
+	state = "workflow." + state
+
+	# Send workflow state event to database
+	self._db.write(event=state, **kwargs)
+
+    def __init__(self, run, out, wfparams=None, database=None):
 	"""
 	This function initializes the workflow parameters according to the
 	keys present in wfparams (if provided). Parameters not present in
 	wfparams will remain as None
 	"""
+	# Initialize DB
+	self._db = database
+
 	# Initialize run directory and dagman.out
 	self._run_dir = run
 	self._out_file = out
@@ -568,36 +620,10 @@ class Workflow:
 	    if "grid_dn" in wfparams:
 		self._grid_dn = wfparams["grid_dn"]
 
-    def db_send_wf_info(self):
-	"""
-	This function sends to the DB information about the workflow
-	"""
-	# Start empty
-	kwargs = {}
-	# Make sure we include the wf_uuid
-	kwargs["wf_uuid"] = self._wf_uuid
-	# Now include others, if they are defined
-	if self._dax_label is not None:
-	    kwargs["dax_label"] = self._dax_label
-	if self._timestamp is not None:
-	    kwargs["timestamp"] = self._timestamp
-	if self._submit_hostname is not None:
-	    kwargs["submit_hostname"] = self._submit_hostname
-	if self._submit_dir is not None:
-	    kwargs["submit_dir"] = self._submit_dir
-	if self._planner_arguments is not None:
-	    kwargs["planner_arguments"] = self._planner_arguments
-	if self._user is not None:
-	    kwargs["user"] = self._user
-	if self._grid_dn is not None:
-	    kwargs["grid_dn"] = self._grid_dn
-	if self._planner_version is not None:
-	    kwargs["planner_version"] = self._planner_version
-	if self._parent_workflow_id is not None:
-	    kwargs["parent_workflow_id"] = self._parent_workflow_id
-
-	# Send workflow event to database
-	workdb.write(event="workflow", **kwargs)
+	    # All done!
+	    if self._db is not None:
+		# Add workflow info to database
+		self.db_send_wf_info()
 
     def find_jobid(self, jobid):
 	"""
@@ -636,6 +662,211 @@ class Workflow:
 
 	# jobid is in another state, return None
 	return None
+
+    def db_send_job_info(self, my_job, timestamp, job_state):
+	"""
+	This function sends to the DB information about a particular job
+	"""
+	# Start empty
+	kwargs = {}
+
+	# Make sure we include the wf_uuid, name, and job_submit_seq
+	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["name"] = my_job._name
+	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	kwargs["ts"] = timestamp
+	if my_job._condor_id is not None:
+	    kwargs["condor_id"] = my_job._condor_id
+	if my_job._jobtype is not None:
+	    kwargs["jobtype"] = my_job._jobtype
+	if my_job._clustered is not None:
+	    kwargs["clustered"] = my_job._clustered
+	if my_job._site_name is not None:
+	    kwargs["site_name"] = my_job._site_name
+	if my_job._remote_user is not None:
+	    kwargs["remote_user"] = my_job._remote_user
+	if my_job._remote_working_dir is not None:
+	    kwargs["remote_working_dir"] = my_job._remote_working_dir
+	if my_job._cluster_start_time is not None:
+	    kwargs["cluster_start_time"] = my_job._cluster_start_time
+	if my_job._cluster_duration is not None:
+	    kwargs["cluster_duration"] = my_job._cluster_duration
+	if job_state == "JOB_TERMINATED":
+	    event_type = "job.mainjob.finish"
+	elif job_state == "PRE_SCRIPT_STARTED":
+	    event_type = "job.prescript.start"
+	elif job_state == "SUBMIT":
+	    event_type = "job.mainjob.start"
+	else:
+	    logmsg("db_send_job_info: warning: unknown job state: %s" % (job_state))
+	    return
+
+	# Send job event to database
+	self._db.write(event=event_type, **kwargs)
+
+    def db_send_job_note(self, my_job, timestamp, event_type):
+	"""
+	This function sends to the DB a notification about a particular job
+	"""
+	# Start empty
+	kwargs = {}
+
+	# Make sure we include the wf_uuid, name, and job_submit_seq
+	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["name"] = my_job._name
+	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	kwargs["ts"] = timestamp
+
+	# Send job event to database
+	self._db.write(event=event_type, **kwargs)
+
+    def db_send_job_state(self, my_job):
+	"""
+	This function sends to the DB job state information for a particular job
+	"""
+	# Start empty
+	kwargs = {}
+
+	# Make sure we include the wf_uuid, name, and job_submit_seq
+	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["name"] = my_job._name
+	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	kwargs["state"] = my_job._job_state
+	kwargs["ts"] = my_job._job_state_timestamp
+
+	# Send job state event to database
+	self._db.write(event="job.state", **kwargs)
+
+    def db_send_task_info(self, my_job, task_type, invocation_record=None):
+	"""
+	This function sends to the database task
+	information. task_type is either "PRE SCRIPT", "MAIN JOB", or
+	"POST SCRIPT"
+	"""
+	# Start empty
+	kwargs = {}
+
+	# Sanity check, verify task type
+	if task_type != "PRE SCRIPT" and task_type != "POST SCRIPT" and task_type != "MAIN JOB":
+	    logmsg("db_send_task_info: warning: unknown task type: %s" % (task_type))
+	    return
+
+	# Make sure we include the wf_uuid, name, and job_submit_seq
+	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["name"] = my_job._name
+	kwargs["job_submit_seq"] = my_job._job_submit_seq
+
+	if task_type == "PRE SCRIPT":
+	    # This is a PRE SCRIPT task
+	    event_type = "task.prescript"
+	    kwargs["transformation"] = "dagman::pre"
+	    kwargs["start_time"] = my_job._pre_script_start
+	    kwargs["duration"] = my_job._pre_script_done - my_job._pre_script_start
+	    kwargs["exitcode"] = my_job._pre_script_exitcode
+	    if my_job._name in self._job_info:
+		kwargs["executable"] = self._job_info[my_job._name][1]
+		kwargs["arguments"] = self._job_info[my_job._name][2]
+	    kwargs["ts"] = my_job._pre_script_done
+	elif task_type == "POST SCRIPT":
+	    # This is a POST SCRIPT task
+	    event_type = "task.postscript"
+	    kwargs["transformation"] = "dagman::post"
+	    kwargs["start_time"] = my_job._post_script_start
+	    kwargs["duration"] = my_job._post_script_done - my_job._post_script_start
+	    kwargs["exitcode"] = my_job._post_script_exitcode
+	    if my_job._name in self._job_info:
+		kwargs["executable"] = self._job_info[my_job._name][3]
+		kwargs["arguments"] = self._job_info[my_job._name][4]
+	    kwargs["ts"] = my_job._post_script_done
+	elif task_type == "MAIN JOB":
+	    # This is a MAIN JOB task
+	    event_type = "task.mainjob"
+	    if "transformation" in invocation_record:
+		kwargs["transformation"] = invocation_record["transformation"]
+	    if "start" in invocation_record:
+		my_start = utils.epochdate(invocation_record["start"])
+		if my_start is not None:
+		    kwargs["start_time"] = my_start
+	    if "duration" in invocation_record:
+		kwargs["duration"] = invocation_record["duration"]
+	    if my_start is not None and "duration" in invocation_record:
+		# Calculate timestamp for when this task finished
+		try:
+		    kwargs["ts"] = int(my_start + int(invocation_record["duration"]))
+		except:
+		    # Something went wrong, just use the time the main job finished
+		    kwargs["ts"] = my_job._main_job_done
+	    else:
+		kwargs["ts"] = my_job._main_job_done
+	    if "exitcode" in invocation_record:
+		kwargs["exitcode"] = invocation_record["exitcode"]
+	    if "name" in invocation_record:
+		kwargs["executable"] = invocation_record["name"]
+	    if "argument-vector" in invocation_record:
+		kwargs["arguments"] = invocation_record["argument-vector"]
+
+	# Send job event to database
+	self._db.write(event=event_type, **kwargs)
+
+    def db_send_host_info(self, my_job, timestamp, record):
+	"""
+	This function sends host information collected from the kickstart record to the database.
+	"""
+	# Start empty
+	kwargs = {}
+
+	# Make sure we include the wf_uuid, name, and job_submit_seq
+	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["name"] = my_job._name
+	kwargs["job_submit_seq"] = my_job._job_submit_seq
+
+	# Add information about the host
+	if "hostname" in record:
+	    kwargs["wf_uuid"] = record["hostname"]
+	if "hostaddr" in record:
+	    kwargs["ip_address"] = record["hostaddr"]
+	if "resource" in record:
+	    kwargs["site_name"] = record["resource"]
+	if "total" in record:
+	    kwargs["total_ram"] = record["total"]
+	if "system" in record and "release" in record and "machine" in record:
+	    kwargs["uname"] = record["system"] + "-" + record["release"] + "-" + record["machine"]
+
+	# Add timestamp
+	kwargs["ts"] = timestamp
+
+	# Send host event to database
+	self._db.write(event="host", **kwargs)
+
+    def parse_job_output(self, my_job, timestamp, job_state):
+	"""
+	This function tries to parse the kickstart output file of a given job and
+	collect information for the stampede schema.
+	"""
+
+	# Compose kickstart output file name (base is the filename before rotation)
+	my_job_output_fn_base = os.path.join(self._run_dir, my_job._name) + ".out"
+	my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+
+	my_parser = kickstart_parser.Parser(my_job_output_fn)
+	my_output = my_parser.parse_stampede()
+
+	# Add job information to the Job class
+	if my_job.extract_job_info(my_output) == True:
+	    # Send updated info to the database
+	    self.db_send_job_info(my_job, timestamp, job_state)
+
+	# Loop through all records
+	for record in my_output:
+	    # Skip non-invocation records
+	    if not "invocation" in record:
+		continue
+	
+	    # Send task information to the database
+	    self.db_send_task_info(my_job, "MAIN JOB", record)
+
+	    # Send host information to the database
+	    self.db_send_host_info(my_job, timestamp, record)
 
     def add_job(self, jobid, job_state, timestamp, condor_id=None):
 	"""
@@ -700,45 +931,12 @@ class Workflow:
 	    # Now, we set the job output counter for this particular job
 	    my_job._job_output_counter = self._job_counters[jobid]
 
+	# All done!
+	if self._db is not None:
+	    # Send job event to database
+	    self.db_send_job_info(my_job, timestamp, job_state)
+
 	return my_job_submit_seq
-
-    def db_send_job_info(self, jobid, job_submit_seq):
-	"""
-	This function sends to the DB information about a particular job
-	"""
-	# Start empty
-	kwargs = {}
-
-	# Find job
-	if not (jobid, job_submit_seq) in self._jobs:
-	    logmsg("db_send_job_info: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
-	    return
-	# Got it
-	my_job = self._jobs[jobid, job_submit_seq]
-
-	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf_uuid"] = my_job._wf_uuid
-	kwargs["name"] = my_job._name
-	kwargs["job_submit_seq"] = my_job._job_submit_seq
-	if my_job._condor_id is not None:
-	    kwargs["condor_id"] = my_job._condor_id
-	if my_job._jobtype is not None:
-	    kwargs["jobtype"] = my_job._jobtype
-	if my_job._clustered is not None:
-	    kwargs["clustered"] = my_job._clustered
-	if my_job._site_name is not None:
-	    kwargs["site_name"] = my_job._site_name
-	if my_job._remote_user is not None:
-	    kwargs["remote_user"] = my_job._remote_user
-	if my_job._remote_working_dir is not None:
-	    kwargs["remote_working_dir"] = my_job._remote_working_dir
-	if my_job._cluster_start_time is not None:
-	    kwargs["cluster_start_time"] = my_job._cluster_start_time
-	if my_job._cluster_duration is not None:
-	    kwargs["cluster_duration"] = my_job._cluster_duration
-	
-	# Send job event to database
-	workdb.write(event="job", **kwargs)
 
     def job_update_info(self, jobid, job_submit_seq, condor_id=None):
 	"""
@@ -774,33 +972,37 @@ class Workflow:
 	# Update job state
 	my_job.set_job_state(job_state, timestamp, status)
 
-    def db_send_job_state(self, jobid, job_submit_seq):
-	"""
-	This function sends to the DB job state information for a particular job
-	"""
-	# Start empty
-	kwargs = {}
-
-	# Find job
-	if job_submit_seq is None:
-	    # Need to get job_submit_seq from our hash table
-	    if jobid in self._jobs_map:
-		job_submit_seq = self._jobs_map[jobid]
-	if not (jobid, job_submit_seq) in self._jobs:
-	    logmsg("db_send_job_state: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
+	if self._db is None:
+	    # Not using a database, nothing else to do!
 	    return
-	# Got it
-	my_job = self._jobs[jobid, job_submit_seq]
 
-	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf_uuid"] = my_job._wf_uuid
-	kwargs["name"] = my_job._name
-	kwargs["job_submit_seq"] = my_job._job_submit_seq
-	kwargs["state"] = my_job._job_state
-	kwargs["timestamp"] = my_job._job_state_timestamp
+	# Send jobstate event to database
+	self.db_send_job_state(my_job)
 
-	# Send job state event to database
-	workdb.write(event="jobstate", **kwargs)
+	# Check if we need to send any job notifications to the
+	# database that are not already done in add_job (mainjob
+	# start, pre_script start) or in parse_job_output (mainjob
+	# start and finish)
+	if job_state == "POST_SCRIPT_STARTED":
+	    # POST script started
+	    self.db_send_job_note(my_job, timestamp, "job.postscript.start")
+	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
+	    # POST script finished
+	    self.db_send_job_note(my_job, timestamp, "job.postscript.finish")
+	elif job_state == "PRE_SCRIPT_FAILURE" or job_state == "PRE_SCRIPT_SUCCESS":
+	    # PRE script finished
+	    self.db_send_job_note(my_job, timestamp, "job.prescript.finish")
+
+	# Check if we need to send any tasks to the database
+	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
+	    # POST script finished
+	    self.db_send_task_info(my_job, "POST SCRIPT")
+	elif job_state == "PRE_SCRIPT_FAILURE" or job_state == "PRE_SCRIPT_SUCCESS":
+	    # PRE script finished
+	    self.db_send_task_info(my_job, "PRE SCRIPT")
+	elif job_state == "JOB_TERMINATED":
+	    # Main job has ended
+	    self.parse_job_output(my_job, timestamp, job_state)
 
     def parse_job_sub_file(self, jobid, job_submit_seq, stamp):
 	"""
@@ -830,105 +1032,6 @@ class Workflow:
 	# All done
 	return my_diff, my_site
 
-    def db_send_task_info(self, jobid, job_submit_seq, task_type, invocation_record=None):
-	"""
-	This function sends to the database task
-	information. task_type is either "PRE SCRIPT", "MAIN JOB", or
-	"POST SCRIPT"
-	"""
-	# Start empty
-	kwargs = {}
-
-	# Sanity check, verify task type
-	if task_type != "PRE SCRIPT" and task_type != "POST SCRIPT" and task_type != "MAIN JOB":
-	    logmsg("db_send_task_info: warning: unknown task type: %s" % (task_type))
-	    return
-
-	# Find job
-	if not (jobid, job_submit_seq) in self._jobs:
-	    logmsg("db_send_task_info: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
-	    return
-	# Got it
-	my_job = self._jobs[jobid, job_submit_seq]
-
-	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf_uuid"] = my_job._wf_uuid
-	kwargs["name"] = my_job._name
-	kwargs["job_submit_seq"] = my_job._job_submit_seq
-
-	if task_type == "PRE SCRIPT":
-	    # This is a PRE SCRIPT task
-	    kwargs["transformation"] = "dagman::pre"
-	    kwargs["start_time"] = my_job._pre_script_start
-	    kwargs["duration"] = my_job._pre_script_done - my_job._pre_script_start
-	    kwargs["exitcode"] = my_job._pre_script_exitcode
-	    if jobid in self._job_info:
-		kwargs["executable"] = self._job_info[jobid][1]
-		kwargs["arguments"] = self._job_info[jobid][2]
-	elif task_type == "POST SCRIPT":
-	    # This is a POST SCRIPT task
-	    kwargs["transformation"] = "dagman::post"
-	    kwargs["start_time"] = my_job._post_script_start
-	    kwargs["duration"] = my_job._post_script_done - my_job._post_script_start
-	    kwargs["exitcode"] = my_job._post_script_exitcode
-	    if jobid in self._job_info:
-		kwargs["executable"] = self._job_info[jobid][3]
-		kwargs["arguments"] = self._job_info[jobid][4]
-	elif task_type == "MAIN JOB":
-	    # This is a MAIN JOB task
-	    if "transformation" in invocation_record:
-		kwargs["transformation"] = invocation_record["transformation"]
-	    if "start" in invocation_record:
-		my_start = utils.epochdate(invocation_record["start"])
-		if my_start is not None:
-		    kwargs["start_time"] = my_start
-	    if "duration" in invocation_record:
-		kwargs["duration"] = invocation_record["duration"]
-	    if "exitcode" in invocation_record:
-		kwargs["exitcode"] = invocation_record["exitcode"]
-	    if "name" in invocation_record:
-		kwargs["executable"] = invocation_record["name"]
-	    if "argument-vector" in invocation_record:
-		kwargs["arguments"] = invocation_record["argument-vector"]
-
-	# Send job event to database
-	workdb.write(event="task", **kwargs)
-
-    def parse_job_output(self, jobid, job_submit_seq):
-	"""
-	This function tries to parse the kickstart output file of a given job and
-	collect information for the stampede schema.
-	"""
-
-	# Find job
-	if not (jobid, job_submit_seq) in self._jobs:
-	    logmsg("parse_job_output: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
-	    return
-
-	# Got it
-	my_job = self._jobs[jobid, job_submit_seq]
-
-	# Compose kickstart output file name (base is the filename before rotation)
-	my_job_output_fn_base = os.path.join(self._run_dir, jobid) + ".out"
-	my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
-
-	my_parser = kickstart_parser.Parser(my_job_output_fn)
-	my_output = my_parser.parse_stampede()
-
-	# Add job information to the Job class
-	if my_job.extract_job_info(my_output) == True:
-	    # Send updated info to the database
-	    self.db_send_job_info(jobid, job_submit_seq)
-
-	# Loop through all records
-	for record in my_output:
-	    # Skip non-invocation records
-	    if not "invocation" in record:
-		continue
-	
-	    # Send task information to the database
-	    self.db_send_task_info(jobid, job_submit_seq, "MAIN JOB", record)
-
 def make_boolean(value):
     # purpose: convert an input string into something boolean
     # paramtr: $x (IN): a property value
@@ -951,19 +1054,10 @@ fuse = int(props.property("pegasus.tailstatd.fuse") or 300)
 if fuse < 60:
     fuse = 60
 
-# Remove jobs after xxx seconds in PENDING
-idletime = props.property("pegasus.max.idletime")
-starvation = int(idletime or 0)		# Default is 0, which disables starvation checks
-
-last_check = int(time.time())		# marker for starvation checks
 jsd = None				# location of jobstate.log file
 nodaemon = 0				# foreground mode
 logfile = None				# location of tailstatd.log file
 millisleep = None			# emulated run mode delay
-job_check_interval = 300		# interval to check for starvation
-liedetect = props.property("pegasus.max.runtime.multiplier")
-liedetector = float(liedetect or 5.0)	# Remove after 5.0 times walltime in RUN
-
 config = {}				# braindump database (textual file)
 adjustment = 0				# time zone adjustment (@#~! Condor)
 
@@ -978,11 +1072,6 @@ parser.add_option("-d", "--debug", action = "store", type = "int", dest = "debug
 		  % (debug_level))
 parser.add_option("-a", "--adjust", action = "store", type = "int", dest = "adjustment",
 		  help = "adjust for time zone differences by i seconds, default 0")
-parser.add_option("-c", "--check", action = "store", type = "int", dest = "job_check_interval",
-		  help = "check for starvation every i seconds, default %d s" % (job_check_interval))
-parser.add_option("-s", "--starve", action = "store", type = "int", dest = "starvation",
-		  help = "remove job from Condor after n second spent PENDING remotely, use 0 to disable, defaults to %d s"
-		  % (starvation))
 parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest = "nodaemon",
 		  help = "(Condor) don't daemonize %s; go through motions as if" % (prog_base))
 parser.add_option("-n", "--no-daemon", action = "store_const", const = 1, dest = "nodaemon",
@@ -1000,10 +1089,10 @@ parser.add_option("-l", "--log", action = "store", type = "string", dest = "logf
 parser.add_option("-C", "--config", action = "append", type = "string", dest = "config_opts",
 		  help = "k=v defines configurations instead of reading from braindump.txt. Required keys include %s. Suggested keys include %s"
 		  % (brainkeys["required"], brainkeys["optional"]))
-parser.add_option("-D", "--database", action = "store_const", const = 1, dest = "database",
-		  help = "Turn on Database entries for work DB")
-parser.add_option("--nodatabase", action = "store_const", const = 0, dest = "database",
-		  help = "Turn off Database entries for work DB")
+parser.add_option("-D", "--database", action = "store_const", const = 1, dest = "use_db",
+		  help = "Turn on database entries for work DB")
+parser.add_option("--nodatabase", action = "store_const", const = 0, dest = "use_db",
+		  help = "Turn off database entries for work DB")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
@@ -1019,10 +1108,6 @@ if options.debug_level is not None:
     debug_level = options.debug_level
 if options.adjustment is not None:
     adjustment = options.adjustment
-if options.job_check_interval is not None:
-    job_check_interval = options.job_check_interval
-if options.starvation is not None:
-    starvation = options.starvation
 if options.nodaemon is not None:
     nodaemon = options.nodaemon
 if options.doplot is not None:
@@ -1033,8 +1118,8 @@ if options.jsd is not None:
     jsd = options.jsd
 if options.logfile is not None:
     logfile = options.logfile
-if options.database is not None:
-    database = options.database
+if options.use_db is not None:
+    use_db = options.use_db
 if options.millisleep is not None:
     millisleep = options.millisleep
 if options.replay_mode is not None:
@@ -1116,12 +1201,6 @@ try:
     JSDB = open(jsd, 'a')
 except:
     logger.fatal("Error appending to %s!" % (jsd))
-    sys.exit(1)
-
-# Check for condor_rm
-condor_rm = utils.find_exec("condor_rm")
-if not condor_rm:
-    logger.fatal("ERROR: Unable to determine where condor_rm is installed!")
     sys.exit(1)
 
 # Untie exit handler
@@ -1266,9 +1345,6 @@ def add(stamp, jobid, event, condor_id=None, status=None):
     if event == "PRE_SCRIPT_STARTED":
 	# This is a new job, we need to add it to the workflow
 	my_job_submit_seq = wf.add_job(jobid, event, stamp)
-	if database == 1:
-	    # Send job event to database
-	    wf.db_send_job_info(jobid, my_job_submit_seq)
 
     # A SUBMIT event brings condor id and job type information (it can also be
     # a new job for us when there is no PRE_SCRIPT)
@@ -1287,49 +1363,29 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 	if my_time is not None:
 	    my_time = my_time * 60
 	    if debug_level > 0:
-		logmsg("job %s requests %d s walltime" % (jobid, my_time))
+		logmsg("info: add: job %s requests %d s walltime" % (jobid, my_time))
 	    walltime[jobid] = my_time
 	else:
 	    if debug_level > 0:
-		logmsg("job %s does not request a walltime" % (jobid))
+		logmsg("info: add: job %s does not request a walltime" % (jobid))
 
 	# Remember the run-site
 	if my_site is not None:
 	    if debug_level > 0:
-		logmsg("job %s is planned for site %s" % (jobid, my_site))
+		logmsg("info: add: job %s is planned for site %s" % (jobid, my_site))
 	    job_site[jobid] = my_site
 	else:
-	    logmsg("job %s does not have a site information!" % (jobid))
-
-	if database == 1:
-	    # Send job event to database
-	    wf.db_send_job_info(jobid, my_job_submit_seq)
+	    logmsg("info: add: job %s does not have a site information!" % (jobid))
 
     # Get job_submit_seq if we don't already have it
     if my_job_submit_seq is None:
 	my_job_submit_seq = wf.find_jobid(jobid)
 
     if my_job_submit_seq is None:
-	logmsg("add: cannot find job_submit_seq for job: %s" % (jobid))
+	logmsg("warning: add: cannot find job_submit_seq for job: %s" % (jobid))
 
     # Make sure job has the updated state
     wf.update_job_state(jobid, my_job_submit_seq, event, stamp, status)
-    if database == 1:
-	# Send jobstate event to database
-	wf.db_send_job_state(jobid, my_job_submit_seq)
-
-    # Check if we need to send any tasks to the database
-    if database == 1:
-	if event == "POST_SCRIPT_FAILURE" or event == "POST_SCRIPT_SUCCESS":
-	    # POST script finished
-	    wf.db_send_task_info(jobid, my_job_submit_seq, "POST SCRIPT")
-	elif event == "PRE_SCRIPT_FAILURE" or event == "PRE_SCRIPT_SUCCESS":
-	    # PRE script finished
-	    wf.db_send_task_info(jobid, my_job_submit_seq, "PRE SCRIPT")
-	elif event == "JOB_TERMINATED":
-	    wf.parse_job_output(jobid, my_job_submit_seq)
-	    # Main job has ended
-	    pass
 
     # Remember when we changed into a pending state
     if event in pending_job_events:
@@ -1338,7 +1394,7 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 	    pending[jobid] = [stamp, condor_id, my_time, my_site]
 	else:
 	    if debug_level > 1:
-		logmsg("%s remains a pending event for %s" % (event, jobid))
+		logmsg("info: add: %s remains a pending event for %s" % (event, jobid))
     else:
 	# Remember time spent in pending, if previous state was pending
 	if jobid in jobstate:
@@ -1363,10 +1419,10 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 		jobid in siteinfo[my_site] and
 		siteinfo[my_site][jobid] == 'P'):
 		my_n = sitedb.inc(my_site)
-		logmsg("new window size for %s is %d" % (my_site, my_n))
+		logmsg("info: add: new window size for %s is %d" % (my_site, my_n))
 	else:
 	    if debug_level > 1:
-		logmsg("%s remains a running event for %s" % (event, jobid))
+		logmsg("info: add: %s remains a running event for %s" % (event, jobid))
     else:
 	# Remove when transitioning into any other state
 	if jobid in running:
@@ -1380,7 +1436,7 @@ def add(stamp, jobid, event, condor_id=None, status=None):
     my_line = "%d %s %s %s %s %s %d" % (stamp, jobid, event, status or condor_id or '-', my_site or '-',
 					my_time or '-', my_job_submit_seq or '-')
     if debug_level > 1:
-	logmsg("new state %s" % (my_line))
+	logmsg("info: add: new state %s" % (my_line))
 
     # Prepare for atomic append
     JSDB.write("%s\n" % (my_line))
@@ -1547,6 +1603,8 @@ def process(log_line):
 		terminate = 0
 	    logmsg("DAGMan finished with exit code %s" % (terminate))
 	    JSDB.write("%d INTERNAL *** DAGMAN_FINISHED ***\n" % (timestamp))
+	    # Send info to database
+	    wf.db_send_wf_state("finish", timestamp)
 	elif re_parse_dagman_pid.search(log_line) is not None:
 	    # DAGMan's pid
 	    if not replay_mode:
@@ -1560,6 +1618,8 @@ def process(log_line):
 		    fatal("cannot set pid: %s" % (my_expr.group(1)))
 	    logmsg("DAGMan runs at pid %d" % (pid))
 	    JSDB.write("%d INTERNAL *** DAGMAN_STARTED ***\n" % (timestamp))
+	    # Send info to database
+	    wf.db_send_wf_state("start", timestamp)
 	elif re_parse_condor_version.search(log_line) is not None:
 	    # Version of this logfile format
 	    my_expr = re_parse_condor_version.search(log_line)
@@ -1607,117 +1667,6 @@ def process(log_line):
 
     # Done
     return timestamp
-
-def condor_remove(*args):
-    # purpose: run condor_rm on one or more Condor IDs
-    # paramtr: args(IN) one or more valid Condor IDs
-    # globals: remove(IN/OUT) maintain removals to turn forceful
-    # returns: number of successful condor_rm operations
-    my_result = 0
-
-    for condor in args:
-	if condor.count('.') > 1:
-	    # Implement perl's basename function with 2nd argument
-	    condor = os.path.basename(condor)
-	    if condor.rfind(".0") > 0:
-		condor = condor[0:condor.rfind(".0")]
-
-	if re_condor_id.search(condor) is None:
-	    logmsg('Invalid condor id "%s"' % (condor))
-	    continue
-
-	my_cmd = condor_rm
-	if condor in remove:
-	    if remove[condor]  > 10:
-		my_cmd = my_cmd + " -f"
-
-	my_cmd = my_cmd + " " + condor
-
-	try:
-	    my_status, my_output = commands.getstatusoutput(my_cmd)
-	except:
-	    logmsg("unable to execute %s" % (condor_rm))
-	else:
-
-	    # Parse output
-	    for my_line in my_output[1].split("\n"):
-		logmsg("condor_rm: %s" % (my_line))
-		if re_condor_rm_output.search(my_line) is not None:
-		    if condor in remove:
-			remove[condor] = remove[condor] + 1
-		    else:
-			remove[condor] = 1
-
-	    if my_status == 0:
-		my_result = my_result + 1
-		if condor in remove:
-		    del remove[condor]
-
-    return my_result
-
-def check_starvation(my_now=int(time.time())):
-    # purpose: check if there are starving jobs
-    # paramtr: my_now(IN, OPT) current time to check against
-    # globals: pending(IN) used to determine starving jobs
-    # globals: running(IN) used to determine hidden starvation
-    # returns: Nothing
-
-    # Skip starvation checks for Pegasus
-    if starvation == 0:
-	return
-
-    if debug_level > 1:
-	logmsg("Start: checking for starvation")
-
-    # Candidates entered GLOBUS_SUBMIT more than starvation/3 ago
-    my_warn = starvation / 3
-
-    # Start with the worst case first
-    for my_job in sorted(pending.items(), key=operator.itemgetter(1)):
-	my_vals = my_job[1]
-	# Skip ones that are not too old
-	if my_now - my_vals[0]  <= my_warn:
-	    continue
-	my_diff = my_now - my_vals[0]
-	my_condor = my_vals[1][0:-2]
-	logmsg("%s (%s) is pending for %d" % (my_job, my_condor, my_diff))
-
-	# If pending for more than starvation ago, remove job from Condor
-	if my_diff > starvation:
-	    logmsg("removing idle job %s (%s) from queue due to limit reached" % (my_job, my_condor))
-	    condor_remove(my_condor)
-
-    # Candidates for hidden starvation entered EXECUTE a lot longer ago
-    # than they intended to obtain walltime for. However, we can do this
-    # check only for "nice" jobs that declare their walltime in Globus RSL!
-
-    # Skip walltime starvation execution checks for Pegasus
-    if liedetector == 0:
-	return
-
-    my_n = 0.75 * liedetector
-    for my_job in sorted(running.items(), key=operator.itemgetter(1)):
-	my_vals = my_job[1]
-	# Nothing we can do about secretive jobs without RSL
-	if my_vals[2] is None:
-	    continue
-	# Skip those that did not run over
-	if my_now - my_vals[0] <= my_n * my_vals[2]:
-	    continue
-	my_diff = my_now - my_vals[0]
-	my_condor = my_vals[1]
-	my_wall = my_vals[2]
-	logmsg("%s (%s) execution: requested=%d s, runtime=%d s (%.1f)" %
-	       (my_job, my_condor, my_wall, my_diff, 1.0 * my_diff / my_wall))
-
-	# Hidden starvation for more than my_n * my_wall and 10 minutes
-	# JSV: 20050419: added constrain of 10min minimum wait
-	if (my_diff > liedetector * my_wall and
-	    my_diff > 600):
-	    condor_remove(my_condor)
-
-    if debug_level > 1:
-	logmsg("Done: checking for starvation")
 
 def server_socket(low, hi, bind_addr="127.0.0.1"):
     # purpose: create a local TCP server socket to listen to sitesel requests
@@ -2314,9 +2263,9 @@ sys.stdin.close()
 sys.stderr = sys.stdout
 
 # Initialize database
-if database == 1:
-    rotate_log_file(run, "pegasus.db")
-    pegasus_db = os.path.join(run, "pegasus.db")
+if use_db == 1:
+    rotate_log_file(run, "pegasus.bp")
+    pegasus_db = os.path.join(run, "pegasus.bp")
     workdb = nlapi.Log(level=nlapi.Level.ALL, logfile=pegasus_db)
 
 # Say hello
@@ -2328,10 +2277,7 @@ if millisleep is not None:
 JSDB.write("%d INTERNAL *** TAILSTATD_STARTED ***\n" % (int(time.time())))
 
 # Instantiate workflow class
-wf = Workflow(run, out, config)
-if database == 1:
-    # Add workflow info to database
-    wf.db_send_wf_info()
+wf = Workflow(run, out, config, database=workdb)
 
 # Ignore dying shells
 signal.signal(signal.SIGHUP, prog_sighup_handler)
@@ -2442,13 +2388,6 @@ while True:
     # Say Hello
     if debug_level > 1:
 	logmsg("wake up and smell the silicon")
-
-    # Periodically check for starving jobs, but not in the reparse mode
-    if last_check < timestamp:
-	now = int(time.time())
-	if now - last_check > job_check_interval:
-	    check_starvation(now)
-	    last_check = now
 
     # Periodically check for service requests
     if server is not None:
