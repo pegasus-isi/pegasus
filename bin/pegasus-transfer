@@ -35,7 +35,7 @@ import signal
 
 # --- regular expressions -------------------------------------------------------------
 
-re_parse_url = re.compile(r'([\w]+)://([\w\.\-:]*)(/[\S]*)')
+re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)')
 
 # --- classes -------------------------------------------------------------------------
 
@@ -116,12 +116,14 @@ logger = logging.getLogger("my_logger")
 tool_map = {}
 tool_map[('file'  , 'file'  )] = 'cp'
 tool_map[('file'  , 'gsiftp')] = 'gsiftp'
+tool_map[('file'  , 'scp'   )] = 'scp'
 tool_map[('file'  , 'srm'   )] = 'srm'
 tool_map[('gsiftp', 'gsiftp')] = 'gsiftp'
 tool_map[('gsiftp', 'srm'   )] = 'srm'
 tool_map[('http'  , 'file'  )] = 'webget'
 tool_map[('http'  , 'gsiftp')] = 'gsiftp'
 tool_map[('https' , 'file'  )] = 'webget'
+tool_map[('scp'   , 'file'  )] = 'scp'
 tool_map[('srm'   , 'gsiftp')] = 'srm'
 tool_map[('srm'   , 'srm'   )] = 'srm'
 
@@ -129,6 +131,7 @@ tool_info = {}
 
 all_list = []
 cp_list = []
+scp_list = []
 webget_list = []
 gsiftp_list = []
 srm_list = []
@@ -237,19 +240,31 @@ def check_tool(executable, version_arg, version_regex):
 
 def check_env_and_tools():
     
-    # fix the PATH
-    path = os.environ['PATH']
+    # PATH setup
+    path = "/usr/bin:/bin"
+    if "PATH" in os.environ:
+        path = os.environ['PATH']
     path_entries = path.split(':')
     # is /usr/bin in the path?
     if not("/usr/bin" in path_entries):
-        path = path + ":/usr/bin:/bin"
-    # is PEGASUS_HOME/bin in the current path?
-    if "PEGASUS_HOME" in os.environ and not(os.environ['PEGASUS_HOME'] + "/bin" in path_entries):
-        path = os.environ['PEGASUS_HOME'] + "/bin:" + path
-    # is G_L/bin in the current path?
-    if "GLOBUS_LOCATION" in os.environ and not(os.environ['GLOBUS_LOCATION'] + "/bin" in path_entries):
-        path = os.environ['GLOBUS_LOCATION'] + "/bin:" + path
-    os.environ['PATH'] = path
+        path_entries.append("/usr/bin")
+        path_entries.append("/bin")
+    # if PEGASUS_HOME is set, prepend it to the PATH (we want it early to override other cruft)
+    if "PEGASUS_HOME" in os.environ:
+        try:
+            path_entries.remove(os.environ['PEGASUS_HOME'] + "/bin")
+        except Exception:
+            pass
+        path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
+    # if GLOBUS_LOCATION is set, prepend it to the PATH (we want it early to override other cruft)
+    if "GLOBUS_LOCATION" in os.environ:
+        try:
+            path_entries.remove(os.environ['GLOBUS_LOCATION'] + "/bin")
+        except Exception:
+            pass
+        path_entries.insert(0, os.environ['GLOBUS_LOCATION'] + "/bin")
+    os.environ['PATH'] = ":".join(path_entries)
+    logger.info("PATH=" + os.environ['PATH'])
     
     # tools we might need later
     check_tool("globus-version", "--full", "([0-9]+\.[0-9]+\.[0-9]+)")
@@ -275,6 +290,22 @@ def cp():
     for i, url_pair in enumerate(cp_list): 
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
         cmd = "/bin/cp %s %s" % (url_pair.src_path, url_pair.dst_path)
+        myexec(cmd, 1*60*60)
+
+
+def scp():
+    """
+    copies using scp
+    """
+    for i, url_pair in enumerate(scp_list): 
+        cmd = "/usr/bin/scp"
+        if url_pair.dst_proto == "file":
+            prepare_local_dir(os.path.dirname(url_pair.dst_path))
+            cmd += " " + url_pair.src_host + ":" + url_pair.src_path
+            cmd += " " + url_pair.dst_path
+        else:
+            cmd += " " + url_pair.src_path
+            cmd += " " + url_pair.dst_host + ":" + url_pair.dst_path
         myexec(cmd, 1*60*60)
 
 
@@ -415,6 +446,9 @@ def myexit(rc):
 
 # --- main ----------------------------------------------------------------------------
 
+# dup stderr onto stdout
+sys.stderr = sys.stdout
+
 # Configure command line option parser
 prog_usage = "usage: %s [options]" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
@@ -423,7 +457,8 @@ parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
 
 # Parse command line options
 (options, args) = parser.parse_args()
-
+if options.log_level == None:
+    options.log_level = "info"
 setup_logger(options.log_level)
 
 logger.debug("Checking environment and tools")
@@ -466,6 +501,8 @@ for i, url_pair in enumerate(all_list):
         tool = tool_map[(url_pair.src_proto, url_pair.dst_proto)]
         if tool == "cp":
             cp_list.append(url_pair)
+        elif tool == "scp":
+            scp_list.append(url_pair)
         elif tool == "webget":
             webget_list.append(url_pair)
         elif tool == "gsiftp":
@@ -482,6 +519,7 @@ for i, url_pair in enumerate(all_list):
 logger.debug("Executing transfer commands")
 try:
     cp()
+    scp()
     webget()
     gsiftp()
     srm()
