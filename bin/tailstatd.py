@@ -498,7 +498,7 @@ class Workflow:
 	# Start empty
 	kwargs = {}
 	# Make sure we include the wf_uuid
-	kwargs["wf_uuid"] = self._wf_uuid
+	kwargs["wf__id"] = self._wf_uuid
 	# Now include others, if they are defined
 	if self._dax_label is not None:
 	    kwargs["dax_label"] = self._dax_label
@@ -536,7 +536,7 @@ class Workflow:
 	# Start empty
 	kwargs = {}
 	# Make sure we include the wf_uuid
-	kwargs["wf_uuid"] = self._wf_uuid
+	kwargs["wf__id"] = self._wf_uuid
 	kwargs["ts"] = timestamp
 	state = "workflow." + state
 
@@ -671,12 +671,12 @@ class Workflow:
 	kwargs = {}
 
 	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["wf__id"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
-	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	kwargs["job__id"] = my_job._job_submit_seq
 	kwargs["ts"] = timestamp
 	if my_job._condor_id is not None:
-	    kwargs["condor_id"] = my_job._condor_id
+	    kwargs["condor__id"] = my_job._condor_id
 	if my_job._jobtype is not None:
 	    kwargs["jobtype"] = my_job._jobtype
 	if my_job._clustered is not None:
@@ -692,7 +692,7 @@ class Workflow:
 	if my_job._cluster_duration is not None:
 	    kwargs["cluster_duration"] = my_job._cluster_duration
 	if job_state == "JOB_TERMINATED":
-	    event_type = "job.mainjob.finish"
+	    event_type = "job.mainjob.end"
 	elif job_state == "PRE_SCRIPT_STARTED":
 	    event_type = "job.prescript.start"
 	elif job_state == "SUBMIT":
@@ -712,9 +712,9 @@ class Workflow:
 	kwargs = {}
 
 	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["wf__id"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
-	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	kwargs["job__id"] = my_job._job_submit_seq
 	kwargs["ts"] = timestamp
 
 	# Send job event to database
@@ -728,9 +728,9 @@ class Workflow:
 	kwargs = {}
 
 	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["wf__id"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
-	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	kwargs["job__id"] = my_job._job_submit_seq
 	kwargs["state"] = my_job._job_state
 	kwargs["ts"] = my_job._job_state_timestamp
 
@@ -752,9 +752,9 @@ class Workflow:
 	    return
 
 	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["wf__id"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
-	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	kwargs["job__id"] = my_job._job_submit_seq
 
 	if task_type == "PRE SCRIPT":
 	    # This is a PRE SCRIPT task
@@ -816,13 +816,13 @@ class Workflow:
 	kwargs = {}
 
 	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf_uuid"] = my_job._wf_uuid
+	kwargs["wf__id"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
-	kwargs["job_submit_seq"] = my_job._job_submit_seq
+	kwargs["job__id"] = my_job._job_submit_seq
 
 	# Add information about the host
 	if "hostname" in record:
-	    kwargs["wf_uuid"] = record["hostname"]
+	    kwargs["hostname"] = record["hostname"]
 	if "hostaddr" in record:
 	    kwargs["ip_address"] = record["hostaddr"]
 	if "resource" in record:
@@ -988,10 +988,10 @@ class Workflow:
 	    self.db_send_job_note(my_job, timestamp, "job.postscript.start")
 	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
 	    # POST script finished
-	    self.db_send_job_note(my_job, timestamp, "job.postscript.finish")
+	    self.db_send_job_note(my_job, timestamp, "job.postscript.end")
 	elif job_state == "PRE_SCRIPT_FAILURE" or job_state == "PRE_SCRIPT_SUCCESS":
 	    # PRE script finished
-	    self.db_send_job_note(my_job, timestamp, "job.prescript.finish")
+	    self.db_send_job_note(my_job, timestamp, "job.prescript.end")
 
 	# Check if we need to send any tasks to the database
 	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
@@ -1604,7 +1604,7 @@ def process(log_line):
 	    logmsg("DAGMan finished with exit code %s" % (terminate))
 	    JSDB.write("%d INTERNAL *** DAGMAN_FINISHED ***\n" % (timestamp))
 	    # Send info to database
-	    wf.db_send_wf_state("finish", timestamp)
+	    wf.db_send_wf_state("end", timestamp)
 	elif re_parse_dagman_pid.search(log_line) is not None:
 	    # DAGMan's pid
 	    if not replay_mode:
@@ -2266,7 +2266,7 @@ sys.stderr = sys.stdout
 if use_db == 1:
     rotate_log_file(run, "pegasus.bp")
     pegasus_db = os.path.join(run, "pegasus.bp")
-    workdb = nlapi.Log(level=nlapi.Level.ALL, logfile=pegasus_db)
+    workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=pegasus_db)
 
 # Say hello
 logmsg("starting [%s], using pid %d" % (revision, os.getpid()))
