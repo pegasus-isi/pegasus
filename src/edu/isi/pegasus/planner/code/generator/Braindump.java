@@ -143,7 +143,7 @@ public class Braindump {
         entries.put( "basedir", mPOptions.getBaseSubmitDirectory() );
                  //append( "dag " ).append(dagFile).append("\n").
                  
-        entries.put( "run " , absPath);
+        entries.put( "run" , absPath);
         entries.put( "jsd" , absPath + File.separator + "jobstate.log");
         entries.put( "rundir" , directory.getName());
         entries.put( "pegasushome", mProps.getPegasusHome());
