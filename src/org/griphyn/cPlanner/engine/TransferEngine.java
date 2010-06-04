@@ -143,11 +143,17 @@ public class TransferEngine extends Engine {
      */
     private Refiner mTXRefiner;
 
+     /**
+     * Holds all the jobs deleted by the reduction algorithm.
+     */
+    private List mDeletedJobs;
+
+
     /**
      * Holds the jobs from the original dags which are deleted by the reduction
      * algorithm.
      */
-    private Vector mvDelLeafJobs;
+    private List mDeletedLeafJobs;
 
 
     /**
@@ -220,12 +226,16 @@ public class TransferEngine extends Engine {
      * Overloaded constructor.
      *
      * @param reducedDag  the reduced workflow.
-     * @param vDelLJobs    list of deleted jobs.
-     * @param bag 
+     * @param bag         bag of initialization objects
+     * @param deletedJobs     list of all jobs deleted by reduction algorithm.
+     * @param deletedLeafJobs list of deleted leaf jobs by reduction algorithm.
      */
-    public TransferEngine( ADag reducedDag,
-                           Vector vDelLJobs,
-                           PegasusBag bag ){
+     public TransferEngine( ADag reducedDag,
+                            PegasusBag bag,
+                            List<SubInfo> deletedJobs ,
+                            List<SubInfo> deletedLeafJobs){
+
+
         super( bag );
 
         
@@ -238,7 +248,9 @@ public class TransferEngine extends Engine {
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
         mDag = reducedDag;
-        mvDelLeafJobs = vDelLJobs;
+        mDeletedJobs     = deletedJobs;
+        mDeletedLeafJobs = deletedLeafJobs;
+
 
         //mS3BucketURL = getS3BucketURL( bag );
         //figure out if we are creating any s3 buckets or not
@@ -369,8 +381,9 @@ public class TransferEngine extends Engine {
         if (outputSite != null &&
             outputSite.trim().length() > 0) {
 
-            for ( Enumeration e = this.mvDelLeafJobs.elements(); e.hasMoreElements(); ) {
-                currentJob = (SubInfo)e.nextElement();
+            for( Iterator it = this.mDeletedJobs.iterator(); it.hasNext() ;) {
+                currentJob = (SubInfo)it.next();
+
                 currentJob.setLevel( 0 );
                 
                 //for a deleted node, to transfer it's output
@@ -378,8 +391,10 @@ public class TransferEngine extends Engine {
                 currentJob.executionPool = "local";
 
                 vOutPoolTX = getDeletedFileTX(outputSite, currentJob);
-                mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, true );
-
+                if( !vOutPoolTX.isEmpty() ){
+                    mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, true );
+                }
+                
             }
         }
 
@@ -411,7 +426,17 @@ public class TransferEngine extends Engine {
             PegasusFile pf = (PegasusFile)it.next();
             String  lfn = pf.getLFN();
 
+            //we only have to get a deleted file that user wants to be transferred
+            if( pf.getTransientTransferFlag() ){
+                continue;
+            }
+
+
             ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
+            //sanity check
+            if( rl == null ){
+                throw new RuntimeException( "Unable to find a location in the Replica Catalog for output file "  + lfn );
+            }
 
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
