@@ -29,6 +29,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import org.griphyn.cPlanner.code.CodeGenerator;
 import org.griphyn.cPlanner.code.generator.CodeGeneratorFactory;
+import org.griphyn.cPlanner.code.gridstart.GridStartFactory;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
@@ -36,9 +37,14 @@ import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PlannerMetrics;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.SubInfo;
+
+import org.griphyn.cPlanner.namespace.VDS;
+
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
 import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
@@ -90,8 +96,6 @@ import java.util.LinkedList;
 
 import java.util.Properties;
 import java.util.Set;
-import org.griphyn.cPlanner.classes.SubInfo;
-
 
 /**
  * This is the main program for the Pegasus. It parses the options specified
@@ -118,15 +122,19 @@ public class CPlanner extends Executable{
      */
     public static final String CLEANUP_DIR  = "cleanup";
 
+    /**
+     * The prefix for the NoOP jobs that are created.
+     */
+    public static final String NOOP_PREFIX = "noop_";
 
     /**
      * The final successful message that is to be logged.
      */
     private static final String EMPTY_FINAL_WORKFLOW_MESSAGE =
         "\n\n\n" +
-        "The executable workflow generated contains no nodes.\n" +
+        "The executable workflow generated contains only a single NOOP job.\n" +
         "It seems that the output files are already at the output site. \n"+
-        "To regenerate the output data from scratch specify --force option." +
+        "To regenerate the output data from scratch specify --force option.\n" +
         "\n\n\n";
 
    /**
@@ -500,10 +508,11 @@ public class CPlanner extends Executable{
 
             //before generating the codes for the workflow check
             //for emtpy workflows
+            boolean emptyWorkflow = false;
             if( finalDag.isEmpty() ){
-
-               mLogger.log( EMPTY_FINAL_WORKFLOW_MESSAGE, LogManager.INFO_MESSAGE_LEVEL );
-               return result;
+                mLogger.log( "Adding a noop job to the empty workflow ", LogManager.DEBUG_MESSAGE_LEVEL );
+                finalDag.add( this.createNoOPJob( getNOOPJobName( finalDag ) ));
+                emptyWorkflow = true;
             }
 
             message = "Generating codes for the concrete workflow";
@@ -543,7 +552,7 @@ public class CPlanner extends Executable{
 
             //create the submit files for cleanup dag if
             //random dir option specified
-            if(mPOptions.generateRandomDirectory()){
+            if( mPOptions.generateRandomDirectory() && !emptyWorkflow ){
                 ADag cleanupDAG = cwmain.getCleanupDAG();
                 PlannerOptions cleanupOptions = (PlannerOptions)mPOptions.clone();
 
@@ -589,7 +598,7 @@ public class CPlanner extends Executable{
             }
             else{
                 //log the success message
-                this.logSuccessfulCompletion(nodatabase);
+                this.logSuccessfulCompletion( nodatabase, emptyWorkflow );
             }
         }
         else{
@@ -598,6 +607,72 @@ public class CPlanner extends Executable{
         }
 
         return result;
+    }
+
+    /**
+     * Returns the name of the noop job.
+     *
+     * @param dag the workflow
+     *
+     * @return the name
+     */
+    public String getNOOPJobName( ADag dag ){
+        StringBuffer sb = new StringBuffer();
+        sb.append( CPlanner.NOOP_PREFIX ).append( dag.getLabel() ).
+           append( "_" ).append( dag.dagInfo.index );
+        return sb.toString();
+    }
+
+    /**
+     * It creates a NoOP job that runs on the submit host.
+     *
+     * @param name the name to be assigned to the noop job
+     *
+     * @return  the noop job.
+     */
+    protected SubInfo createNoOPJob( String name ) {
+
+        SubInfo newJob = new SubInfo();
+
+        //jobname has the dagname and index to indicate different
+        //jobs for deferred planning
+        newJob.setName( name );
+        newJob.setTransformation( "pegasus", "noop", "1.0" );
+        newJob.setDerivation( "pegasus", "noop", "1.0" );
+
+//        newJob.setUniverse( "vanilla" );
+        newJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
+
+        //the noop job does not get run by condor
+        //even if it does, giving it the maximum
+        //possible chance
+        newJob.executable = "/bin/true";
+
+        //construct noop keys
+        newJob.setSiteHandle( "local" );
+        newJob.setJobType( SubInfo.CREATE_DIR_JOB );
+        construct(newJob,"noop_job","true");
+        construct(newJob,"noop_job_exit_code","0");
+
+        //we do not want the job to be launched
+        //by kickstart, as the job is not run actually
+        newJob.vdsNS.checkKeyInNS( VDS.GRIDSTART_KEY,
+                                   GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
+
+        return newJob;
+
+    }
+
+    /**
+     * Constructs a condor variable in the condor profile namespace
+     * associated with the job. Overrides any preexisting key values.
+     *
+     * @param job   contains the job description.
+     * @param key   the key of the profile.
+     * @param value the associated value.
+     */
+    protected void construct(SubInfo job, String key, String value){
+        job.condorVariables.checkKeyInNS(key,value);
     }
 
     /**
@@ -1166,7 +1241,8 @@ public class CPlanner extends Executable{
 
         this.logSuccessfulCompletion( this.logEntryInWorkCatalog( megaDAG,
                                                                   mPOptions.getBaseSubmitDirectory(),
-                                                                  mPOptions.getRelativeDirectory() ));
+                                                                  mPOptions.getRelativeDirectory() ),
+                                      false );
 
         return result;
     }
@@ -1539,10 +1615,11 @@ public class CPlanner extends Executable{
      * Logs the successful completion message.
      *
      * @param nodatabase boolean indicating whether to add a nodatabase option or not.
+     * @param emptyWorkflow  indicates whether the workflow created was empty or not.
      */
-    private void logSuccessfulCompletion( boolean nodatabase ){
+    private void logSuccessfulCompletion( boolean nodatabase, boolean emptyWorkflow ){
         StringBuffer message = new StringBuffer();
-        message.append( this.SUCCESS_MESSAGE ).
+        message.append( emptyWorkflow ? CPlanner.EMPTY_FINAL_WORKFLOW_MESSAGE : CPlanner.SUCCESS_MESSAGE ).
                 append( "" ).append( getPegasusRunInvocation( nodatabase ) ).
                 append( "\n\n" );
         mLogger.log( message.toString(), LogManager.INFO_MESSAGE_LEVEL );
