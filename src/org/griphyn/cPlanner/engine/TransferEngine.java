@@ -84,7 +84,14 @@ import java.util.Properties;
  *
  */
 public class TransferEngine extends Engine {
-    
+
+    /**
+     * The MAX level is assigned as the level for deleted jobs.
+     * We can put it to Integer.MAX_VALUE, but it is rare that number of levels
+     * in a workflows exceed 1000.
+     */
+    public static final int DELETED_JOBS_LEVEL = 1000;
+
     /**
      * The scheme name for file url.
      */
@@ -371,16 +378,18 @@ public class TransferEngine extends Engine {
         //we are done with the traversal.
         //mTXRefiner.done();
 
-        //we  get output files of all the deleted leaf jobs to the output site
-        //provided the transfer flags for the individual output files is 
-        //set to true
+        //get the deleted leaf jobs o/p files to output pool
+        //only if output pool is specified
         //should be moved upwards in the pool. redundancy at present
         if (outputSite != null &&
-            outputSite.trim().length() > 0) {
+            outputSite.trim().length() > 0
+            && !mDeletedJobs.isEmpty() ) {
+
+            mLogger.log( "Adding stage out jobs for jobs deleted from the workflow", LogManager.INFO_MESSAGE_LEVEL );
 
             for( Iterator it = this.mDeletedJobs.iterator(); it.hasNext() ;) {
                 currentJob = (SubInfo)it.next();
-                currentJob.setLevel( 0 );
+                currentJob.setLevel(  TransferEngine.DELETED_JOBS_LEVEL );
                 
                 //for a deleted node, to transfer it's output
                 //the execution pool should be set to local i.e submit host
