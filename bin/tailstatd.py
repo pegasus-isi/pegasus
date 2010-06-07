@@ -116,6 +116,8 @@ brainkeys["optional"] = ["dax", "dag", "jsd", "run", "pegasushome"]
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
 speak = "TSSP/1.0"
 MAXLOGFILE = 1000		# For log rotation, check files from .000 to .999
+PRESCRIPT_TASK_ID = -1		# id for prescript tasks
+POSTSCRIPT_TASK_ID = -2		# id for postscript tasks
 
 # Events that constitute a pending job. Not that event SUBMIT is
 # excluded on purpose since due to throttling inside DAGMan and
@@ -737,7 +739,7 @@ class Workflow:
 	# Send job state event to database
 	self._db.write(event="job.state", **kwargs)
 
-    def db_send_task_info(self, my_job, task_type, invocation_record=None):
+    def db_send_task_info(self, my_job, task_type, task_id, invocation_record=None):
 	"""
 	This function sends to the database task
 	information. task_type is either "PRE SCRIPT", "MAIN JOB", or
@@ -755,6 +757,9 @@ class Workflow:
 	kwargs["wf__id"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
 	kwargs["job__id"] = my_job._job_submit_seq
+
+	# Add task id to this event
+	kwargs["task__id"] = task_id
 
 	if task_type == "PRE SCRIPT":
 	    # This is a PRE SCRIPT task
@@ -856,6 +861,9 @@ class Workflow:
 	    # Send updated info to the database
 	    self.db_send_job_info(my_job, timestamp, job_state)
 
+	# Initialize task id counter
+	my_task_id = 1
+
 	# Loop through all records
 	for record in my_output:
 	    # Skip non-invocation records
@@ -863,7 +871,10 @@ class Workflow:
 		continue
 	
 	    # Send task information to the database
-	    self.db_send_task_info(my_job, "MAIN JOB", record)
+	    self.db_send_task_info(my_job, "MAIN JOB", my_task_id, record)
+
+	    # Increment task id counter
+	    my_task_id = my_task_id + 1
 
 	    # Send host information to the database
 	    self.db_send_host_info(my_job, timestamp, record)
@@ -996,10 +1007,10 @@ class Workflow:
 	# Check if we need to send any tasks to the database
 	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
 	    # POST script finished
-	    self.db_send_task_info(my_job, "POST SCRIPT")
+	    self.db_send_task_info(my_job, "POST SCRIPT", POSTSCRIPT_TASK_ID)
 	elif job_state == "PRE_SCRIPT_FAILURE" or job_state == "PRE_SCRIPT_SUCCESS":
 	    # PRE script finished
-	    self.db_send_task_info(my_job, "PRE SCRIPT")
+	    self.db_send_task_info(my_job, "PRE SCRIPT", PRESCRIPT_TASK_ID)
 	elif job_state == "JOB_TERMINATED":
 	    # Main job has ended
 	    self.parse_job_output(my_job, timestamp, job_state)
