@@ -32,6 +32,9 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
+import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
+import org.griphyn.cPlanner.common.StreamGobbler;
+import org.griphyn.cPlanner.common.StreamGobblerCallback;
 
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.Dagman;
@@ -42,6 +45,7 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Collection;
@@ -166,9 +170,13 @@ public class Shell extends Abstract {
         writeString(this.getScriptFooter());
         mWriteHandle.close();
 
+        //set the XBit on the generated shell script
+        setXBitOnFile( opFileName );
+
         //write out the braindump file
         this.writeOutBraindump( dag );
-        
+
+
         return result;
     }
 
@@ -458,9 +466,6 @@ public class Shell extends Abstract {
         try {
             File f = new File( filename );
             mWriteHandle = new PrintWriter(new FileWriter( f ));
-            //set the xbit for all users
-            f.setExecutable( true , false );
-            
             mLogger.log("Writing to file " + filename , LogManager.DEBUG_MESSAGE_LEVEL);
         }
         catch (Exception e) {
@@ -500,5 +505,67 @@ public class Shell extends Abstract {
 
        return workdir;
     }
+
+    /**
+     * Sets the xbit on the file.
+     *
+     * @param file   the file for which the xbit is to be set
+     *
+     * @return boolean indicating whether xbit was set or not.
+     */
+    protected boolean  setXBitOnFile( String file ) {
+        boolean result = false;
+
+        //do some sanity checks on the source and the destination
+        File f = new File( file );
+        if( !f.exists() || !f.canRead()){
+            mLogger.log("The file does not exist " + file,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            return result;
+        }
+
+        try{
+            //set the callback and run the grep command
+            Runtime r = Runtime.getRuntime();
+            String command = "chmod +x " + file;
+            mLogger.log("Setting xbit " + command,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            Process p = r.exec(command);
+
+            //the default gobbler callback always log to debug level
+            StreamGobblerCallback callback =
+               new DefaultStreamGobblerCallback(LogManager.DEBUG_MESSAGE_LEVEL);
+            //spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips =
+                new StreamGobbler(p.getInputStream(), callback);
+            StreamGobbler eps =
+                new StreamGobbler(p.getErrorStream(), callback);
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            eps.join();
+
+            //get the status
+            int status = p.waitFor();
+            if( status != 0){
+                mLogger.log("Command " + command + " exited with status " + status,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                return result;
+            }
+            result = true;
+        }
+        catch(IOException ioe){
+            mLogger.log("IOException while creating symbolic links ", ioe,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+        }
+        catch( InterruptedException ie){
+            //ignore
+        }
+        return result;
+    }
+
 
 }
