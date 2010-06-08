@@ -148,7 +148,7 @@ sub longstatus(;$$) {
 	print sprintf("WORKFLOW STATUS : %d/%d ( %.0f%% ) RUNNING (condor processing workflow)\n",$done,$total,$percent);
     } else {
 	if ($total == $done){
-	    print sprintf("WORKFLOW STATUS : %d%d ( %.0f%% ) COMPLETED (all jobs finished successfully)\n",$done,$total,$percent);
+	    print sprintf("WORKFLOW STATUS : %d/%d ( %.0f%% ) COMPLETED (all jobs finished successfully)\n",$done,$total,$percent);
 	} else {
 	print sprintf ("WORKFLOW STATUS : %d/%d ( %.0f%% ) FAILED (rescue needs to be submitted)\n",$done,$total,$percent);
 #	    print "WORKFLOW FAILED : $done/$total ( $percent%) DONE\n";
