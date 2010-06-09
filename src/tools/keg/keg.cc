@@ -164,7 +164,7 @@ append( char* buffer, size_t capacity, char ch )
   return buffer;
 }
 
-static char* cpu_info = 0;
+static const char* cpu_info = 0;
 
 void
 cpuinfo( char* buffer, size_t capacity )
@@ -204,10 +204,11 @@ cpuinfo( char* buffer, size_t capacity )
 
     if ( within ) {
       size_t cpu_size = 256;
-      cpu_info = static_cast<char*>( malloc(cpu_size) );
-      snprintf( cpu_info, cpu_size, "Processor Info.: %d x %s @ %s\n",
+      char* dynamic = static_cast<char*>( malloc(cpu_size) );
+      snprintf( dynamic, cpu_size, "Processor Info.: %d x %s @ %s\n",
 		n_cpu, model_name ? model_name : "[unknown]", 
 		cpu_speed ? cpu_speed : "[unknown]" );
+      cpu_info = const_cast<const char*>( dynamic ); 
     } else {
       cpu_info = "";
     }
@@ -219,7 +220,7 @@ cpuinfo( char* buffer, size_t capacity )
 
 static
 int
-debug( char* fmt, ... )
+debug( const char* fmt, ... )
 {
   int result;
   va_list ap;
@@ -431,9 +432,9 @@ identify( char* result, size_t size, const char* arg0,
 
   // phase 2: where am i
   struct utsname uts;
-  char* release = "";
-  char* machine = "";
-  char* sysname = "";
+  char* release = const_cast<char*>("");
+  char* machine = const_cast<char*>("");
+  char* sysname = const_cast<char*>("");
   char* hostname = getenv("HOSTNAME");
   if ( uname(&uts) >= 0 ) {
     release = strdup( uts.release );
@@ -454,7 +455,7 @@ identify( char* result, size_t size, const char* arg0,
     hostname = static_cast<char*>( malloc(32) );
     sprintf( hostname, "%s (VPN)", ifaddr );
   } else {
-    struct hostent* h = ( me.s_addr == 0 || me.s_addr == -1ul ) ?
+    struct hostent* h = ( me.s_addr == 0ul || me.s_addr == 0xFFFFFFFFul ) ?
       gethostbyname(hostname) : 
       gethostbyaddr( (const char*) &me.s_addr, sizeof(me.s_addr), AF_INET );
 
@@ -487,11 +488,13 @@ identify( char* result, size_t size, const char* arg0,
   // Solaris has overloading ambiguity between std::abs(int|double) problems
   int minutes = ( offset < 0 ? -offset : offset ) % 60;
 #endif
-
+  
   // time stamp ISO format
   strftime( line, linsize, "%Y%m%dT%H%M%S", &tm1 );
-  append( result, size, "Timestamp Today: %s%+03d:%02d (%.3f;%.3f)\n", 
-	  line, hours, minutes, start, that-start );
+  char ms[8]; 
+  snprintf( ms, sizeof(ms), "%.3f", start - trunc(start) ); 
+  append( result, size, "Timestamp Today: %s%s%+03d:%02d (%.3f;%.3f)\n", 
+	  line, ms+1, hours, minutes, start, that-start );
 
   // phase 1: Say hi
   append( result, size, "Applicationname: %s @ %s\n", arg0, hostname );

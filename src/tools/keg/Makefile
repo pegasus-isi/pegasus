@@ -26,6 +26,17 @@ NROFF   = groff -mandoc
 TEXT    = -Tlatin1
 HTML    = -Thtml
 
+ifeq (DARWIN,${SYSTEM})
+#SDK=/Developer/SDKs/MacOSX10.6.sdk
+SDK=$(lastword $(sort $(wildcard /Developer/SDKs/MacOSX10.*.sdk)))
+ifneq (,${SDK})
+CXXFLAGS = -g -pipe -arch x86_64 -arch i686 -nostdinc \
+	-B${SDK}/usr/include/gcc -B${SDK}/usr/lib/gcc \
+	-isystem${SDK}/usr/include -F${SDK}/System/Library/Frameworks
+LDFLAGS = -arch x86_64 -arch i686 -Wl,-syslibroot,${SDK}
+endif
+endif
+
 ifeq (SUNOS,${SYSTEM})
 ifeq (5,${MAJOR})
 # use these for the SUN CC compiler
