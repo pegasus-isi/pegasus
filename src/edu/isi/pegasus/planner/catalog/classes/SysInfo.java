@@ -217,4 +217,28 @@ public class SysInfo implements Cloneable {
         return obj;
 
     }
+
+    /**
+     * Returns the output of the data class as string.
+     * @return String
+     */
+    public String toString() {
+        StringBuffer s = new StringBuffer();
+        s.append( "{" );
+        s.append( "arch=" + this.getArchitecture() );
+        s.append( " os=" + this.getOS() );
+
+        String release = this.getOSRelease();
+        if ( release  != null && release.length() > 0 ) {
+            s.append( " osrelease=" + release );
+        }
+
+        String version = this.getOSVersion();
+        if ( version  != null && version.length() > 0 ) {
+            s.append( " osversion=" + version );
+        }
+        s.append( "}" );
+        return s.toString();
+    }
+
 }

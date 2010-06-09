@@ -402,7 +402,14 @@ public class DeployWorkerPackage
             //try and create a default entry for pegasus::worker if 
              //not specified in transformation catalog
             if( selectedEntries == null || selectedEntries.size() == 0 ){
-                this.addDefaultTCEntryForPegasusWebsite( site, DeployWorkerPackage.TRANSFORMATION_NAME );
+                TransformationCatalogEntry entry = this.addDefaultTCEntryForPegasusWebsite( site, DeployWorkerPackage.TRANSFORMATION_NAME );
+                if( entry == null ){
+                    StringBuffer error = new StringBuffer();
+                    error.append( "Unable to construct default entry for pegasus::worker for site " ).append( site )
+                         .append( " Add entry in TC for pegasus::worker of type STATIC_BINARY for sysinfo ")
+                         .append(  mSiteStore.getSysInfo( site ) );
+                    throw new RuntimeException( error.toString() );
+                }
             }
             
         }
