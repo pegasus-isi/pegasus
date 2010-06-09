@@ -49,14 +49,13 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
 
+import edu.isi.pegasus.planner.catalog.classes.OS;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
-import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
-import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -235,43 +234,26 @@ public class DeployWorkerPackage
 
     
     /**
-     * The map storing architecture to corresponding NMI architecture platforms.
-     */
-    private static Map mArchToNMIArch = null;
-    
-    /**
-     * Singleton access to the architecture to NMI arch map.
-     * @return map
-     */
-    private static Map archToNMIArch(){
-        //singleton access
-        if( mArchToNMIArch == null ){
-            mArchToNMIArch = new HashMap();
-            mArchToNMIArch.put( Arch.INTEL32, "x86" );
-            mArchToNMIArch.put( Arch.INTEL64, "x86_64" );
-            mArchToNMIArch.put( Arch.AMD64, "x86_64" );
-            
-        }
-        return mArchToNMIArch;
-    }
-
-    
-    /**
      * The map storing OS to corresponding NMI OS platforms.
      */
-    private static Map mOSToNMIOS = null;
+    private static Map<OS,String> mOSToNMIOSReleaseAndVersion = null;
     
     /**
-     * Singleton access to the os to NMI os map.
+     * Maps each to OS to a specific OS release for purposes of picking up the 
+     * correct worker package for a site. The mapping is to be kept consistent
+     * with the NMI builds for the releases.
+     * 
+     * 
      * @return map
      */
-    private static Map osToNMIOS(){
+    private static Map<OS,String> osToOSReleaseAndVersion(){
         //singleton access
-        if( mOSToNMIOS == null ){
-            mOSToNMIOS = new HashMap();
-            mOSToNMIOS.put( Os.LINUX, "rhel_4" );
+        if( mOSToNMIOSReleaseAndVersion == null ){
+            mOSToNMIOSReleaseAndVersion = new HashMap();
+            mOSToNMIOSReleaseAndVersion.put( OS.LINUX, "rhel_4" );
+            mOSToNMIOSReleaseAndVersion.put( OS.MACOSX, "macos_10.4" );
         }
-        return mOSToNMIOS;
+        return mOSToNMIOSReleaseAndVersion;
     }
     
     /**
@@ -460,7 +442,7 @@ public class DeployWorkerPackage
             //now create transformation catalog entry objects for each
             //worker package executable
             for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
-                TransformationCatalogEntry entry = addDefaultTCEntry( site,  pegasusHome.getAbsolutePath(), selected.getVDSSysInfo(), PEGASUS_WORKER_EXECUTABLES[i] );
+                TransformationCatalogEntry entry = addDefaultTCEntry( site,  pegasusHome.getAbsolutePath(), selected.getSysInfo(), PEGASUS_WORKER_EXECUTABLES[i] );
                 mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
             }
 
@@ -863,7 +845,7 @@ public class DeployWorkerPackage
         }
 
         entry = ( entries == null ) ?
-            this.defaultUntarTCEntry( site ): //try using a default one
+            this.defaultUntarTCEntry( mSiteStore.lookup(site) ): //try using a default one
             (TransformationCatalogEntry) entries.get(0);
 
         if( entry == null ){
@@ -947,7 +929,7 @@ public class DeployWorkerPackage
      */
     private  TransformationCatalogEntry addDefaultTCEntry( String site,
                                                         String pegasusHome,
-                                                        VDSSysInfo sysinfo,
+                                                        SysInfo sysinfo,
                                                         String name ){
         TransformationCatalogEntry defaultTCEntry = null;
 
@@ -973,7 +955,7 @@ public class DeployWorkerPackage
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );
         defaultTCEntry.setType( TCType.INSTALLED );
-        defaultTCEntry.setVDSSysInfo( sysinfo );
+        defaultTCEntry.setSysInfo( sysinfo );
 
         //add pegasus home as an environment variable
         defaultTCEntry.setProfile( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ));
@@ -1016,7 +998,12 @@ public class DeployWorkerPackage
         TransformationCatalogEntry defaultTCEntry = null;
        
         //String site = "pegasus";
-        VDSSysInfo sysinfo = mSiteStore.getVDSSysInfo( site );
+        SysInfo sysinfo = mSiteStore.getSysInfo( site );
+        if( sysinfo == null ){
+            mLogger.log( "Unable to get System Information for site " + site,
+                         LogManager.ERROR_MESSAGE_LEVEL  );
+            return null;
+        }
 
         //construct the path to the executable
         String path = constructDefaultURLToPegasusWorkerPackage( name, sysinfo );
@@ -1041,7 +1028,7 @@ public class DeployWorkerPackage
         defaultTCEntry.setPhysicalTransformation( path );
         defaultTCEntry.setResourceId( "pegasus" );
         defaultTCEntry.setType( TCType.STATIC_BINARY );
-        defaultTCEntry.setVDSSysInfo( sysinfo );
+        defaultTCEntry.setSysInfo( sysinfo );
 
 
         
@@ -1078,10 +1065,11 @@ public class DeployWorkerPackage
      * 
      * @return url
      */
-    protected String constructDefaultURLToPegasusWorkerPackage( String name, VDSSysInfo sysinfo ) {
+    protected String constructDefaultURLToPegasusWorkerPackage( String name, SysInfo sysinfo ) {
         //get the matching architecture
-        String arch = ( String )DeployWorkerPackage.archToNMIArch().get( sysinfo.getArch() );
-        String os   = ( String )DeployWorkerPackage.osToNMIOS().get( sysinfo.getOs() );
+        //String arch = ( String )DeployWorkerPackage.archToNMIArch().get( sysinfo.getArch() );
+        String arch = sysinfo.getArchitecture().toString();
+        String os   = ( String )DeployWorkerPackage.osToOSReleaseAndVersion().get( sysinfo.getOS() );
         
         if( arch == null || os == null ){
             mLogger.log( "Unable to construct url for pegasus worker for " + sysinfo , 
@@ -1118,7 +1106,7 @@ public class DeployWorkerPackage
      *
      * @return  the default entry.
      */
-    private  TransformationCatalogEntry defaultUntarTCEntry( String site ){
+    private  TransformationCatalogEntry defaultUntarTCEntry( SiteCatalogEntry site ){
         TransformationCatalogEntry defaultTCEntry = null;
 
         mLogger.log( "Creating a default TC entry for " +
@@ -1139,8 +1127,9 @@ public class DeployWorkerPackage
                                                          DeployWorkerPackage.UNTAR_TRANSFORMATION_VERSION );
 
         defaultTCEntry.setPhysicalTransformation( path.toString() );
-        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setResourceId( site.getSiteHandle() );
         defaultTCEntry.setType( TCType.INSTALLED );
+        defaultTCEntry.setSysInfo( site.getSysInfo());
 
         //add path as an environment variable
         //addDefaultTCEntry.setProfile( new Profile( Profile.ENV, "PATH", DeployWorkerPackage.PATH_VALUE ));

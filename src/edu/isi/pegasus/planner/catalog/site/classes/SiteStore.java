@@ -103,6 +103,7 @@ public class SiteStore extends AbstractSiteData{
 
     
     
+    
     /**
      * The intialize method.
      */
@@ -229,6 +230,24 @@ public class SiteStore extends AbstractSiteData{
         }
         
     }
+    
+    /**
+     * Returns the <code>SysInfo</code> for the site
+     * 
+     * @param handle the site handle / identifier.
+     * @return the SysInfo else null
+     */
+    public SysInfo getSysInfo( String handle ){
+        //sanity check
+        if( !this.contains( handle ) ) {
+            return null;
+        }
+        else{
+            return this.lookup( handle ).getSysInfo();
+        }
+        
+    }
+    
     
     /**
      * Returns the value of VDS_HOME for a site.

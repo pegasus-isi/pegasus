@@ -162,6 +162,8 @@ public class TransformationCatalogEntry
             type, profiles, this.getVDSSysInfo() );
     }
 
+    
+
     /**
      * gets the String version of the
      * data class
@@ -304,6 +306,15 @@ public class TransformationCatalogEntry
     }
 
     /**
+     * Sets the system information for the entry.
+     * 
+     * @param sysinfo   the System information
+     */
+    public void setSysInfo(SysInfo sysinfo) {
+        this.mSysInfo = sysinfo;
+    }
+    
+    /**
      * Set the System Information associated with the transformation.
      * @param sysinfo VDSSysInfo
      */
@@ -405,6 +416,7 @@ public class TransformationCatalogEntry
         return   mSysInfo;
     }
 
+    
     /**
      * Returns the System Information in the old VDS format associated with the
      * transformation.
