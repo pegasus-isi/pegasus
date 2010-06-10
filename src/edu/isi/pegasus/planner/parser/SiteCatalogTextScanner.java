@@ -17,7 +17,6 @@
 package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
-import edu.isi.pegasus.planner.parser.tokens.ScannerException;
 import edu.isi.pegasus.planner.parser.tokens.SiteCatalogReservedWord;
 import edu.isi.pegasus.planner.parser.tokens.Token;
 import edu.isi.pegasus.planner.parser.tokens.QuotedString;

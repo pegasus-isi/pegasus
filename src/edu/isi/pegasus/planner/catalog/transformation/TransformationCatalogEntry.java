@@ -28,6 +28,7 @@ package edu.isi.pegasus.planner.catalog.transformation;
  */
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
@@ -560,4 +561,6 @@ public class TransformationCatalogEntry
     public boolean equals( TransformationCatalogEntry entry ) {
         return this.toTCString().equalsIgnoreCase( entry.toTCString() );
     }
+
+
 }

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.parser.tokens;
+package edu.isi.pegasus.planner.parser;
 
 import java.io.LineNumberReader;
 

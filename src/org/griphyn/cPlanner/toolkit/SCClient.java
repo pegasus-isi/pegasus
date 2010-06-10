@@ -18,7 +18,7 @@
 package org.griphyn.cPlanner.toolkit;
 
 import org.griphyn.cPlanner.classes.PoolConfig;
-import edu.isi.pegasus.planner.parser.tokens.ScannerException;
+import edu.isi.pegasus.planner.parser.ScannerException;
 import edu.isi.pegasus.planner.parser.SiteCatalogTextParser;
 
 import edu.isi.pegasus.common.logging.LogManager;
