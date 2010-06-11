@@ -478,6 +478,9 @@
     <copy preservelastmodified="true" todir="${dist.dir}/examples">
       <fileset dir="examples" includes="**/*"/>
     </copy>
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${dist.dir}/examples" includes="**/submit"/>
+    </chmod>
 
     <!-- lib -->
     <antcall target="dist-copy-lib"/>
