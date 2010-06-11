@@ -119,7 +119,7 @@ public class TestTransformationCatalog {
             tce.setType( TCType.INSTALLED ); //executable is installed
             tce.setVDSSysInfo( new VDSSysInfo( Arch.INTEL32, Os.LINUX, null, null ) );
             //add an environment profile with the entry
-            tce.setProfile( new Profile( Profile.ENV, "PEGASUS_HOME", "/usr/pegasus/bin" ));
+            tce.addProfile( new Profile( Profile.ENV, "PEGASUS_HOME", "/usr/pegasus/bin" ));
 
             /* insert the entry into transformation catalog */
             boolean added = catalog.addTCEntry( tce );

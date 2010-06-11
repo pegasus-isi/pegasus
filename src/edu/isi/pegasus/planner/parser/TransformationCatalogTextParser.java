@@ -253,7 +253,7 @@ public class TransformationCatalogTextParser {
                 break;
 
                 case TransformationCatalogReservedWord.PROFILE:
-                    entry.setProfile( this.getProfile() );
+                    entry.addProfile( this.getProfile() );
                     break;
 
                 case TransformationCatalogReservedWord.TYPE:

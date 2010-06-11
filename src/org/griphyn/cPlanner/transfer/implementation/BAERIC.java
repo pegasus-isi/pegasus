@@ -258,7 +258,7 @@ public class BAERIC extends AbstractSingleFTPerXFERJob {
        defaultTCEntry.setPhysicalTransformation( path.toString() );
        defaultTCEntry.setResourceId( site );
        defaultTCEntry.setType( TCType.INSTALLED );
-       defaultTCEntry.setProfile( new Profile( Profile.ENV, BAERIC.DC_HOME, dcHome  )  );
+       defaultTCEntry.addProfile( new Profile( Profile.ENV, BAERIC.DC_HOME, dcHome  )  );
 
        return defaultTCEntry;
     }

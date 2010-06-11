@@ -17,6 +17,7 @@
 
 package edu.isi.pegasus.common.util;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -192,6 +193,19 @@ public class ProfileParser
     }
 
     return result;
+  }
+
+  /***
+   * Creates a profile string from the internal representation.
+   *
+   * @param l is a list of profiles
+   * @return a string containing the representation. The string can be
+   * empty (FIXME: should it be "null" or null?) for an empty list.
+   * @see #parse( String s )
+   */
+  public static String combine( Profiles p )
+  {
+    return combine( p.getProfiles() );
   }
 
   /**

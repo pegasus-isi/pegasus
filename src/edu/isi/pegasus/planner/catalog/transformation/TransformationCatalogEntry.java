@@ -39,10 +39,9 @@ import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import java.io.IOException;
 import org.griphyn.cPlanner.classes.Profile;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class TransformationCatalogEntry
@@ -50,36 +49,40 @@ public class TransformationCatalogEntry
 
     
     /**
-     * The logical namespace of the transformation
+     * The logical mNamespace of the transformation
      */
 
-    private String namespace;
-
-    /**
-     * The version of the transformation.
-     */
-    private String version;
+    private String mNamespace;
 
     /**
-     *  The logical name of the transformation.
+     * The mVersion of the transformation.
      */
-    private String name;
+    private String mVersion;
+
+    /**
+     *  The logical mName of the transformation.
+     */
+    private String mName;
 
     /**
      *  The Id of the resource on which the transformation
      *  is installed.
      */
-    private String resourceid;
+    private String mResourceID;
 
     /**
      * The physical path on the resource for a particual arch, os and type.
      */
-    private String physicalname;
+    private String mPFN;
 
     /**
      * The profiles associated with the transformation;
      */
-    private List profiles;
+    //private List profiles;
+    /**
+     * The profiles asscociated with the site.
+     */
+    private Profiles mProfiles;
 
     /**
      * The System Info for the transformation.
@@ -96,12 +99,12 @@ public class TransformationCatalogEntry
      * The basic constructor
      */
     public TransformationCatalogEntry() {
-        namespace = null;
-        name = null;
-        version = null;
-        resourceid = null;
-        physicalname = null;
-        profiles = null;
+        mNamespace = null;
+        mName = null;
+        mVersion = null;
+        mResourceID = null;
+        mPFN = null;
+        mProfiles = null;
 //        sysinfo = null;
         mSysInfo = null;
     }
@@ -116,16 +119,18 @@ public class TransformationCatalogEntry
     public TransformationCatalogEntry( String namespace,
                                        String name,
                                        String version){
-        this.namespace = namespace;
-        this.version = version;
-        this.name = name;
+        this();
+        this.mNamespace = namespace;
+        this.mVersion = version;
+        this.mName = name;
     }
+
     /**
      *  Optimized Constructor
      * @param namespace String
      * @param name String
      * @param version String
-     * @param resourceid String
+     * @param resourceID String
      * @param physicalname String
      * @param type TCType
      * @param profiles List
@@ -136,15 +141,43 @@ public class TransformationCatalogEntry
         String resourceid, String physicalname, TCType type,
         List profiles,
         VDSSysInfo sysinfo ) {
-        this.namespace = namespace;
-        this.version = version;
-        this.name = name;
-        this.resourceid = resourceid;
-        this.physicalname = physicalname;
-        this.profiles = profiles;
+        this.mNamespace = namespace;
+        this.mVersion = version;
+        this.mName = name;
+        this.mResourceID = resourceid;
+        this.mPFN = physicalname;
+        this.mProfiles = new Profiles ();
+        this.mProfiles.addProfiles( profiles );
 
         //       this.sysinfo = sysinfo;
         mSysInfo  = VDSSysInfo2NMI.vdsSysInfo2NMI( sysinfo );
+
+        this.type = type;
+
+    }
+
+    /**
+     * Overloaded constructor.
+     *
+     * @param namespace   the namespace
+     * @param name        the name
+     * @param version     the version
+     * @param resourceID  the site with which entry is associated
+     * @param physicalname the pfn
+     * @param type        the type
+     * @param profiles    the profiles passed
+     * @param sysinfo     the SystemInformation
+     */
+    private TransformationCatalogEntry( String namespace, String name, String version, String resourceID, String physicalname, TCType type, Profiles profiles, SysInfo sysinfo) {
+        this.mNamespace = namespace;
+        this.mVersion = version;
+        this.mName = name;
+        this.mResourceID = resourceID;
+        this.mPFN = physicalname;
+        this.mProfiles = profiles;
+
+        //       this.sysinfo = sysinfo;
+        mSysInfo  = sysinfo;
 
         this.type = type;
 
@@ -158,36 +191,35 @@ public class TransformationCatalogEntry
      * @return Object
      */
     public Object clone() {
-        return new TransformationCatalogEntry( namespace, name, version,
-            resourceid, physicalname,
-            type, profiles, this.getVDSSysInfo() );
+        return new TransformationCatalogEntry( mNamespace, mName, mVersion,
+            mResourceID, mPFN,
+            type, mProfiles, this.getSysInfo() );
     }
 
     
 
     /**
-     * gets the String version of the
+     * gets the String mVersion of the
      * data class
      * @return String
      */
     public String toString() {
-        String st = "\n " +
-            "\n Logical Namespace : " + this.namespace +
-            "\n Logical Name      : " + this.name +
-            "\n Version           : " + this.version +
-            "\n Resource Id       : " + this.resourceid +
-            "\n Physical Name     : " + this.physicalname +
-//            "\n VDSSysInfo           : " + ((this.sysinfo == null) ? "" : this.sysinfo.toString()) +
-            "\n SysInfo           : " + this.getVDSSysInfo() +
+        StringBuffer sb = new StringBuffer( );
+        sb.append( "\n " ).
+           append( "\n Logical Namespace : " ).append( this.mNamespace ).
+           append( "\n Logical Name      : " ).append( this.mName ).
+           append( "\n Version           : " ).append( this.mVersion ).
+           append( "\n Resource Id       : " ).append( this.mResourceID ).
+           append( "\n Physical Name     : " ).append( this.mPFN ).
+           append( "\n SysInfo           : " ).append( this.getSysInfo() ).
+           append( "\n TYPE              : " ).append( ((this.type == null) ? "" : type.toString()) );
 
-            "\n TYPE              : " + ((this.type == null) ? "" : type.toString());
-        if(profiles != null){
-            for (Iterator i = profiles.listIterator(); i.hasNext(); ) {
-                st = st +
-                    "\n Profile           : " + ( (Profile) i.next()).toString();
-            }
+        if( mProfiles != null){
+            sb.append( "\n Profiles :\n" );
+            sb.append( mProfiles );
         }
-        return st;
+
+        return sb.toString();
 
     }
 
@@ -201,8 +233,8 @@ public class TransformationCatalogEntry
             this.getPhysicalTransformation() + "\t" +
             this.getType() + "\t" +
             this.getVDSSysInfo() + "\t";
-        if ( profiles != null ) {
-            st += ProfileParser.combine( profiles );
+        if ( mProfiles != null ) {
+            st += ProfileParser.combine( mProfiles );
         } else {
             st += "NULL";
         }
@@ -219,13 +251,14 @@ public class TransformationCatalogEntry
             + " siteid=\"" + this.getResourceId() + "\""
             + " type=\"" + this.getType() + "\""
             + " sysinfo=\"" + this.getVDSSysInfo() + "\"";
-        if ( this.profiles != null ) {
-            xml += " >\n";
-            for ( Iterator iter = this.profiles.iterator(); iter.hasNext(); ) {
-                Profile profile = ( Profile ) iter.next();
-                xml += "\t\t\t" + profile.toXML() + "\n";
+        if ( this.mProfiles != null ) {
+            try {
+                xml += " >\n";
+                xml += "\t\t\t" + mProfiles.toXML() + "\n";
+                xml += "\t\t</pfn>\n";
+            } catch (IOException ex) {
+                throw new RuntimeException( "Error while XML conversion of profiles ", ex );
             }
-            xml += "\t\t</pfn>\n";
         } else {
             xml += " />\n";
         }
@@ -240,54 +273,54 @@ public class TransformationCatalogEntry
     public void setLogicalTransformation( String logicaltransformation ) {
         String[] ltr;
         ltr = splitLFN( logicaltransformation );
-        this.namespace = ltr[ 0 ];
-        this.name = ltr[ 1 ];
-        this.version = ltr[ 2 ];
+        this.mNamespace = ltr[ 0 ];
+        this.mName = ltr[ 1 ];
+        this.mVersion = ltr[ 2 ];
     }
 
     /**
-     * Set the logical transformation by providing the namespace, name and version as seperate strings.
-     * @param namespace String
-     * @param name String
-     * @param version String
+     * Set the logical transformation by providing the mNamespace, mName and mVersion as seperate strings.
+     * @param mNamespace String
+     * @param mName String
+     * @param mVersion String
      */
     public void setLogicalTransformation( String namespace, String name,
         String version ) {
-        this.namespace = namespace;
-        this.name = name;
-        this.version = version;
+        this.mNamespace = namespace;
+        this.mName = name;
+        this.mVersion = version;
     }
 
     /**
-     * Set the logical namespace of the transformation.
-     * @param namespace String
+     * Set the logical mNamespace of the transformation.
+     * @param mNamespace String
      */
     public void setLogicalNamespace( String namespace ) {
-        this.namespace = namespace;
+        this.mNamespace = namespace;
     }
 
     /**
-     * Set the logical name of the transformation.
-     * @param name String
+     * Set the logical mName of the transformation.
+     * @param mName String
      */
     public void setLogicalName( String name ) {
-        this.name = name;
+        this.mName = name;
     }
 
     /**
-     * Set the logical version of the transformation.
-     * @param version String
+     * Set the logical mVersion of the transformation.
+     * @param mVersion String
      */
     public void setLogicalVersion( String version ) {
-        this.version = version;
+        this.mVersion = version;
     }
 
     /**
-     *  Set the resourceid where the transformation is available.
-     * @param resourceid String
+     *  Set the mResourceID where the transformation is available.
+     * @param mResourceID String
      */
     public void setResourceId( String resourceid ) {
-        this.resourceid = resourceid;
+        this.mResourceID = resourceid;
     }
 
     /**
@@ -300,10 +333,10 @@ public class TransformationCatalogEntry
 
     /**
      * Set the physical location of the transformation.
-     * @param physicalname String
+     * @param mPFN String
      */
     public void setPhysicalTransformation( String physicalname ) {
-        this.physicalname = physicalname;
+        this.mPFN = physicalname;
     }
 
     /**
@@ -327,14 +360,14 @@ public class TransformationCatalogEntry
 
     /**
      * Allows you to add one profile at a time to the transformation.
-     * @param profile Profile  A single profile consisting of namespace, key and value
+     * @param profile Profile  A single profile consisting of mNamespace, key and value
      */
-    public void setProfile( Profile profile ) {
+    public void addProfile( Profile profile ) {
         if ( profile != null ) {
-            if ( this.profiles == null ) {
-                this.profiles = new ArrayList( 5 );
+            if ( this.mProfiles == null ) {
+                this.mProfiles = new Profiles();
             }
-            this.profiles.add( profile );
+            this.mProfiles.addProfile( profile );
         }
     }
 
@@ -342,29 +375,29 @@ public class TransformationCatalogEntry
      * Allows you to add multiple profiles to the transformation.
      * @param profiles List of Profile objects containing the profile information.
      */
-    public void setProfiles( List profiles ) {
+    public void addProfiles( List profiles ) {
         if ( profiles != null ) {
-            if ( this.profiles == null ) {
-                this.profiles = new ArrayList( profiles.size() );
+            if ( this.mProfiles == null ) {
+                this.mProfiles = new Profiles();
             }
-            this.profiles.addAll( profiles );
+            this.mProfiles.addProfiles( profiles );
         }
     }
 
     /**
-     * Gets the Fully Qualified Transformation name in the format NS::Name:Ver.
+     * Gets the Fully Qualified Transformation mName in the format NS::Name:Ver.
      * @return String
      */
     public String getLogicalTransformation() {
-        return joinLFN( namespace, name, version );
+        return joinLFN( mNamespace, mName, mVersion );
     }
 
     /**
      * Returns the Namespace associated with the logical transformation.
-     * @return String Returns null if no namespace associated with the transformation.
+     * @return String Returns null if no mNamespace associated with the transformation.
      */
     public String getLogicalNamespace() {
-        return this.namespace;
+        return this.mNamespace;
     }
 
     /**
@@ -372,15 +405,15 @@ public class TransformationCatalogEntry
      * @return String
      */
     public String getLogicalName() {
-        return this.name;
+        return this.mName;
     }
 
     /**
-     * Returns the version of the logical transformation.
-     * @return String Returns null if no version assocaited with the transformation.
+     * Returns the mVersion of the logical transformation.
+     * @return String Returns null if no mVersion assocaited with the transformation.
      */
     public String getLogicalVersion() {
-        return this.version;
+        return this.mVersion;
     }
 
     /**
@@ -388,7 +421,7 @@ public class TransformationCatalogEntry
      * @return String
      */
     public String getResourceId() {
-        return this.resourceid;
+        return this.mResourceID;
     }
 
     /**
@@ -404,7 +437,7 @@ public class TransformationCatalogEntry
      * @return String
      */
     public String getPhysicalTransformation() {
-        return this.physicalname;
+        return this.mPFN;
     }
 
     /**
@@ -434,37 +467,23 @@ public class TransformationCatalogEntry
      * @return List Returns null if no profiles associated.
      */
     public List getProfiles() {
-        return this.profiles;
+        return ( this.mProfiles == null ) ? null : this.mProfiles.getProfiles();
     }
 
     /**
      * Returns the profiles for a particular Namespace.
-     * @param namespace String The namespace of the profile
+     * @param mNamespace String The mNamespace of the profile
      * @return List   List of Profile objects. returns null if none are found.
      */
     public List getProfiles( String namespace ) {
-        List results = null;
-        if ( profiles != null ) {
-            for ( Iterator i = profiles.iterator(); i.hasNext(); ) {
-                Profile p = ( Profile ) i.next();
-                if ( p.getProfileNamespace().equalsIgnoreCase( namespace ) ) {
-                    if ( results == null ) {
-                        results = new ArrayList();
-                    }
-                    results.add( p );
-                }
-            }
-            return results;
-        } else {
-            return results;
-        }
+        return mProfiles.getProfiles(namespace);
     }
 
     /**
-     * Joins the 3 components into a fully qualified logical name of the format NS::NAME:VER
-     * @param namespace String
-     * @param name String
-     * @param version String
+     * Joins the 3 components into a fully qualified logical mName of the format NS::NAME:VER
+     * @param mNamespace String
+     * @param mName String
+     * @param mVersion String
      * @return String
      */
     private static String joinLFN( String namespace, String name,

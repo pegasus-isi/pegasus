@@ -36,6 +36,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,6 +47,8 @@ import java.util.logging.Logger;
  * @version $Revision$
  */
 public class Profiles {
+
+    
 
     /**
      * The enumeration of valid namespaces.
@@ -80,7 +83,17 @@ public class Profiles {
         mProfileMap.put( NAMESPACES.pegasus, new VDS() );
     }
     
-    
+    /**
+     * Adds multiple profiles.
+     * 
+     * @param profiles  List of <code>Profile</code> objects.
+     */
+    public void addProfiles( List<Profile> profiles ) {
+        for( Iterator<Profile> it = profiles.iterator(); it.hasNext(); ){
+            this.addProfile( it.next() );
+        }
+    }
+
     /**
      * Adds a profile.
      * 
@@ -91,7 +104,74 @@ public class Profiles {
         Namespace n = ( Namespace )mProfileMap.get( NAMESPACES.valueOf( p.getProfileNamespace() ) );
         n.checkKeyInNS( p.getProfileKey(), p.getProfileValue() );
     }
+
+    /**
+     * Returns the list of profiles for all namespaces.
+     *
+     * @return List of <code>Profiles</code>
+     */
+    public List<Profile> getProfiles( ){
+
+        List<Profile> result = new LinkedList();
+
+        //traverse through all the enum keys
+        for ( NAMESPACES n : NAMESPACES.values() ){
+            Namespace nm = this.get( n );
+            for( Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ){
+                String key = ( String )it.next();
+                result.add( new Profile( n.toString(), key, (String)nm.get( key ) ));
+            }
+        }
+        return result;
+    }
     
+    /**
+     * Returns the list of profiles corresponding to a single namespace
+     * 
+     * @param namespace   the namespace
+     * 
+     * @return List of <code>Profiles</code>
+     */
+    public List<Profile> getProfiles( String namespace ){
+
+       return this.getProfiles( NAMESPACES.valueOf( namespace.toLowerCase() ));
+    }
+
+    /**
+     * Returns the list of profiles corresponding to a single namespace
+     *
+     * @param namespace   the namespace
+     *
+     * @return List of <code>Profiles</code>
+     */
+    public List<Profile> getProfiles( NAMESPACES namespace ){
+
+        return this.getProfiles( this.get(namespace) );
+    }
+
+
+    /**
+     * Returns the list of profiles corresponding to a single namespace
+     *
+     * @param namespace   the namespace
+     *
+     * @return List of <code>Profiles</code>
+     */
+    public List<Profile> getProfiles( Namespace namespace ){
+
+        List<Profile> result = new LinkedList();
+
+        for( Iterator it = namespace.getProfileKeyIterator(); it.hasNext(); ){
+            String key = ( String )it.next();
+            result.add( new Profile( namespace.toString(), key, (String)namespace.get( key ) ));
+        }
+
+        return result;
+    }
+
+
+
+
     /**
      * Returns a  iterator over the profile keys corresponding to a particular namespace.
      * 
@@ -142,6 +222,52 @@ public class Profiles {
                 writer.write( (String)nm.get( key ) );
                 writer.write( "</profile>" );
                 writer.write( newLine );                
+            }
+        }
+    }
+    
+    /**
+     * Returns the string description of the object. 
+     *
+     * @return String containing the object in XML.
+     *
+     * @throws RuntimeException if something fishy happens to the stream.
+     */
+    public String toString()  {
+        try {
+            Writer writer = new StringWriter(32);
+            toString(writer, "");
+            return writer.toString();
+        } catch (IOException ex) {
+            throw new RuntimeException( "Exception while converting to String", ex );
+        }
+    }
+
+    /**
+     * Writes out the contents of the object as a String
+     *
+     * @param writer is a Writer opened and ready for writing. This can also
+     *               be a StringWriter for efficient output.
+     * @param indent the indent to be used.
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    public void toString( Writer writer, String indent ) throws IOException {
+        String newLine = System.getProperty( "line.separator", "\r\n" );
+
+
+        //traverse through all the enum keys
+        for ( NAMESPACES n : NAMESPACES.values() ){
+            Namespace nm = this.get( n );
+            for( Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ){
+                String key = ( String )it.next();
+                //write out the  xml element
+                writer.write( indent );
+                writer.write( "profile" );
+                writer.write( " " );writer.write( n.toString() );
+                writer.write( " " );writer.write ( key );
+                writer.write( " " );writer.write(  (String)nm.get( key ) );
+                writer.write( newLine );
             }
         }
     }

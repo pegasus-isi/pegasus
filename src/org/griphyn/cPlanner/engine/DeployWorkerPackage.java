@@ -965,7 +965,7 @@ public class DeployWorkerPackage
         defaultTCEntry.setSysInfo( sysinfo );
 
         //add pegasus home as an environment variable
-        defaultTCEntry.setProfile( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ));
+        defaultTCEntry.addProfile( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ));
 
         
         //register back into the transformation catalog
@@ -1139,7 +1139,7 @@ public class DeployWorkerPackage
         defaultTCEntry.setSysInfo( site.getSysInfo());
 
         //add path as an environment variable
-        //addDefaultTCEntry.setProfile( new Profile( Profile.ENV, "PATH", DeployWorkerPackage.PATH_VALUE ));
+        //addDefaultTCEntry.addProfile( new Profile( Profile.ENV, "PATH", DeployWorkerPackage.PATH_VALUE ));
 
         
         //register back into the transformation catalog

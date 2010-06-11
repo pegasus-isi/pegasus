@@ -309,10 +309,10 @@ public class Database
 
                 try {
                     if (lfnprofiles != null) {
-                        tc.setProfiles(lfnprofiles);
+                        tc.addProfiles(lfnprofiles);
                     }
                     if (pfnprofiles != null) {
-                        tc.setProfiles(pfnprofiles);
+                        tc.addProfiles(pfnprofiles);
                     }
                 }
                 catch (RuntimeException e) {

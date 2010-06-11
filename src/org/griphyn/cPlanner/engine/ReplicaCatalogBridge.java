@@ -567,9 +567,9 @@ public class ReplicaCatalogBridge
 
             mDefaultTCRCEntry.setPhysicalTransformation( path.toString() );
             mDefaultTCRCEntry.setResourceId( site );
-            mDefaultTCRCEntry.setProfile( classpath );
-            mDefaultTCRCEntry.setProfile( javaHome );
-            mDefaultTCRCEntry.setProfile( new Profile( Profile.ENV,
+            mDefaultTCRCEntry.addProfile( classpath );
+            mDefaultTCRCEntry.addProfile( javaHome );
+            mDefaultTCRCEntry.addProfile( new Profile( Profile.ENV,
                                                        "PEGASUS_HOME",
                                                        mProps.getPegasusHome() ));
             //set the flag back to true

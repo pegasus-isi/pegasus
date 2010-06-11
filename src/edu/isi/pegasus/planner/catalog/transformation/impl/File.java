@@ -931,8 +931,8 @@ public class File
         entry.setPhysicalTransformation(physicalname);
         entry.setType(type);
         entry.setResourceId(resourceid);
-        entry.setProfiles(lfnprofiles);
-        entry.setProfiles(pfnprofiles);
+        entry.addProfiles(lfnprofiles);
+        entry.addProfiles(pfnprofiles);
         entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
 
         Map lfnMap = null;
@@ -1279,7 +1279,7 @@ public class File
                             case 5: //profile string
                                 if (!tokens[i].equalsIgnoreCase("null")) {
                                     try {
-                                        tc.setProfiles(ProfileParser.parse(
+                                        tc.addProfiles(ProfileParser.parse(
                                             tokens[
                                             i]));
                                     }
