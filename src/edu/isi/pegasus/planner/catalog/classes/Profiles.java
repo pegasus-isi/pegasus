@@ -58,10 +58,7 @@ public class Profiles {
         env, globus, condor, dagman, pegasus, hints
     };
     
-    /**
-     * An array of list of profiles, one for each namespace.
-     */
-    private List[] mProfileLists ;
+   
 
     /**
      * An enum map that associates the enum keys with the corresponding 
