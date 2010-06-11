@@ -357,6 +357,17 @@ public class TransformationCatalogEntry
     }
 
 
+    /**
+     * Allows you to add one profile at a time to the transformation.
+     * @param profile Profile  A single profile consisting of mNamespace, key and value
+     */
+    public void addProfiles( Profiles profiles ) {
+        if ( this.mProfiles == null ) {
+                this.mProfiles = new Profiles();
+            }
+        this.mProfiles.addProfiles( profiles );
+    }
+
 
     /**
      * Allows you to add one profile at a time to the transformation.

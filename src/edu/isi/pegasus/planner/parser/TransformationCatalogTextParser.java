@@ -39,8 +39,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.LinkedList;
-import java.util.List;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -209,10 +207,12 @@ public class TransformationCatalogTextParser {
 
 
         SysInfo sysinfo = new SysInfo();
-        Profiles p = null;
-        while ( mLookAhead != null && ! (mLookAhead instanceof CloseBrace) ) {
-            p = (Profiles) profiles.clone();
+        Profiles p = (Profiles) profiles.clone();
 
+        while ( mLookAhead != null && ! (mLookAhead instanceof CloseBrace) ) {
+           
+
+            
             //populate all the rest of the attributes
             //associated with the transformation
             if (! (mLookAhead instanceof TransformationCatalogReservedWord)) {
@@ -253,7 +253,7 @@ public class TransformationCatalogTextParser {
                 break;
 
                 case TransformationCatalogReservedWord.PROFILE:
-                    entry.addProfile( this.getProfile() );
+                    p.addProfile( this.getProfile() );
                     break;
 
                 case TransformationCatalogReservedWord.TYPE:
@@ -267,9 +267,12 @@ public class TransformationCatalogTextParser {
 
             }
         }
+
+        //System.out.println( "*** Profiles are " + p );
+
         entry.setSysInfo( sysinfo );
         //add all the profiles for the entry
-        //entry.addProfiles( p );
+        entry.addProfiles( p );
 
         if (! (mLookAhead instanceof CloseBrace)) {
                         throw new ScannerException(mScanner.getLineNumber(),
@@ -384,8 +387,6 @@ public class TransformationCatalogTextParser {
             }
         }
 
-        
-
         return profiles;
     }
 
@@ -429,10 +430,7 @@ public class TransformationCatalogTextParser {
          mLookAhead = mScanner.nextToken();
          p = new Profile(namespace, niceString(key), niceString(value));
 
-         System.out.println( this.mLookAhead );
-
-         System.out.println( p );
-
+         
          return p;
     }
 

@@ -82,7 +82,27 @@ public class Profiles {
         mProfileMap.put( NAMESPACES.hints, new Hints() );
         mProfileMap.put( NAMESPACES.pegasus, new VDS() );
     }
-    
+
+
+    /**
+     * Adds multiple profiles.
+     *
+     * @param profiles the profiles object
+     */
+    public void addProfiles( Profiles profiles ) {
+
+        //traverse through all the enum keys
+        for ( NAMESPACES n : NAMESPACES.values() ){
+            Namespace nm = profiles.get( n );
+            for( Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ){
+                String key = (String) it.next();
+                this.addProfile( new Profile( n.toString(), key, (String)nm.get( key ) ));
+            }
+        }
+
+    }
+
+
     /**
      * Adds multiple profiles.
      * 
@@ -286,8 +306,9 @@ public class Profiles {
             
         //traverse through all the enum keys
         for ( NAMESPACES n : NAMESPACES.values() ){
-            Namespace nm = obj.get( n );
-            nm =  ( Namespace )this.get( n ).clone();                        
+            Namespace nm = this.get( n );
+            nm =  ( Namespace )this.get( n ).clone();
+            obj.mProfileMap.put( n, nm );
         }
         return obj;
     }
