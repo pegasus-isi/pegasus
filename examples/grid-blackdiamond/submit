@@ -1,0 +1,100 @@
+#!/bin/bash
+
+set -e
+
+
+#######################################################################
+#
+#  Settings
+#
+CLUSTER_NAME="ISIViz"
+CLUSTER_HOSTNAME="viz-login.isi.edu"
+CLUSTER_SCHEDULER="condor"
+CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch/rynge"
+CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/2.4.1"
+CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.1"
+#######################################################################
+
+
+TOPDIR=`pwd`
+
+if [ "x$PEGASUS_HOME" = "x" ]; then
+    echo "Pelase set PEGASUS_HOME to the location of your Pegasus install"
+    exit 1
+fi 
+
+if [ "x$GLOBUS_LOCATION" = "x" ]; then
+    echo "Pelase set GLOBUS_LOCATION to the location of your Pegasus install"
+    exit 1
+fi 
+
+# create the replica catalog (in this case, where to find the inputs)
+cat >rc.data <<EOF
+f.a file://`pwd`/f.a pool="local"
+EOF
+
+# create the transformation catalog
+cat >tc.data <<EOF
+# Site  LFN  PFN  TYPE  SYSTEM PROFILE
+$CLUSTER_NAME  black::preprocess:1.0  $CLUSTER_PEGASUS_HOME/bin/keg   INSTALLED INTEL32::LINUX ENV::KEY1="VALUE1"
+$CLUSTER_NAME  black::findrange:1.0   $CLUSTER_PEGASUS_HOME/bin/keg   INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
+$CLUSTER_NAME  black::analyze:1.0     $CLUSTER_PEGASUS_HOME/bin/keg   INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
+EOF
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+					<internal-mount-point mount-point="$TOPDIR/work" free-size="100G" total-size="30G"/>
+                </shared>
+            </scratch>
+			<storage>
+				<shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+					<internal-mount-point mount-point="$TOPDIR/work" free-size="100G" total-size="30G"/>
+				</shared>
+			</storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
+    </site>
+    <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
+                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
+                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
+    </site>
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    -D pegasus.user.properties=pegasusrc \
+    --sites $CLUSTER_NAME \
+    --dir work \
+    --output local \
+    --dax blackdiamond.dax \
+    --submit
+

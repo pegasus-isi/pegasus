@@ -1,0 +1,11 @@
+pegasus.catalog.replica=SimpleFile
+pegasus.catalog.replica.file=rc.data
+
+pegasus.catalog.site=XML3
+pegasus.catalog.site.file=sites.xml
+
+pegasus.catalog.transformation=File
+pegasus.catalog.transformation.file=tc.data
+
+pegasus.exitcode.scope=all
+
