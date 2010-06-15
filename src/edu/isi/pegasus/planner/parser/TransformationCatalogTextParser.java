@@ -34,6 +34,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -94,16 +95,17 @@ public class TransformationCatalogTextParser {
      * Parses the complete input stream, into the PoolConfig data object that
      * holds the contents of all the sites referred to in the stream.
      *
-     * @return a map indexed by the site transformation strings.
+     * @return TransformationStore
+     *
      * @throws IOException
      * @throws ScannerException
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.PoolConfig
      */
-    public void parse() throws IOException,
+    public TransformationStore parse() throws IOException,
         ScannerException  {
         //to check more
-        //PoolConfig sites = new PoolConfig();
+        TransformationStore store = new TransformationStore();
 
         try{
             String transformation   = null;
@@ -120,7 +122,7 @@ public class TransformationCatalogTextParser {
 
                     while( !( mLookAhead instanceof CloseBrace ) ){
                         TransformationCatalogEntry entry = getTransformationCatalogEntry( transformation, profiles );
-
+                        store.addEntry( entry );
                         //we have information about one transformation catalog entry
                         mLogger.log( "Transformation Catalog Entry parsed is - " + entry,
                                   LogManager.DEBUG_MESSAGE_LEVEL);
@@ -156,6 +158,7 @@ public class TransformationCatalogTextParser {
             throw new ScannerException( mScanner.getLineNumber(), e.getMessage() );
         }
 
+        return store;
     }
 
 
