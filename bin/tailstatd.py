@@ -223,6 +223,7 @@ class Job:
     _cluster_start_time = None
     _cluster_duration = None
     _job_state = None
+    _job_state_seq = 0
     _job_state_timestamp = None
     _walltime = None
     _job_site = None
@@ -257,6 +258,8 @@ class Job:
 	"""
 	self._job_state = job_state
 	self._job_state_timestamp = int(timestamp)
+	# Increment job state sequence
+	self._job_state_seq = self._job_state_seq + 1
 
 	# Record timestamp for certain job states
 	if job_state == "PRE_SCRIPT_STARTED":
@@ -357,7 +360,7 @@ class Job:
 
     def extract_job_info(self, buffer):
 	"""
-	This function reads the output from the kickstart output parser and populates
+	This function reads the output from the kickstart output parser and
 	extracts the job information for the Stampede schema.
 	"""
 
@@ -519,7 +522,9 @@ class Workflow:
 	if self._planner_version is not None:
 	    kwargs["planner_version"] = self._planner_version
 	if self._parent_workflow_id is not None:
-	    kwargs["parent_workflow_id"] = self._parent_workflow_id
+	    kwargs["parent__wf__id"] = self._parent_workflow_id
+	else:
+	    kwargs["parent__wf__id"] = "None"
 
 	# Send workflow event to database
 	self._db.write(event="workflow.plan", **kwargs)
@@ -735,6 +740,7 @@ class Workflow:
 	kwargs["job__id"] = my_job._job_submit_seq
 	kwargs["state"] = my_job._job_state
 	kwargs["ts"] = my_job._job_state_timestamp
+	kwargs["js__id"] = my_job._job_state_seq
 
 	# Send job state event to database
 	self._db.write(event="job.state", **kwargs)
@@ -828,10 +834,19 @@ class Workflow:
 	# Add information about the host
 	if "hostname" in record:
 	    kwargs["hostname"] = record["hostname"]
+	else:
+	    # Don't know what the hostname is
+	    kwargs["hostname"] = "unknown"
 	if "hostaddr" in record:
 	    kwargs["ip_address"] = record["hostaddr"]
+	else:
+	    # Don't know what the ip address is
+	    kwargs["ip_address"] = "unknown"
 	if "resource" in record:
 	    kwargs["site_name"] = record["resource"]
+	else:
+	    # Don't know what the site name is
+	    kwargs["site_name"] = "unknown"
 	if "total" in record:
 	    kwargs["total_ram"] = record["total"]
 	if "system" in record and "release" in record and "machine" in record:
