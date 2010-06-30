@@ -1765,12 +1765,12 @@ public class PegasusProperties {
      * Referred to by the "pegasus.condor.output.stream" property.
      *
      * @return the boolean value specified by the property, else
-     *         true in case of invalid value or property not being specified.
+     *         false in case of invalid value or property not being specified.
      *
      */
     public boolean streamCondorOutput() {
         return Boolean.parse(mProps.getProperty( "pegasus.condor.output.stream"),
-                             true );
+                             false );
     }
 
     /**
@@ -1786,11 +1786,11 @@ public class PegasusProperties {
      *  jobs.
      *
      * @return the boolean value specified by the property, else
-     *         true in case of invalid value or property not being specified.
+     *         false in case of invalid value or property not being specified.
      */
     public boolean streamCondorError() {
         return Boolean.parse(mProps.getProperty( "pegasus.condor.error.stream"),
-                             true);
+                             false);
     }
 
     //PROPERTIES RELATED TO STORK
