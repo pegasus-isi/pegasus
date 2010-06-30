@@ -1769,19 +1769,23 @@ public class CondorGenerator extends Abstract {
 //        }
 
 
-        if (isGlobusJob) {
-            //check if we want to stream
-            //the output and error or stage
-            //it in.
-            if (!mProps.streamCondorError()) {
-                //we want it to be staged
-                writer.println("stream_error  = false");
-            }
-            if (!mProps.streamCondorOutput()) {
-                //we want it to be staged
-                writer.println("stream_output = false");
-            }
+        //condor streaming is now for both grid and non grid universe jobs
+        // we always put in the streaming keys. they default to false
+        if ( mProps.streamCondorError()) {
+            //we want it to be staged
+            writer.println("stream_error  = true");
         }
+        else {
+            writer.println("stream_error  = false");
+        }
+        if ( mProps.streamCondorOutput()) {
+            //we want it to be staged
+            writer.println("stream_output = true" );
+        }
+        else{  //we want it to be staged
+            writer.println("stream_output = false" );
+        }
+        
 
         GridStart gridStart = mGridStartFactory.loadGridStart( job, gridStartPath );
 
