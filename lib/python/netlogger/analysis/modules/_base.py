@@ -1,0 +1,269 @@
+"""
+Base for analysis modules.
+"""
+from logging import DEBUG
+from netlogger.nllog import DoesLogging, TRACE
+from netlogger.nlapi import TS_FIELD, EVENT_FIELD
+
+import Queue
+import threading
+import time
+
+"""
+Standard Exceptions for all Analyzers
+"""
+
+class ConnectionException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+"""
+Database imports
+"""
+
+# SQLite
+sqlite = None
+try:
+    # Python 2.5
+    import sqlite3 as sqlite
+except ImportError:
+    try:
+        # Python 2.4
+        from pysqlite2 import dbapi2 as sqlite
+    except ImportError:
+        pass
+
+try:
+    from sqlalchemy import create_engine, MetaData, orm
+except ImportError:
+    pass
+
+"""
+Database classes
+"""
+
+class DBConnectError(Exception): pass
+
+class Connection:
+    NAME = None
+
+    def __init__(self, dsn=None, database=None, kw=None):
+        """Connect to the database.
+
+        :Parameter:
+          dsn - DBMS filename (sqlite) or host (others)
+          database - Database inside DBMS, ignored for sqlite
+          kw - Additional keywords
+
+        On error, raise DBConnectError
+        """
+        self.connection = None
+
+class SQLiteConnection(Connection):
+    NAME = 'sqlite'
+
+    def __init__(self, dsn=None, database=None, kw=None):
+        self.connection = sqlite.connect(dsn, isolation_level="DEFERRED")
+
+"""
+User-level name for each connection class, from the
+NAME constant in each class.
+"""
+
+CONNECTION_CLASSMAP = { }
+for clazz in (SQLiteConnection,):
+    CONNECTION_CLASSMAP[clazz.NAME] = clazz
+
+"""
+Mixin class to provide SQLAlchemy database initialization/mapping.
+Takes a SQLAlchemy connection string and a module function as
+required arguments.  The initialization function takes the db and 
+metadata objects (and optional args) as args, initializes to the 
+appropriate schema and sets "self.session" as a class member for
+loader classes to interact with the DB with.
+
+See: netlogger.analysis.schema.stampede_schema.initializeToPegasusDB
+
+For an example of what the intialization function needs to do to setup
+the schema mappings and the metadata object.  This should be __init__'ed
+in the subclass AFTER the Analyzer superclass gets called.
+
+The module netlogger.analysis.modules.stampede_loader shows the use
+of this to initialize to a DB.
+"""
+class SQLAlchemyInit:
+    def __init__(self, connString, initFunction):
+        if not hasattr(self, '_dbg'):
+            # The Analyzer superclass SHOULD have been _init__'ed
+            # already but if not, bulletproof this attr.
+            self._dbg = False
+        self.db = create_engine(connString, echo=self._dbg)
+        self.metadata = MetaData()
+        initFunction(self.db, self.metadata)
+        self.metadata.bind = self.db
+        sm = orm.sessionmaker(bind=self.db, autoflush=True, autocommit=False,
+                                expire_on_commit=True)
+        self.session = orm.scoped_session(sm)
+
+"""
+Base classes
+"""
+
+class Analyzer(DoesLogging):
+    """Base analysis class. Doesn't do much.
+    """
+
+    FLUSH_SEC = 5 # time to wait before calling flush()
+
+    def __init__(self, _validate=False):
+        """Will be overridden by subclasses to take
+        parameters specific to their function.
+        """
+        DoesLogging.__init__(self)
+        self.last_flush = time.time()
+        if _validate:
+            #print "@@validate"
+            self.__process = self.process
+            self.process = self.validate_and_process
+
+    def process(self, data):
+        """Override with logic; 'data' is a dictionary with timestamp,
+        event, and other values.
+        """
+        pass
+
+    def validate_and_process(self, data):
+        """Call process() if the data has the minimum required NetLogger fields,
+        otherwise silently drop it.
+        """
+        if (TS_FIELD in data and EVENT_FIELD in data):
+            self.__process(data)
+
+    def flush(self):
+        """Override to flush any intermediate results, e.g. call
+        flush() on open file descriptors.
+        """
+        pass
+
+    def finish(self):
+        """Override with logic if subclass needs a cleanup method,
+        ie: threading or whatnot
+        """
+        pass
+
+    def notify(self, data):
+        """Called by framework code to notify loader of new data,
+        which will result in a call to process(data).
+        Do not override this unless you know what you are doing.
+        """
+        result = self.process(data)
+        t = time.time()
+        if t  - self.last_flush >= self.FLUSH_SEC:
+            if self._dbg:
+                self.log.debug("flush")
+            self.flush()
+            self.last_flush = t
+        return result
+
+
+class BufferedAnalyzer(Analyzer, threading.Thread):
+    """Threaded class to process input in a buffered fashion.
+    Intended for cases (db inserts, etc) where processing may
+    lag behind input from the infomation broker, et al.
+    """
+    def __init__(self):
+        Analyzer.__init__(self)
+        threading.Thread.__init__(self)
+        self.running = False
+        self.queue = Queue.Queue()
+
+    def process(self, data):
+        """Get input from controlling process as per usual,
+        put the input into the queue and return immediately.
+        """
+        if not self.running:
+            self.running = True
+            self.start()
+
+        self.queue.put(data)
+
+    def run(self):
+        """Thread method - pull data FIFO style from the queue
+        and pass off to the worker method.
+        """
+        self.log.info('run.start')
+        while self.running:
+            if not self.queue.empty():
+                row = self.queue.get()
+                self.process_buffer(row)
+                self.queue.task_done()
+
+        self.log.info('run.end')
+
+    def process_buffer(self, row):
+        """Override with logic - this is the worker method
+        where the user defines the loading behavior.
+        """
+        pass
+
+    def finish(self):
+        """This is called when processing is finished.  Waits
+        for any queued data to be processed, and shuts down
+        the processing thread.  See nl_load for an example on
+        the appropriate time/place to call.
+        """
+        self.log.info('finish.begin')
+        while 1:
+            if self.queue.empty():
+                break
+        self.running = False
+        self.join()
+        time.sleep(1)
+        self.log.info('finish.end')
+
+class Loader:
+    """Abstract class for loading into database-like things.
+    """
+    def __init__(self, type=None, dsn=None, **kw):
+        """Initialize state.        
+
+        :Parameters:
+          type - Name for type of database
+          dsn - DBMS filename (sqlite) or host (others)
+          kw - Additional connection keywords
+        """
+        # get connection class
+        try:
+            self.type = type.lower()
+        except AttributeError:
+            raise ValueError("Database type not a string")
+        self.conn_class = CONNECTION_CLASSMAP.get(self.type, None)
+        if self.conn_class is None:
+            raise NotImplementedError("Unknown DB type '%s'" % type)
+        # set server (or file) DSN
+        if dsn is None:
+            if self.conn_class is sqlite:
+                self.dsn = "db.sqlite"
+            else:
+                self.dsn = "localhost"
+        else:
+            self.dsn = dsn
+        # save connection keywords
+        self.conn_kw = kw
+
+    def connect(self):
+        """Connect to the database.
+
+        Return new connection (also in self._conn.connection)
+        """
+        self._conn = self.conn_class(self.dsn, self.conn_kw)
+        return self._conn.connection
+
+    def disconnect(self):
+        """Disconnect, if connected.
+        """
+        if self._conn:
+            self._conn.connection.close()
+            self._conn = None
