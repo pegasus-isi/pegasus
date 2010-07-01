@@ -48,6 +48,7 @@ import optparse
 logger = logging.getLogger()
 # Set default level to WARNING
 logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.DEBUG)
 # Format our log messages the way we want
 cl = logging.StreamHandler()
 formatter = logging.Formatter("%(filename)s:%(lineno)d: %(levelname)s: %(message)s")
@@ -62,9 +63,6 @@ from Pegasus.tools import filelock
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.tools import kickstart_parser
-
-# Import netlogger api
-from netlogger import nlapi
 
 # Add SEEK_CUR to os if Python version < 2.5
 if sys.version_info < (2, 5):
@@ -146,6 +144,8 @@ timestamp = 0 			# time stamp from log file
 pid = 0 			# DAGMan's pid -- set later
 replay_mode = 0			# disable checking if DAGMan's pid is gone
 use_db = 1			# flag for using the database
+single_db = 0			# flag for using a single db at the top level workflow
+output_db = None		# connection string for the database
 pending = {} 			# remember when GLOBUS_SUBMIT was entered
 				# jid --> [stamp, condor_id, wtime, site]
 running = {}			# ditto for EXECUTE for hidden starvation
@@ -496,6 +496,33 @@ class Workflow:
 	# jobs. In addition, _job_info should contain all PRE and POST
 	# script information for job in this workflow
 
+    def output_to_db(self, event, kwargs):
+	"""
+	This function sends an NetLogger event to the loader class.
+	"""
+	# self._db.write(event=event, **kwargs)
+	# Before we send anything to the loader, we need to make a few adjustments
+
+	# Add event key
+	kwargs["event"] = "stampede." + event
+
+	# Translate __ keys to .
+	if "wf__id" in kwargs:
+	    kwargs["wf.id"] = str(kwargs.pop("wf__id"))
+	if "parent__wf__id" in kwargs:
+	    kwargs["parent.wf.id"] = kwargs.pop("parent__wf__id")
+	if "job__id" in kwargs:
+	    kwargs["job.id"] = kwargs.pop("job__id")
+	if "condor__id" in kwargs:
+	    kwargs["condor.id"] = kwargs.pop("condor__id")
+	if "js__id" in kwargs:
+	    kwargs["js.id"] = kwargs.pop("js__id")
+	if "task__id" in kwargs:
+	    kwargs["task.id"] = kwargs.pop("task__id")
+
+	# Send it to the loader
+	self._db.process(kwargs)
+
     def db_send_wf_info(self):
 	"""
 	This function sends to the DB information about the workflow
@@ -527,7 +554,7 @@ class Workflow:
 	    kwargs["parent__wf__id"] = "None"
 
 	# Send workflow event to database
-	self._db.write(event="workflow.plan", **kwargs)
+	self.output_to_db("workflow.plan", kwargs)
 
     def db_send_wf_state(self, state, timestamp):
 	"""
@@ -548,7 +575,7 @@ class Workflow:
 	state = "workflow." + state
 
 	# Send workflow state event to database
-	self._db.write(event=state, **kwargs)
+	self.output_to_db(state, kwargs)
 
     def __init__(self, run, out, wfparams=None, database=None):
 	"""
@@ -709,7 +736,7 @@ class Workflow:
 	    return
 
 	# Send job event to database
-	self._db.write(event=event_type, **kwargs)
+	self.output_to_db(event_type, kwargs)
 
     def db_send_job_note(self, my_job, timestamp, event_type):
 	"""
@@ -725,7 +752,7 @@ class Workflow:
 	kwargs["ts"] = timestamp
 
 	# Send job event to database
-	self._db.write(event=event_type, **kwargs)
+	self.output_to_db(event_type, kwargs)
 
     def db_send_job_state(self, my_job):
 	"""
@@ -743,7 +770,7 @@ class Workflow:
 	kwargs["js__id"] = my_job._job_state_seq
 
 	# Send job state event to database
-	self._db.write(event="job.state", **kwargs)
+	self.output_to_db("job.state", kwargs)
 
     def db_send_task_info(self, my_job, task_type, task_id, invocation_record=None):
 	"""
@@ -817,7 +844,7 @@ class Workflow:
 		kwargs["arguments"] = invocation_record["argument-vector"]
 
 	# Send job event to database
-	self._db.write(event=event_type, **kwargs)
+	self.output_to_db(event_type, kwargs)
 
     def db_send_host_info(self, my_job, timestamp, record):
 	"""
@@ -856,7 +883,7 @@ class Workflow:
 	kwargs["ts"] = timestamp
 
 	# Send host event to database
-	self._db.write(event="host", **kwargs)
+	self.output_to_db("host", kwargs)
 
     def parse_job_output(self, my_job, timestamp, job_state):
 	"""
@@ -1116,13 +1143,17 @@ parser.add_option("-C", "--config", action = "append", type = "string", dest = "
 		  help = "k=v defines configurations instead of reading from braindump.txt. Required keys include %s. Suggested keys include %s"
 		  % (brainkeys["required"], brainkeys["optional"]))
 parser.add_option("-D", "--database", action = "store_const", const = 1, dest = "use_db",
-		  help = "Turn on database entries for work DB")
+		  help = "Turn on database entries for work DB (this is the default mode)")
 parser.add_option("--nodatabase", action = "store_const", const = 0, dest = "use_db",
 		  help = "Turn off database entries for work DB")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
 		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
+parser.add_option("-o", "--output-db", action = "store", type = "string", dest = "output_db",
+		  help = "name of the database file to use, default is workflow basename in the submit directory")
+parser.add_option("-s", "--single-db", action = "store_const", const = 1, dest = "single_db",
+		  help = "use a single db at the top level workflow")
 
 # Re-insert our base name to avoid optparse confusion when printing error messages
 # (options, args) = parser.parse_args(sys.argv[0:]) # Does not work 100%
@@ -1150,6 +1181,10 @@ if options.millisleep is not None:
     millisleep = options.millisleep
 if options.replay_mode is not None:
     replay_mode = options.replay_mode
+if options.output_db is not None:
+    output_db = options.output_db
+if options.single_db is not None:
+    single_db = options.single_db
 
 # Walk through any config properties
 if options.config_opts is not None:
@@ -1249,6 +1284,18 @@ if not replay_mode:
 	sys.exit(1)
 
     atexit.register(untie_exit_handler)
+
+# Import netlogger api, if using database
+#from netlogger import nlapi
+# To use NetLogger's command-line parser
+# from netlogger.nllog import get_root_logger, OptionParser
+# Import NetLogger DB loader
+if use_db == 1:
+    try:
+	from netlogger.analysis.modules import stampede_loader
+    except:
+	logger.warning("Warning: cannot import NetLogger library, disabling database output!")
+	use_db = 0
 
 #
 # --- functions ---------------------------------------------------------------------------
@@ -2290,9 +2337,13 @@ sys.stderr = sys.stdout
 
 # Initialize database
 if use_db == 1:
-    rotate_log_file(run, "pegasus.bp")
-    pegasus_db = os.path.join(run, "pegasus.bp")
-    workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=pegasus_db)
+    # Figure out the database connection string
+    if output_db is None:
+	output_db = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
+#    rotate_log_file(run, output_db)
+# using nlapi to create log file (and not use the loader)
+#    workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=output_db)
+    workdb = stampede_loader.Analyzer(output_db)
 
 # Say hello
 logmsg("starting [%s], using pid %d" % (revision, os.getpid()))
