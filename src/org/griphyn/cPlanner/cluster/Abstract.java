@@ -151,6 +151,7 @@ public abstract class Abstract implements Clusterer {
     public void initialize( ADag dag , PegasusBag bag  )
         throws ClustererException{
 
+        mLogger = bag.getLogger();
 
         mScheduledDAG = dag;
         mProps = bag.getPegasusProperties();
