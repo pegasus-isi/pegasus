@@ -321,10 +321,15 @@ public class Kickstart implements GridStart {
             if( mWorkerNodeExecution ){
                 //add a -w only for compute or staged compute jobs
                 if( job.getJobType() == SubInfo.COMPUTE_JOB || job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
-                     StringBuffer args = new StringBuffer( );
-                     args.append( " -w " ).append( getWorkerNodeDirectory(aggJob) ).
-                          append( " " ).append( job.condorVariables.removeKey( "arguments" ) );
-                     construct(job, "arguments", args.toString());
+                    StringBuffer args = new StringBuffer( );
+                     
+                     //we append -w only if we are not using condor file transfers
+                     //JIRA BUG 145
+                     if( !mSLS.doesCondorModifications() ){
+                        args.append( " -w " ).append( getWorkerNodeDirectory(aggJob) );
+                     }
+                     args.append( " " ).append( job.condorVariables.removeKey( "arguments" ) );
+                     construct(job, "arguments", args.toString());                     
                 }
             }
 
