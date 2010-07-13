@@ -198,12 +198,30 @@ class File(CatalogType):
 		result = File('result.txt',link=Link.OUTPUT,register=True,transfer=True)
 		opt = File('optional.txt',link=Link.OUTPUT,optional=True)
 		binary = File('bin/binary',link=Link.INPUT,type=FileType.EXECUTABLE,transfer=True)
+		
+	Example use in job:
+		input = File('input.txt', link=Link.INPUT, transfer=True)
+		output = File('output.txt', link=Link.OUTPUT, transfer=True, register=True)
+		job = Job(name="compute")
+		job.uses(input)
+		job.uses(output)
+		
+	Example use across several jobs:
+		input = File('input.txt', link=Link.INPUT, transfer=True)
+		intermediate = File('intermediate.txt')
+		output = File('output.txt', link=Link.OUTPUT, transfer=True, register=True)
+		pre = Job(name="preprocess")
+		pre.uses(input)
+		pre.uses(intermediate, link=Link.OUTPUT)
+		post = Job(name="postprocess")
+		post.uses(intermediate, link=Link.INPUT)
+		post.uses(output)
 	"""
-	def __init__(self, name, type=FileType.FILE, link=Link.NONE, 
+	def __init__(self, name, type=FileType.FILE, link=None, 
 				 register=False, transfer=False, optional=None):
 		"""
-		All arguments specify the workflow-level behavior of this Filename. Job-level
-		behavior can be defined when adding the Filename to a Job's uses. If the
+		All arguments specify the workflow-level behavior of this File. Job-level
+		behavior can be defined when adding the File to a Job's uses. If the
 		properties are not overridden at the job-level, then the workflow-level
 		values are used as defaults.
 		
@@ -247,13 +265,8 @@ class File(CatalogType):
 		indents = ''.join([indent for i in range(0,level)])
 		xml = StringIO()
 		xml.write(u'%s<file name="%s"' % (indents,self.name))
-		if self.link is not None:
-			xml.write(u' link="%s"' % self.link)
-		if self.optional is not None:
-			if isinstance(self.optional, bool):
-				xml.write(u' optional="%s"' % str(self.optional).lower())
-			else:
-				xml.write(u' optional="%s"' % self.optional)
+		if self.link: xml.write(u' link="%s"' % self.link)
+		if self.optional: xml.write(u' optional="%s"' % unicode(self.optional).lower())
 				
 		inner = self.getInnerXML(level+1,indent)
 		if inner is None:
@@ -312,21 +325,15 @@ class Executable(CatalogType):
 		"""Returns an XML representation of this file as a filename tag"""
 		indents = ''.join([indent for i in range(0,level)])
 		xml = StringIO()
+		
 		xml.write(u'%s<executable name="%s"' % (indents,self.name))
-		if self.namespace:
-			xml.write(u' namespace="%s"' % self.namespace)
-		if self.version:
-			xml.write(u' version="%s"' % self.version)
-		if self.arch:
-			xml.write(u' arch="%s"' % self.arch)
-		if self.os:
-			xml.write(u' os="%s"' % self.os)
-		if self.osrelease:
-			xml.write(u' osrelease="%s"' % self.osrelease)
-		if self.osversion:
-			xml.write(u' osversion="%s"' % self.osversion)
-		if self.glibc:
-			xml.write(u' glibc="%s"' % self.glibc)
+		if self.namespace: xml.write(u' namespace="%s"' % self.namespace)
+		if self.version: xml.write(u' version="%s"' % self.version)
+		if self.arch: xml.write(u' arch="%s"' % self.arch)
+		if self.os: xml.write(u' os="%s"' % self.os)
+		if self.osrelease: xml.write(u' osrelease="%s"' % self.osrelease)
+		if self.osversion: xml.write(u' osversion="%s"' % self.osversion)
+		if self.glibc: xml.write(u' glibc="%s"' % self.glibc)
 		
 		inner = self.getInnerXML(level+1,indent)
 		if inner is None:
@@ -343,11 +350,11 @@ class Executable(CatalogType):
 class Metadata:
 	"""Metadata(key,type,value)
 	
-	A representation of metadata.
+	A way to add metadata to File and Executable objects. This is
+	useful if you want to annotate the DAX with things like file
+	sizes, application-specific attributes, etc.
 	
-	Metadata can be added to File and Executable objects.
-	
-	There is no restriction on the type.
+	There is currently no restriction on the type.
 	
 	Examples:
 		s = Metadata('size','int','12')
@@ -404,6 +411,7 @@ class PFN:
 		indents = ''.join([indent for i in range(0,level)])
 		xml = StringIO()
 		xml.write(u'%s<pfn url="%s" site="%s"'% (indents, self.url, self.site))
+		
 		if len(self.profiles) == 0:
 			xml.write(u'/>')
 		else:
@@ -414,6 +422,7 @@ class PFN:
 				xml.write(p.toXML())
 				xml.write(u'\n')
 			xml.write(u'%s</pfn>' % indents)
+			
 		result = xml.getvalue()
 		xml.close()
 		return result
@@ -478,44 +487,26 @@ class Use:
 	def toXML(self):
 		xml = StringIO()
 
-		if self.link is None: link = self.file.link
-		else: link = self.link
-		if self.optional is None: optional = self.file.optional
-		else: optional = self.optional
-		if self.register is None: register = self.file.register
-		else: register = self.register
-		if self.transfer is None: transfer = self.file.transfer
-		else: transfer = self.transfer
-		if 'namespace' in dir(self.file): namespace = self.file.namespace
-		else: namespace = None
-		if 'version' in dir(self.file): version = self.file.version
-		else: version = None
+		link = self.link or self.file.link
+		optional = self.optional or self.file.optional
+		register = self.register or self.file.register
+		transfer = self.transfer or self.file.transfer
+		if isinstance(self.file, Executable):
+			namespace = self.file.namespace
+			version = self.file.version
+		else:
+			namespace = None
+			version = None
 		type = self.file.type
 			
 		xml.write(u'<uses name="%s"' % self.file.name)
-		if link is not None:
-			xml.write(u' link="%s"' % link)
-		if optional is not None:
-			if isinstance(optional, bool):
-				xml.write(u' optional="%s"' % unicode(optional).lower())
-			else:
-				xml.write(u' optional="%s"' % optional)
-		if register is not None:
-			if isinstance(register, bool):
-				xml.write(u' register="%s"' % unicode(register).lower())
-			else:
-				xml.write(u' register="%s"' % register)
-		if transfer is not None:
-			if isinstance(transfer, bool):
-				xml.write(u' transfer="%s"' % unicode(transfer).lower())
-			else:
-				xml.write(u' transfer="%s"' % transfer)
-		if namespace is not None:
-			xml.write(u' namespace="%s"' % namespace)
-		if version is not None:
-			xml.write(u' version="%s"' % version)
-		if type is not None:
-			xml.write(u' type="%s"' % type)
+		if link: xml.write(u' link="%s"' % link)
+		if optional: xml.write(u' optional="%s"' % unicode(optional).lower())
+		if register: xml.write(u' register="%s"' % unicode(register).lower())
+		if transfer: xml.write(u' transfer="%s"' % unicode(transfer).lower())
+		if namespace: xml.write(u' namespace="%s"' % namespace)
+		if version: xml.write(u' version="%s"' % version)
+		if type: xml.write(u' type="%s"' % type)
 		xml.write(u'/>')
 
 		result = xml.getvalue()
@@ -527,24 +518,56 @@ class Transformation:
 	
 	A logical transformation. This is basically defining one or more
 	entries in the transformation catalog. You can think of it like a macro
-	for adding uses to your jobs. You can define a transformation that
+	for adding <uses> to your jobs. You can define a transformation that
 	uses several files and/or executables, and refer to it when creating
 	a job. If you do, then all of the uses defined for that transformation
 	will be copied to the job during planning.
 	
+	This code:
+		in = File("input.txt")
+		exe = Executable("exe")
+		t = Transformation(namespace="foo", name="bar", version="baz")
+		t.uses(in)
+		t.uses(exe)
+		j = Job(t)
+		
+	is equivalent to:
+		in = File("input.txt")
+		exe = Executable("exe")
+		j = Job(namespace="foo", name="bar", version="baz")
+		j.uses(in)
+		j.uses(exe)
+	
 	Examples:
-		mDiff = Executable(namespace="montage",name="mDiff",version="3.0")
-		Transformation(mDiff)
 		Transformation(name='mDiff')
 		Transformation(namespace='montage',name='mDiff')
 		Transformation(namespace='montage',name='mDiff',version='3.0')
+		
+	Using one executable:
+		mProjectPP = Executable(namespace="montage",name="mProjectPP",version="3.0")
+		x_mProjectPP = Transformation(mProjectPP)
+		
+	Using several executables:
+		mDiff = Executable(namespace="montage",name="mProjectPP",version="3.0")
+		mFitplane = Executable(namespace="montage",name="mFitplane",version="3.0")
+		mDiffFit = Executable(namespace="montage",name="mDiffFit",version="3.0")
+		x_mDiffFit = Transformation(mDiffFit)
+		x_mDiffFit.uses(mDiff)
+		x_mDiffFit.uses(mFitplane)
+		
+	Config files too:
+		conf = File("jbsim.conf")
+		jbsim = Executable(namespace="scec",name="jbsim")
+		x_jbsim = Transformation(jbsim)
+		x_jbsim.uses(conf)
 	"""
 	def __init__(self,name,namespace=None,version=None):
 		"""
 		The name argument can be either a string or an Executable object.
 		If it is an Executable object, then the Transformation inherits
 		its name, namespace and version from the Executable, and the 
-		Transformation is set to use the Executable.
+		Transformation is set to use the Executable with link=input,
+		transfer=true, and register=False.
 		
 		Arguments:
 			name: The name of the transformation
@@ -559,7 +582,7 @@ class Transformation:
 			self.name = name.name
 			self.namespace = name.namespace
 			self.version = name.version
-			self.uses(name)
+			self.uses(name, link=Link.INPUT, transfer=True, register=False)
 		else:
 			self.name = name
 		if namespace: self.namespace = namespace
@@ -591,12 +614,12 @@ class Transformation:
 		"""Return an XML representation of this transformation"""
 		indentation = u''.join([indent for i in range(0,level)])
 		xml = StringIO()
+		
 		xml.write(u'%s<transformation' % indentation)
-		if self.namespace:
-			xml.write(u' namespace="%s"' % self.namespace)
+		if self.namespace: xml.write(u' namespace="%s"' % self.namespace)
 		xml.write(u' name="%s"' % self.name)
-		if self.version:
-			xml.write(u' version="%s"' % self.version)
+		if self.version: xml.write(u' version="%s"' % self.version)
+		
 		if len(self.used_files) == 0:
 			xml.write("/>")
 		else:
@@ -607,8 +630,10 @@ class Transformation:
 				xml.write(u.toXML())
 				xml.write(u'\n')
 			xml.write(u'%s</transformation>' % indentation)
+			
 		result = xml.getvalue()
 		xml.close()
+		
 		return result
 		
 class AbstractJob:
@@ -1303,7 +1328,7 @@ def diamond():
 	analyze = Job(t_analyze)
 	d = File("f.d", link=Link.OUTPUT, transfer=True, register=True)
 	analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-	analyze.addUses(c1, link=Link.INPUT)
+	analyze.uses(c1, link=Link.INPUT)
 	analyze.uses(c2, link=Link.INPUT)
 	analyze.uses(d, link=Link.OUTPUT)
 	diamond.addJob(analyze)
