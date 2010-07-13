@@ -248,7 +248,7 @@ public class Database
         }
     }
     
-    private Database() throws ClassNotFoundException,
+    public Database() throws ClassNotFoundException,
         NoSuchMethodException, InstantiationException,
         IllegalAccessException, InvocationTargetException,
         SQLException, IOException {
