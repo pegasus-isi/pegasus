@@ -143,11 +143,16 @@ public class ENV extends Namespace {
         return Namespace.VALID_KEY;
     }
 
+
+
+
     /**
      * Converts the contents of the map into the string that can be put in the
      * Condor file for printing.
+     *
+     * @return  String .
      */
-    public String toString() {
+    public String toCondor() {
         StringBuffer st = new StringBuffer();
         String key = null;
         String value = null;

@@ -143,6 +143,24 @@ public abstract class Namespace extends Data{
     */
    public abstract String namespaceName();
 
+   /**
+    * Returns the contents as String. Currently, it returns condor compatible
+    * string that can be put in the condor submit file
+    *
+    * @return textual description
+    */
+   public String toString(){
+       return this.toCondor();
+   }
+
+   /**
+    * Returns a condor description that can be used to put the contents of the
+    * namespace into the condor submit file during code generation.
+    *
+    * @return String
+    */
+   public abstract String toCondor();
+
 
    /**
    * Provides an iterator to traverse the profiles by their keys.
@@ -193,7 +211,7 @@ public abstract class Namespace extends Data{
     */
    public void checkKeyInNS(TransformationCatalogEntry entry){
        //sanity check
-       if(entry == null) {
+       if(entry == null ) {
            return;
        }
        //pass down the list of Profile objects to be sucked in.

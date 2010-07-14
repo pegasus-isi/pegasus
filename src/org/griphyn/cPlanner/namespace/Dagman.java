@@ -376,7 +376,7 @@ public class Dagman extends Namespace {
      *
      * @return the the textual description.
      */
-    public String toString() {
+    public String toCondor() {
         return toString(mJobName);
     }
 

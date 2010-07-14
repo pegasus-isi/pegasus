@@ -487,7 +487,7 @@ public class TransformationCatalogEntry
      * @return List   List of Profile objects. returns null if none are found.
      */
     public List getProfiles( String namespace ) {
-        return mProfiles.getProfiles(namespace);
+        return ( this.mProfiles == null ) ? null : mProfiles.getProfiles(namespace);
     }
 
     /**

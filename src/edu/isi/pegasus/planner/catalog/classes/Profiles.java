@@ -180,7 +180,7 @@ public class Profiles {
 
         for( Iterator it = namespace.getProfileKeyIterator(); it.hasNext(); ){
             String key = ( String )it.next();
-            result.add( new Profile( namespace.toString(), key, (String)namespace.get( key ) ));
+            result.add( new Profile( namespace.namespaceName(), key, (String)namespace.get( key ) ));
         }
 
         return result;

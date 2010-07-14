@@ -158,7 +158,7 @@ public class ProfileParser
 	value.append(ch);
 	break;
       case 4: // flush
-	result.add( new Profile( namespace.toString(),
+	result.add( new Profile( namespace.toString().toLowerCase(),
 				 key.toString(),
 				 value.toString() ) );
 	namespace.delete( 0, namespace.length() );

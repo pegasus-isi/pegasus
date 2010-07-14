@@ -259,7 +259,7 @@ public class Hints extends Namespace {
      *
      * @return String
      */
-    public String toString() {
+    public String toCondor() {
         StringBuffer st = new StringBuffer();
         String key = null;
         String value = null;

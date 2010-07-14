@@ -376,7 +376,7 @@ public class Globus extends Namespace {
      *
      * @return the textual description.
      */
-    public String toString(){
+    public String toCondor(){
         return convert(mProfileMap);
     }
 

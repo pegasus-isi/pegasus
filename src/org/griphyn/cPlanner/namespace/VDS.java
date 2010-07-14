@@ -540,7 +540,7 @@ public class VDS extends Namespace {
      *
      * @return the textual description.
      */
-    public String toString() {
+    public String toCondor() {
         StringBuffer st = new StringBuffer();
         String key = null;
         String value = null;

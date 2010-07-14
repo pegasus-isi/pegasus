@@ -62,7 +62,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
  *
  *
  * @author Karan Vahi
- * @version $Revision$
+ * @version $Revision: 2183 $
  */
 public class Text
     implements TransformationCatalog {
