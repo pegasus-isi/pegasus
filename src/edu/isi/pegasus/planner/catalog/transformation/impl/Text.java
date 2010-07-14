@@ -20,7 +20,6 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
-import org.griphyn.cPlanner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
@@ -36,6 +35,12 @@ import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.parser.TransformationCatalogTextParser;
+
+import org.griphyn.cPlanner.common.PegasusProperties;
+
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.Profile;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -46,6 +51,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -55,7 +61,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * A File based Transformation Catalog where each entry spans multiple lines.
@@ -173,7 +178,7 @@ public class Text
      *
      * @throws Exception
      * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public List getTCEntries(String namespace, String name, String version,
                              List resourceids, TCType type) throws Exception {
@@ -225,7 +230,7 @@ public class Text
      *
      * @throws Exception
      * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public List getTCEntries(String namespace, String name, String version,
                              String resourceid, TCType type) throws Exception {
@@ -450,86 +455,36 @@ public class Text
         logMessage("\t getTCPfnProfiles(" + pfn + "," + resourceid + "," +
                    type + ")");
 
-        List result = null;
-        List lfnMap = new ArrayList();
-        if (mTreeMap.containsKey(resourceid)) {
-            lfnMap.add( (Map) mTreeMap.get(resourceid));
-        }
-        for (Iterator i = lfnMap.iterator(); i.hasNext(); ) {
-            for (Iterator j = ( (Map) i.next()).values().iterator();
-                 j.hasNext(); ) {
-                for (Iterator k = ( (List) j.next()).iterator(); k.hasNext(); ) {
-                    TransformationCatalogEntry tc = (
-                        TransformationCatalogEntry) k.next();
-                    List profiles = null;
-                    if (tc.getPhysicalTransformation().equals(pfn)) {
-                        if (type == null || tc.getType().equals(type)) {
-                            profiles = tc.getProfiles();
-                        }
-                        if (profiles != null) {
-                            if (result == null) {
-                                result = new ArrayList(10);
-                            }
-                            result.addAll(profiles);
-                        }
-                    }
-                }
+        List<Profile> result = new LinkedList<Profile>();
+
+        //retrieve all the transformations corresponding to resource id and type
+        //first
+        List<TransformationCatalogEntry> entries = mTCStore.getEntries( resourceid, type );
+
+        //traverse through the list
+        for( TransformationCatalogEntry entry : entries ){
+            if( entry.getPhysicalTransformation().equals( pfn ) ){
+                result.addAll( entry.getProfiles() );
             }
+        }
+
+        //API dictates we return null in case of empty
+        if( result.isEmpty() ){
+            return null;
         }
         return result;
     }
 
     /**
-     * List all the contents of the TC in a column format.
+     * List the contents of the TC
      *
-     * @return a list of String Arrays. Each string array contains the
-     *         resource, lfn, pfn, type, sysinfo and profiles.
-     *         The last entry in the list is an array of integers which contain
-     *         the column lengths for pretty print.
+     * @return a list of <TransformationCatalogEntry> objects
      *
      * @throws Exception
      */
 
     public List getTC() throws Exception {
-        List result = new ArrayList();
-        for (Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
-            for (Iterator j = ( (Map) i.next()).values().iterator();
-                 j.hasNext(); ) {
-                for (Iterator k = ( (List) j.next()).iterator(); k.hasNext(); ) {
-                    TransformationCatalogEntry tc = (
-                        TransformationCatalogEntry) k.next();
-                    result.add(tc);
-                }
-
-            }
-        }
-        /*     List result = null;
-             int[] length = {0, 0, 0, 0, 0};
-             for ( Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
-                 for ( Iterator j = ( ( Map ) i.next() ).values().iterator();
-                     j.hasNext(); ) {
-         for ( Iterator k = ( ( List ) j.next() ).iterator(); k.hasNext(); ) {
-                         TransformationCatalogEntry tc = (
-                             TransformationCatalogEntry ) k.next();
-                         if ( result == null ) {
-                             result = new ArrayList( 10 );
-                         }
-                         String[] s = {tc.getResourceId(),
-                             tc.getLogicalTransformation(),
-                             tc.getPhysicalTransformation(),
-         tc.getType().toString(), tc.getVDSSysInfo().toString(),
-                             ( ( tc.getProfiles() != null ) ?
-         ProfileParser.combine( tc.getProfiles() ) : "NULL" )};
-                         columnLength( s, length );
-                         result.add( s );
-                     }
-                 }
-             }
-             if ( result != null ) {
-                 result.add( length );
-             }
-         */
-        return result;
+        return mTCStore.getEntries( (String)null, (TCType)null );
     }
 
     /**
@@ -540,13 +495,13 @@ public class Text
      * Add multiple TCEntries to the Catalog. Exception is thrown when error
      * occurs.
      *
-     * @param entries list of {@link org.griphyn.common.catalog.TransformationCatalogEntry}
+     * @param entries list of {@link edu.isi.pegasus.planner.catalog.TransformationCatalogEntry}
      * objects as input.
      *
      * @return boolean Return true if succesful, false if error.
      *
      * @throws Exception
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public boolean addTCEntry(List entries) throws
         Exception {
@@ -563,13 +518,13 @@ public class Text
      * Add a single TCEntry to the Catalog. Exception is thrown when error
      * occurs.
      *
-     * @param entry a single {@link org.griphyn.common.catalog.TransformationCatalogEntry}
+     * @param entry a single {@link edu.isi.pegasus.planner.catalog.TransformationCatalogEntry}
      * object as input.
      *
      * @return boolean Return true if succesful, false if error.
      *
      * @throws Exception
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public boolean addTCEntry(TransformationCatalogEntry entry) throws
         Exception {
@@ -586,13 +541,13 @@ public class Text
      * occurs. This method is a hack and wont commit the additions to the
      * backend catalog
      *
-     * @param entry a single {@link org.griphyn.common.catalog.TransformationCatalogEntry}
+     * @param entry a single {@link edu.isi.pegasus.planner.catalog.TransformationCatalogEntry}
      * object as input.
      * @param write boolean to commit additions to backend catalog.
      * @return boolean Return true if succesful, false if error.
      *
      * @throws Exception
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public boolean addTCEntry(TransformationCatalogEntry entry, boolean write) throws
         Exception {
@@ -624,7 +579,7 @@ public class Text
      *
      * @throws Exception
      *
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
@@ -660,7 +615,7 @@ public class Text
      *
      * @throws Exception
      *
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
@@ -683,35 +638,20 @@ public class Text
         entry.addProfiles(pfnprofiles);
         entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
 
-        Map lfnMap = null;
-        if (mTreeMap.containsKey(resourceid)) {
-            lfnMap = (Map) mTreeMap.get(resourceid);
-        }
-        else {
-            lfnMap = new TreeMap();
-            mTreeMap.put(resourceid, lfnMap);
-        }
-
-        List pfnList = null;
-        if (lfnMap.containsKey(entry.getLogicalTransformation())) {
-            pfnList = (List) lfnMap.get(entry.getLogicalTransformation());
-        }
-        else {
-            pfnList = new ArrayList(2);
-            lfnMap.put(entry.getLogicalTransformation(), pfnList);
-        }
+        List<TransformationCatalogEntry> existing = this.getTCEntries( namespace, name, version, resourceid, type );
+        //check to see if entries match
         boolean add = true;
-        for (Iterator i = pfnList.iterator(); i.hasNext(); ) {
-            TransformationCatalogEntry test = (TransformationCatalogEntry) i.
-                next();
-            if (test.equals(entry)) {
-                add = false;
+        for( TransformationCatalogEntry e: existing ){
+            if ( e.equals( entry ) ){
+               add = false;
+               break;
             }
         }
-        if (add) {
-            pfnList.add(entry);
+
+        if( add ){
+            mTCStore.addEntry( entry );
             if (write) {
-                writeTC();
+                //writeTC();
             }
         }
         else {
@@ -719,7 +659,6 @@ public class Text
                         LogManager.DEBUG_MESSAGE_LEVEL);
         }
         return true;
-
     }
 
     /**
@@ -832,11 +771,7 @@ public class Text
      */
     public boolean deleteTCbyResourceId(String resourceid) throws Exception {
 
-        if (mTreeMap.containsKey(resourceid)) {
-            mTreeMap.remove(resourceid);
-        }
-        writeTC();
-        return true;
+       throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
@@ -846,7 +781,7 @@ public class Text
      * @throws Exception
      */
     public boolean deleteTC() throws Exception {
-        mTreeMap.clear();
+        mTCStore.clear();
         return true;
     }
 
@@ -876,45 +811,7 @@ public class Text
         //not impelemented
     }
 
-    private void writeTC() {
-        PrintWriter writer = null;
-        try {
-            mLogger.log("Starting to write the TC file",
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            writer = new PrintWriter(new BufferedWriter(new FileWriter(
-                mTCFile, false)));
-
-        }
-        catch (IOException e) {
-            mLogger.log(
-                "Unable to open TC File for writing\"" + mTCFile, e,
-                LogManager.ERROR_MESSAGE_LEVEL);
-        }
-        int count = 0;
-        for (Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
-            //get all the values from the main map
-            for (Iterator j = ( (Map) i.next()).values().iterator();
-                 j.hasNext(); ) {
-                //for each resource and each logical transformatino get the arraylist.
-                for (Iterator k = ( (List) j.next()).iterator(); k.hasNext(); ) {
-                    //start printing each entry
-                    writer.println( ( (TransformationCatalogEntry) k.next()).
-                                   toTCString());
-                    count++;
-
-                }
-
-            }
-        }
-        mLogger.log("Written " + count +
-                    " entries back to the TC file",
-                    LogManager.DEBUG_MESSAGE_LEVEL);
-        writer.flush();
-        writer.close();
-        mLogger.log( "Starting to write the TC file - DONE",
-                     LogManager.DEBUG_MESSAGE_LEVEL);
-    }
-
+   
     /**
      * Computes the maximum column lenght for pretty printing.
      *
@@ -930,184 +827,6 @@ public class Text
 
     }
 
-    /**
-     * Populates the internal copy of the transformation catalog from a byte
-     * stream (input stream). Used in webservices, when clients upload their files.
-     * It uses the default character encoding.
-     *
-     * @param reader  the <code>InputStrean</code> containing the bytes to be
-     *                read.
-     * @return boolean
-     */
-    private boolean populateTC(InputStream reader) {
-        return populateTC(new InputStreamReader(reader));
-    }
-
-    /**
-     * Populates the internal copy of the transformation catalog from the file
-     * containing the transformation catalog in the 6 column format.
-     *
-     * @return boolean
-     */
-    private boolean populateTC() {
-        boolean result = false;
-
-        try {
-            result = populateTC(new FileReader(mTCFile));
-        }
-        catch (FileNotFoundException ex) {
-            mLogger.log("The tc text file " + mTCFile +
-                        " was not found", LogManager.ERROR_MESSAGE_LEVEL);
-            mLogger.log("Considering it as Empty TC",
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            return true;
-        }
-        catch (IOException e) {
-            mLogger.log("Unable to open the file " +
-                        mTCFile, e, LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
-        }
-        return result;
-    }
-
-    /**
-     * Adds multiple entries into the TC.  Calls the above api multiple times.
-     *
-     * @param reader  the input stream from where to read the contents of the
-     *                transformation catalog.
-     * @return boolean
-     */
-    private boolean populateTC(Reader reader) {
-        BufferedReader buf = new BufferedReader(reader);
-        // String profilestring = null;
-        int linecount = 0;
-        int count = 0;
-        try {
-            String line = null;
-            //buf = new BufferedReader( new FileReader( mTCFile ) );
-            while ( (line = buf.readLine()) != null) {
-                linecount++;
-                if (! (line.startsWith("#") ||
-                       line.trim().equalsIgnoreCase(""))) {
-                    TransformationCatalogEntry tc = new
-                        TransformationCatalogEntry();
-                    String[] tokens = line.split("[ \t]+", 6);
-                    for (int i = 0; i < tokens.length; i++) {
-                        switch (i) {
-                            case 0: //poolname
-                                tc.setResourceId(tokens[i]);
-                                break;
-                            case 1: //logical transformation name
-                                if (tokens[i].indexOf("__") != -1) {
-                                    mLogger.log(
-                                        "Logical Transformations in the new File TC " +
-                                        "are represented as NS::NAME:VER",
-                                        LogManager.ERROR_MESSAGE_LEVEL);
-                                    mLogger.log("Assuming " + tokens[i] +
-                                                " as just the transformation NAME.",
-                                                LogManager.DEBUG_MESSAGE_LEVEL);
-                                }
-                                tc.setLogicalTransformation(tokens[i]);
-                                break;
-                            case 2: //pfn
-                                tc.setPhysicalTransformation(tokens[i]);
-                                break;
-                            case 3: //type
-                                tc.setType( (tokens[i].equalsIgnoreCase(
-                                    "null")) ?
-                                           TCType.INSTALLED :
-                                           TCType.fromString(tokens[i]));
-                                break;
-                            case 4: //systeminfo
-                                tc.setVDSSysInfo( (tokens[i].equalsIgnoreCase(
-                                    "null")) ?
-                                              new VDSSysInfo(null) :
-                                              new VDSSysInfo(tokens[i]));
-                                break;
-                            case 5: //profile string
-                                if (!tokens[i].equalsIgnoreCase("null")) {
-                                    try {
-                                        tc.addProfiles(ProfileParser.parse(
-                                            tokens[
-                                            i]));
-                                    }
-                                    catch (ProfileParserException ppe) {
-                                        mLogger.log(
-                                            "Parsing profiles on line " +
-                                            linecount + " " + ppe.getMessage() +
-                                            "at position " +
-                                            ppe.getPosition(), ppe,
-                                            LogManager.ERROR_MESSAGE_LEVEL);
-
-                                    }
-                                    catch (RuntimeException e) {
-                                        mLogger.log(
-                                            "Ignoring errors while parsing profile in Transformation Catalog on line " +
-                                            linecount, e,
-                                            LogManager.WARNING_MESSAGE_LEVEL);
-                                    }
-                                }
-                                break;
-                            default:
-                                mLogger.log("Line " + linecount +
-                                            " : Humm no need to be in default",
-                                            LogManager.ERROR_MESSAGE_LEVEL);
-                        } //end of switch
-                    } //end of for loop
-                    // if (count > 0) {
-
-                    //   mLogger.logMessage("Loading line number" + linecount +
-                    //                    " to the map", 1);
-                    Map lfnMap = null;
-                    if (!mTreeMap.containsKey(tc.getResourceId())) {
-                        lfnMap = new TreeMap();
-                    }
-                    else {
-                        lfnMap = (Map) mTreeMap.get(tc.getResourceId());
-                    }
-                    List entries = null;
-                    if (!lfnMap.containsKey(tc.getLogicalTransformation())) {
-                        entries = new ArrayList(3);
-                    }
-                    else {
-                        entries = (List) lfnMap.get(tc.
-                            getLogicalTransformation());
-                    }
-                    entries.add(tc);
-                    lfnMap.put(tc.getLogicalTransformation(), entries);
-                    mTreeMap.put(tc.getResourceId(), lfnMap);
-                    count++;
-                } //end of if "#"
-            } //end of while line
-            mLogger.log("Loaded " + count + " entries to the TC Map",
-                        LogManager.DEBUG_MESSAGE_LEVEL);
-            buf.close();
-            return true;
-        }
-        catch (FileNotFoundException ex) {
-            mLogger.log("The tc text file " + mTCFile +
-                        " was not found", LogManager.ERROR_MESSAGE_LEVEL);
-            mLogger.log("Considering it as Empty TC",
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            return true;
-        }
-        catch (IOException e) {
-            mLogger.log("Unable to open the file " +
-                        mTCFile, e, LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
-        }
-        catch (IllegalStateException e) {
-            mLogger.log("On line " + linecount + "in File " +
-                        mTCFile + "\n", e, LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
-        }
-        catch (Exception e) {
-            mLogger.log(
-                "While loading entries into the map on line " + linecount +
-                "\n", e, LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
-        }
-    }
 
     /**
      * Logs the message to a logging stream. Currently does not log to any stream.

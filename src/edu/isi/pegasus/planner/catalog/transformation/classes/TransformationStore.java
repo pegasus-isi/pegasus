@@ -50,13 +50,28 @@ public class TransformationStore {
      * The default constructor.
      */
     public TransformationStore(){
-        mTCStore = new TreeMap();
+        initialize();
     }
 
+    /**
+     * Intializes the store.
+     */
+    private void initialize(){
+        mTCStore = new TreeMap<String, Map<String,List<TransformationCatalogEntry>>>();
+    }
+
+    /**
+     * Clears all the entries in the store.
+     */
+    public void clear(){
+        //more efficient to create a new object rather than relying on
+        //the underlying map clear method
+        initialize();
+    }
 
     /**
      * Adds an entry into the store. If the entry already exists i.e entry
-     * for a site exists it's overriden.
+     * for a site and corresponding PFN exists it's overriden.
      *
      * @param entry  the transformation catalog object.
      */
@@ -68,8 +83,23 @@ public class TransformationStore {
             //retrieve the associated map
             Map<String,List<TransformationCatalogEntry>> m = mTCStore.get( completeName );
             //add an existing entry
-            List l = m.get( entry.getResourceId() );
-            l.add( entry );
+            List<TransformationCatalogEntry> l = m.get( entry.getResourceId() );
+
+            boolean existing = false;
+            for( TransformationCatalogEntry e : l ){
+                if( e.getPhysicalTransformation().equals( entry.getPhysicalTransformation() ) ){
+                    //lets overwrite the entry and break out
+                    l.remove( e );
+                    l.add( entry );
+                    existing = true;
+                    break;
+                }
+            }
+            if ( !existing ){
+                //an entry with the same pfn does not exist for the site
+                l.add( entry );
+            }
+
         }
         else{
             Map<String, List<TransformationCatalogEntry>> m = new HashMap();
