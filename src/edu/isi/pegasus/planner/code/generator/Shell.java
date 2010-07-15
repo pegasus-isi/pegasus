@@ -231,7 +231,7 @@ public class Shell extends Abstract {
         boolean constructed = ps.construct( job, Dagman.POST_SCRIPT_KEY );
 
         //generate call to executeJob
-        writeString( generateCallToExecuteJob( job, execDir ) );
+        writeString( generateCallToExecuteJob( job, execDir, this.mSubmitFileDir ) );
         if( constructed ){
             //execute postscript and check for exitcode
             writeString( generateCallToExecutePostScript( job, mSubmitFileDir ) );
@@ -328,13 +328,15 @@ public class Shell extends Abstract {
      * Generates a call to execute_job function , that is used to launch
      * a job from the shell script.
      * 
-     * @param job        the job to be launched
-     * @param directory  the directory in which the job needs to be launched.
+     * @param job               the job to be launched
+     * @param scratchDirectory  the workflow specific execution directory created during running of the workflow
+     * @param submitDirectory   the submit directory of the workflow
      * 
      * @return the call to execute job function.
      */
     protected String generateCallToExecuteJob( SubInfo job,
-                                               String directory ){
+                                               String scratchDirectory,
+                                               String submitDirectory ){
         StringBuffer sb = new StringBuffer();
         
         //gridstart modules right now store the executable
@@ -343,6 +345,8 @@ public class Shell extends Abstract {
         String executable = (String) job.condorVariables.get( "executable" );
         String arguments = (String)job.condorVariables.get( Condor.ARGUMENTS_KEY );
         arguments = ( arguments == null ) ? "" : arguments;
+
+        String directory = job.runInWorkDirectory() ? scratchDirectory : submitDirectory;
 
         //generate the call to execute job function
         //execute_job $jobstate test1 /tmp /bin/echo "Karan Vahi" "stdin file" "k=v" "g=m"
