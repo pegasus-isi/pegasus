@@ -16,7 +16,6 @@
 
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
@@ -27,11 +26,8 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 
-import edu.isi.pegasus.common.util.ProfileParser;
-import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.parser.TransformationCatalogTextParser;
@@ -41,29 +37,58 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.Profile;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.Reader;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * A File based Transformation Catalog where each entry spans multiple lines.
+ *
+ * The implementation refers to the following same format for specifying a
+ * transformation catalog entry.
+ *
+ *
+ * <pre>
+ * tr example::keg:1.0 {
+ *
+ *  #specify profiles that apply for all the sites for the transformation
+ *  #in each site entry the profile can be overriden
+ *  profile env "APP_HOME" "/tmp/karan"
+ *  profile env "JAVA_HOME" "/bin/java.1.5"
+ * 
+ *  site isi {
+ *   profile env "me" "with"
+ *   profile condor "more" "test"
+ *   profile env "JAVA_HOME" "/bin/java.1.6"
+ *   pfn "/path/to/keg"
+ *   arch  "x86"
+ *   os    "linux"
+ *   osrelease "fc"
+ *   osversion "4"
+ *   type "installed"
+ *  }
+ *
+ *  site wind {
+ *   profile env "me" "with"
+ *   profile condor "more" "test"
+ *   pfn "/path/to/keg"
+ *   arch  "x86"
+ *   os    "linux"
+ *   osrelease "fc"
+ *   osversion "4"
+ *   type "STATIC_BINARY"
+ *  }
+ * }
+ *
+ * </pre>
+ *
  *
  *
  * @author Karan Vahi

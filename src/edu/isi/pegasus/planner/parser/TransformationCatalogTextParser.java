@@ -47,16 +47,50 @@ import org.griphyn.cPlanner.classes.Profile;
 
 
 /**
- * Parses the input stream and generates site configuration map as
- * output.
+ * Parses the input stream and generates the TransformationStore as output.
  *
- * @author Jens Vöckler
- * @author Gaurang Mehta
+ * This parser is able to parse the Transformation Catalog specification in the
+ * following format
+ * 
+ * <pre>
+ * tr example::keg:1.0 {
+ * 
+ *  #specify profiles that apply for all the sites for the transformation
+ *  #in each site entry the profile can be overriden
+ *  profile env "APP_HOME" "/tmp/karan"
+ *  profile env "JAVA_HOME" "/bin/java.1.5"
+ * 
+ *  site isi {
+ *   profile env "me" "with"
+ *   profile condor "more" "test"
+ *   profile env "JAVA_HOME" "/bin/java.1.6"
+ *   pfn "/path/to/keg"
+ *   arch  "x86"
+ *   os    "linux"
+ *   osrelease "fc"
+ *   osversion "4"
+ *   type "installed"            
+ *  }
+ * 
+ *  site wind {
+ *   profile env "me" "with"
+ *   profile condor "more" "test"
+ *   pfn "/path/to/keg"
+ *   arch  "x86"
+ *   os    "linux"
+ *   osrelease "fc"
+ *   osversion "4"
+ *   type "STATIC_BINARY"
+ *  }
+ * }
+
+ * </pre>
+ *
  * @author Karan Vahi
+ * @author Jens Vöckler
  * @version $Revision$
  *
- * @see org.griphyn.cPlanner.classes.SiteCatalogTextScanner
- * @see org.griphyn.cPlanner.classes.Token
+ * @see edu.isi.pegasus.planner.parser.TransformationCatalogTextScanner
  */
 public class TransformationCatalogTextParser {
 
