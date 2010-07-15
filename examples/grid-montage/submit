@@ -1,0 +1,127 @@
+#!/bin/bash
+
+set -e
+
+# note - this requires Montage 3.2beta6 or higher
+
+#######################################################################
+#
+#  Settings
+#
+DEGREES=1.0
+LOCAL_PEGASUS_HOME="/home/rynge/Pegasus/install/current"
+LOCAL_MONTAGE_LOCATION="/home/rynge/Projects/Montage/src/Montage_v3.2_beta4_mats"
+CLUSTER_NAME="ISIViz"
+CLUSTER_HOSTNAME="viz-login.isi.edu"
+CLUSTER_GATEKEEPER_PORT="2119"
+CLUSTER_SCHEDULER="condor"
+CLUSTER_WORK_DIR="/glusterfs/scratch"
+CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/2.4.1"
+CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/4.2.1"
+CLUSTER_MONTAGE_LOCATION="/cluster-software/montage/3.2_beta4_mats"
+JOB_CLUSTERING="PEGASUS::bundle=15"
+#######################################################################
+
+TOP_DIR=`pwd`
+LOCAL_HOSTNAME=`hostname -f`
+
+export PATH=$LOCAL_MONTAGE_LOCATION/bin:$PATH
+unset CLASSPATH
+export PEGASUS_HOME=$LOCAL_PEGASUS_HOME
+. $PEGASUS_HOME/setup.sh
+
+# unique directory for this run
+RUN_ID=`/bin/date +'%F_%H%M%S'`
+RUN_DIR=`pwd`/runs/$RUN_ID
+
+echo "Work directory: $RUN_DIR"
+
+mkdir -p $RUN_DIR/inputs
+cd $RUN_DIR
+
+cp $TOP_DIR/pegasusrc .
+
+# create the transformation catalogue (tc)
+cat >tc <<EOF
+# Site  LFN  PFN  TYPE  SYSTEM PROFILE
+$CLUSTER_NAME     pegasus::dirmanager     $CLUSTER_PEGASUS_HOME/bin/dirmanager        INSTALLED   INTEL32::LINUX
+$CLUSTER_NAME     pegasus::kickstart      $CLUSTER_PEGASUS_HOME/bin/kickstart         INSTALLED   INTEL32::LINUX
+$CLUSTER_NAME     pegasus::seqexec        $CLUSTER_PEGASUS_HOME/bin/seqexec           INSTALLED   INTEL32::LINUX
+$CLUSTER_NAME     pegasus::cleanup        $CLUSTER_PEGASUS_HOME/bin/cleanup           INSTALLED   INTEL32::LINUX
+EOF
+for BINARY in `(cd $LOCAL_MONTAGE_LOCATION/bin && ls)`; do
+    echo "$CLUSTER_NAME     $BINARY:3.0    $CLUSTER_MONTAGE_LOCATION/bin/$BINARY       INSTALLED   INTEL32::LINUX     $JOB_CLUSTERING" >>tc
+done
+
+# site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
+                    <internal-mount-point mount-point="$RUN_DIR/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
+                    <internal-mount-point mount-point="$RUN_DIR/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_HOME" >$LOCAL_PEGASUS_HOME</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
+        <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >$GLOBUS_TCP_PORT_RANGE</profile>
+    </site>
+    <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt2" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
+                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
+                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
+        <profile namespace="env" key="PATH" >$CLUSTER_MONTAGE_LOCATION/bin:$CLUSTER_GLOBUS_LOCATION/bin:/usr/local/bin:/bin:/usr/bin</profile>
+    </site>
+</sitecatalog>
+EOF
+
+cd inputs
+mArchiveList 2mass j M17 $DEGREES $DEGREES images.tbl
+mArchiveExec images.tbl
+cd ..
+
+mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "gsiftp://$LOCAL_HOSTNAME$RUN_DIR" "gsiftp://$LOCAL_HOSTNAME$RUN_DIR/inputs"
+
+cp cache.list rc
+perl -p -i -e 's/ipac_cluster/local/' rc
+
+pegasus-plan \
+    -D pegasus.user.properties=pegasusrc \
+    --sites $CLUSTER_NAME \
+    --cluster horizontal \
+    --dir work \
+    --output local \
+    --dax dag.xml \
+    --nocleanup \
+    --submit \
+    2>&1 | tee pegasus-plan.out
+
+
