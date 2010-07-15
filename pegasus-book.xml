@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<book>
+   <title>Pegasus WMS User Guide</title>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="introduction.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="installation.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concepts.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="configuration.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="catalogs.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="planning_and_submitting.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="submit_directory.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="monitoring_debugging_stats.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="example_workflows.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_configs.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="api.xml"/>
+</book>
+

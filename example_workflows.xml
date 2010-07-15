@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="example_workflows">
+  <title>Example Workflows</title>
+
+  <para>These examples are included in the Pegasus distribution and can be
+  found under <filename>$PEGASUS_HOME/examples/</filename></para>
+
+  <section>
+    <title>Grid Examples</title>
+
+    <para>These examples assumes you have access to a cluster with Globus
+    installed. A pre-ws gatekeeper and gridftp server is required. You also
+    need Globus and Pegasus installed, both on the machine you are submitting
+    from, and the cluster.</para>
+
+    <section>
+      <title>Black Diamond</title>
+
+      <para>This is a sample workflow with 4 nodes, layed out in a diamond
+      shape:</para>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata align="center" fileref="images/examples-diamond.jpg"
+                     valign="middle" />
+        </imageobject>
+      </mediaobject>
+
+      <para>The binary for the nodes is a simple "mock application" name "keg"
+      ("canonical example for the grid") which reads input files designated by
+      arguments, writes them back onto output files, and produces on STDOUT a
+      summary of where and when it was run. Keg ships with Pegasus in the bin
+      directory.</para>
+
+      <para>This example ships with a "submit" script which will build the
+      replica catalog, the transformation catalog, and the site catalog. When
+      you create your own workflows, such a submit script is not needed if you
+      want to maintain those catalogs manually.</para>
+
+      <para>To test the example, edit the "submit" script and change the
+      cluster config to the setup and install locations for your cluster. Then
+      run:</para>
+
+      <para>./submit</para>
+
+      <para>The workflow should now be submitted and in the output you should
+      see a submit dir location for the instance. With that directory you can
+      monitor the workflow with:</para>
+
+      <para>pegasus-status [submitdir]</para>
+
+      <para>Once the workflow is done, you can make sure it was sucessful
+      with:</para>
+
+      <para>pegasus-analyzer -d [submitdir]</para>
+    </section>
+
+    <section>
+      <title>NASA/IPAC Montage</title>
+
+      <para>...</para>
+    </section>
+
+    <section>
+      <title>Rosetta</title>
+
+      <para>...</para>
+    </section>
+
+    <section>
+      <title>Hierarchical</title>
+
+      <para>...</para>
+    </section>
+
+    <section>
+      <title>Recursive</title>
+
+      <para>...</para>
+    </section>
+  </section>
+
+  <section>
+    <title>Local Shell Examples</title>
+
+    <para>...</para>
+
+    <section>
+      <title>Black Diamond</title>
+
+      <para>...</para>
+    </section>
+  </section>
+
+  <section>
+    <title>glideinWMS Examples</title>
+
+    <para>...</para>
+
+    <section>
+      <title>Montage</title>
+
+      <para>...</para>
+    </section>
+  </section>
+</chapter>

@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="planning_and_submitting">
+    <title>Planning and Submitting</title>
+
+   <section>
+       <title>pegasus-plan</title>
+   
+
+    <para>Pegasus plans an abstract workflow into a concrete/executable workflow
+    by querying various catalogs and performing several refinement steps. We
+    have already setup all the catalogs required by Pegasus in the previous
+    sections and also configured properties that will affect how Pegasus plans
+    the workflow.</para>
+
+    <para>Pegasus planner is invoked on the command line by running the
+    pegasus-plan command. The client takes several parameters including one or
+    more sites where to compute the workflow, an optional single site if the
+    output data needs to be staged and stored and the input DAX file.</para>
+
+    <section>
+      <title>Running Locally</title>
+
+      <para>In this section we will be planning the blackdiamond workflow to run
+      locally on the submit machine and store the data on the submit machine
+      also. Invoke the pegasus-plan command with the --sites option set to local
+      and also the --output option set to local. The -D dags option specifies to
+      Pegasus to create the Dag and submit files in a directory called dags
+      inside the current directory. Lastly specify the blackdiamond.dax file as
+      the input DAX to the client.</para>
+
+      <programlisting><emphasis>$ pegasus-plan --sites local --output local -D dags \
+--dax $PEGASUS_HOME/examples/blackdiamond.dax</emphasis>
+
+2007.07.11 17:55:28.118 PDT: [INFO] Parsing the DAX
+2007.07.11 17:55:28.668 PDT: [INFO] Parsing the DAX (completed)
+2007.07.11 17:55:28.725 PDT: [INFO] Parsing the site catalog
+2007.07.11 17:55:28.926 PDT: [INFO] Parsing the site catalog (completed)
+2007.07.11 17:55:28.985 PDT: [INFO] Doing site selection
+2007.07.11 17:55:29.025 PDT: [INFO] Doing site selection (completed)
+2007.07.11 17:55:29.025 PDT: [INFO] Grafting transfer nodes in the workflow
+2007.07.11 17:55:29.137 PDT: [INFO] Grafting transfer nodes in the workflow (completed)
+2007.07.11 17:55:29.142 PDT: [INFO] Grafting the remote workdirectory creation jobs
+                                    in the workflow
+2007.07.11 17:55:29.159 PDT: [INFO] Grafting the remote workdirectory creation jobs
+                                    in the workflow (completed)
+2007.07.11 17:55:29.159 PDT: [INFO] Generating the cleanup workflow
+2007.07.11 17:55:29.164 PDT: [INFO] Generating the cleanup workflow (completed)
+2007.07.11 17:55:29.164 PDT: [INFO] Adding cleanup jobs in the workflow
+2007.07.11 17:55:29.183 PDT: [INFO] Parsing the site catalog
+2007.07.11 17:55:29.223 PDT: [INFO] Parsing the site catalog (completed)
+2007.07.11 17:55:29.248 PDT: [INFO] Adding cleanup jobs in the workflow (completed)
+2007.07.11 17:55:29.280 PDT: [INFO] Generating codes for the concrete workflow
+2007.07.11 17:55:29.476 PDT: [INFO] Generating codes for the concrete workflow(completed)
+2007.07.11 17:55:29.477 PDT: [INFO] Generating code for the cleanup workflow
+2007.07.11 17:55:29.515 PDT: [INFO] Generating code for the cleanup workflow (completed)
+2007.07.11 17:55:29.520 PDT: [INFO]
+
+I have concretized your abstract workflow. The workflow has been entered
+into the workflow database with a state of "planned". The next step is
+to start or execute your workflow. The invocation required is
+
+
+pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS\
+/dags/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
+--nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
+
+
+2007.07.11 17:55:29.521 PDT: [INFO] Time taken to execute is 1.71 seconds</programlisting>
+
+      <para>Looks like the planning worked. pegasus-plan tells you what command
+      to use next to submit your workflow. Just copy the pegasus-run line from
+      your output and run the command. pegasus-plan submits your planned
+      workflow to Condor-G for execution either locally or on the grid.</para>
+
+      <programlisting>$<emphasis> pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
+/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
+--nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
+</emphasis>
+Checking all your submit files for log file names.
+This might take a while...
+Done.
+-----------------------------------------------------------------------
+File for submitting this DAG to Condor           : black-diamond-0.dag.condor.sub
+Log of DAGMan debugging messages                 : black-diamond-0.dag.dagman.out
+Log of Condor library output                     : black-diamond-0.dag.lib.out
+Log of Condor library error messages             : black-diamond-0.dag.lib.err
+Log of the life of condor_dagman itself          : black-diamond-0.dag.dagman.log
+
+Condor Log file for all jobs of this DAG         : /tmp/black-diamond-061699.log
+-no_submit given, not submitting DAG to Condor.  You can do this with:
+"condor_submit black-diamond-0.dag.condor.sub"
+-----------------------------------------------------------------------
+Submitting job(s).
+Logging submit event(s).
+1 job(s) submitted to cluster 22402.
+
+I have started your workflow, committed it to DAGMan, and updated its
+state in the work database. A separate daemon was started to collect
+information about the progress of the workflow. The job state will soon
+be visible. Your workflow runs in base directory.
+
+cd /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
+
+*** To monitor the workflow you can run ***
+
+pegasus-status -w black-diamond-0 -t 20070711T175528-0700
+or
+pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
+
+*** To remove your workflow run ***
+
+pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</programlisting>
+
+      <para>The workflow was successfully submitted for execution to the local
+      submit host. The planned workflow Dag and submit files reside in the
+      directory
+      /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001 as
+      mentioned by the output of pegasus-run. Pegasus run also prints out a few
+      monitoring commands that we will use in Section 6.</para>
+
+      <para>If you have a grid site configured the proceed to Section 5.2 else
+      proceed to Section 6.</para>
+    </section>
+
+    <section>
+      <title>Running on the Grid</title>
+
+      <para>While the local workflow is executing let us submit another workflow
+      to run on the Grid. We have a grid site clus1 set up for use. Replace the
+      --sites local option in the previous run with --sites clus1. We will also
+      need to add a a --force flag because we already ran the same workflow
+      earlier locally and some out of the output products of the workflow may be
+      registered in the Replica Catalog. Pegasus does workflow reduction based
+      on existence of data products in the Replica Catalog. The --force option
+      is a way to tell Pegasus to ignore existing data products and compute the
+      entire workflow again.</para>
+
+      <programlisting>$ <emphasis>pegasus-plan --sites clus1 --output local -D dags \
+--dax $PEGASUS_HOME/examples/blackdiamond.dax --force</emphasis>
+2007.07.11 18:12:14.541 PDT: [INFO] Parsing the DAX
+2007.07.11 18:12:15.287 PDT: [INFO] Parsing the DAX (completed)
+
+...
+...
+
+2007.07.11 18:12:15.847 PDT: [INFO] Generating codes for the concrete workflow
+2007.07.11 18:12:16.008 PDT: [INFO] Generating codes for the concrete workflow(completed)
+2007.07.11 18:12:16.008 PDT: [INFO] Generating code for the cleanup workflow
+2007.07.11 18:12:16.049 PDT: [INFO] Generating code for the cleanup workflow (completed)
+2007.07.11 18:12:16.054 PDT: [INFO]
+
+
+I have concretized your abstract workflow. The workflow has been entered
+into the workflow database with a state of "planned". The next step is
+to start or execute your workflow. The invocation required is
+
+
+pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
+/gmehta/pegasus/black-diamond/run0002/pegasus.7398.properties \
+--nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002
+
+
+2007.07.11 18:12:16.055 PDT: [INFO] Time taken to execute is 1.918 seconds</programlisting>
+
+      <para>Submit the planned workflow also to Condor-G using the pegasus-run
+      command printed by the previous step.</para>
+
+      <programlisting>$ <emphasis>pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
+/gmehta/pegasus/black-diamond/run0002/pegasus.7398.properties \
+--nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002
+</emphasis>
+...
+...
+
+
+cd /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002
+
+*** To monitor the workflow you can run ***
+
+pegasus-status -w black-diamond-0 -t 20070711T181215-0700
+or
+pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002
+
+*** To remove your workflow run ***
+
+pegasus-remove -d 22417.0
+or
+pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</programlisting>
+    </section>
+
+
+
+   <section>
+       <title>Running in the Cloud</title>
+       <para>...</para>
+   </section>
+  </section>
+
+
+</chapter>
+
