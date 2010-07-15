@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="introduction">
+  <title>Introduction to Pegasus</title>
+
+  <para>Pegasus (<link xlink:href="http://pegasus.isi.edu"
+          xmlns:xlink="http://www.w3.org/1999/xlink">http://pegasus.isi.edu</link>) is a
+  configurable system for mapping and executing abstract application workflows
+  over the Grid.</para>
+
+  <para>An abstract application workflow is represented as a directed acyclic
+  graph where the vertices are the compute tasks and the edges represent the
+  data dependencies between the tasks. The input to Pegasus is a description
+  of the abstract workflow in XML format. The mapping of tasks to the
+  execution resources is done based on information derived for static and/or
+  dynamic sources (site catalog, transformation catalog, MDS (<link
+  xlink:href="http://www.globus.org/toolkit/mds"
+  xmlns:xlink="http://www.w3.org/1999/xlink">http://www.globus.org/toolkit/mds/</link>)
+  RLS (<link xlink:href="www.globus.org/toolkit/rls"
+  xmlns:xlink="http://www.w3.org/1999/xlink">www.globus.org/toolkit/rls</link>),
+  etc).</para>
+
+  <para>The output is an executable workflow (also called the concrete
+  workflow) that can be executed over the Grid resources. In case the workflow
+  tasks are mapped to multiple resources that do not share a file system,
+  explicit nodes are added to the workflow for orchestrating data transfer
+  between the tasks. The format of the concrete workflow is determined by the
+  execution engine used for executing the concrete workflow over the mapped
+  resources. For example, if Condor DAGMan <link
+  xlink:href="http://cs.wisc.edu/condor/dagman"
+  xmlns:xlink="http://www.w3.org/1999/xlink">(http://cs.wisc.edu/condor/dagman)</link>
+  is used as the enactment engine, then the concrete workflow consists of a
+  DAG description file which lists the dependencies and Condor submit files
+  for each task in the concrete workflow. Pegasus has been mostly used with
+  Condor DAGMan. DAGMan can schedule jobs onto Globus (<link
+  xlink:href="www,globus.org"
+  xmlns:xlink="http://www.w3.org/1999/xlink">www.globus.org</link>) and Condor
+  (<link xlink:href="http://cs.wisc.edu/condor"
+  xmlns:xlink="http://www.w3.org/1999/xlink">http://cs.wisc.edu/condor</link>)-managed
+  resources. Condor-G can be used to execute any task in the workflow on any
+  Grid resource that provides a Globus GRAM interface. The purpose of this
+  document is to give an overview of the various resource configurations that
+  can be used with Pegasus when Condor DAGMan is used as the workflow
+  enactment engine. The classification is done based on the mechanism used for
+  submitting jobs to these resources.</para>
+</chapter>

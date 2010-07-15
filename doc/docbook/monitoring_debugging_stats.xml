@@ -1,0 +1,151 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="monitoring_debugging_stats">
+   <title>Monitoring, Debugging and Statistics </title>
+   <section>
+       <title>pegasus-status</title>
+    <para>To monitor the execution of the workflow lets run the pegasus-status
+    command as suggested by the output of the pegasus-run command above.</para>
+
+    <programlisting>$ <emphasis>pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis>
+
+
+-- Submitter: smarty.isi.edu : &lt;128.9.72.26:53194&gt; : smarty.isi.edu
+ ID      OWNER/NODENAME   SUBMITTED     RUN_TIME ST PRI SIZE CMD
+22417.0   gmehta          7/11 18:13   0+00:03:58 R  0   9.8  condor_dagman -f -
+22423.0    |-rc_tx_analy  7/11 18:16   0+00:00:54 R  2   0.0  kickstart -n pegas
+22424.0    |-rc_tx_findr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas
+22425.0    |-rc_tx_prepr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas</programlisting>
+
+    <para>The above output shows that several jobs are running under the main
+    DAGMan process. Keep a lookout to track whether a workflow is running or
+    not. If you do not see any of your job in the output for sometime (say 30
+    seconds), we know the workflow has finished. We need to wait, as there might
+    be delay in CondorDAGMAN releasing the next job into the queue after a job
+    has finished successfully.</para>
+
+    <para>If output of pegasus-status is empty, then either your workflow
+    has</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>successfully completed</para>
+      </listitem>
+
+      <listitem>
+        <para>stopped midway due to non recoverable error.</para>
+      </listitem>
+    </itemizedlist>
+
+
+   </section>
+   <section>
+       <title>pegasus-analyzer</title>
+       <para>...</para>
+   </section>
+   <section>
+       <title>pegasus-statistics</title>
+       <para>...</para>
+   </section>
+   <section>
+       <title>pegasus-graphs</title>
+       <para>...</para>
+   </section>
+   <section>
+       <title>Files in work directory</title>
+    <para>Another way to monitor the workflow is to check the jobstate.log file.
+    This is the output file of the monitoring daemon that is parsing all the
+    condor log files to determine the status of the jobs. It logs the events
+    seen by Condor into a more readable form for us.</para>
+
+    <programlisting>$ <emphasis>less jobstate.log</emphasis>
+
+1184202818 INTERNAL *** DAGMAN_STARTED ***
+1184202831 black-diamond_0_viz_cdir SUBMIT 22418.0 clus1 -
+1184202846 black-diamond_0_viz_cdir EXECUTE 22418.0 clus1 -
+1184202846 black-diamond_0_viz_cdir GLOBUS_SUBMIT 22418.0 clus1 -
+1184202846 black-diamond_0_viz_cdir GRID_SUBMIT 22418.0 clus1 -
+1184202977 black-diamond_0_viz_cdir JOB_TERMINATED 22418.0 clus1 -
+1184202977 black-diamond_0_viz_cdir POST_SCRIPT_STARTED - clus1 -
+1184202982 black-diamond_0_viz_cdir POST_SCRIPT_TERMINATED 22418.0 clus1 -
+1184202982 black-diamond_0_viz_cdir POST_SCRIPT_SUCCESS - clus1 -
+
+...
+...
+
+1184205172 new_rc_register_analyze_ID000004 POST_SCRIPT_SUCCESS - local -
+1184205302 cln_analyze_ID000004 JOB_TERMINATED 22436.0 clus1 -
+1184205302 cln_analyze_ID000004 POST_SCRIPT_STARTED - clus1 -
+1184205307 cln_analyze_ID000004 POST_SCRIPT_TERMINATED 22436.0 clus1 -
+1184205307 cln_analyze_ID000004 POST_SCRIPT_SUCCESS - clus1 -
+1184205307 INTERNAL *** DAGMAN_FINISHED ***
+1184205311 INTERNAL *** TAILSTATD_FINISHED 0 **</programlisting>
+
+    <para>The above shows the create dir job being submitted and then executed
+    on the grid. In addition it lists that job is being run on the grid site
+    clus1 The various states of the job while it goes through submission to
+    execution to postprocessing are in UPPERCASE.</para>
+
+    <para>At the bottom of the output we see that DAGMAN and TAILSTATD have
+    FINISHED and with and exit code of zero "0" which signifies that the
+    workflow ran successfully. If there were any errors then the TAILSTATD would
+    exit with a non zero exitcode and the failed jobs would have a job state of
+    FAILURE next to it.</para>
+    <para>If your workflow fails then you can look at the job name (second
+    column in the output) which has failed and check the contents of the
+    kickstart record output stored in the jobname.out.NNN file where NNN can be
+    000 to 999 or the jobname.err file</para>
+
+    <para>One can also monitor the status of the running workflow by looking at
+    the output of the Condor DAGMan output file.</para>
+
+    <programlisting>$ <emphasis>tail -f black-diamond-0.dag.dagman.out
+
+7/11 18:52:27 Node new_rc_tx_analyze_ID000004_0 job proc (22435.0) completed suc
+cessfully.
+7/11 18:52:27 Node new_rc_tx_analyze_ID000004_0 job completed
+7/11 18:52:27 Running POST script of Node new_rc_tx_analyze_ID000004_0...
+7/11 18:52:27 Number of idle job procs: 0
+7/11 18:52:27 Of 17 nodes total:
+7/11 18:52:27  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+7/11 18:52:27   ===     ===      ===     ===     ===        ===      ===
+7/11 18:52:27    14       0        0       1       0          2        0</emphasis></programlisting>
+
+    <para>You will see lines like the one above scrolling by giving you
+    statistics of home many jobs have been finished, failed, running or queued.
+    It will also tell if you the workflow has finished if the DAGMan finishes
+    and the name of any jobs that failed.</para>
+
+    </section>
+<section>
+<title>pegasus-remove</title>
+
+    <para>If you want to abort your workflow for any reason you can use the
+    pegasus-remove command listed in the output of pegasus-run invocation or by
+    specifiying the Dag directory for the workflow you want to terminate.</para>
+
+    <programlisting>$ <emphasis>pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</emphasis></programlisting>
+
+   </section>
+   <section>
+       <title>Resubmitting failed workflows</title>
+   
+    <para>Pegasus will remove the DAGMan and all the jobs related to the DAGMan
+    from the condor queue. A rescue DAG will be generated in case you want to
+    resubmit the same workflow and continue execution from where it last
+    stopped. A rescue DAG only skips jobs that have completely finished. It does
+    not continue a partially running job unless the executable supports
+    checkpointing.</para>
+
+    <para>To resubmit an aborted or failed workflow with the same submit files
+    and rescue Dag just rerun the pegasus-run command</para>
+
+    <programlisting>$ <emphasis>pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
+/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
+--nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
+</emphasis></programlisting>
+
+</section>
+</chapter>
+

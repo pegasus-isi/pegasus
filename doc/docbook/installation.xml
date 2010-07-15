@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="installation">
+   <title>Installation</title>
+   <section>
+       <title>Prerequisites</title>
+       <para>Bla</para>
+   </section>
+   <section>
+       <title>Environment</title>
+
+       <para>In order to use Pegasus, you will have to set the PEGASUS_HOME
+           environment variable, and source the Pegasus setup script.
+       </para>
+       
+       <para>This document assumes you are using a Bourne Shell derived shell. e.g.
+           /bin/sh or /bin/bash. csh setup scripts are available with the .csh
+           extension.
+       </para>
+
+       <para>Set PEGASUS_HOME environment variable</para>
+
+       <programlisting><emphasis>$ unset PEGASUS_HOME
+$ export PEGASUS_HOME=&lt;path to pegasus directory&gt;</emphasis></programlisting>
+
+       <para>Set up the PEGASUS user environment</para>
+
+       <para><programlisting><emphasis>$ unset CLASSPATH
+$ source $PEGASUS_HOME/setup.sh</emphasis></programlisting></para>
+
+
+   </section>
+   <section>
+       <title>Native packages (RPM/DEB)</title>
+       <para>...</para>
+   </section>
+   <section>
+       <title>Pegasus with included Condor</title>
+       <para>...</para>
+   </section>
+   <section>
+       <title>Pegasus from tarballs</title>
+       <para>...</para>
+   </section>
+</chapter>
+
