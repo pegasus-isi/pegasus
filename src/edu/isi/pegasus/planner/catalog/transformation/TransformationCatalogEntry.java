@@ -146,8 +146,10 @@ public class TransformationCatalogEntry
         this.mName = name;
         this.mResourceID = resourceid;
         this.mPFN = physicalname;
-        this.mProfiles = new Profiles ();
-        this.mProfiles.addProfiles( profiles );
+        if(profiles != null) {
+            this.mProfiles = new Profiles ();
+            this.mProfiles.addProfiles( profiles );
+        }
 
         //       this.sysinfo = sysinfo;
         mSysInfo  = VDSSysInfo2NMI.vdsSysInfo2NMI( sysinfo );
@@ -362,10 +364,12 @@ public class TransformationCatalogEntry
      * @param profile Profile  A single profile consisting of mNamespace, key and value
      */
     public void addProfiles( Profiles profiles ) {
-        if ( this.mProfiles == null ) {
-                this.mProfiles = new Profiles();
+    	if(profiles != null) {
+    		if ( this.mProfiles == null ) {
+    			this.mProfiles = new Profiles();
             }
-        this.mProfiles.addProfiles( profiles );
+    		this.mProfiles.addProfiles( profiles );
+    	}
     }
 
 
