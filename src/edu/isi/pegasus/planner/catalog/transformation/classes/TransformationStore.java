@@ -82,30 +82,40 @@ public class TransformationStore {
         if( this.containsTransformation( completeName )){
             //retrieve the associated map
             Map<String,List<TransformationCatalogEntry>> m = mTCStore.get( completeName );
-            //add an existing entry
-            List<TransformationCatalogEntry> l = m.get( entry.getResourceId() );
 
-            boolean existing = false;
-            for( TransformationCatalogEntry e : l ){
-                if( e.getPhysicalTransformation().equals( entry.getPhysicalTransformation() ) ){
-                    //lets overwrite the entry and break out
-                    l.remove( e );
+
+            //check if the transformation is defined for a particular site
+            if( m.containsKey( entry.getResourceId() ) ){
+                //add an existing entry
+                List<TransformationCatalogEntry> l = m.get( entry.getResourceId() );
+
+                boolean existing = false;
+                for( TransformationCatalogEntry e : l ){
+                    if( e.getPhysicalTransformation().equals( entry.getPhysicalTransformation() ) ){
+                        //lets overwrite the entry and break out
+                        l.remove( e );
+                        l.add( entry );
+                        existing = true;
+                        break;
+                    }
+                }
+                if ( !existing ){
+                    //an entry with the same pfn does not exist for the site
                     l.add( entry );
-                    existing = true;
-                    break;
                 }
             }
-            if ( !existing ){
-                //an entry with the same pfn does not exist for the site
+            else{
+                //no entries for the  transformation at the site entry.getResourceId()
+                List<TransformationCatalogEntry> l = new LinkedList();
                 l.add( entry );
+                m.put( entry.getResourceId(), l );
             }
-
         }
         else{
             Map<String, List<TransformationCatalogEntry>> m = new HashMap();
             List l = new LinkedList();
             l.add( entry );
-            m.put( completeName, l );
+            m.put( entry.getResourceId(), l );
             mTCStore.put(completeName, m );
         }
 
@@ -128,6 +138,7 @@ public class TransformationStore {
         //retrieve all entries for a site
         List<TransformationCatalogEntry> result = null;
 
+        
         //check whether we need to filter on type ?
         if( type == null ){
             result = this.getEntries( completeName, site );
@@ -135,6 +146,7 @@ public class TransformationStore {
         else{
             result = new LinkedList();
             for( TransformationCatalogEntry entry : this.getEntries(completeName, site) ){
+
                 if( entry.getType().equals( type ) ){
                     result.add( entry );
                 }
