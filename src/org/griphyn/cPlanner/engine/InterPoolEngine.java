@@ -335,7 +335,8 @@ public class InterPoolEngine extends Engine implements Refiner {
             if ( site == null ) {
                 error = new StringBuffer();
                 error.append( "Site Selector could not map the job " ).
-                      append( job.getCompleteTCName() ).
+                      append( job.getCompleteTCName() ).append( " to any of the execution sites " ).
+                      append( sites ).append( " using the Transformation Mapper " ).append( this.mTCMapper.getMode() ).
                       append( "\nMost likely an error occured in site selector." );
                 mLogger.log( error.toString(),
                             LogManager.ERROR_MESSAGE_LEVEL );
