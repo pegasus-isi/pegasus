@@ -58,6 +58,8 @@ class Job:
     site = ""			# Site where the job ran
     executable = ""		# Job's executable
     arguments = ""		# Job's arguments
+    initial_dir = ""		# Job's initial dir (from submit file)
+    transfer_input_files = ""	# Files to transfer when debugging a job
     is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
     subdag_dir = ""		# Subdag directory from a SUBDAG job in the dag file
     dag_path = ""		# Full path to the dag file from a SUBDAG job
@@ -91,10 +93,14 @@ dag_path = None					# Path of the dag file
 jsdl_path = None				# Path of the jobstate.log file
 tsdl_path = None				# Path to tailstatd's log file
 temp_log = None					# Temporary log file created
+debug_job = None				# Path of a submit file to debug
+debug_dir = None				# Temp directory to use while debugging a job
+workflow_type = None				# Type of the workflow being debugged
 run_tailstatd = 0				# Run tailstatd before trying to analyze the output
 run_directory_writable = False			# Flag to indicate if we can write to the run directory
 quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 strict_mode = 0					# Gets out/err filenames from submit file
+debug_mode = 0					# Mode that enables debugging a single job
 keep_log = 0					# Keeps temporaty jobstate.log file created by tailstatd in /tmp directory
 print_invocation = 0				# Prints invocation command for failed jobs
 print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
@@ -109,7 +115,7 @@ unknown_jobs = []				# List of jobs that neither succeeded nor failed
 
 def create_temp_logfile(name):
     """
-    This function uses tempfile.mkstemp to create a temporaty 
+    This function uses tempfile.mkstemp to create a temporary 
     log filename in the /tmp directory
     """
     try:
@@ -197,7 +203,7 @@ def analyze():
 	    # It seems we don't have a final result for this job
 	    unknown_jobs.append(my_job)
 
-def process_failed_job(my_job):
+def parse_submit_file(my_job):
     """
     This function opens a submit file and reads site
     and condor dagman log information
@@ -270,8 +276,12 @@ def process_failed_job(my_job):
 			if sub_prop:
 			    if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
 				my_job.dagman_out = sub_prop.group(2)
+		# Only parse following keys if we are running in strict mode
 		if strict_mode:
-		    # Only parse error and output if we are running in strict mode
+		    # Get initial dir
+		    if k == "initialdir":
+			my_job.initial_dir = v
+		    # Parse error and output keys
 		    if k == "output" or k == "error":
 			# Take care of basic substitutions first
 			v = v.replace("$(cluster)", my_job.cluster)
@@ -293,8 +303,16 @@ def process_failed_job(my_job):
 			    my_job.out_file = v
 			else:
 			    my_job.err_file = v
-
+		# Only parse following keys if we are debugging a job
+		if debug_mode:
+		    # Get transfer input files
+		    if k == "transfer_input_files":
+			my_job.transfer_input_files = v
 	SUB.close()
+	# If initialdir was specified, we need to make both error and output files relative to that
+	if len(my_job.initial_dir):
+	    my_job.out_file = os.path.join(my_job.initial_dir, my_job.out_file)
+	    my_job.err_file = os.path.join(my_job.initial_dir, my_job.err_file)
     else:
 	# Was not able to access submit file
 	# fail silently for now...
@@ -406,7 +424,7 @@ def parse_jobstate_log(jobstate_fn):
     try:
 	JSDL = open(jobstate_fn, "r")
     except:
-	print "could not open file %s: exiting..." % (jobstate_fn)
+	print "error: could not open file %s: exiting..." % (jobstate_fn)
 	sys.exit(1)
 
     # Loop through the log file
@@ -544,7 +562,7 @@ def print_job_info(job):
     print job.center(80, '=')
     print
     print " last state: %s" % (jobs[job].state)
-    process_failed_job(jobs[job])
+    parse_submit_file(jobs[job])
 
     # Handle subdag jobs from the dag file
     if jobs[job].is_subdag == True:
@@ -631,6 +649,145 @@ def print_summary():
 	for job in unknown_jobs:
 	    print_job_info(job)
 
+def debug_condor(my_job):
+    """
+    This function is used to debug a condor job. It creates a
+    shell script in the debug_dir directory that is used to
+    copy all necessary files to the (local) debug_dir directory
+    and then execute the job locally.
+    """
+    global strict_mode
+
+    # Set strict mode in order to parse everything in the submit file
+    strict_mode = 1
+    # Parse submit file
+    parse_submit_file(my_job)
+
+    # Create script name
+    debug_script_basename = "debug_" + my_job.name + ".sh"
+    debug_script_name = os.path.join(debug_dir, debug_script_basename)
+
+    job_executable = os.path.join(debug_dir, my_job.executable) + my_job.arguments
+
+    try:
+	debug_script = open(debug_script_name, "w")
+    except:
+	print "error: cannot create debug script %s" % (debug_script)
+	sys.exit(1)
+
+    try:
+	# Start with the bash line
+	debug_script.write("#!/bin/bash\n")
+	debug_script.write("\n")
+	debug_script.write("set -e\n")
+	debug_script.write("\n")
+	debug_script.write("# Copy any files that are needed\n")
+
+	debug_script.write('echo "copying input files..."\n')
+	debug_script.write("\n")
+	# Copy all files that we need
+	for my_file in my_job.transfer_input_files.split(","):
+	    if len(my_file):
+		if len(my_job.initial_dir):
+		    # Add the initial dir to all files to be copied
+		    my_file = os.path.join(my_job.initial_dir, my_file)
+		debug_script.write("cp %s %s\n" % (my_file, debug_dir))
+
+	# Extra newline before executing the job
+	debug_script.write("\n")
+	debug_script.write('echo "copying input files completed."\n')
+	debug_script.write("\n")
+	debug_script.write("# Set the execute bit on the executable\n")
+	debug_script.write("chmod +x %s\n" % (os.path.join(debug_dir, my_job.executable)))
+	debug_script.write("\n")
+	debug_script.write('echo "executing job: %s"\n' % (job_executable))
+	debug_script.write("\n")
+	debug_script.write("# Now, execute the job\n")
+	debug_script.write("%s\n" % (job_executable))
+	debug_script.write("\n")
+    except:
+	print "error: cannot write to file %s" % (debug_script)
+	sys.exit(1)
+
+    # We are done writing the file!
+    debug_script.close()
+
+    try:
+	# Make our debug script executable
+	os.chmod(debug_script_name, 0755)
+    except:
+	print "error: cannot change permissions for the debug script %s" % (debug_script)
+	sys.exit(1)
+
+    # Print next step
+    print
+    print "%s: finished generating job debug script!" % (prog_base)
+    print
+    print "To run it, you need to type:"
+    print "   $ cd %s" % (debug_dir)
+    print "   $ ./%s" % (debug_script_basename)
+    print
+
+def debug_workflow():
+    """
+    This function handles the mode where the analyzer
+    is used to debug a job in a workflow
+    """
+    global debug_job, debug_dir
+
+    # Check if we can find this job's submit file
+    if not debug_job.endswith(".sub"):
+	debug_job = debug_job + ".sub"
+    # Figure out job name
+    jobname = os.path.basename(debug_job)
+    jobname = jobname[0:jobname.find(".sub")]
+    # Create job class
+    my_job = Job(jobname)
+    my_job.sub_file = debug_job
+
+    if not os.access(debug_job, os.R_OK):
+	print "error: cannot access job submit file: %s" % (debug_job)
+	sys.exit(1)
+
+    # Handle the temporary directory option
+    if debug_dir is None:
+	# Create temporary directory
+	try:
+	    debug_dir = tempfile.mkdtemp()
+	except:
+	    print "error: could not create temporary directory!"
+	    sys.exit(1)
+    else:
+	# Make sure directory specified is writable
+	debug_dir = os.path.abspath(debug_dir)
+	if not os.access(debug_dir, os.F_OK):
+	    # Create directory if it does not exist
+	    try:
+		os.mkdir(debug_dir)
+	    except:
+		print "error: cannot create debug directory: %s" % (debug_dir)
+
+	# Check if we can write to the debug directory
+	if not os.access(debug_dir, os.W_OK):
+	    print "error: not able to write to temporary directory: %s" % (debug_dir)
+	    sys.exit(1)
+
+
+    # Handle workflow type
+    if workflow_type is not None:
+	if workflow_type.lower() == "condor":
+	    print "info: debugging condor type workflow"
+	    debug_condor(my_job)
+	else:
+	    print "error: workflow type %s not supported!" % (workflow_type)
+	    sys.exit(1)
+    else:
+	print "info: debugging condor type workflow"
+	debug_condor(my_job)
+
+    # All done, in case we are back here!
+    sys.exit(0)
+
 # --- main ----------------------------------------------------------------------------
 
 # Configure command line option parser
@@ -650,6 +807,12 @@ parser.add_option("-p", "--print", action = "store", type = "string" , dest = "p
 		  help = "specifies print options from pre,invocation")
 parser.add_option("-s", "--strict", action = "store_const", const = 1, dest = "strict_mode",
 		  help = "gets a job's out and err files from the submit file")
+parser.add_option("--debug-job", action = "store", type = "string", dest = "debug_job",
+		  help = "specifies a job to debug (can be either the job base name or the submit file name) -- this option enables debugging a single job")
+parser.add_option("--debug-dir", action = "store", type = "string", dest = "debug_dir",
+		  help = "specifies the directory to use as debug directory (default is to create a random directory in /tmp)")
+parser.add_option("--type", action = "store", type = "string", dest = "workflow_type",
+		  help = "specifies what type of workflow we are debugging (available types: condor)")
 
 # Parse command line options
 (options, args) = parser.parse_args()
@@ -671,6 +834,15 @@ if options.print_options is not None:
 	print_pre_script = 1
     if "invocation" in my_options or "all" in my_options:
 	print_invocation = 1
+if options.debug_job is not None:
+    debug_job = options.debug_job
+    # Enables the debugging mode
+    debug_mode = 1
+if options.debug_dir is not None:
+    debug_dir = options.debug_dir
+if options.workflow_type is not None:
+    workflow_type = options.workflow_type
+
 if options.dag_filename is not None:
     dag_path = options.dag_filename
     input_dir = os.path.split(dag_path)[0]
@@ -683,7 +855,14 @@ else:
 	input_dir = options.input_dir
     else:
 	input_dir = os.getcwd()
-    # Now we find where the dag file is
+
+if debug_mode == 1:
+    # Enter debug mode if job name given
+    # This function does not return
+    debug_workflow()
+
+# Get the dag file if it was not specified by the user
+if dag_path is None:
     dag_path = find_file(input_dir, ".dag")
 
 # Check if we can write to the run directory
