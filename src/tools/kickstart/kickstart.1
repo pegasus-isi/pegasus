@@ -21,11 +21,11 @@
 kickstart \- run an executable in a more universal environment.
 .SH "SYNTAX"
 .B kickstart
-[\-n\~tr] [\-N\~dv] [\-H] [\-R site] [\-W | \-w\~wd] [\-L\~lbl \-T\~iso]
+[\-n\~tr] [\-N\~dv] [\-H] [\-R site] [\-W | \-w\~dir] [\-L\~lbl \-T\~iso]
 .br
- [\-s [l=]p | @fn] [\-S [l=]p | @fn] [\-i\~asi] [\-o\~aso] [\-e\~ase] [-X] 
+ [\-s [l=]p | @fn] [\-S [l=]p | @fn] [\-i\~fn] [\-o\~fn] [\-e\~fn] [-X] 
 .br
- [\-l\~log] [\-B\~sz] (-I fn | app [appflags] )
+ [\-l\~fn\~sz] (-I fn | app [appflags] )
 .br
 .B kickstart
 \-V
@@ -183,7 +183,7 @@ record inside.
 .IP 
 There is no default.
 .TP
-.B \-i asi
+.B \-i fn
 This option allows 
 .B kickstart
 to re-connect the stdin of the application that it starts. Use a single
@@ -197,7 +197,7 @@ The default is to connect
 to
 .IR /dev/null .
 .TP
-.B \-o aso
+.B \-o fn
 This option allows 
 .B kickstart
 to re-connect the 
@@ -243,7 +243,7 @@ The default is to connect
 .I stdout
 to a temporary file. 
 .TP
-.B \-e ase
+.B \-e fn
 This option allows 
 .B kickstart
 to re-connect the 
@@ -301,20 +301,20 @@ the default behavior.
 Default is to append the invocation record onto the provided
 .IR stdout .
 .TP
-.B \-w cwd
+.B \-w dir
 permits the explicit setting of a new working directory once kickstart
 is started. This is useful in a remote scheduling environment, when the
 chosen working directory is not visible on the job submitting host. If
 the directory does not exist,
 .B kickstart
 will fail. This option is mutually exclusive with the 
-.I \-W cwd 
+.I \-W dir 
 option.
 .IP
 Default is to use the working directory that the application was started
 in. This is usually set up by a remote scheduling environment. 
 .TP
-.B \-W cwd
+.B \-W dir
 permits the explicit creation and setting of a new working directory
 once kickstart is started. This is useful in a remote scheduling
 environment, when the chosen working directory is not visible on the job
@@ -323,7 +323,7 @@ submitting host. If the directory does not exist,
 will attempt to create it, and then change into it. Both, creation and
 directory change may still fail. This option is mutually exclusive with
 the  
-.I \-w cwd 
+.I \-w dir 
 option.
 .IP
 Default is to use the working directory that the application was started

@@ -155,38 +155,38 @@ helpMe( const AppInfo* run )
 
   fprintf( stderr, "%s\n", RCS_ID );
   fprintf( stderr, 
-"Usage:\t%s [-i asi] [-o aso] [-e ase] [-l log] [-n xid] [-N did] \\\n"
+"Usage:\t%s [-i fn] [-o fn] [-e fn] [-l fn] [-n xid] [-N did] \\\n"
 "\t[-w|-W cwd] [-R res] [-s [l=]p] [-S [l=]p] [-X] [-H] [-L lbl -T iso] \\\n" 
 "\t[-B sz] (-I fn | app [appflags])\n", p );
   fprintf( stderr, 
-" -i asi\tConnects stdin of app to asi, default is \"%s\".\n", 
+" -i fn\tConnects stdin of app to file fn, default is \"%s\".\n", 
 	   xlate(&run->input) );
   fprintf( stderr, 
-" -o aso\tConnects stdout of app to aso, default is \"%s\".\n",
+" -o fn\tConnects stdout of app to file fn, default is \"%s\".\n",
 	   xlate(&run->output) );
   fprintf( stderr, 
-" -e ase\tConnects stderr of app to ase, default is \"%s\".\n", 
+" -e fn\tConnects stderr of app to file fn, default is \"%s\".\n", 
 	   xlate(&run->error) );
   fprintf( stderr, 
-" -l log\tProtocols invocation record into log, default is \"%s\".\n",
+" -l fn\tProtocols invocation record into file fn, default is \"%s\".\n",
 	   xlate(&run->logfile) );
 
   fprintf( stderr, 
 " -n xid\tProvides the TR name, default is \"%s\".\n"
 " -N did\tProvides the DV name, default is \"%s\".\n" 
-" -R res\tReflects the resource handle, default is \"%s\".\n"
-" -B sz\tResizes the data section size, default is %u.\n",
+" -R res\tReflects the resource handle into record, default is \"%s\".\n"
+" -B sz\tResizes the data section size for stdio capture, default is %u.\n",
 	   show(run->xformation), show(run->derivation), 
 	   show(run->sitehandle), data_section_size );
   fprintf( stderr,
-" -L lbl\tReflects the workflow label, no default.\n"
-" -T iso\tReflects the workflow time stamp, no default.\n"
-" -H\tOmits the <?xml ...?> header from generated records.\n"
+" -L lbl\tReflects the workflow label into record, no default.\n"
+" -T iso\tReflects the workflow time stamp into record, no default.\n"
+" -H\tOmit <?xml ...?> header and <resource|environment> from record.\n"
 " -I fn\tReads job and args from the file fn, one arg per line.\n"
 " -V\tDisplays the version and exit.\n"
 " -X\tMakes the application executable, no matter what.\n"
-" -w cwd\tSets a different working directory cwd for jobs.\n" 
-" -W cwd\tLike -w, but also creates the directory if necessary.\n"
+" -w dir\tSets a different working directory dir for jobs.\n" 
+" -W dir\tLike -w, but also creates the directory dir if necessary.\n"
 " -S l=p\tProvides filename pairs to stat after start, multi-option.\n"
 " \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n"
 " -s l=p\tProvides filename pairs to stat before exit, multi-option.\n"
