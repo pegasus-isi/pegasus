@@ -520,8 +520,10 @@ public class Database
                                    String resourceid, TCType type) throws
 
         Exception {
+    	/*
         int[] count = {
             0, 0, 0};
+            */
         PreparedStatement ps = m_dbdriver.getPreparedStatement(
             "stmt.query.pfns");
 
@@ -548,12 +550,14 @@ public class Database
                  VDSSysInfo(rs.getString(4), rs.getString(5), rs.getString(6),
                          rs.getString(7))).toString()};
             result.add(s);
-            columnLength(s, count);
+            //columnLength(s, count);
         }
         rs.close();
+        /*
         if (result != null) {
             result.add(count);
         }
+        */
         return result;
     }
 
@@ -575,8 +579,10 @@ public class Database
 
     public List getTCLogicalNames(String resourceid, TCType type) throws
         Exception {
+    	/*
         int[] count = {
             0, 0};
+            */
         PreparedStatement ps = null;
         ps = this.m_dbdriver.getPreparedStatement("stmt.query.lfns");
         String temp = (resourceid == null) ? "%" : resourceid;
@@ -594,13 +600,15 @@ public class Database
                 rs.getString(1),
                 Separator.combine(rs.getString(2), rs.getString(3),
                                   rs.getString(4)), rs.getString(5)};
-            columnLength(st, count);
+            //columnLength(st, count);
             result.add(st);
         }
         rs.close();
+        /*
         if (result != null) {
             result.add(count);
         }
+        */
         return result;
     }
 
@@ -2108,6 +2116,7 @@ if(!write) return false;
      * @param s String[]
      * @param count int[]
      */
+    /*
     private static void columnLength(String[] s, int[] count) {
         for (int i = 0; i < count.length; i++) {
             if (s[i].length() > count[i]) {
@@ -2116,5 +2125,6 @@ if(!write) return false;
         }
 
     }
+    */
 
 }
