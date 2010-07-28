@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Converts transformation catalog from one format to another
+#
+# $Id$
+
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA_HOME}/bin/java "-Dpegasus.home=${PEGASUS_HOME}" $addon edu.isi.pegasus.planner.client.TCConverter "$@"
