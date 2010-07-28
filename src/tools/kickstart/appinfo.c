@@ -64,7 +64,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
 
   size_t len = 0;
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
-#define XML_SCHEMA_VERSION "2.0"
+#define XML_SCHEMA_VERSION "2.1"
 
   /* default is to produce XML preamble */
   if ( ! run->noHeader )
@@ -122,6 +122,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   if ( isdigit( run->ipv4[0] ) ) {
     struct hostent* h;
     in_addr_t address = inet_addr( run->ipv4 );
+    myprint( buffer, size, &len, " interface=\"%s\"", run->prif ); 
     myprint( buffer, size, &len, " hostaddr=\"%s\"", run->ipv4 );
     if ( (h = wrap_gethostbyaddr( (const char*) &address, sizeof(in_addr_t), AF_INET )) )
       myprint( buffer, size, &len, " hostname=\"%s\"", h->h_name );
@@ -308,8 +309,9 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
   appinfo->argv = argv;
 
   /* where do I run -- guess the primary interface IPv4 dotted quad */
-  /* find out where we run at (might stall for some time on DNS probs?) */
-  whoami( appinfo->ipv4, sizeof(appinfo->ipv4) );
+  /* find out where we run at (might stall LATER for some time on DNS) */
+  whoami( appinfo->ipv4, sizeof(appinfo->ipv4),
+	  appinfo->prif, sizeof(appinfo->prif) );
 
   /* record resource limits */
   initLimitInfo( &appinfo->limits );

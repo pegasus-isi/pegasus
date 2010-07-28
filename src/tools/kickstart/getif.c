@@ -281,27 +281,37 @@ primary_interface( void )
 }
 
 void
-whoami( char* buffer, size_t size )
+whoami( char* abuffer, size_t asize, 
+	char* ibuffer, size_t isize )
 /* purpose: copy the primary interface's IPv4 dotted quad into the given buffer
- * paramtr: buffer (IO): start of buffer
- *          size (IN): maximum capacity the buffer is willing to accept
- * returns: the modified buffer. */
+ * paramtr: abuffer (OUT): start of buffer to put IPv4 dotted quad
+ *          asize (IN): maximum capacity the abuffer is willing to accept
+ *          ibuffer (OUT): start of buffer to put the primary if name
+ *          isize (IN): maximum capacity the ibuffer is willing to accept
+ * returns: the modified buffers. */
 {
   /* enumerate interfaces, and guess primary one */
   struct ifreq* ifr = primary_interface();
   if ( ifr != NULL ) {
     struct sockaddr_in sa;
-    memcpy( &sa, &(ifr->ifr_addr), sizeof(struct sockaddr) );
-    strncpy( buffer, inet_ntoa(sa.sin_addr), size );
+    if ( abuffer ) {
+      memcpy( &sa, &(ifr->ifr_addr), sizeof(struct sockaddr) );
+      strncpy( abuffer, inet_ntoa(sa.sin_addr), asize );
+    }
+    if ( ibuffer ) {
+      strncpy( ibuffer, ifr->ifr_name, isize ); 
+    }
     free((void*) ifr);
   } else {
     /* error while trying to determine address of primary interface */
 #if 0
     /* future lab */
-    strncpy( buffer, "xsi:null", size );
+    if ( abuffer ) strncpy( abuffer, "xsi:null", asize );
+    if ( ibuffer ) strncpy( ibuffer, "xsi:null", isize ); 
 #else
     /* for now */
-    strncpy( buffer, "0.0.0.0", size );
+    if ( abuffer ) strncpy( abuffer, "0.0.0.0", asize );
+    if ( ibuffer ) strncpy( ibuffer, "(none)", isize ); 
 #endif
   }
 }

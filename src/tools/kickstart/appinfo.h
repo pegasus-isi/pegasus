@@ -38,6 +38,7 @@ typedef struct {
   size_t         envc;       /* size of the environment vector envp */
 
   char           ipv4[16];   /* host address of primary interface */
+  char           prif[16];   /* name of primary interface NIC */ 
   char*          xformation; /* chosen VDC TR fqdn for this invocation */
   char*          derivation; /* chosen VDC DV fqdn for this invocation */
   char*          sitehandle; /* resource handle for the this site */

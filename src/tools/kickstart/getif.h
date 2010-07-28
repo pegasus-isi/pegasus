@@ -43,11 +43,14 @@ primary_interface();
 
 extern 
 void 
-whoami( char* buffer, size_t size );
+whoami( char* abuffer, size_t asize, 
+	char* ibuffer, size_t isize );
 /* purpose: copy the primary interface's IPv4 dotted quad into the given buffer
- * paramtr: buffer (IO): start of buffer
- *          size (IN): maximum capacity the buffer is willing to accept
- * returns: the modified buffer. 
+ * paramtr: abuffer (OUT): start of buffer to put IPv4 dotted quad
+ *          asize (IN): maximum capacity the abuffer is willing to accept
+ *          ibuffer (OUT): start of buffer to put the primary if name
+ *          isize (IN): maximum capacity the ibuffer is willing to accept
+ * returns: the modified buffers. 
  */
 
 #endif /* _GETIF_H */

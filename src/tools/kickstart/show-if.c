@@ -34,7 +34,7 @@ int
 main( int argc, char* argv[] )
 {
   int result = 0;
-  char buffer[128];
+  char abuffer[128], ibuffer[128];
 
   if ( argc > 1 ) {
     getif_debug = atoi(argv[1]);
@@ -42,7 +42,7 @@ main( int argc, char* argv[] )
     getif_debug = -1;
   }
 
-  whoami( buffer, sizeof(buffer) );
-  printf( "primary interface: %s\n", buffer );
+  whoami( abuffer, sizeof(abuffer), ibuffer, sizeof(ibuffer) );
+  printf( "primary interface %s has address %s\n", ibuffer, abuffer );
   return result;
 }
