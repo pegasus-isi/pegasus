@@ -527,8 +527,10 @@ public class File
                    version + ", " + resourceid + ", " + type + ")");
         List results = null;
         List lfnMap = new ArrayList();
+        /*
         int count[] = {
             0, 0, 0};
+            */
         if (resourceid == null) {
             lfnMap.addAll(mTreeMap.values());
         }
@@ -559,7 +561,8 @@ public class File
                         entry.getPhysicalTransformation(),
                         entry.getType().toString(),
                         entry.getVDSSysInfo().toString()};
-                    columnLength(s, count);
+                    // Moved the format logic to client classes
+                    //columnLength(s, count);
                     if (results == null) {
                         results = new ArrayList();
                     }
@@ -567,9 +570,11 @@ public class File
                 }
             }
         }
+        /*
         if (results != null) {
             results.add(count);
         }
+        */
         return results;
     }
 
@@ -595,8 +600,10 @@ public class File
         logMessage("List getTCLogicalNames(String resourceid, TCType type)");
         logMessage("\t getTCLogicalNames(" + resourceid + "," + type + ")");
         List result = null;
+        /*
         int[] length = {
             0, 0};
+            */
         List lfnMap = new ArrayList();
         String lfn = null, resource = null, tctype = null;
         if (resourceid == null) {
@@ -642,7 +649,7 @@ public class File
                                 tctype = t;
                                 String[] s = {
                                     l, r, t};
-                                columnLength(s, length);
+                                //columnLength(s, length);
                                 if (result == null) {
                                     result = new ArrayList(5);
                                 }
@@ -653,9 +660,11 @@ public class File
                 }
             }
         }
+        /*
         if (result != null) {
             result.add(length);
         }
+        */
         return result;
     }
 
@@ -1173,6 +1182,7 @@ public class File
      * @param s String[]
      * @param count int[]
      */
+    /*
     private static void columnLength(String[] s, int[] count) {
         for (int i = 0; i < count.length; i++) {
             if (s[i].length() > count[i]) {
@@ -1180,7 +1190,7 @@ public class File
             }
         }
 
-    }
+    }*/
 
     /**
      * Populates the internal copy of the transformation catalog from a byte
