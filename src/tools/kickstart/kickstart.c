@@ -380,6 +380,7 @@ main( int argc, char* argv[] )
     case 'B':
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       m = strtoul( temp, 0, 0 );
+      /* limit max <data> size to 64 MB for each. */
       if ( m < 67108863ul ) data_section_size = m;
       break;
 #if 0
@@ -508,7 +509,7 @@ main( int argc, char* argv[] )
     }
   }
 
-  /* sanity check -- for FNAL */
+  /* sanity check -- for FNAL/ATLAS */
   areWeSane("GRIDSTART_CHANNEL");
 
   /* initialize app info and register CLI parameters with it */
@@ -528,14 +529,18 @@ main( int argc, char* argv[] )
     helpMe( &appinfo );
   }
 
-  /* make/change into new workdir now */
+  /* make/change into new workdir NOW */
  REDIR:
   if ( workdir != NULL && chdir(workdir) != 0 ) {
     /* shall we try to make the directory */
     if ( createDir ) {
       createDir = 0; /* once only */
 
-      if ( mkdir( workdir, 0777 ) == 0 ) goto REDIR;
+      if ( mkdir( workdir, 0777 ) == 0 ) {
+	/* If this causes an infinite loop, your file-system is
+	 * seriously whacked out -- run fsck or equivalent. */
+	goto REDIR;
+      }
       /* else */
       appinfo.application.saverr = errno;
       fprintf( stderr, "Unable to mkdir %s: %d: %s\n", 

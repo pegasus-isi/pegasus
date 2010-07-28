@@ -39,8 +39,8 @@ static const char* RCS_ID =
 
 int getif_debug = 0; /* enable debugging code paths */
 
-static unsigned long vpn_network[5] = { 0, 0, 0, 0 };
-static unsigned long vpn_netmask[5] = { 0, 0, 0, 0 };
+static unsigned long vpn_network[6] = { 0, 0, 0, 0, 0 };
+static unsigned long vpn_netmask[6] = { 0, 0, 0, 0, 0 };
 
 static
 void
@@ -53,6 +53,7 @@ singleton_init( void )
     vpn_network[2] = inet_addr("172.16.0.0");  /* class B VPN nets */
     vpn_network[3] = inet_addr("192.168.0.0"); /* class C VPN nets */
     vpn_network[4] = inet_addr("169.254.0.0"); /* link-local junk */
+    vpn_network[5] = inet_addr("0.0.0.0");     /* no address */
   }
 
   /* singleton init */
@@ -62,6 +63,7 @@ singleton_init( void )
     vpn_netmask[2] = inet_addr("255.240.0.0"); /* class B VPN mask */
     vpn_netmask[3] = inet_addr("255.255.0.0"); /* class C VPN mask */
     vpn_netmask[4] = inet_addr("255.254.0.0"); /* link-local junk */
+    vpn_netmask[5] = inet_addr("255.255.255.255"); /* no mask */
   }
 }
 
@@ -186,7 +188,18 @@ primary_interface( void )
   /* Notice: recycle meaning of "len" in here */
   for ( ptr = ifc.ifc_buf; ptr < ifc.ifc_buf + ifc.ifc_len; ) {
     struct ifreq* ifr = (struct ifreq*) ptr;
-    size_t len = sizeof(*ifr);
+#ifndef _SIZEOF_ADDR_IFREQ
+#if 0 
+    size_t len = sizeof(*ifr); 
+#else
+    size_t len = sizeof(ifr->ifr_name) +
+      ( ifr->ifr_addr.sa_len > sizeof(struct sockaddr) ?
+        ifr->ifr_addr.sa_len : sizeof(struct sockaddr) ); 
+#endif
+#else
+    size_t len = _SIZEOF_ADDR_IFREQ(*ifr); 
+#endif /* _SIZEOF_ADDR_IFREQ */
+
     if ( getif_debug ) debugmsg( "DEBUG: stepping by %d\n", len );
     ptr += len;
 
@@ -196,7 +209,7 @@ primary_interface( void )
     /* interested in IPv4 interfaces only */
     if ( ifr->ifr_addr.sa_family != AF_INET ) {
       if ( getif_debug ) 
-	debugmsg( "DEBUG: interface has wrong family, skipping\n" );
+	debugmsg( "DEBUG: interface %s has wrong family, skipping\n", ifr->ifr_name );
       continue;
     }
 
@@ -234,9 +247,11 @@ primary_interface( void )
       /* check for VPNs */
       if ( (sa.sin_addr.s_addr & vpn_netmask[1]) == vpn_network[1] ||
 	   (sa.sin_addr.s_addr & vpn_netmask[2]) == vpn_network[2] ||
-	   (sa.sin_addr.s_addr & vpn_netmask[3]) == vpn_network[3] ) {
+	   (sa.sin_addr.s_addr & vpn_netmask[3]) == vpn_network[3] ||
+	   (sa.sin_addr.s_addr & vpn_netmask[4]) == vpn_network[4] ||
+	   (sa.sin_addr.s_addr & vpn_netmask[5]) == vpn_network[5] ) {
 	if ( getif_debug )
-	  debugmsg( "DEBUG: interface has VPN address, trying next\n" );
+	  debugmsg( "DEBUG: interface has VPN or bad address, trying next\n" );
       } else {
 	if ( getif_debug ) 
 	  debugmsg( "DEBUG: interface is good\n" );
