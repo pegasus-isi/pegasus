@@ -103,7 +103,16 @@ gather_sunos_proc( unsigned* total, unsigned* good,
 	  if ( read( fd, &ps, sizeof(ps) ) >= sizeof(ps) ) {
 	    (*good)++;
 	    *active += ps.pr_nlwp;
+#if OSMINOR > 9
+	    /* 20100728 (jsv): bug fix: Only Solaris 10 offers pr_nzomb */ 
 	    *zombie += ps.pr_nzomb; 
+#else
+	    /* "man -s 4 proc": If the process is a zombie, pr_nlwp and
+	     * pr_lwp.pr_lwpid are zero and the other fields of pr_lwp
+	     * are undefined */
+	    if ( ps.pr_nlwp ==0 && ps.pr_lwp.pr_lwpid == 0 )
+	      *zombie++; 
+#endif
 	    *size += ps.pr_size;
 	    *rss  += ps.pr_rssize; 
 	  }
