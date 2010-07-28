@@ -189,9 +189,8 @@ primary_interface( void )
   for ( ptr = ifc.ifc_buf; ptr < ifc.ifc_buf + ifc.ifc_len; ) {
     struct ifreq* ifr = (struct ifreq*) ptr;
 #ifndef _SIZEOF_ADDR_IFREQ
-#if 0 
     size_t len = sizeof(*ifr); 
-#else
+#if 0 /* Linux does not support (struct sockaddr).sa_len */ 
     size_t len = sizeof(ifr->ifr_name) +
       ( ifr->ifr_addr.sa_len > sizeof(struct sockaddr) ?
         ifr->ifr_addr.sa_len : sizeof(struct sockaddr) ); 
