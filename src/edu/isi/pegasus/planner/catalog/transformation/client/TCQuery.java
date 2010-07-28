@@ -106,8 +106,14 @@ public class TCQuery
             System.exit( 1 );
         }
         if ( l != null ) {
-            int[] count = ( int[] ) l.get( l.size() - 1 );
-            l.remove( l.size() - 1 );
+            //int[] count = ( int[] ) l.get( l.size() - 1 );
+        	int[] count = {
+                    0, 0};
+            //l.remove( l.size() - 1 );
+        	for ( Iterator itr = l.iterator(); itr.hasNext(); ) {
+            	String[] s = ( String[] ) itr.next();
+            	columnLength(s, count);
+            }
             System.out.println( "#RESID" + getSpace( count[ 0 ],
                 "#RESID".length() ) +
                 "  LTX" + getSpace( count[ 1 ], "  LTX".length() ) +
@@ -156,8 +162,14 @@ public class TCQuery
                 System.exit( 1 );
             }
             if ( l != null ) {
-                int[] count = ( int[] ) l.get( l.size() - 1 );
-                l.remove( l.size() - 1 );
+                //int[] count = ( int[] ) l.get( l.size() - 1 );
+            	int count[] = {
+                        0, 0, 0};
+                //l.remove( l.size() - 1 );
+            	for ( Iterator itr = l.iterator(); itr.hasNext(); ) {
+                	String[] s = ( String[] ) itr.next();
+                	columnLength(s, count);
+                }
                 System.out.println( "#RESID" +
                     getSpace( count[ 0 ], "#RESID".length() ) +
                     "  LTX" +
