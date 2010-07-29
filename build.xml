@@ -42,9 +42,9 @@
   <target name="checkjava" depends="init">
   <property name="build.source" value="${ant.java.version}"/>
   <property name="build.target" value="${ant.java.version}"/>   
-  <condition property="build.target" value="${build.target}" else="1.5">
+<!--  <condition property="build.target" value="${build.target}" else="1.5">
         <os arch="ia64"/>
-     </condition>
+     </condition> -->
      <echo>JAVA TARGET is ${build.target}</echo>
      <echo>JAVA SOURCE is ${build.source}</echo>
   </target>
