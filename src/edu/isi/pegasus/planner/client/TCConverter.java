@@ -33,6 +33,7 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.catalog.transformation.impl.CreateTCDatabase;
@@ -353,7 +354,7 @@ public class TCConverter
      * @param pegasusProperties input format specified in the properties file
      * @return list of TransfromationCatalogEntry
      */
-    private List <TransformationCatalogEntry> parseTC(PegasusProperties pegasusProperties){
+    private List <TransformationCatalogEntry> parseTC(PegasusProperties pegasusProperties) {
         //switch on input format.
         TransformationCatalog catalog = null;
         List <TransformationCatalogEntry> entries = null;
@@ -368,20 +369,20 @@ public class TCConverter
             /* query for the sites, and print them out */
             mLogger.log( "Transformation loaded are "  + catalog.getTC( ) , LogManager.DEBUG_MESSAGE_LEVEL );
             
+        } catch (TransformationFactoryException ife){
+        	throw ife;
         } catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+        	throw new RuntimeException("Failed to parse transformation catalog " + e.getMessage());
 			
 		}
         finally{
             /* close the connection */
-            try{
+            	if(catalog != null){
                 catalog.close();
-            }catch( Exception e ){
-            	
-            }
-            return entries;
+            	}
+            
         }
+        return entries;
 
 
     }
@@ -419,45 +420,45 @@ public class TCConverter
     }
 
     public void printLongVersion() {
-        String text =
-           "\n $Id$ " +
-           "\n " + getGVDSVersion() +
-           "\n pegasus-tc-converter - Parses the transformation catalogs in given input format ( Text ,File ,Database ) and generates transformation catalog into given output format ( Text ,File ,Database )"  +
-           "\n " +
-           "\n Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>] [--oformat <output format>]" +
-            "\n       [--input <list of input files>] [--output <output file to write>] "+
-            "\n       [--db-user-name <database user name>] [--db-user-pwd <database user password>] [--db-url <database url>] [--db-host <database host>]"+
-            "\n       [--verbose] [--Version] [--help]" +
-            "\n" +   
-            "\n" +
-            "\n Mandatory Options " +
-            "\n" +
-            "\n -I |--iformat        the input format for the files . Can be [Text ,File ,Database] "  + 
-            "\n -O |--oformat        the output format of the file. Can be [Text ,File ,Database] " +
-            "\n -i |--input          comma separated list of input files to convert.This option is mandatory when input format is Text or file " +
-            "\n -o |--output         the output file to which the output needs to be written to. This option is mandatory when output format is Text or file " +
-            "\n" +
-            "\n" +
-            "\n Other Options " +
-            "\n" +
-            "\n -N |--db-user-name   the database user name "  + 
-            "\n -P |--db-user-pwd    the database user password " +
-            "\n -U |--db-url         the database url "  + 
-            "\n -H |--db-host        the database host " +
-            "\n -v |--verbose        increases the verbosity of messages about what is going on" +
-            "\n -V |--version        displays the version of the Pegasus Workflow Planner" +
-            "\n -h |--help           generates this help." +
-            "\n" + 
-            "\n" + 
-            "\n Example Usage " +
-            "\n Text to file format conversion :- " + 
-            "  pegasus-tc-converter  -i tc.txt -I Text -o tc.data  -O File -vvvvv"+
-            "\n File to Database(new) format conversion  :- " + 
-            "  pegasus-tc-converter  -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost  -O Database -vvvvv" +
-            "\n Database(existing specified in properties file) to text format conversion  :-" + 
-            "  pegasus-tc-converter  -I Database -o tc.txt -O Text -vvvvv";
+        StringBuffer text = new StringBuffer();
+        text.append("\n $Id$ " );
+        text.append("\n " + getGVDSVersion() );
+        text.append("\n pegasus-tc-converter - Parses the transformation catalogs in given input format ( Text ,File ,Database ) and generates transformation catalog into given output format ( Text ,File ,Database )"  );
+        text.append("\n " );
+        text.append("\n Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>] [--oformat <output format>]" );
+        text.append("\n       [--input <list of input files>] [--output <output file to write>] ");
+        text.append("\n       [--db-user-name <database user name>] [--db-user-pwd <database user password>] [--db-url <database url>] [--db-host <database host>]");
+        text.append("\n       [--verbose] [--Version] [--help]" );
+        text.append("\n" );   
+        text.append("\n" );
+        text.append("\n Mandatory Options " );
+        text.append("\n" );
+        text.append("\n -I |--iformat        the input format for the files . Can be [Text ,File ,Database] "  ); 
+        text.append("\n -O |--oformat        the output format of the file. Can be [Text ,File ,Database] " );
+        text.append("\n -i |--input          comma separated list of input files to convert.This option is mandatory when input format is Text or file " );
+        text.append("\n -o |--output         the output file to which the output needs to be written to. This option is mandatory when output format is Text or file " );
+        text.append("\n" );
+        text.append("\n" );
+        text.append("\n Other Options " );
+        text.append("\n" );
+        text.append("\n -N |--db-user-name   the database user name "  ); 
+        text.append("\n -P |--db-user-pwd    the database user password " );
+        text.append("\n -U |--db-url         the database url "  ); 
+        text.append("\n -H |--db-host        the database host " );
+        text.append("\n -v |--verbose        increases the verbosity of messages about what is going on" );
+        text.append("\n -V |--version        displays the version of the Pegasus Workflow Planner" );
+        text.append("\n -h |--help           generates this help." );
+        text.append("\n" ); 
+        text.append("\n" ); 
+        text.append("\n Example Usage " );
+        text.append("\n Text to file format conversion :- " ); 
+        text.append("  pegasus-tc-converter  -i tc.txt -I Text -o tc.data  -O File -vvvvv");
+        text.append("\n File to Database(new) format conversion  :- " ); 
+        text.append("  pegasus-tc-converter  -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost  -O Database -vvvvv" );
+        text.append("\n Database(existing specified in properties file) to text format conversion  :-" ); 
+        text.append("  pegasus-tc-converter  -I Database -o tc.txt -O Text -vvvvv");
             
-        mLogger.log( text,LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.log( text.toString(),LogManager.INFO_MESSAGE_LEVEL );
 
     }
 
@@ -518,7 +519,8 @@ public class TCConverter
     						throw new RuntimeException("Cannot over write an existing database " + mDatabaseName);
     					}
     				} catch (SQLException e) {
-    					
+    					mLogger.log("Failed connection with the database " + e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
+    					throw new RuntimeException("Connection Failed " + mDatabaseName);
     				}
         		}
         	}
