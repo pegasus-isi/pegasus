@@ -212,8 +212,8 @@ public interface TransformationCatalog
      * @param tcentry List Takes a list of TransformationCatalogEntry objects as input
      * 
      * @throws Exception
-     * @return number of insertions, should always be 1. On failure,
-     * throw an exception, don't use zero.
+     * @return number of insertions On failure,throw an exception, don't use zero.
+     * 
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
     public int insert( List<TransformationCatalogEntry> tcentry ) throws Exception;
@@ -286,8 +286,7 @@ public interface TransformationCatalog
      * @param profiles  List   The List of Profile objects that are to be added 
      *                  to the transformation.
      * 
-     * @return number of insertions, should always be 1. On failure,
-     * throw an exception, don't use zero.
+     * @return number of insertions. On failure, throw an exception, don't use zero.
      *
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
@@ -304,8 +303,7 @@ public interface TransformationCatalog
      * @param resourcename String The resource on which the physical transformation exists
      * @param profiles   The List of Profile objects that are to be added
      *                   to the transformation.
-     * @return number of insertions, should always be 1. On failure,
-     * throw an exception, don't use zero.
+     * @return number of insertions. On failure, throw an exception, don't use zero.
      *
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
