@@ -715,7 +715,7 @@ public class Kickstart implements GridStart {
             //dynamic deployment
             List entries = null;
             try{
-                entries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
+                entries = mTCHandle.lookup( this.TRANSFORMATION_NAMESPACE,
                                                   this.TRANSFORMATION_NAME,
                                                   this.TRANSFORMATION_VERSION,
                                                   job.getSiteHandle(),

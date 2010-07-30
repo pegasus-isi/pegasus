@@ -153,7 +153,7 @@ public class TCQuery
                     "Querying the TC for physical names for lfn " + lfn +
                     " resource " + resource + " type " + type,
                     LogManager.DEBUG_MESSAGE_LEVEL );
-                l = tc.getTCPhysicalNames( namespace, name, version, resource,
+                l = tc.lookupNoProfiles( namespace, name, version, resource,
                     t );
             } catch ( Exception e ) {
                 mLogger.log(
@@ -213,7 +213,7 @@ public class TCQuery
             try {
                 mLogger.log( "Querying the TC for Profiles for lfn " +
                     lfn, LogManager.DEBUG_MESSAGE_LEVEL );
-                l = tc.getTCLfnProfiles( namespace, name, version );
+                l = tc.lookupLFNProfiles( namespace, name, version );
             } catch ( Exception e ) {
                 mLogger.log(
                     "Unable to query the lfn profiles",
@@ -252,7 +252,7 @@ public class TCQuery
                 mLogger.log( "Query the TC for profiles with pfn=" + pfn +
                     " type=" + type + " resource=" +
                     resource, LogManager.FATAL_MESSAGE_LEVEL );
-                l = tc.getTCPfnProfiles( pfn, resource, TCType.fromString( type ) );
+                l = tc.lookupPFNProfiles( pfn, resource, TCType.fromString( type ) );
             } catch ( Exception e ) {
 
                 mLogger.log(
@@ -289,7 +289,7 @@ public class TCQuery
         List l = null;
         TCType t = ( type == null ) ? null : TCType.fromString( type );
         try {
-            l = tc.getTCResourceIds( namespace, name, version, t );
+            l = tc.lookupSites( namespace, name, version, t );
         } catch ( Exception e ) {
             mLogger.log( "Unable to query TC for resources", e,
                 LogManager.FATAL_MESSAGE_LEVEL );
@@ -312,7 +312,7 @@ public class TCQuery
      */
     private void getTC() {
         try {
-           List l = tc.getTC();
+           List l = tc.getContents();
             if (l!=null && !l.isEmpty() ) {
                 //this means entries are there.
                 //get the pretty print column size information.
@@ -387,7 +387,7 @@ public class TCQuery
       out.append( " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" );
       out.append( " version=\""+XML_VERSION+"\">\n" );
       try {
-          List l=tc.getTC();
+          List l=tc.getContents();
           Collections.sort(l,new LFNComparator());
           String prev="";
           String current="";

@@ -334,7 +334,7 @@ public class S3 implements CleanupImplementation{
         List tcentries = null;
         TransformationCatalogEntry entry  = null;
         try {
-            tcentries = mTCHandle.getTCEntries( S3.TRANSFORMATION_NAMESPACE,
+            tcentries = mTCHandle.lookup( S3.TRANSFORMATION_NAMESPACE,
                                                 S3.TRANSFORMATION_NAME,
                                                 S3.TRANSFORMATION_VERSION,
                                                 site,

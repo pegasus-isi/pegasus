@@ -840,7 +840,7 @@ public class DeployWorkerPackage
         GridGateway jobManager = null;
 
         try {
-            entries = mTCHandle.getTCEntries( DeployWorkerPackage.UNTAR_TRANSFORMATION_NAMESPACE,
+            entries = mTCHandle.lookup( DeployWorkerPackage.UNTAR_TRANSFORMATION_NAMESPACE,
                                               DeployWorkerPackage.UNTAR_TRANSFORMATION_NAME,
                                               DeployWorkerPackage.UNTAR_TRANSFORMATION_VERSION,
                                               site, TCType.INSTALLED);
@@ -971,7 +971,7 @@ public class DeployWorkerPackage
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement
@@ -1042,7 +1042,7 @@ public class DeployWorkerPackage
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement
@@ -1145,7 +1145,7 @@ public class DeployWorkerPackage
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement

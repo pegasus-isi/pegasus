@@ -86,7 +86,7 @@ public class TCAdd
                     mLogger.log( "Trying to add profiles for lfn " +
                         lfn +
                         " " + profiles, LogManager.DEBUG_MESSAGE_LEVEL);
-                    if ( tc.addTCLfnProfile( namespace, name, version,
+                    if ( tc.addLFNProfile( namespace, name, version,
                         profiles ) ) {
                         mLogger.log( "Added lfn profiles sucessfully",
                                     LogManager.INFO_MESSAGE_LEVEL );
@@ -112,7 +112,7 @@ public class TCAdd
                         pfn +
                         " " + resource + " " + type + " " +
                         profiles,LogManager.DEBUG_MESSAGE_LEVEL);
-                    if ( tc.addTCPfnProfile( pfn, TCType.fromString( type ),
+                    if ( tc.addPFNProfile( pfn, TCType.fromString( type ),
                         resource, profiles ) ) {
                         mLogger.log( "Added pfn profiles sucessfully",
                                     LogManager.INFO_MESSAGE_LEVEL );
@@ -162,7 +162,7 @@ public class TCAdd
             " " + pfn + " " + t + " " + resource + " " + system +
             " " + profiles, LogManager.DEBUG_MESSAGE_LEVEL);
         VDSSysInfo s = ( system == null ) ? new VDSSysInfo() : system;
-        return ( tc.addTCEntry( namespace, name, version,
+        return ( tc.insert( namespace, name, version,
             pfn, t,
             resource, null, profiles, VDSSysInfo2NMI.vdsSysInfo2NMI(s) ) ) ? true : false;
     }
@@ -239,7 +239,7 @@ public class TCAdd
                                  ppe.getPosition(), ppe ,
                                  LogManager.ERROR_MESSAGE_LEVEL);
                 }
-                    if ( !tc.addTCEntry( namespace, name, version, pfn, ttype,
+                    if ( !tc.insert( namespace, name, version, pfn, ttype,
                         resource, null, profiles, VDSSysInfo2NMI.vdsSysInfo2NMI( system ) ) ) {
                         mLogger.log(
                             "Unable to bulk entries into tc on line " +

@@ -580,7 +580,7 @@ public abstract class Abstract implements Implementation{
 
         List entries;
         try {
-            entries= mTCHandle.getTCEntries( this.XBIT_TRANSFORMATION_NS,
+            entries= mTCHandle.lookup( this.XBIT_TRANSFORMATION_NS,
                                              this.CHANGE_XBIT_TRANSFORMATION,
                                              this.XBIT_TRANSFORMATION_VERSION,
                                              eSiteHandle, TCType.INSTALLED);
@@ -705,7 +705,7 @@ public abstract class Abstract implements Implementation{
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement

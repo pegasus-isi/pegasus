@@ -322,7 +322,7 @@ public class S3 extends Abstract
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.getTCEntries(S3.TRANSFORMATION_NAMESPACE,
+            tcentries = mTCHandle.lookup(S3.TRANSFORMATION_NAMESPACE,
                                                S3.TRANSFORMATION_NAME,
                                                S3.TRANSFORMATION_VERSION,
                                                siteHandle,

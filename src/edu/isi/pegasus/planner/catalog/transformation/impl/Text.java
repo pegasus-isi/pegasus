@@ -149,7 +149,7 @@ public class Text
         mLogger = bag.getLogger();
         
         mTCFile = mProps.getTCPath();
-        mLogger.log("TC Mode being used is " + this.getTCMode(),
+        mLogger.log("TC Mode being used is " + this.getDescription(),
                     LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("TC File being used is " + mTCFile,
                     LogManager.CONFIG_MESSAGE_LEVEL);
@@ -181,7 +181,7 @@ public class Text
      *
      * @return String containing the description.
      */
-    public String getTCMode() {
+    public String getDescription() {
         return Text.DESCRIPTION;
     }
 
@@ -205,7 +205,7 @@ public class Text
      * @see org.griphyn.common.classes.TCType
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public List getTCEntries(String namespace, String name, String version,
+    public List<TransformationCatalogEntry> lookup(String namespace, String name, String version,
                              List resourceids, TCType type) throws Exception {
         logMessage("getTCEntries(String namespace,String name,String version," +
                    "List resourceids, TCType type");
@@ -215,7 +215,7 @@ public class Text
         List results = null;
         if (resourceids != null) {
             for (Iterator i = resourceids.iterator(); i.hasNext(); ) {
-                List tempresults = getTCEntries(namespace, name, version,
+                List tempresults = lookup(namespace, name, version,
                                                 (String) i.next(), type);
                 if (tempresults != null) {
                     if (results == null) {
@@ -226,7 +226,7 @@ public class Text
             }
         }
         else {
-            List tempresults = getTCEntries(namespace, name, version, (String)null,
+            List tempresults = lookup(namespace, name, version, (String)null,
                                             type);
             if (tempresults != null) {
                 results = new ArrayList(tempresults.size());
@@ -257,7 +257,7 @@ public class Text
      * @see org.griphyn.common.classes.TCType
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public List getTCEntries(String namespace, String name, String version,
+    public List<TransformationCatalogEntry>  lookup(String namespace, String name, String version,
                              String resourceid, TCType type) throws Exception {
         logMessage(
             "getTCEntries(String namespace, String name, String version, " +
@@ -298,7 +298,7 @@ public class Text
      * @throws Exception
      * @see org.griphyn.common.classes.TCType
      */
-    public List getTCResourceIds(String namespace, String name,
+    public List<String> lookupSites(String namespace, String name,
                                  String version,
                                  TCType type) throws Exception {
         logMessage(
@@ -311,7 +311,7 @@ public class Text
 
 
         //retrieve all entries for a transformation, matching a tc type
-        List<TransformationCatalogEntry> entries = this.getTCEntries( namespace, name, version, (String)null, type );
+        List<TransformationCatalogEntry> entries = this.lookup( namespace, name, version, (String)null, type );
 
         Set<String> result = new HashSet();
         for( TransformationCatalogEntry entry : entries ){
@@ -339,18 +339,14 @@ public class Text
      *                     If <B>NULL</B> then returns entries of all types.
      *
      * @throws Exception
-     * @return List       a list of String Arrays.
-     *                    Each array contains the resourceid,
-     *                    the physical transformation, the type of the tr and
-     *                    the systeminfo.
-     *                    The last entry in the List is a int array containing
-     *                    the column lengths for pretty print.
+     * @return List       Returns a List of <TransformationCatalongEntry> objects 
+     *                    with the profiles not populated.
      *                    Returns <B>NULL</B> if no results found.
      *
      * @see org.griphyn.common.classes.TCType
      * @see org.griphyn.common.classes.VDSSysInfo
      */
-    public List getTCPhysicalNames(String namespace, String name,
+    public List<TransformationCatalogEntry>  lookupNoProfiles(String namespace, String name,
                                    String version,
                                    String resourceid, TCType type) throws
         Exception {
@@ -361,31 +357,15 @@ public class Text
         
         
         //retrieve all entries for a transformation, matching a tc type
-        List<TransformationCatalogEntry> entries = this.getTCEntries( namespace, name, version, resourceid, type );
+        List<TransformationCatalogEntry> entries = this.lookup( namespace, name, version, resourceid, type );
         
-        List result = new LinkedList();
-
-        //dont know what count does and why this for pretty print.
-        //ask gaurang. Karan June 11, 2010
-        int count[] = {0, 0, 0};
-        for( TransformationCatalogEntry entry : entries ){
-            result.add( entry.getPhysicalTransformation()  );
-            String[] s = {
-                        entry.getResourceId(),
-                        entry.getPhysicalTransformation(),
-                        entry.getType().toString(),
-                        entry.getSysInfo().toString()};
-
-            columnLength(s, count);
-        }
+        List result = entries;
 
         //API dictates we return null in case of empty
         if( result.isEmpty() ){
             return null;
         }
-        else{
-            result.add(count);
-        }
+        
         return result;
     }
 
@@ -406,13 +386,13 @@ public class Text
      *                   specifying the column length for pretty print.
      *                   Returns <B>NULL</B> if no results found.
      */
-    public List getTCLogicalNames(String resourceid, TCType type) throws
+    public List<String[]> getTCLogicalNames(String resourceid, TCType type) throws
         Exception {
         logMessage("List getTCLogicalNames(String resourceid, TCType type)");
         logMessage("\t getTCLogicalNames(" + resourceid + "," + type + ")");
 
-        List<TransformationCatalogEntry> entries = mTCStore.getEntries( resourceid, type );
-        int[] length = {0, 0};
+        List<TransformationCatalogEntry> entries = mTCStore.getEntries( resourceid, type ); 
+                
 
         //convert the list into the format Gaurang wants for the API.
         List result = new LinkedList();
@@ -422,16 +402,14 @@ public class Text
             String t = entry.getType().toString();
 
             String[] s = { l, r, t};
-            columnLength(s, length);
+            result.add( s );
         }
 
         //API dictates we return null in case of empty
         if( result.isEmpty() ){
             return null;
         }
-        else{
-            result.add( length );
-        }
+        
         return result;
 
 
@@ -452,7 +430,7 @@ public class Text
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public List getTCLfnProfiles(String namespace, String name,
+    public List<Profile> lookupLFNProfiles(String namespace, String name,
                                  String version) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
@@ -473,7 +451,7 @@ public class Text
      *
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public List getTCPfnProfiles(String pfn, String resourceid, TCType type) throws
+    public List<Profile> lookupPFNProfiles(String pfn, String resourceid, TCType type) throws
         Exception {
         logMessage(
             "getTCPfnProfiles(String pfn, String resourceid, TCType type)");
@@ -508,7 +486,7 @@ public class Text
      * @throws Exception
      */
 
-    public List getTC() throws Exception {
+    public List<TransformationCatalogEntry> getContents() throws Exception {
         return mTCStore.getEntries( (String)null, (TCType)null );
     }
 
@@ -528,12 +506,12 @@ public class Text
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(List entries) throws
+    public boolean insert(List entries) throws
         Exception {
         for (int i = 0; i < entries.size(); i++) {
             TransformationCatalogEntry entry = ( (TransformationCatalogEntry)
                                                 entries.get(i));
-            this.addTCEntry(entry);
+            this.insert(entry);
         }
         return true;
 
@@ -551,9 +529,9 @@ public class Text
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(TransformationCatalogEntry entry) throws
+    public boolean insert(TransformationCatalogEntry entry) throws
         Exception {
-        this.addTCEntry(entry.getLogicalNamespace(),
+        this.insert(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
@@ -574,7 +552,7 @@ public class Text
      * @throws Exception
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(TransformationCatalogEntry entry, boolean write) throws
+    public boolean insert(TransformationCatalogEntry entry, boolean write) throws
         Exception {
         this.addTCEntry(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
@@ -608,7 +586,7 @@ public class Text
      * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCEntry(String namespace, String name,
+    public boolean insert(String namespace, String name,
                               String version,
                               String physicalname, TCType type,
                               String resourceid,
@@ -663,7 +641,7 @@ public class Text
         entry.addProfiles(pfnprofiles);
         entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
 
-        List<TransformationCatalogEntry> existing = this.getTCEntries( namespace, name, version, resourceid, type );
+        List<TransformationCatalogEntry> existing = this.lookup( namespace, name, version, resourceid, type );
         //check to see if entries match
         boolean add = true;
         for( TransformationCatalogEntry e: existing ){
@@ -698,7 +676,7 @@ public class Text
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean addTCLfnProfile(String namespace, String name,
+    public boolean addLFNProfile(String namespace, String name,
                                    String version,
                                    List profiles) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
@@ -718,7 +696,7 @@ public class Text
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean addTCPfnProfile(String pfn, TCType type,
+    public boolean addPFNProfile(String pfn, TCType type,
                                    String resourcename,
                                    List profiles) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
@@ -743,13 +721,13 @@ public class Text
      * @throws Exception
      * @return boolean
      */
-    public boolean deleteTCbyLogicalName(String namespace, String name,
+    public boolean removeByLFN(String namespace, String name,
                                          String version, String resourceid,
                                          TCType type) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean deleteTCbyPhysicalName(String physicalname,
+    public boolean removeByPFN(String physicalname,
                                           String namespace,
                                           String name, String version,
                                           String resourceid, TCType type) throws
@@ -769,7 +747,7 @@ public class Text
      * @throws Exception as function not implemented.
      * @return boolean
      */
-    public boolean deleteTCbyType(TCType type, String resourceid) throws
+    public boolean removeByType(TCType type, String resourceid) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
@@ -782,7 +760,7 @@ public class Text
      * @throws Exception as function not implemented.
      * @return boolean
      */
-    public boolean deleteTCbySysInfo( SysInfo sysinfo) throws
+    public boolean removeBySysInfo( SysInfo sysinfo) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
@@ -794,7 +772,7 @@ public class Text
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean deleteTCbyResourceId(String resourceid) throws Exception {
+    public boolean removeBySiteID(String resourceid) throws Exception {
 
        throw new UnsupportedOperationException("Not Implemented");
     }
@@ -805,18 +783,18 @@ public class Text
      * @return boolean
      * @throws Exception
      */
-    public boolean deleteTC() throws Exception {
+    public boolean clear() throws Exception {
         mTCStore.clear();
         return true;
     }
 
-    public boolean deleteTCPfnProfile(String physicalname, TCType type,
+    public boolean deletePFNProfiles(String physicalname, TCType type,
                                       String resourceid, List profiles) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean deleteTCLfnProfile(String namespace, String name,
+    public boolean deleteLFNProfiles(String namespace, String name,
                                       String version, List profiles) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");

@@ -739,7 +739,7 @@ public class S3   implements SLS {
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.getTCEntries( "pegasus",
+            tcentries = mTCHandle.lookup( "pegasus",
                                                 "seqexec",
                                                 null,
                                                 siteHandle,
@@ -778,7 +778,7 @@ public class S3   implements SLS {
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.getTCEntries( S3.TRANSFORMATION_NAMESPACE,
+            tcentries = mTCHandle.lookup( S3.TRANSFORMATION_NAMESPACE,
                                                 S3.TRANSFORMATION_NAME,
                                                 S3.TRANSFORMATION_VERSION,
                                                 siteHandle,
@@ -866,7 +866,7 @@ public class S3   implements SLS {
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement

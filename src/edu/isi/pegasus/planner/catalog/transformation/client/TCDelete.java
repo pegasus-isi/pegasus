@@ -64,7 +64,7 @@ public class TCDelete
                             ( ( resource == null ) ? "ALL" : resource ) +
                             " and type " + ( ( type == null ) ? "ALL" : type ),
                             LogManager.DEBUG_MESSAGE_LEVEL);
-                        if ( tc.deleteTCbyLogicalName( namespace, name, version,
+                        if ( tc.removeByLFN( namespace, name, version,
                             resource,
                             ( ( type == null ) ? null : TCType.fromString( type ) ) ) ) {
                             mLogger.log(
@@ -101,7 +101,7 @@ public class TCDelete
                             ( ( resource == null ) ? "ALL" : resource ) +
                             " and type " + ( ( type == null ) ? "ALL" : type ),
                             LogManager.DEBUG_MESSAGE_LEVEL);
-                        if ( tc.deleteTCbyPhysicalName( pfn, namespace, name,
+                        if ( tc.removeByPFN( pfn, namespace, name,
                             version, resource,
                             ( ( type == null ) ? null : TCType.fromString( type ) ) ) ) {
                             mLogger.log(
@@ -135,7 +135,7 @@ public class TCDelete
                         mLogger.log(
                             "Trying to delete the TC by resourceid " + resource,
                             LogManager.DEBUG_MESSAGE_LEVEL);
-                        if ( tc.deleteTCbyResourceId( resource ) ) {
+                        if ( tc.removeBySiteID( resource ) ) {
                             mLogger.log(
                                 "Deleted the TC entries by resourceid " +
                                 resource,LogManager.INFO_MESSAGE_LEVEL );
@@ -160,7 +160,7 @@ public class TCDelete
                         mLogger.log(
                             "Trying to delete the TC LFN profiles for LFN " +
                             lfn,LogManager.DEBUG_MESSAGE_LEVEL);
-                        if ( tc.deleteTCLfnProfile( namespace, name, version,
+                        if ( tc.deleteLFNProfiles( namespace, name, version,
                             profiles ) ) {
                             mLogger.log(
                                 "Deleted the TC LFN profile entries for LFN " +
@@ -187,7 +187,7 @@ public class TCDelete
                             "Trying to delete the TC PFN profiles for PFN " +
                             pfn + " type " + type + " resource " + resource,
                            LogManager.DEBUG_MESSAGE_LEVEL );
-                        if ( tc.deleteTCPfnProfile( pfn,
+                        if ( tc.deletePFNProfiles( pfn,
                             TCType.fromString( type ),
                             resource, profiles ) ) {
                             mLogger.log(
@@ -216,7 +216,7 @@ public class TCDelete
                             type + "and resource " +
                             ( ( resource == null ) ? "ALL" :
                             resource ), LogManager.DEBUG_MESSAGE_LEVEL);
-                        if ( tc.deleteTCbyType( TCType.fromString( type ),
+                        if ( tc.removeByType( TCType.fromString( type ),
                             resource ) ) {
                             mLogger.log(
                                 "Deleted the TC entries for Type " + type +
@@ -245,7 +245,7 @@ public class TCDelete
                         mLogger.log(
                             "Trying to delete the TC by VDSSysInfo " +
                             systemstring, LogManager.DEBUG_MESSAGE_LEVEL);
-                        if ( tc.deleteTCbySysInfo( VDSSysInfo2NMI.vdsSysInfo2NMI(system) ) ) {
+                        if ( tc.removeBySysInfo( VDSSysInfo2NMI.vdsSysInfo2NMI(system) ) ) {
                             mLogger.log(
                                 "Deleted the TC entries for VDSSysInfo " +
                                 systemstring ,LogManager.INFO_MESSAGE_LEVEL);
@@ -261,7 +261,7 @@ public class TCDelete
                 case 127: //delete entire TC. whoopa.
                     mLogger.log( "Trying to delete the entire TC ",
                                  LogManager.DEBUG_MESSAGE_LEVEL);
-                    if ( tc.deleteTC() ) {
+                    if ( tc.clear() ) {
                         mLogger.log( "Deleted the entire tc succesfully",
                                     LogManager.INFO_MESSAGE_LEVEL );
                     } else {

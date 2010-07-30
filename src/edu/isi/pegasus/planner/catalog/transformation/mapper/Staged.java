@@ -94,7 +94,7 @@ public class Staged
             //since sitemap does not exist we need to generate and populate it.
             //get the TransformationCatalog entries from the TC.
             try {
-                tcentries = mTCHandle.getTCEntries( namespace, name, version,
+                tcentries = mTCHandle.lookup( namespace, name, version,
                     ( List )null,
                     TCType.STATIC_BINARY );
             } catch ( Exception e ) {

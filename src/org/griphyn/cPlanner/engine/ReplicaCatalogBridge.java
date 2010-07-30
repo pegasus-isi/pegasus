@@ -454,7 +454,7 @@ public class ReplicaCatalogBridge
         //change this function
         List tcentries = null;
         try {
-            tcentries = mTCHandle.getTCEntries( newJob.getTXNamespace(),
+            tcentries = mTCHandle.lookup( newJob.getTXNamespace(),
                                                 newJob.getTXName(),
                                                 newJob.getTXVersion(),
                                                 "local",

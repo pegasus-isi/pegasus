@@ -181,7 +181,7 @@ public class RM implements CleanupImplementation{
         List tcentries = null;
         TransformationCatalogEntry entry  = null;
         try {
-            tcentries = mTCHandle.getTCEntries( null,
+            tcentries = mTCHandle.lookup( null,
                                                 DEFAULT_RM_LOGICAL_NAME,
                                                 null,
                                                 site,

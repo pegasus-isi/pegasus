@@ -254,7 +254,7 @@ public class Database
         SQLException, IOException {
         super( (String)null, "pegasus.catalog.transformation.db.schema");
         //mLogger = LogManager.getInstance();
-        mLogger.log("TC Mode being used is " + this.getTCMode(),
+        mLogger.log("TC Mode being used is " + this.getDescription(),
                     LogManager.CONFIG_MESSAGE_LEVEL);
 
     }
@@ -279,7 +279,7 @@ public class Database
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
 
-    public List getTCEntries(String namespace, String name, String version,
+    public List lookup(String namespace, String name, String version,
                              String resourceid, TCType type) throws Exception {
         List resultEntries = null;
         mLogger.log("Trying to get TCEntries for " +
@@ -289,18 +289,18 @@ public class Database
                     ( (type == null) ? "ALL" : type.toString()),
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
-        List pfnentries = this.getTCPhysicalNames(namespace, name, version,
+        List pfnentries = this.lookupNoProfiles(namespace, name, version,
                                                   resourceid, type);
         if (pfnentries != null) {
             resultEntries = new ArrayList(pfnentries.size());
-            List lfnprofiles = this.getTCLfnProfiles(namespace, name, version);
+            List lfnprofiles = this.lookupLFNProfiles(namespace, name, version);
             for (int i = 0; i < pfnentries.size() - 1; i++) {
                 String[] pfnresult = (String[]) pfnentries.get(i);
                 String qresourceid = pfnresult[0];
                 String qpfn = pfnresult[1];
                 String qtype = pfnresult[2];
                 VDSSysInfo qsysinfo = new VDSSysInfo(pfnresult[3]);
-                List pfnprofiles = this.getTCPfnProfiles(qpfn, qresourceid,
+                List pfnprofiles = this.lookupPFNProfiles(qpfn, qresourceid,
                     TCType.fromString(qtype));
                 TransformationCatalogEntry tc = new TransformationCatalogEntry(
                     namespace, name, version, pfnresult[0],
@@ -347,12 +347,12 @@ public class Database
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
 
-    public List getTCEntries(String namespace, String name, String version,
+    public List lookup(String namespace, String name, String version,
                              List resourceids, TCType type) throws Exception {
         List results = null;
         if (resourceids != null) {
             for (Iterator i = resourceids.iterator(); i.hasNext(); ) {
-                List tempresults = getTCEntries(namespace, name, version,
+                List tempresults = lookup(namespace, name, version,
                                                 (String) i.next(), type);
                 if (tempresults != null) {
                     if (results == null) {
@@ -363,7 +363,7 @@ public class Database
             }
         }
         else {
-            results = getTCEntries(namespace, name, version, (String)null,
+            results = lookup(namespace, name, version, (String)null,
                                    type);
         }
         return results;
@@ -378,7 +378,7 @@ public class Database
      * column lengths for pretty print.
      */
 
-    public List getTC() throws Exception {
+    public List getContents() throws Exception {
         //get the statement.
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.query.tc");
         //execute the query
@@ -400,9 +400,9 @@ public class Database
             String sysinfo = new VDSSysInfo(rs.getString(7), rs.getString(8),
                                          rs.getString(9), rs.getString(10)).
                 toString();
-            List pfnprofiles = this.getTCPfnProfiles(pfn, resourceid,
+            List pfnprofiles = this.lookupPFNProfiles(pfn, resourceid,
                 TCType.fromString(type));
-            List lfnprofiles = this.getTCLfnProfiles(namespace, name, version);
+            List lfnprofiles = this.lookupLFNProfiles(namespace, name, version);
             //         String profiles = null;
             List allprofiles = null;
             if (lfnprofiles != null) {
@@ -453,7 +453,7 @@ public class Database
      * @see org.griphyn.common.classes.TCType
      */
 
-    public List getTCResourceIds(String namespace, String name,
+    public List lookupSites(String namespace, String name,
                                  String version,
                                  TCType type) throws Exception {
         //get the statement
@@ -515,7 +515,7 @@ public class Database
      * @see org.griphyn.common.classes.VDSSysInfo
      */
 
-    public List getTCPhysicalNames(String namespace, String name,
+    public List lookupNoProfiles(String namespace, String name,
                                    String version,
                                    String resourceid, TCType type) throws
 
@@ -624,7 +624,7 @@ public class Database
      * @see org.griphyn.cPlanner.classes.Profile
      */
 
-    public List getTCLfnProfiles(String namespace, String name, String version) throws
+    public List lookupLFNProfiles(String namespace, String name, String version) throws
         Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.query.lfnprofiles");
@@ -662,7 +662,7 @@ public class Database
      * @see org.griphyn.cPlanner.classes.Profile
      */
 
-    public List getTCPfnProfiles(String pfn, String resourceid, TCType type) throws
+    public List lookupPFNProfiles(String pfn, String resourceid, TCType type) throws
         Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.query.pfnprofiles");
@@ -701,12 +701,12 @@ public class Database
      * thrown when error occurs.
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(List tcentry) throws
+    public boolean insert(List tcentry) throws
         Exception {
         for (int i = 0; i < tcentry.size(); i++) {
             TransformationCatalogEntry entry = ( (TransformationCatalogEntry)
                                                 tcentry.get(i));
-            this.addTCEntry(entry);
+            this.insert(entry);
         }
         return true;
     }
@@ -723,9 +723,9 @@ public class Database
      * @throws Exception
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(TransformationCatalogEntry entry) throws
+    public boolean insert(TransformationCatalogEntry entry) throws
         Exception {
-        this.addTCEntry(entry.getLogicalNamespace(),
+        this.insert(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
@@ -746,7 +746,7 @@ public class Database
      * @throws Exception
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(TransformationCatalogEntry entry, boolean write) throws
+    public boolean insert(TransformationCatalogEntry entry, boolean write) throws
         Exception {
         this.addTCEntry(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
@@ -783,7 +783,7 @@ public class Database
      * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCEntry(String namespace, String name,
+    public boolean insert(String namespace, String name,
                               String version,
                               String physicalname, TCType type,
                               String resourceid,
@@ -940,7 +940,7 @@ if(!write) return false;
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCLfnProfile(String namespace, String name,
+    public boolean addLFNProfile(String namespace, String name,
                                    String version, List profiles) throws
         Exception {
         long lfnid = -1;
@@ -971,7 +971,7 @@ if(!write) return false;
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCPfnProfile(String pfn, TCType type, String resourceid,
+    public boolean addPFNProfile(String pfn, TCType type, String resourceid,
                                    List profiles) throws Exception {
         long pfnid = -1;
         if ( (pfnid = getPhysicalId(pfn, type, resourceid)) != -1) {
@@ -1010,7 +1010,7 @@ if(!write) return false;
      * @see org.griphyn.common.classes.TCType
      */
 
-    public boolean deleteTCbyLogicalName(String namespace, String name,
+    public boolean removeByLFN(String namespace, String name,
                                          String version, String resourceid,
                                          TCType type) throws Exception {
 
@@ -1194,7 +1194,7 @@ if(!write) return false;
      * @see org.griphyn.common.classes.TCType
      */
 
-    public boolean deleteTCbyPhysicalName(String physicalname,
+    public boolean removeByPFN(String physicalname,
                                           String namespace,
                                           String name, String version,
                                           String resourceid, TCType type) throws
@@ -1359,7 +1359,7 @@ if(!write) return false;
      * @return boolean Returns true for success, false if any error occurs.
      * @see org.griphyn.common.classes.VDSSysInfo
      */
-    public boolean deleteTCbySysInfo( SysInfo sysinfo) throws Exception {
+    public boolean removeBySysInfo( SysInfo sysinfo) throws Exception {
         if (sysinfo == null) {
             mLogger.log(
                 "The system information cannot be null",
@@ -1409,7 +1409,7 @@ if(!write) return false;
      * @see org.griphyn.common.classes.TCType
      */
 
-    public boolean deleteTCbyType(TCType type, String resourceid) throws
+    public boolean removeByType(TCType type, String resourceid) throws
         Exception {
         if (type == null) {
             mLogger.log(
@@ -1456,7 +1456,7 @@ if(!write) return false;
      * @return boolean  Returns true if successm false if any error occurs.
      */
 
-    public boolean deleteTCbyResourceId(String resourceid) throws Exception {
+    public boolean removeBySiteID(String resourceid) throws Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.delete.byresourceid");
         ps.setString(1, resourceid);
@@ -1490,7 +1490,7 @@ if(!write) return false;
      * @return boolean Returns true if delete succeeds, false if any error occurs.
      */
 
-    public boolean deleteTC() throws Exception {
+    public boolean clear() throws Exception {
         PreparedStatement[] ps = {
             this.m_dbdriver.getPreparedStatement("stmt.delete.alllfnpfnmap"),
             this.m_dbdriver.getPreparedStatement("stmt.delete.alllfnprofile"),
@@ -1528,7 +1528,7 @@ if(!write) return false;
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean deleteTCPfnProfile(String physicalname, TCType type,
+    public boolean deletePFNProfiles(String physicalname, TCType type,
                                       String resourceid, List profiles) throws
         Exception {
         long pfnid;
@@ -1588,7 +1588,7 @@ if(!write) return false;
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean deleteTCLfnProfile(String namespace, String name,
+    public boolean deleteLFNProfiles(String namespace, String name,
                                       String version, List profiles) throws
         Exception {
         long lfnid;
@@ -1639,7 +1639,7 @@ if(!write) return false;
      * Returns the TC implementation being used
      * @return String
      */
-    public String getTCMode() {
+    public String getDescription() {
         return new String(PegasusProperties.nonSingletonInstance().getTCMode());
     }
 

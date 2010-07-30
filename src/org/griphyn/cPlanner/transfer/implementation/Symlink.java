@@ -188,7 +188,7 @@ public class Symlink extends Transfer {
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.getTCEntries( Symlink.TRANSFORMATION_NAMESPACE,
+            tcentries = mTCHandle.lookup( Symlink.TRANSFORMATION_NAMESPACE,
                                                 Symlink.TRANSFORMATION_NAME,
                                                 Symlink.TRANSFORMATION_VERSION,
                                                 siteHandle,

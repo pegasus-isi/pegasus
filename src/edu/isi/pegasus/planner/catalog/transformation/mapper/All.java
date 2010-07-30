@@ -92,7 +92,7 @@ public class All
         //since sitemap does not exist we need to generate and populate it.
         //get the TransformationCatalog entries from the TC.
         try {
-            tcentries = mTCHandle.getTCEntries( namespace, name, version,
+            tcentries = mTCHandle.lookup( namespace, name, version,
                 ( List )null, null );
         } catch ( Exception e ) {
             mLogger.log(

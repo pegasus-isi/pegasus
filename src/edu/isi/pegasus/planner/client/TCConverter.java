@@ -363,11 +363,11 @@ public class TCConverter
             catalog = TransformationFactory.loadInstance( pegasusProperties );
         
             /* load all sites in transformation catalog */
-            entries = (List <TransformationCatalogEntry>)catalog.getTC();
+            entries = (List <TransformationCatalogEntry>)catalog.getContents();
             mLogger.log( "Loaded  " + entries.size() + " number of transformations ", LogManager.DEBUG_MESSAGE_LEVEL );
 
             /* query for the sites, and print them out */
-            mLogger.log( "Transformation loaded are "  + catalog.getTC( ) , LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log( "Transformation loaded are "  + catalog.getContents( ) , LogManager.DEBUG_MESSAGE_LEVEL );
             
         } catch (TransformationFactoryException ife){
         	throw ife;
@@ -530,7 +530,7 @@ public class TCConverter
         List<TransformationCatalogEntry> entries = output.getEntries(null, (TCType)null);
         for(TransformationCatalogEntry tcentry:entries){
         	try {
-				catalog.addTCEntry(tcentry);
+				catalog.insert(tcentry);
 			} catch (Exception e) {
 				
 				mLogger.log( "Transformation failed to add "  + tcentry.toString() , LogManager.DEBUG_MESSAGE_LEVEL );

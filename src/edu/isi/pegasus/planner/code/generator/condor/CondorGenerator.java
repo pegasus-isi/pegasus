@@ -765,7 +765,7 @@ public class CondorGenerator extends Abstract {
             
             //try to construct from the TC
             if( entry == null ){
-                entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
+                entries = mTCHandle.lookup(job.namespace, job.logicalName,
                                                  job.version, job.getSiteHandle(),
                                                  TCType.INSTALLED);
                 entry = (entries == null) ?

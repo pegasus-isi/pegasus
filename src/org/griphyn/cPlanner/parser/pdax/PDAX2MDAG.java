@@ -728,7 +728,7 @@ public class PDAX2MDAG implements Callback {
             
             //try to construct from the TC
             if( entry == null ){
-                entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
+                entries = mTCHandle.lookup(job.namespace, job.logicalName,
                                                  job.version, job.getSiteHandle(),
                                                  TCType.INSTALLED);
                 entry = (entries == null) ?
@@ -1107,7 +1107,7 @@ public class PDAX2MDAG implements Callback {
 
         //get the path to script wrapper from the
         try{
-            List entries = mTCHandle.getTCEntries(namespace,
+            List entries = mTCHandle.lookup(namespace,
                                                   name,
                                                   version,
                                                   site,

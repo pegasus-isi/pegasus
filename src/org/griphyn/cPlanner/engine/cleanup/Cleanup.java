@@ -286,7 +286,7 @@ public class Cleanup implements CleanupImplementation{
         List tcentries = null;
         TransformationCatalogEntry entry  = null;
         try {
-            tcentries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
+            tcentries = mTCHandle.lookup( this.TRANSFORMATION_NAMESPACE,
                                                 this.TRANSFORMATION_NAME,
                                                 this.TRANSFORMATION_VERSION,
                                                 site,
@@ -372,7 +372,7 @@ public class Cleanup implements CleanupImplementation{
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement

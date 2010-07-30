@@ -191,7 +191,7 @@ public class S3Cmd extends AbstractSingleFTPerXFERJob {
        List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.getTCEntries( S3Cmd.TRANSFORMATION_NAMESPACE,
+            tcentries = mTCHandle.lookup( S3Cmd.TRANSFORMATION_NAMESPACE,
                                                 S3Cmd.TRANSFORMATION_NAME,
                                                 S3Cmd.TRANSFORMATION_VERSION,
                                                 site,

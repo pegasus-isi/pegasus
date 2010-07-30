@@ -118,7 +118,7 @@ public class Installed
         //Only query for falseSites not the whole sites. Karan May 13, 2008
         //Pegasus Bug 33
         try {
-            tcentries = mTCHandle.getTCEntries( namespace, name, version,
+            tcentries = mTCHandle.lookup( namespace, name, version,
                                                 hassite? siteids : falseSites,
                                                 TCType.INSTALLED );
         } catch ( Exception e ) {

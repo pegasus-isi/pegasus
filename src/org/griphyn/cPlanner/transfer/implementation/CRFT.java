@@ -462,7 +462,7 @@ public class CRFT extends AbstractMultipleFTPerXFERJob {
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.getTCEntries(this.TRANSFORMATION_NAMESPACE,
+            tcentries = mTCHandle.lookup(this.TRANSFORMATION_NAMESPACE,
                                                this.TRANSFORMATION_NAME,
                                                this.TRANSFORMATION_VERSION,
                                                siteHandle,

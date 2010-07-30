@@ -486,7 +486,7 @@ public class SUBDAXGenerator{
             if( entry == null ){
                 mLogger.log( "Unable to construct path to dagman from the environment. CONDOR_HOME and CONDOR_LOCATION not set.",
                              LogManager.DEBUG_MESSAGE_LEVEL );
-                entries = mTCHandle.getTCEntries(job.namespace, job.logicalName,
+                entries = mTCHandle.lookup(job.namespace, job.logicalName,
                                                  job.version, job.getSiteHandle(),
                                                  TCType.INSTALLED);
                 entry = (entries == null) ?
@@ -791,7 +791,7 @@ public class SUBDAXGenerator{
 
         //get the path to script wrapper from the
         try{
-            List entries = mTCHandle.getTCEntries( "pegasus",
+            List entries = mTCHandle.lookup( "pegasus",
                                                    "pegasus-plan",
                                                    null,
                                                    "local",

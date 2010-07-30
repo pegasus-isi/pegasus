@@ -326,7 +326,7 @@ public class S3 implements Implementation {
         GridGateway jobManager = null;
 
         try {
-            entries = mTCHandle.getTCEntries( S3.TRANSFORMATION_NAMESPACE,
+            entries = mTCHandle.lookup( S3.TRANSFORMATION_NAMESPACE,
                                               S3.TRANSFORMATION_NAME,
                                               S3.TRANSFORMATION_VERSION,
                                               site, 
@@ -455,7 +455,7 @@ public class S3 implements Implementation {
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement

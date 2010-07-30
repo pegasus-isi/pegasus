@@ -203,7 +203,7 @@ public class File
         mTCFile = (path == null) ? mProps.getTCPath() : path;
         mLogger = LogManager.getInstance();
         mTreeMap = new TreeMap();
-        mLogger.log("TC Mode being used is " + this.getTCMode(),
+        mLogger.log("TC Mode being used is " + this.getDescription(),
                     LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("TC File being used is " + mTCFile,
                     LogManager.CONFIG_MESSAGE_LEVEL);
@@ -234,7 +234,7 @@ public class File
         
         mTCFile = mProps.getTCPath();
         mTreeMap = new TreeMap();
-        mLogger.log("TC Mode being used is " + this.getTCMode(),
+        mLogger.log("TC Mode being used is " + this.getDescription(),
                     LogManager.CONFIG_MESSAGE_LEVEL);
         mLogger.log("TC File being used is " + mTCFile,
                     LogManager.CONFIG_MESSAGE_LEVEL);
@@ -254,7 +254,7 @@ public class File
      *
      * @return String containing the description.
      */
-    public String getTCMode() {
+    public String getDescription() {
         String st = "New FILE TC Mode";
         return st;
     }
@@ -279,7 +279,7 @@ public class File
      * @see org.griphyn.common.classes.TCType
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public List getTCEntries(String namespace, String name, String version,
+    public List lookup(String namespace, String name, String version,
                              List resourceids, TCType type) throws Exception {
         logMessage("getTCEntries(String namespace,String name,String version," +
                    "List resourceids, TCType type");
@@ -289,7 +289,7 @@ public class File
         List results = null;
         if (resourceids != null) {
             for (Iterator i = resourceids.iterator(); i.hasNext(); ) {
-                List tempresults = getTCEntries(namespace, name, version,
+                List tempresults = lookup(namespace, name, version,
                                                 (String) i.next(), type);
                 if (tempresults != null) {
                     if (results == null) {
@@ -300,7 +300,7 @@ public class File
             }
         }
         else {
-            List tempresults = getTCEntries(namespace, name, version, (String)null,
+            List tempresults = lookup(namespace, name, version, (String)null,
                                             type);
             if (tempresults != null) {
                 results = new ArrayList(tempresults.size());
@@ -331,7 +331,7 @@ public class File
      * @see org.griphyn.common.classes.TCType
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public List getTCEntries(String namespace, String name, String version,
+    public List lookup(String namespace, String name, String version,
                              String resourceid, TCType type) throws Exception {
         logMessage(
             "getTCEntries(String namespace, String name, String version, " +
@@ -424,7 +424,7 @@ public class File
      * @throws Exception
      * @see org.griphyn.common.classes.TCType
      */
-    public List getTCResourceIds(String namespace, String name,
+    public List lookupSites(String namespace, String name,
                                  String version,
                                  TCType type) throws Exception {
         logMessage(
@@ -517,7 +517,7 @@ public class File
      * @see org.griphyn.common.classes.TCType
      * @see org.griphyn.common.classes.VDSSysInfo
      */
-    public List getTCPhysicalNames(String namespace, String name,
+    public List lookupNoProfiles(String namespace, String name,
                                    String version,
                                    String resourceid, TCType type) throws
         Exception {
@@ -683,7 +683,7 @@ public class File
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public List getTCLfnProfiles(String namespace, String name,
+    public List lookupLFNProfiles(String namespace, String name,
                                  String version) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
@@ -704,7 +704,7 @@ public class File
      *
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public List getTCPfnProfiles(String pfn, String resourceid, TCType type) throws
+    public List lookupPFNProfiles(String pfn, String resourceid, TCType type) throws
         Exception {
         logMessage(
             "getTCPfnProfiles(String pfn, String resourceid, TCType type)");
@@ -751,7 +751,7 @@ public class File
      * @throws Exception
      */
 
-    public List getTC() throws Exception {
+    public List getContents() throws Exception {
         List result = new ArrayList();
         for (Iterator i = mTreeMap.values().iterator(); i.hasNext(); ) {
             for (Iterator j = ( (Map) i.next()).values().iterator();
@@ -809,12 +809,12 @@ public class File
      * @throws Exception
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(List entries) throws
+    public boolean insert(List entries) throws
         Exception {
         for (int i = 0; i < entries.size(); i++) {
             TransformationCatalogEntry entry = ( (TransformationCatalogEntry)
                                                 entries.get(i));
-            this.addTCEntry(entry);
+            this.insert(entry);
         }
         return true;
 
@@ -832,9 +832,9 @@ public class File
      * @throws Exception
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(TransformationCatalogEntry entry) throws
+    public boolean insert(TransformationCatalogEntry entry) throws
         Exception {
-        this.addTCEntry(entry.getLogicalNamespace(),
+        this.insert(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
@@ -855,7 +855,7 @@ public class File
      * @throws Exception
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
      */
-    public boolean addTCEntry(TransformationCatalogEntry entry, boolean write) throws
+    public boolean insert(TransformationCatalogEntry entry, boolean write) throws
         Exception {
         this.addTCEntry(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
@@ -889,7 +889,7 @@ public class File
      * @see org.griphyn.common.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCEntry(String namespace, String name,
+    public boolean insert(String namespace, String name,
                               String version,
                               String physicalname, TCType type,
                               String resourceid,
@@ -995,7 +995,7 @@ public class File
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean addTCLfnProfile(String namespace, String name,
+    public boolean addLFNProfile(String namespace, String name,
                                    String version,
                                    List profiles) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
@@ -1015,7 +1015,7 @@ public class File
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean addTCPfnProfile(String pfn, TCType type,
+    public boolean addPFNProfile(String pfn, TCType type,
                                    String resourcename,
                                    List profiles) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
@@ -1040,13 +1040,13 @@ public class File
      * @throws Exception
      * @return boolean
      */
-    public boolean deleteTCbyLogicalName(String namespace, String name,
+    public boolean removeByLFN(String namespace, String name,
                                          String version, String resourceid,
                                          TCType type) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean deleteTCbyPhysicalName(String physicalname,
+    public boolean removeByPFN(String physicalname,
                                           String namespace,
                                           String name, String version,
                                           String resourceid, TCType type) throws
@@ -1066,7 +1066,7 @@ public class File
      * @throws Exception as function not implemented.
      * @return boolean
      */
-    public boolean deleteTCbyType(TCType type, String resourceid) throws
+    public boolean removeByType(TCType type, String resourceid) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
@@ -1079,7 +1079,7 @@ public class File
      * @throws Exception as function not implemented.
      * @return boolean
      */
-    public boolean deleteTCbySysInfo( SysInfo sysinfo) throws
+    public boolean removeBySysInfo( SysInfo sysinfo) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
@@ -1091,7 +1091,7 @@ public class File
      * @return boolean
      * @throws Exception as function not implemented.
      */
-    public boolean deleteTCbyResourceId(String resourceid) throws Exception {
+    public boolean removeBySiteID(String resourceid) throws Exception {
 
         if (mTreeMap.containsKey(resourceid)) {
             mTreeMap.remove(resourceid);
@@ -1106,18 +1106,18 @@ public class File
      * @return boolean
      * @throws Exception
      */
-    public boolean deleteTC() throws Exception {
+    public boolean clear() throws Exception {
         mTreeMap.clear();
         return true;
     }
 
-    public boolean deleteTCPfnProfile(String physicalname, TCType type,
+    public boolean deletePFNProfiles(String physicalname, TCType type,
                                       String resourceid, List profiles) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean deleteTCLfnProfile(String namespace, String name,
+    public boolean deleteLFNProfiles(String namespace, String name,
                                       String version, List profiles) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");

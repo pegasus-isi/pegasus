@@ -273,7 +273,7 @@ public class RemoveDirectory extends Engine {
         GridGateway jm = null;
 
         try {
-            entries = mTCHandle.getTCEntries( RemoveDirectory.TRANSFORMATION_NAMESPACE,
+            entries = mTCHandle.lookup( RemoveDirectory.TRANSFORMATION_NAMESPACE,
                                               RemoveDirectory.TRANSFORMATION_NAME,
                                               RemoveDirectory.TRANSFORMATION_VERSION,
                                               site,
@@ -430,7 +430,7 @@ public class RemoveDirectory extends Engine {
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement

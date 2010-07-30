@@ -631,7 +631,7 @@ public class Transfer   implements SLS {
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.getTCEntries( this.TRANSFORMATION_NAMESPACE,
+            tcentries = mTCHandle.lookup( this.TRANSFORMATION_NAMESPACE,
                                                 this.TRANSFORMATION_NAME,
                                                 this.TRANSFORMATION_VERSION,
                                                 siteHandle,
@@ -722,7 +722,7 @@ public class Transfer   implements SLS {
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
         try{
-            mTCHandle.addTCEntry( defaultTCEntry , false );
+            mTCHandle.insert( defaultTCEntry , false );
         }
         catch( Exception e ){
             //just log as debug. as this is more of a performance improvement

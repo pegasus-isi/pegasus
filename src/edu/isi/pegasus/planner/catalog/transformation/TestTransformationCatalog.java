@@ -122,11 +122,11 @@ public class TestTransformationCatalog {
             tce.addProfile( new Profile( Profile.ENV, "PEGASUS_HOME", "/usr/pegasus/bin" ));
 
             /* insert the entry into transformation catalog */
-            boolean added = catalog.addTCEntry( tce );
+            boolean added = catalog.insert( tce );
             System.out.println( "Entry added " + added );
 
             /* query for the entry we just entered */
-            List<TransformationCatalogEntry> results = catalog.getTCEntries( namespace, lfn, version, handle, TCType.INSTALLED );
+            List<TransformationCatalogEntry> results = catalog.lookup( namespace, lfn, version, handle, TCType.INSTALLED );
             if( results != null ){
                 System.out.println( "Results for LFN " + lfn );
                 for( TransformationCatalogEntry entry: results ){
@@ -138,12 +138,12 @@ public class TestTransformationCatalog {
             /* remove the entry we added
              * deletes are only implemented for the database version
              */
-            //boolean deleted = catalog.deleteTCbyLogicalName( namespace, lfn, version, handle, TCType.INSTALLED );
+            //boolean deleted = catalog.removeByLFN( namespace, lfn, version, handle, TCType.INSTALLED );
             //System.out.println( "Entry deleted " + added );
 
             /* list all the entries remaining in the TC */
             System.out.println( "\nListing all entries in the transformation catalog " );
-            List<TransformationCatalogEntry> entries = catalog.getTC();
+            List<TransformationCatalogEntry> entries = catalog.getContents();
             for( TransformationCatalogEntry e: entries ){
                 System.out.println( e );
             }

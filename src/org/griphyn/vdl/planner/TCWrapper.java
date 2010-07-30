@@ -86,7 +86,7 @@ public class TCWrapper implements Wrapper
 
     List result = null;
     try {
-      result = m_tc.getTCEntries( ns, id, vs, site, TCType.INSTALLED );
+      result = m_tc.lookup( ns, id, vs, site, TCType.INSTALLED );
     } catch ( Exception e ) {
       result = null;
     }
