@@ -381,7 +381,7 @@
     <!-- copies trees preserving all flags and links -->
     <exec executable="sh" dir="${src.dir}">
       <arg value="-c"/>
-      <arg value="find * -depth | cpio -pdma ${dst.dir}"/>
+      <arg value="find * -depth | fgrep -v .svn | cpio -pdma ${dst.dir}"/>
     </exec>
   </target>
 
