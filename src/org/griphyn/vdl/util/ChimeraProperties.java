@@ -43,10 +43,10 @@ public class ChimeraProperties
     "http://www.griphyn.org/chimera/vdl-1.24.xsd";
 
   public static final String DAX_SCHEMA_LOCATION =
-    "http://pegasus.isi.edu/schema/dax-2.0.xsd";
+    "http://pegasus.isi.edu/schema/dax-4.0.xsd";
 
   public static final String IVR_SCHEMA_LOCATION =
-    "http://pegasus.isi.edu/schema/iv-2.0.xsd";
+    "http://pegasus.isi.edu/schema/iv-2.1.xsd";
 
 
 public static final String DB_ALL_PREFIX =
@@ -110,14 +110,14 @@ public static final String DB_ALL_PREFIX =
   {
     for ( Enumeration e = m_props.propertyNames(); e.hasMoreElements(); ) {
       String key = (String) e.nextElement();
-      if ( key.equals("vds.timestamp.format") ) {
+      if ( key.equals("pegasus.timestamp.format") ) {
 	Currently c = new Currently( this.m_props.getProperty(key) );
 	logger.setDateFormat( c );
-      } else if ( key.startsWith("vds.log.") ) {
+      } else if ( key.startsWith("pegasus.log.") ) {
 	String subkey = key.substring(8);
 	logger.log( "default", 2, "found \"" + key + "\" -> " + subkey );
 	logger.register( subkey, this.m_props.getProperty(key) );
-      } else if ( key.startsWith( "vds.verbose" ) ) {
+      } else if ( key.startsWith( "pegasus.verbose" ) ) {
 	int verbose =  Integer.parseInt(this.m_props.getProperty(key));
 	logger.log( "default", 2, "verbosity mode = " + verbose );
 	logger.setVerbose(verbose);
@@ -187,7 +187,7 @@ public static final String DB_ALL_PREFIX =
     // load the default schema name - default is to use the file based
     // schema.
     String schemaName =
-      m_props.getProperty( "vds.db.vdc.schema", "SingleFileSchema" );
+      m_props.getProperty( "pegasus.db.vdc.schema", "SingleFileSchema" );
     if ( schemaName.indexOf('.') == -1 )
       schemaName = "org.griphyn.vdl.dbschema." + schemaName;
 
@@ -229,7 +229,7 @@ public static final String DB_ALL_PREFIX =
   public String getWFSchemaName()
   {
     // load the default schema name
-    String schemaName = m_props.getProperty( "vds.db.wf.schema" );
+    String schemaName = m_props.getProperty( "pegasus.db.wf.schema" );
     if ( schemaName != null && schemaName.indexOf('.') == -1 )
       schemaName = "org.griphyn.vdl.dbschema." + schemaName;
 
@@ -254,8 +254,8 @@ public static final String DB_ALL_PREFIX =
     File vdlx = // create a pointer to the default local position
       new File( this.m_props.getSysConfDir(), uri.getName() );
 
-    // Nota bene: vds.schema.vdl may be a networked URI...
-    return m_props.getProperty( "vds.schema.vdl", vdlx.getAbsolutePath() );
+    // Nota bene: pegasus.schema.vdl may be a networked URI...
+    return m_props.getProperty( "pegasus.schema.vdl", vdlx.getAbsolutePath() );
   }
 
   /**
@@ -275,8 +275,8 @@ public static final String DB_ALL_PREFIX =
     File dax = // create a pointer to the default local position
       new File( m_props.getSysConfDir(), uri.getName() );
 
-    // Nota bene: vds.schema.dax may be a networked URI...
-    return m_props.getProperty( "vds.schema.dax", dax.getAbsolutePath() );
+    // Nota bene: pegasus.schema.dax may be a networked URI...
+    return m_props.getProperty( "pegasus.schema.dax", dax.getAbsolutePath() );
   }
 
   /**
@@ -297,7 +297,7 @@ public static final String DB_ALL_PREFIX =
     File ptc = // create a pointer to the default local position
       new File( m_props.getSysConfDir(), uri.getName() );
 
-    // Nota bene: vds.schema.ptc may be a networked URI...
+    // Nota bene: pegasus.schema.ptc may be a networked URI...
     return m_props.getProperty( "pegasus.catalog.provenance", ptc.getAbsolutePath() );
   }
 
@@ -308,7 +308,7 @@ public static final String DB_ALL_PREFIX =
   public String getRCLocation()
   {
     File rcFile = new File( m_props.getLocalStateDir(), "rc.data" );
-    return m_props.getProperty( "vds.db.rc", rcFile.getAbsolutePath() );
+    return m_props.getProperty( "pegasus.db.rc", rcFile.getAbsolutePath() );
   }
 
   /**
@@ -318,7 +318,7 @@ public static final String DB_ALL_PREFIX =
   public String getTCLocation()
   {
     File tcFile = new File( m_props.getLocalStateDir(), "tc.data" );
-    return m_props.getProperty( "vds.db.tc", tcFile.getAbsolutePath() );
+    return m_props.getProperty( "pegasus.db.tc", tcFile.getAbsolutePath() );
   }
 
 
