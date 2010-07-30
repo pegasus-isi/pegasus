@@ -604,13 +604,15 @@ public class InvocationParser extends DefaultHandler
    *
    * @param parent  is the parent element
    * @param e is the name of the element
-   * @param names is a list of attribute names, as strings.
-   * @param values is a list of attribute values, to match the key list.
+   * @param names  is a list of attribute names, as strings.
+   * @param values  is a list of attribute values, to match the key list.
    * @return A new VDL Java object, which may only be partly constructed.
    * @exception IllegalArgumentException if the element name is too short.
    */
-  protected Invocation createObject( Invocation parent, String e, java.util.List names,
-			     java.util.List values )
+  protected Invocation createObject( Invocation parent, 
+				     String e, 
+				     java.util.List names,
+				     java.util.List values )
     throws IllegalArgumentException
   {
     if ( e == null || e.length() < 1 )
@@ -677,10 +679,12 @@ public class InvocationParser extends DefaultHandler
 	//
       case 'b':
 	if ( e.equals("boot") ) {
-            Boot b = new Boot();
-            b.addAttributes(names, values);
-            return b;
+	  Boot b = new Boot();
+	  b.addAttributes(names, values);
+	  return b;
         }
+
+	// unknown 
         return null;
         
 	//
@@ -700,11 +704,10 @@ public class InvocationParser extends DefaultHandler
 	  Job job = new Job(e);
 	  setupJob( job, names, values );
 	  return job;
-	}
-        else if ( e.equals( "cpu" ) ){
-            CPU c  = new CPU();
-            c.addAttributes(names, values);
-            return c;
+	} else if ( e.equals( "cpu" ) ){
+	  CPU c  = new CPU();
+	  c.addAttributes(names, values);
+	  return c;
         }
 
 	// unknown
@@ -884,6 +887,9 @@ public class InvocationParser extends DefaultHandler
 	    } else if ( name.equals("hostname") ) {
 	      this.log( e, name, value );
 	      m_result.setHostname( value );
+	    } else if ( name.equals("interface") ) {
+	      this.log( e, name, value );
+	      m_result.setInterface( value );
 	    } else if ( name.equals("resource") ) {
 	      this.log( e, name, value );
 	      m_result.setResource( value );
@@ -947,11 +953,10 @@ public class InvocationParser extends DefaultHandler
 	  Job job = new Job(e);
 	  setupJob( job, names, values );
 	  return job;
-	}
-        else if ( e.equals( "machine" ) ){
-            Machine m = new Machine();
-            m.addAttributes( names, values );
-            return m;
+	} else if ( e.equals( "machine" ) ){
+	  Machine m = new Machine();
+	  m.addAttributes( names, values );
+	  return m;
         }
 
 	// unknown
@@ -969,11 +974,10 @@ public class InvocationParser extends DefaultHandler
 	  Job job = new Job(e);
 	  setupJob( job, names, values );
 	  return job;
-	}
-        else if ( e.equals( "proc") ){
-            Proc p = new Proc();
-            p.addAttributes(names, values);
-            return p;
+	} else if ( e.equals( "proc") ){
+	  Proc p = new Proc();
+	  p.addAttributes( names, values );
+	  return p;
         }
 
 	// unknown
@@ -1000,11 +1004,10 @@ public class InvocationParser extends DefaultHandler
 	} else if ( e.equals("resource") ) {
 	  // ignore
 	  return new Ignore();
-	}
-        else if( e.equals( "ram" ) ){
-            RAM r = new RAM();
-            r.addAttributes(names, values);
-            return r;
+	} else if( e.equals( "ram" ) ) {
+	  RAM r = new RAM();
+	  r.addAttributes( names, values );
+	  return r;
         } 
 
 	// unknown
@@ -1141,15 +1144,13 @@ public class InvocationParser extends DefaultHandler
 	  Job job = new Job(e);
 	  setupJob( job, names, values );
 	  return job;
-	}
-        else if( e.equals( "stamp" ) ){
-            Stamp s = new Stamp();
-            return s;
-        } 
-        else if( e.equals( "swap" ) ){
-            Swap s = new Swap();
-            s.addAttributes( names, values );
-            return s;
+	} else if( e.equals( "stamp" ) ){
+	  Stamp s = new Stamp();
+	  return s;
+        } else if( e.equals( "swap" ) ){
+	  Swap s = new Swap();
+	  s.addAttributes( names, values );
+	  return s;
         } 
 
 	// unknown
@@ -1176,11 +1177,10 @@ public class InvocationParser extends DefaultHandler
 	    }
 	  }
 	  return file;
-	}
-        else if( e.equals( "task" ) ){
-            Task t = new Task();
-            t.addAttributes(names, values);
-            return t;
+	} else if( e.equals( "task" ) ){
+	  Task t = new Task();
+	  t.addAttributes(names, values);
+	  return t;
         } 
 
 	// unknown
@@ -1249,12 +1249,11 @@ public class InvocationParser extends DefaultHandler
 	    }
 	  }
 	  return usage;
-	}else if( e.equals( "uname" ) && parent instanceof Machine ){
-            Uname u = new Uname();
-            u.addAttributes(names, values);
-            return u;
-        }
-        else if ( e.equals("uname") ) {
+	} else if( e.equals( "uname" ) && parent instanceof Machine ){
+	  Uname u = new Uname();
+	  u.addAttributes(names, values);
+	  return u;
+        } else if ( e.equals("uname") ) {
 	  Architecture uname = new Architecture();
 	  for ( int i=0; i<names.size(); ++i ) {
 	    String name = (String) names.get(i);
@@ -1404,18 +1403,17 @@ public class InvocationParser extends DefaultHandler
 	} else if ( child instanceof Environment ) {
 	  invocation.setEnvironment((Environment) child);
 	  return true;
-	}
-        else if ( child instanceof Machine ) {
+	} else if ( child instanceof Machine ) {
 	  invocation.setMachine((Machine) child);
           
-          //convert uname object to Architecture object
-          //reqd for Pegasus Bug 39
+          // convert uname object to Architecture object
+          // reqd for Pegasus Bug 39
           Machine machine = (Machine)child;
-          for( Iterator<MachineInfo> it = machine.getMachineInfoIterator(); it.hasNext(); ){
-             MachineInfo mi = it.next();
-             if( mi instanceof Uname ){
-                 invocation.setArchitecture( ((Uname)mi).toArchitecture() );
-             }
+          for ( Iterator<MachineInfo> it = machine.getMachineInfoIterator(); it.hasNext(); ) {
+	    MachineInfo mi = it.next();
+	    if ( mi instanceof Uname ) {
+	      invocation.setArchitecture( ((Uname)mi).toArchitecture() );
+	    }
           }
           
           return true;
@@ -1443,21 +1441,20 @@ public class InvocationParser extends DefaultHandler
 	  job.setArguments((Arguments) child);
 	  return true;
 	}
-      }
-      else if( parent instanceof Machine ){
-          Machine m = (Machine)parent;
-          if( child instanceof Stamp ||
-              child instanceof Uname ||
-              child instanceof RAM ||
-              child instanceof Swap ||
-              child instanceof Boot ||
-              child instanceof CPU ||
-              child instanceof Load ||
-              child instanceof Proc ||
-              child instanceof Task ){
-              m.addMachineInfo( (MachineInfo)child );
-              return true;
-          }
+      } else if ( parent instanceof Machine ) {
+	Machine m = (Machine)parent;
+	if ( child instanceof Stamp ||
+	     child instanceof Uname ||
+	     child instanceof RAM ||
+	     child instanceof Swap ||
+	     child instanceof Boot ||
+	     child instanceof CPU ||
+	     child instanceof Load ||
+	     child instanceof Proc ||
+	     child instanceof Task ) {
+	  m.addMachineInfo( (MachineInfo)child );
+	  return true;
+	}
       }
       
       // unknown

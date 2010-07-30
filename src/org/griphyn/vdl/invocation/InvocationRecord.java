@@ -41,7 +41,7 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * The "not-so-official" location URL of the invocation record definition.
    */
   public static final String SCHEMA_LOCATION =
-    "http://pegasus.isi.edu/schema/iv-2.0.xsd";
+    "http://pegasus.isi.edu/schema/iv-2.1.xsd";
 
 
 
@@ -89,6 +89,11 @@ public class InvocationRecord extends Invocation // implements Cloneable
    * Symbolic hostname where gridlaunch ran (primary interface).
    */
   private String m_hostname;
+
+  /**
+   * Symbolic name of primary interface we used to determine host-name and -address.
+   */
+  private String m_interface;
 
   /**
    * numerical user id of the effective user.
@@ -350,6 +355,23 @@ public class InvocationRecord extends Invocation // implements Cloneable
    */
   public void setHostname( String hostname )
   { this.m_hostname = hostname; }
+
+  /**
+   * Accessor.
+   *
+   * @see #setInterface(String)
+   */
+  public String getInterface()
+  { return this.m_interface; }
+
+  /**
+   * Accessor.
+   *
+   * @param p_interface
+   * @see #getInterface()
+   */
+  public void setInterface( String p_interface )
+  { this.m_interface = p_interface; }
 
   /**
    * Accessor
