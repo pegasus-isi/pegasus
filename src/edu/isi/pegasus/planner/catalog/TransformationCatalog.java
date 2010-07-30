@@ -245,7 +245,7 @@ public interface TransformationCatalog
      * 
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean insert( TransformationCatalogEntry tcentry,boolean write) throws Exception;
+    public int insert( TransformationCatalogEntry tcentry,boolean write) throws Exception;
 
     /**
      * Add an single entry into the transformation catalog.
