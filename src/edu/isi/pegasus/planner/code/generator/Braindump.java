@@ -15,9 +15,15 @@
  */
 package edu.isi.pegasus.planner.code.generator;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 
+import java.net.UnknownHostException;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.globus.gsi.GlobusCredentialException;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
@@ -26,20 +32,51 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
+import org.globus.gsi.GlobusCredential;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Braindump file code generator that generates a Braindump file for the 
  * executable workflow in the submit directory.
+ * 
+ * The following keys are generated in the braindump file.
+ * 
+ * <pre>
+ * wf_uuid
+ * submit_hostname
+ * planner_arguments
+ * user
+ * grid_dn
+ * dax_label
+ * timestamp
+ * submit_dir
+ * planner_version
+ * type
+ * </pre>
+ * 
+ * Additionally, the following duplicate keys exist till pegasus-run is modified.
+ * 
+ * <pre>
+ * old keyname -> new keyname
+ * =============================
+ * label --> dax_label
+ * pegasus_wf_time --> timestamp
+ * run --> submit_dir
+ * pegasus_version --> planner_version
+ * </pre>
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -52,21 +89,64 @@ public class Braindump {
     public static final String BRAINDUMP_FILE = "braindump.txt";
     
     /**
-     * The  Key designating Pegasus as the generator.
-     */
-    public static final String GENERATOR_KEY = "pegasus_generator";
-    
-    /**
      * The Key designating type of Pegasus Code Generator.
      */
     public static final String GENERATOR_TYPE_KEY = "type";
 
+    /**
+     * The user who submitted the workflow.
+     */
+    public static final String USER_KEY = "user";
+    
+    /**
+     * The Grid DN of the user.
+     */
+    public static final String GRID_DN_KEY = "grid_dn";
+    
+    
+    /**
+     * The key for the submit hostname.
+     */
+    public static final String SUBMIT_HOSTNAME_KEY = "submit_hostname";
+    
+    /**
+     * The arguments passed to the planner.
+     */
+    public static final String PLANNER_ARGUMENTS_KEY = "planner_arguments";
+    
+    
+    /**
+     * The key for UUID of the workflow.
+     */
+    public static final String UUID_KEY = "wf_uuid" ;
+    
+    /**
+     * The DAX label.
+     */
+    public static final String DAX_LABEL_KEY = "dax_label";
+    
+    /**
+     * The workflow timestamp.
+     */
+    public static final String TIMESTAMP_KEY = "timestamp";
+    
+    /**
+     * The submit directory for the workflow.
+     */
+    public static final String SUBMIT_DIR_KEY = "submit_dir";
+   
+    
     /**
      * The Key for the version id.
      *
      * @see org.griphyn.cPlanner.classes.DagInfo#releaseVersion
      */
     public static final String VERSION_KEY  = "pegasus_version";
+    
+    /**
+     * The Key for the planner version
+     */
+    public static final String PLANNER_VERSION_KEY = "planner_version";
 
     /**
      * The Key for the pegasus build.
@@ -87,6 +167,12 @@ public class Braindump {
      */
     public static final String WF_TIME_KEY = "pegasus_wf_time";
 
+    /**
+     * The Key for the timestamp.
+     *
+     * @see org.griphyn.cPlanner.classes.DagInfo#mFlowTimestamp
+     */
+    public static final String WF_TIMESTAMP_KEY = "timestamp";
     
     /**
      * The bag of initialization objects.
@@ -110,6 +196,10 @@ public class Braindump {
      */
     protected PlannerOptions mPOptions;
 
+    /**
+     * The handle to the logging object.
+     */
+    protected LogManager mLogger;
 
     /**
      * Initializes the Code Generator implementation.
@@ -123,6 +213,7 @@ public class Braindump {
         mProps         = bag.getPegasusProperties();
         mPOptions      = bag.getPlannerOptions();
         mSubmitFileDir = mPOptions.getSubmitDirectory();
+        mLogger        = bag.getLogger();
     }
 
   
@@ -133,38 +224,70 @@ public class Braindump {
      * 
      * @return default entries
      */
-    public Map<String, String> defaultBrainDumpEntries( ADag workflow ) {
+    public Map<String, String> defaultBrainDumpEntries( ADag workflow ) throws CodeGeneratorException {
         DagInfo dinfo = workflow.dagInfo;
         
-        Map<String,String> entries = new HashMap();
+        //to preserve order while writing out
+        Map<String,String> entries = new LinkedHashMap();
         File directory = new File( mSubmitFileDir );
         String absPath = directory.getAbsolutePath();
+        
+        //user
+        String user = mProps.getProperty( "user.name" ) ;
+        if ( user == null ){ user = "unknown"; }
+        entries.put( Braindump.USER_KEY, user );
+
+        //grid dn
+        entries.put( Braindump.GRID_DN_KEY, getGridDN(  ) );
+        
+        //submit hostname
+        entries.put( Braindump.SUBMIT_HOSTNAME_KEY, getSubmitHostname() );
+        
+        //the workflow uuid
+        entries.put( Braindump.UUID_KEY, UUID.randomUUID().toString() );
+        
+        //dax and dax label
         entries.put( "dax", mPOptions.getDAX() );
+        entries.put( Braindump.DAX_LABEL_KEY, workflow.getLabel() );
+        
+        //the workflow name
+        if (dinfo.flowIDName != null) {
+            entries.put( WF_NAME_KEY, dinfo.flowIDName );
+        }
+        
+        //the workflow timestamp
+        if (dinfo.getMTime() != null) {
+            entries.put( WF_TIMESTAMP_KEY, dinfo.getFlowTimestamp() );
+        }
+        
+        //basedir and submit directory
         entries.put( "basedir", mPOptions.getBaseSubmitDirectory() );
                  //append( "dag " ).append(dagFile).append("\n").
+        entries.put( Braindump.SUBMIT_DIR_KEY, absPath );
                  
-        entries.put( "run" , absPath);
-        entries.put( "jsd" , absPath + File.separator + "jobstate.log");
-        entries.put( "rundir" , directory.getName());
-        entries.put( "pegasushome", mProps.getPegasusHome());
-        entries.put( "vogroup" , mPOptions.getVOGroup() );
-        entries.put( "label", mPOptions.getVOGroup() );
-        
+        //information about the planner
         StringBuffer planner = new StringBuffer();
         planner.append( mProps.getPegasusHome() ).append( File.separator ).
                 append( "bin" ).append( File.separator ).append( "pegasus-plan" );
         entries.put( "planner", planner.toString() );
         
-        
-        entries.put( VERSION_KEY, Version.instance().toString() );
+        //planner version and build
+        entries.put( PLANNER_VERSION_KEY, Version.instance().toString() );
         entries.put( BUILD_KEY, Version.instance().determineBuilt() );
-        //the workflow name
-        if (dinfo.flowIDName != null) {
-            entries.put( WF_NAME_KEY, dinfo.flowIDName );
-        }
-        //the workflow time
+        
+        //required by tailstatd
+        entries.put( "jsd" , absPath + File.separator + "jobstate.log");
+        entries.put( "rundir" , directory.getName());
+        entries.put( "pegasushome", mProps.getPegasusHome());
+        entries.put( "vogroup" , mPOptions.getVOGroup() );
+        
+        
+        //to be deleted once gaurang fixes pegasus-run
+        entries.put( "run" , absPath);
+        entries.put( "label", workflow.getLabel() );
+        entries.put( VERSION_KEY, Version.instance().toString() );
         if (dinfo.getMTime() != null) {
-            entries.put( WF_TIME_KEY, dinfo.getFlowTimestamp() );
+            entries.put( WF_TIMESTAMP_KEY, dinfo.getFlowTimestamp() );
         }
         
         return entries;
@@ -263,7 +386,42 @@ public class Braindump {
                 
         return f;
     }
-    
    
+    /**
+     * Returns the submit hostname
+     * 
+     * @return hostname
+     * 
+     * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
+     */
+    protected String getSubmitHostname( ) throws CodeGeneratorException{
+        try {
+            InetAddress localMachine = java.net.InetAddress.getLocalHost();
+            return localMachine.getHostName();
+        } catch ( UnknownHostException ex) {
+            throw new CodeGeneratorException( "Unable to determine hostname", ex );
+        }
+    }
+    
+    /**
+     * Returns the distinguished name from the proxy
+     * 
+     * 
+     * @return the DN else null if proxy file not found.
+     */
+    protected String getGridDN( ){
+        String dn = null;
+        try {
+            
+            GlobusCredential credential = GlobusCredential.getDefaultCredential();
+                    //new GlobusCredential(proxyFile);
 
+            dn = credential.getIdentity();
+        } catch (GlobusCredentialException ex) {
+            mLogger.log( "Unable to determine GRID DN", ex, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        return dn;
+    }
+    
+    
 }
