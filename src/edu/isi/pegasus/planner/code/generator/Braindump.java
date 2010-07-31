@@ -21,8 +21,6 @@ import edu.isi.pegasus.planner.code.CodeGeneratorException;
 
 import java.net.UnknownHostException;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.globus.gsi.GlobusCredentialException;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
@@ -42,7 +40,6 @@ import java.io.PrintWriter;
 
 import java.net.InetAddress;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
