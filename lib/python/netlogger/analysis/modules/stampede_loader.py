@@ -20,7 +20,7 @@ __rcsid__ = "$Id$"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
-from netlogger.analysis.modules._base import Analyzer as BaseAnalyzer
+from netlogger.analysis.modules._base import BufferedAnalyzer as BaseAnalyzer
 from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger import util
 import sys
@@ -84,10 +84,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self._perf = util.as_bool(perf)
         if self._perf:
             self._insert_time, self._insert_num = 0, 0
+            self._start_time = time.time()
         
         self.log.info('init.end')
         
-    def process(self, linedata):
+    def process_buffer(self, linedata):
         """
         @type   linedata: dict
         @param  linedata: One line of BP data dict-ified.
@@ -115,7 +116,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.log.error('process',
                 msg='Insert failed for event "%s" : %s' % (linedata['event'], e))
             self.session.rollback()
-
+        
     def linedataToObject(self, linedata, o):
         """
         @type   linedata: dict
@@ -415,9 +416,13 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
     ################
         
     def finish(self):
+        BaseAnalyzer.finish(self)
         if self._perf:
+            run_time = time.time() - self._start_time
             self.log.info("performance", insert_time=self._insert_time,
                           insert_num=self._insert_num, 
+                          total_time=run_time, 
+                          run_time_delta=run_time - self._insert_time,
                           mean_time=self._insert_time / self._insert_num)
 
 def main():

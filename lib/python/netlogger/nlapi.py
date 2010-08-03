@@ -13,7 +13,7 @@ Utility functions include functions to get and set the Grid Job ID.
 """
 __author__ = "Dan Gunter"
 __created__ = "1 April 2004"
-__rcsid__ = "$Id: nlapi.py 24165 2010-02-16 23:45:17Z dang $"
+__rcsid__ = "$Id: nlapi.py 24923 2010-06-18 18:37:50Z dang $"
 
 import calendar
 import math
@@ -96,9 +96,12 @@ class Level:
 
 DATE_FMT = "%04d-%02d-%02dT%02d:%02d:%02d"
 
+# Required fields
 TS_FIELD = 'ts'
 EVENT_FIELD = 'event'
-
+# Other conventions
+STATUS_FIELD = 'status'
+MESSAGE_FIELD = 'msg'
 
 #
 ## Utility functions

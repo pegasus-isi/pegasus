@@ -7,6 +7,7 @@ from sqlalchemy import *
 from sqlalchemy import orm, exceptions, func
 
 import time
+import warnings
         
 # Empty classes that will be populated and mapped
 # to tables via the SQLAlch mapper.
@@ -47,6 +48,9 @@ def initializeToPegasusDB(db, metadata):
     # DB don't like it so swap as needed.
     if db.name == 'mysql':
         KeyInt = BigInteger
+        
+    if db.name == 'sqlite':
+        warnings.filterwarnings('ignore', '.*does \*not\* support Decimal*.')
     
     # st_host definition
     # ==> Information from kickstart output file

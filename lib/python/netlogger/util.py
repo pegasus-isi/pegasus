@@ -1,7 +1,7 @@
 """
 Utility functions for NetLogger modules and command-line programs
 """
-__rcsid__ = "$Id: util.py 24160 2010-02-10 01:29:05Z dang $"
+__rcsid__ = "$Id: util.py 24923 2010-06-18 18:37:50Z dang $"
 __author__ = "Dan Gunter (dkgunter (at) lbl.gov)"
 
 from asyncore import compact_traceback
@@ -57,24 +57,6 @@ class DBConnectError(Exception):
     """
     pass
 
-class ModuleLoadError(Exception):
-    """Use this exception for reporting errors in loadModule().
-    """
-    def pathStr(self, path):
-        return ':'.join(path)
-
-class ModuleNotFound(ModuleLoadError):
-    def __init__(self, module, path, err):
-        msg = "No module '%s' in path '%s': %s" % (module, self.pathStr(path), err)
-        ModuleLoadError.__init__(self, msg)
-
-class ModuleImportError(ModuleLoadError):
-    def __init__(self, module, path, err, tb):
-        msg = "Error importing module '%s' in path '%s': %s" % (
-            module, self.pathStr(path), err)
-        msg = msg + tb
-        ModuleLoadError.__init__(self, msg)        
-                                                                
 ## Classes
 
 class ScriptOptionParser(OptionParser):
@@ -158,7 +140,7 @@ class FIFODict:
         if removed is not None:
             del self._data[removed]
         return True
-      
+
 def traceback():
     """Traceback as a string with no newlines."""
     return str(compact_traceback())
@@ -172,7 +154,7 @@ def parse_nvp(args):
             pass
         d[name] = value
     return d
-   
+
 def tzstr():
     return "%s%02d:%02d" % (('+','-')[time.timezone > 0],
                             time.timezone / 3600 ,
@@ -614,6 +596,8 @@ def noop(*args, **kwargs):
     pass
 
 def as_bool(x):
+    """Convert value (possibly a string) into a boolean.
+    """
     if x is True or x is False:
         return x
     if isinstance(x, int):
@@ -630,6 +614,23 @@ def as_bool(x):
         raise ValueError("Cannot convert to bool: %s" % x)
     return retval
 
+def as_list(value, sep=" "):
+    """Convert value (possibly a string) into a list.
+
+    Raises ValueError if it's not convert-able.
+    """
+    retval = None
+    if isinstance(value,list) or isinstance(value,tuple):
+        retval = value
+    elif isinstance(value,str):
+        if not value:
+            retval = [ ]
+        else:
+            retval = value.split(sep)
+    if retval is None:
+        raise ValueError("Cannot convert to list: %s" % value)
+    return retval
+    
 def is_stdout(fname):
     return fname == sys.stdout.name
 
@@ -655,39 +656,6 @@ def getProgFromFile(f):
         f = f[:-3]
     return os.path.basename(f)
 
-def loadModule(module_name, pre_path=None, sys_path=True, post_path=None):
-    """Find and load a module in piece-by-piece.
-    """
-    # Build path
-    path = [ ]
-    if pre_path:
-        path.extend(pre_path.split(':'))
-    if sys_path:
-        path.extend(sys.path)
-    if post_path:
-        path.extend(post_path.split(':'))
-    # Find and load in module
-    module_parts = module_name.split('.')
-    for i, part in enumerate(module_parts):
-        if i > 0:
-            # Reset the path after first component is loaded
-            try:
-                path = module.__path__
-            except AttributeError:
-                path = module.__name__
-        # Find module
-        try:
-            module_info = imp.find_module(part, path)
-        except ImportError, E:
-            raise ModuleNotFound(module_name, path, E)
-        name = '.'.join(module_parts[:i+1])
-        # Load module
-        try:
-            module = imp.load_module(name, *module_info)
-        except ImportError, E:
-            raise ModuleImportError(module_name, path, E, traceback())
-    return module
-            
 # Python 2.4-friendly uuid generator
 try:
     import uuid
@@ -720,8 +688,11 @@ def dewrap(text):
     "Take newlines out of text and normalize whitespace."
     return ' '.join(text.split())
 
-def wrap(text, n):
-    "Word-wrap text at 'n' columns."
+def wrap(text, n, leader=""):
+    """Word-wrap text at 'n' columns.
+    The 'leader' will be inserted before each new line of text
+    after the first.
+    """
     if len(text) <= n:
         return text
     else:
@@ -729,8 +700,8 @@ def wrap(text, n):
         if spc < 0:
             return text
         else:
-            return text[:spc] + '\n' + \
-                   wrap(text[spc+1:].lstrip(), n)
+            return text[:spc] + '\n' + leader + \
+                   wrap(text[spc+1:].lstrip(), n, leader=leader)
 
 def _find_space(text, maxpos):
     "Find rightmost whitespace position, or -1 if none."

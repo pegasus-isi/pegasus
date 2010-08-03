@@ -177,6 +177,7 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         Analyzer.__init__(self)
         threading.Thread.__init__(self)
         self.running = False
+        self.finishing = False
         self.queue = Queue.Queue()
 
     def process(self, data):
@@ -186,8 +187,9 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         if not self.running:
             self.running = True
             self.start()
-
-        self.queue.put(data)
+        # if finish() has been called, stop queueing intput
+        if not self.finishing:
+            self.queue.put(data)
 
     def run(self):
         """Thread method - pull data FIFO style from the queue
@@ -216,10 +218,14 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         """
         self.log.info('finish.begin')
         while 1:
+            if not self.finishing:
+                self.log.info('finish.finishing queue')
+                self.finishing = True
             if self.queue.empty():
                 break
         self.running = False
-        self.join()
+        if self.is_alive():
+            self.join()
         time.sleep(1)
         self.log.info('finish.end')
 
