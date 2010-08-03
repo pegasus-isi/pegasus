@@ -141,9 +141,12 @@ sub longstatus(;$$) {
 	
     }
     
-    my $total=$statnum[2]+$statnum[4]+$statnum[6]+$statnum[7]+$statnum[8];
+    my $total=$statnum[2]+$statnum[3]+$statnum[4]+$statnum[5]+$statnum[6]+$statnum[7]+$statnum[8];
     my $done=$statnum[2];
-    my $percent=(100*$done)/$total;
+    my $percent=0;
+    if ($done != 0) {
+	$percent=(100*$done)/$total;
+    }
     if($running){
 	print sprintf("WORKFLOW STATUS : %d/%d ( %.0f%% ) RUNNING (condor processing workflow)\n",$done,$total,$percent);
     } else {
