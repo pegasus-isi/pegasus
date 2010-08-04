@@ -122,7 +122,7 @@ public class TestTransformationCatalog {
             tce.addProfile( new Profile( Profile.ENV, "PEGASUS_HOME", "/usr/pegasus/bin" ));
 
             /* insert the entry into transformation catalog */
-            boolean added = catalog.insert( tce );
+            boolean added = (catalog.insert( tce ) == 1)?true : false;
             System.out.println( "Entry added " + added );
 
             /* query for the entry we just entered */
