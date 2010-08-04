@@ -49,6 +49,7 @@ public class TCAdd
     }
 
     public void doAdds() {
+    	int count =0;
         try {
             //SWitch for what triggers are defined.
             switch ( trigger ) {
@@ -86,9 +87,10 @@ public class TCAdd
                     mLogger.log( "Trying to add profiles for lfn " +
                         lfn +
                         " " + profiles, LogManager.DEBUG_MESSAGE_LEVEL);
-                    if ( tc.addLFNProfile( namespace, name, version,
-                        profiles ) ) {
-                        mLogger.log( "Added lfn profiles sucessfully",
+                    
+                    if ( (count = tc.addLFNProfile( namespace, name, version,
+                        profiles )) >= 1 ) {
+                        mLogger.log( "Added " + count + " lfn profiles sucessfully",
                                     LogManager.INFO_MESSAGE_LEVEL );
                     } else {
                         mLogger.log( "Unable to add LFN profiles",
@@ -112,9 +114,9 @@ public class TCAdd
                         pfn +
                         " " + resource + " " + type + " " +
                         profiles,LogManager.DEBUG_MESSAGE_LEVEL);
-                    if ( tc.addPFNProfile( pfn, TCType.fromString( type ),
-                        resource, profiles ) ) {
-                        mLogger.log( "Added pfn profiles sucessfully",
+                    if ( (count = tc.addPFNProfile( pfn, TCType.fromString( type ),
+                        resource, profiles )) >= 1 ) {
+                        mLogger.log( "Added " +count +  "pfn profiles sucessfully",
                                     LogManager.INFO_MESSAGE_LEVEL );
                     } else {
                         mLogger.log( "Unable to add PFN profiles",
@@ -164,7 +166,7 @@ public class TCAdd
         VDSSysInfo s = ( system == null ) ? new VDSSysInfo() : system;
         return ( tc.insert( namespace, name, version,
             pfn, t,
-            resource, null, profiles, VDSSysInfo2NMI.vdsSysInfo2NMI(s) ) ) ? true : false;
+            resource, null, profiles, VDSSysInfo2NMI.vdsSysInfo2NMI(s) ) == 1 ) ? true : false;
     }
 
     /**
@@ -239,8 +241,8 @@ public class TCAdd
                                  ppe.getPosition(), ppe ,
                                  LogManager.ERROR_MESSAGE_LEVEL);
                 }
-                    if ( !tc.insert( namespace, name, version, pfn, ttype,
-                        resource, null, profiles, VDSSysInfo2NMI.vdsSysInfo2NMI( system ) ) ) {
+                    if ( !(tc.insert( namespace, name, version, pfn, ttype,
+                        resource, null, profiles, VDSSysInfo2NMI.vdsSysInfo2NMI( system ) )==1) ) {
                         mLogger.log(
                             "Unable to bulk entries into tc on line " +
                             linecount ,LogManager.ERROR_MESSAGE_LEVEL);
