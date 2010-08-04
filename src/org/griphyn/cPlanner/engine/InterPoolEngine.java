@@ -279,7 +279,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                     TransformationCatalogEntry tcEntry = constructTCEntryFromJobHints( job );
                     mLogger.log( "Addding entry into transformation catalog " + tcEntry, LogManager.DEBUG_MESSAGE_LEVEL);
             
-                    if (!mTCHandle.insert( tcEntry, false )) {
+                    if (mTCHandle.insert( tcEntry, false ) != 1 ) {
                         mLogger.log("Unable to add entry to transformation catalog " + tcEntry, LogManager.WARNING_MESSAGE_LEVEL);
                     }
                 } catch (Exception ex) {
