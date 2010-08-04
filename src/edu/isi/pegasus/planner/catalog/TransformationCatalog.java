@@ -280,7 +280,7 @@ public interface TransformationCatalog
     /**
      * Add additional profile to a logical transformation .
      * 
-     * @param namespace String The nsamespace of the transformation to be added. (can be null)
+     * @param namespace String The namespace of the transformation to be added. (can be null)
      * @param name      String The name of the transformation to be added.
      * @param version   String The version of the transformation to be added. (can be null)
      * @param profiles  List   The List of Profile objects that are to be added 
@@ -316,11 +316,11 @@ public interface TransformationCatalog
      */
 
     /**
-     * Delete all entries in the transformation catalog for a give logical tranformation and/or on a resource and/or of
+     * Delete all entries in the transformation catalog for a give logical transformation and/or on a resource and/or of
      * a particular type
-     * @param namespace   String The namespace of the transformation to be added. (can be null)
-     * @param name        String The name of the transformation to be added.
-     * @param version     String The version of the transformation to be added. ( can be null)
+     * @param namespace   String The namespace of the transformation to be deleted. (can be null)
+     * @param name        String The name of the transformation to be deleted.
+     * @param version     String The version of the transformation to be deleted. ( can be null)
      * @param resourceid String The resource id for which the transformation is to be deleted.
      *                          If <B>NULL</B> then transformation on all resource are deleted
      * @param type TCType The type of the transformation. If <B>NULL</B> then all types are deleted for the transformation.
@@ -337,7 +337,7 @@ public interface TransformationCatalog
     /**
      * Delete all entries in the transformation catalog for pair of logical and physical transformation.
      * @param physicalname String The physical name of the transformation
-     * @param namespace String The namespace assocaited in the logical name of the transformation.
+     * @param namespace String The namespace associated in the logical name of the transformation.
      * @param name String The name of the logical transformation.
      * @param version String The version number of the logical transformation.
      * @param resourceid String The resource on which the transformation is to be deleted.
@@ -355,7 +355,7 @@ public interface TransformationCatalog
         Exception;
 
     /**
-     * Delete a paricular type of transformation, and/or on a particular resource
+     * Delete a particular type of transformation, and/or on a particular resource
      * @param type TCType The type of the transformation
      * @param resourceid String The resource on which the transformation exists.
      *                           If <B>NULL</B> then that type of transformation is deleted from all the resources.
