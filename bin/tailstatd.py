@@ -51,9 +51,27 @@ logger.setLevel(logging.WARNING)
 #logger.setLevel(logging.DEBUG)
 # Format our log messages the way we want
 cl = logging.StreamHandler()
-formatter = logging.Formatter("%(filename)s:%(lineno)d: %(levelname)s: %(message)s")
+formatter = logging.Formatter("%(asctime)s:%(filename)s:%(funcName)s:%(lineno)d: %(levelname)s: %(message)s")
 cl.setFormatter(formatter)
 logger.addHandler(cl)
+
+LOG_LEVELS = {'debug': logging.DEBUG,
+              'info': logging.INFO,
+              'warning': logging.WARNING,
+              'error': logging.ERROR,
+              'critical': logging.CRITICAL}
+
+INCREASE_LOG_LEVELS = {logging.DEBUG: logging.DEBUG,
+                       logging.INFO: logging.DEBUG,
+                       logging.WARNING: logging.INFO,
+                       logging.ERROR: logging.WARNING,
+                       logging.CRITICAL: logging.ERROR}
+
+DECREASE_LOG_LEVELS = {logging.DEBUG: logging.INFO,
+                       logging.INFO: logging.WARNING,
+                       logging.WARNING: logging.ERROR,
+                       logging.ERROR: logging.CRITICAL,
+                       logging.CRITICAL: logging.CRITICAL}
 
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
@@ -106,7 +124,7 @@ re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 
 # Constants
-debug_level = 0			# For now
+debug_level = logging.WARNING	# For now
 logbase = "tailstatd.log" 	# Basename of daemon logfile
 brainkeys = {}
 brainkeys["required"] = ["basedir", "vogroup", "label", "rundir"]
@@ -146,6 +164,9 @@ replay_mode = 0			# disable checking if DAGMan's pid is gone
 use_db = 1			# flag for using the database
 single_db = 0			# flag for using a single db at the top level workflow
 output_db = None		# connection string for the database
+db_stats = 'no'			# collect and print database stats at the end of execution
+use_broker = 0			# flag for using the broker
+broker_string = None		# Connection string for using the broker
 pending = {} 			# remember when GLOBUS_SUBMIT was entered
 				# jid --> [stamp, condor_id, wtime, site]
 running = {}			# ditto for EXECUTE for hidden starvation
@@ -184,6 +205,21 @@ jobtypes = {0: "unassigned",
 	    7: "staged compute",
 	    8: "cleanup",
 	    9: "symlink stage-in job"}
+
+def finish_stampede_loader():
+    """
+    This function is called by the atexit module when tailstatd exits.
+    It is used to make sure the loader has finished loading all data
+    into the database. It will also produce stats for benchmarking.
+    """
+    if workdb is not None:
+        try:
+            if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
+                # Make sure log level is enough to display database benchmarking information
+                logger.setLevel(logging.INFO)
+            workdb.finish()
+        except:
+            logger.warning("could not call the finish method in the nl loader class... exiting anyway")
 
 def translate_job_type(my_jobtype_id):
     """
@@ -300,7 +336,7 @@ class Job:
 	    my_stats = os.stat(my_fn)
 	except:
 	    # Could not stat file
-	    logmsg("Error: stat %s" % (my_fn))
+	    logger.error("stat %s" % (my_fn))
 	    return my_result, my_site
 
 	self._job_info[0] = my_stats[2] # dev #
@@ -309,15 +345,14 @@ class Job:
 	self._job_info[3] = my_stats[8] # mtime
 
 	if stamp < self._job_info[3]:
-	    if debug_level > 1:
-		logmsg("stamp=%d, mtime=%d, diff = %d" % (stamp, self._job_info[3], self._job_info[3]-stamp))
-	    logmsg("skipping %s (reparsing events)" % (my_fn))
+            logger.warning("stamp=%d, mtime=%d, diff = %d" % (stamp, self._job_info[3], self._job_info[3]-stamp))
+	    logger.info("skipping %s (reparsing events)" % (my_fn))
 	    return my_result, my_site
 
 	try:
 	    SUB = open(my_fn, "r")
 	except:
-	    logmsg("unable to parse %s" % (my_fn))
+	    logger.error("unable to parse %s" % (my_fn))
 	    return my_result, my_site
 
 	for my_line in SUB:
@@ -370,7 +405,7 @@ class Job:
 
 	# Check if first record is an invocation record (it should be!)
 	if not "invocation" in buffer[0]:
-	    logmsg("extract_job_info: warning: cannot find invocation record!")
+	    logger.warning("cannot find invocation record!")
 	    return None
 
 	# Ok, we have an invocation record, extract the information we need
@@ -442,7 +477,7 @@ class Workflow:
 	try:
 	    DAG = open(self._dag_file, "r")
 	except:
-	    logger.warn("ERROR: Unable to read %s!" % (self._dag_file))
+	    logger.warning("unable to read %s!" % (self._dag_file))
 	else:
 	    for dag_line in DAG:
 		if (dag_line.lower()).find("job") >= 0:
@@ -500,28 +535,36 @@ class Workflow:
 	"""
 	This function sends an NetLogger event to the loader class.
 	"""
-	# self._db.write(event=event, **kwargs)
-	# Before we send anything to the loader, we need to make a few adjustments
+        # Sanity check (should also be done elsewhere, but repeated here)
+        if self._db is None:
+            return
 
-	# Add event key
-	kwargs["event"] = "stampede." + event
+        if use_broker == 1:
+            # We are using the broker to output our logs
+            self._db.write(event=event, **kwargs)
 
-	# Translate __ keys to .
-	if "wf__id" in kwargs:
-	    kwargs["wf.id"] = str(kwargs.pop("wf__id"))
-	if "parent__wf__id" in kwargs:
-	    kwargs["parent.wf.id"] = kwargs.pop("parent__wf__id")
-	if "job__id" in kwargs:
-	    kwargs["job.id"] = kwargs.pop("job__id")
-	if "condor__id" in kwargs:
-	    kwargs["condor.id"] = kwargs.pop("condor__id")
-	if "js__id" in kwargs:
-	    kwargs["js.id"] = kwargs.pop("js__id")
-	if "task__id" in kwargs:
-	    kwargs["task.id"] = kwargs.pop("task__id")
+        if use_db == 1:
+            # Before we send anything to the loader, we need to make a few adjustments
 
-	# Send it to the loader
-	self._db.process(kwargs)
+            # Add event key
+            kwargs["event"] = "stampede." + event
+
+            # Translate __ keys to .
+            if "wf__id" in kwargs:
+                kwargs["wf.id"] = str(kwargs.pop("wf__id"))
+            if "parent__wf__id" in kwargs:
+                kwargs["parent.wf.id"] = kwargs.pop("parent__wf__id")
+            if "job__id" in kwargs:
+                kwargs["job.id"] = kwargs.pop("job__id")
+            if "condor__id" in kwargs:
+                kwargs["condor.id"] = kwargs.pop("condor__id")
+            if "js__id" in kwargs:
+                kwargs["js.id"] = kwargs.pop("js__id")
+            if "task__id" in kwargs:
+                kwargs["task.id"] = kwargs.pop("task__id")
+
+            # Send it to the loader
+            self._db.notify(kwargs)
 
     def db_send_wf_info(self):
 	"""
@@ -634,7 +677,7 @@ class Workflow:
 		    # Turn my_time into Epoch format
 		    self._timestamp = int(calendar.timegm(my_time.timetuple()))
 		except:
-		    logger.warn("ERROR: Converting timestamp %s to Epoch format" % self._timestamp)
+		    logger.warning("error converting timestamp %s to Epoch format" % self._timestamp)
 	    if "submit_dir" in wfparams:
 		self._submit_dir = wfparams["submit_dir"]
 	    else:
@@ -686,7 +729,7 @@ class Workflow:
 
 	# Make sure the job is there
 	if not (jobid, my_job_submit_seq) in self._jobs:
-	    logmsg("find_job_submit_seq: warning: cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+	    logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
 	    return None
 
 	my_job = self._jobs[jobid, my_job_submit_seq]
@@ -732,7 +775,7 @@ class Workflow:
 	elif job_state == "SUBMIT":
 	    event_type = "job.mainjob.start"
 	else:
-	    logmsg("db_send_job_info: warning: unknown job state: %s" % (job_state))
+	    logger.warning("unknown job state: %s" % (job_state))
 	    return
 
 	# Send job event to database
@@ -783,7 +826,7 @@ class Workflow:
 
 	# Sanity check, verify task type
 	if task_type != "PRE SCRIPT" and task_type != "POST SCRIPT" and task_type != "MAIN JOB":
-	    logmsg("db_send_task_info: warning: unknown task type: %s" % (task_type))
+	    logger.warning("unknown task type: %s" % (task_type))
 	    return
 
 	# Make sure we include the wf_uuid, name, and job_submit_seq
@@ -934,7 +977,7 @@ class Workflow:
 	if my_job_submit_seq is not None:
 	    # Job already exists
 	    if not (jobid, my_job_submit_seq) in self._jobs:
-		logmsg("add_job: warning: cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+		logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
 		return
 
 	    my_job = self._jobs[jobid, my_job_submit_seq]
@@ -952,7 +995,7 @@ class Workflow:
 
 	    # Make sure job is not already there
 	    if (jobid, my_job_submit_seq) in self._jobs:
-		logmsg("add_job: warning: trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
+		logger.warning("trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
 		return
 
 	    # Create new job container
@@ -998,7 +1041,7 @@ class Workflow:
 
 	# Make sure job is already there
 	if not (jobid, job_submit_seq) in self._jobs:
-	    logmsg("job_update_info: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
+	    logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
 	    return
 
 	my_job = self._jobs[jobid, job_submit_seq]
@@ -1018,7 +1061,7 @@ class Workflow:
 	    if jobid in self._jobs_map:
 		job_submit_seq = self._jobs_map[jobid]
 	if not (jobid, job_submit_seq) in self._jobs:
-	    logmsg("update_job_state: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
+	    logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
 	    return
 	# Got it
 	my_job = self._jobs[jobid, job_submit_seq]
@@ -1065,7 +1108,7 @@ class Workflow:
 
 	# Find job
 	if not (jobid, job_submit_seq) in self._jobs:
-	    logmsg("parse_job_sub_file: warning: cannot find job: %s, %s" % (jobid, job_submit_seq))
+	    logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
 	    return None, None
 
 	# Check if we have an entry for this job
@@ -1120,9 +1163,9 @@ prog_desc = """Mandatory arguments: outfile is the log file produced by Condor D
 
 parser = optparse.OptionParser(usage=prog_usage, description=prog_desc)
 
-parser.add_option("-d", "--debug", action = "store", type = "int", dest = "debug_level",
-		  help = "accumulative, add more messages as repeated, default level %d dynamic adjustments via signals USR1 (incr) and USR2 (decr)"
-		  % (debug_level))
+parser.add_option("-d", "--debug", action = "store", type = "string", dest = "debug_level",
+		  help = "set log level, possible values are INFO, DEBUG, WARNING, ERROR, CRITICAL. Default level is %s and dynamic adjustments via signals USR1 (incr) and USR2 (decr)"
+		  % logging.getLevelName(debug_level))
 parser.add_option("-a", "--adjust", action = "store", type = "int", dest = "adjustment",
 		  help = "adjust for time zone differences by i seconds, default 0")
 parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest = "nodaemon",
@@ -1143,17 +1186,21 @@ parser.add_option("-C", "--config", action = "append", type = "string", dest = "
 		  help = "k=v defines configurations instead of reading from braindump.txt. Required keys include %s. Suggested keys include %s"
 		  % (brainkeys["required"], brainkeys["optional"]))
 parser.add_option("-D", "--database", action = "store_const", const = 1, dest = "use_db",
-		  help = "Turn on database entries for work DB (this is the default mode)")
+		  help = "turn on database entries for work DB (this is the default mode and overrides the broker option below)")
 parser.add_option("--nodatabase", action = "store_const", const = 0, dest = "use_db",
-		  help = "Turn off database entries for work DB")
+		  help = "turn off logging information to the database (this option must be given when using the broker option below)")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
 		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
 parser.add_option("-o", "--output-db", action = "store", type = "string", dest = "output_db",
-		  help = "name of the database file to use, default is workflow basename in the submit directory")
+		  help = "name of the database file to use, default is workflow basename in the submit directory (this should contain the complete connection string to the database, for example to use SQLite, it should be sqlite:///<path_to_file>)")
 parser.add_option("-s", "--single-db", action = "store_const", const = 1, dest = "single_db",
 		  help = "use a single db at the top level workflow")
+parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "db_stats",
+                  help = "collect and print database stats at the end")
+parser.add_option("-b", "--broker", action = "store", type = "string", dest = "broker_string",
+		  help = "Turn on using the broker with the connection string specified (cannot be used together with the database)")
 
 # Re-insert our base name to avoid optparse confusion when printing error messages
 # (options, args) = parser.parse_args(sys.argv[0:]) # Does not work 100%
@@ -1162,7 +1209,12 @@ sys.argv.insert(0, prog_base)
 
 # Copy command line options into our variables
 if options.debug_level is not None:
-    debug_level = options.debug_level
+    try:
+        # Convert the user-specified debug level (string) into a logging level value
+        debug_level = LOG_LEVELS.get(options.debug_level.lower(), debug_level)
+        logger.setLevel(debug_level)
+    except:
+        logger.warning("could not set logging level to %s" % options.debug_level)
 if options.adjustment is not None:
     adjustment = options.adjustment
 if options.nodaemon is not None:
@@ -1185,6 +1237,15 @@ if options.output_db is not None:
     output_db = options.output_db
 if options.single_db is not None:
     single_db = options.single_db
+if options.db_stats is not None:
+    db_stats = options.db_stats
+if options.broker_string is not None:
+    broker_string = options.broker_string
+    # Only turn on the broker mode if the database logging is turned off
+    if use_db == 0:
+        use_broker = 1
+    else:
+        logger.warning("broker mode disabled, in order to use the --broker option, please also specify --nodatabase.")
 
 # Walk through any config properties
 if options.config_opts is not None:
@@ -1226,12 +1287,12 @@ run = os.path.dirname(out)
 if len(config) > 0:
     for k in brainkeys["required"]:
 	if not k in config:
-	    logger.fatal("Invalid use of --config option: Missing key %s" % (k))
+	    logger.critical("invalid use of --config option: Missing key %s" % (k))
 	    sys.exit(1)
 else:
     config = utils.slurp_braindb(run)
     if not config:
-	logger.warn("Error opening braindump.txt db!")
+	logger.warning("could not process braindump.txt db!")
 
 if not "run" in config:
     # Add run key to our configuration
@@ -1255,13 +1316,13 @@ if not jsd:
     jsd = os.path.join(run, utils.jobbase)
 
 if not os.path.isfile(jsd):
-    logger.warn("Creating new file %s" % (jsd))
+    logger.warning("creating new file %s" % (jsd))
 
 try:
     # Create new file, or append to an existing one
     JSDB = open(jsd, 'a')
 except:
-    logger.fatal("Error appending to %s!" % (jsd))
+    logger.critical("error appending to %s!" % (jsd))
     sys.exit(1)
 
 # Untie exit handler
@@ -1280,13 +1341,11 @@ if not replay_mode:
     try:
 	remove = shelve.open(rmdb)
     except:
-	logger.fatal("Error: Unable to create DB file %s!" % (rmdb))
+	logger.critical("unable to create DB file %s!" % (rmdb))
 	sys.exit(1)
 
     atexit.register(untie_exit_handler)
 
-# Import netlogger api, if using database
-#from netlogger import nlapi
 # To use NetLogger's command-line parser
 # from netlogger.nllog import get_root_logger, OptionParser
 # Import NetLogger DB loader
@@ -1294,8 +1353,15 @@ if use_db == 1:
     try:
 	from netlogger.analysis.modules import stampede_loader
     except:
-	logger.warning("Warning: cannot import NetLogger library, disabling database output!")
+	logger.warning("cannot import NetLogger's stampede_loader library, disabling database output!")
 	use_db = 0
+# Import NetLogger nlapi for using the broker
+if use_broker == 1:
+    try:
+        from netlogger import nlapi
+    except:
+        logger.warning("cannot import NetLogger's nlapi library, disabling broker output!")
+        use_broker = 0
 
 #
 # --- functions ---------------------------------------------------------------------------
@@ -1312,7 +1378,7 @@ def sendmsg(client_connection, msg):
 	try:
 	    my_bytes_sent = client_connection.send(msg[my_total_bytes_sent:])
 	except:
-	    logmsg("Error: writing to socket!")
+	    logger.error("writing to socket!")
 	    return None
 
 	my_total_bytes_sent = my_total_bytes_sent + my_bytes_sent
@@ -1384,9 +1450,8 @@ def aggregate(site, stamp, pending):
     waiting[site][my_slot][0] = waiting[site][my_slot][0] + 1
     waiting[site][my_slot][1] = waiting[site][my_slot][1] + my_diff
 
-    if debug_level > 1:
-	my_n = waiting[site][my_slot][0]
-	logmsg("%s:%s %s / %d = %.3f" % (site, my_slot, my_diff, my_n, my_diff / my_n))
+    my_n = waiting[site][my_slot][0]
+    logger.debug("%s:%s %s / %d = %.3f" % (site, my_slot, my_diff, my_n, my_diff / my_n))
 
 def add(stamp, jobid, event, condor_id=None, status=None):
     # purpose: append atomically a line to the jobstate file
@@ -1435,27 +1500,24 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 	# If not None, convert into seconds
 	if my_time is not None:
 	    my_time = my_time * 60
-	    if debug_level > 0:
-		logmsg("info: add: job %s requests %d s walltime" % (jobid, my_time))
+            logger.info("job %s requests %d s walltime" % (jobid, my_time))
 	    walltime[jobid] = my_time
 	else:
-	    if debug_level > 0:
-		logmsg("info: add: job %s does not request a walltime" % (jobid))
+            logger.info("job %s does not request a walltime" % (jobid))
 
 	# Remember the run-site
 	if my_site is not None:
-	    if debug_level > 0:
-		logmsg("info: add: job %s is planned for site %s" % (jobid, my_site))
+            logger.info("job %s is planned for site %s" % (jobid, my_site))
 	    job_site[jobid] = my_site
 	else:
-	    logmsg("info: add: job %s does not have a site information!" % (jobid))
+            logger.info("job %s does not have a site information!" % (jobid))
 
     # Get job_submit_seq if we don't already have it
     if my_job_submit_seq is None:
 	my_job_submit_seq = wf.find_jobid(jobid)
 
     if my_job_submit_seq is None:
-	logmsg("warning: add: cannot find job_submit_seq for job: %s" % (jobid))
+	logger.warning("cannot find job_submit_seq for job: %s" % (jobid))
 
     # Make sure job has the updated state
     wf.update_job_state(jobid, my_job_submit_seq, event, stamp, status)
@@ -1466,8 +1528,7 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 	    # Remember when -- and which Condor ID
 	    pending[jobid] = [stamp, condor_id, my_time, my_site]
 	else:
-	    if debug_level > 1:
-		logmsg("info: add: %s remains a pending event for %s" % (event, jobid))
+            logger.info("%s remains a pending event for %s" % (event, jobid))
     else:
 	# Remember time spent in pending, if previous state was pending
 	if jobid in jobstate:
@@ -1492,10 +1553,9 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 		jobid in siteinfo[my_site] and
 		siteinfo[my_site][jobid] == 'P'):
 		my_n = sitedb.inc(my_site)
-		logmsg("info: add: new window size for %s is %d" % (my_site, my_n))
+		logger.info("new window size for %s is %d" % (my_site, my_n))
 	else:
-	    if debug_level > 1:
-		logmsg("info: add: %s remains a running event for %s" % (event, jobid))
+            logger.info("%s remains a running event for %s" % (event, jobid))
     else:
 	# Remove when transitioning into any other state
 	if jobid in running:
@@ -1508,8 +1568,7 @@ def add(stamp, jobid, event, condor_id=None, status=None):
     # Create content -- use one space only
     my_line = "%d %s %s %s %s %s %d" % (stamp, jobid, event, status or condor_id or '-', my_site or '-',
 					my_time or '-', my_job_submit_seq or '-')
-    if debug_level > 1:
-	logmsg("info: add: new state %s" % (my_line))
+    logger.info("new state %s" % (my_line))
 
     # Prepare for atomic append
     JSDB.write("%s\n" % (my_line))
@@ -1577,10 +1636,9 @@ def process(log_line):
     my_expr = re_parse_timestamp.search(log_line)
 
     if my_expr is not None:
-	if debug_level > 2:
-	    split_log_line = log_line.split(None, 3)
-	    if len(split_log_line) >= 3:
-		logger.warn("## %d: %s" % (line, split_log_line[2][:64]))
+        split_log_line = log_line.split(None, 3)
+        if len(split_log_line) >= 3:
+            logger.debug("debug: ## %d: %s" % (line, split_log_line[2][:64]))
 	
 	# Found time stamp, let's assume valid log line
 	curr_time = time.localtime()
@@ -1623,17 +1681,17 @@ def process(log_line):
 		    my_exit_code = int(my_expr.group(1))
 		except:
 		    # Unable to convert exit code to integer -- should not happen
-		    logger.warn("unable to convert exit code to integer!")
+		    logger.warning("unable to convert exit code to integer!")
 		    my_exit_code = 1
 		add(timestamp, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code)
 		if my_exit_code == 42 or my_jobid in flag and flag[my_jobid] > 0:
 		    # Detect permanent failure
-		    logmsg("detected permanent failure for %s" % (my_jobid))
+                    logger.info("detected permanent failure for %s" % (my_jobid))
 		    if len(done) == 0:
-			logmsg("Warning: No successful jobs so far!")
+			logger.warning("no successful jobs so far!")
 	    else:
 		# Ignore
-		logmsg("warning: unknown pscript state: %s" % (log_line[-14:]))
+		logger.warning("unknown pscript state: %s" % (log_line[-14:]))
 	elif re_parse_job_failed.search(log_line) is not None:
 	    # Job has failed
 	    my_expr = re_parse_job_failed.search(log_line)
@@ -1644,7 +1702,7 @@ def process(log_line):
 		my_jobstatus = int(my_expr.group(3))
 	    except:
 		# Unable to convert exit code to integet -- should not happen
-		logger.warn("unable to convert exit code to integer!")
+		logger.warning("unable to convert exit code to integer!")
 		my_jobstatus = 1
 	    # remember failure with artificial jobstate
 	    add(timestamp, my_jobid, "JOB_FAILURE", condor_id=my_condorid, status=my_jobstatus)
@@ -1663,7 +1721,7 @@ def process(log_line):
 		    flag[my_expr.group(1)] = int(my_expr.group(3))
 		except:
 		    # Cannot convert retry number to integer
-		    logger.warn("could not convert retry number to integer!")
+		    logger.warning("could not convert retry number to integer!")
 	elif re_parse_dagman_finished.search(log_line) is not None:
 	    # DAG finished -- done parsing
 	    my_expr = re_parse_dagman_finished.search(log_line)
@@ -1672,9 +1730,9 @@ def process(log_line):
 		terminate = int(my_expr.group(1))
 	    except:
 		# Cannot convert exit code to integer!
-		logger.warn("cannot convert DAGMan's exit code to integer!")
+		logger.warning("cannot convert DAGMan's exit code to integer!")
 		terminate = 0
-	    logmsg("DAGMan finished with exit code %s" % (terminate))
+	    logger.info("DAGMan finished with exit code %s" % (terminate))
 	    JSDB.write("%d INTERNAL *** DAGMAN_FINISHED ***\n" % (timestamp))
 	    # Send info to database
 	    wf.db_send_wf_state("end", timestamp)
@@ -1688,8 +1746,9 @@ def process(log_line):
 		try:
 		    pid = int(my_expr.group(1))
 		except:
-		    fatal("cannot set pid: %s" % (my_expr.group(1)))
-	    logmsg("DAGMan runs at pid %d" % (pid))
+		    logger.critical("cannot set pid: %s" % (my_expr.group(1)))
+                    sys.exit(42)
+	    logger.info("DAGMan runs at pid %d" % (pid))
 	    JSDB.write("%d INTERNAL *** DAGMAN_STARTED ***\n" % (timestamp))
 	    # Send info to database
 	    wf.db_send_wf_state("start", timestamp)
@@ -1699,7 +1758,7 @@ def process(log_line):
 	    # groups = condor version, condor major
 	    condor_version = my_expr.group(1)
 	    condor_major = my_expr.group(2)
-	    logmsg("Using DAGMan version %s" % (condor_version))
+	    logger.info("Using DAGMan version %s" % (condor_version))
 	elif (re_parse_condor_logfile.search(log_line) is not None or
 	      multiline_file_flag == True and re_parse_condor_logfile_insane.search(log_line) is not None):
 	    # Condor common log file location, DAGMan 6.6
@@ -1708,30 +1767,30 @@ def process(log_line):
 	    else:
 		my_expr = re_parse_condor_logfile_insane.search(log_line)
 	    condorlog = my_expr.group(1)
-	    logmsg("Condor writes its logfile to %s" % (condorlog))
+	    logger.info("Condor writes its logfile to %s" % (condorlog))
 
 	    # Make a symlink for NFS-secured files
 	    my_log, my_base = out2log(out)
 	    if os.path.islink(my_log):
-		logmsg("Symlink %s already exists" % (my_log))
+		logger.info("symlink %s already exists" % (my_log))
 	    elif os.access(my_log, os.R_OK):
-		logmsg("%s is a regular file, not touching" % (my_base))
+		logger.info("%s is a regular file, not touching" % (my_base))
 	    else:
-		logmsg("Trying to create local symlink to common log")
+		logger.info("trying to create local symlink to common log")
 		if os.access(condorlog, os.R_OK) or not os.access(condorlog, os.F_OK):
 		    if os.access(my_log, os.R_OK):
 			try:
 			    os.rename(my_log, "%s.bak" % (my_log))
 			except:
-			    logger.warn("Error: renaming %s to %s.bak" % (my_log, my_log))
+			    logger.warning("error renaming %s to %s.bak" % (my_log, my_log))
 		    try:
 			os.symlink(condorlog, my_log)
 		    except:
-			logmsg("unable to symlink %s" % (condorlog))
+			logger.info("unable to symlink %s" % (condorlog))
 		    else:
-			logmsg("symlink %s -> %s" % (condorlog, my_log))
+			logger.info("symlink %s -> %s" % (condorlog, my_log))
 		else:
-		    logmsg("%s exists but is not readable!" % (condorlog))
+		    logger.info("%s exists but is not readable!" % (condorlog))
 	    # We only expect one of such files
 	    multiline_file_flag = False
 	elif re_parse_multiline_files.search(log_line) is not None:
@@ -1754,7 +1813,8 @@ def server_socket(low, hi, bind_addr="127.0.0.1"):
 				  socket.SOCK_STREAM,
 				  socket.getprotobyname("tcp"))
     except:
-	fatal("Error: create socket!")
+        logger.critical("could not create socket!")
+        sys.exit(42)
 
     # Set options
     try:
@@ -1762,7 +1822,8 @@ def server_socket(low, hi, bind_addr="127.0.0.1"):
 			     socket.SO_REUSEADDR,
 			     1)
     except:
-	fatal("Error: setsockopt SO_REUSEADDR!")
+        logger.critical("setsockopt SO_REUSEADDR!")
+        sys.exit(42)
 
     # Bind to a free port
     my_port = low
@@ -1776,20 +1837,23 @@ def server_socket(low, hi, bind_addr="127.0.0.1"):
 	    break
 
     if my_port >= hi:
-	fatal("Error: No free port to bind to!")
+        logger.critical("no free port to bind to!")
+        sys.exit(42)
 
     # Make server socket non-blocking to not have a race condition
     # when doing select() before accept() on a server socket
     try:
 	my_socket.setblocking(0)
     except:
-	fatal("Error: setblocking!")
+        logger.critical("setblocking!")
+        sys.exit(42)
 
     # Start listener
     try:
 	my_socket.listen(socket.SOMAXCONN)
     except:
-	fatal("Error: Listen!\n")
+        logger.critical("listen!")
+        sys.exit(42)
 
     # Return socket
     return my_socket
@@ -1999,11 +2063,11 @@ def service_request(server):
     try:
 	my_conn, my_addr = server.accept()
     except:
-	logmsg("Error: accept!")
+	logger.error("accept!")
 	return None
 
     my_count = 0
-    logmsg("processing request from %s:%d" % (my_addr[0], my_addr[1]))
+    logger.info("processing request from %s:%d" % (my_addr[0], my_addr[1]))
 
     # TODO: Can only handle 1 line up to 1024 bytes long, should fix this later
     # Read line fron socket
@@ -2014,7 +2078,7 @@ def service_request(server):
 	    if e[0] == 35:
 		continue
 	    else:
-		logmsg("Error: recv: %d:%s" % (e[0], e[1]))
+		logger.error("recv: %d:%s" % (e[0], e[1]))
 		try:
 		    # Close socket
 		    my_conn.close()
@@ -2141,7 +2205,7 @@ def daemonize(fn):
     try:
 	os.chdir('/')
     except:
-	logger.fatal("Error: in chdir!")
+	logger.critical("could not chdir!")
 	sys.exit(1)
 
     # Open logfile as stdout
@@ -2149,14 +2213,15 @@ def daemonize(fn):
     try:
 	sys.stdout = open(fn, "w", 0)
     except:
-	logger.fatal("Error opening %s!" % (fn))
+	logger.critical("could not open %s!" % (fn))
 	sys.exit(1)
 
     # Fork and go!
     try:
 	my_pid = os.fork()
     except:
-	fatal("Error: in fork!")
+        logger.critical("could not fork!")
+        sys.exit(1)
 
     if my_pid > 0:
 	# Parent exits
@@ -2166,7 +2231,8 @@ def daemonize(fn):
     try:
 	my_pid = os.fork()
     except:
-	fatal("Error: in fork!")
+        logger.critical("could not form!")
+        sys.exit(1)
 
     if my_pid > 0:
 	# Parent exits
@@ -2176,7 +2242,8 @@ def daemonize(fn):
     try:
 	os.setsid()
     except:
-	fatal("Error: in setsid!")
+        logger.critical("could not setsid!")
+        sys.exit(1)
 
 def keep_foreground(fn):
     # purpose: turn into almost a daemon, but keep in foreground for Condor
@@ -2188,7 +2255,7 @@ def keep_foreground(fn):
     try:
 	os.chdir('/')
     except:
-	logger.fatal("Error: in chdir!")
+	logger.critical("could not chdir!")
 	sys.exit(1)
 
     # Open logfile as stdout
@@ -2196,28 +2263,36 @@ def keep_foreground(fn):
     try:
 	sys.stdout = open(fn, "a", 0)
     except:
-	logger.fatal("Error opening %s!" % (fn))
+	logger.critical("could not open %s!" % (fn))
 	sys.exit(1)
     
     # Although we cannot set sid, we can still become process group leader
     try:
 	os.setpgid(0, 0)
     except:
-	logger.fatal("Error: in setpgid!")
+	logger.critical("could not setpgid!")
 	sys.exit(1)
 
 def prog_sighup_handler(signum, frame):
     pass
 
 def prog_sigint_handler(signum, frame):
-    logmsg("graceful exit on signal %d" % (signum))
+    logger.info("graceful exit on signal %d" % (signum))
     sys.exit(1)
 
 def prog_sigusr1_handler(signum, frame):
-    debug_level = debug_level + 1
+    """
+    This function increases the log level to the next one.
+    """
+    debug_level = INCREASE_LOG_LEVELS.get(debug_level, debug_level)
+    logger.setLogLevel(debug_level)
 
 def prog_sigusr2_handler(signum, frame):
-    debug_level = debug_level - 1
+    """
+    This function decreases the log level to the previous one.
+    """
+    debug_level = DECREASE_LOG_LEVELS.get(debug_level, debug_level)
+    logger.setLogLevel(debug_level)
 
 def rotate_log_file(input_dir, log_file):
     """
@@ -2291,16 +2366,16 @@ def done_process_exit_handler():
 		try:
 		    os.unlink(my_log)
 		except:
-		    logmsg("Error: removing %s" % (my_log))
+		    logger.error("removing %s" % (my_log))
 		else:
 		    try:
 			os.rename("%s.copy" % (my_log), my_log)
 		    except:
-			logmsg("Error: renaming %s.copy to %s" % (my_log, my_log))
+			logger.error("renaming %s.copy to %s" % (my_log, my_log))
 		    else:
-			logmsg("copied common log to %s" % (run))
+			logger.info("copied common log to %s" % (run))
 	    else:
-		logmsg("%s: %d:%s" % (my_cmd, my_status, my_output))
+		logger.info("%s: %d:%s" % (my_cmd, my_status, my_output))
 
     # Remember to tell me that it is ok to run post-processing now
     if (terminate is not None) and (run is not None):
@@ -2308,7 +2383,7 @@ def done_process_exit_handler():
 	try:
 	    TOUCH = open(my_touch_name, "w")
 	except:
-	    logmsg("Error: opening %s" % (my_touch_name))
+	    logger.error("opening %s" % (my_touch_name))
 	else:
 	    timestamp = int(time.time())
 	    TOUCH.write("%s %.3f\n" % (utils.isodate(timestamp), (timestamp - start)))
@@ -2340,15 +2415,19 @@ if use_db == 1:
     # Figure out the database connection string
     if output_db is None:
 	output_db = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
+    workdb = stampede_loader.Analyzer(output_db, perf=db_stats)
+    atexit.register(finish_stampede_loader)
+
+# Initialize broker
+if use_broker == 1:
 #    rotate_log_file(run, output_db)
-# using nlapi to create log file (and not use the loader)
-#    workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=output_db)
-    workdb = stampede_loader.Analyzer(output_db)
+    # using nlapi to create log file (and not use the loader)
+    workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=broker_string)
 
 # Say hello
-logmsg("starting [%s], using pid %d" % (revision, os.getpid()))
+logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
 if millisleep is not None:
-    logmsg("using simulation delay of %d ms" % (millisleep))
+    logger.info("using simulation delay of %d ms" % (millisleep))
 
 # Add start information to JSDB
 JSDB.write("%d INTERNAL *** TAILSTATD_STARTED ***\n" % (int(time.time())))
@@ -2382,7 +2461,7 @@ if not replay_mode:
 	    OUT.write("%s %d\n" % (my_host, my_port))
 	    OUT.close()
 	except:
-	    logmsg("Warning: Unable to write %s!" % (sockfn))
+	    logger.warning("unable to write %s!" % (sockfn))
 
 # No need to do this when running in replay mode
 if not replay_mode:
@@ -2393,21 +2472,21 @@ if not replay_mode:
 plus = ''
 if "LD_LIBRARY_PATH" in os.environ:
     for my_path in os.environ["LD_LIBRARY_PATH"].split(':'):
-	logmsg("env: LD_LIBRARY_PATH%s=%s" % (plus, my_path))
+	logger.info("env: LD_LIBRARY_PATH%s=%s" % (plus, my_path))
 	plus = '+'
 
 if "GLOBUS_TCP_PORT_RANGE" in os.environ:
-    logmsg("env: GLOBUS_TCP_PORT_RANGE=%s" % (os.environ["GLOBUS_TCP_PORT_RANGE"]))
+    logger.info("env: GLOBUS_TCP_PORT_RANGE=%s" % (os.environ["GLOBUS_TCP_PORT_RANGE"]))
 else:
-    logmsg("env: GLOBUS_TCP_PORT_RANGE=")
+    logger.info("env: GLOBUS_TCP_PORT_RANGE=")
 if "GLOBUS_TCP_SOURCE_RANGE" in os.environ:
-    logmsg("env: GLOBUS_TCP_SOURCE_RANGE=%s" % (os.environ["GLOBUS_TCP_SOURCE_RANGE"]))
+    logger.info("env: GLOBUS_TCP_SOURCE_RANGE=%s" % (os.environ["GLOBUS_TCP_SOURCE_RANGE"]))
 else:
-    logmsg("env: GLOBUS_TCP_SOURCE_RANGE=")
+    logger.info("env: GLOBUS_TCP_SOURCE_RANGE=")
 if "GLOBUS_LOCATION" in os.environ:
-    logmsg("env: GLOBUS_LOCATION=%s" % (os.environ["GLOBUS_LOCATION"]))
+    logger.info("env: GLOBUS_LOCATION=%s" % (os.environ["GLOBUS_LOCATION"]))
 else:
-    logmsg("env: GLOBUS_LOCATION=")
+    logger.info("env: GLOBUS_LOCATION=")
 
 # Now we wait for the .out file to appear
 f_stat = None
@@ -2418,7 +2497,8 @@ if replay_mode:
     try:
 	f_stat = os.stat(out)
     except:
-	fatal("error: workflow not started, %s does not exist, exiting..." % (out))
+	logger.critical("error: workflow not started, %s does not exist, exiting..." % (out))
+        sys.exit(1)
 
 # Start looking for the file
 while True:
@@ -2430,15 +2510,18 @@ while True:
 	    n_retries = n_retries + 1
 	    if n_retries > 100:
 		# We tried too long, just exit
-		fatal("%s never made an appearance" % (out))
+		logger.critical("%s never made an appearance" % (out))
+                sys.exit(42)
 	    # Continue waiting
-	    logmsg("waiting for out file, retry %d" % ( n_retries))
+	    logger.info("waiting for out file, retry %d" % ( n_retries))
 	    sleepy(n_retries, server)
 	else:
 	    # Another error
-	    fatal("stat %s" % (out))
+	    logger.critical("stat %s" % (out))
+            sys.exit(42)
     except:
-	fatal("stat %s" % (out))
+	logger.critical("stat %s" % (out))
+        sys.exit(42)
     else:
 	# Found file!
 	break
@@ -2449,7 +2532,8 @@ while True:
 try:
     DMOF = open(out, "r")
 except:
-    fatal("opening %s" % (out))
+    logger.critical("opening %s" % (out))
+    sys.exit(42)
 
 #
 # --- main loop --------------------------------------------------------------------------
@@ -2463,8 +2547,7 @@ ml_pos = 0
 
 while True:
     # Say Hello
-    if debug_level > 1:
-	logmsg("wake up and smell the silicon")
+    logger.debug("wake up and smell the silicon")
 
     # Periodically check for service requests
     if server is not None:
@@ -2474,7 +2557,8 @@ while True:
 	f_stat = os.stat(out)
     except:
 	# stat error
-	fatal("stat %s" % (out))
+	logger.critical("stat %s" % (out))
+        sys.exit(42)
 
     if f_stat[6] == ml_current:
 	# Death by natural causes
@@ -2487,7 +2571,7 @@ while True:
 	    try:
 		os.kill(int(pid), 0)
 	    except:
-		logmsg("DAGMan is gone! Sudden death syndrome detected!")
+		logger.critical("DAGMan is gone! Sudden death syndrome detected!")
 		terminate = 42
 		break
 	
@@ -2495,13 +2579,13 @@ while True:
 	ml_retries = ml_retries + 1
 	if ml_retries > 17280:
 	    # Too long without change
-	    logmsg("too long without action, self-destructing")
+	    logger.critical("too long without action, self-destructing")
 	    break
 
 	sleepy(ml_retries, server)
     elif f_stat[6] < ml_current:
 	# Truncated file, booh!
-	logmsg("file truncated, time to exit")
+	logger.critical("file truncated, time to exit")
 	break
     elif f_stat[6] > ml_current:
 	# We have something to read!
@@ -2509,10 +2593,11 @@ while True:
 	    ml_rbuffer = DMOF.read(32768)
 	except:
 	    # Error while reading
-	    fatal("while reading")
+	    logger.critical("while reading")
+            sys.exit(42)
 	if len(ml_rbuffer) == 0:
 	    # Detected EOF
-	    logmsg("detected EOF, resetting position to %d" % (ml_current))
+	    logger.critical("detected EOF, resetting position to %d" % (ml_current))
 	    DMOF.seek(ml_current)
 	else:
 	    # Something in the read buffer, merge it with our buffer
@@ -2533,7 +2618,7 @@ while True:
 			time.sleep(millisleep / 1000.0)
 
 	    ml_pos = DMOF.tell()
-	    logmsg("processed chunk of %d byte" % (ml_pos - ml_current -len(ml_buffer)))
+	    logger.info("processed chunk of %d byte" % (ml_pos - ml_current -len(ml_buffer)))
 	    ml_current = ml_pos
 	    ml_retries = 0
 
@@ -2555,7 +2640,7 @@ if not replay_mode:
     try:
 	SI = open(os.path.join(run, "sitedump.txt"), 'w')
     except:
-	logger.warn("Could not create file %s" % (os.path.join(run, "sitedump.txt")))
+	logger.warning("could not create file %s" % (os.path.join(run, "sitedump.txt")))
     else:
 	service_request_site(SI)
 	SI.close()
@@ -2568,9 +2653,9 @@ JSDB.close()
 if doplot:
     pass
 else:
-    logmsg("skipping plots")
+    logger.info("skipping plots")
 
 # done
-logmsg("finishing, exit with %d" % (terminate))
+logger.info("finishing, exit with %d" % (terminate))
 sys.exit(terminate)
 
