@@ -188,25 +188,23 @@ public class Text
     /**
      * Returns TC entries for a particular logical transformation and/or on a
      * number of resources and/or of a particular type.
-     *
-     * @param namespace   the namespace of the logical transformation.
-     * @param name        the name of the logical transformation.
-     * @param version     the version of the logical transformation.
-     * @param resourceids the List resourceid where the transformation is located.
+     * 
+     * @param namespace String The namespace of the logical transformation.
+     * @param name String the name of the logical transformation.
+     * @param version String The version of the logical transformation.
+     * @param resourceids List The List resourceid where the transformation is located. 
      *                    If <b>NULL</b> it returns all resources.
-     * @param type TCType the type of the transformation to search for. If
-     *                    <b>NULL</b> it returns all types.
-     *
-     * @return a list of <code>TransformationCatalogEntry</code> objects
-     *         containing the corresponding entries from the TC.
-     *         Returns null if no entry found.
-     *
+     * @param type TCType The type of the transformation to search for.
+     *              If <b>NULL</b> it returns all types.
+     * 
+     * @return List Returns a list of TransformationCatalogEntry objects containing 
+     *          the corresponding entries from the TC. Returns null if no entry found.
      * @throws Exception
-     * @see org.griphyn.common.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public List<TransformationCatalogEntry> lookup(String namespace, String name, String version,
-                             List resourceids, TCType type) throws Exception {
+    public List<TransformationCatalogEntry> lookup( String namespace, String name, String version,
+        List resourceids, TCType type ) throws Exception {
         logMessage("getTCEntries(String namespace,String name,String version," +
                    "List resourceids, TCType type");
         logMessage("\tgetTCEntries(" + namespace + ", " + name + ", " +
@@ -238,27 +236,27 @@ public class Text
     }
 
     /**
-     * Returns TC entries for a particular logical transformation and/or on a
+     * Returns TC entries for a particular logical transformation and/or on a 
      * particular resource and/or of a particular type.
-     *
-     * @param namespace   the namespace of the logical transformation.
-     * @param name        the name of the logical transformation.
-     * @param version     the version of the logical transformation.
-     * @param resourceid  the resourceid where the transformation is located.
-     *                    If <B>NULL</B> it returns all resources.
-     * @param type TCType the type of the transformation to search for.
-     *                    If <B>NULL</b> it returns all types.
-     *
-     * @return a list of <code>TransformationCatalogEntry</code> objects
+     * 
+     * @param namespace String The namespace of the logical transformation.
+     * @param name String the name of the logical transformation.
+     * @param version String The version of the logical transformation.
+     * @param resourceid String The resourceid where the transformation is located.
+     *                  If <B>NULL</B> it returns all resources.
+     * @param type  TCType The type of the transformation to search for.
+     *              If <B>NULL</b> it returns all types.
+     * 
+     * @return List Returns a list of TransformationCatalogEntry objects 
      *         containing the corresponding entries from the TC.
      *         Returns null if no entry found.
-     *
      * @throws Exception
-     * @see org.griphyn.common.classes.TCType
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public List<TransformationCatalogEntry>  lookup(String namespace, String name, String version,
-                             String resourceid, TCType type) throws Exception {
+    public List<TransformationCatalogEntry> lookup( String namespace, String name, String version,
+        String resourceid, TCType type ) throws Exception {
         logMessage(
             "getTCEntries(String namespace, String name, String version, " +
             "String resourceId, TCType type)");
@@ -283,24 +281,20 @@ public class Text
 
     /**
      * Get the list of Resource ID's where a particular transformation may reside.
-     *
      * @param   namespace String The namespace of the transformation to search for.
      * @param   name      String The name of the transformation to search for.
      * @param   version   String The version of the transformation to search for.
      * @param   type      TCType The type of the transformation to search for.<BR>
-     *                    (Enumerated type includes SOURCE, STATIC-BINARY,
-     *                    DYNAMIC-BINARY, PACMAN, INSTALLED, SCRIPT)<BR>
+     *                    (Enumerated type includes SOURCE, STATIC-BINARY, DYNAMIC-BINARY, PACMAN, INSTALLED, SCRIPT)<BR>
      *                     If <B>NULL</B> it returns all types.
-     *
-     * @return  a list of Resource Id's as strings.
-     *          Returns <B>NULL</B> if no results found.
-     *
-     * @throws Exception
-     * @see org.griphyn.common.classes.TCType
+     * 
+     * @return  List      Returns a list of Resource Id's as strings. Returns <B>NULL</B> if no results found.
+     * 
+     * @throws  Exception NotImplementedException if not implemented
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
-    public List<String> lookupSites(String namespace, String name,
-                                 String version,
-                                 TCType type) throws Exception {
+    public List<String> lookupSites( String namespace, String name, String version,
+        TCType type ) throws Exception {
         logMessage(
             "List getTCResourceIds(String namespace, String name, String " +
             "version, TCType type");
@@ -325,31 +319,27 @@ public class Text
     }
 
     /**
-     * Get the list of PhysicalNames for a particular transformation on a
-     * site/sites for a particular type/types.
-     *
-     * @param  namespace  the namespace of the transformation to search for.
-     * @param  name       the name of the transformation to search for.
-     * @param  version    the version of the transformation to search for.
-     * @param  resourceid the id of the resource on which you want to search. <BR>
+     * Get the list of PhysicalNames for a particular transformation on a site/sites 
+     * for a particular type/types;
+     * 
+     * @param  namespace  String The namespace of the transformation to search for.
+     * @param  name       String The name of the transformation to search for.
+     * @param  version    String The version of the transformation to search for.
+     * @param  resourceid String The id of the resource on which you want to search. <BR>
      *                    If <B>NULL</B> then returns entries on all resources
-     * @param  type       the type of the transformation to search for. <BR>
-     *                    (Enumerated type includes source, binary, dynamic-binary,
-     *                     pacman, installed)<BR>
-     *                     If <B>NULL</B> then returns entries of all types.
-     *
-     * @throws Exception
+     * @param  type       TCType The type of the transformation to search for. <BR>
+     *                        (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<BR>
+     *                        If <B>NULL</B> then returns entries of all types.
+     * 
      * @return List       Returns a List of <TransformationCatalongEntry> objects 
      *                    with the profiles not populated.
-     *                    Returns <B>NULL</B> if no results found.
-     *
-     * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.classes.VDSSysInfo
+     * 
+     * @throws Exception  NotImplementedException if not implemented.
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      */
-    public List<TransformationCatalogEntry>  lookupNoProfiles(String namespace, String name,
-                                   String version,
-                                   String resourceid, TCType type) throws
-        Exception {
+    public List <TransformationCatalogEntry> lookupNoProfiles( String namespace, 
+           String name,String version,String resourceid, TCType type ) throws Exception {
         logMessage("List getTCPhysicalNames(String namespace, String name," +
                    "String version, String resourceid,TCType type)");
         logMessage("\t getTCPhysicalNames(" + namespace + ", " + name + ", " +
@@ -370,23 +360,20 @@ public class Text
     }
 
     /**
-     * Gets the list of LogicalNames available on a particular resource.
-     *
-     * @param resourceid the id of the resource on which you want to search
-     * @param type       the type of the transformation to search for. <BR>
-     *                   (Enumerated type includes source, binary, dynamic-binary,
-     *                    pacman, installed)<BR>
+     * Get the list of LogicalNames available on a particular resource.
+     * @param resourceid String The id of the resource on which you want to search
+     * @param type       TCType The type of the transformation to search for. <BR>
+     *                  (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<BR>
      *                   If <B>NULL</B> then return logical name for all types.
-     *
-     * @throws Exception
+     * 
      * @return List      Returns a list of String Arrays.
      *                   Each array contains the resourceid, logical transformation
      *                   in the format namespace::name:version and type.
-     *                   The last entry in the list is an array of integers
-     *                   specifying the column length for pretty print.
      *                   Returns <B>NULL</B> if no results found.
+     * 
+     * @throws Exception  NotImplementedException if not implemented.
      */
-    public List<String[]> getTCLogicalNames(String resourceid, TCType type) throws
+    public List<String[]> getTCLogicalNames( String resourceid, TCType type ) throws
         Exception {
         logMessage("List getTCLogicalNames(String resourceid, TCType type)");
         logMessage("\t getTCLogicalNames(" + resourceid + "," + type + ")");
@@ -417,41 +404,37 @@ public class Text
 
     /**
      * Get the list of Profiles associated with a particular logical transformation.
-     *
-     * @param namespace  the namespace of the transformation to search for.
-     * @param name       the name of the transformation to search for.
-     * @param version    the version of the transformation to search for.
-     *
-     * @throws NotImplementedException as not implemented as yet.
-     *
+     * @param namespace  String The namespace of the transformation to search for.
+     * @param name       String The name of the transformation to search for.
+     * @param version    String The version of the transformation to search for.
+     * 
      * @return List      Returns a list of Profile Objects containing profiles
      *                   assocaited with the transformation.
      *                   Returns <B>NULL</B> if no profiles found.
-     * @throws Exception
+     * 
+     * @throws Exception NotImplementedException if not implemented.
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public List<Profile> lookupLFNProfiles(String namespace, String name,
-                                 String version) throws
+    public List<Profile> lookupLFNProfiles( String namespace, String name, String version ) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
      * Get the list of Profiles associated with a particular physical transformation.
+     * @param pfn        The physical file name to search the transformation by.
+     * @param resourceid String The id of the resource on which you want to search.
+     * @param type       TCType The type of the transformation to search for. <br>
+     *                   (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<br>
      *
-     * @param pfn        the physical file name to search the transformation by.
-     * @param resourceid the id of the resource on which you want to search.
-     * @param type       the type of the transformation to search for. <br>
-     *                   (Enumerated type includes source, binary, dynamic-binary,
-     *                    pacman, installed)<br>
-     *
-     * @throws Exception
-     * @return a list of <code>Profile</code> containing profiles assocaited with
-     *         the transformation. Returns <B>NULL</B> if no profiless found.
-     *
+     * @throws Exception NotImplementedException if not implemented.
+     * @return List      Returns a list of Profile Objects containing profiles 
+     *                   assocaited with the transformation.
+     *                   Returns <B>NULL</B> if no profiless found.
+     * 
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public List<Profile> lookupPFNProfiles(String pfn, String resourceid, TCType type) throws
+    public List<Profile> lookupPFNProfiles( String pfn, String resourceid, TCType type ) throws
         Exception {
         logMessage(
             "getTCPfnProfiles(String pfn, String resourceid, TCType type)");
@@ -479,13 +462,11 @@ public class Text
     }
 
     /**
-     * List the contents of the TC
+     * List all the contents of the TC
      *
-     * @return a list of <TransformationCatalogEntry> objects
-     *
+     * @return List Returns a List of TransformationCatalogEntry objects.
      * @throws Exception
      */
-
     public List<TransformationCatalogEntry> getContents() throws Exception {
         return mTCStore.getEntries( (String)null, (TCType)null );
     }
@@ -495,106 +476,108 @@ public class Text
      */
 
     /**
-     * Add multiple TCEntries to the Catalog. Exception is thrown when error
-     * occurs.
-     *
-     * @param entries list of {@link edu.isi.pegasus.planner.catalog.TransformationCatalogEntry}
-     * objects as input.
-     *
-     * @return boolean Return true if succesful, false if error.
-     *
+     * Add multiple TCEntries to the Catalog.
+     * 
+     * @param tcentry List Takes a list of TransformationCatalogEntry objects as input
+     * 
      * @throws Exception
+     * @return number of insertions On failure,throw an exception, don't use zero.
+     * 
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean insert(List entries) throws
+    public int insert(List<TransformationCatalogEntry> entries) throws
         Exception {
         for (int i = 0; i < entries.size(); i++) {
             TransformationCatalogEntry entry = ( (TransformationCatalogEntry)
                                                 entries.get(i));
             this.insert(entry);
         }
-        return true;
+        return entries.size();
 
     }
 
     /**
-     * Add a single TCEntry to the Catalog. Exception is thrown when error
-     * occurs.
-     *
-     * @param entry a single {@link edu.isi.pegasus.planner.catalog.TransformationCatalogEntry}
-     * object as input.
-     *
-     * @return boolean Return true if succesful, false if error.
-     *
+     * Add single TCEntry to the Catalog.
+     * @param tcentry Takes a single TransformationCatalogEntry object as input
      * @throws Exception
+     * 
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
+     * 
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean insert(TransformationCatalogEntry entry) throws
+    public int insert(TransformationCatalogEntry entry) throws
         Exception {
-        this.insert(entry.getLogicalNamespace(),
+    	return this.insert(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
                         entry.getProfiles(), entry.getSysInfo());
-        return true;
+        
     }
 
     /**
-     * Add a single TCEntry to the Catalog. Exception is thrown when error
-     * occurs. This method is a hack and wont commit the additions to the
-     * backend catalog
-     *
-     * @param entry a single {@link edu.isi.pegasus.planner.catalog.TransformationCatalogEntry}
-     * object as input.
-     * @param write boolean to commit additions to backend catalog.
-     * @return boolean Return true if succesful, false if error.
-     *
+     * Add single TCEntry object temporarily to the in memory Catalog.
+     * This is a hack to get around for adding soft state entries to the TC
+     * @param tcentry Takes a single TransformationCatalogEntry object as input
+     * @param write boolean enable write commits to backed catalog or not.
      * @throws Exception
+     * 
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
+     *
+     * 
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean insert(TransformationCatalogEntry entry, boolean write) throws
+    public int insert(TransformationCatalogEntry entry, boolean write) throws
         Exception {
-        this.addTCEntry(entry.getLogicalNamespace(),
+        if(this.addTCEntry(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo(), write);
-        return true;
+                        entry.getProfiles(), entry.getSysInfo(), write)) {
+        	return 1;
+        }else{
+        	throw new RuntimeException("Failed to add TransformationCatalogEntry " + entry.getLogicalName());
+        }
     }
 
     /**
      * Add an single entry into the transformation catalog.
      *
-     * @param namespace    the namespace of the transformation to be added (Can be null)
-     * @param name         the name of the transformation to be added.
-     * @param version      the version of the transformation to be added. (Can be null)
-     * @param physicalname the physical name/location of the transformation to be added.
-     * @param type         the type of the physical transformation.
-     * @param resourceid   the resource location id where the transformation is located.
-     * @param lfnprofiles  the List of <code>Profile</code> objects associated
-     *                     with a Logical Transformation. (can be null)
-     * @param pfnprofiles  the list of <code>Profile</code> objects associated
-     *                     with a Physical Transformation. (can be null)
-     * @param system       the System information associated with a physical
-     *                     transformation.
-     * @return boolean     true if succesfully added, returns false if error and
-     *                     throws exception.
+     * @param namespace    String The namespace of the transformation to be added (Can be null)
+     * @param name         String The name of the transformation to be added.
+     * @param version      String The version of the transformation to be added. (Can be null)
+     * @param physicalname String The physical name/location of the transformation to be added.
+     * @param type        TCType  The type of the physical transformation.
+     * @param resourceid   String The resource location id where the transformation is located.
+     * @param lfnprofiles     List   The List of Profile objects associated with a Logical Transformation. (can be null)
+     * @param pfnprofiles     List   The List of Profile objects associated with a Physical Transformation. (can be null)
+     * @param sysinfo     VDSSysInfo  The System information associated with a physical transformation.
+     * 
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
      *
+     * 
      * @throws Exception
      *
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.VDSSysInfo
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean insert(String namespace, String name,
+    public int insert(String namespace, String name,
                               String version,
                               String physicalname, TCType type,
                               String resourceid,
                               List pfnprofiles, List lfnprofiles,
                               SysInfo system) throws
         Exception {
-        return this.addTCEntry(namespace, name, version, physicalname, type,
-                               resourceid, lfnprofiles, pfnprofiles, system, true);
+        if(this.addTCEntry(namespace, name, version, physicalname, type,
+                               resourceid, lfnprofiles, pfnprofiles, system, true)){
+        	return 1;
+        }else{
+        	throw new RuntimeException("Failed to add TransformationCatalogEntry " + name);
+        }
     }
 
     /**
@@ -665,38 +648,39 @@ public class Text
     }
 
     /**
-     * Add additional profiles to a matching logical transformation.
+     * Add additional profile to a logical transformation .
+     * 
+     * @param namespace String The namespace of the transformation to be added. (can be null)
+     * @param name      String The name of the transformation to be added.
+     * @param version   String The version of the transformation to be added. (can be null)
+     * @param profiles  List   The List of Profile objects that are to be added 
+     *                  to the transformation.
+     * 
+     * @return number of insertions. On failure, throw an exception, don't use zero.
      *
-     * @param namespace the nsamespace of the transformation to be added. (can be null)
-     * @param name      the name of the transformation to be added.
-     * @param version   the version of the transformation to be added.
-     * @param profiles  list of <code>Profile</code> objects that are to be
-     *                  added to the transformation.
-     *
-     * @return boolean
-     * @throws Exception as function not implemented.
+     * @throws Exception
+     * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addLFNProfile(String namespace, String name,
+    public int addLFNProfile(String namespace, String name,
                                    String version,
                                    List profiles) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
-     * Adds additional profiles to a physical transformation.
+     * Add additional profile to a physical transformation.
+     * @param pfn  String       The physical name of the transformation
+     * @param type      TCType The type of transformation that the profile is 
+     *                  associated with.
+     * @param resourcename String The resource on which the physical transformation exists
+     * @param profiles   The List of Profile objects that are to be added
+     *                   to the transformation.
+     * @return number of insertions. On failure, throw an exception, don't use zero.
      *
-     * @param pfn          the physical name of the transformation
-     * @param type         the type of transformation that the profile is
-     *                     associated with. If null the profile is associated
-     *                     with all the types.
-     * @param resourcename the resource on which the physical transformation exists.
-     * @param profiles     the List of <code>Profile</code> objects that are to
-     *                     be added to the transformation.
-     *
-     * @return boolean
-     * @throws Exception as function not implemented.
+     * @throws Exception
+     * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addPFNProfile(String pfn, TCType type,
+    public int addPFNProfile(String pfn, TCType type,
                                    String resourcename,
                                    List profiles) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
@@ -707,27 +691,41 @@ public class Text
      */
 
     /**
-     * Delete all entries in the transformation catalog of the logical
-     * transformation either at all resource or on a particular resource
-     *
-     * @param namespace   the nsamespace of the transformation to be added. (can be null)
-     * @param name        the name of the transformation to be added.
-     * @param version     the version of the transformation to be added.
-     * @param resourceid  the resource id for which the transformation is to be
-     *                    deleted. If null then transformation on all resource
-     *                    are deleted.
-     * @param type        the type of the transformation
-     *
+     * Delete all entries in the transformation catalog for a give logical transformation and/or on a resource and/or of
+     * a particular type
+     * @param namespace   String The namespace of the transformation to be deleted. (can be null)
+     * @param name        String The name of the transformation to be deleted.
+     * @param version     String The version of the transformation to be deleted. ( can be null)
+     * @param resourceid String The resource id for which the transformation is to be deleted.
+     *                          If <B>NULL</B> then transformation on all resource are deleted
+     * @param type TCType The type of the transformation. If <B>NULL</B> then all types are deleted for the transformation.
      * @throws Exception
-     * @return boolean
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
-    public boolean removeByLFN(String namespace, String name,
+    public int removeByLFN(String namespace, String name,
                                          String version, String resourceid,
                                          TCType type) throws Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
-
-    public boolean removeByPFN(String physicalname,
+    /**
+     * Delete all entries in the transformation catalog for pair of logical and physical transformation.
+     * @param physicalname String The physical name of the transformation
+     * @param namespace String The namespace associated in the logical name of the transformation.
+     * @param name String The name of the logical transformation.
+     * @param version String The version number of the logical transformation.
+     * @param resourceid String The resource on which the transformation is to be deleted.
+     *                          If <B>NULL</B> then it searches all the resource id.
+     * @param type TCType The type of transformation. If <B>NULL</B> then it search and deletes entries for all types.
+     * @throws Exception
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
+     */
+    public int removeByPFN(String physicalname,
                                           String namespace,
                                           String name, String version,
                                           String resourceid, TCType type) throws
@@ -736,65 +734,96 @@ public class Text
     }
 
     /**
-     * Delete a paricular type of transformation, additionally either on all
-     * resources or on a particular resource.
-     *
-     * @param type        the type of the transformation.
-     * @param resourceid  the resource on which the transformation exists.
-     *                    If null then that type of transformation is deleted
-     *                    from all the resources.
-     *
-     * @throws Exception as function not implemented.
-     * @return boolean
+     * Delete a particular type of transformation, and/or on a particular resource
+     * @param type TCType The type of the transformation
+     * @param resourceid String The resource on which the transformation exists.
+     *                           If <B>NULL</B> then that type of transformation is deleted from all the resources.
+     * @throws Exception
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
-    public boolean removeByType(TCType type, String resourceid) throws
+    public int removeByType(TCType type, String resourceid) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
-     * Delete entries in the catalog of a particular systeminfo.
-     *
-     * @param sysinfo SysInfo
-     *
-     * @throws Exception as function not implemented.
-     * @return boolean
+     * Deletes entries from the catalog which have a particular system information.
+     * @param sysinfo VDSSysInfo The System Information by which you want to delete
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
+     * @throws Exception
      */
-    public boolean removeBySysInfo( SysInfo sysinfo) throws
+    public int removeBySysInfo( SysInfo sysinfo) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
-     * Delete an entire resource from the transformation catalog.
-     * @param resourceid String
-     *
-     * @return boolean
-     * @throws Exception as function not implemented.
+     * Delete all entries on a particular resource from the transformation catalog.
+     * @param resourceid String The resource which you want to remove.
+     * @throws Exception
+     * 
+     * @return the number of removed entries.
      */
-    public boolean removeBySiteID(String resourceid) throws Exception {
+    public int removeBySiteID(String resourceid) throws Exception {
 
        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
-     * Deletes the entire transformation catalog. Whoopa.....
-     *
-     * @return boolean
+     * Deletes the entire transformation catalog. CLEAN............. USE WITH CAUTION.
+     * 
+     * @return the number of removed entries.
+     * 
      * @throws Exception
      */
-    public boolean clear() throws Exception {
+    public int clear() throws Exception {
+    	int length = (mTCStore.getEntries(null,(TCType)null)).size();
         mTCStore.clear();
-        return true;
+        return length;
     }
-
-    public boolean deletePFNProfiles(String physicalname, TCType type,
+    
+    /**
+     * Delete a list of profiles or all the profiles associated with a pfn on a 
+     * resource and of a type.
+     * 
+     * @param physicalname String The physical name of the transformation.
+     * @param type TCType The type of the transformation.
+     * @param resourceid String The resource of the transformation.
+     * @param profiles List The list of profiles to be deleted. If <B>NULL</B> then all profiles for that pfn+resource+type are deleted.
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see org.griphyn.cPlanner.classes.Profile
+     * @throws Exception
+     */
+    public int deletePFNProfiles(String physicalname, TCType type,
                                       String resourceid, List profiles) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean deleteLFNProfiles(String namespace, String name,
+    /**
+     * Delete a list of profiles or all the profiles associated with a logical 
+     * transformation.
+     * 
+     * @param namespace String  The namespace of the logical transformation.
+     * @param name String The name of the logical transformation.
+     * @param version String The version of the logical transformation.
+     * @param profiles List The List of profiles to be deleted. If <B>NULL</B> 
+     *                 then all profiles for the logical transformation are deleted.
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see org.griphyn.cPlanner.classes.Profile
+     * @throws Exception
+     */
+    public int deleteLFNProfiles(String namespace, String name,
                                       String version, List profiles) throws
         Exception {
         throw new UnsupportedOperationException("Not Implemented");
@@ -806,12 +835,12 @@ public class Text
     }
 
     public boolean isClosed() {
-        //not impelemented
+        //not implemented
         return true;
     }
 
     public void close() {
-        //not impelemented
+        //not implemented
     }
 
    
