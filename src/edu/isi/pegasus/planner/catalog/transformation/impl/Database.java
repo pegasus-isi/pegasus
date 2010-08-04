@@ -260,27 +260,27 @@ public class Database
     }
 
     /**
-     * Returns TC entries for a particular logical transformation and/or on a
+     * Returns TC entries for a particular logical transformation and/or on a 
      * particular resource and/or of a particular type.
+     * 
      * @param namespace String The namespace of the logical transformation.
      * @param name String the name of the logical transformation.
      * @param version String The version of the logical transformation.
-     * @param resourceid String The resourceid where the transformation is
-     * located. If <B>NULL</B> it returns all resources.
-     * @param type TCType The type of the transformation to search for.
-     * If <B>NULL</b> it returns all types.
+     * @param resourceid String The resourceid where the transformation is located.
+     *                  If <B>NULL</B> it returns all resources.
+     * @param type  TCType The type of the transformation to search for.
+     *              If <B>NULL</b> it returns all types.
+     * 
+     * @return List Returns a list of TransformationCatalogEntry objects 
+     *         containing the corresponding entries from the TC.
+     *         Returns null if no entry found.
      * @throws Exception
-     * @return List Returns a list of TCEntry objects containing the
-     * corresponding entries from the TC. Returns null if no entry found.
-     *  The profiles returned are lfn profiles, followed by pfn profiles.
-     * The code does not check for similar keys between lfn and pfn profiles
-     * and all profiles are kept
-     * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-
-    public List lookup(String namespace, String name, String version,
-                             String resourceid, TCType type) throws Exception {
+    public List<TransformationCatalogEntry> lookup( String namespace, String name, String version,
+        String resourceid, TCType type ) throws Exception {
         List resultEntries = null;
         mLogger.log("Trying to get TCEntries for " +
                     Separator.combine(namespace, name, version) +
@@ -333,22 +333,23 @@ public class Database
     /**
      * Returns TC entries for a particular logical transformation and/or on a
      * number of resources and/or of a particular type.
+     * 
      * @param namespace String The namespace of the logical transformation.
      * @param name String the name of the logical transformation.
      * @param version String The version of the logical transformation.
-     * @param resourceids List The List resourceid where the transformation is
-     * located. If <b>NULL</b> it returns all resources.
+     * @param resourceids List The List resourceid where the transformation is located. 
+     *                    If <b>NULL</b> it returns all resources.
      * @param type TCType The type of the transformation to search for.
-     * If <b>NULL</b> it returns all types.
+     *              If <b>NULL</b> it returns all types.
+     * 
+     * @return List Returns a list of TransformationCatalogEntry objects containing 
+     *          the corresponding entries from the TC. Returns null if no entry found.
      * @throws Exception
-     * @return List Returns a list of TCEntry objects containing the
-     * corresponding entries from the TC. Returns null if no entry found.
-     * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-
-    public List lookup(String namespace, String name, String version,
-                             List resourceids, TCType type) throws Exception {
+    public List<TransformationCatalogEntry> lookup( String namespace, String name, String version,
+        List resourceids, TCType type ) throws Exception {
         List results = null;
         if (resourceids != null) {
             for (Iterator i = resourceids.iterator(); i.hasNext(); ) {
@@ -370,15 +371,12 @@ public class Database
     }
 
     /**
-     * List all the contents of the TC in a column format.
+     * List all the contents of the TC
+     *
+     * @return List Returns a List of TransformationCatalogEntry objects.
      * @throws Exception
-     * @return List Returns a List of String Arrays. Each string array contains
-     * the resource, lfn, pfn, type, sysinfo and profiles.
-     * The last entry in the list is an array of integers which contain the
-     * column lengths for pretty print.
      */
-
-    public List getContents() throws Exception {
+    public List<TransformationCatalogEntry> getContents() throws Exception {
         //get the statement.
         PreparedStatement ps = m_dbdriver.getPreparedStatement("stmt.query.tc");
         //execute the query
@@ -445,17 +443,16 @@ public class Database
      * @param   name      String The name of the transformation to search for.
      * @param   version   String The version of the transformation to search for.
      * @param   type      TCType The type of the transformation to search for.<BR>
-     * (Enumerated type includes SOURCE, STATIC-BINARY, DYNAMIC-BINARY, PACMAN, INSTALLED, SCRIPT)<BR>
-     * If <B>NULL</B> it returns all types.
-     * @return  List      Returns a list of Resource Id's as strings.
-     * Returns <B>NULL</B> if no results found.
+     *                    (Enumerated type includes SOURCE, STATIC-BINARY, DYNAMIC-BINARY, PACMAN, INSTALLED, SCRIPT)<BR>
+     *                     If <B>NULL</B> it returns all types.
+     * 
+     * @return  List      Returns a list of Resource Id's as strings. Returns <B>NULL</B> if no results found.
+     * 
      * @throws  Exception NotImplementedException if not implemented
-     * @see org.griphyn.common.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
-
-    public List lookupSites(String namespace, String name,
-                                 String version,
-                                 TCType type) throws Exception {
+    public List<String> lookupSites( String namespace, String name, String version,
+        TCType type ) throws Exception {
         //get the statement
         PreparedStatement ps = m_dbdriver.getPreparedStatement(
             "stmt.query.resource");
@@ -492,34 +489,27 @@ public class Database
     }
 
     /**
-     * Get the list of PhysicalNames for a particular transformation on a
-     * site/sites for a particular type/types;
+     * Get the list of PhysicalNames for a particular transformation on a site/sites 
+     * for a particular type/types;
+     * 
      * @param  namespace  String The namespace of the transformation to search for.
      * @param  name       String The name of the transformation to search for.
      * @param  version    String The version of the transformation to search for.
-     * @param  resourceid String The id of the resource on which you want to
-     * search. <BR>
+     * @param  resourceid String The id of the resource on which you want to search. <BR>
      *                    If <B>NULL</B> then returns entries on all resources
      * @param  type       TCType The type of the transformation to search for. <BR>
-     *                        (Enumerated type includes source, binary,
-     * dynamic-binary, pacman, installed)<BR>
+     *                        (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<BR>
      *                        If <B>NULL</B> then returns entries of all types.
+     * 
+     * @return List       Returns a List of <TransformationCatalongEntry> objects 
+     *                    with the profiles not populated.
+     * 
      * @throws Exception  NotImplementedException if not implemented.
-     * @return List       Returns a list of String Arrays.
-     *                    Each array contains the resourceid, the physical
-     * transformation, the type of the tr and the systeminfo.
-     *                    The last entry in the List is a int array containing t
-     * he column lengths for pretty print.
-     *                    Returns <B>NULL</B> if no results found.
-     * @see org.griphyn.common.classes.TCType
-     * @see org.griphyn.common.classes.VDSSysInfo
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      */
-
-    public List lookupNoProfiles(String namespace, String name,
-                                   String version,
-                                   String resourceid, TCType type) throws
-
-        Exception {
+    public List <TransformationCatalogEntry> lookupNoProfiles( String namespace, 
+           String name,String version,String resourceid, TCType type ) throws Exception {
     	/*
         int[] count = {
             0, 0, 0};
@@ -565,19 +555,17 @@ public class Database
      * Get the list of LogicalNames available on a particular resource.
      * @param resourceid String The id of the resource on which you want to search
      * @param type       TCType The type of the transformation to search for. <BR>
-     *                  (Enumerated type includes source, binary, dynamic-binary,
-     *  pacman, installed)<BR>
+     *                  (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<BR>
      *                   If <B>NULL</B> then return logical name for all types.
-     * @throws Exception NotImpementedException if not implemented
+     * 
      * @return List      Returns a list of String Arrays.
      *                   Each array contains the resourceid, logical transformation
      *                   in the format namespace::name:version and type.
-     *                   The last entry in the list is an array of integers
-     * specifying the column length for pretty print.
      *                   Returns <B>NULL</B> if no results found.
+     * 
+     * @throws Exception  NotImplementedException if not implemented.
      */
-
-    public List getTCLogicalNames(String resourceid, TCType type) throws
+    public List<String[]> getTCLogicalNames( String resourceid, TCType type ) throws
         Exception {
     	/*
         int[] count = {
@@ -617,14 +605,15 @@ public class Database
      * @param namespace  String The namespace of the transformation to search for.
      * @param name       String The name of the transformation to search for.
      * @param version    String The version of the transformation to search for.
-     * @throws Exception NotImplementedException if not implemented.
+     * 
      * @return List      Returns a list of Profile Objects containing profiles
-     * assocaited with the transformation.
+     *                   assocaited with the transformation.
      *                   Returns <B>NULL</B> if no profiles found.
+     * 
+     * @throws Exception NotImplementedException if not implemented.
      * @see org.griphyn.cPlanner.classes.Profile
      */
-
-    public List lookupLFNProfiles(String namespace, String name, String version) throws
+    public List<Profile> lookupLFNProfiles( String namespace, String name, String version ) throws
         Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.query.lfnprofiles");
@@ -653,16 +642,16 @@ public class Database
      * @param pfn        The physical file name to search the transformation by.
      * @param resourceid String The id of the resource on which you want to search.
      * @param type       TCType The type of the transformation to search for. <br>
-     *                   (Enumerated type includes source, binary, dynamic-binary,
-     *  pacman, installed)<br>
+     *                   (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<br>
+     *
      * @throws Exception NotImplementedException if not implemented.
-     * @return List      Returns a list of Profile Objects containing profiles
-     * assocaited with the transformation.
+     * @return List      Returns a list of Profile Objects containing profiles 
+     *                   assocaited with the transformation.
      *                   Returns <B>NULL</B> if no profiless found.
+     * 
      * @see org.griphyn.cPlanner.classes.Profile
      */
-
-    public List lookupPFNProfiles(String pfn, String resourceid, TCType type) throws
+    public List<Profile> lookupPFNProfiles( String pfn, String resourceid, TCType type ) throws
         Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.query.pfnprofiles");
@@ -695,103 +684,106 @@ public class Database
 
     /**
      * Add multiple TCEntries to the Catalog.
-     * @param tcentry List Takes a list of TCEntry objects as input
+     * 
+     * @param tcentry List Takes a list of TransformationCatalogEntry objects as input
+     * 
      * @throws Exception
-     * @return boolean Return true if succesful, false if error. Exception is
-     * thrown when error occurs.
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * @return number of insertions On failure,throw an exception, don't use zero.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean insert(List tcentry) throws
-        Exception {
+    public int insert( List<TransformationCatalogEntry> tcentry ) throws Exception {
         for (int i = 0; i < tcentry.size(); i++) {
             TransformationCatalogEntry entry = ( (TransformationCatalogEntry)
                                                 tcentry.get(i));
             this.insert(entry);
         }
-        return true;
+        return tcentry.size();
     }
 
     /**
-     * Add a single TCEntry to the Catalog. Exception is thrown when error
-     * occurs.
-     *
-     * @param entry a single {@link org.griphyn.common.catalog.TransformationCatalogEntry}
-     * object as input.
-     *
-     * @return boolean Return true if succesful, false if error.
-     *
+     * Add single TCEntry to the Catalog.
+     * @param tcentry Takes a single TransformationCatalogEntry object as input
      * @throws Exception
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * 
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean insert(TransformationCatalogEntry entry) throws
+    public int insert(TransformationCatalogEntry entry) throws
         Exception {
-        this.insert(entry.getLogicalNamespace(),
+        return this.insert(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
                         entry.getProfiles(), entry.getSysInfo());
-        return true;
+        
     }
 
     /**
-     * Add a single TCEntry to the Catalog. Exception is thrown when error
-     * occurs. This method is a hack and wont commit the additions to the
-     * backend catalog
-     *
-     * @param entry a single {@link org.griphyn.common.catalog.TransformationCatalogEntry}
-     * object as input.
-     * @param write boolean to commit additions to backend catalog.
-     * @return boolean Return true if succesful, false if error.
-     *
+     * Add single TCEntry object temporarily to the in memory Catalog.
+     * This is a hack to get around for adding soft state entries to the TC
+     * @param tcentry Takes a single TransformationCatalogEntry object as input
+     * @param write boolean enable write commits to backed catalog or not.
      * @throws Exception
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
+     * 
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
+     *
+     * 
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
-    public boolean insert(TransformationCatalogEntry entry, boolean write) throws
+    public int insert(TransformationCatalogEntry entry, boolean write) throws
         Exception {
-        this.addTCEntry(entry.getLogicalNamespace(),
+        if(this.addTCEntry(entry.getLogicalNamespace(),
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo(), write);
-        return true;
+                        entry.getProfiles(), entry.getSysInfo(), write)){
+        	return 1;
+        }else{
+        	throw new RuntimeException("Failed to add TransformationCatalogEntry " + entry.getLogicalName());
+        }
+        	
     }
 
     /**
      * Add an single entry into the transformation catalog.
      *
-     * @param namespace    String The namespace of the transformation to be
-     * added (Can be null)
+     * @param namespace    String The namespace of the transformation to be added (Can be null)
      * @param name         String The name of the transformation to be added.
+     * @param version      String The version of the transformation to be added. (Can be null)
+     * @param physicalname String The physical name/location of the transformation to be added.
+     * @param type        TCType  The type of the physical transformation.
+     * @param resourceid   String The resource location id where the transformation is located.
+     * @param lfnprofiles     List   The List of Profile objects associated with a Logical Transformation. (can be null)
+     * @param pfnprofiles     List   The List of Profile objects associated with a Physical Transformation. (can be null)
+     * @param sysinfo     VDSSysInfo  The System information associated with a physical transformation.
+     * 
+     * @return number of insertions, should always be 1. On failure,
+     * throw an exception, don't use zero.
      *
-     * @param version      String The version of the transformation to be added.
-     * (Can be null)
-     * @param physicalname String The physical name/location of the transformation
-     *  to be added.
-     *  @param type        TCType  The type of the physical transformation.
-     * @param resourceid   String The resource location id where the
-     * transformation is located.
-     * @param lfnprofiles     List   The List of Profile objects associated with
-     * a Logical Transformation. (can be null)
-     * @param pfnprofiles     List   The List of Profile objects associated with
-     * a Physical Transformation. (can be null)
-     * @param system    SysInfo  The System information associated with a
-     * physical transformation.
+     * 
      * @throws Exception
-     * @return boolean   Returns true if succesfully added, returns false if
-     * error and throws exception.
-     * @see org.griphyn.common.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.VDSSysInfo
+     *
+     * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean insert(String namespace, String name,
+    public int insert(String namespace, String name,
                               String version,
                               String physicalname, TCType type,
                               String resourceid,
                               List lfnprofiles, List pfnprofiles,
                               SysInfo system) throws
         Exception {
-        return this.addTCEntry(namespace, name, version, physicalname, type,
-                               resourceid, lfnprofiles, pfnprofiles, system, true);
+        if(this.addTCEntry(namespace, name, version, physicalname, type,
+                               resourceid, lfnprofiles, pfnprofiles, system, true)){
+        	return 1;
+        }else{
+        	throw new RuntimeException("Failed to add TransformationCatalogEntry " + name);
+        }
 
     }
 
@@ -931,65 +923,78 @@ if(!write) return false;
     }
 
     /**
-     *Add additional profile to a logical transformation .
-     * @param namespace String The nsamespace of the transformation to be added. (can be null)
+     * Add additional profile to a logical transformation .
+     * 
+     * @param namespace String The namespace of the transformation to be added. (can be null)
      * @param name      String The name of the transformation to be added.
      * @param version   String The version of the transformation to be added. (can be null)
-     * @param profiles  List   The List of Profile objects that are to be added to the transformation.
-     * @return boolean Returns true if success, false if error.
+     * @param profiles  List   The List of Profile objects that are to be added 
+     *                  to the transformation.
+     * 
+     * @return number of insertions. On failure, throw an exception, don't use zero.
+     *
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addLFNProfile(String namespace, String name,
+    public int addLFNProfile(String namespace, String name,
                                    String version, List profiles) throws
         Exception {
         long lfnid = -1;
+        int profileCount = 0;
         if ( (lfnid = getLogicalId(namespace, name, version)) != -1) {
             if (profiles != null) {
                 for (Iterator i = profiles.iterator(); i.hasNext(); ) {
                     Profile p = (Profile) i.next();
-                    this.addProfile(p, lfnid, false);
+                    if(this.addProfile(p, lfnid, false))
+                    	profileCount++;
                 }
             }
+            
         }
         else {
             mLogger.log(
                 "The lfn does not exist. Cannot add profiles to non existent lfn",
                 LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException("The lfn does not exist. Cannot add profiles to non existent lfn " );
         }
         m_dbdriver.commit();
-        return true;
+        return profileCount;
     }
 
     /**
      * Add additional profile to a physical transformation.
      * @param pfn  String       The physical name of the transformation
-     * @param type      TCType The type of transformation that the profile is associated with.
-     * @param resourceid String The resource on which the physical transformation exists
-     * @param profiles  List   The List of Profile objects that are to be added to the transformation.
-     * @return boolean Returns true for success, false for error.
+     * @param type      TCType The type of transformation that the profile is 
+     *                  associated with.
+     * @param resourcename String The resource on which the physical transformation exists
+     * @param profiles   The List of Profile objects that are to be added
+     *                   to the transformation.
+     * @return number of insertions. On failure, throw an exception, don't use zero.
+     *
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addPFNProfile(String pfn, TCType type, String resourceid,
+    public int addPFNProfile(String pfn, TCType type, String resourceid,
                                    List profiles) throws Exception {
         long pfnid = -1;
+        int profileCount =0;
         if ( (pfnid = getPhysicalId(pfn, type, resourceid)) != -1) {
             long profileid = -1;
             if (profiles != null) {
                 for (Iterator i = profiles.iterator(); i.hasNext(); ) {
                     Profile p = (Profile) i.next();
-                    this.addProfile(p, pfnid, true);
+                    if(this.addProfile(p, pfnid, true))
+                    	profileCount++;
                 }
             }
             m_dbdriver.commit();
-            return true;
+            return profileCount;
         }
         else {
             mLogger.log(
                 "The pfn does not exist. Cannot add profiles to a non existent pfn",
                 LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
+            throw new RuntimeException( "The pfn does not exist. Cannot add profiles to a non existent pfn");
         }
     }
 
@@ -998,19 +1003,22 @@ if(!write) return false;
      */
 
     /**
-     * Delete all entries in the transformation catalog for a give logical tranformation and/or on a resource and/or of a particular type
-     * @param namespace   String The namespace of the transformation to be added. (can be null)
-     * @param name        String The name of the transformation to be added.
-     * @param version     String The version of the transformation to be added. ( can be null)
+     * Delete all entries in the transformation catalog for a give logical transformation and/or on a resource and/or of
+     * a particular type
+     * @param namespace   String The namespace of the transformation to be deleted. (can be null)
+     * @param name        String The name of the transformation to be deleted.
+     * @param version     String The version of the transformation to be deleted. ( can be null)
      * @param resourceid String The resource id for which the transformation is to be deleted.
      *                          If <B>NULL</B> then transformation on all resource are deleted
      * @param type TCType The type of the transformation. If <B>NULL</B> then all types are deleted for the transformation.
      * @throws Exception
-     * @return boolean Returns true if success , false if there is any error.
-     * @see org.griphyn.common.classes.TCType
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
 
-    public boolean removeByLFN(String namespace, String name,
+    public int removeByLFN(String namespace, String name,
                                          String version, String resourceid,
                                          TCType type) throws Exception {
 
@@ -1077,6 +1085,7 @@ if(!write) return false;
                     while (rst.next()) {
                         count++;
                     }
+                    int lfnRemovedCount = 0;
                     if (count == 0) {
                         //no more pfns are mapped to the same lfn.
                         //It is safe to delete the lfn;
@@ -1089,12 +1098,14 @@ if(!write) return false;
                             mLogger.log(
                                 "No entry for the lfn exists",
                                 LogManager.ERROR_MESSAGE_LEVEL);
+                            lfnRemovedCount =0;
                         }
                         else {
                             mLogger.log(
                                 "Deleted the logical transformation " +
                                 Separator.combine(namespace, name, version),
                                 LogManager.DEBUG_MESSAGE_LEVEL);
+                            lfnRemovedCount = 1;
                         }
                     }
                     else {
@@ -1106,6 +1117,7 @@ if(!write) return false;
                         mLogger.log(
                             "***Wont delete logical transformation***",
                             LogManager.DEBUG_MESSAGE_LEVEL);
+                        lfnRemovedCount =0;
                     }
                     //now that we have handled the lfns lets handle the pfns.
                     for (int i = 0; i < pfnids.length; i++) {
@@ -1144,11 +1156,12 @@ if(!write) return false;
                             mLogger.log(
                                 "***Wont delete physical transformation***",
                                 LogManager.DEBUG_MESSAGE_LEVEL);
+                            lfnRemovedCount =0;
                         }
                     }
                     //hopefully everything went ok so lets commit
                     this.m_dbdriver.commit();
-                    return true;
+                    return lfnRemovedCount;
                 }
                 else {
                     mLogger.log(
@@ -1159,7 +1172,7 @@ if(!write) return false;
                         " on resource " +
                         ( (resourceid == null) ? "ALL" :
                          resourceid) + " exist", LogManager.ERROR_MESSAGE_LEVEL);
-                    return false;
+                    return 0;
                 }
             }
             else {
@@ -1168,14 +1181,14 @@ if(!write) return false;
                     "The logical transformation " +
                     Separator.combine(namespace, name, version) +
                     " does not exist.", LogManager.ERROR_MESSAGE_LEVEL);
-                return false;
+                return 0;
             }
         }
         else {
             mLogger.log(
                 "The logical transformation name cannot be null.",
                 LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
+            throw new RuntimeException("The logical transformation name cannot be null.");
         }
 
     }
@@ -1183,22 +1196,22 @@ if(!write) return false;
     /**
      * Delete all entries in the transformation catalog for pair of logical and physical transformation.
      * @param physicalname String The physical name of the transformation
-     * @param namespace String The namespace assocaited in the logical name of the transformation.
+     * @param namespace String The namespace associated in the logical name of the transformation.
      * @param name String The name of the logical transformation.
      * @param version String The version number of the logical transformation.
      * @param resourceid String The resource on which the transformation is to be deleted.
      *                          If <B>NULL</B> then it searches all the resource id.
      * @param type TCType The type of transformation. If <B>NULL</B> then it search and deletes entries for all types.
      * @throws Exception
-     * @return boolean Returns true if sucess, false if any error occurs.
-     * @see org.griphyn.common.classes.TCType
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
 
-    public boolean removeByPFN(String physicalname,
-                                          String namespace,
-                                          String name, String version,
-                                          String resourceid, TCType type) throws
-        Exception {
+    public int removeByPFN(String physicalname,
+       String namespace,String name, String version,String resourceid, 
+       TCType type) throws Exception {
         long lfnid;
         long[] pfnids;
         if (name != null) {
@@ -1239,6 +1252,7 @@ if(!write) return false;
                         while (rst.next()) {
                             count++;
                         }
+                        int lfnRemovedCount = 0;
                         if (count == 0) {
                             //no more pfns are mapped to the same lfn.
                             //It is safe to delete the lfn;
@@ -1251,12 +1265,14 @@ if(!write) return false;
                                 mLogger.log(
                                     "No entry for the lfn exists",
                                     LogManager.DEBUG_MESSAGE_LEVEL);
+                                lfnRemovedCount =0;
                             }
                             else {
                                 mLogger.log(
                                     "Deleted the logical transformation " +
                                     Separator.combine(namespace, name, version),
                                     LogManager.DEBUG_MESSAGE_LEVEL);
+                                lfnRemovedCount = 1;
                             }
                         }
                         else {
@@ -1269,6 +1285,7 @@ if(!write) return false;
                             mLogger.log(
                                 "***Wont delete logical transformation***",
                                 LogManager.DEBUG_MESSAGE_LEVEL);
+                            lfnRemovedCount =0;
                         }
                         //now that we have handled the lfns lets handle the pfns.
                         for (int i = 0; i < pfnids.length; i++) {
@@ -1313,7 +1330,7 @@ if(!write) return false;
                         }
                         //hopefully everything went ok so lets commit
                         this.m_dbdriver.commit();
-                        return true;
+                        return lfnRemovedCount;
                     }
                     else {
                         mLogger.log(
@@ -1325,7 +1342,7 @@ if(!write) return false;
                             LogManager.ERROR_MESSAGE_LEVEL);
                         mLogger.log("does not exist",
                                     LogManager.ERROR_MESSAGE_LEVEL);
-                        return false;
+                        return 0;
                     }
                 }
                 else {
@@ -1334,37 +1351,39 @@ if(!write) return false;
                         "The logical transformation " +
                         Separator.combine(namespace, name, version) +
                         " does not exist.", LogManager.ERROR_MESSAGE_LEVEL);
-                    return false;
+                    return 0;
                 }
             }
             else {
                 mLogger.log(
                     "The physical transformation cannot be null.",
                     LogManager.ERROR_MESSAGE_LEVEL);
-                return false;
+                throw new RuntimeException("The physical transformation cannot be null.");
             }
         }
         else {
             mLogger.log(
                 "The logical transformation name cannot be null.",
                 LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
+            throw new RuntimeException("The logical transformation name cannot be null.");
         }
     }
 
     /**
      * Deletes entries from the catalog which have a particular system information.
      * @param sysinfo VDSSysInfo The System Information by which you want to delete
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      * @throws Exception
-     * @return boolean Returns true for success, false if any error occurs.
-     * @see org.griphyn.common.classes.VDSSysInfo
      */
-    public boolean removeBySysInfo( SysInfo sysinfo) throws Exception {
+    public int removeBySysInfo( SysInfo sysinfo) throws Exception {
         if (sysinfo == null) {
             mLogger.log(
                 "The system information cannot be null",
                 LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
+            throw new RuntimeException("The system information cannot be null");
         }
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.delete.sysinfo");
@@ -1380,11 +1399,13 @@ if(!write) return false;
                 mLogger.log(
                     "No entries found that could be deleted",
                     LogManager.ERROR_MESSAGE_LEVEL);
-                return false;
+                return 0;
             }
             else {
                 mLogger.log("Deleted " + i + "entry with system info " +
                             sysinfo.toString(), LogManager.DEBUG_MESSAGE_LEVEL);
+                this.m_dbdriver.commit();
+                return i;
             }
         }
         catch (SQLException e) {
@@ -1392,30 +1413,31 @@ if(!write) return false;
                 "Unable to delete entries by SysInfo from TC :" + e.getMessage(),
                 LogManager.ERROR_MESSAGE_LEVEL);
             this.m_dbdriver.rollback();
-            return false;
+            throw new RuntimeException("Unable to delete entries by SysInfo from TC :" + e.getMessage());
         }
-        this.m_dbdriver.commit();
-        return true;
+        
 
     }
 
     /**
-     * Delete a paricular type of transformation, and/or on a particular resource
+     * Delete a particular type of transformation, and/or on a particular resource
      * @param type TCType The type of the transformation
      * @param resourceid String The resource on which the transformation exists.
      *                           If <B>NULL</B> then that type of transformation is deleted from all the resources.
      * @throws Exception
-     * @return boolean Returns true if success, false if any error occurs.
-     * @see org.griphyn.common.classes.TCType
+     * 
+     * @return the number of removed entries.
+     * 
+     * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      */
 
-    public boolean removeByType(TCType type, String resourceid) throws
+    public int removeByType(TCType type, String resourceid) throws
         Exception {
         if (type == null) {
             mLogger.log(
                 "The type of transformation cannot be null",
                 LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
+            throw new RuntimeException("The type of transformation cannot be null");
         }
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.delete.bytype");
@@ -1428,7 +1450,7 @@ if(!write) return false;
                 mLogger.log(
                     "No entries found that could be deleted",
                     LogManager.ERROR_MESSAGE_LEVEL);
-                return false;
+                return 0;
             }
             else {
                 mLogger.log("Deleted " + i +
@@ -1436,6 +1458,8 @@ if(!write) return false;
                             " and on Resource " +
                             ( (resourceid == null) ? "ALL" : resourceid),
                             LogManager.DEBUG_MESSAGE_LEVEL);
+                this.m_dbdriver.commit();
+                return i;
             }
         }
         catch (SQLException e) {
@@ -1443,20 +1467,19 @@ if(!write) return false;
                 "Unable to delete entries by type from TC :" + e.getMessage(),
                 LogManager.ERROR_MESSAGE_LEVEL);
             this.m_dbdriver.rollback();
-            return false;
+            throw new RuntimeException ("Unable to delete entries by type from TC :" + e.getMessage());
         }
-        this.m_dbdriver.commit();
-        return true;
+        
     }
 
     /**
      * Delete all entries on a particular resource from the transformation catalog.
      * @param resourceid String The resource which you want to remove.
      * @throws Exception
-     * @return boolean  Returns true if successm false if any error occurs.
+     * 
+     * @return the number of removed entries.
      */
-
-    public boolean removeBySiteID(String resourceid) throws Exception {
+    public int removeBySiteID(String resourceid) throws Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.delete.byresourceid");
         ps.setString(1, resourceid);
@@ -1466,11 +1489,13 @@ if(!write) return false;
                 mLogger.log(
                     "No entries found that could be deleted",
                     LogManager.ERROR_MESSAGE_LEVEL);
-                return false;
+                return 0;
             }
             else {
                 mLogger.log("Deleted " + i + " resources",
                             LogManager.INFO_MESSAGE_LEVEL);
+                this.m_dbdriver.commit();
+                return i;
             }
         }
         catch (SQLException e) {
@@ -1478,19 +1503,19 @@ if(!write) return false;
                 "Unable to delete Resource from TC :" + e.getMessage(),
                 LogManager.ERROR_MESSAGE_LEVEL);
             this.m_dbdriver.rollback();
-            return false;
+            throw new RuntimeException("Unable to delete Resource from TC :" + e.getMessage());
         }
-        this.m_dbdriver.commit();
-        return true;
+        
     }
 
     /**
      * Deletes the entire transformation catalog. CLEAN............. USE WITH CAUTION.
+     * 
+     * @return the number of removed entries.
+     * 
      * @throws Exception
-     * @return boolean Returns true if delete succeeds, false if any error occurs.
-     */
-
-    public boolean clear() throws Exception {
+     */    
+    public int clear() throws Exception {
         PreparedStatement[] ps = {
             this.m_dbdriver.getPreparedStatement("stmt.delete.alllfnpfnmap"),
             this.m_dbdriver.getPreparedStatement("stmt.delete.alllfnprofile"),
@@ -1499,36 +1524,45 @@ if(!write) return false;
             this.m_dbdriver.getPreparedStatement("stmt.delete.allpfns"),
             this.m_dbdriver.getPreparedStatement("stmt.delete.allsysinfo")
         };
+        int updateCount =0;
         try {
             for (int i = 0; i < ps.length; i++) {
-                ps[i].executeUpdate();
+            	if(i == 3){ // Gets the number of rows updates by stmt.delete.alllfns and stores it in updateCount variable 
+            		updateCount = ps[i].executeUpdate();
+            	}else{
+            		ps[i].executeUpdate();
+            	}
             }
+            this.m_dbdriver.commit();
+            return updateCount;
         }
         catch (SQLException e) {
             mLogger.log(
                 "Unable to delete the entire TC ", e,
                 LogManager.ERROR_MESSAGE_LEVEL);
             this.m_dbdriver.rollback();
-            return false;
+            throw new RuntimeException("Unable to delete the entire TC ", e);
         }
         //if we are here all succeeded and we should commit;
-        this.m_dbdriver.commit();
-        return true;
+        
+        
     }
 
     /**
-     * Delete a list of profiles or all the profiles associated with a pfn on a
-     *  resource and of a type.
+     * Delete a list of profiles or all the profiles associated with a pfn on a 
+     * resource and of a type.
+     * 
      * @param physicalname String The physical name of the transformation.
      * @param type TCType The type of the transformation.
      * @param resourceid String The resource of the transformation.
-     * @param profiles List The list of profiles to be deleted. If <B>NULL</B>
-     * then all profiles for that pfn+resource+type are deleted.
-     * @return boolean Returns true if success, false if any error occurs.
-     * @throws Exception
+     * @param profiles List The list of profiles to be deleted. If <B>NULL</B> then all profiles for that pfn+resource+type are deleted.
+     * 
+     * @return the number of removed entries.
+     * 
      * @see org.griphyn.cPlanner.classes.Profile
+     * @throws Exception
      */
-    public boolean deletePFNProfiles(String physicalname, TCType type,
+    public int deletePFNProfiles(String physicalname, TCType type,
                                       String resourceid, List profiles) throws
         Exception {
         long pfnid;
@@ -1545,11 +1579,13 @@ if(!write) return false;
                         mLogger.log(
                             "No entries found that could be deleted",
                             LogManager.ERROR_MESSAGE_LEVEL);
-                        return false;
+                        return 0;
                     }
                     else {
                         mLogger.log("Deleted " + i + " pfn profiles",
                                     LogManager.INFO_MESSAGE_LEVEL);
+                        this.m_dbdriver.commit();
+                        return i;
                     }
                 }
                 catch (SQLException e) {
@@ -1557,38 +1593,46 @@ if(!write) return false;
                         "Unable to delete pfnprofiles from TC", e,
                         LogManager.ERROR_MESSAGE_LEVEL);
                     this.m_dbdriver.rollback();
-                    return false;
+                    throw new RuntimeException("Unable to delete pfnprofiles from TC" , e);
                 }
             }
             else {
+            	int count =0;
                 for (Iterator i = profiles.iterator(); i.hasNext(); ) {
-                    this.deleteProfile( (Profile) i.next(), pfnid, true);
+                    if(this.deleteProfile( (Profile) i.next(), pfnid, true))
+                    	count++;
                 }
+                this.m_dbdriver.commit();
+                return count;
+                
             }
-            this.m_dbdriver.commit();
-            return true;
         }
         else {
             mLogger.log("The pfn " + physicalname + " of type " +
                         type + " on resource " + resourceid +
                         " does not exist", LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException("The pfn " + physicalname + " of type " +
+                        type + " on resource " + resourceid +
+                        " does not exist");
         }
-        return false;
     }
 
     /**
-     * Delete a list of profiles or all the profiles associated with a logical
-     *  transformation.
+     * Delete a list of profiles or all the profiles associated with a logical 
+     * transformation.
+     * 
      * @param namespace String  The namespace of the logical transformation.
      * @param name String The name of the logical transformation.
      * @param version String The version of the logical transformation.
-     * @param profiles List The List of profiles to be deleted. If <B>NULL</B>
-     * then all profiles for the logical transformation are deleted.
-     * @return boolean Returns true if success, false if any error occurs.
-     * @throws Exception
+     * @param profiles List The List of profiles to be deleted. If <B>NULL</B> 
+     *                 then all profiles for the logical transformation are deleted.
+     * 
+     * @return the number of removed entries.
+     * 
      * @see org.griphyn.cPlanner.classes.Profile
+     * @throws Exception
      */
-    public boolean deleteLFNProfiles(String namespace, String name,
+    public int deleteLFNProfiles(String namespace, String name,
                                       String version, List profiles) throws
         Exception {
         long lfnid;
@@ -1603,11 +1647,13 @@ if(!write) return false;
                         mLogger.log(
                             "No entries found that could be deleted",
                             LogManager.ERROR_MESSAGE_LEVEL);
-                        return false;
+                        return 0;
                     }
                     else {
                         mLogger.log("Deleted " + i + " lfn profiles",
                                     LogManager.INFO_MESSAGE_LEVEL);
+                        this.m_dbdriver.commit();
+                        return i;
                     }
                 }
                 catch (SQLException e) {
@@ -1615,23 +1661,29 @@ if(!write) return false;
                         "Unable to delete lfnprofiles from TC", e,
                         LogManager.ERROR_MESSAGE_LEVEL);
                     this.m_dbdriver.rollback();
-                    return false;
+                    throw new RuntimeException("Unable to delete lfnprofiles from TC" , e );
                 }
             }
             else {
+            	int count =0;
                 for (Iterator i = profiles.iterator(); i.hasNext(); ) {
-                    this.deleteProfile( (Profile) i.next(), lfnid, false);
+                    if(this.deleteProfile( (Profile) i.next(), lfnid, false))
+                    	count++;
                 }
+                this.m_dbdriver.commit();
+                return count;
             }
-            this.m_dbdriver.commit();
-            return true;
+            
+            
         }
         else {
             mLogger.log("Logical transformation " +
                         Separator.combine(namespace, name, version) +
                         " does not exist", LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "Logical transformation " +
+                    Separator.combine(namespace, name, version) +
+                    " does not exist");
         }
-        return false;
     }
 
     
