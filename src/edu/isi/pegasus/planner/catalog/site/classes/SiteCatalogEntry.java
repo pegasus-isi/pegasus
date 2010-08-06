@@ -100,6 +100,9 @@ public class SiteCatalogEntry extends AbstractSiteData{
             //mNMIOSToOldOS.put( "rhas_3", Os.LINUX );
             mNMIOSToOldOS.put( OS.LINUX, Os.LINUX );
             mNMIOSToOldOS.put( OS.WINDOWS, Os.WINDOWS );
+            mNMIOSToOldOS.put( OS.AIX, Os.AIX );
+            mNMIOSToOldOS.put( OS.SUNOS, Os.SUNOS );
+
         }
         return mNMIOSToOldOS;
     }
@@ -140,6 +143,10 @@ public class SiteCatalogEntry extends AbstractSiteData{
         if( mOSToNMIOS == null ){
             mOSToNMIOS = new HashMap();
             mOSToNMIOS.put( Os.LINUX, OS.LINUX );
+            mOSToNMIOS.put( Os.AIX, OS.AIX );
+            mOSToNMIOS.put( Os.SUNOS, OS.SUNOS );
+            mOSToNMIOS.put( Os.WINDOWS, OS.WINDOWS );
+
         }
         return mOSToNMIOS;
     }
