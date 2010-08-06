@@ -3,9 +3,65 @@ $Id$
 ===============================
 Release Notes for PEGASUS 2.4.3
 ===============================
-This is minor release, that fixes some RPM and DEB packaging bugs
+This is minor release, that fixes some RPM and DEB packaging bugs. It
+has improvements to the Data Reuse Algorithm and pegasus-analyzer.
 
-BUGS FIXED
+NEW FEATURES
+--------------
+
+1) pegasus-analyzer has debug-job feature for pure condor environment
+
+   pegasus-analyzer now has an option debug-job that generates a shell
+   script for a failed job and allows users to run it later. This is
+   only valid for pure condor environment where we relying on condor
+   to do the file transfers. 
+   The script will copy all necessary files to a local directory and
+   invoke the job with the necessary command-line options. More
+   details  in JIRA issue PM-92. Two options were added --debug-job,
+   and  --debug-dir, where the first one indicated which job should
+   be  debugged. The second option is used to specify where the user
+   wants to debug this job (default is to create a temp dir).
+
+2) New Implementation of Data Reuse Algorithm
+
+   The data reuse algorithm reduces the workflow on the basis of
+   existing  output files of the workflow found in the Replica
+   Catalog. The algorithm works in two passes.
+
+   In the first pass , we determine all the jobs whose output files
+   exist  in the Replica Catalog. An output file with the transfer
+   flag set to false is treated equivalent to the file existing in the
+   Replica Catalog , if
+
+   the output file is not an input to any of the children of the job X
+
+   In the second pass, we remove the job whose output files exist in
+   the Replica Catalog and try to cascade the deletion upwards to the
+   parent jobs. We start the breadth first traversal of the workflow
+   bottom up. 
+
+   A node is marked for deletion if -
+
+     ( It is already marked for deletion in pass 1
+       OR
+        ( ALL of it's children have been marked for deletion
+       	  AND
+           Node's output files have transfer flags set to false
+      	 )
+     )
+
+
+3)  Workflow with NOOP Job is created when workflow is reduced fully
+
+    In the case where the Data Reuse Algorithm reduces all the jobs in
+    the workflow, a workflow with a single NOOP job is created. 
+
+    This is to ensure that pegasus-run works correctly, and in case of
+    workflows of workflows the empty sub workflows dont trigger an
+    error in the outer level workflow. 
+
+
+Bugs FIXED
 ----------
 
 1) RPMs had mismatched permissions on the jars versus the setup.sh/
@@ -19,6 +75,59 @@ BUGS FIXED
    install locations. This is useful for RPMs and DEBs which already
    have declared dependencies on certain JREs
 
+4) pegasus-status incorrectly reported status of workflow when it
+   starts up.
+
+   pegasus-status incorrectly reported the number of workflows and %
+   done when a workflow of workflows started. This is now fixed both
+   in branch 2.4 and head.
+
+5) NPE while label based clustering
+   
+   The logger object in the label based clusterer was incorrectly
+   instantiated leading to a null pointer exception 
+
+   This is fixed both in branch 2.4 and head
+
+   More details athttps://jira.isi.edu/browse/PM-144
+
+6) Incorrect -w option to kickstart for clustered jobs with Condor
+   file staging. 
+
+   When using condor file transfers and label-based clustering Pegasus
+   generated the -w working directory option and sets it to a
+   generated  path in /tmp. This broke the workflow because condor
+   transfers  all the input files to the condor exec directory. This
+   problem did not get triggered if the workflow was not clustered.
+
+   More details athttps://jira.isi.edu/browse/PM-145
+
+7) Condor stdout and stderr streaming
+
+   Condor streaming is now supported in Condor for both grid and non
+   grid universe jobs. We always put in the streaming keys. They
+   default to false. 
+
+   But can be overridden by properties.
+
+   pegasus.condor.output.stream
+   pegasus.condor.error.stream
+
+8) Bug fix for exploding relative-dir option when using pdax
+
+   There was a bug whereby the relative-dir option constructed for the
+   sub workflows exploded when a user passed a pdax file to
+   pegasus-plan. 
+   
+   Full details athttps://jira.isi.edu/browse/PM-142
+
+9) Specifying SUNOS in old site catalog format
+
+   The 2.4 branch was not translating OS'es correctly. This lead to a
+   NPE if a user specified SUNOS in the old XML site catalog format.
+
+   The conversion functions that convert internally to new format were
+   expanded to support more OS
 
 ===============================
 Release Notes for PEGASUS 2.4.2

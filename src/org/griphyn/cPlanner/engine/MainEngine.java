@@ -18,19 +18,25 @@
 package org.griphyn.cPlanner.engine;
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Vector;
+
+
+import org.griphyn.common.catalog.ReplicaCatalog;
+import org.griphyn.common.catalog.replica.ReplicaFactory;
+
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import java.io.File;
-import java.util.Properties;
-import org.griphyn.common.catalog.ReplicaCatalog;
-import org.griphyn.common.catalog.replica.ReplicaFactory;
 
+import java.io.File;
+
+import java.util.Properties;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.Vector;
 
 /**
  * The central class that calls out to the various other components of Pegasus.
@@ -74,10 +80,7 @@ public class MainEngine
      */
     private Set mExecPools;
 
-    /**
-     * The pool on which all the output data should be transferred.
-     */
-    private String mOutputPool;
+    
 
     /**
      * The bridge to the Replica Catalog.
@@ -93,7 +96,7 @@ public class MainEngine
     /**
      * The handle to the Reduction Engine that performs reduction on the graph.
      */
-    private ReductionEngine mRedEng;
+    private DataReuseEngine mRedEng;
 
     /**
      * The handle to the Transfer Engine that adds the transfer nodes in the
@@ -178,16 +181,15 @@ public class MainEngine
             mPOptions.setExecutionSites(authenticatedSet);
         }
 
-        Vector vDelLeafJobs = new Vector();
         String message = null;
         mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mBag );
 
 
-        mRedEng = new ReductionEngine( mOriginalDag, mBag );
-        mReducedDag = mRedEng.reduceDag( mRCBridge );
-        vDelLeafJobs = mRedEng.getDeletedLeafJobs();
-        mRedEng = null;
-
+        mRedEng = new DataReuseEngine( mOriginalDag, mBag );
+        mReducedDag = mRedEng.reduceWorkflow(mOriginalDag, mRCBridge );
+        //mReducedDag = new ReductionEngine( mOriginalDag, mBag ).reduceDag(mRCBridge);
+        //System.out.print( mReducedDag );
+        
         //unmark arg strings
         //unmarkArgs();
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_SITESELECTION, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
@@ -221,10 +223,14 @@ public class MainEngine
         message = "Grafting transfer nodes in the workflow";
         ReplicaCatalog transientRC  = initializeTransientRC( mReducedDag ) ;
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );       
-        mTransEng = new TransferEngine( mReducedDag, vDelLeafJobs, mBag );
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
+        mTransEng = new TransferEngine( mReducedDag,
+                                        mBag,
+                                        mRedEng.getDeletedJobs(),
+                                        mRedEng.getDeletedLeafJobs());
         mTransEng.addTransferNodes( mRCBridge , transientRC );
         mTransEng = null;
+        mRedEng = null;
         mLogger.logEventCompletion();
         
         //populate the transient RC into PegasusBag

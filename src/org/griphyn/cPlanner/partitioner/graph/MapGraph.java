@@ -328,6 +328,14 @@ public class MapGraph implements Graph{
         return sb.toString();
     }
 
+    /**
+     * Returns a boolean if there are no nodes in the graph.
+     *
+     * @return boolean
+     */
+    public boolean isEmpty(){
+        return this.mStore.isEmpty();
+    }
 
     /**
      * Returns a copy of the object.

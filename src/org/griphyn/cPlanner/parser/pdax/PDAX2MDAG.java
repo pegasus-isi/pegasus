@@ -213,13 +213,7 @@ public class PDAX2MDAG implements Callback {
      * planner at runtime.
      */
     private PlannerOptions mPOptions;
-
-    /**
-     * Helping clone copy of options that is used for creating runtime options
-     * for the different partitions.
-     */
-    private PlannerOptions mClonedPOptions;
-
+    
     /**
      * The path to the properties file that is written out and shared by
      * all partitions in the mega DAG.
@@ -287,7 +281,6 @@ public class PDAX2MDAG implements Callback {
         mProps     = properties;
         mLogger    =  LogManagerFactory.loadSingletonInstance( properties );
         mPOptions  = options;
-        mClonedPOptions  = (options == null)? null : (PlannerOptions)options.clone();
         
         mTCHandle = TransformationFactory.loadInstance( mProps, mLogger );
         
@@ -1130,6 +1123,11 @@ public class PDAX2MDAG implements Callback {
             throw new RuntimeException( "ERROR: While accessing the Transformation Catalog",e);
         }
 
+        PlannerOptions options =  ( mPOptions == null)? null : (PlannerOptions)mPOptions.clone();
+        if( options == null ){
+            throw new RuntimeException( "ERROR: Planner Options passed to setPrescript are null" );
+        }
+
         //construct the prescript path
         StringBuffer script = new StringBuffer();
         if(entry == null){
@@ -1148,11 +1146,11 @@ public class PDAX2MDAG implements Callback {
 
         //the output of the prescript i.e submit files should be created
         //in the directory where the job is being run.
-        mClonedPOptions.setSubmitDirectory( (String)job.condorVariables.get("initialdir"));
+        options.setSubmitDirectory( (String)job.condorVariables.get("initialdir"));
 
 
         //generate the remote working directory for the paritition
-        String submit        = mClonedPOptions.getSubmitDirectory(); // like /tmp/vahi/pegasus/blackdiamond/run0001/00/PID1
+        String submit        = options.getSubmitDirectory(); // like /tmp/vahi/pegasus/blackdiamond/run0001/00/PID1
         String remoteBase    = mPOptions.getRandomDir(); // like vahi/pegasus/blackdiamond/run0001
         String remoteWorkDir = submit.substring( submit.indexOf( remoteBase) ); //gets us vahi/pegasus/blackdiamond/run0001/00/PID1
 
@@ -1164,25 +1162,25 @@ public class PDAX2MDAG implements Callback {
 //                     LogManager.DEBUG_MESSAGE_LEVEL );
 
         //set the base and relative submit dir
-        mClonedPOptions.setBaseSubmitDirectory( mPOptions.getBaseSubmitDirectory() );
-        mClonedPOptions.setRelativeDirectory( remoteWorkDir );
+        options.setBaseSubmitDirectory( mPOptions.getBaseSubmitDirectory() );
+        options.setRelativeDirectory( remoteWorkDir );
 
         //set the basename for the nested dag as the ID of the job.
         //which is actually the basename of the deep lfn job name!!
-        mClonedPOptions.setBasenamePrefix( getBasenamePrefix(job));
+        options.setBasenamePrefix( getBasenamePrefix(job));
 
         //set the flag designating that the planning invocation is part
         //of a deferred planning run
-        mClonedPOptions.setPartOfDeferredRun( true );
+        options.setPartOfDeferredRun( true );
 
         //in case of deferred planning cleanup wont work
         //explicitly turn it off if the file cleanup scope if fullahead
         if( mCleanupScope.equals( PegasusProperties.CLEANUP_SCOPE.fullahead ) ){
-            mClonedPOptions.setCleanup( false );
+            options.setCleanup( false );
         }
 
         //we want monitoring to happen
-        mClonedPOptions.setMonitoring( true );
+        options.setMonitoring( true );
 
         //construct the argument string.
         //add the jvm options and the pegasus options if any
@@ -1191,11 +1189,11 @@ public class PDAX2MDAG implements Callback {
                   append(" -Dpegasus.user.properties=").append( mMDAGPropertiesFile ).
                   append( " -Dpegasus.log.*=").append(log).
                   //add other jvm options that user may have specified
-                  append( mClonedPOptions.toJVMOptions() ).
+                  append( options.toJVMOptions() ).
                   //the dax argument is diff for each partition
                   append(" --dax ").append( daxURL ).
                   //put in all the other options.
-                  append( mClonedPOptions.toOptions());
+                  append( options.toOptions());
 
         //set the path and the arguments to prescript
         job.setPreScript( script.toString(), arguments.toString());

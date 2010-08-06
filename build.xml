@@ -318,6 +318,15 @@
       <fileset dir="man/man1" includes="*.1"/>
     </copy>
   </target>
+  <target name="man-roff-worker" depends="version"
+          description="[internal] Copies roff sources to distribution">
+    <mkdir dir="${dist.man}/man1"/>
+    <copy preservelastmodified="true" todir="${dist.man}/man1">
+      <fileset dir="man/man1" >
+	<include name="s3cmd.1"/>
+	</fileset>
+    </copy>
+  </target>
 
   <target name="man" depends="man-roff,man-ps,man-html,man-txt"
           description="Copies and formats the client tool manpages"/>
@@ -336,7 +345,7 @@
     <echo>Ran chmod on ${dist.dir}/bin</echo>
   </target>
 
-  <target name="dist-worker" depends="version,man-roff,ctools-all"
+  <target name="dist-worker" depends="version,man-roff-worker,ctools-all"
           description="Creates a distribution of only the C/C++ tools">
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.dir}/bin">
@@ -469,6 +478,9 @@
     <copy preservelastmodified="true" todir="${dist.dir}/examples">
       <fileset dir="examples" includes="**/*"/>
     </copy>
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${dist.dir}/examples" includes="**/submit"/>
+    </chmod>
 
     <!-- lib -->
     <antcall target="dist-copy-lib"/>

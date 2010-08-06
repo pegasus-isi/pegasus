@@ -21,7 +21,7 @@ use strict;
 
 use File::Basename; 		# standard module since 5.005
 use File::Spec;			# standard module since 5.005 or 5.6.0
-use Cwd;
+use Cwd qw(abs_path);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use Work::Common;
 use Data::Dumper;
@@ -141,14 +141,17 @@ sub longstatus(;$$) {
 	
     }
     
-    my $total=$statnum[2]+$statnum[4]+$statnum[6]+$statnum[7]+$statnum[8];
+    my $total=$statnum[2]+$statnum[3]+$statnum[4]+$statnum[5]+$statnum[6]+$statnum[7]+$statnum[8];
     my $done=$statnum[2];
-    my $percent=(100*$done)/$total;
+    my $percent=0;
+    if ($done != 0) {
+	$percent=(100*$done)/$total;
+    }
     if($running){
 	print sprintf("WORKFLOW STATUS : %d/%d ( %.0f%% ) RUNNING (condor processing workflow)\n",$done,$total,$percent);
     } else {
 	if ($total == $done){
-	    print sprintf("WORKFLOW STATUS : %d%d ( %.0f%% ) COMPLETED (all jobs finished successfully)\n",$done,$total,$percent);
+	    print sprintf("WORKFLOW STATUS : %d/%d ( %.0f%% ) COMPLETED (all jobs finished successfully)\n",$done,$total,$percent);
 	} else {
 	print sprintf ("WORKFLOW STATUS : %d/%d ( %.0f%% ) FAILED (rescue needs to be submitted)\n",$done,$total,$percent);
 #	    print "WORKFLOW FAILED : $done/$total ( $percent%) DONE\n";
@@ -246,6 +249,12 @@ if(defined $run){
     $dag=$config{dag};
     warn "#Got workflow = $workflow, time =$time from rundir\n" if $main::DEBUG;  
 } 
+
+if ( defined $run ) {
+    # ensure that we don't start with dot                                                                                                           
+    $run = abs_path($run);
+}
+
 
 if ($longstatus) {
     if ( ! defined($run)) {
