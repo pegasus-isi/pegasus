@@ -38,9 +38,9 @@ import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.cPlanner.transfer.Implementation;
-import org.griphyn.cPlanner.transfer.implementation.ImplementationFactory;
-import org.griphyn.cPlanner.transfer.refiner.RefinerFactory;
+import edu.isi.pegasus.planner.transfer.Implementation;
+import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
+import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 
 import edu.isi.pegasus.planner.selector.TransformationSelector;
 

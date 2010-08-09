@@ -50,7 +50,7 @@ import org.xml.sax.InputSource;
 import java.io.StringWriter;
 import java.io.IOException;
 import java.io.Reader;
-import org.griphyn.cPlanner.transfer.Refiner;
+import edu.isi.pegasus.planner.transfer.Refiner;
 import org.xml.sax.InputSource;
 public class PasoaProvenanceClient {
 

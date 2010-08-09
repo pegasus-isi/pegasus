@@ -58,9 +58,9 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 import edu.isi.pegasus.common.util.Separator;
 
-import org.griphyn.cPlanner.transfer.SLS;
+import edu.isi.pegasus.planner.transfer.SLS;
 
-import org.griphyn.cPlanner.transfer.sls.SLSFactory;
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 
 import java.io.File;
 

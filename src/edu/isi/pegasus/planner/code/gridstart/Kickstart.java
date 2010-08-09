@@ -42,9 +42,9 @@ import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 
-import org.griphyn.cPlanner.transfer.SLS;
+import edu.isi.pegasus.planner.transfer.SLS;
 
-import org.griphyn.cPlanner.transfer.sls.SLSFactory;
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 
 import edu.isi.pegasus.common.util.Separator;
 
@@ -438,10 +438,10 @@ public class Kickstart implements GridStart {
             //stdin. We fool the kickstart to pick up the input file from
             //standard stdin by giving the input file name as -
             if (job.logicalName.equals(
-                org.griphyn.cPlanner.transfer.implementation.Transfer.TRANSFORMATION_NAME)
+                edu.isi.pegasus.planner.transfer.implementation.Transfer.TRANSFORMATION_NAME)
                 ||job.logicalName.equals(
-                org.griphyn.cPlanner.transfer.implementation.T2.TRANSFORMATION_NAME)
-                || job.logicalName.equals(org.griphyn.cPlanner.transfer.implementation.Symlink.TRANSFORMATION_NAME )
+                edu.isi.pegasus.planner.transfer.implementation.T2.TRANSFORMATION_NAME)
+                || job.logicalName.equals(edu.isi.pegasus.planner.transfer.implementation.Symlink.TRANSFORMATION_NAME )
 
                 ||job.logicalName.equals(org.griphyn.cPlanner.cluster.aggregator.SeqExec.
                                          COLLAPSE_LOGICAL_NAME)

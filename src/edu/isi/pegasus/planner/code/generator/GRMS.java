@@ -273,9 +273,9 @@ public class GRMS extends Abstract {
             //the input file from standard stdin
             //by giving the input file name as -
             if(job.logicalName.equals(
-                org.griphyn.cPlanner.transfer.implementation.Transfer.TRANSFORMATION_NAME)
+                edu.isi.pegasus.planner.transfer.implementation.Transfer.TRANSFORMATION_NAME)
                 ||job.logicalName.equals(
-                org.griphyn.cPlanner.transfer.implementation.T2.TRANSFORMATION_NAME)
+                edu.isi.pegasus.planner.transfer.implementation.T2.TRANSFORMATION_NAME)
                 ||job.logicalName.equals(org.griphyn.cPlanner.cluster.aggregator.SeqExec.
                                          COLLAPSE_LOGICAL_NAME)
                 ||job.logicalName.equals(org.griphyn.cPlanner.cluster.aggregator.MPIExec.

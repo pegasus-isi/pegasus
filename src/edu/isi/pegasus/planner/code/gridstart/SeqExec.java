@@ -39,8 +39,8 @@ import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.VDS;
 
-import org.griphyn.cPlanner.transfer.sls.SLSFactory;
-import org.griphyn.cPlanner.transfer.SLS;
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -409,7 +409,7 @@ public class SeqExec implements GridStart {
 
         //this approach only works for S3 for time being!
         //do a sanity check
-        if (!(mSLS instanceof org.griphyn.cPlanner.transfer.sls.S3)) {
+        if (!(mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3)) {
             throw new RuntimeException("Second Level Staging with SeqExec for clustered jobs only works with S3");
         }
 

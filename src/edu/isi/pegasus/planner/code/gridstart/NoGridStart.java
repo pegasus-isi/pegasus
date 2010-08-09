@@ -37,8 +37,8 @@ import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.transfer.sls.SLSFactory;
-import org.griphyn.cPlanner.transfer.SLS;
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+import edu.isi.pegasus.planner.transfer.SLS;
 
 
 import org.griphyn.cPlanner.namespace.VDS;
@@ -290,7 +290,7 @@ public class NoGridStart implements GridStart {
                 try {
                     //this approach only works for S3 for time being!
                     //do a sanity check
-                    if (!(mSLS instanceof org.griphyn.cPlanner.transfer.sls.S3)) {
+                    if (!(mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3)) {
                         throw new RuntimeException("Second Level Staging with NoGridStart for clustered jobs only works with S3");
                     }
 
