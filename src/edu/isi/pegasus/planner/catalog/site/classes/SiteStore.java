@@ -285,7 +285,8 @@ public class SiteStore extends AbstractSiteData{
 
     
     /**
-     * Returns an environment variable associated with the site.
+     * Returns an environment variable associated with the site. For local site
+     * it prefers the value retrieved from the environment.
      *
      * @param handle   the site handle / identifier.
      * @param variable the name of the environment variable.
@@ -293,6 +294,16 @@ public class SiteStore extends AbstractSiteData{
      * @return value of the environment variable if found, else null
      */
     public String getEnvironmentVariable( String handle, String variable ){
+
+        if( handle.equals( "local" ) ){
+            //try to retrieve value from environment
+            //for local site.
+            String value = System.getenv( variable );
+            if( value != null ){
+                return value;
+            }
+        }
+
         //sanity check
         if( !this.contains( handle ) ) {
             return null;
