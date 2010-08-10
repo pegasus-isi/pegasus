@@ -87,9 +87,6 @@ public class PegasusProperties {
 
     //transfer constants
 
-    public static final String DEFAULT_TRANSFER_IMPLEMENTATION = "Transfer";
-    
-    public static final String DEFAULT_SETUP_TRANSFER_IMPLEMENTATION = "GUC";
 
     public static final String DEFAULT_TRANSFER_REFINER = "Default";
 
@@ -935,20 +932,56 @@ public class PegasusProperties {
      *
      * @return the transfer implementation,
      *         else the one specified by "pegasus.transfer.*.impl",
-     *         else the DEFAULT_TRANSFER_IMPLEMENTATION.
      */
-    public String getTransferImplementation(String property){
-        String value = mProps.getProperty(property,
-                                          getDefaultTransferImplementation());
+    public String getTransferImplementation( String property  ){
+        return mProps.getProperty( property,
+                                           getDefaultTransferImplementation());
 
-        String dflt = property.equals( "pegasus.transfer.setup.impl" ) ?
-                            DEFAULT_SETUP_TRANSFER_IMPLEMENTATION:
-                            DEFAULT_TRANSFER_IMPLEMENTATION ;
-                
-        return (value == null)?
-               dflt :
-               value;
     }
+
+    /**
+      * Returns the default list of third party sites.
+      *
+      * Referred to by the "pegasus.transfer.*.thirdparty.sites" property.
+      *
+      * @return the value specified in the properties file, else
+      *         null.
+      */
+     private String getDefaultThirdPartySites(){
+         return mProps.getProperty("pegasus.transfer.*.thirdparty.sites");
+     }
+
+     /**
+      * Returns the default transfer implementation to be picked up for
+      * constructing transfer jobs.
+      *
+      * Referred to by the "pegasus.transfer.*.impl" property.
+      *
+      * @return the value specified in the properties file, else
+      *         null.
+      */
+     private String getDefaultTransferImplementation(){
+         return mProps.getProperty("pegasus.transfer.*.impl");
+     }
+
+     /**
+      * Returns the default priority for the transfer jobs if specified in
+      * the properties file.
+      *
+      * @return the value specified in the properties file, else null if
+      *         non integer value or no value specified.
+      */
+     private String getDefaultTransferPriority(){
+         String prop = mProps.getProperty( this.ALL_TRANSFER_PRIORITY_PROPERTY);
+         int val = -1;
+
+         try {
+             val = Integer.parseInt( prop );
+         } catch ( Exception e ) {
+             return null;
+         }
+         return  Integer.toString( val );
+     }
 
     /**
      * Returns the base source URL where pointing to the directory where the
@@ -2424,49 +2457,7 @@ public class PegasusProperties {
 //     }
 
 
-     /**
-      * Returns the default list of third party sites.
-      *
-      * Referred to by the "pegasus.transfer.*.thirdparty.sites" property.
-      *
-      * @return the value specified in the properties file, else
-      *         null.
-      */
-     private String getDefaultThirdPartySites(){
-         return mProps.getProperty("pegasus.transfer.*.thirdparty.sites");
-     }
-
-     /**
-      * Returns the default transfer implementation to be picked up for
-      * constructing transfer jobs.
-      *
-      * Referred to by the "pegasus.transfer.*.impl" property.
-      *
-      * @return the value specified in the properties file, else
-      *         null.
-      */
-     private String getDefaultTransferImplementation(){
-         return mProps.getProperty("pegasus.transfer.*.impl");
-     }
-
-     /**
-      * Returns the default priority for the transfer jobs if specified in
-      * the properties file.
-      *
-      * @return the value specified in the properties file, else null if
-      *         non integer value or no value specified.
-      */
-     private String getDefaultTransferPriority(){
-         String prop = mProps.getProperty( this.ALL_TRANSFER_PRIORITY_PROPERTY);
-         int val = -1;
-
-         try {
-             val = Integer.parseInt( prop );
-         } catch ( Exception e ) {
-             return null;
-         }
-         return  Integer.toString( val );
-     }
+     
 
 
      /**

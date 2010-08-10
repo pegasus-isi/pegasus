@@ -42,6 +42,7 @@ import java.io.FileWriter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import org.griphyn.cPlanner.classes.Profile;
 
 
 /**
@@ -324,7 +325,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @return List of environment variables, else null in case where the
      *         required environment variables could not be found.
      */
-    protected abstract List getEnvironmentVariables( String site );
+    protected abstract List<Profile> getEnvironmentVariables( String site );
 
 
     /**

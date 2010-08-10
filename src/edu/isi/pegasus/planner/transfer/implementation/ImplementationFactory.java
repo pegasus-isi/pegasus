@@ -41,6 +41,11 @@ public  class ImplementationFactory {
     public static final String DEFAULT_PACKAGE_NAME =
         "edu.isi.pegasus.planner.transfer.implementation";
 
+
+    public static final String DEFAULT_TRANSFER_IMPLEMENTATION = "Transfer3";
+
+    public static final String DEFAULT_SETUP_TRANSFER_IMPLEMENTATION = "GUC";
+
     /**
      * The constant designating the implementation be loaded for stage in jobs.
      */
@@ -85,8 +90,18 @@ public  class ImplementationFactory {
                                                 int type)
         throws TransferImplementationFactoryException{
 
+        String key = getPropertyKey(type);
+        String implementingClass = bag.getPegasusProperties().getTransferImplementation( key );
 
-        return loadInstance( bag.getPegasusProperties().getTransferImplementation(getProperty(type)),
+        if( implementingClass == null ){
+            //User did not define anything in the properties file.
+            implementingClass = ( type == ImplementationFactory.TYPE_SETUP  ) ?
+                            DEFAULT_SETUP_TRANSFER_IMPLEMENTATION:
+                            DEFAULT_TRANSFER_IMPLEMENTATION ;
+
+        }
+
+        return loadInstance( implementingClass,
                              bag );
     }
 
@@ -105,12 +120,14 @@ public  class ImplementationFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static  Implementation loadInstance( PegasusBag bag )
+    /*public static  Implementation loadInstance( PegasusBag bag )
         throws TransferImplementationFactoryException{
 
         return loadInstance( bag.getPegasusProperties().getTransferImplementation(),
                              bag );
-    }
+    }*/
+
+
 
 
     /**
@@ -119,7 +136,9 @@ public  class ImplementationFactory {
      * in the DEFAULT_PACKAGE. The properties object passed should not be null.
      *
      * @param className  the name of the class that implements the mode.It can or
-     *                   cannot be with the package name.
+     *                   cannot be with the package name. Can be null to get
+     *                   the factory to load the default implementation
+     *
      * @param bag   the bag of initialization objects.
      *
      * @return the instance of the class implementing this interface.
@@ -172,7 +191,7 @@ public  class ImplementationFactory {
      * @return the name of the property
      * @throws IllegalArgumentException
      */
-    private static String getProperty(int type)
+    private static String getPropertyKey(int type)
         throws IllegalArgumentException{
         String property;
         if(type == TYPE_STAGE_IN){
