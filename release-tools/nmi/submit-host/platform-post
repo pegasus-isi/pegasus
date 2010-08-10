@@ -2,8 +2,6 @@
 
 set -e
 
-/usr/bin/env
-
 if [ "x$_NMI_STEP_FAILED" != "x" ]; then
     echo "Previous step failed, exiting\n" >&2
     exit 1
@@ -21,5 +19,7 @@ echo "Files in result set:"
 find . -type f -exec ls -l -h {} \;
 
 # upload to pegasus.isi.edu
-scp -r * nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/nightly/
+scp -r * nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/nightly/ 2>&1
+
+echo "Results uploaded!"
 
