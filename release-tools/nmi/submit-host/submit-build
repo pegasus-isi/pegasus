@@ -92,6 +92,5 @@ method     = svn
 url        = https://pegasus.isi.edu/svn/pegasus/$VERSION pegasus
 EOF
 
-nmi_submit cmdfile
-
+nmi_submit --must-match --notify-fail-only  cmdfile
 
