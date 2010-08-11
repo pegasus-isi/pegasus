@@ -1068,6 +1068,8 @@ if(!write) return false;
                             mLogger.log(
                                 "No entries found in the lfnpfnmap that could be deleted.",
                                 LogManager.ERROR_MESSAGE_LEVEL);
+                            this.m_dbdriver.rollback();
+                            throw new RuntimeException("Invalid state!. No entries found in the lfnpfnmap that could be deleted.");
                         }
                         else {
                             mLogger.log("Deleted " + rs +
@@ -1085,7 +1087,7 @@ if(!write) return false;
                     while (rst.next()) {
                         count++;
                     }
-                    int lfnRemovedCount = 0;
+                    int tcEntriesRmvdCount = pfnids.length;
                     if (count == 0) {
                         //no more pfns are mapped to the same lfn.
                         //It is safe to delete the lfn;
@@ -1098,14 +1100,14 @@ if(!write) return false;
                             mLogger.log(
                                 "No entry for the lfn exists",
                                 LogManager.ERROR_MESSAGE_LEVEL);
-                            lfnRemovedCount =0;
+                            this.m_dbdriver.rollback();
+                            throw new RuntimeException("Invalid state!. No entry for the lfn exists");
                         }
                         else {
                             mLogger.log(
                                 "Deleted the logical transformation " +
                                 Separator.combine(namespace, name, version),
                                 LogManager.DEBUG_MESSAGE_LEVEL);
-                            lfnRemovedCount = 1;
                         }
                     }
                     else {
@@ -1117,7 +1119,6 @@ if(!write) return false;
                         mLogger.log(
                             "***Wont delete logical transformation***",
                             LogManager.DEBUG_MESSAGE_LEVEL);
-                        lfnRemovedCount =0;
                     }
                     //now that we have handled the lfns lets handle the pfns.
                     for (int i = 0; i < pfnids.length; i++) {
@@ -1141,6 +1142,8 @@ if(!write) return false;
                                 mLogger.log(
                                     "No entry for the pfn exists",
                                     LogManager.ERROR_MESSAGE_LEVEL);
+                                this.m_dbdriver.rollback();
+                                throw new RuntimeException("Invalid state!. No entry for the pfn exists");
                             }
                             else {
                                 mLogger.log(
@@ -1156,12 +1159,11 @@ if(!write) return false;
                             mLogger.log(
                                 "***Wont delete physical transformation***",
                                 LogManager.DEBUG_MESSAGE_LEVEL);
-                            lfnRemovedCount =0;
                         }
                     }
                     //hopefully everything went ok so lets commit
                     this.m_dbdriver.commit();
-                    return lfnRemovedCount;
+                    return tcEntriesRmvdCount;
                 }
                 else {
                     mLogger.log(
@@ -1235,6 +1237,9 @@ if(!write) return false;
                                 mLogger.log(
                                     "No entries found in the lfnpfnmap that could be deleted.",
                                     LogManager.ERROR_MESSAGE_LEVEL);
+                                this.m_dbdriver.rollback();
+                                throw new RuntimeException("Invalid state!. No entries found in the lfnpfnmap that could be deleted.");
+                                
                             }
                             else {
                                 mLogger.log("Deleted " + rs +
@@ -1252,7 +1257,7 @@ if(!write) return false;
                         while (rst.next()) {
                             count++;
                         }
-                        int lfnRemovedCount = 0;
+                        int tcEntriesRmvdCount = pfnids.length;
                         if (count == 0) {
                             //no more pfns are mapped to the same lfn.
                             //It is safe to delete the lfn;
@@ -1265,14 +1270,14 @@ if(!write) return false;
                                 mLogger.log(
                                     "No entry for the lfn exists",
                                     LogManager.DEBUG_MESSAGE_LEVEL);
-                                lfnRemovedCount =0;
+                                this.m_dbdriver.rollback();
+                                throw new RuntimeException("Invalid state!. No entry for the lfn exists");
                             }
                             else {
                                 mLogger.log(
                                     "Deleted the logical transformation " +
                                     Separator.combine(namespace, name, version),
                                     LogManager.DEBUG_MESSAGE_LEVEL);
-                                lfnRemovedCount = 1;
                             }
                         }
                         else {
@@ -1285,7 +1290,6 @@ if(!write) return false;
                             mLogger.log(
                                 "***Wont delete logical transformation***",
                                 LogManager.DEBUG_MESSAGE_LEVEL);
-                            lfnRemovedCount =0;
                         }
                         //now that we have handled the lfns lets handle the pfns.
                         for (int i = 0; i < pfnids.length; i++) {
@@ -1309,6 +1313,8 @@ if(!write) return false;
                                     mLogger.log(
                                         "No entry for the pfn exists",
                                         LogManager.DEBUG_MESSAGE_LEVEL);
+                                    this.m_dbdriver.rollback();
+                                    throw new RuntimeException("Invalid state!. No entry for the pfn exists");
                                 }
                                 else {
                                     mLogger.log(
@@ -1330,7 +1336,7 @@ if(!write) return false;
                         }
                         //hopefully everything went ok so lets commit
                         this.m_dbdriver.commit();
-                        return lfnRemovedCount;
+                        return tcEntriesRmvdCount;
                     }
                     else {
                         mLogger.log(
