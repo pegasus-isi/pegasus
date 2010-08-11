@@ -60,12 +60,12 @@ public class ADAG extends DAX implements Cloneable
    * The "not-so-official" location URL of the DAX schema definition.
    */
   public static final String SCHEMA_LOCATION =
-    "http://pegasus.isi.edu/schema/dax-2.1.xsd";
+    "http://pegasus.isi.edu/schema/dax-3.2.xsd";
 
   /**
    * The version to report.
    */
-  public static final String SCHEMA_VERSION = "2.1";
+  public static final String SCHEMA_VERSION = "3.2";
 
   /**
    * list of all filenames in terms of Filename

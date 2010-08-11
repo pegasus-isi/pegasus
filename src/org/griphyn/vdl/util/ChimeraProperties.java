@@ -43,7 +43,7 @@ public class ChimeraProperties
     "http://www.griphyn.org/chimera/vdl-1.24.xsd";
 
   public static final String DAX_SCHEMA_LOCATION =
-    "http://pegasus.isi.edu/schema/dax-4.0.xsd";
+    "http://pegasus.isi.edu/schema/dax-3.2.xsd";
 
   public static final String IVR_SCHEMA_LOCATION =
     "http://pegasus.isi.edu/schema/iv-2.1.xsd";

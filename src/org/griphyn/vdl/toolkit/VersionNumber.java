@@ -127,7 +127,7 @@ linefeed +
 	  internal  = v.determineBuilt() + " " + v.determinePlatform();
 	  if ( ! quiet ) {
 	    System.out.println( "Compiled into PEGASUS: " + internal );
-	    System.out.println( "Provided by inst.: " + installed );
+	    System.out.println( "Provided by install. : " + installed );
 	  }
 
 	  if ( v.matches() ) {

@@ -76,13 +76,13 @@ public class DaxParser extends Parser {
      * The "not-so-official" location URL of the DAX schema definition.
      */
     public static final String SCHEMA_LOCATION =
-                                 "http://pegasus.isi.edu/schema/dax-3.0.xsd";
+      "http://pegasus.isi.edu/schema/dax-3.2.xsd";
 
     /**
      * URI namespace
      */
     public static final String SCHEMA_NAMESPACE =
-                                           "http://pegasus.isi.edu/schema/DAX";
+      "http://pegasus.isi.edu/schema/DAX";
 
 
 
