@@ -522,6 +522,9 @@ public class TCConverter
     					mLogger.log("Failed connection with the database " + e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
     					throw new RuntimeException("Connection Failed " + mDatabaseName);
     				}
+        		}else{
+        			mLogger.log( "Unable to detect database name in the URL" , LogManager.ERROR_MESSAGE_LEVEL );
+					throw new RuntimeException("Unable to detect database name in the URL" + mDatabaseURL);
         		}
         	}
     	}
