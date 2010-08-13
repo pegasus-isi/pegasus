@@ -292,6 +292,8 @@ sub gen_data($$$\%) {
     my $p = shift;
     die unless ref $p eq 'HASH';
 
+    warn "# Ploticus Data File generated is $dfn\n"  unless !$nounlink;
+
     # try auto-guess x scale
     my ($xstubs,$xtics,$width);
     my $diff = $main::max - $main::min;
@@ -621,6 +623,8 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 		    printf $dfh " %*d", $dsize, $kss;
 		    printf $dfh " %*d", $dsize, $ksf;
 		    printf $dfh " %s", defined($main::color{$txn})?$main::color{$txn}:$main::color{"unknown"};
+		    #print the jobid also in the end. useful for postmortem analysis
+		    printf $dfh " %s", $jobid;
 		} else {
 		    warn "Warning: kickstart duration out of range\n";		    
 		    printf $dfh " %*d %*d", $dsize, $dpo, $dsize, $dpo;
@@ -669,6 +673,8 @@ for ( my $j=0; $j < @keylist; ++$j ) {
 		    my $txn = $1;
 		    #print "transformation name is $txn \n";
 		    printf $dfh " %s", defined($main::color{$txn})?$main::color{$txn}:$main::color{"unknown"};
+		    #print the jobid also in the end. useful for postmortem analysis
+		    printf $dfh " %s", $jobid;
 		}
 
 	    }
