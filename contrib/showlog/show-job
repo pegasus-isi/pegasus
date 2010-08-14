@@ -38,9 +38,11 @@ my $adjustment = 0;		# time zone adjustment (@#~! Condor)
 my $nounlink = 0;		# remove temporary files later
 my $color_fn ; # the path to the file containing color scheme for jobs
 my $user_title; # the user provided title to be applied to the graph
+my $show_jobnames; #whether to display jobnames on the right y axis
 GetOptions( 'help|h' => \&usage, 
 	    'version|V' => sub { print "$main::version\n"; exit(0); },
 	    "keep|k!" => \$nounlink,
+	    "show-jobnames|s!" => \$show_jobnames,
 	    "adjust|a=i" => \$adjustment,
 	    "color-file|c=s" => \$color_fn,
 	    "title|t=s" => \$user_title );
@@ -482,6 +484,8 @@ END
     ;
     }
 
+   
+
     # deal with failures here (optional output)
     if ( %main::fail > 0 ) {
 	print OUT "#proc getdata\n";
@@ -526,11 +530,49 @@ END
 	print OUT "  format: multiline\n";
 	print OUT "  location: max-0.5 max\n\n";
     } else {
+	#this is when we are creating graph sorted by start time
 	print OUT "#proc legend\n";
 	print OUT "  format: multiline\n";
 # change by Karan. Want in lower right always.
 #	print OUT "  location: min+0.5 max\n\n";
 	print OUT "  location: max-1 min+3\n\n";
+
+	if (defined $show_jobnames ){
+	    #generate right hand y axis that lists the jobnames
+	    #using the proc categories
+	    print OUT << "END";
+#proc categories
+  axis: y
+  comparemethod: exact
+  categories:
+END
+    ;
+
+	    #print out the names for categories in descending order accd
+	    #to start time of the jobs i.e descending numeric sort on value
+	    my %phash = %$p;
+	    foreach my $key (sort { $phash{$b} <=> $phash{$a} } keys %phash) {
+		printf OUT "      $key\n";
+	    }
+	    print OUT << "END";
+
+#proc areadef
+  rectangle: 0 0 $width $height
+  xautorange: datafields=3,5,10,12
+  yautorange: categories
+  frame: width=0.5 color=gray(0.3)
+  
+#proc yaxis
+  tics: yes
+  stubs: usecategories
+  minorticinc: 1
+  grid: color=gray(0.8)
+  location: max
+  stubdetails: adjust=2.0,0 color=redorange
+
+END
+    ;
+	}#end of if defined show_jobnames
     }
 
     close OUT;
@@ -562,12 +604,21 @@ warn( "# min=$main::min @{[unix2iso($main::min)]}\n",
       "# max=$main::max @{[unix2iso($main::max)]}\n", 
       "# diff=", $main::max-$main::min, "\n" );
 my @keylist = sort keys %job;	# sort by jobid -- Euryale only?
-my $count = 0;
+my $count = 1;
 my %keylist = map { $_ => $count++ } @keylist;
-$count = 0;
+$count = 1;
 my %start = map { $_ => $count++ }
             sort { $main::order{$a} <=> $main::order{$b} } @keylist;
 #            sort { $job{$a}[0] <=> $job{$b}[0] } @keylist;
+
+
+foreach my $key (sort { $start{$b} <=> $start{$a} } keys %start) {
+    print "desc $key -> $start{$key}\n";
+}
+
+#foreach my $key ( keys %start){
+#    print "$key -> $start{$key}\n";
+#}
 
 my $jsize = length( sprintf( "%d", $#keylist ) );
 my $diff = $main::max - $main::min;
