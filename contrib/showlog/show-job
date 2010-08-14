@@ -612,14 +612,6 @@ my %start = map { $_ => $count++ }
 #            sort { $job{$a}[0] <=> $job{$b}[0] } @keylist;
 
 
-foreach my $key (sort { $start{$b} <=> $start{$a} } keys %start) {
-    print "desc $key -> $start{$key}\n";
-}
-
-#foreach my $key ( keys %start){
-#    print "$key -> $start{$key}\n";
-#}
-
 my $jsize = length( sprintf( "%d", $#keylist ) );
 my $diff = $main::max - $main::min;
 $dpo = $diff + 1;
