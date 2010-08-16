@@ -112,6 +112,10 @@ prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
 
+# delay errors to allow all transfers to be tried before exiting
+delays_errors = False
+delay_exit_code = 0
+
 # this is the map of what tool to use for a given protocol pair (src, dest)
 tool_map = {}
 tool_map[('file'  , 'file'  )] = 'cp'
@@ -172,10 +176,11 @@ def alarm_handler(signum, frame):
     raise Alarm
 
 
-def myexec(cmd_line, timeout_secs):
+def myexec(cmd_line, timeout_secs, delay_err):
     """
     executes shell commands using with timeouts
     """
+    global delay_exit_code
     logger.info("Executing: " + cmd_line)
     sys.stdout.flush()
 
@@ -191,7 +196,11 @@ def myexec(cmd_line, timeout_secs):
         raise RuntimeError("Command '%s' timed out after %s seconds" % (cmd_line, timeout_secs))
     rc = p.returncode
     if rc != 0:
-        raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, rc))
+        if delay_err:
+            logger.warning("Command '%s' failed with error code %s. Continuing anyways due to --delay-errors." % (cmd_line, rc))
+            delay_exit_code = 3
+        else:
+            raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, rc))
 
 
 def backticks(cmd_line):
@@ -273,7 +282,7 @@ def check_env_and_tools():
     check_tool("uberftp", "-version", "([0-9]+\.[0-9]+)")
     check_tool("wget", "--version", "([0-9]+\.[0-9]+)")
     check_tool("lcg-cp", "--version", "lcg_util-([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+)")
-    check_tool("s3cmd", "--version", "([0-9]+\.[0-9]+\.[0-9]+)")
+    #check_tool("s3cmd", "--version", "([0-9]+\.[0-9]+\.[0-9]+)")
 
 
 def prepare_local_dir(path):
@@ -291,7 +300,7 @@ def cp():
     for i, url_pair in enumerate(cp_list): 
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
         cmd = "/bin/cp %s %s" % (url_pair.src_path, url_pair.dst_path)
-        myexec(cmd, 1*60*60)
+        myexec(cmd, 1*60*60, delay_errors)
 
 
 def scp():
@@ -307,7 +316,7 @@ def scp():
         else:
             cmd += " " + url_pair.src_path
             cmd += " " + url_pair.dst_host + ":" + url_pair.dst_path
-        myexec(cmd, 1*60*60)
+        myexec(cmd, 1*60*60, delay_errors)
 
 
 def webget():
@@ -324,7 +333,7 @@ def webget():
         else:
             cmd += " -q"
         cmd += " --no-check-certificate -O " + url_pair.dst_path + " " + url_pair.src_url()
-        myexec(cmd, 1*60*60)
+        myexec(cmd, 1*60*60, delay_errors)
 
 
 def gsiftp_is_similar(a, b):
@@ -393,10 +402,6 @@ def gsiftp():
        
         # default tcp buffer size
         cmd += " -tcp-bs 10000000"
-
-        # -fast only for Globus 4 and above
-        if tool_info['globus-version']['version_major'] >= 4:
-            cmd += " -fast"
         
         # restart is broken in 4.0.0 and 4.0.1 - see bug#3919
         if tool_info['globus-version']['version_major'] >= 4 \
@@ -408,12 +413,16 @@ def gsiftp():
         # Only do third party transfers for gsiftp->gsiftp. For other combinations, fall
         # back to settings which will for well over for example NAT
         if third_party:
-            cmd += " -parallel 8"
+            cmd += " -parallel 4"
+            # -fast only for Globus 4 and above
+            if tool_info['globus-version']['version_major'] >= 4:
+                cmd += " -fast"
         else:
             cmd += " -no-third-party-transfers -no-data-channel-authentication"
+
         cmd += " -f " + tmp_name
         try:
-            myexec(cmd, 6*60*60)
+            myexec(cmd, 6*60*60, delay_errors)
         except Exception, err:
             # in case of failure, make sure we clean up
             os.unlink(tmp_name)
@@ -431,7 +440,7 @@ def srm():
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
         cmd = "lcg-cp -D srmv2 -vb -b -n 4 %s %s" % (url_pair.src_url(), url_pair.dst_url())
-        myexec(cmd, 6*60*60)
+        myexec(cmd, 6*60*60, delay_errors)
 
 
 def myexit(rc):
@@ -455,12 +464,18 @@ prog_usage = "usage: %s [options]" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
 parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
         help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
+parser.add_option("-f", "--file", action = "store", dest = "file",
+        help = "File containing URL pairs to be transferred. If not given, list is read from stdin.")
+parser.add_option("-d", "--delay-errors", action = "store_true", dest = "delay_errors",
+        default = False,
+        help = "Continue with transfers even after one fails.")
 
 # Parse command line options
 (options, args) = parser.parse_args()
 if options.log_level == None:
     options.log_level = "info"
 setup_logger(options.log_level)
+delay_errors = options.delay_errors
 
 logger.debug("Checking environment and tools")
 try:
@@ -469,12 +484,23 @@ except Exception, err:
     logger.critical(err)
     myexit(1)
 
-logger.info("Reading URL pairs from stdin")
+# stdin or file input?
+if options.file == None:
+    logger.info("Reading URL pairs from stdin")
+    input_file = sys.stdin
+else:
+    logger.info("Reading URL pairs from %s" % (options.file))
+    try:
+        input_file = open(options.file, 'r')
+    except Exception, err:
+        logger.critical('Error reading url pair list: %s' % (err))
+        myexit(1)
+
 line_nr = 0
 pair_nr = 0
 url_first = True
 try:
-    for line in sys.stdin.readlines():
+    for line in input_file.readlines():
         line_nr += 1
         if line[0] != '#':
             line = line.rstrip('\n')
@@ -528,6 +554,9 @@ except RuntimeError, err:
     logger.critical(err)
     myexit(1)
 
+if delay_errors and delay_exit_code != 0:
+    logger.critical("Some transfers failed! See above.")
+    myexit(delay_exit_code)
 
 logger.info("All transfers completed successfully.")
 
