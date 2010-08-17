@@ -46,7 +46,7 @@ public class SLSFactory {
     /**
      * The name of the class implementing the condor code generator.
      */
-    public static final String DEFAULT_SLS_IMPL_CLASS  =  "Transfer";
+    public static final String DEFAULT_SLS_IMPL_CLASS  =  "Transfer3";
 
 
     /**
