@@ -41,7 +41,7 @@ public class SLSFactory {
      * reside.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-                                          "org.griphyn.cPlanner.transfer.sls";
+                                          "edu.isi.pegasus.planner.transfer.sls";
 
     /**
      * The name of the class implementing the condor code generator.
