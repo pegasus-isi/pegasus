@@ -465,6 +465,12 @@ public class SUBDAXGenerator{
 
         //always runs on the submit host
         job.setSiteHandle("local");
+        
+        //we want the DAG job to inherit the dagman profile keys
+        //cannot inherit condor and pegasus profiles, as 
+        //they may get the dag job to run incorrectly 
+        //example, pegasus style keys if specified for site local
+        job.dagmanVariables.merge( subdaxJob.dagmanVariables );
 
         //set the partition id only as the unique id
         //for the time being.
