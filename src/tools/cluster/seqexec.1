@@ -178,6 +178,20 @@ taken to atomically append records to the log file, in case
 concurrent instances of
 .B seqexec
 are running, broken Linux NFS may still garble some content. 
+.TP
+.B SEQEXEC_SETUP
+If this variable is set, and contains a single fully-qualified path
+to an executable and arguments, this executable will be run before 
+any jobs are started. The exit code of this setup job will have no
+effect upon the main job sequence. 
+.TP
+.B SEQEXEC_CLEANUP
+If this variable is set, and contains a single fully-qualified path
+to an executable and arguments, this executable will be before 
+.B seqexec
+quits. Failure of any previous job will have no effect on the ability 
+to run this job. The exit code of the cleanup job will have no effect 
+on the overall success or failure state. 
 .SH "AUTHORS"
 Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
 .br

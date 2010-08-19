@@ -36,6 +36,7 @@ static const char* RCS_ID =
 "$Id$";
 
 #define MAXSTR 4096
+#define USE_SEQEXEC_PARSER 1
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -566,7 +567,8 @@ mytrylock( int fd )
 static
 ssize_t
 report( time_t start, double duration,
-	int status, char* argv[], struct rusage* use )
+	int status, char* argv[], struct rusage* use, 
+	const char* special )
 {
   static unsigned long counter = 0;
   int save, locked;
@@ -583,6 +585,11 @@ report( time_t start, double duration,
     /* report of seqexec itself */
     snprintf( msg, size, "%s %s %lu 0/0 START", 
 	      isodate(start,date,sizeof(date)), identifier, counter++ );
+  } else if ( special != NULL ) {
+    /* report from setup/cleanup invocations */
+    snprintf( msg, size, "%s %s %s %d/%d %.3f",
+	      isodate(start,date,sizeof(date)), identifier, special,
+	      (status >> 8), (status & 127), duration );
   } else {
     /* report from child invocations */
     snprintf( msg, size, "%s %s %lu %d/%d %.3f",
@@ -637,7 +644,7 @@ report( time_t start, double duration,
 
 static 
 int
-mysystem( char* argv[], char* envp[] )
+mysystem( char* argv[], char* envp[], const char* special )
 {
   char date[32];
   struct rusage usage;
@@ -718,11 +725,12 @@ mysystem( char* argv[], char* envp[] )
   diff = now(&then) - start;
   if ( debug > 1 ) {
     printf( "<job app=\"%s\" start=\"%s\" duration=\"%.3f\" status=\"%d\"/>\n",
-	    argv[0], isodate(when,date,sizeof(date)), diff, status );
+	    special ? special : argv[0], 
+	    isodate(when,date,sizeof(date)), diff, status );
   }
 
   /* progress report finish */
-  if ( progress != -1 ) report( when, diff, status, argv, &usage );
+  if ( progress != -1 ) report( when, diff, status, argv, &usage, special );
 
   errno = saverr;
   return status;
@@ -754,7 +762,29 @@ main( int argc, char* argv[], char* envp[] )
 
   /* progress report finish */
   identifier = create_identifier();
-  if ( progress != -1 ) report( time(NULL), 0.0, -1, argv, NULL );
+  if ( progress != -1 ) report( time(NULL), 0.0, -1, argv, NULL, NULL );
+
+  /* NEW: unconditionally run a setup job */
+  if ( (cmd = getenv("SEQEXEC_SETUP")) != NULL ) { 
+#ifdef USE_SEQEXEC_PARSER
+    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
+      status = mysystem( appv, envp, "setup" ); 
+      if ( status || debug )
+	showerr( "%s: setup returned %d/%d\n", application,
+		 (status >> 8), (status & 127) ); 
+      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
+      free((void*) appv); 
+    } else {
+      /* unparsable cleanup argument string */
+      showerr( "%s: unparsable setup string, ignoring\n", application ); 
+    }
+#else
+    status = system( cmd ); 
+    if ( status || debug )
+      showerr( "%s: setup returned %d/%d\n", application,
+	       (status >> 8), (status & 127) ); 
+#endif
+  }
 
   /* Read the commands and call each sequentially */
   while ( fgets(line,sizeof(line),stdin) != (char*) NULL ) {
@@ -797,7 +827,7 @@ main( int argc, char* argv[], char* envp[] )
     /* and run it */
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       total++;
-      if ( (status = mysystem( appv, envp )) ) failure++;
+      if ( (status = mysystem( appv, envp, NULL )) ) failure++;
       /* free resource -- we must free argv[] elements */
       for ( len=0; len<appc; len++ ) free((void*) appv[len]);
       free((void*) appv);
@@ -807,6 +837,28 @@ main( int argc, char* argv[], char* envp[] )
 
     /* fail hard mode, if requested */
     if ( fail_hard && status && isafailure(status) ) break;
+  }
+
+  /* NEW: unconditionally run a clean-up job */
+  if ( (cmd = getenv("SEQEXEC_CLEANUP")) != NULL ) { 
+#ifdef USE_SEQEXEC_PARSER
+    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
+      status = mysystem( appv, envp, "cleanup" ); 
+      if ( status || debug )
+	showerr( "%s: cleanup returned %d/%d\n", application,
+		 (status >> 8), (status & 127) ); 
+      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
+      free((void*) appv); 
+    } else {
+      /* unparsable cleanup argument string */
+      showerr( "%s: unparsable cleanup string, ignoring\n", application ); 
+    }
+#else
+    status = system( cmd ); 
+    if ( status || debug )
+      showerr( "%s: cleanup returned %d/%d\n", application,
+	       (status >> 8), (status & 127) ); 
+#endif
   }
 
   /* provide final statistics */
