@@ -1441,15 +1441,25 @@ public class CondorGenerator extends Abstract {
         //construct the periodic_release and periodic_remove
         //values only if their final computed values are > 0
         value = (String)cvar.removeKey("periodic_release");
-        if(value != null && Integer.parseInt(value) > 0){
+        int release = this.getNaturalNumberValue( value );
+        if( release > 0){
             value = "(NumSystemHolds <= " + value + ")";
             cvar.construct("periodic_release", value);
         }
+        else{
+            cvar.construct( "periodic_release", value );
+        }
+
         value = (String)cvar.removeKey("periodic_remove");
-        if(value != null && Integer.parseInt(value) > 0){
+        int remove = this.getNaturalNumberValue(value);
+        if( remove > 0){
             value = "(NumSystemHolds > " + value + ")";
             cvar.construct("periodic_remove", value);
         }
+        else{
+            cvar.construct( "periodic_remove", value );
+        }
+
 
 
         // have to change this later maybe
@@ -1523,6 +1533,26 @@ public class CondorGenerator extends Abstract {
 
         return;
 
+    }
+
+    /**
+     * Returns a natural number value ( > 0 ) if the parameter passed is an integer
+     * and greater than zero, else -1
+     *
+     * @param value   the String passed
+     *
+     * @return
+     */
+    protected int getNaturalNumberValue( String value ){
+        int result = -1;
+
+        try{
+            result = Integer.parseInt(value);
+        }
+        catch( Exception e ){
+
+        }
+        return result;
     }
 
 
