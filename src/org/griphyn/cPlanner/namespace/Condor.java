@@ -573,31 +573,36 @@ public class Condor extends Namespace{
             oldval;
         removeval = (removeval == null) ? oldval : removeval;
 
-        if( Integer.parseInt(removeval) > Integer.parseInt(releaseval)){
-            removeval = releaseval;
-            //throw a warning down
-            mLogger.log(
-                " periodic_remove > periodic_release " +
-                "for job " + /*sinfo.jobName +*/
-                ". Setting periodic_remove=periodic_release",
-                LogManager.WARNING_MESSAGE_LEVEL);
+
+        boolean removeint  = this.isInteger( removeval );
+        boolean releaseint = this.isInteger( releaseval );
+
+        if( removeint && releaseint ){
+            if( Integer.parseInt(removeval) > Integer.parseInt(releaseval)){
+                removeval = releaseval;
+                //throw a warning down
+                mLogger.log(
+                    " periodic_remove > periodic_release " +
+                    "for job " + /*sinfo.jobName +*/
+                     ". Setting periodic_remove=periodic_release",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+            }
         }
 
         //construct the periodic_release and periodic_remove
-        //values only if their final computed values are > 0
-	if(Integer.parseInt(releaseval) > 0){
-            //value = "(NumSystemHolds <= " + releaseval + ")";
+        //values to whatever they are set
+        if( !releaseval.isEmpty() ){
             this.construct("periodic_release", releaseval);
         }
-        if(Integer.parseInt(removeval) > 0){
-            //value = "(NumSystemHolds > " + removeval + ")";
+
+        if( !removeval.isEmpty() ){
             this.construct("periodic_remove", removeval);
         }
 
         //the job priorities from property file
         //picked as default
-        String priority = containsKey(this.PRIORITY_KEY)?
-                          (String)this.get(this.PRIORITY_KEY):
+        String priority = containsKey(Condor.PRIORITY_KEY)?
+                          (String)this.get(Condor.PRIORITY_KEY):
                           null;
         priority = (priority == null)?
                     //pick default from properties
@@ -606,11 +611,34 @@ public class Condor extends Namespace{
                     priority;
         //construct only if priority is not null
         if(priority != null){
-            this.construct(this.PRIORITY_KEY,priority);
+            this.construct(Condor.PRIORITY_KEY,priority);
         }
 
 
-   }
+
+    }
+    
+    /**
+     * Returns a boolean value indicating if the string passed is an integer or not
+     * 
+     * @param value the value
+     * 
+     * @return boolean
+     */
+    public boolean isInteger( String value ){
+        boolean result = true;
+        
+        try{
+            Integer.parseInt(value);
+        }
+        catch( Exception e ){
+            result = false;
+        }
+        return result;
+    }
+
+
+
 
    /**
      * This checks the whether a key value pair specified is valid in the current
