@@ -749,7 +749,8 @@ for ( my $y=1; $y <= 2; ++$y ) {
 
     #only convert to png if covert is available
     if( $app{convert} ){
-	@arg = ( $app{convert}, '-density', '96x96', $epsfn, $jpgfn );
+	@arg = ( $app{convert}, '-density', '96x96', 
+		 '-background', 'white', '-flatten', $epsfn, $jpgfn );
 	warn "# @arg\n";
 	system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
     }

@@ -700,7 +700,7 @@ my $pngfn = defined $outpng ? $outpng : $dagbase . '.png';
 
 my @extra = ();
 foreach ( @pass ) {
-    my ($opt,$val) = split /=/, $_, 2;
+    my ($opt,$val) = split /=/, $_, 2; #/; 
     push( @extra, "-$opt" );
     push( @extra, $val ) if defined $val;
 }
@@ -709,7 +709,8 @@ my @arg = ( $app{ploticus}, $plot, '-eps', '-o', $epsfn, @extra );
 log( "@arg" ) if $main::debug;
 system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
 
-@arg = ( $app{convert}, '-density', '96x96', $epsfn, $pngfn );
+@arg = ( $app{convert}, '-density', '96x96', 
+	'-background', 'white', '-flatten', $epsfn, $pngfn );
 log( "@arg" ) if $main::debug;
 system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
 
