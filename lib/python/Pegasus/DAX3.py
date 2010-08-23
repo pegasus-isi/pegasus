@@ -17,21 +17,21 @@
 The classes in this module can be used to generate DAXes that can be
 read by Pegasus.
 
-The official DAX schema is here: http://pegasus.isi.edu/schema/dax-4.0.xsd
+The official DAX schema is here: http://pegasus.isi.edu/schema/dax-3.2.xsd
 """
 
 __author__ = "Gideon Juve <juve@usc.edu>"
 __all__ = ["ADAG","DAX","DAG","Namespace","Arch","Link","FileType",
 		   "Transfer","OS","File","Executable","Metadata","PFN",
 			"Profile","Transformation","Job"]
-__version__ = "4.0"
+__version__ = "3.2"
 
 import datetime, pwd, os
 from cStringIO import StringIO
 
 SCHEMA_NAMESPACE = u"http://pegasus.isi.edu/schema/DAX"
-SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/dax-4.0.xsd"
-SCHEMA_VERSION = u"4.0"
+SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/dax-3.2.xsd"
+SCHEMA_VERSION = u"3.2"
 
 class Namespace:
 	"""
