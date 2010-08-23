@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -115,6 +116,70 @@ public class SubInfo extends Data implements GraphNodeContent{
      * Denotes a symbolic link stagein job
      */
     public static final int SYMLINK_STAGE_IN_JOB = 9;
+
+    /**
+     * Returns an appropriate grid gateway job type corresponding to a job type
+     *
+     * @param type   the job type
+     *
+     * @return corresponding GridGateway job type
+     */
+    private static GridGateway.JOB_TYPE jobType2GridGatewayJobType( int type ){
+    
+        //sanity check 
+        if ( !( typeInRange(type) ) ){
+            throw new IllegalArgumentException("Invalid Job type " + type);
+        }
+        
+        GridGateway.JOB_TYPE jtype ;
+        
+        switch( type ){
+            case SubInfo.COMPUTE_JOB:
+                jtype = GridGateway.JOB_TYPE.compute;
+                break;
+                
+            case SubInfo.STAGE_IN_JOB:
+                jtype = GridGateway.JOB_TYPE.transfer;
+                break;
+            
+            case SubInfo.STAGE_OUT_JOB:
+                jtype = GridGateway.JOB_TYPE.transfer;
+                break;
+            
+            case SubInfo.REPLICA_REG_JOB:
+                jtype = GridGateway.JOB_TYPE.register;
+                break;
+           
+            case SubInfo.INTER_POOL_JOB:
+                jtype = GridGateway.JOB_TYPE.transfer;
+                break;
+            
+            case SubInfo.CREATE_DIR_JOB:
+                jtype = GridGateway.JOB_TYPE.auxillary;
+                break;
+            
+            
+            case SubInfo.STAGED_COMPUTE_JOB:
+                jtype = GridGateway.JOB_TYPE.compute;
+                break;
+                
+            
+            case SubInfo.CLEANUP_JOB:
+                jtype = GridGateway.JOB_TYPE.cleanup;
+                break;
+                
+            
+            case SubInfo.SYMLINK_STAGE_IN_JOB:
+                jtype = GridGateway.JOB_TYPE.transfer;
+                break;
+                
+            case SubInfo.UNASSIGNED_JOB:
+            default:
+                jtype = GridGateway.JOB_TYPE.compute;
+        }
+        
+        return jtype;
+    }
 
 
     /**
@@ -802,6 +867,14 @@ public class SubInfo extends Data implements GraphNodeContent{
         return this.jobClass;
     }
 
+    /**
+     * Returns the corresponding grid gateway job type
+     *
+     * @return grid gateway job type
+     */
+    public GridGateway.JOB_TYPE getGridGatewayJobType(){
+        return SubInfo.jobType2GridGatewayJobType( this.getJobType() );
+    }
 
     /**
      * Gets the textual description of the type associated with the job.
@@ -1210,9 +1283,9 @@ public class SubInfo extends Data implements GraphNodeContent{
      * @return true if the value is in range.
      *         false if the value is not in range.
      */
-    public boolean typeInRange(int type){
-        return ( type >= this.UNASSIGNED_JOB &&
-                 type <= this.SYMLINK_STAGE_IN_JOB );
+    public static boolean typeInRange(int type){
+        return ( type >= SubInfo.UNASSIGNED_JOB &&
+                 type <= SubInfo.SYMLINK_STAGE_IN_JOB );
     }
 
 

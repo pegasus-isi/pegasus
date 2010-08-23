@@ -21,6 +21,9 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.namespace.Condor;
@@ -82,14 +85,16 @@ public class CondorG extends Abstract {
             //since condor 6.7.6 we have the notion of grid universe
             //and grid types.
             job.condorVariables.construct( Condor.UNIVERSE_KEY,Condor.GRID_UNIVERSE );
-            //the job type by default is GT2 unless overriden
-            //through profiles
-            if(!job.condorVariables.containsKey( Condor.GRID_JOB_TYPE_KEY ) ){
-                job.condorVariables.construct( Condor.UNIVERSE_KEY,
-                                               Condor.GLOBUS_UNIVERSE );
-            }
-            job.condorVariables.construct( "globusscheduler",
-                                           job.globusScheduler );
+            
+            StringBuffer gridResource = new StringBuffer();
+
+            //default type is gt2
+            SiteCatalogEntry s = mSiteStore.lookup( job.getSiteHandle() );
+            GridGateway g = s.selectGridGateway( job.getGridGatewayJobType() );
+            gridResource.append( g.getType() ).append( " " ).append( g.getContact() );
+
+            //System.out.println( "Grid Resource for job " + job.getName() + " is " + gridResource.toString() );
+            job.condorVariables.construct( Condor.GRID_RESOURCE_KEY, gridResource.toString() );
         }
         else{
             //running jobs in scheduler universe
