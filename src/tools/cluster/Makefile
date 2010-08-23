@@ -102,9 +102,13 @@ all: seqexec $(GENDOC)
 #mpiexec.o: mpiexec.c mypopen.h mympi.h
 #mympi.o: mympi.c mympi.h
 mypopen.o: mypopen.c mypopen.h
-seqexec.o: seqexec.c # mypopen.h
+mysystem.o: mysystem.c tools.h report.h mysystem.h
+parser.o: parser.c parser.h
+report.o: report.c tools.h report.h
+tools.o: tools.c tools.h
+seqexec.o: seqexec.c tools.h parser.h report.h mysystem.h
 
-seqexec: seqexec.o # mypopen.o
+seqexec: seqexec.o tools.o parser.o report.o mysystem.o 
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
 
 mpiexec: mpiexec.c mypopen.c mympi.c
