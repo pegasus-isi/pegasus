@@ -17,6 +17,9 @@
 #ifndef _MYSYSTEM_H
 #define _MYSYSTEM_H
 
+#include <sys/types.h>
+#include <signal.h>
+
 typedef struct {
   struct sigaction intr;
   struct sigaction quit;

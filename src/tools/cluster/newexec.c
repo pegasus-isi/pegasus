@@ -22,6 +22,7 @@
 
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -235,7 +236,6 @@ wait_for_child( Jobs* jobs, int* status )
 	     application, child, *status ); 
   } else { 
     /* free slot and report */ 
-    int i; 
     Job* j = (jobs->jobs) + slot; 
     
     /* say hi */ 
@@ -387,6 +387,7 @@ main( int argc, char* argv[], char* envp[] )
 	  return 127; /* never reached, just in case */ 
 	} else {
 	  /* parent code */
+	  j->count = total; 
 	  j->state = RUNNING;
 	  j->start = now( &(j->when) ); 
 	}

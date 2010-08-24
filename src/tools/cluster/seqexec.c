@@ -22,6 +22,7 @@
 
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
 
