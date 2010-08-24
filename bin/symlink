@@ -3,7 +3,8 @@
 
 use 5.006;
 use strict;
-
+use File::Basename;
+use File::Path;
 # some reasonable defaults
 
 
@@ -72,16 +73,30 @@ while(<STDIN>){
 	        print STDOUT "SRC and DEST are same file\n";
 		$success++;
 	    } else {
-	        # symlink source to dest
-	        my $cmd="/bin/ln -s -f ".$src." ".$dest;
-	        print STDOUT "COMMAND IS ",$cmd,"\n" if $main::DEBUG;
-	        if(system($cmd)==0){
+		my $destdir=dirname($dest);
+		if(! -d $destdir) {
+		    my $res=mkpath($destdir);
+		    	if ($res==1){
+			    print STDOUT "MKDIR success\n";
+			} else {
+			    print STDERR "MKDIR ERROR",parse_exit($?),"\n";
+			}
+		    
+		}
+		if (-e $dest) {
+	     		#remove existing link
+		    unlink($dest);
+		}
+		
+		# symlink source to dest
+		my $res=symlink($src,$dest);
+		if ($res==1){
 		    print STDOUT "SYMLINK success\n";
 		    $success++;
-	        } else {
+		} else {
 		    print STDERR "SYMLINK ERROR",parse_exit($?),"\n";
 		    $failures++;
-	        }
+		}
 	    }
 	    # reset all the variables
 	    $src=undef;
