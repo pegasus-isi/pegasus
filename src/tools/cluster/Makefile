@@ -78,9 +78,9 @@ endif
 #
 # === [3] ======================================================= rules section
 # There is no need to change things below this line.
-CFLAGS	+= -D${SYSTEM} -DMAJOR=${MAJOR} # -DSOCKLEN=${SOCKLEN}
-CC	+= -D_FILE_OFFSET_BITS=64
+CFLAGS	+= -D${SYSTEM} -DMAJOR=${MAJOR}
 LD	= $(CC) -D_FILE_OFFSET_BITS=64
+CC	+= -D_FILE_OFFSET_BITS=64
 CFLAGS	+= -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
 GENDOC = seqexec.html seqexec.txt seqexec.ps
 
@@ -107,8 +107,16 @@ parser.o: parser.c parser.h
 report.o: report.c tools.h report.h
 tools.o: tools.c tools.h
 seqexec.o: seqexec.c tools.h parser.h report.h mysystem.h
+newexec.o: newexec.c tools.h parser.h report.h mysystem.h job.h
+try-cpus.o: try-cpus.c
 
 seqexec: seqexec.o tools.o parser.o report.o mysystem.o 
+	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
+
+newexec: newexec.o tools.o parser.o report.o mysystem.o 
+	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
+
+try-cpus: try-cpus.o
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
 
 mpiexec: mpiexec.c mypopen.c mympi.c
@@ -138,4 +146,4 @@ clean:
 	$(RM) *.o $(GENDOC) core core.*
 
 distclean: clean
-	$(RM) seqexec mpiexec mpiexec.condor
+	$(RM) seqexec newexec mpiexec try-cpus mpiexec.condor

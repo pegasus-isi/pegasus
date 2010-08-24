@@ -13,24 +13,17 @@
  * Southern California. All rights reserved.
  *
  */
-
 #include <sys/types.h>
-#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include <time.h>
 
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <sys/wait.h>
-#include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/utsname.h>
-#include <sys/poll.h>
 
 #include "tools.h"
 #include "parser.h"
@@ -39,8 +32,6 @@
 
 static const char* RCS_ID =
 "$Id$";
-
-#define USE_SEQEXEC_PARSER 1
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -201,7 +192,7 @@ main( int argc, char* argv[], char* envp[] )
 
   /* NEW: unconditionally run a setup job */
   if ( (cmd = getenv("SEQEXEC_SETUP")) != NULL ) { 
-#ifdef USE_SEQEXEC_PARSER
+#ifndef USE_SYSTEM_SYSTEM
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       status = mysystem( appv, envp, "setup" ); 
       if ( status || debug )
@@ -218,7 +209,7 @@ main( int argc, char* argv[], char* envp[] )
     if ( status || debug )
       showerr( "%s: setup returned %d/%d\n", application,
 	       (status >> 8), (status & 127) ); 
-#endif
+#endif /* USE_SYSTEM_SYSTEM */
   }
 
   /* Read the commands and call each sequentially */
@@ -276,7 +267,7 @@ main( int argc, char* argv[], char* envp[] )
 
   /* NEW: unconditionally run a clean-up job */
   if ( (cmd = getenv("SEQEXEC_CLEANUP")) != NULL ) { 
-#ifdef USE_SEQEXEC_PARSER
+#ifndef USE_SYSTEM_SYSTEM
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       status = mysystem( appv, envp, "cleanup" ); 
       if ( status || debug )
@@ -293,7 +284,7 @@ main( int argc, char* argv[], char* envp[] )
     if ( status || debug )
       showerr( "%s: cleanup returned %d/%d\n", application,
 	       (status >> 8), (status & 127) ); 
-#endif
+#endif /* USE_SYSTEM_SYSTEM */
   }
 
   /* provide final statistics */
