@@ -34,6 +34,76 @@ extern int progress;
 extern char* application; 
 
 int
+save_signals( Signals* save )
+{
+  struct sigaction ignore; 
+  sigset_t childmask; 
+
+  ignore.sa_handler = SIG_IGN; 
+  sigemptyset( &ignore.sa_mask );
+  ignore.sa_flags = 0; 
+
+  if ( sigaction( SIGINT, &ignore, &(save->intr) ) < 0 )
+    return -1;
+  if ( sigaction( SIGQUIT, &ignore, &(save->quit) ) < 0 )
+    return -1;
+
+  sigemptyset( &childmask );
+  sigaddset( &childmask, SIGCHLD );
+  if ( sigprocmask( SIG_BLOCK, &childmask, &(save->mask) ) < 0 )
+    return -1;
+
+  return 0; 
+}
+
+int
+restore_signals( Signals* save )
+{
+  int result = 0; 
+
+  /* count errors on these, but use them all */
+  if ( sigaction( SIGINT, &(save->intr), NULL ) < 0 )
+    result++;
+  if ( sigaction( SIGQUIT, &(save->quit), NULL ) < 0 )
+    result++; 
+  if ( sigprocmask( SIG_SETMASK, &(save->mask), NULL ) < 0 )
+    result++; 
+
+  return result; 
+}
+
+void
+start_child( char* argv[], char* envp[], Signals* save )
+/* purpose: start a child process with stdin connected to /dev/null
+ * paramtr: argv (IN): argument vector, NULL terminated
+ *          envp (IN): environment vector, NULL terminated
+ *          save (IN): if not NULL, saved signals to restore
+ * returns: DOES NOT RETURN
+ */
+{
+  int null = open( "/dev/null", O_RDONLY );
+  if ( null != -1 ) { 
+    if ( dup2( null, STDIN_FILENO ) == -1 && debug )
+      showerr( "%s: dup2 stdin: %d: %s\n",
+	       application, errno, strerror(errno) );
+  } else {
+    if ( debug ) 
+      showerr( "%s: open /dev/null: %d: %s\n", 
+	       application, errno, strerror(errno) );
+  }
+
+  /* undo signal handlers */
+  if ( save ) restore_signals( save ); 
+
+  execve( argv[0], (char* const*) argv, envp );
+  showerr( "%s: exec %s: %d: %s\n", 
+	   application, argv[0], errno, strerror(errno) );
+  _exit(127); /* never reached unless error */
+}
+
+
+
+int
 mysystem( char* argv[], char* envp[], const char* special )
 /* purpose: implement system(3c) call w/o calling the shell
  * paramtr: argv (IN): NULL terminated argument vector
@@ -44,54 +114,20 @@ mysystem( char* argv[], char* envp[], const char* special )
 {
   char date[32];
   struct rusage usage;
-  struct sigaction ignore, saveintr, savequit;
-  sigset_t childmask, savemask;
+  Signals save; 
   pid_t child;
   time_t when, then;
   double diff, start = now(&when);
   int saverr = 0;
   int status = -1;
 
-  ignore.sa_handler = SIG_IGN;
-  sigemptyset( &ignore.sa_mask );
-  ignore.sa_flags = 0;
-  
-  if ( sigaction( SIGINT, &ignore, &saveintr ) < 0 )
-    return -1;
-  if ( sigaction( SIGQUIT, &ignore, &savequit ) < 0 )
-    return -1;
-
-  sigemptyset( &childmask );
-  sigaddset( &childmask, SIGCHLD );
-  memset( &usage, 0, sizeof(usage) );
-  if ( sigprocmask( SIG_BLOCK, &childmask, &savemask ) < 0 )
-    return -1;
-
+  save_signals( &save ); 
   if ( (child=fork()) < 0 ) {
     /* no more process table space */
     return -1;
   } else if ( child == (pid_t) 0 ) {
     /* child */
-    int null = open( "/dev/null", O_RDONLY );
-    if ( null != -1 ) { 
-      if ( dup2( null, STDIN_FILENO ) == -1 && debug )
-	showerr( "%s: dup2 stdin: %d: %s\n",
-		 application, errno, strerror(errno) );
-    } else {
-      if ( debug ) 
-	showerr( "%s: open /dev/null: %d: %s\n", 
-		 application, errno, strerror(errno) );
-    }
-
-    /* undo signal handlers */
-    sigaction( SIGINT, &saveintr, NULL );
-    sigaction( SIGQUIT, &savequit, NULL );
-    sigprocmask( SIG_SETMASK, &savemask, NULL );
-
-    execve( argv[0], (char* const*) argv, envp );
-    showerr( "%s: exec %s: %d: %s\n", 
-	     application, argv[0], errno, strerror(errno) );
-    _exit(127); /* never reached unless error */
+    start_child( argv, envp, &save ); 
   } else {
     /* parent */
     
@@ -113,9 +149,7 @@ mysystem( char* argv[], char* envp[], const char* special )
   }
 
   /* ignore errors on these, too. */
-  sigaction( SIGINT, &saveintr, NULL );
-  sigaction( SIGQUIT, &savequit, NULL );
-  sigprocmask( SIG_SETMASK, &savemask, NULL );
+  restore_signals( &save ); 
 
   /* say hi */
   diff = now(&then) - start;

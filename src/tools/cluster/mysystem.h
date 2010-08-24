@@ -17,6 +17,39 @@
 #ifndef _MYSYSTEM_H
 #define _MYSYSTEM_H
 
+typedef struct {
+  struct sigaction intr;
+  struct sigaction quit;
+  sigset_t         mask; 
+} Signals;
+
+extern
+int
+save_signals( Signals* save );
+/* purpose: ignore SIG{INT,QUIT} and block SIGCHLD
+ * paramtr: save (IO): place to store original signal vectors
+ * returns: 0 on success, -1 on failure.
+ */
+
+extern
+int
+restore_signals( Signals* save );
+/* purpose: restore previously save signals
+ * paramtr: save (IN): previously saved signal state
+ * returns: 0 on success, count of errors on failure
+ * warning: errno may be useless to check in this case
+ */ 
+
+extern
+void
+start_child( char* argv[], char* envp[], Signals* save );
+/* purpose: start a child process with stdin connected to /dev/null
+ * paramtr: argv (IN): argument vector, NULL terminated
+ *          envp (IN): environment vector, NULL terminated
+ *          save (IN): if not NULL, saved signals to restore
+ * returns: DOES NOT RETURN
+ */
+
 extern
 int
 mysystem( char* argv[], char* envp[], const char* special );

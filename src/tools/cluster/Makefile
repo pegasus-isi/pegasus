@@ -101,6 +101,7 @@ all: seqexec $(GENDOC)
 
 #mpiexec.o: mpiexec.c mypopen.h mympi.h
 #mympi.o: mympi.c mympi.h
+job.o: job.c job.h
 mypopen.o: mypopen.c mypopen.h
 mysystem.o: mysystem.c tools.h report.h mysystem.h
 parser.o: parser.c parser.h
@@ -113,7 +114,7 @@ try-cpus.o: try-cpus.c
 seqexec: seqexec.o tools.o parser.o report.o mysystem.o 
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
 
-newexec: newexec.o tools.o parser.o report.o mysystem.o 
+newexec: newexec.o tools.o parser.o report.o mysystem.o job.o 
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
 
 try-cpus: try-cpus.o
