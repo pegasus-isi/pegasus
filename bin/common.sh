@@ -14,10 +14,12 @@ if [ "X${PEGASUS_HOME}" = "X" ]; then
     exit 1
 fi
 
-if [ "X${CLASSPATH}" = "X" ]; then
-    echo "ERROR: Your CLASSPATH variable is suspiciously empty" 1>&2
-    exit 1
+# build the classpath
+CLASSPATH=`( find ${PEGASUS_HOME}/lib -name '*.jar' | sort | tr '\012' ':' ; echo "" ) | sed -e 's/::/:/g' -e 's/^://' -e 's/:$//'`
+if [ "x${PEGASUS_CLASSPATH_PREPEND}" != "x" ]; then
+    CLASSPATH="${PEGASUS_CLASSPATH_PREPEND}:${CLASSPATH}"
 fi
+export CLASSPATH
 
 addon=''
 while [ true ]; do

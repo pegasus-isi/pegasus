@@ -104,14 +104,3 @@ endif
 #    endif
 #endif
 
-#
-# just add all jars to the CLASSPATH. 
-#
-set cp=`( find ${PEGASUS_HOME}/lib -name '*.jar' | tr '\012' ':' ; echo "" ) | sed -e 's/::/:/g' -e 's/^://' -e 's/:$//'`
-
-# merge CLASSPATH, avoid FQPN duplicates
-if ( $?CLASSPATH ) then
-    set cp=`perl -e 'foreach ( split /:+/, join( ":", "@ARGV", $ENV{CLASSPATH} ) ) { $t1 .= ":$_" if ( ++$x{$_} == 1 ); } print substr($t1,1), "\n";' $cp`
-endif
-setenv CLASSPATH "${cp}"
-unset cp
