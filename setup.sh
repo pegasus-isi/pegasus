@@ -101,17 +101,3 @@ fi
 export PYTHONPATH
 
 
-#
-# just add all jars to the CLASSPATH. 
-#
-cp=`( find ${PEGASUS_HOME}/lib -name '*.jar' | tr '\012' ':' ; echo "" ) | sed -e 's/::/:/g' -e 's/^://' -e 's/:$//'`
-
-# merge CLASSPATH, avoid FQPN duplicates
-if [ "X${CLASSPATH}" != "X" ]; then
-    cp=`perl -e 'foreach ( split /:+/, join( ":", "@ARGV", $ENV{CLASSPATH} ) ) { $t1 .= ":$_" if ( ++$x{$_} == 1 ); } print substr($t1,1), "\n";' $cp`
-fi
-
-# set things
-CLASSPATH=$cp
-export CLASSPATH
-unset cp
