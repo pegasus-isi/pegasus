@@ -28,6 +28,9 @@ if [ "x$GLOBUS_LOCATION" = "x" ]; then
     exit 1
 fi 
 
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
 # generate the dax
 ./blackdiamond.py >blackdiamond.dax
 
