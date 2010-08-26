@@ -76,11 +76,11 @@
 			<xs:documentation>defines the valid OS types.</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:NMTOKENS">
-			<xs:enumeration value="LINUX"/>
-			<xs:enumeration value="SUNOS"/>
-			<xs:enumeration value="AIX"/>
-			<xs:enumeration value="MACOSX"/>
-			<xs:enumeration value="WINDOWS"/>
+			<xs:enumeration value="aix"/>
+			<xs:enumeration value="sunos"/>
+			<xs:enumeration value="linux"/>
+			<xs:enumeration value="darwin"/>
+			<xs:enumeration value="windows"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:attributeGroup name="SystemInformationGroup">
@@ -88,7 +88,7 @@
 			<xs:documentation>defines the attribute set decribing system information.</xs:documentation>
 		</xs:annotation>
 		<xs:attribute name="arch" type="ArchitectureType" use="optional" default="x86"/>
-		<xs:attribute name="os" type="OSType" use="optional" default="LINUX"/>
+		<xs:attribute name="os" type="OSType" use="optional" default="linux"/>
 		<xs:attribute name="osrelease" type="xs:string" use="optional"/>
 		<xs:attribute name="osversion" type="VersionPattern" use="optional"/>
 		<xs:attribute name="glibc" type="VersionPattern" use="optional"/>
@@ -142,6 +142,7 @@
 			<xs:extension base="FilenameType">
 				<xs:attribute name="namespace" type="xs:string" use="optional"/>
 				<xs:attribute name="version" type="VersionPattern" use="optional"/>
+				<xs:attribute name="exectuable" type="xs:boolean" use="optional" default="false"/>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -201,15 +202,7 @@
 					</xs:complexContent>
 				</xs:complexType>
 			</xs:element>
-			<xs:element name="uses" minOccurs="0" maxOccurs="unbounded">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="UsesType">
-							<xs:attribute name="type" type="FileType" use="optional" default="file"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
+			<xs:element name="uses" type="UsesType" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="invoke" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
 					<xs:documentation>very simple notifications.</xs:documentation>
@@ -304,15 +297,7 @@
 					</xs:annotation>
 					<xs:complexType>
 						<xs:sequence>
-							<xs:element name="uses" maxOccurs="unbounded">
-								<xs:complexType>
-									<xs:complexContent>
-										<xs:extension base="UsesType">
-											<xs:attribute name="type" type="FileType" use="optional" default="executable"/>
-										</xs:extension>
-									</xs:complexContent>
-								</xs:complexType>
-							</xs:element>
+							<xs:element name="uses" type="UsesType" maxOccurs="unbounded"/>
 						</xs:sequence>
 						<xs:attribute name="namespace" type="xs:string" use="optional"/>
 						<xs:attribute name="name" type="xs:NMTOKEN" use="required"/>

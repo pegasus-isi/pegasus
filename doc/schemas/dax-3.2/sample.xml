@@ -31,7 +31,7 @@ C:\DOCUME~1\voeckler\Desktop\schema\dax-3.2\dax-3.2.xsd" version="0.0.0" name="-
 			<profile key="String" namespace="pegasus">Text</profile>
 		</pfn>
 	</file>
-	<executable name="NMTOKEN" namespace="String" version="0.0.0" arch="x86" os="LINUX" osrelease="String" osversion="0.0.0" glibc="0.0.0">
+	<executable name="NMTOKEN" namespace="String" version="0.0.0" arch="x86" os="linux" osrelease="String" osversion="0.0.0" glibc="0.0.0">
 		<profile key="String" namespace="pegasus">Text</profile>
 		<profile key="String" namespace="pegasus">Text</profile>
 		<metadata key="NMTOKEN" type="NMTOKEN">String</metadata>
@@ -45,7 +45,7 @@ C:\DOCUME~1\voeckler\Desktop\schema\dax-3.2\dax-3.2.xsd" version="0.0.0" name="-
 			<profile key="String" namespace="pegasus">Text</profile>
 		</pfn>
 	</executable>
-	<executable name="NMTOKEN" namespace="String" version="0.0.0" arch="x86" os="LINUX" osrelease="String" osversion="0.0.0" glibc="0.0.0">
+	<executable name="NMTOKEN" namespace="String" version="0.0.0" arch="x86" os="linux" osrelease="String" osversion="0.0.0" glibc="0.0.0">
 		<profile key="String" namespace="pegasus">Text</profile>
 		<profile key="String" namespace="pegasus">Text</profile>
 		<metadata key="NMTOKEN" type="NMTOKEN">String</metadata>
@@ -60,12 +60,12 @@ C:\DOCUME~1\voeckler\Desktop\schema\dax-3.2\dax-3.2.xsd" version="0.0.0" name="-
 		</pfn>
 	</executable>
 	<transformation namespace="String" name="NMTOKEN" version="0.0.0">
-		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" type="executable"/>
-		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" type="executable"/>
+		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" exectuable="false"/>
+		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" exectuable="false"/>
 	</transformation>
 	<transformation namespace="String" name="NMTOKEN" version="0.0.0">
-		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" type="executable"/>
-		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" type="executable"/>
+		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" exectuable="false"/>
+		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" exectuable="false"/>
 	</transformation>
 	<job name="NMTOKEN" id="-" node-label="String" namespace="String" version="0.0.0">
 		<argument>Text<file name="String"/>
@@ -76,8 +76,8 @@ C:\DOCUME~1\voeckler\Desktop\schema\dax-3.2\dax-3.2.xsd" version="0.0.0" name="-
 		<stdin name="String" link="input"/>
 		<stdout name="String" link="output"/>
 		<stderr name="String" link="output"/>
-		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" type="file"/>
-		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" type="file"/>
+		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" exectuable="false"/>
+		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" exectuable="false"/>
 		<invoke when="never"/>
 		<invoke when="never"/>
 	</job>
@@ -90,8 +90,8 @@ C:\DOCUME~1\voeckler\Desktop\schema\dax-3.2\dax-3.2.xsd" version="0.0.0" name="-
 		<stdin name="String" link="input"/>
 		<stdout name="String" link="output"/>
 		<stderr name="String" link="output"/>
-		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" type="file"/>
-		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" type="file"/>
+		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" exectuable="false"/>
+		<uses name="String" link="none" optional="false" register="true" transfer="true" namespace="String" version="0.0.0" exectuable="false"/>
 		<invoke when="never"/>
 		<invoke when="never"/>
 	</job>
