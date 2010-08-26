@@ -21,9 +21,9 @@ The official DAX schema is here: http://pegasus.isi.edu/schema/dax-3.2.xsd
 """
 
 __author__ = "Gideon Juve <juve@usc.edu>"
-__all__ = ["ADAG","DAX","DAG","Namespace","Arch","Link","FileType",
+__all__ = ["ADAG","DAX","DAG","Namespace","Arch","Link","When",
 		   "Transfer","OS","File","Executable","Metadata","PFN",
-			"Profile","Transformation","Job"]
+		   "Profile","Transformation","Job"]
 __version__ = "3.2"
 
 import datetime, pwd, os
@@ -69,13 +69,6 @@ class Link:
 	OUTPUT = u'output'
 	INOUT = u'inout'
 
-class FileType:
-	"""
-	File types. See File, Executable, and uses().
-	"""
-	FILE = u'file'
-	EXECUTABLE = u'executable'
-
 class Transfer:
 	"""
 	Transfer types for uses. See Executable, File.
@@ -108,10 +101,10 @@ class When:
 class CatalogType:
 	"""Base class for File and Executable"""
 	
-	def __init__(self, name, type, link, register, transfer, optional):
+	def __init__(self, name, link, register, transfer, optional):
 		"""
-		All arguments specify the workflow-level behavior of this Filename. Job-level
-		behavior can be defined when adding the Filename to a Job's uses. If the
+		All arguments specify the workflow-level behavior of this File. Job-level
+		behavior can be defined when adding the File to a Job's uses. If the
 		properties are not overridden at the job-level, then the workflow-level
 		values are used as defaults.
 		
@@ -120,7 +113,6 @@ class CatalogType:
 		
 		Arguments:
 			filename: The name of the file (required)
-			type: The file type (see FileType)
 			link: Is this file a workflow-level input/output/both? (see Link)
 			register: The default value for register (True/False)
 			transfer: The default value for transfer (see Transfer, or True/False)
@@ -133,7 +125,6 @@ class CatalogType:
 		self.register = register
 		self.transfer = transfer
 		self.optional = optional
-		self.type = type
 		self.profiles = []
 		self.metadata = []
 		self.pfns = []
@@ -187,7 +178,7 @@ class CatalogType:
 			return result
 
 class File(CatalogType):
-	"""File(name[,type][,link][,register][,transfer][,optional])
+	"""File(name[,link][,register][,transfer][,optional])
 	
 	A file entry for the DAX-level replica catalog, or a reference to a logical file
 	used by the workflow.
@@ -197,7 +188,7 @@ class File(CatalogType):
 		intermediate = File('intermediate.txt',link=Link.OUTPUT)
 		result = File('result.txt',link=Link.OUTPUT,register=True,transfer=True)
 		opt = File('optional.txt',link=Link.OUTPUT,optional=True)
-		binary = File('bin/binary',link=Link.INPUT,type=FileType.EXECUTABLE,transfer=True)
+		binary = File('binary',link=Link.INPUT,transfer=True)
 		
 	Example use in job:
 		input = File('input.txt', link=Link.INPUT, transfer=True)
@@ -217,7 +208,7 @@ class File(CatalogType):
 		post.uses(intermediate, link=Link.INPUT)
 		post.uses(output)
 	"""
-	def __init__(self, name, type=FileType.FILE, link=None, 
+	def __init__(self, name, link=None, 
 				 register=False, transfer=False, optional=None):
 		"""
 		All arguments specify the workflow-level behavior of this File. Job-level
@@ -230,13 +221,12 @@ class File(CatalogType):
 		
 		Arguments:
 			filename: The name of the file (required)
-			type: The file type (see FileType)
-			link: Is this file a workflow-level input/output/both? (see FileType)
+			link: Is this file a workflow-level input/output/both? (see Link)
 			register: The default value for register (True/False)
-			transfer: The default value for transfer (see FileType, or True/False)
+			transfer: The default value for transfer (see Transfer, or True/False)
 			optional: The default value for optional (True/False)
 		"""
-		CatalogType.__init__(self, name, type, link, register, transfer, optional)
+		CatalogType.__init__(self, name, link, register, transfer, optional)
 	
 	def __str__(self):
 		return self.toArgumentXML()
@@ -281,7 +271,7 @@ class File(CatalogType):
 		return result
 	
 class Executable(CatalogType):
-	"""Executable(name[,type][,link][,register][,transfer][,optional][,namespace]
+	"""Executable(name[,link][,register][,transfer][,optional][,namespace]
 				  [,version][,arch][,os][,osrelease][,osversion][,glibc])
 				
 	An entry for an executable in the DAX-level replica catalog.
@@ -292,14 +282,13 @@ class Executable(CatalogType):
 		grep = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86)
 		grep = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86,os=OS.LINUX)
 	"""
-	def __init__(self, name, type=FileType.EXECUTABLE, link=Link.INPUT, 
+	def __init__(self, name, link=Link.INPUT, 
 				 register=False, transfer=True, optional=None, 
 				 namespace=None, version=None, arch=None, os=None, 
 				 osrelease=None, osversion=None, glibc=None):
 		"""
 		Arguments:
 			name: Logical name of executable
-			type: See CatalogType
 			link: See CatalogType
 			register: See CatalogType
 			transfer: See CatalogType
@@ -312,7 +301,7 @@ class Executable(CatalogType):
 			osversion: Version of os that this exe was compiled for
 			glibc: Version of glibc this exe was compiled against
 		"""
-		CatalogType.__init__(self, name, type, link, register, transfer, optional)
+		CatalogType.__init__(self, name, link, register, transfer, optional)
 		self.namespace = namespace
 		self.version = version
 		self.arch = arch
@@ -494,10 +483,11 @@ class Use:
 		if isinstance(self.file, Executable):
 			namespace = self.file.namespace
 			version = self.file.version
+			executable = True
 		else:
 			namespace = None
 			version = None
-		type = self.file.type
+			executable = None
 			
 		xml.write(u'<uses name="%s"' % self.file.name)
 		if link: xml.write(u' link="%s"' % link)
@@ -506,7 +496,7 @@ class Use:
 		if transfer: xml.write(u' transfer="%s"' % unicode(transfer).lower())
 		if namespace: xml.write(u' namespace="%s"' % namespace)
 		if version: xml.write(u' version="%s"' % version)
-		if type: xml.write(u' type="%s"' % type)
+		if executable: xml.write(u' executable="true"')
 		xml.write(u'/>')
 
 		result = xml.getvalue()
