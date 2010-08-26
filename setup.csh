@@ -111,7 +111,7 @@ set cp=`( find ${PEGASUS_HOME}/lib -name '*.jar' | tr '\012' ':' ; echo "" ) | s
 
 # merge CLASSPATH, avoid FQPN duplicates
 if ( $?CLASSPATH ) then
-    set cp=`perl -e 'foreach ( split /:+/, join( ":", $ENV{CLASSPATH}, "@ARGV" ) ) { $t1 .= ":$_" if ( ++$x{$_} == 1 ); } print substr($t1,1), "\n";' $cp`
+    set cp=`perl -e 'foreach ( split /:+/, join( ":", "@ARGV",$ENV{CLASSPATH} ) ) { $t1 .= ":$_" if ( ++$x{$_} == 1 ); } print substr($t1,1), "\n";' $cp`
 endif
 setenv CLASSPATH "${cp}"
 unset cp

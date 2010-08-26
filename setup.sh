@@ -100,14 +100,6 @@ else
 fi
 export PYTHONPATH
 
-#if [ -d "$VDS_HOME/contrib/gstar" ]; then
-#    # add G* tools to environment
-#    GSTAR_LOCATION="$VDS_HOME/contrib/gstar"
-#    export GSTAR_LOCATION
-#    if [ -r "$GSTAR_LOCATION/etc/gstar-setup-env.sh" ]; then
-#	source "$GSTAR_LOCATION/etc/gstar-setup-env.sh"
-#    fi
-#fi
 
 #
 # just add all jars to the CLASSPATH. 
@@ -116,7 +108,7 @@ cp=`( find ${PEGASUS_HOME}/lib -name '*.jar' | tr '\012' ':' ; echo "" ) | sed -
 
 # merge CLASSPATH, avoid FQPN duplicates
 if [ "X${CLASSPATH}" != "X" ]; then
-    cp=`perl -e 'foreach ( split /:+/, join( ":", $ENV{CLASSPATH}, "@ARGV" ) ) { $t1 .= ":$_" if ( ++$x{$_} == 1 ); } print substr($t1,1), "\n";' $cp`
+    cp=`perl -e 'foreach ( split /:+/, join( ":", "@ARGV", $ENV{CLASSPATH} ) ) { $t1 .= ":$_" if ( ++$x{$_} == 1 ); } print substr($t1,1), "\n";' $cp`
 fi
 
 # set things
