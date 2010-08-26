@@ -312,7 +312,7 @@ public class NoGridStart implements GridStart {
                     
                     //now that we have a seqxec gridlaunch 
                     //let the figure out how to handle clustered jobs
-                    if( gs instanceof SeqExec ){
+                    if( gs instanceof SeqExecOld ){
                         return gs.enable( job, isGlobusJob );
                     }
                     

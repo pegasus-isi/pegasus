@@ -68,7 +68,7 @@ import java.util.Set;
 import java.util.List;
 
 /**
- * This class launches all the jobs using seqexec. SeqExec by default wraps all
+ * This class launches all the jobs using seqexec. SeqExecOld by default wraps all
  * invocations in kickstart. This implementation is useful in the case of worker
  * node execution on Amazon EC2 with S3 being used to store the data.
  *
@@ -93,7 +93,7 @@ import java.util.List;
  *
  * To enable this implementation at runtime set the following property
  * <pre>
- * pegasus.gridstart SeqExec
+ * pegasus.gridstart SeqExecOld
  * </pre>
  *
  * @see org.griphyn.cPlanner.transfer.sls.S3#STAGE_SLS_FILE_PROPERTY_KEY
@@ -102,7 +102,7 @@ import java.util.List;
  * @version $Revision$
  */
 
-public class SeqExec implements GridStart {
+public class SeqExecOld implements GridStart {
     private PegasusBag mBag;
     private ADag mDAG;
 
@@ -628,7 +628,7 @@ public class SeqExec implements GridStart {
      * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
      */
     public  String getVDSKeyValue(){
-        return SeqExec.CLASSNAME;
+        return SeqExecOld.CLASSNAME;
     }
 
 
@@ -638,7 +638,7 @@ public class SeqExec implements GridStart {
      * @return  short textual description.
      */
     public String shortDescribe(){
-        return SeqExec.SHORT_NAME;
+        return SeqExecOld.SHORT_NAME;
     }
 
     /**
