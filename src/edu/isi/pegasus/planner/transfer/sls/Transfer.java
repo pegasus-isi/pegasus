@@ -140,6 +140,12 @@ public class Transfer   implements SLS {
     protected String mExtraArguments;
 
     /**
+     * Boolean to track whether to stage sls file or not
+     */
+    protected boolean mStageSLSFile;
+
+
+    /**
      * The default constructor.
      */
     public Transfer() {
@@ -164,6 +170,7 @@ public class Transfer   implements SLS {
         mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         mTransientRC = bag.getHandleToTransientReplicaCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
+        mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
     }
 
     /**
@@ -223,7 +230,19 @@ public class Transfer   implements SLS {
         
 
         //add the required arguments to transfer
-        invocation.append( " base mnt " ).append( slsFile.getAbsolutePath() );
+        invocation.append( " base mnt " );
+        
+        //we add absolute path if the sls files are staged via
+        //first level staging
+        if( this.mStageSLSFile ){
+            invocation.append( slsFile.getAbsolutePath() );
+
+        }
+        else{
+            //only the basename
+            invocation.append( slsFile.getName() );
+        }
+
 
         if( mLocalUserProxyBasename != null ){
             invocation.append( "\"" );
@@ -483,6 +502,20 @@ public class Transfer   implements SLS {
                                                   String slsOutputLFN ) {
 
         String separator = File.separator;
+
+        //sanity check
+        if( !this.mStageSLSFile ){
+
+            //add condor file transfer keys if input and output lfs are not null
+            if( slsInputLFN != null ){
+                job.condorVariables.addIPFileForTransfer( submitDir + File.separator + slsInputLFN );
+            }
+            if( slsOutputLFN != null ){
+                job.condorVariables.addIPFileForTransfer( submitDir + File.separator + slsOutputLFN );
+            }
+
+            return true;
+        }
 
         //incorporate the sls input file if required
         if( slsInputLFN != null ){

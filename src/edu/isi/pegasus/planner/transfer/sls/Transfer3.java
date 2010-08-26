@@ -83,7 +83,7 @@ public class Transfer3 extends Transfer implements SLS {
      */
     public static final String DESCRIPTION = "Python based Transfer Script for 3.0";
 
-   
+  
     
     /**
      * The default constructor.
@@ -100,6 +100,7 @@ public class Transfer3 extends Transfer implements SLS {
      */
     public void initialize( PegasusBag bag ) {
         super.initialize(bag);
+
     }
 
     
@@ -149,7 +150,19 @@ public class Transfer3 extends Transfer implements SLS {
         
 
         //add the required arguments to transfer
-        invocation.append( " -f " ).append( slsFile.getAbsolutePath() );
+        invocation.append( " -f " );
+        //we add absolute path if the sls files are staged via
+        //first level staging
+        if( this.mStageSLSFile ){
+            invocation.append( slsFile.getAbsolutePath() );
+            
+        }
+        else{
+            //only the basename
+            invocation.append( slsFile.getName() );
+        }
+
+
 
         if( mLocalUserProxyBasename != null ){
             invocation.append( "\"" );

@@ -940,6 +940,20 @@ public class PegasusProperties {
     }
 
     /**
+     * Returns a boolean indicating whether to stage sls files via Pegasus
+     * First Level Staging or let Condor do it.
+     *
+     * Referred to by the property "pegasus.transfer.stage.sls.file"
+     *
+     * @return boolean value mentioned in the properties or else the default
+     *         value which is true.
+     */
+    public boolean stageSLSFilesViaFirstLevelStaging( ){
+        return Boolean.parse( mProps.getProperty( "pegasus.transfer.stage.sls.file" ),
+                              true );
+    }
+
+    /**
       * Returns the default list of third party sites.
       *
       * Referred to by the "pegasus.transfer.*.thirdparty.sites" property.
