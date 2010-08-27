@@ -20,9 +20,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import java.io.BufferedWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.code.GridStart;
@@ -42,7 +39,6 @@ import edu.isi.pegasus.planner.transfer.SLS;
 
 
 import org.griphyn.cPlanner.namespace.VDS;
-import org.griphyn.cPlanner.namespace.Dagman;
 
 import java.io.File;
 
@@ -58,7 +54,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.ENV;
 /**
  * This class ends up running the job directly on the grid, without wrapping
  * it in any other launcher executable.
@@ -312,7 +307,7 @@ public class NoGridStart implements GridStart {
                     
                     //now that we have a seqxec gridlaunch 
                     //let the figure out how to handle clustered jobs
-                    if( gs instanceof SeqExecOld ){
+                    if( gs instanceof SeqExecOld || gs instanceof SeqExec ){
                         return gs.enable( job, isGlobusJob );
                     }
                     

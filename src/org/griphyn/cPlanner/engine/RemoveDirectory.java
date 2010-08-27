@@ -272,6 +272,8 @@ public class RemoveDirectory extends Engine {
         TransformationCatalogEntry entry   = null;
         GridGateway jm = null;
 
+        SiteCatalogEntry ePool = mSiteStore.lookup( site );
+
         try {
             entries = mTCHandle.lookup( RemoveDirectory.TRANSFORMATION_NAMESPACE,
                                               RemoveDirectory.TRANSFORMATION_NAME,
@@ -285,7 +287,7 @@ public class RemoveDirectory extends Engine {
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
         entry = ( entries == null ) ?
-                     this.defaultTCEntry( site ): //try using a default one
+                     this.defaultTCEntry( ePool ): //try using a default one
                      (TransformationCatalogEntry) entries.get(0);
 
 
@@ -321,7 +323,6 @@ public class RemoveDirectory extends Engine {
             execPath = entry.getPhysicalTransformation();
         }
 
-        SiteCatalogEntry ePool = mSiteStore.lookup( site );
         jm = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
 
         StringBuffer arguments = new StringBuffer();
@@ -380,21 +381,21 @@ public class RemoveDirectory extends Engine {
      * Returns a default TC entry to be used in case entry is not found in the
      * transformation catalog.
      *
-     * @param site   the site for which the default entry is required.
+     * @param site   the SiteCatalogEntry for the site for which the default entry is required.
      *
      *
      * @return  the default entry.
      */
-    private  TransformationCatalogEntry defaultTCEntry( String site ){
+    private  TransformationCatalogEntry defaultTCEntry( SiteCatalogEntry site ){
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
-        String home = mSiteStore.getPegasusHome( site );
+        String home = site.getPegasusHome();
         //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
+        home = ( home == null )? site.getVDSHome( ): home;
 
         mLogger.log( "Creating a default TC entry for " +
                      RemoveDirectory.getCompleteTranformationName() +
-                     " at site " + site,
+                     " at site " + site.getSiteHandle(),
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         //if home is still null
@@ -424,8 +425,9 @@ public class RemoveDirectory extends Engine {
                                                          RemoveDirectory.TRANSFORMATION_VERSION );
 
         defaultTCEntry.setPhysicalTransformation( path.toString() );
-        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setResourceId( site.getSiteHandle() );
         defaultTCEntry.setType( TCType.INSTALLED );
+        defaultTCEntry.setSysInfo( site.getSysInfo() );
 
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again

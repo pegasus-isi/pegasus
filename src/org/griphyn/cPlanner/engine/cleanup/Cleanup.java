@@ -286,9 +286,9 @@ public class Cleanup implements CleanupImplementation{
         List tcentries = null;
         TransformationCatalogEntry entry  = null;
         try {
-            tcentries = mTCHandle.lookup( this.TRANSFORMATION_NAMESPACE,
-                                                this.TRANSFORMATION_NAME,
-                                                this.TRANSFORMATION_VERSION,
+            tcentries = mTCHandle.lookup( Cleanup.TRANSFORMATION_NAMESPACE,
+                                                Cleanup.TRANSFORMATION_NAME,
+                                                Cleanup.TRANSFORMATION_VERSION,
                                                 site,
                                                 TCType.INSTALLED );
         } catch (Exception e) { /* empty catch */ }
@@ -304,7 +304,7 @@ public class Cleanup implements CleanupImplementation{
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
-                  append( this.getCompleteTranformationName()).
+                  append( Cleanup.getCompleteTranformationName()).
                   append(" at site ").append(site);
 
               mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
@@ -368,6 +368,7 @@ public class Cleanup implements CleanupImplementation{
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );
         defaultTCEntry.setType( TCType.INSTALLED );
+        defaultTCEntry.setSysInfo( this.mSiteStore.lookup( site ).getSysInfo() );
 
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again

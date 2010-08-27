@@ -296,6 +296,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         defaultTCEntry.setResourceId( site );
         defaultTCEntry.setType( TCType.INSTALLED );
         defaultTCEntry.addProfiles( envs );
+        defaultTCEntry.setSysInfo( this.mSiteStore.lookup( site ).getSysInfo() );
 
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again

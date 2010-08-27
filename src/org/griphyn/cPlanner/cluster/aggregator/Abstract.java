@@ -526,6 +526,7 @@ public abstract class Abstract implements JobAggregator {
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );
         defaultTCEntry.setType( TCType.INSTALLED );
+        defaultTCEntry.setSysInfo( this.mSiteStore.getSysInfo( site ) );
 
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again

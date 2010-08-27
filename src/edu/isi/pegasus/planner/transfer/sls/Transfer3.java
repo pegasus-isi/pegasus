@@ -274,6 +274,7 @@ public class Transfer3 extends Transfer implements SLS {
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );
         defaultTCEntry.setType( TCType.INSTALLED );
+        defaultTCEntry.setSysInfo( this.mSiteStore.lookup( site ).getSysInfo() );
 
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
