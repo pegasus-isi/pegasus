@@ -120,6 +120,18 @@ public class SeqExec implements GridStart {
 
 
     /**
+     * The environment variable that tells seqexec to run a setup job.
+     */
+    public static final String  SEQEXEC_SETUP_ENV_VARIABLE = " SEQEXEC_SETUP";
+    
+
+    /**
+     * The environment variable that tells seqexec to run a cleanup job.
+     */
+    public static final String  SEQEXEC_CLEANUP_ENV_VARIABLE = " SEQEXEC_CLEANUP";
+
+
+    /**
      * The LogManager object which is used to log all the messages.
      */
     protected LogManager mLogger;
@@ -883,6 +895,8 @@ public class SeqExec implements GridStart {
         try{
             OutputStream ostream = new FileOutputStream( stdIn , true );
             PrintWriter writer = new PrintWriter( new BufferedWriter(new OutputStreamWriter(ostream)) );
+
+            /*
             writer.println( enableCommandViaKickstart(  "/bin/mkdir -p " + directory,
                                                         "mkdir",
                                                         job.getSiteHandle(),
@@ -890,10 +904,14 @@ public class SeqExec implements GridStart {
                                                         false )
                            );
             writer.flush();
+             */
+            //worker node directory is created by setting SEQEXEC_SETUP Env variable
+            job.envVariables.construct( SeqExec.SEQEXEC_SETUP_ENV_VARIABLE,  "/bin/mkdir -p " + directory );
 
             //retrieve name of seqxec prejob file
             String preJob = (String)job.envVariables.removeKey( Kickstart.KICKSTART_PREJOB );
 
+            boolean suppressXMLHeader = false;
             if( !this.mStageSLSFile ){
                 //we let condor transfer the file from the submit directory
                 //to a directory on the headnode/worker node.
@@ -912,7 +930,8 @@ public class SeqExec implements GridStart {
                                                "cp",
                                                job.getSiteHandle(),
                                                SubInfo.CREATE_DIR_JOB,
-                                               true  ) );
+                                               suppressXMLHeader  ) );
+                    suppressXMLHeader = true;
 
                 }
             }
@@ -945,10 +964,11 @@ public class SeqExec implements GridStart {
                 else{
                     //enable the pre command via kickstart
                      writer.println( enableCommandViaKickstart( preJob,
-                                                           "post-job",
+                                                            "pre-job",
                                                             job.getSiteHandle(),
                                                             SubInfo.STAGE_OUT_JOB,
-                                                            true ) );
+                                                            suppressXMLHeader ) );
+                     suppressXMLHeader = true;
                 }
             }
 
@@ -980,7 +1000,8 @@ public class SeqExec implements GridStart {
                                                                      "s3cmd",
                                                                      job.getSiteHandle(),
                                                                      SubInfo.STAGE_OUT_JOB,
-                                                                     true ) );
+                                                                     suppressXMLHeader ) );
+                        suppressXMLHeader = true;
                     }
                     in.close();
 
@@ -993,16 +1014,23 @@ public class SeqExec implements GridStart {
                                                                "post-job",
                                                                job.getSiteHandle(),
                                                                SubInfo.STAGE_OUT_JOB,
-                                                               true ) );
+                                                               suppressXMLHeader ) );
+                    suppressXMLHeader = true;
                 }
             }
             
             //write out the cleanup command
+            /*
             writer.println( enableCommandViaKickstart(   cleanupCmd,
                                                          "rm",
                                                          job.getSiteHandle(),
                                                          SubInfo.CREATE_DIR_JOB,
                                                          true ));
+             */
+
+            //worker node directory is removed by setting SEQEXEC_CLEANUP Env variable
+            job.envVariables.construct( SeqExec.SEQEXEC_CLEANUP_ENV_VARIABLE,  cleanupCmd );
+
             writer.close();
             ostream.close();
         }
@@ -1189,7 +1217,7 @@ public class SeqExec implements GridStart {
     protected String constructCopySLSFileCommand( List<String> files, String destination) {
         StringBuffer cp = new StringBuffer();
 
-        cp.append( "cp" );
+        cp.append( "/bin/cp" );
 
         for( String source : files ){
           cp.append( " " ).append(  source  );
