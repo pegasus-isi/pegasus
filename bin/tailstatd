@@ -659,16 +659,22 @@ sub process ($) {
     # returns: $main::stamp
     local($_) = shift;
     s/\s*$//;			# trim tail, including CR and LF
-    if ( m{^\s*(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})} ) {
+
+    if ( m{^\s*(\d{1,2})/(\d{1,2})(/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})} ) {
 	if ( $main::DEBUG > 2 ) {
 	    my ($a,$b,$y) = split /\s+/, $_, 3;
 	    my $x = length($y) > 64 ? substr($y,0,64) . '...' : $y;
 	    warn "## ", $main::line, ": $x\n";
 	}
 
-	# found time stamp, assume valid logline
 	my @now = localtime();
-	@now[0..4] = ($5, $4, $3, $2, $1-1 );
+	if ( $3 eq '' ) {
+	    # old timestamp format -- we need a year (from localtime())
+	    @now[0..4] = ($7, $6, $5, $2, $1-1 );
+	} else {
+	    # new timestamp format -- we have a year (see: perldoc Time::Local)
+	    @now[0..5] = ($7, $6, $5, $2, $1-1, $4+100 ); 
+	}
 	$main::stamp = timelocal( @now[0..5] ) + $adjustment;
 
 	# search for more content

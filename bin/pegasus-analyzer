@@ -705,6 +705,8 @@ def debug_condor(my_job):
 	debug_script.write("# Now, execute the job\n")
 	debug_script.write("%s\n" % (job_executable))
 	debug_script.write("\n")
+        # Remember not to put anything between running the executable
+        # and checking the exit code, otherwise $? will break...
         debug_script.write("# Check error code\n")
         debug_script.write("if [ $? -eq 0 ]; then\n")
         debug_script.write('   echo "executable ran successfully"\n')

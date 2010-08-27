@@ -49,6 +49,7 @@ class Parser:
     _ks_elements = {}
     _cwd = ""
     _fh = None
+    _open_error = False
 
     def __init__(self, filename):
 	"""
@@ -56,6 +57,7 @@ class Parser:
 	output file that should be parsed.
 	"""
 	self._kickstart_output_file = filename
+        self._open_error = False
 
     def open(self):
 	"""
@@ -66,9 +68,11 @@ class Parser:
 	except:
 	    # Error opening file
 	    self._fh = None
+            self._open_error = True
 	    return False
 
 	# Open succeeded
+        self._open_error = False
 	return True
 
     def close(self):

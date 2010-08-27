@@ -30,11 +30,9 @@ import os
 import re
 import sys
 import time
-import uuid
 import errno
 import atexit
 import select
-import shelve
 import signal
 import socket
 import logging
@@ -82,6 +80,14 @@ from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.tools import kickstart_parser
 
+# Import Python > 2.5 modules
+try:
+    import uuid
+    uuid_present = True
+except:
+    # Import failed, make a note so we can use something else
+    uuid_present = False
+
 # Add SEEK_CUR to os if Python version < 2.5
 if sys.version_info < (2, 5):
     os.SEEK_CUR = 1
@@ -104,10 +110,12 @@ re_rsl_clean = re.compile(r"([-_])")
 re_site_parse_gvds = re.compile(r"^\s*\+(pegasus|wf)_(site|resource)\s*=\s*([\'\"])?(\S+)\3")
 re_parse_jobtype = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
 re_parse_transformation = re.compile(r"^\s*\+pegasus_wf_xformation\s*=\s*(\S+)")
+re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
+re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_site_parse_euryale = re.compile(r"^\#!\s+site=(\S+)")
 
 # Used in process
-re_parse_timestamp = re.compile(r"^\s*(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})")
+re_parse_timestamp = re.compile(r"^\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
 re_parse_event = re.compile(r"Event:\s+ULOG_(\S+) for Condor (?:Job|Node) (\S+)\s+\(([0-9]+\.[0-9]+)(\.[0-9]+)?\)$")
 re_parse_script_running = re.compile(r"\d{2}\sRunning (PRE|POST) script of (?:Job|Node) (.+)\.{3}")
 re_parse_script_done = re.compile(r"\d{2}\s(PRE|POST) Script of (?:Job|Node) (\S+)")
@@ -178,7 +186,6 @@ jobstate = {}			# jid --> [stamp, event, condor_id, wtime, site]
 siteinfo = {}			# site --> { [RPSF] --> [ #, mtime] }
 walltime = {}			# jid --> walltime
 waiting = {}			# site --> stamp/60 --> [ #P->R, sum(ptime)]
-remove = {}			# used with shelve, database of removed Condor jobs
 
 # Revision handling
 revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
@@ -271,6 +278,8 @@ class Job:
     _main_job_start = None
     _main_job_done = None
     _main_job_transformation = None
+    _main_job_executable = None
+    _main_job_arguments = None
     _main_job_exitcode = None
     _post_script_start = None
     _post_script_done = None
@@ -387,6 +396,18 @@ class Job:
 		# Remove quotes, if any
 		my_transformation = my_transformation.strip('"')
 		self._main_job_transformation = my_transformation
+            elif re_parse_executable.search(my_line):
+                # Found line with executable
+                my_executable = re_parse_executable.search(my_line).group(1)
+                # Remove quotes, if any
+                my_executable = my_executable.strip('"')
+                self._main_job_executable = my_executable
+            elif re_parse_arguments.search(my_line):
+                # Found line with arguments
+                my_arguments = re_parse_arguments.search(my_line).group(1)
+                # Remove quotes, if any
+                my_arguments = my_arguments.strip('"')
+                self._main_job_arguments = my_arguments
 
 	SUB.close()
 
@@ -646,7 +667,11 @@ class Workflow:
 		    self._wf_uuid = wfparams["wf_uuid"]
 	    # If _wf_uuid is not defined, we create a random uuid for this workflow
 	    if self._wf_uuid is None:
-		self._wf_uuid = uuid.uuid4()
+                if uuid_present == True:
+                    self._wf_uuid = uuid.uuid4()
+                else:
+                    logger.info("uuid module is not present, using time.time() to generate wf_uuid")
+                    self._wf_uuid = str(time.time())
 	    if "dax_label" in wfparams:
 		self._dax_label = wfparams["dax_label"]
 	    else:
@@ -768,7 +793,7 @@ class Workflow:
 	    kwargs["cluster_start_time"] = my_job._cluster_start_time
 	if my_job._cluster_duration is not None:
 	    kwargs["cluster_duration"] = my_job._cluster_duration
-	if job_state == "JOB_TERMINATED":
+	if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
 	    event_type = "job.mainjob.end"
 	elif job_state == "PRE_SCRIPT_STARTED":
 	    event_type = "job.prescript.start"
@@ -938,8 +963,24 @@ class Workflow:
 	my_job_output_fn_base = os.path.join(self._run_dir, my_job._name) + ".out"
 	my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
 
+        # First assume we will find rotated file
 	my_parser = kickstart_parser.Parser(my_job_output_fn)
 	my_output = my_parser.parse_stampede()
+
+        # Check if we were able to find it
+        if my_parser._open_error == True:
+            # File wasn't there, look for the file before the rotation
+            my_parser.__init__(my_job_output_fn_base)
+            my_output = my_parser.parse_stampede()
+
+            if my_parser._open_error == True:
+                # Couldn't find it again, one last try, as it might have just been moved
+                my_parser.__init__(my_job_output_fn)
+                my_output = my_parser.parse_stampede()
+
+        # Check if successful
+        if my_parser._open_error == True:
+            logger.info("unable to find output file for job %s" % (my_job._name))
 
 	# Add job information to the Job class
 	if my_job.extract_job_info(my_output) == True:
@@ -1096,7 +1137,7 @@ class Workflow:
 	elif job_state == "PRE_SCRIPT_FAILURE" or job_state == "PRE_SCRIPT_SUCCESS":
 	    # PRE script finished
 	    self.db_send_task_info(my_job, "PRE SCRIPT", PRESCRIPT_TASK_ID)
-	elif job_state == "JOB_TERMINATED":
+	elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
 	    # Main job has ended
 	    self.parse_job_output(my_job, timestamp, job_state)
 
@@ -1185,8 +1226,8 @@ parser.add_option("-l", "--log", action = "store", type = "string", dest = "logf
 parser.add_option("-C", "--config", action = "append", type = "string", dest = "config_opts",
 		  help = "k=v defines configurations instead of reading from braindump.txt. Required keys include %s. Suggested keys include %s"
 		  % (brainkeys["required"], brainkeys["optional"]))
-parser.add_option("-D", "--database", action = "store_const", const = 1, dest = "use_db",
-		  help = "turn on database entries for work DB (this is the default mode and overrides the broker option below)")
+#parser.add_option("-D", "--database", action = "store_const", const = 1, dest = "use_db",
+#		  help = "turn on database entries for work DB (this is the default mode and overrides the broker option below)")
 parser.add_option("--nodatabase", action = "store_const", const = 0, dest = "use_db",
 		  help = "turn off logging information to the database (this option must be given when using the broker option below)")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
@@ -1324,27 +1365,6 @@ try:
 except:
     logger.critical("error appending to %s!" % (jsd))
     sys.exit(1)
-
-# Untie exit handler
-def untie_exit_handler():
-    remove.close()
-    if terminate == 0:
-	try:
-	    os.unlink(rmdb)
-	except:
-	    # fail silently
-	    pass
-
-if not replay_mode:
-    # Maintain database of removed Condor jobs (for restarts)
-    rmdb = os.path.join(run, "remove.db")
-    try:
-	remove = shelve.open(rmdb)
-    except:
-	logger.critical("unable to create DB file %s!" % (rmdb))
-	sys.exit(1)
-
-    atexit.register(untie_exit_handler)
 
 # To use NetLogger's command-line parser
 # from netlogger.nllog import get_root_logger, OptionParser
@@ -1643,11 +1663,15 @@ def process(log_line):
 	# Found time stamp, let's assume valid log line
 	curr_time = time.localtime()
 	adj_time = list(curr_time)
-	adj_time[1] = int(my_expr.group(1)) # Month
-	adj_time[2] = int(my_expr.group(2)) # Day
-	adj_time[3] = int(my_expr.group(3)) # Hours
-	adj_time[4] = int(my_expr.group(4)) # Minutes
-	adj_time[5] = int(my_expr.group(5)) # Seconds
+        adj_time[1] = int(my_expr.group(1)) # Month
+        adj_time[2] = int(my_expr.group(2)) # Day
+        adj_time[3] = int(my_expr.group(5)) # Hours
+        adj_time[4] = int(my_expr.group(6)) # Minutes
+        adj_time[5] = int(my_expr.group(7)) # Seconds
+
+        if my_expr.group(3) is not None:
+            # New timestamp format
+            adj_time[0] = int(my_expr.group(4)) + 2000 # Year
 
 	timestamp = time.mktime(adj_time) + adjustment
 
@@ -2421,6 +2445,8 @@ if use_db == 1:
 # Initialize broker
 if use_broker == 1:
 #    rotate_log_file(run, output_db)
+    # prepend the run dir if broker_string is not an absolute path
+    broker_string = os.path.join(run, broker_string)
     # using nlapi to create log file (and not use the loader)
     workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=broker_string)
 
