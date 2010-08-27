@@ -554,15 +554,19 @@ public class InPlace implements CleanupStrategy{
             GraphNode node = (GraphNode)it.next();
             SubInfo job = ( SubInfo )node.getContent();
 
-            //log to debug
-            StringBuffer sb = new StringBuffer();
-            sb.append( "Applying priority of " ).append( node.getDepth() ).
-                    append( " to " ).append( job.getID() );
-            mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+            //only apply priority if job is not associated with a priority
+            //beforehand
+            if( !job.condorVariables.containsKey( Condor.PRIORITY_KEY ) ){
 
-            //apply a priority to the job overwriting any preexisting priority
-            job.condorVariables.construct( Condor.PRIORITY_KEY,
-                    new Integer( node.getDepth() ).toString());
+                //log to debug
+                StringBuffer sb = new StringBuffer();
+                sb.append( "Applying priority of " ).append( node.getDepth() ).
+                        append( " to " ).append( job.getID() );
+                mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+
+                //apply a priority to the job overwriting any preexisting priority
+                job.condorVariables.construct( Condor.PRIORITY_KEY,
+                        new Integer( node.getDepth() ).toString());
 
 
             //also for compute and staged compute jobs
@@ -573,6 +577,7 @@ public class InPlace implements CleanupStrategy{
 //                job.globusRSL.construct( "condorsubmit",
 //                                         "(priority " + node.getDepth() + ")");
 //            }
+            }
         }
         return;
     }
