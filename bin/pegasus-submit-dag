@@ -245,7 +245,7 @@ print STDERR "# submit value is $submit" if $main::DEBUG;
 if($submit < 1){
     my @carg= ($c_s);
     push (@carg,'-append', '+pegasus_wf_name="'.$config{pegasus_wf_name}.'"');
-    push (@carg,'-append', '+pegasus_wf_time="'.$config{pegasus_wf_time}.'"');
+    push (@carg,'-append', '+pegasus_wf_time="'.$config{timestamp}.'"');
     push (@carg, $dag.".condor.sub");
     print STDERR "# @carg\n" if $main::DEBUG;
     exec { $carg[0] } @carg or die "Cannot execut @carg: $!\n";
