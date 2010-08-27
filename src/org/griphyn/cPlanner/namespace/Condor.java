@@ -591,12 +591,12 @@ public class Condor extends Namespace{
 
         //construct the periodic_release and periodic_remove
         //values to whatever they are set
-        if( !releaseval.isEmpty() ){
-            this.construct("periodic_release", releaseval);
+        if( releaseval != null && releaseval.length() > 0 ){
+            this.construct( "periodic_release", releaseval);
         }
 
-        if( !removeval.isEmpty() ){
-            this.construct("periodic_remove", removeval);
+        if( removeval != null && removeval.length() > 0 ){
+            this.construct( "periodic_remove", removeval );
         }
 
         //the job priorities from property file
