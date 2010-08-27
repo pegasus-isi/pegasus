@@ -21,6 +21,8 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import java.io.BufferedReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.code.GridStart;
@@ -202,6 +204,12 @@ public class SeqExec implements GridStart {
      */
     protected boolean mStageSLSFile;
 
+    /**
+     * Boolean to signify we are using s3cmd to do sls.
+     * temporary.
+     */
+    private boolean mS3SLSUsed;
+
 
     /**
      * Initializes the GridStart implementation.
@@ -231,7 +239,7 @@ public class SeqExec implements GridStart {
         mKickstartGridStartImpl.initialize( bag, dag );
 
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-
+        mS3SLSUsed = this.mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3;
 
    }
 
@@ -486,107 +494,40 @@ public class SeqExec implements GridStart {
     protected void enableClusteredJobForWorkerNodeExecution( AggregatedJob job, boolean isGlobusJob) {
         
 
-        try {
-            String key = getDirectoryKey( job );
+        String key = getDirectoryKey(job);
 
-            //always have the remote dir set to /tmp as
-            //we are banking on kickstart to change directory
-            //for us for compute jobs
-            job.condorVariables.construct( key, "/tmp" );
+        //always have the remote dir set to /tmp as
+        //we are banking on kickstart to change directory
+        //for us for compute jobs
+        job.condorVariables.construct(key, "/tmp");
 
-            AggregatedJob clusteredJob = (AggregatedJob) job;
-            SubInfo firstJob = clusteredJob.getConstituentJob(0);
+        AggregatedJob clusteredJob = (AggregatedJob) job;
+        SubInfo firstJob = clusteredJob.getConstituentJob(0);
 
-            GridStart gs = this.mKickstartGridStartImpl;
+        GridStart gs = this.mKickstartGridStartImpl;
 
-            //add the -f option always
-            if( !mProps.abortOnFirstJobFailure() ){
-                //the clustering module did not add the -f option
-                //we add ourselves here
-                //we want seqexec to fail hard on first error (non-zero exit code or signal death)
-                construct( job, "arguments", job.getArguments() + " -f " );
-            }
-            
-            //gs.enable( clusteredJob, isGlobusJob );
-            //System.out.println( clusteredJob.envVariables );
-            //enable the whole clustered job via kickstart
-            SubInfo j = (SubInfo) clusteredJob.clone();
-            gs.enable(j, isGlobusJob);
+        //add the -f option always
+        if (!mProps.abortOnFirstJobFailure()) {
+            //the clustering module did not add the -f option
+            //we add ourselves here
+            //we want seqexec to fail hard on first error (non-zero exit code or signal death)
+            construct(job, "arguments", job.getArguments() + " -f ");
+        }
 
-
-            //we merge the sls input and sls output files into
-            //the stdin of the clustered job
-            File slsInputFile = new File( mSubmitDir, mSLS.getSLSInputLFN(job));
-            File slsOutputFile = new File( mSubmitDir, mSLS.getSLSOutputLFN(job));
-            File stdin = new File( mSubmitDir, job.getStdIn());
-
-            //create a temp file first
-            File temp = File.createTempFile("sls", null, new File( mSubmitDir ));
-
-            //add an entry to create the worker node directory
-            PrintWriter writer = new PrintWriter( new FileWriter( temp ) );
-            writer.println(   enableCommandViaKickstart(  "/bin/mkdir -p " + gs.getWorkerNodeDirectory( job ),
-                                                          "mkdir",
-                                                          job.getSiteHandle(),
-                                                          SubInfo.CREATE_DIR_JOB,
-                                                          false )
-                            );
-
-            //append the sls input file to temp file
-            BufferedReader in = new BufferedReader( new FileReader( slsInputFile ) );
-            String line = null;
-            while(( line = in.readLine() ) != null ){
-                    writer.println( enableCommandViaKickstart(  line,
-                                                                "s3cmd",
-                                                                job.getSiteHandle(),
-                                                                SubInfo.STAGE_IN_JOB,
-                                                                true) );
-            }
-            in.close();
-            slsInputFile.delete();
+        //gs.enable( clusteredJob, isGlobusJob );
+        //System.out.println( clusteredJob.envVariables );
+        //enable the whole clustered job via kickstart
+        SubInfo j = (SubInfo) clusteredJob.clone();
+        gs.enable(j, isGlobusJob);
 
 
-            //append the stdin to the tmp file and add -H kickstart options
-//            addToFile( stdin, tmpOStream );
-            in = new BufferedReader( new FileReader( stdin ) );
-            line = null;
-            while(( line = in.readLine() ) != null ){
-                //figure out the executable and the arguments first.
-                int index = line.indexOf( ' ' ); //the first space
-                String executable = line.substring( 0, index );
-                String arguments = line.substring(index);
-                writer.println ( executable + " -H " + arguments );
-            }
-            in.close();
-            stdin.delete();
-
-
-            //append the sls output to temp file
-            in = new BufferedReader( new FileReader( slsOutputFile ) );
-            line = null;
-            while(( line = in.readLine() ) != null ){
-                    writer.println( enableCommandViaKickstart(  line,
-                                                                "s3cmd",
-                                                                job.getSiteHandle(),
-                                                                SubInfo.STAGE_OUT_JOB,
-                                                                true) );
-            }
-            in.close();
-            slsOutputFile.delete();
-
-            //we need to remove the directory
-            writer.println( enableCommandViaKickstart( "/bin/rm -rf " + gs.getWorkerNodeDirectory( job ),
-                                                       "rm",
-                                                       job.getSiteHandle(),
-                                                       SubInfo.CREATE_DIR_JOB,
-                                                       true ) );
-            writer.close();
-
-            //rename tmp to stdin
-            temp.renameTo( stdin );
-
-        } catch (IOException ex) {
-
+        if ( mS3SLSUsed ) {
+            //only for S3 sls were the transfer job itself is a clustered
+            //job. Legacy support. To be removed eventually.
+            mergeSLSInputAndOutputFilesToStdIn(job, gs);
+        }
+        else{
+            this.enableAndGenerateSeqexecInputFile( job, isGlobusJob );
         }
 
     }
@@ -854,6 +795,142 @@ public class SeqExec implements GridStart {
     }
 
     /**
+     * Generates a seqexec input file for an Aggregated job. The function first enables the
+     * job via kickstart module for worker node execution and then retrieves
+     * the commands to put in the input file from the environment variables specified
+     * for kickstart.
+     *
+     * It creates a single input file for the seqexec invocation.
+     * The input file contains commands to
+     *
+     * <pre>
+     * 1) create directory on worker node
+     * 2) fetch input data files
+     * 3) execute the job
+     * 4) transfer the output data files
+     * 5) cleanup the directory
+     * </pre>
+     *
+     * @param job          the job to be enabled.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     * 
+     * @return the file handle to the seqexec input file
+     */
+    protected File enableAndGenerateSeqexecInputFile( AggregatedJob job, boolean isGlobusJob) {
+        File stdIn = new File( mSubmitDir, job.getID() + ".in" );
+
+        //enable the job first using kickstart to get PRE JOB and POST JOB populated
+        this.mKickstartGridStartImpl.enable( job, isGlobusJob );
+        String directory  = this.mKickstartGridStartImpl.getWorkerNodeDirectory( job );
+    
+        try{
+            //create a temp file first
+            File temp = File.createTempFile( "merge_stdin", null, new File(mSubmitDir));
+            OutputStream ostream = new FileOutputStream( temp , true );
+            PrintWriter writer = new PrintWriter( new BufferedWriter(new OutputStreamWriter(ostream)) );
+
+           
+            //worker node directory is created by setting SEQEXEC_SETUP Env variable
+            job.envVariables.construct( SeqExec.SEQEXEC_SETUP_ENV_VARIABLE,  "/bin/mkdir -p " + directory );
+
+            //retrieve name of seqxec prejob file
+            String preJob = (String)job.envVariables.removeKey( Kickstart.KICKSTART_PREJOB );
+
+            boolean suppressXMLHeader = false;
+            if( !this.mStageSLSFile ){
+                //we let condor transfer the file from the submit directory
+                //to a directory on the headnode/worker node.
+                //we need seqexec to cp the sls files to the worker node directories
+                List<String> slsFiles = new LinkedList();
+                if( mSLS.needsSLSInput( job ) ){
+                    slsFiles.add( mSLS.getSLSInputLFN(job) );
+                }
+                if( mSLS.needsSLSOutput( job ) ){
+                    slsFiles.add( mSLS.getSLSOutputLFN(job) );
+                }
+                if( !slsFiles.isEmpty() ){
+
+                    String cmd = constructCopySLSFileCommand( slsFiles, directory );
+                    writer.println( enableCommandViaKickstart( cmd,
+                                               "cp",
+                                               job.getSiteHandle(),
+                                               SubInfo.CREATE_DIR_JOB,
+                                               suppressXMLHeader  ) );
+                    suppressXMLHeader = true;
+
+                }
+            }
+
+            if( preJob != null ){
+                //enable the pre command via kickstart
+                writer.println( enableCommandViaKickstart( preJob,
+                                                            "pre-job",
+                                                            job.getSiteHandle(),
+                                                            SubInfo.STAGE_OUT_JOB,
+                                                            suppressXMLHeader,
+                                                            directory ) );
+                
+                suppressXMLHeader = true;
+                
+            }
+
+            //write out the main command that needs to be invoked
+            //append to the temp file the contents of the aggregated
+            //jobs stdin
+            File stdin = new File(mSubmitDir, job.getStdIn());
+            BufferedReader in = new BufferedReader(new FileReader( stdin ));
+            String line = null;
+            while ((line = in.readLine()) != null) {
+                //figure out the executable and the arguments first.
+                int index = line.indexOf(' '); //the first space
+                String executable = line.substring(0, index);
+                String arguments = line.substring(index);
+                writer.println(executable + ( suppressXMLHeader ? " -H " : "" ) + arguments);
+                suppressXMLHeader = true;
+            }
+            in.close();
+            writer.flush();
+            stdin.delete();
+            
+            //retrieve name of seqxec postjob file
+            //there should be a way to determine if 
+            //postjob is actually a clustered job itself
+            String postJob = (String)job.envVariables.removeKey( Kickstart.KICKSTART_POSTJOB );
+            if( postJob != null  ){
+                //enable the post command via kickstart
+                writer.println( enableCommandViaKickstart( postJob,
+                                                               "post-job",
+                                                               job.getSiteHandle(),
+                                                               SubInfo.STAGE_OUT_JOB,
+                                                               suppressXMLHeader,
+                                                               directory ) );
+                suppressXMLHeader = true;
+                
+            }
+            
+            //write out the cleanup command
+            
+            //worker node directory is removed by setting SEQEXEC_CLEANUP Env variable
+            job.envVariables.construct( SeqExec.SEQEXEC_CLEANUP_ENV_VARIABLE,  "/bin/rm -rf " + directory );
+
+            writer.close();
+            ostream.close();
+            
+            
+            //rename tmp to stdin
+            temp.renameTo(stdin);
+        }
+        catch( IOException ioe ){
+            throw new RuntimeException( "[SEQEXEC GRIDSTART] Error while writing out seqexec input file " + stdIn , ioe );
+        }
+
+        return stdIn;
+    }
+
+    /**
      * Generates a seqexec input file for the job. The function first enables the
      * job via kickstart module for worker node execution and then retrieves
      * the commands to put in the input file from the environment variables specified
@@ -878,10 +955,10 @@ public class SeqExec implements GridStart {
      * 
      * @return the file handle to the seqexec input file
      */
-    private File enableAndGenerateSeqexecInputFile(SubInfo job, boolean isGlobusJob) {
+    protected File enableAndGenerateSeqexecInputFile(SubInfo job, boolean isGlobusJob) {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
 
-        boolean s3sls = this.mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3;
+        
 
         //enable the job first using kickstart
         this.mKickstartGridStartImpl.enable(job, isGlobusJob );
@@ -939,7 +1016,7 @@ public class SeqExec implements GridStart {
             if( preJob != null ){
                 //there should be a way to determine if
                 //prejob is actually a clustered job itself
-                if( s3sls ){
+                if( mS3SLSUsed ){
                     cmdArray = preJob.split( " " );
 
                     //the last token is the sls file
@@ -967,7 +1044,8 @@ public class SeqExec implements GridStart {
                                                             "pre-job",
                                                             job.getSiteHandle(),
                                                             SubInfo.STAGE_OUT_JOB,
-                                                            suppressXMLHeader ) );
+                                                            suppressXMLHeader,
+                                                            directory ) );
                      suppressXMLHeader = true;
                 }
             }
@@ -984,7 +1062,7 @@ public class SeqExec implements GridStart {
             if( postJob != null  ){
                 //there should be a way to determine if
                 //postjob is actually a clustered job itself
-                if( s3sls ){
+                if( mS3SLSUsed ){
                     cmdArray = postJob.split( " " );
 
                     //the last token is the sls file
@@ -1014,7 +1092,8 @@ public class SeqExec implements GridStart {
                                                                "post-job",
                                                                job.getSiteHandle(),
                                                                SubInfo.STAGE_OUT_JOB,
-                                                               suppressXMLHeader ) );
+                                                               suppressXMLHeader,
+                                                               directory ) );
                     suppressXMLHeader = true;
                 }
             }
@@ -1041,7 +1120,7 @@ public class SeqExec implements GridStart {
         return stdIn;
     }
 
-     /**
+    /**
       * Enables a command via kickstart. This is used to enable commands that
       * are retrieved from the SLS files.
       *
@@ -1058,7 +1137,32 @@ public class SeqExec implements GridStart {
                                                  String name,
                                                  String site,
                                                  int type,
-                                                 boolean supressXMLHeader
+                                                 boolean supressXMLHeader ){
+    
+         return this.enableCommandViaKickstart(command, name, site, type, supressXMLHeader, null );
+     }
+     
+     /**
+      * Enables a command via kickstart. This is used to enable commands that
+      * are retrieved from the SLS files.
+      *
+      * @param command   the command that needs to be invoked via kickstart.
+      * @param name      a logical name to assign to the command
+      * @param site      the site on which the command executes
+      * @param type      the type of job that the command refers to.
+      * @param supressXMLHeader   get kickstart to disable XML header creation
+      * @param changeToDirectory  the directory to which kickstart should change
+      *                           before launching the job. If null, then kickstart
+      *                           does not change directory
+      *
+      * @return   the command enabled via kickstart
+      */
+     protected String enableCommandViaKickstart( String command,
+                                                 String name,
+                                                 String site,
+                                                 int type,
+                                                 boolean supressXMLHeader,
+                                                 String changeToDirectory
                                                  ){
          //figure out the executable and the arguments first.
          int index = command.indexOf( ' ' ); //the first space
@@ -1078,6 +1182,9 @@ public class SeqExec implements GridStart {
          result.append( job.condorVariables.get( "executable" ) ).append( " " );
          if ( supressXMLHeader ){
              result.append( " -H " );
+         }
+         if( changeToDirectory != null ){
+             result.append(  " -w " ).append( changeToDirectory );
          }
          result.append( job.condorVariables.get( "arguments" ) );
 
@@ -1225,6 +1332,72 @@ public class SeqExec implements GridStart {
         cp.append( " " ).append( destination );
 
         return cp.toString();
+    }
+
+
+    /**
+     * Merges the SLS input and output files to the stdin of the seqexec job.
+     * This is in case of S3 sls jobs using 3CMD command itself are clustered job
+     *
+     * @param job    the aggregated job being enabled via kickstart
+     * @param gs     the GridStart impelemntation to use.
+     */
+    protected void mergeSLSInputAndOutputFilesToStdIn(AggregatedJob job, GridStart gs ) {
+        try {
+            //we merge the sls input and sls output files into
+            //the stdin of the clustered job
+            File slsInputFile = new File(mSubmitDir, mSLS.getSLSInputLFN(job));
+            File slsOutputFile = new File(mSubmitDir, mSLS.getSLSOutputLFN(job));
+            File stdin = new File(mSubmitDir, job.getStdIn());
+
+            //create a temp file first
+            File temp = File.createTempFile("sls", null, new File(mSubmitDir));
+
+            //add an entry to create the worker node directory
+            PrintWriter writer = new PrintWriter(new FileWriter(temp));
+            writer.println(enableCommandViaKickstart("/bin/mkdir -p " + gs.getWorkerNodeDirectory(job), "mkdir", job.getSiteHandle(), SubInfo.CREATE_DIR_JOB, false));
+
+            //append the sls input file to temp file
+            BufferedReader in = new BufferedReader(new FileReader(slsInputFile));
+            String line = null;
+            while ((line = in.readLine()) != null) {
+                writer.println(enableCommandViaKickstart(line, "s3cmd", job.getSiteHandle(), SubInfo.STAGE_IN_JOB, true));
+            }
+            in.close();
+            slsInputFile.delete();
+
+            //append the stdin to the tmp file and add -H kickstart options
+//            addToFile( stdin, tmpOStream );
+            in = new BufferedReader(new FileReader(stdin));
+            line = null;
+            while ((line = in.readLine()) != null) {
+                //figure out the executable and the arguments first.
+                int index = line.indexOf(' '); //the first space
+                String executable = line.substring(0, index);
+                String arguments = line.substring(index);
+                writer.println(executable + " -H " + arguments);
+            }
+            in.close();
+            stdin.delete();
+
+            //append the sls output to temp file
+            in = new BufferedReader(new FileReader(slsOutputFile));
+            line = null;
+            while ((line = in.readLine()) != null) {
+                writer.println(enableCommandViaKickstart(line, "s3cmd", job.getSiteHandle(), SubInfo.STAGE_OUT_JOB, true));
+            }
+            in.close();
+            slsOutputFile.delete();
+
+            //we need to remove the directory
+            writer.println(enableCommandViaKickstart("/bin/rm -rf " + gs.getWorkerNodeDirectory(job), "rm", job.getSiteHandle(), SubInfo.CREATE_DIR_JOB, true));
+            writer.close();
+
+            //rename tmp to stdin
+            temp.renameTo(stdin);
+        } catch (IOException ex) {
+            Logger.getLogger(SeqExec.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
 }

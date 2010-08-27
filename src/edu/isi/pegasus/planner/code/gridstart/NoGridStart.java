@@ -285,9 +285,9 @@ public class NoGridStart implements GridStart {
                 try {
                     //this approach only works for S3 for time being!
                     //do a sanity check
-                    if (!(mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3)) {
+                    /*if (!(mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3)) {
                         throw new RuntimeException("Second Level Staging with NoGridStart for clustered jobs only works with S3");
-                    }
+                    }*/
 
 
 
