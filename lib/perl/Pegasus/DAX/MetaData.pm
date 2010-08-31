@@ -1,19 +1,5 @@
-##
-#  Copyright 2007-2010 University Of Southern California
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
-##
+# License: (atend)
 # $Id$
 #
 package Pegasus::DAX::MetaData;
@@ -78,3 +64,103 @@ sub toXML {
 }
 
 1; 
+
+
+=head1 NAME
+
+Pegasus::DAX::Metadata - stores a Pegasus piece of meta data.
+
+=head1 SYNOPSIS
+
+    use Pegasus::DAX::Metadata; 
+
+    my $a = Pegasus::DAX::Profile->new( 'key', 'type', 'fubar' ); 
+    my $b = Pegasus::DAX::Profile->new( key => 'foo'
+    				      , type => 'integer'
+                                      , value => 'bar' );
+
+=head1 DESCRIPTION
+
+This class remembers a Pegasus meta data. The internal transformation-
+and replica catalog may use meta data associated with entries. 
+
+=head1 METHODS
+
+=over 4
+
+=item new()
+
+=item new( $key, $type, $value )
+
+=item new( a => b, c => d, ... )
+
+=item new( { a => b, c => d, ... } )
+
+The default constructor will create an empty instance whose scalar
+attributes can be adjusted using the getters and setters provided by the
+C<AUTOLOAD> inherited method.
+
+When invoked with exactly 3 arguments, the first argument is the meta
+data key, the second argument the type identifier, and the third
+argument the value to set.
+
+Other means of construction is to use named lists.
+
+=item key
+
+Setter and getter for a key string. The key value may be of restricted
+range, dependinng on the namespace, but this is not checked at this
+point.
+
+=item type
+
+Setter and getter for a type string. Types are not standardized in any
+way.
+
+=item value
+
+Setter and getter for the value to be transported. 
+
+=item toXML( $handle, $indent, $xmlns )
+
+The purpose of the C<toXML> function is to recursively generate XML from
+the internal data structures. The first argument is a file handle open
+for writing. This is where the XML will be generated.  The second
+argument is a string with the amount of white-space that should be used
+to indent elements for pretty printing. The third argument may not be
+defined. If defined, all element tags will be prefixed with this name
+space.
+
+=back 
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Pegasus::DAX::Base>
+
+Base class. 
+
+=item L<Pegasus::DAX::CatalogType>
+
+Abstract class using meta data. 
+
+=back 
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2007-2010 University Of Southern California
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut

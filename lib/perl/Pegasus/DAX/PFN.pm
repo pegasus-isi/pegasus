@@ -1,19 +1,5 @@
-##
-#  Copyright 2007-2010 University Of Southern California
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
-##
+# License: (atend)
 # $Id$
 #
 package Pegasus::DAX::PFN;
@@ -106,3 +92,109 @@ sub toXML {
 }
 
 1; 
+
+=head1 NAME
+
+Pegasus::DAX::PFN - stores a Pegasus concrete data- or executable
+description.
+
+=head1 SYNOPSIS
+
+    use Pegasus::DAX::PFN; 
+
+    my $a = Pegasus::DAX::PFN->new( 'url1' );
+    my $b = Pegasus::DAX::PFN->new( 'url2', 'local' );
+    my $c = Pegasus::DAX::PFN->new( url => 'file://foo'
+                                  , site => 'local' ); 
+
+   $c->addProfile( PROFILE_ENV, 'FOO', 'bar' );
+   $c->addProfile( $profile_instance ); 
+
+=head1 DESCRIPTION
+
+This class remembers a Pegasus concrete remote file location. The file
+may refer to an executable (in the transformation catalog), or a data
+file (in the replica catalog). 
+
+=head1 METHODS
+
+=over 4
+
+=item new()
+
+=item new( $url )
+
+=item new( $url, $site )
+
+=item new( a => b, c => d, ... )
+
+=item new( { a => b, c => d, ... } )
+
+The default constructor will create an empty instance whose scalar
+attributes can be adjusted using the getters and setters provided by the
+C<AUTOLOAD> inherited method.
+
+When invoked with exactly 1 or 2 arguments, the first argument is the
+location URL, and the second argument is the site handle. 
+
+Other means of construction is to use named lists.
+
+=item url
+
+Setter and getter for the URL string.
+
+=item site
+
+Setter and getter for the site handle string. 
+
+=item addProfile( $namespace, $key, $value )
+
+=item addProfile( $profile_instance )
+
+This method will add a specified profile, either as three string or
+instance of L<Pegasus::DAX::Profile>, to the collection of profiles
+associated with this PFN.
+
+=item toXML( $handle, $indent, $xmlns )
+
+The purpose of the C<toXML> function is to recursively generate XML from
+the internal data structures. The first argument is a file handle open
+for writing. This is where the XML will be generated.  The second
+argument is a string with the amount of white-space that should be used
+to indent elements for pretty printing. The third argument may not be
+defined. If defined, all element tags will be prefixed with this name
+space.
+
+=back 
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Pegasus::DAX::Base>
+
+Base class. 
+
+=item L<Pegasus::DAX::CatalogType>
+
+Abstract class using PFNs.
+
+=back 
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2007-2010 University Of Southern California
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut

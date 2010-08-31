@@ -1,18 +1,5 @@
 #
-#  Copyright 2007-2010 University Of Southern California
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
+# License: (atend)
 # $Id$
 #
 package Pegasus::DAX::PlainFilename;
@@ -33,6 +20,7 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
+    $self->{'__permitted'}->{name} = 1;
 
     if ( @_ > 1 && (@_ & 1) == 0) { 
 	# even: called with a=>b,c=>d list
@@ -70,3 +58,95 @@ sub toXML {
 }
 
 1; 
+
+=head1 NAME
+
+Pegasus::DAX::PlainFilename - class for simple file names. 
+
+=head1 SYNOPSIS
+
+    use Pegasus::DAX::PlainFilename; 
+
+    my $i = Pegasus::DAX::PlainFilename->new( 'asdf.txt' );
+    print "name is ", $i->name, "\n";
+    $i->name = 'newname.txt';
+    print "name is ", $i->name, "\n";
+   
+=head1 DESCRIPTION
+
+This class remembers a simple filename. These filenames are aggregated
+by the C<AbstractJob> class. A simple filename is either part of a
+concrete job's argument list.
+
+=head1 METHODS
+
+=over 4
+
+=item new()
+
+=item new( $filename )
+
+=item new( name => $filename )
+
+=item new( { name => $filename } )
+
+The constructor may be called with a single scalar argument, which is
+the filename string. Alternative ways to invoke the c'tor pass the 
+arguments as named list. 
+
+=item name()
+
+This is the getter. 
+
+=item name( $name )
+
+This is the setter. 
+
+=item toXML( $handle, $indent, $xmlns )
+
+The purpose of the C<toXML> function is to recursively generate XML from
+the internal data structures. The first argument is a file handle open
+for writing. This is where the XML will be generated.  The second
+argument is a string with the amount of white-space that should be used
+to indent elements for pretty printing. The third argument may not be
+defined. If defined, all element tags will be prefixed with this name
+space.
+
+=back 
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Pegasus::DAX::Base>
+
+Base class. 
+
+=item L<Pegasus::DAX::Filename>
+
+Child class. 
+
+=item L<Pegasus::DAX::AbstractJob>
+
+The abstract job class aggregates instances of this class in
+C<arguments> and in C<stdio>.
+
+=back 
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2007-2010 University Of Southern California
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut

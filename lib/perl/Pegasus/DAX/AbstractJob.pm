@@ -1,18 +1,5 @@
 #
-#  Copyright 2007-2010 University Of Southern California
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
+# License: (atend)
 # $Id$
 #
 package Pegasus::DAX::AbstractJob;
@@ -24,10 +11,18 @@ use Pegasus::DAX::Base qw(:xml);
 use Exporter;
 our @ISA = qw(Pegasus::DAX::Base Exporter); 
 
+use constant INVOKE_NEVER => 'never';
+use constant INVOKE_START => 'start'; 
+use constant INVOKE_ON_SUCCESS => 'on_success';
+use constant INVOKE_ON_ERROR => 'on_error';
+use constant INVOKE_AT_END => 'at_end'; 
+use constant INVOKE_ALL => 'all'; 
+
 our $VERSION = '3.2'; 
 our @EXPORT = (); 
-our @EXPORT_OK = ();
-our %EXPORT_TAGS = (); 
+our %EXPORT_TAGS = ( all => [qw(INVOKE_NEVER INVOKE_START INVOKE_ON_SUCCESS
+	INVOKE_ON_ERROR INVOKE_AT_END INVOKE_ALL) ] ); 
+our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
 
 sub new {
     my $proto = shift;
@@ -58,6 +53,10 @@ sub addArgument {
 	# sub-classing not permissible for storing/printing
 	$name = Pegasus::DAX::PlainFilename->new( $name->name )
 	    unless ( ref $name eq 'Pegasus::DAX::PlainFilename' ); 
+    } elsif ( $name->isa('Pegasus::DAX::CatalogType') ) {
+	# File or Executable
+	$self->uses($name); 
+	$name = Pegasus::DAX::PlainFilename->new( $name->name ); 
     } else {
 	croak "Illegal argument to addArgument"; 
     }
@@ -89,46 +88,43 @@ sub addProfile {
     }
 }
 
-sub setStdin {
+sub stdio($$;@) { 
     my $self = shift;
-    my $name = shift; 
-    if ( ! ref $name ) { 
-	# plain string
-	$self->{stdin} = $name; 
-    } elsif ( $name->can('name') ) { 
-	# some class?
-	$self->{stdin} = $name->name; 
-    } else {
-	croak "illegal name argument";
+    my $what = shift;
+
+    my $result = $self->{$what}; 
+    if ( @_ ) { 
+	my $name = shift; 
+	if ( ! ref $name ) { 
+	    # plain string
+	    $self->{$what} = $name; 
+	} elsif ( $name->can('name') ) { 
+	    # some class?
+	    $self->{$what} = $name->name; 
+	    
+	    $self->uses($name)
+		if ( $name->isa('Pegasus::DAX::Filename') || 
+		     $name->isa('Pegasus::DAX::CatalogType') ); 
+	} else {
+	    croak "illegal name argument";
+	}
     }
+    $result; 
 }
 
-sub setStdout {
+sub stdin {
     my $self = shift;
-    my $name = shift; 
-    if ( ! ref $name ) { 
-	# plain string
-	$self->{stdout} = $name; 
-    } elsif ( $name->can('name') ) { 
-	# some class?
-	$self->{stdout} = $name->name; 
-    } else {
-	croak "illegal name argument";
-    }
+    __PACKAGE__::stdio($self,'stdin',@_);
 }
 
-sub setStderr {
+sub stdout {
     my $self = shift;
-    my $name = shift; 
-    if ( ! ref $name ) { 
-	# plain string
-	$self->{stderr} = $name; 
-    } elsif ( $name->can('name') ) { 
-	# some class?
-	$self->{stderr} = $name->name; 
-    } else {
-	croak "illegal name argument";
-    }
+    __PACKAGE__::stdio($self,'stdout',@_); 
+}
+
+sub stderr {
+    my $self = shift;
+    __PACKAGE__::stdio($self,'stderr',@_);
 }
 
 sub addUses {
@@ -139,14 +135,40 @@ sub addUses {
 sub uses {
     my $self = shift; 
     my $uses = shift; 
-    if ( defined $uses && ref $uses && $uses->isa('Pegasus::DAX::Filename') ) {
-	$self->{uses}->{ $uses->name } = $uses; 
+    if ( defined $uses && ref $uses ) { 
+	if ( $uses->isa('Pegasus::DAX::Filename') ) {
+	    $self->{uses}->{ $uses->name } = $uses; 
+	} elsif ( $uses->isa('Pegasus::DAX::Executable') ) {
+	    $self->{uses}->{ $uses->name } =
+		Pegasus::DAX::Filename->new( namespace => $uses->namespace,
+					     name => $uses->name,
+					     version => $uses->version,
+					     executable => 1 );
+	} elsif ( $uses->isa('Pegasus::DAX::File') ) { 
+	    $self->{uses}->{ $uses->name } =
+		Pegasus::DAX::Filename->new( name => $uses->name,
+					     link => $uses->link,
+					     optional => $uses->optional,
+					     executable => 0 ); 
+	} else {
+	    croak( "Instance of ", ref $uses, ' is an invalid argument' );
+	}
     } else {
-	croak "argument is not a Filename";
+	croak "invalid argument"; 
     }
 }
 
 sub addInvoke {
+    my $self = shift;
+    $self->invoke(@_);
+}
+
+sub notify {
+    my $self = shift; 
+    $self->invoke(@_);
+}
+
+sub invoke {
     my $self = shift; 
     my $when = shift; 
     my $cmd = shift; 
@@ -166,9 +188,6 @@ sub addInvoke {
 sub name;
 sub id;
 sub nodelabel;
-sub stdin;
-sub stdout;
-sub stderr; 
 
 sub innerXML {
     # purpose: partial XML for common stuff
@@ -209,21 +228,21 @@ sub innerXML {
     #
     # <stdio>
     #
-    if ( exists $self->{stdin} ) { 
+    if ( exists $self->{stdin} && $self->{stdin} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdin" : 'stdin'; 
 	$f->print( "$indent<$tag"
 		 , attribute('name',$f->stdin)
 		 , attribute('link','in')
 		 , "/>\n" );
     }
-    if ( exists $self->{stdout} ) { 
+    if ( exists $self->{stdout} && $self->{stdout} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdout" : 'stdout'; 
 	$f->print( "$indent<$tag"
 		 , attribute('name',$f->stdout)
 		 , attribute('link','out')
 		 , "/>\n" );
     }
-    if ( exists $self->{stderr} ) { 
+    if ( exists $self->{stderr} && $self->{stderr} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stderr" : 'stderr'; 
 	$f->print( "$indent<$tag"
 		 , attribute('name',$f->stderr)
@@ -258,3 +277,196 @@ sub innerXML {
 }
 
 1; 
+
+
+
+=head1 NAME
+
+Pegasus::DAX::AbstractJob - abstract base class for jobs. 
+
+=head1 SYNOPSIS
+
+This is an abstract class. You do not instantiate abstract classes. 
+
+=head1 DESCRIPTION
+
+This class is the base for the four kinds of jobs and sub-workflows. 
+
+=head1 CONSTANTS
+
+=over 4 
+
+=item INVOKE_NEVER
+
+Never run the invoke. This is primarily to temporarily disable an invoke. 
+
+=item INVOKE_START
+
+Run the invoke when the job gets submitted. 
+
+=item INVOKE_ON_SUCCESS
+
+Run the invoke after the job finishes with success (exitcode == 0). 
+
+=item INVOKE_ON_ERROR
+
+Run the invoke after the job finishes with failure (exitcode != 0). 
+
+=item INVOKE_AT_END
+
+Run the invoke after the job finishes, regardless of exit code. 
+ 
+=item INVOKE_ALL
+
+Like C<INVOKE_START> and C<INVOKE_AT_END> combined. 
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item new()
+
+The constructor is used by child classes to establish data structures. 
+
+=item addArgument( $string )
+
+This method will add a simple string into the ordered list of arguments. 
+
+=item addArgument( $plainfilename_instance )
+
+This method adds a simple filename into the ordered list of
+arguments. You will have to add the filename separately to the C<uses>
+section.
+
+=item addArgument( $filename_instance )
+
+=item addArgument( $file_instance )
+
+=item addArgument( $exectuable_instance )
+
+This method adds a full filename to the ordered list of arguments B<and>
+also adds the filename to the C<uses> section.
+
+=item addProfile( $namespace, $key, $value )
+
+=item addProfile( $profile_instance )
+
+This method will add a specified profile, either as three strings or
+instance of L<Pegasus::DAX::Profile>, to the collection of profiles
+associated with the logical level catalog entry. 
+
+=item stdin
+
+=item stdout
+
+=item stderr
+
+Setter and getter for stdio handles. In get mode, the plain string
+of the logical file is returned. 
+
+In set mode, use a string or L<Pegasus::DAX::PlainFilename> to provide
+the logical file name. You are responsible to add the filename to the
+C<uses> section.
+
+You may also specify an argument of L<Pegasus::DAX::Filename>, 
+L<Pegasus::DAX::File>, or L<Pegasus::DAX::Executable>. In these cases,
+the filename is added automatically to the C<uses> section. You are
+responsible to provide the proper linkage, if applicable. 
+
+=item addUses
+
+Alias method for C<uses> method.
+
+=item uses( $filename_instance )
+
+=item uses( $file_instance )
+
+=item uses( $executable_instance )
+
+This method adds a filename, file, or executable to the things that will
+end up in the uses section of a job.
+
+=item addInvoke( $when, $cmd )
+
+Alias for C<invoke> method.
+
+=item notify( $when, $cmd ) 
+
+Alias for C<invoke> method.
+
+=item invoke( $when $cmd )
+
+This method adds a simple executable instruction to run (on the submit
+host) when a job reaches the state in C<$when>. Please refer to the 
+constants C<INVOKE_*> for details. 
+
+=item name
+
+Getter and setter for the job's name required string. Regardless of the
+child class, any job always some form of name.
+
+=item id
+
+Getter and setter for the job's identifier string. Please note that the
+identifier is more restrictive, e.g. needs to obey more stringend rules.
+
+The job identifier is a required argument, and unique within the C<ADAG>. 
+
+=item nodelabel
+
+Getter and setter for the optional job label string. 
+
+=item innerXML( $handle, $indent, $xmlns )
+
+The purpose of the C<innerXML> function is to recursively generate XML from
+the internal data structures. Since this class is abstract, it will not
+create the element tag nor attributes. However, it needs to create the
+inner elements as necessary. 
+
+The first argument is a file handle open for writing. This is where the
+XML will be generated.  The second argument is a string with the amount
+of white-space that should be used to indent elements for pretty
+printing. The third argument may not be defined. If defined, all element
+tags will be prefixed with this name space.
+
+=back 
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Pegasus::DAX::Base>
+
+Base class. 
+
+=item L<Pegasus::DAX::DAG>
+
+=item L<Pegasus::DAX::DAX>
+
+=item L<Pegasus::DAX::Job>
+
+=item L<Pegasus::DAX::ADAG>
+
+Child classes inheriting from L<Pegasus::DAX::AbstractJob>. 
+
+=back 
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2007-2010 University Of Southern California
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut

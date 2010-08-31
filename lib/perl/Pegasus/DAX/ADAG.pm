@@ -1,19 +1,5 @@
-##
-#  Copyright 2007-2010 University Of Southern California
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
-##
+# License: (atend)
 # $Id$
 #
 package Pegasus::DAX::ADAG;
@@ -58,6 +44,46 @@ sub name;
 sub index;
 sub count; 
 
+sub addFile {
+    my $self = shift; 
+    my $name = shift; 
+    if ( ref $name && $name->isa('Pegasus::DAX::File') ) {
+	push( @{$self->{files}}, $name ); 
+    } else { 
+	croak "Instance of ", ref($name), " is an invalid argument"; 
+    }
+}
+
+sub addExecutable { 
+    my $self = shift; 
+    my $name = shift; 
+    if ( ref $name && $name->isa('Pegasus::DAX::Executable') ) {
+	push( @{$self->{executables}}, $name ); 
+    } else { 
+	croak "Instance of ", ref($name), " is an invalid argument"; 
+    }
+}
+
+sub addTransformation { 
+    my $self = shift; 
+    my $name = shift; 
+    if ( ref $name && $name->isa('Pegasus::DAX::Transformation') ) {
+	push( @{$self->{transformations}}, $name ); 
+    } else { 
+	croak "Instance of ", ref($name), " is an invalid argument"; 
+    }
+}
+
+sub addJob { 
+    my $self = shift; 
+    my $name = shift; 
+    if ( ref $name && $name->isa('Pegasus::DAX::AbstractJob') ) {
+	push( @{$self->{jobs}}, $name ); 
+    } else { 
+	croak "Instance of ", ref($name), " is an invalid argument"; 
+    }
+}
+
 sub addDependency {
     my $self = shift; 
     my $parent = shift;
@@ -85,7 +111,6 @@ sub addDependency {
     # spring into existence -- store undef, if necessary
     $self->{deps}->{$child}->{$parent} = $label; 
 }
-
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -168,3 +193,187 @@ sub toXML {
 }
 
 1; 
+
+
+=head1 NAME
+
+Pegasus::DAX::ADAG - Pegasus workflow description. 
+
+=head1 SYNOPSIS
+
+    use Pegasus::DAX::ADAG; 
+
+    my $d = Pegasus::DAX::ADAG->new( name => 'fubar' ); 
+    $d->addJob( $job );
+    $d->addDependency( $parent, $child, 'label' ); 
+
+=head1 DESCRIPTION
+
+This class stores the entire abstract directed acyclic graph (ADAG) that
+is a Pegasus workflow ready to be planned out. The heavy lifting is done
+in the base class L<Pegasus::DAX::AbstractJob>.
+
+Please note that, even though the schema and API permit it, you cannot
+stores an C<ADAG> within an C<ADAG>. We are hoping to add recursion at
+some unspecified time in the future. 
+
+=head1 METHODS
+
+=over 4
+
+=item new()
+
+=item new( a => b, c => d, ... )
+
+=item new( { a => b, c => d, ... } )
+
+The default constructor will create an empty instance whose scalar
+attributes can be adjusted using the getters and setters provided by the
+C<AUTOLOAD> inherited method.
+
+Other means of construction is to use named lists.
+
+=item index
+
+Getter and setter to the slot number, starting with 0, of this workflow
+variation. This is mostly an obsolete feature that will go away.
+
+=item count
+
+Getter and setter to the total number of slots, a count, of all variations
+of this workflow. This is mostly an obsolete feature that will go away.
+
+=item addFile( $file_instance )
+
+Adds an included replica catalog entry. 
+
+=item addExecutable( $executable_instance )
+
+Adds an included transformation catalog entry. 
+
+=item addTransformation( $transformation_instance )
+
+Adds a L<Pegasus::DAX::Transformation> combiner to the workflow. 
+
+=item addJob( $dag_instance )
+
+Adds an already concretized sub-workflow as node to the workflow graph. 
+
+=item addJob( $dax_instance )
+
+Adds a yet to be planned sub-workflow as node to the workflow graph. 
+
+=item addJob( $job_instance )
+
+Adds a regular job as node to the workflow graph. 
+
+=item addJob( $adag_instance )
+
+While not forbidden by the API, we cannot plan C<ADAG> within C<ADAG> yet. 
+
+=item addDependency( $parent, $child )
+
+=item addDependency( $parent, $child, $label )
+
+This method adds a child to the parent, using each job's C<id>
+attribute. In addition, an optional edge label may be stored with each
+dependency. Internal structures ensure that each relationship is only
+added once. 
+
+=item toXML( $handle, $indent, $xmlns )
+
+The purpose of the C<toXML> function is to recursively generate XML from
+the internal data structures. The first argument is a file handle open
+for writing. This is where the XML will be generated.  The second
+argument is a string with the amount of white-space that should be used
+to indent elements for pretty printing. The third argument may not be
+defined. If defined, all element tags will be prefixed with this name
+space.
+
+=back 
+
+=head1 INHERITED METHODS
+
+Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods. 
+
+=over 4
+
+=item addArgument( $string )
+
+=item addArgument( $plainfilename_instance )
+
+=item addArgument( $filename_instance )
+
+=item addArgument( $file_instance )
+
+=item addArgument( $exectuable_instance )
+
+=item addProfile( $namespace, $key, $value )
+
+=item addProfile( $profile_instance )
+
+=item stdin
+
+=item stdout
+
+=item stderr
+
+=item name
+
+=item id
+
+=item nodelabel
+
+=item addUses( .. )
+
+=item uses( $filename_instance )
+
+=item uses( $file_instance )
+
+=item uses( $executable_instance )
+
+=item addInvoke( $when, $cmd )
+
+=item notify( $when, $cmd ) 
+
+=item invoke( $when $cmd )
+
+=item innerXML( $handle, $indent, $xmlns )
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Pegasus::DAX::AbstractJob>
+
+Base class. 
+
+=item L<Pegasus::DAX::DAG>
+
+=item L<Pegasus::DAX::DAX>
+
+=item L<Pegasus::DAX::Job>
+
+Sibling classes. 
+
+=back 
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2007-2010 University Of Southern California
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut

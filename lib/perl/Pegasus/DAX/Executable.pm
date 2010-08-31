@@ -1,19 +1,5 @@
-##
-#  Copyright 2007-2010 University Of Southern California
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
-##
+# License: (atend)
 # $Id$
 #
 package Pegasus::DAX::Executable;
@@ -84,3 +70,138 @@ sub toXML {
 }
 
 1; 
+
+=head1 NAME
+
+Pegasus::DAX::Executable - stores an included transformation catalog entry. 
+
+=head1 SYNOPSIS
+
+    use Pegasus::DAX::Executable; 
+
+    my $a = Pegasus::DAX::Executable(); 
+    $a->namespace( 'somewhere' ); 
+    $a->name( 'lfn' );
+    $a->version( '1.0' ); 
+    $a->os( 'x86_64' ); 
+  
+=head1 DESCRIPTION
+
+This class remembers an included Pegasus transformation catalog entry. 
+
+=head1 METHODS
+
+=over 4
+
+=item new()
+
+=item new( a => b, c => d, ... )
+
+=item new( { a => b, c => d, ... } )
+
+The default constructor will create an empty instance whose scalar
+attributes can be adjusted using the getters and setters provided by the
+C<AUTOLOAD> inherited method.
+
+Other means of construction is to use named lists. However, you will
+have to be aware of the internals to be able to use these lists
+successfully.
+
+=item namespace
+
+Setter and getter for the optional logical transformation namespace string. 
+
+=item name
+
+Setter and getter for the logical transformation's name string. 
+
+=item version
+
+Setter and getter for the optional logical transformation version number
+string.
+
+=item arch
+
+Setter and getter for the optional architecture string. 
+
+=item os
+
+Setter and getter for the optional operating system identifier. 
+
+=item osrelease
+
+Setter and getter for the optional OS release string. 
+
+=item osversion
+
+Setter and getter for the optional OS version string. 
+
+=item glibc
+
+Setter and getter for the optional GNU libc platform identifier string. 
+
+=item toXML( $handle, $indent, $xmlns )
+
+The purpose of the C<toXML> function is to recursively generate XML from
+the internal data structures. The first argument is a file handle open
+for writing. This is where the XML will be generated.  The second
+argument is a string with the amount of white-space that should be used
+to indent elements for pretty printing. The third argument may not be
+defined. If defined, all element tags will be prefixed with this name
+space.
+
+=back 
+
+=head1 INHERITED METHODS
+
+Please refer to L<Pegasus::DAX::CatalogType> for inherited methods. 
+
+=over 4
+
+=item addMeta( $key, $type, $value )
+
+=item addMeta( $metadata_instance )
+
+=item addPFN( $url )
+
+=item addPFN( $url, $site )
+
+=item addPFN( $pfn_instance )
+
+=item addProfile( $namespace, $key, $value )
+
+=item addProfile( $profile_instance )
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Pegasus::DAX::CatalogType>
+
+Base class.
+
+=item L<Pegasus::DAX::ADAG>
+
+Class using L<Pegasus::DAX::File>. 
+
+=back 
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2007-2010 University Of Southern California
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut

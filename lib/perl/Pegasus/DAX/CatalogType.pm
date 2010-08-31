@@ -1,19 +1,5 @@
-##
-#  Copyright 2007-2010 University Of Southern California
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
-##
+# License: (atend)
 # $Id$
 #
 package Pegasus::DAX::CatalogType;
@@ -152,3 +138,103 @@ sub innerXML {
 }
 
 1; 
+
+
+=head1 NAME
+
+Pegasus::DAX::CatalogType - abstract class for included transformation-
+and replica catalogs. 
+
+=head1 SYNOPSIS
+
+This is an abstract class. You do not instantiate abstract classes. 
+
+=head1 DESCRIPTION
+
+This class is the base for the included transformation- and replica
+catalog entry. 
+
+=head1 METHODS
+
+=over 4
+
+=item new()
+
+The constructor is used by child classes to establish data structures. 
+
+=item addProfile( $namespace, $key, $value )
+
+=item addProfile( $profile_instance )
+
+This method will add a specified profile, either as three strings or
+instance of L<Pegasus::DAX::Profile>, to the collection of profiles
+associated with the logical level catalog entry. 
+
+=item addMeta( $key, $type, $value )
+
+=item addMeta( $metadata_instance )
+
+This method adds a piece of meta data to the collection of meta data,
+either as trhee strings or instance of L<Pegasus::DAX::MetaData>,
+associated with this logical catalog entry.
+
+=item addPFN( $url )
+
+=item addPFN( $url, $site )
+
+=item addPFN( $pfn_instance )
+
+This method adds a physical filename, either as url and site string or
+instance of L<Pegasus::DAX::PFN>, to the collection of PFNs associated
+with this catalog entry.
+
+=item innerXML( $handle, $indent, $xmlns )
+
+The purpose of the C<innerXML> function is to recursively generate XML from
+the internal data structures. Since this class is abstract, it will not
+create the element tag nor attributes. However, it needs to create the
+inner elements as necessary. 
+
+The first argument is a file handle open for writing. This is where the
+XML will be generated.  The second argument is a string with the amount
+of white-space that should be used to indent elements for pretty
+printing. The third argument may not be defined. If defined, all element
+tags will be prefixed with this name space.
+
+=back 
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Pegasus::DAX::Base>
+
+Base class. 
+
+=item L<Pegasus::DAX::File>
+
+Replica catalog entry child class.
+
+=item L<Pegasus::DAX::Executable>
+
+Transformation catalog entry child class. 
+
+=back 
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2007-2010 University Of Southern California
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut
