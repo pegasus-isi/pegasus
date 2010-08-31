@@ -52,6 +52,16 @@
        <title>pegasus-graphs</title>
        <para>...</para>
    </section>
+    <section>
+    <title>pegasus-remove</title>
+
+    <para>If you want to abort your workflow for any reason you can use the
+    pegasus-remove command listed in the output of pegasus-run invocation or by
+    specifiying the Dag directory for the workflow you want to terminate.</para>
+
+    <programlisting>$ <emphasis>pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</emphasis></programlisting>
+
+   </section>
    <section>
        <title>Files in work directory</title>
     <para>Another way to monitor the workflow is to check the jobstate.log file.
@@ -118,16 +128,6 @@ cessfully.
     and the name of any jobs that failed.</para>
 
     </section>
-<section>
-<title>pegasus-remove</title>
-
-    <para>If you want to abort your workflow for any reason you can use the
-    pegasus-remove command listed in the output of pegasus-run invocation or by
-    specifiying the Dag directory for the workflow you want to terminate.</para>
-
-    <programlisting>$ <emphasis>pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</emphasis></programlisting>
-
-   </section>
    <section>
        <title>Resubmitting failed workflows</title>
    
