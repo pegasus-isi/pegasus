@@ -105,6 +105,8 @@ sub addDependency {
     if ( ref $parent ) {
 	if ( $parent->isa('Pegasus::DAX::AbstractJob') ) {
 	    $parent = $parent->id;
+	    croak( "parent does not have a valid job-id" )
+		unless ( defined $parent && $parent ); 
 	} else {
 	    croak "parent is not a job type";
 	}
@@ -114,6 +116,8 @@ sub addDependency {
     if ( ref $child ) {
 	if ( $child->isa('Pegasus::DAX::AbstractJob') ) {
 	    $child = $child->id;
+	    croak( "child does not have a valid job-id" )
+		unless ( defined $child && $child ); 
 	} else {
 	    croak "child is not a job type"; 
 	}

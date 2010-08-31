@@ -18,8 +18,13 @@ use constant LINK_OUT   => 'out';
 use constant LINK_INOUT => 'inout'; 
 use constant LINK_IO    => 'inout'; 
 
+use constant TRANSFER_TRUE => 'true';
+use constant TRANSFER_FALSE => 'false';
+use constant TRANSFER_OPTIONAL => 'optional'; 
+
 our $VERSION = '3.2'; 
-our @EXPORT = qw(LINK_NONE LINK_IN LINK_OUT LINK_INOUT LINK_IO); 
+our @EXPORT = qw(LINK_NONE LINK_IN LINK_OUT LINK_INOUT LINK_IO
+	TRANSFER_TRUE TRANSFER_FALSE TRANSFER_OPTIONAL); 
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
 
