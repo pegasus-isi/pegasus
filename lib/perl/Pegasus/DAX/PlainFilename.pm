@@ -20,9 +20,10 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-    $self->{'__permitted'}->{name} = 1;
 
-    if ( @_ > 1 && (@_ & 1) == 0) { 
+    if ( @_ == 0 ) { 
+	# nothing to do
+    } elsif ( @_ > 1 && (@_ & 1) == 0) { 
 	# even: called with a=>b,c=>d list
 	%{$self} = ( %{$self}, @_ ); 
     } elsif ( @_ == 1 && ! ref $_[0] ) { 

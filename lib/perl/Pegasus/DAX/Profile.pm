@@ -32,7 +32,9 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ == 3 ) {
+    if ( @_ == 0 ) { 
+	# nothing to do
+    } elsif ( @_ == 3 ) {
 	# called as namespace, key, value
 	@{$self}{'namespace','key','value'} = @_; 
     } elsif ( @_ > 2 && (@_ & 1) == 0 ) {

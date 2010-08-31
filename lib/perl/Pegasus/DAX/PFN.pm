@@ -21,7 +21,9 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
     
-    if ( @_ == 1 && ! ref $_[0] ) {
+    if ( @_ == 0 ) { 
+	# nothing to do
+    } elsif ( @_ == 1 && ! ref $_[0] ) {
 	# single string argument
 	$self->{url} = shift; 
     } elsif ( @_ == 2 && ! ref $_[0] && ! ref $_[1] ) { 
@@ -34,6 +36,8 @@ sub new {
     } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
 	# called with { a=>b, c=>d } hashref
 	%{$self} = ( %{$self}, %{ shift() } ); 
+    } else {
+	croak "invalid c'tor for ", __PACKAGE__; 
     }
 
     bless $self, $class; 
@@ -87,7 +91,7 @@ sub toXML {
 	}
 	$f->print( "$indent</$tag>\n" );
     } else {
-	$f->print("/>\n"); 
+	$f->print(" />\n"); 
     }
 }
 

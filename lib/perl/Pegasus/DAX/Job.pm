@@ -17,21 +17,34 @@ our @EXPORT = ();
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
 
+my $count = 0; 
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-    
-    if ( @_ > 1 ) {
+
+    # default identifier using class variable $count
+    $self->{id} = sprintf( "ID%06u", ++$count ); 
+
+    if ( @_ == 0 ) { 
+	# nothing to do 
+    } elsif ( @_ > 1 ) {
 	# called with a=>b,c=>d list
 	%{$self} = ( %{$self}, @_ ); 
     } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
 	# called with { a=>b, c=>d } hashref
 	%{$self} = ( %{$self}, %{ shift() } ); 
+    } else {
+	croak "invalid c'tor invocation"; 
     }
 
     bless $self, $class; 
 }
+
+# forward declaration to auto loaders
+sub namespace;
+sub version;
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -43,7 +56,7 @@ sub toXML {
     my $f = shift; 
     my $indent = shift || '';
     my $xmlns = shift; 
-    my $tag = defined $xmlns && $xmlns ? "$xmlns:dag" : 'dag';
+    my $tag = defined $xmlns && $xmlns ? "$xmlns:job" : 'job';
 
     $f->print( "$indent<$tag"
 	     , attribute('namespace',$self->namespace)

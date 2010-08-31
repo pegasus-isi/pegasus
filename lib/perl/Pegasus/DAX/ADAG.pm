@@ -27,7 +27,8 @@ sub new {
     my $self = $class->SUPER::new();
     $self->{index} = 0;
     $self->{count} = 1; 
-    
+    $self->{version} = SCHEMA_VERSION; 
+
     if ( @_ > 1 ) {
 	# called with a=>b,c=>d list
 	%{$self} = ( %{$self}, @_ ); 
@@ -44,23 +45,33 @@ sub name;
 sub index;
 sub count; 
 
+use Pegasus::DAX::File; 
+
 sub addFile {
     my $self = shift; 
     my $name = shift; 
-    if ( ref $name && $name->isa('Pegasus::DAX::File') ) {
-	push( @{$self->{files}}, $name ); 
-    } else { 
-	croak "Instance of ", ref($name), " is an invalid argument"; 
+    if ( ref $name ) {
+	if ( $name->isa('Pegasus::DAX::File') ) {
+	    push( @{$self->{files}}, $name ); 
+	} else { 
+	    croak "Instance of ", ref($name), " is an invalid argument"; 
+	}
+    } else {
+	croak "invalid argument"; 
     }
 }
 
 sub addExecutable { 
     my $self = shift; 
     my $name = shift; 
-    if ( ref $name && $name->isa('Pegasus::DAX::Executable') ) {
-	push( @{$self->{executables}}, $name ); 
-    } else { 
-	croak "Instance of ", ref($name), " is an invalid argument"; 
+    if ( ref $name ) {
+	if ( $name->isa('Pegasus::DAX::Executable') ) {
+	    push( @{$self->{executables}}, $name ); 
+	} else { 
+	    croak "Instance of ", ref($name), " is an invalid argument"; 
+	}
+    } else {
+	croak "invalid argument";
     }
 }
 
@@ -123,8 +134,19 @@ sub toXML {
     my $indent = shift || '';
     my $xmlns = shift; 
     my $tag = defined $xmlns && $xmlns ? "$xmlns:adag" : 'adag';
+
+    # OK, this is slightly ugly and tricky: If there is no indentation,
+    # this <adag> element is the outer-most, and thus gets the XML intro.
+    if ( $indent eq '' ) { 
+	use POSIX qw(strftime); 
+	binmode($f,':utf8'); 	# evil, evil, evil
+	$f->print( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ); 
+	$f->print( '<!-- generated: ', strftime( "%Y-%m-%dT%H:%M:%S%z", localtime() ), " -->\n" ); 
+    }
+
+    my $ns = defined $xmlns && $xmlns ? "xmlns:$xmlns" : 'xmlns'; 
     $f->print( "$indent<$tag"
-	     , attribute('xmlns',SCHEMA_NAMESPACE)
+	     , attribute($ns,SCHEMA_NAMESPACE)
 	     , attribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance')
 	     , attribute('xsi:schemaLocation',SCHEMA_NAMESPACE . ' ' . SCHEMA_LOCATION)
 	     , attribute('version',SCHEMA_VERSION)
@@ -137,6 +159,7 @@ sub toXML {
     # <file>
     #
     if ( exists $self->{files} ) {
+	$f->print( "  $indent<!-- part 1.1: included replica catalog -->\n" );
 	foreach my $i ( @{$self->{files}} ) {
 	    $i->toXML($f,"  $indent",$xmlns); 
 	}
@@ -146,6 +169,7 @@ sub toXML {
     # <executable>
     #
     if ( exists $self->{executables} ) { 
+	$f->print( "  $indent<!-- part 1.2: included transformation catalog -->\n" );
 	foreach my $i ( @{$self->{executables}} ) { 
 	    $i->toXML($f,"  $indent",$xmlns);
 	}
@@ -155,6 +179,7 @@ sub toXML {
     # <transformation>
     #
     if ( exists $self->{transformations} ) { 
+	$f->print( "  $indent<!-- part 1.3: included transformation abbreviations -->\n" );
 	foreach my $i ( @{$self->{transformations}} ) {
 	    $i->toXML($f,"  $indent",$xmlns);
 	}
@@ -163,16 +188,16 @@ sub toXML {
     #
     # <DAG|DAX|Job|ADAG>
     #
-    if ( exists $self->{jobs} ) {
-	foreach my $i ( @{$self->{jobs}} ) {
-	    $i->toXML($f,"  $indent",$xmlns);
-	}
+    $f->print( "  $indent<!-- part 2: definition of all jobs (at least one) -->\n" ); 
+    foreach my $i ( @{$self->{jobs}} ) {
+	$i->toXML($f,"  $indent",$xmlns);
     }
     
     #
     # <child>
     # 
     if ( exists $self->{deps} ) {
+	$f->print( "  $indent<!-- part 3: list of control-flow dependencies -->\n" ); 
 	my $ctag = defined $xmlns && $xmlns ? "$xmlns:child" : 'child';
 	my $ptag = defined $xmlns && $xmlns ? "$xmlns:parent" : 'parent';
 	while ( my ($child,$r) = each %{$self->{deps}} ) { 
@@ -183,7 +208,7 @@ sub toXML {
 		$f->print( "    $indent<$ptag", attribute('ref',$parent) );
 		$f->print( attribute('edge-label',$label) ) 
 		    if ( defined $label && $label ne '' ); 
-		$f->print( "/>\n" ); 
+		$f->print( " />\n" ); 
 	    }
 	    $f->print( "  $indent</$ctag>\n" ); 
 	}

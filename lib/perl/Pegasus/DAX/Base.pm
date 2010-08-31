@@ -25,7 +25,7 @@ our $prefix = '[' . __PACKAGE__ . '] ';
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my $self = bless { '__permitted' => { }, @_ }, $class; 
+    my $self = bless { @_ }, $class; 
 
     $self;
 }

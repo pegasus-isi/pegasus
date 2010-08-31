@@ -114,17 +114,17 @@ sub stdio($$;@) {
 
 sub stdin {
     my $self = shift;
-    __PACKAGE__::stdio($self,'stdin',@_);
+    stdio($self,'stdin',@_);
 }
 
 sub stdout {
     my $self = shift;
-    __PACKAGE__::stdio($self,'stdout',@_); 
+    stdio($self,'stdout',@_); 
 }
 
 sub stderr {
     my $self = shift;
-    __PACKAGE__::stdio($self,'stderr',@_);
+    stdio($self,'stderr',@_);
 }
 
 sub addUses {
@@ -221,7 +221,7 @@ sub innerXML {
     #
     if ( exists $self->{profiles} ) {
 	foreach my $i ( @{$self->{profiles}} ) { 
-	    $i->toXML($f,"  $indent",$xmlns); 
+	    $i->toXML($f,$indent,$xmlns); 
 	}
     }
 
@@ -231,31 +231,31 @@ sub innerXML {
     if ( exists $self->{stdin} && $self->{stdin} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdin" : 'stdin'; 
 	$f->print( "$indent<$tag"
-		 , attribute('name',$f->stdin)
+		 , attribute('name',$self->stdin)
 		 , attribute('link','in')
-		 , "/>\n" );
+		 , " />\n" );
     }
     if ( exists $self->{stdout} && $self->{stdout} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdout" : 'stdout'; 
 	$f->print( "$indent<$tag"
-		 , attribute('name',$f->stdout)
+		 , attribute('name',$self->stdout)
 		 , attribute('link','out')
-		 , "/>\n" );
+		 , " />\n" );
     }
     if ( exists $self->{stderr} && $self->{stderr} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stderr" : 'stderr'; 
 	$f->print( "$indent<$tag"
-		 , attribute('name',$f->stderr)
+		 , attribute('name',$self->stderr)
 		 , attribute('link','out')
-		 , "/>\n" );
+		 , " />\n" );
     }
 
     #
     # <uses>
     #
     if ( exists $self->{uses} ) { 
-	foreach my $i ( @{$self->{uses}} ) { 
-	    $i->toXML($f,"  $indent",$xmlns);
+	while ( my ($name,$i) = each %{$self->{uses}} ) {
+	    $i->toXML($f,$indent,$xmlns);
 	}
     }
 

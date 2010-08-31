@@ -22,7 +22,9 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ == 3 ) {
+    if ( @_ == 0 ) {
+	# nothing to do
+    } elsif ( @_ == 3 ) {
 	# assume namespace,name,version
 	@{$self}{'namespace','name','version'} = @_; 
     } elsif ( @_ > 1 && (@_ & 1) == 0 ) {
@@ -95,8 +97,8 @@ sub toXML {
     #
     # <uses> -- at least one
     #
-    foreach my $i ( @{$self->{uses}} ) {
-	$i->toXML($f,"  $indent",$xmlns); 
+    while ( my ($name,$i) = each %{$self->{uses}} ) {
+	$i->toXML($f,"  $indent",$xmlns);
     }
 
     $f->print( "$indent</$tag>\n" );

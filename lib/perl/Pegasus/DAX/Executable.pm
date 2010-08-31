@@ -22,12 +22,16 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
     
-    if ( @_ > 1 ) {
+    if ( @_ == 0 ) { 
+	# nothing to do
+    } elsif ( @_ > 1 ) {
 	# called with a=>b,c=>d list
 	%{$self} = ( %{$self}, @_ ); 
     } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
 	# called with { a=>b, c=>d } hashref
 	%{$self} = ( %{$self}, %{ shift() } ); 
+    } else {
+	croak "invalid c'tor invocation"; 
     }
 
     bless $self, $class; 

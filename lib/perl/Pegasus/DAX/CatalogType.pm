@@ -21,7 +21,9 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ > 1 ) {
+    if ( @_ == 0 ) { 
+	# nothing to do
+    } elsif ( @_ > 1 ) {
 	# called with a=>b,c=>d list
 	%{$self} = ( %{$self}, @_ ); 
     } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
@@ -103,17 +105,20 @@ sub innerXML {
     # paramtr: F (IN): perl file handle open for writing
     #          ident (IN): indentation level
     #          xmlns (IN): namespace of element, if necessary
+    # returns: number of inner elements produced
     #
     my $self = shift; 
     my $f = shift; 
     my $indent = shift || '';
     my $xmlns = shift; 
+    my $result = 0; 
 
     #
     # <profile>
     #
     if ( exists $self->{profiles} ) {
 	foreach my $i ( @{$self->{profiles}} ) { 
+	    $result++;
 	    $i->toXML($f,"  $indent",$xmlns);
 	}
     }
@@ -123,6 +128,7 @@ sub innerXML {
     #
     if ( exists $self->{metas} ) {
 	foreach my $i ( @{$self->{metas}} ) { 
+	    $result++;
 	    $i->toXML($f,"  $indent",$xmlns);
 	}
     }
@@ -132,9 +138,12 @@ sub innerXML {
     #
     if ( exists $self->{pfns} ) {
 	foreach my $i ( @{$self->{pfns}} ) { 
+	    $result++;
 	    $i->toXML($f,"  $indent",$xmlns);
 	}
     }
+
+    $result; 
 }
 
 1; 

@@ -5,6 +5,7 @@
 package Pegasus::DAX::Filename;
 use 5.006;
 use strict;
+use Carp; 
 
 use Pegasus::DAX::Base qw(:xml); 
 use Pegasus::DAX::PlainFilename; 
@@ -18,7 +19,7 @@ use constant LINK_INOUT => 'inout';
 use constant LINK_IO    => 'inout'; 
 
 our $VERSION = '3.2'; 
-our @EXPORT = (LINK_NONE LINK_IN LINK_OUT LINK_INOUT LINK_IO); 
+our @EXPORT = qw(LINK_NONE LINK_IN LINK_OUT LINK_INOUT LINK_IO); 
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
 
@@ -27,12 +28,16 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    if ( @_ > 1 ) {
+    if ( @_ == 0 ) { 
+	# nothing to do 
+    } elsif ( @_ > 1 && (@_ & 1) == 0 ) {
 	# called with a=>b,c=>d list
 	%{$self} = ( %{$self}, @_ ); 
     } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
 	# called with { a=>b, c=>d } hashref
 	%{$self} = ( %{$self}, %{ shift() } ); 
+    } else {
+	croak "invalid c'tor invocation"; 
     }
 
     bless $self, $class; 
@@ -68,7 +73,7 @@ sub toXML {
 	     , attribute('register',boolean($self->{register}))
 	     , attribute('transfer',$self->{transfer})
 	     , attribute('executable',boolean($self->{exectuable}))
-	     , " />" ); 
+	     , " />\n" ); 
 }
 
 1; 
