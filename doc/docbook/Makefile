@@ -1,5 +1,6 @@
 
 index.php: pegasus-book.xml pegasus-style.xsl
+	rm -rf html
 	mkdir -p html
 	xsltproc --noout \
 		      --stringparam base.dir html/ \
@@ -9,5 +10,5 @@ index.php: pegasus-book.xml pegasus-style.xsl
 	cp -r images html/
 
 clean:
-	  rm -f html/*.html html/*.php
+	  rm -rf html ./*~
 

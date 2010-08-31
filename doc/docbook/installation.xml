@@ -1,47 +1,204 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-                      "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="installation">
-   <title>Installation</title>
-   <section>
-       <title>Prerequisites</title>
-       <para>Bla</para>
-   </section>
-   <section>
-       <title>Environment</title>
+  <title>Installation</title>
 
-       <para>In order to use Pegasus, you will have to set the PEGASUS_HOME
-           environment variable, and source the Pegasus setup script.
-       </para>
-       
-       <para>This document assumes you are using a Bourne Shell derived shell. e.g.
-           /bin/sh or /bin/bash. csh setup scripts are available with the .csh
-           extension.
-       </para>
+  <section>
+    <title>Prerequisites</title>
 
-       <para>Set PEGASUS_HOME environment variable</para>
+    <para>Pegasus has a few dependencies:</para>
 
-       <programlisting><emphasis>$ unset PEGASUS_HOME
-$ export PEGASUS_HOME=&lt;path to pegasus directory&gt;</emphasis></programlisting>
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Java 1.6 or higher</emphasis>. Check
+        with:</para>
 
-       <para>Set up the PEGASUS user environment</para>
+        <para><programlisting>$ <emphasis>java -version</emphasis>
+java version "1.6.0_07"
+Java(TM) 2 Runtime Environment, Standard Edition (build 1.6.0_07-164)
+Java HotSpot(TM) Client VM (build 1.6.0_07-87, mixed mode, sharing)</programlisting></para>
+      </listitem>
 
-       <para><programlisting><emphasis>$ unset CLASSPATH
-$ source $PEGASUS_HOME/setup.sh</emphasis></programlisting></para>
+      <listitem>
+        <para><emphasis role="bold">Condor 7.4 or higher</emphasis>. See
+        h<ulink
+        url="ttp://www.cs.wisc.edu/condor/">ttp://www.cs.wisc.edu/condor/</ulink>
+        for more information. You should be able to run
+        <filename>condor_q</filename> and
+        <filename>condor_status</filename>.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Globus 4.0 or higher</emphasis>. See
+        <ulink url="http://www.globus.org/">http://www.globus.org/</ulink> for
+        more information. Check Globus Installation</para>
+
+        <programlisting>$ <emphasis>echo $GLOBUS_LOCATION</emphasis>
+/path/to/globus/install</programlisting>
+
+        <para>Make sure you source the Globus environment</para>
+
+        <para><programlisting>$<emphasis> GLOBUS_LOCATION/etc/globus-user-env.sh</emphasis></programlisting></para>
+
+        <para>Check the setup by running:</para>
+
+        <para><programlisting>$<emphasis> globus-version</emphasis>
+5.0.1</programlisting></para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section>
+    <title>Environment</title>
+
+    <para>In order to use Pegasus, you will have to set the PEGASUS_HOME
+    environment variable, and source the Pegasus setup script.</para>
+
+    <para>This document assumes you are using a Bourne Shell derived shell.
+    e.g. /bin/sh or /bin/bash. csh setup scripts are available with the .csh
+    extension.</para>
+
+    <para>Set PEGASUS_HOME environment variable</para>
+
+    <programlisting><emphasis>$ export PEGASUS_HOME=&lt;path to pegasus directory&gt;</emphasis></programlisting>
+
+    <para>Set up the PEGASUS user environment<programlisting><emphasis>$ source $PEGASUS_HOME/setup.sh</emphasis></programlisting></para>
+  </section>
+
+  <section>
+    <title>Native Packages (RPM/DEB)</title>
+
+    <para>The preferred way to install Pegasus is with native (RPM/DEB)
+    packages. Using this packages, Pegasus will be installed into
+    <filename>/opt/pegasus/{major_version}.{minor_version}</filename>, and the
+    packages have {major_version}.{minor_version} in the package name. This is
+    so that you can have multiple Pegasus versions installed at the same time.
+    For example, if you installed Pegasus 2.4.3 and 3.0.0, you will end up
+    with:</para>
+
+    <programlisting>/opt/pegasus/2.4/
+/opt/pegasus/3.0/</programlisting>
+
+    <para>You can find the packages and instructions for YUM and APT
+    repositories, see the <ulink
+    url="http://pegasus.isi.edu/wms/download.php">download
+    page</ulink>.</para>
+  </section>
+
+  <section>
+    <title>Pegasus from Tarballs</title>
+    
+    <para>The Pegaus prebuild tarballs can be downloaded from the <ulink
+    url="http://pegasus.isi.edu/wms/download.php">download
+    page</ulink>.</para>
+
+    <section>
+      <title>Tarball without Condor</title>
+
+      <para>Use these tarballs if you already have Condor installed or prefer to keep
+              the Condor installation separate from the Pegasus installation.
+      </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Untar the tarball</para>
+
+          <para><programlisting>$ tar zxf pegasus-*.tar.gz</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>set environment PEGASUS_HOME to the directory
+          pegasus-3.0.0</para>
+
+          <para><programlisting>$ setenv PEGASUS_HOME /path/to/pegasus-3.0.0</programlisting>or
+          in bash<programlisting>$ export PEGASUS_HOME=/path/to/pegasus-3.0.0</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Source the setup scripts setup.sh for BASH or setup.csh for
+          CSH/TCSH</para>
+
+          <para><programlisting>$ source setup.csh</programlisting>or in
+          bash</para>
+
+          <para><programlisting>$ . setup.csh</programlisting></para>
+        </listitem>
+
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>Tarball with Included Condor</title>
+
+      <para>For convenience, there is Pegasus WMS tarballs which has Condor
+      included. This way you can instlal Pegasus and Condor at the same time,
+      with just minor configuration to get up and running.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Untar the tarball</para>
+
+          <para><programlisting>$ tar zxf pegasus-wms-*.tar.gz</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>set environment PEGASUS_HOME to the directory
+          pegasus-wms-3.0.0</para>
+
+          <para><programlisting>$ setenv PEGASUS_HOME /path/to/pegasus-wms-3.0.0</programlisting>or
+          in bash<programlisting>$ export PEGASUS_HOME=/path/to/pegasus-wms-3.0.0</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Source the setup scripts setup.sh for BASH or setup.csh for
+          CSH/TCSH</para>
+
+          <para><programlisting>$ source setup.csh</programlisting>or in
+          bash</para>
+
+          <para><programlisting>$ . setup.csh</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Edit the Condor Configuration file. The configuration file is
+          currently configured to run only as a submit side (Runs schedd)
+          supporting schedule, local and grid universe. If you want to use it
+          for gt4, lsf, pbs or condor-c additional configuration changes may
+          be required. Please check the Condor Manual for appropriate
+          parameters.</para>
+
+          <para>For now you need to change only 2 parameters. Change
+          !!PEGASUS_HOME!! to the actual path where PEGASUS_WMS is installed
+          and CHANGE !!USER!! to the user who will receive email in case of
+          error. (This can generally be just your username )</para>
+
+          <para><programlisting>$ vim $PEGASUS_HOME/etc/condor_config
 
 
-   </section>
-   <section>
-       <title>Native packages (RPM/DEB)</title>
-       <para>...</para>
-   </section>
-   <section>
-       <title>Pegasus with included Condor</title>
-       <para>...</para>
-   </section>
-   <section>
-       <title>Pegasus from tarballs</title>
-       <para>...</para>
-   </section>
+RELEASE_DIR = !!PEGASUS_HOME!!    # CHANGE THIS TO PATH OF PEGASUS_WMS INSTALLATION
+
+CONDOR_ADMIN = !!USER!! # CHANGE THIS To THE USER WHO wILL GET EMAIL INCASE OF ERROR.</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Start Condor by running
+          $PEGASUS_HOME/sbin/condor_master</para>
+
+          <para><programlisting>$ $PEGASUS_HOME/sbin/condor_master</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Check if condor is up by running the condor_q command</para>
+
+          <para><programlisting>$ condor_q
+
+-- Submitter: gmehta@smarty.isi.edu : &lt;128.9.72.26:60126&gt; : smarty.isi.edu
+ ID      OWNER            SUBMITTED     RUN_TIME ST PRI SIZE CMD               
+
+0 jobs; 0 idle, 0 running, 0 held</programlisting></para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
 </chapter>
-
