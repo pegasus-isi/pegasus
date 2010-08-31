@@ -37,10 +37,10 @@ sub new {
 
     if ( @_ > 1 ) {
 	# called with a=>b,c=>d list
-	%{$self} = ( @_ ); 
+	%{$self} = ( %{$self}, @_ ); 
     } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
 	# called with { a=>b, c=>d } hashref
-	%{$self} = %{ shift() }; 
+	%{$self} = ( %{$self}, %{ shift() } ); 
     } else {
 	croak "invalid c'tor for ", __PACKAGE__; 
     }
