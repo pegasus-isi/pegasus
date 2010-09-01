@@ -4,23 +4,23 @@ use 5.006;
 use strict;
 use warnings; 
 
-use Pegasus::DAX::ADAG; 
-use Pegasus::DAX::Job; 
-use Pegasus::DAX::Filename;
+use Pegasus::DAX::Factory qw(:all); 
 
-my $xmlns = shift;
+my $xmlns = shift;		# optional argument: XML namespace to use
 
-my $stdout = Pegasus::DAX::Filename->new( name => 'hw.txt',
-					  link => LINK_OUT,
-					  register => 0,
-					  transfer => TRANSFER_TRUE ); 
+my $file = newFile( name => 'hw.txt'
+		  , link => LINK_OUT
+		  # lazy way using c'tor to initialize collection
+		  , pfns => [ newPFN( url => 'hw.txt', site => 'local' ) ]
+    ); 
 
-my $job = Pegasus::DAX::Job->new( namespace => 'tut', name => 'echo' ); 
+my $job = newJob( namespace => 'tut', name => 'echo' ); 
 $job->addArgument( 'Hello World' ); 
-$job->stdout( $stdout ); 
+$job->stdout( newPlainFilename( name => $file->name() ) );
 
-my $adag = Pegasus::DAX::ADAG->new( name => 'helloworld' ); 
+my $adag = newADAG( name => 'helloworld' ); 
 $adag->addJob( $job ); 
+$adag->addFile( $file ); 
 
 use IO::Handle; 		# so that \*STDOUT works
 $adag->toXML( \*STDOUT, '', $xmlns ); 

@@ -10,6 +10,9 @@ use Carp;
 use Exporter;
 our @ISA = qw(Exporter); 
 
+#
+# import all instantiatable classes
+#
 use Pegasus::DAX::Profile qw(:all);
 use Pegasus::DAX::PFN;
 use Pegasus::DAX::MetaData;
@@ -23,54 +26,25 @@ use Pegasus::DAX::DAX;
 use Pegasus::DAX::Job;
 use Pegasus::DAX::ADAG qw(:all); 
 
-sub newProfile {
-    Pegasus::DAX::Profile->new(@_);
-}
+#
+# define wrappers around their c'tors
+#
+sub newProfile	{ Pegasus::DAX::Profile->new(@_) }
+sub newPFN	{ Pegasus::DAX::PFN->new(@_) }
+sub newMetaData	{ Pegasus::DAX::MetaData->new(@_) }
+sub newPlainFilename { Pegasus::DAX::PlainFilename->new(@_) }
+sub newFilename	{ Pegasus::DAX::Filename->new(@_) }
+sub newFile	{ Pegasus::DAX::File->new(@_) }
+sub newExecutable { Pegasus::DAX::Executable->new(@_) }
+sub newTransformation { Pegasus::DAX::Transformation->new(@_) }
+sub newDAG	{ Pegasus::DAX::DAG->new(@_) }
+sub newDAX	{ Pegasus::DAX::DAX->new(@_) }
+sub newJob	{ Pegasus::DAX::Job->new(@_) }
+sub newADAG	{ Pegasus::DAX::ADAG->new(@_) }
 
-sub newPFN {
-    Pegasus::DAX::PFN->new(@_);
-}
-
-sub newMetaData {
-    Pegasus::DAX::MetaData->new(@_);
-}
-
-sub newPlainFilename {
-    Pegasus::DAX::PlainFilename->new(@_);
-}
-
-sub newFilename {
-    Pegasus::DAX::Filename->new(@_);
-}
-
-sub newFile { 
-    Pegasus::DAX::File->new(@_);
-}
-
-sub newExecutable {
-    Pegasus::DAX::Executable->new(@_);
-}
-
-sub newTransformation {
-    Pegasus::DAX::Transformation->new(@_);
-}
-
-sub newDAG { 
-    Pegasus::DAX::DAG->new(@_);
-}
-
-sub newDAX {
-    Pegasus::DAX::DAX->new(@_);
-}
-
-sub newJob {
-    Pegasus::DAX::Job->new(@_);
-}
-
-sub newADAG {
-    Pegasus::DAX::ADAG->new(@_);
-}
-
+#
+# export bonanza
+#
 our $VERSION = '3.2'; 
 our %EXPORT_TAGS = (
     func => [qw(newADAG newDAG newDAX newExecutable newFile 
@@ -92,7 +66,7 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
 
-    croak "You called $class, which is not instantiatable"; 
+    croak "The c'tor on $class is not instantiatable"; 
 }
 
 
@@ -114,7 +88,47 @@ Pegasus::DAX::Factory - convenience module
 =head1 DESCRIPTION
 
 This class exports all constructors as convenience functions into the
-caller's namespace.
+caller's namespace. In addition, when using the C<:all> tag, all
+constants from any class are exported.
+
+=head1 IMPORT TAGS
+
+=over 4
+
+=item C<:func>
+
+This tag imports the convenience wrapper functions around the class
+constructors. The wrappers are exported by default.
+
+=item C<:link>
+
+This tag imports the linkage constants C<LINK_*> from L<Pegasus::DAX::Filename>.
+
+=item C<:transfer>
+
+This tag imports the transfer constants C<TRANSFER_*> from L<Pegasus::DAX::Filename>.
+
+=item C<:arch>
+
+This tag imports the architecture constants C<ARCH_*> from L<Pegasus::DAX::Executable>.
+
+=item C<:os>
+
+This tag imports the operating system constants C<OS_*> from L<Pegasus::DAX::Executable>.
+
+=item C<:ns>
+
+This tag imports the profile namespace constants C<PROFILE_*> from L<Pegasus::DAX::Profile>.
+
+=item C<:schema>
+
+This tag imports the XML schema constants C<SCHEMA_*> from L<Pegasus::DAX::ADAG>.
+
+=item C<:all>
+
+All of the above. 
+
+=back
 
 =head1 FUNCTIONS
 
