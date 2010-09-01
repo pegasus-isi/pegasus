@@ -8,15 +8,12 @@ use Pegasus::DAX::Factory qw(:all);
 
 my $xmlns = shift;		# optional argument: XML namespace to use
 
-my $file = newFile( name => 'hw.txt'
-		  , link => LINK_OUT
-		  # lazy way using c'tor to initialize collection
-		  , pfns => [ newPFN( url => 'hw.txt', site => 'local' ) ]
-    ); 
+my $file = newFile( name => 'hw.txt', link => LINK_OUT );
+$file->addPFN( newPFN( url => 'hw.txt', site => 'local' ) ); 
 
 my $job = newJob( namespace => 'tut', name => 'echo' ); 
 $job->addArgument( 'Hello World' ); 
-$job->stdout( newPlainFilename( name => $file->name() ) );
+$job->stdout( $file ); 
 
 my $adag = newADAG( name => 'helloworld' ); 
 $adag->addJob( $job ); 

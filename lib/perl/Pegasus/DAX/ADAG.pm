@@ -147,10 +147,11 @@ sub toXML {
     # OK, this is slightly ugly and tricky: If there is no indentation,
     # this <adag> element is the outer-most, and thus gets the XML intro.
     if ( $indent eq '' ) { 
-	use POSIX qw(strftime); 
-	binmode($f,':utf8'); 	# evil, evil, evil
+	binmode($f,':utf8'); 	# evil, evil, evil?
 	$f->print( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ); 
-	$f->print( '<!-- generated: ', strftime( "%Y-%m-%dT%H:%M:%S%z", localtime() ), " -->\n" ); 
+	my @t = gmtime;		# avoid loading POSIX
+	$f->printf( "<!-- generated: %04u-%02u-%02uT%02u:%02u:%02uZ -->\n",
+		    $t[5]+1900, $t[4]+1, $t[3], $t[2], $t[1], $t[0] ); 
     }
 
     my $ns = defined $xmlns && $xmlns ? "xmlns:$xmlns" : 'xmlns'; 

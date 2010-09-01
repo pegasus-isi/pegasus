@@ -47,8 +47,7 @@ sub addArgument {
     my $self = shift; 
     my $name = shift;
     if ( ! ref $name ) {
-	# plain text
-	$name = Pegasus::DAX::PlainFilename->new( $name ); 
+	# plain text -- take as is
     } elsif ( $name->isa('Pegasus::DAX::PlainFilename')) {
 	# auto-add uses for P::D::Filename
 	$self->uses($name) if $name->isa('Pegasus::DAX::Filename'); 
