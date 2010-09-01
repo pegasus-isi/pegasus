@@ -7,9 +7,8 @@ use 5.006;
 use strict;
 use Carp; 
 
-use Pegasus::DAX::Base qw(:xml); 
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Exporter); 
+our @ISA = qw(Exporter); 
 
 use Pegasus::DAX::Profile qw(:all);
 use Pegasus::DAX::PFN;
@@ -74,13 +73,15 @@ sub newADAG {
 
 our $VERSION = '3.2'; 
 our %EXPORT_TAGS = (
-    func => [qw(newADAG newDAG newDAX newExecutable newFile newFilename newJob 
-	newMetaData newPFN newPlainFilename newProfile newTransformation)],
+    func => [qw(newADAG newDAG newDAX newExecutable newFile 
+	newFilename newJob newMetaData newPFN newPlainFilename 
+	newProfile newTransformation)],
     link => [ @{$Pegasus::DAX::Filename::EXPORT_TAGS{link}} ],
+    transfer => [ @{$Pegasus::DAX::Filename::EXPORT_TAGS{transfer}} ],
     arch => [ @{$Pegasus::DAX::Executable::EXPORT_TAGS{arch}} ],
     os => [ @{$Pegasus::DAX::Executable::EXPORT_TAGS{os}} ],
     ns => [ @{$Pegasus::DAX::Profile::EXPORT_TAGS{ns}} ],
-    schema => [ @{$Pegasus::DAX::ADAG::EXPORT_TAGS{ns}} ]
+    schema => [ @{$Pegasus::DAX::ADAG::EXPORT_TAGS{schema}} ]
     ); 
 $EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
 our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
