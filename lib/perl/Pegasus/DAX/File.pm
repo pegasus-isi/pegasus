@@ -13,9 +13,9 @@ use Exporter;
 our @ISA = qw(Pegasus::DAX::CatalogType Exporter); 
 
 our $VERSION = '3.2'; 
+our %EXPORT_TAGS = (); 
 our @EXPORT = (); 
 our @EXPORT_OK = (); 
-our %EXPORT_TAGS = (); 
 
 sub new {
     my $proto = shift;
@@ -38,7 +38,7 @@ sub new {
 }
 
 # forward declarations
-sub name;
+#sub name;	# inherited from parent
 sub link;
 sub optional;
 
@@ -64,6 +64,7 @@ sub toXML {
 }
 
 1; 
+__END__
 
 
 =head1 NAME

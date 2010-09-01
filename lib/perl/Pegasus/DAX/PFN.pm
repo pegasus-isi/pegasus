@@ -96,6 +96,7 @@ sub toXML {
 }
 
 1; 
+__END__
 
 =head1 NAME
 

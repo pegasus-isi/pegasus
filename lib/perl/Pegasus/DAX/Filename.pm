@@ -12,21 +12,27 @@ use Pegasus::DAX::PlainFilename;
 use Exporter;
 our @ISA = qw(Pegasus::DAX::PlainFilename Exporter); 
 
-use constant LINK_NONE  => 'none';
-use constant LINK_IN    => 'in'; 
-use constant LINK_OUT   => 'out';
-use constant LINK_INOUT => 'inout'; 
-use constant LINK_IO    => 'inout'; 
+use constant LINK_NONE   => 'none';
+use constant LINK_IN     => 'in'; 
+use constant LINK_OUT    => 'out';
+use constant LINK_INPUT  => 'in'; 
+use constant LINK_OUTPUT => 'out';
+use constant LINK_INOUT  => 'inout'; 
+use constant LINK_IO     => 'inout'; 
 
 use constant TRANSFER_TRUE => 'true';
 use constant TRANSFER_FALSE => 'false';
 use constant TRANSFER_OPTIONAL => 'optional'; 
 
 our $VERSION = '3.2'; 
-our @EXPORT = qw(LINK_NONE LINK_IN LINK_OUT LINK_INOUT LINK_IO
-	TRANSFER_TRUE TRANSFER_FALSE TRANSFER_OPTIONAL); 
-our @EXPORT_OK = (); 
-our %EXPORT_TAGS = (); 
+our @EXPORT = (); 
+our %EXPORT_TAGS = ( 
+    'link' => [qw(LINK_NONE LINK_IN LINK_OUT LINK_INPUT LINK_OUTPUT 
+	LINK_INOUT LINK_IO)],
+    'transfer' => [qw(TRANSFER_TRUE TRANSFER_FALSE TRANSFER_OPTIONAL)]
+    );
+$EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
+our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} ); 
 
 sub new {
     my $proto = shift;
@@ -82,6 +88,7 @@ sub toXML {
 }
 
 1; 
+__END__
 
 =head1 NAME
 
@@ -104,6 +111,8 @@ concrete job's argument list.
 
 =head1 CONSTANTS
 
+The following constants define valid values for the I<link> attribute. 
+
 =over 4
 
 =item LINK_NONE
@@ -113,22 +122,42 @@ I<link> attribute.
 
 =item LINK_IN
 
+=item LINK_INPUT
+
 Constant denoting that a file is an input file. To be used with the
 I<link> attribute.
 
 =item LINK_OUT
 
+=item LINK_OUTPUT
+
 Constant denoting that a file is an output file. To be used with the
 I<link> attribute.
+
+=item LINK_IO
 
 =item LINK_INOUT
 
 Constant denoting that a file is an input- and output file. To be used
 with the I<link> attribute.
 
-=item LINK_IO
+=back
 
-Alias for C<LINK_INOUT>. 
+The following constants define valid values for the I<transfer> attribute. 
+
+=over 4
+
+=item TRANSFER_TRUE
+
+Stage the files as necessary. 
+
+=item TRANSFER_FALSE
+
+Do not stage files. 
+
+=item TRANSFER_OPTIONAL
+
+Attempt to stage files, but failing to stage an input file is not an error. 
 
 =back
 

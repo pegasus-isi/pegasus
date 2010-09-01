@@ -12,10 +12,32 @@ use Pegasus::DAX::CatalogType;
 use Exporter;
 our @ISA = qw(Pegasus::DAX::CatalogType Exporter); 
 
+use constant ARCH_IA64    => 'ia64';
+use constant ARCH_PPC     => 'ppc';
+use constant ARCH_PPC_64  => 'ppc_64';
+use constant ARCH_SPARCV7 => 'sparcv7'; 
+use constant ARCH_SPARCV9 => 'sparcv9';
+use constant ARCH_X86     => 'x86';
+use constant ARCH_X86_64  => 'x86_64'; 
+use constant ARCH_AMD64   => 'x86_64'; 
+
+use constant OS_AIX       => 'aix';
+use constant OS_LINUX     => 'linux';
+use constant OS_DARWIN    => 'darwin';
+use constant OS_MACOSX    => 'darwin'; 
+use constant OS_SUNOS     => 'sunos';
+use constant OS_SOLARIS   => 'sunos'; 
+use constant OS_WINDOWS   => 'windows'; 
+
 our $VERSION = '3.2'; 
 our @EXPORT = (); 
-our @EXPORT_OK = (); 
-our %EXPORT_TAGS = (); 
+our %EXPORT_TAGS = ( 
+    arch =>[qw(ARCH_IA64 ARCH_PPC ARCH_PPC_64 ARCH_SPARCV7 ARCH_SPARCV9 
+	ARCH_X86 ARCH_X86_64 ARCH_AMD64)],
+    os => [qw(OS_AIX OS_LINUX OS_DARWIN OS_MACOSX OS_WINDOWS OS_SUNOS OS_SOLARIS)]
+    ); 
+$EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
+our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} ); 
 
 sub new {
     my $proto = shift;
@@ -39,7 +61,7 @@ sub new {
 
 # forward declarations
 sub namespace;
-sub name;
+#sub name;	# inherited from parent
 sub version;
 sub arch;
 sub os;
@@ -74,6 +96,7 @@ sub toXML {
 }
 
 1; 
+__END__
 
 =head1 NAME
 
@@ -92,6 +115,67 @@ Pegasus::DAX::Executable - stores an included transformation catalog entry.
 =head1 DESCRIPTION
 
 This class remembers an included Pegasus transformation catalog entry. 
+
+=head1 CONSTANTS
+
+These constants describe the architecture for which an executable was
+compiled. Note that multi-architectures as available on Mac OS X are
+currently not supported.
+
+=over 4
+
+=item ARCH_IA64
+
+=item ARCH_PPC
+
+=item ARCH_PPC_64
+
+=item ARCH_SPARCV7
+
+=item ARCH_SPARCV9
+
+=item ARCH_X86
+
+=item ARCH_X86_64
+
+=item ARCH_AMD64
+
+=back
+
+These constants describe the operating system platform. Some of them are
+aliases mapping to the same string.
+
+=over 4
+
+=item OS_AIX
+
+The IBM AIX Unix platform. 
+
+=item OS_LINUX
+
+The Linux platform. 
+
+=item OS_DARWIN
+
+The Mac OS X platform. 
+
+=item OS_MACOSX
+
+An alias for the Mac OS X platform. 
+
+=item OS_SUNOS
+
+The SUN Sparc and SUN Intel platforms. 
+
+=item OS_SOLARIS
+
+An alias for the SUN platforms. 
+
+=item OS_WINDOWS
+
+The Microsoft Windows family of platforms. 
+
+=back 
 
 =head1 METHODS
 

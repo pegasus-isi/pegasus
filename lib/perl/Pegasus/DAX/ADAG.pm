@@ -19,7 +19,9 @@ use constant SCHEMA_VERSION => 3.2;
 our $VERSION = '3.2'; 
 our @EXPORT = (); 
 our @EXPORT_OK = qw(SCHEMA_NAMESPACE SCHEMA_LOCATION SCHEMA_VERSION); 
-our %EXPORT_TAGS = (); 
+our %EXPORT_TAGS = ( 
+    schema => [ @EXPORT_OK ], 
+    all => [ @EXPORT_OK ] ); 
 
 sub new {
     my $proto = shift;
@@ -222,6 +224,7 @@ sub toXML {
 }
 
 1; 
+__END__
 
 
 =head1 NAME

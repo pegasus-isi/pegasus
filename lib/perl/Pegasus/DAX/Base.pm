@@ -18,7 +18,9 @@ sub boolean($);			# { }
 our $VERSION = '3.2'; 
 our @EXPORT = (); 
 our @EXPORT_OK = qw(quote attribute boolean $escape %escape); 
-our %EXPORT_TAGS = ( xml => [ @EXPORT_OK ] ); 
+our %EXPORT_TAGS = ( 
+    xml => [ @EXPORT_OK ], 
+    all => [ @EXPORT_OK ] ); 
 
 our $prefix = '[' . __PACKAGE__ . '] ';
 
@@ -125,9 +127,14 @@ sub boolean($) {
     # paramtr: $v (IN): value
     # returns: string 'true' or string 'false' for defined input
     # warning: returns undefined value for undefined input!
+    # warning: string "false" input will return 'false', too. 
     #
     my $s = shift;
-    defined $s ? ( $s ? 'true' : 'false' ) : undef;
+    if ( defined $s ) { 
+	( $s =~ /false/i || ! $s ) ? 'false' : 'true'; 
+    } else { 
+	undef;
+    }
 }
 
 sub toXML {
@@ -137,10 +144,11 @@ sub toXML {
     #          xmlns (opt. IN): namespace of element, if necessary
     #
     my $self = shift; 
-    croak "Called ", __PACKAGE__, "::toXML"; 
+    croak( ref($self),  " called *abstract* ", __PACKAGE__, "::toXML" ); 
 }
 
 1; 
+__END__
 
 __END__
 
@@ -224,7 +232,9 @@ empty string will be returned.
 =item boolean($v)
 
 This function translates a Perl boolean value into an XML boolean value.
-The output is I<true> if the expression evaluates to a Perl true value. 
+The output is the string C<false>, if the expression evaluates to a Perl
+false value I<or> if the input value matches the expression C</false/i>.
+Every other value returns the string C<true>. 
 
 As a quirk to accomodate the omission of attributes, an I<undef> input
 will generate I<undef> output. 

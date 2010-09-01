@@ -36,6 +36,9 @@ sub new {
     bless $self, $class; 
 }
 
+# forward declaration
+sub name; 
+
 sub addMeta {
     my $self = shift;
 
@@ -147,6 +150,7 @@ sub innerXML {
 }
 
 1; 
+__END__
 
 
 =head1 NAME

@@ -25,6 +25,7 @@ our @EXPORT = ();
 our %EXPORT_TAGS = ( ns => [ qw(PROFILE_PEGASUS PROFILE_CONDOR 
 	PROFILE_DAGMAN PROFILE_ENV PROFILE_HINTS PROFILE_GLOBUS 
 	PROFILE_SELECTOR PROFILE_STAT ) ] );
+$EXPORT_TAGS{all} = [ @{$EXPORT_TAGS{ns}} ]; 
 our @EXPORT_OK = ( @{$EXPORT_TAGS{ns}} );
 
 sub new {
@@ -83,6 +84,7 @@ sub toXML {
 }
 
 1; 
+__END__
 
 =head1 NAME
 
