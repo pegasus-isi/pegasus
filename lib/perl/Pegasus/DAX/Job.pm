@@ -19,6 +19,9 @@ our %EXPORT_TAGS = ();
 
 my $count = 0; 
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -59,11 +62,11 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:job" : 'job';
 
     $f->print( "$indent<$tag"
-	     , attribute('namespace',$self->namespace)
-	     , attribute('name',$self->name)
-	     , attribute('version',$self->version)
-	     , attribute('id',$self->id)
-	     , attribute('node-label',$self->nodelabel)
+	     , attribute('namespace',$self->namespace,$xmlns)
+	     , attribute('name',$self->name,$xmlns)
+	     , attribute('version',$self->version,$xmlns)
+	     , attribute('id',$self->id,$xmlns)
+	     , attribute('node-label',$self->nodelabel,$xmlns)
 	     , ">\n" );
     $self->innerXML($f,"  $indent",$xmlns); 
     $f->print( "$indent</$tag>\n" );

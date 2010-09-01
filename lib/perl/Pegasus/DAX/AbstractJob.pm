@@ -24,6 +24,9 @@ our %EXPORT_TAGS = ( all => [qw(INVOKE_NEVER INVOKE_START INVOKE_ON_SUCCESS
 	INVOKE_ON_ERROR INVOKE_AT_END INVOKE_ALL) ] ); 
 our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -231,22 +234,22 @@ sub innerXML {
     if ( exists $self->{stdin} && $self->{stdin} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdin" : 'stdin'; 
 	$f->print( "$indent<$tag"
-		 , attribute('name',$self->stdin)
-		 , attribute('link','in')
+		 , attribute('name',$self->stdin,$xmlns)
+		 , attribute('link','in',$xmlns)
 		 , " />\n" );
     }
     if ( exists $self->{stdout} && $self->{stdout} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdout" : 'stdout'; 
 	$f->print( "$indent<$tag"
-		 , attribute('name',$self->stdout)
-		 , attribute('link','out')
+		 , attribute('name',$self->stdout,$xmlns)
+		 , attribute('link','out',$xmlns)
 		 , " />\n" );
     }
     if ( exists $self->{stderr} && $self->{stderr} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stderr" : 'stderr'; 
 	$f->print( "$indent<$tag"
-		 , attribute('name',$self->stderr)
-		 , attribute('link','out')
+		 , attribute('name',$self->stderr,$xmlns)
+		 , attribute('link','out',$xmlns)
 		 , " />\n" );
     }
 
@@ -266,7 +269,7 @@ sub innerXML {
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:invoke" : 'invoke';
 	foreach my $i ( @{$self->{invokes}} ) {
 	    $f->print( "$indent<$tag"
-		     , attribute('when',$i->{when})
+		     , attribute('when',$i->{when},$xmlns)
 		     , ">"
 		     , quote($i->{cmd})
 		     , "</$tag>\n"

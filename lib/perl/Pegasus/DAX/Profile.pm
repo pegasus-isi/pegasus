@@ -28,6 +28,9 @@ our %EXPORT_TAGS = ( ns => [ qw(PROFILE_PEGASUS PROFILE_CONDOR
 $EXPORT_TAGS{all} = [ @{$EXPORT_TAGS{ns}} ]; 
 our @EXPORT_OK = ( @{$EXPORT_TAGS{ns}} );
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -75,8 +78,8 @@ sub toXML {
 	$self->value; 
 
     $f->print( "$indent<$tag", 
-	     , attribute('namespace',$self->namespace)
-	     , attribute('key',$self->key)
+	     , attribute('namespace',$self->namespace,$xmlns)
+	     , attribute('key',$self->key,$xmlns)
 	     , ">"
 	     , quote($value)
 	     , "</$tag>\n"

@@ -39,6 +39,9 @@ our %EXPORT_TAGS = (
 $EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
 our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} ); 
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -82,14 +85,14 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:executable" : 'executable';
 
     $f->print( "$indent<$tag"
-	     , attribute('namespace',$self->namespace)
-	     , attribute('name',$self->name)
-	     , attribute('version',$self->version)
-	     , attribute('arch',$self->arch)
-	     , attribute('os',$self->os)
-	     , attribute('osrelease',$self->osrelease)
-	     , attribute('osversion',$self->osversion)
-	     , attribute('glibc',$self->glibc)
+	     , attribute('namespace',$self->namespace,$xmlns)
+	     , attribute('name',$self->name,$xmlns)
+	     , attribute('version',$self->version,$xmlns)
+	     , attribute('arch',$self->arch,$xmlns)
+	     , attribute('os',$self->os,$xmlns)
+	     , attribute('osrelease',$self->osrelease,$xmlns)
+	     , attribute('osversion',$self->osversion,$xmlns)
+	     , attribute('glibc',$self->glibc,$xmlns)
 	     , ">\n" );
     $self->innerXML($f,"  $indent",$xmlns); 
     $f->print( "$indent</$tag>\n" );

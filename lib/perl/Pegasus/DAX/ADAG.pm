@@ -23,6 +23,9 @@ our %EXPORT_TAGS = (
     schema => [ @EXPORT_OK ], 
     all => [ @EXPORT_OK ] ); 
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -155,10 +158,10 @@ sub toXML {
 	     , attribute($ns,SCHEMA_NAMESPACE)
 	     , attribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance')
 	     , attribute('xsi:schemaLocation',SCHEMA_NAMESPACE . ' ' . SCHEMA_LOCATION)
-	     , attribute('version',SCHEMA_VERSION)
-	     , attribute('name',$self->{name})
-	     , attribute('index',$self->{index})
-	     , attribute('count',$self->{count})
+	     , attribute('version',SCHEMA_VERSION,$xmlns)
+	     , attribute('name',$self->name,$xmlns)
+	     , attribute('index',$self->index,$xmlns)
+	     , attribute('count',$self->count,$xmlns)
 	     , ">\n" ); 
 
     #
@@ -208,13 +211,13 @@ sub toXML {
 	my $ptag = defined $xmlns && $xmlns ? "$xmlns:parent" : 'parent';
 	while ( my ($child,$r) = each %{$self->{deps}} ) { 
 	    $f->print( "  $indent<$ctag"
-		     , attribute('ref',$child)
+		     , attribute('ref',$child,$xmlns)
 		     , ">\n" );
 	    while ( my ($parent,$label) = each %{$r} ) {
-		$f->print( "    $indent<$ptag", attribute('ref',$parent) );
-		$f->print( attribute('edge-label',$label) ) 
-		    if ( defined $label && $label ne '' ); 
-		$f->print( " />\n" ); 
+		$f->print( "    $indent<$ptag"
+			 , attribute('ref',$parent,$xmlns)
+			 , attribute('edge-label',$label,$xmlns)
+			 , " />\n" ); 
 	    }
 	    $f->print( "  $indent</$ctag>\n" ); 
 	}

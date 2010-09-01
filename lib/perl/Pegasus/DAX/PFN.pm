@@ -16,6 +16,9 @@ our @EXPORT = ();
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -81,8 +84,8 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:pfn" : 'pfn';
 
     $f->print( "$indent<$tag"
-	     , attribute('url',$self->url)
-	     , attribute('site',$self->site) 
+	     , attribute('url',$self->url,$xmlns)
+	     , attribute('site',$self->site,$xmlns) 
 	     );
     if ( exists $self->{profiles} ) { 
 	$f->print(">\n");

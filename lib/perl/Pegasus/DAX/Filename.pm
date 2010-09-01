@@ -34,6 +34,9 @@ our %EXPORT_TAGS = (
 $EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
 our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} ); 
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -55,6 +58,7 @@ sub new {
 }
 
 # forward declarations so can we check using 'can'
+#sub name;			# inherited
 sub namespace;
 sub version;
 sub link;
@@ -76,14 +80,14 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:uses" : 'uses';
 
     $f->print( "$indent<$tag", 
-	     , attribute('namespace',$self->{namespace})
-	     , attribute('name',$self->{name})
-	     , attribute('version',$self->{version})
-	     , attribute('link',$self->{link})
-	     , attribute('optional',boolean($self->{optional}))
-	     , attribute('register',boolean($self->{register}))
-	     , attribute('transfer',$self->{transfer})
-	     , attribute('executable',boolean($self->{exectuable}))
+	     , attribute('namespace',$self->namespace,$xmlns)
+	     , attribute('name',$self->name,$xmlns)
+	     , attribute('version',$self->version,$xmlns)
+	     , attribute('link',$self->link,$xmlns)
+	     , attribute('optional',boolean($self->optional),$xmlns)
+	     , attribute('register',boolean($self->register),$xmlns)
+	     , attribute('transfer',$self->transfer,$xmlns)
+	     , attribute('executable',boolean($self->executable),$xmlns)
 	     , " />\n" ); 
 }
 

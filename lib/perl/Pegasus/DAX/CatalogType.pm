@@ -16,6 +16,9 @@ our @EXPORT = ();
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = ();
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -69,7 +72,7 @@ sub addPFN {
     } elsif ( @_ == 2 && ! ref $_[0] && ! ref $_[1] ) {
 	# two plain strings, no pfn-profiles
 	$pfn = Pegasus::DAX::PFN->new( shift(), shift() ); 
-    } elsif ( @_ == 1 && $pfn->isa('Pegasus::DAX::PFN' ) ) {
+    } elsif ( @_ == 1 && $_[0]->isa('Pegasus::DAX::PFN' ) ) {
 	# ok
 	$pfn = shift; 
     } else {
@@ -122,7 +125,7 @@ sub innerXML {
     if ( exists $self->{profiles} ) {
 	foreach my $i ( @{$self->{profiles}} ) { 
 	    $result++;
-	    $i->toXML($f,"  $indent",$xmlns);
+	    $i->toXML($f,$indent,$xmlns);
 	}
     }
 
@@ -132,7 +135,7 @@ sub innerXML {
     if ( exists $self->{metas} ) {
 	foreach my $i ( @{$self->{metas}} ) { 
 	    $result++;
-	    $i->toXML($f,"  $indent",$xmlns);
+	    $i->toXML($f,$indent,$xmlns);
 	}
     }
 
@@ -142,7 +145,7 @@ sub innerXML {
     if ( exists $self->{pfns} ) {
 	foreach my $i ( @{$self->{pfns}} ) { 
 	    $result++;
-	    $i->toXML($f,"  $indent",$xmlns);
+	    $i->toXML($f,$indent,$xmlns);
 	}
     }
 

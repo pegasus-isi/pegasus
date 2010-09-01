@@ -16,10 +16,14 @@ our @EXPORT = ();
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
+    $self->{name} = undef; 
 
     if ( @_ == 0 ) { 
 	# nothing to do
@@ -39,7 +43,8 @@ sub new {
     bless $self, $class; 
 }
 
-sub name;			# { } forward declaration
+# forward declaration of methods
+sub name;
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -54,7 +59,7 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:file" : 'file';
 
     $f->print( "$indent<$tag"
-	     , attribute('name',$self->{name})
+	     , attribute('name',$self->{name},$xmlns)
 	     , " />" ); 
 }
 

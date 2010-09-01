@@ -17,6 +17,9 @@ our %EXPORT_TAGS = ();
 our @EXPORT = (); 
 our @EXPORT_OK = (); 
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -38,7 +41,7 @@ sub new {
 }
 
 # forward declarations
-#sub name;	# inherited from parent
+#sub name;			# inherited
 sub link;
 sub optional;
 
@@ -55,9 +58,9 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:file" : 'file';
 
     $f->print( "$indent<$tag"
-	     , attribute('name',$self->name)
-	     , attribute('link',$self->link)
-	     , attribute('optional',boolean($self->optional))
+	     , attribute('name',$self->name,$xmlns)
+	     , attribute('link',$self->link,$xmlns)
+	     , attribute('optional',boolean($self->optional),$xmlns)
 	     , ">\n" );
     $self->innerXML($f,"  $indent",$xmlns); 
     $f->print( "$indent</$tag>\n" );

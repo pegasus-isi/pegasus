@@ -17,6 +17,9 @@ our @EXPORT = ();
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -89,9 +92,9 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:executable" : 'executable';
 
     $f->print( "$indent<$tag"
-	     , attribute('namespace',$self->namespace)
-	     , attribute('name',$self->name)
-	     , attribute('version',$self->version)
+	     , attribute('namespace',$self->namespace,$xmlns)
+	     , attribute('name',$self->name,$xmlns)
+	     , attribute('version',$self->version,$xmlns)
 	     , ">\n" );
 
     #

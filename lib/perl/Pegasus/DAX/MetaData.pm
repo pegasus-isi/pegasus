@@ -16,6 +16,9 @@ our @EXPORT = ();
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = ();
 
+# one AUTOLOAD to rule them all
+BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -57,8 +60,8 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:metadata" : 'metadata';
 
     $f->print( "$indent<$tag", 
-	     , attribute('key',$self->key)
-	     , attribute('type',$self->type)
+	     , attribute('key',$self->key,$xmlns)
+	     , attribute('type',$self->type,$xmlns)
 	     , ">"
 	     , quote($self->value)
 	     , "</$tag>\n"

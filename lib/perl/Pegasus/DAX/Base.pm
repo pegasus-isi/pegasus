@@ -5,14 +5,14 @@
 package Pegasus::DAX::Base;
 use 5.006;
 use strict;
-use vars qw($AUTOLOAD);
-use Carp; 
+use vars qw($AUTOLOAD); 
 
+use Carp; 
 use Exporter;
 our @ISA = qw(Exporter); 
 
 sub quote($);			# { }
-sub attribute($$);		# { }
+sub attribute($$;$);		# { }
 sub boolean($);			# { }
 
 our $VERSION = '3.2'; 
@@ -106,17 +106,23 @@ sub quote($) {
     $s; 
 }
 
-sub attribute($$) { 
+sub attribute($$;$) { 
     # purpose: format an element attribute
     # paramtr: $key (IN): name of attribute
     #          $val (IN): value for attribute
+    #          $xmlns (opt. IN): xml namespace for qualifications
     # returns: formatted string
     # warning: may return empty string if key is empty
     #
     my $key = shift; 
     my $val = shift; 
+    my $xmlns = shift; 
     if ( defined $key && $key && defined $val ) {
-	" $key=\"", quote($val), "\""; 
+	if ( defined $xmlns && $xmlns ) {
+	    " $xmlns:$key=\"", quote($val), "\""; 
+	} else {
+	    " $key=\"", quote($val), "\""; 
+	}
     } else {
 	'';
     }
@@ -217,6 +223,8 @@ C<undef>, if the input string was C<undef>.
 
 =item attribute($key,$value)
 
+=item attribute($key,$value,$xmlns)
+
 This function is a helper for sub-classes that instantiate the abstract
 C<toXML> method when printing an element tag. Given the I<$key> for an
 element's attribute, and the I<$value> to put with the element, this
@@ -228,6 +236,9 @@ quote character.
 
 If the key is not defined or empty, or the value is not defined, the
 empty string will be returned. 
+
+In the 3-argument form, if the C<$xmlns> argument is defined and true,
+the attribute will be qualified with the string in C<$xmlns>. 
 
 =item boolean($v)
 
