@@ -103,8 +103,6 @@ sub addJob {
 sub addDependency {
     my $self = shift; 
     my $parent = shift;
-    my $child = shift; 
-    my $label = shift; 
 
     # we only need the job identifier string
     if ( ref $parent ) {
@@ -117,6 +115,32 @@ sub addDependency {
 	}
     }
 
+    while ( @_ ) {
+	my $child = shift; 
+
+	# we only need the job identifier string
+	if ( ref $child ) {
+	    if ( $child->isa('Pegasus::DAX::AbstractJob') ) {
+		$child = $child->id;
+		croak( "child does not have a valid job-id" )
+		    unless ( defined $child && $child ); 
+	    } else {
+		croak "child is not a job type"; 
+	    }
+	}
+
+	# plain string is a label
+	my $label = ( ref $_[0] ? undef : shift ); 
+
+	# spring into existence -- store undef, if necessary
+	$self->{deps}->{$child}->{$parent} = $label; 
+    }
+}
+
+sub addInverse {
+    my $self = shift; 
+    my $child = shift; 
+
     # we only need the job identifier string
     if ( ref $child ) {
 	if ( $child->isa('Pegasus::DAX::AbstractJob') ) {
@@ -128,9 +152,28 @@ sub addDependency {
 	}
     }
 
-    # spring into existence -- store undef, if necessary
-    $self->{deps}->{$child}->{$parent} = $label; 
+    while ( @_ ) {
+	my $parent = shift; 
+
+	# we only need the job identifier string
+	if ( ref $parent ) {
+	    if ( $parent->isa('Pegasus::DAX::AbstractJob') ) {
+		$parent = $parent->id;
+		croak( "parent does not have a valid job-id" )
+		    unless ( defined $parent && $parent ); 
+	    } else {
+		croak "parent is not a job type";
+	    }
+	}
+
+	# plain string is a label
+	my $label = ( ref $_[0] ? undef : shift ); 
+
+	# spring into existence -- store undef, if necessary
+	$self->{deps}->{$child}->{$parent} = $label; 
+    }
 }
+
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -147,13 +190,15 @@ sub toXML {
     # OK, this is slightly ugly and tricky: If there is no indentation,
     # this <adag> element is the outer-most, and thus gets the XML intro.
     if ( $indent eq '' ) { 
-	binmode($f,':utf8'); 	# evil, evil, evil?
 	$f->print( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ); 
 	my @t = gmtime;		# avoid loading POSIX
 	$f->printf( "<!-- generated: %04u-%02u-%02uT%02u:%02u:%02uZ -->\n",
 		    $t[5]+1900, $t[4]+1, $t[3], $t[2], $t[1], $t[0] ); 
+	$f->print( "<!-- generator: Perl -->\n" ); 
     }
 
+    my $jobCount = @{$self->{jobs}}+0;
+    my $depCount = exists $self->{deps} ? scalar keys %{$self->{deps}} : 0; 
     my $ns = defined $xmlns && $xmlns ? "xmlns:$xmlns" : 'xmlns'; 
     $f->print( "$indent<$tag"
 	     , attribute($ns,SCHEMA_NAMESPACE)
@@ -163,6 +208,8 @@ sub toXML {
 	     , attribute('name',$self->name,$xmlns)
 	     , attribute('index',$self->index,$xmlns)
 	     , attribute('count',$self->count,$xmlns)
+	     , attribute('jobCount',$jobCount,$xmlns)
+	     , attribute('childCount',$depCount,$xmlns)
 	     , ">\n" ); 
 
     #
@@ -307,14 +354,33 @@ Adds a regular job as node to the workflow graph.
 
 While not forbidden by the API, we cannot plan C<ADAG> within C<ADAG> yet. 
 
-=item addDependency( $parent, $child )
+=item addDependency( $parent, $child, .. )
 
-=item addDependency( $parent, $child, $label )
+=item addDependency( $parent, $child, $label, .. )
 
-This method adds a child to the parent, using each job's C<id>
-attribute. In addition, an optional edge label may be stored with each
-dependency. Internal structures ensure that each relationship is only
-added once. 
+This method adds one or more children to a single parent, using each
+job's C<id> attribute. In addition, an optional edge label may be stored
+with each dependency. Internal structures ensure that each relationship
+is only added once.
+
+You may add any number of children to the same parent by just listing
+them. Each child may be followed by a separate edge label - or not. The
+proper argument form is distinguished internally by whether the argument
+has a job type, or is a plain scalar (label).
+
+=item addInverse( $child, $parent, .. )
+
+=item addInverse( $child, $parent, $label, .. )
+
+This method adds one or more parents to a single child, using each job's
+C<id> attribute. In addition, an optional edge label may be stored with
+each dependency. Internal structures ensure that each relationship is
+only added once.
+
+You may add any number of parents to the same child by just listing
+them. Each parent may be followed by a separate edge label - or not. The
+proper argument form is distinguished internally by whether the argument
+has a job type, or is a plain scalar (label).
 
 =item toXML( $handle, $indent, $xmlns )
 

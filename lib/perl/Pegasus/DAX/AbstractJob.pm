@@ -31,7 +31,8 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-    
+    $self->{separator} = ' '; 	# between arguments default
+
     if ( @_ > 1 ) {
 	# called with a=>b,c=>d list
 	%{$self} = ( %{$self}, @_ ); 
@@ -44,29 +45,34 @@ sub new {
 }
 
 sub addArgument { 
-    my $self = shift; 
-    my $name = shift;
-    if ( ! ref $name ) {
-	# plain text -- take as is
-    } elsif ( $name->isa('Pegasus::DAX::PlainFilename')) {
-	# auto-add uses for P::D::Filename
-	$self->uses($name) if $name->isa('Pegasus::DAX::Filename'); 
+    my $self = shift;
 
-	# sub-classing not permissible for storing/printing
-	$name = Pegasus::DAX::PlainFilename->new( $name->name )
-	    unless ( ref $name eq 'Pegasus::DAX::PlainFilename' ); 
-    } elsif ( $name->isa('Pegasus::DAX::CatalogType') ) {
-	# File or Executable
-	$self->uses($name); 
-	$name = Pegasus::DAX::PlainFilename->new( $name->name ); 
-    } else {
-	croak "Illegal argument to addArgument"; 
-    }
+    # WARNING: foreach is susceptible to in-place modification of the
+    # underlying object through the iterator variable!
+    my $arg;
+    foreach my $name ( @_ ) {
+	if ( ! ref $name ) {
+	    # plain text -- take as is
+	    $arg = "$name"; 	# deep copy
+	} elsif ( $name->isa('Pegasus::DAX::PlainFilename')) {
+	    # auto-add uses for P::D::Filename
+	    $self->uses($name) if $name->isa('Pegasus::DAX::Filename'); 
 
-    if ( exists $self->{arguments} ) { 
-	push( @{$self->{arguments}}, $name );
-    } else {
-	$self->{arguments} = [ $name ]; 
+	    # sub-classing not permissible for storing/printing
+	    $arg = Pegasus::DAX::PlainFilename->new( $name->name )
+	} elsif ( $name->isa('Pegasus::DAX::CatalogType') ) {
+	    # File or Executable
+	    $self->uses($name); 
+	    $arg = Pegasus::DAX::PlainFilename->new( $name->name ); 
+	} else {
+	    croak "Illegal argument to addArgument"; 
+	}
+
+	if ( exists $self->{arguments} ) { 
+	    push( @{$self->{arguments}}, $arg );
+	} else {
+	    $self->{arguments} = [ $arg ]; 
+	}
     }
 }
 
@@ -139,7 +145,8 @@ sub uses {
     my $uses = shift; 
     if ( defined $uses && ref $uses ) { 
 	if ( $uses->isa('Pegasus::DAX::Filename') ) {
-	    $self->{uses}->{ $uses->name } = $uses; 
+	    $self->{uses}->{ $uses->name } =
+		Pegasus::DAX::Filename->new( $uses ); # deep copy!
 	} elsif ( $uses->isa('Pegasus::DAX::Executable') ) {
 	    $self->{uses}->{ $uses->name } =
 		Pegasus::DAX::Filename->new( namespace => $uses->namespace,
@@ -207,13 +214,16 @@ sub innerXML {
     #
     if ( exists $self->{arguments} ) {
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:argument" : 'argument'; 
+	my $flag = 0; 
 	$f->print( "$indent<$tag>" ); 
 	foreach my $i ( @{$self->{arguments}} ) {
+	    $f->print( $self->{separator} ) if ( $flag && $self->{separator} ); 
 	    if ( ref $i ) {
 		$i->toXML($f,'',$xmlns); 
 	    } else {
 		$f->print($i); 
 	    }
+	    $flag++; 
 	}
 	$f->print( "</$tag>\n" ); 
     }
@@ -352,6 +362,11 @@ section.
 This method adds a full filename to the ordered list of arguments B<and>
 also adds the filename to the C<uses> section.
 
+=item addArgument( ... )
+
+You may pass any number of the above permitted arguments as long list
+of these arguments. This is a convenience method. 
+
 =item addProfile( $namespace, $key, $value )
 
 =item addProfile( $profile_instance )
@@ -389,7 +404,9 @@ Alias method for C<uses> method.
 =item uses( $executable_instance )
 
 This method adds a filename, file, or executable to the things that will
-end up in the uses section of a job.
+end up in the uses section of a job. In case of a L<Pegasus::DAX::Filename>
+instance, a deep copy is made so that you can change attributes on your
+object. 
 
 =item addInvoke( $when, $cmd )
 
@@ -420,6 +437,16 @@ The job identifier is a required argument, and unique within the C<ADAG>.
 =item nodelabel
 
 Getter and setter for the optional job label string. 
+
+=item separator
+
+This attribute defaults to a single space. The arguments in the argument
+string will be formatted with the separator value between each argument. 
+The default should be good in many circumstances. 
+
+In case your application is sensitive to white-space in its argument
+list, you may want to set C<separator> to the empty string, and provide
+the proper whitespaces yourself. 
 
 =item innerXML( $handle, $indent, $xmlns )
 

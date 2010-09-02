@@ -47,8 +47,10 @@ sub new {
     } elsif ( @_ > 1 && (@_ & 1) == 0 ) {
 	# called with a=>b,c=>d list
 	%{$self} = ( %{$self}, @_ ); 
-    } elsif ( @_ == 1 && ref $_[0] eq 'HASH' ) { 
+    } elsif ( @_ == 1 && ref $_[0] && 
+	      ( ref $_[0] eq 'HASH' || ref $_[0] eq __PACKAGE__ ) ) { 
 	# called with { a=>b, c=>d } hashref
+	# or called as copy-c'tor (deep copy)
 	%{$self} = ( %{$self}, %{ shift() } ); 
     } else {
 	croak "invalid c'tor invocation"; 
