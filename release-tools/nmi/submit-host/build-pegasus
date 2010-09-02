@@ -231,7 +231,7 @@ sub build_deb
     cmd("wget -nv http://pegasus.isi.edu/wms/download/tooling/fakeroot-1.12.4.tar.gz 2>&1", 1, 1);
     cmd("tar xzf fakeroot-1.12.4.tar.gz", 1, 1);
     cd("fakeroot-1.12.4");
-    cmd("./configure --prefix=$top_dir/tmp/fakeroot-install && make && make install", 1, 1);
+    cmd("./configure --prefix=$top_dir/tmp/fakeroot-install && make && make install 2>&1", 1, 1);
 
     cd("$top_dir/tmp/");
     cmd("$top_dir/tmp/fakeroot-install/bin/fakeroot" .
@@ -275,15 +275,93 @@ sub build_rpm
 
 sub test_binary
 {
-    announce("testing binary package");
-    logmsg("noop!");    
+    my $rc = 0; 
+    
+    announce("Installing the binary package");
+    cmd("mkdir -p $top_dir/binary-test/", 1, 1);
+    cd("$top_dir/binary-test");
+    cmd("tar xzf $src_dir/build-results/pegasus-binary-*.tar.gz", 1, 1);
+    my $dir = `ls`;
+    chomp($dir);
+    $ENV{'PEGASUS_HOME'} = "$top_dir/binary-test/$dir";
+    logmsg("PEGASUS_HOME set to " . $ENV{PEGASUS_HOME});
+
+    # make sure we are not missing any expected files
+    announce("Checking install for missing files");
+    my @expected_files = (
+        'bin/cleanup',
+        'bin/dirmanager',
+        'bin/keg',
+        'bin/kickstart',
+        'bin/pegasus-transfer',
+        'bin/seqexec',
+        'bin/symlink',
+    );
+    foreach my $efile (@expected_files) {
+        my $msg = "Checking install for $efile...";
+        if ( -e "$top_dir/binary-test/$dir/$efile" ) {
+            $msg = sprintf("%-50s %-10s", $msg, "OK");
+        }
+        else {
+            $msg = sprintf("%-50s %-10s", $msg, "MISSING");
+            $rc++;
+        }
+        logmsg($msg);
+    }  
+    
+    announce("cleaning up");
+    cd($top_dir);
+    cmd("rm -rf binary-test", 1, 0);
+
+    if ($rc != 0) {
+        die("Some tests failed");
+    }
 }
 
 
 sub test_worker
 {
-    announce("testing worker package");
-    logmsg("noop!");
+    my $rc = 0; 
+    
+    announce("Installing the worker package");
+    cmd("mkdir -p $top_dir/worker-test/", 1, 1);
+    cd("$top_dir/worker-test");
+    cmd("tar xzf $src_dir/build-results/pegasus-worker-*.tar.gz", 1, 1);
+    my $dir = `ls`;
+    chomp($dir);
+    $ENV{'PEGASUS_HOME'} = "$top_dir/worker-test/$dir";
+    logmsg("PEGASUS_HOME set to " . $ENV{PEGASUS_HOME});
+
+    # make sure we are not missing any expected files
+    announce("Checking install for missing files");
+    my @expected_files = (
+        'bin/cleanup',
+        'bin/dirmanager',
+        'bin/keg',
+        'bin/kickstart',
+        'bin/pegasus-transfer',
+        'bin/seqexec',
+        'bin/symlink',
+    );
+    foreach my $efile (@expected_files) {
+        my $msg = "Checking install for $efile...";
+        if ( -e "$top_dir/worker-test/$dir/$efile" ) {
+            $msg = sprintf("%-50s %-10s", $msg, "OK");
+        }
+        else {
+            $msg = sprintf("%-50s %-10s", $msg, "MISSING");
+            $rc++;
+        }
+        logmsg($msg);
+    }  
+    
+    announce("cleaning up");
+    cd($top_dir);
+    cmd("rm -rf worker-test", 1, 0);
+
+    if ($rc != 0) {
+        die("Some tests failed");
+    }
 }
 
 
