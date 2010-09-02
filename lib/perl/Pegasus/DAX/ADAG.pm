@@ -94,7 +94,11 @@ sub addJob {
     my $self = shift; 
     my $name = shift; 
     if ( ref $name && $name->isa('Pegasus::DAX::AbstractJob') ) {
-	push( @{$self->{jobs}}, $name ); 
+	my $id = $name->id || 
+	    croak( "Instance of ", ref($name), " does not have a 'id' attribute" );
+	carp( "Warning: job identifier $id already exists, replacing existing job!" )
+	    if exists $self->{jobs}->{$id}; 
+	$self->{jobs}->{$id} = $name; 
     } else { 
 	croak "Instance of ", ref($name), " is an invalid argument"; 
     }
@@ -174,6 +178,36 @@ sub addInverse {
     }
 }
 
+sub topo_sort {
+    my $self = shift; 
+
+    # determine start nodes (no incoming edges), jobid only
+    my (%start,%p,%c) = map { $_ => 1 } keys %{ $self->{jobs} };
+    foreach my $c ( keys %{ $self->{deps} } ) {
+        foreach my $p ( keys %{ $self->{deps}->{$c} } ) {
+            $p{$c}{$p} = 1;
+            $c{$p}{$c} = 1;
+            delete $start{$c};
+        }
+    }
+
+    # compute topological sort order
+    my %topo = ();
+    my @topo = ();
+    my @q = sort keys %start;
+    while ( @q ) {
+        my $n = shift(@q);
+        push( @topo, $n ) unless exists $topo{$n};
+        $topo{$n} = 1;
+        foreach my $x ( sort keys %{$c{$n}} ) {
+            delete $c{$n}{$x};
+            delete $p{$x}{$n};
+            push( @q, $x ) if ( keys %{$p{$x}} == 0 );
+        }
+    }
+
+    @topo;
+}
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -197,7 +231,7 @@ sub toXML {
 	$f->print( "<!-- generator: Perl -->\n" ); 
     }
 
-    my $jobCount = @{$self->{jobs}}+0;
+    my $jobCount = scalar keys %{$self->{jobs}};
     my $depCount = exists $self->{deps} ? scalar keys %{$self->{deps}} : 0; 
     my $ns = defined $xmlns && $xmlns ? "xmlns:$xmlns" : 'xmlns'; 
     $f->print( "$indent<$tag"
@@ -246,8 +280,9 @@ sub toXML {
     # <DAG|DAX|Job|ADAG>
     #
     $f->print( "  $indent<!-- part 2: definition of all jobs (at least one) -->\n" ); 
-    foreach my $i ( @{$self->{jobs}} ) {
-	$i->toXML($f,"  $indent",$xmlns);
+    my @topo = $self->topo_sort;
+    foreach my $id ( $self->topo_sort ) {
+	$self->{jobs}->{$id}->toXML($f,"  $indent",$xmlns);
     }
     
     #
@@ -257,15 +292,21 @@ sub toXML {
 	$f->print( "  $indent<!-- part 3: list of control-flow dependencies -->\n" ); 
 	my $ctag = defined $xmlns && $xmlns ? "$xmlns:child" : 'child';
 	my $ptag = defined $xmlns && $xmlns ? "$xmlns:parent" : 'parent';
-	while ( my ($child,$r) = each %{$self->{deps}} ) { 
+
+	my %topo = map { $topo[$_] => $_ } 0 .. $#topo; 
+	@topo = (); 		# free space
+
+	foreach my $child ( sort { $topo{$a} <=> $topo{$b} } keys %{$self->{deps}} ) { 
 	    $f->print( "  $indent<$ctag"
 		     , attribute('ref',$child,$xmlns)
 		     , ">\n" );
-	    while ( my ($parent,$label) = each %{$r} ) {
+	    foreach my $parent ( sort { $topo{$a} <=> $topo{$b} } 
+				 keys %{$self->{deps}->{$child}} ) { 
+		my $label = $self->{deps}->{$child}->{$parent}; 
 		$f->print( "    $indent<$ptag"
-			 , attribute('ref',$parent,$xmlns)
-			 , attribute('edge-label',$label,$xmlns)
-			 , " />\n" ); 
+			   , attribute('ref',$parent,$xmlns)
+			   , attribute('edge-label',$label,$xmlns)
+			   , " />\n" ); 
 	    }
 	    $f->print( "  $indent</$ctag>\n" ); 
 	}
@@ -340,19 +381,24 @@ Adds a L<Pegasus::DAX::Transformation> combiner to the workflow.
 
 =item addJob( $dag_instance )
 
-Adds an already concretized sub-workflow as node to the workflow graph. 
+Adds an already concretized sub-workflow as node to the workflow
+graph. The job must have a valid and unique I<id> attribute.
 
 =item addJob( $dax_instance )
 
-Adds a yet to be planned sub-workflow as node to the workflow graph. 
+Adds a yet to be planned sub-workflow as node to the workflow graph. The
+job must have a valid and unique I<id> attribute.
 
 =item addJob( $job_instance )
 
-Adds a regular job as node to the workflow graph. 
+Adds a regular job as node to the workflow graph. The job must have a
+valid and unique I<id> attribute.
 
 =item addJob( $adag_instance )
 
-While not forbidden by the API, we cannot plan C<ADAG> within C<ADAG> yet. 
+While not forbidden by the API, we cannot plan C<ADAG> within C<ADAG>
+yet. The job must have a valid and unique I<id> attribute once this gets
+implemented.
 
 =item addDependency( $parent, $child, .. )
 

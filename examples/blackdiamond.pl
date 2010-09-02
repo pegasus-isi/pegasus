@@ -18,6 +18,19 @@ my $file = newFile( name => 'f.a', link => LINK_IN );
 $file->addPFN( newPFN( url => 'f.a', site => 'local' ) ); 
 $adag->addFile($file); 
 
+if ( exists $ENV{'PEGASUS_HOME'} ) {
+    use File::Spec;
+    use POSIX (); 
+    my $keg = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'keg' ); 
+    my @os = POSIX::uname(); 
+    if ( -x $keg ) { 
+	my $app1 = newExecutable( namespace => NS, name => 'preprocess', version => '2.0',
+				  arch => $os[4], os => lc($^O), osversion => $os[2] ); 
+	$app1->addPFN( newPFN( url => "file://$keg", site => 'local' ) );
+	$adag->addExecutable($app1); 
+    }
+}
+
 my %hash = ( link => LINK_OUT, register => 'false', transfer => 'true' ); 
 my $fnb1 = newFilename( name => 'f.b1', %hash );
 my $fnb2 = newFilename( name => 'f.b2', %hash ); 
@@ -27,7 +40,7 @@ $adag->addJob($job1);
 
 my $fnc1 = newFilename( name => 'f.c1', %hash );
 $fnb1->link( LINK_IN ); 
-$job3->addArgument( '-a', $job2->name, '-T60', '-i', $fnb1, 
+$job2->addArgument( '-a', $job2->name, '-T60', '-i', $fnb1, 
 		    '-o', $fnc1 ); 
 $adag->addJob($job2);
 
