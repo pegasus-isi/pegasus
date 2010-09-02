@@ -18,10 +18,6 @@
 #include <net/if.h>
 #include <netdb.h>
 
-#if defined(__sun__) || defined(SOLARIS)
-#include <alloca.h>
-#endif
-
 #ifdef HAS_SYS_SOCKIO
 #include <sys/sockio.h>
 #endif
@@ -146,9 +142,9 @@ char*
 append( char* buffer, size_t capacity, const char* fmt, ... )
 {
   va_list ap;
-  char* line = static_cast<char*>( alloca( getpagesize() ) );
+  char line[4096];	// many systems don't like alloca()
   va_start( ap, fmt );
-  vsnprintf( line, getpagesize()-4, fmt, ap );
+  vsnprintf( line, 4096-4, fmt, ap );
   va_end(ap);
   return strncat( buffer, line, capacity );
 }
