@@ -100,4 +100,14 @@ else
 fi
 export PYTHONPATH
 
+PEGASUS_JAR=$PEGASUS_HOME/lib/pegasus.jar
+if ! (echo "$CLASSPATH" | grep "$PEGASUS_JAR") >/dev/null 2>&1; then
+    if [ "x$CLASSPATH" = "x" ]; then
+        CLASSPATH="$PEGASUS_JAR"
+    else
+        CLASSPATH="$PEGASUS_JAR:$CLASSPATH"
+    fi
+    export CLASSPATH
+fi
+
 

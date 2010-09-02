@@ -104,3 +104,15 @@ endif
 #    endif
 #endif
 
+set PEGASUS_JAR="${PEGASUS_HOME}/lib/pegasus.jar"
+set JAR_INCLUDED=`(echo "$CLASSPATH" | grep "$PEGASUS_JAR") >>& /dev/null`
+if ( $? != 0 ) then
+    if ( ! "$?CLASSPATH" ) then
+        setenv CLASSPATH "${PEGASUS_JAR}"
+    else
+        setenv CLASSPATH "${PEGASUS_JAR}:${CLASSPATH}"
+    endif
+endif
+unset PEGASUS_JAR
+unset JAR_INCLUDED
+
