@@ -1,0 +1,462 @@
+#!/usr/bin/perl -w
+# author Prasanth Thomas
+# propose: Runs visualization tools on pegasus workflow execution
+
+use strict; # Perl pragma to restrict unsafe constructs
+use FileHandle; #  Supply object methods for filehandles
+use Getopt::Long; #  Extended processing of command line options
+use Term::ANSIColor qw(:constants colored); # Color screen output using ANSI escape sequences
+$Term::ANSIColor::AUTORESET = 1;
+use Data::Dumper; # help debug
+use File::Basename;
+use File::Path qw(remove_tree rmtree);
+use File::Copy;
+use File::Spec;
+use File::Temp qw/ tempfile tempdir  /;
+
+my @predefined_transformations = 
+   ( 
+     "pegasus::dirmanager",
+     "pegasus::transfer",
+     "pegasus::rc-client" 
+    );
+    
+&main();
+
+
+sub print_usage() {
+	print "\n";
+	print "Usage : pegasus-plot <submit directory> \n";
+	print GREEN "Optional :\n";
+	print "\t --output: write outputs in given directory\n";
+	print "\t --show-job-title: title of the show job graph\n";
+	print "\t --show-id-title: title of the show id graph\n";
+	print "\t --keep: keeps the logs of the pegasus-plot run  \n";
+	print "\t --h|help: display this help message\n";
+}
+
+sub main(){
+	my ($help,$keep, $verbose)=(undef,undef ,0);
+	my ($output_dir,$show_job_title ,$show_id_title) = (undef,undef,undef);
+	if(!$ARGV[0]){
+		print "You need to provide submit directory. \n";
+		print_usage();
+		exit 1;
+	}
+	&GetOptions(
+		"output=s"=>\$output_dir,
+		"show-job-title=s"=>\$show_job_title,
+		"show-id-title=s"=>\$show_id_title,
+		"keep"=>\$keep,
+		"help|h"=>\$help);
+	my ($submit_dir) = $ARGV[0];	
+		
+	if ($help){
+		generateColorCode();
+		print_usage();
+		exit 0;
+	}
+	
+	#sanity check first                                                                                                                            
+	if( !defined $ENV{PEGASUS_HOME} ){
+	    print STDERR "ERROR: PEGASUS_HOME is not set. Please source the setup-with-pegasus script.\n";
+	    exit 1;
+	}
+	
+	my($braindump_file_path) = File::Spec->catfile( $submit_dir, 'braindump.txt' );
+	my($dag_file_name , $dax_file_path) =  parse_brain_dump_file($braindump_file_path);
+	
+	
+	
+	
+	my ($log_dir) = tempdir('pegasus_graph_XXXX' , TMPDIR=> 1);
+	if(!$output_dir){
+		$output_dir =  File::Spec->catdir($submit_dir,"graph");
+		if (-d "$output_dir") {
+			print STDERR "WARNING: Output directory $output_dir exists. Overwriting the contents ....\n";
+			remove_tree($output_dir) or die "Unable to delete $output_dir . $! \n";
+		}
+		mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
+	}else{
+		if (!(-d "$output_dir")) {
+			print STDERR "WARNING: Output directory $output_dir doesn't exists. Creating the directory ....\n";
+			mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
+		}
+	}
+	
+	
+	
+	my($dag_file_path) =  File::Spec->catfile("$submit_dir","$dag_file_name");
+	my ($color_file_path) = &generate_compute_job_color($dag_file_path ,$log_dir);
+	
+	# Executing show job command
+	if(find_exec('ploticus')){
+		my($show_job_status , $show_job_status_msg) =run_show_job($dag_file_path ,$output_dir , $log_dir ,$color_file_path,$show_job_title);
+		print "$show_job_status_msg \n";
+		## Executing show id command
+		my($show_id_status , $show_id_status_msg) =run_show_id($dag_file_path ,$output_dir , $log_dir  ,$show_id_title);
+		print "$show_id_status_msg \n";
+	}else{
+		print STDERR  "ERROR: Unable to locate \'ploticus\' . Unable to create job over time graphs\n";
+	}
+	## Executing dag2dot command
+	my($dag2dot_id_status , $dag2dot_status_msg) =run_dag2dot($dag_file_path ,$output_dir , $log_dir );
+	print "$dag2dot_status_msg \n";
+	## Executing dax2dot command
+	my($dax2dot_id_status , $dax2dot_status_msg) =run_dax2dot($dax_file_path ,$output_dir , $log_dir );
+	print "$dax2dot_status_msg \n";
+	
+	if(!$keep){
+		print " Deleting log directory $log_dir \n";
+		remove_tree($log_dir) or die "Unable to delete $log_dir . $! \n";
+	}else{
+		print "Logs are stored at $log_dir \n";
+	}
+	
+	exit 0;
+}
+
+
+sub run_show_job($$$$$){
+# purpose : executing show-job command
+# returns : status code and status message
+	my(  $dag_file_path , $output_dir , $log_dir ,$color_file,$title)=(@_);
+	my(@args);
+	my $status_msg .= "******  show-job *****  \n";	
+	
+	#Adding arguments
+	push(@args ,"--color-file ".$color_file); # adding color option
+	push(@args ,"--show-jobnames"); #/adding show-jobnames option
+	if($title){
+		push(@args ,"--title '".$title."'"); # adding graph title	
+	}
+	push(@args, $dag_file_path); # adding dag file path
+	
+	# creating show job command 
+	my (@show_job_directory_path) = ("$ENV{PEGASUS_HOME}","contrib" ,"showlog");
+	my ($show_job_path) =  File::Spec->catfile( @show_job_directory_path, 'show-job');
+	my ($show_job_command) = "$show_job_path ".join(" ",@args);
+	
+	$status_msg .= "Executing command :-\n $show_job_command \n";
+	my($status,$exec_msg) = execute_command($show_job_command,  $log_dir,'show-job');
+	if($status == 0  ){
+		$status_msg .= "****** Finished executing show-job  ***** \n";		
+	}else{
+		$status_msg .= "ERROR : Failed to execute show-job command . $exec_msg\n";
+	}
+	
+	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+    $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $dagbase =~ s/-\d+$//;
+    my($eps_file_name ,$png_file_name) =("$dagbase"."-2.eps" ,"$dagbase"."-2.png" );
+    my($eps_file ,$png_file) = (File::Spec->catfile("$submit_dir",$eps_file_name) ,File::Spec->catfile("$submit_dir",$png_file_name));
+	
+	#Moving the output file to <submit dir>/graph directory
+	if(!move($eps_file,$output_dir)){
+		$status_msg .="Failed to move the eps file to $output_dir. $! \n";
+		return ($status,$status_msg);
+	}
+	if(find_exec('convert')){
+		if(!move($png_file,$output_dir)) {
+			$status_msg .= "Failed to move the png file to $output_dir. $! \n";
+			return ($status,$status_msg);
+		}
+	}else{
+			$status_msg .= "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The job over time graph is created at :-\neps format :- $eps_file \n************ \n";
+			return ($status,$status_msg);
+	}
+	$status_msg .= "The job over time graph is created at \npng format :- $png_file \neps format :- $eps_file \n************ \n";
+	return ($status,$status_msg);
+	
+}
+
+sub run_show_id($$$$){
+# purpose : executing show -id command
+# returns : status code and status message
+	my( $dag_file_path , $output_dir , $log_dir,$title)=(@_);
+	my(@args);
+	my $status_msg = "******  show-id *****  \n";
+	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+	
+    $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $dagbase =~ s/-\d+$//;
+    my($eps_file_name ,$png_file_name) =("$dagbase".".eps" ,"$dagbase".".png" );
+    my($eps_file ,$png_file) = (File::Spec->catfile("$output_dir",$eps_file_name) ,File::Spec->catfile("$output_dir",$png_file_name));
+    
+    
+	#Adding arguments
+	push(@args ,"--eps ".$eps_file); # adding eps element
+	push(@args ,"--png ".$png_file); #/adding dag element
+	if($title){
+		push(@args ,"--title '".$title."'"); # adding graph title	
+	}
+	push(@args, $dag_file_path); # adding dag file path
+	
+	# creating show id command 
+	my (@show_id_directory_path) = ("$ENV{PEGASUS_HOME}","contrib" ,"showlog");
+	my ($show_id_path) =  File::Spec->catfile( @show_id_directory_path, 'show-id');
+	my ($show_id_command) = "$show_id_path ".join(" ", @args);
+	
+	$status_msg .= "Executing command :-\n $show_id_command \n";
+	my($status,$exec_msg) = execute_command($show_id_command,  $log_dir,'show-id');
+	if($status == 0  ){
+		$status_msg .= "****** Finished executing show-id  ***** \n";
+		if(find_exec('convert')){
+			$status_msg .= "The job over time timeline graph is created at \n(png format :- $png_file) \n eps format :- $eps_file \n************ \n";
+		}else{
+			$status_msg .= "WARNING: Application \'convert\' not available. Only eps file will be generated.The job over time timeline graph is created at \neps format :- $eps_file \n************ \n";
+		}
+	}else{
+		$status_msg .= "Failed to execute show-id command . $exec_msg\n";
+	}
+	return ($status , $status_msg);
+	
+}
+
+sub run_dag2dot($$$){
+# purpose : executing dag2dot command
+# returns : status code and status message
+    my ($dag_file_path,  $output_dir , $log_dir)=(@_);
+    my (@args);
+	my $status_msg = "******  dag2dot  ***** \n";
+	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+	
+    $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $dagbase =~ s/-\d+$//;    
+    my ($dot_img_file_name) =("$dagbase"."-dag.dot" );
+	my ($dot_img_file ) =File::Spec->catfile("$output_dir/", $dot_img_file_name);	
+	
+	#Adding arguments 
+	push(@args , "--output ".$dot_img_file);
+	push(@args, $dag_file_path); # adding dag file path
+	
+	# creating dag2dot command 
+	my (@dag2dot_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
+	my ($dag2dot_path) =  File::Spec->catfile( @dag2dot_directory_path, 'dag2dot.py');
+	my ($dag2dot_command) = "$dag2dot_path ".join(" ",@args);
+	
+	$status_msg .= "Executing command :-\n $dag2dot_command \n";
+	my($status ,$exec_msg) = execute_command($dag2dot_command,  $log_dir ,'dag2dot');
+	if($status == 0  ){
+		$status_msg .= "****** Finished executing dag2dot ***** \n";
+		$status_msg .= "dot file corresponding to the dag is created at $dot_img_file \n************\n";
+	}else{
+		$status_msg .= "Failed to execute dag2dot command. $exec_msg \n";
+		
+	}
+	return ($status , $status_msg);
+}
+
+
+sub run_dax2dot($$$){
+# purpose : executing dax2dot command
+# returns : status code and status message
+    my ($dax_file_path,  $output_dir , $log_dir)=(@_);
+    my (@args);
+	my $status_msg = "******  dax2dot  ***** \n";
+	my ($daxbase,$submit_dir ,$type ) = fileparse( $dax_file_path  ,qr{\..*});
+	
+    $daxbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $daxbase =~ s/-\d+$//;
+    my ($dot_img_file_name) =("$daxbase"."-dax.dot" );
+	my ($dot_img_file ) =File::Spec->catfile("$output_dir/", $dot_img_file_name);	
+	
+	#Adding arguments
+	push(@args , "--output ".$dot_img_file);
+	push(@args, $dax_file_path); # adding dax file path
+	#create dax2dot command
+	my (@dax2dot_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
+	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'dag2dot.py');
+	my ($dax2dot_command) = "$dax2dot_path ".join(" ",@args);
+	
+	
+	$status_msg .= "Executing command :-\n $dax2dot_command \n";
+	my($status ,$exec_msg) = execute_command($dax2dot_command,  $log_dir,'dax2dot');
+	if($status == 0  ){
+		$status_msg .= "****** Finished executing dax2dot ***** \n";
+		$status_msg .= "dot file corresponding to the dax is created at $dot_img_file \n************ \n";
+	}else{
+		$status_msg .= "Failed to execute dax2dot. $exec_msg \n";
+	}
+	return ($status , $status_msg);
+}
+
+
+
+
+sub parse_brain_dump_file($){
+	# purpose : parses the brain dump file to find the dax file path and dag file name.
+	# returns : dag file name and dag file path
+	my ($braindump_file)=(@_);
+	my ($dag_file, $dax_file);
+	open CONFIG, "$braindump_file" or die "Unable to open brain dump file: $braindump_file . $! \n";
+	for (<CONFIG>) {
+    	chomp;
+    	s/\#.*//;
+    	s/^\s+//;
+    	s/\s+$//;
+    	next unless length;
+    	my ($var, $val) = split(/\s/, $_, 2);
+    	if ($var eq 'dax'){
+    		$dax_file =  $val;
+		}
+		if ($var eq 'dag'){
+    		$dag_file = $val;
+		}
+    }
+	if(!$dax_file){
+		print STDERR "ERROR: Unable to find the dax file path in the  $braindump_file.\n";
+		exit 1;
+	}
+	if(!$dag_file){
+		print STDERR "ERROR: Unable to find the dag file name in the  $braindump_file.\n";
+		exit 1;
+	}
+	close(CONFIG);
+	return ($dag_file , $dax_file);
+}
+
+
+sub generate_compute_job_color($$){
+	# purpose : generates color code for compute job
+	# returns : color configuration file
+	my($dag_file_path,$log_dir) =(@_);
+	my(%job_submit_file_hash); # stores the job name and corresponding submit file
+	
+	# Reads the dag file to get the JOB names
+	open CONFIG, "$dag_file_path" or die "Unable to open dag file: $dag_file_path . $! \n";
+	while (my $line = <CONFIG>) {
+    	chomp $line;
+    	$line =~ s/^\s+//; 
+    	$line =~ s/^\s+//;
+    	if( $line =~m/^JOB\s.*/i ){
+    		my @values = split(/\s+/, $line);
+  			$job_submit_file_hash{$values[1]} =$values[2];
+    	}
+    }
+    my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+    my ($submit_file_path,$wf_transformation_value);
+    my($key, $value);
+    my(%transformations_count_hash); # stores the transformation name and count
+    
+    # Reads the corresponding .sub file and gets the transformation value 
+    while (($key, $value) = each(%job_submit_file_hash)){
+	     $submit_file_path = File::Spec->catfile($submit_dir,$value);
+	     $wf_transformation_value = &parse_submit_file($submit_file_path);
+	     if($wf_transformation_value){
+	     	if(defined($transformations_count_hash{$wf_transformation_value})){
+	     		$transformations_count_hash{$wf_transformation_value} = ++($transformations_count_hash{$wf_transformation_value});
+	     	}else{
+	     		$transformations_count_hash{$wf_transformation_value} = 1;
+	     	}
+	     }
+	}
+	my ($color);
+	# Assign color to each transformation
+	my ($color_file_path) = File::Spec->catfile($log_dir,'color.in');
+	open COLORS ,">$color_file_path";
+	while (($key, $value) = each(%transformations_count_hash)){
+		 $color = generateColorCode();
+		 $key =~s/^"(.*)"$/$1/;
+		 if(!checkIfPredefinedTransformation($key)){
+		 	print COLORS "$key  $color \n";
+		 }
+    }
+    close(COLORS);
+    my ($number_of_elements) = scalar(keys %transformations_count_hash);
+    return $color_file_path;
+}
+
+
+sub checkIfPredefinedTransformation($){
+	#purpose : check if it is a predefined transformation
+	#returns : true , it is a predefined transfromation, false otherwise	
+	my ($transformation) =(@_);
+	my ($predef_trans_count) = scalar(@predefined_transformations);
+	my ($i);
+	for ($i = 0; $i < $predef_trans_count; $i++) {
+		if($transformation eq $predefined_transformations[$i]){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub parse_submit_file($){
+	# purpose : parses the submit file to find the '+pegasus_wf_xformation' configuration value.
+	# returns : '+pegasus_wf_xformation' configuration value if present , undef otherwise
+	my ($submit_file)=(@_);
+	if(open CONFIG, "$submit_file"){ 
+		for (<CONFIG>) {
+	    	chomp;
+	    	s/\#.*//;
+	    	s/^\s+//;
+	    	s/\s+$//;
+	    	next unless length;
+	    	my ($var, $val) = split(/\s*=\s*/, $_, 2);
+	    	if ($var eq '+pegasus_wf_xformation'){
+	    		close(CONFIG);
+				return $val;
+			}
+	    	
+		}
+		close(CONFIG);
+		print STDERR "WARNING: Unable to find '+pegasus_wf_xformation' configuration value in the submit file $submit_file.\n";
+		return undef;
+	}else{
+		print STDERR "WARNING: Unable to open submit file: $submit_file . $! \n";
+		return undef;
+	}
+	
+}
+
+
+sub  execute_command($$$){
+	# purpose : executes command and returns the status and error message
+	# returns : status and error message
+	my ($command , $log_dir ,$prefix)=(@_);
+	my ($error_msg) = (undef);
+	my ($out_fh,$out_fn) = tempfile($prefix."_XXXX",SUFFIX => '.out',DIR =>$log_dir);
+	my ($err_fh,$err_fn) = tempfile($prefix."_XXXX",SUFFIX => '.err',DIR =>$log_dir);
+	close($out_fh);
+	close($err_fh);
+	my($ret) = system("$command  1>$out_fn 2>$err_fn");
+	if($ret != 0){
+		$error_msg = $!;
+	}
+	return ($ret , $error_msg);
+}
+
+sub generateColorCode(){
+#purpose : generates random color code which is used by ploticus
+#returns : color code used by ploticus
+	my ($rand,$i ,$color);
+	my @hex;
+
+    for ($i = 0; $i < 3; $i++) {
+    	$rand = rand(255);
+    	$hex[$i] = sprintf ("%x", $rand);
+	    if ($rand < 9) {
+	      $hex[$i] = "0" . $hex[$i];
+	    }
+	    if ($rand > 9 && $rand < 16) {
+	      $hex[$i] = "0" . $hex[$i];
+	    }
+  	}
+	$color = "x" . $hex[0] . $hex[1] . $hex[2];
+	return $color;
+
+}
+
+sub find_exec($) {
+    # purpose: determine location of given binary in $PATH
+    # returns: fully qualified path to binary, undef if not found
+    my $program = shift;
+    local($_);
+    foreach ( File::Spec->path ) {
+        my $fs = File::Spec->catfile( $_, $program );
+        return $fs if -x $fs;
+    }
+    return undef;
+}
+
