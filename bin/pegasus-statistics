@@ -1,0 +1,271 @@
+#!/usr/bin/perl -w
+# author Prasanth Thomas
+# propose: Runs statistics tools on pegasus workflow execution
+
+use strict; # Perl pragma to restrict unsafe constructs
+use FileHandle; #  Supply object methods for filehandles
+use Getopt::Long; #  Extended processing of command line options
+use Term::ANSIColor qw(:constants colored); # Color screen output using ANSI escape sequences
+$Term::ANSIColor::AUTORESET = 1;
+use Data::Dumper; # help debug
+use File::Basename;
+use File::Path qw(remove_tree rmtree);
+use File::Copy;
+use File::Spec;
+use File::Temp qw/ tempfile tempdir  /;
+
+&main();
+
+
+sub print_usage() {
+	print "\n";
+	print "Usage : pegasus-statistics <submit directory> \n";
+	print GREEN "Optional :\n";
+	print "\t --output: write outputs in given directory\n";
+	print "\t --keep: keeps the logs of the pegasus-statistics run  \n";
+	print "\t --h|help: display this help message\n";
+}
+
+sub main(){
+	my ($help,$keep, $verbose)=(undef,undef ,0);
+	my ($output_dir) =(undef);
+	if(!$ARGV[0]){
+		print "You need to provide submit directory. \n";
+		print_usage();
+		exit 1;
+	}
+	&GetOptions(
+		"output=s"=>\$output_dir,
+		"keep"=>\$keep,
+		"help|h"=>\$help);
+	my ($submit_dir) = $ARGV[0];	
+		
+	if ($help){
+		print_usage();
+		exit 0;
+	}
+	
+	#sanity check first                                                                                                                            
+	if( !defined $ENV{PEGASUS_HOME} ){
+	    print STDERR "ERROR: PEGASUS_HOME is not set. Please source the setup-with-pegasus script.\n";
+	    exit 1;
+	}
+	
+	my($braindump_file_path) = File::Spec->catfile( $submit_dir, 'braindump.txt' );
+	my($dag_file_name , $jsd_file_path) =  parse_brain_dump_file($braindump_file_path);
+	my ($log_dir) = tempdir('pegasus_graph_XXXX' , TMPDIR=> 1);
+	if(!$output_dir){
+		$output_dir =  File::Spec->catdir($submit_dir,"statistics");
+		if (-d "$output_dir") {
+			print STDERR "WARNING: Output directory $output_dir exists. Overwriting the contents ....\n";
+			remove_tree($output_dir) or die "Unable to delete $output_dir . $! \n";
+		}
+		mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
+	}else{
+		if (!(-d "$output_dir")) {
+			print STDERR "WARNING: Output directory $output_dir doesn't exists. Creating the directory ....\n";
+			mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
+		}
+	}
+	
+	my($dag_file_path) =  File::Spec->catfile("$submit_dir","$dag_file_name");
+	
+	# Executing genstat command
+	my($genstats_status , $genstats_status_msg) =run_genstats($dag_file_path ,$jsd_file_path,$output_dir , $log_dir );
+	print "$genstats_status_msg \n";
+	## Executing genstats-breakdown command
+	my($genstats_breakdown_status , $genstats_breakdown_status_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir , $log_dir  );
+	print "$genstats_breakdown_status_msg \n";
+	
+	
+	if(!$keep){
+		print " Deleting log directory $log_dir \n";
+		remove_tree($log_dir) or die "Unable to delete $log_dir . $! \n";
+	}else{
+		print "Logs are stored at $log_dir \n";
+	}
+	
+	exit 0;
+}
+
+
+sub run_genstats($$$$){
+# purpose : executing genstats command
+# returns : status code and status message
+	my(  $dag_file_path , $jobstate_log, $output_dir , $log_dir )=(@_);
+	my(@args);
+	my $status_msg .= "******  genstats *****  \n";	
+	
+	#Adding arguments
+	push(@args ,"--dag ".$dag_file_path); # adding dag file argument
+	push(@args ,"--output ".$output_dir); #/adding output dir argument
+	push(@args ,"--jobstate-log ".$jobstate_log); # adding job state argument	
+	
+	# creating genstats command 
+	my (@genstats_directory_path) = ("$ENV{PEGASUS_HOME}","bin" );
+	my ($genstats_path) =  File::Spec->catfile( @genstats_directory_path, 'genstats');
+	my ($genstats_command) = "$genstats_path ".join(" ",@args);
+	
+	$status_msg .= "Executing command :-\n $genstats_command \n";
+	my($status,$exec_msg) = execute_command($genstats_command,  $log_dir ,'genstats');
+	if($status == 0  ){
+		$status_msg .= "****** Finished executing genstats  ***** \n";
+		$status_msg .= "The genstats result is  created at $output_dir \n************ \n";		
+	}else{
+		$status_msg .= "ERROR : Failed to execute genstats command . $exec_msg\n";
+	}
+	return ($status,$status_msg);
+	
+}
+
+sub run_genstats_breakdown($$$$){
+# purpose : executing genstats-breakdown command
+# returns : status code and status message
+	my ($dag_file_path , $submit_dir , $output_dir , $log_dir)=(@_);
+	my (@args);
+	my ($submit_dirs) = $submit_dir;
+	my (@sub_workflow_submit_dirs) = get_sub_workflow_list($dag_file_path);
+	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
+	if($number_of_elements > 0){
+		$submit_dirs .= " ".join(" ",@sub_workflow_submit_dirs);
+	}
+	
+    my $status_msg .= "******  genstats-breakdown *****  \n";
+    my $output_file = 	File::Spec->catfile($output_dir ,"breakdown.txt");
+	#Adding arguments
+	push(@args ,"--output ".$output_file); #/adding output file argument
+	push(@args ,"-x ".$submit_dirs); #adding submit directories
+	
+	# creating genstats-breakdown command 
+	my (@genstats_breakdown_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
+	my ($genstats_breakdown_path) =  File::Spec->catfile( @genstats_breakdown_directory_path, 'genstats-breakdown');
+	my ($genstats_breakdown_command) = "$genstats_breakdown_path ".join(" ", @args);
+	
+	$status_msg .= "Executing command :-\n $genstats_breakdown_command \n";
+	my($status,$exec_msg) = execute_command($genstats_breakdown_command,  $log_dir,'genstats_breakdown');
+	if($status == 0  ){
+		$status_msg .= "****** Finished executing genstats-breakdown  ***** \n";
+		$status_msg .= "The genstats breakdown is  created at $output_file \n************ \n";
+	}else{
+		$status_msg .= "Failed to execute genstats-breakdown command . $exec_msg\n";
+	}
+	return ($status , $status_msg);
+	
+}
+
+
+sub parse_brain_dump_file($){
+	# purpose : parses the brain dump file to find the  jobstate log file path and dag file name.
+	#returns : dag file name and jobstate log file path
+	my ($braindump_file)=(@_);
+	my ($dag_file, $jsd_file );
+	open CONFIG, "$braindump_file" or die "Unable to open brain dump file: $braindump_file . $! \n";
+	for (<CONFIG>) {
+    	chomp;
+    	s/\#.*//;
+    	s/^\s+//;
+    	s/\s+$//;
+    	next unless length;
+    	my ($var, $val) = split(/\s/, $_, 2);
+    	if ($var eq 'dag'){
+    		$dag_file =  $val;
+		}
+		if ($var eq 'jsd'){
+    		$jsd_file = $val;
+		}
+    }
+	if(!$dag_file){
+		print STDERR "ERROR: Unable to find the dag file name in the  $braindump_file.\n";
+		exit 1;
+	}
+	if(!$jsd_file){
+		print STDERR "ERROR: Unable to find the job state log file path in the  $braindump_file.\n";
+		exit 1;
+	}
+	close(CONFIG);
+	return ($dag_file , $jsd_file);
+}
+
+
+sub get_sub_workflow_list($$){
+	# purpose : find the list of sub workflows from the dag file
+	# returns : list of sub workflows
+	my($dag_file_path) =(@_);
+	my($job_name ,$submit_file_name);
+	my(%job_submit_file_hash) ;
+	open CONFIG, "$dag_file_path" or die "Unable to open dag file: $dag_file_path . $! \n";
+	while (my $line = <CONFIG>) {
+    	chomp $line;
+    	$line =~ s/^\s+//; 
+    	$line =~ s/^\s+//;
+    	if( $line =~m/^JOB\s.*/i ){
+    		my @values = split(/\s+/, $line);
+    		$job_name =$values[1];
+    		$submit_file_name = $values[2];
+    		if($job_name  =~m/^pegasus-plan.*/i){
+  				$job_submit_file_hash{$job_name} =$submit_file_name;
+  			}
+    	}
+    }
+    my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+    my ($submit_file_path,$sub_wf_submit_dir);
+    my($key, $value);
+    my(@sub_workflow_submit_dirs);
+    
+    while (($key, $value) = each(%job_submit_file_hash)){
+	     $submit_file_path = File::Spec->catfile($submit_dir,$value);
+	     $sub_wf_submit_dir = &parse_submit_file($submit_file_path);
+	     if($sub_wf_submit_dir){
+	     	push (@sub_workflow_submit_dirs ,$sub_wf_submit_dir);
+	     }
+	}
+	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
+	return @sub_workflow_submit_dirs;
+}
+
+sub parse_submit_file($){
+	# purpose : parses the submit file to find the 'initialdir' configuration value.
+	# returns : 'initialdir' configuration value if present , undef otherwise
+	
+	my ($submit_file)=(@_);
+	if(open CONFIG, "$submit_file"){ 
+		for (<CONFIG>) {
+	    	chomp;
+	    	s/\#.*//;
+	    	s/^\s+//;
+	    	s/\s+$//;
+	    	next unless length;
+	    	my ($var, $val) = split(/\s*=\s*/, $_, 2);
+	    	if ($var eq 'initialdir'){
+	    		close(CONFIG);
+				return $val;
+			}
+	    	
+		}
+		close(CONFIG);
+		print STDERR "WARNING: Unable to find 'initialdir' configuration value in the submit file $submit_file.\n";
+		return undef;
+	}else{
+		print STDERR "WARNING: Unable to open submit file: $submit_file . $! \n";
+		return undef;
+	}
+	
+}
+
+
+sub  execute_command($$$){
+# purpose : executes command and returns the status and error message
+	# returns : status and error message
+	my ($command , $log_dir ,$prefix)=(@_);
+	my ($error_msg) = (undef);
+	my ($out_fh,$out_fn) = tempfile($prefix."_XXXX",SUFFIX => '.out',DIR =>$log_dir);
+	my ($err_fh,$err_fn) = tempfile($prefix."_XXXX",SUFFIX => '.err',DIR =>$log_dir);
+	close($out_fh);
+	close($err_fh);
+	my($ret) = system("$command  1>$out_fn 2>$err_fn");
+	if($ret != 0){
+		$error_msg = $!;
+	}
+	return ($ret , $error_msg);
+}
+
