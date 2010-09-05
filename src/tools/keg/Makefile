@@ -77,6 +77,7 @@ endif
 ifeq (LINUX,${SYSTEM})
 ifeq (ia64,${MARCH})
 CXXFLAGS = -Wall -O2 -DMARCH_IA64=1 -ggdb
+LD	= $(CXX)
 else
 ifeq (x86_64,${MARCH})
 CXXFLAGS = -Wall -O2 -m64 -ggdb
