@@ -88,8 +88,8 @@ CXXFLAGS  = -Wall -O2 -march=i686 -ggdb
 endif
 LOADLIBES_VANILLA = -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
 LOADLIBES_CONDOR  = -lstdc++
-endif
 LD	= gcc
+endif
 endif
 
 #
