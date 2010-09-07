@@ -52,14 +52,15 @@ def cleanup(input, stat=False, verbose=False):
 		print 'cleanup: deleted %d bytes' % bytes
 
 def main():
-	usage = "Usage: %prog [options]"
-	epilog = """Deletes a list of files. Each file to delete
+	usage = """Usage: %prog [options]
+
+Deletes a list of files. Each file to delete
 should be on a separate line in the input. Absolute paths are allowed,
 otherwise files are assumed to be relative to the current directory. 
 Directories are allowed, but must be empty. Blank lines and lines 
 beginning with the '#' character are skipped. Input is taken from
 STDIN by default, but a file can be specified using -f/--file."""
-	parser = OptionParser(usage, epilog=epilog)
+	parser = OptionParser(usage)
 	
 	parser.add_option("-s", "--stat", action="store_true", default=False,
 		dest="stat", help="Print total size of deleted files.")
