@@ -17,16 +17,11 @@
 
 package org.griphyn.cPlanner.engine.cleanup;
 
-import edu.isi.pegasus.planner.catalog.SiteCatalog;
 
-import edu.isi.pegasus.planner.catalog.site.SiteFactory;
-import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PegasusFile;
 
@@ -39,8 +34,6 @@ import org.griphyn.cPlanner.namespace.Condor;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
@@ -49,7 +42,6 @@ import edu.isi.pegasus.common.util.Separator;
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashSet;
-import java.util.ArrayList;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -99,6 +91,11 @@ public class Cleanup implements CleanupImplementation{
      * The derivation version number for the job.
      */
     public static final String DERIVATION_VERSION = null;
+
+    /**
+     * The basename of the pegasus cleanup executable.
+     */
+    public static final String EXECUTABLE_BASENAME = "pegasus-cleanup";
 
     /**
      * A short description of the transfer implementation.
@@ -332,7 +329,7 @@ public class Cleanup implements CleanupImplementation{
         String home = mSiteStore.getPegasusHome( site );
 
         mLogger.log( "Creating a default TC entry for " +
-                     this.getCompleteTranformationName() +
+                     Cleanup.getCompleteTranformationName() +
                      " at site " + site,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -341,9 +338,9 @@ public class Cleanup implements CleanupImplementation{
         if ( home == null ){
             //cannot create default TC
             mLogger.log( "Unable to create a default entry for " +
-                         Separator.combine( this.TRANSFORMATION_NAMESPACE,
-                                            this.TRANSFORMATION_NAME,
-                                            this.TRANSFORMATION_VERSION ),
+                         Separator.combine( Cleanup.TRANSFORMATION_NAMESPACE,
+                                            Cleanup.TRANSFORMATION_NAME,
+                                            Cleanup.TRANSFORMATION_VERSION ),
                          LogManager.DEBUG_MESSAGE_LEVEL );
             //set the flag back to true
             return defaultTCEntry;
@@ -358,7 +355,7 @@ public class Cleanup implements CleanupImplementation{
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( Cleanup.TRANSFORMATION_NAME );
+            append( Cleanup.EXECUTABLE_BASENAME );
 
 
         defaultTCEntry = new TransformationCatalogEntry( Cleanup.TRANSFORMATION_NAMESPACE,
