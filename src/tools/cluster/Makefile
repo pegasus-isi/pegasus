@@ -130,7 +130,7 @@ mpiexec.condor: mpiexec.c mypopen.c
 	$(MPICC_CONDOR) $(CFLAGS) -c -o mympiMPI_condor.o mympi.c ;\
 	$(MPICC_CONDOR) $(LDFLAGS) -o mpiexec.condor mpiexec.c mypopenMPI_condor.o mympiMPI_condor.o $(LOADLIBES) -lpthread
 
-install: all
+install: seqexec
 	$(INSTALL) -m 0755 seqexec $(prefix)/bin
 
 install.man: seqexec.1

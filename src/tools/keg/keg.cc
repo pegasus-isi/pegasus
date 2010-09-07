@@ -233,8 +233,8 @@ debug( const char* fmt, ... )
 }
 
 
-static unsigned long vpn_network[4] = { 0, 0, 0, 0 };
-static unsigned long vpn_netmask[4] = { 0, 0, 0, 0 };
+ static unsigned long vpn_network[5] = { 0, 0, 0, 0, 0 };
+ static unsigned long vpn_netmask[5] = { 0, 0, 0, 0, 0 };
 
 static
 void
@@ -246,6 +246,7 @@ singleton_init( void )
     vpn_network[1] = inet_addr("10.0.0.0");    /* class A VPN net */
     vpn_network[2] = inet_addr("172.16.0.0");  /* class B VPN nets */
     vpn_network[3] = inet_addr("192.168.0.0"); /* class C VPN nets */
+    vpn_network[4] = inet_addr("169.254.0.0"); /* link-local M$ junk */
   }
 
   /* singleton init */
@@ -254,6 +255,7 @@ singleton_init( void )
     vpn_netmask[1] = inet_addr("255.0.0.0");   /* class A mask */
     vpn_netmask[2] = inet_addr("255.240.0.0"); /* class B VPN mask */
     vpn_netmask[3] = inet_addr("255.255.0.0"); /* class C VPN mask */
+    vpn_netmask[4] = inet_addr("255.254.0.0"); /* link-local M$ junk */ 
   }
 }
 
