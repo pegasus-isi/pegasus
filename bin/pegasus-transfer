@@ -32,6 +32,7 @@ import optparse
 import tempfile
 import subprocess
 import signal
+import string
 
 # --- regular expressions -------------------------------------------------------------
 
@@ -57,22 +58,49 @@ class URLPair:
         self.pair_id = pair_id
 
     def set_src(self, url):
-        re = re_parse_url.search(url)
-        if re:
-            # Parse successful
-            self.src_proto = re.group(1)
-            self.src_host = re.group(2)
-            self.src_path = re.group(3)
-        else:
-            raise RuntimeError("Unable to parse URL: %s" % (url))
+        self.src_proto, self.src_host, self.src_path = self.parse_url(url)
     
     def set_dst(self, url):
+        self.dst_proto, self.dst_host, self.dst_path = self.parse_url(url)
+    
+    def parse_url(self, url):
+        proto = ""
+        host = ""
+        path = ""
+
+        # default protocol is file://
+        if string.find(url, "://") == -1:
+            logger.debug("URL without protocol (" + url + ") - assuming file://")
+            url = "file://" + url
+
+        # file url is a special cases as it can contain relative paths and env vars
+        if string.find(url, "file://") == 0:
+            proto = "file"
+            path = string.replace(url, "file://", "")
+            path = expand_env_vars(path)
+            # relative path?
+            if string.find(path, "/") != 0:
+                path = os.getcwd() + "/" + path
+            return proto, host, path
+        
+        # symlink url is a special cases as it can contain relative paths and env vars
+        if string.find(url, "symlink://") == 0:
+            proto = "symlink"
+            path = string.replace(url, "symlink://", "")
+            path = expand_env_vars(path)
+            # relative path?
+            if string.find(path, "/") != 0:
+                path = os.getcwd() + "/" + path
+            return proto, host, path
+
+        # other than file:// urls
         re = re_parse_url.search(url)
         if re:
             # Parse successful
-            self.dst_proto = re.group(1)
-            self.dst_host = re.group(2)
-            self.dst_path = re.group(3)
+            proto = re.group(1)
+            host = re.group(2)
+            path = re.group(3)
+            return proto, host, path
         else:
             raise RuntimeError("Unable to parse URL: %s" % (url))
 
@@ -118,24 +146,26 @@ delay_exit_code = 0
 
 # this is the map of what tool to use for a given protocol pair (src, dest)
 tool_map = {}
-tool_map[('file'  , 'file'  )] = 'cp'
-tool_map[('file'  , 'gsiftp')] = 'gsiftp'
-tool_map[('file'  , 'scp'   )] = 'scp'
-tool_map[('file'  , 'srm'   )] = 'srm'
-tool_map[('gsiftp', 'file'  )] = 'gsiftp'
-tool_map[('gsiftp', 'gsiftp')] = 'gsiftp'
-tool_map[('gsiftp', 'srm'   )] = 'srm'
-tool_map[('http'  , 'file'  )] = 'webget'
-tool_map[('http'  , 'gsiftp')] = 'gsiftp'
-tool_map[('https' , 'file'  )] = 'webget'
-tool_map[('scp'   , 'file'  )] = 'scp'
-tool_map[('srm'   , 'gsiftp')] = 'srm'
-tool_map[('srm'   , 'srm'   )] = 'srm'
+tool_map[('file'  , 'file'    )] = 'cp'
+tool_map[('file'  , 'gsiftp'  )] = 'gsiftp'
+tool_map[('file'  , 'scp'     )] = 'scp'
+tool_map[('file'  , 'srm'     )] = 'srm'
+tool_map[('file'  , 'symlink' )] = 'symlink'
+tool_map[('gsiftp', 'file'    )] = 'gsiftp'
+tool_map[('gsiftp', 'gsiftp  ')] = 'gsiftp'
+tool_map[('gsiftp', 'srm'     )] = 'srm'
+tool_map[('http'  , 'file'    )] = 'webget'
+tool_map[('http'  , 'gsiftp'  )] = 'gsiftp'
+tool_map[('https' , 'file'    )] = 'webget'
+tool_map[('scp'   , 'file'    )] = 'scp'
+tool_map[('srm'   , 'gsiftp'  )] = 'srm'
+tool_map[('srm'   , 'srm'     )] = 'srm'
 
 tool_info = {}
 
 all_list = []
 cp_list = []
+symlink_list = []
 scp_list = []
 webget_list = []
 gsiftp_list = []
@@ -174,6 +204,21 @@ def setup_logger(level_str):
 
 def alarm_handler(signum, frame):
     raise Alarm
+
+
+def expand_env_vars(s):
+    re_env_var = re.compile(r'\${?([a-zA-Z0-9_]+)}?')
+    s = re.sub(re_env_var, get_env_var, s)
+    return s
+
+
+def get_env_var(match):
+    name = match.group(1)
+    value = ""
+    logger.debug("Looking up " + name)
+    if name in os.environ:
+        value = os.environ[name]
+    return value
 
 
 def myexec(cmd_line, timeout_secs, delay_err):
@@ -255,10 +300,18 @@ def check_env_and_tools():
     if "PATH" in os.environ:
         path = os.environ['PATH']
     path_entries = path.split(':')
+    
     # is /usr/bin in the path?
     if not("/usr/bin" in path_entries):
         path_entries.append("/usr/bin")
         path_entries.append("/bin")
+       
+    # need LD_LIBRARY_PATH for Globus tools
+    ld_library_path = ""
+    if "LD_LIBRARY_PATH" in os.environ:
+        ld_library_path = os.environ['LD_LIBRARY_PATH']
+    ld_library_path_entries = ld_library_path.split(':')
+    
     # if PEGASUS_HOME is set, prepend it to the PATH (we want it early to override other cruft)
     if "PEGASUS_HOME" in os.environ:
         try:
@@ -266,15 +319,26 @@ def check_env_and_tools():
         except Exception:
             pass
         path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
-    # if GLOBUS_LOCATION is set, prepend it to the PATH (we want it early to override other cruft)
+    
+    # if GLOBUS_LOCATION is set, prepend it to the PATH and LD_LIBRARY_PATH 
+    #(we want it early to override other cruft)
     if "GLOBUS_LOCATION" in os.environ:
         try:
             path_entries.remove(os.environ['GLOBUS_LOCATION'] + "/bin")
         except Exception:
             pass
         path_entries.insert(0, os.environ['GLOBUS_LOCATION'] + "/bin")
+        try:
+            ld_library_path_entries.remove(os.environ['GLOBUS_LOCATION'] + "/lib")
+        except Exception:
+            pass
+        ld_library_path_entries.insert(0, os.environ['GLOBUS_LOCATION'] + "/lib")
+
     os.environ['PATH'] = ":".join(path_entries)
+    os.environ['LD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
+    os.environ['DYLD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
     logger.info("PATH=" + os.environ['PATH'])
+    logger.info("LD_LIBRARY_PATH=" + os.environ['PATH'])
     
     # tools we might need later
     check_tool("globus-version", "--full", "([0-9]+\.[0-9]+\.[0-9]+)")
@@ -301,6 +365,15 @@ def cp():
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
         cmd = "/bin/cp %s %s" % (url_pair.src_path, url_pair.dst_path)
         myexec(cmd, 1*60*60, delay_errors)
+
+def symlink():
+    """
+    symlinks locally using ln
+    """
+    for i, url_pair in enumerate(symlink_list): 
+        prepare_local_dir(os.path.dirname(url_pair.dst_path))
+        cmd = "ln -f -s %s %s" % (url_pair.src_path, url_pair.dst_path)
+        myexec(cmd, 60, delay_errors)
 
 
 def scp():
@@ -439,7 +512,11 @@ def srm():
     for i, url_pair in enumerate(srm_list): 
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
-        cmd = "lcg-cp -D srmv2 -vb -b -n 4 %s %s" % (url_pair.src_url(), url_pair.dst_url())
+        cmd = ""
+        # lcg-cp is mostly used on OSG, so look for $OSG_GRID and if found source setup.sh
+        if "OSG_GRID" in os.environ:
+            cmd = ". $OSG_GRID/setup.sh ;"
+        cmd = "%s lcg-cp -D srmv2 -vb -b -n 4 %s %s" % (cmd, url_pair.src_url(), url_pair.dst_url())
         myexec(cmd, 6*60*60, delay_errors)
 
 
@@ -502,7 +579,7 @@ url_first = True
 try:
     for line in input_file.readlines():
         line_nr += 1
-        if line[0] != '#':
+        if line[0] != '#' and len(line) > 4:
             line = line.rstrip('\n')
             if url_first:
                 pair_nr += 1
@@ -528,6 +605,8 @@ for i, url_pair in enumerate(all_list):
         tool = tool_map[(url_pair.src_proto, url_pair.dst_proto)]
         if tool == "cp":
             cp_list.append(url_pair)
+        elif tool == "symlink":
+            symlink_list.append(url_pair)
         elif tool == "scp":
             scp_list.append(url_pair)
         elif tool == "webget":
@@ -546,6 +625,7 @@ for i, url_pair in enumerate(all_list):
 logger.debug("Executing transfer commands")
 try:
     cp()
+    symlink()
     scp()
     webget()
     gsiftp()
