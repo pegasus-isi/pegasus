@@ -152,7 +152,7 @@ tool_map[('file'  , 'scp'     )] = 'scp'
 tool_map[('file'  , 'srm'     )] = 'srm'
 tool_map[('file'  , 'symlink' )] = 'symlink'
 tool_map[('gsiftp', 'file'    )] = 'gsiftp'
-tool_map[('gsiftp', 'gsiftp  ')] = 'gsiftp'
+tool_map[('gsiftp', 'gsiftp'  )] = 'gsiftp'
 tool_map[('gsiftp', 'srm'     )] = 'srm'
 tool_map[('http'  , 'file'    )] = 'webget'
 tool_map[('http'  , 'gsiftp'  )] = 'gsiftp'
@@ -619,7 +619,7 @@ for i, url_pair in enumerate(all_list):
             logger.critical("Error: No mapping for the tool '%s'" %(tool))
             myexit(1)
     else:
-        logger.critical("Error: This tool can not transfer between %s:// and %s://" % (url_pair.src_proto, url_pair.dst_proto))
+        logger.critical("Error: This tool does not know how to transfer from %s:// to %s://" % (url_pair.src_proto, url_pair.dst_proto))
         myexit(1)
 
 logger.debug("Executing transfer commands")
