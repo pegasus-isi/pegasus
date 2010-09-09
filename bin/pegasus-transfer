@@ -33,6 +33,7 @@ import tempfile
 import subprocess
 import signal
 import string
+import stat
 
 # --- regular expressions -------------------------------------------------------------
 
@@ -372,6 +373,16 @@ def symlink():
     """
     for i, url_pair in enumerate(symlink_list): 
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
+
+        if os.path.exists(url_pair.src_path) and os.path.exists(url_pair.dst_path):
+            # make sure src and target are not the same file - have to compare at the
+            # inode level as paths can differ
+            src_inode = os.stat(url_pair.src_path)[stat.ST_INO]
+            dst_inode = os.stat(url_pair.dst_path)[stat.ST_INO]
+            if src_inode == dst_inode:
+                logger.warning("symlink: src (%s) and dst (%s) already exists" % (url_pair.src_path, url_pair.dst_path))
+                continue
+
         cmd = "ln -f -s %s %s" % (url_pair.src_path, url_pair.dst_path)
         myexec(cmd, 60, delay_errors)
 
