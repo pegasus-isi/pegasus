@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import java.io.File;
+import org.griphyn.cPlanner.common.PegasusProperties;
 
 /**
  * The exitcode wrapper, that can parse kickstart output's and put them in the
@@ -66,5 +67,17 @@ public class PegasusExitCode extends VDSPOSTScript {
         return sb.toString();
     }
 
+    
+    /**
+     * Returns an empty string, as python version of exitcode cannot parse properties
+     * file.
+     *
+     * @param properties   the properties object
+     *
+     * @return the properties list, else empty string.
+     */
+    protected String getPostScriptProperties( PegasusProperties properties ){
+        return "";
+    }
 
 }
