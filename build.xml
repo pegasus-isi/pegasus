@@ -349,8 +349,7 @@
     <copy preservelastmodified="true" todir="${dist.dir}/bin">
       <fileset dir="bin">
           <include name="dirmanager"/>
-          <include name="cleanup"/>
-          <include name="cleanup.py"/>
+          <include name="pegasus-cleanup"/>
           <include name="pegasus-transfer"/>
           <include name="symlink"/>
           <include name="s3cmd"/>
