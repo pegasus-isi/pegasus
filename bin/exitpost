@@ -2,7 +2,7 @@
 #
 # To be run as Condor DAGMan POST script, will invoke PEGASUS_HOME exitcode internally.
 #
-# Usage: exitpost [exitcode options] dot-out-file 
+# Usage: exitpost [pegasus-exitcode-reference options] dot-out-file 
 #
 # This file or a portion of this file is licensed under the terms of
 # the Globus Toolkit Public License, found in file GTPL, or at
@@ -99,7 +99,7 @@ sub silent_killer($) {
 eval { require Time::HiRes };
 my $timeok = ( $@ ? 0 : 1 );
 
-my $ec = 'exitcode';
+my $ec = 'pegasus-exitcode-reference';
 if ( exists $ENV{'PEGASUS_HOME'} ) {
     # use PEGASUS_HOME
     $ec = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'exitcode' );

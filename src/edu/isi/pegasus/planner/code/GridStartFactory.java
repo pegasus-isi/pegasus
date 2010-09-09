@@ -123,6 +123,7 @@ public class GridStartFactory {
         associate( new UserPOSTScript() );
         associate( new NoPOSTScript() );
         associate( new NetloggerPostScript() );
+        associate( new PegasusExitCode() );
     }
 
 

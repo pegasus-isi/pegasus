@@ -969,12 +969,12 @@ public class Kickstart implements GridStart {
      * Returns the SHORT_NAME for the POSTScript implementation that is used
      * to be as default with this GridStart implementation.
      *
-     * @return  the identifier for the ExitPOST POSTScript implementation.
+     * @return  the identifier for the PegasusExitCode POSTScript implementation.
      *
      *
      */
     public String defaultPOSTScript(){
-        return ExitPOST.SHORT_NAME;
+        return PegasusExitCode.SHORT_NAME;
     }
     
     /**
