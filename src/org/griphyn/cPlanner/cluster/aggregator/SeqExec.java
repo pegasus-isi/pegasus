@@ -20,7 +20,7 @@ package org.griphyn.cPlanner.cluster.aggregator;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
-import edu.isi.pegasus.planner.code.gridstart.ExitPOST;
+import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.AggregatedJob;
@@ -152,7 +152,7 @@ public class SeqExec extends Abstract {
                 //ensure $PEGASUS_HOME/bin/exitpost is invoked
                 //as the baby jobs are being invoked by kickstart
                 mergedJob.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY,
-                                                     ExitPOST.SHORT_NAME );
+                                                     PegasusExitCode.SHORT_NAME );
             }
         }
         message.append( mergedJob.dagmanVariables.get( Dagman.POST_SCRIPT_KEY ) );
