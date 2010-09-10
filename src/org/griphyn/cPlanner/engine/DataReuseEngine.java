@@ -442,7 +442,7 @@ public class DataReuseEngine extends Engine implements Refiner{
 
             int depth  = node.getDepth();
 
-            System.out.println( "Traversing " + node.getID() );
+            //System.out.println( "Traversing " + node.getID() );
 
             //traverse through all the parents and add to the queue
             for( Iterator it = node.getParents().iterator(); it.hasNext(); ){
