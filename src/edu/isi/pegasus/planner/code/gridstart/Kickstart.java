@@ -423,6 +423,7 @@ public class Kickstart implements GridStart {
         StringBuffer gridStartArgs = new StringBuffer();
 
         // the executable is gridstart, the application becomes its argument
+        gridStartArgs.append(' ');
         gridStartArgs.append("-n ");
         gridStartArgs.append(job.getCompleteTCName());
         gridStartArgs.append(' ');
@@ -523,7 +524,7 @@ public class Kickstart implements GridStart {
                 String directory = (String)job.condorVariables.removeKey( key );
 
                 //pass the directory as an argument to kickstart
-                gridStartArgs.append("-w ").append(directory).append(' ');
+                gridStartArgs.append(" -w ").append(directory).append(' ');
             }
 
             //handle the -W option that asks kickstart to create and change
