@@ -162,7 +162,7 @@ public class S3 implements Implementation {
         
         //in case of staging of executables/worker package
         //we use mkdir directly
-        mUseMkdir = bag.getHandleToTransformationMapper().isStageableMapper();
+        mUseMkdir = bag.getPegasusProperties().transferWorkerPackage();
     }
     
     

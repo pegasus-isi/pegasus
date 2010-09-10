@@ -137,7 +137,7 @@ public class RemoveDirectory extends Engine {
     public RemoveDirectory( ADag concDag, PegasusBag bag ) {
         super( bag );
         mConcDag = concDag;
-        mTransferFromSubmitHost = bag.getHandleToTransformationMapper().isStageableMapper();
+        mTransferFromSubmitHost = bag.getPegasusProperties().transferWorkerPackage();
     }
 
     /**

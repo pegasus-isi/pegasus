@@ -1210,6 +1210,21 @@ public class PegasusProperties {
     }
 
     /**
+     * It specifies if the worker package needs to be staged to the remote site
+     * or not.
+     *
+     * Referred to by "pegasus.transfer.worker.package" property.
+     *
+     * @return boolean value specified in the properties file,else
+     *         false in case of non boolean value being specified or
+     *         property not being set.
+     */
+    public boolean transferWorkerPackage() {
+        return Boolean.parse( mProps.getProperty( "pegasus.transfer.worker.package" ),
+                              false );
+    }
+
+    /**
      * Returns the arguments with which the transfer executable needs
      * to be invoked.
      *

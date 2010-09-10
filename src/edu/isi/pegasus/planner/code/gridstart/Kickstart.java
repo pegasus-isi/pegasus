@@ -261,9 +261,7 @@ public class Kickstart implements GridStart {
         mSiteStore    = bag.getHandleToSiteStore();
         mTCHandle     = bag.getHandleToTransformationCatalog();
 
-        mDynamicDeployment =  ( bag.getHandleToTransformationMapper() == null )?
-                                false:
-                                bag.getHandleToTransformationMapper().isStageableMapper();
+        mDynamicDeployment =  mProps.transferWorkerPackage();
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){

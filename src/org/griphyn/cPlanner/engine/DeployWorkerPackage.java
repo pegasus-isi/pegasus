@@ -306,8 +306,14 @@ public class DeployWorkerPackage
     /**
      * Boolean indicating whether to use the user specified location or not
      */
-    private boolean mUseUserSpecifiedSourceLocation;
+    protected boolean mUseUserSpecifiedSourceLocation;
     
+    /**
+     * Boolean indicating whether user wants the worker package to be transferred
+     * or not.
+     */
+    protected boolean mTransferWorkerPackage;
+
     /**
      * Loads the implementing class corresponding to the mode specified by the
      * user at runtime.
@@ -353,6 +359,8 @@ public class DeployWorkerPackage
         mSiteToPegasusHomeMap = new HashMap<String,String>();
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
 
+        mTransferWorkerPackage = mProps.transferWorkerPackage();
+
         //load the transfer setup implementation
         //To DO . specify type for loading
         mSetupTransferImplementation = ImplementationFactory.loadInstance(
@@ -379,7 +387,7 @@ public class DeployWorkerPackage
         tpt.buildState();
 
         //figure if we need to deploy or not
-        if( !m.isStageableMapper() ){
+        if( !mTransferWorkerPackage ){
             mLogger.log( "No Deployment of Worker Package needed" ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return;
@@ -546,7 +554,7 @@ public class DeployWorkerPackage
         Mapper m = mBag.getHandleToTransformationMapper();
         
         //figure if we need to deploy or not
-        if( !m.isStageableMapper() ){
+        if( !mTransferWorkerPackage ){
             mLogger.log( "No Deployment of Worker Package needed" ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return dag;
@@ -646,7 +654,7 @@ public class DeployWorkerPackage
         Mapper m = mBag.getHandleToTransformationMapper();
         
         //figure if we need to deploy or not
-        if( !m.isStageableMapper() ){
+        if( !mTransferWorkerPackage ){
             mLogger.log( "No cleanup of Worker Package needed" ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return dag;

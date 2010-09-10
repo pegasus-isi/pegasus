@@ -134,7 +134,7 @@ public class DefaultImplementation implements Implementation {
         mProps     = bag.getPegasusProperties();
         //in case of staging of executables/worker package
         //we use mkdir directly
-        mUseMkdir = bag.getHandleToTransformationMapper().isStageableMapper();
+        mUseMkdir =  bag.getPegasusProperties().transferWorkerPackage();
     }
     
     /**
