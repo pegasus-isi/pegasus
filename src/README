@@ -27,7 +27,7 @@ jarsrc		directory with sources (as available) for the 3rd party
 org		PEGASUS sources
 tools		C and C++ program that help the PEGASUS working. These
 		programs currently include: keg, kickstart, k.2, T2,
-		condor-log-parser, transfer and the various free programs.
+		condor-log-parser and the various free programs.
 
 3. ignore for now
 =================
