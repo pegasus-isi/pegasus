@@ -437,7 +437,6 @@
       <exclude name="*.cmd"/>
       <exclude name="*-free"/>
       <exclude name="T2"/>
-      <exclude name="transfer"/>
       <exclude name="kickstart"/>
       <exclude name="k.2"/>
       <exclude name="keg"/>
