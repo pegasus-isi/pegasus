@@ -29,6 +29,13 @@ if [ ! -e minirosetta_database ]; then
    rm minirosetta_database.tar.gz
 fi
 
+# what about the required pdbs?
+if [ ! -e pdbs ]; then
+   wget -nv http://www.isi.edu/~rynge/pegasus/example-workflows/pdbs.tar.gz
+   tar xzf pdbs.tar.gz
+   rm pdbs.tar.gz
+fi
+
 # build the dax generator
 export CLASSPATH=.:$CLASSPATH
 javac RosettaDAX.java
