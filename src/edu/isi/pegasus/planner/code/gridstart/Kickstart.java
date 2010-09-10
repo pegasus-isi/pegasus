@@ -653,8 +653,18 @@ public class Kickstart implements GridStart {
             }
         }
         else{
-            gridStartArgs.append(job.executable).
-                append(' ').append(job.strargs);
+            if( this.mWorkerNodeExecution && job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+                //we need to put the path of the executable
+                //staged in the worker node temp directory
+                //JIRA PM-20 and PM-68
+                gridStartArgs.append( this.getWorkerNodeDirectory( job ) ).append( File.separator ).
+                              append( job.getStagedExecutableBaseName() );
+            }
+            else{
+                gridStartArgs.append(job.executable);
+
+            }
+            gridStartArgs.append(' ').append(job.strargs);
         }
 
 
