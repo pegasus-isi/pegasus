@@ -864,7 +864,12 @@ public class SeqExec implements GridStart {
                 }
             }
 
-            if( preJob != null ){
+            if( preJob == null ){
+                mLogger.log( "PREJOB was not constructed for job " + job.getName(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+
+            }
+            else{
                 //enable the pre command via kickstart
                 writer.println( enableCommandViaKickstart( preJob,
                                                             "pre-job",
@@ -1013,7 +1018,13 @@ public class SeqExec implements GridStart {
                 }
             }
 
-            if( preJob != null ){
+
+            if( preJob == null ){
+                mLogger.log( "PREJOB was not constructed for job " + job.getName(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+
+            }
+            else{
                 //there should be a way to determine if
                 //prejob is actually a clustered job itself
                 if( mS3SLSUsed ){
