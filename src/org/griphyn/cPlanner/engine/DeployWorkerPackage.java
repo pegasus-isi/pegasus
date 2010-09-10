@@ -104,9 +104,22 @@ public class DeployWorkerPackage
 
     /**
      * Array storing the names of the executables in the $PEGASUS_HOME/bin directory
+     * Associates the transformation name with the executable basenames
      */
-    public static final String PEGASUS_WORKER_EXECUTABLES[] = {
-        "T2", "transfer", "kickstart", "cleanup", "seqexec", "dirmanager", "invoke",  "keg" ,"symlink", "pegasus-transfer" };
+    public static final String PEGASUS_WORKER_EXECUTABLES[][] = {
+        { "T2", "T2" },
+        { "transfer", "transfer" },
+        { "kickstart", "kickstart" },
+        { "cleanup", "pegasus-cleanup" },
+        { "seqexec", "seqexec"},
+        { "dirmanager", "dirmanager" },
+        { "invoke", "invoke" },
+        { "keg" , "keg" },
+        { "symlink", "symlink"},
+        { "pegasus-transfer", "pegasus-transfer" }
+
+    };
+
 
     /**
      * Store the regular expressions necessary to parse the basename from the worker
@@ -449,7 +462,12 @@ public class DeployWorkerPackage
             //now create transformation catalog entry objects for each
             //worker package executable
             for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
-                TransformationCatalogEntry entry = addDefaultTCEntry( site,  pegasusHome.getAbsolutePath(), selected.getSysInfo(), PEGASUS_WORKER_EXECUTABLES[i] );
+                TransformationCatalogEntry entry = addDefaultTCEntry( site,
+                                                                      pegasusHome.getAbsolutePath(),
+                                                                      selected.getSysInfo(),
+                                                                      PEGASUS_WORKER_EXECUTABLES[i][0],
+                                                                      PEGASUS_WORKER_EXECUTABLES[i][1]  );
+
                 mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
             }
 
@@ -929,7 +947,8 @@ public class DeployWorkerPackage
      * @param site   the site for which the default entry is required.
      * @param pegasusHome  the path to deployed worker package
      * @param sysinfo the system information of that site.
-     * @param name    name of the executable
+     * @param name        the logical name of the transformation
+     * @param executable  the basename of the executable
      *
      *
      * @return  the default entry.
@@ -937,7 +956,8 @@ public class DeployWorkerPackage
     private  TransformationCatalogEntry addDefaultTCEntry( String site,
                                                         String pegasusHome,
                                                         SysInfo sysinfo,
-                                                        String name ){
+                                                        String name,
+                                                        String executable ){
         TransformationCatalogEntry defaultTCEntry = null;
 
         mLogger.log( "Creating a default TC entry for " +
@@ -950,7 +970,7 @@ public class DeployWorkerPackage
         StringBuffer path = new StringBuffer();
         path.append( pegasusHome ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( name );
+            append( executable );
 
         mLogger.log( "Remote Path set is " + path.toString(),
                      LogManager.DEBUG_MESSAGE_LEVEL );
@@ -993,8 +1013,8 @@ public class DeployWorkerPackage
      * the http webserver on the pegasus website. It also attempts to add 
      * the transformation catalog entry to the TC store.   
      * 
-     * @param site    the execution site for which we need a matching static binary.
-     * @param name    name of the executable
+     * @param site        the execution site for which we need a matching static binary.
+     * @param name        logical name of the transformation
      *
      *
      * @return  the default entry.
