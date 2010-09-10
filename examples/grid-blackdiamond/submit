@@ -10,9 +10,9 @@ set -e
 CLUSTER_NAME="ISIViz"
 CLUSTER_HOSTNAME="viz-login.isi.edu"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/glusterfs/scratch"
-CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/2.4.1"
-CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.1"
+CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
+CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/testing/latest"
+CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
 #######################################################################
 
 
@@ -36,7 +36,7 @@ echo "This is sample input to KEG" >f.a
 
 # create the replica catalog (in this case, where to find the inputs)
 cat >rc.data <<EOF
-f.a gsiftp://`hostname -f``pwd`/f.a pool="local"
+f.a file://$TOPDIR/f.a pool="local"
 EOF
 
 # create the transformation catalog
@@ -56,13 +56,13 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work/outputs"/>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
                     <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work/outputs"/>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
                     <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
                 </shared>
             </storage>
