@@ -79,7 +79,7 @@ public class PegasusProperties {
 
     public static final String DEFAULT_CONDOR_CONFIG_DIR = "";
 
-    public static final String DEFAULT_POSTSCRIPT_MODE = "none";
+    public static final String DEFAULT_POSTSCRIPT_MODE = "all";
 
     public static final String POOL_CONFIG_FILE = "sites.";
 
