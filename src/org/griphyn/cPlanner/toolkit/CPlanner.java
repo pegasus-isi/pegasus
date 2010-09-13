@@ -56,13 +56,10 @@ import org.griphyn.cPlanner.parser.pdax.PDAXCallbackFactory;
 import org.griphyn.cPlanner.parser.DaxParser;
 import org.griphyn.cPlanner.parser.PDAXParser;
 
-import edu.isi.pegasus.planner.catalog.work.WorkFactory;
-import edu.isi.pegasus.planner.catalog.WorkCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 
 import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
