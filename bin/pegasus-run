@@ -3,19 +3,21 @@
 # Wrapper around pegasus-submit-dag to run a workflow
 #
 # Usage: pegasus-run rundir
+##
+#  Copyright 2007-2010 University Of Southern California
 #
-# This file or a portion of this file is licensed under the terms of
-# the Globus Toolkit Public License, found in file GTPL, or at
-# http://www.globus.org/toolkit/download/license.html. This notice must
-# appear in redistributions of this file, with or without modification.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-# Redistributions of this Software, with or without modification, must
-# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
-# some other similar material which is provided with the Software (if
-# any).
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
-# Copyright 1999-2004 University of Chicago and The University of
-# Southern California. All rights reserved.
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
 #
 # Author: Jens-S. V�ckler voeckler@isi.edu
 # Author: Gaurang Mehta gmehta@isi.edu
@@ -29,12 +31,10 @@ use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
 
 # path to load our libs.. 
-BEGIN {
-   if ( exists $ENV{'PEGASUS_HOME'} && -d $ENV{'PEGASUS_HOME'} ) {
-	my $dir = File::Spec->catdir( $ENV{'PEGASUS_HOME'}, 'lib', 'perl' ); 
-	unshift( @INC, $dir ) if -d $dir; # prepend
-   }
-}
+    BEGIN { 
+	require File::Spec->catfile( dirname($0), 'common.pm' );
+	common->import(':all');
+    }
 
 # load our own local modules
 use Work::Common;
@@ -45,16 +45,13 @@ use Work::Workflow;
 sub usage(;$);			# { }
 $main::DEBUG = 0;		# for now
 my $condor;			# if set, use Condor for tailstatd
-my $grid=1;                     # if set, disable grid checks;
+my $grid=0;                     # if set, disable grid checks;
 my $props = Work::Properties->new();
 my $properties="";  	        # properties file for Pegasus
 my $default_tsd = File::Spec->catfile( File::Spec->rel2abs( 
     File::Spec->canonpath(dirname($0)) ), 'tailstatd.py' );
-my $tsd = $props->property('pegasus.tailstatd.py') || $default_tsd;
+my $tsd = $props->property('pegasus.tailstatd') || $default_tsd;
 
-# my $default_vdd = 
-#    File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'libexec', 'pegasus-delegationd' );
-# my $vdd = $props->property('pegasus.delegationd');
     
 my $database=1;
 GetOptions( "help|h" => \&usage,
@@ -96,7 +93,7 @@ Optional arguments:
  -v|--verbose       raises debug level by 1, see --debug. 
  --condor           uses Condor to submit daemons (prototype).
  --database|--nodatabase Make tailstad log events in the workflow database (default yes)
- --grid|--nogrid  Disable or Enable grid checks (default is enabled)
+ --grid|--nogrid  Disable or Enable grid checks (default is disabled)
  -|--conf 	     use this pegasus properties file.
 EOF
     exit($ec);
@@ -182,7 +179,7 @@ print STDERR "# found $tsd\n" if $main::DEBUG;
 if($grid){
 # sanity check: Is there a GLOBUS_LOCATION?
 
-die( "ERROR: Your environment setup misses GLOBUS_LOCATION. This bodes ill.\n",
+die ( "ERROR: Your environment setup misses GLOBUS_LOCATION.\n",
      "Please check carefully that you have sourced the correct setup files!\n" )
     unless exists $ENV{'GLOBUS_LOCATION'};
 
@@ -190,22 +187,14 @@ die( "ERROR: Your environment setup misses GLOBUS_LOCATION. This bodes ill.\n",
 my $g_l = $ENV{'GLOBUS_LOCATION'};
 print STDERR "# GLOBUS_LOCATION=$g_l\n" if $main::DEBUG;
 
+# sanity check: Is G_L part of L_L_P?
+my @llp = grep { /^$g_l/ } split /:/, $ENV{'LD_LIBRARY_PATH'};
+$ENV{'LD_LIBRARY_PATH'}=File::Spec->catfile($ENV{'GLOBUS_LOCATION'},"/lib") if @llp == 0;
+
+#Find grid-proxy-init (should we use openssl instead?? )
 my $gpi = File::Spec->catfile( $g_l, 'bin', 'grid-proxy-info' );
 die "ERROR: Unable to find $gpi\n" unless -x $gpi;
 print STDERR "# found $gpi\n" if $main::DEBUG;
-
-## sanity check: Is there a G_T_P_R
-print STDERR "# GLOBUS_TCP_PORT_RANGE=", $ENV{'GLOBUS_TCP_PORT_RANGE'}, "\n"
-    if ( exists $ENV{'GLOBUS_TCP_PORT_RANGE'} && $main::DEBUG );
-print STDERR "# GLOBUS_TCP_SOURCE_RANGE=", $ENV{'GLOBUS_TCP_SOURCE_RANGE'}, "\n"
-    if ( exists $ENV{'GLOBUS_TCP_SOURCE_RANGE'} && $main::DEBUG );
-
-# sanity check: Is G_L part of L_L_P?
-my @llp = grep { /^$g_l/ } split /:/, $ENV{'LD_LIBRARY_PATH'};
-die( "ERROR: Your LD_LIBRARY_PATH does not contain a directory which has your\n",
-     "GLOBUS_LOCATION as a prefix. Something is severly amiss here.\n" )
-    if @llp == 0;
-print STDERR "# found $llp[0]\n" if $main::DEBUG;
 
 # common user error
 # sanity check: Sufficient time left on grid proxy certificate
@@ -215,13 +204,12 @@ chomp($timeleft);
 $timeleft += 0;			# make numeric
 close GPI;
 die( "ERROR: $gpi died on signal ", ($? & 127) ) if ( ($? & 127) > 0 );
-die( "ERROR: Grid proxy not initialized\n" ) if $timeleft == -1;
+die( "ERROR: Grid proxy not initialized, Please generate a new proxy\n" ) if $timeleft == -1;
 die( "ERROR: Grid proxy expired, please refresh\n" ) if $timeleft == 0;
 die( "ERROR: $gpi exited with status ", $?>>8 ) if ( $? != 0 );
-die( "ERROR: Too little time left ($timeleft s) on grid proxy\n" ) 
+warn( "ERROR: Too little time left ($timeleft s) on grid proxy. Please refresh your proxy\n" ) 
     if $timeleft < 7200;
 print STDERR "# grid proxy has $timeleft s left\n" if $main::DEBUG;
-
 } # end if($grid) checks only if grid option is enabled.
 
 if($config{dag}) {
@@ -278,14 +266,15 @@ foreach my $k ( keys %initial ) {
 my @args = ( $psd );
 push( @args, @extra ) if @extra > 0;
 push( @args, '-d', 0+$main::DEBUG);
-if(!$grid){
-    push(@args, '--nogrid');
+if($grid){
+    push(@args, '--grid');
 }
 push( @args, '--nosubmit', $config{dag} );
 print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
 system(@args) == 0 
     or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
 print STDERR "# dagman is running\n" if $main::DEBUG;
+
 # run tailstatd to update job stats until DAGMan finishes
 if(!$database){
 @args = create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
@@ -294,39 +283,8 @@ if(!$database){
 }
 print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
 system(@args) == 0 
-    or die( "ERROR: Running @{[basename($args[0])]} failed with ", 
-	    parse_exit($?) );
+    or die( "ERROR: Running $tsd failed with ", parse_exit($?) );
 print STDERR "# $tsd is running\n" if $main::DEBUG;
-
-# If using Pegasus delegation cache daemon, start one, if necessary
-# FIXME: No locking here, though I should lock
-#if ( defined $vdd && length($vdd) ) {
-#    unless ( -e vdd_socket() ) {
-#	@args = create_args( $vdd );
-#	print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
-#	if ( system(@args) == 0 ) {
-#	    print STDERR "# $vdd is running\n" if $main::DEBUG;
-#	} else {
-#	    print STDERR "ERROR: Ignoring @{[basename($args[0])]} failed with ",
-#	    parse_exit($?);
-#	}
-#    } else {
-#	print "# $vdd already appears to be running\n" if $main::DEBUG;
-#    }
-#}
-
-# update workflow in work db -- late connect
-#if($database) {
-#    eval {
-#	my $workdb = Work::Workflow->new($props); # fail late
-#	my $workid = $workdb->work_id( $config{basedir}, $config{vogroup}, 
-#				       $config{label}, $config{rundir} );
-#	warn "#Workid is $workid\n" if $main::DEBUG;
-#	$workdb->update_work( $workid, -1 );
-#	undef $workdb;
-#    };
-#    warn "Warning: While trying to access work database\n$@\n" if $@;
-#}
 
 # next step
 if ( @rescue > 0 ) {
@@ -350,8 +308,7 @@ if (open(DID,"<$daglogfile")){
 }
 print << "EOF";
 
-I have started your workflow. The job state will soon
-be visible. Your workflow runs in base directory given below
+Your Workflow has been started and runs in base directory given below
 
 cd $run
 
@@ -359,7 +316,7 @@ cd $run
 
 pegasus-status -l $run
 or
-pegasus-status -l -w $workflow -t $time 
+pegasus-status $workflow -t $time 
 
 *** To remove your workflow run ***
 EOF

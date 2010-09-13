@@ -40,7 +40,7 @@ my $submit=1;
 my $notify = 'NEVER';
 my $verbose;
 my %props = ();
-my $grid=1; #Grid checks enabled
+my $grid=0; #Grid checks enabled
 
 $main::DEBUG = 0;		# for now
 $main::revision = 'unknown';
