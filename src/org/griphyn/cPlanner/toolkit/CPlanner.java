@@ -578,7 +578,7 @@ public class CPlanner extends Executable{
             }
 
             //log entry in to the work catalog
-            boolean nodatabase = logEntryInWorkCatalog( finalDag, baseDir, relativeSubmitDir );
+            //boolean nodatabase = logEntryInWorkCatalog( finalDag, baseDir, relativeSubmitDir );
 
             //write out  the planner metrics  to global log
             mPMetrics.setEndTime( new Date() );
@@ -588,7 +588,7 @@ public class CPlanner extends Executable{
                 StringBuffer invocation = new StringBuffer();
                 //construct the path to the bin directory
                 invocation.append( mProps.getPegasusHome() ).append( File.separator ).
-                           append( "bin" ).append( File.separator ).append( getPegasusRunInvocation ( nodatabase ) );
+                           append( "bin" ).append( File.separator ).append( getPegasusRunInvocation (  ) );
 
                 boolean submit = submitWorkflow( invocation.toString() );
                 if ( !submit ){
@@ -598,7 +598,7 @@ public class CPlanner extends Executable{
             }
             else{
                 //log the success message
-                this.logSuccessfulCompletion(nodatabase, emptyWorkflow);
+                this.logSuccessfulCompletion(  emptyWorkflow);
             }
         }
         else{
@@ -843,44 +843,7 @@ public class CPlanner extends Executable{
 
     }
 
-    /**
-     * Logs an entry in the work catalog about the workflow being planned.
-     *
-     * @param dag ADag
-     * @param baseDir String
-     * @param relativeDir String
-     *
-     * @return boolean
-     */
-    protected boolean logEntryInWorkCatalog( ADag dag, String baseDir, String relativeDir ){
-        //connect to the work catalog and populate
-        //an entry in it for the current workflow
-        WorkCatalog wc = null;
-        boolean nodatabase = false;
-        try{
-            wc = WorkFactory.loadInstance( mProps );
-        }
-        catch( Exception e ) {
-            //just log and proceed
-            mLogger.log( "Ignoring: " + convertException( e ),  LogManager.DEBUG_MESSAGE_LEVEL );
-            nodatabase = true;
-        }
-        if ( wc != null ) {
-            wc.insert( baseDir, mPOptions.getVOGroup(), dag.getLabel(),
-                       new File( relativeDir == null ? "." : relativeDir  ).getName(),
-                       mUser,
-                       Currently.parse( dag.getMTime() ),
-                       Currently.parse( dag.dagInfo.getFlowTimestamp() ),
-                       -2  );
-            try{
-                wc.close();
-            } catch( Exception e ) {
-                /*ignore */
-                nodatabase = true;
-            }
-        }
-        return nodatabase;
-    }
+    
 
 
     /**
@@ -1239,10 +1202,7 @@ public class CPlanner extends Executable{
 
 
 
-        this.logSuccessfulCompletion( this.logEntryInWorkCatalog( megaDAG,
-                                                                  mPOptions.getBaseSubmitDirectory(),
-                                                                  mPOptions.getRelativeDirectory() ),
-                                      false );
+        this.logSuccessfulCompletion( false );
 
         return result;
     }
@@ -1611,16 +1571,16 @@ public class CPlanner extends Executable{
     }
 
 
+
     /**
      * Logs the successful completion message.
      *
-     * @param nodatabase boolean indicating whether to add a nodatabase option or not.
      * @param emptyWorkflow  indicates whether the workflow created was empty or not.
      */
-    private void logSuccessfulCompletion( boolean nodatabase, boolean emptyWorkflow ){
+    private void logSuccessfulCompletion(  boolean emptyWorkflow ){
         StringBuffer message = new StringBuffer();
         message.append( emptyWorkflow ? CPlanner.EMPTY_FINAL_WORKFLOW_MESSAGE : CPlanner.SUCCESS_MESSAGE ).
-                append( "" ).append( getPegasusRunInvocation( nodatabase ) ).
+                append( "" ).append( getPegasusRunInvocation(  ) ).
                 append( "\n\n" );
         mLogger.log( message.toString(), LogManager.INFO_MESSAGE_LEVEL );
 
@@ -1629,16 +1589,14 @@ public class CPlanner extends Executable{
     /**
      * Returns the pegasus-run invocation on the workflow planned.
      *
-     * @param nodatabase boolean indicating whether to add a nodatabase option or not.
      *
      * @return  the pegasus-run invocation
      */
-    private String getPegasusRunInvocation( boolean nodatabase ){
+    private String getPegasusRunInvocation( ){
         StringBuffer result = new StringBuffer();
 
         result.append( "pegasus-run ").
-               append( "-Dpegasus.user.properties=" ).append( mProps.getPropertiesInSubmitDirectory() ).
-               append( nodatabase ? " --nodatabase"  : "" );
+               append( "-Dpegasus.user.properties=" ).append( mProps.getPropertiesInSubmitDirectory() );
 
         //check if we need to add any other options to pegasus-run
         for( Iterator<NameValue> it = mPOptions.getForwardOptions().iterator(); it.hasNext() ; ){
