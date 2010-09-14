@@ -71,19 +71,24 @@ sub main(){
 	my($dag_file_path) =  File::Spec->catfile("$submit_dir","$dag_file_name");
 	
 	# Executing genstat command
-	my($genstats_status , $genstats_status_msg) =run_genstats($dag_file_path ,$jsd_file_path,$output_dir , $log_dir );
+	my($genstats_status , $genstats_status_msg ,$genstats_summary_msg) =run_genstats($dag_file_path ,$jsd_file_path,$output_dir , $log_dir );
 	print "$genstats_status_msg \n";
 	## Executing genstats-breakdown command
-	my($genstats_breakdown_status , $genstats_breakdown_status_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir , $log_dir  );
+	my($genstats_breakdown_status , $genstats_breakdown_status_msg ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir , $log_dir  );
 	print "$genstats_breakdown_status_msg \n";
 	
 	
 	if(!$keep){
-		print " Deleting log directory $log_dir \n";
 		remove_tree($log_dir) or die "Unable to delete $log_dir . $! \n";
 	}else{
 		print "Logs are stored at $log_dir \n";
 	}
+	
+	print "************* SUMMARY *******************\n";
+	
+	print $genstats_summary_msg.$genstats_breakdown_summary_msg;
+	
+	print "*****************************************\n";
 	
 	exit 0;
 }
@@ -95,6 +100,7 @@ sub run_genstats($$$$){
 	my(  $dag_file_path , $jobstate_log, $output_dir , $log_dir )=(@_);
 	my(@args);
 	my $status_msg .= "******  genstats *****  \n";	
+	my $summary_msg;
 	
 	#Adding arguments
 	push(@args ,"--dag ".$dag_file_path); # adding dag file argument
@@ -110,11 +116,13 @@ sub run_genstats($$$$){
 	my($status,$exec_msg) = execute_command($genstats_command,  $log_dir ,'genstats');
 	if($status == 0  ){
 		$status_msg .= "****** Finished executing genstats  ***** \n";
-		$status_msg .= "The genstats result is  created at $output_dir \n************ \n";		
+		$status_msg .= "The genstats result is created at $output_dir \n************ \n";
+		$summary_msg = "The genstats result is created at $output_dir\n";		
 	}else{
 		$status_msg .= "ERROR : Failed to execute genstats command . $exec_msg\n";
+		$summary_msg = "ERROR : Failed to create job statistics . $exec_msg\n";
 	}
-	return ($status,$status_msg);
+	return ($status,$status_msg,$summary_msg);
 	
 }
 
@@ -126,6 +134,8 @@ sub run_genstats_breakdown($$$$){
 	my ($submit_dirs) = $submit_dir;
 	my (@sub_workflow_submit_dirs) = get_sub_workflow_list($dag_file_path);
 	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
+	my $summary_msg;
+	
 	if($number_of_elements > 0){
 		$submit_dirs .= " ".join(" ",@sub_workflow_submit_dirs);
 	}
@@ -145,11 +155,13 @@ sub run_genstats_breakdown($$$$){
 	my($status,$exec_msg) = execute_command($genstats_breakdown_command,  $log_dir,'genstats_breakdown');
 	if($status == 0  ){
 		$status_msg .= "****** Finished executing genstats-breakdown  ***** \n";
-		$status_msg .= "The genstats breakdown is  created at $output_file \n************ \n";
+		$status_msg .= "The genstats breakdown result is created at $output_file \n************ \n";
+		$summary_msg = "The genstats breakdown result is created at $output_file\n";
 	}else{
-		$status_msg .= "Failed to execute genstats-breakdown command . $exec_msg\n";
+		$status_msg .= "ERROR:Failed to execute genstats-breakdown command . $exec_msg\n";
+		$summary_msg ="ERROR:Failed to create statistics of logical transformations . $exec_msg\n";
 	}
-	return ($status , $status_msg);
+	return ($status , $status_msg,$summary_msg);
 	
 }
 
