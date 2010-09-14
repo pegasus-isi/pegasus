@@ -10,15 +10,18 @@ set -e
 #
 DEGREES=1.0
 LOCAL_PEGASUS_HOME="/home/rynge/Pegasus/install/current"
-LOCAL_MONTAGE_LOCATION="/home/rynge/Projects/Montage/src/Montage_v3.2_beta4_mats"
+LOCAL_GLOBUS_LOCATION="/opt/globus/5.0.1"
+LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
+LOCAL_MONTAGE_LOCATION="/home/rynge/Projects/Montage/src/Montage_v3.2_beta6_mats"
 CLUSTER_NAME="ISIViz"
 CLUSTER_HOSTNAME="viz-login.isi.edu"
-CLUSTER_GATEKEEPER_PORT="2119"
+CLUSTER_GATEKEEPER_TYPE="gt5"
+CLUSTER_GATEKEEPER_PORT="2121"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/glusterfs/scratch"
-CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/2.4.1"
-CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/4.2.1"
-CLUSTER_MONTAGE_LOCATION="/cluster-software/montage/3.2_beta4_mats"
+CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
+CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/testing/latest"
+CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
+CLUSTER_MONTAGE_LOCATION="/cluster-software/montage/3.2_beta6_mats"
 JOB_CLUSTERING="PEGASUS::bundle=15"
 #######################################################################
 
@@ -32,7 +35,7 @@ export PEGASUS_HOME=$LOCAL_PEGASUS_HOME
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/runs/$RUN_ID
+RUN_DIR=`pwd`/work/$RUN_ID
 
 echo "Work directory: $RUN_DIR"
 
@@ -42,6 +45,8 @@ cd $RUN_DIR
 cp $TOP_DIR/pegasusrc .
 
 # create the transformation catalogue (tc)
+echo
+echo "Creating the transformation catalog..."
 cat >tc <<EOF
 # Site  LFN  PFN  TYPE  SYSTEM PROFILE
 $CLUSTER_NAME     pegasus::dirmanager     $CLUSTER_PEGASUS_HOME/bin/dirmanager        INSTALLED   INTEL32::LINUX
@@ -54,6 +59,8 @@ for BINARY in `(cd $LOCAL_MONTAGE_LOCATION/bin && ls)`; do
 done
 
 # site catalog
+echo
+echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
@@ -75,12 +82,12 @@ cat >sites.xml <<EOF
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="env" key="PEGASUS_HOME" >$LOCAL_PEGASUS_HOME</profile>
-        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
-        <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >$GLOBUS_TCP_PORT_RANGE</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$LOCAL_GLOBUS_LOCATION</profile>
+        <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >$LOCAL_GLOBUS_TCP_PORT_RANGE</profile>
     </site>
     <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+        <grid  type="$CLUSTER_GATEKEEPER_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="$CLUSTER_GATEKEEPER_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
         <head-fs>
             <scratch>
                 <shared>
@@ -103,16 +110,22 @@ cat >sites.xml <<EOF
 </sitecatalog>
 EOF
 
-cd inputs
-mArchiveList 2mass j M17 $DEGREES $DEGREES images.tbl
-mArchiveExec images.tbl
-cd ..
-
+echo
+echo "Running mDAG (finding input images, generating DAX, ...)..."
 mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "gsiftp://$LOCAL_HOSTNAME$RUN_DIR" "gsiftp://$LOCAL_HOSTNAME$RUN_DIR/inputs"
 
+echo
+echo "Downloading input images from NASA IPAC at Caltech..."
+cd inputs
+mArchiveExec ../images.tbl
+cd ..
+
+echo
+echo "Setting up the replica catalog..."
 cp cache.list rc
 perl -p -i -e 's/ipac_cluster/local/' rc
 
+echo "Planning and submitting the workflow..."
 pegasus-plan \
     -D pegasus.user.properties=pegasusrc \
     --sites $CLUSTER_NAME \
