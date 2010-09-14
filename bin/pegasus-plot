@@ -52,7 +52,6 @@ sub main(){
 	my ($submit_dir) = $ARGV[0];	
 		
 	if ($help){
-		generateColorCode();
 		print_usage();
 		exit 0;
 	}
@@ -88,31 +87,39 @@ sub main(){
 	
 	my($dag_file_path) =  File::Spec->catfile("$submit_dir","$dag_file_name");
 	my ($color_file_path) = &generate_compute_job_color($dag_file_path ,$log_dir);
-	
+	my($show_job_status , $show_job_status_msg ,$show_job_summary_msg);
+	my($show_id_status , $show_id_status_msg ,$show_id_summary_msg);
 	# Executing show job command
 	if(find_exec('ploticus')){
-		my($show_job_status , $show_job_status_msg) =run_show_job($dag_file_path ,$output_dir , $log_dir ,$color_file_path,$show_job_title);
+		($show_job_status , $show_job_status_msg ,$show_job_summary_msg ) =run_show_job($dag_file_path ,$output_dir , $log_dir ,$color_file_path,$show_job_title);
 		print "$show_job_status_msg \n";
-		## Executing show id command
-		my($show_id_status , $show_id_status_msg) =run_show_id($dag_file_path ,$output_dir , $log_dir  ,$show_id_title);
+		# Executing show id command
+		($show_id_status , $show_id_status_msg ,$show_id_summary_msg) =run_show_id($dag_file_path ,$output_dir , $log_dir  ,$show_id_title);
 		print "$show_id_status_msg \n";
 	}else{
-		print STDERR  "ERROR: Unable to locate \'ploticus\' . Unable to create job over time graphs\n";
+		print STDERR  "ERROR: Application \'ploticus\' not available. Unable to create workflow execution Gantt chart and job over time timeline graph\n";
+		$show_job_summary_msg = "ERROR: Application \'ploticus\' not available. Unable to create workflow execution Gantt chart\n";
+		$show_id_summary_msg =  "ERROR: Application \'ploticus\' not available. Unable to create job over time timeline graph\n";
 	}
 	## Executing dag2dot command
-	my($dag2dot_id_status , $dag2dot_status_msg) =run_dag2dot($dag_file_path ,$output_dir , $log_dir );
+	my($dag2dot_id_status , $dag2dot_status_msg , $dag2dot_summary_msg) =run_dag2dot($dag_file_path ,$output_dir , $log_dir );
 	print "$dag2dot_status_msg \n";
 	## Executing dax2dot command
-	my($dax2dot_id_status , $dax2dot_status_msg) =run_dax2dot($dax_file_path ,$output_dir , $log_dir );
+	my($dax2dot_id_status , $dax2dot_status_msg , $dax2dot_summary_msg) =run_dax2dot($dax_file_path ,$output_dir , $log_dir );
 	print "$dax2dot_status_msg \n";
 	
 	if(!$keep){
-		print " Deleting log directory $log_dir \n";
 		remove_tree($log_dir) or die "Unable to delete $log_dir . $! \n";
 	}else{
 		print "Logs are stored at $log_dir \n";
 	}
 	
+	
+	print "************* SUMMARY *******************\n";
+	
+	print $show_job_summary_msg.$show_id_summary_msg.$dag2dot_summary_msg.$dax2dot_summary_msg;
+	
+	print "*****************************************\n";
 	exit 0;
 }
 
@@ -123,7 +130,7 @@ sub run_show_job($$$$$){
 	my(  $dag_file_path , $output_dir , $log_dir ,$color_file,$title)=(@_);
 	my(@args);
 	my $status_msg .= "******  show-job *****  \n";	
-	
+	my $summary_msg;
 	#Adding arguments
 	push(@args ,"--color-file ".$color_file); # adding color option
 	push(@args ,"--show-jobnames"); #/adding show-jobnames option
@@ -143,6 +150,8 @@ sub run_show_job($$$$$){
 		$status_msg .= "****** Finished executing show-job  ***** \n";		
 	}else{
 		$status_msg .= "ERROR : Failed to execute show-job command . $exec_msg\n";
+		$summary_msg = "ERROR : Failed to create workflow execution Gantt chart  . $exec_msg\n";
+		return ($status,$status_msg , $summary_msg);
 	}
 	
 	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
@@ -153,20 +162,25 @@ sub run_show_job($$$$$){
 	
 	#Moving the output file to <submit dir>/graph directory
 	if(!move($eps_file,$output_dir)){
-		$status_msg .="Failed to move the eps file to $output_dir. $! \n";
-		return ($status,$status_msg);
+		$status_msg .=  "ERROR : Failed to move the eps file to $output_dir. $! \n";
+		$summary_msg = "ERROR : Failed to move the eps file to $output_dir. $! \n";
+		return ($status,$status_msg,$summary_msg);
 	}
+	my ($eps_out_path , $png_out_path) = (File::Spec->catfile( $output_dir, $eps_file_name) , File::Spec->catfile( $output_dir, $png_file_name));
 	if(find_exec('convert')){
 		if(!move($png_file,$output_dir)) {
-			$status_msg .= "Failed to move the png file to $output_dir. $! \n";
-			return ($status,$status_msg);
+			$status_msg .= "ERROR : Failed to move the png file to $output_dir. $! \n";
+			$summary_msg = "ERROR : Failed to move the png file to $output_dir. $! \n";
+			return ($status,$status_msg ,$summary_msg);
 		}
 	}else{
-			$status_msg .= "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The job over time graph is created at :-\neps format :- $eps_file \n************ \n";
-			return ($status,$status_msg);
+			$status_msg .= "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The workflow execution Gantt chart is created at :-\neps format :- $eps_out_path \n************ \n";
+			$summary_msg = "Application \'convert\' not available. Only eps file will be generated.\n.The workflow execution Gantt chart is created at :-\neps format :-$eps_out_path \n";
+			return ($status,$status_msg,$summary_msg);
 	}
-	$status_msg .= "The job over time graph is created at \npng format :- $png_file \neps format :- $eps_file \n************ \n";
-	return ($status,$status_msg);
+	$status_msg .= "The workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n************ \n";
+	$summary_msg = "The workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n";
+	return ($status,$status_msg,$summary_msg);
 	
 }
 
@@ -177,6 +191,7 @@ sub run_show_id($$$$){
 	my(@args);
 	my $status_msg = "******  show-id *****  \n";
 	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+	my $summary_msg;
 	
     $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
     $dagbase =~ s/-\d+$//;
@@ -202,14 +217,17 @@ sub run_show_id($$$$){
 	if($status == 0  ){
 		$status_msg .= "****** Finished executing show-id  ***** \n";
 		if(find_exec('convert')){
-			$status_msg .= "The job over time timeline graph is created at \n(png format :- $png_file) \n eps format :- $eps_file \n************ \n";
+			$status_msg .= "The job over time timeline graph is created at -\npng format :- $png_file \neps format :- $eps_file \n************ \n";
+			$summary_msg = "The job over time timeline graph is created at - \npng format :- $png_file \neps format :- $eps_file \n";
 		}else{
 			$status_msg .= "WARNING: Application \'convert\' not available. Only eps file will be generated.The job over time timeline graph is created at \neps format :- $eps_file \n************ \n";
+			$summary_msg =  "Application \'convert\' not available. Only eps file will be generated.The job over time timeline graph is created at \neps format :- $eps_file \n";
 		}
 	}else{
-		$status_msg .= "Failed to execute show-id command . $exec_msg\n";
+		$status_msg .= "ERROR:Failed to execute show-id command . $exec_msg\n";
+		$summary_msg = "ERROR:Failed to job over time timeline graph . $exec_msg\n";
 	}
-	return ($status , $status_msg);
+	return ($status , $status_msg,$summary_msg);
 	
 }
 
@@ -220,11 +238,12 @@ sub run_dag2dot($$$){
     my (@args);
 	my $status_msg = "******  dag2dot  ***** \n";
 	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+	my $summary_msg;
 	
     $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
     $dagbase =~ s/-\d+$//;    
     my ($dot_img_file_name) =("$dagbase"."-dag.dot" );
-	my ($dot_img_file ) =File::Spec->catfile("$output_dir/", $dot_img_file_name);	
+	my ($dot_img_file ) =File::Spec->catfile("$output_dir", $dot_img_file_name);	
 	
 	#Adding arguments 
 	push(@args , "--output ".$dot_img_file);
@@ -241,10 +260,43 @@ sub run_dag2dot($$$){
 		$status_msg .= "****** Finished executing dag2dot ***** \n";
 		$status_msg .= "dot file corresponding to the dag is created at $dot_img_file \n************\n";
 	}else{
-		$status_msg .= "Failed to execute dag2dot command. $exec_msg \n";
-		
+		$status_msg .= "ERROR : Failed to execute dag2dot command. $exec_msg \n";
+		$summary_msg = "ERROR : Failed to create dot file corresponding to the dag file. $exec_msg \n";
+		return ($status , $status_msg ,$summary_msg);
 	}
-	return ($status , $status_msg);
+	
+	my ($dot_jpeg_command_path) = find_exec('dot');
+	
+	if($dot_jpeg_command_path){
+			$status_msg .= "******  dot  ***** \n";
+			my ($dot_jpeg_img_file_name) =("$dagbase"."-dag.jpg" );
+			my ($dot_jpeg_img_file ) =File::Spec->catfile("$output_dir", $dot_jpeg_img_file_name);
+			my (@dot_jpeg_args);
+			
+			#Adding arguments 
+			push(@dot_jpeg_args , "-Tjpeg"); # adding output file path
+			push(@dot_jpeg_args , "-o ".$dot_jpeg_img_file); # adding output file path
+			push(@dot_jpeg_args, $dot_img_file); # adding dot file path
+			
+			# creating dag2jpeg command 
+			my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
+			
+			$status_msg .= "Executing command :-\n $dag2jpeg_command \n";
+			my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command,  $log_dir ,'dag_dot2jpeg');
+			
+			if($dot_jpeg_status == 0  ){
+				$status_msg .= "****** Finished executing dot2jpeg ***** \n";
+				$status_msg .= "JPEG image file corresponding to the dag is created at $dot_jpeg_img_file \n************\n";
+				$summary_msg = "JPEG image file corresponding to the dag is created at $dot_jpeg_img_file \n";
+			}else{
+				$status_msg .= "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
+				$summary_msg = "WARNING : Failed to create JPEG image. $dot_jpeg_exec_msg .dot file corresponding to the dag is created at $dot_img_file "
+			}
+	}else{
+			$status_msg .= "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+			$summary_msg = "Application \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dag is created at $dot_img_file \n";
+	}
+	return ($status , $status_msg,$summary_msg);
 }
 
 
@@ -255,11 +307,12 @@ sub run_dax2dot($$$){
     my (@args);
 	my $status_msg = "******  dax2dot  ***** \n";
 	my ($daxbase,$submit_dir ,$type ) = fileparse( $dax_file_path  ,qr{\..*});
+	my $summary_msg;
 	
     $daxbase =~ s/(?:\.(?:rescue|dag))+$//;
     $daxbase =~ s/-\d+$//;
     my ($dot_img_file_name) =("$daxbase"."-dax.dot" );
-	my ($dot_img_file ) =File::Spec->catfile("$output_dir/", $dot_img_file_name);	
+	my ($dot_img_file ) =File::Spec->catfile("$output_dir", $dot_img_file_name);	
 	
 	#Adding arguments
 	push(@args , "--output ".$dot_img_file);
@@ -276,9 +329,43 @@ sub run_dax2dot($$$){
 		$status_msg .= "****** Finished executing dax2dot ***** \n";
 		$status_msg .= "dot file corresponding to the dax is created at $dot_img_file \n************ \n";
 	}else{
-		$status_msg .= "Failed to execute dax2dot. $exec_msg \n";
+		$status_msg .= "ERROR : Failed to execute dax2dot. $exec_msg \n";
+		$summary_msg = "ERROR : Failed to create dot file corresponding to the dax file. $exec_msg \n";
+		return ($status , $status_msg ,$summary_msg);
 	}
-	return ($status , $status_msg);
+	
+	my ($dot_jpeg_command_path) = find_exec('dot');
+	
+	if($dot_jpeg_command_path){
+			$status_msg .= "******  dot  ***** \n";
+			my ($dot_jpeg_img_file_name) =("$daxbase"."-dax.jpg" );
+			my ($dot_jpeg_img_file ) =File::Spec->catfile("$output_dir", $dot_jpeg_img_file_name);
+			my (@dot_jpeg_args);
+			
+			#Adding arguments 
+			push(@dot_jpeg_args , "-Tjpeg"); # adding output file path
+			push(@dot_jpeg_args , "-o ".$dot_jpeg_img_file); # adding output file path
+			push(@dot_jpeg_args, $dot_img_file); # adding dot file path
+			
+			# creating dag2jpeg command 
+			my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
+			
+			$status_msg .= "Executing command :-\n $dag2jpeg_command \n";
+			my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command,  $log_dir ,'dag_dot2jpeg');
+			
+			if($dot_jpeg_status == 0  ){
+				$status_msg .= "****** Finished executing dot2jpeg ***** \n";
+				$status_msg .= "jpeg file corresponding to the dax is created at $dot_jpeg_img_file \n************\n";
+				$summary_msg = "jpeg file corresponding to the dax is created at $dot_jpeg_img_file \n";
+			}else{
+				$status_msg .= "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
+				$summary_msg ="WARNING : Failed to create JPEG image. $dot_jpeg_exec_msg .dot file corresponding to the dax is created at $dot_img_file \n";
+			}
+	}else{
+			$status_msg .= "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+			$summary_msg = "Application \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dax is created at $dot_img_file \n";
+	}
+	return ($status , $status_msg,$summary_msg);
 }
 
 
