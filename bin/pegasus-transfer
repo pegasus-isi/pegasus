@@ -485,7 +485,7 @@ def gsiftp():
         cmd += " -create-dest"
        
         # default tcp buffer size
-        cmd += " -tcp-bs 10000000"
+        cmd += " -tcp-bs 1M"
         
         # restart is broken in 4.0.0 and 4.0.1 - see bug#3919
         if tool_info['globus-version']['version_major'] >= 4 \
