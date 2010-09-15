@@ -371,8 +371,18 @@ def symlink():
     """
     symlinks locally using ln
     """
+    global delay_exit_code
     for i, url_pair in enumerate(symlink_list): 
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
+
+        # we do not allow dangling symlinks
+        if not os.path.exists(url_pair.src_path):
+            if delay_errors:
+                logger.warning("Symlink source (%s) does not exist. Continuing anyways due to --delay-errors." % (url_pair.src_path))
+                delay_exit_code = 4
+            else:
+                raise RuntimeError("Symlink source (%s) does not exist" % (url_pair.src_path))
+            continue
 
         if os.path.exists(url_pair.src_path) and os.path.exists(url_pair.dst_path):
             # make sure src and target are not the same file - have to compare at the
