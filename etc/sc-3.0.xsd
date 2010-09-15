@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2006 U (http://www.altova.com) by Gaurang Mehta (USC ISI) -->
 <!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
-<xs:schema targetNamespace="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/sitecatalog" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.0">
+<xs:schema targetNamespace="http://pegasus.isi.edu/schema/sitecatalog" xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.0">
 	<xs:simpleType name="ProfileNamespace">
 		<xs:annotation>
 			<xs:documentation>defines the legal namespaces of execution profiles.</xs:documentation>
@@ -23,7 +24,7 @@
 			<xs:enumeration value="PBS"/>
 			<xs:enumeration value="LSF"/>
 			<xs:enumeration value="Condor"/>
-			<xs:enumeration value="SGE"/> 
+			<xs:enumeration value="SGE"/>
 			<xs:enumeration value="unknown"/>
 		</xs:restriction>
 	</xs:simpleType>
@@ -237,7 +238,7 @@
 		<xs:annotation>
 			<xs:documentation>Describes the filesystem layout (shared and local) on a site</xs:documentation>
 		</xs:annotation>
-		<xs:all maxOccurs="2">
+		<xs:sequence>
 			<xs:element name="local" type="DirectoryType" minOccurs="0">
 				<xs:annotation>
 					<xs:documentation>Information about the local directory on a Node</xs:documentation>
@@ -248,7 +249,7 @@
 					<xs:documentation>Information about the shared directory on the Cluster</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-		</xs:all>
+		</xs:sequence>
 	</xs:complexType>
 	<xs:simpleType name="ArchitectureType">
 		<xs:annotation>
