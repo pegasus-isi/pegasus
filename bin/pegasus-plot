@@ -4,12 +4,12 @@
 
 use strict; # Perl pragma to restrict unsafe constructs
 use FileHandle; #  Supply object methods for filehandles
-use Getopt::Long; #  Extended processing of command line options
+use Getopt::Long qw(:config no_ignore_case bundling); #  Extended processing of command line options
 use Term::ANSIColor qw(:constants colored); # Color screen output using ANSI escape sequences
 $Term::ANSIColor::AUTORESET = 1;
 use Data::Dumper; # help debug
 use File::Basename;
-use File::Path qw(remove_tree rmtree);
+use File::Path qw(rmtree);
 use File::Copy;
 use File::Spec;
 use File::Temp qw/ tempfile tempdir  /;
@@ -28,34 +28,39 @@ sub print_usage() {
 	print "\n";
 	print "Usage : pegasus-plot <submit directory> \n";
 	print GREEN "Optional :\n";
-	print "\t --output: write outputs in given directory\n";
+	print "\t -o|--output: write outputs in given directory\n";
 	print "\t --show-job-title: title of the show job graph\n";
 	print "\t --show-id-title: title of the show id graph\n";
-	print "\t --keep: keeps the logs of the pegasus-plot run  \n";
-	print "\t --h|help: display this help message\n";
+	print "\t -k|--keep: keeps the logs of the pegasus-plot run  \n";
+	print "\t -h|--help: display this help message\n";
 }
 
 sub main(){
 	my ($help,$keep, $verbose)=(undef,undef ,0);
 	my ($output_dir,$show_job_title ,$show_id_title) = (undef,undef,undef);
-	if(!$ARGV[0]){
-		print "You need to provide submit directory. \n";
-		print_usage();
-		exit 1;
-	}
-	&GetOptions(
-		"output=s"=>\$output_dir,
+	
+	if(!GetOptions(
+		"output|o=s"=>\$output_dir,
 		"show-job-title=s"=>\$show_job_title,
 		"show-id-title=s"=>\$show_id_title,
-		"keep"=>\$keep,
-		"help|h"=>\$help);
-	my ($submit_dir) = $ARGV[0];	
+		"keep|k"=>\$keep,
+		"help|h"=>\$help)){
+			 print "Unable to parse the options. $! \n";
+			 print_usage();
+			 exit 1;
+		 }
+		
 		
 	if ($help){
 		print_usage();
 		exit 0;
 	}
-	
+	if(!$ARGV[0]){
+		print "You need to provide submit directory. \n";
+		print_usage();
+		exit 1;
+	}
+	my ($submit_dir) = $ARGV[0];
 	#sanity check first                                                                                                                            
 	if( !defined $ENV{PEGASUS_HOME} ){
 	    print STDERR "ERROR: PEGASUS_HOME is not set. Please source the setup-with-pegasus script.\n";
@@ -73,7 +78,7 @@ sub main(){
 		$output_dir =  File::Spec->catdir($submit_dir,"graph");
 		if (-d "$output_dir") {
 			print STDERR "WARNING: Output directory $output_dir exists. Overwriting the contents ....\n";
-			remove_tree($output_dir) or die "Unable to delete $output_dir . $! \n";
+			rmtree($output_dir) or die "Unable to delete $output_dir . $! \n";
 		}
 		mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
 	}else{
@@ -109,7 +114,7 @@ sub main(){
 	print "$dax2dot_status_msg \n";
 	
 	if(!$keep){
-		remove_tree($log_dir) or die "Unable to delete $log_dir . $! \n";
+		rmtree($log_dir) or die "Unable to delete $log_dir . $! \n";
 	}else{
 		print "Logs are stored at $log_dir \n";
 	}
