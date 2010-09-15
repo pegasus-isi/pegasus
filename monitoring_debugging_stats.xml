@@ -46,11 +46,42 @@
    </section>
    <section>
        <title>pegasus-statistics</title>
-       <para>...</para>
+       <para>pegasus-statistics can be used to generate statistics like job's runtime, delay etc in the workflow execution.</para>
+       <programlisting>$ <emphasis>pegasus-statistics /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/</emphasis>
+
+
+...
+
+************* SUMMARY *******************
+The genstats result is created at /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/statistics
+The genstats breakdown result is created at /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/statistics/breakdown.txt
+*****************************************</programlisting>       
+   
+   <para>By default the output gets generated to statistics folder inside the submit directory. pegasus-statistics generates files that contains details about job's runtime , condor queue delay etc.</para>
    </section>
    <section>
-       <title>pegasus-graphs</title>
-       <para>...</para>
+       <title>pegasus-plot</title>
+       
+       <para>pegasus-plot can be used to generate graphs and charts to
+    	visualize workflow execution.</para>
+    	
+    	<programlisting>$ <emphasis>pegasus-plot /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/</emphasis>
+
+
+...
+
+************* SUMMARY *******************
+The workflow execution Gantt chart is created at -
+png format :- /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/graph/diamond-2.png 
+eps format :- /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/graph/diamond-2.eps 
+The job over time timeline graph is created at - 
+png format :- /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/graph/diamond.png 
+eps format :- /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/graph/diamond.eps 
+JPEG image file corresponding to the dag is created at /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/graph/diamond-dag.jpg 
+jpeg file corresponding to the dax is created at /lfs1/prasanth/grid-setup/pegasus/default/examples/grid-blackdiamond/work/prasanth/pegasus/diamond/20100910T132744-0700/graph/blackdiamond-dax.jpg 
+*****************************************</programlisting>
+
+	<para>By default the output gets generated to graph folder inside the submit directory. pegasus-plot generates graphs for visualizing the dag and dax file. pegasus-plot also generates job over time chart and Gantt chart for workflow execution.</para> 
    </section>
     <section>
     <title>pegasus-remove</title>
