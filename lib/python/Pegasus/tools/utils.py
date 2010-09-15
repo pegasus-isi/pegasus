@@ -21,6 +21,7 @@ utils.py: Provides common functions used by all workflow programs
 # Revision : $Revision: 2012 $
 
 import os
+import sys
 import time
 import logging
 import calendar
@@ -251,6 +252,68 @@ def log10(x):
         return result
 
     return 1
+
+def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    ''' Fork the current process as a daemon, redirecting standard file
+        descriptors (by default, redirects them to /dev/null).
+
+        This function was adapted from O'Reilly's Python Cookbook 2nd
+        Edition.
+    '''
+    # Perform first fork.
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0) # Exit first parent.
+    except OSError, e:
+        sys.stderr.write("fork #1 failed: (%d) %s\n" % (e.errno, e.strerror))
+        sys.exit(1)
+
+    # Decouple from parent environment.
+    os.chdir("/")
+    os.umask(0002) # Be permisive
+    os.setsid()
+
+    # Perform second fork.
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0) # Exit second parent.
+    except OSError, e:
+        sys.stderr.write("fork #2 failed: (%d) %s\n" % (e.errno, e.strerror))
+        sys.exit(1)
+
+    # The process is now daemonized, redirect standard file descriptors.
+    for f in sys.stdout, sys.stderr: f.flush()
+
+    si = file(stdin, 'r')
+    so = file(stdout, 'w', 0)
+    se = file(stderr, 'w', 0)
+    os.dup2(si.fileno(), sys.stdin.fileno())
+    os.dup2(so.fileno(), sys.stdout.fileno())
+    os.dup2(se.fileno(), sys.stderr.fileno())
+
+def keep_foreground():
+    """
+    This function turns the program into almost a daemon, but keep in
+    foreground for Condor. It does not take any parameters and does
+    not return anything.
+    """
+
+    # Go to a safe place that is not susceptible to sudden umounts
+    # FIX THIS: It may break some things
+    try:
+	os.chdir('/')
+    except:
+	logger.critical("could not chdir!")
+	sys.exit(1)
+    
+    # Although we cannot set sid, we can still become process group leader
+    try:
+	os.setpgid(0, 0)
+    except:
+	logger.critical("could not setpgid!")
+	sys.exit(1)
 
 if __name__ == "__main__":
     print "Testing isodate() function"

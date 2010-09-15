@@ -139,11 +139,12 @@ brainkeys["required"] = ["basedir", "vogroup", "label", "rundir"]
 brainkeys["optional"] = ["dax", "dag", "jsd", "run", "pegasushome"]
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
 speak = "TSSP/1.0"
-MAXLOGFILE = 1000		# For log rotation, check files from .000 to .999
-PRESCRIPT_TASK_ID = -1		# id for prescript tasks
-POSTSCRIPT_TASK_ID = -2		# id for postscript tasks
+MAXLOGFILE = 1000			# For log rotation, check files from .000 to .999
+PRESCRIPT_TASK_ID = -1			# id for prescript tasks
+POSTSCRIPT_TASK_ID = -2			# id for postscript tasks
+TAILSTATD_STATE_FILE = "tailstatd.info" # filename for writing tailstatd state information
 
-# Events that constitute a pending job. Not that event SUBMIT is
+# Events that constitute a pending job. Note that event SUBMIT is
 # excluded on purpose since due to throttling inside DAGMan and
 # Condor-G, a locally SUBMITted job may only become remotely
 # GLOBUS_SUBMITted as throttles permits
@@ -173,8 +174,9 @@ use_db = 1			# flag for using the database
 single_db = 0			# flag for using a single db at the top level workflow
 output_db = None		# connection string for the database
 db_stats = 'no'			# collect and print database stats at the end of execution
-use_broker = 0			# flag for using the broker
-broker_string = None		# Connection string for using the broker
+use_nllog = 0			# flag for using Netlogger's log api
+use_nllogfile = 0		# flag for using a file to log Netlogger events
+nllog_string = None		# Filename or host:port when using Netlogger's log api
 pending = {} 			# remember when GLOBUS_SUBMIT was entered
 				# jid --> [stamp, condor_id, wtime, site]
 running = {}			# ditto for EXECUTE for hidden starvation
@@ -380,9 +382,11 @@ class Job:
 	    elif re_site_parse_gvds.search(my_line):
 		# GVDS agreement
 		my_site = re_site_parse_gvds.search(my_line).group(4)
+                self._site_name = my_site
 	    elif re_site_parse_euryale.search(my_line):
 		# Euryale specific comment
 		my_site = re_site_parse_euryale.search(my_line).group(1)
+                self._site_name = my_site
 	    elif re_parse_jobtype.search(my_line):
 		# Found line with jobtype information
 		my_jobtype_id = re_parse_jobtype.search(my_line).group(1)
@@ -418,6 +422,8 @@ class Job:
 	"""
 	This function reads the output from the kickstart output parser and
 	extracts the job information for the Stampede schema.
+
+        Returns True if successful, or None if an error occurs.
 	"""
 
 	# Check if we have anything
@@ -429,7 +435,9 @@ class Job:
 	    logger.warning("cannot find invocation record!")
 	    return None
 
-	# Ok, we have an invocation record, extract the information we need
+	# Ok, we have an invocation record, extract the information we
+        # need. Note that this may overwrite information obtained from
+        # the submit file (e.g. the site_name).
 	my_record = buffer[0]
 	if "resource" in my_record:
 	    self._site_name = my_record["resource"]
@@ -552,6 +560,41 @@ class Workflow:
 	# jobs. In addition, _job_info should contain all PRE and POST
 	# script information for job in this workflow
 
+    def write_state(self):
+        """
+        This function writes the job_submit_seq and the job_counters
+        dictionary to a file in the workflow's run directory. This can
+        be used later for restarting the logging information from
+        where we stop. This function will overwrite the log file every
+        time is it called.
+        """
+        
+        my_fn = os.path.join(self._run_dir, TAILSTATD_STATE_FILE)
+
+        try:
+            OUT = open(my_fn, "w")
+        except:
+            logger.error("cannot open logging file %s" % (my_fn))
+            return
+        
+        try:
+            # Write first line with the last job_submit_seq used
+            OUT.write("tailstatd_job_sequence %d\n" % (self._job_submit_seq))
+            # Then, write all job_counters
+            for my_job in self._job_counters:
+                OUT.write("%s %d\n" % (my_job, self._job_counters[my_job]))
+        except:
+            logger.error("cannot write state to log file %s" % (my_fn))
+        
+        # Close the file
+        try:
+            OUT.close()
+        except:
+            pass
+
+        # All done!
+        return
+
     def output_to_db(self, event, kwargs):
 	"""
 	This function sends an NetLogger event to the loader class.
@@ -560,8 +603,8 @@ class Workflow:
         if self._db is None:
             return
 
-        if use_broker == 1:
-            # We are using the broker to output our logs
+        if use_nllog == 1:
+            # We are using NetLogger's logging api to output our logs
             self._db.write(event=event, **kwargs)
 
         if use_db == 1:
@@ -840,7 +883,7 @@ class Workflow:
 	# Send job state event to database
 	self.output_to_db("job.state", kwargs)
 
-    def db_send_task_info(self, my_job, task_type, task_id, invocation_record=None):
+    def db_send_task_info(self, my_job, task_type, task_id, invocation_record={}):
 	"""
 	This function sends to the database task
 	information. task_type is either "PRE SCRIPT", "MAIN JOB", or
@@ -889,12 +932,28 @@ class Workflow:
 	    event_type = "task.mainjob"
 	    if "transformation" in invocation_record:
 		kwargs["transformation"] = invocation_record["transformation"]
+            else:
+                if my_job._main_job_transformation is not None:
+                    kwargs["transformation"] = my_job._main_job_transformation
 	    if "start" in invocation_record:
+                # Need to convert it to epoch data
 		my_start = utils.epochdate(invocation_record["start"])
-		if my_start is not None:
-		    kwargs["start_time"] = my_start
+            else:
+                # Not in the invocation record, let's use our own time keeping
+                my_start = my_job._main_job_start
+            if my_start is not None:
+                kwargs["start_time"] = my_start
 	    if "duration" in invocation_record:
 		kwargs["duration"] = invocation_record["duration"]
+            else:
+                # Duration not in the invocation record
+                if my_job._main_job_start is not None and my_job._main_job_done is not None:
+                    try:
+                        my_duration = int(my_job._main_job_done) - int(my_job._main_job_start)
+                    except:
+                        my_duration = None
+                    if my_duration is not None:
+                        kwargs["duration"] = my_duration
 	    if my_start is not None and "duration" in invocation_record:
 		# Calculate timestamp for when this task finished
 		try:
@@ -906,10 +965,19 @@ class Workflow:
 		kwargs["ts"] = my_job._main_job_done
 	    if "exitcode" in invocation_record:
 		kwargs["exitcode"] = invocation_record["exitcode"]
+            else:
+                if my_job._main_job_exitcode is not None:
+                    kwargs["exitcode"] = my_job._main_job_exitcode
 	    if "name" in invocation_record:
 		kwargs["executable"] = invocation_record["name"]
+            else:
+                if my_job._main_job_executable is not None:
+                    kwargs["executable"] = my_job._main_job_executable
 	    if "argument-vector" in invocation_record:
 		kwargs["arguments"] = invocation_record["argument-vector"]
+            else:
+                if my_job._main_job_arguments is not None:
+                    kwargs["arguments"] = my_job._main_job_arguments
 
 	# Send job event to database
 	self.output_to_db(event_type, kwargs)
@@ -982,28 +1050,38 @@ class Workflow:
         if my_parser._open_error == True:
             logger.info("unable to find output file for job %s" % (my_job._name))
 
-	# Add job information to the Job class
-	if my_job.extract_job_info(my_output) == True:
-	    # Send updated info to the database
-	    self.db_send_job_info(my_job, timestamp, job_state)
-
 	# Initialize task id counter
 	my_task_id = 1
 
-	# Loop through all records
-	for record in my_output:
-	    # Skip non-invocation records
-	    if not "invocation" in record:
-		continue
+        if len(my_output) > 0:
+            # Add job information (from the kickstart output file) to
+            # the Job class.
+            my_job.extract_job_info(my_output)
+
+            # Send updated info to the database
+            self.db_send_job_info(my_job, timestamp, job_state)
+
+            # Loop through all records
+            for record in my_output:
+                # Skip non-invocation records
+                if not "invocation" in record:
+                    continue
 	
-	    # Send task information to the database
-	    self.db_send_task_info(my_job, "MAIN JOB", my_task_id, record)
+                # Send task information to the database
+                self.db_send_task_info(my_job, "MAIN JOB", my_task_id, record)
 
-	    # Increment task id counter
-	    my_task_id = my_task_id + 1
+                # Increment task id counter
+                my_task_id = my_task_id + 1
 
-	    # Send host information to the database
-	    self.db_send_host_info(my_job, timestamp, record)
+                # Send host information to the database
+                self.db_send_host_info(my_job, timestamp, record)
+        else:
+            # No kickstart output is available, still send updated job
+            # information to the database.
+            self.db_send_job_info(my_job, timestamp, job_state)
+
+            # If we don't have kickstart, we only generate 1 task
+            self.db_send_task_info(my_job, "MAIN JOB", my_task_id)
 
     def add_job(self, jobid, job_state, timestamp, condor_id=None):
 	"""
@@ -1229,7 +1307,7 @@ parser.add_option("-C", "--config", action = "append", type = "string", dest = "
 #parser.add_option("-D", "--database", action = "store_const", const = 1, dest = "use_db",
 #		  help = "turn on database entries for work DB (this is the default mode and overrides the broker option below)")
 parser.add_option("--nodatabase", action = "store_const", const = 0, dest = "use_db",
-		  help = "turn off logging information to the database (this option must be given when using the broker option below)")
+		  help = "turn off logging information to the database (this option must be given when using the NL api's option's below)")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
@@ -1240,8 +1318,10 @@ parser.add_option("-s", "--single-db", action = "store_const", const = 1, dest =
 		  help = "use a single db at the top level workflow")
 parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "db_stats",
                   help = "collect and print database stats at the end")
-parser.add_option("-b", "--broker", action = "store", type = "string", dest = "broker_string",
-		  help = "Turn on using the broker with the connection string specified (cannot be used together with the database)")
+parser.add_option("-f", "--output-file", action = "store", type = "string", dest = "file_string",
+		  help = "Turn on using NetLogger's log api and specifies the file to where log data (cannot be used together with the database)")
+parser.add_option("-H", "--host", action = "store", type = "string", dest = "host_string",
+                  help = "Turn on using NetLogger's log api and specifies the host:port to where send data (cannot be used together with the database, or the log to file option)")
 
 # Re-insert our base name to avoid optparse confusion when printing error messages
 # (options, args) = parser.parse_args(sys.argv[0:]) # Does not work 100%
@@ -1280,13 +1360,20 @@ if options.single_db is not None:
     single_db = options.single_db
 if options.db_stats is not None:
     db_stats = options.db_stats
-if options.broker_string is not None:
-    broker_string = options.broker_string
-    # Only turn on the broker mode if the database logging is turned off
-    if use_db == 0:
-        use_broker = 1
+if options.file_string is not None or options.host_string is not None:
+    if options.file_string is not None and options.host_string is not None:
+        logger.warning("cannot log to both file and host/port, NL api logging disabled")
     else:
-        logger.warning("broker mode disabled, in order to use the --broker option, please also specify --nodatabase.")
+        if options.file_string is not None:
+            use_nllogfile = 1
+            nllog_string = options.file_string
+        else:
+            nllog_string = options.host_string
+        # Only turn on the NL log mode if the database logging is turned off
+        if use_db == 0:
+            use_nllog = 1
+        else:
+            logger.warning("NL api logging disabled, in order to use the logging api, please also specify --nodatabase.")
 
 # Walk through any config properties
 if options.config_opts is not None:
@@ -1357,11 +1444,11 @@ if not jsd:
     jsd = os.path.join(run, utils.jobbase)
 
 if not os.path.isfile(jsd):
-    logger.warning("creating new file %s" % (jsd))
+    logger.info("creating new file %s" % (jsd))
 
 try:
     # Create new file, or append to an existing one
-    JSDB = open(jsd, 'a')
+    JSDB = open(jsd, 'a', 0)
 except:
     logger.critical("error appending to %s!" % (jsd))
     sys.exit(1)
@@ -1375,13 +1462,13 @@ if use_db == 1:
     except:
 	logger.warning("cannot import NetLogger's stampede_loader library, disabling database output!")
 	use_db = 0
-# Import NetLogger nlapi for using the broker
-if use_broker == 1:
+# Import NetLogger nlapi for using the logging api
+if use_nllog == 1:
     try:
         from netlogger import nlapi
     except:
-        logger.warning("cannot import NetLogger's nlapi library, disabling broker output!")
-        use_broker = 0
+        logger.warning("cannot import NetLogger's nlapi library, disabling the logging api output!")
+        use_nllog = 0
 
 #
 # --- functions ---------------------------------------------------------------------------
@@ -1760,6 +1847,8 @@ def process(log_line):
 	    JSDB.write("%d INTERNAL *** DAGMAN_FINISHED ***\n" % (timestamp))
 	    # Send info to database
 	    wf.db_send_wf_state("end", timestamp)
+            # Save all state to disk so that we can start again later
+            wf.write_state()
 	elif re_parse_dagman_pid.search(log_line) is not None:
 	    # DAGMan's pid
 	    if not replay_mode:
@@ -2219,84 +2308,6 @@ def sleeptime(retries):
 
     return my_y
 
-def daemonize(fn):
-    # purpose: turn process into a daemon
-    # paramtr: fn (IN): name of file to connect stdout to
-    # returns: Nothing
-
-    # Go to a safe place that is not susceptible to sudden umounts
-    # FIX THIS: It may break some things
-    try:
-	os.chdir('/')
-    except:
-	logger.critical("could not chdir!")
-	sys.exit(1)
-
-    # Open logfile as stdout
-    # Maybe this should be an option in the submit file like "output = fn"
-    try:
-	sys.stdout = open(fn, "w", 0)
-    except:
-	logger.critical("could not open %s!" % (fn))
-	sys.exit(1)
-
-    # Fork and go!
-    try:
-	my_pid = os.fork()
-    except:
-        logger.critical("could not fork!")
-        sys.exit(1)
-
-    if my_pid > 0:
-	# Parent exits
-	sys.exit(0)
-
-    # Daemon child -- fork again for System-V
-    try:
-	my_pid = os.fork()
-    except:
-        logger.critical("could not form!")
-        sys.exit(1)
-
-    if my_pid > 0:
-	# Parent exits
-	sys.exit(0)
-	
-    # Setsid
-    try:
-	os.setsid()
-    except:
-        logger.critical("could not setsid!")
-        sys.exit(1)
-
-def keep_foreground(fn):
-    # purpose: turn into almost a daemon, but keep in foreground for Condor
-    # paramtr: fn (IN): name of file to connect stdout to
-    # returns: Nothing
-
-    # Go to a safe place that is not susceptible to sudden umounts
-    # FIX THIS: It may break some things
-    try:
-	os.chdir('/')
-    except:
-	logger.critical("could not chdir!")
-	sys.exit(1)
-
-    # Open logfile as stdout
-    # Maybe this should be an option in the submit file like "output = fn"
-    try:
-	sys.stdout = open(fn, "a", 0)
-    except:
-	logger.critical("could not open %s!" % (fn))
-	sys.exit(1)
-    
-    # Although we cannot set sid, we can still become process group leader
-    try:
-	os.setpgid(0, 0)
-    except:
-	logger.critical("could not setpgid!")
-	sys.exit(1)
-
 def prog_sighup_handler(signum, frame):
     pass
 
@@ -2417,14 +2428,23 @@ def done_process_exit_handler():
 # --- main ------------------------------------------------------------------------------
 #
 
-# sanity check: Be permisive
-os.umask(0002)
-
 # Turn into daemon process
 if nodaemon == 0:
-    daemonize(logfile)
+    utils.daemonize()
+    # Open logfile as stdout
+    try:
+	sys.stdout = open(logfile, "w", 0)
+    except:
+	logger.critical("could not open %s!" % (logfile))
+	sys.exit(1)
 elif nodaemon == 2:
-    keep_foreground(logfile)
+    utils.keep_foreground()
+    # Open logfile as stdout
+    try:
+	sys.stdout = open(logfile, "w", 0)
+    except:
+	logger.critical("could not open %s!" % (logfile))
+	sys.exit(1)
 else:
     # Hack to make stdout unbuffered
     sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 0)
@@ -2442,13 +2462,13 @@ if use_db == 1:
     workdb = stampede_loader.Analyzer(output_db, perf=db_stats)
     atexit.register(finish_stampede_loader)
 
-# Initialize broker
-if use_broker == 1:
+# Initialize the logging API
+if use_nllog == 1:
 #    rotate_log_file(run, output_db)
-    # prepend the run dir if broker_string is not an absolute path
-    broker_string = os.path.join(run, broker_string)
-    # using nlapi to create log file (and not use the loader)
-    workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=broker_string)
+    # using nlapi to create log file or sending data to a host:port (and not use the loader)
+    if use_nllogfile == 1:
+        nllog_string = os.path.join(run, nllog_string)
+    workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=nllog_string)
 
 # Say hello
 logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
