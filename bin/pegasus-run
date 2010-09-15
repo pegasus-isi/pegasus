@@ -53,7 +53,7 @@ my $default_tsd = File::Spec->catfile( File::Spec->rel2abs(
 my $tsd = $props->property('pegasus.tailstatd') || $default_tsd;
 
     
-my $database=1;
+my $database=1  ;
 GetOptions( "help|h" => \&usage,
 	    "monitor|tsd|m=s" => \$tsd,
 	    "database!"=>\$database,
@@ -275,14 +275,18 @@ system(@args) == 0
     or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
 print STDERR "# dagman is running\n" if $main::DEBUG;
 
+my @tsdargs = ($tsd);
 # run tailstatd to update job stats until DAGMan finishes
 if(!$database){
-@args = create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
+#@args=create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
+push(@tsdargs,'--nodatabase');
+push(@tsdargs, $config{dag} . '.dagman.out' );
 }else {
-@args = create_args( $tsd, $config{dag} . '.dagman.out' );
+#@args = create_args( $tsd, ,"-n", $config{dag} . '.dagman.out' );
+push(@tsdargs, $config{dag} . '.dagman.out' );
 }
-print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
-system(@args) == 0 
+print STDERR "# ", join(' ',@tsdargs), "\n" if $main::DEBUG;
+system(@tsdargs) == 0 
     or die( "ERROR: Running $tsd failed with ", parse_exit($?) );
 print STDERR "# $tsd is running\n" if $main::DEBUG;
 
