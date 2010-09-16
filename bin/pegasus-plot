@@ -145,7 +145,7 @@ sub run_show_job($$$$$){
 	push(@args, $dag_file_path); # adding dag file path
 	
 	# creating show job command 
-	my (@show_job_directory_path) = ("$ENV{PEGASUS_HOME}","contrib" ,"showlog");
+	my (@show_job_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","visualize");
 	my ($show_job_path) =  File::Spec->catfile( @show_job_directory_path, 'show-job');
 	my ($show_job_command) = "$show_job_path ".join(" ",@args);
 	
@@ -213,7 +213,7 @@ sub run_show_id($$$$){
 	push(@args, $dag_file_path); # adding dag file path
 	
 	# creating show id command 
-	my (@show_id_directory_path) = ("$ENV{PEGASUS_HOME}","contrib" ,"showlog");
+	my (@show_id_directory_path) = ("$ENV{PEGASUS_HOME}","libexec" ,"visualize");
 	my ($show_id_path) =  File::Spec->catfile( @show_id_directory_path, 'show-id');
 	my ($show_id_command) = "$show_id_path ".join(" ", @args);
 	
@@ -255,8 +255,8 @@ sub run_dag2dot($$$){
 	push(@args, $dag_file_path); # adding dag file path
 	
 	# creating dag2dot command 
-	my (@dag2dot_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
-	my ($dag2dot_path) =  File::Spec->catfile( @dag2dot_directory_path, 'pegasus-dag2dot');
+	my (@dag2dot_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","visualize");
+	my ($dag2dot_path) =  File::Spec->catfile( @dag2dot_directory_path, 'dag2dot');
 	my ($dag2dot_command) = "$dag2dot_path ".join(" ",@args);
 	
 	$status_msg .= "Executing command :-\n $dag2dot_command \n";
@@ -323,8 +323,8 @@ sub run_dax2dot($$$){
 	push(@args , "--output ".$dot_img_file);
 	push(@args, $dax_file_path); # adding dax file path
 	#create dax2dot command
-	my (@dax2dot_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
-	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'pegasus-dax2dot');
+	my (@dax2dot_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","visualize");
+	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'dax2dot');
 	my ($dax2dot_command) = "$dax2dot_path ".join(" ",@args);
 	
 	
