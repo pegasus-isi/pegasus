@@ -256,7 +256,7 @@ sub run_dag2dot($$$){
 	
 	# creating dag2dot command 
 	my (@dag2dot_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
-	my ($dag2dot_path) =  File::Spec->catfile( @dag2dot_directory_path, 'dag2dot.py');
+	my ($dag2dot_path) =  File::Spec->catfile( @dag2dot_directory_path, 'pegasus-dag2dot');
 	my ($dag2dot_command) = "$dag2dot_path ".join(" ",@args);
 	
 	$status_msg .= "Executing command :-\n $dag2dot_command \n";
@@ -324,7 +324,7 @@ sub run_dax2dot($$$){
 	push(@args, $dax_file_path); # adding dax file path
 	#create dax2dot command
 	my (@dax2dot_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
-	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'dag2dot.py');
+	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'pegasus-dax2dot');
 	my ($dax2dot_command) = "$dax2dot_path ".join(" ",@args);
 	
 	

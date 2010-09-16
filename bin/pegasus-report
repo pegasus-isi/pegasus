@@ -100,8 +100,7 @@ sub ReadLogFiles($){
 	#Does the file exist?
 	if (-e $logFile 
 	    && (basename $logFile) ne "jobstate.log" 
-	    && (basename $logFile) ne "tailstatd.log" 
-	    && (basename $logFile) ne "euryale.log")
+	    && (basename $logFile) ne "monitord.log" )
 	{
 	    MatchPatterns(\@errors, \@ignoredErrors, \$logFile);
 	}
