@@ -1,0 +1,717 @@
+#!/usr/bin/env perl
+#
+# creates one timeline diagram, job over time
+#
+use 5.006;
+use strict;
+use subs qw(log);
+
+use File::Spec;
+use File::Basename;
+use File::Temp qw(tempfile);
+use Time::Local;
+use Time::HiRes qw();
+use POSIX qw(floor ceil);
+use Data::Dumper;
+use Getopt::Long qw(:config bundling no_ignore_case);
+
+use lib File::Basename::dirname($0);
+use Common;
+
+$main::version = 'unknown';
+$_ = '$Revision$';       # don't edit
+$main::version = $1 if /Revision:\s+([0-9.]+)/o;
+
+# globals
+$main::debug = 1;		# debug mode
+$main::duration = 0.0;		# duration of workflow
+$main::min = $main::kmin = 1E20;
+$main::max = $main::kmax = 0;
+$main::adjust = 0;		# adjustment for non-local timestamp
+
+sub usage {
+    my $base = basename($0,'.pl');
+    print "Usage: $base [options] dot-dag-file\n\n";
+    print "Mandatory arguments:\n";
+    print " dot-dat-file  path to the DAGMan input file.\n";
+    print "\n";
+    print "Optional arguments:\n";
+    print " -l|--log fn   Force Condor common log file, ignore submit's log entry.\n";
+    print " -?|--help     print usage information and exit.\n";
+    print " -d|--debug    increase debug level as often as specified.\n";
+    print " -V|--version  print version information and exit.\n";
+    print " -T|--title s  use this title string on the diagram.\n";
+    print " -a|--adjust s adjust non-local time stamp by this many seconds.\n";
+    print " -w|--width f  set paper width to the size f in inches.\n";
+    print " --duration f  set the diagram's duration to f (instead of setting width).\n";
+    print " -h|--height f set paper height to size f in inches.\n";
+    print " -l|--limit re limit jobs only to those matching the regexp.\n";
+    print " --special re  for all jobs matching re, also protocol data.\n";
+    print " --pass k[=v]  pass an option to ploticus.\n";
+    print " --eps fn      Put the resulting EPS picture into the indicated file\n";
+    print " --png fn      Put the resulting PNG picture into the indicated file\n";
+    print "\n";
+    exit(1);
+}
+
+sub max {
+    if ( @_ == 2 ) {
+	$_[0] < $_[1] ? $_[1] : $_[0];
+    } else {
+	my @x = sort { $a <=> $b } @_;
+	$x[$#x];
+    }
+}
+
+sub find_max($) {
+    my $x = shift;
+    max( $x->{'001'}, $x->{'017'} || $x->{'027'}, 
+	 $x->{'000'}, $x->{'005'} || $x->{'009'} );
+}
+
+sub min {
+    if ( @_ == 2 ) {
+	$_[0] > $_[1] ? $_[1] : $_[0];
+    } else {
+	my @x = sort { $a <=> $b } @_;
+	for ( my $i=0; $i<@x; ++$i ) {
+	    return $x[$i] if $x[$i];
+	}
+    }
+}
+
+sub find_min($) {
+    my $x = shift;
+    min( $x->{'001'}, $x->{'017'} || $x->{'027'}, 
+	 $x->{'000'}, $x->{'005'} || $x->{'009'} );
+}
+
+sub mytime ($$) {
+    # purpose: Convert Condor's log file timestamp into UTC seconds
+    # paramtr: $date (IN): date portion
+    #          $time (IN): time portion
+    # globals: $main::adjust (IN): difference by which to adjust non-local time
+    # returns: UTC seconds since epoch
+    # warning: Since the log file time stamp is not zoned, this may be off!
+    #
+    my ($month,$day) = split(/\//,shift());
+    my ($h,$m,$s) = split(/:/,shift());
+
+    # year fix
+    $main::year = (localtime())[5] unless defined $main::year;
+
+    my $r = timelocal($s,$m,$h,$day,$month-1,$main::year);
+    $r += $main::adjust if $main::adjust;
+    $main::min = $r if $r < $main::min;
+    $main::max = $r if $r > $main::max;
+    $r;
+}
+	       
+sub slurp_dagfile($;$) {
+    # purpose: read all jobs from a dag file, and determine submit file names etc. 
+    # paramtr: $dagfn (IN): location of the dag file
+    #          $force (opt. IN): Overwrite for log file location
+    # returns: [0]: name of common log file, extracted from submit files
+    #          [1]: hashref { dagjobid => $subfn }
+    #          [2]: hashref { dagjobid => $outfn }
+    #
+    my $dagfn = shift;
+    my $force = shift;		# may be undef
+    my $dagdir = File::Spec->rel2abs( dirname($dagfn) );
+    my $count = 0;
+    my %result = ();
+    my %output = ();
+    my $logfn = $force;		# may still be undef
+
+    # protect the DAG variable, and safely open DAG file
+    local(*DAG);
+    open( DAG, "<$dagfn" ) || die "ERROR: open $dagfn: $!\n";
+
+    # slurp all jobs from DAG file, and derive submit filenames
+    log( "reading dag file $dagfn" ) if $main::debug;
+    my ($subfn,%submit,@x,$mylog,$myout,$myapp,%parent,%child);
+    while ( <DAG> ) {
+	chomp;
+	if ( /^\s*job/i ) {
+	    $count++;
+	    @x = split;
+	    $result{$x[1]} = $subfn = 
+		( index($x[2],0,1) eq '/' ? $x[2] : 
+		  File::Spec->catfile( $dagdir, $x[2] ) );
+
+	    # check Condor common log sanity
+	    %submit = read_submit_file( $subfn );
+	    ($mylog,$myout,$myapp) = 
+		map { substr($_,0,1) eq '/' ? 
+			  $_ : 
+			  File::Spec->catfile( $dagdir, $_ ) }
+		@submit{'log','output','executable'}; 
+
+	    unless ( defined $force ) {
+		# no pre-specified log file location
+		if ( defined $mylog ) {
+		    if ( defined $logfn ) {
+			die( "ERROR: Mis-match in Condor common log:\n",
+			     "\$mylog=$mylog\n\$logfn=$logfn\n" )
+			    unless ( $mylog eq $logfn );
+		    } else {
+			$logfn = $mylog;
+		    }
+		} else {
+		    warn "Warning: $subfn may be broken, ignoring\n";
+		}
+	    }
+
+	    # remember output file, if we are in kickstart mode
+	    if ( defined $myout && defined $myapp && 
+		 $myapp =~ /(kickstart|seqexec)/ ) {
+		$output{$x[1]} = $myout;
+	    }
+	} elsif ( /^\s*parent/i ) {
+	    s/^\s*parent\s+//i;
+	    my ($p,$c) = split /\s+child\s+/i;
+	    my @p = split /\s+/, $p;
+	    my @c = split /\s+/, $c;
+	    foreach $p ( @p ) {
+		foreach $c ( @c ) {
+		    $parent{$p}{$c} = 1;
+		    $child{$c}{$p} = 1;
+		}
+	    }
+	}
+    }
+
+    # done
+    close DAG;
+    log( "found $count job records" ) if $main::debug;
+
+    # determine start nodes (no incoming edges)
+    my %start = map { $_ => 1 } keys %result;
+    foreach my $p ( keys %parent ) {
+	foreach my $c ( keys %{$parent{$p}} ) {
+	    delete $start{$c};
+	}
+    }
+
+    # compute topological sort order
+    my %topo = ();
+    my @topo = ();
+    my @q = sort keys %start;
+    while ( @q ) {
+	my $n = shift(@q);
+	push( @topo, $n ) unless exists $topo{$n};
+	$topo{$n} = 1;
+	foreach my $x ( sort keys %{$parent{$n}} ) {
+	    delete $parent{$n}{$x};
+	    delete $child{$x}{$n};
+	    push( @q, $x ) if ( keys %{$child{$x}} == 0 );
+	}
+    }
+
+    ($logfn,\%result,\%output,@topo);
+}
+
+sub slurp_logfile($) {
+    # purpose: read all event records from the Condor common log
+    # paramtr: $logfn (IN): location of the condor common log
+    # returns: 
+    #
+    my $logfn = shift;
+    my %result = ();		# collects job tracks
+    my %condor = ();		# maps condor jobs to dagman ids
+    my $count = 0;
+
+    # use paragraph mode
+    local $/ = "\n...\n";
+    local(*LOG);
+    open( LOG, "<$logfn" ) || die "ERROR: open $logfn: $!\n";
+
+    # slurp one multi-line event at a time
+    log( "reading log file $logfn" ) if $main::debug;
+    my ($tag,$condorjob,$tds);
+    while ( <LOG> ) {
+	if ( /^(\d{3})\s+\((\d+)[0-9.]+\)\s+([0-9\/]+)\s+([0-9:]+)/ ) {
+	    ($tag,$condorjob,$tds) = ($1,$2,mytime($3,$4));	    
+	    $count++;
+
+	    if ( $tag eq '000' ) {
+		# SUBMIT event
+		if ( /DAG Node: ([^\n]+)/ ) {
+		    $condor{$condorjob} = $1;
+		    push ( @{$result{$1}}, { '000' => $tds } ); # open record
+		} else {
+		    warn "# SUBMIT event without DAG node translation\n";
+		}
+	    } elsif ( exists $condor{$condorjob} ) {
+		my $n = @{$result{$condor{$condorjob}}} - 1; 
+
+		if ( $tag eq '001' ) {
+		    # EXECUTE event
+		    $result{$condor{$condorjob}}->[$n]->{$tag} = $tds;
+		} elsif ( $tag eq '005' ) {
+		    # FINISH event
+		    $result{$condor{$condorjob}}->[$n]->{$tag} = $tds;
+		} elsif ( $tag eq '009' ) {
+		    # JOB_ABORT event
+		    $result{$condor{$condorjob}}->[$n]->{$tag} = $tds;
+		} elsif ( $tag eq '012' || $tag eq '013' ) {
+		    # JOB_HELD and JOB_RELEASED event
+		    $result{$condor{$condorjob}}->[$n]->{$tag} = $tds;
+		} elsif ( $tag eq '016' ) {
+		    # POST_SCRIPT event
+		    $result{$condor{$condorjob}}->[$n]->{$tag} = $tds;
+		} elsif ( $tag eq '017' || $tag eq '027' ) {
+		    # GLOBUS_SUBMIT event, GRID_SUBMIT event
+		    $result{$condor{$condorjob}}->[$n]->{$tag} = $tds;
+		} else {
+		    warn "# Skipping unknown event with tag $tag\n";
+		}
+	    } else {
+		warn "# Cannot map Condor job $condorjob ($tag) to a DAG job id\n";
+	    }
+	}
+    }
+
+    # done
+    close LOG;
+    log( "found $count event records" ) if $main::debug;
+    %result;
+}
+
+sub read_kickstart($;$) {
+    # purpose: determine duration from kickstart output
+    # paramtr: $fn (IN): location of kickstart file
+    # returns: ( [ kmin, kmax, duration ] ) timestamps, or empty vector
+    #
+    my $fn = shift;
+    my $match = shift || 0;
+    my @result = ();
+    local(*KS);
+
+    my @backup = sort glob( "$fn.???" );
+    @backup = ( $fn ) if @backup == 0;
+
+    foreach my $kickfn ( @backup ) {
+	log( "reading kickstart $kickfn" ) if ( $main::debug > 1 || $match );
+	if ( open( KS, "<$kickfn" ) ) {
+	    my @x = ();
+	    my ($kss,$ksf,$d);
+	    while ( <KS> ) {
+		if ( /^\s*<invocation\s/ ) {
+		    $kss = iso2unix($1) if /\sstart=\"([^\"]+)\"/;
+		    $ksf = $kss+($d=$1) if /\sduration=\"([^\"]+)\"/;
+		    $main::kmin = $kss if $main::kmin > $kss;
+		    $main::kmax = $ksf if $main::kmax < $ksf;
+		    push( @x, [ $kss, $ksf, $d, 0 ] );
+		} elsif ( /^\s+<status raw=\"(-?\d+)\">/ ) {
+		    $x[$#x][3] |= ($1 != 0);
+		}
+	    }
+	    close KS;
+	    log( "found ", @x+0, " invocation records" ) if $main::debug > 1;
+	    
+	    if ( @x > 0 ) {
+		foreach my $x ( @x ) {
+		    push( @result, [ @{$x} ] ) 
+			if ( defined $x->[0] && $x->[0] > 0 );
+		}
+	    }
+	} else {
+	    warn "Warning: open $kickfn: $!, ignoring\n";
+	}
+    }
+
+    log( "found ", @result+0, " total records" ) if $match;
+    @result;
+}
+
+
+
+# global variables
+my $logfn;			# Condor common log file overwerite
+my $adjustment = 0;		# time zone adjustment (@#~! Condor)
+my $nounlink = 0;		# remove temporary files later
+my ($title,$special,$width,$height,@pass,$limit);
+my ($minimum,$maximum) = ($main::kmin,$main::kmax);
+my $duration = 0;
+my ($outeps,$outpng);
+
+GetOptions( 'help|?' => \&usage, 
+	    'debug|d+' => \$main::debug,
+	    'log|l=s' => \$logfn,
+	    'png=s' => \$outpng,
+	    'eps=s' => \$outeps,
+	    'title|T=s' => \$title,
+	    'version|V' => sub { print "$main::version\n"; exit(0); },
+	    'adjust|a=i' => \$main::adjust, 
+	    'special=s' => \$special,
+	    'width|w=f' => \$width,
+	    'height|h=f' => \$height,
+	    'duration=f' => \$duration, 
+	    'limit|l=s' => \$limit,
+	    'pass=s' => \@pass,
+	    'keep|k!' => \$nounlink );
+BEGIN { $main::start = Time::HiRes::time() }
+END { log("done after ", sprintf('%.3f s', Time::HiRes::time() - $main::start ) ) 
+	  if $main::debug }
+
+# determine dag filename to find submit files to find kickstart records
+my $dagfn = shift || die "ERROR: Need the name of the DAG file\n";
+die "ERROR: No DAGMan file $dagfn\n" unless -r $dagfn;
+my $dagdir = File::Spec->rel2abs( dirname($dagfn) );
+
+# sanity check: find apps first, and fail early
+my %app = ();
+foreach my $app ( qw(ploticus convert) ) {
+    $app{$app} = find_exec($app) || die "ERROR: Unable to locate $app\n";
+}
+
+# determine all submit file locations
+my ($submit,$output,@topo);
+($logfn,$submit,$output,@topo) = slurp_dagfile( $dagfn, $logfn );
+die "ERROR: Unable to derives the name of a common Condor logfile\n" 
+    unless ( defined $logfn && length($logfn) );
+die "ERROR: No Condor common log $logfn\n" unless -r $logfn;
+die "ERROR: Empty Condor common log $logfn\n" unless -s _;
+my %events = slurp_logfile( $logfn );
+
+# data file generation
+my $tmp = $ENV{TMPDIR} || $ENV{TMP} || File::Spec->tmpdir() || '/tmp';
+my $data = new File::Temp( TEMPLATE => 'show-XXXXXX', DIR => $tmp, 
+			   SUFFIX => '.dat', UNLINK => (! $nounlink) );
+log( "writing regular data into ", $data->filename ) if $main::debug;
+my $kick = new File::Temp( TEMPLATE => 'show-XXXXXX', DIR => $tmp, 
+			   SUFFIX => '.dat', UNLINK => (! $nounlink) );
+log( "writing kickstart data into ", $kick->filename ) if $main::debug;
+
+my $total = 0.0;
+my $n = 1;
+foreach my $dagjob ( @topo ) {
+    my $id = basename( $submit->{$dagjob}, '.sub' );
+    next unless defined $events{$dagjob};
+    if ( defined $limit && $id !~ /$limit/o ) {
+	log( "Job $id does not match /$limit/, skipping" ); 
+	next;
+    }
+    
+    my $maxindex = @{$events{$dagjob}} - 1;
+#    my $stamp = find_min( $events{$dagjob}->[0] );
+#    $minimum = $stamp if $minimum > $stamp;
+#    $stamp = find_max( $events{$dagjob}->[$maxindex] );
+#    $maximum = $stamp if $maximum < $stamp;
+    $minimum = $main::min;
+    $maximum = $main::max;
+
+    for ( my $cycle=0; $cycle <= $maxindex; ++$cycle ) {
+	my $x = $events{$dagjob}->[$cycle];
+	my $exe = $x->{'001'};
+	my $grid = $x->{'017'} || $x->{'027'};
+	my $start = $x->{'000'};
+	my $final = $x->{'005'} || $x->{'009'};
+	my $match = ( defined $special ? $id =~ /$special/ : 0 );
+
+	my @kick = ();
+	if ( $cycle == $maxindex ) {
+	    my $kickfn = $output->{$dagjob}; 
+	    @kick = read_kickstart( $kickfn, $match ) if defined $kickfn;
+	}
+
+	unless ( defined $exe && $exe >= $minimum && $exe <= $maximum ) {
+	    log( "adjusting executable to minimum $dagjob" );
+	    $exe=$minimum;
+	}
+	unless ( defined $grid && $grid >= $minimum && $grid <= $maximum ) {
+	    log( "adjusting grid start to minimum $dagjob" );
+	    $grid= defined $exe ? $exe : $minimum;
+	}
+ 
+	# $id =~ s/-/_/g;
+	if ( defined $start && $start >= $minimum &&
+	     defined $final && $final <= $maximum ) {
+	    printf $data "\"%s\" %.3f %.3f %.3f %.3f\n", $id, 
+		$start - $minimum, $final - $minimum, 
+		$grid - $minimum, $exe - $minimum; 
+	    printf STDERR "DEBUG: data \"%s\" %.3f %.3f %.3f %.3f\n", $id, 
+	        $start - $minimum, $final - $minimum, 
+	        $grid - $minimum, $exe - $minimum if $match;
+	} else {
+	    warn "# Unable to determine interval for $dagjob, cycle $cycle\n";
+	}
+
+	foreach my $x ( @kick ) {
+	    $total += $x->[2];
+	    printf $kick "\"%s\" %.3f %.3f %d\n", $id, 
+	        $x->[0] - $minimum, $x->[1] - $minimum, $x->[3];
+	    printf STDERR "DEBUG: kick \"%s\" %.3f %.3f %d\n", $id, 
+	        $x->[0] - $minimum, $x->[1] - $minimum, $x->[3] if $match;
+	}
+    }
+    ++$n;
+}
+
+my $rescale_flag = 0;		# scale by min/max if 0, kmin/kmax if true
+log( "sequential execution sum is ", sprintf('%.3f seconds', $total ),
+     sprintf( ' (%.1f days)', $total / 86400.0 ) ) if $main::debug;
+if ( $minimum < $maximum ) {
+    $main::duration = $maximum - $minimum;
+    log( "dag worked for $main::duration seconds" ) if $main::debug;
+    if ( $main::kmin > 1E9 && $main::kmin - $minimum < -10 ) {
+	log( "Warning: Kickstart lower boundary before workflow, adjusting" );
+	$minimum = int(floor($main::kmin));
+	$rescale_flag |= 1;
+    }
+    if ( $main::kmax > 1E9 && $maximum - $main::kmax < +10  ) {
+	log( "Warning: Kickstart upper bounary after workflow, adjusting" );
+	$maximum = int(ceil($main::kmax));
+	$rescale_flag |= 2;
+    }
+    if ( $rescale_flag ) {
+	$main::duration = $maximum - $minimum;
+	log( "Adjusted workflow duration is $main::duration seconds" ) 
+	    if $main::debug;
+    }
+    log( "speed-up of ", sprintf('%.1f', $total / $main::duration ) );
+} else {
+    die "No good timestamps, very suspicious, giving up.\n";
+}
+
+if ( $duration > 0 && $maximum - $minimum < $duration ) {
+    log( "Using user-specified max-duration $duration" );
+    $maximum = $minimum + ( $main::duration = $duration );
+}
+
+# auto-scaling for x-axis
+my ($xstubs,$xtics,$xlabel,$xdivider,$mywidth);
+if ( $main::duration <= 60 ) {
+    $xstubs = 5;
+    $xtics = 1;
+    $mywidth = 8.0;
+    $xlabel = 's';
+    $xdivider = 1;
+} elsif ( $main::duration <= 3600 ) {
+    $xstubs = 600;
+    $xtics = 60;
+    $mywidth = 8.0;
+    $xlabel = 'min';
+    $xdivider = 60;
+} elsif ( $main::duration <= 14400 ) {
+    $xstubs = 1800;
+    $xtics = 600;
+    $mywidth = max( 8.0, $main::duration / 900 );
+    $xlabel = 'min';
+    $xdivider = 60;
+} elsif ( $main::duration <= 43200 ) {
+    $xstubs = 3600;
+    $xtics = 600;
+    $mywidth = max( 8.0, $main::duration / 3600 );
+    $xlabel = 'h';
+    $xdivider = 3600;
+} elsif ( $main::duration <= 86400 ) {
+    $xstubs = 7200;
+    $xtics = 1200;
+    $mywidth = max( 8.0, $main::duration / 7200 );
+    $xlabel = 'h';
+    $xdivider = 3600;
+} elsif ( $main::duration <= 86400*2 ) {
+    $xstubs = 14400;
+    $xtics = 3600;
+    $mywidth = max( 8.0, $main::duration / 14400 );
+    $xlabel = 'h';
+    $xdivider = 3600;
+} elsif ( $main::duration <= 86400*8 ) {
+    $xstubs = 86400;
+    $xtics = 14400;
+    $mywidth = max( 8.0, $main::duration / 86400 );
+    $xlabel = 'd';
+    $xdivider = 86400;
+} elsif ( $main::duration <= 86400*60 ) {
+    $xstubs = 604800;
+    $xtics = 86400;
+    $mywidth = max( 8.0, $main::duration / 604800 );
+    $xlabel = 'week';
+    $xdivider = 604800;
+} else {
+    die( "ERROR: $main::duration s workflow is just too long!",
+	 "Extend this perl script with sensible larger data\n\t" );
+}
+
+my $selflocatingstubs = '';
+for ( my $x = 0; $x < $main::duration; $x += $xstubs ) {
+    $selflocatingstubs .= sprintf "\t%d %.1f\n", $x, $x / $xdivider;
+}
+
+while ( $mywidth > 24.0 ) {
+    warn "Warning: too wide picture, halfing width\n";
+    $mywidth /= 2.0;
+}
+$width=$mywidth unless defined $width && $width > 1.0;
+log( 'width=', sprintf("%.1f",$width) );
+log( "xstubs=$xstubs, xticks=$xtics" ) if $main::debug > 1;
+
+# ploticus file generation
+$title = default_title($dagfn,$minimum) unless ( defined $title );
+
+my $myheight = ( $n <= 51 ? 5.0 : $n / 10 );
+$height=$myheight unless defined $height && $height > 2.0;
+log( "n=$n, height=$height, title=\"$title\"" ) 
+    if $main::debug > 1;
+
+my $scaleduration = int($main::duration)+1;
+$scaleduration = int( ceil($main::duration / 3600) * 3600.0 )
+    if $main::duration > 7200;
+
+my $plot = substr( $data->filename, 0, -4 ) . '.pls';
+log( "writing commands into $plot" ) if $main::debug;
+open( PLOT, ">$plot" ) || die "open $plot: $!\n";
+# areadef.xautorange: datafields=2,3
+print PLOT << "END"
+//
+// generated: @{[scalar localtime]}
+//
+#proc getdata
+  file: @{[$data->filename]}
+
+#proc categories
+  axis: y
+  listsize: @{[$n * 2]}
+  comparemethod: exact
+
+#proc areadef
+  rectangle: 0 0 $width $height
+  xrange: 0 $scaleduration
+  yautorange: categories
+  ycategories: datafield=1
+  frame: width=0.5 color=gray(0.3)
+  title: $title
+  titledetails: align=C style=I adjust=0,0.2
+
+#proc xaxis
+  ticincrement: $xtics
+  grid: color=rgb(1,0.9,0.8) style=1 dashscale=2
+
+#proc xaxis
+  label: time [$xlabel]
+  tics: yes
+  selflocatingstubs: text
+$selflocatingstubs
+  minorticinc: $xtics
+  grid: color=gray(0.8)
+
+#proc yaxis
+  ticincrement: 1
+  grid: color=rgb(1,0.9,0.8) style=1 dashscale=2
+
+#proc yaxis
+//  label: DAGMan job id
+  labeldetails: adjust=-0.5
+  stubs: categories
+  grid: color=gray(0.8)
+  tics: yes
+  minorticinc: 1
+
+#proc bars
+  outline: no
+  barwidth: 0.03
+  horizontalbars: yes
+  segmentfields: 2 3
+  locfield: 1
+  color: green
+  tails: 0.03
+
+#proc legendentry
+  sampletype: color
+  label: Condor job duration
+  details: green
+
+#proc bars
+  select: \@4 > 0 && \@5 > 0
+  outline: color=yellow
+  color: yellow2
+  horizontalbars: yes
+  barwidth: 0.04
+  tails: no
+  segmentfields: 4 5
+  locfield: 1
+
+#proc legendentry
+  sampletype: color
+  label: Perceived queuing delay
+  details: yellow2
+
+#proc getdata
+  file: @{[$kick->filename]}
+
+#proc bars
+  select: \@2 > 0 && \@4 == 0
+  outline: color=gray(0.4)
+  horizontalbars: yes
+  barwidth: 0.06
+  segmentfields: 2 3
+  locfield: 1
+  color: gray(0.75)
+  tails: no
+
+#proc legendentry
+  sampletype: color
+  label: True job duration
+  details: gray(0.75)
+
+#proc bars
+  select: \@2 > 0 && \@4 > 0
+  outline: color=red
+  horizontalbars: yes
+  barwidth: 0.06
+  segmentfields: 2 3
+  locfield: 1
+  color: rgb(1.0,0.5,0.5)
+  tails: no
+
+#proc getdata
+  file: @{[$data->filename]}
+
+#proc scatterplot 
+  select: \@5 > 0
+  xfield: 5
+  yfield: 1
+  symbol: shape=square style=spokes linecolor=black
+
+#proc legendentry
+  sampletype: symbol
+  label: Condor App Start
+  details: shape=square style=spokes linecolor=black
+
+#proc legend
+  format: across
+  location: min+0.5 max+0.2
+
+END
+    ;
+close PLOT;
+END { unlink("$plot") unless $nounlink }
+
+
+my $dagbase = basename( $dagfn );
+$dagbase =~ s/(?:\.(?:rescue|dag))+$//;
+$dagbase =~ s/-\d+$//;
+#my $epsfn = File::Spec->catfile( $dagdir, $dagbase . '.eps' );
+#my $pngfn = File::Spec->catfile( $dagdir, $dagbase . '.png' );
+my $epsfn = defined $outeps ? $outeps : $dagbase . '.eps';
+my $pngfn = defined $outpng ? $outpng : $dagbase . '.png';
+
+my @extra = ();
+foreach ( @pass ) {
+    my ($opt,$val) = split /=/, $_, 2; #/; 
+    push( @extra, "-$opt" );
+    push( @extra, $val ) if defined $val;
+}
+
+my @arg = ( $app{ploticus}, $plot, '-eps', '-o', $epsfn, @extra );
+log( "@arg" ) if $main::debug;
+system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
+
+@arg = ( $app{convert}, '-density', '96x96', 
+	'-background', 'white', '-flatten', $epsfn, $pngfn );
+log( "@arg" ) if $main::debug;
+system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
+
+exit 0;
