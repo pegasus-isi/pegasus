@@ -419,7 +419,7 @@ public class Shell extends Abstract {
            append( "fi" ).append( "\n" );
         
         //source the common shell script
-        sb.append( ".  ${PEGASUS_HOME}/bin/common-sh-plan.sh" ).append( "\n" ).
+        sb.append( ".  ${PEGASUS_HOME}/libexec/shell-runner-functions.sh" ).append( "\n" ).
            append( "" ).append( "\n" );
 
         sb.append( "PEGASUS_SUBMIT_DIR" ).append( "=" ).append( submitDirectory ).append( "\n" );
