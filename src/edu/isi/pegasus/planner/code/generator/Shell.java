@@ -412,8 +412,8 @@ public class Shell extends Abstract {
 
 
         //check for common shell script before sourcing
-        sb.append( "if [ ! -e ${PEGASUS_HOME}/bin/common-sh-plan.sh ];then" ).append( "\n" ).
-           append( "   echo \"Unable to find common-sh-plan.sh file.\"" ).append( "\n" ).
+        sb.append( "if [ ! -e ${PEGASUS_HOME}/libexec/shell-runner-functions.sh ];then" ).append( "\n" ).
+           append( "   echo \"Unable to find shell-runner-functions.sh file.\"" ).append( "\n" ).
            append( "   echo   \"You need to use Pegasus Version 3.0 or higher\"").append( "\n" ).
            append( "   exit 1 " ).append( "\n" ).
            append( "fi" ).append( "\n" );
