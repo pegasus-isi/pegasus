@@ -550,7 +550,7 @@ public class ReplicaCatalogBridge
             StringBuffer path = new StringBuffer();
             path.append( home ).append( File.separator ).
                  append( "bin" ).append( File.separator ).
-                 append( "rc-client" );
+                 append( "pegasus-rc-client" );
 
             //create Profiles for JAVA_HOME and CLASSPATH
             String jh = mProps.getProperty( "java.home" );

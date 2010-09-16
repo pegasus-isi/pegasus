@@ -67,6 +67,11 @@ public class DefaultImplementation implements Implementation {
     public static final String TRANSFORMATION_VERSION = null;
 
     /**
+     * The basename of the pegasus cleanup executable.
+     */
+    public static final String EXECUTABLE_BASENAME = "pegasus-dirmanager";
+    
+    /**
      * The path to be set for create dir jobs.
      */
     public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";
@@ -295,7 +300,7 @@ public class DefaultImplementation implements Implementation {
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( DefaultImplementation.TRANSFORMATION_NAME );
+            append( DefaultImplementation.EXECUTABLE_BASENAME );
 
 
         defaultTCEntry = new TransformationCatalogEntry( DefaultImplementation.TRANSFORMATION_NAMESPACE,

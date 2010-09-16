@@ -112,7 +112,7 @@ public class DeployWorkerPackage
         { "kickstart", "kickstart" },
         { "cleanup", "pegasus-cleanup" },
         { "seqexec", "seqexec"},
-        { "dirmanager", "dirmanager" },
+        { "dirmanager", "pegasus-dirmanager" },
         { "invoke", "invoke" },
         { "keg" , "keg" },
         { "symlink", "symlink"},
