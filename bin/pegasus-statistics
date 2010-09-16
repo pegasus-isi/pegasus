@@ -115,7 +115,7 @@ sub run_genstats($$$$){
 	push(@args ,"--jobstate-log ".$jobstate_log); # adding job state argument	
 	
 	# creating genstats command 
-	my (@genstats_directory_path) = ("$ENV{PEGASUS_HOME}","bin" );
+	my (@genstats_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","statistics" );
 	my ($genstats_path) =  File::Spec->catfile( @genstats_directory_path, 'genstats');
 	my ($genstats_command) = "$genstats_path ".join(" ",@args);
 	
@@ -154,7 +154,7 @@ sub run_genstats_breakdown($$$$){
 	push(@args ,"-x ".$submit_dirs); #adding submit directories
 	
 	# creating genstats-breakdown command 
-	my (@genstats_breakdown_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
+	my (@genstats_breakdown_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","statistics");
 	my ($genstats_breakdown_path) =  File::Spec->catfile( @genstats_breakdown_directory_path, 'genstats-breakdown');
 	my ($genstats_breakdown_command) = "$genstats_breakdown_path ".join(" ", @args);
 	
