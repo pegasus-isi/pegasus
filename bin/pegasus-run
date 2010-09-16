@@ -44,13 +44,13 @@ use Work::Workflow;
 # constants
 sub usage(;$);			# { }
 $main::DEBUG = 0;		# for now
-my $condor;			# if set, use Condor for tailstatd
+my $condor;			# if set, use Condor for pegasus-monitord
 my $grid=0;                     # if set, disable grid checks;
 my $props = Work::Properties->new();
 my $properties="";  	        # properties file for Pegasus
 my $default_tsd = File::Spec->catfile( File::Spec->rel2abs( 
-    File::Spec->canonpath(dirname($0)) ), 'tailstatd.py' );
-my $tsd = $props->property('pegasus.tailstatd') || $default_tsd;
+    File::Spec->canonpath(dirname($0)) ), 'pegasus-monitord' );
+my $tsd = $props->property('pegasus.monitord') || $default_tsd;
 
     
 my $database=1  ;
@@ -125,7 +125,7 @@ sub create_args {
 	push( @result, '-N' );
 	push( @result, @_ ) if ( @_ > 0 );
 
-	# write submit file for (restartable) tailstatd
+	# write submit file for (restartable) pegasus-monitord
 	print SUB "initialdir = $run\n";
 	print SUB 'executable = ', File::Spec->rel2abs($daemon), "\n";
 	print SUB 'arguments  = ', join(' ',@result), "\n";
@@ -171,7 +171,7 @@ $SIG{'__DIE__'} = sub {
 };
 chdir($run) || die "ERROR: chdir $run: $!\n";
 
-# sanity check: find the tailstat daemon
+# sanity check: find the pegasus-monitord daemon
 die "ERROR: Unable to execute $tsd\n" unless -x $tsd;
 print STDERR "# found $tsd\n" if $main::DEBUG;
 
@@ -276,7 +276,7 @@ system(@args) == 0
 print STDERR "# dagman is running\n" if $main::DEBUG;
 
 my @tsdargs = ($tsd);
-# run tailstatd to update job stats until DAGMan finishes
+# run pegasus-monitord to update job stats until DAGMan finishes
 if(!$database){
 #@args=create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
 push(@tsdargs,'--nodatabase');
@@ -331,7 +331,7 @@ print "pegasus-remove $run\n\n";
 } elsif ($config{type}=="shell") {
 
 # sanity check: Is the SCRIPT file there? 
-die "ERROR: Unable to execute $config{script}\n" unless -x $config{script};
+die "ERROR: Unable to execute $config{script}\n" unless - $config{script};
 print STDERR "# found $config{script}\n" if $main::DEBUG;
 
 my @args=("/bin/sh", $config{script});
