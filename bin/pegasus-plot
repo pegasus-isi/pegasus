@@ -324,7 +324,7 @@ sub run_dax2dot($$$){
 	push(@args, $dax_file_path); # adding dax file path
 	#create dax2dot command
 	my (@dax2dot_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","visualize");
-	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'dax2dot');
+	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'dag2dot');
 	my ($dax2dot_command) = "$dax2dot_path ".join(" ",@args);
 	
 	
