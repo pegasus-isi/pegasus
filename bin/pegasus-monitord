@@ -4,7 +4,7 @@
 Small daemon process to update the job state file from DAGMan logs.
 This program is to be run automatically by the pegasus-run command.
 
-Usage: tailstatd [options] dagoutfile
+Usage: pegasus-monitord [options] dagoutfile
 """
 
 ##
@@ -133,7 +133,7 @@ re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 
 # Constants
 debug_level = logging.WARNING	# For now
-logbase = "tailstatd.log" 	# Basename of daemon logfile
+logbase = "monitord.log" 	# Basename of daemon logfile
 brainkeys = {}
 brainkeys["required"] = ["basedir", "vogroup", "label", "rundir"]
 brainkeys["optional"] = ["dax", "dag", "jsd", "run", "pegasushome"]
@@ -142,7 +142,7 @@ speak = "TSSP/1.0"
 MAXLOGFILE = 1000			# For log rotation, check files from .000 to .999
 PRESCRIPT_TASK_ID = -1			# id for prescript tasks
 POSTSCRIPT_TASK_ID = -2			# id for postscript tasks
-TAILSTATD_STATE_FILE = "tailstatd.info" # filename for writing tailstatd state information
+MONITORD_STATE_FILE = "monitord.info" 	# filename for writing monitord state information
 
 # Events that constitute a pending job. Note that event SUBMIT is
 # excluded on purpose since due to throttling inside DAGMan and
@@ -217,7 +217,7 @@ jobtypes = {0: "unassigned",
 
 def finish_stampede_loader():
     """
-    This function is called by the atexit module when tailstatd exits.
+    This function is called by the atexit module when monitord exits.
     It is used to make sure the loader has finished loading all data
     into the database. It will also produce stats for benchmarking.
     """
@@ -492,7 +492,7 @@ class Workflow:
     _run_dir = None			# run directory for this workflow
     _out_file = None			# dagman.out file for this workflow
     _dag_file = None			# dag file
-    _log_file = None			# tailstatd.log file
+    _log_file = None			# monitord.log file
     _jsd_file = None			# jobstate.log file
     _job_counters = {}			# Job counters for figuring out which output file to parse
     _job_info = {}			# jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args]
@@ -569,7 +569,7 @@ class Workflow:
         time is it called.
         """
         
-        my_fn = os.path.join(self._run_dir, TAILSTATD_STATE_FILE)
+        my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
 
         try:
             OUT = open(my_fn, "w")
@@ -579,7 +579,7 @@ class Workflow:
         
         try:
             # Write first line with the last job_submit_seq used
-            OUT.write("tailstatd_job_sequence %d\n" % (self._job_submit_seq))
+            OUT.write("monitord_job_sequence %d\n" % (self._job_submit_seq))
             # Then, write all job_counters
             for my_job in self._job_counters:
                 OUT.write("%s %d\n" % (my_job, self._job_counters[my_job]))
@@ -1271,7 +1271,7 @@ if fuse < 60:
 
 jsd = None				# location of jobstate.log file
 nodaemon = 0				# foreground mode
-logfile = None				# location of tailstatd.log file
+logfile = None				# location of monitord.log file
 millisleep = None			# emulated run mode delay
 config = {}				# braindump database (textual file)
 adjustment = 0				# time zone adjustment (@#~! Condor)
@@ -1434,7 +1434,7 @@ if not replay_mode:
 	sitedb = filelock.Intent()
 	sitedb.new(os.path.join(run, sitefn))
 
-# Use default tailstatd logfile if user hasn't specified another file
+# Use default monitord logfile if user hasn't specified another file
 if not logfile:
     logfile = os.path.join(run, logbase)
 logfile = os.path.abspath(logfile)
@@ -2414,7 +2414,7 @@ def done_process_exit_handler():
 
     # Remember to tell me that it is ok to run post-processing now
     if (terminate is not None) and (run is not None):
-	my_touch_name = os.path.join(run, "tailstatd.done")
+	my_touch_name = os.path.join(run, "monitord.done")
 	try:
 	    TOUCH = open(my_touch_name, "w")
 	except:
@@ -2476,7 +2476,7 @@ if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
 
 # Add start information to JSDB
-JSDB.write("%d INTERNAL *** TAILSTATD_STARTED ***\n" % (int(time.time())))
+JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (int(time.time())))
 
 # Instantiate workflow class
 wf = Workflow(run, out, config, database=workdb)
@@ -2494,7 +2494,7 @@ signal.signal(signal.SIGUSR2, prog_sigusr2_handler)
 # No need to create server socket in replay mode
 if not replay_mode:
     # Create server socket for communication with site selector
-    sockfn = os.path.join(os.path.dirname(out), "tailstatd.sock")
+    sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
     server = server_socket(49152, 65536)
     # Take care of closing socket when we exit
     atexit.register(socket_exit_handler)
@@ -2692,7 +2692,7 @@ if not replay_mode:
 	SI.close()
     
 # Finish, and close output file
-JSDB.write("%d INTERNAL *** TAILSTATD_FINISHED %d ***\n" % (int(time.time()), terminate))
+JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (int(time.time()), terminate))
 JSDB.close()
 
 # Try to run the hurricane graphics

@@ -91,17 +91,17 @@ prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 input_dir = None				# Directory given in -i command line option
 dag_path = None					# Path of the dag file
 jsdl_path = None				# Path of the jobstate.log file
-tsdl_path = None				# Path to tailstatd's log file
+tsdl_path = None				# Path to monitord's log file
 temp_log = None					# Temporary log file created
 debug_job = None				# Path of a submit file to debug
 debug_dir = None				# Temp directory to use while debugging a job
 workflow_type = None				# Type of the workflow being debugged
-run_tailstatd = 0				# Run tailstatd before trying to analyze the output
+run_monitord = 0				# Run monitord before trying to analyze the output
 run_directory_writable = False			# Flag to indicate if we can write to the run directory
 quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 strict_mode = 0					# Gets out/err filenames from submit file
 debug_mode = 0					# Mode that enables debugging a single job
-keep_log = 0					# Keeps temporaty jobstate.log file created by tailstatd in /tmp directory
+keep_log = 0					# Keeps temporaty jobstate.log file created by monitord in /tmp directory
 print_invocation = 0				# Prints invocation command for failed jobs
 print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
 jsdl_filename = "jobstate.log"			# Default name of the log file to use
@@ -433,7 +433,7 @@ def parse_jobstate_log(jobstate_fn):
 	# Skip lines that don't have enough items
 	if len(sp) < 6:
 	    continue
-	# Skip tailstatd comments
+	# Skip monitord comments
 	if sp[1] == "INTERNAL":
 	    continue
 
@@ -516,19 +516,19 @@ def rotate_log(source_file):
     # Done!
     return
 
-def invoke_tailstatd(dagman_out_file, output_log):
+def invoke_monitord(dagman_out_file, output_log):
     """
-    This function runs tailstatd on the given dagman_out_file.
+    This function runs monitord on the given dagman_out_file.
     """
-    tailstatd_cmd = "tailstatd -n --nodatabase -r"
-    tailstatd_cmd = tailstatd_cmd + " -j " + output_log
-    tailstatd_cmd = tailstatd_cmd + " " + dagman_out_file
-    print "running: %s" % (tailstatd_cmd)
+    monitord_cmd = "pegasus-monitord -n --nodatabase -r"
+    monitord_cmd = monitord_cmd + " -j " + output_log
+    monitord_cmd = monitord_cmd + " " + dagman_out_file
+    print "running: %s" % (monitord_cmd)
 
     try:
-	status, output = commands.getstatusoutput(tailstatd_cmd)
+	status, output = commands.getstatusoutput(monitord_cmd)
     except:
-	print "error: could not invoke tailstatd"
+	print "error: could not invoke monitord"
 	sys.exit(1)
 
 def dump_file(file):
@@ -804,10 +804,10 @@ parser.add_option("-i", "-d", "--dir", action = "store", type = "string", dest =
 		  help = "input directory where the jobstate.log file is located, default is the current directory")
 parser.add_option("-f", "--file", action = "store", type = "string", dest = "dag_filename",
 		  help = "full path to the dag file to use -- this option overrides the -d option")
-parser.add_option("-t", "--tailstatd", action = "store_const", const = 1, dest = "run_tailstatd",
-		  help = "run tailstatd before analyzing the output")
+parser.add_option("-t", "--monitord", action = "store_const", const = 1, dest = "run_monitord",
+		  help = "run pegasus-monitord before analyzing the output")
 parser.add_option("-k", "--keep", action = "store_const", const = 1, dest = "keep_log",
-		  help = "keeps temporary jobstate.log file created by tailstatd in the /tmp directory")
+		  help = "keeps temporary jobstate.log file created by monitord in the /tmp directory")
 parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "quiet_mode",
 		  help = "output out/err filenames instead of their contents")
 parser.add_option("-p", "--print", action = "store", type = "string" , dest = "print_options",
@@ -827,8 +827,8 @@ parser.add_option("--type", action = "store", type = "string", dest = "workflow_
 print "%s: initializing..." % (prog_base)
 
 # Copy options from the command line parser
-if options.run_tailstatd is not None:
-    run_tailstatd = options.run_tailstatd
+if options.run_monitord is not None:
+    run_monitord = options.run_monitord
 if options.strict_mode is not None:
     strict_mode = options.strict_mode
 if options.quiet_mode is not None:
@@ -875,21 +875,21 @@ if dag_path is None:
 # Check if we can write to the run directory
 run_directory_writable = os.access(input_dir, os.W_OK)
 
-# Invoke tailstatd if requested
-if run_tailstatd:
+# Invoke monitord if requested
+if run_monitord:
     if run_directory_writable:
-	# Run directory is writable, write tailstatd output to jobstate.log file
+	# Run directory is writable, write monitord output to jobstate.log file
 	jsdl_path = os.path.join(input_dir, jsdl_filename)
 	rotate_log(jsdl_path)
-	invoke_tailstatd("%s.dagman.out" % (dag_path), jsdl_path)
+	invoke_monitord("%s.dagman.out" % (dag_path), jsdl_path)
     else:
-	# Need to use /tmp directory for tailstatd output as run directory is not writable
+	# Need to use /tmp directory for monitord output as run directory is not writable
 	jsdl_path = create_temp_logfile("jobstate")
 	if jsdl_path is None:
 	    print "error: could not create temporaty jobstate.log file in the /tmp directory"
 	    sys.exit(1)
 	temp_log = jsdl_path
-	invoke_tailstatd("%s.dagman.out" % (dag_path), jsdl_path)
+	invoke_monitord("%s.dagman.out" % (dag_path), jsdl_path)
 else:
     jsdl_path = os.path.join(input_dir, jsdl_filename)
 
@@ -913,7 +913,7 @@ print "%s: end of status report" % (prog_base)
 # Handle temporary log files created by pegasus-analyzer
 if temp_log is not None:
     if keep_log:
-	print "%s: temporary tailstatd output kept at: %s" % (prog_base, temp_log)
+	print "%s: temporary monitord output kept at: %s" % (prog_base, temp_log)
     else:
 	try:
 	    os.unlink(temp_log)
