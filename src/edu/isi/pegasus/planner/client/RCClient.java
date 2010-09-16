@@ -200,7 +200,7 @@ public class RCClient extends Toolkit
     m_log = Logger.getLogger( RCClient.class );
     m_rls_logger =  LogManagerFactory.loadSingletonInstance();
     m_rls_logger.setLevel( Level.WARN );
-    m_rls_logger.logEventStart( "rc-client", "planner.version", Version.instance().toString() );
+    m_rls_logger.logEventStart( "pegasus-rc-client", "planner.version", Version.instance().toString() );
     m_log.debug( "starting instance" );
     determineChunkFactor();
   }
@@ -863,7 +863,7 @@ public class RCClient extends Toolkit
 
     try {
       // create an instance of self
-      me = new RCClient( "rc-client" );
+      me = new RCClient( "pegasus-rc-client" );
 
       // get the commandline options
       Getopt opts = new Getopt( me.m_application, args,
