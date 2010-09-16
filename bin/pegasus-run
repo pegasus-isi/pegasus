@@ -331,7 +331,7 @@ print "pegasus-remove $run\n\n";
 } elsif ($config{type}=="shell") {
 
 # sanity check: Is the SCRIPT file there? 
-die "ERROR: Unable to execute $config{script}\n" unless - $config{script};
+die "ERROR: Unable to execute $config{script}\n" unless -x $config{script};
 print STDERR "# found $config{script}\n" if $main::DEBUG;
 
 my @args=("/bin/sh", $config{script});
