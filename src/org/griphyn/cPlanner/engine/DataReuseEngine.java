@@ -276,7 +276,7 @@ public class DataReuseEngine extends Engine implements Refiner{
      */
     public List<SubInfo> getDeletedLeafJobs(){
         mLogger.log( "Date Reuse Engine no longer tracks deleted leaf jobs. Returning empty list ",
-                     LogManager.ERROR_MESSAGE_LEVEL );
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         List<SubInfo> delLeafJobs = new LinkedList();
 
        
