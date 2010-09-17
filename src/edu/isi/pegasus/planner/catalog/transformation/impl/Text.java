@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -30,6 +31,8 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.classes.Architecture;
+import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.parser.TransformationCatalogTextParser;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -39,13 +42,18 @@ import org.griphyn.cPlanner.classes.Profile;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.BufferedWriter;
+import java.io.Writer;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -131,6 +139,12 @@ public class Text
      */
     private TransformationStore mTCStore;
 
+    /**
+     * Boolean indicating whether to flush the contents back to the file on 
+     * close.
+     */
+    private boolean mFlushOnClose;
+    
 
     /**
      * Default constructor.
@@ -140,6 +154,8 @@ public class Text
     
     /**
      * Initialize the implementation, and return an instance of the implementation.
+     * It should be in the connect method, to be consistent with the other
+     * catalogs.
      * 
      * @param bag  the bag of Pegasus initialization objects.
      * 
@@ -147,6 +163,7 @@ public class Text
     public void initialize ( PegasusBag bag ){
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
+        mFlushOnClose = false;
         
         mTCFile = mProps.getTCPath();
         mLogger.log("TC Mode being used is " + this.getDescription(),
@@ -161,9 +178,17 @@ public class Text
 
 
         try{
-            mTextParser = new TransformationCatalogTextParser ( new FileReader(new java.io.File(  mTCFile )),
-                                                            mLogger );
-            mTCStore = mTextParser.parse();
+            java.io.File f = new java.io.File(  mTCFile );
+            
+            if( f.exists() ){
+                mTextParser = new TransformationCatalogTextParser ( new FileReader( f ),
+                                                                    mLogger );
+                mTCStore = mTextParser.parse();
+            }
+            else{
+                //empty TCStore
+                mTCStore = new TransformationStore();
+            }
         }
         catch (FileNotFoundException ex) {
             throw new RuntimeException( "Unable to find file " + mTCFile );
@@ -175,6 +200,199 @@ public class Text
 
     }
     
+    /**
+     * Empty for the time being. The factory still calls out to the initialize
+     * method.
+     * 
+     * @param props   the connection properties.
+     * @return
+     */
+    public boolean connect( Properties props ) {
+        //not implemented
+        return true;
+    }
+
+    /**
+     * Returns whether the connection is closed or not.
+     * 
+     * @return
+     */
+    public boolean isClosed() {
+        //not implemented
+        return this.mTCStore == null ;
+    }
+
+    /**
+     * Closes the connection to the back end.
+     */
+    public void close() {
+        if( mFlushOnClose ){
+            //we flush back the contents of the internal store to the file.
+            String newline = System.getProperty("line.separator", "\r\n");
+            String indent = "";
+            try {
+                // open
+                Writer out = new BufferedWriter( new FileWriter( mTCFile ) );
+                String newIndent = indent + "\t";
+                
+                // write header
+                out.write( "# multiple line text-based transformation catalog: " +
+                             Currently.iso8601(false,true,true,new Date()) );
+                out.write( newline );
+
+                // write out data
+                //traverse through all the logical transformations in the
+                //catalog
+                for ( Iterator i= this.mTCStore.getTransformations(null, null).iterator(); i.hasNext(); ) {
+                    //transformation is the complete name comprised of namespace,name,version
+                    String transformation = (String) i.next();
+                    
+                    out.write( indent );
+                    out.write( "tr " );
+                    out.write( transformation );
+                    out.write( " {"  );
+                    out.write( newline );
+	
+                    //get all the entries for that transformations on all sites
+                    for( TransformationCatalogEntry entry: mTCStore.getEntries( transformation, (String)null ) ){
+                        //write out all the entries for the transformation
+                        out.write(  toText( entry, newline, newIndent ) );
+                    }
+                
+                    
+                    out.write( indent );
+                    out.write( "}"  );
+                    out.write( newline );
+                    out.write( newline );
+                }
+
+                // close
+                out.close();
+            }
+            catch ( IOException ioe ) {
+                throw new RuntimeException( "Unable to write contents of TC to " + mTCFile,
+                                            ioe );
+            } 
+            finally {
+                this.mTCStore = null;
+                this.mTCFile = null;
+            }
+        }
+    }
+    
+    /**
+     * Converts the transformation catalog entry object to the multi line
+     * textual representation. e.g.
+     * 
+     * site wind {
+     *   profile env "me" "with"
+     *   profile condor "more" "test"
+     *   pfn "/path/to/keg"
+     *   arch  "x86"
+     *   os    "linux"
+     *   osrelease "fc"
+     *   osversion "4"
+     *   type "STATIC_BINARY"
+     *  }
+     * 
+     * @param entry   the transformation catalog entry
+     * @param newline the newline characters
+     * @param indent  the indentation to use
+     * 
+     * @return the textual description
+     */
+    public String toText( TransformationCatalogEntry entry, String newline , String indent ){
+        StringBuffer sb = new StringBuffer();
+        indent = (indent != null && indent.length() > 0 ) ?
+                 indent:
+                 "";
+        String newIndent = indent + "\t";
+        
+        sb.append( indent );
+        sb.append( "site" ).append( " " ).append( entry.getResourceId() ).append( " {" ).append( newline );
+                
+        //list out all the profiles
+        List<Profile> profiles = entry.getProfiles();
+        if( profiles != null ){
+            for( Profile p : profiles ){
+                sb.append( newIndent ).append( "profile" ).append( " " ).
+                   append( p.getProfileNamespace() ).append( " " ).
+                   append( quote( p.getProfileKey() ) ).append( " ").
+                   append( quote( p.getProfileValue())).append( " ").
+                   append( newline );
+            }
+        }
+        
+        //write out the pfn
+        addLineToText( sb, newIndent, newline, "pfn", entry.getPhysicalTransformation() );
+        
+        //write out sysinfo
+        SysInfo s = entry.getSysInfo();
+        Architecture arch = s.getArchitecture();
+        if( arch != null ){
+            addLineToText( sb, newIndent, newline, "arch", arch.toString() );
+        }
+        OS os = s.getOS();
+        if( os != null ){
+            addLineToText( sb, newIndent, newline, "os", os.toString() );
+        }
+        String osrelease = s.getOSRelease();
+        if( osrelease != null && osrelease.length() > 0 ){
+            addLineToText( sb, newIndent, newline, "osrelease", osrelease );
+        }
+        String osversion = s.getOSVersion();
+        if( osversion != null && osversion.length() > 0 ){
+            addLineToText( sb, newIndent, newline, "osversion", osversion );
+        }
+        String glibc = s.getGlibc();
+        if( glibc != null && glibc.length() > 0 ){
+            addLineToText( sb, newIndent, newline, "glibc", glibc );
+        }
+        
+        //write out the type
+        addLineToText( sb, newIndent, newline, "type", entry.getType().toString() );
+        
+                
+        sb.append( indent ).append( "}" ).append( newline );
+        
+        return sb.toString();
+    }
+    
+    
+    /**
+     * Convenience method to add a line to the internal textual representation.
+     * 
+     * @param sb         the StringBuffer to which contents are to be added.
+     * @param newIndent  the indentation
+     * @paran newline    the newline character
+     * @param key        the key
+     * @param value      the value
+     */
+    protected void addLineToText( StringBuffer sb, 
+                                  String newIndent, 
+                                  String newline,
+                                  String key, 
+                                  String value) {
+        
+        sb.append( newIndent ).append( key ).append( " " ).
+           append( quote( value ) ).append( newline );
+    }
+    
+    
+    
+    /**
+     * Quotes a String.
+     * 
+     * @param str  the String to be quoted.
+     * 
+     * @return quoted version
+     */
+    public String quote( String str ){
+        //maybe should use the escape class also?
+        StringBuffer sb = new StringBuffer();
+        sb.append( "\"" ).append( str ).append( "\"" );
+        return sb.toString();
+    }
 
     /**
      * Returns a textual description of the transformation mode.
@@ -417,7 +635,7 @@ public class Text
      */
     public List<Profile> lookupLFNProfiles( String namespace, String name, String version ) throws
         Exception {
-        throw new UnsupportedOperationException("Not Implemented");
+        throw new UnsupportedOperationException( "Not Implemented" );
     }
 
     /**
@@ -625,25 +843,33 @@ public class Text
         entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
 
         List<TransformationCatalogEntry> existing = this.lookup( namespace, name, version, resourceid, type );
-        //check to see if entries match
+        
         boolean add = true;
-        for( TransformationCatalogEntry e: existing ){
-            if ( e.equals( entry ) ){
-               add = false;
-               break;
+        
+        if( existing != null ){
+            //check to see if entries match
+            for( TransformationCatalogEntry e: existing ){
+                if ( e.equals( entry ) ){
+                   add = false;
+                   break;
+                }
             }
         }
 
         if( add ){
             mTCStore.addEntry( entry );
-            if (write) {
-                //writeTC();
-            }
         }
         else {
             mLogger.log("TC Entry already exists. Skipping",
                         LogManager.DEBUG_MESSAGE_LEVEL);
         }
+        
+        //if entry needs to be added and flushed to the backend
+        //set to flag to true.
+        if( write && add ) {
+            mFlushOnClose = true;
+        }
+        
         return true;
     }
 
@@ -829,19 +1055,7 @@ public class Text
         throw new UnsupportedOperationException("Not Implemented");
     }
 
-    public boolean connect(java.util.Properties props) {
-        //not implemented
-        return true;
-    }
-
-    public boolean isClosed() {
-        //not implemented
-        return true;
-    }
-
-    public void close() {
-        //not implemented
-    }
+    
 
    
     /**
@@ -868,5 +1082,6 @@ public class Text
     protected void logMessage(String msg) {
         //mLogger.logMessage("[Shishir] Transformation Catalog : " + msg);
     }
+
 
 }
