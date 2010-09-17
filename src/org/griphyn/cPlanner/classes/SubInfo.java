@@ -1592,7 +1592,9 @@ public class SubInfo extends Data implements GraphNodeContent{
 
         //write out the node
         stream.write( indent );
+        stream.write( "\"" );
         stream.write( getID() );
+        stream.write( "\"" );
         stream.write( " " );
         stream.write( "[" );
 
