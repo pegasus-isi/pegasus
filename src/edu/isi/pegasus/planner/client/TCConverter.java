@@ -198,7 +198,7 @@ public class TCConverter
     public void executeCommand( String[] opts ) throws IOException {
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt( "TCConverter", opts, "hVv:I:i:O:o:U:P:N:H:",
+        Getopt g = new Getopt( "TCConverter", opts, "hVvI:i:O:o:U:P:N:H:",
             longOptions, false );
 
         int option = 0;
@@ -285,11 +285,23 @@ public class TCConverter
     	//check if format is supported
         
         if(!isSupportedFormat(mInputFormat)){
-        	throw new RuntimeException( "Format not supported ! The supported input formats are " + SUPPORTED_TRANSFORMATION_FORMAT);
+            StringBuffer error = new StringBuffer();
+            error.append( "Format not supported ! The supported input formats are [" );
+            for( String format : SUPPORTED_TRANSFORMATION_FORMAT ){
+                error.append( format ).append( " " );
+            }
+            error.append( "]" );
+            throw new RuntimeException( error.toString() );
         }
         
         if(!isSupportedFormat(mOutputFormat)){
-        	throw new RuntimeException( "Format not supported !  The supported output formats are " + SUPPORTED_TRANSFORMATION_FORMAT);
+            StringBuffer error = new StringBuffer();
+            error.append( "Format not supported ! The supported output formats are [" );
+            for( String format : SUPPORTED_TRANSFORMATION_FORMAT ){
+                error.append( format ).append( " " );
+            }
+            error.append( "]" );
+            throw new RuntimeException( error.toString() );
         }
     	TransformationStore result = this.convertTCEntryFrom( mInputFiles, mInputFormat );
         //write out the result to the output file
@@ -473,76 +485,92 @@ public class TCConverter
      *
      * @throws IOException
      */
-    private void convertTCEntryTo(  TransformationStore output , String format , String filename) throws IOException {
-    	TransformationCatalog catalog = null;
-    	if(format.equals(FILE_FORMAT) || format.equals(TEXT_FORMAT)){
-    		
-    		if( filename == null ){
-    			throw new IOException( "Please specify a file to write the output to using --output option ");
-    		}
-    		mProps.setProperty( "pegasus.catalog.transformation.file", filename );
-            
-            
-    	}else{
-        	if(mDatabaseURL != null && mDatabaseUserName != null && mDatabasePassword != null){
-        		CreateTCDatabase jdbcTC;
-    			try {
-    				jdbcTC = new CreateTCDatabase(mDatabase, mDatabaseURL , mDatabaseUserName, mDatabasePassword , mDatabaseHost);
-    			} catch (ClassNotFoundException e1) {
-    				throw new RuntimeException("Failed to load driver " + mDatabase);
-    			} catch (SQLException e1) {
-    				throw new RuntimeException("Failed to get connection " + mDatabaseURL);
-    			}
-    			mDatabaseName = jdbcTC.getDatabaseName(mDatabaseURL);
-        		if(mDatabaseName != null){
-    				try {
-    					if(!jdbcTC.checkIfDatabaseExists(mDatabaseName)){
-    						if(!jdbcTC.createDatabase(mDatabaseName)){
-    							throw new RuntimeException("Failed to create database " + mDatabaseName);
-    						}
-    						String initFilePath = mProps.getPegasusHome() +"/sql/";
-    						for(String name: TC_INITIALIZATION_FILES){
-    							if(!jdbcTC.initializeDatabase(mDatabaseName,initFilePath + name)){
-    								jdbcTC.deleteDatabase(mDatabaseName);
-    								throw new RuntimeException("Failed to initialize database " + mDatabaseName);
-    							}
-    						}
-    						
-    						
-    						mProps.setProperty( "pegasus.catalog.transformation.db", mDatabase );
-    						mProps.setProperty( "pegasus.catalog.transformation.db.driver", mDatabase );
-    						mProps.setProperty( "pegasus.catalog.transformation.db.url", mDatabaseURL  );
-    						mProps.setProperty( "pegasus.catalog.transformation.db.user", mDatabaseUserName );
-    						mProps.setProperty( "pegasus.catalog.transformation.db.password", mDatabasePassword );
-    					}else{
-    						mLogger.log( "Database "  + mDatabaseName  +" already exists" , LogManager.ERROR_MESSAGE_LEVEL );
-    						throw new RuntimeException("Cannot over write an existing database " + mDatabaseName);
-    					}
-    				} catch (SQLException e) {
-    					mLogger.log("Failed connection with the database " + e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
-    					throw new RuntimeException("Connection Failed " + mDatabaseName);
-    				}
-        		}else{
-        			mLogger.log( "Unable to detect database name in the URL" , LogManager.ERROR_MESSAGE_LEVEL );
-					throw new RuntimeException("Unable to detect database name in the URL" + mDatabaseURL);
-        		}
-        	}
-    	}
+    private void convertTCEntryTo(TransformationStore output, String format, String filename) throws IOException {
+        TransformationCatalog catalog = null;
+        if (format.equals(FILE_FORMAT) || format.equals(TEXT_FORMAT)) {
+
+            if (filename == null) {
+                throw new IOException("Please specify a file to write the output to using --output option ");
+            }
+            mProps.setProperty("pegasus.catalog.transformation.file", filename);
+
+
+        } else {
+            if (mDatabaseURL != null && mDatabaseUserName != null && mDatabasePassword != null) {
+                CreateTCDatabase jdbcTC;
+                try {
+                    jdbcTC = new CreateTCDatabase(mDatabase, mDatabaseURL, mDatabaseUserName, mDatabasePassword, mDatabaseHost);
+                } catch (ClassNotFoundException e1) {
+                    throw new RuntimeException("Failed to load driver " + mDatabase);
+                } catch (SQLException e1) {
+                    throw new RuntimeException("Failed to get connection " + mDatabaseURL);
+                }
+                mDatabaseName = jdbcTC.getDatabaseName(mDatabaseURL);
+                if (mDatabaseName != null) {
+                    try {
+                        if (!jdbcTC.checkIfDatabaseExists(mDatabaseName)) {
+                            if (!jdbcTC.createDatabase(mDatabaseName)) {
+                                throw new RuntimeException("Failed to create database " + mDatabaseName);
+                            }
+                            String initFilePath = mProps.getPegasusHome() + "/sql/";
+                            for (String name : TC_INITIALIZATION_FILES) {
+                                if (!jdbcTC.initializeDatabase(mDatabaseName, initFilePath + name)) {
+                                    jdbcTC.deleteDatabase(mDatabaseName);
+                                    throw new RuntimeException("Failed to initialize database " + mDatabaseName);
+                                }
+                            }
+
+
+                            mProps.setProperty("pegasus.catalog.transformation.db", mDatabase);
+                            mProps.setProperty("pegasus.catalog.transformation.db.driver", mDatabase);
+                            mProps.setProperty("pegasus.catalog.transformation.db.url", mDatabaseURL);
+                            mProps.setProperty("pegasus.catalog.transformation.db.user", mDatabaseUserName);
+                            mProps.setProperty("pegasus.catalog.transformation.db.password", mDatabasePassword);
+                        } else {
+                            mLogger.log("Database " + mDatabaseName + " already exists", LogManager.ERROR_MESSAGE_LEVEL);
+                            throw new RuntimeException("Cannot over write an existing database " + mDatabaseName);
+                        }
+                    } catch (SQLException e) {
+                        mLogger.log("Failed connection with the database " + e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL);
+                        throw new RuntimeException("Connection Failed " + mDatabaseName);
+                    }
+                } else {
+                    mLogger.log("Unable to detect database name in the URL", LogManager.ERROR_MESSAGE_LEVEL);
+                    throw new RuntimeException("Unable to detect database name in the URL" + mDatabaseURL);
+                }
+            }
+        }
     	mProps.setProperty( "pegasus.catalog.transformation", format );
     	catalog = TransformationFactory.loadInstance( mProps );
         List<TransformationCatalogEntry> entries = output.getEntries(null, (TCType)null);
         for(TransformationCatalogEntry tcentry:entries){
-        	try {
-				catalog.insert(tcentry);
-			} catch (Exception e) {
-				
-				mLogger.log( "Transformation failed to add "  + tcentry.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
-			}
+            try {
+                catalog.insert(tcentry);
+		
+            } catch (Exception e) {
+                mLogger.log( "Transformation failed to add "  + tcentry.toString() , 
+                              LogManager.ERROR_MESSAGE_LEVEL  );
+            }
         }
         
-    	mLogger.log( " Successful converted Transformation Catalog from "+ mInputFormat +" to " + mOutputFormat , LogManager.INFO_MESSAGE_LEVEL );
+        //close the connection to the catalog
+        catalog.close();
+        
+    	mLogger.log( "Successfully converted Transformation Catalog from "+ mInputFormat +" to " + mOutputFormat ,
+                       LogManager.INFO_MESSAGE_LEVEL );
+        if( filename != null ){
+            mLogger.log( "The output transfomation catalog is in file  "+ new java.io.File(filename).getAbsolutePath() ,
+                       LogManager.INFO_MESSAGE_LEVEL );
+        }
     }
 
+    /**
+     * The main function
+     * 
+     * @param args  arguments passed at runtime
+     * 
+     * @throws java.lang.Exception
+     */
     public static void main( String[] args ) throws Exception {
         
         TCConverter me = new TCConverter();
@@ -565,7 +593,6 @@ public class TCConverter
             //unaccounted for exceptions
             me.log(e.getMessage(),
                          LogManager.FATAL_MESSAGE_LEVEL );
-            e.printStackTrace();
             result = 3;
         } finally {
             double endtime = new Date().getTime();
