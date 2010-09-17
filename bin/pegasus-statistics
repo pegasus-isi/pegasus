@@ -317,12 +317,12 @@ sub create_submit_directories_file($){
 	my($submit_dirs) =@_;
 	my ($out_fh,$out_fn) = tempfile("submit_directory_XXXX",SUFFIX => '.in',DIR =>$log_dir);
 	
-	open (out_fh, '>$out_fn') or die "Unable to write to file $out_fn. $! \n";
+	open ($out_fh, ">$out_fn") or die "Unable to write to file $out_fn. $! \n";
 	my @submit_directories_arr = split(' ',$submit_dirs);
 	foreach my $submit_dir (@submit_directories_arr) {
 		print $out_fh "$submit_dir\n";
 	}
-	close out_fh; 
+	close $out_fh; 
 	return $out_fn;
 }
 
