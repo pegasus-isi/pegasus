@@ -14,6 +14,11 @@ use File::Copy;
 use File::Spec;
 use File::Temp qw/ tempfile tempdir  /;
 
+# use local modules
+use Work::Common;
+
+my $MAX_LOG_FILE = 1000;
+my $job_state_file_name = 'jobstate.log';
 my @predefined_transformations = 
    ( 
      "pegasus::dirmanager",
@@ -29,6 +34,7 @@ sub print_usage() {
 	print "Usage : pegasus-plot <submit directory> \n";
 	print GREEN "Optional :\n";
 	print "\t -o|--output: write outputs in given directory\n";
+	print "\t -m|--monitord: invokes pegasus-monitord before running pegasus-plot\n";
 	print "\t --show-job-title: title of the show job graph\n";
 	print "\t --show-id-title: title of the show id graph\n";
 	print "\t -k|--keep: keeps the logs of the pegasus-plot run  \n";
@@ -36,13 +42,14 @@ sub print_usage() {
 }
 
 sub main(){
-	my ($help,$keep, $verbose)=(undef,undef ,0);
+	my ($help,$keep,$monitord,$verbose)=(undef,undef,undef,0);
 	my ($output_dir,$show_job_title ,$show_id_title) = (undef,undef,undef);
 	
 	if(!GetOptions(
 		"output|o=s"=>\$output_dir,
 		"show-job-title=s"=>\$show_job_title,
 		"show-id-title=s"=>\$show_id_title,
+		"monitord|m"=>\$monitord,
 		"keep|k"=>\$keep,
 		"help|h"=>\$help)){
 			 print "Unable to parse the options. $! \n";
@@ -66,14 +73,48 @@ sub main(){
 	    print STDERR "ERROR: PEGASUS_HOME is not set. Please source the setup-with-pegasus script.\n";
 	    exit 1;
 	}
+	my (%config) = slurp_braindb( $submit_dir ) or die "ERROR: open braindump.txt: $!\n";
+	my($dag_file_name , $dax_file_path) =  ($config{'dag'} , $config{'dax'});
 	
-	my($braindump_file_path) = File::Spec->catfile( $submit_dir, 'braindump.txt' );
-	my($dag_file_name , $dax_file_path) =  parse_brain_dump_file($braindump_file_path);
+	if(!$dag_file_name){
+		print STDERR "ERROR: Unable to find the dag file name in the braindump.txt file.\n";
+		exit 1;
+	}
+	
+	if(!$dax_file_path){
+		print STDERR "ERROR: Unable to find the dax file path in the braindump.txt file.\n";
+		exit 1;
+	}
 	
 	
+	my ($log_dir) = tempdir('pegasus_plot_XXXX' , TMPDIR=> 1);
+	if($monitord){
+		my($jsd_file_path) =  ($config{'jsd'});
+		if(!$jsd_file_path){
+			print STDERR "ERROR: Unable to find the jobstate file path in the braindump.txt file.\n";
+			exit 1;
+		}
+		my $job_state_backup = undef;
+		my ($job_state_base_file)= File::Spec->catfile( $submit_dir, $job_state_file_name);
+		if(-e "$job_state_base_file"){
+			# Invoke only if jobstate.log is there
+			$job_state_backup = setup_monitord($job_state_base_file);
+		}
+		my($dagman_out_file) = File::Spec->catfile( $submit_dir ,$dag_file_name .".dagman.out");
+		my($monitord_status , $monitord_status_msg , $monitord_summary_msg)  = invoke_monitord($dagman_out_file,$jsd_file_path ,$log_dir);
+		print "$monitord_status_msg\n";
+		if($monitord_status !=0 ){
+			if($job_state_backup){
+			# Revert back the jobstate file
+				if(!move($job_state_backup ,$job_state_base_file)) {
+					print STDERR "ERROR : Failed to create a revert back the jobstate file . $! \n";
+				}
+			}
+			
+			exit 1;
+		}
+	}
 	
-	
-	my ($log_dir) = tempdir('pegasus_graph_XXXX' , TMPDIR=> 1);
 	if(!$output_dir){
 		$output_dir =  File::Spec->catdir($submit_dir,"graph");
 		if (-d "$output_dir") {
@@ -126,6 +167,68 @@ sub main(){
 	
 	print "*****************************************\n";
 	exit 0;
+}
+
+
+
+sub invoke_monitord($$$){
+# purpose : executing pegasus-monitord command
+# returns : status code and status message
+
+	my($dagman_out_file,$job_state_file,$log_dir) = @_;
+	my(@args);
+	my $status_msg = "******  pegasus-monitord  ***** \n";
+	my $summary_msg;
+	# Adding arguments
+	push(@args ,"-j ".$job_state_file); # adding color option
+	push(@args ,"$dagman_out_file"); #/adding show-jobnames option
+	
+	# create pegasus-monitord command
+	my (@pegasus_monitord_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
+	my ($pegasus_monitord_path) =  File::Spec->catfile( @pegasus_monitord_directory_path, 'pegasus-monitord');
+	my ($pegasus_monitord_command) = "$pegasus_monitord_path ".join(" ",@args);
+	
+	
+	$status_msg .= "Executing command :-\n$pegasus_monitord_command \n";
+	my($status,$exec_msg) = execute_command($pegasus_monitord_command,  $log_dir,'pegasus-monitord');
+	if($status == 0  ){
+		$status_msg .= "****** Finished executing pegasus-monitord  ***** \n";
+		$summary_msg = "Finished executing pegasus-monitord\n";		
+	}else{
+		$status_msg .= "ERROR : Failed to execute pegasus-monitord command . $exec_msg\n";
+		$summary_msg ="ERROR : Failed to execute pegasus-monitord  . $exec_msg\n";
+	}
+	return ($status,$status_msg , $summary_msg);
+	
+}
+
+
+sub setup_monitord($){
+	#purpose : makes set up for pegasus-monitord command, by creating a backup of jobstate.log file
+	#returns : job state backup file path
+	my ($job_state_base_file) =@_;
+	my ($count) =0;
+	my ($job_state_tmp_file);
+	while($count < $MAX_LOG_FILE){
+		if($count <10){
+			$job_state_tmp_file = $job_state_base_file.".00".$count;
+		}elsif($count <100){
+			$job_state_tmp_file = $job_state_base_file.".0".$count;
+		}else{
+			$job_state_tmp_file = $job_state_base_file.".".$count;
+		}
+		if(-e "$job_state_tmp_file"){
+			$count++;
+		}else{
+			if(!move($job_state_base_file,$job_state_tmp_file)) {
+				print STDERR "ERROR : Failed to create a backup of jobstate file . $! \n";
+				exit 1;
+			}
+			return $job_state_tmp_file;
+		}	
+	}
+	print STDERR "ERROR : Failed to create a backup of jobstate file . Exceeded the rotation limit. \n";
+	exit 1;
 }
 
 
@@ -273,33 +376,33 @@ sub run_dag2dot($$$){
 	my ($dot_jpeg_command_path) = find_exec('dot');
 	
 	if($dot_jpeg_command_path){
-			$status_msg .= "******  dot  ***** \n";
-			my ($dot_jpeg_img_file_name) =("$dagbase"."-dag.jpg" );
-			my ($dot_jpeg_img_file ) =File::Spec->catfile("$output_dir", $dot_jpeg_img_file_name);
-			my (@dot_jpeg_args);
-			
-			#Adding arguments 
-			push(@dot_jpeg_args , "-Tjpeg"); # adding output file path
-			push(@dot_jpeg_args , "-o ".$dot_jpeg_img_file); # adding output file path
-			push(@dot_jpeg_args, $dot_img_file); # adding dot file path
-			
-			# creating dag2jpeg command 
-			my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
-			
-			$status_msg .= "Executing command :-\n $dag2jpeg_command \n";
-			my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command,  $log_dir ,'dag_dot2jpeg');
-			
-			if($dot_jpeg_status == 0  ){
-				$status_msg .= "****** Finished executing dot2jpeg ***** \n";
-				$status_msg .= "JPEG image file corresponding to the dag is created at $dot_jpeg_img_file \n************\n";
-				$summary_msg = "JPEG image file corresponding to the dag is created at $dot_jpeg_img_file \n";
-			}else{
-				$status_msg .= "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
-				$summary_msg = "WARNING : Failed to create JPEG image. $dot_jpeg_exec_msg .dot file corresponding to the dag is created at $dot_img_file "
-			}
+		$status_msg .= "******  dot  ***** \n";
+		my ($dot_jpeg_img_file_name) =("$dagbase"."-dag.jpg" );
+		my ($dot_jpeg_img_file ) =File::Spec->catfile("$output_dir", $dot_jpeg_img_file_name);
+		my (@dot_jpeg_args);
+		
+		#Adding arguments 
+		push(@dot_jpeg_args , "-Tjpeg"); # adding output file path
+		push(@dot_jpeg_args , "-o ".$dot_jpeg_img_file); # adding output file path
+		push(@dot_jpeg_args, $dot_img_file); # adding dot file path
+		
+		# creating dag2jpeg command 
+		my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
+		
+		$status_msg .= "Executing command :-\n $dag2jpeg_command \n";
+		my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command,  $log_dir ,'dag_dot2jpeg');
+		
+		if($dot_jpeg_status == 0  ){
+			$status_msg .= "****** Finished executing dot2jpeg ***** \n";
+			$status_msg .= "JPEG image file corresponding to the dag is created at $dot_jpeg_img_file \n************\n";
+			$summary_msg = "JPEG image file corresponding to the dag is created at $dot_jpeg_img_file \n";
+		}else{
+			$status_msg .= "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
+			$summary_msg = "WARNING : Failed to create JPEG image. $dot_jpeg_exec_msg .dot file corresponding to the dag is created at $dot_img_file "
+		}
 	}else{
-			$status_msg .= "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
-			$summary_msg = "Application \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dag is created at $dot_img_file \n";
+		$status_msg .= "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+		$summary_msg = "Application \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dag is created at $dot_img_file \n";
 	}
 	return ($status , $status_msg,$summary_msg);
 }
@@ -342,71 +445,38 @@ sub run_dax2dot($$$){
 	my ($dot_jpeg_command_path) = find_exec('dot');
 	
 	if($dot_jpeg_command_path){
-			$status_msg .= "******  dot  ***** \n";
-			my ($dot_jpeg_img_file_name) =("$daxbase"."-dax.jpg" );
-			my ($dot_jpeg_img_file ) =File::Spec->catfile("$output_dir", $dot_jpeg_img_file_name);
-			my (@dot_jpeg_args);
-			
-			#Adding arguments 
-			push(@dot_jpeg_args , "-Tjpeg"); # adding output file path
-			push(@dot_jpeg_args , "-o ".$dot_jpeg_img_file); # adding output file path
-			push(@dot_jpeg_args, $dot_img_file); # adding dot file path
-			
-			# creating dag2jpeg command 
-			my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
-			
-			$status_msg .= "Executing command :-\n $dag2jpeg_command \n";
-			my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command,  $log_dir ,'dag_dot2jpeg');
-			
-			if($dot_jpeg_status == 0  ){
-				$status_msg .= "****** Finished executing dot2jpeg ***** \n";
-				$status_msg .= "jpeg file corresponding to the dax is created at $dot_jpeg_img_file \n************\n";
-				$summary_msg = "jpeg file corresponding to the dax is created at $dot_jpeg_img_file \n";
-			}else{
-				$status_msg .= "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
-				$summary_msg ="WARNING : Failed to create JPEG image. $dot_jpeg_exec_msg .dot file corresponding to the dax is created at $dot_img_file \n";
-			}
+		$status_msg .= "******  dot  ***** \n";
+		my ($dot_jpeg_img_file_name) =("$daxbase"."-dax.jpg" );
+		my ($dot_jpeg_img_file ) =File::Spec->catfile("$output_dir", $dot_jpeg_img_file_name);
+		my (@dot_jpeg_args);
+		
+		#Adding arguments 
+		push(@dot_jpeg_args , "-Tjpeg"); # adding output file path
+		push(@dot_jpeg_args , "-o ".$dot_jpeg_img_file); # adding output file path
+		push(@dot_jpeg_args, $dot_img_file); # adding dot file path
+		
+		# creating dag2jpeg command 
+		my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
+		
+		$status_msg .= "Executing command :-\n $dag2jpeg_command \n";
+		my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command,  $log_dir ,'dax_dot2jpeg');
+		
+		if($dot_jpeg_status == 0  ){
+			$status_msg .= "****** Finished executing dot2jpeg ***** \n";
+			$status_msg .= "jpeg file corresponding to the dax is created at $dot_jpeg_img_file \n************\n";
+			$summary_msg = "jpeg file corresponding to the dax is created at $dot_jpeg_img_file \n";
+		}else{
+			$status_msg .= "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
+			$summary_msg ="WARNING : Failed to create JPEG image. $dot_jpeg_exec_msg .dot file corresponding to the dax is created at $dot_img_file \n";
+		}
 	}else{
-			$status_msg .= "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
-			$summary_msg = "Application \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dax is created at $dot_img_file \n";
+		$status_msg .= "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+		$summary_msg = "Application \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dax is created at $dot_img_file \n";
 	}
 	return ($status , $status_msg,$summary_msg);
 }
 
 
-
-
-sub parse_brain_dump_file($){
-	# purpose : parses the brain dump file to find the dax file path and dag file name.
-	# returns : dag file name and dag file path
-	my ($braindump_file)=(@_);
-	my ($dag_file, $dax_file);
-	open CONFIG, "$braindump_file" or die "Unable to open brain dump file: $braindump_file . $! \n";
-	for (<CONFIG>) {
-    	chomp;
-    	s/\#.*//;
-    	s/^\s+//;
-    	s/\s+$//;
-    	next unless length;
-    	my ($var, $val) = split(/\s/, $_, 2);
-    	if ($var eq 'dax'){
-    		$dax_file =  $val;
-		}
-		if ($var eq 'dag'){
-    		$dag_file = $val;
-		}
-    }
-	if(!$dax_file){
-		print STDERR "ERROR: Unable to find the dax file path in the  $braindump_file.\n";
-		exit 1;
-	}
-	if(!$dag_file){
-		print STDERR "ERROR: Unable to find the dag file name in the  $braindump_file.\n";
-		exit 1;
-	}
-	close(CONFIG);
-	return ($dag_file , $dax_file);
-}
 
 
 sub generate_compute_job_color($$){
@@ -540,15 +610,5 @@ sub generateColorCode(){
 
 }
 
-sub find_exec($) {
-    # purpose: determine location of given binary in $PATH
-    # returns: fully qualified path to binary, undef if not found
-    my $program = shift;
-    local($_);
-    foreach ( File::Spec->path ) {
-        my $fs = File::Spec->catfile( $_, $program );
-        return $fs if -x $fs;
-    }
-    return undef;
-}
+
 
