@@ -348,7 +348,7 @@
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.dir}/bin">
       <fileset dir="bin">
-          <include name="dirmanager"/>
+          <include name="pegasus-dirmanager"/>
           <include name="pegasus-cleanup"/>
           <include name="pegasus-transfer"/>
           <include name="symlink"/>
