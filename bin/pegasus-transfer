@@ -70,14 +70,15 @@ class URLPair:
         path = ""
 
         # default protocol is file://
-        if string.find(url, "://") == -1:
+        if string.find(url, ":") == -1:
             logger.debug("URL without protocol (" + url + ") - assuming file://")
             url = "file://" + url
 
         # file url is a special cases as it can contain relative paths and env vars
-        if string.find(url, "file://") == 0:
+        if string.find(url, "file:") == 0:
             proto = "file"
-            path = string.replace(url, "file://", "")
+            # file urls can either start with file://[\w]*/ or file: (no //)
+            path = re.sub("^file:(//[\w\.\-:@]*)?", "", url)
             path = expand_env_vars(path)
             # relative path?
             if string.find(path, "/") != 0:
@@ -85,9 +86,10 @@ class URLPair:
             return proto, host, path
         
         # symlink url is a special cases as it can contain relative paths and env vars
-        if string.find(url, "symlink://") == 0:
+        if string.find(url, "symlink:") == 0:
             proto = "symlink"
-            path = string.replace(url, "symlink://", "")
+            # symlink urls can either start with symlink://[\w]*/ or symlink: (no //)
+            path = re.sub("^symlink:(//[\w\.\-:@]*)?", "", url)
             path = expand_env_vars(path)
             # relative path?
             if string.find(path, "/") != 0:
@@ -95,12 +97,12 @@ class URLPair:
             return proto, host, path
 
         # other than file:// urls
-        re = re_parse_url.search(url)
-        if re:
+        r = re_parse_url.search(url)
+        if r:
             # Parse successful
-            proto = re.group(1)
-            host = re.group(2)
-            path = re.group(3)
+            proto = r.group(1)
+            host = r.group(2)
+            path = r.group(3)
             return proto, host, path
         else:
             raise RuntimeError("Unable to parse URL: %s" % (url))
