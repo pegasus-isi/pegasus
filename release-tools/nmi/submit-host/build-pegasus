@@ -289,7 +289,7 @@ sub test_binary
     # make sure we are not missing any expected files
     announce("Checking install for missing files");
     my @expected_files = (
-        'bin/dirmanager',
+        'bin/pegasus-dirmanager',
         'bin/keg',
         'bin/kickstart',
         'bin/pegasus-cleanup',
@@ -335,7 +335,7 @@ sub test_worker
     # make sure we are not missing any expected files
     announce("Checking install for missing files");
     my @expected_files = (
-        'bin/dirmanager',
+        'bin/pegasus-dirmanager',
         'bin/keg',
         'bin/kickstart',
         'bin/pegasus-cleanup',
