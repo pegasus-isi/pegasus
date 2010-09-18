@@ -74,6 +74,32 @@ DECREASE_LOG_LEVELS = {logging.DEBUG: logging.INFO,
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
 
+# Figure out where our lib/Python directory is located, and put that in our module search path
+if "PEGASUS_HOME" in os.environ:
+    lib_path = os.path.join(os.environ["PEGASUS_HOME"], "lib/python")
+    # Check if this is a directory
+    if os.path.isdir(lib_path):
+        # Insert this directory in our search path
+        os.sys.path.insert(0, lib_path)
+    else:
+        # Something is wrong!
+        logger.critical("PEGASUS_HOME appears to be set incorrectly... exiting!")
+        sys.exit(1)
+else:
+    # PEGASUS_HOME is not set, let's try to figure out where it is
+    pegasus_home = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]), ".."))
+    os.environ["PEGASUS_HOME"] = pegasus_home
+    lib_path = os.path.join(pegasus_home, "lib/python")
+
+    # Check if this is a directory
+    if os.path.isdir(lib_path):
+        # Insert this directory in our search path
+        os.sys.path.insert(0, lib_path)
+    else:
+        # Cannot figure out what to do!
+        logger.critical("cannot find Pegasus's Python library directory... exiting!")
+        sys.exit(1)
+
 # Import our modules
 from Pegasus.tools import filelock
 from Pegasus.tools import utils
