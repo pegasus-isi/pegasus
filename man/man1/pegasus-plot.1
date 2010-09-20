@@ -1,0 +1,101 @@
+.\"  Copyright 2010-2011 University Of Southern California
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"  http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\"  Unless required by applicable law or agreed to in writing,
+.\"  software distributed under the License is distributed on an "AS IS" BASIS,
+.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\"  See the License for the specific language governing permissions and
+.\" limitations under the License.
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id$
+.\"
+.\" Authors: Prasanth Thomas
+.\"
+.TH "pegasus-plot" "1" "1.0.0" "PEGASUS Workflow Planner"
+.SH "NAME"
+pegasus-plot \- A tool to generate graphs and charts to visualize workflow execution.
+
+.SH "SYNOPSIS"
+.B pegasus-plot <submit directory>
+[\-o|\-\-output <output directory>] 
+[\-show\-job\-title title of the show\-job chart] [\-show\-id\-title title of the show-id chart]
+[\-m|\-\-monitord] 
+[\-k|\-\-keep] [\-h|\-\-help] 
+.SH "DESCRIPTION"
+The pegasus-plot generates graphs and charts to visualize workflow execution.pegasus-plot generates dax and dag graph.
+It also generates workflow execution Gantt chart and job over time timeline graph. 
+
+.SH "ARGUMENTS"
+.TP
+.B \-o <output directory>
+.PD 0
+.TP
+.PD 1
+.B \-\-output  <output directory>
+Writes the output to the given directory 
+
+.TP
+.B \-\-show\-job\-title  show\-job chart title
+The title of the show\-job chart which generates the Gantt workflow execution chart.
+.IP
+
+
+.TP
+.B \-\-show\-id\-title  show\-id chart title
+The title of the show\-id chart which generates the job over time timeline chart.
+.IP
+
+.TP
+.B \-m
+.PD 0
+.TP
+.PD 1
+.B \-\-monitord
+Invokes pegasus-monitord beforre running pegasus-plot.
+
+.TP
+.B \-k
+.PD 0
+.TP
+.PD 1
+.B \-\-keep
+Keeps the log created by the pegasus-plot run.
+
+.TP
+.B \-h
+.PD 0
+.TP
+.PD 1
+.B \-\-help
+Displays all the options to the
+.B pegasus-plot
+command.
+
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B PEGASUS_HOME
+points to the installation base directory of your the PEGASUS execution
+environment. 
+
+.SH "EXAMPLE"
+.TP
+Runs pegasus-plot and writes the output to the given directory :\-
+.nf 
+\f(CB
+ pegasus-plot  -o /scratch/plot /scratch/grid-setup/run0001
+\fP
+.fi 
+ 
+.SH "AUTHORS"
+Prasanth Thomas 
+.PP 
+.br 
+PEGASUS
+.B http://pegasus.isi.edu
+
