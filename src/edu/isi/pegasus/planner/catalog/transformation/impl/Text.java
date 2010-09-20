@@ -268,6 +268,7 @@ public class Text
 
                 // close
                 out.close();
+                this.mFlushOnClose = false;
             }
             catch ( IOException ioe ) {
                 throw new RuntimeException( "Unable to write contents of TC to " + mTCFile,
@@ -1011,6 +1012,7 @@ public class Text
     public int clear() throws Exception {
     	int length = (mTCStore.getEntries(null,(TCType)null)).size();
         mTCStore.clear();
+        mFlushOnClose = true;
         return length;
     }
     
