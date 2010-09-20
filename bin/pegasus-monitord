@@ -101,7 +101,6 @@ else:
         sys.exit(1)
 
 # Import our modules
-from Pegasus.tools import filelock
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.tools import kickstart_parser
@@ -120,9 +119,10 @@ if sys.version_info < (2, 5):
 
 # Compile our regular expressions
 
-# Used in initialization code, while checking for rescue DAGs
+# Used in the initialization code of the Workflow class, while reading the DAG file
 re_parse_dag_submit_files = re.compile(r"JOB\s+(\S+)\s(\S+)(\s+DONE)?", re.IGNORECASE)
 re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
+re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\sDIR\s(\S+)", re.IGNORECASE)
 
 # Used in out2log
 re_remove_extensions = re.compile(r"(?:\.(?:rescue|dag))+$")
@@ -227,6 +227,7 @@ condorlog = None		# Condor common logfile
 terminate = None		# Keep track of terminate condition (and errors for exit code)
 condor_version = 0		# Track DAGMan's version
 condor_major = 0		# Track DAGMan's major version
+condor_dagman_executable = None	# condor_dagman binary location
 multiline_file_flag = False	# Track multiline user log files, DAGMan > 6.6
 workdb = None			# Instance of the database
 
@@ -240,6 +241,12 @@ jobtypes = {0: "unassigned",
 	    7: "staged compute",
 	    8: "cleanup",
 	    9: "symlink stage-in job"}
+
+# Find condor_dagman
+condor_dagman_executable = utils.find_exec("condor_dagman")
+if condor_dagman_executable is None:
+    # Default value
+    condor_dagman_executable = "condor_dagman"
 
 def finish_stampede_loader():
     """
@@ -458,7 +465,7 @@ class Job:
 
 	# Check if first record is an invocation record (it should be!)
 	if not "invocation" in buffer[0]:
-	    logger.warning("cannot find invocation record!")
+	    logger.debug("cannot find invocation record!")
 	    return None
 
 	# Ok, we have an invocation record, extract the information we
@@ -521,7 +528,7 @@ class Workflow:
     _log_file = None			# monitord.log file
     _jsd_file = None			# jobstate.log file
     _job_counters = {}			# Job counters for figuring out which output file to parse
-    _job_info = {}			# jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args]
+    _job_info = {}			# jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
 
     def parse_dag_file(self):
 	"""
@@ -548,7 +555,7 @@ class Workflow:
 				self._job_info[my_jobid][0] = my_sub
 			    else:
 				# No entry for this job, let's create a new one
-				self._job_info[my_jobid] = [my_sub, None, None, None, None]
+				self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None]
 		if (dag_line.lower()).find("script post") >= 0:
 		    # Found SCRIPT POST line, parse it
 		    my_match = re_parse_dag_script.search(dag_line)
@@ -562,7 +569,7 @@ class Workflow:
 			    self._job_info[my_jobid][4] = my_args
 			else:
 			    # No entry for this job, let's create a new one
-			    self._job_info[my_jobid] = [None, None, None, my_exec, my_args]
+			    self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None]
 		if (dag_line.lower()).find("script pre") >= 0:
 		    # Found SCRIPT PRE line, parse it
 		    my_match = re_parse_dag_script.search(dag_line)
@@ -576,7 +583,22 @@ class Workflow:
 			    self._job_info[my_jobid][2] = my_args
 			else:
 			    # No entry for this job, let's create a new one
-			    self._job_info[my_jobid] = [None, my_exec, my_args, None, None]
+			    self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None]
+                if (dag_line.lower()).find("subdag external") >= 0:
+                    # Found SUBDAG line, parse it
+                    my_match = re_parse_dag_subdag.search(dag_line)
+                    if my_match:
+                        my_jobid = my_match.group(1)
+                        my_dag = my_match.group(2)
+                        my_dir = my_match.group(3)
+                        if my_jobid in self._job_info:
+                            # Entry already exists for this job, just set subdag flag, and dag/dir info
+			    self._job_info[my_jobid][5] = True
+			    self._job_info[my_jobid][6] = my_dag
+                            self._job_info[my_jobid][7] = my_dir
+                        else:
+                            # No entry for this job, let's create a new one
+                            self._job_info[my_jobid] = [None, None, None, None, None, True, my_dag, my_dir]
 			
 	    DAG.close()
 
@@ -584,9 +606,50 @@ class Workflow:
 	# that are not yet done. Normally, this are all submit
 	# files. In rescue DAGS, that is an arbitrary subset of all
 	# jobs. In addition, _job_info should contain all PRE and POST
-	# script information for job in this workflow
+	# script information for job in this workflow, and all subdag
+        # jobs, with the their dag files, and directories
 
-    def write_state(self):
+    def read_workflow_state(self):
+        """
+        This function reads the job_submit_seq and the job_counters
+        dictionary from a file in the workflow's run directory. This
+        is used for restarting the logging information from where we
+        stopped last time.
+        """
+        
+        my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+
+        try:
+            INPUT = open(my_fn, "r")
+        except:
+            logger.info("cannot open state file %s" % (my_fn))
+            return
+        
+        try:
+            for line in INPUT:
+                # Split the input line in 2, and make the second part an integer
+                my_job, my_count = line.split(" ", 1)
+                my_job = my_job.strip()
+                my_count = int(my_count.strip())
+                if my_job == "monitord_job_sequence":
+                    # This is the last job_submit_seq used
+                    self._job_submit_seq = my_count
+                else:
+                    # Another job counter
+                    self._job_counters[my_job] = my_count
+        except:
+            logger.error("error processing state file %s" % (my_fn))
+        
+        # Close the file
+        try:
+            INPUT.close()
+        except:
+            pass
+
+        # All done!
+        return
+
+    def write_workflow_state(self):
         """
         This function writes the job_submit_seq and the job_counters
         dictionary to a file in the workflow's run directory. This can
@@ -600,7 +663,7 @@ class Workflow:
         try:
             OUT = open(my_fn, "w")
         except:
-            logger.error("cannot open logging file %s" % (my_fn))
+            logger.error("cannot open state file %s" % (my_fn))
             return
         
         try:
@@ -729,6 +792,10 @@ class Workflow:
 
 	# Now, we parse the dag file and get submit file locations
 	self.parse_dag_file()
+
+        if not replay_mode:
+            # Recover state from a previous run
+            self.read_workflow_state()
 
 	if wfparams is not None:
 	    if "wf_uuid" in wfparams:
@@ -961,6 +1028,10 @@ class Workflow:
             else:
                 if my_job._main_job_transformation is not None:
                     kwargs["transformation"] = my_job._main_job_transformation
+                else:
+                    if (my_job._name in self._job_info and
+                        self._job_info[my_job._name][5] == True):
+                        kwargs["transformation"] = "condor::dagman"
 	    if "start" in invocation_record:
                 # Need to convert it to epoch data
 		my_start = utils.epochdate(invocation_record["start"])
@@ -999,6 +1070,10 @@ class Workflow:
             else:
                 if my_job._main_job_executable is not None:
                     kwargs["executable"] = my_job._main_job_executable
+                else:
+                    if (my_job._name in self._job_info and
+                        self._job_info[my_job._name][5] == True):
+                        kwargs["executable"] = condor_dagman_executable
 	    if "argument-vector" in invocation_record:
 		kwargs["arguments"] = invocation_record["argument-vector"]
             else:
@@ -1052,29 +1127,38 @@ class Workflow:
 	This function tries to parse the kickstart output file of a given job and
 	collect information for the stampede schema.
 	"""
+        my_output = []
+        skip_kickstart_parsing = False
 
-	# Compose kickstart output file name (base is the filename before rotation)
-	my_job_output_fn_base = os.path.join(self._run_dir, my_job._name) + ".out"
-	my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
+        # Check if this is a subdag job
+        if (my_job._name in self._job_info and
+            self._job_info[my_job._name][5] == True):
+            skip_kickstart_parsing = True
 
-        # First assume we will find rotated file
-	my_parser = kickstart_parser.Parser(my_job_output_fn)
-	my_output = my_parser.parse_stampede()
+        # If job is a subdag job, skip looking for its kickstart output
+        if not skip_kickstart_parsing:
+            # Compose kickstart output file name (base is the filename before rotation)
+            my_job_output_fn_base = os.path.join(self._run_dir, my_job._name) + ".out"
+            my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
 
-        # Check if we were able to find it
-        if my_parser._open_error == True:
-            # File wasn't there, look for the file before the rotation
-            my_parser.__init__(my_job_output_fn_base)
+            # First assume we will find rotated file
+            my_parser = kickstart_parser.Parser(my_job_output_fn)
             my_output = my_parser.parse_stampede()
 
+            # Check if we were able to find it
             if my_parser._open_error == True:
-                # Couldn't find it again, one last try, as it might have just been moved
-                my_parser.__init__(my_job_output_fn)
+                # File wasn't there, look for the file before the rotation
+                my_parser.__init__(my_job_output_fn_base)
                 my_output = my_parser.parse_stampede()
 
-        # Check if successful
-        if my_parser._open_error == True:
-            logger.info("unable to find output file for job %s" % (my_job._name))
+                if my_parser._open_error == True:
+                    # Couldn't find it again, one last try, as it might have just been moved
+                    my_parser.__init__(my_job_output_fn)
+                    my_output = my_parser.parse_stampede()
+
+            # Check if successful
+            if my_parser._open_error == True:
+                logger.info("unable to find output file for job %s" % (my_job._name))
 
 	# Initialize task id counter
 	my_task_id = 1
@@ -1452,14 +1536,6 @@ if not "run" in config:
     # Add run key to our configuration
     config["run"] = run
 
-# For slow start
-sitefn = props.property("pegasus.slow.start")
-sitedb = None
-if not replay_mode:
-    if sitefn:
-	sitedb = filelock.Intent()
-	sitedb.new(os.path.join(run, sitefn))
-
 # Use default monitord logfile if user hasn't specified another file
 if not logfile:
     logfile = os.path.join(run, logbase)
@@ -1677,16 +1753,6 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 	if not jobid in running:
 	    # Remember when -- and which Condor ID
 	    running[jobid] = [stamp, condor_id, my_time, my_site]
-
-	    # Increase the window size when in slow start
-	    # WARNING: This may be blocking forever!!!!!
-	    if (sitedb is not None and
-		my_site is not None and
-		my_site in siteinfo and
-		jobid in siteinfo[my_site] and
-		siteinfo[my_site][jobid] == 'P'):
-		my_n = sitedb.inc(my_site)
-		logger.info("new window size for %s is %d" % (my_site, my_n))
 	else:
             logger.info("%s remains a running event for %s" % (event, jobid))
     else:
@@ -1874,7 +1940,7 @@ def process(log_line):
 	    # Send info to database
 	    wf.db_send_wf_state("end", timestamp)
             # Save all state to disk so that we can start again later
-            wf.write_state()
+            wf.write_workflow_state()
 	elif re_parse_dagman_pid.search(log_line) is not None:
 	    # DAGMan's pid
 	    if not replay_mode:
