@@ -308,8 +308,10 @@ public class TransformationCatalogTextParser {
         //System.out.println( "*** Profiles are " + p );
 
         entry.setSysInfo( sysinfo );
-        //add all the profiles for the entry
-        entry.addProfiles( p );
+        //add all the profiles for the entry only if they are empty
+        if( !p.isEmpty() ){
+           entry.addProfiles( p );
+        }
 
         if (! (mLookAhead instanceof CloseBrace)) {
                         throw new ScannerException(mScanner.getLineNumber(),

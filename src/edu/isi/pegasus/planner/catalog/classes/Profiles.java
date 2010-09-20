@@ -210,7 +210,24 @@ public class Profiles {
     public Namespace get( NAMESPACES n ){
         return ( Namespace )mProfileMap.get( n );
     }
-    
+
+    /**
+     * Returns a boolean indicating if the object is empty.
+     *
+     * The object is empty if all the underlying profile maps are empty.
+     *
+     * @return
+     */
+    public boolean isEmpty(){
+         boolean result = true;
+         for ( NAMESPACES n : NAMESPACES.values() ){
+            if( !this.get( n ).isEmpty() ){
+                result = false;
+                break;
+            }
+         }
+         return result;
+    }
     
     /**
      * Writes out the xml description of the object. 
@@ -242,7 +259,8 @@ public class Profiles {
             }
         }
     }
-    
+
+
     /**
      * Returns the string description of the object. 
      *

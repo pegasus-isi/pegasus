@@ -378,6 +378,17 @@ public abstract class Namespace extends Data{
    }
 
 
+    /**
+     * Returns a boolean indicating if the object is empty.
+     *
+     * The object is empty if the underlying map's key set is empty.
+     *
+     * @return
+     */
+    public boolean isEmpty(){
+        return ( mProfileMap == null )? true : mProfileMap.keySet().isEmpty();
+    }
+
    /**
     * Returns the value to which this namespace maps the specified key.
     * Returns null if the map contains no mapping for this key. A return value
