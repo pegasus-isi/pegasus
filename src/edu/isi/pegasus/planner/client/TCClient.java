@@ -264,29 +264,36 @@ public class TCClient extends Executable{
             mLogger.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 2 );
         }
-
-        switch ( operationcase ) {
-            case 1: //QUERY OPERATION SELECTED
-                TCQuery tcquery = new TCQuery( tc, mLogger, argsmap );
-                tcquery.doQuery();
-
-                break;
-            case 2: //ADD OPERATION SELECTED
-                TCAdd tcadd = new TCAdd( tc, mLogger, argsmap );
-                tcadd.doAdds();
-                break;
-
-            case 4: //DELETE OPERATION SELECTED
-                TCDelete tcdelete = new TCDelete( tc, mLogger, argsmap );
-                tcdelete.doDelete();
-                break;
-            default: //ERROR IN SELECTION OPERATION
-                mLogger.log(
-                    "Please specify the correct operation for the client." +
-                    "Only one operation can be done at a time.",
-                    LogManager.FATAL_MESSAGE_LEVEL );
-                this.printShortVersion();
-                System.exit( -1 );
+        try{
+	        switch ( operationcase ) {
+	            case 1: //QUERY OPERATION SELECTED
+	                TCQuery tcquery = new TCQuery( tc, mLogger, argsmap );
+	                tcquery.doQuery();
+	
+	                break;
+	            case 2: //ADD OPERATION SELECTED
+	                TCAdd tcadd = new TCAdd( tc, mLogger, argsmap );
+	                tcadd.doAdds();
+	                break;
+	
+	            case 4: //DELETE OPERATION SELECTED
+	                TCDelete tcdelete = new TCDelete( tc, mLogger, argsmap );
+	                tcdelete.doDelete();
+	                break;
+	            default: //ERROR IN SELECTION OPERATION
+	                mLogger.log(
+	                    "Please specify the correct operation for the client." +
+	                    "Only one operation can be done at a time.",
+	                    LogManager.FATAL_MESSAGE_LEVEL );
+	                this.printShortVersion();
+	                System.exit( -1 );
+	        }
+        }finally{
+        	if(tc != null){
+        		if(!tc.isClosed()){
+        			tc.close();
+        		}
+        	}
         }
         mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
     }
