@@ -9,6 +9,9 @@ if [ "x$PEGASUS_HOME" = "x" ]; then
     exit 1
 fi 
 
+# geneate the input file
+echo "This is sample input file" >f.a
+
 # generate the dax
 ./blackdiamond.py >blackdiamond.dax
 
@@ -23,7 +26,6 @@ cat >tc.data <<EOF
 local  diamond::preprocess:2.0  $PEGASUS_HOME/bin/keg                 INSTALLED INTEL32::LINUX ENV::KEY1="VALUE1"
 local  diamond::findrange:2.0   $PEGASUS_HOME/bin/keg                 INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
 local  diamond::analyze:2.0     $PEGASUS_HOME/bin/keg                 INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
-local  pegasus::transfer        $PEGASUS_HOME/bin/transfer            INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
 EOF
 
 # create the site catalog
@@ -36,14 +38,14 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work/outputs"/>
-                    <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs" free-size="100G" total-size="30G"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work/outputs"/>
-                    <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs" free-size="100G" total-size="30G"/>
                 </shared>
             </storage>
         </head-fs>
@@ -60,4 +62,6 @@ pegasus-plan \
     --dir work \
     --output local \
     --dax blackdiamond.dax \
+    --submit
+
 
