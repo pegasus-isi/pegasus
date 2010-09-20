@@ -152,9 +152,9 @@ public class TransformationCatalogTextScanner {
                 }
             }
             else if( previousTokenIsSite ){
-                //allow - in site names
+                //allow - . @ in site names
                 while ( mLookAhead != -1 &&
-                        ( Character.isJavaIdentifierPart((char) mLookAhead) || mLookAhead == '-'  ) ){
+                        ( Character.isJavaIdentifierPart((char) mLookAhead) || mLookAhead == '-' || mLookAhead == '.' || mLookAhead == '@'  ) ){
                     identifier.append( (char) mLookAhead );
                     mLookAhead = mInputReader.read();
                 }
