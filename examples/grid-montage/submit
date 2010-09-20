@@ -22,7 +22,9 @@ CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
 CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/testing/latest"
 CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
 CLUSTER_MONTAGE_LOCATION="/cluster-software/montage/3.2_beta6_mats"
-JOB_CLUSTERING="PEGASUS::bundle=15"
+
+# this will bundle N jobs togehter
+JOB_COLLAPSE="10"
 #######################################################################
 
 TOP_DIR=`pwd`
@@ -48,14 +50,50 @@ cp $TOP_DIR/pegasusrc .
 echo
 echo "Creating the transformation catalog..."
 cat >tc <<EOF
-# Site  LFN  PFN  TYPE  SYSTEM PROFILE
-$CLUSTER_NAME     pegasus::dirmanager     $CLUSTER_PEGASUS_HOME/bin/dirmanager        INSTALLED   INTEL32::LINUX
-$CLUSTER_NAME     pegasus::kickstart      $CLUSTER_PEGASUS_HOME/bin/kickstart         INSTALLED   INTEL32::LINUX
-$CLUSTER_NAME     pegasus::seqexec        $CLUSTER_PEGASUS_HOME/bin/seqexec           INSTALLED   INTEL32::LINUX
-$CLUSTER_NAME     pegasus::cleanup        $CLUSTER_PEGASUS_HOME/bin/cleanup           INSTALLED   INTEL32::LINUX
+tr pegasus::dirmanager {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_PEGASUS_HOME/bin/pegasus-dirmanager"
+        arch "x86"
+        os "linux"
+    }
+}
+tr pegasus::kickstart {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_PEGASUS_HOME/bin/kickstart"
+        arch "x86"
+        os "linux"
+        type "installed"
+    }
+}
+tr pegasus::seqexec {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_PEGASUS_HOME/bin/seqexec"
+        arch "x86"
+        os "linux"
+        type "installed"
+    }
+}
+tr pegasus::cleanup {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_PEGASUS_HOME/bin/pegasus-cleanup"
+        arch "x86"
+        os "linux"
+        type "installed"
+    }
+}
 EOF
 for BINARY in `(cd $LOCAL_MONTAGE_LOCATION/bin && ls)`; do
-    echo "$CLUSTER_NAME     $BINARY:3.0    $CLUSTER_MONTAGE_LOCATION/bin/$BINARY       INSTALLED   INTEL32::LINUX     $JOB_CLUSTERING" >>tc
+    cat >>tc <<EOF
+tr $BINARY:3.0 {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_MONTAGE_LOCATION/bin/$BINARY"
+        arch "x86"
+        os "linux"
+        type "installed"
+        profile pegasus "collapse" "$JOB_COLLAPSE" 
+    }
+}
+EOF
 done
 
 # site catalog
@@ -64,7 +102,7 @@ echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86" os="LINUX">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
             <scratch>
@@ -85,7 +123,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="GLOBUS_LOCATION" >$LOCAL_GLOBUS_LOCATION</profile>
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >$LOCAL_GLOBUS_TCP_PORT_RANGE</profile>
     </site>
-    <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
+    <site handle="$CLUSTER_NAME" arch="x86" os="LINUX">
         <grid  type="$CLUSTER_GATEKEEPER_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="$CLUSTER_GATEKEEPER_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
         <head-fs>
