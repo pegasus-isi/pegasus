@@ -96,6 +96,13 @@ public class File
      * The handle to the properties object.
      */
     private PegasusProperties mProps;
+    
+    
+    /**
+     * Boolean indicating whether to flush the contents back to the file on 
+     * close.
+     */
+    private boolean mFlushOnClose;
 
     /**
      * Returns an instance of the File TC.
@@ -232,7 +239,7 @@ public class File
     public void initialize ( PegasusBag bag ){
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
-        
+        mFlushOnClose = false;
         mTCFile = mProps.getTCPath();
         mTreeMap = new TreeMap();
         mLogger.log("TC Mode being used is " + this.getDescription(),
@@ -949,7 +956,8 @@ public class File
         if (add) {
             pfnList.add(entry);
             if (write) {
-                writeTC();
+            	mFlushOnClose = true;
+                //writeTC();
             }
         }
         else {
@@ -1087,7 +1095,8 @@ public class File
 
         if (mTreeMap.containsKey(resourceid)) {
             mTreeMap.remove(resourceid);
-            writeTC();
+            mFlushOnClose = true;
+            //writeTC();
             return 1;
         }else{
         	return 0;
@@ -1105,6 +1114,7 @@ public class File
     public int clear() throws Exception {
     	int length = mTreeMap.size();
         mTreeMap.clear();
+        mFlushOnClose = true;
         return length;
     }
 
@@ -1154,12 +1164,21 @@ public class File
     }
 
     public boolean isClosed() {
-        //not impelemented
-        return true;
+        
+        return (this.mTreeMap == null);
     }
 
     public void close() {
-        //not impelemented
+    	try{
+    		if(mFlushOnClose){
+    			writeTC();
+    			this.mFlushOnClose = false;
+    		}
+    	}finally{	
+    		this.mTreeMap = null;
+    		this.mTCFile = null;
+    		
+    	}
     }
 
     private void writeTC() {
