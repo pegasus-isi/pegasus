@@ -124,9 +124,17 @@ public class TransformationCatalogTextScanner {
             return null;
         }
 
-        //for identifier after tr we allow for . and :
-        boolean permissive = ( mPreviousToken instanceof TransformationCatalogReservedWord &&
-                                ((TransformationCatalogReservedWord)mPreviousToken).getValue() == TransformationCatalogReservedWord.TRANSFORMATION );
+        //for identifier after tr we allow for . - and :
+        boolean previousTokenIsTR = false;
+        boolean previousTokenIsSite = false;
+        if( ( mPreviousToken instanceof TransformationCatalogReservedWord &&
+                                ((TransformationCatalogReservedWord)mPreviousToken).getValue() == TransformationCatalogReservedWord.TRANSFORMATION ) ){
+            previousTokenIsTR = true;
+        }
+        else if( ( mPreviousToken instanceof TransformationCatalogReservedWord &&
+                                ((TransformationCatalogReservedWord)mPreviousToken).getValue() == TransformationCatalogReservedWord.SITE ) ){
+            previousTokenIsSite = true;
+        }
 
         // are we parsing a reserved word or identifier
         if ( Character.isJavaIdentifierStart( (char) mLookAhead) ) {
@@ -134,10 +142,19 @@ public class TransformationCatalogTextScanner {
             identifier.append( (char) mLookAhead );
             mLookAhead = mInputReader.read();
 
-            if( permissive ){
-                //allow : and .
+            if( previousTokenIsTR ){
+                //allow : - and . for transformation names
                 while ( mLookAhead != -1 &&
-                        ( Character.isJavaIdentifierPart((char) mLookAhead) || mLookAhead == ':'  || mLookAhead == '.' ) ) {
+                        ( Character.isJavaIdentifierPart((char) mLookAhead) || 
+                          mLookAhead == ':'  || mLookAhead == '.' || mLookAhead == '-' ) ) {
+                    identifier.append( (char) mLookAhead );
+                    mLookAhead = mInputReader.read();
+                }
+            }
+            else if( previousTokenIsSite ){
+                //allow - in site names
+                while ( mLookAhead != -1 &&
+                        ( Character.isJavaIdentifierPart((char) mLookAhead) || mLookAhead == '-'  ) ){
                     identifier.append( (char) mLookAhead );
                     mLookAhead = mInputReader.read();
                 }
