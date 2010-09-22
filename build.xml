@@ -444,6 +444,7 @@
       <exclude name="invoke"/>
       <exclude name="keg.condor"/>
       <exclude name="seqexec"/>
+      <exclude name="newexec"/>
       <exclude name="mpi*"/>
       <exclude name="condor-log-parser"/>
     </fixcrlf>
