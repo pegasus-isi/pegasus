@@ -1,8 +1,0 @@
-CHANGELOG
-=========
-
-VDLx 1.22 -> 1.23
------------------
-
-o Added boolean attribute "optional" to all LFN specifications.
-

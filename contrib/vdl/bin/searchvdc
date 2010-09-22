@@ -1,9 +1,0 @@
-#!/bin/sh
-#
-# search the vdc for specific definition's
-# $Id$
-#
-. "`dirname $0`/common.sh"
-
-#run java program
-${JAVA_HOME}/bin/java "-Dvds.home=${VDS_HOME}" $addon org.griphyn.vdl.toolkit.SearchVDC "$@"

@@ -1,9 +1,0 @@
-#!/bin/sh
-#
-# Search definition's and lfn's with specific metadata
-# $Id$
-#
-. "`dirname $0`/common.sh"
-
-#run java program
-${JAVA_HOME}/bin/java  "-Dvds.home=${VDS_HOME}" $addon org.griphyn.vdl.toolkit.SearchMeta "$@"

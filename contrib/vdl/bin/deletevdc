@@ -1,9 +1,0 @@
-#!/bin/sh
-#
-# delete specific definition's that match the namespace, id, ver triple
-# $Id$
-#
-. "`dirname $0`/common.sh"
-
-# run java program
-${JAVA_HOME}/bin/java "-Dvds.home=${VDS_HOME}" $addon org.griphyn.vdl.toolkit.DeleteVDC "$@"

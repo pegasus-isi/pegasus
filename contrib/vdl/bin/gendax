@@ -1,9 +1,0 @@
-#!/bin/sh
-#
-# generate DAX upon the request for an lfn or a specific DV.
-# $Id$
-#
-. "`dirname $0`/common.sh"
-
-# run java program
-${JAVA_HOME}/bin/java "-Dvds.home=${VDS_HOME}" $addon org.griphyn.vdl.toolkit.GetDAX "$@"

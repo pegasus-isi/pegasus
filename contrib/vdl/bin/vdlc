@@ -1,9 +1,0 @@
-#!/bin/sh
-#
-# process the pipeline from VDLt to DAX in one go
-# $Id$
-#
-. "`dirname $0`/common.sh"
-
-# run java program
-${JAVA_HOME}/bin/java "-Dvds.home=${VDS_HOME}" $addon org.griphyn.vdl.toolkit.VDLc "$@"
