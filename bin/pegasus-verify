@@ -75,7 +75,6 @@ my %perl_mod = ( 'Archive::Tar'   => [ 0 ],
 		 'Time::Local'    => [ 1 ],
 		 'URI'            => [ 2, '1.32' ],
 		 'Work::Common'   => [ 1 ], # ours
-		 'Work::Workflow' => [ 1 ], # ours
 		 'XML::Simple'    => [ 1 ],
 		 'XML::Parser::EasyTree' => [ 0 ],
 		 'XML::Parser::Expat' => [ 2, '2.29' ],
