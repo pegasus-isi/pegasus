@@ -368,7 +368,7 @@ public class TransformationCatalogEntry
     		if ( this.mProfiles == null ) {
     			this.mProfiles = new Profiles();
             }
-    		this.mProfiles.addProfiles( profiles );
+    		this.mProfiles.addProfilesDirectly( profiles );
     	}
     }
 
@@ -382,7 +382,7 @@ public class TransformationCatalogEntry
             if ( this.mProfiles == null ) {
                 this.mProfiles = new Profiles();
             }
-            this.mProfiles.addProfile( profile );
+            this.mProfiles.addProfileDirectly( profile );
         }
     }
 
@@ -395,7 +395,7 @@ public class TransformationCatalogEntry
             if ( this.mProfiles == null ) {
                 this.mProfiles = new Profiles();
             }
-            this.mProfiles.addProfiles( profiles );
+            this.mProfiles.addProfilesDirectly( profiles );
         }
     }
 

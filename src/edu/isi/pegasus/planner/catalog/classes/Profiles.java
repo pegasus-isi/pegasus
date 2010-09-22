@@ -112,6 +112,50 @@ public class Profiles {
     }
 
     /**
+     * Adds multiple profiles . to namespace bypassing any underlying namespace
+     * specific checks. The catalog parsers should use this function
+     *
+     * @param profiles the profiles object
+     */
+    public void addProfilesDirectly( Profiles profiles ) {
+
+        //traverse through all the enum keys
+        for ( NAMESPACES n : NAMESPACES.values() ){
+            Namespace nm = profiles.get( n );
+            for( Iterator it = nm.getProfileKeyIterator(); it.hasNext(); ){
+                String key = (String) it.next();
+                this.addProfileDirectly( new Profile( n.toString(), key, (String)nm.get( key ) ));
+            }
+        }
+
+    }
+
+    /**
+     * Adds multiple profiles to namespace bypassing any underlying namespace
+     * specific checks. The catalog parsers should use this function.
+     *
+     *
+     * @param profiles  List of <code>Profile</code> objects.
+     */
+    public void addProfilesDirectly( List<Profile> profiles ) {
+        for( Iterator<Profile> it = profiles.iterator(); it.hasNext(); ){
+            this.addProfileDirectly( it.next() );
+        }
+    }
+
+    /**
+     * Adds a profile directly to namespace bypassing any underlying namespace
+     * specific checks. The catalog parsers should use this function.
+     *
+     * @param p  the profile to be added
+     */
+    public void addProfileDirectly( Profile p ){
+        //retrieve the appropriate namespace and then add
+        Namespace n = ( Namespace )mProfileMap.get( NAMESPACES.valueOf( p.getProfileNamespace() ) );
+        n.construct( p.getProfileKey(), p.getProfileValue() );
+    }
+
+    /**
      * Adds a profile.
      * 
      * @param p  the profile to be added
