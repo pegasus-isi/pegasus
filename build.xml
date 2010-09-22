@@ -281,7 +281,7 @@
   <target name="man-ps" depends="validate-groff,version" 
 	  if="groff.available">
     <mkdir dir="${dist.man}"/>
-    <apply executable="${basedir}/groff.sh" dest="${dist.man}">
+    <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
       <srcfile/>
       <targetfile/>
       <fileset dir="man/man1" includes="*.1"/>
@@ -292,7 +292,7 @@
   <target name="man-txt" depends="validate-groff,version" 
 	  if="groff.available">
     <mkdir dir="${dist.man}"/>
-    <apply executable="${basedir}/groff.sh" dest="${dist.man}">
+    <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
       <srcfile/>
       <targetfile/>
       <fileset dir="man/man1" includes="*.1"/>
@@ -303,7 +303,7 @@
   <target name="man-html" depends="validate-groff,version" 
           if="groff.available">
     <mkdir dir="${dist.man}"/>
-    <apply executable="${basedir}/groff.sh" dest="${dist.man}">
+    <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
       <srcfile/>
       <targetfile/>
       <fileset dir="man/man1" includes="*.1"/>
@@ -491,11 +491,6 @@
       <fileset dir="${dist.dir}/libexec" excludes="README*"/>
     </chmod>
 
-    <!-- share -->
-    <mkdir dir="${dist.dir}/share"/>
-    <copy preservelastmodified="true" todir="${dist.dir}/share">
-      <fileset dir="share" includes="*"/>
-    </copy>
 
     <!-- sql -->
     <mkdir dir="${dist.dir}/sql"/>
