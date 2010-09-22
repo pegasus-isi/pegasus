@@ -172,7 +172,7 @@ $SIG{'__DIE__'} = sub {
 chdir($run) || die "ERROR: chdir $run: $!\n";
 
 # sanity check: find the pegasus-monitord daemon
-die "ERROR: Unable to execute $tsd\n" unless -x $tsd;
+warn "WARN: Either $tsd does not exist or is not executable\n" unless -x $tsd;
 print STDERR "# found $tsd\n" if $main::DEBUG;
 
 # Do GRID check if $grid enabled
@@ -275,20 +275,23 @@ system(@args) == 0
     or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
 print STDERR "# dagman is running\n" if $main::DEBUG;
 
-my @tsdargs = ($tsd);
+if ( -x $tsd ) {
+    my @tsdargs = ($tsd);
 # run pegasus-monitord to update job stats until DAGMan finishes
-if(!$database){
+    if(!$database){
 #@args=create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
-push(@tsdargs,'--nodatabase');
-push(@tsdargs, $config{dag} . '.dagman.out' );
-}else {
+	push(@tsdargs,'--nodatabase');
+	push(@tsdargs, $config{dag} . '.dagman.out' );
+    }else {
 #@args = create_args( $tsd, ,"-n", $config{dag} . '.dagman.out' );
-push(@tsdargs, $config{dag} . '.dagman.out' );
+	push(@tsdargs, $config{dag} . '.dagman.out' );
+    }
+    print STDERR "# ", join(' ',@tsdargs), "\n" if $main::DEBUG;
+    system(@tsdargs) == 0 
+	or warn( "WARN: Running $tsd failed with ", parse_exit($?) );
+    print STDERR "# $tsd is running\n" if $main::DEBUG;
 }
-print STDERR "# ", join(' ',@tsdargs), "\n" if $main::DEBUG;
-system(@tsdargs) == 0 
-    or die( "ERROR: Running $tsd failed with ", parse_exit($?) );
-print STDERR "# $tsd is running\n" if $main::DEBUG;
+
 
 # next step
 if ( @rescue > 0 ) {
