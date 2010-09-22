@@ -18,16 +18,16 @@
 .\" Authors: Karan Vahi
 .\" 
 .\" 
-.TH "sc-client" "1" "2.2.0" "PEGASUS Workflow Planner"
+.TH "pegasus-sc-converter" "1" "2.2.0" "PEGASUS Workflow Planner"
 .SH "NAME"
-sc-client \- A client to convert site catalog from one format to another format.
+pegasus-sc-converter \- A client to convert site catalog from one format to another format.
 
 .SH "SYNOPSIS"
-.B sc-client
+.B pegasus-sc-converter
  [\-Dprop  [..]]  \-i <list of input files> \-o <output file to write> 
         [\-I input format] [\-O <output format> [\-v] [\-V] [\-h]
 .SH "DESCRIPTION"
-The sc-client program is used to convert the site catalog from one format to another. 
+The pegasus-sc-converter program is used to convert the site catalog from one format to another. 
 .IP
 Currently, the following formats of site catalog exist.
 .TP
@@ -206,7 +206,7 @@ command.
 .SH "EXAMPLE"
 .nf 
 \f(CB
- sc-client  -i sites.xml -I XML -o sites.xml.new  -O XML3 -vvvvv
+ pegasus-sc-converter  -i sites.xml -I XML -o sites.xml.new  -O XML3 -vvvvv
 \fP
 .fi 
 .SH "AUTHORS"

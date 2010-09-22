@@ -8,18 +8,21 @@ HTML	= -Thtml
 # use /usr/ucb/install on Solaris
 INSTALL	= install
 
-SRC	= exitcode.1 \
-	sc-client.1 \
-	rc-client.1 \
-	show-properties.1 \
-	tc-client.1 \
-	test-version.1 \
+SRC	= pegasus-bug-report.1 \
 	pegasus-check-sites.1 \
-	pegasus-get-sites.1 \
+	pegasus-get-sites-old.1 \
 	pegasus-plan.1 \
+	pegasus-plot.1 \
+	pegasus-rc-client.1 \
+	pegasus-run.1 \
+	pegasus-sc-converter.1 \
+	pegasus-statistics.1 \
 	pegasus-submit-dag.1 \
+	pegasus-tc-client.1 \
+	pegasus-tc-converter.1 \
 	pegasus-verify.1 \
-	pegasus-version.1
+	pegasus-version.1 \
+	s3cmd.1
 
 OUTPS	= $(SRC:.1=.ps)
 OUTPDF	= $(SRC:.1=.pdf)
