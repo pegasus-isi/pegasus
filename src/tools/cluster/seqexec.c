@@ -175,7 +175,7 @@ main( int argc, char* argv[], char* envp[] )
 {
   size_t len;
   char line[MAXSTR];
-  int appc, status = 0;
+  int appc, other, status = 0;
   int fail_hard = 0;
   char* cmd;
   char** appv = NULL;
@@ -195,10 +195,10 @@ main( int argc, char* argv[], char* envp[] )
   if ( (cmd = getenv("SEQEXEC_SETUP")) != NULL ) { 
 #ifndef USE_SYSTEM_SYSTEM
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
-      status = mysystem( appv, envp, "setup" ); 
-      if ( status || debug )
+      other = mysystem( appv, envp, "setup" ); 
+      if ( other || debug )
 	showerr( "%s: setup returned %d/%d\n", application,
-		 (status >> 8), (status & 127) ); 
+		 (other >> 8), (other & 127) ); 
       for ( len=0; len<appc; len++ ) free((void*) appv[len]);
       free((void*) appv); 
     } else {
@@ -206,10 +206,10 @@ main( int argc, char* argv[], char* envp[] )
       showerr( "%s: unparsable setup string, ignoring\n", application ); 
     }
 #else
-    status = system( cmd ); 
-    if ( status || debug )
+    other = system( cmd ); 
+    if ( other || debug )
       showerr( "%s: setup returned %d/%d\n", application,
-	       (status >> 8), (status & 127) ); 
+	       (other >> 8), (other & 127) ); 
 #endif /* USE_SYSTEM_SYSTEM */
   }
 
@@ -270,10 +270,10 @@ main( int argc, char* argv[], char* envp[] )
   if ( (cmd = getenv("SEQEXEC_CLEANUP")) != NULL ) { 
 #ifndef USE_SYSTEM_SYSTEM
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
-      status = mysystem( appv, envp, "cleanup" ); 
-      if ( status || debug )
+      other = mysystem( appv, envp, "cleanup" ); 
+      if ( other || debug )
 	showerr( "%s: cleanup returned %d/%d\n", application,
-		 (status >> 8), (status & 127) ); 
+		 (other >> 8), (other & 127) ); 
       for ( len=0; len<appc; len++ ) free((void*) appv[len]);
       free((void*) appv); 
     } else {
@@ -281,10 +281,10 @@ main( int argc, char* argv[], char* envp[] )
       showerr( "%s: unparsable cleanup string, ignoring\n", application ); 
     }
 #else
-    status = system( cmd ); 
-    if ( status || debug )
+    other = system( cmd ); 
+    if ( other || debug )
       showerr( "%s: cleanup returned %d/%d\n", application,
-	       (status >> 8), (status & 127) ); 
+	       (other >> 8), (other & 127) ); 
 #endif /* USE_SYSTEM_SYSTEM */
   }
 
