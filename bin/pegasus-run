@@ -39,7 +39,7 @@ use Getopt::Long qw(:config bundling no_ignore_case);
 # load our own local modules
 use Work::Common;
 use Work::Properties qw(%initial); # parses -Dprop=val from @ARGV
-use Work::Workflow;
+
 
 # constants
 sub usage(;$);			# { }
