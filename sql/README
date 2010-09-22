@@ -33,18 +33,17 @@ where
 	init	schema metadata upon which the rest depends
 	tc	org.griphyn.common.catalog.transformation.Database
 	rc      JDBC generic (uses autoinc) implementation
-	wf      workflow manager and site information
 
 The schemas marked with a "+" are mutually exclusive. The special files:
 
 	<work>-<db>.sql
 
 creates, deletes, or updates a recommended set of schemas
-(init,anno,ptc,tc,rc,wf) for Annotations. Alternatively, the special
+(init,tc,rc) for Annotations. Alternatively, the special
 files:
 
 	<work>-<db>-old.sql
 
 creates, deletes, or updates a recommended set of schemas
-(init,chunk,ptc,tc,rc,wf) for chunks.
+(init,tc,rc) for chunks.
 
