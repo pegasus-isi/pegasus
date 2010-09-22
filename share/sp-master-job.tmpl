@@ -1,7 +1,0 @@
-if ! ./@@JOBSCRIPT@@ @@LOGFILE@@; then
-    echo 'ERROR: @@JOBSCRIPT@@ failed'
-    echo 'FATAL: workflow execution terminated on error'
-    exit 1
-else 
-    test "X@@REGISTER@@" = "X1" && insert_rc @@FILELIST@@
-fi
