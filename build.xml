@@ -417,7 +417,7 @@
     </chmod>
   </target>
 
-  <target name="dist" depends="jar,latex,withoutlatex,javadoc,man-roff,ctools-all,getsystem"
+  <target name="dist" depends="jar,latex,withoutlatex,man-roff,ctools-all,getsystem"
           description="Sets up the dist directory">
     <!-- bin -->
     <mkdir dir="${dist.dir}/bin"/>
@@ -510,12 +510,6 @@
     <chmod perm="ugo+rx" type="file">
       <fileset dir="${dist.dir}/test" includes="**/*.pl,**/*sh"/>
     </chmod>
-
-    <!-- var -->
-    <mkdir dir="${dist.dir}/var"/>
-    <copy preservelastmodified="true" todir="${dist.dir}/var">
-      <fileset dir="var" includes="*"/>
-    </copy>
 
     <!-- . -->
     <copy preservelastmodified="true" todir="${dist.dir}">
