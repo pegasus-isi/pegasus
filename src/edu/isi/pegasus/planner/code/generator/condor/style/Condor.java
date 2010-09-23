@@ -118,6 +118,7 @@ public class Condor extends Abstract {
         // Karan Jan 28, 2008
         job.condorVariables.construct( "universe", universe );
 
+        mLogger.log("BLA1", LogManager.WARNING_MESSAGE_LEVEL );
         if( universe.equalsIgnoreCase( Condor.VANILLA_UNIVERSE )  ||
             universe.equalsIgnoreCase( Condor.STANDARD_UNIVERSE ) ||
             universe.equalsIgnoreCase( Condor.PARALLEL_UNIVERSE ) ){
@@ -126,6 +127,7 @@ public class Condor extends Abstract {
             //check if it is a glide in job.
             //vanilla jobs are glide in jobs?
             //No they are not.
+            mLogger.log("BLA2", LogManager.WARNING_MESSAGE_LEVEL );
 
             //set the vds change dir key to trigger -w
             //to kickstart invocation for all non transfer jobs

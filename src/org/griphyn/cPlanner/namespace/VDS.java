@@ -227,6 +227,12 @@ public class VDS extends Namespace {
      * glidein execution.
      */
     public static final String GLIDEIN_STYLE = "glidein";
+
+    /**
+     * The style indicating that the submit files are to be generated for a
+     * glideinwms execution.
+     */
+    public static final String GLIDEINWMS_STYLE = "glideinwms";
     
     /**
      * The style indicating that the submit files are to be generated for a

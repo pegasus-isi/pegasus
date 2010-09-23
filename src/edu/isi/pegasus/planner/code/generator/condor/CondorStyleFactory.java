@@ -66,6 +66,11 @@ public class CondorStyleFactory {
     private static final String GLIDEIN_STYLE_IMPLEMENTING_CLASS = "CondorGlideIN";
 
     /**
+     * The name of the class implementing the Condor GlideinWMS Style.
+     */
+    private static final String GLIDEINWMS_STYLE_IMPLEMENTING_CLASS = "CondorGlideinWMS";
+    
+    /**
      * The name of the class implementing the CondorG Style.
      */
     private static final String GLOBUS_STYLE_IMPLEMENTING_CLASS = "CondorG";
@@ -266,6 +271,7 @@ public class CondorStyleFactory {
             mImplementingClassNameTable = new HashMap(3);
             mImplementingClassNameTable.put( VDS.CONDOR_STYLE, CONDOR_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( VDS.GLIDEIN_STYLE, GLIDEIN_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( VDS.GLIDEINWMS_STYLE, GLIDEINWMS_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( VDS.GLOBUS_STYLE, GLOBUS_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( VDS.GLITE_STYLE, GLITE_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( VDS.CONDORC_STYLE, CONDORC_STYLE_IMPLEMENTING_CLASS );
