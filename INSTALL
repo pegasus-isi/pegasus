@@ -3,7 +3,7 @@ SOFTWARE REQUIRED TO BUILD FROM SOURCE
 
 o ANT v1.6 or higher
 o JAVA v1.5 or higher
-o gcc, gtar, gmake
+o gcc, gtar, gmake, groff
 
   OPTIONAL
 
