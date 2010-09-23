@@ -2,20 +2,23 @@
 
 set -e
 
+# note - this requires Montage 3.2beta6 or higher
+
 #######################################################################
 #
 #  Settings
 #
-DEGREES=2.0
-LOCAL_PEGASUS_HOME="/home/bockelman/rynge/software/pegasus-3.0.0cvs20100714"
-LOCAL_MONTAGE_LOCATION="/home/bockelman/rynge/software/montage-3.0_mei"
-CLUSTER_NAME="Omaha"
-CLUSTER_GRIDFTP_BASE="gsiftp://ff-grid.unl.edu:2811"
-CLUSTER_WORK_DIR="/panfs/panasas/CMS/data/hcc/tmp"
-CLUSTER_PEGASUS_HOME="/opt/osgwn1.2.4/pegasus"
-CLUSTER_GLOBUS_LOCATION="/opt/osgwn1.2.4/globus"
-CLUSTER_MONTAGE_LOCATION="/panfs/panasas/CMS/app/hcc/software/montage/3.0"
-JOB_CLUSTERING="PEGASUS::bundle=30"
+DEGREES=1.0
+LOCAL_PEGASUS_HOME="/home/rynge/Pegasus/install/current"
+LOCAL_GLOBUS_LOCATION="/opt/globus/5.0.1"
+LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
+LOCAL_MONTAGE_LOCATION="/home/rynge/Projects/Montage/src/Montage_v3.2_beta6_mats"
+CLUSTER_NAME="ISIViz"
+CLUSTER_HOSTNAME="viz-login.isi.edu"
+CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
+CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/testing/latest"
+CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
+CLUSTER_MONTAGE_LOCATION="/cluster-software/montage/3.2_beta6_mats"
 #######################################################################
 
 TOP_DIR=`pwd`
@@ -28,32 +31,71 @@ export PEGASUS_HOME=$LOCAL_PEGASUS_HOME
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/runs/$RUN_ID
+RUN_DIR=`pwd`/work/$RUN_ID
 
 echo "Work directory: $RUN_DIR"
 
 mkdir -p $RUN_DIR/inputs
-
 cd $RUN_DIR
+
 cp $TOP_DIR/pegasusrc .
 
 # create the transformation catalogue (tc)
+echo
+echo "Creating the transformation catalog..."
 cat >tc <<EOF
-# Site  LFN  PFN  TYPE  SYSTEM PROFILE
-$CLUSTER_NAME     pegasus::dirmanager     $CLUSTER_PEGASUS_HOME/bin/dirmanager        INSTALLED   INTEL32::LINUX
-$CLUSTER_NAME     pegasus::kickstart      $CLUSTER_PEGASUS_HOME/bin/kickstart         INSTALLED   INTEL32::LINUX
-$CLUSTER_NAME     pegasus::seqexec        $CLUSTER_PEGASUS_HOME/bin/seqexec           INSTALLED   INTEL32::LINUX
-$CLUSTER_NAME     pegasus::cleanup        $CLUSTER_PEGASUS_HOME/bin/cleanup           INSTALLED   INTEL32::LINUX
+tr pegasus::dirmanager {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_PEGASUS_HOME/bin/pegasus-dirmanager"
+        arch "x86"
+        os "linux"
+    }
+}
+tr pegasus::kickstart {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_PEGASUS_HOME/bin/kickstart"
+        arch "x86"
+        os "linux"
+        type "installed"
+    }
+}
+tr pegasus::seqexec {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_PEGASUS_HOME/bin/seqexec"
+        arch "x86"
+        os "linux"
+        type "installed"
+    }
+}
+tr pegasus::cleanup {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_PEGASUS_HOME/bin/pegasus-cleanup"
+        arch "x86"
+        os "linux"
+        type "installed"
+    }
+}
 EOF
 for BINARY in `(cd $LOCAL_MONTAGE_LOCATION/bin && ls)`; do
-    echo "$CLUSTER_NAME     $BINARY:3.0    $CLUSTER_MONTAGE_LOCATION/bin/$BINARY       INSTALLED   INTEL32::LINUX     $JOB_CLUSTERING" >>tc
+    cat >>tc <<EOF
+tr $BINARY:3.0 {
+    site $CLUSTER_NAME {
+        pfn "$CLUSTER_MONTAGE_LOCATION/bin/$BINARY"
+        arch "x86"
+        os "linux"
+        type "installed"
+    }
+}
+EOF
 done
 
 # site catalog
+echo
+echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86" os="LINUX">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
             <scratch>
@@ -70,34 +112,30 @@ cat >sites.xml <<EOF
             </storage>
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="condor" key="+JOBGLIDEIN_Site" >""</profile>
         <profile namespace="env" key="PEGASUS_HOME" >$LOCAL_PEGASUS_HOME</profile>
-        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$LOCAL_GLOBUS_LOCATION</profile>
+        <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >$LOCAL_GLOBUS_TCP_PORT_RANGE</profile>
     </site>
-    <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
-        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="unknown" jobtype="compute"/>
+    <site handle="$CLUSTER_NAME" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-condor" scheduler="unknown" jobtype="compute"/>
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="$CLUSTER_GRIDFTP_BASE" mount-point="$CLUSTER_WORK_DIR"/>
+                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
                     <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="$CLUSTER_GRIDFTP_BASE" mount-point="$CLUSTER_WORK_DIR"/>
+                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
                     <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
                 </shared>
             </storage>
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
 
-        <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">vanilla</profile>
-        <profile namespace="condor" key="requirements">(GLIDEIN_Site=="$CLUSTER_NAME")&amp;&amp;(IS_MONITOR_VM==False)&amp;&amp;(Arch!="")&amp;&amp;(OpSys!="")&amp;&amp;(Disk!=-42)&amp;&amp;(Memory>1)&amp;&amp;(FileSystemDomain!="")</profile>
-        <profile namespace="condor" key="should_transfer_files">YES</profile>
-        <profile namespace="condor" key="when_to_transfer_output">ON_EXIT_OR_EVICT</profile>
+        <profile namespace="pegasus" key="style">glideinwms</profile>
 
         <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
@@ -106,23 +144,29 @@ cat >sites.xml <<EOF
 </sitecatalog>
 EOF
 
+echo
+echo "Running mDAG (finding input images, generating DAX, ...)..."
+mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "gsiftp://$LOCAL_HOSTNAME$RUN_DIR" "gsiftp://$LOCAL_HOSTNAME$RUN_DIR/inputs"
+
+echo
+echo "Downloading input images from NASA IPAC at Caltech..."
 cd inputs
-mArchiveList 2mass j M17 $DEGREES $DEGREES images.tbl
-mArchiveExec images.tbl
+mArchiveExec ../images.tbl
 cd ..
 
-mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "file://$RUN_DIR" "file://$RUN_DIR/inputs"
-
+echo
+echo "Setting up the replica catalog..."
 cp cache.list rc
-perl -p -i -e "s/ipac_cluster/local/" rc
+perl -p -i -e 's/ipac_cluster/local/' rc
 
+echo "Planning and submitting the workflow..."
 pegasus-plan \
     -D pegasus.user.properties=pegasusrc \
     --sites $CLUSTER_NAME \
-    --cluster horizontal \
     --dir work \
     --output local \
     --dax dag.xml \
     --submit \
     2>&1 | tee pegasus-plan.out
+
 
