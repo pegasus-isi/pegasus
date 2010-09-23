@@ -98,6 +98,11 @@ public class TransferEngine extends Engine {
     public static final String FILE_URL_SCHEME = "file:";
 
     /**
+     * The scheme name for file url.
+     */
+    public static final String SYMLINK_URL_SCHEME = "symlink:";
+
+    /**
      * The property prefix for retrieving SRM properties.
      */
     public static final String SRM_PROPERTIES_PREFIX = "pegasus.transfer.srm";
@@ -285,21 +290,37 @@ public class TransferEngine extends Engine {
     }
 
     /**
-     * Returns whether a site is third party enabled or not. A site is determined
-     * to be third party enabled if the transfer mode is a thirdparty based
-     * transfer mode like RFT or if it is specified a third party site in the
-     * by the property "pegasus.transfer.thirdparty.*.sites".
+     * Returns whether to run a transfer job on local site or not.
      *
-     * @param site  the site handle of the site for which you want to detect
-     *              third party capability.
+     *
+     * @param site  the site handle associated with the destination URL.
+     * @param destURL the destination URL
      * @param type  the type of transfer job for which the URL is being constructed.
      *
-     * @return true indicating site is third party enabled, else
-     *         false indicating site is not third party enabled.
+     * @return true indicating if the associated transfer job should run on local
+     *              site or not.
      */
-    public boolean isSiteThirdParty(String site, int type) {
+    public boolean runTransferOnLocalSite( String site, String destinationURL, int type) {
+        //check if user has specified any preference in config
+        boolean result = true;
 
-        return mTXRefiner.isSiteThirdParty(site,type);
+        //short cut for local site
+        if( site.equals( "local" ) ){
+            //transfer to run on local site
+            return result;
+        }
+
+        if( result = mTXRefiner.runTransferRemotely( site, type )){
+            //always use user preference
+            return !result;
+        }
+        //check to see if destination URL is a file url
+        else if( destinationURL != null && destinationURL.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+           result = false;
+            
+        }
+
+        return result;
     }
 
     /**
@@ -364,8 +385,9 @@ public class TransferEngine extends Engine {
             //transfer the nodes output files
             //to the output pool
             if ( stageOut ) {
-                vOutPoolTX = getFileTX(outputSite, currentJob);
-                mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb );
+                boolean localTransfer = runTransferOnLocalSite( currentJob.getSiteHandle(), null, SubInfo.STAGE_OUT_JOB);
+                vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
+                mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, localTransfer );
             }
 
             if( mPOptions.partOfDeferredRun() && !stageOut ){
@@ -442,11 +464,19 @@ public class TransferEngine extends Engine {
                 throw new RuntimeException( "Unable to find a location in the Replica Catalog for output file "  + lfn );
             }
 
+
+
+            //definite inconsitency as url prefix and mount point
+            //are not picked up from the same server
+            String destURL = //p.getURLPrefix(true) +
+                                 p.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
+                                 this.getPathOnStageoutSite( lfn );
+
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
             ReplicaLocation selLocs = mReplicaSelector.selectReplicas( rl,
                                                                        pool,
-                                                                       this.isSiteThirdParty( pool, SubInfo.STAGE_OUT_JOB ));
+                                                                       this.runTransferOnLocalSite( pool,destURL, SubInfo.STAGE_OUT_JOB ));
 
 
             boolean flag = false;
@@ -456,12 +486,6 @@ public class TransferEngine extends Engine {
             for ( Iterator selIt = selLocs.pfnIterator(); selIt.hasNext(); ) {
                 ReplicaCatalogEntry selLoc = ( ReplicaCatalogEntry ) selIt.next();
                 String sourceURL = selLoc.getPFN();
-                //definite inconsitency as url prefix and mount point
-                //are not picked up from the same server
-                String destURL = //p.getURLPrefix(true) + 
-                                 p.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-                                 this.getPathOnStageoutSite( lfn );
-                //+                                 File.separator + lfn;
 
                 //check if the URL's match
                 if (sourceURL.trim().equalsIgnoreCase(destURL.trim())){
@@ -510,10 +534,16 @@ public class TransferEngine extends Engine {
 
         //interpool transfer of the nodes parents
         //output files
-        Vector vInterPoolFileTX = this.getInterpoolFileTX(job, vParentSubs);
+        Collection[] interSiteFileTX = this.getInterpoolFileTX(job, vParentSubs);
+        Collection localInterSiteTX = interSiteFileTX[0];
+        Collection remoteInterSiteTX = interSiteFileTX[1];
+
         //only add if there are files to transfer
-        if(!vInterPoolFileTX.isEmpty()){
-            mTXRefiner.addInterSiteTXNodes(job, vInterPoolFileTX);
+        if( !localInterSiteTX.isEmpty()){
+            mTXRefiner.addInterSiteTXNodes(job, localInterSiteTX, true );
+        }
+        if( !remoteInterSiteTX.isEmpty() ){
+            mTXRefiner.addInterSiteTXNodes(job, remoteInterSiteTX, false );
         }
 
         //check if node ip files are in the parents out files
@@ -543,10 +573,12 @@ public class TransferEngine extends Engine {
      * @param destPool The pool to which the files are to be transferred to.
      * @param job      The <code>SubInfo</code>object of the job whose output files
      *                 are needed at the destination pool.
+     * @param localTransfer  boolean indicating that associated transfer job will run
+     *                       on local site.
      *
      * @return        Vector of <code>FileTransfer</code> objects
      */
-    private Vector getFileTX(String destPool, SubInfo job) {
+    private Vector getFileTX(String destPool, SubInfo job, boolean localTransfer ) {
         Vector vFileTX = new Vector();
 
         //check if there is a remote initialdir set
@@ -560,7 +592,8 @@ public class TransferEngine extends Engine {
 
             FileTransfer ft = this.constructFileTX( pf, job.executionPool,
                                                     destPool, job.logicalName,
-                                                    path);
+                                                    path,
+                                                    localTransfer );
             if (ft != null) {
                 vFileTX.add(ft);
 
@@ -587,17 +620,19 @@ public class TransferEngine extends Engine {
      * @param path        the path that a user specifies in the profile for key
      *                    remote_initialdir that results in the workdir being
      *                    changed for a job on a execution pool.
+     * @param localTransfer  boolean indicating that associated transfer job will run
+     *                       on local site.
+
      *
      * @return   the corresponding FileTransfer object
      */
-    private FileTransfer constructFileTX(PegasusFile pf, String execPool,
-                                         String destPool, String job, String path) {
+    private FileTransfer constructFileTX( PegasusFile pf, String execPool,
+                                          String destPool, String job, String path,
+                                          boolean localTransfer ) {
 
         String lfn = pf.getLFN();
         FileTransfer ft = null;
 
-//        SiteInfo ePool = mPoolHandle.getPoolEntry(execPool, "vanilla");
-//        SiteInfo dPool = mPoolHandle.getPoolEntry(destPool, "vanilla");
         SiteCatalogEntry ePool = mSiteStore.lookup( execPool );
         SiteCatalogEntry dPool = mSiteStore.lookup( destPool );
         if (ePool == null || dPool == null) {
@@ -640,10 +675,11 @@ public class TransferEngine extends Engine {
         //would be on the output pool
         else {
             //construct the source url depending on whether third party tx
-            String sourceURL = isSiteThirdParty(execPool,SubInfo.STAGE_OUT_JOB) ?
-                execURL :
-                "file://" + mSiteStore.getWorkDirectory(execPool,path) +
-                File.separator + lfn;
+//            String sourceURL = runTransferOnLocalSite( execPool, null, SubInfo.STAGE_OUT_JOB) ?
+            String sourceURL = localTransfer ?
+                                execURL :
+                                "file://" + mSiteStore.getWorkDirectory(execPool,path) +
+                                File.separator + lfn;
 
             ft = new FileTransfer(lfn,job,pf.getFlags());
             //set the transfer mode
@@ -744,27 +780,24 @@ public class TransferEngine extends Engine {
      *
      * @return        Vector of <code>FileTransfer</code> objects
      */
-    private Vector getInterpoolFileTX(SubInfo job, Vector nodes) {
+    private Collection<FileTransfer>[] getInterpoolFileTX(SubInfo job, Vector nodes) {
         String destPool = job.executionPool;
         //contains the remote_initialdir if specified for the job
         String destRemoteDir = job.vdsNS.getStringValue(
                                                  VDS.REMOTE_INITIALDIR_KEY);
 
-//        SiteInfo desPool = mPoolHandle.getTXPoolEntry(destPool);
-//        SiteInfo sourcePool;
         SiteCatalogEntry desPool = mSiteStore.lookup( destPool );
         SiteCatalogEntry sourcePool;
 
-        Vector vFileTX = new Vector();
+        Collection[] result = new Collection[2];
+        Collection<FileTransfer> localTransfers  = new LinkedList();
+        Collection<FileTransfer> remoteTransfers = new LinkedList();
 
         for (Iterator it = nodes.iterator();it.hasNext();) {
             //get the parent job
             SubInfo pJob = (SubInfo)it.next();
-//            sourcePool = mPoolHandle.getTXPoolEntry(pJob.executionPool);
             sourcePool = mSiteStore.lookup( pJob.getSiteHandle() );
 
-//            if (((String)sourcePool.getInfo(SiteInfo.HANDLE))
-//                .equalsIgnoreCase(destPool)) {
             if( sourcePool.getSiteHandle().equalsIgnoreCase(destPool) ){
                 //no need to add transfers, as the parent job and child
                 //job are run in the same directory on the pool
@@ -772,18 +805,16 @@ public class TransferEngine extends Engine {
             }
 
             String sourceURI = null;
-//            String thirdPartyDestURI = desPool.getURLPrefix(true) +
-//                mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir) ;
-             String thirdPartyDestURI = desPool.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
+            String thirdPartyDestURI = desPool.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
                                         mSiteStore.getWorkDirectory( destPool, destRemoteDir );
-//                mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir) ;
+
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
-            String destURI = isSiteThirdParty(destPool,SubInfo.INTER_POOL_JOB) ?
+            boolean localTransfer = runTransferOnLocalSite( destPool, thirdPartyDestURI, SubInfo.INTER_POOL_JOB );
+            String destURI = localTransfer ?
                 //construct for third party transfer
                 thirdPartyDestURI :
                 //construct for normal transfer
-//                "file://" + mPoolHandle.getExecPoolWorkDir(destPool,destRemoteDir);
                 "file://" + mSiteStore.getWorkDirectory( destPool, destRemoteDir );
 
 
@@ -791,7 +822,7 @@ public class TransferEngine extends Engine {
                 PegasusFile pf = (PegasusFile) fileIt.next();
                 String outFile = pf.getLFN();
 
-            if( job.getInputFiles().contains( pf ) ){
+               if( job.getInputFiles().contains( pf ) ){
                     String sourceURL     = null;
                     String destURL       = destURI + File.separator + outFile;
                     String thirdPartyDestURL = thirdPartyDestURI + File.separator +
@@ -801,36 +832,14 @@ public class TransferEngine extends Engine {
 
                     //add all the possible source urls iterating through
                     //the list of grid ftp servers associated with the dest pool.
-//                    List l = mPoolHandle.getGridFTPServers(pJob.executionPool);
                     boolean first = true;
-//                    for(Iterator it1 = l.iterator();it1.hasNext();){
                     for( Iterator it1 = mSiteStore.lookup( pJob.getSiteHandle() ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator(); 
                                       it1.hasNext();){
                         FileServer server = ( FileServer)it1.next();
                         //definite inconsitency as url prefix and mount point
                         //are not picked up from the same server
-/*
-                            sourceURI = (first)?
-                            //the first entry has to be the one in the Pool object
-                            sourcePool.getURLPrefix(false) :
-                            //get it from the list
-                            ((GridFTPServer)it1.next()).getInfo(GridFTPServer.GRIDFTP_URL);
-*/
                         sourceURI = server.getURLPrefix();
-  
-/*                        
-                        if((!first && sourceURI.equals(sourcePool.getURLPrefix(false)) )){
-                            //ensures no duplicate entries. The gridftp server in the pool
-                            //object is one of the servers in the list of gridftp servers.
-                            mLogger.log("Not adding inter pool file tx for " +
-                                        outFile, LogManager.DEBUG_MESSAGE_LEVEL);
-                            continue;
-                        }
-*/
-
-//                        sourceURI += mPoolHandle.getExecPoolWorkDir( pJob.executionPool,
-//                                                                     pJob.vdsNS.getStringValue(VDS.REMOTE_INITIALDIR_KEY));
-                                                                        
+                                                                          
                         sourceURI += mSiteStore.getWorkDirectory(  pJob.executionPool,
                                                                    pJob.vdsNS.getStringValue(VDS.REMOTE_INITIALDIR_KEY));
                         
@@ -843,12 +852,19 @@ public class TransferEngine extends Engine {
                         }
                         first = false;
                     }
-                    if(ft.isValid()){
-                        //adding only if there is at least
-                        //a single valid transfer associated.
-                        vFileTX.addElement(ft);
+                    if( ft.isValid() ){
+                        if( localTransfer ){
+                            localTransfers.add(ft);
+                        }
+                        else{
+                            remoteTransfers.add(ft);
+                        }
                     }
                 }
+                result[0] = localTransfers;
+                result[1] = remoteTransfers;
+
+                return result;
             }
 
 
@@ -870,22 +886,24 @@ public class TransferEngine extends Engine {
      *                      up from the Replica Mechanism.
      */
     private void getFilesFromRC( SubInfo job, Vector searchFiles ) {
-        Vector vFileTX = new Vector();
-        Collection<FileTransfer> symLinkFileTransfers = new LinkedList();
+        //Vector vFileTX = new Vector();
+        //Collection<FileTransfer> symLinkFileTransfers = new LinkedList();
+        Collection<FileTransfer> localFileTransfers = new LinkedList();
+        Collection<FileTransfer> remoteFileTransfers = new LinkedList();
+
+
         String jobName = job.logicalName;
         String ePool   = job.executionPool;
         //contains the remote_initialdir if specified for the job
         String eRemoteDir = job.vdsNS.getStringValue(
                                                  VDS.REMOTE_INITIALDIR_KEY);
         
-//        SiteInfo ep        = mPoolHandle.getPoolEntry(ePool, "vanilla");
         SiteCatalogEntry ep        = mSiteStore.lookup( ePool );
         //we are using the pull mode for data transfer
         String scheme  = "file";
 
         //sAbsPath would be just the source directory absolute path
         //dAbsPath would be just the destination directory absolute path
-//        String dAbsPath = mPoolHandle.getExecPoolWorkDir(ePool,eRemoteDir);
         String dAbsPath = mSiteStore.getWorkDirectory( ePool, eRemoteDir );
         String sAbsPath = null;
 
@@ -894,7 +912,6 @@ public class TransferEngine extends Engine {
         //and is always a networked url.
         //definite inconsitency as url prefix and mount point
         //are not picked up from the same server
-//        String dDirURL = ep.getURLPrefix(true) + dAbsPath;
         String dDirURL = ep.getHeadNodeFS().selectScratchSharedFileServer( ).getURLPrefix() + dAbsPath;
         String sDirURL = null;
         
@@ -903,13 +920,14 @@ public class TransferEngine extends Engine {
         String fileDestDir = scheme + "://" + mSiteStore.getWorkDirectory( ePool, eRemoteDir );
                 
         //check if the execution pool is third party or not
-        String destDir = (isSiteThirdParty(ePool, SubInfo.STAGE_IN_JOB)) ?
+        boolean runTransferOnLocalSite = runTransferOnLocalSite( ePool, dDirURL, SubInfo.STAGE_IN_JOB);
+        String destDir = ( runTransferOnLocalSite ) ?
             //use the full networked url to the directory
             dDirURL
             :
             //use the default pull mode
-//            scheme + "://" + mPoolHandle.getExecPoolWorkDir(ePool,eRemoteDir);
             fileDestDir;
+
 
         for( Iterator it = searchFiles.iterator(); it.hasNext(); ){
             String sourceURL,destURL=null;
@@ -934,7 +952,7 @@ public class TransferEngine extends Engine {
                 }
                 else{//staging of executables case
                     destURL = destNV.getValue();
-                    destURL = (isSiteThirdParty(ePool, SubInfo.STAGE_IN_JOB))?
+                    destURL = (runTransferOnLocalSite(ePool, destURL, SubInfo.STAGE_IN_JOB))?
                                //the destination URL is already third party
                                //enabled. use as it is
                                destURL:
@@ -968,18 +986,12 @@ public class TransferEngine extends Engine {
                            job.getName());
             }
 
-            /*
-            ReplicaLocation selLoc = (nv == null)?
-                //select from the various replicas
-                mReplicaSelector.select( lfn, pfns, job.getSiteHandle() ):
-                //we have the replica already selected
-                new ReplicaLocation(nv.getValue(),nv.getKey());
-            */
+            
             ReplicaCatalogEntry selLoc = (nv == null)?
                                         //select from the various replicas
                                         mReplicaSelector.selectReplica( rl, 
                                                                         job.getSiteHandle(),
-                                                                        this.isSiteThirdParty( job.getSiteHandle(), SubInfo.STAGE_IN_JOB )):
+                                                                        runTransferOnLocalSite ):
                                         //we have the replica already selected
                                         new ReplicaCatalogEntry( nv.getValue(), nv.getKey() );
 
@@ -1006,10 +1018,6 @@ public class TransferEngine extends Engine {
             //the final source and destination url's to the file
             sourceURL = selLoc.getPFN();
             
-            
-//            destURL   = (destURL == null)?
-//                        destDir + File.separator + lfn:
-//                        destURL;
             if( destURL == null ){
                 //no staging of executables case. 
                 //we construct destination URL to file.
@@ -1100,11 +1108,12 @@ public class TransferEngine extends Engine {
             if(ft.getDestURL() == null)
                 ft.addDestination(ePool,destURL);
             
-            if( symLinkSelectedLocation ){
-                symLinkFileTransfers.add(ft);
+            if( symLinkSelectedLocation || !runTransferOnLocalSite ){
+                //all symlink transfers and user specified remote transfers
+                remoteFileTransfers.add(ft);
             }
             else{
-                vFileTX.add(ft);
+                localFileTransfers.add(ft);
             }
             
             //we need to set destURL to null
@@ -1112,8 +1121,8 @@ public class TransferEngine extends Engine {
         }
 
         //call addTransferNode
-        if (!vFileTX.isEmpty() || !symLinkFileTransfers.isEmpty()) {
-            mTXRefiner.addStageInXFERNodes(job, vFileTX, symLinkFileTransfers );
+        if (!localFileTransfers.isEmpty() || !remoteFileTransfers.isEmpty()) {
+            mTXRefiner.addStageInXFERNodes(job, localFileTransfers, remoteFileTransfers );
 
         }
     }

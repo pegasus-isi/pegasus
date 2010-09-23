@@ -97,6 +97,12 @@ public abstract class AbstractRefiner implements Refiner{
      */
     protected TPT mTPT;
 
+
+    /**
+     * The handle to the Remote Transfers State machinery.
+     */
+    protected RemoteTransfer mRemoteTransfers;
+
     /**
      * The XML Producer object that records the actions.
      */
@@ -117,6 +123,9 @@ public abstract class AbstractRefiner implements Refiner{
         mPOptions = bag.getPlannerOptions();
         mTPT = new TPT( mProps );
         mTPT.buildState();
+        mRemoteTransfers = new RemoteTransfer( mProps );
+        mRemoteTransfers.buildState();
+
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
     }
 
@@ -179,6 +188,52 @@ public abstract class AbstractRefiner implements Refiner{
      */
     public XMLProducer getXMLProducer(){
         return this.mXMLStore;
+    }
+
+    /**
+     * Returns whether a Site prefers transfers to be run on it i.e remote transfers
+     * enabled.
+     *
+     * @param site  the name of the site.
+     * @param type  the type of transfer job for which the URL is being constructed.
+     *              Should be one of the following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
+     *
+     * @return true if site is setup for remote transfers
+     *
+     * @see SubInfo#STAGE_IN_JOB
+     * @see SubInfo#INTER_POOL_JOB
+     * @see SubInfo#STAGE_OUT_JOB
+     */
+    public boolean runTransferRemotely( String site, int type ) {
+        Implementation implementation;
+        //the value from the properties file
+        //later on maybe picked up as profiles
+        boolean runTransferRemotely = false;
+        if(type == SubInfo.STAGE_IN_JOB ){
+            implementation = mTXStageInImplementation;
+            runTransferRemotely = mRemoteTransfers.stageInOnRemoteSite( site );
+        }
+        else if(type == SubInfo.INTER_POOL_JOB){
+            implementation = mTXInterImplementation;
+            runTransferRemotely         = mRemoteTransfers.interOnRemoteSite( site );
+        }
+        else if(type == SubInfo.STAGE_OUT_JOB){
+            implementation = mTXStageOutImplementation;
+            runTransferRemotely         = mRemoteTransfers.stageOutOnRemoteSite( site );
+        }
+        else if(type == SubInfo.SYMLINK_STAGE_IN_JOB){
+            implementation = mTXSymbolicLinkImplementation;
+            runTransferRemotely         = true;
+        }
+        else{
+            throw new java.lang.IllegalArgumentException(
+                "Invalid implementation type passed " + type);
+        }
+
+        return runTransferRemotely;
     }
 
 

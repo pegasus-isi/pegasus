@@ -68,7 +68,7 @@ public class Bundle extends Default {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_STAGE_IN_BUNDLE_FACTOR = "1";
+    public static final String DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = "1";
 
     
     /**
@@ -76,7 +76,7 @@ public class Bundle extends Default {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_STAGE_IN_SYMLINK_BUNDLE_FACTOR = "1";
+    public static final String DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = "1";
     
     /**
      * The default bundling factor that identifies the number of transfer jobs
@@ -181,11 +181,11 @@ public class Bundle extends Default {
     protected  void initializeBundleValues() {
         mStageinBundleValue = new BundleValue();
         mStageinBundleValue.initialize( VDS.BUNDLE_STAGE_IN_KEY, 
-                                        Bundle.DEFAULT_STAGE_IN_BUNDLE_FACTOR );
+                                        Bundle.DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR );
         
         mStageInSymlinkBundleValue = new BundleValue();
         mStageInSymlinkBundleValue.initialize( VDS.BUNDLE_STAGE_IN_SYMLINK_KEY, 
-                                        Bundle.DEFAULT_STAGE_IN_SYMLINK_BUNDLE_FACTOR );
+                                        Bundle.DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR );
     }
 
     
@@ -593,7 +593,7 @@ public class Bundle extends Default {
      *
      * @return the bundle factor.
      *
-     * @see #DEFAULT_STAGE_IN_BUNDLE_FACTOR
+     * @see #DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR
      */
     protected int getSISiteBundleValue(String site,  String deflt){
         //this should be parameterised Karan Dec 20,2005
@@ -601,7 +601,7 @@ public class Bundle extends Default {
             mTXStageInImplementation.getTransformationCatalogEntry(site);
         SubInfo sub = new SubInfo();
         String value = (deflt == null)?
-                        this.DEFAULT_STAGE_IN_BUNDLE_FACTOR:
+                        this.DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR:
                         deflt;
 
         if(entry != null){

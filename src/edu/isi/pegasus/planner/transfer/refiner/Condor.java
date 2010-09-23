@@ -124,7 +124,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      *              information about source and destURL's.
      */
     public  void addStageInXFERNodes( SubInfo job,
-                                      Collection files ){
+                                      Collection files  ){
 
 
         Set inputFiles = job.getInputFiles();
@@ -168,9 +168,12 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
+     * @param localTransfer  boolean indicating that associated transfer job will run
+     *                       on local site.
      */
-    public void addInterSiteTXNodes(SubInfo job,
-                                    Collection files){
+    public void addInterSiteTXNodes( SubInfo job,
+                                     Collection files,
+                                     boolean localTransfer ){
 
         throw new java.lang.UnsupportedOperationException(
             "Interpool operation is not supported");
@@ -187,13 +190,16 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      *              information about source and destURL's.
      * @param rcb   bridge to the Replica Catalog. Used for creating registration
      *              nodes in the workflow.
+     * @param localTransfer  boolean indicating that associated transfer job will run
+     *                       on local site.
      *
      */
     public void addStageOutXFERNodes( SubInfo job,
                                       Collection files,
-                                      ReplicaCatalogBridge rcb ) {
+                                      ReplicaCatalogBridge rcb,
+                                      boolean localTransfer ) {
 
-        this.addStageOutXFERNodes ( job, files, rcb, false );
+        this.addStageOutXFERNodes ( job, files, rcb, localTransfer, false );
     }
 
     /**
@@ -206,6 +212,8 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      *              information about source and destURL's.
      * @param rcb   bridge to the Replica Catalog. Used for creating registration
      *              nodes in the workflow.
+     * @param localTransfer  boolean indicating that associated transfer job will run
+     *                       on local site.
      * @param deletedLeaf to specify whether the node is being added for
      *                      a deleted node by the reduction engine or not.
      *                      default: false
@@ -213,6 +221,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
     public  void addStageOutXFERNodes(SubInfo job,
                                       Collection files,
                                       ReplicaCatalogBridge rcb,
+                                      boolean localTransfer,
                                       boolean deletedLeaf){
         
         String destinationDirectory = null;

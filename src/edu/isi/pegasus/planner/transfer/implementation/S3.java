@@ -176,6 +176,7 @@ public class S3 extends Abstract
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
      *                    files to the output pool.
+     * @param site        the site where the transfer job should run.
      * @param files       collection of <code>FileTransfer</code> objects
      *                    representing the data files and staged executables to be
      *                    transferred.
@@ -191,6 +192,7 @@ public class S3 extends Abstract
      * @return  the created TransferJob.
      */
     public TransferJob createTransferJob( SubInfo job,
+                                          String site,
                                           Collection files,
                                           Collection execFiles,
                                           String txJobName,
@@ -212,6 +214,7 @@ public class S3 extends Abstract
             List<FileTransfer> l = new LinkedList<FileTransfer>();
             l.add( ft );
             TransferJob s3Job = mS3Transfer.createTransferJob( job,
+                                                               site,
                                                                   l,
                                                                   null,
                                                                   txJobName, 

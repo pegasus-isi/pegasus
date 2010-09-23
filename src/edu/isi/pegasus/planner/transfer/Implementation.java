@@ -40,7 +40,7 @@ public interface Implementation {
     /**
      * The version number associated with this API of Code Generator.
      */
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.4";
 
 
     /**
@@ -70,6 +70,7 @@ public interface Implementation {
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
      *                    files to the output pool.
+     * @param site        the site where the transfer job should run.
      * @param files       collection of <code>FileTransfer</code> objects
      *                    representing the data files and staged executables to be
      *                    transferred.
@@ -85,6 +86,7 @@ public interface Implementation {
      * @return  the created TransferJob.
      */
     public TransferJob createTransferJob(SubInfo job,
+                                         String site,
                                          Collection files,
                                          Collection execFiles,
                                          String txJobName,

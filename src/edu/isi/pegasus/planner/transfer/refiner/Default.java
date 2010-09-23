@@ -139,9 +139,15 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                                       Collection<FileTransfer> files,
                                       Collection<FileTransfer> symlinkFiles ){
         
-        addStageInXFERNodes( job, files, Refiner.STAGE_IN_PREFIX , this.mTXStageInImplementation);
+        addStageInXFERNodes( job,
+                             files,
+                             Refiner.STAGE_IN_PREFIX + Refiner.LOCAL_PREFIX,
+                             this.mTXStageInImplementation);
         
-        addStageInXFERNodes( job, symlinkFiles, Refiner.SYMBOLIC_LINK_PREFIX, this.mTXSymbolicLinkImplementation );
+        addStageInXFERNodes( job,
+                             symlinkFiles,
+                             Refiner.STAGE_IN_PREFIX + Refiner.REMOTE_PREFIX,
+                             this.mTXSymbolicLinkImplementation );
         
     }
     
@@ -162,6 +168,11 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                                       Collection<FileTransfer> files,
                                       String prefix,
                                       Implementation implementation ){
+
+        String site = prefix.endsWith( Refiner.LOCAL_PREFIX ) ?
+                      "local":
+                      job.getSiteHandle();
+
         String jobName = job.getName();
         String pool = job.getSiteHandle();
         int counter = 0;
@@ -248,7 +259,10 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             if(stagedFiles.isEmpty()){
                 //add the direct relation
                 addRelation(newJobName, jobName, pool, true);
-                SubInfo siJob = implementation.createTransferJob( job, files,null,
+                SubInfo siJob = implementation.createTransferJob( job,
+                                                                  site,
+                                                                  files,
+                                                                  null,
                                                                   newJobName,
                                                                   jobClass );
                 addJob( siJob );
@@ -259,7 +273,10 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             else{
                 //the dependency to stage in job is added via the
                 //the setup job that does the chmod
-                SubInfo siJob = implementation.createTransferJob( job,files,stagedFiles,
+                SubInfo siJob = implementation.createTransferJob( job,
+                                                                  site,
+                                                                  files,
+                                                                  stagedFiles,
                                                                   newJobName,
                                                                   jobClass );
 
@@ -282,12 +299,21 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
+     *
+     * @param localTransfer  boolean indicating that associated transfer job will run
+     *                       on local site.
      */
     public void addInterSiteTXNodes(SubInfo job,
-                                    Collection files){
+                                    Collection files,
+                                    boolean localTransfer ){
         String jobName = job.getName();
         int counter = 0;
-        String newJobName = this.INTER_POOL_PREFIX + jobName + "_" + counter;
+
+
+        StringBuffer name = new StringBuffer();
+        name.append( Refiner.INTER_POOL_PREFIX ).append( localTransfer ? Refiner.LOCAL_PREFIX : Refiner.REMOTE_PREFIX ).
+             append( jobName ).append( "_" ).append( counter );
+        String newJobName = name.toString();
 
         String msg = "Adding inter pool nodes for job " + jobName;
         String prevParent = null;
@@ -301,6 +327,8 @@ public class Default extends MultipleFTPerXFERJobRefiner {
 
         //to prevent duplicate dependencies
         java.util.HashSet tempSet = new java.util.HashSet();
+
+        String site = localTransfer ? "local" : pool;
 
         //node construction only if there is
         //a file to transfer
@@ -408,9 +436,12 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                 mLogger.log(msg,LogManager.DEBUG_MESSAGE_LEVEL);
 
                 //added in make transfer node
-                SubInfo interJob = mTXInterImplementation.createTransferJob(job, files,null,
-                                                           newJobName,
-                                                           SubInfo.INTER_POOL_JOB);
+                SubInfo interJob = mTXInterImplementation.createTransferJob( job,
+                                                                             site,
+                                                                             files,
+                                                                             null,
+                                                                             newJobName,
+                                                                             SubInfo.INTER_POOL_JOB );
 
                 addJob( interJob );
 
@@ -432,13 +463,15 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      *              information about source and destURL's.
      * @param rcb   bridge to the Replica Catalog. Used for creating registration
      *              nodes in the workflow.
-     *
+     * @param localTransfer  boolean indicating that associated transfer job will run
+     *                       on local site.
      */
     public void addStageOutXFERNodes(SubInfo job,
                                      Collection files,
-                                     ReplicaCatalogBridge rcb ) {
+                                     ReplicaCatalogBridge rcb,
+                                     boolean localTransfer ) {
 
-        this.addStageOutXFERNodes( job, files, rcb, false);
+        this.addStageOutXFERNodes( job, files, rcb, localTransfer, false);
     }
 
     /**
@@ -451,18 +484,25 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      *              information about source and destURL's.
      * @param rcb   bridge to the Replica Catalog. Used for creating registration
      *              nodes in the workflow.
+     * @param localTransfer  boolean indicating that associated transfer job will run
+     *                       on local site.
      * @param deletedLeaf to specify whether the node is being added for
      *                      a deleted node by the reduction engine or not.
      *                      default: false
      */
-    public  void addStageOutXFERNodes(SubInfo job,
-                                      Collection files,
-                                      ReplicaCatalogBridge rcb,
-                                      boolean deletedLeaf){
+    public  void addStageOutXFERNodes( SubInfo job,
+                                       Collection files,
+                                       ReplicaCatalogBridge rcb,
+                                       boolean localTransfer,
+                                       boolean deletedLeaf ){
         String jobName = job.getName();
         int counter = 0;
-        String newJobName = this.STAGE_OUT_PREFIX + jobName + "_" + counter;
-        String regJob = this.REGISTER_PREFIX + jobName;
+
+        StringBuffer name = new StringBuffer();
+        name.append( Refiner.STAGE_OUT_PREFIX ).append( localTransfer ? Refiner.LOCAL_PREFIX : Refiner.REMOTE_PREFIX ).
+             append( jobName ).append( "_" ).append( counter );
+        String newJobName = name.toString();
+        String regJob = Refiner.REGISTER_PREFIX + jobName;
 
         mLogMsg = "Adding output pool nodes for job " + jobName;
 
@@ -483,6 +523,8 @@ public class Default extends MultipleFTPerXFERJobRefiner {
         boolean makeTNode = !txFiles.isEmpty();
         boolean makeRNode = !regFiles.isEmpty();
 
+        String site = localTransfer ? "local" : job.getSiteHandle();
+
         if (!files.isEmpty()) {
             mLogger.log(mLogMsg,LogManager.DEBUG_MESSAGE_LEVEL);
             mLogMsg = "Adding new output pool node named " + newJobName;
@@ -491,9 +533,12 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             if (makeTNode) {
                 //added in make transfer node
                 //mDag.addNewJob(newJobName);
-                SubInfo soJob = mTXStageOutImplementation.createTransferJob(job, txFiles,null,
-                                                                   newJobName,
-                                                                   SubInfo.STAGE_OUT_JOB);
+                SubInfo soJob = mTXStageOutImplementation.createTransferJob( job,
+                                                                             site,
+                                                                             txFiles,
+                                                                             null,
+                                                                             newJobName,
+                                                                             SubInfo.STAGE_OUT_JOB );
                 addJob( soJob );
                 if (!deletedLeaf) {
                     addRelation(jobName, newJobName);

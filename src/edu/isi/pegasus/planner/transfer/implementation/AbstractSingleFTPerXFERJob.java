@@ -70,6 +70,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
      *                    files to the output pool.
+     * @param site        the site where the transfer job should run.
      * @param files       collection of <code>FileTransfer</code> objects
      *                    representing the data files and staged executables to be
      *                    transferred.
@@ -84,11 +85,12 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      *
      * @return  the created TransferJob.
      */
-    public TransferJob createTransferJob(SubInfo job,
-                                         Collection files,
-                                         Collection execFiles,
-                                         String txJobName,
-                                         int jobClass) {
+    public TransferJob createTransferJob( SubInfo job,
+                                          String site,
+                                          Collection files,
+                                          Collection execFiles,
+                                          String txJobName,
+                                          int jobClass) {
 
         if(files.size() > 1){
             //log an error
@@ -103,7 +105,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
 
         Iterator it = files.iterator();
         FileTransfer ft = (FileTransfer)it.next();
-        TransferJob txJob = this.createTransferJob(job,ft,execFiles,txJobName,jobClass);
+        TransferJob txJob = this.createTransferJob(job, site, ft,execFiles,txJobName,jobClass);
         
         //to get the file stat information we need to put
         //the files as output files of the transfer job
@@ -122,6 +124,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
      *                    files to the output pool.
+     * @param site        the site where the transfer job should run.
      * @param file       collection of <code>FileTransfer</code> objects
      *                    representing the data files and staged executables to be
      *                    transferred.
@@ -136,15 +139,14 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      *
      * @return  the created TransferJob.
      */
-    public TransferJob createTransferJob(SubInfo job,
-                                         FileTransfer file,
-                                         Collection execFiles,
-                                         String txJobName,
-                                         int jobClass) {
+    public TransferJob createTransferJob( SubInfo job,
+                                          String site,
+                                          FileTransfer file,
+                                          Collection execFiles,
+                                          String txJobName,
+                                          int jobClass) {
 
         TransferJob txJob = new TransferJob();
-//        SiteInfo ePool;
-//        JobManager jobmanager;
         SiteCatalogEntry ePool;
         GridGateway jobmanager;
 
@@ -152,12 +154,14 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
         //to be run. For thirdparty site it makes
         //sense to schedule on the local host unless
         //explicitly designated to run TPT on remote site
+        /*
         String tPool = mRefiner.isSiteThirdParty(job.getSiteHandle(),jobClass) ?
                                 //check if third party have to be run on remote site
                                 mRefiner.runTPTOnRemoteSite(job.getSiteHandle(),jobClass) ?
                                              job.getSiteHandle() : "local"
                                 :job.getSiteHandle();
-
+                                */
+        String tPool = site;
 
         //the non third party site for the transfer job is
         //always the job execution site for which the transfer
@@ -167,13 +171,11 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
 
         //we first check if there entry for transfer universe,
         //if no then go for globus
-//        ePool = mSCHandle.getTXPoolEntry(tPool);
         ePool = mSiteStore.lookup( tPool );
 
         txJob.jobName = txJobName;
         txJob.executionPool = tPool;
         
-//        txJob.condorUniverse = "globus";
         txJob.setUniverse( GridGateway.JOB_TYPE.transfer.toString() );
 
         TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry(tPool);
@@ -198,11 +200,6 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
 
         //this should in fact only be set
         // for non third party pools
-//        jobmanager = ePool.selectJobManager(this.TRANSFER_UNIVERSE,true);
-//        txJob.globusScheduler = (jobmanager == null) ?
-//                                  null :
-//                                  jobmanager.getInfo(JobManager.URL);
-
         jobmanager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         txJob.globusScheduler = (jobmanager == null) ?
                                   null :
@@ -224,9 +221,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
         //no stdin file is written out
 
         //the profile information from the pool catalog needs to be
-        //assimilated into the job.
-//        txJob.updateProfiles(mSCHandle.getPoolProfile(tPool));
-        txJob.updateProfiles( ePool.getProfiles() );
+        //assimilated into the job.        txJob.updateProfiles( ePool.getProfiles() );
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
