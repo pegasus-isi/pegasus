@@ -18,8 +18,11 @@ echo
 echo "Files in result set:"
 find . -type f -exec ls -l -h {} \;
 
+# use the worker package to figure out target version
+DOWNLOAD_SECTION=`ls pegasus-worker-3.0.0cvs-* | head -n 1 | sed 's/pegasus-worker-//' | sed -r 's/\.[0-9]+cvs.*//'`
+
 # upload to pegasus.isi.edu
-scp -r * nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/nightly/ 2>&1
+scp -r * nmibuild@pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/$DOWNLOAD_SECTION/nightly/ 2>&1
 
 echo "Results uploaded!"
 
