@@ -96,7 +96,7 @@ linefeed +
     VersionNumber me = null;
 
     try {
-      me = new VersionNumber("vds-version");
+      me = new VersionNumber("pegasus-version");
       Getopt opts = new Getopt( me.m_application, args,
 				"Vfhmq",
 				me.generateValidOptions() );
