@@ -52,7 +52,10 @@ send_message( int outfd, char* msg, ssize_t msize, unsigned channel )
  */
 {
   int locked;
-  size_t i, len = 0;
+#if 0
+  size_t i;
+#endif
+  size_t len = 0;
   size_t size = msize + 256;
   char* buffer = (char*) malloc(size);
   struct timeval t;

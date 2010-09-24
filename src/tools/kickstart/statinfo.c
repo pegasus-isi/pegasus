@@ -494,6 +494,11 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
   if ( info->lfn != NULL ) 
     myprint( buffer, size, len, " lfn=\"%s\"", info->lfn );
   append( buffer, size, len, ">\n" );
+
+  /* NEW: ignore "file not found" error for "gridstart" */
+  if ( id != NULL && info->error == 2 && strcmp( id, "gridstart" ) == 0 ) 
+    myprint( buffer, size, len, "%*s<!-- ignore above error -->\n",
+	     indent+2, "" ); 
   
   /* either a <name> or <descriptor> sub element */
   switch ( info->source ) {
@@ -536,9 +541,11 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
     break;
 
   case IS_FILE: /* <file> element */
+#if 0
     /* some debug info - for now */
     myprint( buffer, size, len, "%*s<!-- deferred flag: %d -->\n",
 	     indent+2, "", info->deferred );
+#endif
 
     myprint( buffer, size, len, 
 	     "%*s<file name=\"%s\"", indent+2, "", info->file.name );
