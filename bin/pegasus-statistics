@@ -29,17 +29,19 @@ sub print_usage() {
 	print GREEN "Optional :\n";
 	print "\t -o|--output: write outputs in given directory\n";
 	print "\t -m|--monitord: invokes pegasus-monitord before running pegasus-statistics\n";
+	print "\t -c|--condor: specifies a pure condor run with no GRID_SUBMIT events\n";
 	print "\t -k|--keep: keeps the logs of the pegasus-statistics run  \n";
 	print "\t -h|--help: display this help message\n";
 }
 
 sub main(){
-	my ($help,$keep,$monitord, $verbose)=(undef,undef,undef,0);
+	my ($help,$keep,$monitord, $condor,$verbose)=(undef,undef,undef,undef,0);
 	my ($output_dir) =(undef);
 	
 	if(!GetOptions(
 		"output|o=s"=>\$output_dir,
 		"monitord|m"=>\$monitord,
+		"condor|c"=>\$condor,
 		"keep|k"=>\$keep,
 		"help|h"=>\$help)){
 			 print "Unable to parse the options .$!\n";
@@ -122,7 +124,7 @@ sub main(){
 	my($genstats_status , $genstats_status_msg ,$genstats_summary_msg) =run_genstats($dag_file_path ,$jsd_file_path,$output_dir );
 	print "$genstats_status_msg \n";
 	## Executing genstats-breakdown command
-	my($genstats_breakdown_status , $genstats_breakdown_status_msg ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir  );
+	my($genstats_breakdown_status , $genstats_breakdown_status_msg ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir ,$condor  );
 	print "$genstats_breakdown_status_msg \n";
 	
 	
@@ -235,10 +237,10 @@ sub run_genstats($$$){
 	
 }
 
-sub run_genstats_breakdown($$$){
+sub run_genstats_breakdown($$$$){
 # purpose : executing genstats-breakdown command
 # returns : status code and status message
-	my ($dag_file_path , $submit_dir , $output_dir )=(@_);
+	my ($dag_file_path , $submit_dir , $output_dir ,$condor )=(@_);
 	my (@args);
 	my ($submit_dirs) = $submit_dir;
 	my (@sub_workflow_submit_dirs) = get_sub_workflow_list($dag_file_path);
@@ -246,6 +248,7 @@ sub run_genstats_breakdown($$$){
 	my $summary_msg;
 	
 	if($number_of_elements > 0){
+		print "Number of element $number_of_elements";
 		invoke_tailstatd_for_sub_workflow(@sub_workflow_submit_dirs);
 		$submit_dirs .= " ".join(" ",@sub_workflow_submit_dirs);
 	}
@@ -254,6 +257,9 @@ sub run_genstats_breakdown($$$){
     my $output_file = 	File::Spec->catfile($output_dir ,"breakdown.txt");
 	#Adding arguments
 	push(@args ,"--output ".$output_file); #/adding output file argument
+	if($condor){
+		push(@args ,"--condor"); #/adding output file argument
+	}
 	push(@args ,"-f ".$submit_dirs_file); #adding submit directories
 	
 	# creating genstats-breakdown command 
@@ -326,37 +332,59 @@ sub create_submit_directories_file($){
 	return $out_fn;
 }
 
-sub get_sub_workflow_list($$){
+sub get_sub_workflow_list($){
 	# purpose : find the list of sub workflows from the dag file
 	# returns : list of sub workflows
-	my($dag_file_path) =(@_);
+	my($root_dag_file_path) =(@_);
 	my($job_name ,$submit_file_name);
-	my(%job_submit_file_hash) ;
-	open CONFIG, "$dag_file_path" or die "Unable to open dag file: $dag_file_path . $! \n";
-	while (my $line = <CONFIG>) {
-    	chomp $line;
-    	$line =~ s/^\s+//; 
-    	$line =~ s/^\s+//;
-    	if( $line =~m/^JOB\s.*/i ){
-    		my @values = split(/\s+/, $line);
-    		$job_name =$values[1];
-    		$submit_file_name = $values[2];
-    		if($job_name  =~m/^pegasus-plan.*/i){
-  				$job_submit_file_hash{$job_name} =$submit_file_name;
-  			}
-    	}
-    }
-    my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+	my(@sub_workflow_list) ;
+	my (@dag_path_list);
+	my $dag_file_path;
+	my ($dagbase,$submit_dir ,$type ) ;
     my ($submit_file_path,$sub_wf_submit_dir);
-    my($key, $value);
+    my($sub_wf_submit_file_name);
+    my (%config);
+    my($sub_dag_file_name);
+    my ($sub_dag_file_path);
     my(@sub_workflow_submit_dirs);
-    
-    while (($key, $value) = each(%job_submit_file_hash)){
-	     $submit_file_path = File::Spec->catfile($submit_dir,$value);
-	     $sub_wf_submit_dir = &parse_submit_file($submit_file_path);
-	     if($sub_wf_submit_dir){
-	     	push (@sub_workflow_submit_dirs ,$sub_wf_submit_dir);
-	     }
+	
+	push(@dag_path_list,$root_dag_file_path);
+	while(@dag_path_list){
+		$dag_file_path = shift(@dag_path_list);
+		open CONFIG, "$dag_file_path" or die "Unable to open dag file: $dag_file_path . $! \n";
+		# Getting sub workflows from dag file
+		while (my $line = <CONFIG>) {
+	    	chomp $line;
+	    	$line =~ s/^\s+//; 
+	    	$line =~ s/^\s+//;
+	    	if( $line =~m/^JOB\s.*/i ){
+	    		my @values = split(/\s+/, $line);
+	    		$job_name =$values[1];
+	    		$submit_file_name = $values[2];
+	    		if($job_name  =~m/^pegasus-plan.*/i){
+	  				push(@sub_workflow_list,$submit_file_name);
+	  			}
+	    	}
+	    }
+	    close CONFIG;
+	 	
+	 	($dagbase,$submit_dir ,$type) = fileparse( $dag_file_path  ,qr{\..*});
+	 	foreach $sub_wf_submit_file_name (@sub_workflow_list){
+	 		 $submit_file_path = File::Spec->catfile($submit_dir,$sub_wf_submit_file_name);
+		     $sub_wf_submit_dir = &parse_submit_file($submit_file_path);
+		     %config = slurp_braindb( $sub_wf_submit_dir ) or die "ERROR: open braindump.txt in directory $sub_wf_submit_dir: $!\n";
+	     	 $sub_dag_file_name = $config{'dag'};
+	     	if($sub_wf_submit_dir){
+	     		push (@sub_workflow_submit_dirs ,$sub_wf_submit_dir);
+	     		if($sub_dag_file_name){
+	     			$sub_dag_file_path = File::Spec->catfile($sub_wf_submit_dir,$sub_dag_file_name);
+	     			push(@dag_path_list,$sub_dag_file_path);
+		     	}else{
+		     		print STDERR "WARNING: Unable to find dag file name in the braindump file in $sub_wf_submit_dir.\n";
+		     	}
+		     }
+		     
+		}   
 	}
 	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
 	return @sub_workflow_submit_dirs;
