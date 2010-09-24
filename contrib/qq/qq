@@ -192,6 +192,7 @@ sub parsersl($) {
     local $_ = shift;
     while ( /\(([^)]+)\)/g ) {
         my ($k,$v) = split /=/, $1, 2;
+	$k =~ s/[-_]//g;
 	$result{lc $k} = $v;
     }
     %result;
@@ -253,10 +254,14 @@ sub showjob($\%) {
 	print ' [', ( $x{name} || basename($r->{out},'.out') ), ']' 
 	    unless $flag;
 	print " # q=", ( $x{queue} || 'default' ); 
+
 	my $x = $x{maxtime} || $x{maxwalltime} || $x{maxcputime};
 	if ( defined $x && $x > 0 ) {
 	    printf " t=%d:%02d", ( $x /60 ), ( $x % 60 );
 	}
+
+	my $p = $x{hostcount} || $x{'host_count'} || $x{count};
+	printf( " p=%d", $p ) if $p > 1; 
     }
     print "\n";
 }
@@ -302,6 +307,24 @@ sub condor_q(\%\%\$;$) {
 }
 
 # --- main ------------------------------------------------------
+
+#
+# determine termininal size
+#
+my ($rows,$cols) = (25,80);
+if ( -t STDOUT ) {
+    my $x;
+    eval {
+	require "sys/ioctl.ph";
+	ioctl( STDOUT, &TIOCGWINSZ, $x ) || die "ioctl";
+    };
+    if ( ! $@ && defined $x && length($x) ) {
+	($rows,$cols) = unpack("S2",$x);
+    }
+} else {
+    $rows = $cols = 1E10;	# unlimited
+}
+
 
 my (%dag,%job,$max);
 condor_q( %job, %dag, $max, $user );
@@ -383,7 +406,7 @@ if ( $total > 0 ) {
 	print( $f++ ? ' ' : ' (' );
 	printf "%s:%d", $gstat{$g}, $globus{$g};
     }
-    print ')';
+    print ')' if $f; 
 
     printf( ", %d job%s total", $total, ( $total == 1 ? '' : 's' ) );
     $f = 0;
@@ -391,6 +414,8 @@ if ( $total > 0 ) {
 	print( $f++ ? ' ' : ' (' );
 	printf "%s:%d", $cstat[$c], $condor{$c};
     }
-    print ")\n";
+    print ')' if $f; 
+
+    print "\n";
 }
 warn "I am missing some jobs :=(\n" if ( scalar %seen );
