@@ -68,7 +68,7 @@ public class Bundle extends Default {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = "1";
+    public static final String DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR = "4";
 
     
     /**
@@ -76,26 +76,35 @@ public class Bundle extends Default {
      * that are being created per execution pool for stageing in data for
      * the workflow.
      */
-    public static final String DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = "1";
-    
+    public static final String DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR = "4";
+
     /**
      * The default bundling factor that identifies the number of transfer jobs
-     * that are being created per execution pool while stageing data out.
+     * that are being created per execution pool for stageing out data for
+     * the workflow.
      */
-    public static final String DEFAULT_STAGE_OUT_BUNDLE_FACTOR = "1";
+    public static final String DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR = "4";
+
+
+    /**
+     * The default bundling factor that identifies the number of transfer jobs
+     * that are being created per execution pool for stageing out data for
+     * the workflow.
+     */
+    public static final String DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR = "4";
 
 
     /**
      * The map containing the list of stage in transfer jobs that are being
      * created for the workflow indexed by the execution poolname.
      */
-    private Map mStageInMap;
+    private Map mStageInLocalMap;
     
     /**
      * The map containing the list of stage in transfer jobs that are being
      * created for the workflow indexed by the execution poolname.
      */
-    private Map mStageInSymlinkMap;
+    private Map mStageInRemoteMap;
 
     /**
      * The map indexed by compute jobnames that contains the list of stagin job
@@ -105,21 +114,26 @@ public class Bundle extends Default {
      */
     private Map mRelationsMap;
 
-    /**
-     * The map containing the stage in bundle values indexed by the name of the
-     * pool. If the bundle value is not specified, then null is stored.
-     */
-//    private Map mSIBundleMap;
     
     /**
-     * The BundleValue that evaluates for stage in jobs.
+     * The BundleValue that evaluates for local stage in jobs.
      */
-    protected BundleValue mStageinBundleValue;
+    protected BundleValue mStageinLocalBundleValue;
 
     /**
-     * The BundleValue that evaluates for symlink jobs.
+     * The BundleValue that evaluates for remote stage-in jobs.
      */
-    protected BundleValue mStageInSymlinkBundleValue;
+    protected BundleValue mStageInRemoteBundleValue;
+
+    /**
+     * The BundleValue that evaluates for local stage out jobs.
+     */
+    protected BundleValue mStageOutLocalBundleValue;
+
+    /**
+     * The BundleValue that evaluates for remote stage out jobs.
+     */
+    protected BundleValue mStageOutRemoteBundleValue;
 
     
     /**
@@ -131,10 +145,17 @@ public class Bundle extends Default {
 
 
     /**
-     * A map indexed by site name, that contains the pointer to the stage out
+     * A map indexed by site name, that contains the pointer to the local stage out
      * PoolTransfer objects for that site. This is per level of the workflow.
      */
-    private Map mStageOutMapPerLevel;
+    private Map<String,PoolTransfer> mStageOutLocalMapPerLevel;
+
+
+    /**
+     * A map indexed by site name, that contains the pointer to the remote stage out
+     * PoolTransfer objects for that site. This is per level of the workflow.
+     */
+    private Map<String,PoolTransfer> mStageOutRemoteMapPerLevel;
 
 
     /**
@@ -162,9 +183,8 @@ public class Bundle extends Default {
      */
     public Bundle( ADag dag, PegasusBag bag ){
         super( dag, bag );
-        mStageInMap   = new HashMap( mPOptions.getExecutionSites().size());
-        mStageInSymlinkMap   = new HashMap( mPOptions.getExecutionSites().size());
-//        mSIBundleMap  = new HashMap();
+        mStageInLocalMap   = new HashMap( mPOptions.getExecutionSites().size());
+        mStageInRemoteMap   = new HashMap( mPOptions.getExecutionSites().size());
         
         mRelationsMap = new HashMap();
         mSetupMap     = new HashMap();
@@ -179,13 +199,27 @@ public class Bundle extends Default {
      * the bundle values.
      */
     protected  void initializeBundleValues() {
-        mStageinBundleValue = new BundleValue();
-        mStageinBundleValue.initialize( VDS.BUNDLE_STAGE_IN_KEY, 
-                                        Bundle.DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR );
+        mStageinLocalBundleValue = new BundleValue();
+        mStageinLocalBundleValue.initialize( VDS.BUNDLE_LOCAL_STAGE_IN_KEY,
+                                             VDS.BUNDLE_STAGE_IN_KEY,
+                                             Bundle.DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR );
         
-        mStageInSymlinkBundleValue = new BundleValue();
-        mStageInSymlinkBundleValue.initialize( VDS.BUNDLE_STAGE_IN_SYMLINK_KEY, 
-                                        Bundle.DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR );
+        mStageInRemoteBundleValue = new BundleValue();
+        mStageInRemoteBundleValue.initialize( VDS.BUNDLE_REMOTE_STAGE_IN_KEY,
+                                              VDS.BUNDLE_STAGE_IN_KEY,
+                                              Bundle.DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR );
+
+
+        mStageOutLocalBundleValue = new BundleValue();
+        mStageOutLocalBundleValue.initialize( VDS.BUNDLE_LOCAL_STAGE_OUT_KEY,
+                                             VDS.BUNDLE_STAGE_OUT_KEY,
+                                             Bundle.DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR );
+
+        mStageOutRemoteBundleValue = new BundleValue();
+        mStageOutRemoteBundleValue.initialize( VDS.BUNDLE_REMOTE_STAGE_OUT_KEY,
+                                              VDS.BUNDLE_STAGE_OUT_KEY,
+                                              Bundle.DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR );
+
     }
 
     
@@ -207,19 +241,21 @@ public class Bundle extends Default {
                                       Collection<FileTransfer> files,
                                       Collection<FileTransfer> symlinkFiles ){
         
-        addStageInXFERNodes( job, 
+        addStageInXFERNodes( job,
+                             true,
                              files,
                              SubInfo.STAGE_IN_JOB , 
-                             this.mStageInMap, 
-                             this.mStageinBundleValue,
+                             this.mStageInLocalMap,
+                             this.mStageinLocalBundleValue,
                              this.mTXStageInImplementation );
         
         addStageInXFERNodes( job,
+                             false,
                              symlinkFiles, 
-                             SubInfo.SYMLINK_STAGE_IN_JOB,
-                             this.mStageInSymlinkMap,
-                             this.mStageInSymlinkBundleValue,
-                             this.mTXSymbolicLinkImplementation  );
+                             SubInfo.STAGE_IN_JOB,
+                             this.mStageInRemoteMap,
+                             this.mStageInRemoteBundleValue,
+                             this.mTXStageInImplementation  );
         
     }
 
@@ -230,6 +266,7 @@ public class Bundle extends Default {
      *
      * @param job   <code>SubInfo</code> object corresponding to the node to
      *              which the files are to be transferred to.
+     * @param localTransfer boolean indicating whether transfer has to happen on local site.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
      * @param type  the type of transfer job being created
@@ -239,6 +276,7 @@ public class Bundle extends Default {
      * @param implementation  the transfer implementation to use.
      */
     public  void addStageInXFERNodes( SubInfo job,
+                                      boolean localTransfer,
                                       Collection files, 
                                       int type,
                                       Map<String,PoolTransfer> stageInMap,
@@ -294,14 +332,11 @@ public class Bundle extends Default {
                 boolean contains = stageInMap.containsKey(siteHandle);
                 //following pieces need rearragnement!
                 if(!contains){
-//                    bundle = getSISiteBundleValue(siteHandle,
-//                                                job.vdsNS.getStringValue(VDS.BUNDLE_STAGE_IN_KEY));
-//                    mSIBundleMap.put(siteHandle,Integer.toString(bundle));
                     bundle = bundleValue.determine( implementation, job );
                 }
                 PoolTransfer pt = (contains)?
                                   (PoolTransfer)stageInMap.get(siteHandle):
-                                  new PoolTransfer(siteHandle,bundle);
+                                  new PoolTransfer( siteHandle, localTransfer, bundle);
                 if(!contains){
                     stageInMap.put(siteHandle,pt);
                 }
@@ -378,6 +413,7 @@ public class Bundle extends Default {
      *              information about source and destURL's.
      * @param rcb   bridge to the Replica Catalog. Used for creating registration
      *              nodes in the workflow.
+     * @param localTransfer  whether the transfer should be on local site or not.
      * @param deletedLeaf to specify whether the node is being added for
      *                      a deleted node by the reduction engine or not.
      *                      default: false
@@ -385,6 +421,7 @@ public class Bundle extends Default {
     public  void addStageOutXFERNodes(SubInfo job,
                                       Collection files,
                                       ReplicaCatalogBridge rcb,
+                                      boolean localTransfer,
                                       boolean deletedLeaf){
 
         //initializing rcb till the change in function signature happens
@@ -397,9 +434,10 @@ public class Bundle extends Default {
         }
 
         String jobName = job.getName();
-//        String regJob = this.REGISTER_PREFIX + jobName;
+        BundleValue bundleValue = (localTransfer) ? this.mStageOutLocalBundleValue :
+                                           this.mStageOutRemoteBundleValue;
 
-        mLogMsg = "Adding output pool nodes for job " + jobName;
+        mLogMsg = "Adding stageout nodes for job " + jobName;
 
         //separate the files for transfer
         //and for registration
@@ -420,14 +458,13 @@ public class Bundle extends Default {
 
         int level   = job.getLevel();
         String site = job.getSiteHandle();
-        int bundleValue = getSOSiteBundleValue( site,
-                                                getComputeJobBundleValue( job ) );
+        int bundle = bundleValue.determine( this.mTXStageOutImplementation, job );
 
         if ( level != mCurrentSOLevel ){
             mCurrentSOLevel = level;
             //we are starting on a new level of the workflow.
             //reinitialize stuff
-            this.resetStageOutMap();
+            this.resetStageOutMaps();
         }
 
 
@@ -435,7 +472,7 @@ public class Bundle extends Default {
         if (makeTNode) {
 
             //get the appropriate pool transfer object for the site
-            PoolTransfer pt = this.getStageOutPoolTransfer(  site, bundleValue );
+            PoolTransfer pt = this.getStageOutPoolTransfer( site, localTransfer, bundle );
             //we add all the file transfers to the pool transfer
             soTC = pt.addTransfer( txFiles, level, SubInfo.STAGE_OUT_JOB );
             String soJob = soTC.getTXName();
@@ -453,7 +490,7 @@ public class Bundle extends Default {
         else if ( makeRNode ) {
             //add an empty file transfer
             //get the appropriate pool transfer object for the site
-            PoolTransfer pt = this.getStageOutPoolTransfer(  site, bundleValue );
+            PoolTransfer pt = this.getStageOutPoolTransfer(  site, localTransfer, bundle );
             //we add all the file transfers to the pool transfer
             soTC = pt.addTransfer( new Vector(), level, SubInfo.STAGE_OUT_JOB );
 
@@ -489,13 +526,15 @@ public class Bundle extends Default {
      * containers and the stdin of the transfer jobs written.
      */
     public void done( ){
-        doneStageIn( this.mStageInMap,
+        doneStageIn( this.mStageInLocalMap,
                      this.mTXStageInImplementation , 
-                     SubInfo.STAGE_IN_JOB );
+                     SubInfo.STAGE_IN_JOB,
+                     true );
         
-        doneStageIn( this.mStageInSymlinkMap, 
-                     this.mTXSymbolicLinkImplementation, 
-                     SubInfo.SYMLINK_STAGE_IN_JOB );
+        doneStageIn( this.mStageInRemoteMap,
+                     this.mTXStageInImplementation,
+                     SubInfo.STAGE_IN_JOB,
+                     false );
        
         //adding relations that tie in the stagin
         //jobs to the compute jobs.
@@ -513,7 +552,7 @@ public class Bundle extends Default {
 
         
         //reset the stageout map too
-        this.resetStageOutMap();
+        this.resetStageOutMaps();
     }
     
     /**
@@ -525,10 +564,13 @@ public class Bundle extends Default {
      * @param stageInMap       maps site names to PoolTransfer
      * @param implementation   the transfer implementation to use
      * @param stageInJobType   whether a stagein or symlink stagein job
+     * @param localTransfer    indicates whether transfer job needs to run on
+     *                         local site or not.
      */
     public void doneStageIn( Map<String,PoolTransfer> stageInMap,
                              Implementation implementation,
-                             int stageInJobType ){
+                             int stageInJobType,
+                             boolean localTransfer ){
         //traverse through the stagein map and
         //add transfer nodes per pool
         String key; String value;
@@ -556,10 +598,15 @@ public class Bundle extends Default {
                 //mDag.addNewJob(tc.getName());
                 //we just need the execution pool in the job object
                 job.executionPool = key;
+
+                String site = localTransfer ? "local" : job.getSiteHandle();
                 
-                SubInfo tJob =  implementation.createTransferJob(job,tc.getFileTransfers(),
-                                                           null,tc.getTXName(),
-                                                           stageInJobType );
+                SubInfo tJob =  implementation.createTransferJob( job,
+                                                                  site,
+                                                                  tc.getFileTransfers(),
+                                                                  null,
+                                                                  tc.getTXName(),
+                                                                  stageInJobType );
                 //always set the type to stagein after it is created
                 tJob.setJobType( stageInJobType );
                 addJob( tJob );
@@ -577,109 +624,61 @@ public class Bundle extends Default {
      * @return a short textual description
      */
     public  String getDescription(){
-        return this.DESCRIPTION;
+        return Bundle.DESCRIPTION;
     }
 
 
-    /**
-     * Determines the bundle factor for a particular site on the basis of the
-     * stage in bundle value associcated with the underlying transfer
-     * transformation in the transformation catalog. If the key is not found,
-     * then the default value is returned. In case of the default value being
-     * null the global default is returned.
-     *
-     * @param site    the site at which the value is desired.
-     * @param deflt   the default value.
-     *
-     * @return the bundle factor.
-     *
-     * @see #DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR
-     */
-    protected int getSISiteBundleValue(String site,  String deflt){
-        //this should be parameterised Karan Dec 20,2005
-        TransformationCatalogEntry entry  =
-            mTXStageInImplementation.getTransformationCatalogEntry(site);
-        SubInfo sub = new SubInfo();
-        String value = (deflt == null)?
-                        this.DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR:
-                        deflt;
-
-        if(entry != null){
-            sub.updateProfiles(entry);
-            value = (sub.vdsNS.containsKey( VDS.BUNDLE_STAGE_IN_KEY ))?
-                     sub.vdsNS.getStringValue( VDS.BUNDLE_STAGE_IN_KEY ):
-                     value;
-        }
-
-        return Integer.parseInt(value);
-    }
-
-
-    /**
-     * Determines the bundle factor for a particular site on the basis of the
-     * stage out bundle value associcated with the underlying transfer
-     * transformation in the transformation catalog. If the key is not found,
-     * then the default value is returned. In case of the default value being
-     * null the global default is returned.
-     *
-     * @param site    the site at which the value is desired.
-     * @param deflt   the default value.
-     *
-     * @return the bundle factor.
-     *
-     * @see #DEFAULT_STAGE_OUT_BUNDLE_FACTOR
-     */
-    protected int getSOSiteBundleValue( String site,  String deflt ){
-        //this should be parameterised Karan Dec 20,2005
-        TransformationCatalogEntry entry  =
-            mTXStageInImplementation.getTransformationCatalogEntry(site);
-        SubInfo sub = new SubInfo();
-        String value = (deflt == null)?
-                        this.DEFAULT_STAGE_OUT_BUNDLE_FACTOR:
-                        deflt;
-
-        if(entry != null){
-            sub.updateProfiles(entry);
-            value = (sub.vdsNS.containsKey( VDS.BUNDLE_STAGE_OUT_KEY ))?
-                     sub.vdsNS.getStringValue( VDS.BUNDLE_STAGE_OUT_KEY ):
-                     value;
-        }
-
-        return Integer.parseInt(value);
-    }
+   
 
 
     /**
      * Returns the appropriate pool transfer for a particular site.
      *
-     * @param site  the site for which the PT is reqd.
+     * @param site           the site for which the PT is reqd.
+     * @param localTransfer  whethe the associated transfer job runs on local site or remote.
      * @param num   the number of Stageout jobs required for that Pool.
      *
      * @return the PoolTransfer
      */
-    public PoolTransfer getStageOutPoolTransfer( String site, int num  ){
+    public PoolTransfer getStageOutPoolTransfer( String site, boolean localTransfer, int num  ){
 
-        if ( this.mStageOutMapPerLevel.containsKey( site ) ){
-            return ( PoolTransfer ) this.mStageOutMapPerLevel.get( site );
+        //pick up appropriate map
+        Map map = localTransfer ? this.mStageOutLocalMapPerLevel : this.mStageOutRemoteMapPerLevel;
+
+        if ( map.containsKey( site ) ){
+            return ( PoolTransfer ) map.get( site );
         }
         else{
-            PoolTransfer pt = new PoolTransfer( site, num );
-            this.mStageOutMapPerLevel.put( site, pt );
+            PoolTransfer pt = new PoolTransfer( site, localTransfer, num );
+            map.put( site, pt );
             return pt;
         }
     }
 
     /**
-     * Resets the stage out map.
+     * Resets the local and remote stage out maps.
      */
-    protected void resetStageOutMap(){
-        if ( this.mStageOutMapPerLevel != null ){
+    protected void resetStageOutMaps(  ){
+        this.resetStageOutMap( mStageOutLocalMapPerLevel, true );
+        this.resetStageOutMap( mStageOutRemoteMapPerLevel, false );
+    }
+
+    /**
+     * Resets a single map
+     *
+     * @param map            the map to be reset
+     * @param localTransfer  whether the transfer jobs need to run on local site or not
+     */
+    protected void resetStageOutMap( Map<String,PoolTransfer> map, boolean localTransfer ){
+        if ( map != null ){
             //before flushing add the stageout nodes to the workflow
             SubInfo job = new SubInfo();
 
-            for( Iterator it = mStageOutMapPerLevel.values().iterator(); it.hasNext(); ){
+            for( Iterator it = map.values().iterator(); it.hasNext(); ){
                 PoolTransfer pt = ( PoolTransfer ) it.next();
                 job.setSiteHandle( pt.mPool );
+                //site is where transfer job runs
+                String site = localTransfer ? "local" : job.getSiteHandle();
 
                 mLogger.log( "Adding jobs for staging out data from site " + pt.mPool,
                              LogManager.DEBUG_MESSAGE_LEVEL );
@@ -698,7 +697,10 @@ public class Bundle extends Default {
                         mLogger.log( "Adding stage-out job " + tc.getTXName(),
                                      LogManager.DEBUG_MESSAGE_LEVEL);
                         soJob = mTXStageOutImplementation.createTransferJob(
-                                                             job, tc.getFileTransfers(), null,
+                                                             job,
+                                                             site,
+                                                             tc.getFileTransfers(),
+                                                             null,
                                                              tc.getTXName(), SubInfo.STAGE_OUT_JOB );
                         addJob( soJob );
                     }
@@ -723,7 +725,7 @@ public class Bundle extends Default {
             }
         }
 
-        mStageOutMapPerLevel = new HashMap();
+        map = new HashMap();
     }
 
     
@@ -895,7 +897,7 @@ public class Bundle extends Default {
         private int mNext;
 
         /**
-         * The pool for which these transfers are grouped.
+         * The remote pool for which these transfers are grouped.
          */
         private String mPool;
 
@@ -906,6 +908,11 @@ public class Bundle extends Default {
         private List mTXContainers;
 
         /**
+         * boolean indicating whether the transfer job needs to run on local site
+         */
+        private boolean mLocalTransfer;
+
+        /**
          * The default constructor.
          */
         public PoolTransfer(){
@@ -913,16 +920,19 @@ public class Bundle extends Default {
             mNext     = -1;
             mPool     = null;
             mTXContainers = null;
+            mLocalTransfer = true;
         }
 
         /**
          * Convenience constructor.
          *
-         * @param pool    the pool name for which transfers are being grouped.
+         * @param pool           the pool name for which transfers are being grouped.
+         * @param localTransfer  whether the transfers need to be run on local site
          * @param number  the number of transfer jobs that are going to be created
          *                for the pool.
          */
-        public PoolTransfer(String pool, int number){
+        public PoolTransfer(String pool, boolean localTransfer, int number){
+            mLocalTransfer = localTransfer;
             mCapacity = number;
             mNext     = 0;
             mPool     = pool;
@@ -1020,43 +1030,7 @@ public class Bundle extends Default {
         }
 
 
-        /**
-         * Generates the name of the transfer job, that is unique for the given
-         * workflow.
-         *
-         * @param counter  the index for the transfer job.
-         * @param type     the type of transfer job.
-         * @param level    the level of the workflow.
-         *
-         * @return the name of the transfer job.
-         */
-        private String getTXJobName( int counter, int type, int level ){
-            StringBuffer sb = new StringBuffer();
-            switch ( type ){
-                case SubInfo.STAGE_IN_JOB:
-                    sb.append( Refiner.STAGE_IN_PREFIX );
-                    break;
-
-               case SubInfo.SYMLINK_STAGE_IN_JOB:
-                    sb.append( Refiner.SYMBOLIC_LINK_PREFIX );
-                    break;
-                    
-                case SubInfo.STAGE_OUT_JOB:
-                    sb.append( Refiner.STAGE_OUT_PREFIX );
-                    break;
-
-                default:
-                    throw new RuntimeException( "Wrong type specified " + type );
-            }
-
-            //append the job prefix if specified in options at runtime
-            if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
-
-            sb.append( mPool ).append( "_" ).append( level ).
-               append( "_" ).append( counter );
-
-           return sb.toString();
-        }
+        
 
         /**
          * Generates the name of the transfer job, that is unique for the given
@@ -1096,18 +1070,15 @@ public class Bundle extends Default {
          *
          * @param counter  the index for the transfer job.
          * @param type     the type of transfer job.
+         * @param level    the level of the workflow.
          *
          * @return the name of the transfer job.
          */
-        private String getTXJobName( int counter, int type ){
+        private String getTXJobName( int counter, int type, int level ){
             StringBuffer sb = new StringBuffer();
             switch ( type ){
                 case SubInfo.STAGE_IN_JOB:
                     sb.append( Refiner.STAGE_IN_PREFIX );
-                    break;
-                    
-                case SubInfo.SYMLINK_STAGE_IN_JOB:
-                    sb.append( Refiner.SYMBOLIC_LINK_PREFIX );
                     break;
 
                 case SubInfo.STAGE_OUT_JOB:
@@ -1118,6 +1089,52 @@ public class Bundle extends Default {
                     throw new RuntimeException( "Wrong type specified " + type );
             }
 
+            if( mLocalTransfer ) {
+                sb.append( Refiner.LOCAL_PREFIX );
+            }
+            else{
+                sb.append( Refiner.REMOTE_PREFIX );
+            }
+            //append the job prefix if specified in options at runtime
+            if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
+
+            sb.append( mPool ).append( "_" ).append( level ).
+               append( "_" ).append( counter );
+
+           return sb.toString();
+        }
+        
+        /**
+         * Generates the name of the transfer job, that is unique for the given
+         * workflow.
+         *
+         * @param counter  the index for the transfer job.
+         * @param type     the type of transfer job.
+         *
+         * @return the name of the transfer job.
+         */
+        private String getTXJobName( int counter, int type ){
+            StringBuffer sb = new StringBuffer();
+            switch ( type ){
+                case SubInfo.STAGE_IN_JOB:
+                    sb.append( Refiner.STAGE_IN_PREFIX );
+                    break;
+                    
+               
+                case SubInfo.STAGE_OUT_JOB:
+                    sb.append( Refiner.STAGE_OUT_PREFIX );
+                    break;
+
+                default:
+                    throw new RuntimeException( "Wrong type specified " + type );
+            }
+
+            if( mLocalTransfer ) {
+                sb.append( Refiner.LOCAL_PREFIX );
+            }
+            else{
+                sb.append( Refiner.REMOTE_PREFIX );
+            }
 
             //append the job prefix if specified in options at runtime
             if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
@@ -1145,7 +1162,14 @@ public class Bundle extends Default {
          * The default bundle value to use.
          */
         private String mDefaultBundleValue;
-        
+
+
+        /**
+         * The Default Pegasus profile key to use for lookup
+         */
+        private String mDefaultProfileKey;
+
+
         /**
          * The default constructor.
          */
@@ -1156,12 +1180,14 @@ public class Bundle extends Default {
         /**
          * Initializes the implementation
          * 
-         * @param key     the Pegasus Profile key to be used for lookup of bundle values.
-         * @param dflt the default value to be associated if no key is found.
+         * @param key        the Pegasus Profile key to be used for lookup of bundle values.
+         * @param defaultKey the default Profile Key to be used if key is not found.
+         * @param defaultValue the default value to be associated if no key is found.
          */
-        public void initialize( String key, String dflt ){
-            mProfileKey     = key;
-            mDefaultBundleValue = dflt;
+        public void initialize( String key, String defaultKey, String defaultValue ){
+            mProfileKey         = key;
+            mDefaultProfileKey  = defaultKey;
+            mDefaultBundleValue = defaultValue;
         }
         
       
@@ -1188,7 +1214,8 @@ public class Bundle extends Default {
         public int determine(  Implementation implementation, SubInfo job  ){
             return determine( implementation,
                               job.getSiteHandle(), 
-                              job.vdsNS.getStringValue( mProfileKey ));
+                              job.vdsNS.getStringValue( mProfileKey ),
+                              job.vdsNS.getStringValue( mDefaultProfileKey ));
         }
        
        /**
@@ -1202,29 +1229,43 @@ public class Bundle extends Default {
         * call to get(String site) returns the value determined.
         *
         * 
-        * @param implementation  the transfer implementation being used
-        * @param site    the site at which the value is desired.
-        * @param deflt   the default value.
+        * @param implementation        the transfer implementation being used
+        * @param site                  the site at which the value is desired.
+        * @param profileValue          the value of the profile key
+        * @param defaultProfileValue   the value of the default profile key
         *
         * @return the bundle factor.
         *
         */
-        public  int determine( Implementation implementation, String site, String deflt ){
+        public  int determine( Implementation implementation, String site, String profileValue,String defaultProfileValue ){
             //this should be parameterised Karan Dec 20,2005
-           TransformationCatalogEntry entry  =
-             implementation.getTransformationCatalogEntry(site);
         
            SubInfo sub = new SubInfo();
-           String value = (deflt == null)?
-                           mDefaultBundleValue:
-                           deflt;
 
+           //check for profile value first
+           String value = profileValue;
+           if( value == null ){
+               value = defaultProfileValue;
+           }
+
+           //if value is still null apply the default bundle value
+           value = ( value == null )?
+                   this.mDefaultBundleValue:
+                   value;
+
+
+           //we dont pick up any value from transformation catalog
+           //for time being. Karan Sept 23rd 2010
+           /*
+           TransformationCatalogEntry entry  =
+             implementation.getTransformationCatalogEntry(site);
             if(entry != null){
                 sub.updateProfiles(entry);
                 value = (sub.vdsNS.containsKey( mProfileKey ))?
                          sub.vdsNS.getStringValue( mProfileKey ):
                          value;
             }
+            */
 
             return Integer.parseInt(value);
         }

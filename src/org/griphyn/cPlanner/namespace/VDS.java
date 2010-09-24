@@ -136,9 +136,28 @@ public class VDS extends Namespace {
     
     /**
      * The name of the key that determines the bundling parameter for the
-     * stagein transfer node.
+     * remote stagein transfer node.
      */
-    public static final String BUNDLE_STAGE_IN_SYMLINK_KEY = "bundle.symlink";
+    public static final String BUNDLE_REMOTE_STAGE_IN_KEY = "bundle.remote.stagein";
+
+    /**
+     * The name of the key that determines the bundling parameter for the
+     * local stagein transfer node.
+     */
+    public static final String BUNDLE_LOCAL_STAGE_IN_KEY = "bundle.local.stagein";
+
+    /**
+     * The name of the key that determines the bundling parameter for the
+     * remote stagein transfer node.
+     */
+    public static final String BUNDLE_REMOTE_STAGE_OUT_KEY = "bundle.remote.stageout";
+
+    /**
+     * The name of the key that determines the bundling parameter for the
+     * local stagein transfer node.
+     */
+    public static final String BUNDLE_LOCAL_STAGE_OUT_KEY = "bundle.local.stageout";
+
     /**
      * The name of the key that determines the bundling parameter for the
      * stageout transfer node.
@@ -149,19 +168,39 @@ public class VDS extends Namespace {
      * The name of the key that determines the clustering parameter for the
      * stagein transfer node.
      */
-    public static final String CLUSTER_STAGE_IN_TX_KEY = "cluster.stagein";
+    public static final String CLUSTER_STAGE_IN_KEY = "cluster.stagein";
     
     /**
      * The name of the key that determines the clustering parameter for the
      * stagein transfer node.
      */
-    public static final String CLUSTER_STAGE_IN_SYMLINK_TX_KEY = "cluster.symlink";
+    public static final String CLUSTER_REMOTE_STAGE_IN_KEY = "cluster.remote.stagein";
+
+    /**
+     * The name of the key that determines the cluster parameter for the
+     * local stagein transfer node.
+     */
+    public static final String CLUSTER_LOCAL_STAGE_IN_KEY = "cluster.local.stagein";
+
 
     /**
      * The name of the key that determines the clustering parameter for the
      * stageout transfer node.
      */
-    public static final String CLUSTER_STAGE_OUT_TX_KEY = "cluster.stageout";
+    public static final String CLUSTER_STAGE_OUT_KEY = "cluster.stageout";
+
+
+    /**
+     * The name of the key that determines the bundling parameter for the
+     * remote stagein transfer node.
+     */
+    public static final String CLUSTER_REMOTE_STAGE_OUT_KEY = "cluster.remote.stageout";
+
+    /**
+     * The name of the key that determines the cluster parameter for the
+     * local stagein transfer node.
+     */
+    public static final String CLUSTER_LOCAL_STAGE_OUT_KEY = "cluster.local.stageout";
 
 
     /**
@@ -340,7 +379,7 @@ public class VDS extends Namespace {
                 if ( (key.compareTo(BUNDLE_KEY) == 0) ||
                      (key.compareTo(BUNDLE_STAGE_IN_KEY) == 0) ||
                      (key.compareTo(BUNDLE_STAGE_OUT_KEY) == 0 ) ||
-                     (key.compareTo( BUNDLE_STAGE_IN_SYMLINK_KEY) == 0 )) {
+                     (key.compareTo( BUNDLE_REMOTE_STAGE_IN_KEY) == 0 )) {
                     res = VALID_KEY;
                 }
                 else if( key.compareTo(DEPRECATED_BUNDLE_STAGE_IN_KEY) == 0){
