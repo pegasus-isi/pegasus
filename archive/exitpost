@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 #
-# To be run as Condor DAGMan POST script, will invoke PEGASUS_HOME exitcode internally.
+# To be run as Condor DAGMan POST script, will invoke PEGASUS_HOME
+# exitcode internally.
 #
 # Usage: exitpost [pegasus-exitcode-reference options] dot-out-file 
 #
@@ -102,10 +103,10 @@ my $timeok = ( $@ ? 0 : 1 );
 my $ec = 'pegasus-exitcode-reference';
 if ( exists $ENV{'PEGASUS_HOME'} ) {
     # use PEGASUS_HOME
-    $ec = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'exitcode' );
+    $ec = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'archive', $ec ); 
 } else {
     # check this script's directory
-    $ec = File::Spec->catfile( dirname($0), 'exitcode' );
+    $ec = File::Spec->catfile( dirname($0), $ec );
 }
 fatal "ERROR: Unable to find $ec\n" unless -e $ec;
 fatal "ERROR: Unable to read $ec\n" unless -r _;
