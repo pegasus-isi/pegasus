@@ -248,7 +248,6 @@ sub run_genstats_breakdown($$$$){
 	my $summary_msg;
 	
 	if($number_of_elements > 0){
-		print "Number of element $number_of_elements";
 		invoke_tailstatd_for_sub_workflow(@sub_workflow_submit_dirs);
 		$submit_dirs .= " ".join(" ",@sub_workflow_submit_dirs);
 	}
@@ -351,6 +350,7 @@ sub get_sub_workflow_list($){
 	push(@dag_path_list,$root_dag_file_path);
 	while(@dag_path_list){
 		$dag_file_path = shift(@dag_path_list);
+		@sub_workflow_list =();
 		open CONFIG, "$dag_file_path" or die "Unable to open dag file: $dag_file_path . $! \n";
 		# Getting sub workflows from dag file
 		while (my $line = <CONFIG>) {
@@ -372,10 +372,10 @@ sub get_sub_workflow_list($){
 	 	foreach $sub_wf_submit_file_name (@sub_workflow_list){
 	 		 $submit_file_path = File::Spec->catfile($submit_dir,$sub_wf_submit_file_name);
 		     $sub_wf_submit_dir = &parse_submit_file($submit_file_path);
-		     %config = slurp_braindb( $sub_wf_submit_dir ) or die "ERROR: open braindump.txt in directory $sub_wf_submit_dir: $!\n";
-	     	 $sub_dag_file_name = $config{'dag'};
-	     	if($sub_wf_submit_dir){
-	     		push (@sub_workflow_submit_dirs ,$sub_wf_submit_dir);
+		     if($sub_wf_submit_dir){
+		        %config = slurp_braindb( $sub_wf_submit_dir ) or die "ERROR: open braindump.txt in directory $sub_wf_submit_dir: $!\n";
+	     	    $sub_dag_file_name = $config{'dag'};
+	     	    push (@sub_workflow_submit_dirs ,$sub_wf_submit_dir);
 	     		if($sub_dag_file_name){
 	     			$sub_dag_file_path = File::Spec->catfile($sub_wf_submit_dir,$sub_dag_file_name);
 	     			push(@dag_path_list,$sub_dag_file_path);
@@ -386,7 +386,6 @@ sub get_sub_workflow_list($){
 		     
 		}   
 	}
-	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
 	return @sub_workflow_submit_dirs;
 }
 
