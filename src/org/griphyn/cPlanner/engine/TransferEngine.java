@@ -861,16 +861,15 @@ public class TransferEngine extends Engine {
                         }
                     }
                 }
-                result[0] = localTransfers;
-                result[1] = remoteTransfers;
-
-                return result;
+                
             }
 
 
         }
 
-        return vFileTX;
+        result[0] = localTransfers;
+        result[1] = remoteTransfers;
+        return result;
 
     }
 

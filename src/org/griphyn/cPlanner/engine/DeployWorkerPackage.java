@@ -40,6 +40,7 @@ import org.griphyn.cPlanner.namespace.VDS;
 
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
+import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 
 import edu.isi.pegasus.planner.selector.TransformationSelector;
@@ -57,6 +58,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
+import edu.isi.pegasus.planner.transfer.RemoteTransfer;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -70,7 +72,6 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import org.griphyn.cPlanner.common.TPT;
 
 /**
  * The refiner that is responsible for adding 
@@ -91,6 +92,16 @@ public class DeployWorkerPackage
      * Constant suffix for the names of the deployment nodes.
      */
     public static final String DEPLOY_WORKER_PREFIX = "stage_worker_";
+    
+    /**
+     * The local prefix to be added for local setup transfer jobs.
+     */
+    public static final String LOCAL_PREFIX = "local_";
+    
+    /**
+     * The remote prefix to be added for remote setup transfer jobs.
+     */
+    public static final String REMOTE_PREFIX = "remote_";
     
     /**
      * Constant suffix for the names of the deployment nodes.
@@ -290,7 +301,14 @@ public class DeployWorkerPackage
     /**
      * The FileTransfer map indexed by site id.
      */
-    protected Map mFTMap;
+    protected Map<String, FileTransfer> mFTMap;
+    
+    
+    /**
+     * Map that indicates whether we need local setup transfer jobs for a site or
+     * not.
+     */
+    protected Map<String, Boolean> mLocalTransfers;
     
     /**
      * Maps a site to the the directory where the pegasus worker package has
@@ -356,6 +374,7 @@ public class DeployWorkerPackage
         super( bag );
         mCurrentDag = null;
         mFTMap = new HashMap();
+        mLocalTransfers = new HashMap();
         mSiteToPegasusHomeMap = new HashMap<String,String>();
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
 
@@ -383,8 +402,11 @@ public class DeployWorkerPackage
     public void initialize( ADag scheduledDAG ) {
         Mapper m = mBag.getHandleToTransformationMapper();
         SiteStore siteStore = mBag.getHandleToSiteStore();
-        TPT tpt = new TPT( mProps ); //allows us to check whether we need to construct 3rd party URL's
-        tpt.buildState();
+        
+        RemoteTransfer remoteTransfers = new RemoteTransfer( mProps );
+        remoteTransfers.buildState();
+
+        
 
         //figure if we need to deploy or not
         if( !mTransferWorkerPackage ){
@@ -400,8 +422,8 @@ public class DeployWorkerPackage
         //selectors may end up being loaded for different jobs.
         TransformationSelector txSelector = TransformationSelector.loadTXSelector( mProps.getTXSelectorMode() );
 
-        mSetupTransferImplementation.setRefiner( 
-                RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) );
+        Refiner defaultRefiner = RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) ;
+        mSetupTransferImplementation.setRefiner( defaultRefiner );
         
         //for each site insert default entries in the Transformation Catalog
         //for each scheduled site query TCMapper
@@ -484,23 +506,56 @@ public class DeployWorkerPackage
             FileTransfer ft = new FileTransfer( COMPLETE_TRANSFORMATION_NAME, null );
             ft.addSource( selected.getResourceId(), sourceURL );
             String baseName = sourceURL.substring( sourceURL.lastIndexOf( "/" ) + 1 );
-
-
-            /*ft.addDestination( site,
-                               //siteCatalog.getURLPrefix( site ) + 
-                               siteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-                               new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
-            */
+            
             //figure out the URL prefix depending on
             //the TPT configuration
-            String urlPrefix = ( tpt.stageInThirdParty( site ) )?
+            String destURLPrefix = 
+                               siteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
+            
+            boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, site, destURLPrefix, SubInfo.STAGE_IN_JOB);
+            String urlPrefix =  localTransfer ?
                                //lookup the site catalog to get the URL prefix
-                               siteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix():
+                               destURLPrefix :
                                //push pull mode. File URL will do
                                "file://";
             ft.addDestination( site, urlPrefix + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
             mFTMap.put( site, ft );
+            mLocalTransfers.put( site, localTransfer );
         }
+    }
+
+    /**
+     * Returns whether to run a transfer job on local site or not.
+     *
+     *
+     * @param site  the site handle associated with the destination URL.
+     * @param destURL the destination URL
+     * @param type  the type of transfer job for which the URL is being constructed.
+     *
+     * @return true indicating if the associated transfer job should run on local
+     *              site or not.
+     */
+    public boolean runTransferOnLocalSite( Refiner refiner, String site, String destinationURL, int type) {
+        //check if user has specified any preference in config
+        boolean result = true;
+
+        //short cut for local site
+        if( site.equals( "local" ) ){
+            //transfer to run on local site
+            return result;
+        }
+
+        if( result = refiner.runTransferRemotely( site, type )){
+            //always use user preference
+            return !result;
+        }
+        //check to see if destination URL is a file url
+        else if( destinationURL != null && destinationURL.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+           result = false;
+            
+        }
+
+        return result;
     }
 
 
@@ -584,8 +639,11 @@ public class DeployWorkerPackage
             SubInfo dummy = new SubInfo() ;
             dummy.setSiteHandle( site );
             
+            String tsite = mLocalTransfers.get( site ) ? "local" : site;
+            
             SubInfo setupTXJob = mSetupTransferImplementation.createTransferJob(
                                          dummy,
+                                         tsite,
                                          fts,
                                          null,
                                          this.getDeployJobName( dag, site ),
