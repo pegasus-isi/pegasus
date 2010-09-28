@@ -32,6 +32,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 
+import edu.isi.pegasus.planner.transfer.Refiner;
 import org.griphyn.cPlanner.namespace.VDS;
 
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
@@ -299,7 +300,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
         }
 
         if( !txFiles.isEmpty() ){
-            String txName = Condor.STAGE_OUT_PREFIX + job.getName() + "_0" ;
+            String txName = Refiner.STAGE_OUT_PREFIX + Refiner.LOCAL_PREFIX + job.getName() + "_0" ;
             SubInfo txJob = this.createStageOutTransferJob( job,
                                                             txFiles,
                                                             destinationDirectory,
