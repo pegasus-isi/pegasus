@@ -14,6 +14,11 @@ if [ "X${PEGASUS_HOME}" = "X" ]; then
     exit 1
 fi
 
+# normalize PEGASUS_HOME - remove trailing slashes, double slashes, ...
+# this is needed as the java code do string compares on the classpath
+PEGASUS_HOME=`(cd $PEGASUS_HOME && pwd)`
+export PEGASUS_HOME
+
 # build the classpath
 CLASSPATH=`( find ${PEGASUS_HOME}/lib -name '*.jar' | sort | tr '\012' ':' ; echo "" ) | sed -e 's/::/:/g' -e 's/^://' -e 's/:$//'`
 if [ "x${PEGASUS_CLASSPATH_PREPEND}" != "x" ]; then
