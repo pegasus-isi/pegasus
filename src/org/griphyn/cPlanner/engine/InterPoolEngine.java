@@ -805,9 +805,13 @@ public class InterPoolEngine extends Engine implements Refiner {
                         if( s == null ){
                             throw new RuntimeException( "Unable to find entry for site in site catalog " + job.getSiteHandle() );
                         }
-                        job.globusScheduler =  s.selectGridGateway( 
-                                                    GridGateway.JOB_TYPE.valueOf(job.condorUniverse)).
-                                                                 getContact();
+                        GridGateway gw = s.selectGridGateway( 
+                                                    GridGateway.JOB_TYPE.valueOf(job.condorUniverse));
+                        if( gw == null ){
+                            throw new RuntimeException( 
+                                    "No GridGateway specified for compute jobs for site  " + job.getSiteHandle() );
+                        }
+                        job.globusScheduler =  gw.getContact();
                     }
                     return true;
                 }
