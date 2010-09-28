@@ -366,7 +366,7 @@ def cp():
     """
     for i, url_pair in enumerate(cp_list): 
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
-        cmd = "/bin/cp %s %s" % (url_pair.src_path, url_pair.dst_path)
+        cmd = "/bin/cp -L \"%s\" \"%s\"" % (url_pair.src_path, url_pair.dst_path)
         myexec(cmd, 1*60*60, delay_errors)
 
 def symlink():
@@ -428,7 +428,7 @@ def webget():
             cmd += " -v"
         else:
             cmd += " -q"
-        cmd += " --no-check-certificate -O " + url_pair.dst_path + " " + url_pair.src_url()
+        cmd += " --no-check-certificate -O \"" + url_pair.dst_path + "\" \"" + url_pair.src_url() + "\""
         myexec(cmd, 1*60*60, delay_errors)
 
 
