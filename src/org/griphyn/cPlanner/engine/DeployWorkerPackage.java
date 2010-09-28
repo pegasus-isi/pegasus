@@ -94,16 +94,6 @@ public class DeployWorkerPackage
     public static final String DEPLOY_WORKER_PREFIX = "stage_worker_";
     
     /**
-     * The local prefix to be added for local setup transfer jobs.
-     */
-    public static final String LOCAL_PREFIX = "local_";
-    
-    /**
-     * The remote prefix to be added for remote setup transfer jobs.
-     */
-    public static final String REMOTE_PREFIX = "remote_";
-    
-    /**
      * Constant suffix for the names of the deployment nodes.
      */
     public static final String UNTAR_PREFIX = "untar_";
@@ -639,14 +629,15 @@ public class DeployWorkerPackage
             SubInfo dummy = new SubInfo() ;
             dummy.setSiteHandle( site );
             
-            String tsite = mLocalTransfers.get( site ) ? "local" : site;
+            boolean localTransfer = mLocalTransfers.get( site ) ;
+            String tsite = localTransfer? "local" : site;
             
             SubInfo setupTXJob = mSetupTransferImplementation.createTransferJob(
                                          dummy,
                                          tsite,
                                          fts,
                                          null,
-                                         this.getDeployJobName( dag, site ),
+                                         this.getDeployJobName( dag, site , localTransfer),
                                          SubInfo.STAGE_IN_JOB );
 
             
@@ -740,7 +731,7 @@ public class DeployWorkerPackage
                                          getBasename( ft.getSourceURL().getValue() )).getAbsolutePath() );
             cleanupFiles.add( mSiteToPegasusHomeMap.get( site ) );
             cleanupFiles.add(  new File ( baseRemoteWorkDir,
-                                          this.getDeployJobName( dag, site ) + ".in" ).getAbsolutePath() );//to remove the GUC .in file
+                                          this.getDeployJobName( dag, site, this.mLocalTransfers.get( site ) ) + ".in" ).getAbsolutePath() );//to remove the GUC .in file
             for( String f : cleanupFiles ){
                 StringBuffer sb = new StringBuffer();
                 sb.append( "Need to cleanup file " ).append( f ).append( " on site " ).append( site );
@@ -826,21 +817,28 @@ public class DeployWorkerPackage
      * @param dag   the workflow so far.
      * @param site  the execution pool for which the create directory job
      *                  is responsible.
+     * @param localTransfer  whether the transfer needs to run locally or not.
      *
      * @return String corresponding to the name of the job.
      */
-    protected String getDeployJobName( ADag dag, String site ){
+    protected String getDeployJobName( ADag dag, String site , boolean localTransfer ){
         StringBuffer sb = new StringBuffer();
 
         //append setup prefix
         sb.append( DeployWorkerPackage.DEPLOY_WORKER_PREFIX );
+        
+        if( localTransfer ){
+            sb.append( Refiner.LOCAL_PREFIX );
+        }
+        else{
+            sb.append( Refiner.REMOTE_PREFIX );
+        }
+        
         //append the job prefix if specified in options at runtime
         if ( mJobPrefix != null ) { sb.append( mJobPrefix ); }
 
         sb.append( dag.dagInfo.nameOfADag ).append( "_" ).
            append( dag.dagInfo.index ).append( "_" );
-
-
         sb.append( site );
 
         return sb.toString();
