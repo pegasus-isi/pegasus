@@ -189,6 +189,34 @@ public abstract class AbstractRefiner implements Refiner{
     public XMLProducer getXMLProducer(){
         return this.mXMLStore;
     }
+    
+    /**
+     * Boolean indicating whether the Transfer Refiner has a preference for
+     * where a transfer job is run. By default, Refiners dont advertise any
+     * preference as to where transfer jobs run.
+     * 
+     * @return false
+     */
+    public boolean refinerPreferenceForTransferJobLocation(  ){
+        return false;
+    }
+    
+    /**
+     * Boolean indicating Refiner preference for transfer jobs to run locally.
+     * This method should be called only if refinerPreferenceForTransferJobLocation
+     * is true for a refiner.
+     * 
+     * @param type  the type of transfer job for which the URL is being constructed.
+     *              Should be one of the following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
+     * 
+     * @return boolean  refiner preference for transfer job to run locally or not.
+     */
+    public boolean refinerPreferenceForLocalTransferJobs( int type ){
+        throw new UnsupportedOperationException( "Refiner does not advertise preference for local transfer jobs ");
+    }
 
     /**
      * Returns whether a Site prefers transfers to be run on it i.e remote transfers

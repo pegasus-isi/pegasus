@@ -194,6 +194,31 @@ public interface Refiner
      */
     public void done();
 
+    
+    /**
+     * Boolean indicating whether the Transfer Refiner has a preference for
+     * where a transfer job is run.
+     * 
+     * @return boolean
+     */
+    public boolean refinerPreferenceForTransferJobLocation(  );
+    
+    /**
+     * Boolean indicating Refiner preference for transfer jobs to run locally.
+     * This method should be called only if refinerPreferenceForTransferJobLocation
+     * is true for a refiner.
+     * 
+     * @param type  the type of transfer job for which the URL is being constructed.
+     *              Should be one of the following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
+     * 
+     * @return boolean  refiner preference for transfer job to run locally or not.
+     */
+    public boolean refinerPreferenceForLocalTransferJobs( int type );
+
+    
 
     /**
      * Returns whether a Site prefers transfers to be run on it i.e remote transfers

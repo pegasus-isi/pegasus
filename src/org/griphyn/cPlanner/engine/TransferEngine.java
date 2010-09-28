@@ -310,6 +310,13 @@ public class TransferEngine extends Engine {
             return result;
         }
 
+        
+        if( mTXRefiner.refinerPreferenceForTransferJobLocation() ){
+            //refiner is advertising a preference for where transfer job
+            //should be run. Use that.
+            return mTXRefiner.refinerPreferenceForLocalTransferJobs( type );
+        }
+        
         if( result = mTXRefiner.runTransferRemotely( site, type )){
             //always use user preference
             return !result;

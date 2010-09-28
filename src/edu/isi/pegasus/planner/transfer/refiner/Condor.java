@@ -109,7 +109,36 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
         mSiteStore = bag.getHandleToSiteStore();
 
     }
-
+    
+        
+    /**
+     * Boolean indicating whether the Transfer Refiner has a preference for
+     * where a transfer job is run. Condor Refiner has a preference for where
+     * the job runs.
+     * 
+     * @return true
+     */
+    public boolean refinerPreferenceForTransferJobLocation(  ){
+        return true;
+    }
+    
+    /**
+     * Boolean indicating Refiner preference for transfer jobs to run locally.
+     * This method should be called only if refinerPreferenceForTransferJobLocation
+     * is true for a refiner. Condor Refiner wants all associated transfer jobs
+     * to be run locally.
+     * 
+     * @param type  the type of transfer job for which the URL is being constructed.
+     *              Should be one of the following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
+     * 
+     * @return boolean  refiner preference for transfer job to run locally or not.
+     */
+    public boolean refinerPreferenceForLocalTransferJobs( int type ){
+        return true;
+    }
 
 
     /**
