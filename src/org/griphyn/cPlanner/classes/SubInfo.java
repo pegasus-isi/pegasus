@@ -115,7 +115,7 @@ public class SubInfo extends Data implements GraphNodeContent{
     /**
      * Denotes a symbolic link stagein job
      */
-    public static final int SYMLINK_STAGE_IN_JOB = 9;
+    //public static final int SYMLINK_STAGE_IN_JOB = 9;
 
     /**
      * Returns an appropriate grid gateway job type corresponding to a job type
@@ -168,10 +168,11 @@ public class SubInfo extends Data implements GraphNodeContent{
                 jtype = GridGateway.JOB_TYPE.cleanup;
                 break;
                 
-            
+            /*
             case SubInfo.SYMLINK_STAGE_IN_JOB:
                 jtype = GridGateway.JOB_TYPE.transfer;
                 break;
+            */
                 
             case SubInfo.UNASSIGNED_JOB:
             default:
@@ -1285,7 +1286,7 @@ public class SubInfo extends Data implements GraphNodeContent{
      */
     public static boolean typeInRange(int type){
         return ( type >= SubInfo.UNASSIGNED_JOB &&
-                 type <= SubInfo.SYMLINK_STAGE_IN_JOB );
+                 type <= SubInfo.CLEANUP_JOB );
     }
 
 

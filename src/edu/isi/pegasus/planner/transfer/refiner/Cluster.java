@@ -409,7 +409,7 @@ public class Cluster extends Bundle {
         this.mStageInRemoteMapPerLevel = resetStageInMap( this.mStageInRemoteMapPerLevel,
                                                            this.mTXStageInImplementation,
                                                            tempSynchJobMap,
-                                                           SubInfo.SYMLINK_STAGE_IN_JOB,
+                                                           SubInfo.STAGE_IN_JOB,
                                                            false,
                                                            false
                                                           );
