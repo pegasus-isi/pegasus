@@ -34,6 +34,7 @@ import subprocess
 import signal
 import string
 import stat
+import time
 
 # --- regular expressions -------------------------------------------------------------
 
@@ -174,6 +175,12 @@ webget_list = []
 gsiftp_list = []
 srm_list = []
 
+# stats
+stats_start = 0
+stats_end = 0
+stats_total_bytes = 0
+
+
 # --- functions -----------------------------------------------------------------------
 
 
@@ -224,12 +231,13 @@ def get_env_var(match):
     return value
 
 
-def myexec(cmd_line, timeout_secs, delay_err):
+def myexec(cmd_line, timeout_secs, should_log, delay_err):
     """
     executes shell commands using with timeouts
     """
     global delay_exit_code
-    logger.info("Executing: " + cmd_line)
+    if should_log or logger.isEnabledFor(logging.DEBUG):
+        logger.info("Executing: " + cmd_line)
     sys.stdout.flush()
 
     # set up signal handler for timeout
@@ -324,7 +332,7 @@ def check_env_and_tools():
         path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
     
     # if GLOBUS_LOCATION is set, prepend it to the PATH and LD_LIBRARY_PATH 
-    #(we want it early to override other cruft)
+    # (we want it early to override other cruft)
     if "GLOBUS_LOCATION" in os.environ:
         try:
             path_entries.remove(os.environ['GLOBUS_LOCATION'] + "/bin")
@@ -364,16 +372,24 @@ def cp():
     """
     copies locally using /bin/cp
     """
+    if len(cp_list) == 0:
+        return
+    logger.info("Executing cp commands")
     for i, url_pair in enumerate(cp_list): 
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
         cmd = "/bin/cp -L \"%s\" \"%s\"" % (url_pair.src_path, url_pair.dst_path)
-        myexec(cmd, 1*60*60, delay_errors)
+        myexec(cmd, 1*60*60, False, delay_errors)
+        stats_add(url_pair.dst_path)
+
 
 def symlink():
     """
     symlinks locally using ln
     """
     global delay_exit_code
+    if len(symlink_list) == 0:
+        return
+    logger.info("Executing symlink commands")
     for i, url_pair in enumerate(symlink_list): 
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
 
@@ -396,29 +412,37 @@ def symlink():
                 continue
 
         cmd = "ln -f -s %s %s" % (url_pair.src_path, url_pair.dst_path)
-        myexec(cmd, 60, delay_errors)
+        myexec(cmd, 60, False, delay_errors)
 
 
 def scp():
     """
     copies using scp
     """
+    if len(scp_list) == 0:
+        return
+    logger.info("Executing scp commands")
     for i, url_pair in enumerate(scp_list): 
         cmd = "/usr/bin/scp"
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
             cmd += " " + url_pair.src_host + ":" + url_pair.src_path
             cmd += " " + url_pair.dst_path
+            stats_add(url_pair.dst_path)
         else:
             cmd += " " + url_pair.src_path
             cmd += " " + url_pair.dst_host + ":" + url_pair.dst_path
-        myexec(cmd, 1*60*60, delay_errors)
+            stats_add(url_pair.src_path)
+        myexec(cmd, 1*60*60, False, delay_errors)
 
 
 def webget():
     """
     pulls http/https using wget
     """
+    if len(webget_list) == 0:
+        return
+    logger.info("Executing wget commands")
     if len(webget_list) > 0 and tool_info['wget']['full_path'] == None:
         raise RuntimeError("Unable to do http/https transfers becuase wget could not be found")
     for i, url_pair in enumerate(webget_list): 
@@ -429,7 +453,8 @@ def webget():
         else:
             cmd += " -q"
         cmd += " --no-check-certificate -O \"" + url_pair.dst_path + "\" \"" + url_pair.src_url() + "\""
-        myexec(cmd, 1*60*60, delay_errors)
+        myexec(cmd, 1*60*60, False, delay_errors)
+        stats_add(url_pair.dst_path)
 
 
 def gsiftp_is_similar(a, b):
@@ -452,11 +477,16 @@ def gsiftp():
     """
     gsiftp - globus-url-copy for now, maybe uberftp in the future
     """
-    if len(gsiftp_list) > 0 and tool_info['globus-url-copy']['full_path'] == None:
+    if len(gsiftp_list) == 0:
+        return
+    
+    if tool_info['globus-url-copy']['full_path'] == None:
         raise RuntimeError("Unable to do gsiftp transfers becuase globus-url-copy could not be found")
+
     # reverse the list so we can append/pop i nthe right order
     gsiftp_list.reverse()
     while len(gsiftp_list) > 0:
+        delayed_file_stat = []
         # create a tmp file with similar (same src host/path, same dst host/path)
         # url pairs
         try:
@@ -471,6 +501,13 @@ def gsiftp():
         while gsiftp_is_similar(curr, prev):
             logger.debug("   adding %s %s" % (curr.src_url(), curr.dst_url()))
             tmp_file.write("%s %s\n" % (curr.src_url(), curr.dst_url()))
+
+            # delay stating until we have finished the transfers
+            if curr.src_proto == "file":
+                delayed_file_stat.append(curr.src_path)
+            elif curr.dst_proto == "file":
+                delayed_file_stat.append(curr.dst_path)
+
             num_pairs += 1
             if len(gsiftp_list) == 0:
                 break
@@ -515,20 +552,27 @@ def gsiftp():
 
         cmd += " -f " + tmp_name
         try:
-            myexec(cmd, 6*60*60, delay_errors)
+            myexec(cmd, 6*60*60, True, delay_errors)
         except Exception, err:
             # in case of failure, make sure we clean up
             os.unlink(tmp_name)
             raise err
         os.unlink(tmp_name)
 
+        # stat the files
+        for i, filename in enumerate(delayed_file_stat): 
+            stats_add(filename)
 
 def srm():
     """
     srm - use lcg-cp (Is this generic enough? Do we need to handle space tokens?)
     """
-    if len(srm_list) > 0 and tool_info['lcg-cp']['full_path'] == None:
+    if len(srm_list) == 0:
+        return
+    
+    if tool_info['lcg-cp']['full_path'] == None:
         raise RuntimeError("Unable to do srm transfers becuase lcg-cp could not be found")
+
     for i, url_pair in enumerate(srm_list): 
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
@@ -537,7 +581,41 @@ def srm():
         if "OSG_GRID" in os.environ:
             cmd = ". $OSG_GRID/setup.sh ;"
         cmd = "%s lcg-cp -D srmv2 -vb -b -n 4 %s %s" % (cmd, url_pair.src_url(), url_pair.dst_url())
-        myexec(cmd, 6*60*60, delay_errors)
+        myexec(cmd, 6*60*60, True, delay_errors)
+
+
+def stats_add(filename):
+    global stats_total_bytes
+    s = os.stat(filename)
+    stats_total_bytes = stats_total_bytes + s[stat.ST_SIZE]
+
+
+def stats_summarize():
+
+    if stats_total_bytes == 0:
+        logger.info("Stats: no local files in the transfer set")
+        return
+
+    total_secs = stats_end - stats_start
+    bps = stats_total_bytes / total_secs
+
+    logger.info("Stats: %s transferred in %.0f seconds. Rate: %s/s" % (bytes_formatted(stats_total_bytes), total_secs, bytes_formatted(bps)))
+    logger.info("NOTE: stats do not include third party gsiftp transfers")
+
+
+def bytes_formatted(n):
+    prefix = ""
+    n = float(n)
+    if n > (1024*1024*1024):
+        prefix = "G"
+        n = n / (1024*1024*1024)
+    elif n > (1024*1024):
+        prefix = "M"
+        n = n / (1024*1024)
+    elif n > (1024):
+        prefix = "K"
+        n = n / (1024)
+    return "%.1f %sB" % (n, prefix)
 
 
 def myexit(rc):
@@ -642,6 +720,9 @@ for i, url_pair in enumerate(all_list):
         logger.critical("Error: This tool does not know how to transfer from %s:// to %s://" % (url_pair.src_proto, url_pair.dst_proto))
         myexit(1)
 
+# start the stats time
+stats_start = time.time()
+
 logger.debug("Executing transfer commands")
 try:
     cp()
@@ -653,6 +734,10 @@ try:
 except RuntimeError, err:
     logger.critical(err)
     myexit(1)
+
+# end the stats timer and show summary
+stats_end = time.time()
+stats_summarize()
 
 if delay_errors and delay_exit_code != 0:
     logger.critical("Some transfers failed! See above.")
