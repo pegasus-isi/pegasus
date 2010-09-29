@@ -317,7 +317,7 @@ public class TransferEngine extends Engine {
             return mTXRefiner.refinerPreferenceForLocalTransferJobs( type );
         }
         
-        if( result = mTXRefiner.runTransferRemotely( site, type )){
+        if( mTXRefiner.runTransferRemotely( site, type )){
             //always use user preference
             return !result;
         }
@@ -1148,9 +1148,9 @@ public class TransferEngine extends Engine {
         
         //if the pfn starts with a file url we 
         //dont need to replace . a sanity check
-        if( pfn.startsWith( FILE_URL_SCHEME ) ){
+        /*if( pfn.startsWith( FILE_URL_SCHEME ) ){
             return rce;
-        }
+        }*/
         
         /* special handling for SRM urls */
         StringBuffer newPFN = new StringBuffer();
@@ -1171,7 +1171,7 @@ public class TransferEngine extends Engine {
             //we have to the manual replacement 
             String hostName = Utility.getHostName( pfn );
 
-            newPFN.append( FILE_URL_SCHEME ).append( "//" );
+            newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).append( "//" );
        
             //we want to skip out the hostname
             newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );

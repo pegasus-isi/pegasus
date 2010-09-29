@@ -535,7 +535,7 @@ public class DeployWorkerPackage
             return result;
         }
 
-        if( result = refiner.runTransferRemotely( site, type )){
+        if( refiner.runTransferRemotely( site, type )){
             //always use user preference
             return !result;
         }
