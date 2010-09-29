@@ -107,9 +107,11 @@ sub longstatus(;$$) {
 	    open( F, "<$fn" ); 
 	    my ($start,$final,$pid,$status,@tab);
 	    while ( <F> ) {
-		$start = $1 if /\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP/;
-		($final,$pid,$status) = ($1,$2,$3) 
-		    if /\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s(\d+)\sEXITING\sWITH\sSTATUS\s(\S+)/; 
+		($start,$final) = ($1,"") if /\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP/;
+		$pid=$1 if /\*\*\sPID\s=\s(\d+)/;
+		($final,$status) = ($1,$2) 
+		    if /\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s\d+\sEXITING\sWITH\sSTATUS\s(\S+)/; 
+		
 
 		if ( /Done/ ) {
 		    $tab[0] = $_; 
