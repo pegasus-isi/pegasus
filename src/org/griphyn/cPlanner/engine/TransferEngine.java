@@ -356,8 +356,6 @@ public class TransferEngine extends Engine {
         SubInfo currentJob;
         String currentJobName;
         Vector vOutPoolTX;
-//        int noOfJobs = mDag.getNoOfJobs();
-//        int counter = 0;
         String msg;
         String outputSite = mPOptions.getOutputSite();
 
@@ -392,7 +390,18 @@ public class TransferEngine extends Engine {
             //transfer the nodes output files
             //to the output pool
             if ( stageOut ) {
-                boolean localTransfer = runTransferOnLocalSite( currentJob.getSiteHandle(), null, SubInfo.STAGE_OUT_JOB);
+                SiteCatalogEntry execSiteEntry = mSiteStore.lookup( currentJob.getSiteHandle() );
+                if (execSiteEntry == null ) {
+                    mLogMsg = this.poolNotFoundMsg(  currentJob.getSiteHandle(), "vanilla");
+                    mLogger.log( mLogMsg, LogManager.ERROR_MESSAGE_LEVEL );
+                    throw new RuntimeException( mLogMsg );
+                }
+
+                
+                boolean localTransfer = runTransferOnLocalSite( 
+                                            currentJob.getSiteHandle(), 
+                                            execSiteEntry.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),
+                                            SubInfo.STAGE_OUT_JOB);
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, localTransfer );
             }
@@ -682,8 +691,7 @@ public class TransferEngine extends Engine {
         //would be on the output pool
         else {
             //construct the source url depending on whether third party tx
-//            String sourceURL = runTransferOnLocalSite( execPool, null, SubInfo.STAGE_OUT_JOB) ?
-            String sourceURL = localTransfer ?
+           String sourceURL = localTransfer ?
                                 execURL :
                                 "file://" + mSiteStore.getWorkDirectory(execPool,path) +
                                 File.separator + lfn;
@@ -714,25 +722,11 @@ public class TransferEngine extends Engine {
             String destURL = null;
             boolean first = true;
             while(it.hasNext()){
-                /*
-                destURL = (first)?
-                          //the first entry has to be the one in the Pool object
-                          dPool.getURLPrefix(false):
-                          //get it from the list
-                          ((GridFTPServer)it.next()).getInfo(GridFTPServer.GRIDFTP_URL);
-                 */
+                
                 FileServer fs = (FileServer)it.next();
                 destURL = fs.getURLPrefix() ;
 
-                /*
-                if(!first && destURL.equals(dPool.getURLPrefix(false))){
-                    //ensures no duplicate entries. The gridftp server in the pool
-                    //object is one of the servers in the list of gridftp servers.
-                    continue;
-                }
-                 */
-
-
+              
                 //assumption of same se mount point for each gridftp server
                 destURL += this.getPathOnStageoutSite( lfn );//  + File.separator + lfn;
 
