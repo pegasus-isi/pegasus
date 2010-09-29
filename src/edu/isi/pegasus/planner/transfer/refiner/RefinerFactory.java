@@ -17,18 +17,11 @@
 package edu.isi.pegasus.planner.transfer.refiner;
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.PlannerOptions;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
-
-import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 
-import java.io.IOException;
-
-import java.lang.reflect.InvocationTargetException;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 
@@ -47,6 +40,12 @@ public class RefinerFactory {
      */
     public static final String DEFAULT_PACKAGE_NAME =
         "edu.isi.pegasus.planner.transfer.refiner";
+    
+    
+    /**
+     * The default refiner implementation that is picked up.
+     */
+    public static final String DEFAULT_REFINER_IMPLEMENTATION = "Bundle";
 
     /**
      * Loads the implementing class corresponding to the value specified in the
@@ -107,6 +106,11 @@ public class RefinerFactory {
             }
             if (dag == null) {
                 throw new RuntimeException("Invalid workflow passed");
+            }
+            
+            //set the refiner to default if required
+            if( className == null ){
+                className = RefinerFactory.DEFAULT_REFINER_IMPLEMENTATION;
             }
 
             //prepend the package name

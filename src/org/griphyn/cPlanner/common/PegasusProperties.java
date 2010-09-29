@@ -86,10 +86,6 @@ public class PegasusProperties {
     public static final String CONDOR_KICKSTART = "kickstart-condor";
 
     //transfer constants
-
-
-    public static final String DEFAULT_TRANSFER_REFINER = "Default";
-
     public static final String DEFAULT_STAGING_DELIMITER = "-";
 
     public static final String DEFAULT_TRANSFER_PROCESSES = "4";
@@ -900,10 +896,7 @@ public class PegasusProperties {
      *
      * Referred to by the "pegasus.transfer.*.impl" property.
      *
-     * @return the transfer implementation, else the
-     *         DEFAULT_TRANSFER_IMPLEMENTATION.
-     *
-     * @see #DEFAULT_TRANSFER_IMPLEMENTATION
+     * @return the transfer implementation
      */
     public String getTransferImplementation(){
         return getTransferImplementation( "pegasus.transfer.*.impl" );
@@ -915,10 +908,8 @@ public class PegasusProperties {
      *
      * Referred to by the "pegasus.transfer.sls.*.impl" property.
      *
-     * @return the transfer implementation, else the
-     *         DEFAULT_TRANSFER_IMPLEMENTATION.
-     *
-     * @see #DEFAULT_TRANSFER_IMPLEMENTATION
+     * @return the transfer implementation
+     * 
      */
     public String getSLSTransferImplementation(){
         return getTransferImplementation( "pegasus.transfer.sls.*.impl" );
@@ -1015,17 +1006,11 @@ public class PegasusProperties {
      *
      * Referred to by the "pegasus.transfer.refiner" property.
      *
-     * @return the transfer refiner, else the DEFAULT_TRANSFER_REFINER.
-     *
-     * @see #DEFAULT_TRANSFER_REFINER
+     * @return the transfer refiner, else null
      */
     public String getTransferRefiner(){
-        String value = mProps.getProperty("pegasus.transfer.refiner");
+        return mProps.getProperty("pegasus.transfer.refiner");
 
-        //put in default if still we have a non null
-        return (value == null)?
-                DEFAULT_TRANSFER_REFINER:
-                value;
 
     }
 
