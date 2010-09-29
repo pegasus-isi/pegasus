@@ -199,7 +199,7 @@ public class Cluster extends Bundle {
         addStageInXFERNodes( job,
                              false,
                              symlinkFiles, 
-                             SubInfo.SYMLINK_STAGE_IN_JOB, 
+                             SubInfo.STAGE_IN_JOB, 
                              this.mStageInRemoteMapPerLevel,
                              this.mStageInRemoteBundleValue,
                              this.mTXStageInImplementation );
@@ -312,16 +312,16 @@ public class Cluster extends Bundle {
             //reinitialize stuff
             this.resetStageInMaps();
             //the stagein map needs to point to the correct reinitialized one
-            if( jobType == SubInfo.STAGE_IN_JOB ){
+            if( localTransfer ){
                 stageInMap = this.mStageInLocalMapPerLevel;
             }
-            else if ( jobType == SubInfo.SYMLINK_STAGE_IN_JOB ){
+            else {
                 stageInMap = this.mStageInRemoteMapPerLevel;
-            }
+            }/*
             else{
                 //error 
                 throw new RuntimeException( "Invalide job type specified " + jobType );
-            }
+            }*/
         }
 
 
