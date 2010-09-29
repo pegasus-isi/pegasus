@@ -659,8 +659,8 @@ public class Bundle extends Default {
      * Resets the local and remote stage out maps.
      */
     protected void resetStageOutMaps(  ){
-        this.resetStageOutMap( mStageOutLocalMapPerLevel, true );
-        this.resetStageOutMap( mStageOutRemoteMapPerLevel, false );
+        mStageOutLocalMapPerLevel = this.resetStageOutMap( mStageOutLocalMapPerLevel, true );
+        mStageOutRemoteMapPerLevel = this.resetStageOutMap( mStageOutRemoteMapPerLevel, false );
     }
 
     /**
@@ -668,8 +668,10 @@ public class Bundle extends Default {
      *
      * @param map            the map to be reset
      * @param localTransfer  whether the transfer jobs need to run on local site or not
+     * 
+     * @return  the reset map
      */
-    protected void resetStageOutMap( Map<String,PoolTransfer> map, boolean localTransfer ){
+    protected Map resetStageOutMap( Map<String,PoolTransfer> map, boolean localTransfer ){
         if ( map != null ){
             //before flushing add the stageout nodes to the workflow
             SubInfo job = new SubInfo();
@@ -726,6 +728,8 @@ public class Bundle extends Default {
         }
 
         map = new HashMap();
+        
+        return map;
     }
 
     
