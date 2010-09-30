@@ -251,11 +251,11 @@ public abstract class AbstractRefiner implements Refiner{
         else if(type == SubInfo.STAGE_OUT_JOB){
             implementation = mTXStageOutImplementation;
             runTransferRemotely         = mRemoteTransfers.stageOutOnRemoteSite( site );
-        }
+        }/*
         else if(type == SubInfo.SYMLINK_STAGE_IN_JOB){
             implementation = mTXSymbolicLinkImplementation;
             runTransferRemotely         = true;
-        }
+        }*/
         else{
             throw new java.lang.IllegalArgumentException(
                 "Invalid implementation type passed " + type);
@@ -300,11 +300,11 @@ public abstract class AbstractRefiner implements Refiner{
         else if(type == SubInfo.STAGE_OUT_JOB){
             implementation = mTXStageOutImplementation;
             useTPT         = mTPT.stageOutThirdParty(site);
-        }
+        }/*
         else if(type == SubInfo.SYMLINK_STAGE_IN_JOB){
             implementation = mTXSymbolicLinkImplementation;
             useTPT         = false;
-        }
+        }*/
         else{
             throw new java.lang.IllegalArgumentException(
                 "Invalid implementation type passed " + type);
