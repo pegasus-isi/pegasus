@@ -3,7 +3,7 @@
 use strict;
 use Getopt::Long;
 use List::Util qw[min max];
-use File::Basename qw(dirname basename);
+use File::Basename qw(dirname basename fileparse);
 use File::Path;
 use File::Copy;
 use File::Spec;
@@ -277,7 +277,7 @@ sub processJobstateLog {
                 $tokens[0] -= $globalStartTime;
                 print OUT join(' ', @tokens), "\n";
             } else {
-                if ($line =~ /TAILSTATD_FINISHED ([0-9])*/) {
+                if ($line =~ /MONITORD_FINISHED ([0-9])*/) {
                     if ($1 != 0) {
                         warn "Workflow execution failed/restarted.";
                     }
@@ -345,6 +345,8 @@ sub processJobstateLog {
 	#we want kickstart times for the registration jobs that are run on local site
         if ($jobsRef->{$job}->{'site'} eq 'local' && $job !~ /register_/ ) {
             $jobsRef->{$job}->{'ksruntime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} - $jobsRef->{$job}->{'SUBMIT'};
+            $jobsRef->{$job}->{'seqexec'} = "-";
+			$jobsRef->{$job}->{'seqexec-delay'} = "-";
         }
 	#elsif ($job =~ /stage_in/) {
         #    $jobsRef->{$job}->{'ksruntime'} = 0;
@@ -583,8 +585,17 @@ if (! -d $outputDir) {
     }
 }
 
+if (defined $jobstateLog) {
+	$jobstateLog =File::Spec->rel2abs($jobstateLog);
+}
+$dagName= File::Spec->rel2abs($dagName);
+
 if (defined($inputDir)) {
+	$inputDir= File::Spec->rel2abs($inputDir);
     chdir $inputDir || die "Cannot chdir to $inputDir\n";
+}else{
+	 my ($dagbase,$submit_dir ,$type ) = fileparse( $dagName  ,qr{\..*});
+	 chdir $submit_dir || die "Cannot chdir to $submit_dir\n";
 }
 
 processDAGManOutput(\%jobs,\%map,\%files, $dagName, $outputDir);
