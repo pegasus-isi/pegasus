@@ -152,14 +152,18 @@ def pipe_out_cmd(cmd_string):
 
     return my_result
 
-def slurp_braindb(run):
+def slurp_braindb(run, brain_alternate=None):
     """
     Reads extra configuration from braindump database
     Param: run is the run directory
     Returns: Dictionary with the configuration, empty if error
     """
     my_config = {}
-    my_braindb = os.path.join(run, brainbase)
+
+    if brain_alternate is None:
+        my_braindb = os.path.join(run, brainbase)
+    else:
+        my_braindb = os.path.join(run, brain_alternate)
 
     try:
 	my_file = open(my_braindb, 'r')
