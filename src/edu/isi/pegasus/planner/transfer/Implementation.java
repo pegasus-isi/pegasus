@@ -24,6 +24,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import java.util.Collection;
+import org.griphyn.cPlanner.classes.FileTransfer;
 
 /**
  * The interface defines the functions that a particular Transfer Implementation
@@ -40,7 +41,7 @@ public interface Implementation {
     /**
      * The version number associated with this API of Code Generator.
      */
-    public static final String VERSION = "1.4";
+    public static final String VERSION = "1.5";
 
 
     /**
@@ -116,11 +117,11 @@ public interface Implementation {
      * @return boolean indicating whether any XBitJobs were succesfully added or
      *         not.
      */
-    public boolean addSetXBitJobs( SubInfo computeJob,
+    /*public boolean addSetXBitJobs( SubInfo computeJob,
                                    String txJobName,
                                    Collection execFiles,
                                    int transferClass );
-
+*/
 
     /**
      * Adds the dirmanager job to the workflow, that do a chmod on the files
@@ -143,6 +144,22 @@ public interface Implementation {
                                    int xbitIndex  );
 
 
+    /**
+     * Adds the dirmanager job to the workflow, that do a chmod on the files
+     * being staged.
+     *
+     * @param computeJob     the computeJob for which the files are
+     *                       being staged.
+     * @param execFiles      the executable files that are being staged.
+     * @param transferClass  the class of transfer job
+     * @param xbitIndex      index to be used for creating the name of XBitJob.
+     *
+     * @return the job object for the xBitJob
+     */
+    public SubInfo createSetXBitJob( SubInfo computeJob,
+                                   Collection<FileTransfer> execFiles,
+                                   int transferClass,
+                                   int xbitIndex );
 
 
     /**

@@ -404,6 +404,59 @@ public abstract class Abstract implements Implementation{
         return added;
     }
 
+
+    /**
+     * Adds the dirmanager job to the workflow, that do a chmod on the files
+     * being staged.
+     *
+     * @param computeJob     the computeJob for which the files are
+     *                       being staged.
+     * @param execFiles      the executable files that are being staged.
+     * @param transferClass  the class of transfer job
+     * @param xbitIndex      index to be used for creating the name of XBitJob.
+     *
+     * @return the job object for the xBitJob
+     */
+    public SubInfo createSetXBitJob( SubInfo computeJob,
+                                   Collection<FileTransfer> execFiles,
+                                   int transferClass,
+                                   int xbitIndex ){
+
+        String computeJobName = computeJob.getName();
+        String site = computeJob.getSiteHandle();
+
+        
+        if(transferClass != SubInfo.STAGE_IN_JOB){
+            //extra check. throw an exception
+            throw new RuntimeException( "Invalid Transfer Type (" +
+                                        transferClass +
+                                        ") for staging executable files for job " +
+                                        computeJob.getName()   );
+        }
+
+
+        //figure out whether we need to create a chmod or noop
+        boolean noop = this.disableChmodJobCreation( site );
+
+        //add setXBit jobs into the workflow
+        int counter = 0;
+
+        String xBitJobName = this.getSetXBitJobName( computeJobName, xbitIndex );//create a chmod job
+        SubInfo xBitJob =  noop  ?
+                               this.createNoOPJob( xBitJobName ) : //create a NOOP job
+                               this.createSetXBitJob( execFiles, xBitJobName, computeJob.getSiteHandle() ); //create a chmod job
+
+        if( xBitJob == null ){
+            //error occured while creating the job
+            throw new RuntimeException("Unable to create setXBitJob " +
+                                        "corresponding to  compute job " +
+                                        computeJobName );
+        }
+        return xBitJob;
+    }
+
+
+
     /**
      * Adds the dirmanager job to the workflow, that do a chmod on the files
      * being staged.
@@ -554,6 +607,111 @@ public abstract class Abstract implements Implementation{
         return newJob;
 
     }
+
+    /**
+     * Creates a dirmanager job, that does a chmod on the file being staged.
+     * The file being staged should be of type executable. Though no explicit
+     * check is made for that. The staged file is the one whose X bit would be
+     * set on execution of this job. The site at which job is executed, is
+     * determined from the site associated with the destination URL.
+     *
+     * @param files  the collection <code>FileTransfer</code> containing the file that has
+     *              to be X Bit Set.
+     * @param name  the name that has to be assigned to the job.
+     * @param site  the site at which the job has to be created
+     *
+     * @return  the chmod job, else null if it is not able to be created
+     *          for some reason.
+     */
+    protected SubInfo createSetXBitJob( Collection<FileTransfer> files, String name, String site ){
+        SubInfo xBitJob = new SubInfo();
+        TransformationCatalogEntry entry   = null;
+        GridGateway jobManager = null;
+        String eSiteHandle = site;
+
+        List entries;
+        try {
+            entries= mTCHandle.lookup( Abstract.XBIT_TRANSFORMATION_NS,
+                                       Abstract.CHANGE_XBIT_TRANSFORMATION,
+                                       Abstract.XBIT_TRANSFORMATION_VERSION,
+                                       eSiteHandle,
+                                       TCType.INSTALLED);
+        } catch (Exception e) {
+            //non sensical catching
+            mLogger.log("Unable to retrieve entries from TC " +
+                        e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
+            return null;
+        }
+
+        entry = ( entries == null ) ?
+            this.defaultXBitTCEntry( eSiteHandle ): //try using a default one
+            (TransformationCatalogEntry) entries.get(0);
+
+        if( entry == null ){
+            //NOW THROWN AN EXCEPTION
+
+            //should throw a TC specific exception
+            StringBuffer error = new StringBuffer();
+            error.append("Could not find entry in tc for lfn ").
+                append( Separator.combine( Abstract.XBIT_TRANSFORMATION_NS,
+                                           Abstract.CHANGE_XBIT_TRANSFORMATION,
+                                           Abstract.XBIT_TRANSFORMATION_VERSION )).
+                append(" at site ").append( eSiteHandle );
+
+            mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( error.toString() );
+        }
+
+
+        SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
+        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
+
+        StringBuffer arguments = new StringBuffer();
+        arguments.append( " -X -f " );
+        boolean first = true;
+        for( FileTransfer file : files ){
+            NameValue destURL  = (NameValue)file.getDestURL();
+            if( first ){
+                first = false;
+            }
+            else{
+                arguments.append( " " );
+            }
+            arguments.append( Utility.getAbsolutePath(destURL.getValue()) );
+        }
+
+        xBitJob.jobName     = name;
+        xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
+        xBitJob.namespace   = Abstract.XBIT_TRANSFORMATION_NS;
+        xBitJob.version     = Abstract.XBIT_TRANSFORMATION_VERSION;
+        xBitJob.dvName      = Abstract.CHANGE_XBIT_TRANSFORMATION;
+        xBitJob.dvNamespace = Abstract.XBIT_DERIVATION_NS;
+        xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
+        xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
+        xBitJob.globusScheduler = jobManager.getContact();
+        xBitJob.executable      = entry.getPhysicalTransformation();
+        xBitJob.executionPool   = eSiteHandle;
+        xBitJob.strargs         = arguments.toString();
+        xBitJob.jobClass        = SubInfo.CREATE_DIR_JOB;
+        xBitJob.jobID           = name;
+
+        //the profile information from the pool catalog needs to be
+        //assimilated into the job.
+        xBitJob.updateProfiles( eSite.getProfiles() );
+
+        //the profile information from the transformation
+        //catalog needs to be assimilated into the job
+        //overriding the one from pool catalog.
+        xBitJob.updateProfiles( entry );
+
+        //the profile information from the properties file
+        //is assimilated overidding the one from transformation
+        //catalog.
+        xBitJob.updateProfiles( mProps );
+
+        return xBitJob;
+    }
+
 
 
     /**

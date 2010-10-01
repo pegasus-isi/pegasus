@@ -350,7 +350,7 @@ public class Cluster extends Bundle {
                     }
                     else{
                         mFileTable.put( key,
-                                        implementation.getSetXBitJobName( jobName,staged++) );
+                                        implementation.getSetXBitJobName( jobName,staged) );
                     }
                 }
                 else{
@@ -372,10 +372,23 @@ public class Cluster extends Bundle {
             if( !stagedExecFiles.isEmpty() ){
                 //create en-mass the setXBit jobs
                 //if there were any staged files
-               implementation.addSetXBitJobs( job, 
+               /*implementation.addSetXBitJobs( job,
                                               siJob,
                                               stagedExecFiles,
                                               SubInfo.STAGE_IN_JOB );
+               */
+                
+               SubInfo xBitJob = implementation.createSetXBitJob( job,
+                                                                  stagedExecFiles,
+                                                                  SubInfo.STAGE_IN_JOB,
+                                                                  staged );
+
+
+               this.addJob( xBitJob );
+               //add the relation txJob->XBitJob->ComputeJob
+               this.addRelation( siJob, xBitJob.getName(),
+                                 xBitJob.getSiteHandle(), true);
+               this.addRelation( xBitJob.getName(), job.getName() );
             }
             
            

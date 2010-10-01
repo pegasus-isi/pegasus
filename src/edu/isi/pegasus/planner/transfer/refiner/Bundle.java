@@ -45,6 +45,7 @@ import java.util.HashSet;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
+import java.util.LinkedList;
 
 /**
  * An extension of the default refiner, that allows the user to specify
@@ -293,8 +294,8 @@ public class Bundle extends Default {
         Set tempSet = new HashSet();
 
         int staged = 0;
-        Collection stagedFiles = new ArrayList();
-        Collection stageInExecJobs = new ArrayList();//store list of jobs that are transferring the stage file
+        Collection stagedExecutableFiles = new LinkedList();
+        Collection<String> stageInExecJobs = new LinkedList();//store list of jobs that are transferring the stage file
         for(Iterator it = files.iterator();it.hasNext();) {
             FileTransfer ft = (FileTransfer) it.next();
             String lfn = ft.getLFN();
@@ -344,23 +345,17 @@ public class Bundle extends Default {
                 String newJobName = pt.addTransfer( ft, type );
 
                 if(ft.isTransferringExecutableFile()){
-                    //currently we have only one file to be staged per
-                    //compute job
-//                    Collection execFiles = new ArrayList(1);
-//                    execFiles.add(ft);
                     //add both the name of the stagein job and the executable file
                     stageInExecJobs.add( newJobName );
-                    stagedFiles.add( ft );
+                    stagedExecutableFiles.add( ft );
 
-//                    mTXStageInImplementation.addSetXBitJobs(job, newJobName,
-//                                                            execFiles,
-//                                                            SubInfo.STAGE_IN_JOB);
                     mLogger.log("Entered " + key + "->" +
                                 implementation.getSetXBitJobName(job.getName(),staged),
                                 LogManager.DEBUG_MESSAGE_LEVEL);
                     mSetupMap.put(key,
                                   implementation.getSetXBitJobName(job.getName(),staged));
-                    staged++;
+                    //all executables for a job are chmod with a single node
+                    //staged++;
                 }
 
                 //make a new entry into the table
@@ -377,17 +372,46 @@ public class Bundle extends Default {
 
         //if there were any staged files
         //add the setXBitJobs for them
+
+
         int index = 0;
-        Iterator jobIt= stageInExecJobs.iterator();
-        for( Iterator it = stagedFiles.iterator(); it.hasNext(); index++){
-            Collection execFiles = new ArrayList(1);
-            execFiles.add( it.next() );
-            implementation.addSetXBitJobs(job, (String)jobIt.next(),
-                                                         execFiles,
-                                                         SubInfo.STAGE_IN_JOB,
-                                                         index);
+
+        //stageInExecJobs has corresponding list of transfer
+        //jobs that transfer the files
+      
+        if( !stagedExecutableFiles.isEmpty() ){
+            SubInfo xBitJob = implementation.createSetXBitJob( job,
+                                                               stagedExecutableFiles,
+                                                               SubInfo.STAGE_IN_JOB,
+                                                               index);
+
+
+
+            this.addJob( xBitJob );
+
+            //add the relation txJob->XBitJob->ComputeJob
+            Set edgesAdded = new HashSet();
+            for( String txJobName : stageInExecJobs ){
+
+                //adding relation txJob->XBitJob
+                if( edgesAdded.contains( txJobName ) ){
+                    //do nothing
+                    mLogger.log( "Not adding edge " + txJobName + " -> "  + xBitJob.getName(),
+                                  LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+                else{
+                    this.addRelation( txJobName, xBitJob.getName(),
+                                      xBitJob.getSiteHandle(), true);
+                    edgesAdded.add( txJobName );
+
+                }
+
+            }
+            this.addRelation( xBitJob.getName(), job.getName() );
 
         }
+
+
 
 
         //add the temp set to the relations
