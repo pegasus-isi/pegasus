@@ -62,7 +62,7 @@ sub usage {
     print "Options:\n";
     print "\t -c|--create  Create a directory/directories specified by --dir\n";
     print "\t -r|--remove  Remove the directory/directories specified by --dir\n";
-    print "\t -X|--exec    Marks a file or directory executable\n";
+    print "\t -X|--exec    Marks  files or directories executable\n";
     print "\t  -m, --mode=MODE   set permission mode (as in chmod), not rwxrwxrwx - umask\n";
     print "\t -n|--none    Dummy job: Prints the system time\n";
     print "\t -h|--help    Print this usage\n";
@@ -221,8 +221,9 @@ elsif ($remove) {
     exit(exit_code($?, 'date'));
 } elsif ($chmod) {
     my $obj = $file || $dir;	# take whatever was specified
+    warn "# Entities to chmod  are " , join( "\n# ", split( '\s+',$obj) ) ,"\n" if $main::debug ;
     warn "# Running ",$executables{'chmod'}," a+x $obj\n" if $main::debug;
-    @result=pipe_out_cmd( $executables{'chmod'}, 'a+x', $obj );
+    @result=pipe_out_cmd( $executables{'chmod'}, 'a+x', split( '\s+',$obj)  );
     exit(exit_code($?,'chmod'));
 }
 elsif( $mode ){

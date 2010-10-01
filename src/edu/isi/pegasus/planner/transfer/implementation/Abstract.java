@@ -668,6 +668,7 @@ public abstract class Abstract implements Implementation{
 
         StringBuffer arguments = new StringBuffer();
         arguments.append( " -X -f " );
+        arguments.append( "'" );
         boolean first = true;
         for( FileTransfer file : files ){
             NameValue destURL  = (NameValue)file.getDestURL();
@@ -679,6 +680,7 @@ public abstract class Abstract implements Implementation{
             }
             arguments.append( Utility.getAbsolutePath(destURL.getValue()) );
         }
+        arguments.append( "'" );
 
         xBitJob.jobName     = name;
         xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
