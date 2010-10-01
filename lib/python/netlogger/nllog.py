@@ -32,6 +32,9 @@ def setLoggerClass(clazz):
     global _logger_class
     _logger_class = clazz
 
+# consistent with new naming style
+set_logger_class = setLoggerClass
+
 def get_logger(filename):
     """
     Return a NetLogger logger with qualified name based on the provied
@@ -48,7 +51,9 @@ def get_logger(filename):
     filename - The full filename of the NL script or module requesting
     a logger, i.e. __file__
     """
-    if filename[0] == '.':
+    if filename == "":
+        qname = ""
+    elif filename[0] == '.':
         qname = filename
     else:
         qname = '.'.join(_modlist(filename))
@@ -186,6 +191,34 @@ class BPLogger(logging.Logger):
         self.log(logging.ERROR, Level.ERROR, event, msg=str(err),
                  status=-1, traceback=estr, **kwargs)
     exc = exception
+
+class BPSysLogger(BPLogger):
+    """This is a hack that prepends a header to the
+    output of BPLogger in order to work-around some bug with the
+    Python SysLogHandler and Ubuntu rsylog that otherwise splits
+    out the first section of the timestamp as part of the header.
+    """
+    header = "netlogger" # header prefix
+    
+    def __init__(self, qualname):
+        BPLogger.__init__(self, qualname)
+        self._orig_format = self._format
+        self._format = self.syslog_format
+        self._hdr = self.header + ": "
+
+    def set_meta(self, **kw):
+        """See set_meta() in superclass.
+
+        Repeated here because superclass method accesses a protected
+        attribute that was modified in the constructor.
+        """
+        self._orig_format.setMeta(None, **kw)
+
+    def flush(self):
+        self._orig_format.flush()
+
+    def syslog_format(self, *arg, **kw):
+        return self._hdr + self._orig_format(*arg, **kw)
 
 ###############################################
 ## Set BPLogger as default logging class

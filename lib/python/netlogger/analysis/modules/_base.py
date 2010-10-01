@@ -2,22 +2,36 @@
 Base for analysis modules.
 """
 from logging import DEBUG
-from netlogger.nllog import DoesLogging, TRACE
-from netlogger.nlapi import TS_FIELD, EVENT_FIELD
-
 import Queue
 import threading
 import time
+#
+from netlogger import util
+from netlogger.nllog import DoesLogging, TRACE
+from netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
+from netlogger.util import hash_event
+from netlogger.analysis import schemacfg
 
 """
 Standard Exceptions for all Analyzers
 """
 
-class ConnectionException(Exception):
+class AnalyzerException(Exception):
+    """Common base class.
+    """
+    pass
+
+class ConnectionException(AnalyzerException):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
+
+class PreprocessException(AnalyzerException):
+    pass
+
+class ProcessException(AnalyzerException):
+    pass
 
 """
 Database imports
@@ -113,34 +127,72 @@ Base classes
 
 class Analyzer(DoesLogging):
     """Base analysis class. Doesn't do much.
+
+    Parameters:
+      - add_hash {yes,no,no*}: To each input event, add a new field,
+           '_hash', which is a probabilistically unique (MD5) hash of all
+           the other fields in the event.
+      - type_info {<file,file..>,None*}: If given, read data type info from
+           file(s), which use the INI format with a [section]
+           for each event name and <field> = <type-name> describing the type
+           of each field for that event.
     """
 
     FLUSH_SEC = 5 # time to wait before calling flush()
 
-    def __init__(self, _validate=False):
+    def __init__(self, add_hash="no", _validate=False,
+                 type_info=None):
         """Will be overridden by subclasses to take
         parameters specific to their function.
         """
         DoesLogging.__init__(self)
+        self._do_preprocess = False # may get set to True, below
         self.last_flush = time.time()
-        if _validate:
-            #print "@@validate"
-            self.__process = self.process
-            self.process = self.validate_and_process
-
+        self._validate = _validate        
+        # Parameter: add_hash
+        try:
+            self._add_hash = util.as_bool(add_hash)
+            self._do_preprocess = True
+        except ValueError, err:
+            self.log.error("parameter.error",
+                           name="add_hash", value=add_hash, msg=err)
+            self._add_hash = False
+        # Parameter: data_types
+        self._schema = None
+        if type_info is not None:
+            schema_files = [s.strip() for s in type_info.split(',')]
+            try:
+                p = schemacfg.SchemaParser(files=schema_files)
+                self._schema = p.get_schema()
+                self._do_preprocess = True
+            except (IOError, ValueError),err:
+                self.log.error("parameter.error",
+                               name="data_types", value=schema_files,
+                               msg=err)
+            
     def process(self, data):
         """Override with logic; 'data' is a dictionary with timestamp,
         event, and other values.
         """
         pass
 
-    def validate_and_process(self, data):
-        """Call process() if the data has the minimum required NetLogger fields,
-        otherwise silently drop it.
-        """
-        if (TS_FIELD in data and EVENT_FIELD in data):
-            self.__process(data)
+    def _preprocess(self, data):
+        """Called before data is handed to subclass in order to allow
+        standardized massaging / filtering of input data.
 
+        Returns:
+          - Result of module's process() function, or None if the
+            data was rejected by validation.
+
+        Exceptions:
+          - ValueError
+        """
+        if self._schema:
+            self._schema.event(data)
+        if self._add_hash:
+            data[HASH_FIELD] = hash_event(data)
+        return data
+    
     def flush(self):
         """Override to flush any intermediate results, e.g. call
         flush() on open file descriptors.
@@ -157,8 +209,34 @@ class Analyzer(DoesLogging):
         """Called by framework code to notify loader of new data,
         which will result in a call to process(data).
         Do not override this unless you know what you are doing.
+
+        Args:
+          - data: NetLogger event dictionary
+
+        Returns:
+          - Whatever the loading code returns, in most cases
+          the return value should be ignored.
+
+        Exceptions:
+          - PreprocessException (AnalyzerException): Something went wrong
+             during preprocessing
+          - ProcessException (AnalyzerException): Something went wrong
+             during processing
         """
-        result = self.process(data)
+        if self._validate:
+            valid = (TS_FIELD in data and EVENT_FIELD in data)
+            if not valid:
+                raise PreprocessException("Invalid event data in '%s'" %
+                                          str(data))
+        if self._do_preprocess:
+            try:
+                data = self._preprocess(data)
+            except Exception, err:
+                raise PreprocessException(str(err))
+        try:
+            result = self.process(data)
+        except Exception, err:
+            raise ProcessException(str(err))
         t = time.time()
         if t  - self.last_flush >= self.FLUSH_SEC:
             if self._dbg:
@@ -173,9 +251,10 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
     Intended for cases (db inserts, etc) where processing may
     lag behind input from the infomation broker, et al.
     """
-    def __init__(self):
-        Analyzer.__init__(self)
+    def __init__(self, *args, **kwargs):
+        Analyzer.__init__(self, *args, **kwargs)
         threading.Thread.__init__(self)
+        self.daemon = True
         self.running = False
         self.finishing = False
         self.queue = Queue.Queue()
@@ -201,7 +280,8 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
                 row = self.queue.get()
                 self.process_buffer(row)
                 self.queue.task_done()
-
+            else:
+                time.sleep(0.1)
         self.log.info('run.end')
 
     def process_buffer(self, row):
@@ -217,16 +297,15 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
         the appropriate time/place to call.
         """
         self.log.info('finish.begin')
-        while 1:
-            if not self.finishing:
-                self.log.info('finish.finishing queue')
-                self.finishing = True
-            if self.queue.empty():
-                break
+        if not self.finishing:
+            self.log.info('finish.finishing queue')
+            self.finishing = True
+        while not self.queue.empty():
+            time.sleep(0.1)
         self.running = False
-        if self.is_alive():
+        if self.isAlive():
             self.join()
-        time.sleep(1)
+        #time.sleep(1)
         self.log.info('finish.end')
 
 class Loader:

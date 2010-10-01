@@ -3,8 +3,12 @@ Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
 from netlogger.analysis.schema._base import SABase
-from sqlalchemy import *
-from sqlalchemy import orm, exceptions, func
+try:
+    from sqlalchemy import *
+    from sqlalchemy import orm, exceptions, func, exc
+except ImportError, e:
+    print '** SQLAlchemy library needs to be installed: http://www.sqlalchemy.org/ **\n'
+    raise ImportError, e
 
 import time
 import warnings
@@ -74,7 +78,10 @@ def initializeToPegasusDB(db, metadata):
     Index('UNIQUE_HOST', st_host.c.site_name, st_host.c.hostname,
         st_host.c.ip_address, unique=True)
     
-    orm.mapper(Host, st_host)
+    try:
+        orm.mapper(Host, st_host)
+    except exc.ArgumentError:
+        pass
     
     # st_workflow definition
     # ==> Information comes from braindump.txt file
@@ -108,7 +115,10 @@ def initializeToPegasusDB(db, metadata):
     Index('wf_uuid_UNIQUE', st_workflow.c.wf_uuid, unique=True)
     Index('FK_PARENT_WF_ID', st_workflow.c.parent_workflow_id, unique=False)
     
-    orm.mapper(Workflow, st_workflow)
+    try:
+        orm.mapper(Workflow, st_workflow)
+    except exc.ArgumentError:
+        pass
     
     st_workflowstate = Table('workflowstate', metadata,
     # All three columns are marked as primary key to produce the desired
@@ -125,7 +135,10 @@ def initializeToPegasusDB(db, metadata):
     Index('UNIQUE_WORKFLOWSTATE', st_workflowstate.c.wf_id, st_workflowstate.c.state, 
         st_workflowstate.c.timestamp, unique=True)
     
-    orm.mapper(Workflowstate, st_workflowstate)
+    try:
+        orm.mapper(Workflowstate, st_workflowstate)
+    except exc.ArgumentError:
+        pass
     
     # st_job definition
     # ==> Information comes mainly from kickstart output file, 
@@ -165,7 +178,10 @@ def initializeToPegasusDB(db, metadata):
     Index('FK_JOB_HOST_ID', st_job.c.host_id, unique=False)
     Index('UNIQUE_JOB', st_job.c.wf_id, st_job.c.job_submit_seq, unique=True)
     
-    orm.mapper(Job, st_job)
+    try:
+        orm.mapper(Job, st_job)
+    except exc.ArgumentError:
+        pass
     
     # st_jobstate definition
     # ==> Same information that currently goes into jobstate.log file, 
@@ -191,7 +207,10 @@ def initializeToPegasusDB(db, metadata):
     Index('UNIQUE_JOBSTATE', st_jobstate.c.job_id, st_jobstate.c.state, 
         st_jobstate.c.timestamp, unique=True)
     
-    orm.mapper(Jobstate, st_jobstate)
+    try:
+        orm.mapper(Jobstate, st_jobstate)
+    except exc.ArgumentError:
+        pass
         
     # st_task definition
     # ==> Information comes from kickstart output file
@@ -221,7 +240,10 @@ def initializeToPegasusDB(db, metadata):
     Index('task_id_UNIQUE', st_task.c.task_id, unique=True)
     Index('FK_TASK_JOB_ID', st_task.c.job_id, unique=False)
     
-    orm.mapper(Task, st_task)
+    try:
+        orm.mapper(Task, st_task)
+    except exc.ArgumentError:
+        pass
     
     # st_file definition
     # ==> Information will come from kickstart output file
@@ -239,7 +261,10 @@ def initializeToPegasusDB(db, metadata):
     Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
     Index('FK_FILE_JOB_ID', st_file.c.job_id, unique=False)
     
-    orm.mapper(File, st_file)
+    try:
+        orm.mapper(File, st_file)
+    except exc.ArgumentError:
+        pass
     
     metadata.create_all(db)
     pass

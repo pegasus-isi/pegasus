@@ -1,7 +1,7 @@
 """
 Utility functions for NetLogger modules and command-line programs
 """
-__rcsid__ = "$Id: util.py 24923 2010-06-18 18:37:50Z dang $"
+__rcsid__ = "$Id: util.py 26518 2010-09-27 19:32:18Z dang $"
 __author__ = "Dan Gunter (dkgunter (at) lbl.gov)"
 
 from asyncore import compact_traceback
@@ -9,6 +9,12 @@ from copy import copy
 import glob
 import imp
 import logging
+try:
+    from hashlib import md5
+    md5_new = md5
+except ImportError:
+    import md5
+    md5_new = md5.new
 from optparse import OptionParser, Option, OptionValueError, make_option
 import os
 import Queue
@@ -182,29 +188,37 @@ def parseDatetime(d, utc=False):
 class ProgressMeter:
     """A simple textual progress meter.
     """
-    REPORT_LINES = 1000
-    def __init__(self, ofile):
+    REPORT_INTERVAL = 1000
+
+    def __init__(self, ofile, units="lines"):
         self.ofile = ofile
+        self.units = units
         self.reset(0)
+
     def reset(self, n):
         self.t0 = time.time()
         self.last_report = n
-    def setLine(self, num):
-        if num - self.last_report >= self.REPORT_LINES:
+        
+    def advance(self, num):
+        if num - self.last_report >= self.REPORT_INTERVAL:
             n = num - self.last_report
             dt = time.time() - self.t0
             rate = n / dt
-            self.ofile.write("%5d: %d lines in %lf sec = %lf lines/sec\n" % 
-                             (num, n, dt, rate))
+            self.ofile.write("%5d: %d %s in %lf sec = %lf %s/sec\n" % 
+                             (num, n, self.units, dt, rate, self.units))
             self.reset(num)
-
+        
 class NullProgressMeter:
     """Substitute for ProgressMeter when you don't want anything to
     actually be printed.
     """
-    def __init__(self, ofile=None):
+    def __init__(self, ofile=None, units=None):
         return
-    def setLine(self, num):
+
+    def reset(self, n):
+        pass
+    
+    def advance(self, num):
         pass
 
 def mostRecentFile(dir, file_pattern, after_time=None):
@@ -709,3 +723,44 @@ def _find_space(text, maxpos):
     for ws in (' ', '-'):
         p = max(p, text.rfind(ws, 0, maxpos))
     return p
+
+def process_kvp(option, all={}, _bool={}, type="AMQP"):
+    """Process a name=value option.
+
+    Parameters:
+    
+        - option (str): "name=value" option string
+    
+    Returns: (key,value)
+    
+    Raises:  ValueError for bad format or unknown option.
+    """
+    parts = option.split('=', 1)
+    if len(parts) != 2:
+        raise ValueError("argument '%s' not in form name=value" % option)
+    key, value = parts
+    if all and (key not in all):
+        raise ValueError("unknown %s option '%s'." % (type, key))
+    if key in _bool:
+        value = as_bool(value)
+    return key, value
+
+def hash_event(e):
+    """Generate and return a probabilistically unique hash code
+    for event dictionary, 'e'.
+
+    Returns: String (hexdigest) representation of the hash value.
+    
+    """
+    return md5(str(e)).hexdigest()
+
+def stringize(v):
+    if isinstance(v,str):
+        result = v
+    elif isinstance(v, float):
+        result = "%f" % v
+    elif isinstance(v, int):
+        result = "%d" % v
+    else:
+        result = str(v)
+    return result

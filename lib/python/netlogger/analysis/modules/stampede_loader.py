@@ -40,13 +40,13 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         expects the database to exist (ie: will not issue CREATE DB)
         but will populate an empty DB with tables/indexes/etc.
     """
-    def __init__(self, connString=None, perf='no'):
+    def __init__(self, connString=None, perf='no', **kw):
         """Init object
         
         @type   connString: string
         @param  connString: SQLAlchemy connection string - REQUIRED
         """
-        BaseAnalyzer.__init__(self)
+        BaseAnalyzer.__init__(self, **kw)
         if connString is None:
             raise ValueError("connString is required")
         # This mixin adds a class member "self.session" after initialization.
@@ -59,6 +59,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
         # "Case" dict to map events to handler methods
         self.eventMap = {
+            'stampede.edge': self.noop,
             'stampede.host': self.host,
             'stampede.job.mainjob.end': self.job,
             'stampede.job.mainjob.start': self.job,
@@ -72,6 +73,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.task.prescript': self.task,
             'stampede.workflow.end': self.workflowstate,
             'stampede.workflow.plan': self.workflow,
+            'stampede.workflow.restart': self.workflowstate,
             'stampede.workflow.start': self.workflowstate
         }
         

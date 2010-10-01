@@ -13,9 +13,10 @@ Utility functions include functions to get and set the Grid Job ID.
 """
 __author__ = "Dan Gunter"
 __created__ = "1 April 2004"
-__rcsid__ = "$Id: nlapi.py 24923 2010-06-18 18:37:50Z dang $"
+__rcsid__ = "$Id: nlapi.py 26536 2010-10-01 03:05:32Z dang $"
 
 import calendar
+import datetime
 import math
 import os
 import socket
@@ -102,6 +103,7 @@ EVENT_FIELD = 'event'
 # Other conventions
 STATUS_FIELD = 'status'
 MESSAGE_FIELD = 'msg'
+HASH_FIELD = 'nlhash'
 
 #
 ## Utility functions
@@ -216,15 +218,18 @@ class Log:
     
     def __init__(self, logfile=None, flush=False, prefix=None, 
                  level=Level.INFO, newline=True, guid=True,
-                 pretty=False):
+                 pretty=False, float_time=False, meta={}):
         """Constructor.
         """
         self._logfile = None
+        self._float_time = float_time
         self._pretty = pretty
         self._newline = newline
         self._flush = [None, self.flush][flush]
         self.setPrefix(prefix)
         self._meta = {}
+        if meta:
+            self._meta[None] = meta
         if isinstance(logfile,types.StringType):
             try:
                 self._logfile = urlfile(logfile)
@@ -239,9 +244,13 @@ class Log:
         if guid is True:
             guid = getGuid(create=False)
             if guid:
-                self._meta[None] = {'guid':guid}
+                _m = self._meta.get(None, {})
+                _m['guid'] = guid
+                self._meta[None] = _m
         elif isinstance(guid,str):
-            self._meta[None] = {'guid':guid}
+            _m = self._meta.get(None, {})
+            _m['guid'] = guid
+            self._meta[None] = _m
         
     def setLevel(self,level):
         """Set highest level of messages that WILL be logged.
@@ -296,16 +305,16 @@ class Log:
     __call__ = write
 
     def error(self, event='', **kwargs):
-        self.write(event, level=Level.ERROR, **kwargs)
+        return self.write(event, level=Level.ERROR, **kwargs)
 
     def warn(self, event='', **kwargs):
-        self.write(event, level=Level.WARN, **kwargs)
+        return self.write(event, level=Level.WARN, **kwargs)
 
     def info(self, event='', **kwargs):
-        self.write(event, level=Level.INFO, **kwargs)
+        return self.write(event, level=Level.INFO, **kwargs)
 
     def debug(self, event='', **kwargs):
-        self.write(event, level=Level.DEBUG, **kwargs)
+        return self.write(event, level=Level.DEBUG, **kwargs)
 
     def _append(self, fields, kw):
         for k,v in kw.items():
@@ -330,6 +339,16 @@ class Log:
             # Regular BP formatting
             if isinstance(ts,str):
                 fields = ["ts=" + ts, "event="+event]
+            elif isinstance(ts, datetime.datetime):
+                if self._float_time:
+                    tsfloat = calendar.timegm(ts.utctimetuple()) + ts.microsecond/1e6
+                    fields = ["ts=%.6f" % tsfloat, "event="+event]
+                else:
+                    tsstr = "%s.%06dZ" % (DATE_FMT % ts.utctimetuple()[0:6],
+                                          ts.microsecond)
+                    fields = ["ts=" + tsstr, "event=" + event]
+            elif self._float_time:
+                fields = ["ts=%.6f" % ts, "event="+event]                
             else:
                 fields = ["ts=" + utcFormatISO(ts), "event=" + event]
             if level is not None:
