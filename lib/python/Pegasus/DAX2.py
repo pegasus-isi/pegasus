@@ -21,11 +21,15 @@ The official DAX schema is here: http://pegasus.isi.edu/schema/dax-2.1.xsd
 """
 
 __author__ = "Gideon Juve <juve@usc.edu>"
-__all__ = ["DAX","Filename","Profile","Job","Namespace","LFN"]
+__all__ = ["DAX","Filename","Profile","Job","Namespace","LFN",
+	"parse","parseString"]
 __version__ = "2.1"
 
 import datetime, pwd, os
 from cStringIO import StringIO
+import xml.sax
+import xml.sax.handler
+import shlex
 
 SCHEMA_NAMESPACE = u"http://pegasus.isi.edu/schema/DAX"
 SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/dax-2.1.xsd"
@@ -75,7 +79,7 @@ class LFN:
 
 
 class Filename:
-	"""Filename(filename[,link][,register][,transfer][,optional][,type])
+	"""Filename(filename[,type][,link][,register][,transfer][,optional][,varname])
 	
 	A logical file name.
 	
@@ -110,42 +114,42 @@ class Filename:
 		"""
 		if filename is None:
 			raise ValueError, 'filename required'
-		self._filename = filename
-		self._link = link
-		self._register = register
-		self._transfer = transfer
-		self._optional = optional
-		self._type = type
-		self._varname = varname
+		self.filename = filename
+		self.link = link
+		self.register = register
+		self.transfer = transfer
+		self.optional = optional
+		self.type = type
+		self.varname = varname
 		
 	def getFilename(self):
-		return self._filename
+		return self.filename
 	def setFilename(self, filename):
-		self._filename = filename
+		self.filename = filename
 	def getType(self):
-		return self._type
+		return self.type
 	def setType(self, type):
-		self._type = type
+		self.type = type
 	def getLink(self):
-		return self._link
+		return self.link
 	def setLink(self, link):
-		self._link = link	
+		self.link = link	
 	def getRegister(self): 
-		return self._register
+		return self.register
 	def setRegister(self, register):
-		self._register = register
+		self.register = register
 	def getTransfer(self):
-		return self._transfer
+		return self.transfer
 	def setTransfer(self, transfer):
-		self._transfer = transfer
+		self.transfer = transfer
 	def getOptional(self):
-		return self._optional
+		return self.optional
 	def setOptional(self, optional):
-		self._optional = optional
+		self.optional = optional
 	def getVarname(self):
-		return self._varname
+		return self.varname
 	def setVarname(self, varname):
-		self._varname = varname
+		self.varname = varname
 		
 	def __str__(self):
 		"""Returns argument-style version of the filename XML tag"""
@@ -154,20 +158,20 @@ class Filename:
 	def toArgumentXML(self):
 		"""Returns an XML representation of this file as a short filename 
 		tag for use in job arguments"""
-		return u'<filename file="%s"/>' % (self._filename)
+		return u'<filename file="%s"/>' % (self.filename)
 	
 	def toFilenameXML(self):
 		"""Returns an XML representation of this file as a filename tag"""
 		xml = StringIO()
 
-		xml.write(u'<filename file="%s"' % self._filename)
-		if self._link is not None:
-			xml.write(u' link="%s"' % self._link)
-		if self._optional is not None:
-			if isinstance(self._optional, bool):
-				xml.write(u' optional="%s"' % str(self._optional).lower())
+		xml.write(u'<filename file="%s"' % self.filename)
+		if self.link is not None:
+			xml.write(u' link="%s"' % self.link)
+		if self.optional is not None:
+			if isinstance(self.optional, bool):
+				xml.write(u' optional="%s"' % str(self.optional).lower())
 			else:
-				xml.write(u' optional="%s"' % self._optional)
+				xml.write(u' optional="%s"' % self.optional)
 		xml.write(u'/>')
 
 		result = xml.getvalue()
@@ -177,9 +181,9 @@ class Filename:
 	def toStdioXML(self, tag):
 		"""Returns an XML representation of this file as a stdin/out/err tag"""
 		xml = StringIO()
-		xml.write(u'<%s file="%s"' % (tag, self._filename))
-		if self._varname is not None:
-			xml.write(u' varname="%s"' % self._varname)
+		xml.write(u'<%s file="%s"' % (tag, self.filename))
+		if self.varname is not None:
+			xml.write(u' varname="%s"' % self.varname)
 		if tag is 'stdin':
 			xml.write(u' link="input"') # stdin is always input
 		else:
@@ -214,26 +218,26 @@ class Profile:
 			value: The value for the profile. Can be anything that responds to str().
 			origin: The entity responsible for setting this profile (optional)
 		"""
-		self._namespace = namespace
-		self._key = key
-		self._value = value
-		self._origin = origin
+		self.namespace = namespace
+		self.key = key
+		self.value = value
+		self.origin = origin
 
 	def toXML(self):
 		"""Return an XML representation of this profile"""
 		xml = StringIO()
-		xml.write(u'<profile namespace="%s" key="%s"' % (self._namespace, self._key))
-		if self._origin is not None:
-			xml.write(u' origin="%s"' % self._origin)
+		xml.write(u'<profile namespace="%s" key="%s"' % (self.namespace, self.key))
+		if self.origin is not None:
+			xml.write(u' origin="%s"' % self.origin)
 		xml.write(u'>')
-		xml.write(unicode(self._value))
+		xml.write(unicode(self.value))
 		xml.write(u'</profile>')
 		result = xml.getvalue()
 		xml.close()
 		return result
 		
 	def __str__(self):
-		return u'%s:%s = %s' % (self._namespace, self._key, self._value)
+		return u'%s:%s = %s' % (self.namespace, self.key, self.value)
 
 
 class Job:
@@ -275,28 +279,28 @@ class Job:
 					optional=None, temporaryHint=None):
 			if file is None:
 				raise ValueError, 'file required'
-			self._file = file
-			self._link = link
-			self._optional = optional
-			self._register = register
-			self._transfer = transfer
-			self._temporaryHint = temporaryHint
+			self.file = file
+			self.link = link
+			self.optional = optional
+			self.register = register
+			self.transfer = transfer
+			self.temporaryHint = temporaryHint
 
 		def toXML(self):
 			xml = StringIO()
 
-			if self._link is None: link = self._file.getLink()
-			else: link = self._link
-			if self._optional is None: optional = self._file.getOptional()
-			else: optional = self._optional
-			if self._register is None: register = self._file.getRegister()
-			else: register = self._register
-			if self._transfer is None: transfer = self._file.getTransfer()
-			else: transfer = self._transfer
-			type = self._file.getType()
-			temporaryHint = self._temporaryHint
+			if self.link is None: link = self.file.getLink()
+			else: link = self.link
+			if self.optional is None: optional = self.file.getOptional()
+			else: optional = self.optional
+			if self.register is None: register = self.file.getRegister()
+			else: register = self.register
+			if self.transfer is None: transfer = self.file.getTransfer()
+			else: transfer = self.transfer
+			type = self.file.getType()
+			temporaryHint = self.temporaryHint
 			
-			xml.write(u'<uses file="%s"' % self._file.getFilename())
+			xml.write(u'<uses file="%s"' % self.file.getFilename())
 			if temporaryHint is not None:
 				if isinstance(temporaryHint, bool):
 					xml.write(u' temporaryHint="%s"' % unicode(temporaryHint).lower())
@@ -362,28 +366,28 @@ class Job:
 		"""
 		if name is None:
 			raise ValueError, 'name required'
-		self._name = name
-		self._namespace = namespace
-		self._version = version
-		self._id = id
-		self._dv_namespace = dv_namespace
-		self._dv_name = dv_name
-		self._dv_version = dv_version
-		self._level = level
-		self._compound = compound
+		self.name = name
+		self.namespace = namespace
+		self.version = version
+		self.id = id
+		self.dv_namespace = dv_namespace
+		self.dv_name = dv_name
+		self.dv_version = dv_version
+		self.level = level
+		self.compound = compound
 		
-		self._arguments = []
-		self._profiles = []
-		self._uses = []
+		self.arguments = []
+		self.profiles = []
+		self.uses = []
 
-		self._stdout = None
-		self._stderr = None
-		self._stdin = None
+		self.stdout = None
+		self.stderr = None
+		self.stdin = None
 
 	
 	def addArguments(self, *arguments):
 		"""Add several arguments to the job"""
-		self._arguments.extend(arguments)
+		self.arguments.extend(arguments)
 
 	def addArgument(self, arg):
 		"""Add an argument to the job"""
@@ -391,7 +395,7 @@ class Job:
 
 	def addProfile(self,profile):
 		"""Add a profile to the job"""
-		self._profiles.append(profile)
+		self.profiles.append(profile)
 
 	def addUses(self, file, link=None, register=None, transfer=None, 
 				optional=None, temporaryHint=None):
@@ -412,51 +416,51 @@ class Job:
 			temporaryHint: ?
 		"""
 		use = Job.Use(file,link,register,transfer,optional)
-		self._uses.append(use)
+		self.uses.append(use)
 
 	def setStdout(self, filename):
 		"""Redirect stdout to a file"""
-		self._stdout = filename
+		self.stdout = filename
 
 	def setStderr(self, filename):
 		"""Redirect stderr to a file"""
-		self._stderr = filename
+		self.stderr = filename
 
 	def setStdin(self, filename):
 		"""Redirect stdin from a file"""
-		self._stdin = filename
+		self.stdin = filename
 
 	def setID(self, id):
 		"""Set the ID of this job"""
-		self._id = id
+		self.id = id
 		
 	def getID(self):
 		"""Return the job ID"""
-		return self._id
+		return self.id
 		
 	def setNamespace(self, namespace):
 		"""Set the transformation namespace for this job"""
-		self._namespace = namespace
+		self.namespace = namespace
 		
 	def getNamespace(self):
 		"""Get the transformation namespace for this job"""
-		return self._namespace
+		return self.namespace
 		
 	def setName(self, name):
 		"""Set the transformation name of this job"""
-		self._name = name
+		self.name = name
 		
 	def getName(self):
 		"""Get the transformation name of this job"""
-		return self._name
+		return self.name
 		
 	def setVersion(self, version):
 		"""Set the version of the transformation"""
-		self._version = version
+		self.version = version
 		
 	def getVersion(self):
 		"""Get the version of the transformation"""
-		return self._version
+		return self.version
 		
 	def toXML(self,level=0,indent=u'\t'):
 		"""Return an XML representation of this job
@@ -470,52 +474,52 @@ class Job:
 		
 		# Open tag
 		xml.write(indentation)
-		xml.write(u'<job id="%s"' % self._id)
-		if self._namespace is not None: xml.write(u' namespace="%s"' % self._namespace)
-		xml.write(u' name="%s"' % self._name)
-		if self._version is not None: xml.write(u' version="%s"' % self._version)
-		if self._dv_namespace is not None: xml.write(u' dv-namespace="%s"' % self._dv_namespace)
-		if self._dv_name is not None: xml.write(u' dv-name="%s"' % self._dv_name)
-		if self._dv_version is not None: xml.write(u' dv-version="%s"' % self._dv_version)
-		if self._level is not None: xml.write(u' level="%s"' % self._level)
-		if self._compound is not None: xml.write(u' compound="%s"' % self._compound)
+		xml.write(u'<job id="%s"' % self.id)
+		if self.namespace is not None: xml.write(u' namespace="%s"' % self.namespace)
+		xml.write(u' name="%s"' % self.name)
+		if self.version is not None: xml.write(u' version="%s"' % self.version)
+		if self.dv_namespace is not None: xml.write(u' dv-namespace="%s"' % self.dv_namespace)
+		if self.dv_name is not None: xml.write(u' dv-name="%s"' % self.dv_name)
+		if self.dv_version is not None: xml.write(u' dv-version="%s"' % self.dv_version)
+		if self.level is not None: xml.write(u' level="%s"' % self.level)
+		if self.compound is not None: xml.write(u' compound="%s"' % self.compound)
 		xml.write(u'>\n')
 
 		# Arguments
-		if len(self._arguments) > 0:
+		if len(self.arguments) > 0:
 			xml.write(indentation)
 			xml.write(indent)
 			xml.write(u'<argument>')
-			xml.write(u' '.join(unicode(x) for x in self._arguments))
+			xml.write(u' '.join(unicode(x) for x in self.arguments))
 			xml.write(u'</argument>\n')
 
 		# Profiles
-		if len(self._profiles) > 0:
-			for pro in self._profiles:
+		if len(self.profiles) > 0:
+			for pro in self.profiles:
 				xml.write(indentation)
 				xml.write(indent)
 				xml.write(u'%s\n' % pro.toXML())
 		
 		# Stdin/xml/err
-		if self._stdin is not None:
+		if self.stdin is not None:
 			xml.write(indentation)
 			xml.write(indent)
-			xml.write(self._stdin.toStdioXML('stdin'))
+			xml.write(self.stdin.toStdioXML('stdin'))
 			xml.write(u'\n')
-		if self._stdout is not None:
+		if self.stdout is not None:
 			xml.write(indentation)
 			xml.write(indent)
-			xml.write(self._stdout.toStdioXML('stdout'))
+			xml.write(self.stdout.toStdioXML('stdout'))
 			xml.write(u'\n')
-		if self._stderr is not None:
+		if self.stderr is not None:
 			xml.write(indentation)
 			xml.write(indent)
-			xml.write(self._stderr.toStdioXML('stderr'))
+			xml.write(self.stderr.toStdioXML('stderr'))
 			xml.write(u'\n')
 
 		# Uses
-		if len(self._uses) > 0:
-			for use in self._uses:
+		if len(self.uses) > 0:
+			for use in self.uses:
 				xml.write(indentation)
 				xml.write(indent)
 				xml.write(use.toXML())
@@ -562,19 +566,19 @@ class DAX:
 	class Dependency:
 		"""A control-flow dependency between a child and its parents"""
 		def __init__(self,child):
-			self._child = child
-			self._parents = []
+			self.child = child
+			self.parents = []
 
 		def addParent(self, parent):
-			self._parents.append(parent)
+			self.parents.append(parent)
 
 		def toXML(self, level=0, indent=u'\t'):
 			xml = StringIO()
 			indentation = ''.join([indent for x in range(0,level)])
 			
 			xml.write(indentation)
-			xml.write(u'<child ref="%s">\n' % self._child.getID())
-			for parent in self._parents:
+			xml.write(u'<child ref="%s">\n' % self.child.getID())
+			for parent in self.parents:
 				xml.write(indentation)
 				xml.write(indent)
 				xml.write(u'<parent ref="%s"/>\n' % parent.getID())
@@ -592,55 +596,55 @@ class DAX:
 			count: Total number of DAXes that will be created
 			index: Zero-based index of this DAX
 		"""
-		self._name = name
-		self._count = count
-		self._index = index
+		self.name = name
+		self.count = count
+		self.index = index
 		
 		# This is used to generate unique ID numbers
-		self._sequence = 1
+		self.sequence = 1
 		
-		self._jobs = []
-		self._filenames = []
-		self._lookup = {} # A lookup table for dependencies
-		self._dependencies = []
+		self.jobs = []
+		self.filenames = []
+		self.lookup = {} # A lookup table for dependencies
+		self.dependencies = []
 
 	def getName(self):
-		return self._name
+		return self.name
 
 	def setName(self,name):
-		self._name = name
+		self.name = name
 
 	def getCount(self):
-		return self._count
+		return self.count
 
 	def setCount(self,count):
-		self._count = count
+		self.count = count
 
 	def getIndex(self):
-		return self._index
+		return self.index
 
 	def setIndex(self,index):
-		self._index = index
+		self.index = index
 
 	def addJob(self,job):
 		"""Add a job to the list of jobs in the DAX"""
 		# Add an auto-generated ID if the job doesn't have one
 		if job.getID() is None:
-			job.setID("ID%07d" % self._sequence)
-			self._sequence += 1
-		self._jobs.append(job)
+			job.setID("ID%07d" % self.sequence)
+			self.sequence += 1
+		self.jobs.append(job)
 		
 	def addFilename(self, filename):
 		"""Add a filename"""
-		self._filenames.append(filename)
+		self.filenames.append(filename)
 		
 	def addDependency(self, parent, child):
 		"""Add a control flow dependency"""
-		if not child in self._lookup:
+		if not child in self.lookup:
 			dep = DAX.Dependency(child)
-			self._lookup[child] = dep
-			self._dependencies.append(dep)
-		self._lookup[child].addParent(parent)
+			self.lookup[child] = dep
+			self.dependencies.append(dep)
+		self.lookup[child].addParent(parent)
 
 	def writeXML(self, out, indent='\t'):
 		"""Write the DAX as XML to a stream"""
@@ -658,30 +662,173 @@ class DAX:
 		out.write(u'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ')
 		out.write(u'xsi:schemaLocation="%s %s" ' % (SCHEMA_NAMESPACE, SCHEMA_LOCATION))
 		out.write(u'version="%s" ' % SCHEMA_VERSION)
-		out.write(u'count="%d" index="%d" name="%s" ' % (self._count, self._index, self._name))
-		out.write(u'jobCount="%d" fileCount="%d" childCount="%d">\n' % (len(self._jobs), len(self._filenames), len(self._dependencies)))
+		out.write(u'count="%d" index="%d" name="%s" ' % (self.count, self.index, self.name))
+		out.write(u'jobCount="%d" fileCount="%d" childCount="%d">\n' % (len(self.jobs), len(self.filenames), len(self.dependencies)))
 
 		# Files
 		out.write(u'\n%s<!-- part 1: list of all referenced files (may be empty) -->\n' % indent)
-		for filename in self._filenames:
+		for filename in self.filenames:
 			out.write(indent)
 			out.write(filename.toFilenameXML())
 			out.write('\n')
 		
 		# Jobs
 		out.write(u'\n%s<!-- part 2: definition of all jobs (at least one) -->\n' % indent)
-		for job in self._jobs:
+		for job in self.jobs:
 			out.write(job.toXML(level=1,indent=indent))
 			out.write(u'\n')
 		
 		# Dependencies
 		out.write(u'\n%s<!-- part 3: list of control-flow dependencies (may be empty) -->\n' % indent)
-		for dep in self._dependencies:
+		for dep in self.dependencies:
 			out.write(dep.toXML(level=1,indent=indent))
 			out.write(u'\n')
 		
 		# Close tag
 		out.write(u'</adag>\n')
+
+
+class DAXHandler(xml.sax.handler.ContentHandler):
+	"""
+	This is a DAX parser
+	"""
+	def __init__(self):
+		self.dax = None
+		self.jobmap = {}
+		self.filemap = {}
+		self.lastJob = None
+		self.lastChild = None
+		self.lastArguments = None
+		self.lastProfile = None
+		
+	def startElement(self, name, attrs):
+		if name == "adag":
+			name = attrs.get("name")
+			count = int(attrs.get("count","1"))
+			index = int(attrs.get("index","0"))
+			self.dax = DAX(name,count,index)
+		elif name == "filename":
+			if self.lastJob is None:
+				file = attrs.get("file")
+				link = attrs.get("link")
+				optional = attrs.get("optional")
+				f = Filename(file, type=None, link=link, register=None, 
+					transfer=None, optional=optional)
+				self.dax.addFilename(f)
+				self.filemap[name] = f
+			else:
+				name = attrs.get("file")
+				if name in self.filemap:
+					f = self.filemap[name]
+				else:
+					f = Filename(name)
+					self.filemap[name] = f
+				if self.lastProfile is None:
+					self.lastArguments.append(f)
+				else:
+					self.lastProfile.value = f
+		elif name == "job":
+			id = attrs.get("id")
+			namespace = attrs.get("namespace")
+			name = attrs.get("name")
+			version = attrs.get("version")
+			dv_namespace = attrs.get("dv-namespace")
+			dv_name = attrs.get("dv-name")
+			dv_version = attrs.get("dv-version")
+			level = attrs.get("level")
+			compound = attrs.get("compound")
+			job = Job(id=id, namespace=namespace, name=name, version=version,
+				dv_namespace=dv_namespace, dv_name=dv_name, dv_version=dv_version,
+				level=level, compound=compound)
+			self.dax.addJob(job)
+			self.lastJob = job
+			self.jobmap[job.getID()] = job
+		elif name == "argument":
+			self.lastArguments = []
+		elif name == "profile":
+			namespace = attrs.get("namespace")
+			key = attrs.get("key")
+			self.lastProfile = Profile(namespace,key,"")
+			self.lastJob.addProfile(self.lastProfile)
+		elif name in ["stdin","stdout","stderr"]:
+			file = attrs.get("file")
+			link = attrs.get("link")
+			varname = attrs.get("varname")
+			if file in self.filemap:
+				f = self.filemap[file]
+			else:
+				f = Filename(file,link=link)
+				self.filemap[file] = f
+			if varname is not None:
+				if f.varname is None:
+					f.varname = varname
+			if name == "stdin":
+				self.lastJob.setStdin(f)
+			elif name == "stdout":
+				self.lastJob.setStdout(f)
+			else:
+				self.lastJob.setStderr(f)
+		elif name == "uses":
+			file = attrs.get("file")
+			link = attrs.get("link")
+			register = attrs.get("register")
+			transfer = attrs.get("transfer")
+			type = attrs.get("type")
+			temporaryHint = attrs.get("temporaryHint")
+			if file in self.filemap:
+				f = self.filemap[file]
+				if f.type is None:
+					f.type = type
+			else:
+				f = Filename(file, type=type, link=link,
+					register=register, transfer=transfer)
+				self.filemap[file] = f
+			self.lastJob.addUses(f,link=link,register=register,
+				transfer=transfer,temporaryHint=temporaryHint)
+		elif name == "child":
+			id = attrs.get("ref")
+			child = self.jobmap[id]
+			self.lastChild = child
+		elif name == "parent":
+			id = attrs.get("ref")
+			parent = self.jobmap[id]
+			self.dax.addDependency(parent, self.lastChild)
+			
+	def characters(self, chars):
+		if self.lastArguments is not None:
+			self.lastArguments += [unicode(a) for a in shlex.split(chars)]
+		elif self.lastProfile is not None:
+			self.lastProfile.value += chars
+			
+	def endElement(self, name):
+		if name == "child":
+			self.lastChild = None
+		elif name == "job":
+			self.lastJob = None
+		elif name == "argument":
+			self.lastJob.addArguments(*self.lastArguments)
+			self.lastArguments = None
+		elif name == "profile":
+			self.lastProfile = None
+
+				
+def parse(fname):
+	"""
+	Parse DAX from a Pegasus DAX file.
+	"""
+	handler = DAXHandler()
+	xml.sax.parse(fname, handler)
+	return handler.dax
+
+
+def parseString(string):
+	"""
+	Parse DAX from a string
+	"""
+	handler = DAXHandler()
+	xml.sax.parseString(string, handler)
+	return handler.dax
+
 
 if __name__ == '__main__':
 	"""An example of using the DAX API"""
@@ -736,7 +883,19 @@ if __name__ == '__main__':
 	diamond.addDependency(parent=preprocess, child=frr)
 	diamond.addDependency(parent=frl, child=analyze)
 	diamond.addDependency(parent=frr, child=analyze)
-
-	# Write the DAX to stdout
-	import sys
-	diamond.writeXML(sys.stdout)
+	
+	out = StringIO()
+	diamond.writeXML(out)
+	foo1 = out.getvalue()
+	out.close()
+	
+	diamond = parseString(foo1)
+	
+	out = StringIO()
+	diamond.writeXML(out)
+	foo2 = out.getvalue()
+	out.close()
+	
+	print foo1
+	print foo2
+	
