@@ -55,7 +55,7 @@ public class Profiles {
      */
     public static enum NAMESPACES {
 
-        env, globus, condor, dagman, pegasus, hints
+        env, globus, condor, dagman, pegasus, hints,selector,stat
     };
     
    
@@ -64,7 +64,7 @@ public class Profiles {
      * An enum map that associates the enum keys with the corresponding 
      * namespace objects.
      */
-    private EnumMap mProfileMap;
+    private EnumMap<NAMESPACES,Namespace> mProfileMap;
 
     /**
      * The default constructor.
@@ -106,8 +106,8 @@ public class Profiles {
      * @param profiles  List of <code>Profile</code> objects.
      */
     public void addProfiles( List<Profile> profiles ) {
-        for( Iterator<Profile> it = profiles.iterator(); it.hasNext(); ){
-            this.addProfile( it.next() );
+        for( Profile profile: profiles ){
+            this.addProfile( profile );
         }
     }
 
@@ -138,8 +138,8 @@ public class Profiles {
      * @param profiles  List of <code>Profile</code> objects.
      */
     public void addProfilesDirectly( List<Profile> profiles ) {
-        for( Iterator<Profile> it = profiles.iterator(); it.hasNext(); ){
-            this.addProfileDirectly( it.next() );
+        for ( Profile profile : profiles ){
+            this.addProfileDirectly( profile);
         }
     }
 
@@ -165,6 +165,52 @@ public class Profiles {
         Namespace n = ( Namespace )mProfileMap.get( NAMESPACES.valueOf( p.getProfileNamespace() ) );
         n.checkKeyInNS( p.getProfileKey(), p.getProfileValue() );
     }
+
+    /**
+     * Add a profile. Convenience method
+     * @param namespace
+     * @param key
+     * @param value
+     */public void addProfileDirectly( NAMESPACES namespace, String key, String value ){
+        //retrieve the appropriate namespace and then add
+        Namespace n = ( Namespace )mProfileMap.get(namespace);
+        n.construct(key,value);
+    }
+    
+    /**
+     * Add a profile. Convenience method
+     * @param namespace
+     * @param key
+     * @param value
+     */public void addProfileDirectly( String namespace, String key, String value ){
+        //retrieve the appropriate namespace and then add
+        Namespace n = ( Namespace )mProfileMap.get(namespace);
+        n.construct(key,value);
+    }
+    
+    
+/**
+     * Add a profile. Convenience method
+     * @param namespace
+     * @param key
+     * @param value
+     */public void addProfile( NAMESPACES namespace, String key, String value ){
+        //retrieve the appropriate namespace and then add
+        Namespace n = ( Namespace )mProfileMap.get(namespace);
+        n.checkKeyInNS(key,value);
+    }
+    
+    /**
+     * Add a profile. Convenience method
+     * @param namespace
+     * @param key
+     * @param value
+     */public void addProfile( String namespace, String key, String value ){
+        //retrieve the appropriate namespace and then add
+        Namespace n = ( Namespace )mProfileMap.get(namespace);
+        n.checkKeyInNS(key,value);
+    }
+    
 
     /**
      * Returns the list of profiles for all namespaces.
