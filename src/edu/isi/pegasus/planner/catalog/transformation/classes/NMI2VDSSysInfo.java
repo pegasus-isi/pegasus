@@ -16,8 +16,6 @@
 
 package edu.isi.pegasus.planner.catalog.transformation.classes;
 
-import edu.isi.pegasus.planner.catalog.classes.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.OS;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.util.HashMap;
@@ -35,7 +33,7 @@ public class NMI2VDSSysInfo {
     /**
      * The map storing architecture to corresponding NMI architecture platforms.
      */
-    private static Map< Architecture,Arch > mNMIArchToVDSArchMap = null;
+    private static Map< SysInfo.Architecture,Arch > mNMIArchToVDSArchMap = null;
 
 
     /**
@@ -48,20 +46,20 @@ public class NMI2VDSSysInfo {
      *
      * @return Map mapping NMI Architecture to VDS Arch object.
      */
-    public static Map<Architecture, Arch> NMIArchToVDSArchMap(){
+    public static Map<SysInfo.Architecture, Arch> NMIArchToVDSArchMap(){
         //singleton access
         if( mNMIArchToVDSArchMap == null ){
-            mNMIArchToVDSArchMap = new HashMap< Architecture,Arch >();
-            mNMIArchToVDSArchMap.put( Architecture.x86, Arch.INTEL32  );
-            mNMIArchToVDSArchMap.put( Architecture.x86_64, Arch.INTEL64  );
-            mNMIArchToVDSArchMap.put( Architecture.amd64, Arch.AMD64  );
+            mNMIArchToVDSArchMap = new HashMap< SysInfo.Architecture,Arch >();
+            mNMIArchToVDSArchMap.put( SysInfo.Architecture.x86, Arch.INTEL32  );
+            mNMIArchToVDSArchMap.put( SysInfo.Architecture.x86_64, Arch.INTEL64  );
+            mNMIArchToVDSArchMap.put( SysInfo.Architecture.amd64, Arch.AMD64  );
             //mNMIArchToVDSArch.put( Architecture.x86_64, Arch.AMD64 );
             
             //VDS arch INTEL64 actually meant IA64
-            mNMIArchToVDSArchMap.put(Architecture.ia64, Arch.INTEL64 );
+            mNMIArchToVDSArchMap.put( SysInfo.Architecture.ia64, Arch.INTEL64 );
 
-            mNMIArchToVDSArchMap.put(Architecture.sparcv7, Arch.SPARCV7 );
-            mNMIArchToVDSArchMap.put(Architecture.sparcv9, Arch.SPARCV9 );
+            mNMIArchToVDSArchMap.put( SysInfo.Architecture.sparcv7, Arch.SPARCV7 );
+            mNMIArchToVDSArchMap.put( SysInfo.Architecture.sparcv9, Arch.SPARCV9 );
         }
         return mNMIArchToVDSArchMap;
     }
@@ -70,7 +68,7 @@ public class NMI2VDSSysInfo {
     /**
      * The map storing OS to corresponding NMI OS platforms.
      */
-    private static Map<OS,Os> mNMIOSToVDSOSMap = null;
+    private static Map<SysInfo.OS,Os> mNMIOSToVDSOSMap = null;
 
     /**
      * Singleton access to the os to NMI os map.
@@ -78,15 +76,15 @@ public class NMI2VDSSysInfo {
      *
      * @return Map mapping NMI OS to VDS Os object.
      */
-    public static Map<OS,Os> NMIOSToVDSOSMap(){
+    public static Map<SysInfo.OS,Os> NMIOSToVDSOSMap(){
         //singleton access
         if( mNMIOSToVDSOSMap == null ){
-            mNMIOSToVDSOSMap = new HashMap<OS,Os>();
+            mNMIOSToVDSOSMap = new HashMap<SysInfo.OS,Os>();
             //mNMIOSToVDSOS.put( "rhas_3", Os.LINUX );
-            mNMIOSToVDSOSMap.put( OS.LINUX, Os.LINUX );
-            mNMIOSToVDSOSMap.put( OS.WINDOWS, Os.WINDOWS );
-            mNMIOSToVDSOSMap.put( OS.AIX, Os.AIX );
-            mNMIOSToVDSOSMap.put( OS.SUNOS, Os.SUNOS );
+            mNMIOSToVDSOSMap.put( SysInfo.OS.LINUX, Os.LINUX );
+            mNMIOSToVDSOSMap.put( SysInfo.OS.WINDOWS, Os.WINDOWS );
+            mNMIOSToVDSOSMap.put( SysInfo.OS.AIX, Os.AIX );
+            mNMIOSToVDSOSMap.put( SysInfo.OS.SUNOS, Os.SUNOS );
         }
         return mNMIOSToVDSOSMap;
     }
@@ -134,7 +132,7 @@ public class NMI2VDSSysInfo {
      *
      * @return the VDSSysInfo object
      */
-    public static VDSSysInfo nmiToVDSSysInfo( Architecture arch, OS os, String glibc ){
+    public static VDSSysInfo nmiToVDSSysInfo( SysInfo.Architecture arch, SysInfo.OS os, String glibc ){
         VDSSysInfo result = new VDSSysInfo();
         result.setArch( nmiArchToVDSArch(arch) );
         result.setOs( nmiOSToVDSOS( os ) );
@@ -150,7 +148,7 @@ public class NMI2VDSSysInfo {
      *
      * @return Arch
      */
-    public static Arch nmiArchToVDSArch( Architecture arch ){
+    public static Arch nmiArchToVDSArch( SysInfo.Architecture arch ){
         return NMIArchToVDSArchMap().get( arch );
     }
 
@@ -163,7 +161,7 @@ public class NMI2VDSSysInfo {
      * @return Arch
      */
     public static Arch nmiArchToVDSArch( String arch ){
-        return NMIArchToVDSArchMap().get( Architecture.valueOf(arch)  );
+        return NMIArchToVDSArchMap().get( SysInfo.Architecture.valueOf(arch)  );
     }
 
     /**
@@ -174,7 +172,7 @@ public class NMI2VDSSysInfo {
      *
      * @return the VDS description of OS
      */
-    public static Os nmiOSToVDSOS( OS os ){
+    public static Os nmiOSToVDSOS( SysInfo.OS os ){
         return NMIOSToVDSOSMap().get( os );
     }
 
@@ -188,7 +186,7 @@ public class NMI2VDSSysInfo {
      * @return the VDS description of OS
      */
     public static Os nmiOSToVDSOS( String os ){
-        return NMIOSToVDSOSMap().get( OS.valueOf(os) );
+        return NMIOSToVDSOSMap().get( SysInfo.OS.valueOf(os) );
     }
 
 

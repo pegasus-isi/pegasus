@@ -47,15 +47,15 @@ public class VDSSysInfo2NMI {
      *
      * @return Map mapping VDS Arch to NMI architecture
      */
-    private static Map<Arch,Architecture> vdsArchToNMIArchMap(){
+    private static Map<Arch,SysInfo.Architecture> vdsArchToNMIArchMap(){
         //singleton access
         if( mVDSArchToNMIArch == null ){
             mVDSArchToNMIArch = new HashMap();
-            mVDSArchToNMIArch.put( Arch.INTEL32, Architecture.x86 );
-            mVDSArchToNMIArch.put( Arch.INTEL64, Architecture.x86_64 );
-            mVDSArchToNMIArch.put( Arch.AMD64, Architecture.amd64 );
-            mVDSArchToNMIArch.put( Arch.SPARCV7, Architecture.sparcv7 );
-            mVDSArchToNMIArch.put( Arch.SPARCV9, Architecture.sparcv9 );
+            mVDSArchToNMIArch.put( Arch.INTEL32, SysInfo.Architecture.x86 );
+            mVDSArchToNMIArch.put( Arch.INTEL64, SysInfo.Architecture.x86_64 );
+            mVDSArchToNMIArch.put( Arch.AMD64, SysInfo.Architecture.amd64 );
+            mVDSArchToNMIArch.put( Arch.SPARCV7, SysInfo.Architecture.sparcv7 );
+            mVDSArchToNMIArch.put( Arch.SPARCV9, SysInfo.Architecture.sparcv9 );
         }
         return mVDSArchToNMIArch;
     }
@@ -65,21 +65,21 @@ public class VDSSysInfo2NMI {
     /**
      * The map storing OS to corresponding NMI OS platforms.
      */
-    private static Map<Os,OS> mVDSOSToNMIOS = null;
+    private static Map<Os,SysInfo.OS> mVDSOSToNMIOS = null;
 
     /**
      * Singleton access to the os to NMI os map.
      *
      * @return Map mapping VDS Os to NMI OS
      */
-    private static Map<Os,OS> vdsOsToNMIOSMap(){
+    private static Map<Os,SysInfo.OS> vdsOsToNMIOSMap(){
         //singleton access
         if( mVDSOSToNMIOS == null ){
             mVDSOSToNMIOS = new HashMap();
-            mVDSOSToNMIOS.put( Os.LINUX, OS.LINUX );
-            mVDSOSToNMIOS.put( Os.AIX, OS.AIX );
-            mVDSOSToNMIOS.put( Os.SUNOS, OS.SUNOS );
-            mVDSOSToNMIOS.put( Os.WINDOWS, OS.WINDOWS );
+            mVDSOSToNMIOS.put( Os.LINUX, SysInfo.OS.LINUX );
+            mVDSOSToNMIOS.put( Os.AIX, SysInfo.OS.AIX );
+            mVDSOSToNMIOS.put( Os.SUNOS, SysInfo.OS.SUNOS );
+            mVDSOSToNMIOS.put( Os.WINDOWS, SysInfo.OS.WINDOWS );
         }
         return mVDSOSToNMIOS;
     }
@@ -128,7 +128,7 @@ public class VDSSysInfo2NMI {
      *
      * @return NMI Architecture
      */
-    public static Architecture vdsArchToNMIArch( Arch arch ){
+    public static SysInfo.Architecture vdsArchToNMIArch( Arch arch ){
         return vdsArchToNMIArchMap().get( arch );
     }
 
@@ -140,7 +140,7 @@ public class VDSSysInfo2NMI {
      *
      * @return NMI Architecture
      */
-    public static Architecture vdsArchToNMIArch( String arch ){
+    public static SysInfo.Architecture vdsArchToNMIArch( String arch ){
         return vdsArchToNMIArchMap().get( Arch.fromString(arch) );
     }
 
@@ -152,7 +152,7 @@ public class VDSSysInfo2NMI {
      *
      * @return NMI OS
      */
-    public static OS vdsOsToNMIOS( Os os ){
+    public static SysInfo.OS vdsOsToNMIOS( Os os ){
         return vdsOsToNMIOSMap().get( os );
     }
 
@@ -165,7 +165,7 @@ public class VDSSysInfo2NMI {
      *
      * @return NMI OS
      */
-    public static OS vdsOsToNMIOS( String os ){
+    public static SysInfo.OS vdsOsToNMIOS( String os ){
         return vdsOsToNMIOSMap().get( Os.fromValue(os) );
     }
 

@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.code.gridstart;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.catalog.classes.OS;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.AggregatedJob;
@@ -207,7 +207,7 @@ public class Windward implements GridStart{
             
             //trigger the second level transfer in case of windows env
             //from the jobmanager to backend windows node.
-            if( mSiteStore.lookup( job.getSiteHandle() ).getOS() == OS.WINDOWS ){
+            if( mSiteStore.lookup( job.getSiteHandle() ).getOS() == SysInfo.OS.WINDOWS ){
                 mLogger.log( "Triggering SLS for job " + job.getID() ,
                              LogManager.DEBUG_MESSAGE_LEVEL );
                 StringBuffer tip = new StringBuffer();
@@ -230,7 +230,7 @@ public class Windward implements GridStart{
             job.setArguments( args );
         }
          //for windows os for auxillary jobs also delete remote_initialdir and intialdir
-        else if( mSiteStore.lookup( job.getSiteHandle() ).getOS() == OS.WINDOWS ){
+        else if( mSiteStore.lookup( job.getSiteHandle() ).getOS() == SysInfo.OS.WINDOWS ){
             //we dont want any directories set for windows jobs.
             String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
             String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||

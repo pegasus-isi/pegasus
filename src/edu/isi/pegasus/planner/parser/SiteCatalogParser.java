@@ -19,8 +19,8 @@
 package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.catalog.classes.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.OS;
+
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteData;
 import edu.isi.pegasus.planner.catalog.site.classes.Connection;
@@ -42,7 +42,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeStorage;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeScratch;
 
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.namespace.Namespace;
 
 import org.griphyn.cPlanner.parser.Parser;
 
@@ -401,7 +400,7 @@ public class SiteCatalogParser extends Parser {
                         String value = (String) values.get( i );
 
                         if ( name.equals( "arch") ){
-                            gw.setArchitecture( Architecture.valueOf( value ));
+                            gw.setArchitecture( SysInfo.Architecture.valueOf( value ));
                  	    this.log( element, name, value );                              
                         }
                         else if ( name.equals( "type" ) ) {
@@ -421,7 +420,7 @@ public class SiteCatalogParser extends Parser {
                  	    this.log( element, name, value );                              
                         }
                         else if ( name.equals( "os" ) ){
-                            gw.setOS( OS.valueOf( value ) );
+                            gw.setOS( SysInfo.OS.valueOf( value ) );
                             this.log( element, name, value );                              
                         }
                         else if ( name.equals( "osrelease" ) ){
@@ -570,11 +569,11 @@ public class SiteCatalogParser extends Parser {
                         String value = (String) values.get( i );
 
                         if ( name.equals( "arch") ){
-                            site.setArchitecture( Architecture.valueOf( value ));
+                            site.setArchitecture( SysInfo.Architecture.valueOf( value ));
                  	    this.log( element, name, value );                              
                         }
                         else if ( name.equals( "os") ){
-                            site.setOS( OS.valueOf( value ) );
+                            site.setOS( SysInfo.OS.valueOf( value ) );
                             this.log( element, name, value );                              
                         }
                         else if ( name.equals( "handle" ) ){

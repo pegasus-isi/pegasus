@@ -19,8 +19,7 @@
 package edu.isi.pegasus.planner.catalog.site.classes;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
-import edu.isi.pegasus.planner.catalog.classes.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.OS;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
 import java.io.FileWriter;
 import org.griphyn.cPlanner.classes.Profile;

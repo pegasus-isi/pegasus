@@ -19,10 +19,9 @@
 package edu.isi.pegasus.planner.catalog.site.classes;
 
 
-import edu.isi.pegasus.planner.catalog.classes.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.OS;
 
 
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.io.Writer;
 import java.io.IOException;
 
@@ -76,12 +75,12 @@ public class GridGateway extends AbstractSiteData{
     /**
      * An optional os type for the grid gateway.
      */
-    private OS mOS;
+    private SysInfo.OS mOS;
     
     /**
      * An optional architecture type for the grid gateway.
      */
-    private Architecture mArch;
+    private SysInfo.Architecture mArch;
     
     /**
      * Optional information about the os release.
@@ -299,7 +298,7 @@ public class GridGateway extends AbstractSiteData{
      * 
      * @param os   the os
      */
-    public void setOS( OS os ){
+    public void setOS( SysInfo.OS os ){
         mOS = os;
     }
 
@@ -308,7 +307,7 @@ public class GridGateway extends AbstractSiteData{
      * 
      * @return the os if set else null
      */
-    public OS getOS( ){
+    public SysInfo.OS getOS( ){
         return mOS;
     }
     
@@ -374,7 +373,7 @@ public class GridGateway extends AbstractSiteData{
      * 
      * @param arch   the architecture of the nodes
      */
-    public void setArchitecture( Architecture arch ){
+    public void setArchitecture( SysInfo.Architecture arch ){
         mArch = arch;
     }
 
@@ -384,7 +383,7 @@ public class GridGateway extends AbstractSiteData{
      * 
      * @return the architecture if set else null
      */
-    public Architecture getArchitecture( ){
+    public SysInfo.Architecture getArchitecture( ){
         return mArch;
     }
     

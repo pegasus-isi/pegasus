@@ -27,8 +27,6 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.planner.catalog.classes.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -266,12 +264,12 @@ public class TransformationCatalogTextParser {
 
                 case TransformationCatalogReservedWord.ARCH:
                     value = getQuotedValue( "arch" );
-                    sysinfo.setArchitecture( Architecture.valueOf( value ) );
+                    sysinfo.setArchitecture( SysInfo.Architecture.valueOf( value ) );
                 break;
 
                 case TransformationCatalogReservedWord.OS:
                     value = getQuotedValue( "os" );
-                    sysinfo.setOS( OS.valueOf( value.toUpperCase() ) );
+                    sysinfo.setOS( SysInfo.OS.valueOf( value.toUpperCase() ) );
                 break;
                 
                 case TransformationCatalogReservedWord.OSRELEASE:

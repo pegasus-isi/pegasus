@@ -50,7 +50,6 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
 
-import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
@@ -250,7 +249,7 @@ public class DeployWorkerPackage
     /**
      * The map storing OS to corresponding NMI OS platforms.
      */
-    private static Map<OS,String> mOSToNMIOSReleaseAndVersion = null;
+    private static Map<SysInfo.OS,String> mOSToNMIOSReleaseAndVersion = null;
     
     /**
      * Maps each to OS to a specific OS release for purposes of picking up the 
@@ -260,12 +259,12 @@ public class DeployWorkerPackage
      * 
      * @return map
      */
-    private static Map<OS,String> osToOSReleaseAndVersion(){
+    private static Map<SysInfo.OS,String> osToOSReleaseAndVersion(){
         //singleton access
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
-            mOSToNMIOSReleaseAndVersion.put( OS.LINUX, "rhel_4" );
-            mOSToNMIOSReleaseAndVersion.put( OS.MACOSX, "macos_10.4" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_4" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.4" );
         }
         return mOSToNMIOSReleaseAndVersion;
     }

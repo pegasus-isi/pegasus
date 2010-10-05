@@ -31,8 +31,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 
 import edu.isi.pegasus.common.util.Separator;
 
-import edu.isi.pegasus.planner.catalog.classes.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.OS;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.parser.TransformationCatalogTextParser;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -329,11 +328,11 @@ public class Text
         
         //write out sysinfo
         SysInfo s = entry.getSysInfo();
-        Architecture arch = s.getArchitecture();
+        SysInfo.Architecture arch = s.getArchitecture();
         if( arch != null ){
             addLineToText( sb, newIndent, newline, "arch", arch.toString() );
         }
-        OS os = s.getOS();
+        SysInfo.OS os = s.getOS();
         if( os != null ){
             addLineToText( sb, newIndent, newline, "os", os.toString() );
         }

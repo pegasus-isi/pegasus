@@ -16,8 +16,6 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
-import edu.isi.pegasus.planner.catalog.classes.Architecture;
-import edu.isi.pegasus.planner.catalog.classes.OS;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
 
@@ -203,7 +201,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * @param arch  the architecture.
      */
-    public void setArchitecture( Architecture arch ){
+    public void setArchitecture( SysInfo.Architecture arch ){
         mSysInfo.setArchitecture(arch);
     }
     
@@ -213,7 +211,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * @return  the architecture.
      */
-    public Architecture getArchitecture( ){
+    public SysInfo.Architecture getArchitecture( ){
         return mSysInfo.getArchitecture();
     }
     
@@ -223,7 +221,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * @param os the os of the site.
      */
-    public void setOS( OS os ){
+    public void setOS( SysInfo.OS os ){
         mSysInfo.setOS(os);
     }
     
@@ -233,7 +231,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * @return  the OS
      */
-    public OS getOS( ){
+    public SysInfo.OS getOS( ){
         return mSysInfo.getOS();
     }
     

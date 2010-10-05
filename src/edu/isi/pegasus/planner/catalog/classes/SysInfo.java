@@ -29,6 +29,21 @@ package edu.isi.pegasus.planner.catalog.classes;
 public class SysInfo implements Cloneable {
 
     /**
+     * Enumerates the new OS types supported in Pegasus.
+     */
+    public enum OS {
+        LINUX, SUNOS, AIX, MACOSX, WINDOWS
+    }
+
+    /**
+     * Enumerates the new architecture types supported in Pegasus.
+     */
+    public  enum Architecture {
+        x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64
+    }
+
+    
+    /**
      * The default OS the entry is associated with if none is specified
      */
     public static final OS DEFAULT_OS = OS.LINUX;
@@ -41,27 +56,27 @@ public class SysInfo implements Cloneable {
     /**
      * The architecture.
      */
-    private Architecture mArchitecture;
+    protected Architecture mArchitecture;
 
     /**
      * The Operating System.
      */
-    private OS mOS;
+    protected OS mOS;
 
     /**
      * The Operating System Release. Optional.
      */
-    private String mOSRelease;
+    protected String mOSRelease;
 
     /**
      * The Operating System Version. Optional.
      */
-    private String mOSVersion;
+    protected String mOSVersion;
 
     /**
      * The Glibc version. Optional.
      */
-    private String mGlibc;
+    protected String mGlibc;
 
 
 
