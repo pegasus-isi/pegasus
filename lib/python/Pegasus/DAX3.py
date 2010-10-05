@@ -23,11 +23,14 @@ The official DAX schema is here: http://pegasus.isi.edu/schema/dax-3.2.xsd
 __author__ = "Gideon Juve <juve@usc.edu>"
 __all__ = ["ADAG","DAX","DAG","Namespace","Arch","Link","When",
 		   "Transfer","OS","File","Executable","Metadata","PFN",
-		   "Profile","Transformation","Job"]
+		   "Profile","Transformation","Job","parse","parseString"]
 __version__ = "3.2"
 
 import datetime, pwd, os
 from cStringIO import StringIO
+import xml.sax
+import xml.sax.handler
+import shlex
 
 SCHEMA_NAMESPACE = u"http://pegasus.isi.edu/schema/DAX"
 SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/dax-3.2.xsd"
@@ -1151,6 +1154,237 @@ class ADAG:
 		# Close tag
 		out.write(u'</adag>\n')
 
+
+class DAXHandler(xml.sax.handler.ContentHandler):
+	"""
+	This is a DAX parser
+	"""
+	def __init__(self):
+		self.elements = []
+		self.adag = None
+		self.jobmap = {}
+		self.filemap = {}
+		self.lastJob = None
+		self.lastChild = None
+		self.lastArgument = None
+		self.lastProfile = None
+		self.lastMetadata = None
+		self.lastPFN = None
+		self.lastFile = None
+		self.lastInvoke = None
+		self.lastTransformation = None
+		
+	def startElement(self, element, attrs):
+		self.elements.insert(0, element)
+		parent = None
+		if len(self.elements) > 1:
+			parent = self.elements[1]
+		
+		if element == "adag":
+			name = attrs.get("name")
+			count = attrs.get("count")
+			index = attrs.get("index")
+			self.adag = ADAG(name,count,index)
+		elif element == "file":
+			name = attrs.get("name")
+			link = attrs.get("link")
+			optional = attrs.get("optional")
+			
+			if name in self.filemap:
+				f = self.filemap[name]
+			else:
+				f = File(name=name, link=link, optional=optional)
+				self.filemap[name] = f
+					
+			if parent == 'adag':
+				self.adag.addFile(f)
+			elif parent == 'argument':
+				self.lastArgument.append(f)
+			else:
+				raise Exception("Adding file to %s" % parent)
+			self.lastFile = f
+		elif element == "executable":
+			name = attrs.get("name")
+			namespace = attrs.get("namespace")
+			version  = attrs.get("version")
+			arch = attrs.get("arch")
+			os  = attrs.get("os")
+			osrelease = attrs.get("osrelease")
+			osversion = attrs.get("osversion")
+			glibc = attrs.get("glibc")
+			e = Executable(name=name, namespace=namespace, version=version,
+				arch=arch, os=os, osrelease=osrelease, osversion=osversion,
+				glibc=glibc)
+			self.filemap[name] = e
+			self.adag.addExecutable(e)
+			self.lastFile = e
+		elif element == "transformation":
+			namespace = attrs.get("namespace")
+			name = attrs.get("name")
+			version = attrs.get("version")
+			t = Transformation(name=name, namespace=namespace, version=version)
+			self.lastTransformation = t
+			self.adag.addTransformation(t)
+		elif element in ["job","dag","dax"]:
+			id = attrs.get("id")
+			namespace = attrs.get("namespace")
+			name = attrs.get("name")
+			version = attrs.get("version")
+			node_label = attrs.get("node-label")
+			if element == "job":
+				job = Job(id=id, namespace=namespace, name=name, version=version,
+						node_label=node_label)
+				self.adag.addJob(job)
+			elif element == "dag":
+				job = DAG(name=name, id=id, node_label=node_label)
+				self.adag.addDAG(job)
+			else:
+				job = DAX(name=name, id=id, node_label=node_label)
+				self.adag.addDAX(job)
+			self.jobmap[id] = job
+			self.lastJob = job
+		elif element == "argument":
+			self.lastArgument = []
+		elif element == "profile":
+			namespace = attrs.get("namespace")
+			key = attrs.get("key")
+			p = Profile(namespace,key,"")
+			if parent == 'job':
+				self.lastJob.addProfile(p)
+			elif parent in ['file','executable']:
+				self.lastFile.addProfile(p)
+			elif parent == 'pfn':
+				self.lastPFN.addProfile(p)
+			else:
+				raise Exception("Adding profile to %s" % parent)
+			self.lastProfile = p
+		elif element == "metadata":
+			key = attrs.get("key")
+			type = attrs.get("type")
+			meta = Metadata(key=key,type=type,value="")
+			if parent in ["file","executable"]:
+				self.lastFile.addMetadata(meta)
+			elif parent == "transformation":
+				self.lastTransformation.addMetadata(meta)
+			elif parent == "job":
+				self.lastJob.addMetadata(meta)
+			else:
+				raise Exception("Adding metadata to %s" % parent)
+			self.lastMetadata = meta
+		elif element == "pfn":
+			url = attrs.get("url")
+			site = attrs.get("site")
+			pfn = PFN(url=url, site=site)
+			if parent in ["file","executable"]:
+				self.lastFile.addPFN(pfn)
+			else:
+				raise Exception("Adding PFN to %s" % parent)
+			self.lastPFN = pfn
+		elif element in ["stdin","stdout","stderr"]:
+			name = attrs.get("name")
+			link = attrs.get("link")
+			f = File(name,link=link)
+			if element == "stdin":
+				self.lastJob.setStdin(f)
+			elif element == "stdout":
+				self.lastJob.setStdout(f)
+			else:
+				self.lastJob.setStderr(f)
+		elif element == "uses":
+			name = attrs.get("name")
+			link = attrs.get("link")
+			optional = attrs.get("optional")
+			register = attrs.get("register")
+			transfer = attrs.get("transfer")
+			namespace = attrs.get("namespace")
+			version = attrs.get("version")
+			executable = bool(attrs.get("executable",False))
+			
+			if name in self.filemap:
+				f = self.filemap[name]
+			elif executable:
+				f = Executable(name, namespace=namespace, version=version, 
+					link=link, register=register, transfer=transfer)
+				self.filemap[name] = f
+			else:
+				f = File(name, link=link, register=register, 
+					transfer=transfer)
+				self.filemap[name] = f
+				
+			if parent in ['job','dax','dag']:
+				self.lastJob.uses(f, link=link, register=register,
+					transfer=transfer, optional=optional)
+			elif parent == 'transformation':
+				self.lastTransformation.uses(f, link=link, register=register,
+					transfer=transfer, optional=optional)
+			else:
+				raise Exception("Adding uses to %s" % parent)
+		elif element == "invoke":
+			self.lastInvoke = [attrs.get("when"), ""]
+		elif element == "child":
+			ref = attrs.get("ref")
+			self.lastChild = self.jobmap[ref]
+		elif element == "parent":
+			ref = attrs.get("ref")
+			edge_label = attrs.get("edge-label")
+			p = self.jobmap[ref]
+			self.adag.addDependency(p, self.lastChild, edge_label)
+		else:
+			raise Exception("Unrecognized element %s" % name)
+			
+	def characters(self, chars):
+		parent = self.elements[0]
+		
+		if parent == "argument":
+			self.lastArgument += [unicode(a) for a in shlex.split(chars)]
+		elif parent == "profile":
+			self.lastProfile.value += chars
+		elif parent == "metadata":
+			self.lastMetadata.value += chars
+		elif parent == "invoke":
+			self.lastInvoke[1] += chars
+			
+	def endElement(self, element):
+		self.elements = self.elements[1:]
+		
+		if element == "child":
+			self.lastChild = None
+		elif element in ["job","dax","dag"]:
+			self.lastJob = None
+		elif element == "argument":
+			self.lastJob.addArguments(*self.lastArgument)
+			self.lastArgument = None
+		elif element == "profile":
+			self.lastProfile = None
+		elif element == "metadata":
+			self.lastMetadata = None
+		elif element == "pfn":
+			self.lastPFN = None
+		elif element == "invoke":
+			self.lastJob.invoke(*self.lastInvoke)
+			self.lastInvoke = None
+		elif element == "transformation":
+			self.lastTransformation = None
+	
+	
+def parse(fname):
+	"""
+	Parse DAX from a Pegasus DAX file.
+	"""
+	handler = DAXHandler()
+	xml.sax.parse(fname, handler)
+	return handler.adag
+
+
+def parseString(string):
+	"""
+	Parse DAX from a string
+	"""
+	handler = DAXHandler()
+	xml.sax.parseString(string, handler)
+	return handler.adag
+
+
 def test():
 	"""An example of using the DAX API"""
 
@@ -1196,6 +1430,7 @@ def test():
 	# Add transformation (long form)
 	t_preprocess = Transformation(namespace="diamond",name="preprocess",version="2.0")
 	t_preprocess.uses(e_preprocess)
+	t_preprocess.uses(a)
 	diamond.addTransformation(t_preprocess)
 	
 	# Add transformation (short form)
@@ -1235,12 +1470,14 @@ def test():
 	analyze.uses(d,link=Link.OUTPUT)
 	diamond.addJob(analyze)
 	
+	# A DAG
 	dagfile = File("pre.dag")
-	predag = DAG(dagfile)
+	predag = DAG(dagfile,node_label="predag")
 	diamond.addDAG(predag)
 	
+	# A DAX
 	daxfile = File("post.xml")
-	postdax = DAX(daxfile)
+	postdax = DAX(daxfile,node_label="postdax")
 	postdax.invoke('at_end','/bin/echo "yay"')
 	diamond.addDAX(postdax)
 
@@ -1251,10 +1488,27 @@ def test():
 	diamond.addDependency(parent=frl, child=analyze)
 	diamond.addDependency(parent=frr, child=analyze)
 	diamond.addDependency(parent=analyze, child=postdax)
+	
+	postdax.setStdin(File("postdax.in"))
+	postdax.setStdout(File("postdax.out"))
+	postdax.setStderr(File("postdax.err"))
 
 	# Write the DAX to stdout
-	import sys
-	diamond.writeXML(sys.stdout)
+	out = StringIO()
+	diamond.writeXML(out)
+	foo1 = out.getvalue()
+	out.close()
+	
+	print foo1
+	
+	diamond = parseString(foo1)
+	
+	out = StringIO()
+	diamond.writeXML(out)
+	foo2 = out.getvalue()
+	out.close()
+	
+	print foo2
 	
 def diamond():
 	# Create a DAX
@@ -1334,5 +1588,5 @@ def diamond():
 	diamond.writeXML(sys.stdout)
 	
 if __name__ == '__main__':
-	#test()
-	diamond()
+	test()
+	#diamond()
