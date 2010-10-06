@@ -94,24 +94,7 @@ public abstract class Namespace extends Data{
     */
    public static boolean isNamespaceValid(String namespace){
 
-       boolean valid = false;
-
-       //sanity checks
-       if( namespace == null || namespace.length() < 2){
-           return valid;
-       }
-
-       if (namespace.equalsIgnoreCase(Profile.CONDOR) ||
-           namespace.equalsIgnoreCase(Profile.GLOBUS) ||
-           namespace.equalsIgnoreCase(Profile.VDS) ||
-           namespace.equalsIgnoreCase(Profile.DAGMAN) ||
-           namespace.equalsIgnoreCase(Profile.HINTS) ||
-           namespace.equalsIgnoreCase(Profile.ENV)) {
-
-           valid = true;
-       }
-
-       return valid;
+       return Profile.namespaceValid( namespace );
    }
 
    /**

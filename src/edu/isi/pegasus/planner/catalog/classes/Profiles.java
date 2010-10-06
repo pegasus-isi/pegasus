@@ -25,6 +25,8 @@ import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.namespace.Globus;
 import org.griphyn.cPlanner.namespace.Hints;
 import org.griphyn.cPlanner.namespace.Condor;
+import org.griphyn.cPlanner.namespace.Stat;
+import org.griphyn.cPlanner.namespace.Selector;
 
 
 import java.util.List;
@@ -51,7 +53,7 @@ public class Profiles {
     
 
     /**
-     * The enumeration of valid namespaces.
+     * The enumeration of valid namespaces. It should be 
      */
     public static enum NAMESPACES {
 
@@ -78,6 +80,8 @@ public class Profiles {
         mProfileMap.put( NAMESPACES.globus, new Globus() );
         mProfileMap.put( NAMESPACES.hints, new Hints() );
         mProfileMap.put( NAMESPACES.pegasus, new VDS() );
+        mProfileMap.put( NAMESPACES.selector, new Selector() );
+        mProfileMap.put( NAMESPACES.stat, new Stat() );
     }
 
 
@@ -171,7 +175,8 @@ public class Profiles {
      * @param namespace
      * @param key
      * @param value
-     */public void addProfileDirectly( NAMESPACES namespace, String key, String value ){
+     */
+    public void addProfileDirectly( NAMESPACES namespace, String key, String value ){
         //retrieve the appropriate namespace and then add
         Namespace n = ( Namespace )mProfileMap.get(namespace);
         n.construct(key,value);
@@ -182,19 +187,22 @@ public class Profiles {
      * @param namespace
      * @param key
      * @param value
-     */public void addProfileDirectly( String namespace, String key, String value ){
+     */
+     public void addProfileDirectly( String namespace, String key, String value ){
         //retrieve the appropriate namespace and then add
         Namespace n = ( Namespace )mProfileMap.get(namespace);
         n.construct(key,value);
     }
     
     
-/**
+
+    /**
      * Add a profile. Convenience method
      * @param namespace
      * @param key
      * @param value
-     */public void addProfile( NAMESPACES namespace, String key, String value ){
+     */
+     public void addProfile( NAMESPACES namespace, String key, String value ){
         //retrieve the appropriate namespace and then add
         Namespace n = ( Namespace )mProfileMap.get(namespace);
         n.checkKeyInNS(key,value);
@@ -205,7 +213,8 @@ public class Profiles {
      * @param namespace
      * @param key
      * @param value
-     */public void addProfile( String namespace, String key, String value ){
+     */
+     public void addProfile( String namespace, String key, String value ){
         //retrieve the appropriate namespace and then add
         Namespace n = ( Namespace )mProfileMap.get(namespace);
         n.checkKeyInNS(key,value);

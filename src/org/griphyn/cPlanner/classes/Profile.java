@@ -51,6 +51,10 @@ public class Profile
     public static final String HINTS  = "hints";
 
     public static final String ENV    = "env";
+    
+    public static final String STAT    = "stat";
+    
+    public static final String SELECTOR    = "selector";
 
     private String mNamespace;
 
@@ -70,7 +74,32 @@ public class Profile
            append( " . Valid types are " ).append( validTypesToString() );
         return sb.toString();
     }
-                                        
+    
+    /**
+     * Returns a boolean indicating whether the namespace is valid or not.
+     * 
+     * @param namespace the namespace
+     * 
+     * @return true if valid namespace
+     */
+    public static boolean namespaceValid( String namespace ){
+       boolean valid = false;
+
+       //sanity checks
+       if( namespace == null || namespace.length() < 2){
+           return valid;
+       }
+
+        return ( namespace.equalsIgnoreCase( CONDOR ) ||
+            namespace.equalsIgnoreCase( GLOBUS ) ||
+            namespace.equalsIgnoreCase( VDS ) ||
+            namespace.equalsIgnoreCase( DAGMAN ) ||
+            namespace.equalsIgnoreCase( HINTS ) ||
+            namespace.equalsIgnoreCase( ENV ) ||
+            namespace.equalsIgnoreCase( SELECTOR )  ||
+            namespace.equalsIgnoreCase( STAT )  ) ;
+    }
+    
     
     /**
      * Returns a comma separated string containing the valid namespace types.
@@ -116,22 +145,7 @@ public class Profile
         }
     }
 
-    /**
-     * Returns a boolean indicating whether the namespace is valid or not.
-     * 
-     * @param namespace the namespace
-     * 
-     * @return true if valid namespace
-     */
-    public boolean namespaceValid( String namespace ){
-        return ( namespace.equalsIgnoreCase( CONDOR ) ||
-            namespace.equalsIgnoreCase( GLOBUS ) ||
-            namespace.equalsIgnoreCase( VDS ) ||
-            namespace.equalsIgnoreCase( DAGMAN ) ||
-            namespace.equalsIgnoreCase( HINTS ) ||
-            namespace.equalsIgnoreCase( ENV ) ) ;
-    }
-    
+   
     
 
     /**
