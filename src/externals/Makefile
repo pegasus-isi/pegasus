@@ -16,7 +16,7 @@ touch.sqlalchemy:
 	tar xzf SQLAlchemy-0.6.4.tar.gz
 	(cd SQLAlchemy-0.6.4 && \
 	  python setup.py build && \
-	  cp -a build/lib.*/sqlalchemy/ $(PEGASUS_HOME)/lib/python/ \
+	  cp -a build/lib*/sqlalchemy/ $(PEGASUS_HOME)/lib/python/ \
 	)
 	@rm -rf SQLAlchemy-0.6.4
 	touch touch.sqlalchemy
