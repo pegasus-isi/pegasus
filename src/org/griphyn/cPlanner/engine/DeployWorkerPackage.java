@@ -224,21 +224,16 @@ public class DeployWorkerPackage
     public static final String PACKAGE_NAME = "org.griphyn.cPlanner.engine.";
 
     /**
-     * The base directory for the nightly builds.
+     * The base directory URL for the builds.
      */
-    public static final String STABLE_BUILD_DIRECTORY_URL = 
-                "http://pegasus.isi.edu/mapper/download/";
+    public static final String BASE_BUILD_DIRECTORY_URL = "http://pegasus.isi.edu/wms/download/";
     
-    /**
-     * The base directory for the nightly builds.
-     */
-    public static final String NIGHTLY_BUILD_DIRECTORY_URL = 
-                "http://pegasus.isi.edu/mapper/download/nightly/";
     
     /**
      * The version of pegasus matching the planner.
      */
     public static final String PEGASUS_VERSION = Version.instance().toString();
+
     
     /**
      * Stores compiled patterns at first use, quasi-Singleton.
@@ -322,6 +317,12 @@ public class DeployWorkerPackage
     protected boolean mTransferWorkerPackage;
 
     /**
+     * The major minor version that is used to construct the URL for the
+     * pegasus website.
+     */
+    protected String mPlannerMajorMinorVersion;
+
+    /**
      * Loads the implementing class corresponding to the mode specified by the
      * user at runtime.
      *
@@ -378,6 +379,11 @@ public class DeployWorkerPackage
         mUserSpecifiedSourceLocation = mProps.getBaseSourceURLForSetupTransfers();
         mUseUserSpecifiedSourceLocation =
                   !( mUserSpecifiedSourceLocation == null || mUserSpecifiedSourceLocation.trim().length()== 0 );
+    
+        Version version = Version.instance();
+        StringBuffer sb = new StringBuffer();
+        sb.append( version.MAJOR ).append( "." ).append( version.MINOR );
+        mPlannerMajorMinorVersion = sb.toString();
     }
 
 
@@ -1174,9 +1180,12 @@ public class DeployWorkerPackage
             url.append( mUserSpecifiedSourceLocation ).append( File.separator);   
         }
         else{
+
+            url.append( DeployWorkerPackage.BASE_BUILD_DIRECTORY_URL ).
+                append( this.mPlannerMajorMinorVersion ).append( "/" );
             url.append( PEGASUS_VERSION.endsWith( "cvs" ) ?
-                    DeployWorkerPackage.NIGHTLY_BUILD_DIRECTORY_URL :
-                    DeployWorkerPackage.STABLE_BUILD_DIRECTORY_URL );
+                    "nightly/" :
+                    "" );
         }
         
         url.append( "pegasus-" ).append( name ).append( "-" ).
