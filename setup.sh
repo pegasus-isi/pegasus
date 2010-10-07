@@ -89,17 +89,6 @@ else
 fi
 export PERL5LIB
 
-if [ "X${PYTHONPATH}" = "X" ]; then
-    PYTHONPATH=$PEGASUS_HOME/lib/python
-else
-    x=$PEGASUS_HOME/lib/python
-    if ! echo $PYTHONPATH | egrepq "(^|:)$x($|:)" ; then
-	PYTHONPATH="$x:$PYTHONPATH"
-    fi
-    unset x
-fi
-export PYTHONPATH
-
 PEGASUS_JAR=$PEGASUS_HOME/lib/pegasus.jar
 if ! (echo "$CLASSPATH" | grep "$PEGASUS_JAR") >/dev/null 2>&1; then
     if [ "x$CLASSPATH" = "x" ]; then

@@ -66,26 +66,6 @@ else
 fi
 export PERL5LIB
 
-if [ "X${PYTHONPATH}" = "X" ]; then
-    PYTHONPATH=$PEGASUS_HOME/lib/python
-else
-    x=$PEGASUS_HOME/lib/python
-    if ! echo $PYTHONPATH | egrepq "(^|:)$x($|:)" ; then
-	PYTHONPATH="$x:$PYTHONPATH"
-    fi
-    unset x
-fi
-export PYTHONPATH
-
-#if [ -d "$PEGASUS_HOME/contrib/gstar" ]; then
-#    # add G* tools to environment
-#    GSTAR_LOCATION="$PEGASUS_HOME/contrib/gstar"
-#    export GSTAR_LOCATION
-#    if [ -r "$GSTAR_LOCATION/etc/gstar-setup-env.sh" ]; then
-#	source "$GSTAR_LOCATION/etc/gstar-setup-env.sh"
-#    fi
-#fi
-
 #
 # just add all jars to the CLASSPATH. 
 #
