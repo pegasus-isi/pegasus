@@ -28,7 +28,7 @@ sub parse_kick_start_files($$){
 	($cur,$dir) =@_;
 	chdir $dir;
     $samples{$dir} = ();
-    @kickstartFiles = glob "*.out.[0-9]*";
+    @kickstartFiles = glob "*.out*";
     for $file (@kickstartFiles) {
         if (open(FILE, $file)) {
             while ($line = <FILE>) {
