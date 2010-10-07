@@ -32,7 +32,10 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import org.griphyn.vdl.invocation.HasText;
+import org.griphyn.vdl.invocation.Stamp;
+import org.griphyn.vdl.invocation.Uname;
 import org.griphyn.vdl.invocation.Machine;
+import org.griphyn.vdl.invocation.MachineSpecific;
 import org.griphyn.vdl.invocation.MachineInfo;
 
 /**
@@ -210,33 +213,55 @@ public class NetloggerCallback implements Callback {
        
     }
 
-    /**
-     * Callback to pass the machine information on which the job is executed.
-     * Iterates through the machine info objects and puts the keys and values
-     * in internal map.
-     * 
-     * @param machine
-     */
-    public void cbMachine( Machine machine ){
-        //iterate through the values
-        for( Iterator it = machine.getMachineInfoIterator(); it.hasNext(); ){
-            MachineInfo info = ( MachineInfo)it.next();
-            String prefix = MACHINE_INFO_PREFIX + info.getElementName() ;
-            
-            if( info instanceof HasText ){
-                mInvocationMap.put( prefix, ((HasText)info).getValue() );
-            }
-            
-            prefix += ".";
-            
-            //put in all the attribute key and values
-            for( Iterator<String> attIt = info.getAttributeKeysIterator(); attIt.hasNext() ; ){
-                String key = attIt.next();
-                
-                mInvocationMap.put( prefix + key , info.get(key) );
-            }
-        }
+  /**
+   * Callback to pass the machine information on which the job is
+   * executed. Iterates through the machine info objects and puts the
+   * keys and values in internal map.
+   * 
+   * @param machine
+   */
+  public void cbMachine( Machine machine )
+  {
+    // go through the values in a Machine
+    String prefix = MACHINE_INFO_PREFIX + machine.getElementName(); 
+
+    // stamp element
+    Stamp stamp = machine.getStamp(); 
+    mInvocationMap.put( prefix + "." + stamp.getElementName(), 
+			stamp.getValue() ); 
+
+    // uname element
+    Uname uname = machine.getUname(); 
+    String specific = prefix + "." + uname.getElementName(); 
+    if ( uname instanceof HasText ) {
+      mInvocationMap.put( specific, uname.getValue() );
     }
+    for ( Iterator<String> ai = uname.getAttributeKeysIterator(); ai.hasNext(); ) { 
+      String akey = ai.next();
+      mInvocationMap.put( specific + "." + akey, uname.get(akey) ); 
+    }
+    
+    // machine-specific group
+    MachineSpecific ms = machine.getMachineSpecific(); 
+    specific = prefix + "." + ms.getElementName(); 
+
+    for ( Iterator it = ms.getMachineInfoIterator(); it.hasNext(); ) {
+      MachineInfo info = (MachineInfo) it.next();
+      String key = specific + "." + info.getElementName(); 
+            
+      if ( info instanceof HasText ) {
+	mInvocationMap.put( key, ((HasText)info).getValue() );
+      }
+      
+      key += ".";
+            
+      // put in all the attribute key and values
+      for ( Iterator<String> ai = info.getAttributeKeysIterator(); ai.hasNext() ; ){
+	String akey = ai.next();
+	mInvocationMap.put( key + akey , info.get(akey) );
+      }
+    }
+  }
     
     /**
      * Returns the first value from the List values for a key

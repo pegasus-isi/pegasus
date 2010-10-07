@@ -297,7 +297,7 @@
 		<xs:attribute name="duration" type="PositiveDecimal" use="required"/>
 		<xs:attribute name="pid" type="xs:decimal" use="optional"/>
 	</xs:complexType>
-	<xs:group name="MachineDarwin">
+	<xs:complexType name="MachineDarwin">
 		<xs:annotation>
 			<xs:documentation>Machine-specific info for Mac OS X.</xs:documentation>
 		</xs:annotation>
@@ -374,8 +374,8 @@
 				</xs:complexType>
 			</xs:element>
 		</xs:sequence>
-	</xs:group>
-	<xs:group name="MachineLinux">
+	</xs:complexType>
+	<xs:complexType name="MachineLinux">
 		<xs:annotation>
 			<xs:documentation>Machine-specific info for Linux kernels 2.4 and 2.6.</xs:documentation>
 		</xs:annotation>
@@ -469,8 +469,8 @@
 				</xs:complexType>
 			</xs:element>
 		</xs:sequence>
-	</xs:group>
-	<xs:group name="MachineSunos">
+	</xs:complexType>
+	<xs:complexType name="MachineSunos">
 		<xs:annotation>
 			<xs:documentation>Machine-specific info for Solaris 8 or higher.</xs:documentation>
 		</xs:annotation>
@@ -551,10 +551,29 @@
 				</xs:complexType>
 			</xs:element>
 		</xs:sequence>
-	</xs:group>
+	</xs:complexType>
+	<xs:complexType name="MachineBasic">
+		<xs:annotation>
+			<xs:documentation>Machine-unspecific when we cannot identify it.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ram" minOccurs="0">
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="avail" type="xs:nonNegativeInteger" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="cpu" minOccurs="0">
+				<xs:complexType>
+					<xs:attribute name="total" type="xs:nonNegativeInteger" use="optional"/>
+					<xs:attribute name="online" type="xs:nonNegativeInteger" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
 	<xs:element name="invocation">
 		<xs:annotation>
-			<xs:documentation>record of an application run for a given TR and DV.</xs:documentation>
+			<xs:documentation>record of an application that was run.</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
@@ -637,14 +656,14 @@
 									</xs:simpleContent>
 								</xs:complexType>
 							</xs:element>
-							<xs:choice minOccurs="0">
-								<xs:group ref="MachineDarwin"/>
-								<xs:group ref="MachineLinux"/>
-								<xs:group ref="MachineSunos"/>
+							<xs:choice>
+								<xs:element name="darwin" type="MachineDarwin"/>
+								<xs:element name="linux" type="MachineLinux"/>
+								<xs:element name="sunos" type="MachineSunos"/>
+								<xs:element name="basic" type="MachineBasic"/>
 							</xs:choice>
 						</xs:sequence>
 						<xs:attribute name="page-size" type="xs:nonNegativeInteger" use="required"/>
-						<xs:attribute name="provider" type="xs:string" use="required"/>
 					</xs:complexType>
 				</xs:element>
 				<xs:element name="statcall" maxOccurs="unbounded">

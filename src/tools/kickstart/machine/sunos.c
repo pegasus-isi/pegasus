@@ -90,7 +90,7 @@ initMachine( void )
 
   /* name of this provider -- overwritten by importers */
   p->basic = initBasicMachine(); 
-  p->basic->provider = "SUNOS"; 
+  p->basic->provider = "sunos"; 
   
   gather_sunos_swap( &p->swap_total, &p->swap_free );
   gather_sunos_proc( &p->ps_total, &p->ps_good,

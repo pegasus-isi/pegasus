@@ -682,7 +682,10 @@ public class InvocationParser extends DefaultHandler
 	  Boot b = new Boot();
 	  b.addAttributes(names, values);
 	  return b;
-        }
+        } else if ( e.equals("basic") ) {
+	  MachineSpecific basic = new MachineSpecific("basic");
+	  return basic; 
+	}
 
 	// unknown 
         return null;
@@ -745,6 +748,9 @@ public class InvocationParser extends DefaultHandler
 	    }
 	  }
 	  return file;
+	} else if ( e.equals("darwin") ) { 
+	  MachineSpecific darwin = new MachineSpecific("darwin");
+	  return darwin; 
 	}
 
 	// unknown
@@ -940,6 +946,9 @@ public class InvocationParser extends DefaultHandler
 	  Load l = new Load();
           l.addAttributes( names, values );
 	  return l;
+	} else if ( e.equals("linux") ) {
+	  MachineSpecific linux = new MachineSpecific("linux"); 
+	  return linux; 
 	}
 
 	// unknown
@@ -954,9 +963,19 @@ public class InvocationParser extends DefaultHandler
 	  setupJob( job, names, values );
 	  return job;
 	} else if ( e.equals( "machine" ) ){
-	  Machine m = new Machine();
-	  m.addAttributes( names, values );
-	  return m;
+	  Machine machine = new Machine();
+	  for ( int i=0; i< names.size(); ++i ) {
+	    String name = (String) names.get(i);
+	    String value = (String) values.get(i);
+	    
+	    if ( name.equals("page-size") ) {
+	      this.log( e, name, value );
+	      machine.setPageSize( Long.parseLong(value) ); 
+	    } else {
+	      this.complain( e, name, value ); 
+	    }
+	  }
+	  return machine;
         }
 
 	// unknown
@@ -1151,7 +1170,11 @@ public class InvocationParser extends DefaultHandler
 	  Swap s = new Swap();
 	  s.addAttributes( names, values );
 	  return s;
-        } 
+
+        } else if ( e.equals("sunos") ) { 
+	  MachineSpecific sunos = new MachineSpecific("sunos");
+	  return sunos; 
+	}
 
 	// unknown
 	return null;
@@ -1404,18 +1427,12 @@ public class InvocationParser extends DefaultHandler
 	  invocation.setEnvironment((Environment) child);
 	  return true;
 	} else if ( child instanceof Machine ) {
-	  invocation.setMachine((Machine) child);
+          Machine machine = (Machine) child;
+	  invocation.setMachine(machine); 
           
           // convert uname object to Architecture object
           // reqd for Pegasus Bug 39
-          Machine machine = (Machine)child;
-          for ( Iterator<MachineInfo> it = machine.getMachineInfoIterator(); it.hasNext(); ) {
-	    MachineInfo mi = it.next();
-	    if ( mi instanceof Uname ) {
-	      invocation.setArchitecture( ((Uname)mi).toArchitecture() );
-	    }
-          }
-          
+	  invocation.setArchitecture( machine.getUname().toArchitecture() );
           return true;
 	}
       }
@@ -1442,17 +1459,27 @@ public class InvocationParser extends DefaultHandler
 	  return true;
 	}
       } else if ( parent instanceof Machine ) {
-	Machine m = (Machine)parent;
-	if ( child instanceof Stamp ||
-	     child instanceof Uname ||
-	     child instanceof RAM ||
+	Machine m = (Machine) parent;
+	if ( child instanceof Stamp ) {
+	  m.setStamp( (Stamp) child );
+	  return true; 
+	} else if ( child instanceof Uname ) {
+	  m.setUname( (Uname) child ); 
+	  return true; 
+	} else if ( child instanceof MachineSpecific ) {
+	  m.setMachineSpecific( (MachineSpecific) child ); 
+	  return true; 
+	}
+      } else if ( parent instanceof MachineSpecific ) {
+	MachineSpecific ms = (MachineSpecific) parent;
+	if ( child instanceof RAM  ||
 	     child instanceof Swap ||
 	     child instanceof Boot ||
-	     child instanceof CPU ||
+	     child instanceof CPU  ||
 	     child instanceof Load ||
 	     child instanceof Proc ||
 	     child instanceof Task ) {
-	  m.addMachineInfo( (MachineInfo)child );
+	  ms.addMachineInfo( (MachineInfo) child );
 	  return true;
 	}
       }

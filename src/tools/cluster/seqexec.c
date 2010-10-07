@@ -197,7 +197,7 @@ main( int argc, char* argv[], char* envp[] )
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       other = mysystem( appv, envp, "setup" ); 
       if ( other || debug )
-	showerr( "%s: setup returned %d/%d\n", application,
+	showerr( "%s: setup returned %d/%d\n", /* application */ argv[0],
 		 (other >> 8), (other & 127) ); 
       for ( len=0; len<appc; len++ ) free((void*) appv[len]);
       free((void*) appv); 
@@ -272,7 +272,7 @@ main( int argc, char* argv[], char* envp[] )
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       other = mysystem( appv, envp, "cleanup" ); 
       if ( other || debug )
-	showerr( "%s: cleanup returned %d/%d\n", application,
+	showerr( "%s: cleanup returned %d/%d\n", /* application */ argv[0],
 		 (other >> 8), (other & 127) ); 
       for ( len=0; len<appc; len++ ) free((void*) appv[len]);
       free((void*) appv); 

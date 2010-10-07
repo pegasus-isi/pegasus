@@ -442,7 +442,7 @@ initMachine( void )
 
   /* name of this provider -- overwritten by importers */
   p->basic = initBasicMachine(); 
-  p->basic->provider = "LINUX"; 
+  p->basic->provider = "linux"; 
 
   gather_meminfo( &p->ram_total, &p->ram_free,
 		  &p->ram_shared, &p->ram_buffer, 

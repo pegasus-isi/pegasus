@@ -64,7 +64,7 @@ initBasicMachine(void)
   } else memset( p, 0, sizeof(MachineBasicInfo) );
 
   /* name of this provider -- overwritten by importers */
-  p->provider = "BASIC"; 
+  p->provider = "basic"; 
 
   /* start of data gathering */
   now( &p->stamp ); 
@@ -121,10 +121,8 @@ startBasicMachine( char* buffer, size_t size, size_t* len, size_t indent,
   if ( machine == NULL ) return *len; 
 
   /* <machine> open tag */
-  myprint( buffer, size, len, "%*s<%s page-size=\"%u\" provider=\"", 
+  myprint( buffer, size, len, "%*s<%s page-size=\"%u\">\n",
 	   indent-2, "", tag, machine->pagesize );
-  append( buffer, size, len, machine->provider );
-  append( buffer, size, len, "\">\n" );
 
   /* <stamp> */
   myprint( buffer, size, len, "%*s<stamp>", indent, "" );
@@ -150,6 +148,9 @@ startBasicMachine( char* buffer, size_t size, size_t* len, size_t indent,
 	       mystrlen(machine->uname.version,SYS_NMLN) );
   append( buffer, size, len, "</uname>\n" );
 
+  /* <"provider"> grouping tag */
+  myprint( buffer, size, len, "%*s<%s>\n",
+	   indent-1, "", machine->provider ); 
   return *len; 
 }
 
@@ -168,6 +169,10 @@ finalBasicMachine( char* buffer, size_t size, size_t* len, size_t indent,
 {
   /* sanity check */
   if ( machine == NULL ) return *len; 
+
+  /* </"provider"> close tag */
+  myprint( buffer, size, len, "%*s</%s>\n",
+	   indent-1, "", machine->provider ); 
 
   /* </machine> close tag */
   myprint( buffer, size, len, "%*s</%s>\n", indent-2, "", tag ); 

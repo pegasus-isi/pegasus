@@ -206,7 +206,7 @@ initMachine( void )
 
   /* name of this provider -- overwritten by importers */
   p->basic = initBasicMachine(); 
-  p->basic->provider = "DARWIN"; 
+  p->basic->provider = "darwin"; 
   
   /* gather loadavg */
   gather_darwin_meminfo( p );
