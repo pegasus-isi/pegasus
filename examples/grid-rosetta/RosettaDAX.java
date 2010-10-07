@@ -23,12 +23,10 @@ public class RosettaDAX{
             recursiveAddToFileNameCollection(inputs, "minirosetta_database");
             inputs.add(new Filename("design.resfile", LFN.INPUT));
             inputs.add(new Filename("repack.resfile", LFN.INPUT));
-            inputs.add(new Filename("outputs/.transfer-me-to-get-output-dir", LFN.INPUT));
 
             File pdbDir = new File("pdbs/");
             String pdbs[] = pdbDir.list();
-            //for (int i = 0; i < pdbs.length; i++) {
-            for (int i = 0; i < 40; i++) {
+            for (int i = 0; i < pdbs.length; i++) {
                 File pdb = new File("pdbs/" + pdbs[i]);
                 if (pdb.isFile()) {
                     Job j = createJobFromPDB(pdb, inputs);
