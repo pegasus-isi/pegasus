@@ -28,39 +28,49 @@
         </imageobject>
       </mediaobject>
 
-      <para>The binary for the nodes is a simple "mock application" name "keg"
-      ("canonical example for the grid") which reads input files designated by
-      arguments, writes them back onto output files, and produces on STDOUT a
-      summary of where and when it was run. Keg ships with Pegasus in the bin
-      directory.</para>
+      <para>The binary for the nodes is a simple "mock application" name
+      <command>keg</command> ("canonical example for the grid") which reads
+      input files designated by arguments, writes them back onto output files,
+      and produces on STDOUT a summary of where and when it was run. Keg ships
+      with Pegasus in the bin directory.</para>
 
       <para>This example ships with a "submit" script which will build the
       replica catalog, the transformation catalog, and the site catalog. When
       you create your own workflows, such a submit script is not needed if you
       want to maintain those catalogs manually.</para>
 
-      <para>To test the example, edit the "submit" script and change the
-      cluster config to the setup and install locations for your cluster. Then
-      run:</para>
+      <para>To test the example, edit the <command>submit</command> script and
+      change the cluster config to the setup and install locations for your
+      cluster. Then run:</para>
 
-      <para>./submit</para>
+      <para><programlisting>./submit</programlisting></para>
 
       <para>The workflow should now be submitted and in the output you should
       see a submit dir location for the instance. With that directory you can
       monitor the workflow with:</para>
 
-      <para>pegasus-status [submitdir]</para>
+      <para><programlisting>pegasus-status [submitdir]</programlisting></para>
 
       <para>Once the workflow is done, you can make sure it was sucessful
       with:</para>
 
-      <para>pegasus-analyzer -d [submitdir]</para>
+      <para><programlisting>pegasus-analyzer -d [submitdir]</programlisting></para>
     </section>
 
     <section>
       <title>NASA/IPAC Montage</title>
 
-      <para>...</para>
+      <para>The NASA IPAC Montage (<ulink
+      url="http://montage.ipac.caltech.edu/">http://montage.ipac.caltech.edu/</ulink>)
+      workflow projects/montages a set of input images from telescopes like
+      Hubble and end up with images like <ulink
+      url="???">http://montage.ipac.caltech.edu/images/m104.jpg</ulink> . The
+      test workflow is for a 1 by 1 degrees tile. It has 45 input images which
+      all have to be projected, background modeled and adjusted to come out as
+      one seamless image.</para>
+
+      <para>Open up the <command>submit</command> script and edit the
+      settings.</para>
     </section>
 
     <section>
