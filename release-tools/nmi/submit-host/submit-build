@@ -43,12 +43,11 @@ platform_post = platform-post
 
 remote_default_timeout=2h
 
-platforms = ia64_sles_9, x86_64_deb_5.0, x86_64_rhap_5, x86_64_rhas_4, x86_64_sles_9, x86_deb_4.0, x86_deb_5.0, x86_rhap_5, x86_rhas_4
+platforms = x86_64_deb_5.0, x86_64_rhap_5, x86_64_rhas_4, x86_64_sles_9, x86_deb_4.0, x86_deb_5.0, x86_rhap_5, x86_rhas_4
 
 prereqs =  apache-ant-1.7.0
 #prereqs =  wget-1.9.1, apache-ant-1.7.0
 
-prereqs_ia64_sles_9 = java-6u13
 prereqs_ppc_aix_5.3 = ibm-java-1.5.0-sr7, vac-6, vacpp-6
 prereqs_ppc_macos_10.4 = java-1.5.0_05
 prereqs_sun4u_sol_5.8 = java-6u13

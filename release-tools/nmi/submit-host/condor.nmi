@@ -6,6 +6,6 @@ input_runids = 227044
 # map some platforms to others
 # see: https://nmi.cs.wisc.edu/node/1804
 #      http://condor-wiki.cs.wisc.edu/index.cgi/wiki?p=PortsTable
-platforms = ia64_rhas_3::ia64_rhas_4, ia64_rhas_3::ia64_sles_9, x86_deb_4.0::x86_64_deb_4.0, x86_64_deb_5.0, x86_macos_10.4::x86_64_macos_10.5, x86_64_rhap_5, x86_64_rhas_3::x86_64_rhas_4, x86_64_rhas_3::x86_64_sles_9, x86_deb_4.0, x86_deb_5.0, x86_macos_10.4, x86_rhap_5, x86_rhas_3::x86_rhas_4
+platforms = ia64_rhas_3::ia64_rhas_4, x86_deb_4.0::x86_64_deb_4.0, x86_64_deb_5.0, x86_macos_10.4::x86_64_macos_10.5, x86_64_rhap_5, x86_64_rhas_3::x86_64_rhas_4, x86_64_rhas_3::x86_64_sles_9, x86_deb_4.0, x86_deb_5.0, x86_macos_10.4, x86_rhap_5, x86_rhas_3::x86_rhas_4
 #platforms = x86_64_deb_5.0, x86_64_rhap_5, x86_macos_10.4::x86_64_macos_10.5
 
