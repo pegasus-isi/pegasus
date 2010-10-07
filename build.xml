@@ -266,6 +266,23 @@
       <arg line="distclean"/>
     </exec>
   </target>
+  
+  <target name="externals" depends="version,validate-make"
+          description="INTERNAL: Compiles and installs external dependencies" 
+          if="make.available">
+    <exec executable="${basedir}/src/tools/make.pl" dir="src/externals" failonerror="true">
+      <env key="prefix" value="${dist.dir}"/>
+      <arg line="prefix=${dist.dir} all"/>
+    </exec>
+  </target>
+
+  <target name="externals-clean" depends="validate-make"
+          description="INTERNAL: Cleans up all C tools" 
+          if="make.available">
+    <exec executable="${basedir}/src/tools/make.pl" dir="src/externals" failonerror="true">
+      <arg line="clean"/>
+    </exec>
+  </target>
 
   <target name="validate-groff">
     <condition property="groff.available">
@@ -417,7 +434,7 @@
     </chmod>
   </target>
 
-  <target name="dist" depends="jar,latex,withoutlatex,man-roff,ctools-all,getsystem"
+  <target name="dist" depends="jar,latex,withoutlatex,man-roff,ctools-all,externals,getsystem"
           description="Sets up the dist directory">
     <!-- bin -->
     <mkdir dir="${dist.dir}/bin"/>
@@ -537,12 +554,12 @@
     <delete file="dist/pegasus-binary-${pegasus.version}.tar"/>
   </target>
 
-  <target name="clean" depends="ctools-clean"
+  <target name="clean" depends="ctools-clean, externals-clean"
 	  description="Removes the build and dist directories">
     <delete dir="dist"/>
     <delete dir="build"/>
     <delete file="stamp"/>
   </target>
- <target name="build" depends="ctools-all, jar"/>
+ <target name="build" depends="ctools-all, externals, jar"/>
 </project>
 
