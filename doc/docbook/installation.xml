@@ -21,6 +21,14 @@ Java HotSpot(TM) Client VM (build 1.6.0_07-87, mixed mode, sharing)</programlist
       </listitem>
 
       <listitem>
+        <para><emphasis role="bold">Python 2.4 or higher</emphasis>. Check
+        with:</para>
+
+        <para><programlisting>$ <emphasis>python -v</emphasis>
+Python 2.6.2</programlisting></para>
+      </listitem>
+
+      <listitem>
         <para><emphasis role="bold">Condor 7.4 or higher</emphasis>. See
         h<ulink
         url="ttp://www.cs.wisc.edu/condor/">ttp://www.cs.wisc.edu/condor/</ulink>
