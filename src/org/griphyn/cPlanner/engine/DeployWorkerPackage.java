@@ -258,7 +258,7 @@ public class DeployWorkerPackage
         //singleton access
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_4" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_5" );
             mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.4" );
         }
         return mOSToNMIOSReleaseAndVersion;
