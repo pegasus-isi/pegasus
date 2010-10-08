@@ -33,6 +33,7 @@ import sys
 import time
 import logging
 import tempfile
+import pwd
 
 # Constants
 PARSE_NONE = 0
