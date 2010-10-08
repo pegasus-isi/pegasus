@@ -188,7 +188,7 @@ public abstract class Abstract implements Implementation{
         mLocalUserProxy = Proxy.getPathToUserProxy(bag);
         //set the path to user proxy only if the proxy exists
         if( !new File( mLocalUserProxy).exists() ){
-            mLogger.log( "The user proxy does not exist" + mLocalUserProxy,
+            mLogger.log( "The user proxy does not exist - " + mLocalUserProxy,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             mLocalUserProxy = null;
         }
