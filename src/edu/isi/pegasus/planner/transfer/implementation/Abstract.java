@@ -30,6 +30,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.Utility;
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.util.Proxy;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import org.griphyn.cPlanner.namespace.Condor;
@@ -184,7 +185,7 @@ public abstract class Abstract implements Implementation{
         mDisabledChmodSites = determineDisabledChmodSites( mProps.getChmodDisabledSites() );
         mChmodDisabledForAllSites = mDisabledChmodSites.contains( "*" );
 
-        mLocalUserProxy = getPathToUserProxy();
+        mLocalUserProxy = Proxy.getPathToUserProxy(bag);
         mLocalUserProxyBasename = (mLocalUserProxy == null) ?
                                   null :
                                   new File(mLocalUserProxy).getName();
@@ -944,39 +945,7 @@ public abstract class Abstract implements Implementation{
         return priority;
     }
 
-    /**
-     * Returns the path to the user proxy from the pool configuration file and
-     * the properties file. The value in the properties file overrides the
-     * value from the pool configuration file.
-     *
-     * @return path to user proxy on local pool.
-     *         null if no path is found.
-     */
-    protected String getPathToUserProxy(){
-/*        
-        List l = mSCHandle.getPoolProfile("local",Profile.ENV);
-        String proxy = null;
-
-        if(l != null){
-            //try to get the path to the proxy on local pool
-            for(Iterator it = l.iterator();it.hasNext();){
-                Profile p = (Profile)it.next();
-                proxy = p.getProfileKey().equalsIgnoreCase(ENV.X509_USER_PROXY_KEY)?
-                        p.getProfileValue():
-                        proxy;
-            }
-        }
-*/
-        String proxy = mSiteStore.lookup( "local" ).getEnvironmentVariable( ENV.X509_USER_PROXY_KEY );
-        //overload from the properties file
-        ENV env = new ENV();
-        env.checkKeyInNS(mProps,"local");
-        proxy = env.containsKey(ENV.X509_USER_PROXY_KEY)?
-                (String)env.get(ENV.X509_USER_PROXY_KEY):
-                proxy;
-
-        return proxy;
-    }
+    
 
 
     /**

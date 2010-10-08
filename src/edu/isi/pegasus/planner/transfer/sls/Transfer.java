@@ -21,15 +21,10 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusFile;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import org.griphyn.cPlanner.namespace.ENV;
-import org.griphyn.cPlanner.namespace.VDS;
-
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.common.util.Proxy;
 
 import edu.isi.pegasus.planner.transfer.SLS;
 
@@ -37,16 +32,23 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
+
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.FileTransfer;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusFile;
+import org.griphyn.cPlanner.classes.Profile;
+import org.griphyn.cPlanner.namespace.ENV;
+
+import org.griphyn.cPlanner.common.PegasusProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.FileWriter;
 
 import java.util.Iterator;
 import java.util.Set;
-import org.griphyn.cPlanner.classes.Profile;
 import java.util.List;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.common.util.Separator;
 import java.util.ArrayList;
 
 /**
@@ -162,7 +164,7 @@ public class Transfer   implements SLS {
         mLogger     = bag.getLogger();
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
-        mLocalUserProxy = getPathToUserProxy();
+        mLocalUserProxy = Proxy.getPathToUserProxy(bag);
         mLocalUserProxyBasename = (mLocalUserProxy == null) ?
                                   null :
                                   new File(mLocalUserProxy).getName();
@@ -631,25 +633,6 @@ public class Transfer   implements SLS {
     }
 
 
-    /**
-     * Returns the path to the user proxy from the pool configuration file and
-     * the properties file. The value in the properties file overrides the
-     * value from the pool configuration file.
-     *
-     * @return path to user proxy on local pool.
-     *         null if no path is found.
-     */
-    protected String getPathToUserProxy(){
-        String proxy = mSiteStore.getEnvironmentVariable( "local", ENV.X509_USER_PROXY_KEY);
-        //overload from the properties file
-        ENV env = new ENV();
-        env.checkKeyInNS( mProps,"local" );
-        proxy = env.containsKey( ENV.X509_USER_PROXY_KEY )?
-                (String)env.get( ENV.X509_USER_PROXY_KEY ):
-                proxy;
-
-        return proxy;
-    }
 
     /**
      * Retrieves the transformation catalog entry for the executable that is
