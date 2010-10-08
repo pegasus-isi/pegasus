@@ -478,11 +478,11 @@ sub run_genstats($$$$){
 		my ($genstats_out_path) =  File::Spec->catfile($output_dir ,'out');
 		print STDOUT "****** Finished executing genstats  ***** \n";
 		print STDOUT "The genstats result is created at $output_dir \n************ \n";
-		$summary_msg = "Workflow events with time starting with zero is created at $genstats_out_path\n";
-		$summary_msg .= "Job statistics is created at $genstats_job_path\n";
+		$summary_msg = "\nWorkflow events with time starting with zero is created at :\n$genstats_out_path\n";
+		$summary_msg .= "\nJob statistics is created at : \n$genstats_job_path\n";
 	}else{
 		print STDERR "ERROR : Failed to execute genstats command . $exec_msg\n";
-		$summary_msg = "ERROR : Failed to create job statistics . $exec_msg\n";
+		$summary_msg = "\nERROR : Failed to create job statistics . $exec_msg\n";
 	}
 	return ($status,$summary_msg);
 	
@@ -523,10 +523,10 @@ sub run_genstats_breakdown($$$$){
 	if($status == 0  ){
 		print STDOUT "****** Finished executing genstats-breakdown  ***** \n";
 		print STDOUT "The genstats breakdown result is created at $output_file \n************ \n";
-		$summary_msg = "Logical transformation statistics is created at $output_file\n";
+		$summary_msg = "\nLogical transformation statistics is created at :\n$output_file\n";
 	}else{
 		print STDERR "ERROR:Failed to execute genstats-breakdown command . $exec_msg\n";
-		$summary_msg ="ERROR:Failed to create logical transformations statistics. $exec_msg\n";
+		$summary_msg ="\nERROR:Failed to create logical transformations statistics. $exec_msg\n";
 	}
 	return ($status ,$summary_msg);
 	
