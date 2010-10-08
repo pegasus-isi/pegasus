@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.util.Proxy;
 import java.io.BufferedReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -205,6 +206,16 @@ public class SeqExec implements GridStart {
     protected boolean mStageSLSFile;
 
     /**
+     * The path to local user proxy.
+     */
+    protected String mLocalUserProxy;
+
+    /**
+     * The basename of the proxy
+     */
+    protected String mLocalUserProxyBasename;
+
+    /**
      * Boolean to signify we are using s3cmd to do sls.
      * temporary.
      */
@@ -240,6 +251,18 @@ public class SeqExec implements GridStart {
 
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
         mS3SLSUsed = this.mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3;
+
+        mLocalUserProxy = Proxy.getPathToUserProxy(bag);
+
+        //set the path to user proxy only if the proxy exists
+        if( !new File( mLocalUserProxy).exists() ){
+            mLogger.log( "The user proxy does not exist - " + mLocalUserProxy,
+                         LogManager.WARNING_MESSAGE_LEVEL );
+            mLocalUserProxy = null;
+        }
+        mLocalUserProxyBasename = (mLocalUserProxy == null) ?
+                                  null :
+                                  new File(mLocalUserProxy).getName();
 
    }
 
@@ -499,7 +522,7 @@ public class SeqExec implements GridStart {
         //always have the remote dir set to /tmp as
         //we are banking on kickstart to change directory
         //for us for compute jobs
-        job.condorVariables.construct(key, "/tmp");
+        //job.condorVariables.construct(key, "/tmp");
 
         AggregatedJob clusteredJob = (AggregatedJob) job;
         SubInfo firstJob = clusteredJob.getConstituentJob(0);
@@ -841,28 +864,53 @@ public class SeqExec implements GridStart {
             String preJob = (String)jobcopy.envVariables.removeKey( Kickstart.KICKSTART_PREJOB );
 
             boolean suppressXMLHeader = false;
+
+            //we need seqexec to cp the sls files to the worker node directories
+            List<String> filesToBeCopied = new LinkedList();
+
             if( !this.mStageSLSFile ){
                 //we let condor transfer the file from the submit directory
                 //to a directory on the headnode/worker node.
-                //we need seqexec to cp the sls files to the worker node directories
-                List<String> slsFiles = new LinkedList();
+                
                 if( mSLS.needsSLSInput( job ) ){
-                    slsFiles.add( mSLS.getSLSInputLFN( jobcopy ) );
+                    filesToBeCopied.add( mSLS.getSLSInputLFN( jobcopy ) );
                 }
                 if( mSLS.needsSLSOutput( job ) ){
-                    slsFiles.add( mSLS.getSLSOutputLFN( jobcopy ) );
+                    filesToBeCopied.add( mSLS.getSLSOutputLFN( jobcopy ) );
                 }
-                if( !slsFiles.isEmpty() ){
+                
+            }
 
-                    String cmd = constructCopySLSFileCommand( slsFiles, directory );
-                    writer.println( enableCommandViaKickstart( cmd,
+            //transfer the proxy and set x bit accordingly
+            String remoteProxyPath = null;
+            if( this.mLocalUserProxy != null ){
+                remoteProxyPath = directory + File.separator + this.mLocalUserProxyBasename;
+                job.condorVariables.addIPFileForTransfer( this.mLocalUserProxy );
+                job.envVariables.construct( Proxy.X509_USER_PROXY_KEY,
+                                            remoteProxyPath );
+                filesToBeCopied.add( this.mLocalUserProxyBasename );
+            }
+
+            if( !filesToBeCopied.isEmpty() ){
+                String cmd = constructCopyFileCommand( filesToBeCopied, directory );
+                writer.println( enableCommandViaKickstart( cmd,
                                                "cp",
                                                jobcopy.getSiteHandle(),
                                                SubInfo.CREATE_DIR_JOB,
                                                suppressXMLHeader  ) );
-                    suppressXMLHeader = true;
+                suppressXMLHeader = true;
+            }
 
-                }
+
+            //set the xbit for the proxy
+            if( remoteProxyPath != null ){
+
+                writer.println( enableCommandViaKickstart( "/bin/chmod 600 " + remoteProxyPath,
+                                                           "chmod",
+                                                           job.getSiteHandle(),
+                                                           SubInfo.STAGE_IN_JOB,
+                                                           suppressXMLHeader ) );
+                suppressXMLHeader = true;
             }
 
             if( preJob == null ){
@@ -995,30 +1043,53 @@ public class SeqExec implements GridStart {
             String preJob = (String)job.envVariables.removeKey( Kickstart.KICKSTART_PREJOB );
 
             boolean suppressXMLHeader = false;
+
+            List<String> filesToBeCopied = new LinkedList();
+
             if( !this.mStageSLSFile ){
                 //we let condor transfer the file from the submit directory
                 //to a directory on the headnode/worker node.
                 //we need seqexec to cp the sls files to the worker node directories
-                List<String> slsFiles = new LinkedList();
                 if( mSLS.needsSLSInput( job ) ){
-                    slsFiles.add( mSLS.getSLSInputLFN(job) );
+                    filesToBeCopied.add( mSLS.getSLSInputLFN(job) );
                 }
                 if( mSLS.needsSLSOutput( job ) ){
-                    slsFiles.add( mSLS.getSLSOutputLFN(job) );
+                    filesToBeCopied.add( mSLS.getSLSOutputLFN(job) );
                 }
-                if( !slsFiles.isEmpty() ){
+                
+            }
 
-                    String cmd = constructCopySLSFileCommand( slsFiles, directory );
-                    writer.println( enableCommandViaKickstart( cmd,
+            //transfer the proxy and set x bit accordingly
+            String remoteProxyPath = null;
+            if( this.mLocalUserProxy != null ){
+                remoteProxyPath = directory + File.separator + this.mLocalUserProxyBasename;
+                job.condorVariables.addIPFileForTransfer( this.mLocalUserProxy );
+                job.envVariables.construct( Proxy.X509_USER_PROXY_KEY,
+                                            remoteProxyPath );
+                filesToBeCopied.add( this.mLocalUserProxyBasename );
+            }
+
+            if( !filesToBeCopied.isEmpty() ){
+
+                String cmd = constructCopyFileCommand( filesToBeCopied, directory );
+                writer.println( enableCommandViaKickstart( cmd,
                                                "cp",
                                                job.getSiteHandle(),
                                                SubInfo.CREATE_DIR_JOB,
                                                suppressXMLHeader  ) );
-                    suppressXMLHeader = true;
-
-                }
+                suppressXMLHeader = true;
             }
 
+            //set the xbit for the proxy
+            if( remoteProxyPath != null ){
+
+                writer.println( enableCommandViaKickstart( "/bin/chmod 600 " + remoteProxyPath,
+                                                           "chmod",
+                                                           job.getSiteHandle(),
+                                                           SubInfo.STAGE_IN_JOB,
+                                                           suppressXMLHeader ) );
+                suppressXMLHeader = true;
+            }
 
             if( preJob == null ){
                 mLogger.log( "PREJOB was not constructed for job " + job.getName(),
@@ -1333,7 +1404,7 @@ public class SeqExec implements GridStart {
      *
      * @return
      */
-    protected String constructCopySLSFileCommand( List<String> files, String destination) {
+    protected String constructCopyFileCommand( List<String> files, String destination) {
         StringBuffer cp = new StringBuffer();
 
         cp.append( "/bin/cp" );

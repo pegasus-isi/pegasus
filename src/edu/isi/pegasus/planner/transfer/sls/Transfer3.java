@@ -128,8 +128,9 @@ public class Transfer3 extends Transfer implements SLS {
 
         }
 
-        //we need to set the x bit on proxy correctly first
-        if( mLocalUserProxyBasename != null ){
+        //we need to set the x bit on proxy correctly first as a
+        //GRIDSTART prejob only if SeqExec is not used for launching jobs
+        if( mLocalUserProxyBasename != null && !this.mSeqExecGridStartUsed ){
             StringBuffer proxy = new StringBuffer( );
             proxy.append( slsFile.getParent() ).append( File.separator ).
                   append( mLocalUserProxyBasename);
@@ -164,7 +165,7 @@ public class Transfer3 extends Transfer implements SLS {
 
 
 
-        if( mLocalUserProxyBasename != null ){
+        if( mLocalUserProxyBasename != null && !this.mSeqExecGridStartUsed ){
             invocation.append( "\"" );
         }
 
