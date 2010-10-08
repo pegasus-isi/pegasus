@@ -99,7 +99,7 @@ def find_exec(program, curdir=False):
     # program is the executable basename to look for
     # When curdir is True we also check the current directory
     # Returns fully qualified path to binary, None if not found
-    my_path = os.environ["PATH"]
+    my_path = os.getenv("PATH","/bin:/usr/bin")
 
     for my_dir in my_path.split(':'):
 	my_file = os.path.join(os.path.expanduser(my_dir), program)
