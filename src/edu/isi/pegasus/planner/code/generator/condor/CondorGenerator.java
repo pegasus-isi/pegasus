@@ -336,33 +336,38 @@ public class CondorGenerator extends Abstract {
             printDagString( this.getCategoryDAGManKnobs( mProps ) );
         }
 
-        //figure out the logs directory for condor logs
-        String dir = mProps.getSubmitLogsDirectory();
-        File directory = null;
-        if( dir != null ){
-            directory = new File( dir );
+        
+        if( mProps.symlinkCommonLog() ){
+            //figure out the logs directory for condor logs
+            String dir = mProps.getSubmitLogsDirectory();
+            File directory = null;
+            if( dir != null ){
+                directory = new File( dir );
             
-            //try to create this directory if it does not exist
-            if( !directory.exists() && !directory.mkdirs() ){
-                //directory does not exist and cannot be created
-                directory = null;
+                //try to create this directory if it does not exist
+                if( !directory.exists() && !directory.mkdirs() ){
+                    //directory does not exist and cannot be created
+                    directory = null;
+                }
             }
-        }
-        mLogger.log( "Condor logs directory to be used is " + directory,
+            mLogger.log( "Condor logs directory to be used is " + directory,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         
-        //Create a file in the submit logs directory for the log 
-        //and symlink it to the submit directory.
-        try{
+        
+        
+            //Create a file in the submit logs directory for the log 
+            //and symlink it to the submit directory.
+            try{
           
-            File f = File.createTempFile( dag.dagInfo.nameOfADag + "-" +
-                                          dag.dagInfo.index,".log", 
-                                          directory );
-            mTempLogFile=f.getAbsolutePath();
-        } catch (IOException ioe) {
-            mLogger.log("Error while creating an empty log file in " +
-                        "the local temp directory " + ioe.getMessage(),
-                        LogManager.ERROR_MESSAGE_LEVEL);
+                File f = File.createTempFile( dag.dagInfo.nameOfADag + "-" +
+                                              dag.dagInfo.index,".log", 
+                                              directory );
+                mTempLogFile=f.getAbsolutePath();
+            } catch (IOException ioe) {
+                mLogger.log( "Error while creating an empty log file in " +
+                             "the local temp directory " + ioe.getMessage(),
+                              LogManager.ERROR_MESSAGE_LEVEL);
+            }
         }
 
 
@@ -440,9 +445,10 @@ public class CondorGenerator extends Abstract {
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //symlink the log file to a file in the temp directory if possible
-        this.generateLogFileSymlink( this.getLogFileName(),
-                                     this.getLogFileSymlinkName( dag ) );
-
+        if( mProps.symlinkCommonLog() ){
+            this.generateLogFileSymlink( this.getCondorLogInTmpDirectory(),
+                                         this.getCondorLogInSubmitDirectory( dag ) );
+        }
 
         //write out the DOT file
         mLogger.log( "Writing out the DOT file ", LogManager.DEBUG_MESSAGE_LEVEL );
@@ -1185,26 +1191,37 @@ public class CondorGenerator extends Abstract {
 
 
     /**
-     * The name of the condor log file that is used for the dag that is being
-     * written into the condor formal. This name is used as the default logfile
-     * for all the jobs unless it is over ridden in the condor namespace. It is
-     * the full path to the log file stored in the local temporary directory.
-     *
+     * Returns the name of Condor log file in a tmp directory that is created
+     * if generation of symlink for condor logs is turned on.
+     * 
      * @return  the name of the log file.
      */
-    protected String getLogFileName(){
+    protected String getCondorLogInTmpDirectory(){
        return this.mTempLogFile;
     }
-
+    
+    
     /**
-     * Returns the path to the symlink that is created to the original log file
-     * in the temporary directory.
+     * Returns the path to the condor log file in the submit directory.
+     * It can be a symlink.
      *
      * @param dag  the concrete workflow.
      *
-     * @return the path to symlink.
+     * @return the path to condor log file in the submit directory.
      */
-    protected String getLogFileSymlinkName( ADag dag ){
+    protected String getCondorLogInSubmitDirectory( ){
+        return this.getCondorLogInSubmitDirectory( this.mConcreteWorkflow );
+    }
+    
+    /**
+     * Returns the path to the condor log file in the submit directory.
+     * It can be a symlink.
+     *
+     * @param dag  the concrete workflow.
+     *
+     * @return the path to condor log file in the submit directory.
+     */
+    protected String getCondorLogInSubmitDirectory( ADag dag ){
         StringBuffer sb = new StringBuffer();
         sb.append(this.mSubmitFileDir)
            .append(File.separator);
@@ -1449,7 +1466,7 @@ public class CondorGenerator extends Abstract {
         if(!cvar.containsKey(key)){
             //we put in the default value
             //cvar.construct("log",dagname + "_" + dagindex + ".log");
-            cvar.construct("log",this.getLogFileName());
+            cvar.construct("log",this.getCondorLogInSubmitDirectory( ) );
         }
 
         //also add the information as for the submit event trigger

@@ -616,6 +616,8 @@ public class PegasusProperties {
     public String getSubmitLogsDirectory(){
         return mProps.getProperty( "pegasus.dir.submit.logs" );
     }
+    
+    
 
     /**
      * Returns a boolean indicating whether the submit directory for the sub
@@ -1717,6 +1719,16 @@ public class PegasusProperties {
     }
 
     //PROPERTIES RELATED TO CONDOR
+    
+    /** 
+     * Completely disable placing a symlink for Condor common log (indiscriminately). 
+     * 
+     * @return true if we want a symlink for Condor common log. 
+    */ 
+    public boolean symlinkCommonLog() { 
+        return Boolean.parse( mProps.getProperty( "pegasus.condor.logs.symlink"),
+                              true  ); 
+   } 
 
     /**
      * Returns a boolean indicating whether we want to Condor Quote the
