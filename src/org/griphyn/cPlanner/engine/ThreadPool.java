@@ -30,8 +30,8 @@ import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
-import org.griphyn.cPlanner.poolinfo.PoolMode;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolInfoProvider;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolMode;
 import org.ietf.jgss.GSSCredential;
 
 

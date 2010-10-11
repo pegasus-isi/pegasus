@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.partitioner.graph.Bag;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolInfoProvider;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;

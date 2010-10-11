@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolInfoProvider;
 
 
 import java.io.BufferedReader;

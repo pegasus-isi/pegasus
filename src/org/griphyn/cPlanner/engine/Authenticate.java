@@ -24,7 +24,7 @@ import org.griphyn.cPlanner.classes.AuthenticateRequest;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolInfoProvider;
 
 import org.globus.gram.Gram;
 import org.globus.gram.GramException;

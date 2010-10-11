@@ -31,7 +31,7 @@ import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolInfoProvider;
 
 import java.io.File;
 import java.io.IOException;
