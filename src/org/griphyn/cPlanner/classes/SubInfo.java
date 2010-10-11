@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.namespace.Globus;
 import org.griphyn.cPlanner.namespace.Hints;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
@@ -194,7 +194,7 @@ public class SubInfo extends Data implements GraphNodeContent{
     /**
      * The type of the job. Pegasus tags the jobs according to the function of
      * the job. The jobs are tagged according to the functionality they serve in
-     * the VDS super node. The job class can be
+     * the Pegasus super node. The job class can be
      *
      * unassigned
      * compute job
@@ -208,8 +208,8 @@ public class SubInfo extends Data implements GraphNodeContent{
     public int jobClass;
 
     /**
-     * Identifies of which VDS Super Node is a job associated with.
-     * VDS Supernode is identified by the jobName of the compute node in the
+     * Identifies of which Pegasus Super Node is a job associated with.
+     * Pegasus Supernode is identified by the jobName of the compute node in the
      * super node.
      */
     public String jobID;
@@ -353,9 +353,9 @@ public class SubInfo extends Data implements GraphNodeContent{
     public Hints hints;
 
     /**
-     * The VDS namespace variable.
+     * The Pegasus namespace variable.
      */
-    public VDS vdsNS;
+    public Pegasus vdsNS;
 
     /**
      * Identifies the level of the job in the dax. The level is bottom up
@@ -403,7 +403,7 @@ public class SubInfo extends Data implements GraphNodeContent{
         condorVariables  = new Condor();
         dagmanVariables  = new Dagman();
         hints            = new Hints();
-        vdsNS            = new VDS();
+        vdsNS            = new Pegasus();
         jobClass         = UNASSIGNED_JOB;
         level            = -1;
         mRuntime = -1;
@@ -480,7 +480,7 @@ public class SubInfo extends Data implements GraphNodeContent{
                                                         (Condor)this.condorVariables.clone();
         newSub.dagmanVariables= this.dagmanVariables == null ? null :
                                                         (Dagman)this.dagmanVariables.clone();
-        newSub.vdsNS          = this.vdsNS == null ? null :(VDS)this.vdsNS.clone();
+        newSub.vdsNS          = this.vdsNS == null ? null :(Pegasus)this.vdsNS.clone();
 
         newSub.hints          = (Hints)this.hints.clone();
         newSub.jobID          = this.jobID;
@@ -540,12 +540,12 @@ public class SubInfo extends Data implements GraphNodeContent{
      * using setRuntime( String ) function.
      * 
      * @return the expected runtime.
-     * @see org.griphyn.cPlanner.namespace.VDS#RUNTIME_KEY
+     * @see org.griphyn.cPlanner.namespace.Pegasus#RUNTIME_KEY
      */
     public double computeRuntime( ){
         if( mRuntime < 0 ){
             //attempt to look up the value from pegasus profile
-            String value = this.vdsNS.getStringValue(  VDS.RUNTIME_KEY );
+            String value = this.vdsNS.getStringValue(  Pegasus.RUNTIME_KEY );
             if( value == null ){
                 return -1;
             }
@@ -839,7 +839,7 @@ public class SubInfo extends Data implements GraphNodeContent{
     }
 
     /**
-     * Returns the name of the compute job of VDS supernode containing this job.
+     * Returns the name of the compute job of Pegasus supernode containing this job.
      *
      * @return String
      */
@@ -848,7 +848,7 @@ public class SubInfo extends Data implements GraphNodeContent{
     }
 
     /**
-     * Setter method to the name of the compute job of VDS supernode containing
+     * Setter method to the name of the compute job of Pegasus supernode containing
      * this job.
      *
      * @param name  the name of the job.
@@ -1264,8 +1264,8 @@ public class SubInfo extends Data implements GraphNodeContent{
      */
     public boolean typeRecursive(){
 
-        return  this.vdsNS.containsKey( VDS.TYPE_KEY )?
-                this.vdsNS.getStringValue( VDS.TYPE_KEY ).equals( "recursive" ):
+        return  this.vdsNS.containsKey( Pegasus.TYPE_KEY )?
+                this.vdsNS.getStringValue( Pegasus.TYPE_KEY ).equals( "recursive" ):
                 false;
     }
 
@@ -1273,7 +1273,7 @@ public class SubInfo extends Data implements GraphNodeContent{
      * Sets the job to be recursive.
      */
     public void setTypeRecursive(){
-        this.vdsNS.construct( VDS.TYPE_KEY, "recursive" );
+        this.vdsNS.construct( Pegasus.TYPE_KEY, "recursive" );
     }
     
     /**
@@ -1514,7 +1514,7 @@ public class SubInfo extends Data implements GraphNodeContent{
         condorVariables  = new Condor();
         dagmanVariables  = new Dagman();
         hints            = new Hints();
-        vdsNS            = new VDS();
+        vdsNS            = new Pegasus();
     }
 
     /**

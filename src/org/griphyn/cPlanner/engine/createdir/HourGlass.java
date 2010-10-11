@@ -28,7 +28,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import java.util.Iterator;
 import java.util.List;
@@ -231,7 +231,7 @@ public class HourGlass extends AbstractStrategy{
 
         //we do not want the job to be launched
         //by kickstart, as the job is not run actually
-        newJob.vdsNS.checkKeyInNS( VDS.GRIDSTART_KEY,
+        newJob.vdsNS.checkKeyInNS( Pegasus.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
         return newJob;

@@ -37,7 +37,7 @@ import org.griphyn.cPlanner.cluster.JobAggregator;
 import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
 
 import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import edu.isi.pegasus.planner.transfer.SLS;
@@ -619,13 +619,13 @@ public class SeqExecOld implements GridStart {
     }
 
     /**
-     * Returns the value of the vds profile with key as VDS.GRIDSTART_KEY,
+     * Returns the value of the vds profile with key as Pegasus.GRIDSTART_KEY,
      * that would result in the loading of this particular implementation.
      * It is usually the name of the implementing class without the
      * package name.
      *
      * @return the value of the profile key.
-     * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
+     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
      */
     public  String getVDSKeyValue(){
         return SeqExecOld.CLASSNAME;
@@ -664,9 +664,9 @@ public class SeqExecOld implements GridStart {
      */
     private String getDirectoryKey(SubInfo job) {
         /*
-        String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
+        String style = (String)job.vdsNS.get( Pegasus.STYLE_KEY );
                     //remove the remote or initial dir's for the compute jobs
-                    String key = ( style.equalsIgnoreCase( VDS.GLOBUS_STYLE )  )?
+                    String key = ( style.equalsIgnoreCase( Pegasus.GLOBUS_STYLE )  )?
                                    "remote_initialdir" :
                                    "initialdir";
          */
@@ -689,16 +689,16 @@ public class SeqExecOld implements GridStart {
      * @return boolean
      */
     private boolean removeDirectoryKey(SubInfo job){
-        String style = job.vdsNS.containsKey(VDS.STYLE_KEY) ?
+        String style = job.vdsNS.containsKey(Pegasus.STYLE_KEY) ?
                        null :
-                       (String)job.vdsNS.get(VDS.STYLE_KEY);
+                       (String)job.vdsNS.get(Pegasus.STYLE_KEY);
 
         //is being run. Remove remote_initialdir if there
         //condor style associated with the job
         //Karan Nov 15,2005
         return (style == null)?
                 false:
-                style.equalsIgnoreCase(VDS.CONDOR_STYLE);
+                style.equalsIgnoreCase(Pegasus.CONDOR_STYLE);
 
     }
 

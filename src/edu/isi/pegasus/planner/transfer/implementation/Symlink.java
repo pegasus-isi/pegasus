@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
@@ -136,9 +136,9 @@ public class Symlink extends Transfer {
      */
     protected String generateArgumentString(TransferJob job) {
         StringBuffer sb = new StringBuffer();
-        if(job.vdsNS.containsKey(VDS.TRANSFER_ARGUMENTS_KEY)){
+        if(job.vdsNS.containsKey(Pegasus.TRANSFER_ARGUMENTS_KEY)){
             sb.append(
-                      job.vdsNS.removeKey(VDS.TRANSFER_ARGUMENTS_KEY)
+                      job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
                       );
         }
 

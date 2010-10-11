@@ -90,7 +90,7 @@ import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Set;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 
 /**
@@ -653,7 +653,7 @@ public class CPlanner extends Executable{
 
         //we do not want the job to be launched
         //by kickstart, as the job is not run actually
-        newJob.vdsNS.checkKeyInNS( VDS.GRIDSTART_KEY,
+        newJob.vdsNS.checkKeyInNS( Pegasus.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
         return newJob;

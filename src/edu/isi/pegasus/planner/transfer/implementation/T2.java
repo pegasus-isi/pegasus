@@ -24,7 +24,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
@@ -46,7 +46,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the T2
- * executable distributed with the VDS. T2 extends upon the multiple transfers
+ * executable distributed with the Pegasus. T2 extends upon the multiple transfers
  * provided by the transfer executable, providing for conditional/optional transfers,
  * and retry in case of url if alternative source or destinations are specified.
  * <p>
@@ -54,7 +54,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
  * user uses the thirdparty transfer option, in which case the T2 is invoked on
  * the submit host. Hence there should be an entry in the transformation catalog
  * for logical transformation <code>T2</code> at the execution sites.
- * T2 is distributed as part of the VDS worker package and can be found at
+ * T2 is distributed as part of the Pegasus worker package and can be found at
  * $PEGASUS_HOME/bin/T2.
  * <p>
  * It leads to the creation of the setup chmod jobs to the workflow, that appear
@@ -78,7 +78,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
  * The arguments with which the client is invoked can be specified
  * <pre>
  *       - by specifying the property pegasus.transfer.arguments
- *       - associating the VDS profile key transfer.arguments
+ *       - associating the Pegasus profile key transfer.arguments
  * </pre>
 
  *
@@ -266,9 +266,9 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      */
     protected String generateArgumentString(TransferJob job) {
         StringBuffer sb = new StringBuffer();
-        if(job.vdsNS.containsKey(VDS.TRANSFER_ARGUMENTS_KEY)){
+        if(job.vdsNS.containsKey(Pegasus.TRANSFER_ARGUMENTS_KEY)){
             sb.append(
-                      job.vdsNS.removeKey(VDS.TRANSFER_ARGUMENTS_KEY)
+                      job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
                       );
         }
         else{

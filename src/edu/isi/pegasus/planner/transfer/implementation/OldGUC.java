@@ -24,7 +24,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
@@ -49,7 +49,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
  * invoked on the submit host. Hence there should be an entry in the transformation
  * catalog for logical transformation <code>globus-url-copy</code> at the
  * execution sites.
- * GUC is distributed as part of the VDS worker package and can be found at
+ * GUC is distributed as part of the Pegasus worker package and can be found at
  * $GLOBUS_LOCATION/bin/globus-url-copy.
  *
  * <p>
@@ -74,7 +74,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
  * The arguments with which the client is invoked can be specified
  * <pre>
  *       - by specifying the property vds.transfer.arguments
- *       - associating the VDS profile key transfer.arguments
+ *       - associating the Pegasus profile key transfer.arguments
  * </pre>
 
  *
@@ -259,9 +259,9 @@ public class OldGUC extends AbstractSingleFTPerXFERJob {
     protected String generateArgumentString(TransferJob job,FileTransfer file){
         StringBuffer sb = new StringBuffer();
 
-        if(job.vdsNS.containsKey(VDS.TRANSFER_ARGUMENTS_KEY)){
+        if(job.vdsNS.containsKey(Pegasus.TRANSFER_ARGUMENTS_KEY)){
             sb.append(
-                      job.vdsNS.removeKey(VDS.TRANSFER_ARGUMENTS_KEY)
+                      job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
                       );
         }
         else{

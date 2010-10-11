@@ -27,7 +27,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorInstanceFactory;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.partitioner.Partition;
 
@@ -232,7 +232,7 @@ public class Horizontal implements Clusterer,
      * (having same transformation name and scheduled on same site), is then
      * clustered.
      * The number of clustered jobs created for each group is dependant on the
-     * following VDS profiles that can be associated with the jobs.
+     * following Pegasus profiles that can be associated with the jobs.
      * <pre>
      *       1) bundle   (dictates the number of clustered jobs that are created)
      *       2) collapse (the number of jobs that make a single clustered job)
@@ -246,8 +246,8 @@ public class Horizontal implements Clusterer,
      *
      * @throws ClustererException in case of error.
      *
-     * @see VDS#BUNDLE_KEY
-     * @see VDS#COLLAPSE_KEY
+     * @see Pegasus#BUNDLE_KEY
+     * @see Pegasus#COLLAPSE_KEY
      */
     public void determineClusters( Partition partition ) throws ClustererException {
         Set s = partition.getNodeIDs();
@@ -608,7 +608,7 @@ public class Horizontal implements Clusterer,
     /**
      * Returns the collapse factor, that is used to chunk up the jobs of a
      * particular type on a pool. The collapse factor is determined by
-     * getting the collapse key in the VDS namespace/profile associated with the
+     * getting the collapse key in the Pegasus namespace/profile associated with the
      * job in the transformation catalog. Right now tc overrides the property
      * from the one in the properties file that specifies per pool.
      * There are two orthogonal notions of bundling and collapsing. In case the
@@ -631,10 +631,10 @@ public class Horizontal implements Clusterer,
 
         //the job should have the collapse key from the TC if
         //by the user specified
-        factor = (String)job.vdsNS.get(VDS.COLLAPSE_KEY);
+        factor = (String)job.vdsNS.get(Pegasus.COLLAPSE_KEY);
 
         //ceiling is (x + y -1)/y
-        String bundle = (String)job.vdsNS.get(VDS.BUNDLE_KEY);
+        String bundle = (String)job.vdsNS.get(Pegasus.BUNDLE_KEY);
         if(bundle != null){
             int b = Integer.parseInt(bundle);
             result[0] = size/b;

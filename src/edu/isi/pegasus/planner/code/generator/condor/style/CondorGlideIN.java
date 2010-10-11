@@ -24,7 +24,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 import org.griphyn.cPlanner.namespace.Condor;
 
 /**
@@ -94,7 +94,7 @@ public class CondorGlideIN extends Abstract {
             //set the vds change dir key to trigger -w
             //to kickstart invocation for all non transfer jobs
             if( !( job instanceof TransferJob ) ){
-                job.vdsNS.checkKeyInNS( VDS.CHANGE_DIR_KEY, "true" );
+                job.vdsNS.checkKeyInNS( Pegasus.CHANGE_DIR_KEY, "true" );
                 //set remote_initialdir for the job only for non transfer jobs
                 //this is removed later when kickstart is enabling.
                 job.condorVariables.construct( "remote_initialdir", workdir );

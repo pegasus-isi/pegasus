@@ -35,7 +35,7 @@ import org.griphyn.cPlanner.common.Utility;
 
 import org.griphyn.cPlanner.engine.createdir.S3;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Graph;
@@ -599,7 +599,7 @@ public class TransferEngine extends Engine {
 
         //check if there is a remote initialdir set
         String path  = job.vdsNS.getStringValue(
-                                                 VDS.REMOTE_INITIALDIR_KEY );
+                                                 Pegasus.REMOTE_INITIALDIR_KEY );
 
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile) it.next();
@@ -785,7 +785,7 @@ public class TransferEngine extends Engine {
         String destPool = job.executionPool;
         //contains the remote_initialdir if specified for the job
         String destRemoteDir = job.vdsNS.getStringValue(
-                                                 VDS.REMOTE_INITIALDIR_KEY);
+                                                 Pegasus.REMOTE_INITIALDIR_KEY);
 
         SiteCatalogEntry desPool = mSiteStore.lookup( destPool );
         SiteCatalogEntry sourcePool;
@@ -842,7 +842,7 @@ public class TransferEngine extends Engine {
                         sourceURI = server.getURLPrefix();
                                                                           
                         sourceURI += mSiteStore.getWorkDirectory(  pJob.executionPool,
-                                                                   pJob.vdsNS.getStringValue(VDS.REMOTE_INITIALDIR_KEY));
+                                                                   pJob.vdsNS.getStringValue(Pegasus.REMOTE_INITIALDIR_KEY));
                         
                         sourceURL = sourceURI + File.separator + outFile;
 
@@ -896,7 +896,7 @@ public class TransferEngine extends Engine {
         String ePool   = job.executionPool;
         //contains the remote_initialdir if specified for the job
         String eRemoteDir = job.vdsNS.getStringValue(
-                                                 VDS.REMOTE_INITIALDIR_KEY);
+                                                 Pegasus.REMOTE_INITIALDIR_KEY);
         
         SiteCatalogEntry ep        = mSiteStore.lookup( ePool );
         //we are using the pull mode for data transfer
@@ -1371,7 +1371,7 @@ public class TransferEngine extends Engine {
 
         //check if there is a remote initialdir set
         String path  = job.vdsNS.getStringValue(
-                                                 VDS.REMOTE_INITIALDIR_KEY );
+                                                 Pegasus.REMOTE_INITIALDIR_KEY );
 
 //        SiteInfo ePool = mPoolHandle.getPoolEntry( job.getSiteHandle(), "vanilla" );
         SiteCatalogEntry ePool = mSiteStore.lookup( job.getSiteHandle() );

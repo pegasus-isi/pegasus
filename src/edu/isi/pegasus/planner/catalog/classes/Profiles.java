@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.catalog.classes;
 import org.griphyn.cPlanner.classes.Profile;
 
 import org.griphyn.cPlanner.namespace.Namespace;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.ENV;
 import org.griphyn.cPlanner.namespace.Globus;
@@ -79,7 +79,7 @@ public class Profiles {
         mProfileMap.put( NAMESPACES.env, new ENV() );
         mProfileMap.put( NAMESPACES.globus, new Globus() );
         mProfileMap.put( NAMESPACES.hints, new Hints() );
-        mProfileMap.put( NAMESPACES.pegasus, new VDS() );
+        mProfileMap.put( NAMESPACES.pegasus, new Pegasus() );
         mProfileMap.put( NAMESPACES.selector, new Selector() );
         mProfileMap.put( NAMESPACES.stat, new Stat() );
     }

@@ -35,7 +35,7 @@ import org.griphyn.cPlanner.common.Utility;
 import org.griphyn.cPlanner.engine.Engine;
 
 import org.griphyn.cPlanner.namespace.Namespace;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
@@ -529,7 +529,7 @@ public abstract class PoolInfoProvider {
     public String getExecPoolWorkDir( SubInfo job ) {
         return this.getExecPoolWorkDir( job.executionPool,
             job.vdsNS.getStringValue(
-            VDS.REMOTE_INITIALDIR_KEY ),
+            Pegasus.REMOTE_INITIALDIR_KEY ),
             job.jobClass );
     }
 

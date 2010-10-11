@@ -20,12 +20,12 @@ import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.DagInfo;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import java.io.PrintWriter;
 
 /**
- * A helper class, that generates VDS specific classads for the jobs.
+ * A helper class, that generates Pegasus specific classads for the jobs.
  *
  * @author Karan Vahi
  * @version $Revision$
@@ -178,7 +178,7 @@ public class ClassADSGenerator {
         writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
 
         //add the pegasus value if defined.
-        String value = (String)job.vdsNS.getStringValue( VDS.RUNTIME_KEY );
+        String value = (String)job.vdsNS.getStringValue( Pegasus.RUNTIME_KEY );
         //else see if globus maxwalltime defined
         value = ( value == null )? (String)job.globusRSL.get( "maxwalltime" ) : value;
         int runtime = 0;

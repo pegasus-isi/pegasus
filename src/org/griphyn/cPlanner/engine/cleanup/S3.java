@@ -33,7 +33,7 @@ import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -272,7 +272,7 @@ public class S3 implements CleanupImplementation{
         //to change function signature to reflect a set only
         //cJob.setInputFiles( new HashSet( files) );
 
-        //the compute job of the VDS supernode is this job itself
+        //the compute job of the Pegasus supernode is this job itself
         cJob.setVDSSuperNode( job.getID() );
 
         //set the path to the rm executable
@@ -317,7 +317,7 @@ public class S3 implements CleanupImplementation{
         
         //we want the S3 cleanup jobs only execute in /tmp since
         //there is no remote directory being created in S3 environment
-        cJob.vdsNS.construct( VDS.REMOTE_INITIALDIR_KEY, "/tmp" );
+        cJob.vdsNS.construct( Pegasus.REMOTE_INITIALDIR_KEY, "/tmp" );
         //System.out.println( cJob );
         
         return cJob;

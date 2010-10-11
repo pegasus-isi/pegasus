@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.AggregatedJob;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 import org.griphyn.cPlanner.namespace.Dagman;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
@@ -251,7 +251,7 @@ public class GridStartFactory {
 
     /**
      * Loads the appropriate gridstart implementation for a job on the basis of
-     * the value of the GRIDSTART_KEY in the VDS namepsace. If no value is
+     * the value of the GRIDSTART_KEY in the Pegasus namepsace. If no value is
      * specified then the value in the properties file is picked up.
      *
      * @param job           the job for which we want the gridstart handle.
@@ -259,7 +259,7 @@ public class GridStartFactory {
      *
      * @return a handle to appropriate GridStart implementation.
      *
-     * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
+     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
      * @see org.griphyn.cPlanner.common.PegasusProperties#getGridStart()
      *
      * @throws GridStartFactoryException that nests any error that
@@ -281,9 +281,9 @@ public class GridStartFactory {
         else{
             //determine the short name of GridStart implementation
             //on the basis of any profile associated or from the properties file
-            String shortName = ( job.vdsNS.containsKey( VDS.GRIDSTART_KEY) ) ?
+            String shortName = ( job.vdsNS.containsKey( Pegasus.GRIDSTART_KEY) ) ?
                                 //pick the one associated in profiles
-                                ( String ) job.vdsNS.get( VDS.GRIDSTART_KEY ):
+                                ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY ):
                                 //pick the one in the properties file
                                 mProps.getGridStart();
 
@@ -303,8 +303,8 @@ public class GridStartFactory {
 
      /**
      * Loads the appropriate POST Script implementation for a job on the basis of
-     * the value of the VDS profile GRIDSTART_KEY, and the DAGMan profile
-     * POST_SCRIPT_KEY in the VDS namepsace. If no value is
+     * the value of the Pegasus profile GRIDSTART_KEY, and the DAGMan profile
+     * POST_SCRIPT_KEY in the Pegasus namepsace. If no value is
      * specified then the value in the properties file is picked up.
      *
      * @param job       the job for which we want the gridstart handle.
@@ -313,7 +313,7 @@ public class GridStartFactory {
      *
      * @return a handle to appropriate POSTScript implementation.
      *
-     * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
+     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
      * @see org.griphyn.cPlanner.namespace.Dagman#POST_SCRIPT_KEY
      * @see org.griphyn.cPlanner.common.PegasusProperties#getGridStart()
      *

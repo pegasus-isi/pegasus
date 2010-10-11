@@ -54,7 +54,7 @@ import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.Dagman;
 import org.griphyn.cPlanner.namespace.Globus;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 import org.griphyn.cPlanner.namespace.ENV;
 
 import org.griphyn.vdl.euryale.VTorInUseException;
@@ -566,7 +566,7 @@ public class CondorGenerator extends Abstract {
         writer.print( job.condorVariables );
 
         //write the classad's that have the information regarding
-        //which VDS super node is a node part of, in addition to the
+        //which Pegasus super node is a node part of, in addition to the
         //release version of Chimera/Pegasus, the jobClass and the
         //workflow id
         ClassADSGenerator.generate( writer, dag, job );
@@ -883,9 +883,9 @@ public class CondorGenerator extends Abstract {
        job.updateProfiles(mProps);
 
        //we do not want the job to be launched via kickstart
-       //Fix for VDS bug number 143
+       //Fix for Pegasus bug number 143
        //http://bugzilla.globus.org/vds/show_bug.cgi?id=143
-       job.vdsNS.construct( VDS.GRIDSTART_KEY,
+       job.vdsNS.construct( Pegasus.GRIDSTART_KEY,
                             GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
        
@@ -1607,9 +1607,9 @@ public class CondorGenerator extends Abstract {
 
         //load  the appropriate style for the job
         CondorStyle cs = mStyleFactory.loadInstance( job );
-        String style   = (String)job.vdsNS.get( VDS.STYLE_KEY );
+        String style   = (String)job.vdsNS.get( Pegasus.STYLE_KEY );
 
-        boolean isGlobus =  style.equals( VDS.GLOBUS_STYLE ) ? true : false;
+        boolean isGlobus =  style.equals( Pegasus.GLOBUS_STYLE ) ? true : false;
 
         //apply the appropriate style on the job.
         cs.apply( job );

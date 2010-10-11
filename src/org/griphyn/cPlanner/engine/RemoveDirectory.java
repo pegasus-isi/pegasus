@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.LinkedList;
 
 import java.io.File;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 
 /**
@@ -311,7 +311,7 @@ public class RemoveDirectory extends Engine {
             //path variable needs to be set
             newJob.envVariables.construct( "PATH", CreateDirectory.PATH_VALUE );
             */
-            newJob.vdsNS.construct( VDS.GRIDSTART_KEY, "None" );
+            newJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
 
             StringBuffer sb = new StringBuffer();
             sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" ).

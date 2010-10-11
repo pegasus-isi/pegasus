@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 import org.griphyn.cPlanner.namespace.Dagman;
 
 
@@ -41,7 +41,7 @@ import java.util.List;
 /**
  * This class aggregates the smaller jobs in a manner such that
  * they are launched at remote end, sequentially on a single node using
- * seqexec. The executable seqexec is a VDS tool distributed in the VDS worker
+ * seqexec. The executable seqexec is a Pegasus tool distributed in the Pegasus worker
  * package, and can be usually found at $PEGASUS_HOME/bin/seqexec.
  *
  * @author Karan Vahi vahi@isi.edu
@@ -125,7 +125,7 @@ public class SeqExec extends Abstract {
     public AggregatedJob construct(List jobs,String name, String id) {
         AggregatedJob mergedJob = super.construct(jobs,name,id);
         //ensure that AggregatedJob is invoked via NoGridStart
-        mergedJob.vdsNS.construct( VDS.GRIDSTART_KEY,
+        mergedJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[
                                                           GridStartFactory.NO_GRIDSTART_INDEX] );
 
@@ -142,7 +142,7 @@ public class SeqExec extends Abstract {
         else{
             //we need to tinker
             //gridstart is always populated
-            String gridstart = (String) firstJob.vdsNS.get(VDS.GRIDSTART_KEY);
+            String gridstart = (String) firstJob.vdsNS.get(Pegasus.GRIDSTART_KEY);
             if (gridstart.equalsIgnoreCase( GridStartFactory.
                                             GRIDSTART_SHORT_NAMES[
                                             GridStartFactory.KICKSTART_INDEX]) ||
@@ -186,7 +186,7 @@ public class SeqExec extends Abstract {
         //explicitly set the gridstart key
         //so as to enable the correct generation of the postscript for
         //the aggregated job
-        firstJob.vdsNS.construct( VDS.GRIDSTART_KEY,
+        firstJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
                                   gridStart.getVDSKeyValue() );
 
 

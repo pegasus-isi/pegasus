@@ -36,7 +36,7 @@ import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
@@ -653,8 +653,8 @@ public class DeployWorkerPackage
                                                   );
             
             //the setup and untar jobs need to be launched without kickstart.
-            setupTXJob.vdsNS.construct( VDS.GRIDSTART_KEY, "None" );
-            untarJob.vdsNS.construct( VDS.GRIDSTART_KEY, "None" );
+            setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            untarJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
             
             GraphNode untarNode  = new GraphNode( untarJob.getName(), untarJob );
             GraphNode setupNode = new GraphNode( setupTXJob.getName(), setupTXJob );

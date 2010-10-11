@@ -59,7 +59,7 @@ import java.util.Map;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.ENV;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 import org.griphyn.cPlanner.parser.pdax.PDAX2MDAG;
 
 /**
@@ -624,9 +624,9 @@ public class SUBDAXGenerator{
        job.updateProfiles(mProps);
        
        //we do not want the job to be launched via kickstart
-       //Fix for VDS bug number 143
+       //Fix for Pegasus bug number 143
        //http://bugzilla.globus.org/vds/show_bug.cgi?id=143
-       job.vdsNS.construct( VDS.GRIDSTART_KEY,
+       job.vdsNS.construct( Pegasus.GRIDSTART_KEY,
                             GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
        return job;
@@ -978,7 +978,7 @@ public class SUBDAXGenerator{
         //sanity check on the directory
         sanityCheck( dir );
 
-        //we only want to write out the VDS properties for time being
+        //we only want to write out the Pegasus properties for time being
         Properties properties = mProps.matchingSubset( "pegasus", true );
 
         //create a temporary file in directory

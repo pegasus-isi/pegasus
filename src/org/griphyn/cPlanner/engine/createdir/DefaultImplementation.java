@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -206,7 +206,7 @@ public class DefaultImplementation implements Implementation {
             //path variable needs to be set
             newJob.envVariables.construct( "PATH", CreateDirectory.PATH_VALUE );
             */
-            newJob.vdsNS.construct( VDS.GRIDSTART_KEY, "None" );
+            newJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
 
             StringBuffer sb = new StringBuffer();
             sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" ).

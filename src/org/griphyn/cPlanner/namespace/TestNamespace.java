@@ -28,7 +28,7 @@ public class TestNamespace {
 
     public static void main(String[] args){
         Condor c = new Condor();
-        VDS    v = new VDS();
+        Pegasus    v = new Pegasus();
         System.out.println(v.namespaceName() + " \n" + v.deprecatedTable());
         System.out.println(c.namespaceName() + " \n" + c.deprecatedTable());
     }

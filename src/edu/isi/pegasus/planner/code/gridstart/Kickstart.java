@@ -35,7 +35,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.Condor;
 import org.griphyn.cPlanner.namespace.ENV;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.code.GridStart;
 
@@ -68,14 +68,14 @@ import java.io.IOException;
 /**
  * This enables a job to be run on the grid, by launching it through kickstart.
  * The kickstart executable is a light-weight program which  connects  the
- * stdin,  stdout  and  stderr  filehandles for VDS jobs on the remote
+ * stdin,  stdout  and  stderr  filehandles for Pegasus jobs on the remote
  * site.
  * <p>
  * Sitting in between the remote scheduler and the executable, it is
  * possible  for  kickstart  to  gather additional information about the
  * executable run-time behavior, including the  exit  status  of  jobs.
  * <p>
- * Kickstart is an executable distributed with VDS that can generally be found
+ * Kickstart is an executable distributed with Pegasus that can generally be found
  * at $PEGASUS_HOME/bin/kickstart
  *
  * @author Karan Vahi vahi@isi.edu
@@ -304,7 +304,7 @@ public class Kickstart implements GridStart {
             else{
                 //we need to pass -H to kickstart
                 //to suppress the header creation
-                job.vdsNS.construct(VDS.GRIDSTART_ARGUMENTS_KEY,"-H");
+                job.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
             }
 
             
@@ -513,7 +513,7 @@ public class Kickstart implements GridStart {
 
             //handle the -w option that asks kickstart to change
             //directory before launching an executable.
-            if(job.vdsNS.getBooleanValue(VDS.CHANGE_DIR_KEY) /*&& !mWorkerNodeExecution*/ ){
+            if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY) /*&& !mWorkerNodeExecution*/ ){
 
 //            Commented to take account of submitting to condor pool
 //            directly or glide in nodes. However, does not work for
@@ -527,7 +527,7 @@ public class Kickstart implements GridStart {
 
             //handle the -W option that asks kickstart to create and change
             //directory before launching an executable.
-            if(job.vdsNS.getBooleanValue(VDS.CREATE_AND_CHANGE_DIR_KEY ) /*&&  !mWorkerNodeExecution*/){
+            if(job.vdsNS.getBooleanValue(Pegasus.CREATE_AND_CHANGE_DIR_KEY ) /*&&  !mWorkerNodeExecution*/){
 	    
 //            Commented to take account of submitting to condor pool
 //            directly or glide in nodes. However, does not work for
@@ -539,7 +539,7 @@ public class Kickstart implements GridStart {
                 gridStartArgs.append(" -W ").append(directory).append(' ');
             }
 
-            if(job.vdsNS.getBooleanValue(VDS.TRANSFER_PROXY_KEY)){
+            if(job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY)){
                 //just remove the remote_initialdir key
                 //the job needs to be run in the directory
                 //Condor or GRAM decides to run
@@ -629,8 +629,8 @@ public class Kickstart implements GridStart {
 
         //append any arguments that need to be passed
         //kickstart directly, set elsewhere
-        if(job.vdsNS.containsKey(VDS.GRIDSTART_ARGUMENTS_KEY)){
-            gridStartArgs.append(job.vdsNS.get(VDS.GRIDSTART_ARGUMENTS_KEY))
+        if(job.vdsNS.containsKey(Pegasus.GRIDSTART_ARGUMENTS_KEY)){
+            gridStartArgs.append(job.vdsNS.get(Pegasus.GRIDSTART_ARGUMENTS_KEY))
                          .append(' ');
         }
 
@@ -955,13 +955,13 @@ public class Kickstart implements GridStart {
     }
 
     /**
-     * Returns the value of the vds profile with key as VDS.GRIDSTART_KEY,
+     * Returns the value of the vds profile with key as Pegasus.GRIDSTART_KEY,
      * that would result in the loading of this particular implementation.
      * It is usually the name of the implementing class without the
      * package name.
      *
      * @return the value of the profile key.
-     * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
+     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
      */
     public  String getVDSKeyValue(){
         return Kickstart.CLASSNAME;
@@ -998,9 +998,9 @@ public class Kickstart implements GridStart {
      * @return the condor key . can be initialdir or remote_initialdir
      */
     private String getDirectoryKey(SubInfo job) {
-        /*String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLITE_STYLE))?
+        /*String directory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
+                                style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE) ||
+                                style.equalsIgnoreCase(Pegasus.GLITE_STYLE))?
                      (String)job.condorVariables.removeKey("remote_initialdir"):
                      (String)job.condorVariables.removeKey("initialdir");
         */ 

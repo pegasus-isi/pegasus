@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.classes.JobManager;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
@@ -329,9 +329,9 @@ public class Stork extends AbstractSingleFTPerXFERJob {
      */
     protected String generateArgumentString(TransferJob job,FileTransfer file){
         StringBuffer sb = new StringBuffer();
-        if(job.vdsNS.containsKey(VDS.TRANSFER_ARGUMENTS_KEY)){
+        if(job.vdsNS.containsKey(Pegasus.TRANSFER_ARGUMENTS_KEY)){
             sb.append(
-                job.vdsNS.removeKey(VDS.TRANSFER_ARGUMENTS_KEY)
+                job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
                 );
          }
          sb.append(((NameValue)file.getSourceURL()).getValue()).append("\n").

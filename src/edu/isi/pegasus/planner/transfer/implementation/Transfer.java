@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
@@ -49,14 +49,14 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the transfer
- * executable distributed with the VDS.
+ * executable distributed with the Pegasus.
  *
  * <p>
  * The Transfer client is generally invoked on the remote execution sites, unless
  * the user uses the thirdparty transfer option, in which case the transfer is
  * invoked on the submit host. Hence there should be an entry in the transformation
  * catalog for logical transformation <code>Transfer</code> at the execution sites.
- * Transfer is distributed as part of the VDS worker package and can be found at
+ * Transfer is distributed as part of the Pegasus worker package and can be found at
  * $PEGASUS_HOME/bin/transfer.
  * <p>
  * It leads to the creation of the setup chmod jobs to the workflow, that appear
@@ -300,9 +300,9 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      */
     protected String generateArgumentString(TransferJob job) {
         StringBuffer sb = new StringBuffer();
-        if(job.vdsNS.containsKey(VDS.TRANSFER_ARGUMENTS_KEY)){
+        if(job.vdsNS.containsKey(Pegasus.TRANSFER_ARGUMENTS_KEY)){
             sb.append(
-                      job.vdsNS.removeKey(VDS.TRANSFER_ARGUMENTS_KEY)
+                      job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
                       );
         }
         else{

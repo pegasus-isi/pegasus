@@ -32,7 +32,7 @@ import org.griphyn.cPlanner.common.PegRandom;
 
 
 import org.griphyn.cPlanner.namespace.Namespace;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import java.util.List;
 import java.util.LinkedList;
@@ -419,7 +419,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
         
         //check to see if user specified gridstart.path profile 
         //in the site catalog.
-        String profile = (String) this.getProfiles().get( NAMESPACES.pegasus ).get( VDS.GRIDSTART_PATH_KEY );
+        String profile = (String) this.getProfiles().get( NAMESPACES.pegasus ).get( Pegasus.GRIDSTART_PATH_KEY );
         if( profile != null ){
             //return the path specified in profile
             return profile;

@@ -36,7 +36,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -99,7 +99,7 @@ public class Algorithm {
     /**
      * The pegasus profile key that gives us the expected runtime.
      */
-    public static final String RUNTIME_PROFILE_KEY = VDS.RUNTIME_KEY;
+    public static final String RUNTIME_PROFILE_KEY = Pegasus.RUNTIME_KEY;
 
     /**
      * The property that designates which Process catalog impl to pick up.

@@ -20,7 +20,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 
 /**
@@ -80,12 +80,12 @@ public class DCLauncher
        boolean result = super.enable( job, isGlobusJob );
 
        //figure out the path to the datacutter executable
-       String gridStartPath = job.vdsNS.getStringValue( VDS.GRIDSTART_PATH_KEY );
+       String gridStartPath = job.vdsNS.getStringValue( Pegasus.GRIDSTART_PATH_KEY );
        //sanity check
        if (gridStartPath == null){
            mLogger.log( "The path to gridstart " + this.SHORT_NAME + " not specified",
                         LogManager.ERROR_MESSAGE_LEVEL );
-           mLogger.log( "Set the Pegasus Profile key " + VDS.GRIDSTART_PATH_KEY ,
+           mLogger.log( "Set the Pegasus Profile key " + Pegasus.GRIDSTART_PATH_KEY ,
                         LogManager.ERROR_MESSAGE_LEVEL );
            return false;
        }
@@ -96,16 +96,16 @@ public class DCLauncher
        
         //handle the -w option that asks kickstart to change
         //directory before launching an executable.
-        String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
-        if(job.vdsNS.getBooleanValue(VDS.CHANGE_DIR_KEY) && !mWorkerNodeExecution ){
-	    style = (String)job.vdsNS.get(VDS.STYLE_KEY);
+        String style = (String)job.vdsNS.get(Pegasus.STYLE_KEY);
+        if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY) && !mWorkerNodeExecution ){
+	    style = (String)job.vdsNS.get(Pegasus.STYLE_KEY);
 
 //            Commented to take account of submitting to condor pool
 //            directly or glide in nodes. However, does not work for
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
-            String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))?
+            String directory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
+                                style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE))?
                      (String)job.condorVariables.removeKey("remote_initialdir"):
                      (String)job.condorVariables.removeKey("initialdir");
 
@@ -124,13 +124,13 @@ public class DCLauncher
    }
 
    /**
-     * Returns the value of the vds profile with key as VDS.GRIDSTART_KEY,
+     * Returns the value of the vds profile with key as Pegasus.GRIDSTART_KEY,
      * that would result in the loading of this particular implementation.
      * It is usually the name of the implementing class without the
      * package name.
      *
      * @return the value of the profile key.
-     * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
+     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
      */
     public  String getVDSKeyValue(){
         return this.CLASSNAME;

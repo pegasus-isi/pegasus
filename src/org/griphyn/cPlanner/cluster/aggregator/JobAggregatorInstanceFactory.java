@@ -24,7 +24,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -47,14 +47,14 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 public class JobAggregatorInstanceFactory {
     /**
-     * A table that maps, VDS style keys to the names of the corresponding classes
+     * A table that maps, Pegasus style keys to the names of the corresponding classes
      * implementing the CondorStyle interface.
      */
     private static Map mImplementingClassNameTable;
 
 
     /**
-     * A table that maps, VDS style keys to appropriate classes implementing the
+     * A table that maps, Pegasus style keys to appropriate classes implementing the
      * JobAggregator interface
      */
     private  Map mImplementingClassTable ;
@@ -108,7 +108,7 @@ public class JobAggregatorInstanceFactory {
         mProps     = bag.getPegasusProperties();
         mDAG       = dag;
 
-        //load all the implementations that correspond to the VDS style keys
+        //load all the implementations that correspond to the Pegasus style keys
         for( Iterator it = this.implementingClassNameTable().entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = (Map.Entry) it.next();
             String aggregator = (String)entry.getKey();
@@ -148,7 +148,7 @@ public class JobAggregatorInstanceFactory {
 
 
         Object obj;
-        String shortName = ((obj =job.vdsNS.get(VDS.COLLAPSER_KEY))==null)?
+        String shortName = ((obj =job.vdsNS.get(Pegasus.COLLAPSER_KEY))==null)?
                             //pick the one from the properties
                             mProps.getJobAggregator():
                             (String)obj;
@@ -196,10 +196,10 @@ public class JobAggregatorInstanceFactory {
 
 
     /**
-     * Returns a table that maps, the VDS style keys to the names of implementing
+     * Returns a table that maps, the Pegasus style keys to the names of implementing
      * classes.
      *
-     * @return a Map indexed by VDS styles, and values as names of implementing
+     * @return a Map indexed by Pegasus styles, and values as names of implementing
      *         classes.
      */
     private static Map implementingClassNameTable(){

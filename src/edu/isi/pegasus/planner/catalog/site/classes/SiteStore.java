@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
         
@@ -433,7 +433,7 @@ public class SiteStore extends AbstractSiteData{
     public String getWorkDirectory( SubInfo job ) {
         return this.getWorkDirectory( job.executionPool,
             job.vdsNS.getStringValue(
-            VDS.REMOTE_INITIALDIR_KEY ),
+            Pegasus.REMOTE_INITIALDIR_KEY ),
             job.jobClass );
     }
 

@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 
@@ -87,14 +87,14 @@ public class CondorStyleFactory {
 
     
     /**
-     * A table that maps, VDS style keys to the names of the corresponding classes
+     * A table that maps, Pegasus style keys to the names of the corresponding classes
      * implementing the CondorStyle interface.
      */
     private static Map mImplementingClassNameTable;
 
 
     /**
-     * A table that maps, VDS style keys to appropriate classes implementing the
+     * A table that maps, Pegasus style keys to appropriate classes implementing the
      * CondorStyle interface
      */
     private  Map mImplementingClassTable ;
@@ -126,7 +126,7 @@ public class CondorStyleFactory {
     public void initialize( PegasusProperties properties,
                             SiteStore siteStore ) throws CondorStyleFactoryException{
 
-        //load all the implementations that correspond to the VDS style keys
+        //load all the implementations that correspond to the Pegasus style keys
         for( Iterator it = this.implementingClassNameTable().entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = (Map.Entry) it.next();
             String style    = (String)entry.getKey();
@@ -161,18 +161,18 @@ public class CondorStyleFactory {
         String defaultStyle = job.getSiteHandle().equalsIgnoreCase( "local" )?
                               //jobs scheduled on local site have
                               //default style as condor
-                              VDS.CONDOR_STYLE:
-                              VDS.GLOBUS_STYLE;
+                              Pegasus.CONDOR_STYLE:
+                              Pegasus.GLOBUS_STYLE;
 
-        String style = job.vdsNS.containsKey( VDS.STYLE_KEY )?
-                       (String)job.vdsNS.get( VDS.STYLE_KEY ):
+        String style = job.vdsNS.containsKey( Pegasus.STYLE_KEY )?
+                       (String)job.vdsNS.get( Pegasus.STYLE_KEY ):
                        defaultStyle;
 
         //need to check if the style isvalid or not
         //missing for now.
 
         //update the job with style determined
-        job.vdsNS.construct( VDS.STYLE_KEY, style );
+        job.vdsNS.construct( Pegasus.STYLE_KEY, style );
 
         //now just load from the implementing classes
         Object cs = this.get( style );
@@ -239,7 +239,7 @@ public class CondorStyleFactory {
     /**
      * Returns the implementation from the implementing class table.
      *
-     * @param style           the VDS style
+     * @param style           the Pegasus style
      *
      * @return implementation  the class implementing that style, else null
      */
@@ -251,7 +251,7 @@ public class CondorStyleFactory {
     /**
      * Inserts an entry into the implementing class table.
      *
-     * @param style           the VDS style
+     * @param style           the Pegasus style
      * @param implementation  the class implementing that style.
      */
     private void put( String style, Object implementation){
@@ -260,21 +260,21 @@ public class CondorStyleFactory {
 
 
     /**
-     * Returns a table that maps, the VDS style keys to the names of implementing
+     * Returns a table that maps, the Pegasus style keys to the names of implementing
      * classes.
      *
-     * @return a Map indexed by VDS styles, and values as names of implementing
+     * @return a Map indexed by Pegasus styles, and values as names of implementing
      *         classes.
      */
     private static Map implementingClassNameTable(){
         if( mImplementingClassNameTable == null ){
             mImplementingClassNameTable = new HashMap(3);
-            mImplementingClassNameTable.put( VDS.CONDOR_STYLE, CONDOR_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( VDS.GLIDEIN_STYLE, GLIDEIN_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( VDS.GLIDEINWMS_STYLE, GLIDEINWMS_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( VDS.GLOBUS_STYLE, GLOBUS_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( VDS.GLITE_STYLE, GLITE_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( VDS.CONDORC_STYLE, CONDORC_STYLE_IMPLEMENTING_CLASS );
+            mImplementingClassNameTable.put( Pegasus.CONDOR_STYLE, CONDOR_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.GLIDEIN_STYLE, GLIDEIN_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.GLIDEINWMS_STYLE, GLIDEINWMS_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.GLOBUS_STYLE, GLOBUS_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.GLITE_STYLE, GLITE_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.CONDORC_STYLE, CONDORC_STYLE_IMPLEMENTING_CLASS );
         }
         return mImplementingClassNameTable;
     }

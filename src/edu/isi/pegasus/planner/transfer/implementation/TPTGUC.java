@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 
 
@@ -99,9 +99,9 @@ public class TPTGUC extends GUC {
     */
    protected String generateArgumentString( TransferJob job ) {
        StringBuffer sb = new StringBuffer();
-       if(job.vdsNS.containsKey( VDS.TRANSFER_ARGUMENTS_KEY ) ){
+       if(job.vdsNS.containsKey( Pegasus.TRANSFER_ARGUMENTS_KEY ) ){
            sb.append(
-                     job.vdsNS.removeKey(VDS.TRANSFER_ARGUMENTS_KEY)
+                     job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
                      );
        }
        else{

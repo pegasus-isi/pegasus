@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -153,7 +153,7 @@ public class Chain extends Default {
                     bundle = ((Integer)mSIBundleMap.get(site)).intValue();
                 }
                 else{
-                    bundle = getSiteBundleValue(site,VDS.CHAIN_STAGE_IN_KEY);
+                    bundle = getSiteBundleValue(site,Pegasus.CHAIN_STAGE_IN_KEY);
                     //put the value into the map
                     mSIBundleMap.put(site,new Integer(bundle));
                 }

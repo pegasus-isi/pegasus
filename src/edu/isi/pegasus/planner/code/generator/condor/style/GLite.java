@@ -23,7 +23,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
@@ -129,7 +129,7 @@ public class GLite extends Abstract {
         /* remote_initialdir does not work with gLite
          * Rely on Gridstart to do the right thing */
         job.condorVariables.construct( "remote_initialdir", workdir );
-        job.vdsNS.construct( VDS.CHANGE_DIR_KEY, "true" );
+        job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY, "true" );
         
         /* transfer_executable does not work with gLite
          * Explicitly set to false */
@@ -150,7 +150,7 @@ public class GLite extends Abstract {
         if( job.getSiteHandle().equals( "local" ) && job instanceof TransferJob ){
                 /* remove the change dir requirments for the 
                  * third party transfer on local host */
-                job.vdsNS.construct( VDS.CHANGE_DIR_KEY, "false" );
+                job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY, "false" );
                 job.condorVariables.removeKey( "remote_initialdir" );
         }
         
@@ -158,7 +158,7 @@ public class GLite extends Abstract {
         if( job.getSiteHandle().equals( "local" ) && job.getJobType() == SubInfo.REPLICA_REG_JOB ){
                 /* remove the change dir requirments for the 
                  * third party transfer on local host */
-                job.vdsNS.construct( VDS.CHANGE_DIR_KEY, "false" );
+                job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY, "false" );
                 job.condorVariables.removeKey( "remote_initialdir" );
         }
     }

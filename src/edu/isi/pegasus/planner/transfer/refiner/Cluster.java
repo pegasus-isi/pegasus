@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
@@ -148,24 +148,24 @@ public class Cluster extends Bundle {
      */
     protected  void initializeBundleValues() {
         mStageinLocalBundleValue = new BundleValue();
-        mStageinLocalBundleValue.initialize( VDS.CLUSTER_LOCAL_STAGE_IN_KEY,
-                                             VDS.CLUSTER_STAGE_IN_KEY,
+        mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
+                                             Pegasus.CLUSTER_STAGE_IN_KEY,
                                              Cluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR );
         
         mStageInRemoteBundleValue = new BundleValue();
-        mStageInRemoteBundleValue.initialize( VDS.CLUSTER_REMOTE_STAGE_IN_KEY,
-                                              VDS.CLUSTER_STAGE_IN_KEY,
+        mStageInRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY,
+                                              Pegasus.CLUSTER_STAGE_IN_KEY,
                                               Cluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR );
 
 
         mStageOutLocalBundleValue = new BundleValue();
-        mStageOutLocalBundleValue.initialize( VDS.CLUSTER_LOCAL_STAGE_OUT_KEY,
-                                              VDS.CLUSTER_STAGE_OUT_KEY,
+        mStageOutLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
+                                              Pegasus.CLUSTER_STAGE_OUT_KEY,
                                               Cluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR );
 
         mStageOutRemoteBundleValue = new BundleValue();
-        mStageOutRemoteBundleValue.initialize( VDS.BUNDLE_REMOTE_STAGE_OUT_KEY,
-                                               VDS.BUNDLE_STAGE_OUT_KEY,
+        mStageOutRemoteBundleValue.initialize( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
+                                               Pegasus.BUNDLE_STAGE_OUT_KEY,
                                                Cluster.DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR );
     }
 
@@ -300,7 +300,7 @@ public class Cluster extends Bundle {
         int clusterValue = cValue.determine( implementation, job );
         /*
         int clusterValue = getSISiteBundleValue( site,
-                                                job.vdsNS.getStringValue( VDS.CLUSTER_STAGE_IN_KEY ) );
+                                                job.vdsNS.getStringValue( Pegasus.CLUSTER_STAGE_IN_KEY ) );
         */
         mLogger.log( "The Cluster value for site " + site + " is " + clusterValue,
                      LogManager.DEBUG_MESSAGE_LEVEL
@@ -536,7 +536,7 @@ public class Cluster extends Bundle {
      * @return value as String or NULL
      */
     protected String getComputeJobBundleValue( SubInfo job ){
-        return  job.vdsNS.getStringValue( VDS.CLUSTER_STAGE_OUT_KEY );
+        return  job.vdsNS.getStringValue( Pegasus.CLUSTER_STAGE_OUT_KEY );
     }
        
     /**
@@ -614,8 +614,8 @@ public class Cluster extends Bundle {
 
         if(entry != null){
             sub.updateProfiles(entry);
-            value = (sub.vdsNS.containsKey( VDS.CLUSTER_STAGE_IN_KEY ))?
-                     sub.vdsNS.getStringValue( VDS.CLUSTER_STAGE_IN_KEY ):
+            value = (sub.vdsNS.containsKey( Pegasus.CLUSTER_STAGE_IN_KEY ))?
+                     sub.vdsNS.getStringValue( Pegasus.CLUSTER_STAGE_IN_KEY ):
                      value;
         }
 
@@ -687,7 +687,7 @@ public class Cluster extends Bundle {
 
         //we do not want the job to be launched
         //by kickstart, as the job is not run actually
-        newJob.vdsNS.checkKeyInNS( VDS.GRIDSTART_KEY,
+        newJob.vdsNS.checkKeyInNS( Pegasus.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
         return newJob;

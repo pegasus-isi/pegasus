@@ -33,7 +33,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 
 import edu.isi.pegasus.planner.transfer.Refiner;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
@@ -372,7 +372,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
         txJob.setRemoteExecutable( "/bin/true" );
 
         //we dont want the job to be launced via grid start
-        txJob.vdsNS.construct( VDS.GRIDSTART_KEY , GridStartFactory.GRIDSTART_SHORT_NAMES[
+        txJob.vdsNS.construct( Pegasus.GRIDSTART_KEY , GridStartFactory.GRIDSTART_SHORT_NAMES[
                                                           GridStartFactory.NO_GRIDSTART_INDEX ] );
 
         //add input files for transfer since we are only doing for

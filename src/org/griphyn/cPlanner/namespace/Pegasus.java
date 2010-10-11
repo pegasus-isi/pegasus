@@ -37,7 +37,7 @@ import org.griphyn.cPlanner.namespace.aggregator.Sum;
  * @version $Revision$
  */
 
-public class VDS extends Namespace {
+public class Pegasus extends Namespace {
 
     /**
      * The name of the namespace that this class implements.
@@ -60,7 +60,7 @@ public class VDS extends Namespace {
     public static final String BUNDLE_KEY = "clusters.num";
 
     /**
-     * The name of the key that if set in the VDS namespace determines the
+     * The name of the key that if set in the Pegasus namespace determines the
      * number of jobs that are collapsed into the super job.
      */
     public static final String COLLAPSE_KEY = "clusters.size";
@@ -304,7 +304,7 @@ public class VDS extends Namespace {
      * Note that the map is not allocated memory at this stage. It is done so
      * in the overloaded construct function.
      */
-    public VDS() {
+    public Pegasus() {
         mProfileMap = null;
         mNamespace = NAMESPACE_NAME;
     }
@@ -314,7 +314,7 @@ public class VDS extends Namespace {
      *
      * @param mp  the initial map.
      */
-    public VDS(Map mp) {
+    public Pegasus(Map mp) {
         mProfileMap = new TreeMap(mp);
         mNamespace = NAMESPACE_NAME;
     }
@@ -523,7 +523,7 @@ public class VDS extends Namespace {
 	if(value!=null){
 	    //no strict type check required
 	    //populate directly
-	    this.construct(VDS.TRANSFER_ARGUMENTS_KEY,value);
+	    this.construct(Pegasus.TRANSFER_ARGUMENTS_KEY,value);
 	}
 
     }
@@ -538,7 +538,7 @@ public class VDS extends Namespace {
      */
     public void merge( Namespace profiles ){
         //check if we are merging profiles of same type
-        if (!(profiles instanceof VDS )){
+        if (!(profiles instanceof Pegasus )){
             //throw an error
             throw new IllegalArgumentException( "Profiles mismatch while merging" );
         }
@@ -547,7 +547,7 @@ public class VDS extends Namespace {
             //construct directly. bypassing the checks!
             key = (String)it.next();
             
-            if( key.equals( VDS.RUNTIME_KEY ) ){
+            if( key.equals( Pegasus.RUNTIME_KEY ) ){
                 this.construct( key, 
                                 SUM_AGGREGATOR.compute((String)get( key ), (String)profiles.get( key ), "0" )
                                );
@@ -690,7 +690,7 @@ public class VDS extends Namespace {
      * @return the Cloned object
      */
     public Object clone() {
-        return (mProfileMap == null)?new VDS() : new VDS(this.mProfileMap);
+        return (mProfileMap == null)?new Pegasus() : new Pegasus(this.mProfileMap);
     }
 
 }

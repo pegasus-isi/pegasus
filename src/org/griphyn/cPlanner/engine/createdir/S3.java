@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -285,7 +285,7 @@ public class S3 implements Implementation {
 
         //we do not want the job to be launched
         //by kickstart, as the job is not run actually
-        newJob.vdsNS.checkKeyInNS( VDS.GRIDSTART_KEY,
+        newJob.vdsNS.checkKeyInNS( Pegasus.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
         return newJob;

@@ -29,7 +29,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.transfer.SLS;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 
@@ -280,8 +280,8 @@ public class Condor   implements SLS {
         //sanity check on style of the job
         //handle the -w option that asks kickstart to change
         //directory before launching an executable.
-        String style = (String)job.vdsNS.get( VDS.STYLE_KEY );
-        if( style == null || !( style.equals( VDS.CONDOR_STYLE ) || style.equals( VDS.GLIDEIN_STYLE ) ) ){
+        String style = (String)job.vdsNS.get( Pegasus.STYLE_KEY );
+        if( style == null || !( style.equals( Pegasus.CONDOR_STYLE ) || style.equals( Pegasus.GLIDEIN_STYLE ) ) ){
             mLogger.log( "Invalid style for the job " + job.getName(),
                          LogManager.ERROR_MESSAGE_LEVEL );
             return false;

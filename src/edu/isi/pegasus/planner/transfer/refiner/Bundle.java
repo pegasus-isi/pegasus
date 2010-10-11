@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
@@ -201,24 +201,24 @@ public class Bundle extends Default {
      */
     protected  void initializeBundleValues() {
         mStageinLocalBundleValue = new BundleValue();
-        mStageinLocalBundleValue.initialize( VDS.BUNDLE_LOCAL_STAGE_IN_KEY,
-                                             VDS.BUNDLE_STAGE_IN_KEY,
+        mStageinLocalBundleValue.initialize( Pegasus.BUNDLE_LOCAL_STAGE_IN_KEY,
+                                             Pegasus.BUNDLE_STAGE_IN_KEY,
                                              Bundle.DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR );
         
         mStageInRemoteBundleValue = new BundleValue();
-        mStageInRemoteBundleValue.initialize( VDS.BUNDLE_REMOTE_STAGE_IN_KEY,
-                                              VDS.BUNDLE_STAGE_IN_KEY,
+        mStageInRemoteBundleValue.initialize( Pegasus.BUNDLE_REMOTE_STAGE_IN_KEY,
+                                              Pegasus.BUNDLE_STAGE_IN_KEY,
                                               Bundle.DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR );
 
 
         mStageOutLocalBundleValue = new BundleValue();
-        mStageOutLocalBundleValue.initialize( VDS.BUNDLE_LOCAL_STAGE_OUT_KEY,
-                                             VDS.BUNDLE_STAGE_OUT_KEY,
+        mStageOutLocalBundleValue.initialize( Pegasus.BUNDLE_LOCAL_STAGE_OUT_KEY,
+                                             Pegasus.BUNDLE_STAGE_OUT_KEY,
                                              Bundle.DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR );
 
         mStageOutRemoteBundleValue = new BundleValue();
-        mStageOutRemoteBundleValue.initialize( VDS.BUNDLE_REMOTE_STAGE_OUT_KEY,
-                                              VDS.BUNDLE_STAGE_OUT_KEY,
+        mStageOutRemoteBundleValue.initialize( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
+                                              Pegasus.BUNDLE_STAGE_OUT_KEY,
                                               Bundle.DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR );
 
     }
@@ -541,7 +541,7 @@ public class Bundle extends Default {
      * @return value as String or NULL
      */
     protected String getComputeJobBundleValue( SubInfo job ){
-        return  job.vdsNS.getStringValue( VDS.BUNDLE_STAGE_OUT_KEY );
+        return  job.vdsNS.getStringValue( Pegasus.BUNDLE_STAGE_OUT_KEY );
     }
     
     /**

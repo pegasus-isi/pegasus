@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
@@ -35,7 +35,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
  * This class aggregates the smaller jobs in a manner such that
  * they are launched at remote end, by mpiexec on n nodes where n is the nodecount
  * associated with the aggregated job that is being lauched by mpiexec.
- * The executable mpiexec is a VDS tool distributed in the VDS worker package, and
+ * The executable mpiexec is a Pegasus tool distributed in the Pegasus worker package, and
  * can be usually found at $PEGASUS_HOME/bin/mpiexec.
  *
  * @author Karan Vahi vahi@isi.edu
@@ -99,7 +99,7 @@ public class MPIExec extends Abstract {
         mergedJob.globusRSL.checkKeyInNS("jobtype","mpi");
 
         //ensure that AggregatedJob is invoked via NoGridStart
-        mergedJob.vdsNS.construct( VDS.GRIDSTART_KEY,
+        mergedJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[
                                                           GridStartFactory.NO_GRIDSTART_INDEX] );
 
@@ -124,7 +124,7 @@ public class MPIExec extends Abstract {
 //                                                  Condor.VANILLA_UNIVERSE);
 
         SiteCatalogEntry site = mSiteStore.lookup( firstJob.getSiteHandle() );
-        firstJob.vdsNS.construct( VDS.GRIDSTART_KEY,
+        firstJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[
                                                           GridStartFactory.NO_GRIDSTART_INDEX] );
 

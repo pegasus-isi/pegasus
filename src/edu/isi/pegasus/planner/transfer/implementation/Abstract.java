@@ -34,7 +34,7 @@ import edu.isi.pegasus.common.util.Proxy;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 import org.griphyn.cPlanner.namespace.ENV;
 
 
@@ -218,7 +218,7 @@ public abstract class Abstract implements Implementation{
      * Determines if there is a need to transfer proxy for the transfer
      * job or not.  If there is a need to transfer proxy, then the job is
      * modified to create the correct condor commands to transfer the proxy.
-     * Proxy is usually transferred if the VDS profile TRANSFER_PROXY is set,
+     * Proxy is usually transferred if the Pegasus profile TRANSFER_PROXY is set,
      * or the job is being run in the condor vanilla universe. The proxy is
      * transferred from the submit host (i.e site local). The location is
      * determined from the value of the X509_USER_PROXY profile key associated
@@ -233,16 +233,16 @@ public abstract class Abstract implements Implementation{
         boolean transfer = false;
         //not handling for third party transfers correctly.
 
-        String style = job.vdsNS.containsKey(VDS.STYLE_KEY)?
-                       (String)job.vdsNS.get(VDS.STYLE_KEY):
-                       VDS.GLOBUS_STYLE;
+        String style = job.vdsNS.containsKey(Pegasus.STYLE_KEY)?
+                       (String)job.vdsNS.get(Pegasus.STYLE_KEY):
+                       Pegasus.GLOBUS_STYLE;
         String universe = job.condorVariables.containsKey(Condor.UNIVERSE_KEY)?
                           (String)job.condorVariables.get(Condor.UNIVERSE_KEY):
                           //empty
                           "";
-        boolean condition1 = job.vdsNS.getBooleanValue(VDS.TRANSFER_PROXY_KEY) ;
-        boolean condition2 = ((style.equalsIgnoreCase(VDS.CONDOR_STYLE))||
-                              (style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))||
+        boolean condition1 = job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ;
+        boolean condition2 = ((style.equalsIgnoreCase(Pegasus.CONDOR_STYLE))||
+                              (style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE))||
                                (job.executionPool.equalsIgnoreCase("local") &&
                                    (universe.equalsIgnoreCase(Condor.VANILLA_UNIVERSE)
                                     || universe.equalsIgnoreCase(Condor.STANDARD_UNIVERSE))
@@ -303,7 +303,7 @@ public abstract class Abstract implements Implementation{
                 if(!condition1){
                     //for glide in jobs also tag we are
                     //transferring proxy
-                    job.vdsNS.checkKeyInNS(VDS.TRANSFER_PROXY_KEY,"true");
+                    job.vdsNS.checkKeyInNS(Pegasus.TRANSFER_PROXY_KEY,"true");
                 }
                 //we want the transfer job to be run in the
                 //directory that Condor or GRAM decided to run
@@ -609,7 +609,7 @@ public abstract class Abstract implements Implementation{
 
         //we do not want the job to be launched
         //by kickstart, as the job is not run actually
-        newJob.vdsNS.checkKeyInNS( VDS.GRIDSTART_KEY,
+        newJob.vdsNS.checkKeyInNS( Pegasus.GRIDSTART_KEY,
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX] );
 
         return newJob;

@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.partitioner.graph.Graph;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
@@ -198,7 +198,7 @@ public class Group extends Abstract {
      * @param job  the job to be inserted.
      */
     private void insert(SubInfo job){
-        Object obj = job.vdsNS.get(VDS.GROUP_KEY);
+        Object obj = job.vdsNS.get(Pegasus.GROUP_KEY);
         if(obj != null && ((String)obj).equalsIgnoreCase(mDefaultGroup)){
             //throw an exception?
             throw new RuntimeException( "The group name " + mDefaultGroup +

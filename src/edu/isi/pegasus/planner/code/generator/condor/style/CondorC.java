@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 /**
  * Enables a job to be directly submitted to the condor pool of which the

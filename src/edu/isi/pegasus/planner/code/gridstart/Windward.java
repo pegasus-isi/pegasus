@@ -33,7 +33,7 @@ import edu.isi.pegasus.planner.code.GridStart;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.namespace.Dagman;
-import org.griphyn.cPlanner.namespace.VDS;
+import org.griphyn.cPlanner.namespace.Pegasus;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -217,9 +217,9 @@ public class Windward implements GridStart{
                 job.globusRSL.construct( "condorsubmit", tip.toString() );
                 
                 //we dont want any directories set for windows jobs.
-                String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
-                String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
-                                   style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))?
+                String style = (String)job.vdsNS.get(Pegasus.STYLE_KEY);
+                String directory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
+                                   style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE))?
                                    (String)job.condorVariables.removeKey("remote_initialdir"):
                                    (String)job.condorVariables.removeKey("initialdir");
             }
@@ -232,9 +232,9 @@ public class Windward implements GridStart{
          //for windows os for auxillary jobs also delete remote_initialdir and intialdir
         else if( mSiteStore.lookup( job.getSiteHandle() ).getOS() == SysInfo.OS.WINDOWS ){
             //we dont want any directories set for windows jobs.
-            String style = (String)job.vdsNS.get(VDS.STYLE_KEY);
-            String directory = (style.equalsIgnoreCase(VDS.GLOBUS_STYLE) ||
-                                style.equalsIgnoreCase(VDS.GLIDEIN_STYLE))?
+            String style = (String)job.vdsNS.get(Pegasus.STYLE_KEY);
+            String directory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
+                                style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE))?
                                    (String)job.condorVariables.removeKey("remote_initialdir"):
                                    (String)job.condorVariables.removeKey("initialdir");
         }
@@ -310,13 +310,13 @@ public class Windward implements GridStart{
     }
     
    /**
-     * Returns the value of the vds profile with key as VDS.GRIDSTART_KEY,
+     * Returns the value of the vds profile with key as Pegasus.GRIDSTART_KEY,
      * that would result in the loading of this particular implementation.
      * It is usually the name of the implementing class without the
      * package name.
      *
      * @return the value of the profile key.
-     * @see org.griphyn.cPlanner.namespace.VDS#GRIDSTART_KEY
+     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
      */
     public  String getVDSKeyValue(){
         //we want the merged jobs to also have the kickstart postscript i.e. exitpost
