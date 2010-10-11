@@ -23,7 +23,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 
 import edu.isi.pegasus.planner.transfer.SLS;

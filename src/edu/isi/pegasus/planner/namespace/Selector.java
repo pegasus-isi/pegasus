@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.namespace;
+package edu.isi.pegasus.planner.namespace;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -27,18 +27,18 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 
 /**
- * The stat namespace object.
+ * The selector namespace object.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
 
-public class Stat extends Namespace {
+public class Selector extends Namespace {
 
     /**
      * The name of the namespace that this class implements.
      */
-    public static final String NAMESPACE_NAME = Profile.STAT;
+    public static final String NAMESPACE_NAME = Profile.SELECTOR;
 
 
     /**
@@ -54,7 +54,7 @@ public class Stat extends Namespace {
      * Note that the map is not allocated memory at this stage. It is done so
      * in the overloaded construct function.
      */
-    public Stat() {
+    public Selector() {
         mProfileMap = null;
         mNamespace = NAMESPACE_NAME;
     }
@@ -64,7 +64,7 @@ public class Stat extends Namespace {
      *
      * @param mp  map (possibly empty).
      */
-    public Stat(Map mp) {
+    public Selector(Map mp) {
         mProfileMap = new TreeMap(mp);
         mNamespace = NAMESPACE_NAME;
     }
@@ -219,7 +219,7 @@ public class Stat extends Namespace {
      * @return the Cloned object
      */
     public Object clone() {
-        return ( mProfileMap == null ? new Stat() : new Stat(this.mProfileMap) );
+        return ( mProfileMap == null ? new Selector() : new Selector(this.mProfileMap) );
     }
 
 }

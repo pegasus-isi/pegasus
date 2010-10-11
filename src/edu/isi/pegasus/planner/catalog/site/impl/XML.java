@@ -42,7 +42,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.parser.Parser;
 
-import org.griphyn.cPlanner.namespace.Namespace;
+import edu.isi.pegasus.planner.namespace.Namespace;
 
 import java.io.File;
 import java.io.IOException;

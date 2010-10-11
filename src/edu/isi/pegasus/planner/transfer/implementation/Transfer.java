@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 

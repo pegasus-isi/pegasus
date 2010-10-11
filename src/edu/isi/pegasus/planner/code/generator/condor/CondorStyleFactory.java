@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 

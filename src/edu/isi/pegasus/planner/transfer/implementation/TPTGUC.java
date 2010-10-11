@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 
 

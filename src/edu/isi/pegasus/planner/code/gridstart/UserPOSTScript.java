@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Dagman;
 
 import edu.isi.pegasus.planner.code.POSTScript;
 

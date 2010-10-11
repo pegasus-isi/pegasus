@@ -15,17 +15,17 @@
  */
 
 
-package org.griphyn.cPlanner.namespace;
+package edu.isi.pegasus.planner.namespace;
 
 
 import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.aggregator.Aggregator;
-import org.griphyn.cPlanner.namespace.aggregator.MIN;
-import org.griphyn.cPlanner.namespace.aggregator.MAX;
-import org.griphyn.cPlanner.namespace.aggregator.Sum;
-import org.griphyn.cPlanner.namespace.aggregator.Update;
+import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
+import edu.isi.pegasus.planner.namespace.aggregator.MIN;
+import edu.isi.pegasus.planner.namespace.aggregator.MAX;
+import edu.isi.pegasus.planner.namespace.aggregator.Sum;
+import edu.isi.pegasus.planner.namespace.aggregator.Update;
 
 import java.util.Iterator;
 import java.util.Map;

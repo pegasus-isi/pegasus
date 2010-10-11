@@ -22,8 +22,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;

@@ -31,8 +31,8 @@ import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.common.PegRandom;
 
 
-import org.griphyn.cPlanner.namespace.Namespace;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Namespace;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import java.util.List;
 import java.util.LinkedList;

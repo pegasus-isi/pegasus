@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.classes.AuthenticateRequest;
 import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.ENV;
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 import org.griphyn.cPlanner.poolinfo.PoolMode;
 import org.ietf.jgss.GSSCredential;

@@ -26,8 +26,8 @@ import org.griphyn.cPlanner.classes.AggregatedJob;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
-import org.griphyn.cPlanner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Dagman;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 

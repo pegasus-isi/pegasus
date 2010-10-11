@@ -26,7 +26,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Condor;
 
 /**
  * This implementation enables a job to be submitted via CondorG to remote

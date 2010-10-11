@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.namespace;
+package edu.isi.pegasus.planner.namespace;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -27,19 +27,35 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 
 /**
- * The selector namespace object.
+ * The environment namespace, that puts in the environment variables for the
+ * transformation that is being run, through Condor. At present on the occurence
+ * of a clash between the values of an environment variable the values are
+ * overwritten with the order of preference in decreasing order being users
+ * local properties, transformation catalog, pool file and the dax (vdl).
+ * Later on operations like append , prepend would also be supported.
  *
  * @author Karan Vahi
+ * @author Gaurang Mehta
  * @version $Revision$
  */
 
-public class Selector extends Namespace {
+public class ENV extends Namespace {
 
     /**
      * The name of the namespace that this class implements.
      */
-    public static final String NAMESPACE_NAME = Profile.SELECTOR;
+    public static final String NAMESPACE_NAME = Profile.ENV;
 
+    /**
+     * The name of the environment variable that specifies the path to the
+     * proxy.
+     */
+    public static final String X509_USER_PROXY_KEY = "X509_USER_PROXY";
+
+    /**
+     * The name of the environment variable that specifies the Gridstart PREJOB.
+     */
+    public static final String GRIDSTART_PREJOB = "GRIDSTART_PREJOB";
 
     /**
      * The name of the implementing namespace. It should be one of the valid
@@ -54,7 +70,7 @@ public class Selector extends Namespace {
      * Note that the map is not allocated memory at this stage. It is done so
      * in the overloaded construct function.
      */
-    public Selector() {
+    public ENV() {
         mProfileMap = null;
         mNamespace = NAMESPACE_NAME;
     }
@@ -64,7 +80,7 @@ public class Selector extends Namespace {
      *
      * @param mp  map (possibly empty).
      */
-    public Selector(Map mp) {
+    public ENV(Map mp) {
         mProfileMap = new TreeMap(mp);
         mNamespace = NAMESPACE_NAME;
     }
@@ -129,20 +145,55 @@ public class Selector extends Namespace {
 
 
 
+
     /**
-     * It puts in the namespace specific information specified in the properties
-     * file into the namespace. The name of the pool is also passed, as many of
-     * the properties specified in the properties file are on a per pool basis.
+     * Converts the contents of the map into the string that can be put in the
+     * Condor file for printing.
      *
-     * @param properties  the <code>PegasusProperties</code> object containing
-     *                    all the properties that the user specified at various
-     *                    places (like .chimerarc, properties file, command line).
-     * @param pool        the pool name where the job is scheduled to run.
-     */   
-    public void checkKeyInNS(PegasusProperties properties, String pool){
-        //do nothing for time being.
-   
+     * @return  String .
+     */
+    public String toCondor() {
+        StringBuffer st = new StringBuffer();
+        String key = null;
+        String value = null;
+
+        Iterator it = (mProfileMap == null) ? null: mProfileMap.keySet().iterator();
+        if(it == null)
+            return null;
+
+        st.append("environment = ");
+        while(it.hasNext()){
+            key = (String)it.next();
+            value = (String)mProfileMap.get(key);
+            st.append(key).append("=").append(value).append(";");
+        }
+        st.append("\n");
+        return st.toString();
+
     }
+
+    /**
+    * It puts in the namespace specific information specified in the properties
+    * file into the namespace. The name of the pool is also passed, as many of
+    * the properties specified in the properties file are on a per pool basis.
+    *
+    * @param properties  the <code>PegasusProperties</code> object containing
+    *                    all the properties that the user specified at various
+    *                    places (like .chimerarc, properties file, command line).
+    * @param pool        the pool name where the job is scheduled to run.
+    */
+   public void checkKeyInNS(PegasusProperties properties, String pool){
+       //get from the properties for pool local
+       String prop = pool.equalsIgnoreCase("local") ?
+            //check if property in props file
+            properties.getLocalPoolEnvVar() :
+            null;
+
+        if (prop != null) {
+            checkKeyInNS(prop);
+        }
+
+   }
 
 
     /**
@@ -176,7 +227,7 @@ public class Selector extends Namespace {
         }
 
     }
-    
+
     /**
      * Merge the profiles in the namespace in a controlled manner.
      * In case of intersection, the new profile value overrides, the existing
@@ -199,27 +250,13 @@ public class Selector extends Namespace {
     }
 
 
-     
-    /**
-     * Converts the contents of the map into the string that can be put in the
-     * Condor file for printing.
-     *
-     * @return the textual description.
-     */
-    public String toCondor() {
-        return "";
-    }
-   
-
-    
-
     /**
      * Returns a copy of the current namespace object.
      *
      * @return the Cloned object
      */
     public Object clone() {
-        return ( mProfileMap == null ? new Selector() : new Selector(this.mProfileMap) );
+        return ( mProfileMap == null ? new ENV() : new ENV(this.mProfileMap) );
     }
 
 }

@@ -14,20 +14,27 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.namespace.aggregator;
+
+package edu.isi.pegasus.planner.namespace.aggregator;
 
 
 /**
- * An implementation of the Aggregator interface that always takes the
- * new profile value. Updates the old value with the new value.
+ * An internal interface, that allows us to perform aggregation functions
+ * on profiles during merging of profiles.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Update extends Abstract{
+public interface Aggregator{
 
     /**
-     * Returns the minimum of two values.
+     * The version number associated with this API of Profile Aggregators.
+     */
+    public static final String VERSION = "1.0";
+
+
+    /**
+     * Do the aggregation function on the profile values.
      *
      * @param oldValue   the existing value for the profile.
      * @param newValue   the new value being added to the profile.
@@ -36,8 +43,5 @@ public class Update extends Abstract{
      *
      * @return the computed value as a String.
      */
-    public String compute( String oldValue, String newValue, String dflt  ){
-        //always return the new value. no sanity checks
-        return newValue;
-    }
+    public String compute( String oldValue, String newValue, String dflt );
 }

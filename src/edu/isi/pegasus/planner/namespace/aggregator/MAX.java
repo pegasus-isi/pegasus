@@ -14,22 +14,21 @@
  *  limitations under the License.
  */
 
+package edu.isi.pegasus.planner.namespace.aggregator;
 
-package org.griphyn.cPlanner.namespace.aggregator;
 
 /**
- * An implementation of the Aggregator interface that sums the profile values.
- * In the case of either of the profile values not valid integers, the
- * default value is picked up.
- *
+ * An implementation of the Aggregator interface that takes the maximum of the
+ * profile values. In the case of either of the profile values not valid
+ * integers, the default value is picked up.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Sum extends Abstract{
+public class MAX extends Abstract{
 
     /**
-     * Sums up the values.
+     * Returns the maximum of two values.
      *
      * @param oldValue   the existing value for the profile.
      * @param newValue   the new value being added to the profile.
@@ -38,11 +37,10 @@ public class Sum extends Abstract{
      *
      * @return the computed value as a String.
      */
-    public String compute( String oldValue, String newValue, String dflt  ){
-        return Integer.toString(
-            parseInt( oldValue, dflt ) + parseInt(newValue, dflt )
-            );
+    public String compute( String oldValue, String newValue, String dflt ){
+        int val1 = parseInt( oldValue, dflt );
+        int val2 = parseInt( newValue, dflt );
+
+        return ( val2 > val1 )? Integer.toString( val2 ) : Integer.toString( val1 );
     }
-
-
 }

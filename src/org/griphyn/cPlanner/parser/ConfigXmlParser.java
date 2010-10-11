@@ -37,7 +37,7 @@ import java.io.IOException;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import org.griphyn.cPlanner.namespace.Namespace;
+import edu.isi.pegasus.planner.namespace.Namespace;
 
 /**
  * This is the parsing class, used to parse the pool config file in xml format.

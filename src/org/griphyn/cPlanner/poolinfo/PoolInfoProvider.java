@@ -34,8 +34,8 @@ import org.griphyn.cPlanner.common.Utility;
 
 import org.griphyn.cPlanner.engine.Engine;
 
-import org.griphyn.cPlanner.namespace.Namespace;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Namespace;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 

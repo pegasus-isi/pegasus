@@ -26,7 +26,7 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Dagman;
 
 import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
 import org.griphyn.cPlanner.parser.dax.Callback;
@@ -57,9 +57,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Map;
 import edu.isi.pegasus.planner.code.GridStartFactory;
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.ENV;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import org.griphyn.cPlanner.parser.pdax.PDAX2MDAG;
 
 /**

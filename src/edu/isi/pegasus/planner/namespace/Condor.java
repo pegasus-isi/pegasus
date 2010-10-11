@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.namespace;
+package edu.isi.pegasus.planner.namespace;
 
 
 import org.griphyn.cPlanner.classes.Profile;

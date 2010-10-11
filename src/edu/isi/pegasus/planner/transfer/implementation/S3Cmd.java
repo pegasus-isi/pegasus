@@ -43,7 +43,7 @@ import java.io.File;
 import java.util.List;
 import org.griphyn.cPlanner.engine.CreateDirectory;
 import org.griphyn.cPlanner.engine.createdir.Implementation;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
  * The implementation that creates transfer jobs that retrieve data from the 

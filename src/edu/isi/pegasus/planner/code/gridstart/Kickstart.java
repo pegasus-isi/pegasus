@@ -33,9 +33,9 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
 
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.ENV;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.code.GridStart;
 

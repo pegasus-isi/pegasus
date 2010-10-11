@@ -29,7 +29,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.transfer.SLS;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.poolinfo.PoolInfoProvider;
 

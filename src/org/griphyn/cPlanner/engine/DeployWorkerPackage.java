@@ -36,7 +36,7 @@ import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;

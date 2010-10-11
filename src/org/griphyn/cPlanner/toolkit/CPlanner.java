@@ -90,7 +90,7 @@ import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Set;
 import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 
 /**

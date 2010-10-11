@@ -30,7 +30,7 @@ import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 import java.io.File;
 import java.io.FileWriter;

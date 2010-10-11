@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.LinkedList;
 
 import java.io.File;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 
 /**

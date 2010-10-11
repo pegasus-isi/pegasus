@@ -15,26 +15,21 @@
  */
 
 
-package org.griphyn.cPlanner.namespace.aggregator;
+package edu.isi.pegasus.planner.namespace.aggregator;
 
 
 /**
- * An internal interface, that allows us to perform aggregation functions
- * on profiles during merging of profiles.
+ * An implementation of the Aggregator interface that takes the minimum of the
+ * profile values. In the case of either of the profile values not valid
+ * integers, the default value is picked up.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
-public interface Aggregator{
+public class MIN extends Abstract{
 
     /**
-     * The version number associated with this API of Profile Aggregators.
-     */
-    public static final String VERSION = "1.0";
-
-
-    /**
-     * Do the aggregation function on the profile values.
+     * Returns the minimum of two values.
      *
      * @param oldValue   the existing value for the profile.
      * @param newValue   the new value being added to the profile.
@@ -43,5 +38,11 @@ public interface Aggregator{
      *
      * @return the computed value as a String.
      */
-    public String compute( String oldValue, String newValue, String dflt );
+    public String compute( String oldValue, String newValue, String dflt ){
+        int val1 = parseInt( oldValue, dflt );
+        int val2 = parseInt( newValue, dflt );
+
+        return ( val2 < val1 )? Integer.toString( val2 ) : Integer.toString( val1 );
+    }
+
 }

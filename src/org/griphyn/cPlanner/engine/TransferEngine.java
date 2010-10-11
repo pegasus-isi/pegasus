@@ -35,7 +35,7 @@ import org.griphyn.cPlanner.common.Utility;
 
 import org.griphyn.cPlanner.engine.createdir.S3;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Graph;

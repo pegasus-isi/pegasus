@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.classes.SiteInfo;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Condor;
 
 import java.util.List;
 import java.util.Iterator;

@@ -37,7 +37,7 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;

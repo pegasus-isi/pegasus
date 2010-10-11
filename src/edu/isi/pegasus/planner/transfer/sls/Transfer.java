@@ -39,7 +39,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 

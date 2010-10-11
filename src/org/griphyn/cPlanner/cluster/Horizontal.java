@@ -27,7 +27,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorInstanceFactory;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.partitioner.Partition;
 

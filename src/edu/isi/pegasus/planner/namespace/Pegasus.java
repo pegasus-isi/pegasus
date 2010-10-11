@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.namespace;
+package edu.isi.pegasus.planner.namespace;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -24,8 +24,8 @@ import org.griphyn.cPlanner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.namespace.aggregator.Aggregator;
-import org.griphyn.cPlanner.namespace.aggregator.Sum;
+import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
+import edu.isi.pegasus.planner.namespace.aggregator.Sum;
 
 
 /**

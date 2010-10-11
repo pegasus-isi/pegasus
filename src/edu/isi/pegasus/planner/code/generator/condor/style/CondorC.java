@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
  * Enables a job to be directly submitted to the condor pool of which the
@@ -48,7 +48,7 @@ public class CondorC extends Condor {
      * The constant for the remote universe key.
      */
     public static final String REMOTE_UNIVERSE_KEY =
-                org.griphyn.cPlanner.namespace.Condor.REMOTE_UNIVERSE_KEY;
+                edu.isi.pegasus.planner.namespace.Condor.REMOTE_UNIVERSE_KEY;
 
     
     /**
@@ -56,32 +56,32 @@ public class CondorC extends Condor {
      * via Condor File Transfer mechanism.
      */
     public static final String SHOULD_TRANSFER_FILES_KEY =
-             org.griphyn.cPlanner.namespace.Condor.SHOULD_TRANSFER_FILES_KEY;
+             edu.isi.pegasus.planner.namespace.Condor.SHOULD_TRANSFER_FILES_KEY;
     
     /**
      * The corresponding remote kye name that designates that files should be
      * transferred via Condor File Transfer mechanism.
      */
     public static final String REMOTE_SHOULD_TRANSFER_FILES_KEY = 
-            org.griphyn.cPlanner.namespace.Condor.REMOTE_SHOULD_TRANSFER_FILES_KEY;
+            edu.isi.pegasus.planner.namespace.Condor.REMOTE_SHOULD_TRANSFER_FILES_KEY;
     /**
      * The name of key that designates when to transfer output.
      */
     public static final String WHEN_TO_TRANSFER_OUTPUT_KEY =
-            org.griphyn.cPlanner.namespace.Condor.WHEN_TO_TRANSFER_OUTPUT_KEY;
+            edu.isi.pegasus.planner.namespace.Condor.WHEN_TO_TRANSFER_OUTPUT_KEY;
     
     /**
      * The corresponding name of the remote key that designated when to transfer output.
      */
     public static final String REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY = 
-            org.griphyn.cPlanner.namespace.Condor.REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY;
+            edu.isi.pegasus.planner.namespace.Condor.REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY;
     
     
     /**
      * The key that designates the collector associated with the job
      */
     public static final String COLLECTOR_KEY =
-            org.griphyn.cPlanner.namespace.Condor.COLLECTOR_KEY;
+            edu.isi.pegasus.planner.namespace.Condor.COLLECTOR_KEY;
     
     /**
      * The name of the style being implemented.

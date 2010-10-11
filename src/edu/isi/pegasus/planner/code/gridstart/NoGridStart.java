@@ -38,7 +38,7 @@ import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import edu.isi.pegasus.planner.transfer.SLS;
 
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import java.io.File;
 
@@ -53,7 +53,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Condor;
 /**
  * This class ends up running the job directly on the grid, without wrapping
  * it in any other launcher executable.

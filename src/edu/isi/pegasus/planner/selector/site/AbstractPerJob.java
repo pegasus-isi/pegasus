@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import java.util.List;
 import java.util.Iterator;
-import org.griphyn.cPlanner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Hints;
 
 /**
  * The base class for the site selectors that want to map one job at a time.

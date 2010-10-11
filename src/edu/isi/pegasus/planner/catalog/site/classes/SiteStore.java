@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
         

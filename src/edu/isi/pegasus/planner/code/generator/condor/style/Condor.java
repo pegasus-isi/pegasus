@@ -25,7 +25,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
  * Enables a job to be directly submitted to the condor pool of which the
@@ -41,26 +41,26 @@ public class Condor extends Abstract {
 
     //some constants imported from the Condor namespace.
     public static final String UNIVERSE_KEY =
-                             org.griphyn.cPlanner.namespace.Condor.UNIVERSE_KEY;
+                             edu.isi.pegasus.planner.namespace.Condor.UNIVERSE_KEY;
 
     public static final String VANILLA_UNIVERSE =
-                         org.griphyn.cPlanner.namespace.Condor.VANILLA_UNIVERSE;
+                         edu.isi.pegasus.planner.namespace.Condor.VANILLA_UNIVERSE;
 
     public static final String SCHEDULER_UNIVERSE =
-                         org.griphyn.cPlanner.namespace.Condor.SCHEDULER_UNIVERSE;
+                         edu.isi.pegasus.planner.namespace.Condor.SCHEDULER_UNIVERSE;
 
     public static final String STANDARD_UNIVERSE =
-                         org.griphyn.cPlanner.namespace.Condor.STANDARD_UNIVERSE;
+                         edu.isi.pegasus.planner.namespace.Condor.STANDARD_UNIVERSE;
 
     public static final String LOCAL_UNIVERSE =
-                         org.griphyn.cPlanner.namespace.Condor.LOCAL_UNIVERSE;
+                         edu.isi.pegasus.planner.namespace.Condor.LOCAL_UNIVERSE;
 
     public static final String PARALLEL_UNIVERSE =
-                         org.griphyn.cPlanner.namespace.Condor.PARALLEL_UNIVERSE;
+                         edu.isi.pegasus.planner.namespace.Condor.PARALLEL_UNIVERSE;
 
     
     public static final String TRANSFER_EXECUTABLE_KEY =
-                         org.griphyn.cPlanner.namespace.Condor.TRANSFER_EXECUTABLE_KEY;
+                         edu.isi.pegasus.planner.namespace.Condor.TRANSFER_EXECUTABLE_KEY;
 
     //
 

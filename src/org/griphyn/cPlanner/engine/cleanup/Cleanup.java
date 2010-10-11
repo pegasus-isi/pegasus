@@ -29,7 +29,7 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
 
-import org.griphyn.cPlanner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Condor;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;

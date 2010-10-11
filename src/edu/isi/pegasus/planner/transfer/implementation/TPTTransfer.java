@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.classes.FileTransfer;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import java.io.FileWriter;
 import java.io.File;

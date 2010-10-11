@@ -32,8 +32,8 @@ import edu.isi.pegasus.planner.code.GridStart;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.namespace.Dagman;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import java.io.File;
 import java.io.FileWriter;

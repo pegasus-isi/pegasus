@@ -51,11 +51,11 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
 
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.Dagman;
-import org.griphyn.cPlanner.namespace.Globus;
-import org.griphyn.cPlanner.namespace.Pegasus;
-import org.griphyn.cPlanner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Globus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 import org.griphyn.vdl.euryale.VTorInUseException;
 

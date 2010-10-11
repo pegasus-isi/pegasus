@@ -40,7 +40,7 @@ import edu.isi.pegasus.planner.selector.site.SiteSelectorFactory;
 
 import edu.isi.pegasus.planner.selector.TransformationSelector;
 
-import org.griphyn.cPlanner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Hints;
 
 import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
 import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;

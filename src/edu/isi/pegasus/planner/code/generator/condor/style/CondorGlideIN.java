@@ -24,8 +24,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
-import org.griphyn.cPlanner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Condor;
 
 /**
  * Enables a job to be submitted to nodes that are logically part of the local pool,

@@ -35,7 +35,7 @@ import org.griphyn.cPlanner.common.StreamGobbler;
 import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
 import org.griphyn.cPlanner.common.StreamGobblerCallback;
 
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import org.griphyn.cPlanner.partitioner.Partition;
 import org.griphyn.cPlanner.partitioner.DAXWriter;
@@ -72,8 +72,8 @@ import java.util.regex.Pattern;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.ENV;
 
 
 /**

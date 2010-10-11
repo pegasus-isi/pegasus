@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.namespace.aggregator;
+package edu.isi.pegasus.planner.namespace.aggregator;
 
 
 /**

@@ -20,13 +20,13 @@ package org.griphyn.cPlanner.classes;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
-import org.griphyn.cPlanner.namespace.Namespace;
-import org.griphyn.cPlanner.namespace.Condor;
-import org.griphyn.cPlanner.namespace.Dagman;
-import org.griphyn.cPlanner.namespace.ENV;
-import org.griphyn.cPlanner.namespace.Globus;
-import org.griphyn.cPlanner.namespace.Hints;
-import org.griphyn.cPlanner.namespace.Pegasus;
+import edu.isi.pegasus.planner.namespace.Namespace;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Globus;
+import edu.isi.pegasus.planner.namespace.Hints;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
