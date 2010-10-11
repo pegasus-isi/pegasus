@@ -24,8 +24,6 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.AggregatedJob;
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
@@ -34,7 +32,6 @@ import org.griphyn.cPlanner.common.PegasusProperties;
 
 
 import edu.isi.pegasus.planner.namespace.Condor;
-import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.code.GridStart;

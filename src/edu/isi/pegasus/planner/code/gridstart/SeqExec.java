@@ -1019,7 +1019,6 @@ public class SeqExec implements GridStart {
     protected File enableAndGenerateSeqexecInputFile(SubInfo job, boolean isGlobusJob) {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
 
-         System.out.println( job.getName() + " -> " + job.condorVariables );
 
         //enable the job first using kickstart
         this.mKickstartGridStartImpl.enable(job, isGlobusJob );
