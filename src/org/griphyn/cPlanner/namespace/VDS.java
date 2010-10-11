@@ -57,13 +57,13 @@ public class VDS extends Namespace {
      *
      * @see #COLLAPSE_KEY
      */
-    public static final String BUNDLE_KEY = "bundle";
+    public static final String BUNDLE_KEY = "clusters.num";
 
     /**
      * The name of the key that if set in the VDS namespace determines the
      * number of jobs that are collapsed into the super job.
      */
-    public static final String COLLAPSE_KEY = "collapse";
+    public static final String COLLAPSE_KEY = "clusters.size";
 
     /**
      * The name of the key that determines the collapser executable to be used
