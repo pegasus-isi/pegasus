@@ -823,7 +823,10 @@ public class Kickstart implements GridStart {
 
             //always have the remote dir set to /tmp as we are
             //banking upon kickstart to change the directory for us
-            job.condorVariables.construct( key, "/tmp" );
+            //For worker node execution we no longer set any key, as
+            //it creates problems with condor file staging of proxy and
+            //other things. Karan Oct 11th , 2010
+            //job.condorVariables.construct( key, "/tmp" );
 
             //see if we need to generate a SLS input file in the submit directory
             File slsInputFile  = null;

@@ -846,10 +846,17 @@ public class SeqExec implements GridStart {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
 
         SubInfo jobcopy = (SubInfo)job.clone();
+
+        
+
         //enable the job first using kickstart to get PRE JOB and POST JOB populated
         this.mKickstartGridStartImpl.enable( jobcopy, isGlobusJob );
         String directory  = this.mKickstartGridStartImpl.getWorkerNodeDirectory( job );
-    
+
+        //remove the remote or initial dir's from the job
+        String key = getDirectoryKey( job );
+        String dir = (String)job.condorVariables.removeKey( key );
+
         try{
             //create a temp file first
             File temp = File.createTempFile( "merge_stdin", null, new File(mSubmitDir));
@@ -1012,7 +1019,7 @@ public class SeqExec implements GridStart {
     protected File enableAndGenerateSeqexecInputFile(SubInfo job, boolean isGlobusJob) {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
 
-        
+         System.out.println( job.getName() + " -> " + job.condorVariables );
 
         //enable the job first using kickstart
         this.mKickstartGridStartImpl.enable(job, isGlobusJob );
