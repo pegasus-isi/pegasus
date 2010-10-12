@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.visualize;
+package edu.isi.pegasus.planner.visualize;
 
 import java.util.Date;
 import java.util.List;

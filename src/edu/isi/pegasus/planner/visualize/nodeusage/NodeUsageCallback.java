@@ -15,16 +15,16 @@
  */
 
 
-package org.griphyn.cPlanner.visualize.nodeusage;
+package edu.isi.pegasus.planner.visualize.nodeusage;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Currently;
 
-import org.griphyn.cPlanner.visualize.Callback;
-import org.griphyn.cPlanner.visualize.JobMeasurements;
-import org.griphyn.cPlanner.visualize.WorkflowMeasurements;
+import edu.isi.pegasus.planner.visualize.Callback;
+import edu.isi.pegasus.planner.visualize.JobMeasurements;
+import edu.isi.pegasus.planner.visualize.WorkflowMeasurements;
 
 import org.griphyn.vdl.invocation.StatInfo;
 

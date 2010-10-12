@@ -24,8 +24,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
-import org.griphyn.cPlanner.visualize.Callback;
-import org.griphyn.cPlanner.visualize.KickstartParser;
+import edu.isi.pegasus.planner.visualize.Callback;
+import edu.isi.pegasus.planner.visualize.KickstartParser;
 
 import edu.isi.pegasus.planner.provenance.NetloggerCallback;
 

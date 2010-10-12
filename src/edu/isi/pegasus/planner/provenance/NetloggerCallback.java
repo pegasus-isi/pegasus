@@ -21,7 +21,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
 
-import org.griphyn.cPlanner.visualize.Callback;
+import edu.isi.pegasus.planner.visualize.Callback;
 
 import org.griphyn.vdl.invocation.StatInfo;
 

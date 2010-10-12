@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.visualize.spaceusage;
+package edu.isi.pegasus.planner.visualize.spaceusage;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;

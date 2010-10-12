@@ -15,13 +15,13 @@
  */
 
 
-package org.griphyn.cPlanner.visualize.nodeusage;
+package edu.isi.pegasus.planner.visualize.nodeusage;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.visualize.WorkflowMeasurements;
-import org.griphyn.cPlanner.visualize.Measurement;
+import edu.isi.pegasus.planner.visualize.WorkflowMeasurements;
+import edu.isi.pegasus.planner.visualize.Measurement;
 
 import java.util.List;
 import java.util.Iterator;

@@ -15,14 +15,14 @@
  */
 
 
-package org.griphyn.cPlanner.visualize.spaceusage;
+package edu.isi.pegasus.planner.visualize.spaceusage;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Currently;
 
-import org.griphyn.cPlanner.visualize.Callback;
+import edu.isi.pegasus.planner.visualize.Callback;
 
 import org.griphyn.vdl.invocation.StatInfo;
 

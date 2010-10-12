@@ -13,9 +13,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.griphyn.cPlanner.visualize.nodeusage;
+package edu.isi.pegasus.planner.visualize.nodeusage;
 
-import org.griphyn.cPlanner.visualize.Measurement;
+import edu.isi.pegasus.planner.visualize.Measurement;
 
 import java.util.Date;
 

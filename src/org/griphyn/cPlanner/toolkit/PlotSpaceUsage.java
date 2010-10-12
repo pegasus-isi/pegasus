@@ -24,15 +24,15 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.FactoryException;
 
-import org.griphyn.cPlanner.visualize.Callback;
-import org.griphyn.cPlanner.visualize.KickstartParser;
+import edu.isi.pegasus.planner.visualize.Callback;
+import edu.isi.pegasus.planner.visualize.KickstartParser;
 
-import org.griphyn.cPlanner.visualize.spaceusage.Plot;
-import org.griphyn.cPlanner.visualize.spaceusage.Ploticus;
-import org.griphyn.cPlanner.visualize.spaceusage.KickstartOutputFilenameFilter;
-import org.griphyn.cPlanner.visualize.spaceusage.SpaceUsage;
-import org.griphyn.cPlanner.visualize.spaceusage.SpaceUsageCallback;
-import org.griphyn.cPlanner.visualize.spaceusage.TailStatd;
+import edu.isi.pegasus.planner.visualize.spaceusage.Plot;
+import edu.isi.pegasus.planner.visualize.spaceusage.Ploticus;
+import edu.isi.pegasus.planner.visualize.spaceusage.KickstartOutputFilenameFilter;
+import edu.isi.pegasus.planner.visualize.spaceusage.SpaceUsage;
+import edu.isi.pegasus.planner.visualize.spaceusage.SpaceUsageCallback;
+import edu.isi.pegasus.planner.visualize.spaceusage.TailStatd;
 
 import org.griphyn.vdl.toolkit.FriendlyNudge;
 

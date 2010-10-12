@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.visualize;
+package edu.isi.pegasus.planner.visualize;
 
 import org.griphyn.vdl.invocation.Data;
 import org.griphyn.vdl.invocation.Job;

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.visualize.spaceusage;
+package edu.isi.pegasus.planner.visualize.spaceusage;
 
 import java.io.FilenameFilter;
 import java.io.File;

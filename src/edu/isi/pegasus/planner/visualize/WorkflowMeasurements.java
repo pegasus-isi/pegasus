@@ -14,8 +14,9 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.visualize.spaceusage;
+package edu.isi.pegasus.planner.visualize ;
 
+import org.griphyn.cPlanner.visualize.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -25,22 +26,23 @@ import java.util.Collections;
 import java.util.Iterator;
 
 /**
- * A container object that stores the space usage for each site.
+ * A container object that stores the measurements for each site on which
+ * the workflow was executed.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
-public class SpaceUsage {
+public class WorkflowMeasurements {
 
     /**
-     * The map that stores the list of space objects indexed by site name.
+     * The map that stores the list of <code>Measurement</code> indexed by site name.
      */
     private Map mStore;
 
     /**
-     * The default store.
+     * The default constructor.
      */
-    public SpaceUsage() {
+    public WorkflowMeasurements() {
         mStore = new HashMap();
     }
 
@@ -56,23 +58,23 @@ public class SpaceUsage {
     }
 
     /**
-     * Returns the list of <code>Space</code> objects corresponding to a
+     * Returns the list of <code>Measurement</code> objects corresponding to a
      * particular site.
      *
-     * @param site  the site for which sizes are required.
+     * @param site  the site for which Measurements are required.
      *
      * @return List
      */
-    public List getSizes( String site ) {
+    public List getMeasurements( String site ) {
         return (mStore.containsKey( site ) ?  (List) mStore.get( site ) : new LinkedList());
     }
     /**
-     * Add a Space record to the store.
+     * Add a Measurement to the store.
      *
      * @param site     the site for which the record is logged.
-     * @param record   the <code>SpaceUsage</code> record.
+     * @param record   the <code>Measurement</code> record.
      */
-    public void addRecord( String site, Space record ){
+    public void addMeasurement( String site, Measurement record ){
         List l =  ( mStore.containsKey( site ) ) ?
                                                 (List) mStore.get( site ):
                                                 new LinkedList();
@@ -85,7 +87,7 @@ public class SpaceUsage {
      * Sorts the records for each site.
      */
     public void sort(){
-        SpaceComparator s = new SpaceComparator();
+        MeasurementComparator s = new MeasurementComparator();
         for( Iterator it = mStore.entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = (Map.Entry) it.next();
             List l = (List)entry.getValue();
@@ -118,36 +120,35 @@ public class SpaceUsage {
 
 
 /**
- * Comparator for Space objects that allows us to sort on time.
+ * Comparator for Measurement objects that allows us to sort on time.
  *
  */
-class SpaceComparator implements Comparator{
+class MeasurementComparator implements Comparator{
 
-/**
-   * Implementation of the {@link java.lang.Comparable} interface.
-   * Compares this object with the specified object for order. Returns a
-   * negative integer, zero, or a positive integer as this object is
-   * less than, equal to, or greater than the specified object. The
-   * definitions are compared by their type, and by their short ids.
-   *
-   * @param o1 is the object to be compared
-   * @param o2 is the object to be compared with o1.
-   *
-   * @return a negative number, zero, or a positive number, if the
-   * object compared against is less than, equals or greater than
-   * this object.
-   * @exception ClassCastException if the specified object's type
-   * prevents it from being compared to this Object.
-   */
-  public int compare( Object o1, Object o2 )
-  {
-    if ( o1 instanceof Space && o2 instanceof Space ) {
-      Space s1 = (Space) o1;
-      Space s2 = (Space) o2;
+    /**
+     * Implementation of the {@link java.lang.Comparable} interface.
+     * Compares this object with the specified object for order. Returns a
+     * negative integer, zero, or a positive integer as this object is
+     * less than, equal to, or greater than the specified object. The
+     * definitions are compared by their type, and by their short ids.
+     *
+     * @param o1 is the object to be compared
+     * @param o2 is the object to be compared with o1.
+     *
+     * @return a negative number, zero, or a positive number, if the
+     * object compared against is less than, equals or greater than
+     * this object.
+     * @exception ClassCastException if the specified object's type
+     * prevents it from being compared to this Object.
+     */
+    public int compare( Object o1, Object o2 ) {
+        if ( o1 instanceof Measurement && o2 instanceof Measurement ) {
+            Measurement s1 = (Measurement) o1;
+            Measurement s2 = (Measurement) o2;
 
-      return s1.getDate().compareTo( s2.getDate() );
-    } else {
-      throw new ClassCastException( "object is not a Space" );
+            return s1.getTime().compareTo( s2.getTime() );
+        } else {
+            throw new ClassCastException( "object is not a Space" );
+        }
     }
-  }
 }

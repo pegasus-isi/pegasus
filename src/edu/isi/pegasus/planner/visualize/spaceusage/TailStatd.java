@@ -14,9 +14,9 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.visualize.spaceusage;
+package edu.isi.pegasus.planner.visualize.spaceusage;
 
-import org.griphyn.cPlanner.visualize.Callback;
+import edu.isi.pegasus.planner.visualize.Callback;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
