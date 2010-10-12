@@ -735,6 +735,7 @@ print PLOT << "END"
   datafield: 1
   listsize: @{[$n * 2]}
   roundrobin: yes
+  comparemethod: exact
 
 #proc areadef
   rectangle: 0 0 $width $height
