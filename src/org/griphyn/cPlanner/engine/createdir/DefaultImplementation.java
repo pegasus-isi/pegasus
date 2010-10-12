@@ -210,7 +210,7 @@ public class DefaultImplementation implements Implementation {
 
             StringBuffer sb = new StringBuffer();
             sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" ).
-               append( File.separator ).append( "dirmanager" );
+               append( File.separator ).append( DefaultImplementation.EXECUTABLE_BASENAME );
             execPath = sb.toString();
             argString = "--create --dir " +
                         mSiteStore.getWorkDirectory( site );

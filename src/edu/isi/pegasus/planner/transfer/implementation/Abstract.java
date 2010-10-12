@@ -72,6 +72,13 @@ public abstract class Abstract implements Implementation{
      * remote execution pools.
      */
     public static final String CHANGE_XBIT_TRANSFORMATION = "dirmanager";
+    
+    
+    /**
+     * The basename of the pegasus dirmanager  executable.
+     */
+    public static final String XBIT_EXECUTABLE_BASENAME = "pegasus-dirmanager";
+    
 
     /**
      * The transformation namespace for the setXBit jobs.
@@ -741,16 +748,15 @@ public abstract class Abstract implements Implementation{
     protected SubInfo createSetXBitJob(FileTransfer file, String name){
         SubInfo xBitJob = new SubInfo();
         TransformationCatalogEntry entry   = null;
-//        JobManager jobManager = null;
         GridGateway jobManager = null;
         NameValue destURL  = (NameValue)file.getDestURL();
         String eSiteHandle = destURL.getKey();
 
         List entries;
         try {
-            entries= mTCHandle.lookup( this.XBIT_TRANSFORMATION_NS,
-                                             this.CHANGE_XBIT_TRANSFORMATION,
-                                             this.XBIT_TRANSFORMATION_VERSION,
+            entries= mTCHandle.lookup( Abstract.XBIT_TRANSFORMATION_NS,
+                                             Abstract.CHANGE_XBIT_TRANSFORMATION,
+                                             Abstract.XBIT_TRANSFORMATION_VERSION,
                                              eSiteHandle, TCType.INSTALLED);
         } catch (Exception e) {
             //non sensical catching
@@ -769,9 +775,9 @@ public abstract class Abstract implements Implementation{
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
-                append( Separator.combine( this.XBIT_TRANSFORMATION_NS,
-                                           this.CHANGE_XBIT_TRANSFORMATION,
-                                           this.XBIT_TRANSFORMATION_VERSION )).
+                append( Separator.combine( Abstract.XBIT_TRANSFORMATION_NS,
+                                           Abstract.CHANGE_XBIT_TRANSFORMATION,
+                                           Abstract.XBIT_TRANSFORMATION_VERSION )).
                 append(" at site ").append( eSiteHandle );
 
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
@@ -779,22 +785,19 @@ public abstract class Abstract implements Implementation{
         }
 
 
-//        SiteInfo eSite = mSCHandle.getPoolEntry(eSiteHandle, "transfer");
-//        jobManager     = eSite.selectJobManager("transfer",true);
         SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
         jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         String arguments = " -X -f " + Utility.getAbsolutePath(destURL.getValue());
 
         xBitJob.jobName     = name;
-        xBitJob.logicalName = this.CHANGE_XBIT_TRANSFORMATION;
-        xBitJob.namespace   = this.XBIT_TRANSFORMATION_NS;
-        xBitJob.version     = this.XBIT_TRANSFORMATION_VERSION;
-        xBitJob.dvName      = this.CHANGE_XBIT_TRANSFORMATION;
-        xBitJob.dvNamespace = this.XBIT_DERIVATION_NS;
-        xBitJob.dvVersion   = this.XBIT_DERIVATION_VERSION;
+        xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
+        xBitJob.namespace   = Abstract.XBIT_TRANSFORMATION_NS;
+        xBitJob.version     = Abstract.XBIT_TRANSFORMATION_VERSION;
+        xBitJob.dvName      = Abstract.CHANGE_XBIT_TRANSFORMATION;
+        xBitJob.dvNamespace = Abstract.XBIT_DERIVATION_NS;
+        xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
 //        xBitJob.condorUniverse  = "vanilla";
         xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
-//        xBitJob.globusScheduler = jobManager.getInfo(JobManager.URL);
         xBitJob.globusScheduler = jobManager.getContact();
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
@@ -804,7 +807,6 @@ public abstract class Abstract implements Implementation{
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-//        xBitJob.updateProfiles(mSCHandle.getPoolProfile(eSiteHandle));
         xBitJob.updateProfiles( eSite.getProfiles() );
 
         //the profile information from the transformation
@@ -841,9 +843,9 @@ public abstract class Abstract implements Implementation{
         if ( home == null ){
             //cannot create default TC
             mLogger.log( "Unable to create a default entry for " +
-                         Separator.combine( this.XBIT_TRANSFORMATION_NS,
-                                           this.CHANGE_XBIT_TRANSFORMATION,
-                                           this.XBIT_TRANSFORMATION_VERSION  ),
+                         Separator.combine( Abstract.XBIT_TRANSFORMATION_NS,
+                                           Abstract.CHANGE_XBIT_TRANSFORMATION,
+                                           Abstract.XBIT_TRANSFORMATION_VERSION  ),
                          LogManager.DEBUG_MESSAGE_LEVEL );
             //set the flag back to true
             return defaultTCEntry;
@@ -858,12 +860,12 @@ public abstract class Abstract implements Implementation{
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( this.CHANGE_XBIT_TRANSFORMATION );
+            append( Abstract.XBIT_EXECUTABLE_BASENAME  );
 
 
-        defaultTCEntry = new TransformationCatalogEntry( this.XBIT_TRANSFORMATION_NS,
-                                                         this.CHANGE_XBIT_TRANSFORMATION,
-                                                         this.XBIT_TRANSFORMATION_VERSION
+        defaultTCEntry = new TransformationCatalogEntry( Abstract.XBIT_TRANSFORMATION_NS,
+                                                         Abstract.CHANGE_XBIT_TRANSFORMATION,
+                                                         Abstract.XBIT_TRANSFORMATION_VERSION
                                                          );
 
         defaultTCEntry.setPhysicalTransformation( path.toString() );

@@ -73,6 +73,12 @@ public class RemoveDirectory extends Engine {
      * remote execution pools.
      */
     public static final String TRANSFORMATION_NAME = "dirmanager";
+    
+    
+    /**
+     * The basename of the pegasus dirmanager  executable.
+     */
+    public static final String REMOVE_DIR_EXECUTABLE_BASENAME = "pegasus-dirmanager";
 
     /**
      * The transformation namespace for the create dir jobs.
@@ -315,7 +321,7 @@ public class RemoveDirectory extends Engine {
 
             StringBuffer sb = new StringBuffer();
             sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" ).
-               append( File.separator ).append( "dirmanager" );
+               append( File.separator ).append( RemoveDirectory.REMOVE_DIR_EXECUTABLE_BASENAME );
             execPath = sb.toString();
             newJob.condorVariables.construct( "transfer_executable", "true" );
         }
@@ -417,7 +423,7 @@ public class RemoveDirectory extends Engine {
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( RemoveDirectory.TRANSFORMATION_NAME );
+            append( RemoveDirectory.REMOVE_DIR_EXECUTABLE_BASENAME );
 
 
         defaultTCEntry = new TransformationCatalogEntry( RemoveDirectory.TRANSFORMATION_NAMESPACE,
