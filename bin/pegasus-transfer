@@ -276,8 +276,7 @@ def check_tool(executable, version_arg, version_regex):
     full_path = backticks("which " + executable + " 2>/dev/null") 
     full_path = full_path.rstrip('\n')
     if full_path == "":
-        logger.warn("  %-18s Not found (but maybe not required)" %(executable))
-        return
+        raise RuntimeError("Required command '%s' not found in the current environment" %(executable))
     tool_info[executable]['full_path'] = full_path
 
     # version
@@ -349,15 +348,18 @@ def check_env_and_tools():
     os.environ['LD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
     os.environ['DYLD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
     logger.info("PATH=" + os.environ['PATH'])
-    logger.info("LD_LIBRARY_PATH=" + os.environ['PATH'])
+    logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
     
     # tools we might need later
-    check_tool("globus-version", "--full", "([0-9]+\.[0-9]+\.[0-9]+)")
-    check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
-    check_tool("uberftp", "-version", "([0-9]+\.[0-9]+)")
-    check_tool("wget", "--version", "([0-9]+\.[0-9]+)")
-    check_tool("lcg-cp", "--version", "lcg_util-([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+)")
-    #check_tool("s3cmd", "--version", "([0-9]+\.[0-9]+\.[0-9]+)")
+    if len(webget_list) > 0:
+        check_tool("wget", "--version", "([0-9]+\.[0-9]+)")
+
+    if len(gsiftp_list) > 0:
+        check_tool("globus-version", "--full", "([0-9]+\.[0-9]+\.[0-9]+)")
+        check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
+
+    if len(srm_list) > 0:
+        check_tool("lcg-cp", "--version", "lcg_util-([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+)")
 
 
 def prepare_local_dir(path):
@@ -652,13 +654,6 @@ if options.log_level == None:
 setup_logger(options.log_level)
 delay_errors = options.delay_errors
 
-logger.debug("Checking environment and tools")
-try:
-    check_env_and_tools()
-except Exception, err:
-    logger.critical(err)
-    myexit(1)
-
 # stdin or file input?
 if options.file == None:
     logger.info("Reading URL pairs from stdin")
@@ -719,6 +714,13 @@ for i, url_pair in enumerate(all_list):
     else:
         logger.critical("Error: This tool does not know how to transfer from %s:// to %s://" % (url_pair.src_proto, url_pair.dst_proto))
         myexit(1)
+
+logger.debug("Checking environment and tools")
+try:
+    check_env_and_tools()
+except Exception, err:
+    logger.critical(err)
+    myexit(1)
 
 # start the stats time
 stats_start = time.time()
