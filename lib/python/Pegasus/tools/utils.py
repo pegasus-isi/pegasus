@@ -30,8 +30,9 @@ import datetime
 import subprocess
 
 # Module variables
-jobbase = "jobstate.log"
-brainbase = "braindump.txt"
+MAXLOGFILE = 1000		# For log rotation, check files from .000 to .999
+jobbase = "jobstate.log"	# Default name for jobstate.log file
+brainbase = "braindump.txt"	# Default name for workflow information file
 
 # Get logger object (initialized elsewhere)
 logger = logging.getLogger()
@@ -178,7 +179,7 @@ def slurp_braindb(run, brain_alternate=None):
 	k, v = line.split(" ", 1)
 	
 	if k == "run" and v != run and run != '.':
-	    logger.warn("Warning: run directory mismatch, using %s" % (run))
+	    logger.warn("run directory mismatch, using %s" % (run))
 	    my_config[k] = run
 	else:
 	    # Remove leading and trailing whitespaces from value
@@ -242,6 +243,44 @@ def check_rescue(dir, dag):
     my_result.sort()
 
     return my_result
+
+def rotate_log_file(source_file):
+    """
+    This function rotates the specified logfile.
+    """
+
+    # First we check if we have the log file
+    if not os.access(source_file, os.F_OK):
+	# File doesn't exist, we don't have to rotate
+	return
+
+    # Now we need to find the latest log file
+
+    # We start from .000
+    sf = 0
+
+    while (sf < MAXLOGFILE):
+	dest_file = source_file + ".%03d" % (sf)
+	if os.access(dest_file, os.F_OK):
+	    # Continue to the next one
+	    sf = sf + 1
+	else:
+	    break
+
+    # Safety check to see if we have reached the maximum number of log files
+    if sf >= MAXLOGFILE:
+	logger.error("%s exists, cannot rotate log file anymore!" % (dest_file))
+	sys.exit(1)
+
+    # Now that we have source_file and dest_file, try to rotate the logs
+    try:
+	os.rename(source_file, dest_file)
+    except:
+        logger.error("cannot rename %s to %s" % (source_file, dest_file))
+	sys.exit(1)
+
+    # Done!
+    return
 
 def log10(x):
     """

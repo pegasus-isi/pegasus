@@ -128,6 +128,7 @@ if sys.version_info < (2, 5):
 re_parse_dag_submit_files = re.compile(r"JOB\s+(\S+)\s(\S+)(\s+DONE)?", re.IGNORECASE)
 re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
 re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\sDIR\s(\S+)", re.IGNORECASE)
+re_parse_dag_edge = re.compile(r"PARENT\s+(\S+)\s+CHILD\s+(\S+)")
 
 # Used in out2log
 re_remove_extensions = re.compile(r"(?:\.(?:rescue|dag))+$")
@@ -146,6 +147,7 @@ re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_site_parse_euryale = re.compile(r"^\#!\s+site=(\S+)")
 
 # Used in process
+re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
 re_parse_timestamp = re.compile(r"^\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
 re_parse_event = re.compile(r"Event:\s+ULOG_(\S+) for Condor (?:Job|Node) (\S+)\s+\((-?[0-9]+\.[0-9]+)(\.[0-9]+)?\)$")
 re_parse_script_running = re.compile(r"\d{2}\sRunning (PRE|POST) script of (?:Job|Node) (.+)\.{3}")
@@ -173,7 +175,6 @@ brainkeys["required"] = ["basedir", "vogroup", "label", "rundir"]
 brainkeys["optional"] = ["dax", "dag", "jsd", "run", "pegasushome"]
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
 speak = "TSSP/1.0"
-MAXLOGFILE = 1000			# For log rotation, check files from .000 to .999
 PRESCRIPT_TASK_ID = -1			# id for prescript tasks
 POSTSCRIPT_TASK_ID = -2			# id for postscript tasks
 MONITORD_STATE_FILE = "monitord.info" 	# filename for writing monitord state information
@@ -198,11 +199,7 @@ unsubmitted_events = {"UN_READY": 1,
 		      "PRE_SCRIPT_FAILURE": 1}
 
 # Global variables
-start = int(time.time()) 	# start time for total duration
 wf = None			# instance of workflow class
-line = 0 			# line number from DAGMan debug file
-timestamp = 0 			# time stamp from log file
-pid = 0 			# DAGMan's pid -- set later
 replay_mode = 0			# disable checking if DAGMan's pid is gone
 use_db = 1			# flag for using the database
 single_db = 0			# flag for using a single db at the top level workflow
@@ -215,8 +212,6 @@ pending = {} 			# remember when GLOBUS_SUBMIT was entered
 				# jid --> [stamp, condor_id, wtime, site]
 running = {}			# ditto for EXECUTE for hidden starvation
 				# jid --> [stamp, condor_id, wtime, site]
-done = {}			# jid --> stamp
-flag = {}			# jid --> retries
 job_site = {}			# last site a job was planned for
 jobstate = {}			# jid --> [stamp, event, condor_id, wtime, site]
 siteinfo = {}			# site --> { [RPSF] --> [ #, mtime] }
@@ -227,16 +222,11 @@ waiting = {}			# site --> stamp/60 --> [ #P->R, sum(ptime)]
 revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
 
 # Remaining variables
-out = None			# .dag.dagman.out file
-run = None			# run directory
+out = None			# .dag.dagman.out file from command-line
+run = None			# run directory from command-line dagman.out file
 server = None			# server socket
 sockfn = None			# socket filename
-condorlog = None		# Condor common logfile
-terminate = None		# Keep track of terminate condition (and errors for exit code)
-condor_version = 0		# Track DAGMan's version
-condor_major = 0		# Track DAGMan's major version
 condor_dagman_executable = None	# condor_dagman binary location
-multiline_file_flag = False	# Track multiline user log files, DAGMan > 6.6
 workdb = None			# Instance of the database
 
 jobtypes = {0: "unassigned",
@@ -286,6 +276,24 @@ def translate_job_type(my_jobtype_id):
 	return jobtypes[my_jt]
     # my_jt is not in the jobtypes conversion map, return None
     return None
+
+def out2log(rundir, outfile):
+    # purpose: infer output symlink for Condor common user log
+    # paramtr: rundir (IN): the run directory
+    # paramtr: outfile (IN): the name of the out file we use
+    # returns: the name of the log file to use
+
+    # Get the basename
+    my_base = os.path.basename(outfile)
+    # NEW: Account for rescue DAGs
+    my_base = my_base[:my_base.find(".dagman.out")]
+    my_base = re_remove_extensions.sub('', my_base)
+    # Add .log extension
+    my_base = my_base + ".log"
+    # Create path
+    my_log = os.path.join(rundir, my_base)
+
+    return my_log, my_base
 
 class Job:
     """
@@ -531,168 +539,25 @@ class Workflow:
     _jobs_map = {}
     _jobs = {}
     _job_submit_seq = 1
+    _out_file = None			# .dag.dagman.out file
     _run_dir = None			# run directory for this workflow
-    _out_file = None			# dagman.out file for this workflow
-    _dag_file = None			# dag file
     _log_file = None			# monitord.log file
     _jsd_file = None			# jobstate.log file
     _JSDB = None			# Handle for jobstate.log file
     _job_counters = {}			# Job counters for figuring out which output file to parse
     _job_info = {}			# jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
-
-    def parse_dag_file(self):
-	"""
-	This function parses the DAG file and determines submit file
-	locations
-	"""
-
-	try:
-	    DAG = open(self._dag_file, "r")
-	except:
-	    logger.warning("unable to read %s!" % (self._dag_file))
-	else:
-	    for dag_line in DAG:
-		if (dag_line.lower()).find("job") >= 0:
-		    # Found Job line, parse it
-		    my_match = re_parse_dag_submit_files.search(dag_line)
-		    if my_match:
-			if not my_match.group(3):
-			    my_jobid = my_match.group(1)
-			    my_sub = os.path.join(self._run_dir, my_match.group(2))
-			    # Found submit file for not-DONE job
-			    if my_jobid in self._job_info:
-				# Entry already exists for this job, just collect submit file info
-				self._job_info[my_jobid][0] = my_sub
-			    else:
-				# No entry for this job, let's create a new one
-				self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None]
-		if (dag_line.lower()).find("script post") >= 0:
-		    # Found SCRIPT POST line, parse it
-		    my_match = re_parse_dag_script.search(dag_line)
-		    if my_match:
-			my_jobid = my_match.group(1)
-			my_exec = my_match.group(2)
-			my_args = my_match.group(3)
-			if my_jobid in self._job_info:
-			    # Entry already exists for this job, just collect post script info
-			    self._job_info[my_jobid][3] = my_exec
-			    self._job_info[my_jobid][4] = my_args
-			else:
-			    # No entry for this job, let's create a new one
-			    self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None]
-		if (dag_line.lower()).find("script pre") >= 0:
-		    # Found SCRIPT PRE line, parse it
-		    my_match = re_parse_dag_script.search(dag_line)
-		    if my_match:
-			my_jobid = my_match.group(1)
-			my_exec = my_match.group(2)
-			my_args = my_match.group(3)
-			if my_jobid in self._job_info:
-			    # Entry already exists for this job, just collect pre script info
-			    self._job_info[my_jobid][1] = my_exec
-			    self._job_info[my_jobid][2] = my_args
-			else:
-			    # No entry for this job, let's create a new one
-			    self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None]
-                if (dag_line.lower()).find("subdag external") >= 0:
-                    # Found SUBDAG line, parse it
-                    my_match = re_parse_dag_subdag.search(dag_line)
-                    if my_match:
-                        my_jobid = my_match.group(1)
-                        my_dag = my_match.group(2)
-                        my_dir = my_match.group(3)
-                        if my_jobid in self._job_info:
-                            # Entry already exists for this job, just set subdag flag, and dag/dir info
-			    self._job_info[my_jobid][5] = True
-			    self._job_info[my_jobid][6] = my_dag
-                            self._job_info[my_jobid][7] = my_dir
-                        else:
-                            # No entry for this job, let's create a new one
-                            self._job_info[my_jobid] = [None, None, None, None, None, True, my_dag, my_dir]
-			
-	    DAG.close()
-
-	# POST-CONDITION: _job_info contains only submit-files of jobs
-	# that are not yet done. Normally, this are all submit
-	# files. In rescue DAGS, that is an arbitrary subset of all
-	# jobs. In addition, _job_info should contain all PRE and POST
-	# script information for job in this workflow, and all subdag
-        # jobs, with the their dag files, and directories
-
-    def read_workflow_state(self):
-        """
-        This function reads the job_submit_seq and the job_counters
-        dictionary from a file in the workflow's run directory. This
-        is used for restarting the logging information from where we
-        stopped last time.
-        """
-        
-        my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
-
-        try:
-            INPUT = open(my_fn, "r")
-        except:
-            logger.info("cannot open state file %s" % (my_fn))
-            return
-        
-        try:
-            for line in INPUT:
-                # Split the input line in 2, and make the second part an integer
-                my_job, my_count = line.split(" ", 1)
-                my_job = my_job.strip()
-                my_count = int(my_count.strip())
-                if my_job == "monitord_job_sequence":
-                    # This is the last job_submit_seq used
-                    self._job_submit_seq = my_count
-                else:
-                    # Another job counter
-                    self._job_counters[my_job] = my_count
-        except:
-            logger.error("error processing state file %s" % (my_fn))
-        
-        # Close the file
-        try:
-            INPUT.close()
-        except:
-            pass
-
-        # All done!
-        return
-
-    def write_workflow_state(self):
-        """
-        This function writes the job_submit_seq and the job_counters
-        dictionary to a file in the workflow's run directory. This can
-        be used later for restarting the logging information from
-        where we stop. This function will overwrite the log file every
-        time is it called.
-        """
-        
-        my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
-
-        try:
-            OUT = open(my_fn, "w")
-        except:
-            logger.error("cannot open state file %s" % (my_fn))
-            return
-        
-        try:
-            # Write first line with the last job_submit_seq used
-            OUT.write("monitord_job_sequence %d\n" % (self._job_submit_seq))
-            # Then, write all job_counters
-            for my_job in self._job_counters:
-                OUT.write("%s %d\n" % (my_job, self._job_counters[my_job]))
-        except:
-            logger.error("cannot write state to log file %s" % (my_fn))
-        
-        # Close the file
-        try:
-            OUT.close()
-        except:
-            pass
-
-        # All done!
-        return
+    _valid_braindb = True		# Flag for creating a new brain db if we don't find one
+    _line = 0 				# line number from dagman.out file
+    _last_processed_line = 0		# line last processed by the monitoring daemon
+    _restart_count = 0			# Keep track of how many times the workflow was restarted
+    _skipping_recovery_lines = False	# Flag for skipping the repeat duplicate messages generated by DAGMan
+    _dagman_condor_id = None		# Condor id of the current DAGMan
+    _dagman_pid = 0			# Condor DAGMan's PID
+    _workflow_start = 0			# Time we started tracking this workflow (initialized in __init__)
+    _current_timestamp = 0		# Last timestamp from DAGMan
+    _terminate = None			# Keep track of when to finish this workflow
+    _condorlog = None			# Condor common logfile
+    _multiline_file_flag = False	# Track multiline user log files, DAGMan > 6.6
 
     def output_to_db(self, event, kwargs):
 	"""
@@ -729,6 +594,211 @@ class Workflow:
             # Send it to the loader
             self._db.notify(kwargs)
 
+    def db_send_edge(self, parent, child):
+	"""
+	This function sends to the DB information about a parent-child relationship.
+	"""
+	# Check if database is configured
+	if self._db is None:
+	    return
+	# Make sure parameters are not None
+	if parent is None or child is None:
+	    return
+
+	# Start empty
+	kwargs = {}
+	# Make sure we include the wf_uuid
+	kwargs["wf__id"] = self._wf_uuid
+	kwargs["ts"] = self._current_timestamp
+        kwargs["parent"] = parent
+        kwargs["child"] = child
+	
+	# Send workflow state event to database
+	self.output_to_db("edge", kwargs)
+
+    def parse_dag_file(self, dag_file):
+	"""
+	This function parses the DAG file and determines submit file locations
+	"""
+
+        # If we already have jobs in our _job_info dictionary, skip reading the dag file
+        if len(self._job_info) > 0:
+            logger.debug("skipping parsing the dag file, already have job info loaded...")
+            return
+
+        dag_file = os.path.join(self._run_dir, dag_file)
+
+	try:
+	    DAG = open(dag_file, "r")
+	except:
+	    logger.warning("unable to read %s!" % (dag_file))
+	else:
+	    for dag_line in DAG:
+		if (dag_line.lower()).find("job") >= 0:
+		    # Found Job line, parse it
+		    my_match = re_parse_dag_submit_files.search(dag_line)
+		    if my_match:
+			if not my_match.group(3):
+			    my_jobid = my_match.group(1)
+			    my_sub = os.path.join(self._run_dir, my_match.group(2))
+			    # Found submit file for not-DONE job
+			    if my_jobid in self._job_info:
+				# Entry already exists for this job, just collect submit file info
+				self._job_info[my_jobid][0] = my_sub
+			    else:
+				# No entry for this job, let's create a new one
+				self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None]
+                elif (dag_line.lower()).find("script post") >= 0:
+		    # Found SCRIPT POST line, parse it
+		    my_match = re_parse_dag_script.search(dag_line)
+		    if my_match:
+			my_jobid = my_match.group(1)
+			my_exec = my_match.group(2)
+			my_args = my_match.group(3)
+			if my_jobid in self._job_info:
+			    # Entry already exists for this job, just collect post script info
+			    self._job_info[my_jobid][3] = my_exec
+			    self._job_info[my_jobid][4] = my_args
+			else:
+			    # No entry for this job, let's create a new one
+			    self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None]
+		elif (dag_line.lower()).find("script pre") >= 0:
+		    # Found SCRIPT PRE line, parse it
+		    my_match = re_parse_dag_script.search(dag_line)
+		    if my_match:
+			my_jobid = my_match.group(1)
+			my_exec = my_match.group(2)
+			my_args = my_match.group(3)
+			if my_jobid in self._job_info:
+			    # Entry already exists for this job, just collect pre script info
+			    self._job_info[my_jobid][1] = my_exec
+			    self._job_info[my_jobid][2] = my_args
+			else:
+			    # No entry for this job, let's create a new one
+			    self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None]
+                elif (dag_line.lower()).find("subdag external") >= 0:
+                    # Found SUBDAG line, parse it
+                    my_match = re_parse_dag_subdag.search(dag_line)
+                    if my_match:
+                        my_jobid = my_match.group(1)
+                        my_dag = my_match.group(2)
+                        my_dir = my_match.group(3)
+                        if my_jobid in self._job_info:
+                            # Entry already exists for this job, just set subdag flag, and dag/dir info
+			    self._job_info[my_jobid][5] = True
+			    self._job_info[my_jobid][6] = my_dag
+                            self._job_info[my_jobid][7] = my_dir
+                        else:
+                            # No entry for this job, let's create a new one
+                            self._job_info[my_jobid] = [None, None, None, None, None, True, my_dag, my_dir]
+                elif re_parse_dag_edge.search(dag_line) is not None:
+                    # Found edge
+                    if self._restart_count > 0:
+                        # Skip these for restarts
+                        continue
+                    my_match = re_parse_dag_edge.search(dag_line)
+                    if my_match:
+                        my_parent = my_match.group(1)
+                        my_child = my_match.group(2)
+                        self.db_send_edge(my_parent, my_child)
+			
+	    DAG.close()
+
+	# POST-CONDITION: _job_info contains only submit-files of jobs
+	# that are not yet done. Normally, this are all submit
+	# files. In rescue DAGS, that is an arbitrary subset of all
+	# jobs. In addition, _job_info should contain all PRE and POST
+	# script information for job in this workflow, and all subdag
+        # jobs, with the their dag files, and directories
+
+    def read_workflow_state(self):
+        """
+        This function reads the job_submit_seq and the job_counters
+        dictionary from a file in the workflow's run directory. This
+        is used for restarting the logging information from where we
+        stopped last time.
+        """
+        
+        my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+
+        try:
+            INPUT = open(my_fn, "r")
+        except:
+            logger.info("cannot open state file %s" % (my_fn))
+            return
+        
+        try:
+            for line in INPUT:
+                # Split the input line in 2, and make the second part an integer
+                my_job, my_count = line.split(" ", 1)
+                my_job = my_job.strip()
+                my_count = int(my_count.strip())
+                if my_job == "monitord_job_sequence":
+                    # This is the last job_submit_seq used
+                    self._job_submit_seq = my_count
+                elif my_job == "monitord_dagman_out_sequence":
+                    # This is the line we last read from the dagman.out file
+                    self._last_processed_line = my_count
+                elif my_job == "monitord_workflow_restart_count":
+                    # This is the number of restarts we have seen in the past
+                    self._restart_count = my_count
+                else:
+                    # Another job counter
+                    self._job_counters[my_job] = my_count
+        except:
+            logger.error("error processing state file %s" % (my_fn))
+        
+        # Close the file
+        try:
+            INPUT.close()
+        except:
+            pass
+
+        # All done!
+        return
+
+    def write_workflow_state(self):
+        """
+        This function writes the job_submit_seq and the job_counters
+        dictionary to a file in the workflow's run directory. This can
+        be used later for restarting the logging information from
+        where we stop. This function will overwrite the log file every
+        time is it called.
+        """
+        
+        my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+
+        try:
+            OUT = open(my_fn, "w")
+        except:
+            logger.error("cannot open state file %s" % (my_fn))
+            return
+        
+        try:
+            # Write first line with the last job_submit_seq used
+            OUT.write("monitord_job_sequence %d\n" % (self._job_submit_seq))
+            # Then, write the last line number of the dagman.out file we processed
+            if self._line > self._last_processed_line:
+                OUT.write("monitord_dagman_out_sequence %s\n" % (self._line))
+            else:
+                OUT.write("monitord_dagman_out_sequence %s\n" % (self._last_processed_line))
+            # Next, write the restart count
+            OUT.write("monitord_workflow_restart_count %d\n" % (self._restart_count))
+            # Finally, write all job_counters
+            for my_job in self._job_counters:
+                OUT.write("%s %d\n" % (my_job, self._job_counters[my_job]))
+        except:
+            logger.error("cannot write state to log file %s" % (my_fn))
+        
+        # Close the file
+        try:
+            OUT.close()
+        except:
+            pass
+
+        # All done!
+        return
+
     def db_send_wf_info(self):
 	"""
 	This function sends to the DB information about the workflow
@@ -762,7 +832,7 @@ class Workflow:
 	# Send workflow event to database
 	self.output_to_db("workflow.plan", kwargs)
 
-    def db_send_wf_state(self, state, timestamp):
+    def db_send_wf_state(self, state):
 	"""
 	This function sends to the DB information about the current workflow state
 	"""
@@ -770,58 +840,56 @@ class Workflow:
 	if self._db is None:
 	    return
 	# Make sure parameters are not None
-	if state is None or timestamp is None:
+	if state is None:
 	    return
 
 	# Start empty
 	kwargs = {}
 	# Make sure we include the wf_uuid
 	kwargs["wf__id"] = self._wf_uuid
-	kwargs["ts"] = timestamp
+	kwargs["ts"] = self._current_timestamp
+        # Always decrement the restart count by 1
+        kwargs["restart_count"] = self._restart_count - 1
 	state = "workflow." + state
 
 	# Send workflow state event to database
 	self.output_to_db(state, kwargs)
 
-    def change_wf_state(self, state, timestamp, param):
+    def change_wf_state(self, state):
 	"""
 	This function changes the workflow state, and sends the state change to
         the DB. This function is called as response to DAGMan starting/stopping.
-        When workflows start, state == "start", and param has DAGMan's condor id,
-        and when the workflows end, state == "end", and param has DAGMan's exit code.
         """
         if state == "start":
-            self._JSDB.write("%d INTERNAL *** DAGMAN_STARTED %s ***\n" % (timestamp, param))
+            logger.info("DAGMan starting with condor id %s" % (self._dagman_condor_id))
+            self._JSDB.write("%d INTERNAL *** DAGMAN_STARTED %s ***\n" % (self._current_timestamp, self._dagman_condor_id))
+            self._restart_count = self._restart_count + 1
         elif state == "end":
-            self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (timestamp, param))
+            self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (self._current_timestamp, self._terminate))
         
-        self.db_send_wf_state(state, timestamp)
+        self.db_send_wf_state(state)
 
-    def __init__(self, run, out, extra_params=None, database=None,
-                 workflow_config_file=None, jsd=None):
+    def __init__(self, rundir, outfile, extra_params=None, database=None,
+                 workflow_config_file=None, jsd=None, parent_id=None):
 	"""
 	This function initializes the workflow object. It looks
         for the workflow configuration file (or for workflow_config_file,
         if specified). Keys in wfparams override values in the configuration
         file. Here we also open the jobstate.log file, and parse the dag.
 	"""
-	# Initialize DB
+	# Initialize basic class variables
+        self._out_file = outfile
+	self._run_dir = rundir
+        self._parent_workflow_id = parent_id
 	self._db = database
-
-	# Initialize run directory and dagman.out
-	self._run_dir = run
-	self._out_file = out
-
-	# Get the dag file location
-	self._dag_file = out[:out.find(".dagman.out")]
-	self._dag_file = os.path.normpath(os.path.join(run, self._dag_file))
+        self._workflow_start = int(time.time())
 
         # Determine location of jobstate.log file
         if jsd is None:
-            self._jsd_file = os.path.join(run, utils.jobbase)
+            self._jsd_file = os.path.join(rundir, utils.jobbase)
         else:
             # Make sure we have an absolute path
-            self._jsd_file = os.path.join(run, jsd)
+            self._jsd_file = os.path.join(rundir, jsd)
 
         if not os.path.isfile(self._jsd_file):
             logger.info("creating new file %s" % (self._jsd_file))
@@ -831,103 +899,151 @@ class Workflow:
             if not replay_mode:
                 self._JSDB = open(self._jsd_file, 'a', 0)
             else:
+                # Rotate jobstate.log file, if any
+                utils.rotate_log_file(self._jsd_file)
                 self._JSDB = open(self._jsd_file, 'w', 0)
         except:
             logger.critical("error creating/appending to %s!" % (self._jsd_file))
             sys.exit(1)
 
-        # Add start information to JSDB
-        self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (int(time.time())))
-
-	# Now, we parse the dag file and get submit file locations
-	self.parse_dag_file()
+        # Say hello.... add start information to JSDB
+        self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
 
         if not replay_mode:
             # Recover state from a previous run
             self.read_workflow_state()
 
         # Parse the braindump file
-        wfparams = utils.slurp_braindb(run, workflow_config_file)
+        wfparams = utils.slurp_braindb(rundir, workflow_config_file)
+
+        if len(wfparams) == 0:
+            # Set flag for creating a braindb file if nothing was read
+            self._valid_braindb = False
 
         # Update wfparams with keys from extra_params, if any
         if extra_params is not None:
             wfparams.update(extra_params)
 
-	if len(wfparams) > 0:
-	    if "wf_uuid" in wfparams:
-		if wfparams["wf_uuid"] is not None:
-		    self._wf_uuid = wfparams["wf_uuid"]
-	    # If _wf_uuid is not defined, we create a random uuid for this workflow
-	    if self._wf_uuid is None:
-                if uuid_present == True:
-                    self._wf_uuid = uuid.uuid4()
-                else:
-                    logger.info("uuid module is not present, using time.time() to generate wf_uuid")
-                    self._wf_uuid = str(time.time())
-	    if "dax_label" in wfparams:
-		self._dax_label = wfparams["dax_label"]
-	    else:
-		# Use "label" if "dax_label" not found
-		if "label" in wfparams:
-		    self._dax_label = wfparams["label"]
-	    if "timestamp" in wfparams:
-		self._timestamp = wfparams["timestamp"]
-	    else:
-		# Use "pegasus_wf_time" if "timestamp" not found
-		if "pegasus_wf_time" in wfparams:
-		    self._timestamp = wfparams["pegasus_wf_time"]
-	    # Convert timestamp from YYYYMMDDTHHMMSSZZZZZ to Epoch
-	    if self._timestamp is not None:
-		try:
-		    # Split date/time and timezone information
-		    dt = self._timestamp[:-5]
-		    tz = self._timestamp[-5:]
-		    # Convert date/time to datetime format
-		    # my_time = datetime.datetime.strptime(dt, "%Y%m%dT%H%M%S")
-                    # Python < 2.5 doesn't have the datetime.datetime.strptime function
-                    my_time = datetime.datetime(*(time.strptime(dt, "%Y%m%dT%H%M%S")[0:6]))
-		    # Split timezone in hours and minutes
-		    my_hour = int(tz[:-2])
-		    my_min = int(tz[-2:])
-		    # Calculate offset
-		    my_offset = datetime.timedelta(hours=my_hour, minutes=my_min)
-		    # Subtract offset
-		    my_time = my_time - my_offset
-		    # Turn my_time into Epoch format
-		    self._timestamp = int(calendar.timegm(my_time.timetuple()))
-		except:
-		    logger.warning("error converting timestamp %s to Epoch format" % self._timestamp)
-	    if "submit_dir" in wfparams:
-		self._submit_dir = wfparams["submit_dir"]
-	    else:
-		# Use "run" if "submit_dir" not found
-		if "run" in wfparams:
-		    self._submit_dir = wfparams["run"]
-	    if "planner_version" in wfparams:
-		self._planner_version = wfparams["planner_version"]
-	    else:
-		# Use "pegasus_version" if "planner_version" not found
-		if "pegasus_version" in wfparams:
-		    self._planner_version = wfparams["pegasus_version"]
-	    if "submit_hostname" in wfparams:
-		self._submit_hostname = wfparams["submit_hostname"]
-	    if "user" in wfparams:
-		self._user = wfparams["user"]
-	    if "grid_dn" in wfparams:
-		self._grid_dn = wfparams["grid_dn"]
+        # Go through wfparams, and read what we need
+        if "wf_uuid" in wfparams:
+            if wfparams["wf_uuid"] is not None:
+                self._wf_uuid = wfparams["wf_uuid"]
+        # If _wf_uuid is not defined, we create a random uuid for this workflow
+        if self._wf_uuid is None:
+            if uuid_present == True:
+                self._wf_uuid = uuid.uuid4()
+            else:
+                logger.info("uuid module is not present, using time.time() to generate wf_uuid")
+                self._wf_uuid = str(time.time())
+        if "dax_label" in wfparams:
+            self._dax_label = wfparams["dax_label"]
+        else:
+            # Use "label" if "dax_label" not found
+            if "label" in wfparams:
+                self._dax_label = wfparams["label"]
+        if "timestamp" in wfparams:
+            self._timestamp = wfparams["timestamp"]
+        else:
+            # Use "pegasus_wf_time" if "timestamp" not found
+            if "pegasus_wf_time" in wfparams:
+                self._timestamp = wfparams["pegasus_wf_time"]
+        # Convert timestamp from YYYYMMDDTHHMMSSZZZZZ to Epoch
+        if self._timestamp is not None:
+            try:
+                # Split date/time and timezone information
+                dt = self._timestamp[:-5]
+                tz = self._timestamp[-5:]
+                # Convert date/time to datetime format
+                # my_time = datetime.datetime.strptime(dt, "%Y%m%dT%H%M%S")
+                # Python < 2.5 doesn't have the datetime.datetime.strptime function
+                my_time = datetime.datetime(*(time.strptime(dt, "%Y%m%dT%H%M%S")[0:6]))
+                # Split timezone in hours and minutes
+                my_hour = int(tz[:-2])
+                my_min = int(tz[-2:])
+                # Calculate offset
+                my_offset = datetime.timedelta(hours=my_hour, minutes=my_min)
+                # Subtract offset
+                my_time = my_time - my_offset
+                # Turn my_time into Epoch format
+                self._timestamp = int(calendar.timegm(my_time.timetuple()))
+            except:
+                logger.warning("error converting timestamp %s to Epoch format" % self._timestamp)
+        else:
+            # No timestamp information is available, just use current time
+            self._timestamp = int(time.time())
+        if "submit_dir" in wfparams:
+            self._submit_dir = wfparams["submit_dir"]
+        else:
+            # Use "run" if "submit_dir" not found
+            if "run" in wfparams:
+                self._submit_dir = wfparams["run"]
+        if "planner_version" in wfparams:
+            self._planner_version = wfparams["planner_version"]
+        else:
+            # Use "pegasus_version" if "planner_version" not found
+            if "pegasus_version" in wfparams:
+                self._planner_version = wfparams["pegasus_version"]
+        if "submit_hostname" in wfparams:
+            self._submit_hostname = wfparams["submit_hostname"]
+        if "user" in wfparams:
+            self._user = wfparams["user"]
+        if "grid_dn" in wfparams:
+            self._grid_dn = wfparams["grid_dn"]
 
-	    # All done!
-	    if self._db is not None:
-		# Add workflow info to database
-		self.db_send_wf_info()
+        # All done... last step is to send to the database the workflow plan event
+        # However, we only do this, if this is the first time we run
+        if self._db is not None and self._last_processed_line == 0:
+            # Add workflow info to database
+            self.db_send_wf_info()
 
-    def end_workflow(self, status):
+    def end_workflow(self):
         """
         This function writes the last line in the jobstate.log and closes
         the file.
         """
-        self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (int(time.time()), status))
+        my_workflow_end = int(time.time())
+
+        self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (my_workflow_end, self._terminate))
         self._JSDB.close()
+
+        if not replay_mode:
+            # Write monitord.done file
+            my_touch_name = os.path.join(self._run_dir, "monitord.done")
+            try:
+                TOUCH = open(my_touch_name, "w")
+            except:
+                logger.error("opening %s" % (my_touch_name))
+            else:
+                TOUCH.write("%s %.3f\n" % (utils.isodate(my_workflow_end), (my_workflow_end - self._workflow_start)))
+                TOUCH.close()
+
+            # Attempt to copy the condor common logfile to the current directory
+            if self._condorlog is not None:
+                if (os.path.isfile(self._condorlog) and
+                    os.access(self._condorlog, os.R_OK) and
+                    self._condorlog.find('/') == 0):
+
+                    # Copy common condor log to local directory
+                    my_log = out2log(self._run_dir, self._out_file)[0]
+                    my_cmd = "/bin/cp -p %s %s.copy" % (self._condorlog, my_log)
+                    my_status, my_output = commands.getstatusoutput(my_cmd)
+
+                    if my_status == 0:
+                        # Copy successful
+                        try:
+                            os.unlink(my_log)
+                        except:
+                            logger.error("removing %s" % (my_log))
+                        else:
+                            try:
+                                os.rename("%s.copy" % (my_log), my_log)
+                            except:
+                                logger.error("renaming %s.copy to %s" % (my_log, my_log))
+                            else:
+                                logger.info("copied common log to %s" % (self._run_dir))
+                    else:
+                        logger.info("%s: %d:%s" % (my_cmd, my_status, my_output))
+
 
     def find_jobid(self, jobid):
 	"""
@@ -968,7 +1084,7 @@ class Workflow:
 	# jobid is in another state, return None
 	return None
 
-    def db_send_job_info(self, my_job, timestamp, job_state):
+    def db_send_job_info(self, my_job, job_state):
 	"""
 	This function sends to the DB information about a particular job
 	"""
@@ -979,7 +1095,7 @@ class Workflow:
 	kwargs["wf__id"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
 	kwargs["job__id"] = my_job._job_submit_seq
-	kwargs["ts"] = timestamp
+	kwargs["ts"] = self._current_timestamp
 	if my_job._condor_id is not None:
 	    kwargs["condor__id"] = my_job._condor_id
 	if my_job._jobtype is not None:
@@ -1009,7 +1125,7 @@ class Workflow:
 	# Send job event to database
 	self.output_to_db(event_type, kwargs)
 
-    def db_send_job_note(self, my_job, timestamp, event_type):
+    def db_send_job_note(self, my_job, event_type):
 	"""
 	This function sends to the DB a notification about a particular job
 	"""
@@ -1020,7 +1136,7 @@ class Workflow:
 	kwargs["wf__id"] = my_job._wf_uuid
 	kwargs["name"] = my_job._name
 	kwargs["job__id"] = my_job._job_submit_seq
-	kwargs["ts"] = timestamp
+	kwargs["ts"] = self._current_timestamp
 
 	# Send job event to database
 	self.output_to_db(event_type, kwargs)
@@ -1150,7 +1266,7 @@ class Workflow:
 	# Send job event to database
 	self.output_to_db(event_type, kwargs)
 
-    def db_send_host_info(self, my_job, timestamp, record):
+    def db_send_host_info(self, my_job, record):
 	"""
 	This function sends host information collected from the kickstart record to the database.
 	"""
@@ -1184,12 +1300,12 @@ class Workflow:
 	    kwargs["uname"] = record["system"] + "-" + record["release"] + "-" + record["machine"]
 
 	# Add timestamp
-	kwargs["ts"] = timestamp
+	kwargs["ts"] = self._current_timestamp
 
 	# Send host event to database
 	self.output_to_db("host", kwargs)
 
-    def parse_job_output(self, my_job, timestamp, job_state):
+    def parse_job_output(self, my_job, job_state):
 	"""
 	This function tries to parse the kickstart output file of a given job and
 	collect information for the stampede schema.
@@ -1236,7 +1352,7 @@ class Workflow:
             my_job.extract_job_info(my_output)
 
             # Send updated info to the database
-            self.db_send_job_info(my_job, timestamp, job_state)
+            self.db_send_job_info(my_job, job_state)
 
             # Loop through all records
             for record in my_output:
@@ -1251,16 +1367,16 @@ class Workflow:
                 my_task_id = my_task_id + 1
 
                 # Send host information to the database
-                self.db_send_host_info(my_job, timestamp, record)
+                self.db_send_host_info(my_job, record)
         else:
             # No kickstart output is available, still send updated job
             # information to the database.
-            self.db_send_job_info(my_job, timestamp, job_state)
+            self.db_send_job_info(my_job, job_state)
 
             # If we don't have kickstart, we only generate 1 task
             self.db_send_task_info(my_job, "MAIN JOB", my_task_id)
 
-    def add_job(self, jobid, job_state, timestamp, condor_id=None):
+    def add_job(self, jobid, job_state, condor_id=None):
 	"""
 	This function adds a new job to our list of jobs. It first checks if
 	the job is already in our list in the PRE_SCRIPT_SUCCESS state, if so,
@@ -1284,7 +1400,7 @@ class Workflow:
 
 	    # Update job state
 	    my_job._job_state = job_state
-	    my_job._job_state_timestamp = int(timestamp)
+	    my_job._job_state_timestamp = int(self._current_timestamp)
 	else:
 	    # This is a new job, we have to do everything from scratch
 	    my_job_submit_seq = self._job_submit_seq
@@ -1298,7 +1414,7 @@ class Workflow:
 	    my_job = Job(self._wf_uuid, jobid, my_job_submit_seq)
 	    # Set job state
 	    my_job._job_state = job_state
-	    my_job._job_state_timestamp = int(timestamp)
+	    my_job._job_state_timestamp = int(self._current_timestamp)
 	    # Set condor_id
 	    my_job._condor_id = condor_id
 	    # Set job type as "compute" for now, will change when submit file is parsed
@@ -1330,7 +1446,7 @@ class Workflow:
 	# All done!
 	if self._db is not None:
 	    # Send job event to database
-	    self.db_send_job_info(my_job, timestamp, job_state)
+	    self.db_send_job_info(my_job, job_state)
 
 	return my_job_submit_seq
 
@@ -1351,7 +1467,7 @@ class Workflow:
 	# Everything done
 	return
 
-    def update_job_state(self, jobid, job_submit_seq, job_state, timestamp, status, walltime):
+    def update_job_state(self, jobid, job_submit_seq, job_state, status, walltime):
 	"""
 	This function updates a	job's state, and also writes
 	a line in our output file.
@@ -1367,14 +1483,14 @@ class Workflow:
 	# Got it
 	my_job = self._jobs[jobid, job_submit_seq]
 	# Update job state
-	my_job.set_job_state(job_state, timestamp, status)
+	my_job.set_job_state(job_state, self._current_timestamp, status)
 
         # Make status a string so we can print properly
         if status is not None:
             status = str(status)
 
         # Create content -- use one space only
-        my_line = "%d %s %s %s %s %s %d" % (timestamp, jobid, job_state,
+        my_line = "%d %s %s %s %s %s %d" % (self._current_timestamp, jobid, job_state,
                                             status or my_job._condor_id or '-',
                                             my_job._site_name or '-',
                                             walltime or '-',
@@ -1397,13 +1513,13 @@ class Workflow:
 	# start and finish)
 	if job_state == "POST_SCRIPT_STARTED":
 	    # POST script started
-	    self.db_send_job_note(my_job, timestamp, "job.postscript.start")
+	    self.db_send_job_note(my_job, "job.postscript.start")
 	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
 	    # POST script finished
-	    self.db_send_job_note(my_job, timestamp, "job.postscript.end")
+	    self.db_send_job_note(my_job, "job.postscript.end")
 	elif job_state == "PRE_SCRIPT_FAILURE" or job_state == "PRE_SCRIPT_SUCCESS":
 	    # PRE script finished
-	    self.db_send_job_note(my_job, timestamp, "job.prescript.end")
+	    self.db_send_job_note(my_job, "job.prescript.end")
 
 	# Check if we need to send any tasks to the database
 	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
@@ -1414,9 +1530,9 @@ class Workflow:
 	    self.db_send_task_info(my_job, "PRE SCRIPT", PRESCRIPT_TASK_ID)
 	elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
 	    # Main job has ended
-	    self.parse_job_output(my_job, timestamp, job_state)
+	    self.parse_job_output(my_job, job_state)
 
-    def parse_job_sub_file(self, jobid, job_submit_seq, stamp):
+    def parse_job_sub_file(self, jobid, job_submit_seq):
 	"""
 	This function calls a function in the Job class to parse
 	a job's submit file and extract planning information
@@ -1439,7 +1555,7 @@ class Workflow:
 	my_job = self._jobs[jobid, job_submit_seq]
 
 	# Parse sub file
-	my_diff, my_site = my_job.parse_sub_file(stamp, self._job_info[jobid][0])
+	my_diff, my_site = my_job.parse_sub_file(self._current_timestamp, self._job_info[jobid][0])
 
 	# All done
 	return my_diff, my_site
@@ -1551,6 +1667,8 @@ if options.millisleep is not None:
     millisleep = options.millisleep
 if options.replay_mode is not None:
     replay_mode = options.replay_mode
+    # Replay mode always runs in foreground
+    nodaemon = 1
 if options.output_db is not None:
     output_db = options.output_db
 if options.single_db is not None:
@@ -1654,44 +1772,6 @@ def systell(fh):
     # returns: current file position
     os.lseek(fh, 0, os.SEEK_CUR)
 
-def logmsg(*args):
-    # Get localtime
-    my_now = time.time()
-    my_tm = time.localtime(my_now)
-    # Format string
-    my_msg = ("%4d%02d%02dT%02d%02d%02d.%03d [%d]: " % (
-	    my_tm[0], my_tm[1], my_tm[2], my_tm[3], my_tm[4], my_tm[5],
-	    1000 * abs(int(my_now)-my_now), line))
-    # Add any arguments
-    for my_arg in args:
-	my_msg += str(my_arg)
-	# Print message
-	print my_msg
-
-def fatal(msg):
-    # purpose: log plus exit with failure
-    # paramtr: message to output
-    logmsg("FATAL: %s" % (msg))
-    sys.exit(42)
-
-def out2log(out):
-    # purpose: infer output symlink for Condor common user log
-    # paramtr: out (IN): the name of the out file we use
-    # globals: run (IN): the run directory
-    # returns: the name of the log file to use
-
-    # Get the basename
-    my_base = os.path.basename(out)
-    # NEW: Account for rescue DAGs
-    my_base = my_base[:my_base.find(".dagman.out")]
-    my_base = re_remove_extensions.sub('', my_base)
-    # Add .log extension
-    my_base = my_base + ".log"
-    # Create path
-    my_log = os.path.join(run, my_base)
-
-    return my_log, my_base
-
 def aggregate(site, stamp, pending):
     # purpose: aggregates pending information into raster intervals
     # paramtr: site(IN): run site
@@ -1716,9 +1796,9 @@ def aggregate(site, stamp, pending):
     my_n = waiting[site][my_slot][0]
     logger.debug("%s:%s %s / %d = %.3f" % (site, my_slot, my_diff, my_n, my_diff / my_n))
 
-def add(stamp, jobid, event, condor_id=None, status=None):
+def add(wf, jobid, event, condor_id=None, status=None):
     # purpose: append atomically a line to the jobstate file
-    # paramtr: stamp(IN): time stamp when the state change was seen
+    # paramtr: wf(IN): workflow object for this operation
     # paramtr: jobid(IN): what job
     # paramtr: event(IN): new status of job
     # paramtr: condor_id(IN, OPT): condor id
@@ -1745,17 +1825,17 @@ def add(stamp, jobid, event, condor_id=None, status=None):
     # A PRE_SCRIPT_START event always means a new job
     if event == "PRE_SCRIPT_STARTED":
 	# This is a new job, we need to add it to the workflow
-	my_job_submit_seq = wf.add_job(jobid, event, stamp)
+	my_job_submit_seq = wf.add_job(jobid, event)
 
     # A SUBMIT event brings condor id and job type information (it can also be
     # a new job for us when there is no PRE_SCRIPT)
     if event == "SUBMIT":
 	# Add job to our workflow (if not alredy there), will update condor_id in both cases
-	my_job_submit_seq = wf.add_job(jobid, event, stamp, condor_id=condor_id)
+	my_job_submit_seq = wf.add_job(jobid, event, condor_id=condor_id)
 
 	# Obtain planning information from the submit file when entering Condor,
 	# Figure out how long the job _intends_ to run maximum
-	my_time, my_site = wf.parse_job_sub_file(jobid, my_job_submit_seq, stamp)
+	my_time, my_site = wf.parse_job_sub_file(jobid, my_job_submit_seq)
 
 	if my_site == "!!SITE!!":
 	    my_site = None
@@ -1787,26 +1867,26 @@ def add(stamp, jobid, event, condor_id=None, status=None):
         if my_job_submit_seq is not None:
             if (jobid, my_job_submit_seq) in wf._jobs:
                 my_job = wf._jobs[jobid, my_job_submit_seq]
-                wf.db_send_job_info(my_job, stamp, "SUBMIT")
+                wf.db_send_job_info(my_job, "SUBMIT")
             else:
                 logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
 
     # Make sure job has the updated state
-    wf.update_job_state(jobid, my_job_submit_seq, event, stamp, status, my_time)
-    jobstate[jobid] = [stamp, event, condor_id, my_time, my_site]
+    wf.update_job_state(jobid, my_job_submit_seq, event, status, my_time)
+    jobstate[jobid] = [wf._current_timestamp, event, condor_id, my_time, my_site]
 
     # Remember when we changed into a pending state
     if event in pending_job_events:
 	if not jobid in pending:
 	    # Remember when -- and which Condor ID
-	    pending[jobid] = [stamp, condor_id, my_time, my_site]
+	    pending[jobid] = [wf._current_timestamp, condor_id, my_time, my_site]
 	else:
             logger.info("%s remains a pending event for %s" % (event, jobid))
     else:
 	# Remember time spent in pending, if previous state was pending
 	if jobid in jobstate:
 	    if jobstate[jobid][1] in pending_job_events and jobid in pending:
-		aggregate(my_site, stamp, pending[jobid])
+		aggregate(my_site, wf_current_timestamp, pending[jobid])
 
 	# Remove when transitioning into any other state
 	if jobid in pending:
@@ -1816,7 +1896,7 @@ def add(stamp, jobid, event, condor_id=None, status=None):
     if event in running_job_events:
 	if not jobid in running:
 	    # Remember when -- and which Condor ID
-	    running[jobid] = [stamp, condor_id, my_time, my_site]
+	    running[jobid] = [wf._current_timestamp, condor_id, my_time, my_site]
 	else:
             logger.info("%s remains a running event for %s" % (event, jobid))
     else:
@@ -1864,20 +1944,25 @@ def add(stamp, jobid, event, condor_id=None, status=None):
 
     if my_site is not None:
 	if my_state == 'S':
-	    siteinfo[my_site]["mtime_succ"] = stamp
+	    siteinfo[my_site]["mtime_succ"] = wf._current_timestamp
 	if my_state == 'F':
-	    siteinfo[my_site]["mtime_fail"] = stamp
+	    siteinfo[my_site]["mtime_fail"] = wf._current_timestamp
 	siteinfo[my_site][jobid] = my_state
-	siteinfo[my_site]["mtime"] = stamp
+	siteinfo[my_site]["mtime"] = wf._current_timestamp
 
     return
 
-def process(log_line):
+def process(wf, log_line):
     # purpose: process a log line and look for the information we are interested in
     # paramtr: log_line(IN): the line
-    # globals: timestamp(OUT): maintains latest timestamp from DAGMan
-    # returns: timestamp
-    global multiline_file_flag, terminate, pid, condorlog, condor_version, condor_major, timestamp
+
+    # Keep track of line count
+    wf._line = wf._line + 1
+
+    # Make sure we have not already seen this line
+    # This is used in the case of rescue dags, for skipping what we have already seen in the dagman.out file
+    if wf._line <= wf._last_processed_line:
+        return
 
     # Strip end spaces, tabs, and <cr> and/or <lf>
     log_line = log_line.rstrip()
@@ -1888,7 +1973,7 @@ def process(log_line):
     if my_expr is not None:
         split_log_line = log_line.split(None, 3)
         if len(split_log_line) >= 3:
-            logger.debug("debug: ## %d: %s" % (line, split_log_line[2][:64]))
+            logger.debug("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
 	
 	# Found time stamp, let's assume valid log line
 	curr_time = time.localtime()
@@ -1903,23 +1988,23 @@ def process(log_line):
             # New timestamp format
             adj_time[0] = int(my_expr.group(4)) + 2000 # Year
 
-	timestamp = time.mktime(adj_time) + adjustment
+	wf._current_timestamp = time.mktime(adj_time) + adjustment
 
 	# Search for more content
 	if re_parse_event.search(log_line) is not None:
 	    # Found Event
 	    my_expr = re_parse_event.search(log_line)
 	    # groups = jobid, event, condor_id
-	    add(timestamp, my_expr.group(2), my_expr.group(1), condor_id=my_expr.group(3))
+	    add(wf, my_expr.group(2), my_expr.group(1), condor_id=my_expr.group(3))
         elif re_parse_job_submit.search(log_line) is not None:
             # Found job submit event
             my_expr = re_parse_job_submit.search(log_line)
             wf._last_submitted_job = my_expr.group(1)
-            wf.add_job(my_expr.group(1), "DAGMAN_SUBMIT", timestamp)
+            wf.add_job(my_expr.group(1), "DAGMAN_SUBMIT")
         elif re_parse_job_submit_error.search(log_line) is not None:
             # Found job submit error event
             if wf._last_submitted_job is not None:
-                add(timestamp, wf._last_submitted_job, "SUBMIT_FAILED")
+                add(wf, wf._last_submitted_job, "SUBMIT_FAILED")
             else:
                 logger.warning("found submit error in dagman.out, but last job is not set")
 	elif re_parse_script_running.search(log_line) is not None:
@@ -1927,7 +2012,7 @@ def process(log_line):
 	    # Starting of scripts is not a regular Condor event
 	    my_expr = re_parse_script_running.search(log_line)
 	    # groups = script, jobid
-	    add(timestamp, my_expr.group(2), "%s_SCRIPT_STARTED" % (my_expr.group(1).upper()))
+	    add(wf, my_expr.group(2), "%s_SCRIPT_STARTED" % (my_expr.group(1).upper()))
 	elif re_parse_script_done.search(log_line) is not None:
 	    my_expr = re_parse_script_done.search(log_line)
 	    # groups = script, jobid
@@ -1935,9 +2020,7 @@ def process(log_line):
 	    my_jobid = my_expr.group(2)
 	    if re_parse_script_successful.search(log_line) is not None:
 		# Remember success with artificial jobstate
-		add(timestamp, my_jobid, "%s_SCRIPT_SUCCESS" % (my_script), status=0)
-		if my_script == "POST":
-		    done[my_jobid] = timestamp
+		add(wf, my_jobid, "%s_SCRIPT_SUCCESS" % (my_script), status=0)
 	    elif re_parse_script_failed.search(log_line) is not None:
 		# Remember failure with artificial jobstate
 		my_expr = re_parse_script_failed.search(log_line)
@@ -1948,12 +2031,7 @@ def process(log_line):
 		    # Unable to convert exit code to integer -- should not happen
 		    logger.warning("unable to convert exit code to integer!")
 		    my_exit_code = 1
-		add(timestamp, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code)
-		if my_exit_code == 42 or my_jobid in flag and flag[my_jobid] > 0:
-		    # Detect permanent failure
-                    logger.info("detected permanent failure for %s" % (my_jobid))
-		    if len(done) == 0:
-			logger.warning("no successful jobs so far!")
+		add(wf, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code)
 	    else:
 		# Ignore
 		logger.warning("unknown pscript state: %s" % (log_line[-14:]))
@@ -1970,103 +2048,97 @@ def process(log_line):
 		logger.warning("unable to convert exit code to integer!")
 		my_jobstatus = 1
 	    # remember failure with artificial jobstate
-	    add(timestamp, my_jobid, "JOB_FAILURE", condor_id=my_condorid, status=my_jobstatus)
+	    add(wf, my_jobid, "JOB_FAILURE", condor_id=my_condorid, status=my_jobstatus)
 	elif re_parse_job_successful.search(log_line) is not None:
 	    # Job succeeded
 	    my_expr = re_parse_job_successful.search(log_line)
 	    my_jobid = my_expr.group(1)
 	    my_condorid = my_expr.group(2)
 	    # remember success with artificial jobstate
-	    add(timestamp, my_jobid, "JOB_SUCCESS", condor_id=my_condorid, status=0)
-	elif re_parse_retry.search(log_line) is not None:
-	    # Found a retry, save maxed-out retried for later
-	    my_expr = re_parse_retry.search(log_line)
-	    if my_expr.group(2) == my_expr.group(3):
-		try:
-		    flag[my_expr.group(1)] = int(my_expr.group(3))
-		except:
-		    # Cannot convert retry number to integer
-		    logger.warning("could not convert retry number to integer!")
+	    add(wf, my_jobid, "JOB_SUCCESS", condor_id=my_condorid, status=0)
 	elif re_parse_dagman_finished.search(log_line) is not None:
 	    # DAG finished -- done parsing
 	    my_expr = re_parse_dagman_finished.search(log_line)
 	    # groups = exit code
 	    try:
-		terminate = int(my_expr.group(1))
+		wf._terminate = int(my_expr.group(1))
 	    except:
 		# Cannot convert exit code to integer!
 		logger.warning("cannot convert DAGMan's exit code to integer!")
-		terminate = 0
-	    logger.info("DAGMan finished with exit code %s" % (terminate))
+		wf._terminate = 0
+	    logger.info("DAGMan finished with exit code %s" % (wf._terminate))
 	    # Send info to database
-	    wf.change_wf_state("end", timestamp, terminate)
+	    wf.change_wf_state("end")
             # Save all state to disk so that we can start again later
             wf.write_workflow_state()
         elif re_parse_dagman_condor_id.search(log_line) is not None:
             # DAGMan starting, capture its condor id
             my_expr = re_parse_dagman_condor_id.search(log_line)
-            my_dagman_condor_id = my_expr.group(1)
-            logger.info("DAGMan starting with condor id %s" % (my_dagman_condor_id))
-	    # Send this event to database
-	    wf.change_wf_state("start", timestamp, my_dagman_condor_id)
+            wf._dagman_condor_id = my_expr.group(1)
 	elif re_parse_dagman_pid.search(log_line) is not None and not replay_mode:
 	    # DAGMan's pid, but only set pid if not running in replay mode
             # (otherwise pid may belong to another process)
             my_expr = re_parse_dagman_pid.search(log_line)
             # groups = DAGMan's pid
             try:
-                pid = int(my_expr.group(1))
+                wf._dagman_pid = int(my_expr.group(1))
             except:
                 logger.critical("cannot set pid: %s" % (my_expr.group(1)))
                 sys.exit(42)
-	    logger.info("DAGMan runs at pid %d" % (pid))
+	    logger.info("DAGMan runs at pid %d" % (wf._dagman_pid))
+        elif re_parse_dag_name.search(log_line) is not None:
+            # Found the dag filename, read dag, and generate start event for the database
+            my_expr = re_parse_dag_name.search(log_line)
+            my_dag = my_expr.group(1)
+            # Parse dag file
+            logger.info("using dag %s" % (my_dag))
+            wf.parse_dag_file(my_dag)
+	    # Send the delayed workflow start event to database
+	    wf.change_wf_state("start")
 	elif re_parse_condor_version.search(log_line) is not None:
 	    # Version of this logfile format
 	    my_expr = re_parse_condor_version.search(log_line)
 	    # groups = condor version, condor major
-	    condor_version = my_expr.group(1)
-	    condor_major = my_expr.group(2)
-	    logger.info("Using DAGMan version %s" % (condor_version))
+	    my_condor_version = my_expr.group(1)
+	    my_condor_major = my_expr.group(2)
+	    logger.info("Using DAGMan version %s" % (my_condor_version))
 	elif (re_parse_condor_logfile.search(log_line) is not None or
-	      multiline_file_flag == True and re_parse_condor_logfile_insane.search(log_line) is not None):
+	      wf._multiline_file_flag == True and re_parse_condor_logfile_insane.search(log_line) is not None):
 	    # Condor common log file location, DAGMan 6.6
 	    if re_parse_condor_logfile.search(log_line) is not None:
 		my_expr = re_parse_condor_logfile.search(log_line)
 	    else:
 		my_expr = re_parse_condor_logfile_insane.search(log_line)
-	    condorlog = my_expr.group(1)
-	    logger.info("Condor writes its logfile to %s" % (condorlog))
+	    wf._condorlog = my_expr.group(1)
+	    logger.info("Condor writes its logfile to %s" % (wf._condorlog))
 
 	    # Make a symlink for NFS-secured files
-	    my_log, my_base = out2log(out)
+	    my_log, my_base = out2log(wf._run_dir, wf._out_file)
 	    if os.path.islink(my_log):
 		logger.info("symlink %s already exists" % (my_log))
 	    elif os.access(my_log, os.R_OK):
 		logger.info("%s is a regular file, not touching" % (my_base))
 	    else:
 		logger.info("trying to create local symlink to common log")
-		if os.access(condorlog, os.R_OK) or not os.access(condorlog, os.F_OK):
+		if os.access(wf._condorlog, os.R_OK) or not os.access(wf._condorlog, os.F_OK):
 		    if os.access(my_log, os.R_OK):
 			try:
 			    os.rename(my_log, "%s.bak" % (my_log))
 			except:
 			    logger.warning("error renaming %s to %s.bak" % (my_log, my_log))
 		    try:
-			os.symlink(condorlog, my_log)
+			os.symlink(wf._condorlog, my_log)
 		    except:
-			logger.info("unable to symlink %s" % (condorlog))
+			logger.info("unable to symlink %s" % (wf._condorlog))
 		    else:
-			logger.info("symlink %s -> %s" % (condorlog, my_log))
+			logger.info("symlink %s -> %s" % (wf._condorlog, my_log))
 		else:
-		    logger.info("%s exists but is not readable!" % (condorlog))
+		    logger.info("%s exists but is not readable!" % (wf._condorlog))
 	    # We only expect one of such files
-	    multiline_file_flag = False
+	    wf._multiline_file_flag = False
 	elif re_parse_multiline_files.search(log_line) is not None:
 	    # Multiline user log files, DAGMan > 6.6
-	    multiline_file_flag = True
-
-    # Done
-    return timestamp
+	    wf._multiline_file_flag = True
 
 def server_socket(low, hi, bind_addr="127.0.0.1"):
     # purpose: create a local TCP server socket to listen to sitesel requests
@@ -2447,7 +2519,6 @@ def sleepy(retries, server=None):
 	if my_sleeptime is not None:
 	    time.sleep(my_sleeptime)
 	
-
 def sleeptime(retries):
     # purpose: compute suggested sleep time as a function of retries
     # paramtr: $retries (IN): number of retries so far
@@ -2468,6 +2539,9 @@ def prog_sighup_handler(signum, frame):
 
 def prog_sigint_handler(signum, frame):
     logger.info("graceful exit on signal %d" % (signum))
+    # Close output files
+    if wf is not None:
+        wf.end_workflow(1)
     sys.exit(1)
 
 def prog_sigusr1_handler(signum, frame):
@@ -2484,46 +2558,6 @@ def prog_sigusr2_handler(signum, frame):
     debug_level = DECREASE_LOG_LEVELS.get(debug_level, debug_level)
     logger.setLogLevel(debug_level)
 
-def rotate_log_file(input_dir, log_file):
-    """
-    This function rotates the specified logfile so that an old version
-    is not overwritten when we start.
-    """
-    # First we check if we have the log file
-    source_file = os.path.join(input_dir, log_file)
-    
-    if not os.access(source_file, os.F_OK):
-	# File doesn't exist, we don't have to rotate
-	return
-
-    # Now we need to find the latest log file
-
-    # We start from .000
-    sf = 0
-
-    while (sf < MAXLOGFILE):
-	dest_file = source_file + ".%03d" % (sf)
-	if os.access(dest_file, os.F_OK):
-	    # Continue to the next one
-	    sf = sf + 1
-	else:
-	    break
-
-    # Safety check to see if we have reached the maximum number of log files
-    if sf >= MAXLOGFILE:
-	logger.error("%s exists, cannot rotate log file anymore!" % (dest_file))
-	sys.exit(1)
-
-    # Now that we have source_file and dest_file, try to rotate the logs
-    try:
-	os.rename(source_file, dest_file)
-    except:
-        logger.error("cannot rename %s to %s" % (source_file, dest_file))
-	sys.exit(1)
-
-    # Done!
-    return
-
 #
 # --- at exit handlers -------------------------------------------------------------------
 #
@@ -2536,48 +2570,6 @@ def socket_exit_handler():
 	except:
 	    # Just be silent
 	    pass
-
-def done_process_exit_handler():
-    global timestamp
-
-    # Attempt to copy the condor common logfile to the current directory
-    if condorlog is not None:
-	if (os.path.isfile(condorlog) and
-	    os.access(condorlog, os.R_OK) and
-	    condorlog.find('/') == 0):
-
-	    # Copy common condor log to local directory
-	    my_log = out2log(out)[0]
-	    my_cmd = "/bin/cp -p %s %s.copy" % (condorlog, my_log)
-	    my_status, my_output = commands.getstatusoutput(my_cmd)
-
-	    if my_status == 0:
-		# Copy successful
-		try:
-		    os.unlink(my_log)
-		except:
-		    logger.error("removing %s" % (my_log))
-		else:
-		    try:
-			os.rename("%s.copy" % (my_log), my_log)
-		    except:
-			logger.error("renaming %s.copy to %s" % (my_log, my_log))
-		    else:
-			logger.info("copied common log to %s" % (run))
-	    else:
-		logger.info("%s: %d:%s" % (my_cmd, my_status, my_output))
-
-    # Remember to tell me that it is ok to run post-processing now
-    if (terminate is not None) and (run is not None):
-	my_touch_name = os.path.join(run, "monitord.done")
-	try:
-	    TOUCH = open(my_touch_name, "w")
-	except:
-	    logger.error("opening %s" % (my_touch_name))
-	else:
-	    timestamp = int(time.time())
-	    TOUCH.write("%s %.3f\n" % (utils.isodate(timestamp), (timestamp - start)))
-	    TOUCH.close()
 
 #
 # --- main ------------------------------------------------------------------------------
@@ -2619,7 +2611,7 @@ if use_db == 1:
 
 # Initialize the logging API
 if use_nllog == 1:
-#    rotate_log_file(run, output_db)
+#    rotate_log_file(os.path.join(run, output_db))
     # using nlapi to create log file or sending data to a host:port (and not use the loader)
     if use_nllogfile == 1:
         nllog_string = os.path.join(run, nllog_string)
@@ -2660,11 +2652,6 @@ if not replay_mode:
 	    OUT.close()
 	except:
 	    logger.warning("unable to write %s!" % (sockfn))
-
-# No need to do this when running in replay mode
-if not replay_mode:
-    # Take care of copying condor log, and creating .done file
-    atexit.register(done_process_exit_handler)
 
 # For future reference
 plus = ''
@@ -2724,9 +2711,9 @@ while True:
 	# Found file!
 	break
 
-# post condition: stat is a valid stat record from the daglog file
+# post condition: stat is a valid stat record from the dagman.out file
 
-# open daglog file
+# open dagman.out file
 try:
     DMOF = open(out, "r")
 except:
@@ -2761,17 +2748,17 @@ while True:
     # f_stat[6] is the file size
     if f_stat[6] == ml_current:
 	# Death by natural causes
-	if terminate is not None:
+	if wf._terminate is not None:
 	    break
 
 	# Check if DAGMan is alive -- if we know where it lives
-	if ml_retries > 10 and pid > 0:
+	if ml_retries > 10 and wf._dagman_pid > 0:
 	    # Just send signal 0 to check if the pid is ours
 	    try:
-		os.kill(int(pid), 0)
+		os.kill(int(wf._dagman_pid), 0)
 	    except:
 		logger.critical("DAGMan is gone! Sudden death syndrome detected!")
-		terminate = 42
+		wf._terminate = 42
 		break
 	
 	# No change, wait a while
@@ -2805,9 +2792,8 @@ while True:
 	    ml_pos = ml_buffer.find('\n')
 	    while (ml_pos > 0):
 		# Take out 1 line, and adjust buffer
-		process(ml_buffer[0:ml_pos])
+		process(wf, ml_buffer[0:ml_pos])
 		ml_buffer = ml_buffer[ml_pos+1:]
-		line = line + 1
 		ml_pos = ml_buffer.find('\n')
 
 		if millisleep is not None:
@@ -2845,7 +2831,7 @@ if not replay_mode:
 	SI.close()
     
 # Finish, and close output file
-wf.end_workflow(terminate)
+wf.end_workflow()
 
 # Try to run the hurricane graphics
 if doplot:
@@ -2854,6 +2840,6 @@ else:
     logger.info("skipping plots")
 
 # done
-logger.info("finishing, exit with %d" % (terminate))
-sys.exit(terminate)
+logger.info("finishing, exit with %d" % (wf._terminate))
+sys.exit(wf._terminate)
 
