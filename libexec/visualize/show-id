@@ -37,6 +37,7 @@ sub usage {
     print "\n";
     print "Optional arguments:\n";
     print " -l|--log fn   Force Condor common log file, ignore submit's log entry.\n";
+    print " -j|--jobstate In case you lost your common log, use jobstate.log.\n"; 
     print " -?|--help     print usage information and exit.\n";
     print " -d|--debug    increase debug level as often as specified.\n";
     print " -V|--version  print version information and exit.\n";
@@ -48,6 +49,8 @@ sub usage {
     print " -l|--limit re limit jobs only to those matching the regexp.\n";
     print " --special re  for all jobs matching re, also protocol data.\n";
     print " --pass k[=v]  pass an option to ploticus.\n";
+    print " -s|-sort i    0: use topological sort order (default).\n";
+    print "               sort by {1:SUBMIT,2:EXECUTE,3:TERMINATE} time.\n"; 
     print " --eps fn      Put the resulting EPS picture into the indicated file\n";
     print " --png fn      Put the resulting PNG picture into the indicated file\n";
     print "\n";
@@ -106,7 +109,22 @@ sub mytime ($$) {
     $main::max = $r if $r > $main::max;
     $r;
 }
-	       
+
+sub idsort {
+    # purpose: sort by ID rather than jobname
+    if ( $a =~/ID0*(\d+)/ ) {
+        my $aa = $1;
+        if ( $b =~ /ID0*(\d+)/ ) {
+            my $bb = $1;
+            $aa <=> $bb;
+        } else {
+            $a cmp $b;
+        }
+    } else {
+        $a cmp $b;
+    }
+}
+
 sub slurp_dagfile($;$) {
     # purpose: read all jobs from a dag file, and determine submit file names etc. 
     # paramtr: $dagfn (IN): location of the dag file
@@ -201,7 +219,7 @@ sub slurp_dagfile($;$) {
 	my $n = shift(@q);
 	push( @topo, $n ) unless exists $topo{$n};
 	$topo{$n} = 1;
-	foreach my $x ( sort keys %{$parent{$n}} ) {
+	foreach my $x ( sort idsort keys %{$parent{$n}} ) {
 	    delete $parent{$n}{$x};
 	    delete $child{$x}{$n};
 	    push( @q, $x ) if ( keys %{$child{$x}} == 0 );
@@ -278,6 +296,99 @@ sub slurp_logfile($) {
     %result;
 }
 
+my %submit_event = 
+    ( SUBMIT => '000',
+      EXECUTE => '001',
+      EXECUTABLE_ERROR => '002',
+      CHECKPOINTED => '003',
+      JOB_EVICTED => '004',
+      JOB_TERMINATED => '005',
+      IMAGE_SIZE => '006',
+      SHADOW_EXCEPTION => '007',
+      GENERIC => '008',
+      JOB_ABORTED => '009',
+      JOB_SUSPENDED => '010',
+      JOB_UNSUSPENDED => '011',
+      JOB_HELD => '012',
+      JOB_RELEASED => '013',
+      NODE_EXECUTE => '014',
+      NODE_TERMINATED => '015',
+      POST_SCRIPT_TERMINATED => '016',
+      GLOBUS_SUBMIT => '017',
+      GLOBUS_SUBMIT_FAILED => '018',
+      GLOBUS_RESOURCE_UP => '019',
+      GLOBUS_RESOURCE_DOWN => '020',
+      REMOTE_ERROR => '021',
+      JOB_DISCONNECTED => '022',
+      JOB_RECONNECTED => '023',
+      JOB_RECONNECT_FAILED => '024',
+      GRID_RESOURCE_UP => '025',
+      GRID_RESOURCE_DOWN => '026',
+      GRID_SUBMIT => '027',
+      JOB_AD_INFORMATION => '028',
+      JOB_STATUS_UNKNOWN => '029',
+      JOB_STATUS_KNOWN => '030',
+      JOB_STAGE_IN => '031',
+      JOB_STAGE_OUT => '032' );
+
+sub slurp_jobstate($) { 
+    # purpose: read all event records from the jobstate.log file
+    # paramtr: $jsfn (IN): location of the jobstate.log file
+    # globals: $main::min (IO): update smallest state timestamp
+    #          $main::max (IO): update largest state timestamp
+    #          $main::year (OUT): updated (old common log didn't have year)
+    # returns: {jobid} -> [ re-run# ] -> { submit event } => time stamp
+    #
+    my $fn = shift; 
+    my %result = (); 		# collects job tracks
+    my %good = map { $_ => 1 } qw(SUBMIT EXECUTE FINISH JOB_ABORTED
+				  JOB_HELD JOB_RELEASED POST_SCRIPT
+				  JOB_TERMINATED GLOBUS_SUBMIT GRID_SUBMIT); 
+    my $count = 0; 
+
+    local(*LOG);
+    open( LOG, "<$fn" ) || die "ERROR: open $fn: $!\n"; 
+
+    # slurp one line (event) at a time
+    log( "reading log file $fn" ) if $main::debug;
+    my ($tag,$job,$condorjob,$tds,@x);
+    while ( <LOG> ) {
+	chomp ; 
+	@x = split; 
+	($tds,$job,$tag,$condorjob) = @x; 
+	
+	# mytime
+	$tds += $main::adjust if $main::adjust;
+	$main::min = $tds if $tds < $main::min; 
+	$main::max = $tds if $tds > $main::max;
+	(undef,undef,undef,undef,undef,$main::year) = localtime($tds); 
+
+	next if $tag eq '***'; 
+	$count++; 
+
+	my $n = exists $result{$job} ? @{$result{$job}}-1 : 0;
+	if ( exists $good{$tag} ) { 
+	    if ( $submit_event{$tag} == 0 && 
+		 exists $result{$job}->[$n]->{ $submit_event{$tag} } ) {
+		# start new cycle with new SUBMIT event (focus on retries)
+		# FIXME: This ignores other problems like RECONNECT_FAILED
+		++$n; 
+	    }
+	    $result{$job}->[$n]->{ $submit_event{$tag} } = $tds; 
+	} else { 
+	    warn( "# Skipping unknown event $tag (", $submit_event{$tag}, ")\n" )
+		if exists $submit_event{$tag}; 
+	}
+    }
+
+    # done
+    close LOG;
+    log( "found $count event records" ) if $main::debug; 
+    log( "$main::max - $main::min = ", $main::max-$main::min )
+	if $main::debug > 2;
+    %result;
+}
+	    
 sub read_kickstart($;$) {
     # purpose: determine duration from kickstart output
     # paramtr: $fn (IN): location of kickstart file
@@ -334,7 +445,8 @@ my $nounlink = 0;		# remove temporary files later
 my ($title,$special,$width,$height,@pass,$limit);
 my ($minimum,$maximum) = ($main::kmin,$main::kmax);
 my $duration = 0;
-my ($outeps,$outpng);
+my $sort = 0; 
+my ($jobstate,$outeps,$outpng);
 
 GetOptions( 'help|?' => \&usage, 
 	    'debug|d+' => \$main::debug,
@@ -342,6 +454,7 @@ GetOptions( 'help|?' => \&usage,
 	    'png=s' => \$outpng,
 	    'eps=s' => \$outeps,
 	    'title|T=s' => \$title,
+	    'jobstate|j=s' => \$jobstate,
 	    'version|V' => sub { print "$main::version\n"; exit(0); },
 	    'adjust|a=i' => \$main::adjust, 
 	    'special=s' => \$special,
@@ -350,7 +463,8 @@ GetOptions( 'help|?' => \&usage,
 	    'duration=f' => \$duration, 
 	    'limit|l=s' => \$limit,
 	    'pass=s' => \@pass,
-	    'keep|k!' => \$nounlink );
+	    'keep|k!' => \$nounlink,
+	    'sort|s=i' => \$sort );
 BEGIN { $main::start = Time::HiRes::time() }
 END { log("done after ", sprintf('%.3f s', Time::HiRes::time() - $main::start ) ) 
 	  if $main::debug }
@@ -367,30 +481,72 @@ foreach my $app ( qw(ploticus convert) ) {
 }
 
 # determine all submit file locations
-my ($submit,$output,@topo);
-($logfn,$submit,$output,@topo) = slurp_dagfile( $dagfn, $logfn );
+my ($submit,$output,@sort);
+($logfn,$submit,$output,@sort) = slurp_dagfile( $dagfn, $logfn );
 die "ERROR: Unable to derives the name of a common Condor logfile\n" 
     unless ( defined $logfn && length($logfn) );
-die "ERROR: No Condor common log $logfn\n" unless -r $logfn;
+if ( defined $jobstate ) { 
+    die "ERROR: No jobstate log $jobstate\n" unless -r $jobstate; 
+} else {
+    die "ERROR: No Condor common log $logfn\n" unless -r $logfn;
+}
 die "ERROR: Empty Condor common log $logfn\n" unless -s _;
-my %events = slurp_logfile( $logfn );
+
+my %events;
+if ( defined $jobstate ) { 
+    %events = slurp_jobstate($jobstate); 
+} else {
+    %events = slurp_logfile($logfn); 
+}
 
 # data file generation
 my $tmp = $ENV{TMPDIR} || $ENV{TMP} || File::Spec->tmpdir() || '/tmp';
 my $data = new File::Temp( TEMPLATE => 'show-XXXXXX', DIR => $tmp, 
 			   SUFFIX => '.dat', UNLINK => (! $nounlink) );
+die "FATAL: Unable to create transient data file in $tmp" unless defined $data;
 log( "writing regular data into ", $data->filename ) if $main::debug;
 my $kick = new File::Temp( TEMPLATE => 'show-XXXXXX', DIR => $tmp, 
 			   SUFFIX => '.dat', UNLINK => (! $nounlink) );
+die "FATAL: Unable to create transient kick file in $tmp" unless defined $kick;
 log( "writing kickstart data into ", $kick->filename ) if $main::debug;
 
+# new ways to sort job order
+sub figure($$\%) {
+    my $id = shift;
+    my $sort = shift;
+    my $eref = shift;
+
+    if ( $sort == 1 ) {
+	min( map { $_->{'000'} } 
+	     grep { defined $_ && exists $_->{'000'} } 
+	     @{$eref->{$id}} ); 
+    } elsif ( $sort == 2 ) {
+	min( map { $_->{'001'} } 
+	     grep { defined $_ && exists $_->{'001'} } 
+	     @{$eref->{$id}} ); 
+    } elsif ( $sort == 3 ) {
+	max( map { $_->{'005'} } 
+	     grep { defined $_ && exists $_->{'005'} } 
+	     @{$eref->{$id}} ); 
+    } else {
+	undef;
+    }
+}
+
+# use different sort order, if requested (default: topo sort)
+if ( $sort ) {
+    @sort = map { $_->[0] }
+    sort { $b->[1] <=> $a->[1] }
+    map { [ $_ => figure($_,$sort,%events) ] } keys %events;
+}
+
 my $total = 0.0;
-my $n = 1;
-foreach my $dagjob ( @topo ) {
+my ($n,$r1,$r2) = (1,0,0);
+foreach my $dagjob ( @sort ) {
     my $id = basename( $submit->{$dagjob}, '.sub' );
     next unless defined $events{$dagjob};
     if ( defined $limit && $id !~ /$limit/o ) {
-	log( "Job $id does not match /$limit/, skipping" ); 
+	log( "Job $id does not match /$limit/, skipping" );
 	next;
     }
     
@@ -405,9 +561,9 @@ foreach my $dagjob ( @topo ) {
     for ( my $cycle=0; $cycle <= $maxindex; ++$cycle ) {
 	my $x = $events{$dagjob}->[$cycle];
 	my $exe = $x->{'001'};
-	my $grid = $x->{'017'} || $x->{'027'};
-	my $start = $x->{'000'};
-	my $final = $x->{'005'} || $x->{'009'};
+	my $grid = $x->{'017'} || $x->{'027'}; # Globus SUBMIT event
+	my $submit = $x->{'000'}; # Condor SUBMIT event
+	my $finish = $x->{'005'} || $x->{'009'};
 	my $match = ( defined $special ? $id =~ /$special/ : 0 );
 
 	my @kick = ();
@@ -416,24 +572,26 @@ foreach my $dagjob ( @topo ) {
 	    @kick = read_kickstart( $kickfn, $match ) if defined $kickfn;
 	}
 
+	unless ( defined $grid && $grid >= $minimum && $grid <= $maximum ) {
+	    # I hope *this* change does not break grid displays
+	    log( "adjusting grid start to Condor submit of $dagjob" );
+	    $grid=$submit; # no-grid submit -> use Condor submit?
+	}
 	unless ( defined $exe && $exe >= $minimum && $exe <= $maximum ) {
 	    log( "adjusting executable to minimum $dagjob" );
 	    $exe=$minimum;
 	}
-	unless ( defined $grid && $grid >= $minimum && $grid <= $maximum ) {
-	    log( "adjusting grid start to minimum $dagjob" );
-	    $grid= defined $exe ? $exe : $minimum;
-	}
  
 	# $id =~ s/-/_/g;
-	if ( defined $start && $start >= $minimum &&
-	     defined $final && $final <= $maximum ) {
+	if ( defined $submit && $submit >= $minimum &&
+	     defined $finish && $finish <= $maximum ) {
 	    printf $data "\"%s\" %.3f %.3f %.3f %.3f\n", $id, 
-		$start - $minimum, $final - $minimum, 
+		$submit - $minimum, $finish - $minimum, 
 		$grid - $minimum, $exe - $minimum; 
 	    printf STDERR "DEBUG: data \"%s\" %.3f %.3f %.3f %.3f\n", $id, 
-	        $start - $minimum, $final - $minimum, 
+	        $submit - $minimum, $finish - $minimum, 
 	        $grid - $minimum, $exe - $minimum if $match;
+	    $r1++; 
 	} else {
 	    warn "# Unable to determine interval for $dagjob, cycle $cycle\n";
 	}
@@ -444,6 +602,7 @@ foreach my $dagjob ( @topo ) {
 	        $x->[0] - $minimum, $x->[1] - $minimum, $x->[3];
 	    printf STDERR "DEBUG: kick \"%s\" %.3f %.3f %d\n", $id, 
 	        $x->[0] - $minimum, $x->[1] - $minimum, $x->[3] if $match;
+	    $r2++; 
 	}
     }
     ++$n;
@@ -573,14 +732,14 @@ print PLOT << "END"
 
 #proc categories
   axis: y
+  datafield: 1
   listsize: @{[$n * 2]}
-  comparemethod: exact
+  roundrobin: yes
 
 #proc areadef
   rectangle: 0 0 $width $height
   xrange: 0 $scaleduration
-  yautorange: categories
-  ycategories: datafield=1
+  yrange: categories
   frame: width=0.5 color=gray(0.3)
   title: $title
   titledetails: align=C style=I adjust=0,0.2
@@ -629,9 +788,9 @@ $selflocatingstubs
   color: yellow2
   horizontalbars: yes
   barwidth: 0.04
-  tails: no
   segmentfields: 4 5
   locfield: 1
+  tails: no
 
 #proc legendentry
   sampletype: color
@@ -705,13 +864,27 @@ foreach ( @pass ) {
     push( @extra, $val ) if defined $val;
 }
 
-my @arg = ( $app{ploticus}, $plot, '-eps', '-o', $epsfn, @extra );
+my $maxrows = max($r1,$r2);
+my @arg = ( $app{ploticus}, $plot, '-eps', '-o', $epsfn );
+push( @arg, '-maxrows', $maxrows, '-cpulimit', 600 ) if $maxrows > 10000; 
+push( @arg, @extra ) if @extra; 
 log( "@arg" ) if $main::debug;
-system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
-
-@arg = ( $app{convert}, '-density', '96x96', 
-	'-background', 'white', '-flatten', $epsfn, $pngfn );
-log( "@arg" ) if $main::debug;
-system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
-
-exit 0;
+system { $arg[0] } @arg;
+if ( $? == 0 ) {
+    @arg = ( $app{convert}, '-density', '96x96', 
+	     '-background', 'white', 
+             '-flatten', $epsfn, $pngfn );
+    log( "@arg" ) if $main::debug;
+    system { $arg[0] } @arg;
+    if ( $? == 0 ) { 
+	# all is well, both executions were proper
+	exit 0;
+    } else {
+	# ImageMagick failed
+	warn( "ERROR: @arg returned ", ($?>>8), '/', ($? & 127), "\n" ); 
+	exit 1;
+    }
+} else {
+    warn( "ERROR: @arg returned ", ($?>>8), '/', ($? & 127), "\n" ); 
+    exit 1;
+}

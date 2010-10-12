@@ -19,12 +19,13 @@ sub iso2unix($);		# { }
 sub find_exec($;@); 		# { }
 sub read_submit_file($);	# { }
 sub default_title($;$);		# { }
+sub ploticus_version($);	# { }
 
 # create the export lists
 our $VERSION = '0.1';
 our %EXPORT_TAGS = ();
 our @EXPORT = qw(log unix2iso iso2unix find_exec read_submit_file
-		 default_title);
+		 default_title ploticus_version);
 our @EXPORT_OK = qw($VERSION);
 
 $VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
@@ -174,6 +175,25 @@ sub default_title($;$) {
     } elsif ( @dir == 1 ) {
 	$result .= ' [' . $dir[$#dir] . ']';
     }
+    $result;
+}
+
+sub ploticus_version($) {
+    # purpose: determine the version number of your ploticus installation
+    # paramtr: $app (IN): Full path to ploticus
+    # returns: a version number as major * 1000 + minor, undef on failures
+    #
+    my $exe = shift; 
+    my $result = undef; 
+
+    local(*P); 
+    if ( open( P, "$exe -version|" ) ) {
+	if ( defined ($_ = <P>) ) {
+	    $result = ($1*1000 + $2) if /ploticus\s+(\d+)\.(\d+)/;
+	}
+	close P; 
+    }
+
     $result;
 }
 
