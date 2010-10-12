@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.provenance;
+package edu.isi.pegasus.planner.provenance;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;

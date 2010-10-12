@@ -15,9 +15,9 @@
  */
 
 
-package org.griphyn.cPlanner.provenance.pasoa.producer;
+package edu.isi.pegasus.planner.provenance.pasoa.producer;
 
-import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 
 import java.io.*;
 

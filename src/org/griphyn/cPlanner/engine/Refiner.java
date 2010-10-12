@@ -17,7 +17,7 @@ package org.griphyn.cPlanner.engine;
 
 import org.griphyn.cPlanner.classes.ADag;
 
-import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 
 /**
  * A first cut at a separate refiner interface. Right now it only has method

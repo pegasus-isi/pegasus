@@ -15,13 +15,13 @@
  */
 
 
-package org.griphyn.cPlanner.provenance.pasoa.pps;
+package edu.isi.pegasus.planner.provenance.pasoa.pps;
 
 import java.util.*;
 
 import org.griphyn.cPlanner.engine.Refiner;
 
-import org.griphyn.cPlanner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 
 /**
  * The default empty implementation to be used.

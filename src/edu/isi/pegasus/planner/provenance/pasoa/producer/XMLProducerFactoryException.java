@@ -15,27 +15,30 @@
  */
 
 
-package org.griphyn.cPlanner.provenance.pasoa.pps;
+package edu.isi.pegasus.planner.provenance.pasoa.producer;
 
 import edu.isi.pegasus.common.util.FactoryException;
 
+
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
+
 /**
- * Class to notify of failures while instantiating PPS implementations.
+ * Class to notify of failures while instantiating XMLProducer implementations.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
 
-public class PPSFactoryException extends FactoryException {
+public class XMLProducerFactoryException extends FactoryException {
 
     /**
      * The default classname that is associated with the exception.
      */
-    public static final String DEFAULT_NAME = "PPS";
+    public static final String DEFAULT_NAME = "XMLProducer";
 
 
     /**
-     * Constructs a <code>PPSFactoryException</code> with no detail
+     * Constructs a <code>XMLProducerFactoryException</code> with no detail
      * message. The associated classname is set to value specified by
      * <code>DEFAULT_NAME</code>.
      *
@@ -43,26 +46,26 @@ public class PPSFactoryException extends FactoryException {
      *
      * @see #DEFAULT_NAME
      */
-    public PPSFactoryException( String msg ) {
+    public XMLProducerFactoryException( String msg ) {
         super( msg );
         mClassname = this.DEFAULT_NAME;
     }
 
     /**
-     * Constructs a <code>PPSFactoryException</code> with the specified detailed
+     * Constructs a <code>XMLProducerFactoryException</code> with the specified detailed
      * message.
      *
      * @param msg       is the detailed message.
      * @param classname the name of class that was trying to be instantiated or
      *                  some other signifier like module name.
      */
-    public PPSFactoryException(String msg, String classname) {
+    public XMLProducerFactoryException(String msg, String classname) {
         super( msg , classname );
     }
 
 
     /**
-     * Constructs a <code>PPSFactoryException</code> with the
+     * Constructs a <code>XMLProducerFactoryException</code> with the
      * specified detailed message and a cause. The associated classname is set
      * to value specified by <code>DEFAULT_NAME</code>.
      *
@@ -74,14 +77,14 @@ public class PPSFactoryException extends FactoryException {
      *
      * @see #DEFAULT_NAME
      */
-    public PPSFactoryException(String msg, Throwable cause) {
+    public XMLProducerFactoryException(String msg, Throwable cause) {
         super(msg, cause);
         mClassname = this.DEFAULT_NAME;
     }
 
 
     /**
-     * Constructs a <code>PPSFactoryException</code> with the
+     * Constructs a <code>XMLProducerFactoryException</code> with the
      * specified detailed message and a cause.
      *
      * @param msg       is the detailed message that is to be logged.
@@ -91,7 +94,7 @@ public class PPSFactoryException extends FactoryException {
      * value is permitted, and indicates that the cause is nonexistent or
      * unknown.
      */
-    public PPSFactoryException( String msg,
+    public XMLProducerFactoryException( String msg,
                                         String classname,
                                         Throwable cause ) {
 

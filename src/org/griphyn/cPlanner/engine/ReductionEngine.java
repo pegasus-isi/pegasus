@@ -28,11 +28,11 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
-import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 
-import org.griphyn.cPlanner.provenance.pasoa.PPS;
-import org.griphyn.cPlanner.provenance.pasoa.pps.PPSFactory;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 
 import java.util.Enumeration;
 import java.util.Set;

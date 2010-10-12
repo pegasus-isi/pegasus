@@ -27,7 +27,7 @@ import edu.isi.pegasus.common.logging.LoggingKeys;
 import org.griphyn.cPlanner.visualize.Callback;
 import org.griphyn.cPlanner.visualize.KickstartParser;
 
-import org.griphyn.cPlanner.provenance.NetloggerCallback;
+import edu.isi.pegasus.planner.provenance.NetloggerCallback;
 
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.FactoryException;

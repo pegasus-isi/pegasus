@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.provenance.pasoa;
+package edu.isi.pegasus.planner.provenance.pasoa;
 
 import java.io.IOException;
 import java.io.Writer;

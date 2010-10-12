@@ -30,11 +30,11 @@ import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 
-import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
-import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 
-import org.griphyn.cPlanner.provenance.pasoa.PPS;
-import org.griphyn.cPlanner.provenance.pasoa.pps.PPSFactory;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 
 
 import java.util.ArrayList;

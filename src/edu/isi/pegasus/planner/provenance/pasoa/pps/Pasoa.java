@@ -14,9 +14,9 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.provenance.pasoa.pps;
+package edu.isi.pegasus.planner.provenance.pasoa.pps;
 
-import org.griphyn.cPlanner.provenance.pasoa.PPS;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 
 
 import org.griphyn.cPlanner.classes.SubInfo;

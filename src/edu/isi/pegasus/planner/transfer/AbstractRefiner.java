@@ -29,8 +29,8 @@ import java.util.Collection;
 import org.griphyn.cPlanner.classes.FileTransfer;
 import org.griphyn.cPlanner.common.TPT;
 
-import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
-import org.griphyn.cPlanner.provenance.pasoa.producer.XMLProducerFactory;
+import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 
 
 

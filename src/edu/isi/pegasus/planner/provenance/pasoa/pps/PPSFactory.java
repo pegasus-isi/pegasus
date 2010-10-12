@@ -15,36 +15,46 @@
  */
 
 
-package org.griphyn.cPlanner.provenance.pasoa.producer;
+package edu.isi.pegasus.planner.provenance.pasoa.pps;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
 
-
-import org.griphyn.cPlanner.provenance.pasoa.XMLProducer;
+import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 
 /**
- *
  * The factory for instantiating an XMLProducer.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
-public class XMLProducerFactory {
+public class PPSFactory {
+
     /**
      * The default package where all the implementations reside.
      */
-    public static final String DEFAULT_PACKAGE_NAME = "org.griphyn.cPlanner.provenance.pasoa.producer";
+    public static final String DEFAULT_PACKAGE_NAME = "org.griphyn.cPlanner.provenance.pasoa.pps";
 
 
     /**
-     * The default XML producer implementation to be used.
+     * The default PPS implementation to be used.
      */
-    public static final String DEFAULT_XML_PRODUCER = "InMemory";
+    public static final String DEFAULT_PPS_PROVIDER = "Empty";
+
+    /**
+     * The default Pasoa PPS implementation to be used.
+     */
+    public static final String PASOA_PPS_PROVIDER = "Pasoa";
 
 
     /**
-     * Loads the appropriate XMLProducer on the basis of the property set in the
+     * The singleton instance of the PPS implementation that is returned.
+     */
+    private static PPS mInstance = null;
+
+
+    /**
+     * Loads the appropriate PPS implementation on the basis of the property set in the
      * properties.
      *
      *
@@ -53,21 +63,36 @@ public class XMLProducerFactory {
      *
      * @return the instance of the appropriate XML Producer.
      *
-     * @throws XMLProducerFactoryException that nests any error that
+     * @throws PPSFactoryException that nests any error that
      *         might occur during the instantiation
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public static XMLProducer loadXMLProducer( PegasusProperties properties )
-                                              throws XMLProducerFactoryException{
-
+    public static PPS loadPPS( PegasusProperties properties )
+                                              throws PPSFactoryException{
 
         //sanity check
+        if( properties == null ){
+            throw new PPSFactoryException( "No properties passed to factory " );
+        }
 
-        String className = DEFAULT_XML_PRODUCER;
-        XMLProducer producer = null;
+
+        //check for singleton
+        if( mInstance != null ){
+            return mInstance;
+        }
+
+
+        String className = properties.getRefinementProvenanceStore();
+        if( className == null ){
+            className = DEFAULT_PPS_PROVIDER;
+        }
+        else if ( className.equalsIgnoreCase( "pasoa" ) ){
+            className = PASOA_PPS_PROVIDER;
+        }
+
+        PPS pps = null;
         try{
-
             //prepend the package name if required
             className = ( className.indexOf('.') == -1 )?
                         //pick up from the default package
@@ -77,14 +102,15 @@ public class XMLProducerFactory {
 
             //try loading the class dynamically
             DynamicLoader dl = new DynamicLoader( className );
-            producer = ( XMLProducer ) dl.instantiate( new Object[0] );
+            pps = ( PPS ) dl.instantiate( new Object[0] );
         }
-        catch ( Exception e ){
-            throw new XMLProducerFactoryException( " Unable to instantiate XMLProducer ",
+        catch( Exception e ){
+            throw new PPSFactoryException( " Unable to instantiate PPS ",
                                                  className,
                                                  e );
         }
-        return producer;
+        mInstance = pps;
+        return pps;
     }
 
 
