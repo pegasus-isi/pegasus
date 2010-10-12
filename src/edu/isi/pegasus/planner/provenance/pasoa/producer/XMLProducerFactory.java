@@ -34,7 +34,7 @@ public class XMLProducerFactory {
     /**
      * The default package where all the implementations reside.
      */
-    public static final String DEFAULT_PACKAGE_NAME = "org.griphyn.cPlanner.provenance.pasoa.producer";
+    public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.planner.provenance.pasoa.producer";
 
 
     /**

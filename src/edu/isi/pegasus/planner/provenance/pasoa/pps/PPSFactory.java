@@ -33,7 +33,7 @@ public class PPSFactory {
     /**
      * The default package where all the implementations reside.
      */
-    public static final String DEFAULT_PACKAGE_NAME = "org.griphyn.cPlanner.provenance.pasoa.pps";
+    public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.planner.provenance.pasoa.pps";
 
 
     /**
