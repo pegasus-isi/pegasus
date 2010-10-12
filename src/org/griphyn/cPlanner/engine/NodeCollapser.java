@@ -28,9 +28,9 @@ import org.griphyn.cPlanner.partitioner.ClustererCallback;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
-import org.griphyn.cPlanner.cluster.ClustererFactory;
-import org.griphyn.cPlanner.cluster.Clusterer;
-import org.griphyn.cPlanner.cluster.ClustererException;
+import edu.isi.pegasus.planner.cluster.ClustererFactory;
+import edu.isi.pegasus.planner.cluster.Clusterer;
+import edu.isi.pegasus.planner.cluster.ClustererException;
 
 
 import edu.isi.pegasus.common.logging.LogManager;

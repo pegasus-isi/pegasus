@@ -15,9 +15,9 @@
  */
 
 
-package org.griphyn.cPlanner.cluster.aggregator;
+package edu.isi.pegasus.planner.cluster.aggregator;
 
-import org.griphyn.cPlanner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;

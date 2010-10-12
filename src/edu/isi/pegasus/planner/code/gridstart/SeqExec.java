@@ -36,8 +36,8 @@ import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
-import org.griphyn.cPlanner.cluster.JobAggregator;
-import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;

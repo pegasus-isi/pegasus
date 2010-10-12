@@ -27,8 +27,8 @@ import org.griphyn.cPlanner.classes.PegasusFile;
 
 
 import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.cluster.JobAggregator;
-import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 

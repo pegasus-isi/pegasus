@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.cluster;
+package edu.isi.pegasus.planner.cluster;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.SubInfo;
@@ -25,9 +25,9 @@ import org.griphyn.cPlanner.classes.PCRelation;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 
-import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorInstanceFactory;
+import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorInstanceFactory;
 
 import org.griphyn.cPlanner.partitioner.Partition;
 

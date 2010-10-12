@@ -14,27 +14,28 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.cluster;
+
+package edu.isi.pegasus.planner.cluster.aggregator;
 
 import edu.isi.pegasus.common.util.FactoryException;
 
 /**
- * Class to notify of failures while instantiating Clusterer implementations.
+ * Class to notify of failures while instantiating JobAggregator implementations.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
 
-public class ClustererFactoryException extends FactoryException {
+public class JobAggregatorFactoryException extends FactoryException {
 
     /**
      * The default classname that is associated with the exception.
      */
-    public static final String DEFAULT_NAME = "Clusterer";
+    public static final String DEFAULT_NAME = "Job Aggregator";
 
 
     /**
-     * Constructs a <code>ClustererFactoryException</code> with no detail
+     * Constructs a <code>JobAggregatorFactoryException</code> with no detail
      * message. The associated classname is set to value specified by
      * <code>DEFAULT_NAME</code>.
      *
@@ -42,26 +43,26 @@ public class ClustererFactoryException extends FactoryException {
      *
      * @see #DEFAULT_NAME
      */
-    public ClustererFactoryException( String msg ) {
+    public JobAggregatorFactoryException( String msg ) {
         super( msg );
         mClassname = this.DEFAULT_NAME;
     }
 
     /**
-     * Constructs a <code>ClustererFactoryException</code> with the specified detailed
+     * Constructs a <code>JobAggregatorFactoryException</code> with the specified detailed
      * message.
      *
      * @param msg       is the detailed message.
      * @param classname the name of class that was trying to be instantiated or
      *                  some other signifier like module name.
      */
-    public ClustererFactoryException(String msg, String classname) {
+    public JobAggregatorFactoryException(String msg, String classname) {
         super( msg , classname );
     }
 
 
     /**
-     * Constructs a <code>ClustererFactoryException</code> with the
+     * Constructs a <code>JobAggregatorFactoryException</code> with the
      * specified detailed message and a cause. The associated classname is set
      * to value specified by <code>DEFAULT_NAME</code>.
      *
@@ -73,14 +74,14 @@ public class ClustererFactoryException extends FactoryException {
      *
      * @see #DEFAULT_NAME
      */
-    public ClustererFactoryException(String msg, Throwable cause) {
+    public JobAggregatorFactoryException(String msg, Throwable cause) {
         super(msg, cause);
         mClassname = this.DEFAULT_NAME;
     }
 
 
     /**
-     * Constructs a <code>ClustererFactoryException</code> with the
+     * Constructs a <code>JobAggregatorFactoryException</code> with the
      * specified detailed message and a cause.
      *
      * @param msg       is the detailed message that is to be logged.
@@ -90,7 +91,7 @@ public class ClustererFactoryException extends FactoryException {
      * value is permitted, and indicates that the cause is nonexistent or
      * unknown.
      */
-    public ClustererFactoryException( String msg,
+    public JobAggregatorFactoryException( String msg,
                                         String classname,
                                         Throwable cause ) {
 

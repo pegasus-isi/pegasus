@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.cluster;
+package edu.isi.pegasus.planner.cluster;
 
 /**
  * The baseclass of the exception that is thrown by all Clusterers.

@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.cluster;
+package edu.isi.pegasus.planner.cluster;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
@@ -47,7 +47,7 @@ public class ClustererFactory {
     /**
      * The default package where all the implementations reside.
      */
-    public static final String DEFAULT_PACKAGE_NAME = "org.griphyn.cPlanner.cluster";
+    public static final String DEFAULT_PACKAGE_NAME = "edu.isi.pegasus.planner.cluster";
 
     /**
      * The name of the class implementing horizontal clustering.

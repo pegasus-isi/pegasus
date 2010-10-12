@@ -36,8 +36,8 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
-import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
-import org.griphyn.cPlanner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 
 import java.io.File;
 

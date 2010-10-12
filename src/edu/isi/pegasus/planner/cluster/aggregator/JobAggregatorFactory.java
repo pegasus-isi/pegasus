@@ -15,9 +15,9 @@
  */
 
 
-package org.griphyn.cPlanner.cluster.aggregator;
+package edu.isi.pegasus.planner.cluster.aggregator;
 
-import org.griphyn.cPlanner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
@@ -41,7 +41,7 @@ public class JobAggregatorFactory {
      * Package to prefix "just" class names with.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-                                             "org.griphyn.cPlanner.cluster.aggregator";
+                                             "edu.isi.pegasus.planner.cluster.aggregator";
 
 
     /**

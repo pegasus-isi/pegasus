@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.cluster.aggregator;
+package edu.isi.pegasus.planner.cluster.aggregator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 

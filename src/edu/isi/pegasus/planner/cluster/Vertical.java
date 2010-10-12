@@ -12,7 +12,7 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
-package org.griphyn.cPlanner.cluster;
+package edu.isi.pegasus.planner.cluster;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.AggregatedJob;

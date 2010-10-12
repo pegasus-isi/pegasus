@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.cluster.aggregator;
+package edu.isi.pegasus.planner.cluster.aggregator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.classes.AggregatedJob;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;

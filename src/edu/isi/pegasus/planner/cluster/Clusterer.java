@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.cluster;
+package edu.isi.pegasus.planner.cluster;
 
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;

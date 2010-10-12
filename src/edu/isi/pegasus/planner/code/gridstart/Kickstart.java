@@ -441,9 +441,9 @@ public class Kickstart implements GridStart {
                 edu.isi.pegasus.planner.transfer.implementation.T2.TRANSFORMATION_NAME)
                 || job.logicalName.equals(edu.isi.pegasus.planner.transfer.implementation.Symlink.TRANSFORMATION_NAME )
 
-                ||job.logicalName.equals(org.griphyn.cPlanner.cluster.aggregator.SeqExec.
+                ||job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.SeqExec.
                                          COLLAPSE_LOGICAL_NAME)
-                ||job.logicalName.equals(org.griphyn.cPlanner.cluster.aggregator.MPIExec.
+                ||job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.MPIExec.
                                          COLLAPSE_LOGICAL_NAME)
                 ||job.logicalName.equals(org.griphyn.cPlanner.engine.cleanup.Cleanup.TRANSFORMATION_NAME )
                                          ) {

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.cluster;
+package edu.isi.pegasus.planner.cluster;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.ADag;
@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.classes.AggregatedJob;
 import org.griphyn.cPlanner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorInstanceFactory;
+import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorInstanceFactory;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 

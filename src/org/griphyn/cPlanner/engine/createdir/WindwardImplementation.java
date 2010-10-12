@@ -28,8 +28,8 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
-import org.griphyn.cPlanner.cluster.JobAggregator;
-import org.griphyn.cPlanner.cluster.aggregator.JobAggregatorFactory;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import org.griphyn.cPlanner.common.PegasusProperties;

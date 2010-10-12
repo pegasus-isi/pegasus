@@ -16,8 +16,8 @@
 
 package org.griphyn.cPlanner.partitioner;
 
-import org.griphyn.cPlanner.cluster.Clusterer;
-import org.griphyn.cPlanner.cluster.ClustererException;
+import edu.isi.pegasus.planner.cluster.Clusterer;
+import edu.isi.pegasus.planner.cluster.ClustererException;
 
 import org.griphyn.cPlanner.common.PegasusProperties;
 
