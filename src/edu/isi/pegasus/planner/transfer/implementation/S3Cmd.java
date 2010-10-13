@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.refiner.createdir.WindwardImplementation;
+import org.griphyn.cPlanner.engine.createdir.WindwardImplementation;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -41,8 +41,8 @@ import java.util.Properties;
 
 import java.io.File;
 import java.util.List;
-import edu.isi.pegasus.planner.refiner.CreateDirectory;
-import edu.isi.pegasus.planner.refiner.createdir.Implementation;
+import org.griphyn.cPlanner.engine.CreateDirectory;
+import org.griphyn.cPlanner.engine.createdir.Implementation;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
@@ -120,7 +120,7 @@ public class S3Cmd extends AbstractSingleFTPerXFERJob {
     /**
      * An instance to the Create Direcotry Implementation being used in Pegasus.
      */
-    private edu.isi.pegasus.planner.refiner.createdir.S3 mS3CreateDirImpl;
+    private org.griphyn.cPlanner.engine.createdir.S3 mS3CreateDirImpl;
     
     
     /**
@@ -136,10 +136,10 @@ public class S3Cmd extends AbstractSingleFTPerXFERJob {
         Implementation createDirImpl = 
                 CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
         //sanity check on the implementation
-        if ( !( createDirImpl instanceof edu.isi.pegasus.planner.refiner.createdir.S3 )){
+        if ( !( createDirImpl instanceof org.griphyn.cPlanner.engine.createdir.S3 )){
             throw new RuntimeException( "Only S3 Create Dir implementation can be used with S3 First Level Staging" );
         }
-        mS3CreateDirImpl = (edu.isi.pegasus.planner.refiner.createdir.S3 )createDirImpl;
+        mS3CreateDirImpl = (org.griphyn.cPlanner.engine.createdir.S3 )createDirImpl;
         
     }
 

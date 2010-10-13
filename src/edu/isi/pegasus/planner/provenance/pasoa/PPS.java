@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.provenance.pasoa;
 
 import java.util.List;
 
-import edu.isi.pegasus.planner.refiner.Refiner;
+import org.griphyn.cPlanner.engine.Refiner;
 
 
 /**

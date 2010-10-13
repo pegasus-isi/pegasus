@@ -26,7 +26,7 @@ import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
+import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 

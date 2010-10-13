@@ -15,7 +15,7 @@
  */
 
 
-package edu.isi.pegasus.planner.client;
+package org.griphyn.cPlanner.toolkit;
 
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -27,12 +27,13 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.planner.visualize.Callback;
 import edu.isi.pegasus.planner.visualize.KickstartParser;
 
-import edu.isi.pegasus.planner.visualize.spaceusage.Plot;
-import edu.isi.pegasus.planner.visualize.spaceusage.Ploticus;
+
 import edu.isi.pegasus.planner.visualize.spaceusage.KickstartOutputFilenameFilter;
-import edu.isi.pegasus.planner.visualize.spaceusage.SpaceUsage;
-import edu.isi.pegasus.planner.visualize.spaceusage.SpaceUsageCallback;
-import edu.isi.pegasus.planner.visualize.spaceusage.TailStatd;
+
+import edu.isi.pegasus.planner.visualize.WorkflowMeasurements;
+
+import edu.isi.pegasus.planner.visualize.nodeusage.NodeUsageCallback;
+import edu.isi.pegasus.planner.visualize.nodeusage.Ploticus;
 
 import org.griphyn.vdl.toolkit.FriendlyNudge;
 
@@ -59,7 +60,7 @@ import java.util.List;
  * @version $Revision$
  */
 
-public class PlotSpaceUsage extends Executable{
+public class PlotNodeUsage extends Executable{
 
     /**
      * The default output directory.
@@ -75,7 +76,6 @@ public class PlotSpaceUsage extends Executable{
      * The tailstatd timing source.
      */
     public static final String TAILSTATD_TIMING_SOURCE = "Tailstatd";
-
 
 
     /**
@@ -99,40 +99,20 @@ public class PlotSpaceUsage extends Executable{
     private int mLoggingLevel;
 
     /**
-     * The size units.
-     */
-    private String mSizeUnits;
-
-    /**
      * The time units.
      */
     private String mTimeUnits;
 
     /**
-     * The timing source used to order the events.
-     */
-    private String mTimingSource;
-
-    /**
-     * A boolean indicating to use stat information for estimating
-     * directory sizes.
-     */
-    private boolean mUseStatInfo;
-
-    /**
      * Default constructor.
      */
-    public PlotSpaceUsage(){
+    public PlotNodeUsage(){
         super();
         mLogMsg = new String();
         mVersion = Version.instance().toString();
         mOutputDir = this.DEFAULT_OUTPUT_DIR;
         mLoggingLevel = 0;
-        mSizeUnits    = "K";
-        mTimeUnits    = null;
         mBasename     = "ploticus";
-        mTimingSource = this.DEFAULT_TIMING_SOURCE;
-        mUseStatInfo  = false;
     }
 
     /**
@@ -143,7 +123,7 @@ public class PlotSpaceUsage extends Executable{
      */
     public static void main(String[] args) {
 
-        PlotSpaceUsage me = new PlotSpaceUsage();
+        PlotNodeUsage me = new PlotNodeUsage();
         int result = 0;
         double starttime = new Date().getTime();
         double execTime  = -1;
@@ -201,11 +181,6 @@ public class PlotSpaceUsage extends Executable{
         //set logging level only if explicitly set by user
         if( mLoggingLevel > 0 ) { mLogger.setLevel( mLoggingLevel ); }
 
-        //do sanity check on units
-        mSizeUnits = mSizeUnits.trim();
-        if ( mSizeUnits.length() != 1 ){
-            throw new RuntimeException( "The valid size units can be K or M or G" );
-        }
 
         //do sanity check on input directory
         if( mInputDir == null ){
@@ -246,21 +221,9 @@ public class PlotSpaceUsage extends Executable{
 
         KickstartParser su = new KickstartParser();
 
-        //determing the callback on the basis of timing source
-        Callback c;
-        if( mTimingSource.equalsIgnoreCase( this.DEFAULT_TIMING_SOURCE )){
-            c = new SpaceUsageCallback();
-        }
-        else if ( mTimingSource.equalsIgnoreCase( this.TAILSTATD_TIMING_SOURCE )){
-            c = new TailStatd();
-        }
-        else{
-            throw new RuntimeException( "No callback available for timing source" +
-                                        mTimingSource );
-        }
-        mLogger.log( "Timing Source being used is " + mTimingSource ,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
-        c.initialize( mInputDir, mUseStatInfo );
+        Callback c = new NodeUsageCallback();
+
+        c.initialize( mInputDir, true );
         su.setCallback( c );
 
         //String dir = "/usr/sukhna/work/test/dags/ivdgl1/blackdiamond/run0004";
@@ -286,16 +249,16 @@ public class PlotSpaceUsage extends Executable{
         //we are done with parsing
         c.done();
 
-        SpaceUsage s = (SpaceUsage)c.getConstructedObject();
-        s.sort();
-        log( " Space Store is \n" + c.getConstructedObject(),
+        WorkflowMeasurements wm = ( WorkflowMeasurements )c.getConstructedObject();
+        wm.sort();
+        log( " Workflow Measurements is \n" + wm,
              LogManager.DEBUG_MESSAGE_LEVEL);
 
         //generate the ploticus format
-        Plot plotter = new Ploticus();
-        plotter.initialize( mOutputDir, mBasename , mUseStatInfo);
+        Ploticus plotter = new Ploticus();
+        plotter.initialize( mOutputDir, mBasename , true);
         try{
-            List result = plotter.plot( s, mSizeUnits.charAt( 0 ), mTimeUnits );
+            List result = plotter.plot( wm, '0', mTimeUnits );
 
             for( Iterator it = result.iterator(); it.hasNext(); ){
                 mLogger.log( "Written out file " + it.next(),
@@ -320,8 +283,8 @@ public class PlotSpaceUsage extends Executable{
     public void parseCommandLineArguments(String[] args){
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt( "plot-space-usage", args,
-                              "b:i:o:s:t:T:uhvV",
+        Getopt g = new Getopt( "plot-node-usage", args,
+                              "b:i:o:T:hvV",
                               longOptions, false);
         g.setOpterr(false);
 
@@ -348,20 +311,8 @@ public class PlotSpaceUsage extends Executable{
                     this.mOutputDir =  g.getOptarg();
                     break;
 
-                case 's'://size-units
-                    this.mSizeUnits = g.getOptarg();
-                    break;
-
-                case 't'://timing source
-                    this.mTimingSource = g.getOptarg();
-                    break;
-
                 case 'T'://time units
                     this.mTimeUnits = g.getOptarg();
-                    break;
-
-                case 'u'://use-stat
-                    this.mUseStatInfo = true;
                     break;
 
                 case 'v'://verbose
@@ -393,18 +344,15 @@ public class PlotSpaceUsage extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[10];
+        LongOpt[] longopts = new LongOpt[7];
 
         longopts[0]   = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
         longopts[1]   = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
-        longopts[2]   = new LongOpt( "size-units", LongOpt.REQUIRED_ARGUMENT, null, 's' );
-        longopts[3]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
-        longopts[4]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
-        longopts[5]   = new LongOpt( "Version", LongOpt.NO_ARGUMENT, null, 'V' );
-        longopts[6]   = new LongOpt( "basename", LongOpt.REQUIRED_ARGUMENT, null, 'b' );
-        longopts[7]   = new LongOpt( "timing-source", LongOpt.REQUIRED_ARGUMENT, null, 't');
-        longopts[8]   = new LongOpt( "use-stat", LongOpt.NO_ARGUMENT, null, 'u' );
-        longopts[9]   = new LongOpt( "time-units", LongOpt.REQUIRED_ARGUMENT, null, 'T' );
+        longopts[2]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
+        longopts[3]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
+        longopts[4]   = new LongOpt( "Version", LongOpt.NO_ARGUMENT, null, 'V' );
+        longopts[5]   = new LongOpt( "basename", LongOpt.REQUIRED_ARGUMENT, null, 'b' );
+        longopts[6]   = new LongOpt( "time-units", LongOpt.REQUIRED_ARGUMENT, null, 'T' );
         return longopts;
     }
 
@@ -416,9 +364,8 @@ public class PlotSpaceUsage extends Executable{
         String text =
           "\n $Id$ " +
           "\n " + getGVDSVersion() +
-          "\n Usage : plot-space-usage [-Dprop  [..]] -i <input directory>  " +
-          " [-o output directory] [-b basename] [-s size units] [-t timing source] " +
-          " [-T time units] [-u] [-v] [-V] [-h]";
+          "\n Usage : plot_node_usage [-Dprop  [..]] -i <input directory>  " +
+          " [-o output directory] [-b basename] [-T time units] [-v] [-V] [-h]";
 
         System.out.println(text);
     }
@@ -432,20 +379,17 @@ public class PlotSpaceUsage extends Executable{
         String text =
            "\n $Id$ " +
            "\n " + getGVDSVersion() +
-           "\n plot-space-usage - A plotting tool that plots out the space usage on remote clusters over time"  +
-           "\n Usage: plot_space_usage [-Dprop  [..]] --dir <input directory> [--base basename] " +
-           "\n [--output output directory] [--timing-source source] [--use-stat] [--verbose] [--Version] [--help] " +
+           "\n plot-node-usage - A plotting tool that plots out the number of jobs running on remote clusters over time"  +
+           "\n Usage: plot_node_usage [-Dprop  [..]] --input <input directory> [--base basename] " +
+           "\n [--output output directory] [-T time units] [--verbose] [--Version] [--help] " +
            "\n" +
            "\n Mandatory Options " +
            "\n --input              the directory where the kickstart records reside." +
            "\n Other Options  " +
            "\n -b |--basename      the basename prefix for constructing the ploticus files." +
            "\n -o |--output        the output directory where to generate the ploticus files." +
-           "\n -s |--size-units    the units in which you want the filesizes to be plotted (can be K or M or G)."  +
-           "\n -t |--timing-source the source from which the ordering of events is determined. " +
-           "\n                     Can be kickstart or tailstatd. Defaults to kickstart." +
-           "\n -T |--time-units    the units in which you want the x axis to be plotted (seconds|minutes|hours) Defaults to seconds." +
-           "\n -u |--use-stat      use the file stat information in kickstart records to estimate directory usage" +
+           "\n -T |--time-units    the units in which you want the x axis to be plotted (seconds|minutes|hours) " +
+           "\n                     Defaults to seconds." +
            "\n -v |--verbose       increases the verbosity of messages about what is going on" +
            "\n -V |--version       displays the version of the Pegasus Workflow Planner" +
            "\n -h |--help          generates this help." +

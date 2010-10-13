@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import org.griphyn.cPlanner.toolkit.Executable;
 
 
 
@@ -51,6 +52,7 @@ import java.io.PrintWriter;
 import java.io.IOException;
 import java.util.Date;
 
+import org.griphyn.cPlanner.toolkit.CPlanner;
 
 import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
