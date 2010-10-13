@@ -145,7 +145,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             if k == 'parent.wf.id':
                 k = 'parent_workflow_id'
             if k == 'arguments':
-                v = v.replace("'", "\\'")
+                if v != None:
+                    v = v.replace("'", "\\'")
             
             try:
                 exec("o.%s = '%s'" % (k,v))
@@ -273,12 +274,12 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             edgeq = self.session.query(EdgeStatic.parent).filter(EdgeStatic.wf_uuid == job.wf_uuid).filter(EdgeStatic.child == job.name)
             for parent in edgeq.all():
                 parentName = parent[0]
-                parentq = self.session.query(Job.job_id).filter(Job.name == parentName)
-                parentid = parentq.one()[0]
-                edge = Edge()
-                edge.parent_id = parentid
-                edge.child_id = job.job_id
-                edge.commit_to_db(self.session)
+                parentq = self.session.query(Job.job_id).filter(Job.name == parentName).filter(Job.wf_id == job.wf_id)
+                for parentid in parentq.all():
+                    edge = Edge()
+                    edge.parent_id = parentid[0]
+                    edge.child_id = job.job_id
+                    edge.commit_to_db(self.session)
         pass
         
     def jobstate(self, linedata):
