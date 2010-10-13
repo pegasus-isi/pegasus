@@ -58,7 +58,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  */
 
 public class Horizontal implements Clusterer,
-                                   org.griphyn.cPlanner.engine.Refiner{//reqd for PASOA integration
+                                   edu.isi.pegasus.planner.engine.Refiner{//reqd for PASOA integration
 
     /**
      * The default collapse factor for collapsing jobs with same logical name

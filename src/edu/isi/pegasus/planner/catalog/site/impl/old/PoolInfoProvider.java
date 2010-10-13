@@ -32,7 +32,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.UserOptions;
 import edu.isi.pegasus.planner.common.Utility;
 
-import org.griphyn.cPlanner.engine.Engine;
+import edu.isi.pegasus.planner.engine.Engine;
 
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;

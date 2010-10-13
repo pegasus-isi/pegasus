@@ -43,9 +43,9 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
-import org.griphyn.cPlanner.engine.MainEngine;
+import edu.isi.pegasus.planner.engine.MainEngine;
 
-import org.griphyn.cPlanner.engine.createdir.WindwardImplementation;
+import edu.isi.pegasus.planner.engine.createdir.WindwardImplementation;
 
 
 import edu.isi.pegasus.planner.parser.dax.Callback;
