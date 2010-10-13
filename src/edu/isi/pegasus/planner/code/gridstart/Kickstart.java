@@ -445,7 +445,7 @@ public class Kickstart implements GridStart {
                                          COLLAPSE_LOGICAL_NAME)
                 ||job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.MPIExec.
                                          COLLAPSE_LOGICAL_NAME)
-                ||job.logicalName.equals(edu.isi.pegasus.planner.engine.cleanup.Cleanup.TRANSFORMATION_NAME )
+                ||job.logicalName.equals(edu.isi.pegasus.planner.refiner.cleanup.Cleanup.TRANSFORMATION_NAME )
                                          ) {
 
 

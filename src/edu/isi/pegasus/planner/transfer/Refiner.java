@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.transfer;
 import edu.isi.pegasus.planner.classes.SubInfo;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
-import edu.isi.pegasus.planner.engine.ReplicaCatalogBridge;
+import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -45,7 +45,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  * @version $Revision$
  */
 public interface Refiner
-    extends edu.isi.pegasus.planner.engine.Refiner {//need to extend it for the PASOA integration
+    extends edu.isi.pegasus.planner.refiner.Refiner {//need to extend it for the PASOA integration
 
     /**
      * The prefix for all local transfer jobs.

@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.provenance.pasoa.pps;
 
 import java.util.*;
 
-import edu.isi.pegasus.planner.engine.Refiner;
+import edu.isi.pegasus.planner.refiner.Refiner;
 
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 

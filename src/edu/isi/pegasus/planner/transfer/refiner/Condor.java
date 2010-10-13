@@ -35,7 +35,7 @@ import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.engine.ReplicaCatalogBridge;
+import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 
 import java.io.File;
 
