@@ -45,7 +45,7 @@ public abstract class XMLOutput
     if ( original == null ) return null;
     StringBuilder result = new StringBuilder( 2 * original.length() );
     StringCharacterIterator i = new StringCharacterIterator(original);
-    for ( char ch = i.first(); ch != i.DONE; ch = i.next() ) {
+    for ( char ch = i.first(); ch != StringCharacterIterator.DONE; ch = i.next() ) {
       if ( ch == '\r' ) {
 	result.append("\\r");
       } else if ( ch == '\n' ) {
@@ -66,16 +66,14 @@ public abstract class XMLOutput
   /**
    * Escapes certain characters inappropriate for XML content output.
    *
-   * Warning: XML attribute values are not handled correctly by this 
-   * method. According to the
+   * According to the
    * <a href="http://www.w3.org/TR/2008/REC-xml-20081126/#NT-AttValue">XML
-   * 1.0 Spec</a>, an attribute cannot contain ampersand, percent, nor
-   * the character that was used to quote the attribute value.
+   * 1.0 Specification</a>, an attribute cannot contain ampersand, percent,
+   * nor the character that was used to quote the attribute value.
    *
    * @param original is a string that needs to be quoted
    * @param isAttribute denotes an attributes value, if set to true.
    * If false, it denotes regular XML content outside of attributes.
-   * <b>Warning: This behavior is not implemented.</b>
    * @return a string that is "safe" to print as XML.
    */
   static public String quote( String original, boolean isAttribute )
@@ -83,22 +81,29 @@ public abstract class XMLOutput
     if ( original == null ) return null;
     StringBuilder result = new StringBuilder( 2 * original.length() );
     StringCharacterIterator i = new StringCharacterIterator(original);
-    for ( char ch = i.first(); ch != i.DONE; ch = i.next() ) {
+    for ( char ch = i.first(); ch != StringCharacterIterator.DONE; ch = i.next() ) {
       switch (ch) {
       case '<':
-	result.append( "&lt;" );
+        if ( isAttribute ) result.append("&#60;");
+	else result.append("&lt;");
 	break;
       case '&':
-	result.append( "&amp;" );
+	if ( isAttribute ) result.append("&#38;");
+        else result.append("&amp;");
 	break;
       case '>':
-	result.append( "&gt;" );
+        // greater-than does not need to be attribute-escaped,
+        // but standard does not say we must not do it, either.
+        if ( isAttribute ) result.append("&#62;");
+        else result.append("&gt;");
 	break;
       case '\'':
-	result.append( "&apos;" );
+	if ( isAttribute ) result.append("&#39;");
+        else result.append("&apos;");
 	break;
       case '\"':
-	result.append( "&quot;" );
+        if ( isAttribute ) result.append("&#34;");
+        else result.append("&quot;");
 	break;
       default:
 	result.append(ch);
