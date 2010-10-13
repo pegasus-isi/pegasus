@@ -35,7 +35,7 @@ import edu.isi.pegasus.planner.parser.DaxParser;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
-import org.griphyn.cPlanner.toolkit.CPlanner;
+import edu.isi.pegasus.planner.client.CPlanner;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;

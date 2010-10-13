@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import org.griphyn.cPlanner.toolkit.Executable;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;

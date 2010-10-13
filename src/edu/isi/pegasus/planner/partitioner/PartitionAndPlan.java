@@ -33,8 +33,8 @@ import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.parser.DaxParser;
 
 
-import org.griphyn.cPlanner.toolkit.CPlanner;
-import org.griphyn.cPlanner.toolkit.PartitionDAX;
+import edu.isi.pegasus.planner.client.CPlanner;
+import edu.isi.pegasus.planner.client.PartitionDAX;
 
 import java.util.Map;
 
