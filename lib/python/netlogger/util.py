@@ -1,7 +1,7 @@
 """
 Utility functions for NetLogger modules and command-line programs
 """
-__rcsid__ = "$Id: util.py 26518 2010-09-27 19:32:18Z dang $"
+__rcsid__ = "$Id: util.py 26576 2010-10-08 23:27:02Z dang $"
 __author__ = "Dan Gunter (dkgunter (at) lbl.gov)"
 
 from asyncore import compact_traceback
@@ -189,23 +189,34 @@ class ProgressMeter:
     """A simple textual progress meter.
     """
     REPORT_INTERVAL = 1000
-
+    
     def __init__(self, ofile, units="lines"):
         self.ofile = ofile
         self.units = units
+        self._counter = 0
         self.reset(0)
 
     def reset(self, n):
         self.t0 = time.time()
         self.last_report = n
         
-    def advance(self, num):
+    def advance(self, num=0, inc=1):
+        if num == 0:
+            self._counter += inc
+            num = self._counter
         if num - self.last_report >= self.REPORT_INTERVAL:
             n = num - self.last_report
             dt = time.time() - self.t0
             rate = n / dt
-            self.ofile.write("%5d: %d %s in %lf sec = %lf %s/sec\n" % 
-                             (num, n, self.units, dt, rate, self.units))
+            if rate < 1:
+                dig = 2
+            elif rate < 10:
+                dig = 1
+            else:
+                dig = 0
+            fmt = "[ %%5d ] %%s, rate = %%.%df %%s/sec     \r" % dig
+            self.ofile.write(fmt % (num, self.units, rate, self.units))
+            self.ofile.flush()
             self.reset(num)
         
 class NullProgressMeter:
@@ -218,7 +229,7 @@ class NullProgressMeter:
     def reset(self, n):
         pass
     
-    def advance(self, num):
+    def advance(self, num=0):
         pass
 
 def mostRecentFile(dir, file_pattern, after_time=None):

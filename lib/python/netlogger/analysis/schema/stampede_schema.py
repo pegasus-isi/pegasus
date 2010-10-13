@@ -36,6 +36,12 @@ class Task(SABase):
 class File(SABase):
     pass
     
+class Edge(SABase):
+    pass
+    
+class EdgeStatic(SABase):
+    pass
+    
 def initializeToPegasusDB(db, metadata):
     """
     Function to create the Stampede schema if it does not exist,
@@ -192,20 +198,20 @@ def initializeToPegasusDB(db, metadata):
     # timestamp = from dagman,out file (1st column of jobstate.log file)
     
     st_jobstate = Table('jobstate', metadata,
-    # All three columns are marked as primary key to produce the desired
-    # effect - ie: it is the combo of the three columns that make a row
+    # All four columns are marked as primary key to produce the desired
+    # effect - ie: it is the combo of the four columns that make a row
     # unique.
                         Column('job_id', KeyInt, ForeignKey('job.job_id'), 
                                 nullable=False, primary_key=True),
                         Column('state', VARCHAR(255), nullable=False, primary_key=True),
                         Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True,
                         default=time.time()),
-                        Column('jobstate_submit_seq', INT, nullable=False)
+                        Column('jobstate_submit_seq', INT, nullable=False, primary_key=True)
     )
     
     Index('FK_STATE_JOB_ID', st_jobstate.c.job_id, unique=False)
     Index('UNIQUE_JOBSTATE', st_jobstate.c.job_id, st_jobstate.c.state, 
-        st_jobstate.c.timestamp, unique=True)
+        st_jobstate.c.timestamp, st_jobstate.c.jobstate_submit_seq, unique=True)
     
     try:
         orm.mapper(Jobstate, st_jobstate)
@@ -263,6 +269,34 @@ def initializeToPegasusDB(db, metadata):
     
     try:
         orm.mapper(File, st_file)
+    except exc.ArgumentError:
+        pass
+        
+    st_edge_static = Table('edge_static', metadata,
+                            Column('wf_uuid', VARCHAR(255), primary_key=True, nullable=False),
+                            Column('parent', VARCHAR(255), primary_key=True, nullable=False),
+                            Column('child', VARCHAR(255), primary_key=True, nullable=False)
+    )
+    
+    Index('UNIQUE_STATIC_EDGE', st_edge_static.c.wf_uuid, 
+            st_edge_static.c.parent, st_edge_static.c.child, unique=True)
+    
+    try:
+        orm.mapper(EdgeStatic, st_edge_static)
+    except exc.ArgumentError:
+        pass
+        
+    st_edge = Table('edge', metadata,
+                    Column('parent_id', KeyInt,
+                            ForeignKey('job.job_id'), primary_key=True, nullable=False),
+                    Column('child_id', KeyInt,
+                            ForeignKey('job.job_id'), primary_key=True, nullable=False)
+    )
+    
+    Index('UNIQUE_EDGE', st_edge.c.parent_id, st_edge.c.child_id, unique=True)
+    
+    try:
+        orm.mapper(Edge, st_edge)
     except exc.ArgumentError:
         pass
     

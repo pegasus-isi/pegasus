@@ -59,7 +59,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
         # "Case" dict to map events to handler methods
         self.eventMap = {
-            'stampede.edge': self.noop,
+            'stampede.edge': self.edge_static,
             'stampede.host': self.host,
             'stampede.job.mainjob.end': self.job,
             'stampede.job.mainjob.start': self.job,
@@ -73,7 +73,6 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.task.prescript': self.task,
             'stampede.workflow.end': self.workflowstate,
             'stampede.workflow.plan': self.workflow,
-            'stampede.workflow.restart': self.workflowstate,
             'stampede.workflow.start': self.workflowstate
         }
         
@@ -145,8 +144,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 k = 'jobstate_submit_seq'
             if k == 'parent.wf.id':
                 k = 'parent_workflow_id'
+            if k == 'arguments':
+                v = v.replace("'", "\\'")
             
-            exec("o.%s = '%s'" % (k,v))
+            try:
+                exec("o.%s = '%s'" % (k,v))
+            except:
+                self.log.error('linedataToObject', 
+                    msg='unable to process attribute %s with values: %s' % (k,v))
         
         # global type re-assignments
         if hasattr(o, 'ts'):
@@ -160,6 +165,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             o.cluster_duration = float(o.cluster_duration)
         if hasattr(o, 'duration') and o.duration != None:
             o.duration = float(o.duration)
+        if hasattr(o, 'restart_count') and o.restart_count != None:
+            o.restart_count = int(o.restart_count)
         return o
         
     #############################################
@@ -194,11 +201,20 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         wfs.state = wfs.event[wfs.event.rfind('.')+1:]
         wfs.wf_id = self.wf_uuidToId(wfs.wf_uuid)
         wfs.timestamp = wfs.ts
+        # XXX: this test is a band aid while people transition to
+        # the newer log style.
+        if hasattr(wfs, 'restart_count'):
+            if wfs.restart_count > 0:
+                wfs.state += ' restart=%s' % wfs.restart_count
+                del wfs.restart_count
+        else:
+            self.log.warn('workflowstate', 
+                msg='Workflow state event lacks restart_count attribute.  Reprocess log with updated monitord.')
         del wfs.event, wfs.ts
         self.log.debug('workflowstate', msg=wfs)
         wfs.commit_to_db(self.session)
- 
-        if wfs.state == 'end':
+        
+        if wfs.state.startswith('end'):
             self.flushCaches(wfs)
         pass
         
@@ -249,6 +265,20 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.log.debug('job', msg='Updating jobid: %s' % jid)
             job.job_id = jid # set PK from cache for merge
             job.merge_to_db(self.session)
+            
+        # process edge information
+        query = self.session.query(Edge).filter(Edge.child_id == job.job_id)
+        if query.count() == 0:
+            self.log.debug('job', msg='Finding edges for job %s (job_id: %s)' % (job.name, job.job_id))
+            edgeq = self.session.query(EdgeStatic.parent).filter(EdgeStatic.wf_uuid == job.wf_uuid).filter(EdgeStatic.child == job.name)
+            for parent in edgeq.all():
+                parentName = parent[0]
+                parentq = self.session.query(Job.job_id).filter(Job.name == parentName)
+                parentid = parentq.one()[0]
+                edge = Edge()
+                edge.parent_id = parentid
+                edge.child_id = job.job_id
+                edge.commit_to_db(self.session)
         pass
         
     def jobstate(self, linedata):
@@ -262,6 +292,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         js.timestamp = js.ts
 
         js.job_id = self.jobIdFromUnique(js)
+        if js.job_id == None:
+            self.log.error('jobstate',
+                msg='Could not determine job_id for jobstate: %s' % js)
+            return
         del js.name, js.wf_uuid, js.job_submit_seq, js.ts, js.event
         
         self.log.debug('jobstate', msg=js)
@@ -277,6 +311,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         tsk = self.linedataToObject(linedata, Task())
         tsk.job_id = self.jobIdFromUnique(tsk)
+        if tsk.job_id == None:
+            self.log.error('task',
+                msg='Could not determine job_id for task: %s' % js)
+            return
         del tsk.wf_uuid, tsk.name, tsk.job_submit_seq, tsk.ts
         
         self.log.debug('task', msg=tsk)
@@ -303,6 +341,20 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.session.rollback()
             
         self.mapHostToJob(host)
+        pass
+        
+    def edge_static(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+        
+        Handles a static edge insert event.
+        """
+        edge = self.linedataToObject(linedata, EdgeStatic())
+        del edge.ts, edge.event
+        
+        self.log.debug('edge_static', msg=edge)
+        edge.commit_to_db(self.session)
         pass
         
     def noop(self, linedata):
@@ -362,6 +414,12 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             except orm.exc.MultipleResultsFound, e:
                 self.log.error('jobIdFromUnique',
                     msg='Multple job_id results for tuple %s : %s' % (uniqueIdIdx, e))
+                return None
+            except orm.exc.NoResultFound, e:
+                self.log.error('jobIdFromUnique',
+                    msg='No job_id results for tuple %s : %s' % (uniqueIdIdx, e))
+                return None
+                    
             
         return self.job_id_cache[uniqueIdIdx]
         

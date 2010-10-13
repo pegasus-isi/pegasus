@@ -130,10 +130,10 @@ class Analyzer(DoesLogging):
 
     Parameters:
       - add_hash {yes,no,no*}: To each input event, add a new field,
-           '_hash', which is a probabilistically unique (MD5) hash of all
+           'nlhash', which is a probabilistically unique (MD5) hash of all
            the other fields in the event.
-      - type_info {<file,file..>,None*}: If given, read data type info from
-           file(s), which use the INI format with a [section]
+      - schemata {<file,file..>,None*}: If given, read a simple form of
+           schema from file(s). The schema uses INI format with a [section]
            for each event name and <field> = <type-name> describing the type
            of each field for that event.
     """
@@ -141,14 +141,14 @@ class Analyzer(DoesLogging):
     FLUSH_SEC = 5 # time to wait before calling flush()
 
     def __init__(self, add_hash="no", _validate=False,
-                 type_info=None):
+                 schemata=None):
         """Will be overridden by subclasses to take
         parameters specific to their function.
         """
         DoesLogging.__init__(self)
         self._do_preprocess = False # may get set to True, below
         self.last_flush = time.time()
-        self._validate = _validate        
+        self._validate = _validate  
         # Parameter: add_hash
         try:
             self._add_hash = util.as_bool(add_hash)
@@ -159,8 +159,8 @@ class Analyzer(DoesLogging):
             self._add_hash = False
         # Parameter: data_types
         self._schema = None
-        if type_info is not None:
-            schema_files = [s.strip() for s in type_info.split(',')]
+        if schemata is not None:
+            schema_files = [s.strip() for s in schemata.split(',')]
             try:
                 p = schemacfg.SchemaParser(files=schema_files)
                 self._schema = p.get_schema()
