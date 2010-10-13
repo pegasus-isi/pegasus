@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.catalog.site.impl.oldimpl;
+package edu.isi.pegasus.planner.catalog.site.impl.old;
 
 import org.griphyn.cPlanner.classes.PoolConfig;
 import org.griphyn.cPlanner.classes.SiteInfo;

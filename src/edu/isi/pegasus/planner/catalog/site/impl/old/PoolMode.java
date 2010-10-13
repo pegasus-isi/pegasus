@@ -15,7 +15,7 @@
  */
 
 
-package edu.isi.pegasus.planner.catalog.site.impl.oldimpl;
+package edu.isi.pegasus.planner.catalog.site.impl.old;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
