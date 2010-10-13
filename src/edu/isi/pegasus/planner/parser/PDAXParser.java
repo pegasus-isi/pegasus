@@ -15,13 +15,13 @@
  */
 
 
-package org.griphyn.cPlanner.parser;
+package edu.isi.pegasus.planner.parser;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.parser.pdax.Callback;
+import edu.isi.pegasus.planner.parser.pdax.Callback;
 
 import org.griphyn.cPlanner.partitioner.Partition;
 

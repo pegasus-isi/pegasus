@@ -40,7 +40,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.parser.Parser;
+import edu.isi.pegasus.planner.parser.Parser;
 
 import edu.isi.pegasus.planner.namespace.Namespace;
 

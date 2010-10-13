@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.parser.dax;
+package edu.isi.pegasus.planner.parser.dax;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -43,7 +43,7 @@ public class DAXCallbackFactory {
      * Package to prefix "just" class names with.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-                                             "org.griphyn.cPlanner.parser.dax";
+                                             "edu.isi.pegasus.planner.parser.dax";
 
     /**
      * Loads the implementing class corresponding to the type specified by the user.

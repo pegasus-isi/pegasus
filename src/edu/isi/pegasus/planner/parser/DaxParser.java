@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.parser;
+package edu.isi.pegasus.planner.parser;
 
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
@@ -31,7 +31,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Namespace;
 
-import org.griphyn.cPlanner.parser.dax.Callback;
+import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import edu.isi.pegasus.common.util.Version;
 

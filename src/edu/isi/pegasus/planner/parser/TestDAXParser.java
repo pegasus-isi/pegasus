@@ -13,15 +13,15 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.griphyn.cPlanner.parser;
+package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
-import org.griphyn.cPlanner.parser.dax.Callback;
+import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 

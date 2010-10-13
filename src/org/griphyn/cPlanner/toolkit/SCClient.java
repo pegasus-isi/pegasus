@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.catalog.site.SiteFactory;
 import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import org.griphyn.cPlanner.parser.ConfigXmlParser;
+import edu.isi.pegasus.planner.parser.ConfigXmlParser;
 
 //import org.griphyn.cPlanner.poolinfo.MdsQuery;
 

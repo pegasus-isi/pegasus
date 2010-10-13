@@ -18,8 +18,8 @@ package org.griphyn.cPlanner.partitioner;
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
 
-import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
-import org.griphyn.cPlanner.parser.dax.Callback;
+import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
@@ -30,7 +30,7 @@ import java.io.BufferedReader;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
-import org.griphyn.cPlanner.parser.DaxParser;
+import edu.isi.pegasus.planner.parser.DaxParser;
 
 
 import org.griphyn.cPlanner.toolkit.CPlanner;

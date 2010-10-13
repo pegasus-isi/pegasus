@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import org.griphyn.cPlanner.parser.Parser;
+import edu.isi.pegasus.planner.parser.Parser;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 

@@ -43,7 +43,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeScratch;
 
 import edu.isi.pegasus.planner.classes.Profile;
 
-import org.griphyn.cPlanner.parser.Parser;
 
 
 import edu.isi.pegasus.common.logging.LogManager;

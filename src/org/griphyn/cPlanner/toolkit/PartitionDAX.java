@@ -16,12 +16,12 @@
 
 package org.griphyn.cPlanner.toolkit;
 
-import org.griphyn.cPlanner.parser.DaxParser;
+import edu.isi.pegasus.planner.parser.DaxParser;
 
-import org.griphyn.cPlanner.parser.dax.Callback;
-import org.griphyn.cPlanner.parser.dax.DAX2Graph;
-import org.griphyn.cPlanner.parser.dax.DAX2LabelGraph;
-import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.Callback;
+import edu.isi.pegasus.planner.parser.dax.DAX2Graph;
+import edu.isi.pegasus.planner.parser.dax.DAX2LabelGraph;
+import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
 
 import org.griphyn.cPlanner.partitioner.WriterCallback;
 import org.griphyn.cPlanner.partitioner.Partitioner;

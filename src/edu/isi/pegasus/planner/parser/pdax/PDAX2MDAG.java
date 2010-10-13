@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.parser.pdax;
+package edu.isi.pegasus.planner.parser.pdax;
 
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;

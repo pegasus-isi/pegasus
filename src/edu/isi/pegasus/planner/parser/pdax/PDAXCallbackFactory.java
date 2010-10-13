@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.parser.pdax;
+package edu.isi.pegasus.planner.parser.pdax;
 
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
@@ -22,9 +22,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 
-import java.io.IOException;
 
-import java.lang.reflect.InvocationTargetException;
 
 
 /**
@@ -40,7 +38,7 @@ public class PDAXCallbackFactory {
      * Package to prefix "just" class names with.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-                                             "org.griphyn.cPlanner.parser.pdax";
+                                             "edu.isi.pegasus.planner.parser.pdax";
 
     /**
      * Loads the implementing class corresponding to the type specified by the user.

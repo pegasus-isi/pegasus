@@ -23,10 +23,10 @@ import edu.isi.pegasus.planner.classes.ADag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.parser.DaxParser;
+import edu.isi.pegasus.planner.parser.DaxParser;
 
-import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
-import org.griphyn.cPlanner.parser.dax.Callback;
+import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import java.util.Collection;
 import java.util.Collections;

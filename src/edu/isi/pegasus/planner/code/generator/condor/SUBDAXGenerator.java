@@ -28,9 +28,9 @@ import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 
-import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
-import org.griphyn.cPlanner.parser.dax.Callback;
-import org.griphyn.cPlanner.parser.DaxParser;
+import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.Callback;
+import edu.isi.pegasus.planner.parser.DaxParser;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
@@ -60,7 +60,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import org.griphyn.cPlanner.parser.pdax.PDAX2MDAG;
+import edu.isi.pegasus.planner.parser.pdax.PDAX2MDAG;
 
 /**
  * The class that takes in a dax job specified in the DAX and renders it into

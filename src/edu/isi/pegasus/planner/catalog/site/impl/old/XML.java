@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.catalog.site.impl.old;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.parser.ConfigXmlParser;
+import edu.isi.pegasus.planner.parser.ConfigXmlParser;
 
 /**
  * It gets the information about a pool by reading the pool config xml that is

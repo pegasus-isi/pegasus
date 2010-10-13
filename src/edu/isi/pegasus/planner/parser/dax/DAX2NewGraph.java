@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.parser.dax;
+package edu.isi.pegasus.planner.parser.dax;
 
 import edu.isi.pegasus.planner.classes.SubInfo;
 

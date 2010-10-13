@@ -163,7 +163,7 @@ public class DAXParser extends DefaultHandler
       m_parser = (XMLReader) Class.forName(vendorParserClass).newInstance();
       m_parser.setContentHandler(this);
       // m_parser.setErrorHandler(this);
-      m_parser.setErrorHandler( new org.griphyn.cPlanner.parser.XMLErrorHandler() );
+      m_parser.setErrorHandler( new edu.isi.pegasus.planner.parser.XMLErrorHandler() );
 
       set( "http://xml.org/sax/features/validation", true );
       set( "http://apache.org/xml/features/validation/dynamic", true );
