@@ -31,7 +31,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import org.griphyn.cPlanner.toolkit.Executable;
 import edu.isi.pegasus.common.util.Version;
 
 

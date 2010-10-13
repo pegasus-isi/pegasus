@@ -18,7 +18,6 @@
 package edu.isi.pegasus.planner.client;
 
 
-import org.griphyn.cPlanner.toolkit.Executable;
 
 import edu.isi.pegasus.common.logging.LogManager;
 

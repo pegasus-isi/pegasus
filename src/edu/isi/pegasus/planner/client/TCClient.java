@@ -27,7 +27,6 @@ import edu.isi.pegasus.planner.catalog.transformation.client.TCAdd;
 import edu.isi.pegasus.planner.catalog.transformation.client.TCDelete;
 import edu.isi.pegasus.planner.catalog.transformation.client.TCQuery;
 
-import org.griphyn.cPlanner.toolkit.Executable;
 
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.FactoryException;
