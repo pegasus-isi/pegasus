@@ -18,8 +18,8 @@
 package edu.isi.pegasus.planner.selector.site;
 
 
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -31,7 +31,7 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import java.util.List;
 import java.util.Iterator;
-import org.griphyn.cPlanner.classes.ADag;
+import edu.isi.pegasus.planner.classes.ADag;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 /**

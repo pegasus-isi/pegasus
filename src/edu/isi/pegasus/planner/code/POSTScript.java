@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.code;
 
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 

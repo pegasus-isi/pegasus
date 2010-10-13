@@ -19,13 +19,13 @@ package edu.isi.pegasus.planner.code.gridstart;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.AggregatedJob;
-import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;

@@ -16,8 +16,8 @@
 
 package org.griphyn.cPlanner.parser.dax;
 
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * This interfaces defines the callback calls from DAX parsing. A slim

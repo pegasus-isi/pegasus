@@ -16,10 +16,10 @@
 
 package edu.isi.pegasus.planner.transfer.implementation;
 
-import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.NameValue;
-import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -42,7 +42,7 @@ import java.util.ArrayList;
 
 
 import java.io.File;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the python based

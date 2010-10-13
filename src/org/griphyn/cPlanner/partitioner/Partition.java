@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.partitioner;
 
-import org.griphyn.cPlanner.classes.Data;
+import edu.isi.pegasus.planner.classes.Data;
 
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 

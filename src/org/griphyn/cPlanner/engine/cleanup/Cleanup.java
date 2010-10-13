@@ -21,9 +21,9 @@ package org.griphyn.cPlanner.engine.cleanup;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;

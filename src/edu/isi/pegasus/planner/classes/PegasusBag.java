@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.classes;
 
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
@@ -25,7 +25,7 @@ import org.griphyn.cPlanner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolInfoProvider;
+import edu.isi.pegasus.planner.catalog.site.impl.old.PoolInfoProvider;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;

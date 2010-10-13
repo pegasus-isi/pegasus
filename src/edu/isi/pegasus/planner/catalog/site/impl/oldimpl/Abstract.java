@@ -14,10 +14,10 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.catalog.site.impl.oldimpl;
+package edu.isi.pegasus.planner.catalog.site.impl.old;
 
-import org.griphyn.cPlanner.classes.PoolConfig;
-import org.griphyn.cPlanner.classes.SiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 

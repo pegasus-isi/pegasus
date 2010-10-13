@@ -18,7 +18,7 @@ package org.griphyn.cPlanner.parser;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
 import org.griphyn.cPlanner.parser.dax.Callback;

@@ -28,7 +28,7 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import java.util.Iterator;
 import java.util.List;

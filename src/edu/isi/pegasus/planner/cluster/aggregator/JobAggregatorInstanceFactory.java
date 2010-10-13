@@ -19,8 +19,8 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * A JobAggergator factory that caches up the loaded implementations.

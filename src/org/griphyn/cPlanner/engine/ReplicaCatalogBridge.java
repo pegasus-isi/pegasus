@@ -23,16 +23,16 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
-import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.LRC;
-import org.griphyn.cPlanner.classes.NameValue;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.classes.ReplicaLocation;
-import org.griphyn.cPlanner.classes.ReplicaStore;
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.LRC;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.SiteInfo;
+import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.classes.ReplicaStore;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -60,7 +60,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * This coordinates the look up to the Replica Location Service, to determine

@@ -21,8 +21,8 @@ import edu.isi.pegasus.common.logging.LoggingKeys;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import java.io.File;

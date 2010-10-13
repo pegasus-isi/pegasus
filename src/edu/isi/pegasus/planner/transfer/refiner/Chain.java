@@ -17,8 +17,8 @@
 package edu.isi.pegasus.planner.transfer.refiner;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -34,7 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * This transfer refiner builds upon the Default Refiner.

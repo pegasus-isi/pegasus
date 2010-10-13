@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes;
 
 
 import java.util.ArrayList;

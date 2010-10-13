@@ -15,8 +15,10 @@
  */
 
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes;
 
+import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.*;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 

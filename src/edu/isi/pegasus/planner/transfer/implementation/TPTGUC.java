@@ -17,8 +17,8 @@
 
 package edu.isi.pegasus.planner.transfer.implementation;
 
-import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
 import edu.isi.pegasus.planner.namespace.Pegasus;

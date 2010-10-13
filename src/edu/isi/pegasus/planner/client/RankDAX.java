@@ -25,8 +25,8 @@ import edu.isi.pegasus.planner.ranking.Ranking;
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
 
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.common.logging.LogManager;
 

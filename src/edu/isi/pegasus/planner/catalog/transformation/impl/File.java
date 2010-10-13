@@ -50,8 +50,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 
 /**
  * This is the new file based TC implementation storing the contents of the file

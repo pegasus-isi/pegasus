@@ -34,11 +34,11 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 
 import edu.isi.pegasus.planner.code.gridstart.SeqExec;
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.ENV;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;

@@ -16,7 +16,7 @@
 
 package org.griphyn.cPlanner.parser.pdax;
 
-import org.griphyn.cPlanner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 

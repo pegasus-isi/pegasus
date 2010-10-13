@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.classes;
 
 /**
  * This is a data class that stores the contents of the transfer job that

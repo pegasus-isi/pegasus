@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.common.util.DynamicLoader;
 
 
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * The factory class that loads an appropriate Transfer Immplementation class,

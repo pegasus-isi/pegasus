@@ -24,7 +24,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 

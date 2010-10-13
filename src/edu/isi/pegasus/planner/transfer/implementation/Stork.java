@@ -17,13 +17,13 @@
 package edu.isi.pegasus.planner.transfer.implementation;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.NameValue;
-import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.JobManager;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.SiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.JobManager;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -39,7 +39,7 @@ import edu.isi.pegasus.common.util.Separator;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashSet;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the stork data

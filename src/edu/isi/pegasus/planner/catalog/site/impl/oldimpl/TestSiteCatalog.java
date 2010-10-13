@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.catalog.site.impl.oldimpl;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import org.griphyn.cPlanner.classes.SiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.SiteInfo;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;

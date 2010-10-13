@@ -15,16 +15,16 @@
  */
 
 
-package edu.isi.pegasus.planner.catalog.site.impl.oldimpl;
+package edu.isi.pegasus.planner.catalog.site.impl.old;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import org.griphyn.cPlanner.classes.GridFTPServer;
-import org.griphyn.cPlanner.classes.LRC;
-import org.griphyn.cPlanner.classes.PoolConfig;
-import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.WorkDir;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
+import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.WorkDir;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegRandom;

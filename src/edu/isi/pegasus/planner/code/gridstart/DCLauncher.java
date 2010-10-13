@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.code.gridstart;
 
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
