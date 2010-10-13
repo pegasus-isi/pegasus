@@ -405,9 +405,7 @@ class Job:
 	self._job_info[3] = my_stats[8] # mtime
 
 	if stamp < self._job_info[3]:
-            logger.warning("stamp=%d, mtime=%d, diff = %d" % (stamp, self._job_info[3], self._job_info[3]-stamp))
-	    logger.info("skipping %s (reparsing events)" % (my_fn))
-	    return my_result, my_site
+            logger.info("%s: submit file was modified after job ran: job timestamp=%d, sub file mtime=%d, diff = %d" % (my_fn, stamp, self._job_info[3], self._job_info[3]-stamp))
 
 	try:
 	    SUB = open(my_fn, "r")
@@ -1990,6 +1988,12 @@ def process(wf, log_line):
 
 	wf._current_timestamp = time.mktime(adj_time) + adjustment
 
+        # If in recovery mode, check if we reached the end of it
+        if wf._skipping_recovery_lines:
+            if log_line.find("...done with RECOVERY mode") >= 0:
+                wf._skipping_recovery_lines = False
+            return
+
 	# Search for more content
 	if re_parse_event.search(log_line) is not None:
 	    # Found Event
@@ -2139,6 +2143,10 @@ def process(wf, log_line):
 	elif re_parse_multiline_files.search(log_line) is not None:
 	    # Multiline user log files, DAGMan > 6.6
 	    wf._multiline_file_flag = True
+        elif log_line.find("Running in RECOVERY mode...") >= 0:
+            # Entering recovery mode, skip lines until we reach the end
+            wf._skipping_recovery_lines = True
+            return
 
 def server_socket(low, hi, bind_addr="127.0.0.1"):
     # purpose: create a local TCP server socket to listen to sitesel requests
@@ -2541,7 +2549,7 @@ def prog_sigint_handler(signum, frame):
     logger.info("graceful exit on signal %d" % (signum))
     # Close output files
     if wf is not None:
-        wf.end_workflow(1)
+        wf.end_workflow()
     sys.exit(1)
 
 def prog_sigusr1_handler(signum, frame):
@@ -2790,7 +2798,7 @@ while True:
 	    ml_buffer = ml_buffer + ml_rbuffer
 	    # Look for end of line
 	    ml_pos = ml_buffer.find('\n')
-	    while (ml_pos > 0):
+	    while (ml_pos >= 0):
 		# Take out 1 line, and adjust buffer
 		process(wf, ml_buffer[0:ml_pos])
 		ml_buffer = ml_buffer[ml_pos+1:]
