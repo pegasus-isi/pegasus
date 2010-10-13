@@ -161,7 +161,7 @@ public class PoolMode {
 
         Object argList[] = new Object[2 ];
         argList[ 0 ] = poolProvider;
-        argList[ 1 ] = edu.isi.pegasus.common.util.VDSProperties.PROPERTY_FILENAME;
+        argList[ 1 ] = edu.isi.pegasus.common.util.CommonProperties.PROPERTY_FILENAME;
 
         return loadPoolInstance( poolClass, lMode, argList );
 

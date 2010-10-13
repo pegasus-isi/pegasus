@@ -19,20 +19,20 @@ import java.io.File;
 import java.util.*;
 
 import edu.isi.pegasus.common.util.Currently;
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import org.griphyn.vdl.util.Logging;
 
 /**
  * A Central Properties class that keeps track of all the properties
  * used by Chimera. All other classes access the methods in this class
- * to get the value of the property. It access the VDSProperties class
+ * to get the value of the property. It access the CommonProperties class
  * to read the property file.
  *
  * @author Jens-S. Vöckler
  * @author Yong Zhao
  * @version $Revision$
  *
- * @see org.griphyn.common.util.VDSProperties
+ * @see org.griphyn.common.util.CommonProperties
  */
 public class ChimeraProperties
 {
@@ -69,7 +69,7 @@ public static final String DB_ALL_PREFIX =
    * The object holding all the properties pertaining
    * to the VDS system.
    */
-  private VDSProperties m_props;
+  private CommonProperties m_props;
 
   /**
    * To get a reference to the the object.
@@ -97,10 +97,10 @@ public static final String DB_ALL_PREFIX =
   /**
    * Gets the handle to the property file.
    */
-  private VDSProperties getVDSPropertiesInstance()
+  private CommonProperties getVDSPropertiesInstance()
     throws IOException, MissingResourceException
   {
-    return VDSProperties.instance();
+    return CommonProperties.instance();
   }
 
   /**

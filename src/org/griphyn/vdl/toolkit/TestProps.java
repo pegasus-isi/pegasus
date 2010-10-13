@@ -15,7 +15,7 @@
 
 package org.griphyn.vdl.toolkit;
 
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Version;
 import java.util.*;
 
@@ -85,7 +85,7 @@ public class TestProps extends Toolkit
   }
 
   /**
-   * dump the properties after VDSProperties had parsed them.
+   * dump the properties after CommonProperties had parsed them.
    */
   public static void main(String[] args) 
   {
@@ -130,7 +130,7 @@ public class TestProps extends Toolkit
       }
 
       // create and read all properties
-      VDSProperties v = VDSProperties.instance();
+      CommonProperties v = CommonProperties.instance();
 
       // sort property keys into a tree set (sorted set)
       // while obtaining minimum and maximum key lengths

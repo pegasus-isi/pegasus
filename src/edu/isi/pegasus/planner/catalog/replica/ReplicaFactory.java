@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.catalog.replica;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import java.lang.reflect.*;
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class ReplicaFactory{
      * @exception InvocationTargetException if the constructor of the schema
      * throws an exception while being dynamically loaded.
      *
-     * @see org.griphyn.common.util.VDSProperties
+     * @see org.griphyn.common.util.CommonProperties
      * @see #loadInstance()
      */
     static public ReplicaCatalog loadInstance( PegasusProperties props )
@@ -100,10 +100,10 @@ public class ReplicaFactory{
      * @exception InvocationTargetException if the constructor of the schema
      * throws an exception while being dynamically loaded.
      *
-     * @see org.griphyn.common.util.VDSProperties
+     * @see org.griphyn.common.util.CommonProperties
      * @see #loadInstance()
      */
-    static public ReplicaCatalog loadInstance( VDSProperties props )
+    static public ReplicaCatalog loadInstance( CommonProperties props )
       throws ClassNotFoundException, IOException,
              NoSuchMethodException, InstantiationException,
              IllegalAccessException, InvocationTargetException
@@ -165,7 +165,7 @@ public class ReplicaFactory{
    * @exception InvocationTargetException if the constructor of the schema
    * throws an exception while being dynamically loaded.
    *
-   * @see org.griphyn.common.util.VDSProperties
+   * @see org.griphyn.common.util.CommonProperties
    * @see #loadInstance()
    */
   static public ReplicaCatalog loadInstance( String catalogImplementor,
@@ -227,8 +227,8 @@ public class ReplicaFactory{
    * @exception MissingResourceException if the properties could not
    * be loaded properly.
    *
-   * @see org.griphyn.common.util.VDSProperties
-   * @see #loadInstance( org.griphyn.common.util.VDSProperties )
+   * @see org.griphyn.common.util.CommonProperties
+   * @see #loadInstance( org.griphyn.common.util.CommonProperties )
    */
   static public ReplicaCatalog loadInstance()
     throws ClassNotFoundException, IOException,
@@ -236,6 +236,6 @@ public class ReplicaFactory{
 	   IllegalAccessException, InvocationTargetException,
 	   MissingResourceException
   {
-    return loadInstance( VDSProperties.instance() );
+    return loadInstance( CommonProperties.instance() );
   }
 }

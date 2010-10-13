@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.classes.NameValue;
 
 import edu.isi.pegasus.planner.catalog.transformation.TCMode;
 
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Boolean;
 
 import java.io.File;
@@ -38,14 +38,14 @@ import java.util.HashSet;
 /**
  * A Central Properties class that keeps track of all the properties used by
  * Pegasus. All other classes access the methods in this class to get the value
- * of the property. It access the VDSProperties class to read the property file.
+ * of the property. It access the CommonProperties class to read the property file.
  *
  * @author Karan Vahi
  * @author Gaurang Mehta
  *
  * @version $Revision$
  *
- * @see org.griphyn.common.util.VDSProperties
+ * @see org.griphyn.common.util.CommonProperties
  */
 public class PegasusProperties {
 
@@ -160,7 +160,7 @@ public class PegasusProperties {
     /**
      * The object holding all the properties pertaining to the VDS system.
      */
-    private VDSProperties mProps;
+    private CommonProperties mProps;
 
     /**
      * The Logger object.
@@ -255,7 +255,7 @@ public class PegasusProperties {
      * @return a handle to the Properties class.
      */
     public static PegasusProperties nonSingletonInstance() {
-        return nonSingletonInstance( VDSProperties.PROPERTY_FILENAME );
+        return nonSingletonInstance( CommonProperties.PROPERTY_FILENAME );
     }
 
 
@@ -341,10 +341,10 @@ public class PegasusProperties {
 
     /**
      * Gets the handle to the properties file. The singleton instance is
-     * invoked if the properties file is null (partly due to the way VDSProperties
+     * invoked if the properties file is null (partly due to the way CommonProperties
      * is implemented ), else the non singleton is invoked. If you want to pick
      * up the default properties file in a non singleton manner, specify
-     * VDSProperties.PROPERTY_FILENAME as a parameter.
+     * CommonProperties.PROPERTY_FILENAME as a parameter.
      *
      * @param propertiesFile name of the properties file to picked
      *                       from $PEGASUS_HOME/etc/ directory.
@@ -353,9 +353,9 @@ public class PegasusProperties {
         try {
             mProps = ( propertiesFile == null ) ?
                 //invoke the singleton instance
-                VDSProperties.instance() :
+                CommonProperties.instance() :
                 //invoke the non singleton instance
-                VDSProperties.nonSingletonInstance( propertiesFile );
+                CommonProperties.nonSingletonInstance( propertiesFile );
         } catch ( IOException e ) {
             mLogMsg = "unable to read property file: " + e.getMessage();
             System.err.println( mLogMsg );
@@ -385,12 +385,12 @@ public class PegasusProperties {
     }
 
     /**
-     * Returns the VDSProperties that this object encapsulates. Use only when
+     * Returns the CommonProperties that this object encapsulates. Use only when
      * absolutely necessary. Use accessor methods whereever possible.
      *
-     * @return VDSProperties
+     * @return CommonProperties
      */
-    public VDSProperties getVDSProperties(){
+    public CommonProperties getVDSProperties(){
         return this.mProps;
     }
 
@@ -2510,7 +2510,7 @@ public class PegasusProperties {
 //        if ( pegProperties == null ) {
 //            //only the default properties file
 //            //can be picked up due to the way
-//            //Singleton implemented in VDSProperties.???
+//            //Singleton implemented in CommonProperties.???
 //            pegProperties = new PegasusProperties( null );
 //        }
 //        return pegProperties;

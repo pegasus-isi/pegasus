@@ -23,7 +23,7 @@ import java.sql.*;
 
 import edu.isi.pegasus.planner.catalog.WorkCatalog;
 
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -300,7 +300,7 @@ public class Database
         boolean result = false;
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
-        Properties localProps = VDSProperties.matchingSubset( (Properties)props.clone(), "db", false );
+        Properties localProps = CommonProperties.matchingSubset( (Properties)props.clone(), "db", false );
 
         String url = (String) localProps.remove("url");
         if (url == null || url.length() == 0) {

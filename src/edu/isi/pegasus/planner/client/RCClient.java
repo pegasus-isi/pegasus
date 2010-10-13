@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.client;
 
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
@@ -991,7 +991,7 @@ public class RCClient extends Toolkit
     int size = this.DEFAULT_CHUNK_FACTOR;
 
     try{
-      Properties properties =VDSProperties.instance().
+      Properties properties =CommonProperties.instance().
                                  matchingSubset(ReplicaCatalog.c_prefix,false);
       String s = properties.getProperty(ReplicaCatalog.BATCH_KEY);
       size = Integer.parseInt(s);

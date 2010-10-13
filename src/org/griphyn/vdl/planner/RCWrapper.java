@@ -15,7 +15,7 @@
 
 package org.griphyn.vdl.planner;
 
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
@@ -60,7 +60,7 @@ public class RCWrapper implements Wrapper
 	   IllegalAccessException, InvocationTargetException, 
 	   MissingResourceException
   {
-    m_rc = ReplicaFactory.loadInstance( VDSProperties.instance() );
+    m_rc = ReplicaFactory.loadInstance( CommonProperties.instance() );
   }
   
   /**
@@ -80,7 +80,7 @@ public class RCWrapper implements Wrapper
    * throws an exception while being dynamically loaded.
    *
    */
-  public RCWrapper( VDSProperties props )
+  public RCWrapper( CommonProperties props )
     throws ClassNotFoundException, IOException,
 	   NoSuchMethodException, InstantiationException,
 	   IllegalAccessException, InvocationTargetException

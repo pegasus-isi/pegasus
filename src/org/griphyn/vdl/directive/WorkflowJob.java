@@ -16,7 +16,7 @@
 package org.griphyn.vdl.directive;
 
 import java.io.*;
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import org.griphyn.vdl.workflow.*;
 
 /**

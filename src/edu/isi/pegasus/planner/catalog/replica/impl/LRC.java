@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.CatalogException;
 
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 
 import org.globus.replica.rls.RLSClient;
 import org.globus.replica.rls.RLSException;
@@ -203,7 +203,7 @@ public class LRC implements ReplicaCatalog {
         setBatchSize(props);
         
         //stripe out the properties that assoicate site handle to lrc url
-        Properties site2LRC = VDSProperties.matchingSubset( props, LRC.LRC_SITE_TO_LRC_URL_KEY, false);
+        Properties site2LRC = CommonProperties.matchingSubset( props, LRC.LRC_SITE_TO_LRC_URL_KEY, false);
         //traverse through the properties to figure out
         //the default site attribute for the URL
         for( Iterator it = site2LRC.entrySet().iterator(); it.hasNext(); ){

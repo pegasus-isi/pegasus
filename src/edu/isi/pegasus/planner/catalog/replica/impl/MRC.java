@@ -23,7 +23,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 
 import java.util.List;
 import java.util.LinkedList;
@@ -150,7 +150,7 @@ public class MRC
     public boolean connect( Properties props ) {
 
         //get the subset for the properties
-        Properties subset = VDSProperties.matchingSubset( props, PROPERTY_PREFIX, false );
+        Properties subset = CommonProperties.matchingSubset( props, PROPERTY_PREFIX, false );
         mLogger.log( "MRC Properties are " + subset , LogManager.DEBUG_MESSAGE_LEVEL );
 
         //container for properties for each of the different catalogs

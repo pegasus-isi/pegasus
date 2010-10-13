@@ -23,7 +23,7 @@ import java.sql.*;
 import edu.isi.pegasus.planner.catalog.Catalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
 /**
@@ -283,7 +283,7 @@ public class JDBCRC implements ReplicaCatalog
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
 
-        Properties localProps = VDSProperties.matchingSubset( (Properties)props.clone(), "db", false );
+        Properties localProps = CommonProperties.matchingSubset( (Properties)props.clone(), "db", false );
 
         String url = (String) localProps.remove("url");
         if (url == null || url.length() == 0) {

@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.catalog.work;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.planner.catalog.WorkCatalog;
 import java.util.Properties;
 import java.util.Enumeration;
@@ -64,7 +64,7 @@ public class WorkFactory{
      * @exception InvocationTargetException if the constructor of the schema
      * throws an exception while being dynamically loaded.
      *
-     * @see org.griphyn.common.util.VDSProperties
+     * @see org.griphyn.common.util.CommonProperties
      */
     static public WorkCatalog loadInstance( PegasusProperties props )
            throws WorkFactoryException {
@@ -92,9 +92,9 @@ public class WorkFactory{
      * @exception InvocationTargetException if the constructor of the schema
      * throws an exception while being dynamically loaded.
      *
-     * @see org.griphyn.common.util.VDSProperties
+     * @see org.griphyn.common.util.CommonProperties
      */
-    static public WorkCatalog loadInstance( VDSProperties props )
+    static public WorkCatalog loadInstance( CommonProperties props )
       throws WorkFactoryException
     {
         // sanity check
@@ -150,7 +150,7 @@ public class WorkFactory{
    * @exception InvocationTargetException if the constructor of the schema
    * throws an exception while being dynamically loaded.
    *
-   * @see org.griphyn.common.util.VDSProperties
+   * @see org.griphyn.common.util.CommonProperties
    */
   static private WorkCatalog loadInstance( String catalogImplementor,
                                           Properties props )

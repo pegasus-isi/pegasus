@@ -31,12 +31,12 @@ import java.util.regex.*;
  * @author Karan Vahi
  * @version $Revision$
  * */
-public class VDSProperties
+public class CommonProperties
 {
   /**
    * implements the singleton access via class variable.
    */
-  private static VDSProperties m_instance = null;
+  private static CommonProperties m_instance = null;
 
   /**
    * internal set of properties. Direct access is expressly forbidden.
@@ -189,7 +189,7 @@ public class VDSProperties
    * to specify the <code>-Dpegasus.home=$PEGASUS_HOME</code> to the runtime
    * environment.
    */
-  protected VDSProperties( String propFilename )
+  protected CommonProperties( String propFilename )
     throws IOException, MissingResourceException
   {
     // create empty new instance
@@ -230,21 +230,21 @@ public class VDSProperties
       alternative = System.getProperty( "pegasus.user.properties" );
       if ( alternative == null ) {
 	// Prefer $HOME/.pegasusrc over $HOME/.chimerarc
-	props = new File( userHome, VDSProperties.USER_PROPERTY_FILENAME );
+	props = new File( userHome, CommonProperties.USER_PROPERTY_FILENAME );
 	if ( props.exists() ) {
 	  // new user props file does exist, sanity check for old one
 	  File old = new File( userHome,
-			       VDSProperties.OLD_USER_PROPERTY_FILENAME );
+			       CommonProperties.OLD_USER_PROPERTY_FILENAME );
 	  if ( old.exists() ) {
 	    // both user props exist, does the user know what he's doing?
 	    System.out.println( "INFO: Both user property files " +
 				old.getName() + " and " + props.getName() +
 				" exist, using " +
-				VDSProperties.USER_PROPERTY_FILENAME );
+				CommonProperties.USER_PROPERTY_FILENAME );
 	  }
 	} else {
 	  // new user props file did not exist, check for old user props file
-	  props = new File( userHome, VDSProperties.OLD_USER_PROPERTY_FILENAME );
+	  props = new File( userHome, CommonProperties.OLD_USER_PROPERTY_FILENAME );
 	}
       } else {
 	// was overwritten -- use user's overwrite
@@ -298,13 +298,13 @@ public class VDSProperties
    * environment.
    * @see #noHassleInstance()
    */
-  public static VDSProperties instance()
+  public static CommonProperties instance()
     throws IOException, MissingResourceException
   {
-    if ( VDSProperties.m_instance == null )
-      VDSProperties.m_instance =
-	new VDSProperties( VDSProperties.PROPERTY_FILENAME );
-    return VDSProperties.m_instance;
+    if ( CommonProperties.m_instance == null )
+      CommonProperties.m_instance =
+	new CommonProperties( CommonProperties.PROPERTY_FILENAME );
+    return CommonProperties.m_instance;
   }
 
   /**
@@ -323,12 +323,12 @@ public class VDSProperties
    * environment.
    * @see #instance()
    */
-  public static VDSProperties nonSingletonInstance( String propFilename )
+  public static CommonProperties nonSingletonInstance( String propFilename )
     throws IOException, MissingResourceException
   {
-    return new VDSProperties( (propFilename == null) ?
+    return new CommonProperties( (propFilename == null) ?
 			      // pick up the default value
-			      VDSProperties.PROPERTY_FILENAME :
+			      CommonProperties.PROPERTY_FILENAME :
 			      // pick up the file mentioned
 			      propFilename );
   }
@@ -344,9 +344,9 @@ public class VDSProperties
    * @return a reference to the properties.
    * @see #instance()
    */
-  public static VDSProperties noHassleInstance()
+  public static CommonProperties noHassleInstance()
   {
-    VDSProperties result = null;
+    CommonProperties result = null;
     try {
       result = instance();
     } catch ( IOException e ) {

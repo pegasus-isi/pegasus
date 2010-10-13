@@ -126,7 +126,7 @@ public class SiteFactory {
         args[ 0 ] = properties.getPoolFile();
         /* this should not be reqd. the Site Catalog interface should take
            the properties object while being instantiated */
-        args[ 1 ] = edu.isi.pegasus.common.util.VDSProperties.PROPERTY_FILENAME;
+        args[ 1 ] = edu.isi.pegasus.common.util.CommonProperties.PROPERTY_FILENAME;
 
 
         PoolInfoProvider catalog;

@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 
 import gnu.getopt.LongOpt;
 import java.io.File;
@@ -128,7 +128,7 @@ public abstract class Executable {
         //get the logging value set in properties
         //cannot ask for PegasusProperties, as deprecation warnings could be
         //logged. So get it directly from VDS Properties. Karan May 11, 2006.
-        String value = VDSProperties.noHassleInstance().getProperty("pegasus.log.*");
+        String value = CommonProperties.noHassleInstance().getProperty("pegasus.log.*");
 
         //use defaults if nothing is set.
         if( value == null){

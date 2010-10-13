@@ -22,7 +22,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.common.util.VDSProperties;
+import edu.isi.pegasus.common.util.CommonProperties;
 
 import edu.isi.pegasus.planner.catalog.Catalog;
 
@@ -115,7 +115,7 @@ public class GetDAX {
      * @return boolean
      */
     public boolean connect( PegasusProperties properties ){
-        VDSProperties props = properties.getVDSProperties();
+        CommonProperties props = properties.getVDSProperties();
         Properties connect = props.matchingSubset( GetDAX.c_prefix, false );
 
         //get the default db driver properties in first pegasus.catalog.*.db.driver.*
@@ -156,7 +156,7 @@ public class GetDAX {
         boolean result = false;
         // class loader: Will propagate any runtime errors!!!
         String driver = (String) props.remove("db.driver");
-        Properties localProps = VDSProperties.matchingSubset( (Properties)props.clone(), "db", false );
+        Properties localProps = CommonProperties.matchingSubset( (Properties)props.clone(), "db", false );
 
         String url = (String) localProps.remove("url");
         if( url == null ){
