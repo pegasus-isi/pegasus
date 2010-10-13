@@ -14,6 +14,18 @@
  */
 package org.griphyn.vdl.dbschema;
 
+import edu.isi.pegasus.planner.invocation.InvocationRecord;
+import edu.isi.pegasus.planner.invocation.HasText;
+import edu.isi.pegasus.planner.invocation.JobStatus;
+import edu.isi.pegasus.planner.invocation.Arguments;
+import edu.isi.pegasus.planner.invocation.Architecture;
+import edu.isi.pegasus.planner.invocation.StatCall;
+import edu.isi.pegasus.planner.invocation.HasDescriptor;
+import edu.isi.pegasus.planner.invocation.Usage;
+import edu.isi.pegasus.planner.invocation.StatInfo;
+import edu.isi.pegasus.planner.invocation.Job;
+import edu.isi.pegasus.planner.invocation.Status;
+import edu.isi.pegasus.planner.invocation.HasFilename;
 import java.sql.*;
 import java.util.*;
 import java.io.*;
@@ -21,7 +33,8 @@ import java.lang.reflect.*;
 import java.net.InetAddress;
 import org.griphyn.vdl.util.ChimeraProperties;
 import edu.isi.pegasus.common.util.Separator;
-import org.griphyn.vdl.invocation.*;
+
+
 import org.griphyn.vdl.util.Logging;
 
 /**
@@ -486,7 +499,7 @@ public class InvocationSchema extends DatabaseSchema
     // add rest of stat record, as appropriate. Many things will stay
     // NULL during the fill-in of incomplete (failed) stat info
     ps.setInt( i++, s.getError() );
-    org.griphyn.vdl.invocation.File f = s.getFile();
+        edu.isi.pegasus.planner.invocation.File f = s.getFile();
     if ( f != null ) {
       if ( f instanceof HasFilename && ((HasFilename) f).getFilename() != null )
 	ps.setString( i++, ((HasFilename) f).getFilename() );

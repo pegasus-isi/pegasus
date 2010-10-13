@@ -26,7 +26,7 @@ import edu.isi.pegasus.planner.visualize.Callback;
 import edu.isi.pegasus.planner.visualize.JobMeasurements;
 import edu.isi.pegasus.planner.visualize.WorkflowMeasurements;
 
-import org.griphyn.vdl.invocation.StatInfo;
+import edu.isi.pegasus.planner.invocation.StatInfo;
 
 import java.util.List;
 import java.util.Iterator;
@@ -39,7 +39,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
-import org.griphyn.vdl.invocation.Machine;
+import edu.isi.pegasus.planner.invocation.Machine;
 
 
 /**

@@ -14,6 +14,7 @@
  */
 package org.griphyn.vdl.dbschema;
 
+import edu.isi.pegasus.planner.invocation.InvocationRecord;
 import java.sql.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ import org.xml.sax.InputSource;
 import org.griphyn.vdl.util.ChimeraProperties;
 import org.griphyn.vdl.util.Logging;
 import org.griphyn.vdl.parser.*;
-import org.griphyn.vdl.invocation.*;
+
 import edu.isi.pegasus.common.util.Separator;
 import org.xml.sax.InputSource;
 /**

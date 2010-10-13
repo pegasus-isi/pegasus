@@ -23,7 +23,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.visualize.Callback;
 
-import org.griphyn.vdl.invocation.StatInfo;
+import edu.isi.pegasus.planner.invocation.StatInfo;
 
 import java.util.List;
 import java.util.Iterator;
@@ -31,12 +31,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.griphyn.vdl.invocation.HasText;
-import org.griphyn.vdl.invocation.Stamp;
-import org.griphyn.vdl.invocation.Uname;
-import org.griphyn.vdl.invocation.Machine;
-import org.griphyn.vdl.invocation.MachineSpecific;
-import org.griphyn.vdl.invocation.MachineInfo;
+import edu.isi.pegasus.planner.invocation.HasText;
+import edu.isi.pegasus.planner.invocation.Stamp;
+import edu.isi.pegasus.planner.invocation.Uname;
+import edu.isi.pegasus.planner.invocation.Machine;
+import edu.isi.pegasus.planner.invocation.MachineSpecific;
+import edu.isi.pegasus.planner.invocation.MachineInfo;
 
 /**
  * Implements callback interface to calculate space usage.

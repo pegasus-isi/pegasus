@@ -23,16 +23,16 @@ import org.griphyn.vdl.util.ChimeraProperties;
 
 import org.griphyn.vdl.directive.ParseKickstart;
 
-import org.griphyn.vdl.invocation.InvocationRecord;
-import org.griphyn.vdl.invocation.Job;
-import org.griphyn.vdl.invocation.JobStatus;
-import org.griphyn.vdl.invocation.JobStatusRegular;
-import org.griphyn.vdl.invocation.StatCall;
-import org.griphyn.vdl.invocation.Data;
-import org.griphyn.vdl.invocation.Regular;
-import org.griphyn.vdl.invocation.Status;
+import edu.isi.pegasus.planner.invocation.InvocationRecord;
+import edu.isi.pegasus.planner.invocation.Job;
+import edu.isi.pegasus.planner.invocation.JobStatus;
+import edu.isi.pegasus.planner.invocation.JobStatusRegular;
+import edu.isi.pegasus.planner.invocation.StatCall;
+import edu.isi.pegasus.planner.invocation.Data;
+import edu.isi.pegasus.planner.invocation.Regular;
+import edu.isi.pegasus.planner.invocation.Status;
 
-import org.griphyn.vdl.parser.InvocationParser;
+import edu.isi.pegasus.planner.parser.InvocationParser;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -128,7 +128,7 @@ public class KickstartParser {
         List extract = mParseKickstart.extractToMemory( f );
 
 
-        org.griphyn.vdl.invocation.File invocationFile = null;
+        edu.isi.pegasus.planner.invocation.File invocationFile = null;
 
         // testme: for each record obtained, work on it
         for ( int j=1; j-1 < extract.size(); ++j ) {

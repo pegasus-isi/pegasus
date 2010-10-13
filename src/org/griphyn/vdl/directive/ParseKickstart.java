@@ -15,6 +15,15 @@
 
 package org.griphyn.vdl.directive;
 
+import edu.isi.pegasus.planner.invocation.InvocationRecord;
+import edu.isi.pegasus.planner.invocation.JobStatus;
+import edu.isi.pegasus.planner.invocation.JobStatusSuspend;
+import edu.isi.pegasus.planner.invocation.JobStatusRegular;
+import edu.isi.pegasus.planner.invocation.Architecture;
+import edu.isi.pegasus.planner.invocation.JobStatusSignal;
+import edu.isi.pegasus.planner.invocation.Job;
+import edu.isi.pegasus.planner.invocation.Status;
+import edu.isi.pegasus.planner.invocation.JobStatusFailure;
 import java.io.*;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -25,8 +34,8 @@ import java.util.MissingResourceException;
 
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.Currently;
-import org.griphyn.vdl.parser.InvocationParser;
-import org.griphyn.vdl.invocation.*;
+import edu.isi.pegasus.planner.parser.InvocationParser;
+
 import org.griphyn.vdl.dbschema.*;
 import org.griphyn.vdl.util.Logging;
 import org.griphyn.vdl.toolkit.FriendlyNudge;

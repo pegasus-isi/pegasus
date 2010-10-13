@@ -16,10 +16,10 @@
 
 package edu.isi.pegasus.planner.visualize;
 
-import org.griphyn.vdl.invocation.Data;
-import org.griphyn.vdl.invocation.Job;
-import org.griphyn.vdl.invocation.Machine;
-import org.griphyn.vdl.invocation.StatInfo;
+import edu.isi.pegasus.planner.invocation.Data;
+import edu.isi.pegasus.planner.invocation.Job;
+import edu.isi.pegasus.planner.invocation.Machine;
+import edu.isi.pegasus.planner.invocation.StatInfo;
 
 import java.util.List;
 import java.util.Map;
