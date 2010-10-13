@@ -22,9 +22,9 @@ import org.griphyn.cPlanner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.PegRandom;
-import org.griphyn.cPlanner.common.Utility;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.common.Utility;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 

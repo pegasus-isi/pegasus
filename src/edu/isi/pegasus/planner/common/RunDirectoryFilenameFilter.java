@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.common;
+package edu.isi.pegasus.planner.common;
 
 import java.io.FilenameFilter;
 import java.util.regex.Pattern;

@@ -20,7 +20,7 @@ package edu.isi.pegasus.common.logging.logger;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import java.util.Collection;
-import org.griphyn.cPlanner.common.*;
+
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;

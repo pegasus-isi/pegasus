@@ -16,7 +16,7 @@
 
 package org.griphyn.cPlanner.parser.dax;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 

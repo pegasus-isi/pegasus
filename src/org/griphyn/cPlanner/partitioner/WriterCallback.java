@@ -18,7 +18,7 @@
 package org.griphyn.cPlanner.partitioner;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.List;

@@ -17,7 +17,7 @@
 package edu.isi.pegasus.common.logging;
 
 
-import org.griphyn.cPlanner.common.*;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import org.apache.log4j.Level;
 
 import java.io.File;

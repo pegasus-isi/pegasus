@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import java.io.BufferedReader;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.code.GridStart;
 

@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import org.globus.common.CoGProperties;
 

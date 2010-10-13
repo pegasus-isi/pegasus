@@ -50,7 +50,7 @@ import java.util.StringTokenizer;
 
 //import javax.naming.NamingEnumeration;
 import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 //import javax.naming.directory.SearchControls;
 import edu.isi.pegasus.common.util.FactoryException;
 //import javax.naming.ldap.LdapContext;

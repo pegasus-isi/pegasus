@@ -34,7 +34,7 @@ import edu.isi.pegasus.planner.cluster.ClustererException;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.parser.dax.DAX2LabelGraph;
 

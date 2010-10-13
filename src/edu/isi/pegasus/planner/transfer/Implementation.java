@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.transfer;
 import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.TransferJob;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 

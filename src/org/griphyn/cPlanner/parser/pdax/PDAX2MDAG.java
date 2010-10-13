@@ -30,10 +30,10 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.CondorVersion;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.StreamGobbler;
-import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
-import org.griphyn.cPlanner.common.StreamGobblerCallback;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.StreamGobblerCallback;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 

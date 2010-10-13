@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.code.GridStart;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;

@@ -27,10 +27,10 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.WorkDir;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.PegRandom;
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.UserOptions;
-import org.griphyn.cPlanner.common.Utility;
+import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.UserOptions;
+import edu.isi.pegasus.planner.common.Utility;
 
 import org.griphyn.cPlanner.engine.Engine;
 

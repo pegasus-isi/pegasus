@@ -26,7 +26,7 @@ import java.util.MissingResourceException;
 
 
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.util.Enumeration;
 
 /**

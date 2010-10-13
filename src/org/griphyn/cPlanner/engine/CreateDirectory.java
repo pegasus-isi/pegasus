@@ -22,7 +22,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.engine.createdir.Implementation;
 import org.griphyn.cPlanner.engine.createdir.Strategy;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FactoryException;

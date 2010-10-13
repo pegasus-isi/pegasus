@@ -15,12 +15,13 @@
  */
 
 
-package org.griphyn.cPlanner.common;
+package edu.isi.pegasus.planner.transfer;
+
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.Iterator;
-import java.util.Collection;
 import java.util.TreeMap;
 import java.util.Map;
 import java.util.Set;

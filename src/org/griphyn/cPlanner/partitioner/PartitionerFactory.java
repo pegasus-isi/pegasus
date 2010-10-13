@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.partitioner;
 
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 
@@ -134,7 +134,7 @@ public class PartitionerFactory {
             classList[1] = Class.forName("java.util.Map");
             argList[2] = properties;
             classList[2] = Class.forName(
-                "org.griphyn.cPlanner.common.PegasusProperties");
+                "edu.isi.pegasus.planner.common.PegasusProperties");
             partitioner = (Partitioner) dl.instantiate(classList, argList);
         }
         catch( Exception e ){

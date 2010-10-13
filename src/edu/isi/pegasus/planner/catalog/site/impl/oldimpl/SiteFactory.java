@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.catalog.site.impl.oldimpl;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 /**

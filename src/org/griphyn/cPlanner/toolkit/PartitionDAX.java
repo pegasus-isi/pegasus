@@ -30,7 +30,7 @@ import org.griphyn.cPlanner.partitioner.PartitionerFactory;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.classes.PegasusBag;
 

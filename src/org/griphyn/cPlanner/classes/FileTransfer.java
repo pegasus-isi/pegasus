@@ -17,7 +17,7 @@
 package org.griphyn.cPlanner.classes;
 
 
-import org.griphyn.cPlanner.common.PegRandom;
+import edu.isi.pegasus.planner.common.PegRandom;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.cluster;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.partitioner.Partitioner;
 import org.griphyn.cPlanner.partitioner.PartitionerFactory;

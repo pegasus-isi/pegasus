@@ -23,7 +23,7 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 /**

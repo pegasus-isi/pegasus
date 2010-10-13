@@ -22,7 +22,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 import edu.isi.pegasus.planner.catalog.site.impl.MYOSG;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.ArrayList;
 import java.util.List;

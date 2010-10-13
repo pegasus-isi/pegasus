@@ -41,7 +41,7 @@ import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.ENV;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
 import java.io.IOException;

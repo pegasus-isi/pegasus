@@ -27,8 +27,8 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import java.io.BufferedReader;
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
 import org.griphyn.cPlanner.parser.DaxParser;
 

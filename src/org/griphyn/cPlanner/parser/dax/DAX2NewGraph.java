@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.partitioner.graph.Graph;
 import org.griphyn.cPlanner.partitioner.graph.MapGraph;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.ArrayList;
 import java.util.Iterator;

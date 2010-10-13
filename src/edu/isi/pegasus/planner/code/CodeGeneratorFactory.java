@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.code.CodeGenerator;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
 
 

@@ -24,7 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import org.griphyn.cPlanner.toolkit.Executable;
 
 import edu.isi.pegasus.common.logging.LogManager;

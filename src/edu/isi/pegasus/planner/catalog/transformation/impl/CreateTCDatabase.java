@@ -24,8 +24,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.MissingResourceException;
 
-import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
-import org.griphyn.cPlanner.common.StreamGobbler;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.StreamGobbler;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;

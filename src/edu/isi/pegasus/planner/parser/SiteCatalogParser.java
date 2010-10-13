@@ -47,7 +47,7 @@ import org.griphyn.cPlanner.parser.Parser;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
 import java.io.IOException;

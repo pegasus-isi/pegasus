@@ -38,7 +38,7 @@ import org.griphyn.cPlanner.classes.WorkDir;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.parser.Parser;
 

@@ -26,8 +26,8 @@ import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.FileTransfer;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.Utility;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.Utility;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Proxy;

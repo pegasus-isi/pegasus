@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
-import org.griphyn.cPlanner.common.PegRandom;
+import edu.isi.pegasus.planner.common.PegRandom;
         
 /**
  * An abstract base class that creates a directory type. It associates multiple

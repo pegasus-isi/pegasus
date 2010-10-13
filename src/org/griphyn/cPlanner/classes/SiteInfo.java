@@ -20,8 +20,8 @@ package org.griphyn.cPlanner.classes;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
-import org.griphyn.cPlanner.common.PegRandom;
-import org.griphyn.cPlanner.common.Utility;
+import edu.isi.pegasus.planner.common.PegRandom;
+import edu.isi.pegasus.planner.common.Utility;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.List;

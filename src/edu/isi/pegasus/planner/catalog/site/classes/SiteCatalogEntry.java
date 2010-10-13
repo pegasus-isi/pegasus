@@ -28,7 +28,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 
 import org.griphyn.cPlanner.classes.Profile;
 
-import org.griphyn.cPlanner.common.PegRandom;
+import edu.isi.pegasus.planner.common.PegRandom;
 
 
 import edu.isi.pegasus.planner.namespace.Namespace;

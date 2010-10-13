@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.code.generator.condor.CondorGenerator;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.BufferedWriter;
 import java.io.File;

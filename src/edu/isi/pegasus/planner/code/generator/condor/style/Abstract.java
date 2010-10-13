@@ -25,7 +25,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
 

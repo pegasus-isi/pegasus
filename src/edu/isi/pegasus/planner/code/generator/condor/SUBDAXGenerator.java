@@ -32,8 +32,8 @@ import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
 import org.griphyn.cPlanner.parser.dax.Callback;
 import org.griphyn.cPlanner.parser.DaxParser;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
 import org.griphyn.cPlanner.toolkit.CPlanner;
 

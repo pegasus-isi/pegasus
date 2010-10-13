@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
  * The site store contains the collection of sites backed by a HashMap.

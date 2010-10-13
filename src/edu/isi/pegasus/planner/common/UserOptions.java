@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.common;
+package edu.isi.pegasus.planner.common;
 
 
 import edu.isi.pegasus.common.logging.LogManager;

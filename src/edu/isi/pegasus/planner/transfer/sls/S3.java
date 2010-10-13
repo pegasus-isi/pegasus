@@ -28,7 +28,7 @@ import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.Profile;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import org.griphyn.cPlanner.engine.CreateDirectory;
 import org.griphyn.cPlanner.engine.createdir.Implementation;

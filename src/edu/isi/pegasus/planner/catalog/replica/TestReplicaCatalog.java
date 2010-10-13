@@ -24,7 +24,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 import edu.isi.pegasus.common.util.Version;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 

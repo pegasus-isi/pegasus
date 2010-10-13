@@ -24,7 +24,7 @@ import edu.isi.pegasus.common.util.Proxy;
 import java.io.BufferedReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.code.GridStart;
 

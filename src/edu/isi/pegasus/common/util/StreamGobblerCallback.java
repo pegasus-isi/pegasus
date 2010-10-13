@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.griphyn.cPlanner.common;
+package edu.isi.pegasus.common.util;
 
 /**
  * This interface defines the callback calls that are called from within the

@@ -21,7 +21,7 @@ import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.transfer.implementation.TransferImplementationFactoryException;
 

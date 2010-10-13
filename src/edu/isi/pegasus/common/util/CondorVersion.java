@@ -21,8 +21,6 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.griphyn.cPlanner.common.StreamGobbler;
-import org.griphyn.cPlanner.common.StreamGobblerCallback;
 
 /**
  * A utility class that allows us to determine condor version.

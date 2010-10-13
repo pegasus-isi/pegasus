@@ -14,9 +14,11 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.common;
+package edu.isi.pegasus.planner.transfer;
 
-import org.griphyn.cPlanner.common.TPT;
+import edu.isi.pegasus.planner.common.Utility;
+
+import edu.isi.pegasus.planner.transfer.TPT;
 /**
  * Client for testing  the TPT class.
  *

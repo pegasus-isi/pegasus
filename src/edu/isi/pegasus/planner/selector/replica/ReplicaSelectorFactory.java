@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.selector.replica;
 
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 

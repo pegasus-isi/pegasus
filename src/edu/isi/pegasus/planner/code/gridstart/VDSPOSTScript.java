@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.code.gridstart;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.namespace.Dagman;

@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.partitioner;
 import edu.isi.pegasus.planner.cluster.Clusterer;
 import edu.isi.pegasus.planner.cluster.ClustererException;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.List;
 

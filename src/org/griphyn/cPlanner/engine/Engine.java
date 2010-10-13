@@ -24,7 +24,7 @@ import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolMode;
 

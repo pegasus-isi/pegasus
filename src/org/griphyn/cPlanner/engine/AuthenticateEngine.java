@@ -23,7 +23,7 @@ import org.griphyn.cPlanner.classes.GridFTPServer;
 import org.griphyn.cPlanner.classes.JobManager;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.HashSet;
 import java.util.Iterator;

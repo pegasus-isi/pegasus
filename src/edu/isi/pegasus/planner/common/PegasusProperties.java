@@ -13,7 +13,7 @@
  * Southern California. All rights reserved.
  */
 
-package org.griphyn.cPlanner.common;
+package edu.isi.pegasus.planner.common;
 
 import org.griphyn.cPlanner.classes.NameValue;
 

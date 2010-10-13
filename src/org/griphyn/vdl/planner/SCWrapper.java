@@ -24,7 +24,7 @@ import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.WorkDir;
 import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolMode;
 import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolInfoProvider;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
  * This class wraps the shell planner's request into the new site

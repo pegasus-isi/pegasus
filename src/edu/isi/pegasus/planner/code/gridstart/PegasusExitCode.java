@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import java.io.File;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
  * The exitcode wrapper, that can parse kickstart output's and put them in the

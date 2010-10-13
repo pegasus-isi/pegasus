@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.code;
 
 import org.griphyn.cPlanner.classes.SubInfo;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
  * The interface that defines the creation of a POSTSCRIPT for a job.

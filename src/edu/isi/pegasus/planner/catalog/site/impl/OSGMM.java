@@ -33,8 +33,8 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
 
-import org.griphyn.cPlanner.common.StreamGobbler;
-import org.griphyn.cPlanner.common.StreamGobblerCallback;
+import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.StreamGobblerCallback;
 
 
 import org.griphyn.cPlanner.classes.GridFTPServer;

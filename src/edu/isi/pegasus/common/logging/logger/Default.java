@@ -18,7 +18,6 @@ package edu.isi.pegasus.common.logging.logger;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogFormatter;
-import org.griphyn.cPlanner.common.*;
 import edu.isi.pegasus.common.util.Currently;
 
 import org.apache.log4j.Level;
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.io.Writer;
 
 import java.util.Properties;
-import java.util.Stack;
 
 /**
  * The logging class that to log messages at different levels.

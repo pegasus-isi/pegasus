@@ -30,8 +30,8 @@ import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
 
-import org.griphyn.cPlanner.common.PegasusProperties;
-import org.griphyn.cPlanner.common.Utility;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.Utility;
 
 import org.griphyn.cPlanner.engine.createdir.S3;
 

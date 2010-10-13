@@ -23,7 +23,7 @@ import java.util.Properties;
 import java.util.Enumeration;
 
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
  * This factory loads a work catalog, as specified by the properties.

@@ -37,11 +37,11 @@ import org.griphyn.cPlanner.classes.PlannerMetrics;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
-import org.griphyn.cPlanner.common.StreamGobbler;
-import org.griphyn.cPlanner.common.DefaultStreamGobblerCallback;
-import org.griphyn.cPlanner.common.RunDirectoryFilenameFilter;
+import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
 import org.griphyn.cPlanner.engine.MainEngine;
 

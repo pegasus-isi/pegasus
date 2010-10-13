@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.namespace;
 
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.Iterator;
 import java.util.Map;

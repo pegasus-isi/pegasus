@@ -20,7 +20,7 @@ package edu.isi.pegasus.common.logging;
 
 
 import edu.isi.pegasus.common.util.DynamicLoader;
-import org.griphyn.cPlanner.common.PegasusProperties;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 
