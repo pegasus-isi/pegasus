@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 
 
 import edu.isi.pegasus.planner.classes.SubInfo;
-import org.griphyn.cPlanner.engine.Refiner;
+import edu.isi.pegasus.planner.refiner.Refiner;
 
 import org.pasoa.common.BestPractice;
 import org.pasoa.common.Constants;

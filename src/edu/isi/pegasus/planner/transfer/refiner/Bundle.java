@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
+import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import java.util.LinkedList;
 

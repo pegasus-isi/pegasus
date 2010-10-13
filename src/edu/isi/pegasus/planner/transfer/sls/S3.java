@@ -30,8 +30,8 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.engine.CreateDirectory;
-import org.griphyn.cPlanner.engine.createdir.Implementation;
+import edu.isi.pegasus.planner.refiner.CreateDirectory;
+import edu.isi.pegasus.planner.refiner.createdir.Implementation;
 
 import edu.isi.pegasus.planner.transfer.SLS;
 
@@ -185,7 +185,7 @@ public class S3   implements SLS {
     /**
      * An instance to the Create Direcotry Implementation being used in Pegasus.
      */
-    private org.griphyn.cPlanner.engine.createdir.S3 mS3CreateDirImpl;
+    private edu.isi.pegasus.planner.refiner.createdir.S3 mS3CreateDirImpl;
     
     
     /**
@@ -214,10 +214,10 @@ public class S3   implements SLS {
         Implementation createDirImpl = 
                 CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
         //sanity check on the implementation
-        if ( !( createDirImpl instanceof org.griphyn.cPlanner.engine.createdir.S3 )){
+        if ( !( createDirImpl instanceof edu.isi.pegasus.planner.refiner.createdir.S3 )){
             throw new RuntimeException( "Only S3 Create Dir implementation can be used with S3 SLS" );
         }
-        mS3CreateDirImpl = (org.griphyn.cPlanner.engine.createdir.S3 )createDirImpl;
+        mS3CreateDirImpl = (edu.isi.pegasus.planner.refiner.createdir.S3 )createDirImpl;
         
         mStageSLSFile = Boolean.parse( mProps.getProperty( S3.STAGE_SLS_FILE_PROPERTY_KEY ),
                                        true );
