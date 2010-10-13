@@ -16,10 +16,10 @@
 
 package edu.isi.pegasus.planner.transfer.implementation;
 
-import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.NameValue;
-import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.FileTransfer;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -37,7 +37,7 @@ import java.io.FileWriter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * The implementation that creates transfer jobs referring to the old GUC

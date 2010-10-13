@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.classes;
 
 /**
  * A Workflow metrics class that stores the metrics about the workflow.

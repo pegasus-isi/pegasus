@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.common.util.Currently;
 

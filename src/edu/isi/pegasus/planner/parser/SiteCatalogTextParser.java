@@ -16,13 +16,14 @@
 
 package edu.isi.pegasus.planner.parser;
 
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.WorkDir;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
-import org.griphyn.cPlanner.classes.*;
+
 import edu.isi.pegasus.planner.parser.tokens.OpenBrace;
 import edu.isi.pegasus.planner.parser.tokens.SiteCatalogReservedWord;
 import edu.isi.pegasus.planner.parser.tokens.Token;

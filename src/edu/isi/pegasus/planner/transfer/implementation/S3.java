@@ -20,11 +20,11 @@ package edu.isi.pegasus.planner.transfer.implementation;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.TransferJob;
-import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
 import edu.isi.pegasus.planner.transfer.Refiner;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.Profile;
 import java.util.ArrayList;
 import java.util.HashSet;
 

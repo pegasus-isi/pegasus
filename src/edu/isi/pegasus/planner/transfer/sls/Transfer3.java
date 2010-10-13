@@ -20,8 +20,8 @@ package edu.isi.pegasus.planner.transfer.sls;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.namespace.ENV;
 
@@ -32,7 +32,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import java.io.File;
 
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.Profile;
 import java.util.List;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.common.util.Separator;

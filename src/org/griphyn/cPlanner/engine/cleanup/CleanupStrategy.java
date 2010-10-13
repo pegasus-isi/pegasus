@@ -16,7 +16,7 @@
 
 package org.griphyn.cPlanner.engine.cleanup;
 
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import org.griphyn.cPlanner.partitioner.graph.Graph;
 

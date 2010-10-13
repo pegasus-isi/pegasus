@@ -23,7 +23,7 @@ package edu.isi.pegasus.planner.catalog.transformation.client;
  * @version $Revision$
  */
 
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;

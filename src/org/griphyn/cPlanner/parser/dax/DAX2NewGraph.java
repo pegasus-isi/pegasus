@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.parser.dax;
 
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import org.griphyn.cPlanner.partitioner.graph.Graph;
 import org.griphyn.cPlanner.partitioner.graph.MapGraph;

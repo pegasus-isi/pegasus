@@ -15,7 +15,7 @@
  */
 package org.griphyn.cPlanner.engine;
 
-import org.griphyn.cPlanner.classes.ADag;
+import edu.isi.pegasus.planner.classes.ADag;
 
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 

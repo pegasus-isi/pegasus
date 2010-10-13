@@ -41,7 +41,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.WorkerSharedDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeStorage;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeScratch;
 
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.Profile;
 
 import org.griphyn.cPlanner.parser.Parser;
 

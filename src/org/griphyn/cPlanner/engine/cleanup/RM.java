@@ -18,8 +18,8 @@
 package org.griphyn.cPlanner.engine.cleanup;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -35,7 +35,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashSet;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * Use's RM to do removal of the files on the remote sites.

@@ -17,10 +17,10 @@
 package edu.isi.pegasus.planner.cluster;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PCRelation;
-import org.griphyn.cPlanner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PCRelation;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -48,7 +48,7 @@ import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.StringTokenizer;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * The horizontal clusterer, that clusters jobs on the same level.

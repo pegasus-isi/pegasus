@@ -38,7 +38,7 @@ import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPBandwidth;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.WorkDir;
 
 /**

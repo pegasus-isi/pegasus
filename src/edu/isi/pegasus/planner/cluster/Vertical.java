@@ -14,9 +14,9 @@
  */
 package edu.isi.pegasus.planner.cluster;
 
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.AggregatedJob;
-import org.griphyn.cPlanner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.PegasusFile;
 
 import org.griphyn.cPlanner.partitioner.Topological;
 import org.griphyn.cPlanner.partitioner.Partition;

@@ -18,12 +18,12 @@ package org.griphyn.cPlanner.engine;
 
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.DagInfo;
-import org.griphyn.cPlanner.classes.PCRelation;
-import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.PlannerOptions;
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.DagInfo;
+import edu.isi.pegasus.planner.classes.PCRelation;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -41,7 +41,7 @@ import java.util.Vector;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
 /**

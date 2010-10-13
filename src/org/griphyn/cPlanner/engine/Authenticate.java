@@ -19,7 +19,7 @@ package org.griphyn.cPlanner.engine;
 
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import org.griphyn.cPlanner.classes.AuthenticateRequest;
+import edu.isi.pegasus.planner.classes.AuthenticateRequest;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;

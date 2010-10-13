@@ -18,7 +18,7 @@ package org.griphyn.cPlanner.engine;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import org.griphyn.cPlanner.classes.AuthenticateRequest;
+import edu.isi.pegasus.planner.classes.AuthenticateRequest;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
 
@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * It authenticates the user with the sites, that the user specifies at the

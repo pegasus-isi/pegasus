@@ -22,9 +22,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.AggregatedJob;
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -33,7 +33,7 @@ import edu.isi.pegasus.planner.namespace.Dagman;
 
 
 import edu.isi.pegasus.planner.code.GridStart;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
 import java.util.List;

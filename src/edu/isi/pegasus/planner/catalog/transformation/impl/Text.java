@@ -36,8 +36,8 @@ import edu.isi.pegasus.planner.parser.TransformationCatalogTextParser;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.classes.PegasusBag;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;

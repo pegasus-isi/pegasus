@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.Profile;
 
 /**
  * Converts between the string version of a profile specification

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.Enumeration;

@@ -25,8 +25,8 @@ import java.util.Set;
 
 import org.gridforum.jgss.ExtendedGSSCredential;
 import org.gridforum.jgss.ExtendedGSSManager;
-import org.griphyn.cPlanner.classes.AuthenticateRequest;
-import org.griphyn.cPlanner.classes.Profile;
+import edu.isi.pegasus.planner.classes.AuthenticateRequest;
+import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;

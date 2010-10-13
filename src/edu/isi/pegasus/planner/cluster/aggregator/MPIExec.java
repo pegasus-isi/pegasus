@@ -18,9 +18,9 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import java.util.List;
 import edu.isi.pegasus.planner.code.GridStart;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * This class aggregates the smaller jobs in a manner such that

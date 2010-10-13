@@ -22,8 +22,8 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
-import org.griphyn.cPlanner.classes.PegasusFile;
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -45,8 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
-import org.griphyn.cPlanner.classes.ADag;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
  * This is the class that implements a call-out to a site selector which

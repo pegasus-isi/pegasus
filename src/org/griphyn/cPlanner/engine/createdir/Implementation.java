@@ -17,8 +17,8 @@
 
 package org.griphyn.cPlanner.engine.createdir;
 
-import org.griphyn.cPlanner.classes.SubInfo;
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import java.util.List;
 

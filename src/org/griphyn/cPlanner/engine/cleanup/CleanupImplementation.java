@@ -17,9 +17,9 @@
 
 package org.griphyn.cPlanner.engine.cleanup;
 
-import org.griphyn.cPlanner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.SubInfo;
 
-import org.griphyn.cPlanner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
 import java.util.List;
