@@ -24,9 +24,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.LRC;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
 import org.griphyn.cPlanner.classes.NameValue;
-import org.griphyn.cPlanner.classes.SiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.Profile;
 import org.griphyn.cPlanner.classes.ReplicaLocation;
 import org.griphyn.cPlanner.classes.ReplicaStore;

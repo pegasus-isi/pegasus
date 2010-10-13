@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.catalog.site.impl.old;
 
-import org.griphyn.cPlanner.classes.PoolConfig;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
 import edu.isi.pegasus.planner.parser.ScannerException;
 import edu.isi.pegasus.planner.parser.SiteCatalogTextParser;
 

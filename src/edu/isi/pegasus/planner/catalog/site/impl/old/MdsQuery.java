@@ -32,14 +32,14 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
-import org.griphyn.cPlanner.classes.PoolConfig;
-import org.griphyn.cPlanner.classes.GridFTPServer;
-import org.griphyn.cPlanner.classes.GridFTPBandwidth;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.JobManager;
-import org.griphyn.cPlanner.classes.LRC;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPBandwidth;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.classes.WorkDir;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.WorkDir;
 
 /**
  * This Class queries the GT2 based Monitoring and Discovery Service (MDS)

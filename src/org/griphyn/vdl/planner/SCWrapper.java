@@ -19,9 +19,9 @@ import java.io.*;
 import java.util.*;
 
 import org.griphyn.vdl.util.Logging;
-import org.griphyn.cPlanner.classes.SiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.classes.WorkDir;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.WorkDir;
 import edu.isi.pegasus.planner.catalog.site.impl.old.PoolMode;
 import edu.isi.pegasus.planner.catalog.site.impl.old.PoolInfoProvider;
 import edu.isi.pegasus.planner.common.PegasusProperties;

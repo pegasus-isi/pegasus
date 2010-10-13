@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.selector.site;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import org.griphyn.cPlanner.classes.GridFTPServer;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
 import org.griphyn.cPlanner.classes.PegasusFile;
 import org.griphyn.cPlanner.classes.SubInfo;
 

@@ -16,8 +16,9 @@
 
 
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.catalog.site.impl.old.classes;
 
+import org.griphyn.cPlanner.classes.*;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import org.globus.replica.rls.RLSClient;

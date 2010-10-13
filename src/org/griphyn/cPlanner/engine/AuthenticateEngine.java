@@ -19,8 +19,8 @@ package org.griphyn.cPlanner.engine;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import org.griphyn.cPlanner.classes.AuthenticateRequest;
-import org.griphyn.cPlanner.classes.GridFTPServer;
-import org.griphyn.cPlanner.classes.JobManager;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;

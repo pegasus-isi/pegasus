@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.classes;
+package edu.isi.pegasus.planner.catalog.site.impl.old.classes;
 
 /**
  * This is a data class to store information about gridftp bandwidths between

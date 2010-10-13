@@ -22,8 +22,8 @@ import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.classes.NameValue;
 import org.griphyn.cPlanner.classes.PlannerOptions;
 import org.griphyn.cPlanner.classes.FileTransfer;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.JobManager;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
 
 
 import edu.isi.pegasus.common.logging.LogManager;

@@ -37,12 +37,12 @@ import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
 
 
-import org.griphyn.cPlanner.classes.GridFTPServer;
-import org.griphyn.cPlanner.classes.SiteInfo;
-import org.griphyn.cPlanner.classes.JobManager;
-import org.griphyn.cPlanner.classes.LRC;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
 import org.griphyn.cPlanner.classes.Profile;
-import org.griphyn.cPlanner.classes.WorkDir;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.WorkDir;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
