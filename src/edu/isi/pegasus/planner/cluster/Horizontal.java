@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorInstanceFactory;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import org.griphyn.cPlanner.partitioner.Partition;
+import edu.isi.pegasus.planner.partitioner.Partition;
 
 import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
 import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;

@@ -22,9 +22,9 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.SubInfo;
 
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
-import org.griphyn.cPlanner.partitioner.graph.Adapter;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -35,7 +35,7 @@ import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import org.griphyn.cPlanner.partitioner.graph.Bag;
+import edu.isi.pegasus.planner.partitioner.graph.Bag;
 
 
 import java.util.Set;

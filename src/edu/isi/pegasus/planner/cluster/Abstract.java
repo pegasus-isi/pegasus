@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.cluster.JobAggregator;
 
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorInstanceFactory;
 
-import org.griphyn.cPlanner.partitioner.Partition;
+import edu.isi.pegasus.planner.partitioner.Partition;
 
 import java.util.Collection;
 import java.util.Vector;

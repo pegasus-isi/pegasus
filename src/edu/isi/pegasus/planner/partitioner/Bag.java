@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.partitioner;
+package edu.isi.pegasus.planner.partitioner;
 
 /**
  * An interface to define a BAG of objects. The bag can be then associated

@@ -19,9 +19,9 @@ package edu.isi.pegasus.planner.parser.dax;
 
 import edu.isi.pegasus.planner.classes.SubInfo;
 
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.MapGraph;
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 

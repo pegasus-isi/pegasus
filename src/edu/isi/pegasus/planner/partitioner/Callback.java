@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.partitioner;
+package edu.isi.pegasus.planner.partitioner;
 
 import java.util.List;
 

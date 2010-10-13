@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.selector.site.heft;
 
-import org.griphyn.cPlanner.partitioner.graph.Bag;
+import edu.isi.pegasus.planner.partitioner.graph.Bag;
 
 /**
  * A data class that implements the Bag interface and stores the extra information

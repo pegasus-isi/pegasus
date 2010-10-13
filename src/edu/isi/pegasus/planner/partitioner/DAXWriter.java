@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.partitioner;
+package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.logging.LogManager;

@@ -22,10 +22,10 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.partitioner.Partitioner;
-import org.griphyn.cPlanner.partitioner.PartitionerFactory;
-import org.griphyn.cPlanner.partitioner.PartitionerFactoryException;
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.Partitioner;
+import edu.isi.pegasus.planner.partitioner.PartitionerFactory;
+import edu.isi.pegasus.planner.partitioner.PartitionerFactoryException;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 

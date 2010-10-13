@@ -15,9 +15,9 @@
  */
 
 
-package org.griphyn.cPlanner.partitioner;
+package edu.isi.pegasus.planner.partitioner;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.util.List;
 import java.util.ArrayList;

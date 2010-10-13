@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.parser.pdax;
 
-import org.griphyn.cPlanner.partitioner.Partition;
+import edu.isi.pegasus.planner.partitioner.Partition;
 
 /**
  * This interfaces defines the callback calls from PDAX parsing. A slim

@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.selector;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
 
 import java.util.List;
 

@@ -18,7 +18,7 @@ package org.griphyn.cPlanner.engine.cleanup;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import org.griphyn.cPlanner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
 
 /**
  * The interface that defines how the cleanup job is invoked and created.

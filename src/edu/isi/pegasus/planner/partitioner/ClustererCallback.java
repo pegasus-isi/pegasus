@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.partitioner;
+package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.planner.cluster.Clusterer;
 import edu.isi.pegasus.planner.cluster.ClustererException;

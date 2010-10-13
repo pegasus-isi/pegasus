@@ -39,9 +39,9 @@ import edu.isi.pegasus.common.util.StreamGobblerCallback;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
 
-import org.griphyn.cPlanner.partitioner.graph.Adapter;
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Adapter;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -30,9 +30,9 @@ import edu.isi.pegasus.planner.classes.NameValue;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.Adapter;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 
 

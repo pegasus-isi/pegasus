@@ -23,10 +23,10 @@ import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.SubInfo;
 
-import org.griphyn.cPlanner.partitioner.Partitioner;
-import org.griphyn.cPlanner.partitioner.ClustererCallback;
+import edu.isi.pegasus.planner.partitioner.Partitioner;
+import edu.isi.pegasus.planner.partitioner.ClustererCallback;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.planner.cluster.ClustererFactory;
 import edu.isi.pegasus.planner.cluster.Clusterer;

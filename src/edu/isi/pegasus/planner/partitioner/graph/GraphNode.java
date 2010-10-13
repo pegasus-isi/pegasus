@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.partitioner.graph;
+package edu.isi.pegasus.planner.partitioner.graph;
 
 import edu.isi.pegasus.planner.classes.Data;
 

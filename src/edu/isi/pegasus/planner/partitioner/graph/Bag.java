@@ -15,7 +15,7 @@
  */
 
 
-package org.griphyn.cPlanner.partitioner.graph;
+package edu.isi.pegasus.planner.partitioner.graph;
 
 /**
  * An interface to define a BAG of objects. The bag can be then associated

@@ -31,7 +31,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNodeContent;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 

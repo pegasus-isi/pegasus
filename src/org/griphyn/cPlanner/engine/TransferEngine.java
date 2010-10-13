@@ -37,9 +37,9 @@ import org.griphyn.cPlanner.engine.createdir.S3;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.Adapter;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;

@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import org.griphyn.cPlanner.partitioner.graph.Bag;
+import edu.isi.pegasus.planner.partitioner.graph.Bag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;

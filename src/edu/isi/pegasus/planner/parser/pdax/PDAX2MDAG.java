@@ -37,8 +37,8 @@ import edu.isi.pegasus.common.util.StreamGobblerCallback;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import org.griphyn.cPlanner.partitioner.Partition;
-import org.griphyn.cPlanner.partitioner.DAXWriter;
+import edu.isi.pegasus.planner.partitioner.Partition;
+import edu.isi.pegasus.planner.partitioner.DAXWriter;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;

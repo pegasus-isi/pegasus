@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.partitioner;
+package edu.isi.pegasus.planner.partitioner.graph;
 
 /**
  * A bag implementation that just holds a particular value for the label key.

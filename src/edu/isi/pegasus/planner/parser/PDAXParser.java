@@ -23,9 +23,9 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.parser.pdax.Callback;
 
-import org.griphyn.cPlanner.partitioner.Partition;
+import edu.isi.pegasus.planner.partitioner.Partition;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.common.util.FactoryException;
 

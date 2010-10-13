@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import org.griphyn.cPlanner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
 
 import java.util.HashSet;
 import java.util.Set;

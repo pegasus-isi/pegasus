@@ -25,8 +25,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
-import org.griphyn.cPlanner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
 
 
 import java.util.Map;
@@ -41,7 +41,7 @@ import java.util.HashSet;
 import java.lang.StringBuffer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
-import org.griphyn.cPlanner.partitioner.graph.MapGraph;
+import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
 
 
 /**

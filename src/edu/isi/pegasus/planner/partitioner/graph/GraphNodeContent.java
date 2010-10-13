@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.partitioner.graph;
+package edu.isi.pegasus.planner.partitioner.graph;
 
 /**
  * This inteface defines a common base for all the classes that can reside in

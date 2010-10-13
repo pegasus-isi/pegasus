@@ -22,9 +22,9 @@ import edu.isi.pegasus.planner.classes.SubInfo;
 
 import org.griphyn.cPlanner.engine.cleanup.CleanupStrategy;
 
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
-import org.griphyn.cPlanner.partitioner.graph.Adapter;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 
 import java.util.Iterator;
 import edu.isi.pegasus.planner.classes.PegasusBag;

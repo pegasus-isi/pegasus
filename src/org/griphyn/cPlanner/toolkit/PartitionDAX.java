@@ -23,11 +23,11 @@ import edu.isi.pegasus.planner.parser.dax.DAX2Graph;
 import edu.isi.pegasus.planner.parser.dax.DAX2LabelGraph;
 import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
 
-import org.griphyn.cPlanner.partitioner.WriterCallback;
-import org.griphyn.cPlanner.partitioner.Partitioner;
-import org.griphyn.cPlanner.partitioner.PartitionerFactory;
+import edu.isi.pegasus.planner.partitioner.WriterCallback;
+import edu.isi.pegasus.planner.partitioner.Partitioner;
+import edu.isi.pegasus.planner.partitioner.PartitionerFactory;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;

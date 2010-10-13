@@ -15,11 +15,11 @@
  */
 
 
-package org.griphyn.cPlanner.partitioner;
+package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.planner.classes.Data;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.io.Writer;
 import java.io.StringWriter;

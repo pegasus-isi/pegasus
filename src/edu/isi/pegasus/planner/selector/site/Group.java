@@ -24,8 +24,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.util.Iterator;
 import java.util.LinkedList;

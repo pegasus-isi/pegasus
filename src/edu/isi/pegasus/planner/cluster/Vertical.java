@@ -18,8 +18,8 @@ import edu.isi.pegasus.planner.classes.SubInfo;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 
-import org.griphyn.cPlanner.partitioner.Topological;
-import org.griphyn.cPlanner.partitioner.Partition;
+import edu.isi.pegasus.planner.partitioner.Topological;
+import edu.isi.pegasus.planner.partitioner.Partition;
 
 import java.util.List;
 import java.util.Set;

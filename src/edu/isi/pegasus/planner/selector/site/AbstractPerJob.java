@@ -17,8 +17,8 @@ package edu.isi.pegasus.planner.selector.site;
 
 import edu.isi.pegasus.planner.classes.SubInfo;
 
-import org.griphyn.cPlanner.partitioner.graph.Graph;
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.util.List;
 import java.util.Iterator;

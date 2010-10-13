@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.griphyn.cPlanner.partitioner;
+package edu.isi.pegasus.planner.partitioner;
 
 
 import edu.isi.pegasus.planner.classes.PlannerOptions;
@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 
-import org.griphyn.cPlanner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import java.io.IOException;
 
@@ -45,7 +45,7 @@ public class PartitionerFactory {
      * Package to prefix "just" class names with.
      */
     public static final String DEFAULT_PACKAGE_NAME =
-                                             "org.griphyn.cPlanner.partitioner";
+                                             "edu.isi.pegasus.planner.partitioner";
 
     /**
      * The name of the class that does level based partitioning.
