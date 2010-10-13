@@ -15,7 +15,7 @@
 
 package edu.isi.pegasus.planner.common;
 
-import edu.isi.pegasus.planner.classes.NameValue;
+import org.griphyn.cPlanner.classes.NameValue;
 
 
 import edu.isi.pegasus.planner.catalog.transformation.TCMode;

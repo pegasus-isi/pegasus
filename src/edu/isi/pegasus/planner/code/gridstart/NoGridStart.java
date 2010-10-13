@@ -27,12 +27,12 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.planner.code.POSTScript;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
-import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.AggregatedJob;
+import org.griphyn.cPlanner.classes.PegasusFile;
+import org.griphyn.cPlanner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import edu.isi.pegasus.planner.transfer.SLS;
@@ -52,7 +52,7 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.namespace.Condor;
 /**
  * This class ends up running the job directly on the grid, without wrapping

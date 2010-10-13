@@ -16,8 +16,8 @@
 
 package edu.isi.pegasus.planner.code;
 
-import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.code.CodeGenerator;
 

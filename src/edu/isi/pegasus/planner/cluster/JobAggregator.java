@@ -17,9 +17,9 @@
 
 package edu.isi.pegasus.planner.cluster;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.AggregatedJob;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.AggregatedJob;
 
 import java.util.List;
 

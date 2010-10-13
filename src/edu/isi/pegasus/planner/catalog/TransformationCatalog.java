@@ -21,11 +21,11 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import java.util.List;
 
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Profile;
 
 /**
  * This class is an interface to the various TxCatalog implementations that Pegasus will use.

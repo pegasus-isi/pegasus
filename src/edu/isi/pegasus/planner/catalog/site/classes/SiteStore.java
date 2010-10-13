@@ -22,7 +22,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**

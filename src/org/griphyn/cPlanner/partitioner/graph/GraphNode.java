@@ -16,7 +16,7 @@
 
 package org.griphyn.cPlanner.partitioner.graph;
 
-import edu.isi.pegasus.planner.classes.Data;
+import org.griphyn.cPlanner.classes.Data;
 
 import java.util.Iterator;
 import java.util.List;

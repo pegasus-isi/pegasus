@@ -17,8 +17,8 @@
 
 package org.griphyn.cPlanner.engine;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.engine.cleanup.CleanupStrategy;
 
@@ -27,7 +27,7 @@ import org.griphyn.cPlanner.partitioner.graph.GraphNode;
 import org.griphyn.cPlanner.partitioner.graph.Adapter;
 
 import java.util.Iterator;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.engine.cleanup.CleanupFactory;
 
 /**

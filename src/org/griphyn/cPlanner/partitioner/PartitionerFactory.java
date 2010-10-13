@@ -17,7 +17,7 @@
 package org.griphyn.cPlanner.partitioner;
 
 
-import edu.isi.pegasus.planner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 

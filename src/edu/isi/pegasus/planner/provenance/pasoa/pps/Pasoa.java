@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.provenance.pasoa.pps;
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.SubInfo;
 import org.griphyn.cPlanner.engine.Refiner;
 
 import org.pasoa.common.BestPractice;

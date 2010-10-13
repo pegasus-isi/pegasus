@@ -19,9 +19,9 @@
 package edu.isi.pegasus.planner.transfer.refiner;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
-import edu.isi.pegasus.planner.classes.FileTransfer;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.FileTransfer;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -43,7 +43,7 @@ import java.util.HashSet;
 
 import java.util.Map;
 import java.util.HashMap;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.transfer.Implementation;
 

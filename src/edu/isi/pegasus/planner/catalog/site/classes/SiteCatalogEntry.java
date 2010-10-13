@@ -26,7 +26,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Profile;
 
 import edu.isi.pegasus.planner.common.PegRandom;
 

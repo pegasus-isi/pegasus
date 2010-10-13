@@ -17,7 +17,7 @@
 
 package org.griphyn.cPlanner.toolkit;
 
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.PoolConfig;
+import org.griphyn.cPlanner.classes.PoolConfig;
 import edu.isi.pegasus.planner.parser.ScannerException;
 import edu.isi.pegasus.planner.parser.SiteCatalogTextParser;
 
@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 //import javax.naming.NamingEnumeration;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.SiteInfo;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 //import javax.naming.directory.SearchControls;
 import edu.isi.pegasus.common.util.FactoryException;

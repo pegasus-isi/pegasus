@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.selector.site;
 
 
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 
 import java.util.Iterator;

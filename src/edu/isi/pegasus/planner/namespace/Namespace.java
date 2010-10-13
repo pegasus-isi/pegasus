@@ -16,8 +16,8 @@
 
 package edu.isi.pegasus.planner.namespace;
 
-import edu.isi.pegasus.planner.classes.Data;
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Data;
+import org.griphyn.cPlanner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 

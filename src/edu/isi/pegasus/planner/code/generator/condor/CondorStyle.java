@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 

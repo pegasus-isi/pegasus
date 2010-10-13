@@ -15,7 +15,7 @@
  */
 
 
-package edu.isi.pegasus.planner.classes;
+package org.griphyn.cPlanner.classes;
 
 import edu.isi.pegasus.common.util.Escape;
 

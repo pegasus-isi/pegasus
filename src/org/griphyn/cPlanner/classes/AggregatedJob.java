@@ -15,7 +15,7 @@
  */
 
 
-package edu.isi.pegasus.planner.classes;
+package org.griphyn.cPlanner.classes;
 
 import java.util.Collection;
 import java.util.List;

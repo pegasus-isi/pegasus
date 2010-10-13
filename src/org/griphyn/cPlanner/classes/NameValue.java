@@ -15,7 +15,7 @@
  */
 
 
-package edu.isi.pegasus.planner.classes;
+package org.griphyn.cPlanner.classes;
 /**
  * The object of this class holds the name value pair.
  * At present to be used for environment variables. Will be used more

@@ -16,8 +16,8 @@
 
 package edu.isi.pegasus.planner.transfer;
 
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.code.GridStart;
 

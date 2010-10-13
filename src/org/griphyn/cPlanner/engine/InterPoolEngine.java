@@ -20,11 +20,11 @@ package org.griphyn.cPlanner.engine;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.SubInfo;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.FileTransfer;
+import org.griphyn.cPlanner.classes.PegasusFile;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;

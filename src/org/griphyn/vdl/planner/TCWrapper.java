@@ -110,8 +110,8 @@ public class TCWrapper implements Wrapper
 
     Map submap = null;
     for ( Iterator i=lop.iterator(); i.hasNext(); ) {
-            edu.isi.pegasus.planner.classes.Profile p =
-	(   edu.isi.pegasus.planner.classes.Profile) i.next();
+      org.griphyn.cPlanner.classes.Profile p = 
+	(org.griphyn.cPlanner.classes.Profile) i.next();
       String ns = p.getProfileNamespace().trim().toLowerCase();
       String key = p.getProfileKey().trim();
       String value = p.getProfileValue();

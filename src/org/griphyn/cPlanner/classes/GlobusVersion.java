@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes;
+package org.griphyn.cPlanner.classes;
 
 import java.util.StringTokenizer;
 

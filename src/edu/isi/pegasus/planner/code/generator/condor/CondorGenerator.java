@@ -39,13 +39,13 @@ import edu.isi.pegasus.planner.code.generator.NetloggerJobMapper;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CondorVersion;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.DagInfo;
-import edu.isi.pegasus.planner.classes.PCRelation;
-import edu.isi.pegasus.planner.classes.SubInfo;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.DAGJob;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.DagInfo;
+import org.griphyn.cPlanner.classes.PCRelation;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.DAGJob;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.util.StreamGobbler;

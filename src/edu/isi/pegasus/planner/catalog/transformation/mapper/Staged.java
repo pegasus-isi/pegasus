@@ -31,7 +31,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * This implementation only generates maps for sites where transformation can be staged

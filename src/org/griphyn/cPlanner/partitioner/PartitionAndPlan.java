@@ -21,9 +21,9 @@ import edu.isi.pegasus.common.logging.LoggingKeys;
 import org.griphyn.cPlanner.parser.dax.DAXCallbackFactory;
 import org.griphyn.cPlanner.parser.dax.Callback;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import java.io.BufferedReader;

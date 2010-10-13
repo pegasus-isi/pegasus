@@ -18,9 +18,9 @@ package org.griphyn.cPlanner.engine;
 
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusFile;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 import org.griphyn.cPlanner.partitioner.graph.Graph;
 import org.griphyn.cPlanner.partitioner.graph.GraphNode;
@@ -34,7 +34,7 @@ import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.partitioner.graph.Bag;
 
 

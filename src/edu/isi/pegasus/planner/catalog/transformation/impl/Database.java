@@ -24,7 +24,7 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
  */
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -49,7 +49,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 public class Database
     extends DatabaseSchema implements TransformationCatalog {

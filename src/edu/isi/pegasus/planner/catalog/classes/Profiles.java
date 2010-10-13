@@ -16,7 +16,7 @@
 package edu.isi.pegasus.planner.catalog.classes;
 
 
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Profile;
 
 import edu.isi.pegasus.planner.namespace.Namespace;
 import edu.isi.pegasus.planner.namespace.Pegasus;

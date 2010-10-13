@@ -22,9 +22,9 @@ import edu.isi.pegasus.planner.code.CodeGeneratorFactory;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.common.logging.LogManager;
 

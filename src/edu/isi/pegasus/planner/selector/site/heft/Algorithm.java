@@ -18,9 +18,9 @@
 package edu.isi.pegasus.planner.selector.site.heft;
 
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -58,7 +58,7 @@ import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Collections;
 import java.util.Properties;
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Profile;
 
 
 /**

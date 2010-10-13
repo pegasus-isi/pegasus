@@ -41,7 +41,7 @@ import java.io.Reader;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Profile;
 
 
 /**

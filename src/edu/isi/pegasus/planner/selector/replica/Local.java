@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.selector.replica;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import org.griphyn.cPlanner.classes.ReplicaLocation;
 
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 

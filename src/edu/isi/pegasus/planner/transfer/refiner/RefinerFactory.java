@@ -16,13 +16,13 @@
 
 package edu.isi.pegasus.planner.transfer.refiner;
 
-import edu.isi.pegasus.planner.classes.ADag;
+import org.griphyn.cPlanner.classes.ADag;
 
 import edu.isi.pegasus.planner.transfer.Refiner;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 /**

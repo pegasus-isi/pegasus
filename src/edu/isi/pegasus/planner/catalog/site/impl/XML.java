@@ -26,15 +26,15 @@ import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.PoolConfig;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.GlobusVersion;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.GridFTPServer;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.GridFTPBandwidth;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.SiteInfo;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.JobManager;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.LRC;
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.WorkDir;
+import org.griphyn.cPlanner.classes.PoolConfig;
+import org.griphyn.cPlanner.classes.GlobusVersion;
+import org.griphyn.cPlanner.classes.GridFTPServer;
+import org.griphyn.cPlanner.classes.GridFTPBandwidth;
+import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.JobManager;
+import org.griphyn.cPlanner.classes.LRC;
+import org.griphyn.cPlanner.classes.Profile;
+import org.griphyn.cPlanner.classes.WorkDir;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;

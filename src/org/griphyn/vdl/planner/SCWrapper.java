@@ -19,9 +19,9 @@ import java.io.*;
 import java.util.*;
 
 import org.griphyn.vdl.util.Logging;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.SiteInfo;
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes.WorkDir;
+import org.griphyn.cPlanner.classes.SiteInfo;
+import org.griphyn.cPlanner.classes.Profile;
+import org.griphyn.cPlanner.classes.WorkDir;
 import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolMode;
 import edu.isi.pegasus.planner.catalog.site.impl.oldimpl.PoolInfoProvider;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -153,8 +153,8 @@ public class SCWrapper implements Wrapper
 
     Map submap;
     for ( Iterator i=lop.iterator(); i.hasNext(); ) {
-            edu.isi.pegasus.planner.classes.Profile p =
-	(   edu.isi.pegasus.planner.classes.Profile) i.next();
+      org.griphyn.cPlanner.classes.Profile p = 
+	(org.griphyn.cPlanner.classes.Profile) i.next();
       String ns = p.getProfileNamespace().trim().toLowerCase();
       String key = p.getProfileKey().trim();
       String value = p.getProfileValue();

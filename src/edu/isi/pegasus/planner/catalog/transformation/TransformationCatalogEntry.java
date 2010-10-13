@@ -40,7 +40,7 @@ import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.io.IOException;
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Profile;
 
 import java.util.List;
 

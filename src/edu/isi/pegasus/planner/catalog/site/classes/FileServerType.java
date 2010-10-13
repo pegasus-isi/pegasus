@@ -15,7 +15,7 @@
  */
 package edu.isi.pegasus.planner.catalog.site.classes;
 
-import edu.isi.pegasus.planner.classes.Profile;
+import org.griphyn.cPlanner.classes.Profile;
 
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;

@@ -16,8 +16,8 @@
 
 package org.griphyn.cPlanner.engine.createdir;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The interface that defines how the cleanup job is invoked and created.

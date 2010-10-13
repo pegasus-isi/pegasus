@@ -16,8 +16,8 @@
 
 package edu.isi.pegasus.planner.transfer;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import org.griphyn.cPlanner.engine.ReplicaCatalogBridge;
 
@@ -31,8 +31,8 @@ import java.io.IOException;
 
 import java.lang.reflect.InvocationTargetException;
 
-import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.FileTransfer;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 
 /**

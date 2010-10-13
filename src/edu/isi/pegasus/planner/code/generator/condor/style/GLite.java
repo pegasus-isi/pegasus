@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.SubInfo;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 
 import java.util.Iterator;
-import edu.isi.pegasus.planner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.TransferJob;
 
 /**
  * This implementation enables a job to be submitted via gLite to a

@@ -15,7 +15,7 @@
  */
 
 
-package edu.isi.pegasus.planner.catalog.site.impl.oldimpl.classes;
+package org.griphyn.cPlanner.classes;
 
 /**
  * This is a data class that is used to store information about a

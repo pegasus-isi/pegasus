@@ -20,9 +20,9 @@ import edu.isi.pegasus.planner.code.gridstart.*;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.POSTScript;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
-import edu.isi.pegasus.planner.classes.AggregatedJob;
+import org.griphyn.cPlanner.classes.ADag;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.AggregatedJob;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -33,7 +33,7 @@ import edu.isi.pegasus.common.util.DynamicLoader;
 
 import java.util.Map;
 import java.util.HashMap;
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * An abstract factory class to load the appropriate type of GridStart

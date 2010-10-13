@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.transfer;
 
-import edu.isi.pegasus.planner.classes.ADag;
+import org.griphyn.cPlanner.classes.ADag;
 
 
 import edu.isi.pegasus.planner.transfer.implementation.ImplementationFactory;
@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.transfer.implementation.TransferImplementationFac
 
 
 
-import edu.isi.pegasus.planner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.PegasusBag;
 
 /**
  * The refiner interface, that determines the functions that need to be

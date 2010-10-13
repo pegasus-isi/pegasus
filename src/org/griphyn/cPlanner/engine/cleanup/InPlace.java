@@ -16,9 +16,9 @@
 
 package org.griphyn.cPlanner.engine.cleanup;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
-import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
+import org.griphyn.cPlanner.classes.SubInfo;
+import org.griphyn.cPlanner.classes.PegasusFile;
+import org.griphyn.cPlanner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -39,8 +39,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.HashSet;
 import java.lang.StringBuffer;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.TransferJob;
+import org.griphyn.cPlanner.classes.PegasusBag;
+import org.griphyn.cPlanner.classes.TransferJob;
 import org.griphyn.cPlanner.partitioner.graph.MapGraph;
 
 

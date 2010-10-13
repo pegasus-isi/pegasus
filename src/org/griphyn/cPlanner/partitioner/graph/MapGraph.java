@@ -18,7 +18,7 @@
 package org.griphyn.cPlanner.partitioner.graph;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.Data;
+import org.griphyn.cPlanner.classes.Data;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
