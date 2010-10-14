@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.parser.dax;
 
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
@@ -131,7 +131,7 @@ public class DAX2Graph implements Callback {
      *
      * @param job  the job that was parsed.
      */
-    public void cbJob( SubInfo job ) {
+    public void cbJob( Job job ) {
         GraphNode gn = new GraphNode( job.getLogicalID(), job.getTXName() );
         mLogger.log( "Adding job to graph " + job.getName() ,
                      LogManager.DEBUG_MESSAGE_LEVEL );

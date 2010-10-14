@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.WorkDir;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -521,12 +521,12 @@ public abstract class PoolInfoProvider {
      * This determines the working directory on remote execution pool for a
      * particular job. The job should have it's execution pool set.
      *
-     * @param job <code>SubInfo</code> object for the job.
+     * @param job <code>Job</code> object for the job.
      *
      * @return the path to the pool work dir.
      * @throws RuntimeException in case of site not found in the site catalog.
      */
-    public String getExecPoolWorkDir( SubInfo job ) {
+    public String getExecPoolWorkDir( Job job ) {
         return this.getExecPoolWorkDir( job.executionPool,
             job.vdsNS.getStringValue(
             Pegasus.REMOTE_INITIALDIR_KEY ),
@@ -574,7 +574,7 @@ public abstract class PoolInfoProvider {
         }
         String execPoolDir = mWorkDir;
 
-        if(jobClass == SubInfo.CREATE_DIR_JOB){
+        if(jobClass == Job.CREATE_DIR_JOB){
             //the create dir jobs always run in the
             //workdir specified in the site catalog
             return execPool.getExecMountPoint();

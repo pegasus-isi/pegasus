@@ -26,7 +26,7 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
@@ -243,8 +243,8 @@ public class TransferEngine extends Engine {
      */
     public TransferEngine( ADag reducedDag,
                            PegasusBag bag,
-                           List<SubInfo> deletedJobs ,
-                           List<SubInfo> deletedLeafJobs){
+                           List<Job> deletedJobs ,
+                           List<Job> deletedLeafJobs){
         super( bag );
 
         
@@ -331,13 +331,13 @@ public class TransferEngine extends Engine {
     }
 
     /**
-     * Returns the SubInfo object for the job specified.
+     * Returns the Job object for the job specified.
      *
      * @param jobName  the name of the job
      *
-     * @return  the SubInfo object for a job.
+     * @return  the Job object for a job.
      */
-    private SubInfo getSubInfo(String jobName) {
+    private Job getSubInfo(String jobName) {
         return mDag.getSubInfo(jobName);
     }
 
@@ -353,7 +353,7 @@ public class TransferEngine extends Engine {
         mRCBridge = rcb;
         mTransientRC = transientCatalog;
 
-        SubInfo currentJob;
+        Job currentJob;
         String currentJobName;
         Vector vOutPoolTX;
         String msg;
@@ -370,7 +370,7 @@ public class TransferEngine extends Engine {
 
         for( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
-            currentJob = (SubInfo)node.getContent();
+            currentJob = (Job)node.getContent();
             //set the node depth as the level
             currentJob.setLevel( node.getDepth() );
             currentJobName = currentJob.getName();
@@ -401,7 +401,7 @@ public class TransferEngine extends Engine {
                 boolean localTransfer = runTransferOnLocalSite( 
                                             currentJob.getSiteHandle(), 
                                             execSiteEntry.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),
-                                            SubInfo.STAGE_OUT_JOB);
+                                            Job.STAGE_OUT_JOB);
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, localTransfer );
             }
@@ -426,7 +426,7 @@ public class TransferEngine extends Engine {
             mLogger.log( "Adding stage out jobs for jobs deleted from the workflow", LogManager.INFO_MESSAGE_LEVEL );
 
             for( Iterator it = this.mDeletedJobs.iterator(); it.hasNext() ;) {
-                currentJob = (SubInfo)it.next();
+                currentJob = (Job)it.next();
                 currentJob.setLevel(  TransferEngine.DELETED_JOBS_LEVEL );
                 
                 //for a deleted node, to transfer it's output
@@ -456,12 +456,12 @@ public class TransferEngine extends Engine {
      * mechanism match then that object is not transferred.
      *
      * @param pool    this the output pool which the user specifies at runtime.
-     * @param job     The SubInfo object corresponding to the leaf job which was
+     * @param job     The Job object corresponding to the leaf job which was
      *                deleted by the Reduction algorithm
      *
      * @return        Vector of <code>FileTransfer</code> objects
      */
-    private Vector getDeletedFileTX( String pool, SubInfo job ) {
+    private Vector getDeletedFileTX( String pool, Job job ) {
         Vector vFileTX = new Vector();
         SiteCatalogEntry p = mSiteStore.lookup(pool);//getPoolEntry( pool, "vanilla" );
 
@@ -492,7 +492,7 @@ public class TransferEngine extends Engine {
             //to the pool pool
             ReplicaLocation selLocs = mReplicaSelector.selectReplicas( rl,
                                                                        pool,
-                                                                       this.runTransferOnLocalSite( pool,destURL, SubInfo.STAGE_OUT_JOB ));
+                                                                       this.runTransferOnLocalSite( pool,destURL, Job.STAGE_OUT_JOB ));
 
 
             boolean flag = false;
@@ -532,12 +532,12 @@ public class TransferEngine extends Engine {
      * or not. All the input files for the job are searched in the output files of
      * the parent nodes and the Replica Mechanism.
      *
-     * @param job       the <code>SubInfo</code> object containing all the
+     * @param job       the <code>Job</code> object containing all the
      *                  details of the job.
      * @param vParents  Vector of String objects corresponding to the Parents
      *                  of the node.
      */
-    private void processParents(SubInfo job, Vector vParents) {
+    private void processParents(Job job, Vector vParents) {
 
         Set nodeIpFiles = job.getInputFiles();
         Vector vRCSearchFiles = new Vector(); //vector of PegasusFile
@@ -587,14 +587,14 @@ public class TransferEngine extends Engine {
      * does not have to be transferred to the destination pool.
      *
      * @param destPool The pool to which the files are to be transferred to.
-     * @param job      The <code>SubInfo</code>object of the job whose output files
+     * @param job      The <code>Job</code>object of the job whose output files
      *                 are needed at the destination pool.
      * @param localTransfer  boolean indicating that associated transfer job will run
      *                       on local site.
      *
      * @return        Vector of <code>FileTransfer</code> objects
      */
-    private Vector getFileTX(String destPool, SubInfo job, boolean localTransfer ) {
+    private Vector getFileTX(String destPool, Job job, boolean localTransfer ) {
         Vector vFileTX = new Vector();
 
         //check if there is a remote initialdir set
@@ -776,12 +776,12 @@ public class TransferEngine extends Engine {
      *
      * @param job     the job with reference to which interpool file transfers
      *                need to be determined.
-     * @param nodes   Vector of <code> SubInfo</code> objects for the nodes, whose
+     * @param nodes   Vector of <code> Job</code> objects for the nodes, whose
      *                outputfiles are to be transferred to the dest pool.
      *
      * @return        Vector of <code>FileTransfer</code> objects
      */
-    private Collection<FileTransfer>[] getInterpoolFileTX(SubInfo job, Vector nodes) {
+    private Collection<FileTransfer>[] getInterpoolFileTX(Job job, Vector nodes) {
         String destPool = job.executionPool;
         //contains the remote_initialdir if specified for the job
         String destRemoteDir = job.vdsNS.getStringValue(
@@ -796,7 +796,7 @@ public class TransferEngine extends Engine {
 
         for (Iterator it = nodes.iterator();it.hasNext();) {
             //get the parent job
-            SubInfo pJob = (SubInfo)it.next();
+            Job pJob = (Job)it.next();
             sourcePool = mSiteStore.lookup( pJob.getSiteHandle() );
 
             if( sourcePool.getSiteHandle().equalsIgnoreCase(destPool) ){
@@ -811,7 +811,7 @@ public class TransferEngine extends Engine {
 
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
-            boolean localTransfer = runTransferOnLocalSite( destPool, thirdPartyDestURI, SubInfo.INTER_POOL_JOB );
+            boolean localTransfer = runTransferOnLocalSite( destPool, thirdPartyDestURI, Job.INTER_POOL_JOB );
             String destURI = localTransfer ?
                 //construct for third party transfer
                 thirdPartyDestURI :
@@ -879,13 +879,13 @@ public class TransferEngine extends Engine {
      * files and add nodes to transfer them. If a file is not found to be in
      * the Replica Catalog the Transfer Engine flags an error and exits
      *
-     * @param job           the <code>SubInfo</code>object for whose ipfile have
+     * @param job           the <code>Job</code>object for whose ipfile have
      *                      to search the Replica Mechanism for.
      * @param searchFiles   Vector containing the PegasusFile objects corresponding
      *                      to the files that need to have their mapping looked
      *                      up from the Replica Mechanism.
      */
-    private void getFilesFromRC( SubInfo job, Vector searchFiles ) {
+    private void getFilesFromRC( Job job, Vector searchFiles ) {
         //Vector vFileTX = new Vector();
         //Collection<FileTransfer> symLinkFileTransfers = new LinkedList();
         Collection<FileTransfer> localFileTransfers = new LinkedList();
@@ -920,7 +920,7 @@ public class TransferEngine extends Engine {
         String fileDestDir = scheme + "://" + mSiteStore.getWorkDirectory( ePool, eRemoteDir );
                 
         //check if the execution pool is third party or not
-        boolean runTransferOnLocalSite = runTransferOnLocalSite( ePool, dDirURL, SubInfo.STAGE_IN_JOB);
+        boolean runTransferOnLocalSite = runTransferOnLocalSite( ePool, dDirURL, Job.STAGE_IN_JOB);
         String destDir = ( runTransferOnLocalSite ) ?
             //use the full networked url to the directory
             dDirURL
@@ -952,7 +952,7 @@ public class TransferEngine extends Engine {
                 }
                 else{//staging of executables case
                     destURL = destNV.getValue();
-                    destURL = (runTransferOnLocalSite(ePool, destURL, SubInfo.STAGE_IN_JOB))?
+                    destURL = (runTransferOnLocalSite(ePool, destURL, Job.STAGE_IN_JOB))?
                                //the destination URL is already third party
                                //enabled. use as it is
                                destURL:
@@ -1251,9 +1251,9 @@ public class TransferEngine extends Engine {
      *
      * @param nodes   Vector of nodes job names whose output files are required.
      *
-     * @param parentSubs  Vector of <code>SubInfo</code> objects. One passes an
+     * @param parentSubs  Vector of <code>Job</code> objects. One passes an
      *                    empty vector as a parameter. And this populated with
-     *                    SubInfo objects, of the nodes when output files are
+     *                    Job objects, of the nodes when output files are
      *                    being determined.
      *
      * @return   Set of PegasusFile objects
@@ -1264,7 +1264,7 @@ public class TransferEngine extends Engine {
 
         for( Iterator it = nodes.iterator(); it.hasNext(); ){
             String jobName = (String) it.next();
-            SubInfo sub = getSubInfo(jobName);
+            Job sub = getSubInfo(jobName);
             parentSubs.addElement(sub);
             files.addAll( sub.getOutputFiles() );
         }
@@ -1326,7 +1326,7 @@ public class TransferEngine extends Engine {
                 //get the total number of files that need to be stageout
                 int totalFiles = 0;
                 for ( Iterator it = workflow.jobIterator(); it.hasNext(); ){
-                    SubInfo job = ( SubInfo )it.next();
+                    Job job = ( Job )it.next();
 
                     //traverse through all the job output files
                     for( Iterator opIt = job.getOutputFiles().iterator(); opIt.hasNext(); ){
@@ -1366,7 +1366,7 @@ public class TransferEngine extends Engine {
      *
      * @param job  the job whose input files need to be tracked.
      */
-    protected void trackInTransientRC( SubInfo job ){
+    protected void trackInTransientRC( Job job ){
 
 
         //check if there is a remote initialdir set

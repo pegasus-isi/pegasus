@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.parser.dax;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
@@ -112,7 +112,7 @@ public class DAX2NewGraph implements Callback {
      *
      * @param job  the job that was parsed.
      */
-    public void cbJob( SubInfo job ) {
+    public void cbJob( Job job ) {
         //populate the job as a node in the graph
         GraphNode node = new GraphNode( job.getID(), job );
         mWorkflow.addNode( node );

@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.refiner.cleanup;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
@@ -154,7 +154,7 @@ public class InPlace implements CleanupStrategy{
         // and A has getTransientTransferFlag() set to false
         for( Iterator it = workflow.nodeIterator() ; it.hasNext(); ){
             GraphNode _GN = ( GraphNode ) it.next();
-            SubInfo _SI = ( SubInfo ) _GN.getContent();
+            Job _SI = ( Job ) _GN.getContent();
             //only for compute jobs
             if( ! ( _SI.getJobType() == _SI.COMPUTE_JOB || _SI.getJobType() == _SI.STAGED_COMPUTE_JOB ) ) {
                 continue;
@@ -164,7 +164,7 @@ public class InPlace implements CleanupStrategy{
             // so , skip such cases
             boolean job_has_stageout = false ;
             for( Iterator itjc = _GN.getChildren().iterator() ; itjc.hasNext() ; ){
-                SubInfo _SIchild = ( SubInfo ) ( ( GraphNode ) itjc.next() ).getContent() ;
+                Job _SIchild = ( Job ) ( ( GraphNode ) itjc.next() ).getContent() ;
                 if( _SIchild.getJobType() == _SIchild.STAGE_OUT_JOB ){
                     job_has_stageout = true;
                     break;
@@ -254,7 +254,7 @@ public class InPlace implements CleanupStrategy{
 
             //debug
             /*
-            System.out.print(curGN.getDepth() +" "+((SubInfo)curGN.getContent()).getSiteHandle()+" ");
+            System.out.print(curGN.getDepth() +" "+((Job)curGN.getContent()).getSiteHandle()+" ");
             if( curGN.getChildren() == null )
                 System.out.print("0");
             else
@@ -262,7 +262,7 @@ public class InPlace implements CleanupStrategy{
              */
 
             //populate mResMap ,mResMapLeaves,mResMapRoots
-            SubInfo si = ( SubInfo )curGN.getContent();
+            Job si = ( Job )curGN.getContent();
             
             //Commented out as for stage out jobs we need non third party
             //site. Karan Jan 8, 2009
@@ -353,11 +353,11 @@ public class InPlace implements CleanupStrategy{
             while( pQA[curP].size() >= 1 ){
                 GraphNode curGN = (GraphNode) pQA[ curP ].iterator().next();
                 pQA[ curP ].remove( curGN );
-                SubInfo curGN_SI = (SubInfo) curGN.getContent();
+                Job curGN_SI = (Job) curGN.getContent();
 
                 if( !typeNeedsCleanUp( curGN_SI.getJobType() ) ) { continue; }
 
-                /*if( curGN_SI.getJobType() == SubInfo.STAGE_OUT_JOB ){
+                /*if( curGN_SI.getJobType() == Job.STAGE_OUT_JOB ){
                     curGN_SI.getInputFiles().addAll( curGN_SI.getOutputFiles() );
                     curGN_SI.getOutputFiles().clear();
                     
@@ -385,7 +385,7 @@ public class InPlace implements CleanupStrategy{
                 // create new GraphNode with MLogicalID=mLogicalName , mParents
                 // mContent ID ,Name , jobtype
                 //the files it cleans up are specified in mContent.inputFiles
-                //create a dummy GraphNode .first create SubInfo object and then add it to GraphNode
+                //create a dummy GraphNode .first create Job object and then add it to GraphNode
                 GraphNode nuGN = new GraphNode( generateCleanupID( curGN_SI ),
                         curGN_SI.getTXName() );
 //                                   InPlace.CLEANUP_JOB_PREFIX + curGN.getName() ,
@@ -427,15 +427,15 @@ public class InPlace implements CleanupStrategy{
                     //a cleanup job can be associated with stageout jobs also, we
                     //need to make sure that for the stageout job the cleanup job
                     //is passed. Karan Jan 9, 2008                    
-//                    SubInfo cleanupJob = mImpl.createCleanupJob( nuGN.getID(),
+//                    Job cleanupJob = mImpl.createCleanupJob( nuGN.getID(),
 //                            cleanupFiles,
 //                            curGN_SI
 //                            );
-                    SubInfo computeJob;
+                    Job computeJob;
                     if( typeStageOut( curGN_SI.getJobType() ) ){
                         //find a compute job that is parent of this
                         GraphNode node = (GraphNode)curGN.getParents().get( 0 );
-                        computeJob = (SubInfo)node.getContent();
+                        computeJob = (Job)node.getContent();
                         message = new StringBuffer();
                         message.append( "For cleanup job " ).append( nuGN.getID() ).
                                 append( " the associated compute job is ").append( computeJob.getID() );
@@ -444,7 +444,7 @@ public class InPlace implements CleanupStrategy{
                     else{
                         computeJob = curGN_SI;
                     }
-                    SubInfo cleanupJob = mImpl.createCleanupJob( nuGN.getID(),
+                    Job cleanupJob = mImpl.createCleanupJob( nuGN.getID(),
                                                                  cleanupFiles,
                                                                  computeJob
                                                                  );
@@ -454,10 +454,10 @@ public class InPlace implements CleanupStrategy{
                     //as a parent of the cleanup job
                     for( Iterator itc=curGN.getChildren().iterator(); itc.hasNext() ;){
                         GraphNode curGNchild=(GraphNode) itc.next();
-                        SubInfo itc_si=(SubInfo) curGNchild.getContent();
+                        Job itc_si=(Job) curGNchild.getContent();
                         if( itc_si != null )
-                            if( itc_si.getJobType() == SubInfo.STAGE_OUT_JOB ||
-                                itc_si.getJobType() == SubInfo.INTER_POOL_JOB ){
+                            if( itc_si.getJobType() == Job.STAGE_OUT_JOB ||
+                                itc_si.getJobType() == Job.INTER_POOL_JOB ){
 
                             nuGN.addParent( curGNchild );
                             curGNchild.addChild( nuGN );
@@ -478,7 +478,7 @@ public class InPlace implements CleanupStrategy{
         for( Iterator it = cleanedBy.keySet().iterator() ; it.hasNext() ;){
             String lfn = (String)it.next();
             GraphNode cl_GN = (GraphNode)cleanedBy.get(lfn);
-            SubInfo cl_si = (SubInfo)cl_GN.getContent();
+            Job cl_si = (Job)cl_GN.getContent();
             //Arun please use a StringBuffer first
             //Karan March 13, 2007
             mLogger.log( "file:" + lfn + "  site:" + cl_si.getSiteHandle() + " " + cl_GN.getID() ,
@@ -495,7 +495,7 @@ public class InPlace implements CleanupStrategy{
             num++;
             mLogger.log(" cleanup job counter = " + num, mLogger.DEBUG_MESSAGE_LEVEL);
             GraphNode cl_GN = (GraphNode)it.next();
-            //SubInfo cl_si=(SubInfo)cl_GN.getContent();
+            //Job cl_si=(Job)cl_GN.getContent();
             List cl_GNparents = cl_GN.getParents();
             List redundant = new LinkedList();
             HashSet visit = new HashSet();
@@ -552,7 +552,7 @@ public class InPlace implements CleanupStrategy{
 
         for ( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = (GraphNode)it.next();
-            SubInfo job = ( SubInfo )node.getContent();
+            Job job = ( Job )node.getContent();
 
             //only apply priority if job is not associated with a priority
             //beforehand
@@ -572,8 +572,8 @@ public class InPlace implements CleanupStrategy{
             //also for compute and staged compute jobs
             //forward to remote job manager also
             //the below hack only works for condor pools
-//            if( job.getJobType() == SubInfo.COMPUTE_JOB ||
-//                job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+//            if( job.getJobType() == Job.COMPUTE_JOB ||
+//                job.getJobType() == Job.STAGED_COMPUTE_JOB ){
 //                job.globusRSL.construct( "condorsubmit",
 //                                         "(priority " + node.getDepth() + ")");
 //            }
@@ -589,7 +589,7 @@ public class InPlace implements CleanupStrategy{
      *
      * @return the identifier for a cleanup job.
      */
-    protected String generateCleanupID( SubInfo job ){
+    protected String generateCleanupID( Job job ){
         StringBuffer sb = new StringBuffer();
         sb.append( this.CLEANUP_JOB_PREFIX ).append( job.getID() );
         return sb.toString();
@@ -605,10 +605,10 @@ public class InPlace implements CleanupStrategy{
      * @return boolean
      */
     protected boolean typeNeedsCleanUp( int type ){
-        return (   type == SubInfo.COMPUTE_JOB
-                || type == SubInfo.STAGE_OUT_JOB
-                || type == SubInfo.INTER_POOL_JOB
-                || type == SubInfo.STAGED_COMPUTE_JOB );
+        return (   type == Job.COMPUTE_JOB
+                || type == Job.STAGE_OUT_JOB
+                || type == Job.INTER_POOL_JOB
+                || type == Job.STAGED_COMPUTE_JOB );
     }
 
     
@@ -620,8 +620,8 @@ public class InPlace implements CleanupStrategy{
      * @return boolean
      */
     protected boolean typeStageOut( int type ){
-        return (   type == SubInfo.STAGE_OUT_JOB
-                || type == SubInfo.INTER_POOL_JOB
+        return (   type == Job.STAGE_OUT_JOB
+                || type == Job.INTER_POOL_JOB
                 );
     }
 }

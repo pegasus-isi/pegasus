@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.transfer.implementation;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
@@ -65,7 +65,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      * specific details. It throws an error if asked to create a transfer job
      * for more than one transfer.
      *
-     * @param job         the SubInfo object for the job, in relation to which
+     * @param job         the Job object for the job, in relation to which
      *                    the transfer node is being added. Either the transfer
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
@@ -85,7 +85,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      *
      * @return  the created TransferJob.
      */
-    public TransferJob createTransferJob( SubInfo job,
+    public TransferJob createTransferJob( Job job,
                                           String site,
                                           Collection files,
                                           Collection execFiles,
@@ -119,7 +119,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      * transfer job. There are appropriate callouts to generate the implementation
      * specific details.
      *
-     * @param job         the SubInfo object for the job, in relation to which
+     * @param job         the Job object for the job, in relation to which
      *                    the transfer node is being added. Either the transfer
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
@@ -139,7 +139,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      *
      * @return  the created TransferJob.
      */
-    public TransferJob createTransferJob( SubInfo job,
+    public TransferJob createTransferJob( Job job,
                                           String site,
                                           FileTransfer file,
                                           Collection execFiles,

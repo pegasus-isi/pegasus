@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -130,13 +130,13 @@ public abstract class VDSPOSTScript implements POSTScript {
      * in the DAGMAN namespace.
      *
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param key  the key for the profile that has to be inserted.
      *
      * @return boolean true if postscript was generated,else false.
      */
-    public boolean construct( SubInfo job, String key ) {
+    public boolean construct( Job job, String key ) {
         String postscript = mExitParserPath;
 
 //        //NO NEED TO REMOVE AS WE ARE HANDLING CORRECTLY IN DAGMAN NAMESPACE
@@ -202,9 +202,9 @@ public abstract class VDSPOSTScript implements POSTScript {
     /**
      * Returns the path to the postscript log file for a job.
      *
-     * @param job  the <code>SubInfo</code> containing job description
+     * @param job  the <code>Job</code> containing job description
      */
-    protected String getPostScriptLogFile( SubInfo job ){
+    protected String getPostScriptLogFile( Job job ){
         StringBuffer sb = new StringBuffer();
         sb.append( job.getName() ).append( "." ).append( this.EXITCODE_OUTPUT_SUFFIX );
         return sb.toString();

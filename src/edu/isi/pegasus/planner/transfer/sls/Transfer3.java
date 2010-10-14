@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.transfer.sls;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.ENV;
 
@@ -115,7 +115,7 @@ public class Transfer3 extends Transfer implements SLS {
      *
      * @return invocation string
      */
-    public String invocationString( SubInfo job, File slsFile ){
+    public String invocationString( Job job, File slsFile ){
         //sanity check
         if( slsFile == null ) { return null; }
 

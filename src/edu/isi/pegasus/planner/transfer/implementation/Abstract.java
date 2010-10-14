@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.transfer.implementation;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
@@ -342,8 +342,8 @@ public abstract class Abstract implements Implementation{
      * @return boolean indicating whether any XBitJobs were succesfully added or
      *         not.
      */
-    protected boolean addSetXBitJobs(SubInfo computeJob,
-                                     SubInfo txJob,
+    protected boolean addSetXBitJobs(Job computeJob,
+                                     Job txJob,
                                      Collection execFiles){
 
         return this.addSetXBitJobs( computeJob, txJob.getName(), execFiles, txJob.getJobType() );
@@ -362,7 +362,7 @@ public abstract class Abstract implements Implementation{
      * @return boolean indicating whether any XBitJobs were succesfully added or
      *         not.
      */
-    public boolean addSetXBitJobs( SubInfo computeJob,
+    public boolean addSetXBitJobs( Job computeJob,
                                    String txJobName,
                                    Collection execFiles,
                                    int transferClass ){
@@ -375,7 +375,7 @@ public abstract class Abstract implements Implementation{
         if(execFiles == null || execFiles.isEmpty()){
             return added;
         }
-        if(transferClass != SubInfo.STAGE_IN_JOB){
+        if(transferClass != Job.STAGE_IN_JOB){
             //extra check. throw an exception
             throw new RuntimeException("Invalid Transfer Type (" +
                                        txJobName + "," + transferClass +
@@ -394,7 +394,7 @@ public abstract class Abstract implements Implementation{
             String xBitJobName = this.getSetXBitJobName( computeJobName, counter );//create a chmod job
 
 
-            SubInfo xBitJob =  noop  ?
+            Job xBitJob =  noop  ?
                                this.createNoOPJob( xBitJobName ) : //create a NOOP job
                                this.createSetXBitJob( execFile, xBitJobName ); //create a chmod job
 
@@ -432,7 +432,7 @@ public abstract class Abstract implements Implementation{
      *
      * @return the job object for the xBitJob
      */
-    public SubInfo createSetXBitJob( SubInfo computeJob,
+    public Job createSetXBitJob( Job computeJob,
                                    Collection<FileTransfer> execFiles,
                                    int transferClass,
                                    int xbitIndex ){
@@ -441,7 +441,7 @@ public abstract class Abstract implements Implementation{
         String site = computeJob.getSiteHandle();
 
         
-        if(transferClass != SubInfo.STAGE_IN_JOB){
+        if(transferClass != Job.STAGE_IN_JOB){
             //extra check. throw an exception
             throw new RuntimeException( "Invalid Transfer Type (" +
                                         transferClass +
@@ -457,7 +457,7 @@ public abstract class Abstract implements Implementation{
         int counter = 0;
 
         String xBitJobName = this.getSetXBitJobName( computeJobName, xbitIndex );//create a chmod job
-        SubInfo xBitJob =  noop  ?
+        Job xBitJob =  noop  ?
                                this.createNoOPJob( xBitJobName ) : //create a NOOP job
                                this.createSetXBitJob( execFiles, xBitJobName, computeJob.getSiteHandle() ); //create a chmod job
 
@@ -486,7 +486,7 @@ public abstract class Abstract implements Implementation{
      * @return boolean indicating whether any XBitJobs were succesfully added or
      *         not.
      */
-    public boolean addSetXBitJobs( SubInfo computeJob,
+    public boolean addSetXBitJobs( Job computeJob,
                                    String txJobName,
                                    Collection execFiles,
                                    int transferClass,
@@ -500,7 +500,7 @@ public abstract class Abstract implements Implementation{
         if(execFiles == null || execFiles.isEmpty()){
             return added;
         }
-        if(transferClass != SubInfo.STAGE_IN_JOB){
+        if(transferClass != Job.STAGE_IN_JOB){
             //extra check. throw an exception
             throw new RuntimeException("Invalid Transfer Type (" +
                                        txJobName + "," + transferClass +
@@ -519,7 +519,7 @@ public abstract class Abstract implements Implementation{
             String xBitJobName = this.getSetXBitJobName( computeJobName, xbitIndex );//create a chmod job
 
 
-            SubInfo xBitJob =  noop  ?
+            Job xBitJob =  noop  ?
                                this.createNoOPJob( xBitJobName ) : //create a NOOP job
                                this.createSetXBitJob( execFile, xBitJobName ); //create a chmod job
 
@@ -588,9 +588,9 @@ public abstract class Abstract implements Implementation{
      *
      * @return  the noop job.
      */
-    public SubInfo createNoOPJob( String name ) {
+    public Job createNoOPJob( String name ) {
 
-        SubInfo newJob = new SubInfo();
+        Job newJob = new Job();
         List entries = null;
         String execPath =  null;
 
@@ -610,7 +610,7 @@ public abstract class Abstract implements Implementation{
 
         //construct noop keys
         newJob.setSiteHandle( "local" );
-        newJob.setJobType( SubInfo.CREATE_DIR_JOB );
+        newJob.setJobType( Job.CREATE_DIR_JOB );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
@@ -638,8 +638,8 @@ public abstract class Abstract implements Implementation{
      * @return  the chmod job, else null if it is not able to be created
      *          for some reason.
      */
-    protected SubInfo createSetXBitJob( Collection<FileTransfer> files, String name, String site ){
-        SubInfo xBitJob = new SubInfo();
+    protected Job createSetXBitJob( Collection<FileTransfer> files, String name, String site ){
+        Job xBitJob = new Job();
         TransformationCatalogEntry entry   = null;
         GridGateway jobManager = null;
         String eSiteHandle = site;
@@ -709,7 +709,7 @@ public abstract class Abstract implements Implementation{
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
         xBitJob.strargs         = arguments.toString();
-        xBitJob.jobClass        = SubInfo.CREATE_DIR_JOB;
+        xBitJob.jobClass        = Job.CREATE_DIR_JOB;
         xBitJob.jobID           = name;
 
         //the profile information from the pool catalog needs to be
@@ -745,8 +745,8 @@ public abstract class Abstract implements Implementation{
      * @return  the chmod job, else null if it is not able to be created
      *          for some reason.
      */
-    protected SubInfo createSetXBitJob(FileTransfer file, String name){
-        SubInfo xBitJob = new SubInfo();
+    protected Job createSetXBitJob(FileTransfer file, String name){
+        Job xBitJob = new Job();
         TransformationCatalogEntry entry   = null;
         GridGateway jobManager = null;
         NameValue destURL  = (NameValue)file.getDestURL();
@@ -802,7 +802,7 @@ public abstract class Abstract implements Implementation{
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
         xBitJob.strargs         = arguments;
-        xBitJob.jobClass        = SubInfo.CREATE_DIR_JOB;
+        xBitJob.jobClass        = Job.CREATE_DIR_JOB;
         xBitJob.jobID           = name;
 
         //the profile information from the pool catalog needs to be
@@ -936,15 +936,15 @@ public abstract class Abstract implements Implementation{
         String priority;
         int type     = job.jobClass;
         switch(type){
-            case SubInfo.STAGE_IN_JOB:
+            case Job.STAGE_IN_JOB:
                 priority = mProps.getTransferStageInPriority();
                 break;
 
-            case SubInfo.STAGE_OUT_JOB:
+            case Job.STAGE_OUT_JOB:
                 priority = mProps.getTransferStageOutPriority();
                 break;
 
-            case SubInfo.INTER_POOL_JOB:
+            case Job.INTER_POOL_JOB:
                 priority = mProps.getTransferInterPriority();
                 break;
 
@@ -965,7 +965,7 @@ public abstract class Abstract implements Implementation{
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    protected void construct(SubInfo job, String key, String value){
+    protected void construct(Job job, String key, String value){
         job.condorVariables.checkKeyInNS(key,value);
     }
 

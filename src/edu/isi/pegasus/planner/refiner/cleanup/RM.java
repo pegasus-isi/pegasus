@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.refiner.cleanup;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -109,12 +109,12 @@ public class RM implements CleanupImplementation{
      *
      * @return the cleanup job.
      */
-    public SubInfo createCleanupJob( String id, List files, SubInfo job ){
+    public Job createCleanupJob( String id, List files, Job job ){
 
         //we want to run the clnjob in the same directory
         //as the compute job. So we clone.
-        SubInfo cJob = ( SubInfo )job.clone();
-        cJob.setJobType( SubInfo.CLEANUP_JOB );
+        Job cJob = ( Job )job.clone();
+        cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
         cJob.setSiteHandle( job.getSiteHandle() );
 

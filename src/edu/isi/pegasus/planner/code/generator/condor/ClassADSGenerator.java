@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DagInfo;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -83,14 +83,14 @@ public class ClassADSGenerator {
     /**
      * The class ad for job Class.
      *
-     * @see org.griphyn.cPlanner.classes.SubInfo#jobClass
+     * @see org.griphyn.cPlanner.classes.Job#jobClass
      */
     public static final String JOB_CLASS_AD_KEY = "pegasus_job_class";
 
     /**
      * The class ad for the jobId.
      *
-     * @see org.griphyn.cPlanner.classes.SubInfo#jobID
+     * @see org.griphyn.cPlanner.classes.Job#jobID
      */
     public static final String JOB_ID_AD_KEY = "pegasus_job_id";
     
@@ -149,10 +149,10 @@ public class ClassADSGenerator {
      * @param writer is an open stream for the Condor submit file.
      * @param dag    the workflow object containing metadata about the workflow
      *               like the workflow id and the release version.
-     * @param job    the <code>SubInfo</code> object for which the writer stream
+     * @param job    the <code>Job</code> object for which the writer stream
      *               is passed.
      **/
-    public static void generate( PrintWriter writer, ADag dag, SubInfo job ) {
+    public static void generate( PrintWriter writer, ADag dag, Job job ) {
 
         //get all the workflow classads
         generate( writer, dag );

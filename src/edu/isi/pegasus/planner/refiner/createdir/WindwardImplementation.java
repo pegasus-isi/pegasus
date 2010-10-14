@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
@@ -227,15 +227,15 @@ public class WindwardImplementation implements Implementation {
      *
      * @return create dir job.
      */
-    public SubInfo makeCreateDirJob( String site, String name, String directory ) {
-        SubInfo pegasusJob = mPegasusImplementation.makeCreateDirJob( site, name, directory ); 
+    public Job makeCreateDirJob( String site, String name, String directory ) {
+        Job pegasusJob = mPegasusImplementation.makeCreateDirJob( site, name, directory );
         
         //add the arguments to set the mode to 777 always
         pegasusJob.setArguments( pegasusJob.getArguments() + " -m 777" );
         
-        SubInfo createGUKBJob = makeCreateGUKBJob( site, directory );
+        Job createGUKBJob = makeCreateGUKBJob( site, directory );
         
-        List <SubInfo> l = new LinkedList <SubInfo> ();
+        List <Job> l = new LinkedList <Job> ();
         l.add( pegasusJob );
         l.add( createGUKBJob );
         
@@ -249,7 +249,7 @@ public class WindwardImplementation implements Implementation {
         
         
         //now lets merge all these jobs
-        SubInfo merged = mSeqExecAggregator.construct( l, "dirmanager", pegasusJob.getName()  );
+        Job merged = mSeqExecAggregator.construct( l, "dirmanager", pegasusJob.getName()  );
   
         
         //set the name of the merged job back to the name of
@@ -268,7 +268,7 @@ public class WindwardImplementation implements Implementation {
      * @param directory
      * @return create GUKB job.
      */
-    protected SubInfo makeCreateGUKBJob( String site , String directory ) {
+    protected Job makeCreateGUKBJob( String site , String directory ) {
         SiteCatalogEntry s = mSiteStore.lookup( site );
         String guHome   = s.getEnvironmentVariable( "GU_HOME" );
         
@@ -276,7 +276,7 @@ public class WindwardImplementation implements Implementation {
             throw new RuntimeException( "The environment variable GU_HOME is not set for site " + site );
         }
         
-        SubInfo guJob = new SubInfo();
+        Job guJob = new Job();
         
         guJob.setTransformation( "windward", "create-ag-kb", null );
         guJob.setDerivation( "windward", "create-ag-kb", null );

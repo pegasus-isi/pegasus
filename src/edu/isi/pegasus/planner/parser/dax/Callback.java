@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.parser.dax;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
@@ -66,7 +66,7 @@ public interface Callback {
      *
      * @param job is the DAX-style job.
      */
-    public void cbJob(SubInfo job);
+    public void cbJob(Job job);
 
     /**
      * Callback for child and parent relationships from section 3.

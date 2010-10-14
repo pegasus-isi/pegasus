@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -48,7 +48,7 @@ public class DAX2CDAG implements Callback {
     private DagInfo mDagInfo;
 
     /**
-     * Contains SubInfo objects. One per submit file.
+     * Contains Job objects. One per submit file.
      */
     private Vector mVSubInfo;
 
@@ -102,10 +102,10 @@ public class DAX2CDAG implements Callback {
      * Callback for the job from section 2 jobs. These jobs are completely
      * assembled, but each is passed separately.
      *
-     * @param job  the <code>SubInfo</code> object storing the job information
+     * @param job  the <code>Job</code> object storing the job information
      *             gotten from parser.
      */
-    public void cbJob(SubInfo job) {
+    public void cbJob(Job job) {
         mJobMap.put(job.logicalId,job.jobName);
         mVSubInfo.add(job);
         mDagInfo.addNewJob( job );

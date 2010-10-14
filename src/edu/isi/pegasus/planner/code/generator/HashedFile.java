@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.code.generator;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.code.CodeGenerator;
@@ -56,7 +56,7 @@ public class HashedFile extends CondorGenerator {
      * @return  the writer to the open file.
      * @exception IOException if unable to open a write handle to the file.
      */
-    public PrintWriter getWriter(SubInfo job) throws IOException{
+    public PrintWriter getWriter(Job job) throws IOException{
 //        String jobDir = job.getSubmitDirectory();
         StringBuffer sb = new StringBuffer();
 
@@ -80,7 +80,7 @@ public class HashedFile extends CondorGenerator {
      * @return  the relative path of the file.
      */
      /*
-    public String getDAGMANFilename(SubInfo job){
+    public String getDAGMANFilename(Job job){
         //do the correct but the inefficient way.
         String name = "";
 

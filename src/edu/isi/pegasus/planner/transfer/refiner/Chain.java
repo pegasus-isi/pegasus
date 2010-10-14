@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.transfer.refiner;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -183,7 +183,7 @@ public class Chain extends Default {
         String value   = this.DEFAULT_BUNDLE_FACTOR;
         //construct a sudo transfer job object
         //and populate the profiles in it.
-        SubInfo sub = new SubInfo();
+        Job sub = new Job();
         //assimilate the profile information from the
         //site catalog into the job.
         sub.updateProfiles( mSiteStore.lookup(site).getProfiles() );

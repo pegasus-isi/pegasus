@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.selector.site.heft;
 
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -301,7 +301,7 @@ public class Algorithm {
         //compute weighted execution times for each job
         for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
-            SubInfo job    = (SubInfo)node.getContent();
+            Job job    = (Job)node.getContent();
 
             //add the heft bag to a node
             Float averageComputeTime = new Float( calculateAverageComputeTime( job ) );
@@ -357,7 +357,7 @@ public class Algorithm {
                         LogManager.DEBUG_MESSAGE_LEVEL);
 
             //figure out the sites where a job can run
-            SubInfo job = (SubInfo) current.getContent();
+            Job job = (Job) current.getContent();
             List runnableSites = mTCMapper.getSiteList( job.getTXNamespace(),
                                                         job.getTXName(),
                                                         job.getTXVersion(),
@@ -443,7 +443,7 @@ public class Algorithm {
      */
     protected long[] calculateEstimatedStartAndFinishTime( GraphNode node, String site ){
 
-        SubInfo job = ( SubInfo )node.getContent();
+        Job job = ( Job )node.getContent();
         long[] result = new long[2];
 
         //calculate the ready time for the job
@@ -535,7 +535,7 @@ public class Algorithm {
      *
      * @return the weighted compute time in seconds.
      */
-    protected float calculateAverageComputeTime( SubInfo job ){
+    protected float calculateAverageComputeTime( Job job ){
         //get all the TC entries for the sites where a job can run
         List runnableSites = mTCMapper.getSiteList( job.getTXNamespace(),
                                                     job.getTXName(),
@@ -581,7 +581,7 @@ public class Algorithm {
      *
      * @return the runtime in seconds.
      */
-    protected int getExpectedRuntime( SubInfo job, TransformationCatalogEntry entry ){
+    protected int getExpectedRuntime( Job job, TransformationCatalogEntry entry ){
         int result = -1;
 
         //try and fetch the expected runtime from the Windward AC
@@ -658,7 +658,7 @@ public class Algorithm {
      *
      * @return the runtime in seconds.
      */
-    protected double getExpectedRuntimeFromAC( SubInfo job, TransformationCatalogEntry entry  ){
+    protected double getExpectedRuntimeFromAC( Job job, TransformationCatalogEntry entry  ){
         double result = -1;
         if( mProcessCatalog == null ){
             return result;
@@ -788,7 +788,7 @@ public class Algorithm {
      * The call out to the site selector to determine on what pool the job
      * should be scheduled.
      *
-     * @param job SubInfo the <code>SubInfo</code> object corresponding to
+     * @param job Job the <code>Job</code> object corresponding to
      *   the job whose execution pool we want to determine.
      * @param pools the list of <code>String</code> objects representing the
      *   execution pools that can be used.
@@ -797,7 +797,7 @@ public class Algorithm {
      *   jobmanager can be null. If the pool is not found, then set
      *   poolhandle to NONE. null - if some error occured .
      */
-    public String mapJob2ExecPool(SubInfo job, List pools) {
+    public String mapJob2ExecPool(Job job, List pools) {
         return "";
     }
 

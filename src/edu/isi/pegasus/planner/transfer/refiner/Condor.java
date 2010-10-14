@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.NameValue;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
@@ -147,13 +147,13 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      * from the location returned from the replica catalog to the job's execution
      * pool.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      *
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       Collection files  ){
 
 
@@ -194,14 +194,14 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      * the output files of the parents to the jobs execution site. They are not
      * supported in this case.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
      * @param localTransfer  boolean indicating that associated transfer job will run
      *                       on local site.
      */
-    public void addInterSiteTXNodes( SubInfo job,
+    public void addInterSiteTXNodes( Job job,
                                      Collection files,
                                      boolean localTransfer ){
 
@@ -214,7 +214,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      * Adds the stageout transfer nodes, that stage data to an output site
      * specified by the user.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -224,7 +224,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      *                       on local site.
      *
      */
-    public void addStageOutXFERNodes( SubInfo job,
+    public void addStageOutXFERNodes( Job job,
                                       Collection files,
                                       ReplicaCatalogBridge rcb,
                                       boolean localTransfer ) {
@@ -236,7 +236,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      * Adds the stageout transfer nodes, that stage data to an output site
      * specified by the user.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -248,7 +248,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      *                      a deleted node by the reduction engine or not.
      *                      default: false
      */
-    public  void addStageOutXFERNodes(SubInfo job,
+    public  void addStageOutXFERNodes(Job job,
                                       Collection files,
                                       ReplicaCatalogBridge rcb,
                                       boolean localTransfer,
@@ -301,7 +301,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
 
         if( !txFiles.isEmpty() ){
             String txName = Refiner.STAGE_OUT_PREFIX + Refiner.LOCAL_PREFIX + job.getName() + "_0" ;
-            SubInfo txJob = this.createStageOutTransferJob( job,
+            Job txJob = this.createStageOutTransferJob( job,
                                                             txFiles,
                                                             destinationDirectory,
                                                             txName );
@@ -326,7 +326,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      * The job itself is a /bin/true job that does the stageout using the
      * transfer_input_files feature.
      *
-     * @param job         the SubInfo object for the job, in relation to which
+     * @param job         the Job object for the job, in relation to which
      *                    the transfer node is being added. Either the transfer
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
@@ -339,7 +339,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      *
      * @return  the created TransferJob.
      */
-    private TransferJob createStageOutTransferJob( SubInfo job,
+    private TransferJob createStageOutTransferJob( Job job,
                                                    Collection files,
                                                    String directory,
                                                    String txJobName
@@ -403,7 +403,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
         //the intial directory is set to the directory where we need the output
         txJob.condorVariables.construct( "initialdir", directory );
 
-        txJob.setJobType( SubInfo.STAGE_OUT_JOB );
+        txJob.setJobType( Job.STAGE_OUT_JOB );
         txJob.setVDSSuperNode( job.jobName );
 
         txJob.stdErr = "";
@@ -449,7 +449,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      *
      * @param job  the job to be added.
      */
-    public void addJob(SubInfo job){
+    public void addJob(Job job){
         mDAG.add(job);
     }
 

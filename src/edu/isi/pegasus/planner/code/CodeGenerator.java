@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.code;
 
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
@@ -76,12 +76,12 @@ public interface CodeGenerator {
      * executor being used.
      *
      * @param dag    the dag of which the job is a part of.
-     * @param job    the <code>SubInfo</code> object holding the information about
+     * @param job    the <code>Job</code> object holding the information about
      *               that particular job.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag, SubInfo job ) throws CodeGeneratorException;
+    public void generateCode( ADag dag, Job job ) throws CodeGeneratorException;
 
     /**
      * Starts monitoring of the workflow by invoking a workflow monitor daemon.

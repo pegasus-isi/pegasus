@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -89,7 +89,7 @@ public abstract class Abstract implements CondorStyle {
      * @param style    the name of the style.
      * @param universe the universe associated with the job.
      */
-    protected String errorMessage( SubInfo job, String style, String universe){
+    protected String errorMessage( Job job, String style, String universe){
         StringBuffer sb = new StringBuffer();
         sb.append( "( " ).
              append( style ).append( "," ).

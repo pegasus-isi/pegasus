@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -89,7 +89,7 @@ public class Condor extends Abstract {
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void apply(SubInfo job) throws CondorStyleException{
+    public void apply(Job job) throws CondorStyleException{
         String execSiteWorkDir = mSiteStore.getWorkDirectory(job);
         String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
         workdir = (workdir == null)?execSiteWorkDir:workdir;
@@ -108,7 +108,7 @@ public class Condor extends Abstract {
         if( universe.equals( Condor.STANDARD_UNIVERSE ) ){
             //standard universe should be only applied for compute jobs
             int type = job.getJobType();
-            if (!( type == SubInfo.COMPUTE_JOB || type == SubInfo.STAGED_COMPUTE_JOB)) {
+            if (!( type == Job.COMPUTE_JOB || type == Job.STAGED_COMPUTE_JOB)) {
                 //set universe to vanilla universe
                 universe = Condor.VANILLA_UNIVERSE;
             }

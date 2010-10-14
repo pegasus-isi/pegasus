@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.parser.dax;
 
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -67,10 +67,10 @@ public class ExampleDAXCallback implements Callback {
      * Callback for the job from section 2 jobs. These jobs are completely
      * assembled, but each is passed separately.
      *
-     * @param job  the <code>SubInfo</code> object storing the job information
+     * @param job  the <code>Job</code> object storing the job information
      *             gotten from parser.
      */
-    public void cbJob(SubInfo job) {
+    public void cbJob(Job job) {
         System.out.println();
         System.out.println( "Job parsed ");
         System.out.println( job );

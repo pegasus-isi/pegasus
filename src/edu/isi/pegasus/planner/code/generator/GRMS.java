@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
@@ -145,7 +145,7 @@ public class GRMS extends Abstract {
         initializeWriteHandle( opFileName );
         Collection result = new ArrayList( 1 );
         result.add( new File( opFileName ) );
-        SubInfo job = null;
+        Job job = null;
 
 
         writeString("\n<grmsjob " +
@@ -153,7 +153,7 @@ public class GRMS extends Abstract {
                     " xsi:noNamespaceSchemaLocation=\"" + SCHEMA + "\"" +
                     " appid=\"Pegasus\">");
         for (Iterator it = dag.vJobSubInfos.iterator(); it.hasNext(); ){
-            job = (SubInfo)it.next();
+            job = (Job)it.next();
             writeString( jobToXML( dag, job ) );
         }
         writeString("\n</grmsjob>");
@@ -167,12 +167,12 @@ public class GRMS extends Abstract {
      * executor being used.
      *
      * @param dag    the dag of which the job is a part of.
-     * @param job    the <code>SubInfo</code> object holding the information about
+     * @param job    the <code>Job</code> object holding the information about
      *               that particular job.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag, SubInfo job ) throws CodeGeneratorException{
+    public void generateCode( ADag dag, Job job ) throws CodeGeneratorException{
         throw new CodeGeneratorException(
             new UnsupportedOperationException(
                    "Method generateCode( ADag, SubInfo) not yet implemented."));
@@ -186,7 +186,7 @@ public class GRMS extends Abstract {
      *
      * @return the string containing the xml description.
      */
-    protected String jobToXML( ADag dag, SubInfo job ){
+    protected String jobToXML( ADag dag, Job job ){
         StringBuffer sb = new StringBuffer();
         boolean gridstart = true;
 
@@ -236,7 +236,7 @@ public class GRMS extends Abstract {
      * @return the xml description containing the executable that is to be
      *         launched and it's arguments.
      */
-    private String gridstart(SubInfo job){
+    private String gridstart(Job job){
 //        SiteInfo site = mPoolHandle.getPoolEntry(job.executionPool, "vanilla");
 //        SiteInfo submitSite = mPoolHandle.getPoolEntry("local","vanilla");
         
@@ -371,7 +371,7 @@ public class GRMS extends Abstract {
      *
      * @return String
      */
-    protected String executableToXML(SubInfo job){
+    protected String executableToXML(Job job){
         StringBuffer sb = new StringBuffer();
 
         sb.append("\n\t\t<executable type=\"single\" count=\"1\">");
@@ -492,7 +492,7 @@ public class GRMS extends Abstract {
      *
      * @return  the xml description of the arguments.
      */
-    protected String argumentsToXML(SubInfo job){
+    protected String argumentsToXML(Job job){
         StringBuffer sb = new StringBuffer();
         StringTokenizer st = new StringTokenizer(job.strargs);
 
@@ -566,12 +566,12 @@ public class GRMS extends Abstract {
      * parents to the job.
      *
      * @param dag    the dag of which the job is a part of.
-     * @param job  the <code>SubInfo</code> object containing the job description.
+     * @param job  the <code>Job</code> object containing the job description.
      *
      * @return the xml element if there are any dependencies of the job
      *          else an empty string.
      */
-    protected String relationsToXML( ADag dag, SubInfo job ){
+    protected String relationsToXML( ADag dag, Job job ){
         StringBuffer sb = new StringBuffer();
         Vector parents  = dag.getParents( job.getName() );
         if(parents.isEmpty())

@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -460,7 +460,7 @@ public class PDAX2MDAG implements Callback {
         int index   = partition.getIndex();
         ArrayList sequenceList = new ArrayList(NUM_OF_EXPANDED_JOBS);
         String tailJob;
-        SubInfo job;
+        Job job;
 
         //get the filename of the dax file containing the partition
         String dax = DAXWriter.getPDAXFilename(name, index);
@@ -539,7 +539,7 @@ public class PDAX2MDAG implements Callback {
 
         //get hold of the constructed job for the child.
         //the name of the jobs are treated as ID's
-        SubInfo cJob = getJob(child);
+        Job cJob = getJob(child);
         String  cID  = cJob.getName();
 
         //glue in the sequences for the expanded things together
@@ -552,10 +552,10 @@ public class PDAX2MDAG implements Callback {
         //traverse through the parents to put in the relations
         //and the cache file arguments.
         String pID;
-        SubInfo pJob;
+        Job pJob;
         for(Iterator it = parents.iterator();it.hasNext();){
             //get the parent job and name
-            pJob = (SubInfo)mJobMap.get(it.next());
+            pJob = (Job)mJobMap.get(it.next());
             pID  = pJob.getName();
 
             mLogger.log("Adding Relation " + pID + "->" + cID,
@@ -660,13 +660,13 @@ public class PDAX2MDAG implements Callback {
      *
      * @return the constructed DAG job.
      */
-    protected SubInfo constructDAGJob( Partition partition ,
+    protected Job constructDAGJob( Partition partition ,
                                        File directory,
                                        String dax){
         
     
         //for time being use the old functions.
-        SubInfo job = new SubInfo();
+        Job job = new Job();
         //the parent directory where the submit file for condor dagman has to
         //reside. the submit files for the corresponding partition are one level
         //deeper.
@@ -756,7 +756,7 @@ public class PDAX2MDAG implements Callback {
         //the job itself is the main job of the super node
         //construct the classad specific information
         job.jobID = job.getName();
-        job.jobClass = SubInfo.COMPUTE_JOB;
+        job.jobClass = Job.COMPUTE_JOB;
 
 
         //directory where all the dagman related files for the nested dagman
@@ -1073,7 +1073,7 @@ public class PDAX2MDAG implements Callback {
      *
      * @see #RETRY_LOGICAL_NAME
      */
-    protected void setPrescript(SubInfo job, String daxURL, String log){
+    protected void setPrescript(Job job, String daxURL, String log){
         setPrescript( job,
                       daxURL,
                       log,
@@ -1096,7 +1096,7 @@ public class PDAX2MDAG implements Callback {
      * @param version   the version of the replanner to be picked up.
      *
      */
-     protected void setPrescript(SubInfo job,
+     protected void setPrescript(Job job,
                                   String daxURL,
                                   String log,
                                   String namespace,
@@ -1270,7 +1270,7 @@ public class PDAX2MDAG implements Callback {
      *
      * @return the basename.
      */
-    protected String getBasenamePrefix( SubInfo job ){
+    protected String getBasenamePrefix( Job job ){
         StringBuffer sb = new StringBuffer( 8 );
         //add a prefix P
         sb.append('P').append(job.getLogicalID());
@@ -1286,7 +1286,7 @@ public class PDAX2MDAG implements Callback {
      *
      * @return the full path to the file.
      */
-    protected String getCacheFilePath(SubInfo job){
+    protected String getCacheFilePath(Job job){
         StringBuffer sb = new StringBuffer();
 
         //cache file is being generated in the initialdir set for the job.
@@ -1433,9 +1433,9 @@ public class PDAX2MDAG implements Callback {
      *
      * @return the corresponding job, else null if not found.
      */
-    protected SubInfo getJob(String id){
+    protected Job getJob(String id){
         Object obj = mJobMap.get(id);
-        return (obj == null)?null:(SubInfo)obj;
+        return (obj == null)?null:(Job)obj;
     }
 
     /**

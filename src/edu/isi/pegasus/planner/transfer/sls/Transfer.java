@@ -36,7 +36,7 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.code.gridstart.SeqExec;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.ENV;
@@ -211,7 +211,7 @@ public class Transfer   implements SLS {
      *
      * @return invocation string
      */
-    public String invocationString( SubInfo job, File slsFile ){
+    public String invocationString( Job job, File slsFile ){
         //sanity check
         if( slsFile == null ) { return null; }
 
@@ -283,7 +283,7 @@ public class Transfer   implements SLS {
      *
      * @return true
      */
-    public boolean needsSLSInput( SubInfo job ) {
+    public boolean needsSLSInput( Job job ) {
         return true;
     }
 
@@ -296,7 +296,7 @@ public class Transfer   implements SLS {
      *
      * @return true
      */
-    public boolean needsSLSOutput( SubInfo job ) {
+    public boolean needsSLSOutput( Job job ) {
         Set files = job.getOutputFiles();
         return! (files == null || files.isEmpty());
     }
@@ -304,11 +304,11 @@ public class Transfer   implements SLS {
     /**
      * Returns the LFN of sls input file.
      *
-     * @param job SubInfo
+     * @param job Job
      *
      * @return the name of the sls input file.
      */
-    public String getSLSInputLFN( SubInfo job ){
+    public String getSLSInputLFN( Job job ){
         StringBuffer lfn = new StringBuffer();
         lfn.append( "sls_" ).append( job.getName() ).append( ".in" );
         return lfn.toString();
@@ -318,11 +318,11 @@ public class Transfer   implements SLS {
     /**
      * Returns the LFN of sls output file.
      *
-     * @param job SubInfo
+     * @param job Job
      *
      * @return the name of the sls input file.
      */
-    public String getSLSOutputLFN( SubInfo job ){
+    public String getSLSOutputLFN( Job job ){
         StringBuffer lfn = new StringBuffer();
         lfn.append( "sls_" ).append( job.getName() ).append( ".out" );
         return lfn.toString();
@@ -342,7 +342,7 @@ public class Transfer   implements SLS {
      * @return the full path to lof file created, else null if no file is
      *   written out.
      */
-    public File generateSLSInputFile( SubInfo job,
+    public File generateSLSInputFile( Job job,
                                       String fileName,
                                       String submitDir,
                                       String headNodeDirectory,
@@ -435,7 +435,7 @@ public class Transfer   implements SLS {
      *   written out.
      *
      */
-    public File generateSLSOutputFile(SubInfo job, String fileName,
+    public File generateSLSOutputFile(Job job, String fileName,
                                       String submitDir,
                                       String headNodeDirectory,
                                       String workerNodeDirectory) {
@@ -513,7 +513,7 @@ public class Transfer   implements SLS {
      *                      for staging in from the head node to worker node directory.
      * @return boolean
      */
-    public boolean modifyJobForFirstLevelStaging( SubInfo job,
+    public boolean modifyJobForFirstLevelStaging( Job job,
                                                   String submitDir,
                                                   String slsInputLFN,
                                                   String slsOutputLFN ) {
@@ -621,7 +621,7 @@ public class Transfer   implements SLS {
      *   not.
      *
      */
-    public boolean modifyJobForWorkerNodeExecution( SubInfo job,
+    public boolean modifyJobForWorkerNodeExecution( Job job,
                                                     String headNodeURLPrefix,
                                                     String headNodeDirectory,
                                                     String workerNodeDirectory ) {

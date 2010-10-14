@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.code.generator;
 
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
@@ -110,13 +110,13 @@ public class Stork extends Abstract {
      * Generates the code for a single job in the Stork format.
      *
      * @param dag    the dag of which the job is a part of.
-     * @param job    the <code>SubInfo</code> object holding the information about
+     * @param job    the <code>Job</code> object holding the information about
      *               that particular job.
      *
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag, SubInfo job ) throws CodeGeneratorException{
+    public void generateCode( ADag dag, Job job ) throws CodeGeneratorException{
         String dagname  = dag.dagInfo.nameOfADag;
         String dagindex = dag.dagInfo.index;
         String dagcount = dag.dagInfo.count;
@@ -185,7 +185,7 @@ public class Stork extends Abstract {
      *
      * @return  the basename of the file.
      */
-    public String getFileBaseName(SubInfo job){
+    public String getFileBaseName(Job job){
         StringBuffer sb = new StringBuffer();
         sb.append(job.jobName).append(".stork");
         return sb.toString();

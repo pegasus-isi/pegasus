@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -330,7 +330,7 @@ public class NonJavaCallout extends AbstractPerJob {
 
     /**
      * Calls out to the external site selector. The method converts a
-     * <code>SubInfo</code> object into an API-compliant temporary file.
+     * <code>Job</code> object into an API-compliant temporary file.
      * The file's name is provided as single commandline argument to the
      * site selector executable when it is invoked. The executable,
      * representing the external site selector, provides its answer
@@ -347,9 +347,9 @@ public class NonJavaCallout extends AbstractPerJob {
      * FIXME: Some site selector return an empty string on failures. Also:
      * NONE could be a valid site name.
      *
-     * @see org.griphyn.cPlanner.classes.SubInfo
+     * @see org.griphyn.cPlanner.classes.Job
      */
-    public void mapJob( SubInfo job, List sites ){
+    public void mapJob( Job job, List sites ){
         Runtime rt = Runtime.getRuntime();
 
         // prepare the temporary file that needs to be sent to the
@@ -491,7 +491,7 @@ public class NonJavaCallout extends AbstractPerJob {
     /**
      * Writes job knowledge into the temporary file passed to the external
      * site selector. The job knowledge derives from the contents of the
-     * DAX job's <code>SubInfo</code> record, and the a list of site
+     * DAX job's <code>Job</code> record, and the a list of site
      * candidates. The format of the file is laid out in the class's
      * introductory documentation.
      *
@@ -507,7 +507,7 @@ public class NonJavaCallout extends AbstractPerJob {
      *
      * @see #getTempFilename()
      */
-    private File prepareInputFile( SubInfo job, List pools ) {
+    private File prepareInputFile( Job job, List pools ) {
         File f = new File( this.getTempFilename() );
         PrintWriter pw;
 
@@ -625,7 +625,7 @@ public class NonJavaCallout extends AbstractPerJob {
      *
      *
      */
-    private boolean parseStdOut( SubInfo job, String s ){
+    private boolean parseStdOut( Job job, String s ){
         String val = null;
 
         s = s.trim();
@@ -780,7 +780,7 @@ public class NonJavaCallout extends AbstractPerJob {
 
       NonJavaCallout nj = new NonJavaCallout( );
 
-      SubInfo s = new SubInfo();
+      Job s = new Job();
       s.logicalName = "test";
       s.namespace   = "pegasus";
       s.version     = "1.01";

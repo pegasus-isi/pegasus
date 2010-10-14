@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.transfer;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -59,14 +59,14 @@ public interface Implementation {
     public void setRefiner(Refiner refiner);
 
     /**
-     * This constructs the SubInfo object for the transfer node. The transfer is
+     * This constructs the Job object for the transfer node. The transfer is
      * supposed to occur at job execution site. It should lead to the creation
      * of the setup chmod jobs to the workflow, that appear as parents to compute
      * jobs in case the transfer implementation does not preserve the X bit
      * on the file being transferred. This is required for staging of executables
      * as part of the workflow.
      *
-     * @param job         the SubInfo object for the job, in relation to which
+     * @param job         the Job object for the job, in relation to which
      *                    the transfer node is being added. Either the transfer
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
@@ -86,7 +86,7 @@ public interface Implementation {
      *
      * @return  the created TransferJob.
      */
-    public TransferJob createTransferJob(SubInfo job,
+    public TransferJob createTransferJob(Job job,
                                          String site,
                                          Collection files,
                                          Collection execFiles,
@@ -117,7 +117,7 @@ public interface Implementation {
      * @return boolean indicating whether any XBitJobs were succesfully added or
      *         not.
      */
-    /*public boolean addSetXBitJobs( SubInfo computeJob,
+    /*public boolean addSetXBitJobs( Job computeJob,
                                    String txJobName,
                                    Collection execFiles,
                                    int transferClass );
@@ -137,7 +137,7 @@ public interface Implementation {
      * @return boolean indicating whether any XBitJobs were succesfully added or
      *         not.
      */
-    public boolean addSetXBitJobs( SubInfo computeJob,
+    public boolean addSetXBitJobs( Job computeJob,
                                    String txJobName,
                                    Collection execFiles,
                                    int transferClass,
@@ -156,7 +156,7 @@ public interface Implementation {
      *
      * @return the job object for the xBitJob
      */
-    public SubInfo createSetXBitJob( SubInfo computeJob,
+    public Job createSetXBitJob( Job computeJob,
                                    Collection<FileTransfer> execFiles,
                                    int transferClass,
                                    int xbitIndex );

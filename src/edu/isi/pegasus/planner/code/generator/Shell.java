@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.POSTScript;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
@@ -162,7 +162,7 @@ public class Shell extends Abstract {
         //traverse the workflow in topological sort order
         for( Iterator<GraphNode> it = workflow.topologicalSortIterator(); it.hasNext(); ){
             GraphNode node = it.next();
-            SubInfo job = (SubInfo)node.getContent();
+            Job job = (Job)node.getContent();
             generateCode( dag, job );
         }
 
@@ -185,12 +185,12 @@ public class Shell extends Abstract {
      * executor being used.
      *
      * @param dag    the dag of which the job is a part of.
-     * @param job    the <code>SubInfo</code> object holding the information about
+     * @param job    the <code>Job</code> object holding the information about
      *               that particular job.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag, SubInfo job ) throws CodeGeneratorException{
+    public void generateCode( ADag dag, Job job ) throws CodeGeneratorException{
         mLogger.log( "Generating code for job " + job.getID() , LogManager.DEBUG_MESSAGE_LEVEL );
 
 
@@ -271,7 +271,7 @@ public class Shell extends Abstract {
      * 
      * @return the call to execute job function.
      */
-    protected String generateCallToCheckExitcode( SubInfo job,
+    protected String generateCallToCheckExitcode( Job job,
                                                   String prefix ){
         StringBuffer sb = new StringBuffer();
             sb.append( "check_exitcode" ).append( " " ).
@@ -291,7 +291,7 @@ public class Shell extends Abstract {
      * 
      * @return the call to execute job function.
      */
-    protected String generateCallToExecutePostScript( SubInfo job,
+    protected String generateCallToExecutePostScript( Job job,
                                                       String directory ){
         StringBuffer sb = new StringBuffer();
         
@@ -334,7 +334,7 @@ public class Shell extends Abstract {
      * 
      * @return the call to execute job function.
      */
-    protected String generateCallToExecuteJob( SubInfo job,
+    protected String generateCallToExecuteJob( Job job,
                                                String scratchDirectory,
                                                String submitDirectory ){
         StringBuffer sb = new StringBuffer();
@@ -502,7 +502,7 @@ public class Shell extends Abstract {
      *
      * @return  the directory
      */
-    protected String getExecutionDirectory(SubInfo job) {
+    protected String getExecutionDirectory(Job job) {
        String execSiteWorkDir = mSiteStore.getWorkDirectory(job);
        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
        workdir = (workdir == null)?execSiteWorkDir:workdir;

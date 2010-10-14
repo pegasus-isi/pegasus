@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.refiner;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -81,7 +81,7 @@ public class DataReuseEngine extends Engine implements Refiner{
     /**
      * List of all deleted jobs during workflow reduction.
      */
-    private List<SubInfo> mAllDeletedJobs;
+    private List<Job> mAllDeletedJobs;
 
 
     /**
@@ -160,7 +160,7 @@ public class DataReuseEngine extends Engine implements Refiner{
             GraphNode node = ( GraphNode )it.next();
 
             //get the job associated with node
-            reducedWorkflow.add( ( SubInfo )node.getContent() );
+            reducedWorkflow.add( ( Job )node.getContent() );
 
             //all the children of the node are the edges of the DAG
             for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
@@ -225,7 +225,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         
         mLogMsg = "Nodes/Jobs Deleted from the Workflow during reduction ";
         mLogger.log( mLogMsg,LogManager.INFO_MESSAGE_LEVEL );
-        for( SubInfo job : this.mAllDeletedJobs){
+        for( Job job : this.mAllDeletedJobs){
             mLogger.log("\t" + job.getID(), LogManager.INFO_MESSAGE_LEVEL );
             mXMLStore.add( "<removed job = \"" + job.getID() + "\"/>" );
             mXMLStore.add( "\n" );
@@ -258,9 +258,9 @@ public class DataReuseEngine extends Engine implements Refiner{
      * This returns all the jobs deleted from the workflow after the reduction
      * algorithm has run.
      *
-     * @return  List containing the <code>SubInfo</code> of deleted leaf jobs.
+     * @return  List containing the <code>Job</code> of deleted leaf jobs.
      */
-    public List<SubInfo> getDeletedJobs(){
+    public List<Job> getDeletedJobs(){
        return this.mAllDeletedJobs;
     }
 
@@ -272,12 +272,12 @@ public class DataReuseEngine extends Engine implements Refiner{
      * Also to determine the deleted leaf jobs it refers the original
      * dag, not the reduced dag.
      *
-     * @return  List containing the <code>SubInfo</code> of deleted leaf jobs.
+     * @return  List containing the <code>Job</code> of deleted leaf jobs.
      */
-    public List<SubInfo> getDeletedLeafJobs(){
+    public List<Job> getDeletedLeafJobs(){
         mLogger.log( "Date Reuse Engine no longer tracks deleted leaf jobs. Returning empty list ",
                      LogManager.DEBUG_MESSAGE_LEVEL );
-        List<SubInfo> delLeafJobs = new LinkedList();
+        List<Job> delLeafJobs = new LinkedList();
 
        
         return delLeafJobs;
@@ -298,7 +298,7 @@ public class DataReuseEngine extends Engine implements Refiner{
      *
      * @return a List of GraphNodes with their Boolean bag value set to true.
      *
-     * @see org.griphyn.cPlanner.classes.SubInfo
+     * @see org.griphyn.cPlanner.classes.Job
      */
     private List<GraphNode> getJobsInRC(Graph workflow ,Set filesInRC){
         List<GraphNode> jobsInReplica = new LinkedList();
@@ -318,7 +318,7 @@ public class DataReuseEngine extends Engine implements Refiner{
         //iterate through all the nodes in the graph
         for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
             GraphNode node = (GraphNode)it.next();
-            SubInfo job =  (SubInfo)node.getContent();
+            Job job =  (Job)node.getContent();
             Set<PegasusFile> outputFiles = job.getOutputFiles();
 
             String jobName = job.jobName;
@@ -354,7 +354,7 @@ public class DataReuseEngine extends Engine implements Refiner{
                     boolean input = true;
                     for( Iterator cit = node.getChildren().iterator(); cit.hasNext(); ){
                         GraphNode child = (GraphNode) cit.next();
-                        SubInfo childJob = (SubInfo)child.getContent();
+                        Job childJob = (Job)child.getContent();
                         if( childJob.getInputFiles().contains( pf ) ){
                             input = false;
                             break;
@@ -492,7 +492,7 @@ public class DataReuseEngine extends Engine implements Refiner{
             if( node.isColor( GraphNode.BLACK_COLOR ) ){
                 mLogger.log( "Removing node from the workflow "  + node.getID() ,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
-                this.mAllDeletedJobs.add( (SubInfo)node.getContent() );
+                this.mAllDeletedJobs.add( (Job)node.getContent() );
                 workflow.remove( node.getID() );
             }
 
@@ -512,7 +512,7 @@ public class DataReuseEngine extends Engine implements Refiner{
     protected boolean transferOutput(GraphNode node) {
         boolean result = false;
 
-        SubInfo job = (SubInfo)node.getContent();
+        Job job = (Job)node.getContent();
 
         if( job.getOutputFiles().isEmpty() ){
             //no output files means we should not delete the job automatically

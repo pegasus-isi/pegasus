@@ -27,7 +27,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
@@ -210,14 +210,14 @@ public abstract class Abstract implements JobAggregator {
      * The new aggregated job, appears as a single job in the workflow and
      * replaces the jobs it contains in the workflow.
      *
-     * @param jobs the list of <code>SubInfo</code> objects that need to be
+     * @param jobs the list of <code>Job</code> objects that need to be
      *             collapsed. All the jobs being collapsed should be scheduled
      *             at the same pool, to maintain correct semantics.
      * @param name  the logical name of the jobs in the list passed to this
      *              function.
      * @param id   the id that is given to the new job.
      *
-     * @return  the <code>SubInfo</code> object corresponding to the aggregated
+     * @return  the <code>Job</code> object corresponding to the aggregated
      *          job containing the jobs passed as List in the input,
      *          null if the list of jobs is empty
      */
@@ -231,7 +231,7 @@ public abstract class Abstract implements JobAggregator {
      * The new aggregated job, appears as a single job in the workflow and
      * replaces the jobs it contains in the workflow.
      *
-     * @param jobs    the list of <code>SubInfo</code> objects that need to be
+     * @param jobs    the list of <code>Job</code> objects that need to be
      *                collapsed. All the jobs being collapsed should be scheduled
      *                at the same pool, to maintain correct semantics.
      * @param name    the logical name of the jobs in the list passed to this
@@ -263,12 +263,12 @@ public abstract class Abstract implements JobAggregator {
         //pool, querying with entry for vanilla universe.
         //In the new format the gridstart is associated with the
         //pool not pool, condor universe
-        SubInfo firstJob = (SubInfo)jobs.get(0);
-        AggregatedJob mergedJob = new AggregatedJob( /*(SubInfo)jobs.get(0),*/
+        Job firstJob = (Job)jobs.get(0);
+        AggregatedJob mergedJob = new AggregatedJob( /*(Job)jobs.get(0),*/
                                                      jobs.size() );
 
 
-        SubInfo job    = null;
+        Job job    = null;
         String mergedJobName = Abstract.FAT_JOB_PREFIX + name + "_" + id;
         mLogger.log("Constructing clustered job " + mergedJobName,
                     LogManager.DEBUG_MESSAGE_LEVEL);
@@ -309,7 +309,7 @@ public abstract class Abstract implements JobAggregator {
             //and merge the profiles for the jobs
             boolean merge = false;
             for( Iterator it = jobs.iterator(); it.hasNext(); ) {
-                job = (SubInfo) it.next();
+                job = (Job) it.next();
                 ipFiles.addAll( job.getInputFiles() );
                 opFiles.addAll( job.getOutputFiles() );
 
@@ -365,7 +365,7 @@ public abstract class Abstract implements JobAggregator {
 
         mergedJob.setUniverse( firstJob.getUniverse() );
         mergedJob.setJobManager( firstJob.getJobManager() );
-        mergedJob.setJobType( SubInfo.COMPUTE_JOB );
+        mergedJob.setJobType( Job.COMPUTE_JOB );
 
         //the compute job of the VDS supernode is this job itself
         mergedJob.setVDSSuperNode( mergedJobName );
@@ -436,7 +436,7 @@ public abstract class Abstract implements JobAggregator {
      * @return  the TransformationCatalogEntry corresponding to the entry in the
      *          TC.
      */
-    protected TransformationCatalogEntry getTCEntry(SubInfo job){
+    protected TransformationCatalogEntry getTCEntry(Job job){
        List tcentries = null;
        TransformationCatalogEntry entry  = null;
        try {

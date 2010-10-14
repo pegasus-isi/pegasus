@@ -24,7 +24,7 @@ import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 
@@ -211,11 +211,11 @@ public class SUBDAXGenerator{
      *
      * @param job  the job for which code has to be generated.
      *
-     * @return a <code>SubInfo</code> if a submit file needs to be generated 
+     * @return a <code>Job</code> if a submit file needs to be generated
      *         for the job. Else return null.
      * 
      */
-    public SubInfo generateCode( SubInfo job ){
+    public Job generateCode( Job job ){
         String arguments = job.getArguments();
         String [] args = arguments.split( " " );
         mLogger.log( "Arguments passed to SUBDAX Generator are " + arguments,
@@ -410,7 +410,7 @@ public class SUBDAXGenerator{
             mLogger.log( "Basename prefix for the sub workflow is " + basenamePrefix,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             
-            SubInfo dagJob = constructDAGJob( job,
+            Job dagJob = constructDAGJob( job,
                                     new File( mPegasusPlanOptions.getSubmitDirectory() ),
                                     new File( options.getSubmitDirectory()),
                                     basenamePrefix.toString()
@@ -438,14 +438,14 @@ public class SUBDAXGenerator{
      * 
      * @return the constructed DAG job.
      */
-    protected SubInfo constructDAGJob( SubInfo subdaxJob,
+    protected Job constructDAGJob( Job subdaxJob,
                                        File directory,
                                        File subdaxDirectory,
                                        String basenamePrefix){
         
     
         //for time being use the old functions.
-        SubInfo job = new SubInfo();
+        Job job = new Job();
         //the parent directory where the submit file for condor dagman has to
         //reside. the submit files for the corresponding partition are one level
         //deeper.
@@ -522,7 +522,7 @@ public class SUBDAXGenerator{
         //the job itself is the main job of the super node
         //construct the classad specific information
         job.jobID = job.getName();
-        job.jobClass = SubInfo.COMPUTE_JOB;
+        job.jobClass = Job.COMPUTE_JOB;
 
 
         //directory where all the dagman related files for the nested dagman
@@ -787,7 +787,7 @@ public class SUBDAXGenerator{
      * 
      * @return  the prescript
      */
-    public String constructPegasusPlanPrescript( SubInfo job,
+    public String constructPegasusPlanPrescript( Job job,
                                                  PlannerOptions options,
                                                  String properties,
                                                  String log ){

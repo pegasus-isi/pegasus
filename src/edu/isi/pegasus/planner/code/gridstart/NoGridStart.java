@@ -28,7 +28,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.POSTScript;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.TransferJob;
@@ -170,10 +170,10 @@ public class NoGridStart implements GridStart {
      *
      * @param aggJob the AggregatedJob into which the collection has to be
      *               integrated.
-     * @param jobs   the collection of jobs (SubInfo) that need to be enabled.
+     * @param jobs   the collection of jobs (Job) that need to be enabled.
      *
      * @return the AggregatedJob containing the enabled jobs.
-     * @see #enable(SubInfo,boolean)
+     * @see #enable(Job,boolean)
      */
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
         //sanity check for the arguments
@@ -186,7 +186,7 @@ public class NoGridStart implements GridStart {
         mEnablingPartOfAggregatedJob = true;
 
         for (Iterator it = jobs.iterator(); it.hasNext(); ) {
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             
             //always pass isGlobus true as always
             //interested only in executable strargs
@@ -209,7 +209,7 @@ public class NoGridStart implements GridStart {
      * launcher executable. It connects the stdio, and stderr to underlying
      * condor mechanisms so that they are transported back to the submit host.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param isGlobusJob is <code>true</code>, if the job generated a
      *        line <code>universe = globus</code>, and thus runs remotely.
@@ -220,7 +220,7 @@ public class NoGridStart implements GridStart {
      *         the path to kickstart could not be determined on the site where
      *         the job is scheduled.
      */
-    public boolean enable(SubInfo job, boolean isGlobusJob) {
+    public boolean enable(Job job, boolean isGlobusJob) {
         //take care of relative submit directory if specified
         String submitDir = mSubmitDir + mSeparator;
 //        String submitDir = getSubmitDirectory( mSubmitDir , job) + mSeparator;
@@ -299,7 +299,7 @@ public class NoGridStart implements GridStart {
                     job.condorVariables.construct( key, "/tmp" );
 
                     AggregatedJob clusteredJob = (AggregatedJob) job;
-                    SubInfo firstJob = clusteredJob.getConstituentJob(0);
+                    Job firstJob = clusteredJob.getConstituentJob(0);
 
                     GridStartFactory factory = new GridStartFactory();
                     factory.initialize(mBag, mDAG);
@@ -317,12 +317,12 @@ public class NoGridStart implements GridStart {
                     //http://jira.pegasus.isi.edu/browse/PM-59
 
                     //enable the whole clustered job via kickstart
-                    SubInfo j = (SubInfo) clusteredJob.clone();
+                    Job j = (Job) clusteredJob.clone();
                     gs.enable(j, isGlobusJob);
                     
                     //enable all constitutents jobs through the factory
                     for (Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext();) {
-                        SubInfo cJob = (SubInfo) it.next();
+                        Job cJob = (Job) it.next();
                         gs.enable(cJob, isGlobusJob);
                     }
 
@@ -370,8 +370,8 @@ public class NoGridStart implements GridStart {
                 
             }
             else if( !mEnablingPartOfAggregatedJob ){
-                if( job.getJobType() == SubInfo.COMPUTE_JOB ||
-                    job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+                if( job.getJobType() == Job.COMPUTE_JOB ||
+                    job.getJobType() == Job.STAGED_COMPUTE_JOB ){
 
                     if( !mSLS.doesCondorModifications() && 
                             //do the check only if input/output files are not empty
@@ -427,7 +427,7 @@ public class NoGridStart implements GridStart {
             }
 
             //for cleanup jobs no generation of stats for output files
-            if (job.getJobType() != SubInfo.CLEANUP_JOB) {
+            if (job.getJobType() != Job.CLEANUP_JOB) {
                 generateListofFilenamesFile(job.getOutputFiles(),
                                            job.getID() + ".out.lof");
 
@@ -443,20 +443,20 @@ public class NoGridStart implements GridStart {
      * handled for staged compute jobs, where Pegasus is staging the binaries
      * to the remote site.
      * 
-     * @param job   the <code>SubInfo</code> containing the job description.
+     * @param job   the <code>Job</code> containing the job description.
      *
      * @return the path that needs to be set as the executable key. If 
      *         transfer_executable is not set the path to the executable is
      *         returned as is.
      */
-    protected String handleTransferOfExecutable( SubInfo job  ) {
+    protected String handleTransferOfExecutable( Job job  ) {
         Condor cvar = job.condorVariables;
         String path = job.executable;
         
         if ( cvar.getBooleanValue( "transfer_executable" )) {
             
             //explicitly check for whether the job is a staged compute job or not
-            if( job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+            if( job.getJobType() == Job.STAGED_COMPUTE_JOB ){
                 //the executable is being staged to the remote site.
                 //all we need to do is unset transfer_executable
                 cvar.construct( "transfer_executable", "false" );
@@ -530,7 +530,7 @@ public class NoGridStart implements GridStart {
      * 
      * @return the condor key . can be initialdir or remote_initialdir
      */
-    private String getDirectoryKey(SubInfo job) {
+    private String getDirectoryKey(Job job) {
         /*
         String style = (String)job.vdsNS.get( Pegasus.STYLE_KEY );
                     //remove the remote or initial dir's for the compute jobs
@@ -556,7 +556,7 @@ public class NoGridStart implements GridStart {
      *
      * @return boolean
      */
-    private boolean removeDirectoryKey(SubInfo job){
+    private boolean removeDirectoryKey(Job job){
         String style = job.vdsNS.containsKey(Pegasus.STYLE_KEY) ?
                        null :
                        (String)job.vdsNS.get(Pegasus.STYLE_KEY);
@@ -578,7 +578,7 @@ public class NoGridStart implements GridStart {
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    private void construct(SubInfo job, String key, String value){
+    private void construct(Job job, String key, String value){
         job.condorVariables.construct(key,value);
     }
 
@@ -660,7 +660,7 @@ public class NoGridStart implements GridStart {
      * 
      * @return  the full path to the directory where the job executes
      */
-    public String getWorkerNodeDirectory( SubInfo job ){
+    public String getWorkerNodeDirectory( Job job ){
         StringBuffer workerNodeDir = new StringBuffer();
         String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
         destDir = ( destDir == null ) ? "/tmp" : destDir;

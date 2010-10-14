@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 
@@ -202,20 +202,20 @@ public class S3 implements CleanupImplementation{
      *
      * @return the cleanup job.
      */
-    public SubInfo createCleanupJob( String id, List files, SubInfo job ){
-        SubInfo cleanupJob = null;
+    public Job createCleanupJob( String id, List files, Job job ){
+        Job cleanupJob = null;
         
         //create a cleanup job per file
-        List<SubInfo> cJobs = new LinkedList<SubInfo>( );
+        List<Job> cJobs = new LinkedList<Job>( );
         for( Iterator<PegasusFile> it = files.iterator(); it.hasNext() ; ){
             PegasusFile file = it.next();
-            SubInfo cJob = this.createCleanupJob( id, file, job );
+            Job cJob = this.createCleanupJob( id, file, job );
             cJobs.add( cJob );
         }
             
         if( files.size() > 1 ){      
             //now lets merge all these jobs
-            SubInfo merged = mSeqExecAggregator.construct( cJobs, "cleanup", id  );
+            Job merged = mSeqExecAggregator.construct( cJobs, "cleanup", id  );
             String stdIn = id + ".in";
             //rename the stdin file to make in accordance with tx jobname
             File f = new File( mSubmitDirectory, merged.getStdIn() );
@@ -228,7 +228,7 @@ public class S3 implements CleanupImplementation{
             //set the name of the merged job back to the name of
             //transfer job passed in the function call
             cleanupJob.setName( id );
-            cleanupJob.setJobType(  SubInfo.CLEANUP_JOB );
+            cleanupJob.setJobType(  Job.CLEANUP_JOB );
             
             
         }else{
@@ -249,12 +249,12 @@ public class S3 implements CleanupImplementation{
      *
      * @return the cleanup job.
      */
-    protected SubInfo createCleanupJob( String id, PegasusFile file, SubInfo job ){
+    protected Job createCleanupJob( String id, PegasusFile file, Job job ){
 
         //we want to run the clnjob in the same directory
         //as the compute job. So we clone.
-        SubInfo cJob = ( SubInfo )job.clone();
-        cJob.setJobType( SubInfo.CLEANUP_JOB );
+        Job cJob = ( Job )job.clone();
+        cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
 
         //inconsistency between job name and logical name for now

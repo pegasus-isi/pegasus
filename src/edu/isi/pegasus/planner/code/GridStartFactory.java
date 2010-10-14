@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.POSTScript;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -265,7 +265,7 @@ public class GridStartFactory {
      * @throws GridStartFactoryException that nests any error that
      *            might occur during the instantiation of the implementation.
      */
-    public GridStart loadGridStart( SubInfo job, String gridStartPath )
+    public GridStart loadGridStart( Job job, String gridStartPath )
                                                    throws GridStartFactoryException {
 
         //sanity checks first
@@ -320,7 +320,7 @@ public class GridStartFactory {
      * @throws GridStartFactoryException that nests any error that
      *            might occur during the instantiation of the implementation.
      */
-    public POSTScript loadPOSTScript( SubInfo job, GridStart gridStart )
+    public POSTScript loadPOSTScript( Job job, GridStart gridStart )
                                                    throws GridStartFactoryException {
 
         //sanity checks first
@@ -338,7 +338,7 @@ public class GridStartFactory {
         String postScriptType;
         if ( mPostScriptScope.equals( this.ALL_POST_SCRIPT_SCOPE ) ||
             ( mPostScriptScope.equals( this.ESSENTIAL_POST_SCRIPT_SCOPE ) &&
-             job.getJobType() != SubInfo.REPLICA_REG_JOB)
+             job.getJobType() != Job.REPLICA_REG_JOB)
             ) {
                 //we need to apply some postscript
                 //let us figure out the type of postscript to instantiate

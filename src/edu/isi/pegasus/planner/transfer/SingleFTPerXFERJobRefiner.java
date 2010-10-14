@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.transfer;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;

@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.partitioner.graph;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
 
 
@@ -51,7 +51,7 @@ public class Adapter {
         for( Iterator it = dag.vJobSubInfos.iterator(); it.hasNext(); ){
             //pass the jobs to the callback
             //populate the job as a node in the graph
-            SubInfo job = ( SubInfo )it.next();
+            Job job = ( Job )it.next();
             GraphNode node = new GraphNode( job.getID(), job );
             graph.addNode( node );
         }

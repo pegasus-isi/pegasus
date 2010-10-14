@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
 import edu.isi.pegasus.planner.classes.FileTransfer;
@@ -204,7 +204,7 @@ public class Condor extends AbstractMultipleFTPerXFERJob {
      * The job itself is a /bin/true job that currently only manages to
      * transfer input files from the local host.
      *
-     * @param job         the SubInfo object for the job, in relation to which
+     * @param job         the Job object for the job, in relation to which
      *                    the transfer node is being added. Either the transfer
      *                    node can be transferring this jobs input files to
      *                    the execution pool, or transferring this job's output
@@ -223,7 +223,7 @@ public class Condor extends AbstractMultipleFTPerXFERJob {
      *
      * @return  the created TransferJob.
      */
-    public TransferJob createTransferJob( SubInfo job,
+    public TransferJob createTransferJob( Job job,
                                           Collection files,
                                           Collection execFiles,
                                           String txJobName,
@@ -231,7 +231,7 @@ public class Condor extends AbstractMultipleFTPerXFERJob {
 
 
         //sanity check
-        if( jobClass != SubInfo.STAGE_IN_JOB ){
+        if( jobClass != Job.STAGE_IN_JOB ){
             throw new RuntimeException( "Condor file transfer can only be used for stagein" );
         }
 

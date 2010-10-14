@@ -30,7 +30,7 @@ import java.util.List;
  * @version $Revision$
  */
 
-public class GRMSJob extends SubInfo {
+public class GRMSJob extends Job {
 
     /**
      * List of the input urls from where to fetch the input files.
@@ -58,11 +58,11 @@ public class GRMSJob extends SubInfo {
 
     /**
      * The overloaded construct that constructs a GRMS job by wrapping around
-     * the SubInfo job.
+     * the Job job.
      *
      * @param job  the original job description.
      */
-    public GRMSJob(SubInfo job) {
+    public GRMSJob(Job job) {
         super(job);
         inputURLs = new java.util.ArrayList();
         outputURLs = new java.util.ArrayList();
@@ -161,7 +161,7 @@ public class GRMSJob extends SubInfo {
      * reference. It is not a true copy.
      */
     public Object clone(){
-        GRMSJob newJob    = new GRMSJob((SubInfo)super.clone());
+        GRMSJob newJob    = new GRMSJob((Job)super.clone());
         newJob.inputURLs  = this.inputURLs;
         newJob.outputURLs = this.outputURLs;
         return newJob;

@@ -89,7 +89,7 @@ import java.util.LinkedList;
 
 import java.util.Properties;
 import java.util.Set;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 
@@ -627,9 +627,9 @@ public class CPlanner extends Executable{
      *
      * @return  the noop job.
      */
-    protected SubInfo createNoOPJob( String name ) {
+    protected Job createNoOPJob( String name ) {
 
-        SubInfo newJob = new SubInfo();
+        Job newJob = new Job();
 
         //jobname has the dagname and index to indicate different
         //jobs for deferred planning
@@ -647,7 +647,7 @@ public class CPlanner extends Executable{
 
         //construct noop keys
         newJob.setSiteHandle( "local" );
-        newJob.setJobType( SubInfo.CREATE_DIR_JOB );
+        newJob.setJobType( Job.CREATE_DIR_JOB );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
@@ -668,7 +668,7 @@ public class CPlanner extends Executable{
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    protected void construct(SubInfo job, String key, String value){
+    protected void construct(Job job, String key, String value){
         job.condorVariables.checkKeyInNS(key,value);
     }
 
@@ -1560,7 +1560,7 @@ public class CPlanner extends Executable{
         while( e.hasMoreElements() ){
             List<String> l = new LinkedList<String>();
             for( int i = 0; e.hasMoreElements() && i++ < 1000; ){
-                SubInfo job = (SubInfo)e.nextElement();
+                Job job = (Job)e.nextElement();
                 l.add( job.getID() );
             }
             mLogger.logEntityHierarchyMessage( parentType, parentID, LoggingKeys.JOB_ID, l );

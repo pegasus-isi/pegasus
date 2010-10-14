@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.parser.dax;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
@@ -101,7 +101,7 @@ public class DAX2LabelGraph extends DAX2Graph {
      *
      * @param job  the job that was parsed.
      */
-    public void cbJob(SubInfo job) {
+    public void cbJob(Job job) {
         mLogger.log( "Adding job to graph " + job.getName() ,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         GraphNode gn = new GraphNode(job.logicalId,job.logicalName);

@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.code.gridstart;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -65,7 +65,7 @@ public class DCLauncher
     * launcher executable. It connects the stdio, and stderr to underlying
     * condor mechanisms so that they are transported back to the submit host.
     *
-    * @param job  the <code>SubInfo</code> object containing the job description
+    * @param job  the <code>Job</code> object containing the job description
     *             of the job that has to be enabled on the grid.
     * @param isGlobusJob is <code>true</code>, if the job generated a
     *        line <code>universe = globus</code>, and thus runs remotely.
@@ -76,7 +76,7 @@ public class DCLauncher
     *         the path to kickstart could not be determined on the site where
     *         the job is scheduled.
     */
-   public boolean enable(SubInfo job, boolean isGlobusJob) {
+   public boolean enable(Job job, boolean isGlobusJob) {
        boolean result = super.enable( job, isGlobusJob );
 
        //figure out the path to the datacutter executable
@@ -166,7 +166,7 @@ public class DCLauncher
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    private void construct(SubInfo job, String key, String value){
+    private void construct(Job job, String key, String value){
         job.condorVariables.construct(key,value);
     }
 

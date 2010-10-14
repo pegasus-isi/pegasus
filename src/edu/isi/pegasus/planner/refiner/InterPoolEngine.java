@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
@@ -244,7 +244,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     public void determineSites() {
-        SubInfo job;
+        Job job;
 
         //at present we schedule the whole workflow at once
         List jobs = convertToList( mDag.vJobSubInfos );
@@ -269,7 +269,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         //update the transformation with the hints in the 
         //DAX for the job.
         for( Iterator it = dag.jobIterator(); it.hasNext(); ){
-            SubInfo job = ( SubInfo ) it.next();
+            Job job = ( Job ) it.next();
             //some sanity check for hints namespace
             if( job.hints.containsKey( Hints.PFN_HINT_KEY ) &&
                 !job.hints.containsKey( Hints.EXECUTION_POOL_KEY )    ){
@@ -317,7 +317,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         String site ;
         for( Iterator it = dag.jobIterator(); it.hasNext(); i++ ){
 
-            SubInfo job = ( SubInfo ) it.next();
+            Job job = ( Job ) it.next();
             site  = job.getSiteHandle();
             mLogger.log( "Mapping Job "  + job.getName(), 
                          LogManager.DEBUG_MESSAGE_LEVEL );
@@ -411,7 +411,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      * 
      * @return constructed TransformationCatalogEntry 
      */
-    private TransformationCatalogEntry constructTCEntryFromJobHints( SubInfo job ){ 
+    private TransformationCatalogEntry constructTCEntryFromJobHints( Job job ){
         String executable = (String) job.hints.get( Hints.PFN_HINT_KEY );
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
         entry.setLogicalTransformation(job.getTXNamespace(), job.getTXName(), job.getTXVersion());
@@ -445,7 +445,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      * @return true profiles were successfully incorporated.
      *         false otherwise
      */
-    private boolean incorporateProfiles(SubInfo job){
+    private boolean incorporateProfiles(Job job){
         TransformationCatalogEntry tcEntry = null;
         List tcEntries = null;
         String siteHandle = job.getSiteHandle();
@@ -563,7 +563,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             }
             //setting the job type of the job to
             //denote the executable is being staged
-            job.setJobType(SubInfo.STAGED_COMPUTE_JOB);
+            job.setJobType(Job.STAGED_COMPUTE_JOB);
         }
         else{
             //the executable needs to point to the physical
@@ -597,12 +597,12 @@ public class InterPoolEngine extends Engine implements Refiner {
     /**
      * Handles the dependant executables that need to be staged.
      *
-     * @param job SubInfo
+     * @param job Job
      *
      */
-    private void handleDependantExecutables( SubInfo job ){
+    private void handleDependantExecutables( Job job ){
         String siteHandle = job.getSiteHandle();
-        boolean installedTX =  !(job.getJobType() == SubInfo.STAGED_COMPUTE_JOB );
+        boolean installedTX =  !(job.getJobType() == Job.STAGED_COMPUTE_JOB );
 
         List dependantExecutables = new ArrayList();
         for (Iterator it = job.getInputFiles().iterator(); it.hasNext(); ) {
@@ -650,7 +650,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                         //as an input file to the job in the dag
 
                         //a disconnect between the basename and the input lfn.
-                        String basename = SubInfo.getStagedExecutableBaseName(  lfn[0], lfn[1], lfn[2] );
+                        String basename = Job.getStagedExecutableBaseName(  lfn[0], lfn[1], lfn[2] );
 
                         FileTransfer fTx = new FileTransfer( basename,
                                                              job.jobName );
@@ -710,7 +710,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      *         null when transformation selector is unable to select any
      *         transformation
      */
-    private TransformationCatalogEntry selectTCEntry(List entries, SubInfo job,
+    private TransformationCatalogEntry selectTCEntry(List entries, Job job,
                                                      String selectors){
         //at present there is only one selector
         //operation performed on the selector
@@ -773,7 +773,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      *         false the hint was not set in job or was not successfully
      *               incorporated.
      */
-    private boolean incorporateHint(SubInfo job, String key) {
+    private boolean incorporateHint(Job job, String key) {
         //sanity check
         if (key.length() == 0) {
             return false;
@@ -874,10 +874,10 @@ public class InterPoolEngine extends Engine implements Refiner {
      * Logs the action taken by the refiner on a job as a XML fragment in
      * the XML Producer.
      *
-     * @param job  the <code>SubInfo</code> containing the job that was mapped
+     * @param job  the <code>Job</code> containing the job that was mapped
      *             to a site.
      */
-    protected void logRefinerAction( SubInfo job ){
+    protected void logRefinerAction( Job job ){
         StringBuffer sb = new StringBuffer();
         sb.append( "\t<siteselection job=\"" ).append( job.getName() ).append( "\">" );
         sb.append( "\n" ).append( "\t\t" );

@@ -24,7 +24,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway.JOB_TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 
@@ -62,7 +62,7 @@ public class CondorG extends Abstract {
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void apply( SubInfo job ) throws CondorStyleException {
+    public void apply( Job job ) throws CondorStyleException {
         String execSiteWorkDir = mSiteStore.getWorkDirectory( job );
         String workdir = (String) job.globusRSL.removeKey( "directory" ); // returns old value
         workdir = (workdir == null) ? execSiteWorkDir : workdir;

@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.cluster;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PCRelation;
 
@@ -54,7 +54,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 public abstract class Abstract implements Clusterer {
 
     /**
-     * A Map to store all the job(SubInfo) objects indexed by their logical ID found in
+     * A Map to store all the job(Job) objects indexed by their logical ID found in
      * the dax. This should actually be in the ADag structure.
      */
     protected Map mSubInfoMap;
@@ -163,7 +163,7 @@ public abstract class Abstract implements Clusterer {
         mPartitionClusterMap = new HashMap();
 
         for(Iterator it = mScheduledDAG.vJobSubInfos.iterator();it.hasNext();){
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             addJob( job );
         }
     }
@@ -196,7 +196,7 @@ public abstract class Abstract implements Clusterer {
         String prevSite = null;
         String currSite = null;
         for( Iterator it = nodes.iterator(); it.hasNext(); ){
-            SubInfo job = ( SubInfo )mSubInfoMap.get( it.next() );
+            Job job = ( Job )mSubInfoMap.get( it.next() );
             currSite = job.getSiteHandle();
             l.add( job );
 
@@ -214,7 +214,7 @@ public abstract class Abstract implements Clusterer {
         }
 
         int size = l.size();
-        SubInfo firstJob = (SubInfo)l.get(0);
+        Job firstJob = (Job)l.get(0);
 
 //        System.out.println( " Job to be clustered is " + firstJob);
 
@@ -244,7 +244,7 @@ public abstract class Abstract implements Clusterer {
         //replace the jobs in the partition with the clustered job
         //in the original workflow
         for( Iterator it = l.iterator(); it.hasNext(); ){
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             mLogger.log("Replacing job " + job.getName() +" with " + clusteredJob.getName(),
                         LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -277,8 +277,8 @@ public abstract class Abstract implements Clusterer {
      */
     public void parents( String partitionID, List parents ) throws ClustererException{
         String error = "No cluster job for partition ";
-        SubInfo clusteredNode = clusteredJob( partitionID );
-        SubInfo parentClusteredNode;
+        Job clusteredNode = clusteredJob( partitionID );
+        Job parentClusteredNode;
 
         //throw error if not found
         if( clusteredNode == null){ throw new ClustererException( error + partitionID); }
@@ -332,7 +332,7 @@ public abstract class Abstract implements Clusterer {
      *
      * @param job  the job being added
      */
-    protected void addJob( SubInfo job ){
+    protected void addJob( Job job ){
         mSubInfoMap.put( job.getLogicalID(), job );
     }
 
@@ -343,8 +343,8 @@ public abstract class Abstract implements Clusterer {
      *
      * @return the corresponding job.
      */
-    protected SubInfo getJob( String id ){
-        return (SubInfo) mSubInfoMap.get( id );
+    protected Job getJob( String id ){
+        return (Job) mSubInfoMap.get( id );
     }
 
 
@@ -354,7 +354,7 @@ public abstract class Abstract implements Clusterer {
      * @param p   the partition being clustered.
      * @param job the corresponding clustered job.
      */
-    protected void associate( Partition p, SubInfo job ){
+    protected void associate( Partition p, Job job ){
         mPartitionClusterMap.put( p.getID(), job );
     }
 
@@ -365,7 +365,7 @@ public abstract class Abstract implements Clusterer {
      *
      * @return the corresponding job, else null in case of job is not found.
      */
-    protected SubInfo clusteredJob( Partition p ){
+    protected Job clusteredJob( Partition p ){
         return this.clusteredJob( p.getID() );
     }
 
@@ -376,11 +376,11 @@ public abstract class Abstract implements Clusterer {
      *
      * @return the corresponding job, else null in case of job is not found.
      */
-    protected SubInfo clusteredJob( String id ){
+    protected Job clusteredJob( String id ){
         Object obj = mPartitionClusterMap.get( id );
         return  ( obj == null) ?
                null:
-               (SubInfo)obj;
+               (Job)obj;
     }
 
 }

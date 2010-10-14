@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.refiner.createdir;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import java.util.List;
@@ -55,7 +55,7 @@ public interface Implementation {
      *
      * @return create dir job.
      */
-    public SubInfo makeCreateDirJob( String site, String name, String directory );
+    public Job makeCreateDirJob( String site, String name, String directory );
 
 
 

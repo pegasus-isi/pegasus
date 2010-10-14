@@ -111,7 +111,7 @@ public class WorkflowMetrics extends Data {
      *
      * @param job  the job being added.
      */
-    public void increment( SubInfo job ){
+    public void increment( Job job ){
         //sanity check
         if( job == null ){
             return;
@@ -125,28 +125,28 @@ public class WorkflowMetrics extends Data {
         switch( type ){
 
             //treating compute and staged compute as same
-            case SubInfo.COMPUTE_JOB:
-            case SubInfo.STAGED_COMPUTE_JOB:
+            case Job.COMPUTE_JOB:
+            case Job.STAGED_COMPUTE_JOB:
                 mNumComputeJobs++;
                 break;
 
-            case SubInfo.STAGE_IN_JOB:
+            case Job.STAGE_IN_JOB:
                 mNumSITxJobs++;
                 break;
 
-            case SubInfo.STAGE_OUT_JOB:
+            case Job.STAGE_OUT_JOB:
                 mNumSOTxJobs++;
                 break;
 
-            case SubInfo.INTER_POOL_JOB:
+            case Job.INTER_POOL_JOB:
                 mNumInterTxJobs++;
                 break;
 
-            case SubInfo.REPLICA_REG_JOB:
+            case Job.REPLICA_REG_JOB:
                 mNumRegJobs++;
                 break;
 
-            case SubInfo.CLEANUP_JOB:
+            case Job.CLEANUP_JOB:
                 mNumCleanupJobs++;
                 break;
         }
@@ -158,7 +158,7 @@ public class WorkflowMetrics extends Data {
      *
      * @param job  the job being removed.
      */
-    public void decrement( SubInfo job ){
+    public void decrement( Job job ){
         //sanity check
         if( job == null ){
             return;
@@ -172,28 +172,28 @@ public class WorkflowMetrics extends Data {
         switch( type ){
 
             //treating compute and staged compute as same
-            case SubInfo.COMPUTE_JOB:
-            case SubInfo.STAGED_COMPUTE_JOB:
+            case Job.COMPUTE_JOB:
+            case Job.STAGED_COMPUTE_JOB:
                 mNumComputeJobs--;
                 break;
 
-            case SubInfo.STAGE_IN_JOB:
+            case Job.STAGE_IN_JOB:
                 mNumSITxJobs--;
                 break;
 
-            case SubInfo.STAGE_OUT_JOB:
+            case Job.STAGE_OUT_JOB:
                 mNumSOTxJobs--;
                 break;
 
-            case SubInfo.INTER_POOL_JOB:
+            case Job.INTER_POOL_JOB:
                 mNumInterTxJobs--;
                 break;
 
-            case SubInfo.REPLICA_REG_JOB:
+            case Job.REPLICA_REG_JOB:
                 mNumRegJobs--;
                 break;
 
-            case SubInfo.CLEANUP_JOB:
+            case Job.CLEANUP_JOB:
                 mNumCleanupJobs--;
                 break;
 

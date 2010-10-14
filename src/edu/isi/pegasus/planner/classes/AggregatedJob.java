@@ -33,7 +33,7 @@ import java.util.Iterator;
  * @version $Revision$
  */
 
-public class AggregatedJob extends SubInfo {
+public class AggregatedJob extends Job {
 
     /**
      * The collection of jobs that are contained in the aggregated job.
@@ -65,8 +65,8 @@ public class AggregatedJob extends SubInfo {
      * @param job the job whose shallow copy is created, and is the main job.
      * @param num the number of constituent jobs.
      */
-    public AggregatedJob(SubInfo job,int num) {
-        super((SubInfo)job.clone());
+    public AggregatedJob(Job job,int num) {
+        super((Job)job.clone());
         mConstituentJobs = new ArrayList(num);
     }
 
@@ -75,7 +75,7 @@ public class AggregatedJob extends SubInfo {
      *
      * @param job  the job to be added.
      */
-    public void add(SubInfo job){
+    public void add(Job job){
         mConstituentJobs.add(job);
     }
 
@@ -85,10 +85,10 @@ public class AggregatedJob extends SubInfo {
      * @return Object
      */
     public Object clone(){
-        AggregatedJob newJob = new AggregatedJob((SubInfo)super.clone(),
+        AggregatedJob newJob = new AggregatedJob((Job)super.clone(),
                                               mConstituentJobs.size());
         for(Iterator it = this.mConstituentJobs.iterator();it.hasNext();){
-            newJob.add( (SubInfo)(((SubInfo)it.next()).clone()));
+            newJob.add( (Job)(((Job)it.next()).clone()));
         }
         return newJob;
     }
@@ -110,8 +110,8 @@ public class AggregatedJob extends SubInfo {
      *
      * @return   a constituent job.
      */
-    public SubInfo getConstituentJob( int index ){
-        return (SubInfo) this.mConstituentJobs.get( index );
+    public Job getConstituentJob( int index ){
+        return (Job) this.mConstituentJobs.get( index );
     }
     
     /**

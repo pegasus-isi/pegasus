@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -139,7 +139,7 @@ public class JobAggregatorInstanceFactory {
      *            might occur during the instantiation
      *
      */
-    public JobAggregator loadInstance( SubInfo job ) throws JobAggregatorFactoryException{
+    public JobAggregator loadInstance( Job job ) throws JobAggregatorFactoryException{
         //sanity checks first
         if( !mInitialized ){
             throw new JobAggregatorFactoryException(

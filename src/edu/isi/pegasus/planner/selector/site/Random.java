@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.selector.site;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
@@ -62,7 +62,7 @@ public class Random extends AbstractPerJob {
      *               execution sites that can be used.
      *
      */
-    public void mapJob( SubInfo job, List sites ){
+    public void mapJob( Job job, List sites ){
 
         List rsites = mTCMapper.getSiteList( job.getTXNamespace(),job.getTXName(),
                                              job.getTXVersion(), sites );

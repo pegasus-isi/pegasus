@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -507,7 +507,7 @@ public class DeployWorkerPackage
             String destURLPrefix = 
                                siteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
             
-            boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, site, destURLPrefix, SubInfo.STAGE_IN_JOB);
+            boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, site, destURLPrefix, Job.STAGE_IN_JOB);
             String urlPrefix =  localTransfer ?
                                //lookup the site catalog to get the URL prefix
                                destURLPrefix :
@@ -631,23 +631,23 @@ public class DeployWorkerPackage
             fts.add( ft );
             
             //hmm need to propogate site info with a dummy job on fly
-            SubInfo dummy = new SubInfo() ;
+            Job dummy = new Job() ;
             dummy.setSiteHandle( site );
             
             boolean localTransfer = mLocalTransfers.get( site ) ;
             String tsite = localTransfer? "local" : site;
             
-            SubInfo setupTXJob = mSetupTransferImplementation.createTransferJob(
+            Job setupTXJob = mSetupTransferImplementation.createTransferJob(
                                          dummy,
                                          tsite,
                                          fts,
                                          null,
                                          this.getDeployJobName( dag, site , localTransfer),
-                                         SubInfo.STAGE_IN_JOB );
+                                         Job.STAGE_IN_JOB );
 
             
             //add the untar job
-            SubInfo untarJob = this.makeUntarJob( site,
+            Job untarJob = this.makeUntarJob( site,
                                                   this.getUntarJobName( dag, site ),  
                                                   getBasename( ((NameValue)ft.getSourceURL()).getValue() )
                                                   );
@@ -685,7 +685,7 @@ public class DeployWorkerPackage
             GraphNode node = ( GraphNode )it.next();
 
             //get the job associated with node
-            result.add( ( SubInfo )node.getContent() );
+            result.add( ( Job )node.getContent() );
 
             //all the children of the node are the edges of the DAG
             for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
@@ -746,7 +746,7 @@ public class DeployWorkerPackage
             
             //create a remove directory job per site
             String cleanupJobname = this.getCleanupJobname( dag, site );
-            SubInfo cleanupJob = removeDirectory.makeRemoveDirJob( site, cleanupJobname, cleanupFiles);
+            Job cleanupJob = removeDirectory.makeRemoveDirJob( site, cleanupJobname, cleanupFiles);
                 
             //add the original leaves as parents to cleanup node 
             for( Iterator lIt = workflow.getLeaves().iterator(); lIt.hasNext(); ){                
@@ -772,7 +772,7 @@ public class DeployWorkerPackage
             GraphNode node = ( GraphNode )it.next();
 
             //get the job associated with node
-            result.add( ( SubInfo )node.getContent() );
+            result.add( ( Job )node.getContent() );
 
             //all the children of the node are the edges of the DAG
             for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
@@ -797,7 +797,7 @@ public class DeployWorkerPackage
         Set set = new HashSet();
 
         for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
@@ -919,8 +919,8 @@ public class DeployWorkerPackage
      *
      * @return create dir job.
      */
-    protected SubInfo makeUntarJob( String site, String jobName, String wpBasename ) {
-        SubInfo newJob  = new SubInfo();
+    protected Job makeUntarJob( String site, String jobName, String wpBasename ) {
+        Job newJob  = new Job();
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
@@ -986,7 +986,7 @@ public class DeployWorkerPackage
         //hack for Pegasus bug 41. for local site the untar job
         //needs to have initialdir specified. that is only set for 
         //compute jobs.
-        newJob.jobClass = SubInfo.COMPUTE_JOB;
+        newJob.jobClass = Job.COMPUTE_JOB;
         newJob.jobID = jobName;
 
         //the profile information from the pool catalog needs to be

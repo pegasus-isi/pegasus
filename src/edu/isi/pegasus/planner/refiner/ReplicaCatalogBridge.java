@@ -31,7 +31,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -417,7 +417,7 @@ public class ReplicaCatalogBridge
     */
 
     /**
-     * It constructs the SubInfo object for the registration node, which
+     * It constructs the Job object for the registration node, which
      * registers the materialized files on the output pool in the RLS.
      * Note that the relations corresponding to this node should already have
      * been added to the concerned <code>DagInfo</code> object.
@@ -432,13 +432,13 @@ public class ReplicaCatalogBridge
      *                    destination URLs. The destination
      *                    URLs would be our PFNs.
      *
-     * @return SubInfo corresponding to the new registration node.
+     * @return Job corresponding to the new registration node.
      */
-    public  SubInfo makeRCRegNode( String regJobName, SubInfo job,
+    public  Job makeRCRegNode( String regJobName, Job job,
                                   Collection files ) {
         //making the files string
 
-        SubInfo newJob = new SubInfo();
+        Job newJob = new Job();
 
         newJob.setName( regJobName );
         newJob.setTransformation( this.RC_TRANSFORMATION_NS,
@@ -487,7 +487,7 @@ public class ReplicaCatalogBridge
 //        newJob.setUniverse( Engine.REGISTRATION_UNIVERSE );
         newJob.setUniverse( GridGateway.JOB_TYPE.register.toString() );
         newJob.setSiteHandle( tc.getResourceId() );
-        newJob.setJobType( SubInfo.REPLICA_REG_JOB );
+        newJob.setJobType( Job.REPLICA_REG_JOB );
         newJob.setVDSSuperNode( job.getName() );
 
         //the profile information from the pool catalog needs to be

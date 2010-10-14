@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -221,14 +221,14 @@ public class S3 implements Implementation {
      *
      * @return create dir job.
      */
-    public SubInfo makeCreateDirJob( String site, String name, String directory ) {
+    public Job makeCreateDirJob( String site, String name, String directory ) {
         //figure out if we need to create a bucket or not.
         SiteCatalogEntry entry = mSiteStore.lookup( site );
         if( entry == null ){
             throw new RuntimeException( "No entry in site catalog for site " + site );
         }
         
-        SubInfo createDirJob = null;
+        Job createDirJob = null;
         String bucketName  = entry.getInternalMountPointOfWorkDirectory();
         
         if ( bucketName == null ||  bucketName.trim().length() == 0 ||
@@ -257,9 +257,9 @@ public class S3 implements Implementation {
      *
      * @return  the noop job.
      */
-    protected SubInfo createNoOPJob( String name ) {
+    protected Job createNoOPJob( String name ) {
 
-        SubInfo newJob = new SubInfo();
+        Job newJob = new Job();
         List entries = null;
         String execPath =  null;
 
@@ -279,7 +279,7 @@ public class S3 implements Implementation {
 
         //construct noop keys
         newJob.setSiteHandle( "local" );
-        newJob.setJobType( SubInfo.CREATE_DIR_JOB );
+        newJob.setJobType( Job.CREATE_DIR_JOB );
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
@@ -300,7 +300,7 @@ public class S3 implements Implementation {
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    protected void construct(SubInfo job, String key, String value){
+    protected void construct(Job job, String key, String value){
         job.condorVariables.checkKeyInNS(key,value);
     }
 
@@ -317,8 +317,8 @@ public class S3 implements Implementation {
      *
      * @return create dir job.
      */
-    public SubInfo makeCreateBucketJob( String site, String name, String directory ) {
-        SubInfo newJob  = new SubInfo();
+    public Job makeCreateBucketJob( String site, String name, String directory ) {
+        Job newJob  = new Job();
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
@@ -379,7 +379,7 @@ public class S3 implements Implementation {
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = argString;
-        newJob.jobClass = SubInfo.CREATE_DIR_JOB;
+        newJob.jobClass = Job.CREATE_DIR_JOB;
         newJob.jobID = name;
 
         //the profile information from the pool catalog needs to be

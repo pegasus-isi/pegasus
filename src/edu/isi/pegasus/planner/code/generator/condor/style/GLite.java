@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -113,7 +113,7 @@ public class GLite extends Abstract {
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void apply( SubInfo job ) throws CondorStyleException {
+    public void apply( Job job ) throws CondorStyleException {
         String execSiteWorkDir = mSiteStore.getWorkDirectory( job );
         String workdir = (String) job.globusRSL.removeKey( "directory" ); // returns old value
         workdir = (workdir == null) ? execSiteWorkDir : workdir;
@@ -155,7 +155,7 @@ public class GLite extends Abstract {
         }
         
         /* similar handling for registration jobs */
-        if( job.getSiteHandle().equals( "local" ) && job.getJobType() == SubInfo.REPLICA_REG_JOB ){
+        if( job.getSiteHandle().equals( "local" ) && job.getJobType() == Job.REPLICA_REG_JOB ){
                 /* remove the change dir requirments for the 
                  * third party transfer on local host */
                 job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY, "false" );
@@ -197,7 +197,7 @@ public class GLite extends Abstract {
      * 
      * @throws CondorStyleException in case of condor quoting error
      */
-    protected String getCERequirementsForJob( SubInfo job ) throws CondorStyleException {
+    protected String getCERequirementsForJob( Job job ) throws CondorStyleException {
         StringBuffer value = new StringBuffer();
 
         //do quoting ourselves
@@ -309,7 +309,7 @@ public class GLite extends Abstract {
      * @param job      the job object.
      * @param key      the missing key 
      */
-    protected String missingKeyError( SubInfo job, String key ){
+    protected String missingKeyError( Job job, String key ){
         StringBuffer sb = new StringBuffer();
         sb.append( "( " ).
              append( "Missing key " ).append( key ).

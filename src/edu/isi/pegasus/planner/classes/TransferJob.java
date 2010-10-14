@@ -25,7 +25,7 @@ package edu.isi.pegasus.planner.classes;
  * @author Gaurang Mehta gmehta@isi.edu
  * @version $Revision$
  */
-public class TransferJob extends SubInfo {
+public class TransferJob extends Job {
 
     /**
      * The site at which the transfer jobs would have run, had it been running
@@ -43,11 +43,11 @@ public class TransferJob extends SubInfo {
 
     /**
      * The overloaded construct that constructs a GRMS job by wrapping around
-     * the <code>SubInfo</code> job.
+     * the <code>Job</code> job.
      *
      * @param job  the original job description.
      */
-    public TransferJob(SubInfo job){
+    public TransferJob(Job job){
         super(job);
         mNonTPTSite = null;
     }
@@ -98,7 +98,7 @@ public class TransferJob extends SubInfo {
      * @return Object
      */
     public Object clone(){
-        TransferJob newJob = new TransferJob((SubInfo)super.clone());
+        TransferJob newJob = new TransferJob((Job)super.clone());
         newJob.setNonThirdPartySite(this.getNonThirdPartySite());
         return newJob;
     }

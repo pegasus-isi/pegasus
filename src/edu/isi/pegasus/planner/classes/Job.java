@@ -57,7 +57,7 @@ import java.io.IOException;
  * @version $Revision$
  */
 
-public class SubInfo extends Data implements GraphNodeContent{
+public class Job extends Data implements GraphNodeContent{
 
     /**
      * Denotes a job that does not fall into the other categories. It might
@@ -134,47 +134,47 @@ public class SubInfo extends Data implements GraphNodeContent{
         GridGateway.JOB_TYPE jtype ;
         
         switch( type ){
-            case SubInfo.COMPUTE_JOB:
+            case Job.COMPUTE_JOB:
                 jtype = GridGateway.JOB_TYPE.compute;
                 break;
                 
-            case SubInfo.STAGE_IN_JOB:
+            case Job.STAGE_IN_JOB:
                 jtype = GridGateway.JOB_TYPE.transfer;
                 break;
             
-            case SubInfo.STAGE_OUT_JOB:
+            case Job.STAGE_OUT_JOB:
                 jtype = GridGateway.JOB_TYPE.transfer;
                 break;
             
-            case SubInfo.REPLICA_REG_JOB:
+            case Job.REPLICA_REG_JOB:
                 jtype = GridGateway.JOB_TYPE.register;
                 break;
            
-            case SubInfo.INTER_POOL_JOB:
+            case Job.INTER_POOL_JOB:
                 jtype = GridGateway.JOB_TYPE.transfer;
                 break;
             
-            case SubInfo.CREATE_DIR_JOB:
+            case Job.CREATE_DIR_JOB:
                 jtype = GridGateway.JOB_TYPE.auxillary;
                 break;
             
             
-            case SubInfo.STAGED_COMPUTE_JOB:
+            case Job.STAGED_COMPUTE_JOB:
                 jtype = GridGateway.JOB_TYPE.compute;
                 break;
                 
             
-            case SubInfo.CLEANUP_JOB:
+            case Job.CLEANUP_JOB:
                 jtype = GridGateway.JOB_TYPE.cleanup;
                 break;
                 
             /*
-            case SubInfo.SYMLINK_STAGE_IN_JOB:
+            case Job.SYMLINK_STAGE_IN_JOB:
                 jtype = GridGateway.JOB_TYPE.transfer;
                 break;
             */
                 
-            case SubInfo.UNASSIGNED_JOB:
+            case Job.UNASSIGNED_JOB:
             default:
                 jtype = GridGateway.JOB_TYPE.compute;
         }
@@ -378,7 +378,7 @@ public class SubInfo extends Data implements GraphNodeContent{
     /**
      * Intialises the member variables.
      */
-    public SubInfo() {
+    public Job() {
         jobName          = "";
         namespace        = "";
         logicalName      = "";
@@ -413,9 +413,9 @@ public class SubInfo extends Data implements GraphNodeContent{
     /**
      * Overloaded constructor. Does a shallow copy of the job object passed.
      *
-     * @param job the <code>SubInfo</code> object containing the job description.
+     * @param job the <code>Job</code> object containing the job description.
      */
-    public SubInfo(SubInfo job){
+    public Job(Job job){
         jobName          = job.jobName;
         namespace        = job.namespace;
         logicalName      = job.logicalName;
@@ -453,7 +453,7 @@ public class SubInfo extends Data implements GraphNodeContent{
      * @return clone of the object.
      */
     public Object clone(){
-        SubInfo newSub = new SubInfo();
+        Job newSub = new Job();
 
         newSub.condorUniverse = this.condorUniverse;
         newSub.envVariables   = (ENV)this.envVariables.clone();
@@ -874,7 +874,7 @@ public class SubInfo extends Data implements GraphNodeContent{
      * @return grid gateway job type
      */
     public GridGateway.JOB_TYPE getGridGatewayJobType(){
-        return SubInfo.jobType2GridGatewayJobType( this.getJobType() );
+        return Job.jobType2GridGatewayJobType( this.getJobType() );
     }
 
     /**
@@ -1285,8 +1285,8 @@ public class SubInfo extends Data implements GraphNodeContent{
      *         false if the value is not in range.
      */
     public static boolean typeInRange(int type){
-        return ( type >= SubInfo.UNASSIGNED_JOB &&
-                 type <= SubInfo.CLEANUP_JOB );
+        return ( type >= Job.UNASSIGNED_JOB &&
+                 type <= Job.CLEANUP_JOB );
     }
 
 
@@ -1432,11 +1432,11 @@ public class SubInfo extends Data implements GraphNodeContent{
      * The merging of the profile is dependant upon the namespace to which it
      * belongs. Some profiles maybe overriden, others maybe summed up etc.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             for the job whose profiles have to be merged into this job.
      *
      */
-    public void mergeProfiles( SubInfo job ){
+    public void mergeProfiles( Job job ){
         this.globusRSL.merge( job.globusRSL );
         this.envVariables.merge( job.envVariables );
         this.condorVariables.merge( job.condorVariables );
@@ -1455,8 +1455,8 @@ public class SubInfo extends Data implements GraphNodeContent{
      *         else false.
      */
     public boolean equals(Object obj){
-        if(obj instanceof SubInfo){
-            SubInfo job = (SubInfo) obj;
+        if(obj instanceof Job){
+            Job job = (Job) obj;
 
             return job.jobName.equals(this.jobName) ?
                 true :

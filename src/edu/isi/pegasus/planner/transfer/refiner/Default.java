@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.transfer.refiner;
 
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.NameValue;
@@ -127,7 +127,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * from the location returned from the replica catalog to the job's execution
      * pool.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -135,7 +135,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      *                     source and destination file url's for symbolic linking
      *                     on compute site.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       Collection<FileTransfer> files,
                                       Collection<FileTransfer> symlinkFiles ){
         
@@ -156,7 +156,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * from the location returned from the replica catalog to the job's execution
      * pool.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -164,7 +164,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * @param implementation  the transfer implementation to use
      * 
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       Collection<FileTransfer> files,
                                       String prefix,
                                       Implementation implementation ){
@@ -184,7 +184,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
         
         //the job class is always stage in , as we dont want 
         //later modules to treat symlink jobs different from stagein jobs
-        int jobClass = SubInfo.STAGE_IN_JOB;
+        int jobClass = Job.STAGE_IN_JOB;
 
         //to prevent duplicate dependencies
         java.util.HashSet tempSet = new java.util.HashSet();
@@ -259,7 +259,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             if(stagedFiles.isEmpty()){
                 //add the direct relation
                 addRelation(newJobName, jobName, pool, true);
-                SubInfo siJob = implementation.createTransferJob( job,
+                Job siJob = implementation.createTransferJob( job,
                                                                   site,
                                                                   files,
                                                                   null,
@@ -273,7 +273,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             else{
                 //the dependency to stage in job is added via the
                 //the setup job that does the chmod
-                SubInfo siJob = implementation.createTransferJob( job,
+                Job siJob = implementation.createTransferJob( job,
                                                                   site,
                                                                   files,
                                                                   stagedFiles,
@@ -295,7 +295,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * Adds the inter pool transfer nodes that are required for  transferring
      * the output files of the parents to the jobs execution site.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -303,7 +303,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * @param localTransfer  boolean indicating that associated transfer job will run
      *                       on local site.
      */
-    public void addInterSiteTXNodes(SubInfo job,
+    public void addInterSiteTXNodes(Job job,
                                     Collection files,
                                     boolean localTransfer ){
         String jobName = job.getName();
@@ -436,12 +436,12 @@ public class Default extends MultipleFTPerXFERJobRefiner {
                 mLogger.log(msg,LogManager.DEBUG_MESSAGE_LEVEL);
 
                 //added in make transfer node
-                SubInfo interJob = mTXInterImplementation.createTransferJob( job,
+                Job interJob = mTXInterImplementation.createTransferJob( job,
                                                                              site,
                                                                              files,
                                                                              null,
                                                                              newJobName,
-                                                                             SubInfo.INTER_POOL_JOB );
+                                                                             Job.INTER_POOL_JOB );
 
                 addJob( interJob );
 
@@ -457,7 +457,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * Adds the stageout transfer nodes, that stage data to an output site
      * specified by the user.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -466,7 +466,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * @param localTransfer  boolean indicating that associated transfer job will run
      *                       on local site.
      */
-    public void addStageOutXFERNodes(SubInfo job,
+    public void addStageOutXFERNodes(Job job,
                                      Collection files,
                                      ReplicaCatalogBridge rcb,
                                      boolean localTransfer ) {
@@ -478,7 +478,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * Adds the stageout transfer nodes, that stage data to an output site
      * specified by the user.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -490,7 +490,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      *                      a deleted node by the reduction engine or not.
      *                      default: false
      */
-    public  void addStageOutXFERNodes( SubInfo job,
+    public  void addStageOutXFERNodes( Job job,
                                        Collection files,
                                        ReplicaCatalogBridge rcb,
                                        boolean localTransfer,
@@ -533,12 +533,12 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             if (makeTNode) {
                 //added in make transfer node
                 //mDag.addNewJob(newJobName);
-                SubInfo soJob = mTXStageOutImplementation.createTransferJob( job,
+                Job soJob = mTXStageOutImplementation.createTransferJob( job,
                                                                              site,
                                                                              txFiles,
                                                                              null,
                                                                              newJobName,
-                                                                             SubInfo.STAGE_OUT_JOB );
+                                                                             Job.STAGE_OUT_JOB );
                 addJob( soJob );
                 if (!deletedLeaf) {
                     addRelation(jobName, newJobName);
@@ -581,12 +581,12 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      *
      * @return the registration job.
      */
-    protected SubInfo createRegistrationJob(String regJobName,
-                                            SubInfo job,
+    protected Job createRegistrationJob(String regJobName,
+                                            Job job,
                                             Collection files,
                                             ReplicaCatalogBridge rcb ) {
 
-        SubInfo regJob = rcb.makeRCRegNode( regJobName, job, files );
+        Job regJob = rcb.makeRCRegNode( regJobName, job, files );
 
         //log the registration action for provenance purposes
         StringBuffer sb = new StringBuffer();
@@ -674,7 +674,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      *
      * @param job  the job to be added.
      */
-    public void addJob(SubInfo job){
+    public void addJob(Job job){
         mDAG.add(job);
     }
 
@@ -734,7 +734,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * @param files        list of <code>FileTransfer</code> objects containing file transfers.
      * @param type         the type of transfer job
      */
-    protected void logRefinerAction( SubInfo computeJob, SubInfo txJob, Collection files , String type ){
+    protected void logRefinerAction( Job computeJob, Job txJob, Collection files , String type ){
         StringBuffer sb = new StringBuffer();
         String indent = "\t";
         sb.append( indent );
@@ -771,11 +771,11 @@ public class Default extends MultipleFTPerXFERJobRefiner {
         sb.append( "\n" );
 
         //log the graph relationship
-        String parent = ( txJob.getJobType() == SubInfo.STAGE_IN_JOB )?
+        String parent = ( txJob.getJobType() == Job.STAGE_IN_JOB )?
                   txJob.getName():
                   computeJob.getName();
 
-        String child = ( txJob.getJobType() == SubInfo.STAGE_IN_JOB )?
+        String child = ( txJob.getJobType() == Job.STAGE_IN_JOB )?
                         computeJob.getName():
                         txJob.getName();
 

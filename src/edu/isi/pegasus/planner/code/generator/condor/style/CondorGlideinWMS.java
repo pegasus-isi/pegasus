@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
@@ -49,7 +49,7 @@ public class CondorGlideinWMS extends Condor {
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void apply( SubInfo job ) throws CondorStyleException{
+    public void apply( Job job ) throws CondorStyleException{
          
         // default is vanilla universe for glideinwms jobs
         String universe = job.condorVariables.containsKey( Condor.UNIVERSE_KEY )?

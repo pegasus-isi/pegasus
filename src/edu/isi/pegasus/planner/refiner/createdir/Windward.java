@@ -22,7 +22,7 @@ import edu.isi.pegasus.common.logging.LoggingKeys;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
         
 import edu.isi.pegasus.common.logging.LogManager;
@@ -168,7 +168,7 @@ public class Windward extends AbstractStrategy{
         String directory = new File( base, 
                                      mPOptions.getRelativeDirectory()  ).getAbsolutePath();
         
-        SubInfo kbJob = makeCreateGUKBJob( kbJobname, site, directory );
+        Job kbJob = makeCreateGUKBJob( kbJobname, site, directory );
         result.add( kbJob );
         List l = new LinkedList();
         l.add( kbJob.getID() );
@@ -206,7 +206,7 @@ public class Windward extends AbstractStrategy{
      * 
      * @return  the dummy concat job.
      */
-    public SubInfo makeCreateGUKBJob( String name, String site , String directory) {
+    public Job makeCreateGUKBJob( String name, String site , String directory) {
         return mWindwardImplementation.makeCreateDirJob( site,
                                                          name, 
                                                          directory );

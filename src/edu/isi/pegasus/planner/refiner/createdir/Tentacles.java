@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.refiner.createdir;
 
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -78,11 +78,11 @@ public class Tentacles extends AbstractStrategy {
 
         //remove the entry for the local pool
         //set.remove("local");
-        SubInfo job;
+        Job job;
         int type;
         boolean local;
         for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            job  = (SubInfo)it.next();
+            job  = (Job)it.next();
             jobName = job.getName();
             pool    = job.getSiteHandle();
 
@@ -97,9 +97,9 @@ public class Tentacles extends AbstractStrategy {
             //or are compute jobs running on local site
             type = job.getJobType();
             local = pool.equals("local");
-            if( (job instanceof TransferJob &&  type != SubInfo.STAGE_OUT_JOB )
+            if( (job instanceof TransferJob &&  type != Job.STAGE_OUT_JOB )
                 || (!local
-                          || (type == SubInfo.COMPUTE_JOB || type == SubInfo.STAGED_COMPUTE_JOB))){
+                          || (type == Job.COMPUTE_JOB || type == Job.STAGED_COMPUTE_JOB))){
                 mLogger.log("Adding relation " + parent + " -> " + jobName,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 dag.addNewRelation(parent,jobName);
@@ -109,7 +109,7 @@ public class Tentacles extends AbstractStrategy {
 
         //for each execution pool add
         //a create directory node.
-        SubInfo newJob = null;
+        Job newJob = null;
         for (Iterator it = set.iterator();it.hasNext();){
             pool    = (String)it.next();
             jobName = getCreateDirJobName( dag, pool);

@@ -23,7 +23,7 @@ import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -237,7 +237,7 @@ public class ReductionEngine extends Engine implements Refiner{
             mWorkflow = mReducedDag;
 
             for( Iterator it = mWorkflow.jobIterator(); it.hasNext(); ){
-                SubInfo job = ( SubInfo )it.next();
+                Job job = ( Job )it.next();
                 pps.isIdenticalTo( job.getName(), job.getName() );
             }
 
@@ -265,7 +265,7 @@ public class ReductionEngine extends Engine implements Refiner{
      * A job in RC can be removed from the Dag
      * and the Dag correspondingly reduced.
      *
-     * @param vSubInfos    Vector of <code>SubInfo</code>
+     * @param vSubInfos    Vector of <code>Job</code>
      *                    objects corresponding to  all
      *                    the jobs of a Abstract Dag
      *
@@ -277,10 +277,10 @@ public class ReductionEngine extends Engine implements Refiner{
      *
      * @return a Vector of jobNames (Strings)
      *
-     * @see org.griphyn.cPlanner.classes.SubInfo
+     * @see org.griphyn.cPlanner.classes.Job
      */
     private Vector getJobsInRC(Vector vSubInfos,Set filesInRC){
-        SubInfo subInfo;
+        Job subInfo;
         Set vJobOutputFiles;
         String jobName;
         Vector vJobsInReplica = new Vector();
@@ -299,7 +299,7 @@ public class ReductionEngine extends Engine implements Refiner{
                     LogManager.DEBUG_MESSAGE_LEVEL);
         while(e.hasMoreElements()){
             //getting submit information about each submit file of a job
-            subInfo = (SubInfo)e.nextElement();
+            subInfo = (Job)e.nextElement();
             jobName = subInfo.jobName;
             //System.out.println(jobName);
 
@@ -482,10 +482,10 @@ public class ReductionEngine extends Engine implements Refiner{
      * This returns all the jobs deleted from the workflow after the reduction
      * algorithm has run.
      *
-     * @return  List containing the <code>SubInfo</code> of deleted leaf jobs.
+     * @return  List containing the <code>Job</code> of deleted leaf jobs.
      */
-    public List<SubInfo> getDeletedJobs(){
-        List<SubInfo> deletedJobs = new LinkedList();
+    public List<Job> getDeletedJobs(){
+        List<Job> deletedJobs = new LinkedList();
         for( Iterator it = mAllDeletedJobs.iterator(); it.hasNext(); ){
             String job = (String)it.next();
             deletedJobs.add( mOriginalDag.getSubInfo(job) );
@@ -501,10 +501,10 @@ public class ReductionEngine extends Engine implements Refiner{
      * Also to determine the deleted leaf jobs it refers the original
      * dag, not the reduced dag.
      *
-     * @return  List containing the <code>SubInfo</code> of deleted leaf jobs.
+     * @return  List containing the <code>Job</code> of deleted leaf jobs.
      */
-    public List<SubInfo> getDeletedLeafJobs(){
-        List<SubInfo> delLeafJobs = new LinkedList();
+    public List<Job> getDeletedLeafJobs(){
+        List<Job> delLeafJobs = new LinkedList();
 
         mLogger.log("Finding deleted leaf jobs",LogManager.DEBUG_MESSAGE_LEVEL);
         for( Iterator it = mAllDeletedJobs.iterator(); it.hasNext(); ){
@@ -629,7 +629,7 @@ public class ReductionEngine extends Engine implements Refiner{
      * to the filenames
      *
      *
-     * @param vSubInfos    the SubInfo object including
+     * @param vSubInfos    the Job object including
      *                     the jobs which are not needed
      *                     after the execution of the
      *                     reduction algorithm
@@ -638,25 +638,25 @@ public class ReductionEngine extends Engine implements Refiner{
      *                     the reduction algo as their
      *                     output files are in the Replica Catalog
      *
-     * @return             the SubInfo objects except the ones
+     * @return             the Job objects except the ones
      *                     for the deleted jobs
      *
      */
 
     private Vector constructNewSubInfos(Vector vSubInfos,Vector vDelJobs){
         Vector vNewSubInfos = new Vector();
-        SubInfo newSubInfo;
-        SubInfo currentSubInfo;
+        Job newSubInfo;
+        Job currentSubInfo;
         String jobName;
 
         Enumeration e = vSubInfos.elements();
 
         while(e.hasMoreElements()){
-            currentSubInfo = (SubInfo)e.nextElement();
+            currentSubInfo = (Job)e.nextElement();
             jobName = currentSubInfo.jobName;
             //we add only if the jobName is not in vDelJobs
             if(!stringInVector(jobName,vDelJobs)){
-                newSubInfo = (SubInfo)currentSubInfo.clone();
+                newSubInfo = (Job)currentSubInfo.clone();
                 //adding to Vector
                 vNewSubInfos.addElement(newSubInfo);
             }

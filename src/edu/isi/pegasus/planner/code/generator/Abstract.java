@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.code.generator;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.code.CodeGenerator;
@@ -174,7 +174,7 @@ public abstract class Abstract implements CodeGenerator{
      * @return  the writer to the open file.
      * @exception IOException if unable to open a write handle to the file.
      */
-    public PrintWriter getWriter( SubInfo job ) throws IOException{
+    public PrintWriter getWriter( Job job ) throws IOException{
 //        String jobDir = job.getSubmitDirectory();
         StringBuffer sb = new StringBuffer();
 
@@ -196,7 +196,7 @@ public abstract class Abstract implements CodeGenerator{
      *
      * @return  the basename of the file.
      */
-    public String getFileBaseName(SubInfo job){
+    public String getFileBaseName(Job job){
         StringBuffer sb = new StringBuffer();
         sb.append(job.jobName).append(".sub");
         return sb.toString();

@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.refiner;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.refiner.cleanup.CleanupStrategy;
 
@@ -78,7 +78,7 @@ public class CleanupEngine extends Engine {
             GraphNode node = ( GraphNode )it.next();
 
             //get the job associated with node
-            result.add( ( SubInfo )node.getContent() );
+            result.add( ( Job )node.getContent() );
 
             //all the children of the node are the edges of the DAG
             for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){

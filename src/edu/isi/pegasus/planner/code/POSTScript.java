@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.code;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -61,13 +61,13 @@ public interface POSTScript {
      * in the DAGMAN namespace.
      *
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param key  the <code>DAGMan</code> profile key that has to be inserted.
      *
      * @return boolean true if postscript was generated,else false.
      */
-    public boolean construct( SubInfo job, String key ) ;
+    public boolean construct( Job job, String key ) ;
 
     /**
      * Returns a short textual description of the implementing class.

@@ -25,7 +25,7 @@ import org.globus.gsi.GlobusCredentialException;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -349,7 +349,7 @@ public class Braindump {
      * 
      * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
      */
-    public void generateCode( ADag dag, SubInfo job ) throws CodeGeneratorException {
+    public void generateCode( ADag dag, Job job ) throws CodeGeneratorException {
         throw new CodeGeneratorException( "Braindump generator only generates code for the whole workflow" );
     }
     

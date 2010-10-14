@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.selector.site;
 
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -133,7 +133,7 @@ public class Heft extends Abstract {
         //accordingly
         for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode ) it.next();
-            SubInfo job = ( SubInfo ) node.getContent();
+            Job job = ( Job ) node.getContent();
             job.setSiteHandle( (String)node.getBag().get( HeftBag.SCHEDULED_SITE ) );
         }
 

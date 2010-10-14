@@ -15,7 +15,7 @@
  */
 package edu.isi.pegasus.planner.selector.site;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -45,7 +45,7 @@ public abstract class AbstractPerJob extends Abstract {
         for (Iterator it = workflow.iterator(); it.hasNext(); ) {
             GraphNode node = (GraphNode) it.next();
             
-            SubInfo job = (SubInfo) node.getContent();
+            Job job = (Job) node.getContent();
             
             //only map a job for which execute site hint
             //is not specified in the DAX
@@ -64,6 +64,6 @@ public abstract class AbstractPerJob extends Abstract {
      *               execution sites that can be used.
      *
      */
-    public abstract void mapJob( SubInfo job, List sites ) ;
+    public abstract void mapJob( Job job, List sites ) ;
 
 }

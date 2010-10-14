@@ -25,7 +25,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.namespace.Hints;
@@ -64,7 +64,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
  * @author Gaurang Mehta
  * @version $Revision$
  *
- * @see org.griphyn.cPlanner.classes.SubInfo
+ * @see org.griphyn.cPlanner.classes.Job
  * @see org.griphyn.cPlanner.classes.DagInfo
  * @see org.griphyn.cPlanner.classes.ADag
  * @see org.griphyn.cPlanner.classes.PCRelation
@@ -200,7 +200,7 @@ public class DaxParser extends Parser {
      * Holds information regarding the current job being parsed. It's scope can
      * be seen as the job element.
      */
-    private SubInfo mCurrentJobSubInfo = new SubInfo();
+    private Job mCurrentJobSubInfo = new Job();
 
 
 
@@ -925,7 +925,7 @@ public class DaxParser extends Parser {
      * @param attrs  the attributes
      */
     private void handleDAXTagStart( String local, Attributes attrs ) {
-        mCurrentJobSubInfo = new SubInfo();
+        mCurrentJobSubInfo = new Job();
         
         //the job should be tagged type pegasus
         mCurrentJobSubInfo.setTypeRecursive();
@@ -972,7 +972,7 @@ public class DaxParser extends Parser {
      * @param attrs  the attributes
      */
     private void handleJobTagStart( String local, Attributes attrs ) {
-        mCurrentJobSubInfo = new SubInfo();
+        mCurrentJobSubInfo = new Job();
         
         mCurrentJobSubInfo.namespace   = attrs.getValue("", "namespace");
         mCurrentJobSubInfo.logicalName = attrs.getValue("", "name");
@@ -1000,9 +1000,9 @@ public class DaxParser extends Parser {
      *             the job is associated.
      * version   : the version of the transformation.
      * 
-     * @param job    the <code>SubInfo</code> object
+     * @param job    the <code>Job</code> object
      */
-    private void handleJobTagStart( SubInfo job ) {
+    private void handleJobTagStart( Job job ) {
         String jobId = job.getLogicalID();
 
 
@@ -1117,7 +1117,7 @@ public class DaxParser extends Parser {
         //is the name of the job itself.
         //All the jobs in the DAX are
         //compute jobs
-        mCurrentJobSubInfo.jobClass = SubInfo.COMPUTE_JOB;
+        mCurrentJobSubInfo.jobClass = Job.COMPUTE_JOB;
         mCurrentJobSubInfo.jobID = mCurrentJobSubInfo.jobName;
  
         

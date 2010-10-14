@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.refiner.createdir;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -135,7 +135,7 @@ public abstract class AbstractStrategy implements Strategy {
         Set set = new HashSet();
 
         for( Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir

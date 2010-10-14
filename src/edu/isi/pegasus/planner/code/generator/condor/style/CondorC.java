@@ -25,7 +25,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
@@ -102,7 +102,7 @@ public class CondorC extends Condor {
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void apply(SubInfo job) throws CondorStyleException{
+    public void apply(Job job) throws CondorStyleException{
         //lets apply the Condor style first and then make
         //some modifications
         super.apply(job);
@@ -160,7 +160,7 @@ public class CondorC extends Condor {
      * @return the grid_resource entry
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    protected String constructGridResource( SubInfo job ) throws CondorStyleException{
+    protected String constructGridResource( Job job ) throws CondorStyleException{
         StringBuffer gridResource = new StringBuffer();
         
         //first field is always condor

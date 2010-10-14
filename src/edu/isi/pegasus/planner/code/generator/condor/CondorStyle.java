@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.code.generator.condor;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -62,10 +62,10 @@ public interface CondorStyle {
      * Apply a style to a job. Involves changing the job object, and optionally
      * writing out to the Condor submit file.
      *
-     * @param job  the <code>SubInfo</code> object containing the job.
+     * @param job  the <code>Job</code> object containing the job.
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void apply( SubInfo job ) throws CondorStyleException;
+    public void apply( Job job ) throws CondorStyleException;
 
 }

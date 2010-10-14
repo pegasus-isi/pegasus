@@ -156,7 +156,7 @@ public class DagInfo extends Data {
      *
      * @param job  the job to be added
      */
-    public void addNewJob( SubInfo job ) {
+    public void addNewJob( Job job ) {
         dagJobs.add( job.getID() );
         //increment the various metrics
         mWFMetrics.increment( job );
@@ -200,7 +200,7 @@ public class DagInfo extends Data {
      *
      * @return boolean indicating whether removal was successful or not.
      */
-    public boolean remove( SubInfo  job ){
+    public boolean remove( Job  job ){
         mWFMetrics.decrement( job );
         return dagJobs.remove( job.getID() );
     }

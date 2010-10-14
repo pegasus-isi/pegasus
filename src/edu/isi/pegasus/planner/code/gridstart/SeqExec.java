@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.code.GridStart;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.TransferJob;
@@ -274,10 +274,10 @@ public class SeqExec implements GridStart {
      *
      * @param aggJob the AggregatedJob into which the collection has to be
      *               integrated.
-     * @param jobs   the collection of jobs (SubInfo) that need to be enabled.
+     * @param jobs   the collection of jobs (Job) that need to be enabled.
      *
      * @return the AggregatedJob containing the enabled jobs.
-     * @see #enable(SubInfo,boolean)
+     * @see #enable(Job,boolean)
      */
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
         //sanity check for the arguments
@@ -292,7 +292,7 @@ public class SeqExec implements GridStart {
         this.mKickstartGridStartImpl.setEnablePartOfAggregatedJob( true );
 
         for (Iterator it = jobs.iterator(); it.hasNext(); ) {
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             
             //always pass isGlobus true as always
             //interested only in executable strargs
@@ -316,7 +316,7 @@ public class SeqExec implements GridStart {
      * launcher executable. It connects the stdio, and stderr to underlying
      * condor mechanisms so that they are transported back to the submit host.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param isGlobusJob is <code>true</code>, if the job generated a
      *        line <code>universe = globus</code>, and thus runs remotely.
@@ -327,7 +327,7 @@ public class SeqExec implements GridStart {
      *         the path to kickstart could not be determined on the site where
      *         the job is scheduled.
      */
-    public boolean enable(SubInfo job, boolean isGlobusJob) {
+    public boolean enable(Job job, boolean isGlobusJob) {
         //take care of relative submit directory if specified
         String submitDir = mSubmitDir + mSeparator;
 //        String submitDir = getSubmitDirectory( mSubmitDir , job) + mSeparator;
@@ -438,7 +438,7 @@ public class SeqExec implements GridStart {
             }
 
             //for cleanup jobs no generation of stats for output files
-            if (job.getJobType() != SubInfo.CLEANUP_JOB) {
+            if (job.getJobType() != Job.CLEANUP_JOB) {
                 generateListofFilenamesFile(job.getOutputFiles(),
                                            job.getID() + ".out.lof");
 
@@ -459,7 +459,7 @@ public class SeqExec implements GridStart {
      *        Set to <code>false</code>, if the job runs on the submit
      *        host in any way.
      */
-    private void enableForWorkerNodeExecution(SubInfo job, boolean isGlobusJob ) {
+    private void enableForWorkerNodeExecution(Job job, boolean isGlobusJob ) {
 
         //this approach only works for S3 for time being!
         //do a sanity check
@@ -469,16 +469,16 @@ public class SeqExec implements GridStart {
 
         //check if job is a clustered compute job
         if( job instanceof AggregatedJob && !mSLS.doesCondorModifications()){
-            if( job.getJobType() == SubInfo.COMPUTE_JOB ||
-                job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+            if( job.getJobType() == Job.COMPUTE_JOB ||
+                job.getJobType() == Job.STAGED_COMPUTE_JOB ){
 
                 AggregatedJob clusteredJob = (AggregatedJob) job;
                 enableClusteredJobForWorkerNodeExecution( clusteredJob, isGlobusJob );
             }
         }
         // or if a job is non clustered compute job
-        else if( job.getJobType() == SubInfo.COMPUTE_JOB ||
-                 job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+        else if( job.getJobType() == Job.COMPUTE_JOB ||
+                 job.getJobType() == Job.STAGED_COMPUTE_JOB ){
 
             File seqxecIPFile = enableAndGenerateSeqexecInputFile( job, isGlobusJob );
             construct( job,"input", seqxecIPFile.getAbsolutePath() );
@@ -525,7 +525,7 @@ public class SeqExec implements GridStart {
         //job.condorVariables.construct(key, "/tmp");
 
         AggregatedJob clusteredJob = (AggregatedJob) job;
-        SubInfo firstJob = clusteredJob.getConstituentJob(0);
+        Job firstJob = clusteredJob.getConstituentJob(0);
 
         GridStart gs = this.mKickstartGridStartImpl;
 
@@ -540,7 +540,7 @@ public class SeqExec implements GridStart {
         //gs.enable( clusteredJob, isGlobusJob );
         //System.out.println( clusteredJob.envVariables );
         //enable the whole clustered job via kickstart
-        //SubInfo j = (SubInfo) clusteredJob.clone();
+        //Job j = (Job) clusteredJob.clone();
         //gs.enable(j, isGlobusJob);
 
 
@@ -561,20 +561,20 @@ public class SeqExec implements GridStart {
      * handled for staged compute jobs, where Pegasus is staging the binaries
      * to the remote site.
      * 
-     * @param job   the <code>SubInfo</code> containing the job description.
+     * @param job   the <code>Job</code> containing the job description.
      *
      * @return the path that needs to be set as the executable key. If 
      *         transfer_executable is not set the path to the executable is
      *         returned as is.
      */
-    protected String handleTransferOfExecutable( SubInfo job  ) {
+    protected String handleTransferOfExecutable( Job job  ) {
         Condor cvar = job.condorVariables;
         String path = job.executable;
         
         if ( cvar.getBooleanValue( "transfer_executable" )) {
             
             //explicitly check for whether the job is a staged compute job or not
-            if( job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+            if( job.getJobType() == Job.STAGED_COMPUTE_JOB ){
                 //the executable is being staged to the remote site.
                 //all we need to do is unset transfer_executable
                 cvar.construct( "transfer_executable", "false" );
@@ -649,7 +649,7 @@ public class SeqExec implements GridStart {
      * 
      * @return the condor key . can be initialdir or remote_initialdir
      */
-    private String getDirectoryKey(SubInfo job) {
+    private String getDirectoryKey(Job job) {
         /*
         String style = (String)job.vdsNS.get( Pegasus.STYLE_KEY );
                     //remove the remote or initial dir's for the compute jobs
@@ -675,7 +675,7 @@ public class SeqExec implements GridStart {
      *
      * @return boolean
      */
-    private boolean removeDirectoryKey(SubInfo job){
+    private boolean removeDirectoryKey(Job job){
         String style = job.vdsNS.containsKey(Pegasus.STYLE_KEY) ?
                        null :
                        (String)job.vdsNS.get(Pegasus.STYLE_KEY);
@@ -697,7 +697,7 @@ public class SeqExec implements GridStart {
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    private void construct(SubInfo job, String key, String value){
+    private void construct(Job job, String key, String value){
         job.condorVariables.construct(key,value);
     }
 
@@ -801,7 +801,7 @@ public class SeqExec implements GridStart {
      * 
      * @return  the full path to the directory where the job executes
      */
-    public String getWorkerNodeDirectory( SubInfo job ){
+    public String getWorkerNodeDirectory( Job job ){
         StringBuffer workerNodeDir = new StringBuffer();
         String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
         destDir = ( destDir == null ) ? "/tmp" : destDir;
@@ -845,7 +845,7 @@ public class SeqExec implements GridStart {
     protected File enableAndGenerateSeqexecInputFile( AggregatedJob job, boolean isGlobusJob) {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
 
-        SubInfo jobcopy = (SubInfo)job.clone();
+        Job jobcopy = (Job)job.clone();
 
         
 
@@ -903,7 +903,7 @@ public class SeqExec implements GridStart {
                 writer.println( enableCommandViaKickstart( cmd,
                                                "cp",
                                                jobcopy.getSiteHandle(),
-                                               SubInfo.CREATE_DIR_JOB,
+                                               Job.CREATE_DIR_JOB,
                                                suppressXMLHeader  ) );
                 suppressXMLHeader = true;
             }
@@ -915,7 +915,7 @@ public class SeqExec implements GridStart {
                 writer.println( enableCommandViaKickstart( "/bin/chmod 600 " + remoteProxyPath,
                                                            "chmod",
                                                            job.getSiteHandle(),
-                                                           SubInfo.STAGE_IN_JOB,
+                                                           Job.STAGE_IN_JOB,
                                                            suppressXMLHeader ) );
                 suppressXMLHeader = true;
             }
@@ -930,7 +930,7 @@ public class SeqExec implements GridStart {
                 writer.println( enableCommandViaKickstart( preJob,
                                                             "pre-job",
                                                             jobcopy.getSiteHandle(),
-                                                            SubInfo.STAGE_OUT_JOB,
+                                                            Job.STAGE_OUT_JOB,
                                                             suppressXMLHeader,
                                                             directory ) );
                 
@@ -965,7 +965,7 @@ public class SeqExec implements GridStart {
                 writer.println( enableCommandViaKickstart( postJob,
                                                            "post-job",
                                                            jobcopy.getSiteHandle(),
-                                                           SubInfo.STAGE_OUT_JOB,
+                                                           Job.STAGE_OUT_JOB,
                                                            suppressXMLHeader,
                                                            directory ) );
                 suppressXMLHeader = true;
@@ -1016,7 +1016,7 @@ public class SeqExec implements GridStart {
      * 
      * @return the file handle to the seqexec input file
      */
-    protected File enableAndGenerateSeqexecInputFile(SubInfo job, boolean isGlobusJob) {
+    protected File enableAndGenerateSeqexecInputFile(Job job, boolean isGlobusJob) {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
 
 
@@ -1037,7 +1037,7 @@ public class SeqExec implements GridStart {
             writer.println( enableCommandViaKickstart(  "/bin/mkdir -p " + directory,
                                                         "mkdir",
                                                         job.getSiteHandle(),
-                                                        SubInfo.CREATE_DIR_JOB,
+                                                        Job.CREATE_DIR_JOB,
                                                         false )
                            );
             writer.flush();
@@ -1081,7 +1081,7 @@ public class SeqExec implements GridStart {
                 writer.println( enableCommandViaKickstart( cmd,
                                                "cp",
                                                job.getSiteHandle(),
-                                               SubInfo.CREATE_DIR_JOB,
+                                               Job.CREATE_DIR_JOB,
                                                suppressXMLHeader  ) );
                 suppressXMLHeader = true;
             }
@@ -1092,7 +1092,7 @@ public class SeqExec implements GridStart {
                 writer.println( enableCommandViaKickstart( "/bin/chmod 600 " + remoteProxyPath,
                                                            "chmod",
                                                            job.getSiteHandle(),
-                                                           SubInfo.STAGE_IN_JOB,
+                                                           Job.STAGE_IN_JOB,
                                                            suppressXMLHeader ) );
                 suppressXMLHeader = true;
             }
@@ -1119,7 +1119,7 @@ public class SeqExec implements GridStart {
                         writer.println( enableCommandViaKickstart(  line,
                                                                     "s3cmd",
                                                                     job.getSiteHandle(),
-                                                                    SubInfo.STAGE_IN_JOB,
+                                                                    Job.STAGE_IN_JOB,
                                                                     true) );
                     }
                     in.close();
@@ -1132,7 +1132,7 @@ public class SeqExec implements GridStart {
                      writer.println( enableCommandViaKickstart( preJob,
                                                             "pre-job",
                                                             job.getSiteHandle(),
-                                                            SubInfo.STAGE_OUT_JOB,
+                                                            Job.STAGE_OUT_JOB,
                                                             suppressXMLHeader,
                                                             directory ) );
                      suppressXMLHeader = true;
@@ -1166,7 +1166,7 @@ public class SeqExec implements GridStart {
                         writer.println( enableCommandViaKickstart(   line,
                                                                      "s3cmd",
                                                                      job.getSiteHandle(),
-                                                                     SubInfo.STAGE_OUT_JOB,
+                                                                     Job.STAGE_OUT_JOB,
                                                                      suppressXMLHeader ) );
                         suppressXMLHeader = true;
                     }
@@ -1180,7 +1180,7 @@ public class SeqExec implements GridStart {
                     writer.println( enableCommandViaKickstart( postJob,
                                                                "post-job",
                                                                job.getSiteHandle(),
-                                                               SubInfo.STAGE_OUT_JOB,
+                                                               Job.STAGE_OUT_JOB,
                                                                suppressXMLHeader,
                                                                directory ) );
                     suppressXMLHeader = true;
@@ -1192,7 +1192,7 @@ public class SeqExec implements GridStart {
             writer.println( enableCommandViaKickstart(   cleanupCmd,
                                                          "rm",
                                                          job.getSiteHandle(),
-                                                         SubInfo.CREATE_DIR_JOB,
+                                                         Job.CREATE_DIR_JOB,
                                                          true ));
              */
 
@@ -1259,7 +1259,7 @@ public class SeqExec implements GridStart {
          String arguments = command.substring(index);
 
          //create a job corresponding to the command.
-         SubInfo job = new SubInfo();
+         Job job = new Job();
          job.setTransformation( null, name, null );
          job.setJobType( type );
          job.setSiteHandle( site );
@@ -1444,13 +1444,13 @@ public class SeqExec implements GridStart {
 
             //add an entry to create the worker node directory
             PrintWriter writer = new PrintWriter(new FileWriter(temp));
-            writer.println(enableCommandViaKickstart("/bin/mkdir -p " + gs.getWorkerNodeDirectory(job), "mkdir", job.getSiteHandle(), SubInfo.CREATE_DIR_JOB, false));
+            writer.println(enableCommandViaKickstart("/bin/mkdir -p " + gs.getWorkerNodeDirectory(job), "mkdir", job.getSiteHandle(), Job.CREATE_DIR_JOB, false));
 
             //append the sls input file to temp file
             BufferedReader in = new BufferedReader(new FileReader(slsInputFile));
             String line = null;
             while ((line = in.readLine()) != null) {
-                writer.println(enableCommandViaKickstart(line, "s3cmd", job.getSiteHandle(), SubInfo.STAGE_IN_JOB, true));
+                writer.println(enableCommandViaKickstart(line, "s3cmd", job.getSiteHandle(), Job.STAGE_IN_JOB, true));
             }
             in.close();
             slsInputFile.delete();
@@ -1473,13 +1473,13 @@ public class SeqExec implements GridStart {
             in = new BufferedReader(new FileReader(slsOutputFile));
             line = null;
             while ((line = in.readLine()) != null) {
-                writer.println(enableCommandViaKickstart(line, "s3cmd", job.getSiteHandle(), SubInfo.STAGE_OUT_JOB, true));
+                writer.println(enableCommandViaKickstart(line, "s3cmd", job.getSiteHandle(), Job.STAGE_OUT_JOB, true));
             }
             in.close();
             slsOutputFile.delete();
 
             //we need to remove the directory
-            writer.println(enableCommandViaKickstart("/bin/rm -rf " + gs.getWorkerNodeDirectory(job), "rm", job.getSiteHandle(), SubInfo.CREATE_DIR_JOB, true));
+            writer.println(enableCommandViaKickstart("/bin/rm -rf " + gs.getWorkerNodeDirectory(job), "rm", job.getSiteHandle(), Job.CREATE_DIR_JOB, true));
             writer.close();
 
             //rename tmp to stdin

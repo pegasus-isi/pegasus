@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.refiner.cleanup;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
@@ -56,7 +56,7 @@ public interface CleanupImplementation {
      *
      * @return the cleanup job.
      */
-    public SubInfo createCleanupJob( String id, List files, SubInfo job );
+    public Job createCleanupJob( String id, List files, Job job );
 
 
 

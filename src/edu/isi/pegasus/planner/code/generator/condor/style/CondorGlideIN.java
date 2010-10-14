@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -74,7 +74,7 @@ public class CondorGlideIN extends Abstract {
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void apply( SubInfo job ) throws CondorStyleException{
+    public void apply( Job job ) throws CondorStyleException{
 
         String execSiteWorkDir = mSiteStore.getWorkDirectory( job );
         String workdir = (String) job.globusRSL.removeKey( "directory" ); // returns old value

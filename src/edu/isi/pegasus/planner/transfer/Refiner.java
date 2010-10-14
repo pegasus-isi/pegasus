@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.transfer;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
@@ -114,7 +114,7 @@ public interface Refiner
      * Adds the inter pool transfer nodes that are required for  transferring
      * the output files of the parents to the jobs execution site.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -122,7 +122,7 @@ public interface Refiner
      *                       on local site.
      * 
      */
-    public void addInterSiteTXNodes( SubInfo job,
+    public void addInterSiteTXNodes( Job job,
                                      Collection files,
                                      boolean localTransfer );
 
@@ -130,7 +130,7 @@ public interface Refiner
      * Adds the stageout transfer nodes, that stage data to an output site
      * specified by the user.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -141,7 +141,7 @@ public interface Refiner
 
      *
      */
-    public void addStageOutXFERNodes( SubInfo job,
+    public void addStageOutXFERNodes( Job job,
                                       Collection files,
                                       ReplicaCatalogBridge rcb,
                                       boolean localTransfer ) ;
@@ -151,7 +151,7 @@ public interface Refiner
      * specified by the user. It also adds the registration nodes to register
      * the data in the replica catalog if required.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -164,7 +164,7 @@ public interface Refiner
      *                      default: false
 
      */
-    public abstract void addStageOutXFERNodes(SubInfo job,
+    public abstract void addStageOutXFERNodes(Job job,
                                               Collection files,
                                               ReplicaCatalogBridge rcb,
                                               boolean localTransfer,
@@ -175,7 +175,7 @@ public interface Refiner
      * from the location returned from the replica catalog to the job's execution
      * pool.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -183,7 +183,7 @@ public interface Refiner
      *                     source and destination file url's for symbolic linking
      *                     on compute site.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       Collection<FileTransfer> files,
                                       Collection<FileTransfer> symLinkFiles);
 
@@ -233,9 +233,9 @@ public interface Refiner
      *
      * @return true if site is setup for remote transfers
      *
-     * @see SubInfo#STAGE_IN_JOB
-     * @see SubInfo#INTER_POOL_JOB
-     * @see SubInfo#STAGE_OUT_JOB
+     * @see Job#STAGE_IN_JOB
+     * @see Job#INTER_POOL_JOB
+     * @see Job#STAGE_OUT_JOB
      */
     public boolean runTransferRemotely( String site, int type ) ;
 
@@ -252,9 +252,9 @@ public interface Refiner
      * @return true pool is third party enabled
      *         false pool is not third party enabled.
      *
-     * @see SubInfo#STAGE_IN_JOB
-     * @see SubInfo#INTER_POOL_JOB
-     * @see SubInfo#STAGE_OUT_JOB
+     * @see Job#STAGE_IN_JOB
+     * @see Job#INTER_POOL_JOB
+     * @see Job#STAGE_OUT_JOB
      */
     public boolean isSiteThirdParty(String site, int type) ;
 
@@ -271,9 +271,9 @@ public interface Refiner
      *
      * @return true if the transfers are to be run on remote site, else false.
      *
-     * @see SubInfo#STAGE_IN_JOB
-     * @see SubInfo#INTER_POOL_JOB
-     * @see SubInfo#STAGE_OUT_JOB
+     * @see Job#STAGE_IN_JOB
+     * @see Job#INTER_POOL_JOB
+     * @see Job#STAGE_OUT_JOB
      */
     public boolean runTPTOnRemoteSite(String site,int type);
 
@@ -283,7 +283,7 @@ public interface Refiner
      *
      * @param job  the job to be added.
      */
-    public void addJob(SubInfo job);
+    public void addJob(Job job);
 
     /**
      * Adds a new relation to the workflow being refiner.

@@ -14,7 +14,7 @@
  */
 package edu.isi.pegasus.planner.cluster;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 
@@ -105,7 +105,7 @@ public class Vertical extends Abstract {
         //the constituent jobs are topologically sorted
         //traverse through them and build up the ip and op files
         for( Iterator it = job.constituentJobsIterator(); it.hasNext();){
-            SubInfo cjob = (SubInfo)it.next();
+            Job cjob = (Job)it.next();
 
             //traverse through input files of constituent job
             for( Iterator fileIt = cjob.getInputFiles().iterator(); fileIt.hasNext();){

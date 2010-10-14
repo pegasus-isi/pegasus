@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.provenance.pasoa.pps;
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.refiner.Refiner;
 
 import org.pasoa.common.BestPractice;
@@ -113,7 +113,7 @@ public class Pasoa implements PPS {
             _causeKey  = _effectKey;
             _effectKey = createInteractionKey (_refinementID, refinementStepName, true);
             for (Iterator it = workflow.getWorkflow ().jobIterator (); it.hasNext ();){
-                SubInfo job = (SubInfo) it.next ();
+                Job job = (Job) it.next ();
                 String name = job.getName ();
                 isIdenticalTo (name, name);
             }

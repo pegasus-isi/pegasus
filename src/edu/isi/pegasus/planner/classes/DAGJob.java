@@ -25,7 +25,7 @@ package edu.isi.pegasus.planner.classes;
  * 
  * @version $Revision$
  */
-public class DAGJob extends SubInfo {
+public class DAGJob extends Job {
 
     /**
      * The DAG File that the job refers to.
@@ -48,11 +48,11 @@ public class DAGJob extends SubInfo {
 
     /**
      * The overloaded construct that constructs a DAG job by wrapping around
-     * the <code>SubInfo</code> job.
+     * the <code>Job</code> job.
      *
      * @param job  the original job description.
      */
-    public DAGJob(SubInfo job){
+    public DAGJob(Job job){
         super(job);
         mDAGFile = null;
     }
@@ -115,7 +115,7 @@ public class DAGJob extends SubInfo {
      * @return Object
      */
     public Object clone(){
-        DAGJob newJob = new DAGJob((SubInfo)super.clone());
+        DAGJob newJob = new DAGJob((Job)super.clone());
         newJob.setDAGFile( this.getDAGFile() );
         newJob.setDirectory( this.getDirectory() );
         return newJob;

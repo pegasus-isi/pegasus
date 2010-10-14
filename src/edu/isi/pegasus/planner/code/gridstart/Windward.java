@@ -26,7 +26,7 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.code.GridStart;
 
@@ -183,7 +183,7 @@ public class Windward implements GridStart{
      * For the compute jobs the additional arguments to the GU wrapper are constructed
      * and a config file is constructed for the arguments in the DAX.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param isGlobusJob is <code>true</code>, if the job generated a
      *        line <code>universe = globus</code>, and thus runs remotely.
@@ -194,9 +194,9 @@ public class Windward implements GridStart{
      *         the path to kickstart could not be determined on the site where
      *         the job is scheduled.
      */
-    public boolean enable( SubInfo job, boolean isGlobusJob ) {
-        if( job.getJobType() == SubInfo.COMPUTE_JOB || 
-            job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+    public boolean enable( Job job, boolean isGlobusJob ) {
+        if( job.getJobType() == Job.COMPUTE_JOB ||
+            job.getJobType() == Job.STAGED_COMPUTE_JOB ){
             String args = job.getArguments();
             //we need to construct extra arguments for the 
             //GU wrapper and the config file.
@@ -254,7 +254,7 @@ public class Windward implements GridStart{
      * 
      * @return  the wrapper arguments for the GU wrapper
      */
-    protected String getGUWrapperArguments( SubInfo job ){
+    protected String getGUWrapperArguments( Job job ){
         StringBuffer args = new StringBuffer();
         
         //add the log4j properties url if it does not exist
@@ -381,7 +381,7 @@ public class Windward implements GridStart{
      * 
      * @return  the full path to the directory where the job executes
      */
-    public String getWorkerNodeDirectory( SubInfo job ){
+    public String getWorkerNodeDirectory( Job job ){
         throw new RuntimeException( "Method not implemented getWorkerNodeDirectory(SubInfo)");
     }
     

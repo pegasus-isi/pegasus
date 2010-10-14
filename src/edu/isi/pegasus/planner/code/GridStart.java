@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.code;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 import java.util.Collection;
@@ -70,10 +70,10 @@ public interface  GridStart {
      *
      * @param aggJob the AggregatedJob into which the collection has to be
      *               integrated.
-     * @param jobs   the collection of jobs (SubInfo) that need to be enabled.
+     * @param jobs   the collection of jobs (Job) that need to be enabled.
      *
      * @return the AggregatedJob containing the enabled jobs.
-     * @see #enable(SubInfo,boolean)
+     * @see #enable(Job,boolean)
      */
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs);
 
@@ -84,7 +84,7 @@ public interface  GridStart {
      * job, that actually launches the job. It usually results in the job
      * description passed being modified modified.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param isGlobusJob is <code>true</code>, if the job generated a
      *        line <code>universe = globus</code>, and thus runs remotely.
@@ -93,7 +93,7 @@ public interface  GridStart {
      *
      * @return boolean true if enabling was successful,else false.
      */
-    public boolean enable(SubInfo job,boolean isGlobusJob);
+    public boolean enable(Job job,boolean isGlobusJob);
 
     /**
      * Constructs the postscript that has to be invoked on the submit host
@@ -105,13 +105,13 @@ public interface  GridStart {
      * in the DAGMAN namespace.
      *
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param key  the key for the profile that has to be inserted.
      *
      * @return boolean true if postscript was generated,else false.
      */
-//    public boolean constructPostScript( SubInfo job, String key ) ;
+//    public boolean constructPostScript( Job job, String key ) ;
 
     /**
      * Indicates whether the enabling mechanism can set the X bit
@@ -129,7 +129,7 @@ public interface  GridStart {
      * 
      * @return  the full path to the directory where the job executes
      */
-    public String getWorkerNodeDirectory( SubInfo job );
+    public String getWorkerNodeDirectory( Job job );
 
     
     /**
@@ -169,7 +169,7 @@ public interface  GridStart {
     *
     * @return the path to the submit directory.
     */
-//    public static String getSubmitDirectory( String root, SubInfo job ){
+//    public static String getSubmitDirectory( String root, Job job ){
 //        String jobDir   = job.getSubmitDirectory();
 //        StringBuffer sb = new StringBuffer();
 //

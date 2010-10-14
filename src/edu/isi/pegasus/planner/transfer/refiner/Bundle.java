@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.transfer.refiner;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -230,7 +230,7 @@ public class Bundle extends Default {
      * from the location returned from the replica catalog to the job's execution
      * pool.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -238,14 +238,14 @@ public class Bundle extends Default {
      *                     source and destination file url's for symbolic linking
      *                     on compute site.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       Collection<FileTransfer> files,
                                       Collection<FileTransfer> symlinkFiles ){
         
         addStageInXFERNodes( job,
                              true,
                              files,
-                             SubInfo.STAGE_IN_JOB , 
+                             Job.STAGE_IN_JOB ,
                              this.mStageInLocalMap,
                              this.mStageinLocalBundleValue,
                              this.mTXStageInImplementation );
@@ -253,7 +253,7 @@ public class Bundle extends Default {
         addStageInXFERNodes( job,
                              false,
                              symlinkFiles, 
-                             SubInfo.STAGE_IN_JOB,
+                             Job.STAGE_IN_JOB,
                              this.mStageInRemoteMap,
                              this.mStageInRemoteBundleValue,
                              this.mTXStageInImplementation  );
@@ -265,7 +265,7 @@ public class Bundle extends Default {
      * from the location returned from the replica catalog to the job's execution
      * pool.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param localTransfer boolean indicating whether transfer has to happen on local site.
      * @param files Collection of <code>FileTransfer</code> objects containing the
@@ -276,7 +276,7 @@ public class Bundle extends Default {
      * @param bundleValue   used to determine the bundling factor to employ for a job.
      * @param implementation  the transfer implementation to use.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       boolean localTransfer,
                                       Collection files, 
                                       int type,
@@ -380,9 +380,9 @@ public class Bundle extends Default {
         //jobs that transfer the files
       
         if( !stagedExecutableFiles.isEmpty() ){
-            SubInfo xBitJob = implementation.createSetXBitJob( job,
+            Job xBitJob = implementation.createSetXBitJob( job,
                                                                stagedExecutableFiles,
-                                                               SubInfo.STAGE_IN_JOB,
+                                                               Job.STAGE_IN_JOB,
                                                                index);
 
 
@@ -431,7 +431,7 @@ public class Bundle extends Default {
      * Adds the stageout transfer nodes, that stage data to an output site
      * specified by the user.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -442,7 +442,7 @@ public class Bundle extends Default {
      *                      a deleted node by the reduction engine or not.
      *                      default: false
      */
-    public  void addStageOutXFERNodes(SubInfo job,
+    public  void addStageOutXFERNodes(Job job,
                                       Collection files,
                                       ReplicaCatalogBridge rcb,
                                       boolean localTransfer,
@@ -498,7 +498,7 @@ public class Bundle extends Default {
             //get the appropriate pool transfer object for the site
             PoolTransfer pt = this.getStageOutPoolTransfer( site, localTransfer, bundle );
             //we add all the file transfers to the pool transfer
-            soTC = pt.addTransfer( txFiles, level, SubInfo.STAGE_OUT_JOB );
+            soTC = pt.addTransfer( txFiles, level, Job.STAGE_OUT_JOB );
             String soJob = soTC.getTXName();
 
             if (!deletedLeaf) {
@@ -516,7 +516,7 @@ public class Bundle extends Default {
             //get the appropriate pool transfer object for the site
             PoolTransfer pt = this.getStageOutPoolTransfer(  site, localTransfer, bundle );
             //we add all the file transfers to the pool transfer
-            soTC = pt.addTransfer( new Vector(), level, SubInfo.STAGE_OUT_JOB );
+            soTC = pt.addTransfer( new Vector(), level, Job.STAGE_OUT_JOB );
 
 
             //direct link between compute job and registration job
@@ -540,7 +540,7 @@ public class Bundle extends Default {
      * 
      * @return value as String or NULL
      */
-    protected String getComputeJobBundleValue( SubInfo job ){
+    protected String getComputeJobBundleValue( Job job ){
         return  job.vdsNS.getStringValue( Pegasus.BUNDLE_STAGE_OUT_KEY );
     }
     
@@ -552,12 +552,12 @@ public class Bundle extends Default {
     public void done( ){
         doneStageIn( this.mStageInLocalMap,
                      this.mTXStageInImplementation , 
-                     SubInfo.STAGE_IN_JOB,
+                     Job.STAGE_IN_JOB,
                      true );
         
         doneStageIn( this.mStageInRemoteMap,
                      this.mTXStageInImplementation,
-                     SubInfo.STAGE_IN_JOB,
+                     Job.STAGE_IN_JOB,
                      false );
        
         //adding relations that tie in the stagin
@@ -601,7 +601,7 @@ public class Bundle extends Default {
         PoolTransfer pt;
         TransferContainer tc;
         Map.Entry entry;
-        SubInfo job = new SubInfo();
+        Job job = new Job();
 
         for(Iterator it = stageInMap.entrySet().iterator();it.hasNext();){
             entry = (Map.Entry)it.next();
@@ -625,7 +625,7 @@ public class Bundle extends Default {
 
                 String site = localTransfer ? "local" : job.getSiteHandle();
                 
-                SubInfo tJob =  implementation.createTransferJob( job,
+                Job tJob =  implementation.createTransferJob( job,
                                                                   site,
                                                                   tc.getFileTransfers(),
                                                                   null,
@@ -698,7 +698,7 @@ public class Bundle extends Default {
     protected Map resetStageOutMap( Map<String,PoolTransfer> map, boolean localTransfer ){
         if ( map != null ){
             //before flushing add the stageout nodes to the workflow
-            SubInfo job = new SubInfo();
+            Job job = new Job();
 
             for( Iterator it = map.values().iterator(); it.hasNext(); ){
                 PoolTransfer pt = ( PoolTransfer ) it.next();
@@ -718,7 +718,7 @@ public class Bundle extends Default {
                     }
 
                     //add the stageout job if required
-                    SubInfo soJob = null;
+                    Job soJob = null;
                     if( !tc.getFileTransfers().isEmpty() ){
                         mLogger.log( "Adding stage-out job " + tc.getTXName(),
                                      LogManager.DEBUG_MESSAGE_LEVEL);
@@ -727,7 +727,7 @@ public class Bundle extends Default {
                                                              site,
                                                              tc.getFileTransfers(),
                                                              null,
-                                                             tc.getTXName(), SubInfo.STAGE_OUT_JOB );
+                                                             tc.getTXName(), Job.STAGE_OUT_JOB );
                         addJob( soJob );
                     }
 
@@ -801,7 +801,7 @@ public class Bundle extends Default {
             mRegName      = null;
             mFileTXList   = new Vector();
             mRegFiles     = new Vector();
-            mTransferType = SubInfo.STAGE_IN_JOB;
+            mTransferType = Job.STAGE_IN_JOB;
         }
 
         /**
@@ -1105,11 +1105,11 @@ public class Bundle extends Default {
         private String getTXJobName( int counter, int type, int level ){
             StringBuffer sb = new StringBuffer();
             switch ( type ){
-                case SubInfo.STAGE_IN_JOB:
+                case Job.STAGE_IN_JOB:
                     sb.append( Refiner.STAGE_IN_PREFIX );
                     break;
 
-                case SubInfo.STAGE_OUT_JOB:
+                case Job.STAGE_OUT_JOB:
                     sb.append( Refiner.STAGE_OUT_PREFIX );
                     break;
 
@@ -1144,12 +1144,12 @@ public class Bundle extends Default {
         private String getTXJobName( int counter, int type ){
             StringBuffer sb = new StringBuffer();
             switch ( type ){
-                case SubInfo.STAGE_IN_JOB:
+                case Job.STAGE_IN_JOB:
                     sb.append( Refiner.STAGE_IN_PREFIX );
                     break;
                     
                
-                case SubInfo.STAGE_OUT_JOB:
+                case Job.STAGE_OUT_JOB:
                     sb.append( Refiner.STAGE_OUT_PREFIX );
                     break;
 
@@ -1239,7 +1239,7 @@ public class Bundle extends Default {
         * 
         * @return the bundle factor.
         */
-        public int determine(  Implementation implementation, SubInfo job  ){
+        public int determine(  Implementation implementation, Job job  ){
             return determine( implementation,
                               job.getSiteHandle(), 
                               job.vdsNS.getStringValue( mProfileKey ),
@@ -1268,7 +1268,7 @@ public class Bundle extends Default {
         public  int determine( Implementation implementation, String site, String profileValue,String defaultProfileValue ){
             //this should be parameterised Karan Dec 20,2005
         
-           SubInfo sub = new SubInfo();
+           Job sub = new Job();
 
            //check for profile value first
            String value = profileValue;

@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusFile;
@@ -280,10 +280,10 @@ public class Kickstart implements GridStart {
      *
      * @param aggJob the AggregatedJob into which the collection has to be
      *               integrated.
-     * @param jobs   the collection of jobs (SubInfo) that need to be enabled.
+     * @param jobs   the collection of jobs (Job) that need to be enabled.
      *
      * @return the AggregatedJob containing the enabled jobs.
-     * @see #enable(SubInfo,boolean)
+     * @see #enable(Job,boolean)
      */
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
         boolean first = true;
@@ -294,7 +294,7 @@ public class Kickstart implements GridStart {
         mEnablingPartOfAggregatedJob = true;
 
         for (Iterator it = jobs.iterator(); it.hasNext(); ) {
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             if(first){
                 first = false;
             }
@@ -315,7 +315,7 @@ public class Kickstart implements GridStart {
             //option -w to get kickstart to change directories
             if( mWorkerNodeExecution ){
                 //add a -w only for compute or staged compute jobs
-                if( job.getJobType() == SubInfo.COMPUTE_JOB || job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+                if( job.getJobType() == Job.COMPUTE_JOB || job.getJobType() == Job.STAGED_COMPUTE_JOB ){
                     StringBuffer args = new StringBuffer( );
                      
                      //we append -w only if we are not using condor file transfers
@@ -357,7 +357,7 @@ public class Kickstart implements GridStart {
      * It modifies the job description, and also constructs all the valid
      * option to be passed to kickstart for launching the executable.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param isGlobusJob is <code>true</code>, if the job generated a
      *        line <code>universe = globus</code>, and thus runs remotely.
@@ -368,7 +368,7 @@ public class Kickstart implements GridStart {
      *         the path to kickstart could not be determined on the site where
      *         the job is scheduled.
      */
-    public boolean enable( SubInfo job, boolean isGlobusJob ){
+    public boolean enable( Job job, boolean isGlobusJob ){
         return this.enable( job, isGlobusJob, mDoStat , true );
     }
 
@@ -379,7 +379,7 @@ public class Kickstart implements GridStart {
      * It modifies the job description, and also constructs all the valid
      * option to be passed to kickstart for launching the executable.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param isGlobusJob is <code>true</code>, if the job generated a
      *        line <code>universe = globus</code>, and thus runs remotely.
@@ -393,7 +393,7 @@ public class Kickstart implements GridStart {
      *         the path to kickstart could not be determined on the site where
      *         the job is scheduled.
      */
-    protected boolean enable( SubInfo job, boolean isGlobusJob, boolean stat, boolean addPostScript ) {
+    protected boolean enable( Job job, boolean isGlobusJob, boolean stat, boolean addPostScript ) {
 
         //take care of relative submit directory if specified.
         String submitDir = mSubmitDir + mSeparator;
@@ -554,7 +554,7 @@ public class Kickstart implements GridStart {
         //are added as childern to the stage in jobs, unless they are 
         //disabled and users set a property to set the xbit
         //Karan November 22, 2005
-        if( mSetXBit && job.getJobType() == SubInfo.STAGED_COMPUTE_JOB  ){
+        if( mSetXBit && job.getJobType() == Job.STAGED_COMPUTE_JOB  ){
             //add the -X flag to denote turning on
             gridStartArgs.append( " -X " );
        }
@@ -562,11 +562,11 @@ public class Kickstart implements GridStart {
         //add the stat options to kickstart only for certain jobs for time being
         //and if the input variable is true
         if ( stat ){
-            if (job.getJobType() == SubInfo.COMPUTE_JOB ||
-                job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ||
-                job.getJobType() == SubInfo.CLEANUP_JOB ||
-                job.getJobType() == SubInfo.STAGE_IN_JOB ||
-                job.getJobType() == SubInfo.INTER_POOL_JOB) {
+            if (job.getJobType() == Job.COMPUTE_JOB ||
+                job.getJobType() == Job.STAGED_COMPUTE_JOB ||
+                job.getJobType() == Job.CLEANUP_JOB ||
+                job.getJobType() == Job.STAGE_IN_JOB ||
+                job.getJobType() == Job.INTER_POOL_JOB) {
 
                 String lof;
                 List files = new ArrayList(2);
@@ -588,7 +588,7 @@ public class Kickstart implements GridStart {
                 }
 
                 //for cleanup jobs no generation of stats for output files
-                if (job.getJobType() != SubInfo.CLEANUP_JOB) {
+                if (job.getJobType() != Job.CLEANUP_JOB) {
                     lof = generateListofFilenamesFile(job.getOutputFiles(),
                                                       job.getID() + ".out.lof");
                     if (lof != null) {
@@ -617,7 +617,7 @@ public class Kickstart implements GridStart {
             }
 
             //for cleanup jobs no generation of stats for output files
-            if (job.getJobType() != SubInfo.CLEANUP_JOB) {
+            if (job.getJobType() != Job.CLEANUP_JOB) {
                 generateListofFilenamesFile(job.getOutputFiles(),
                                             job.getID() + ".out.lof");
 
@@ -648,7 +648,7 @@ public class Kickstart implements GridStart {
             }
         }
         else{
-            if( this.mWorkerNodeExecution && job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+            if( this.mWorkerNodeExecution && job.getJobType() == Job.STAGED_COMPUTE_JOB ){
                 //we need to put the path of the executable
                 //staged in the worker node temp directory
                 //JIRA PM-20 and PM-68
@@ -693,12 +693,12 @@ public class Kickstart implements GridStart {
      *
      * Else, we pick up the path from the site catalog that is passed as input
      *
-     * @param job   the <code>SubInfo</code> containing the job description.
+     * @param job   the <code>Job</code> containing the job description.
      * @param path  the path to kickstart on the remote compute site.
      *
      * @return the path that needs to be set as the executable
      */
-    protected String handleTransferOfExecutable( SubInfo job, String path ) {
+    protected String handleTransferOfExecutable( Job job, String path ) {
         Condor cvar = job.condorVariables;
 
         if ( cvar.getBooleanValue("transfer_executable")) {
@@ -774,10 +774,10 @@ public class Kickstart implements GridStart {
      * @param job     the job to be enabled
      * @param args    the arguments constructed so far.
      */
-    protected void enableForWorkerNodeExecution( SubInfo job, StringBuffer args ){
+    protected void enableForWorkerNodeExecution( Job job, StringBuffer args ){
         
-        if( job.getJobType() == SubInfo.COMPUTE_JOB ||
-            job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+        if( job.getJobType() == Job.COMPUTE_JOB ||
+            job.getJobType() == Job.STAGED_COMPUTE_JOB ){
             mLogger.log( "Enabling job for worker node execution " + job.getName() ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -801,7 +801,7 @@ public class Kickstart implements GridStart {
 
                 //handle for staged compute jobs. set their X bit after
                 // SLS has happened
-                if( job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ){
+                if( job.getJobType() == Job.STAGED_COMPUTE_JOB ){
                     xBitSetInvocation = new StringBuffer();
                     xBitSetInvocation.append( "/bin/chmod 777 " );
 
@@ -924,7 +924,7 @@ public class Kickstart implements GridStart {
      * 
      * @return  the full path to the directory where the job executes
      */
-    public String getWorkerNodeDirectory( SubInfo job ){
+    public String getWorkerNodeDirectory( Job job ){
         StringBuffer workerNodeDir = new StringBuffer();
         String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
         destDir = ( destDir == null ) ? "/tmp" : destDir;
@@ -994,7 +994,7 @@ public class Kickstart implements GridStart {
      * 
      * @return the condor key . can be initialdir or remote_initialdir
      */
-    private String getDirectoryKey(SubInfo job) {
+    private String getDirectoryKey(Job job) {
         /*String directory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
                                 style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE) ||
                                 style.equalsIgnoreCase(Pegasus.GLITE_STYLE))?
@@ -1016,13 +1016,13 @@ public class Kickstart implements GridStart {
      * the remote executable and the arguments with which it has to be invoked.
      * The kickstart input file is created in the submit directory.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description.
+     * @param job  the <code>Job</code> object containing the job description.
      * @param args the arguments buffer for gridstart invocation so far.
      *
      * @return boolean indicating whether kickstart input file was generated or not.
      *                 false in case of any error.
      */
-    private boolean useInvoke(SubInfo job,StringBuffer args){
+    private boolean useInvoke(Job job,StringBuffer args){
         boolean result = true;
 
         String inputBaseName = job.jobName + "." + Kickstart.KICKSTART_INPUT_SUFFIX;
@@ -1084,7 +1084,7 @@ public class Kickstart implements GridStart {
      *
      * @return String
      */
-    protected String constructSetupJob( SubInfo job, String workerNodeTmp ){
+    protected String constructSetupJob( Job job, String workerNodeTmp ){
        StringBuffer setup = new StringBuffer();
 
        setup.append( "/bin/mkdir -p " ).append( workerNodeTmp );
@@ -1101,7 +1101,7 @@ public class Kickstart implements GridStart {
      *
      * @return String
      */
-    protected String constructCleanupJob( SubInfo job, String workerNodeTmp ){
+    protected String constructCleanupJob( Job job, String workerNodeTmp ){
        StringBuffer setup = new StringBuffer();
 
        setup.append( "/bin/rm -rf " ).append( workerNodeTmp );
@@ -1124,7 +1124,7 @@ public class Kickstart implements GridStart {
      *
      * @return String containing the prescript invocation
      */
-    protected String constructPREJob( SubInfo job,
+    protected String constructPREJob( Job job,
                                       String headNodeURLPrefix,
                                       String headNodeDirectory,
                                       String workerNodeDirectory,
@@ -1166,7 +1166,7 @@ public class Kickstart implements GridStart {
      *
      * @return String containing the postscript invocation
      *//*
-    protected String constructPOSTJob( SubInfo job,
+    protected String constructPOSTJob( Job job,
                                        String headNodeURLPrefix,
                                        String headNodeDirectory,
                                        String workerNodeDirectory,
@@ -1264,7 +1264,7 @@ public class Kickstart implements GridStart {
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    private void construct(SubInfo job, String key, String value){
+    private void construct(Job job, String key, String value){
         job.condorVariables.construct(key,value);
     }
 
@@ -1300,7 +1300,7 @@ public class Kickstart implements GridStart {
      * @param job   the job in which the post job needs to be added.
      * @param files the files to be deleted.
      */
-    private void addCleanupPostScript( SubInfo job, List files ){
+    private void addCleanupPostScript( Job job, List files ){
         //sanity check
         if ( files == null || !mDoStat || files.isEmpty() ) { return; }
 

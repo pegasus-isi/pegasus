@@ -19,7 +19,7 @@ package edu.isi.pegasus.planner.cluster.aggregator;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 
@@ -81,7 +81,7 @@ public class MPIExec extends Abstract {
      * All the sub jobs are in turn launched via kickstart if kickstart is
      * installed at the site where the job resides.
      *
-     * @param jobs the list of <code>SubInfo</code> objects that need to be
+     * @param jobs the list of <code>Job</code> objects that need to be
      *             collapsed. All the jobs being collapsed should be scheduled
      *             at the same pool, to maintain correct semantics.
      * @param name  the logical name of the jobs in the list passed to this
@@ -118,7 +118,7 @@ public class MPIExec extends Abstract {
     protected AggregatedJob enable(  AggregatedJob mergedJob, List jobs  ){
         //we cannot invoke any of clustered jobs also via kickstart
         //as the output will be clobbered
-        SubInfo firstJob = (SubInfo)jobs.get(0);
+        Job firstJob = (Job)jobs.get(0);
         
 //        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
 //                                                  Condor.VANILLA_UNIVERSE);

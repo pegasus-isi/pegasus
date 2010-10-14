@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -150,7 +150,7 @@ public class CondorStyleFactory {
      * @throws CondorStyleFactoryException that nests any error that
      *            might occur during the instantiation of the implementation.
      */
-    public CondorStyle loadInstance( SubInfo job )
+    public CondorStyle loadInstance( Job job )
                                             throws CondorStyleFactoryException{
 
         //sanity checks first

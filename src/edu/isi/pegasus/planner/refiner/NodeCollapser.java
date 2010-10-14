@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.partitioner.Partitioner;
 import edu.isi.pegasus.planner.partitioner.ClustererCallback;
@@ -171,10 +171,10 @@ public class NodeCollapser extends Engine {
         //more manageable and traversal data structure that is sent
         //to the partitioning stuff
         Map nameIDMap = new HashMap();
-        SubInfo job;
+        Job job;
         for( Iterator it = dag.vJobSubInfos.iterator(); it.hasNext(); ){
             //pass the jobs to the callback
-            job = (SubInfo)it.next();
+            job = (Job)it.next();
             nameIDMap.put( job.getName(), job.getLogicalID() );
         }
         mGraph = edgeList2Graph( dag.dagInfo.relations, nameIDMap );
@@ -193,7 +193,7 @@ public class NodeCollapser extends Engine {
         d2g.cbDocument( null );
         for( Iterator it = dag.vJobSubInfos.iterator(); it.hasNext(); ){
             //pass the jobs to the callback
-            d2g.cbJob( (SubInfo)it.next() );
+            d2g.cbJob( (Job)it.next() );
         }
         //pass the relations
         for( Iterator it = mGraph.entrySet().iterator(); it.hasNext(); ){

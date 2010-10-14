@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.cluster;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
@@ -108,7 +108,7 @@ public class Horizontal implements Clusterer,
     private Map mJobMap;
 
     /**
-     * A Map to store all the job(SubInfo) objects indexed by their logical ID found in
+     * A Map to store all the job(Job) objects indexed by their logical ID found in
      * the dax. This should actually be in the ADag structure.
      */
     private Map mSubInfoMap;
@@ -200,7 +200,7 @@ public class Horizontal implements Clusterer,
 
         for(Iterator it = mScheduledDAG.vJobSubInfos.iterator();it.hasNext();){
             //pass the jobs to the callback
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             mSubInfoMap.put(job.getLogicalID(), job );
         }
 
@@ -257,18 +257,18 @@ public class Horizontal implements Clusterer,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
        for(Iterator it = s.iterator();it.hasNext();){
-           SubInfo job = (SubInfo)mSubInfoMap.get(it.next());
+           Job job = (Job)mSubInfoMap.get(it.next());
            l.add(job);
        }
        //group the jobs by their transformation names
        Collections.sort( l, jobComparator() );
        //traverse through the list and collapse jobs
        //referring to same logical transformation
-       SubInfo previous = null;
+       Job previous = null;
        List clusterList = new LinkedList();
-       SubInfo job = null;
+       Job job = null;
        for(Iterator it = l.iterator();it.hasNext();){
-           job = (SubInfo)it.next();
+           job = (Job)it.next();
            if(previous == null ||
               job.getCompleteTCName().equals(previous.getCompleteTCName())){
                clusterList.add(job);
@@ -310,13 +310,13 @@ public class Horizontal implements Clusterer,
      *
      * @param name         the logical name of the jobs in the list passed to
      *                     this function.
-     * @param jobs         the list <code>SubInfo</code> objects corresponding
+     * @param jobs         the list <code>Job</code> objects corresponding
      *                     to the jobs that have the same logical name.
      * @param partitionID  the ID of the partition to which the jobs belong.
      */
     private void collapseJobs( String name, List jobs, String partitionID ){
         String key  = null;
-        SubInfo job = null;
+        Job job = null;
         List l      = null;
         //internal map that keeps the jobs according to the execution pool
         Map tempMap    = new java.util.HashMap();
@@ -332,7 +332,7 @@ public class Horizontal implements Clusterer,
         //pool on which they are scheduled
         for(Iterator it = jobs.iterator();it.hasNext();){
 
-            job = (SubInfo)it.next();
+            job = (Job)it.next();
             key = job.executionPool;
             //check if the job logical name is already in the map
             if(tempMap.containsKey(key)){
@@ -370,7 +370,7 @@ public class Horizontal implements Clusterer,
                 continue;
             }
 
-            JobAggregator aggregator = mJobAggregatorFactory.loadInstance( (SubInfo)l.get(0) );
+            JobAggregator aggregator = mJobAggregatorFactory.loadInstance( (Job)l.get(0) );
             if(aggregator.entryNotInTC(key)){
                 //no need to collapse one job. go to the next iteration
                 mLogger.log("\t No collapsing for execution pool because job aggregator entry not in tc " + key,
@@ -379,7 +379,7 @@ public class Horizontal implements Clusterer,
             }
 
             //checks made ensure that l is not empty at this point
-            cFactor = getCollapseFactor(key,(SubInfo)l.get(0),size);
+            cFactor = getCollapseFactor(key,(Job)l.get(0),size);
             if(cFactor[0] == 1 && cFactor[1] == 0){
                 mLogger.log("\t Collapse factor of (" + cFactor[0] + "," + cFactor[1] +
                             ") determined for pool. " + key +
@@ -515,7 +515,7 @@ public class Horizontal implements Clusterer,
         String newIndent = indent + "\t";
         List jobs = new ArrayList();
         for( Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext(); ){
-            SubInfo job = ( SubInfo )it.next();
+            Job job = ( Job )it.next();
             jobs.add( job.getName() );
             sb.append( newIndent );
             sb.append( "<constitutent " );
@@ -569,18 +569,18 @@ public class Horizontal implements Clusterer,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
        for(Iterator it = s.iterator();it.hasNext();){
-           SubInfo job = (SubInfo)mSubInfoMap.get(it.next());
+           Job job = (Job)mSubInfoMap.get(it.next());
            l.add(job);
        }
        //group the jobs by their transformation names
        Collections.sort(l,jobComparator());
        //traverse through the list and collapse jobs
        //referring to same logical transformation
-       SubInfo previous = null;
+       Job previous = null;
        List clusterList = new LinkedList();
-       SubInfo job = null;
+       Job job = null;
        for(Iterator it = l.iterator();it.hasNext();){
-           job = (SubInfo)it.next();
+           job = (Job)it.next();
            if(previous == null ||
               job.getCompleteTCName().equals(previous.getCompleteTCName())){
                clusterList.add(job);
@@ -616,7 +616,7 @@ public class Horizontal implements Clusterer,
      * the bundle value is used to generate the collapse values.
      *
      * @param pool  the pool where the chunking up is occuring
-     * @param job   the <code>SubInfo</code> object containing the job that
+     * @param job   the <code>Job</code> object containing the job that
      *              is to be chunked up together.
      * @param size  the number of jobs that refer to the same logical
      *              transformation and are scheduled on the same execution pool.
@@ -624,7 +624,7 @@ public class Horizontal implements Clusterer,
      * @return int array of size 2 where int[0] is the the collapse factor
      *         int[1] is the number of jobs for whom collapsing is int[0] + 1.
      */
-    public int[] getCollapseFactor(String pool, SubInfo job,int size){
+    public int[] getCollapseFactor(String pool, Job job,int size){
         String factor = null;
         int result[]  = new int[2];
         result[1]     = 0;
@@ -683,12 +683,12 @@ public class Horizontal implements Clusterer,
      * @param jobs       the List of jobs that is being replaced.
      * @param mergedJob  the mergedJob that is replacing the jobs in the list.
      */
-    private void updateReplacementTable(List jobs, SubInfo mergedJob){
+    private void updateReplacementTable(List jobs, Job mergedJob){
         if(jobs == null || jobs.isEmpty())
             return;
         String mergedJobName = mergedJob.jobName;
         for(Iterator it = jobs.iterator();it.hasNext();){
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             //put the entry in the replacement table
             mReplacementTable.put(job.jobName,mergedJobName);
         }
@@ -704,12 +704,12 @@ public class Horizontal implements Clusterer,
      */
     private void assimilateJobs(){
         Iterator it = mScheduledDAG.vJobSubInfos.iterator();
-        SubInfo job = null;
+        Job job = null;
         List l      = null;
         String key  = null;
 
         while(it.hasNext()){
-            job = (SubInfo)it.next();
+            job = (Job)it.next();
             key = job.logicalName;
             //check if the job logical name is already in the map
             if(mJobMap.containsKey(key)){
@@ -763,7 +763,7 @@ public class Horizontal implements Clusterer,
         boolean val = false;
         List l = null;
         List nl = null;
-        SubInfo sub = new SubInfo();
+        Job sub = new Job();
         String msg;
 
         for( Iterator it = mReplacementTable.entrySet().iterator(); it.hasNext(); ){
@@ -826,11 +826,11 @@ public class Horizontal implements Clusterer,
    /**
     * A utility method to print short description of jobs in a list.
     *
-    * @param l the list of <code>SubInfo</code> objects
+    * @param l the list of <code>Job</code> objects
     */
    private void printList(List l){
            for(Iterator it = l.iterator();it.hasNext();){
-               SubInfo job = (SubInfo)it.next();
+               Job job = (Job)it.next();
                System.out.print( " "+ /*job.getCompleteTCName() +*/
                                  "[" + job.logicalId + "]");
            }
@@ -843,7 +843,7 @@ public class Horizontal implements Clusterer,
     * transformation names. It is applied to group jobs in a particular partition,
     * according to the underlying transformation that is referred.
     * <p>
-    * This comparator is not consistent with the SubInfo.equals(Object) method.
+    * This comparator is not consistent with the Job.equals(Object) method.
     * Hence, should not be used in sorted sets or Maps.
     */
    private class JobComparator implements Comparator{
@@ -852,10 +852,10 @@ public class Horizontal implements Clusterer,
          * Compares this object with the specified object for order. Returns a
          * negative integer, zero, or a positive integer if the first argument is
          * less than, equal to, or greater than the specified object. The
-         * SubInfo are compared by their transformation name.
+         * Job are compared by their transformation name.
          *
          * This implementation is not consistent with the
-         * SubInfo.equals(Object) method. Hence, should not be used in sorted
+         * Job.equals(Object) method. Hence, should not be used in sorted
          * Sets or Maps.
          *
          * @param o1 is the first object to be compared.
@@ -868,9 +868,9 @@ public class Horizontal implements Clusterer,
          * prevents it from being compared to this Object.
          */
         public int compare(Object o1, Object o2) {
-            if (o1 instanceof SubInfo && o2 instanceof SubInfo) {
-                return ( (SubInfo) o1).getCompleteTCName().compareTo( ( (
-                    SubInfo) o2).getCompleteTCName());
+            if (o1 instanceof Job && o2 instanceof Job) {
+                return ( (Job) o1).getCompleteTCName().compareTo( ( (
+                    Job) o2).getCompleteTCName());
 
             }
             else {

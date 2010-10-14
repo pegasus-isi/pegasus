@@ -17,7 +17,7 @@
 
 package edu.isi.pegasus.planner.selector.site;
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -125,7 +125,7 @@ public class Group extends Abstract {
 
     /**
      * The call out to map a list of jobs on to the execution pools. A default
-     * implementation is provided that internally calls mapJob2ExecPool(SubInfo,
+     * implementation is provided that internally calls mapJob2ExecPool(Job,
      * String,String,String) to map each of the jobs sequentially to an execution site.
      * The reason for this method is to support site selectors that
      * make their decision on a group of jobs i.e use backtracking to reach a good
@@ -140,13 +140,13 @@ public class Group extends Abstract {
      *
      */
     public void mapWorkflow( Graph workflow, List sites) {
-          SubInfo job;
+          Job job;
           List l = null;
 
           int i = 0;
           for(Iterator it = workflow.nodeIterator();it.hasNext(); ){
               GraphNode node = ( GraphNode )it.next();
-              job = ( SubInfo )node.getContent();
+              job = ( Job )node.getContent();
               //put the jobs into the map grouped by key VDS_GROUP_KEY
               insert(job);
           }
@@ -164,18 +164,18 @@ public class Group extends Abstract {
               boolean first = true;
               for(Iterator it1 = l.iterator();it1.hasNext();){
                   msg += (first)? "" : ",";
-                  msg += ((SubInfo)it1.next()).jobName ;
+                  msg += ((Job)it1.next()).jobName ;
                   first = false;
               }
               msg += "}";
               mLogger.log(msg,LogManager.DEBUG_MESSAGE_LEVEL);
               //hand of the first job to the internal selector
-              job = (SubInfo)l.get(0);
+              job = (Job)l.get(0);
               mSelector.mapJob( job, sites );
 
               //traverse thru the remaining jobs in the group
               for(Iterator it1 = l.iterator();it1.hasNext();){
-                  SubInfo j = (SubInfo)it1.next();
+                  Job j = (Job)it1.next();
                   if ( defaultGroup ){
                       //each job in the group has to be
                       //mapped individually
@@ -197,7 +197,7 @@ public class Group extends Abstract {
      *
      * @param job  the job to be inserted.
      */
-    private void insert(SubInfo job){
+    private void insert(Job job){
         Object obj = job.vdsNS.get(Pegasus.GROUP_KEY);
         if(obj != null && ((String)obj).equalsIgnoreCase(mDefaultGroup)){
             //throw an exception?

@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.transfer.Refiner;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -146,7 +146,7 @@ public abstract class AbstractRefiner implements Refiner{
      * legacy implementations. Refiners that want to distinguish between 
      * symlink and stagein jobs should over ride this method.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -154,7 +154,7 @@ public abstract class AbstractRefiner implements Refiner{
      *                     source and destination file url's for symbolic linking
      *                     on compute site.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       Collection<FileTransfer> files,
                                       Collection<FileTransfer> symlinkFiles ){
         
@@ -166,12 +166,12 @@ public abstract class AbstractRefiner implements Refiner{
      * Default behaviour to preserve backward compatibility when the stage in 
      * and symbolic link jobs were not separated. 
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       Collection<FileTransfer> files ){
         
         throw new UnsupportedOperationException( 
@@ -230,28 +230,28 @@ public abstract class AbstractRefiner implements Refiner{
      *
      * @return true if site is setup for remote transfers
      *
-     * @see SubInfo#STAGE_IN_JOB
-     * @see SubInfo#INTER_POOL_JOB
-     * @see SubInfo#STAGE_OUT_JOB
+     * @see Job#STAGE_IN_JOB
+     * @see Job#INTER_POOL_JOB
+     * @see Job#STAGE_OUT_JOB
      */
     public boolean runTransferRemotely( String site, int type ) {
         Implementation implementation;
         //the value from the properties file
         //later on maybe picked up as profiles
         boolean runTransferRemotely = false;
-        if(type == SubInfo.STAGE_IN_JOB ){
+        if(type == Job.STAGE_IN_JOB ){
             implementation = mTXStageInImplementation;
             runTransferRemotely = mRemoteTransfers.stageInOnRemoteSite( site );
         }
-        else if(type == SubInfo.INTER_POOL_JOB){
+        else if(type == Job.INTER_POOL_JOB){
             implementation = mTXInterImplementation;
             runTransferRemotely         = mRemoteTransfers.interOnRemoteSite( site );
         }
-        else if(type == SubInfo.STAGE_OUT_JOB){
+        else if(type == Job.STAGE_OUT_JOB){
             implementation = mTXStageOutImplementation;
             runTransferRemotely         = mRemoteTransfers.stageOutOnRemoteSite( site );
         }/*
-        else if(type == SubInfo.SYMLINK_STAGE_IN_JOB){
+        else if(type == Job.SYMLINK_STAGE_IN_JOB){
             implementation = mTXSymbolicLinkImplementation;
             runTransferRemotely         = true;
         }*/
@@ -277,9 +277,9 @@ public abstract class AbstractRefiner implements Refiner{
      * @return true pool is third party enabled
      *         false pool is not third party enabled.
      *
-     * @see SubInfo#STAGE_IN_JOB
-     * @see SubInfo#INTER_POOL_JOB
-     * @see SubInfo#STAGE_OUT_JOB
+     * @see Job#STAGE_IN_JOB
+     * @see Job#INTER_POOL_JOB
+     * @see Job#STAGE_OUT_JOB
      *
      * @throws IllegalArgumentException
      */
@@ -288,19 +288,19 @@ public abstract class AbstractRefiner implements Refiner{
         //the value from the properties file
         //later on maybe picked up as profiles
         boolean useTPT = false;
-        if(type == SubInfo.STAGE_IN_JOB ){
+        if(type == Job.STAGE_IN_JOB ){
             implementation = mTXStageInImplementation;
             useTPT         = mTPT.stageInThirdParty(site);
         }
-        else if(type == SubInfo.INTER_POOL_JOB){
+        else if(type == Job.INTER_POOL_JOB){
             implementation = mTXInterImplementation;
             useTPT         = mTPT.interThirdParty(site);
         }
-        else if(type == SubInfo.STAGE_OUT_JOB){
+        else if(type == Job.STAGE_OUT_JOB){
             implementation = mTXStageOutImplementation;
             useTPT         = mTPT.stageOutThirdParty(site);
         }/*
-        else if(type == SubInfo.SYMLINK_STAGE_IN_JOB){
+        else if(type == Job.SYMLINK_STAGE_IN_JOB){
             implementation = mTXSymbolicLinkImplementation;
             useTPT         = false;
         }*/
@@ -326,24 +326,24 @@ public abstract class AbstractRefiner implements Refiner{
      *
      * @return true if the transfers are to be run on remote site, else false.
      *
-     * @see SubInfo#STAGE_IN_JOB
-     * @see SubInfo#INTER_POOL_JOB
-     * @see SubInfo#STAGE_OUT_JOB
+     * @see Job#STAGE_IN_JOB
+     * @see Job#INTER_POOL_JOB
+     * @see Job#STAGE_OUT_JOB
      */
     public boolean runTPTOnRemoteSite(String site,int type){
         //Implementation implementation;
         //the value from the properties file
         //later on maybe picked up as profiles
         boolean remoteTPT = false;
-        if(type == SubInfo.STAGE_IN_JOB ){
+        if(type == Job.STAGE_IN_JOB ){
             //implementation = mTXStageInImplementation;
             remoteTPT      = mTPT.stageInThirdPartyRemote(site);
         }
-        else if(type == SubInfo.INTER_POOL_JOB){
+        else if(type == Job.INTER_POOL_JOB){
             //implementation = mTXInterImplementation;
             remoteTPT      = mTPT.interThirdPartyRemote(site);
         }
-        else if(type == SubInfo.STAGE_OUT_JOB){
+        else if(type == Job.STAGE_OUT_JOB){
             //implementation = mTXStageOutImplementation;
             remoteTPT      = mTPT.stageOutThirdPartyRemote(site);
         }

@@ -31,7 +31,7 @@ import java.io.IOException;
 /**
  *  This class object contains the info about a Dag.
  *  DagInfo object contains the information to create the .dax file.
- *  vJobSubInfos is a Vector containing SubInfo objects of jobs making
+ *  vJobSubInfos is a Vector containing Job objects of jobs making
  *  the Dag.
  *  Each subinfo object contains information needed to generate a submit
  *  file for that job.
@@ -41,7 +41,7 @@ import java.io.IOException;
  * @version $Revision$
  *
  * @see DagInfo
- * @see SubInfo
+ * @see Job
  */
 
 public class ADag extends Data {
@@ -53,7 +53,7 @@ public class ADag extends Data {
     public DagInfo dagInfo;
 
     /**
-     * Vector of <code>SubInfo</code> objects. Each SubInfo object contains
+     * Vector of <code>Job</code> objects. Each Job object contains
      * information corresponding to the submit file for one job.
      */
     public Vector vJobSubInfos;
@@ -124,7 +124,7 @@ public class ADag extends Data {
      *
      * @param job  the new job that is to be added to the ADag.
      */
-    public void add(SubInfo job){
+    public void add(Job job){
         //add to the dagInfo
         dagInfo.addNewJob(job );
         vJobSubInfos.addElement(job);
@@ -159,11 +159,11 @@ public class ADag extends Data {
      * Removes a particular job from the workflow. It however does not
      * delete the relations the edges that refer to the job.
      *
-     * @param job  the <code>SubInfo</code> object containing the job description.
+     * @param job  the <code>Job</code> object containing the job description.
      *
      * @return boolean indicating whether the removal was successful or not.
      */
-    public boolean remove(SubInfo job){
+    public boolean remove(Job job){
 	boolean a = dagInfo.remove( job );
 	boolean b = vJobSubInfos.remove(job);
 	return a && b;
@@ -339,10 +339,10 @@ public class ADag extends Data {
      */
     public Set getExecutionSites(){
         Set set = new TreeSet();
-        SubInfo sub = null;
+        Job sub = null;
 
         for(Iterator it = this.vJobSubInfos.iterator();it.hasNext();){
-            sub = (SubInfo)it.next();
+            sub = (Job)it.next();
             set.add(sub.executionPool);
         }
 
@@ -379,21 +379,21 @@ public class ADag extends Data {
     }
 
     /**
-     * This returns a SubInfo object corresponding to the job by looking through
+     * This returns a Job object corresponding to the job by looking through
      * all the subInfos.
      *
      *
      *@param job   jobName of the job for which we need the subInfo object.
      *
-     *@return      the <code>SubInfo</code> objects corresponding to the job
+     *@return      the <code>Job</code> objects corresponding to the job
      */
-    public SubInfo getSubInfo(String job){
+    public Job getSubInfo(String job){
 
-        SubInfo sub = null;
+        Job sub = null;
 
         //System.out.println("Job being considered is " + job);
         for ( Enumeration e = this.vJobSubInfos.elements(); e.hasMoreElements(); ){
-            sub = (SubInfo)e.nextElement();
+            sub = (Job)e.nextElement();
             if(job.equalsIgnoreCase(sub.jobName)){
                 return sub;
             }
@@ -452,7 +452,7 @@ public class ADag extends Data {
 
         //traverse through the jobs
         for( Iterator it = jobIterator(); it.hasNext(); ){
-            ( (SubInfo)it.next() ).toDOT( stream, newIndent );
+            ( (Job)it.next() ).toDOT( stream, newIndent );
         }
 
         stream.write( newLine );

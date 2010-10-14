@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.code.gridstart;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -108,13 +108,13 @@ public class UserPOSTScript implements POSTScript {
      * in the DAGMAN namespace.
      *
      *
-     * @param job  the <code>SubInfo</code> object containing the job description
+     * @param job  the <code>Job</code> object containing the job description
      *             of the job that has to be enabled on the grid.
      * @param key  the <code>DAGMan</code> profile key that has to be inserted.
      *
      * @return boolean true if postscript was generated,else false.
      */
-    public boolean construct(SubInfo job, String key) {
+    public boolean construct(Job job, String key) {
         boolean constructed = false;
 
         //see if any specific postscript was specified for this job

@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.transfer;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.code.GridStart;
 
@@ -69,7 +69,7 @@ public interface SLS {
      *
      * @return invocation string
      */
-    public String invocationString( SubInfo job, File slsFile );
+    public String invocationString( Job job, File slsFile );
 
     /**
      * Returns a boolean indicating whether it will an input file for a job
@@ -80,7 +80,7 @@ public interface SLS {
      *
      * @return true
      */
-    public boolean needsSLSInput( SubInfo job );
+    public boolean needsSLSInput( Job job );
 
     /**
      * Returns a boolean indicating whether it will an output file for a job
@@ -91,32 +91,32 @@ public interface SLS {
      *
      * @return true
      */
-    public boolean needsSLSOutput( SubInfo job );
+    public boolean needsSLSOutput( Job job );
 
 
     /**
      * Returns the LFN of sls input file.
      *
-     * @param job SubInfo
+     * @param job Job
      *
      * @return the name of the sls input file.
      */
-    public String getSLSInputLFN( SubInfo job );
+    public String getSLSInputLFN( Job job );
 
 
     /**
      * Returns the LFN of sls output file.
      *
-     * @param job SubInfo
+     * @param job Job
      *
      * @return the name of the sls input file.
      */
-    public String getSLSOutputLFN( SubInfo job );
+    public String getSLSOutputLFN( Job job );
 
 
     /**
      * Generates a second level staging file of the input files to the worker node
-     * directory. It should be  consistent with the function needsSLSFile( SubInfo )
+     * directory. It should be  consistent with the function needsSLSFile( Job )
      *
      * @param job        the job for which the file is being created
      * @param submitDir  the submit directory where it has to be written out.
@@ -126,9 +126,9 @@ public interface SLS {
      *
      * @return the full path to lof file created, else null if no file is written out.
      *
-     * @see #needsSLSInput( SubInfo)
+     * @see #needsSLSInput( Job)
      */
-    public File generateSLSInputFile( SubInfo job,
+    public File generateSLSInputFile( Job job,
                                       String fileName,
                                       String submitDir,
                                       String headNodeDirectory,
@@ -136,7 +136,7 @@ public interface SLS {
 
     /**
      * Generates a second level staging file of the input files to the worker node
-     * directory. It should be  consistent with the function needsSLSFile( SubInfo )
+     * directory. It should be  consistent with the function needsSLSFile( Job )
      *
      * @param job        the job for which the file is being created
      * @param submitDir  the submit directory where it has to be written out.
@@ -146,9 +146,9 @@ public interface SLS {
      *
      * @return the full path to lof file created, else null if no file is written out.
      *
-     * @see #needsSLSOutput( SubInfo) 
+     * @see #needsSLSOutput( Job)
      */
-    public File generateSLSOutputFile( SubInfo job,
+    public File generateSLSOutputFile( Job job,
                                        String fileName,
                                        String submitDir,
                                        String headNodeDirectory,
@@ -173,7 +173,7 @@ public interface SLS {
      *                      for staging in from the head node to worker node directory.
      * @return boolean
      */
-    public boolean modifyJobForFirstLevelStaging( SubInfo job,
+    public boolean modifyJobForFirstLevelStaging( Job job,
                                                   String submitDir,
                                                   String slsInputLFN,
                                                   String slsOutputLFN );
@@ -193,7 +193,7 @@ public interface SLS {
      *
      * @return boolean indicating whether job was successfully modified or not.
      */
-    public boolean modifyJobForWorkerNodeExecution( SubInfo job,
+    public boolean modifyJobForWorkerNodeExecution( Job job,
                                                     String headNodeURLPrefix,
                                                     String headNodeDirectory,
                                                     String workerNodeDirectory  );

@@ -20,7 +20,7 @@ package edu.isi.pegasus.planner.transfer.refiner;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -127,7 +127,7 @@ public class Cluster extends Bundle {
     /**
      * Maps the site name to the current synch job
      */
-    private Map< String, SubInfo > mSyncJobMap;
+    private Map< String, Job > mSyncJobMap;
     
      /**
      * The overloaded constructor.
@@ -139,7 +139,7 @@ public class Cluster extends Bundle {
     public Cluster( ADag dag, PegasusBag bag ){
         super( dag, bag );
         mCurrentSILevel = -1;
-        mSyncJobMap = new HashMap< String, SubInfo >();
+        mSyncJobMap = new HashMap< String, Job >();
     }
     
     /**
@@ -175,7 +175,7 @@ public class Cluster extends Bundle {
      * from the location returned from the replica catalog to the job's execution
      * pool.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -183,14 +183,14 @@ public class Cluster extends Bundle {
      *                     source and destination file url's for symbolic linking
      *                     on compute site.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       Collection<FileTransfer> files,
                                       Collection<FileTransfer> symlinkFiles ){
         
         addStageInXFERNodes( job,
                              true,
                              files, 
-                             SubInfo.STAGE_IN_JOB, 
+                             Job.STAGE_IN_JOB,
                              this.mStageInLocalMapPerLevel,
                              this.mStageinLocalBundleValue,
                              this.mTXStageInImplementation );
@@ -199,7 +199,7 @@ public class Cluster extends Bundle {
         addStageInXFERNodes( job,
                              false,
                              symlinkFiles, 
-                             SubInfo.STAGE_IN_JOB, 
+                             Job.STAGE_IN_JOB,
                              this.mStageInRemoteMapPerLevel,
                              this.mStageInRemoteBundleValue,
                              this.mTXStageInImplementation );
@@ -210,7 +210,7 @@ public class Cluster extends Bundle {
      * from the location returned from the replica catalog to the job's execution
      * pool.
      *
-     * @param job   <code>SubInfo</code> object corresponding to the node to
+     * @param job   <code>Job</code> object corresponding to the node to
      *              which the files are to be transferred to.
      * @param files Collection of <code>FileTransfer</code> objects containing the
      *              information about source and destURL's.
@@ -220,7 +220,7 @@ public class Cluster extends Bundle {
      * @param cValue   used to determine the bundling factor to employ for a job.
      * @param implementation  the transfer implementation to use.
      */
-    public  void addStageInXFERNodes( SubInfo job,
+    public  void addStageInXFERNodes( Job job,
                                       boolean localTransfer,
                                       Collection files,
                                       int jobType, 
@@ -375,12 +375,12 @@ public class Cluster extends Bundle {
                /*implementation.addSetXBitJobs( job,
                                               siJob,
                                               stagedExecFiles,
-                                              SubInfo.STAGE_IN_JOB );
+                                              Job.STAGE_IN_JOB );
                */
                 
-               SubInfo xBitJob = implementation.createSetXBitJob( job,
+               Job xBitJob = implementation.createSetXBitJob( job,
                                                                   stagedExecFiles,
-                                                                  SubInfo.STAGE_IN_JOB,
+                                                                  Job.STAGE_IN_JOB,
                                                                   staged );
 
 
@@ -409,20 +409,20 @@ public class Cluster extends Bundle {
         
         //stores the mapping of site to synch job per call
         //to resetStagInMaps
-        Map< String, SubInfo > tempSynchJobMap = new HashMap<String,SubInfo>();
+        Map< String, Job > tempSynchJobMap = new HashMap<String,Job>();
         
         //reset both the stagein and symlink stage in maps
         this.mStageInLocalMapPerLevel = resetStageInMap( this.mStageInLocalMapPerLevel,
                                                     this.mTXStageInImplementation,
                                                     tempSynchJobMap,
-                                                    SubInfo.STAGE_IN_JOB,
+                                                    Job.STAGE_IN_JOB,
                                                     true ,
                                                     true );
         //we dont want any synch jobs to be created while creating symlink jobs
         this.mStageInRemoteMapPerLevel = resetStageInMap( this.mStageInRemoteMapPerLevel,
                                                            this.mTXStageInImplementation,
                                                            tempSynchJobMap,
-                                                           SubInfo.STAGE_IN_JOB,
+                                                           Job.STAGE_IN_JOB,
                                                            false,
                                                            false
                                                           );
@@ -447,25 +447,25 @@ public class Cluster extends Bundle {
     protected Map<String,PoolTransfer> resetStageInMap( 
                                     Map<String,PoolTransfer> stageInMap, 
                                     Implementation implementation,
-                                    Map<String,SubInfo> transientSynchJobMap,
+                                    Map<String,Job> transientSynchJobMap,
                                     int jobType,
                                     boolean createChildSyncJob,
                                     boolean localTransfer
                                     ){
         if ( stageInMap != null ){
             
-            SubInfo job = new SubInfo();
+            Job job = new Job();
             //before flushing add the stage in nodes to the workflow
             for( Iterator it = stageInMap.values().iterator(); it.hasNext(); ){
                 PoolTransfer pt = ( PoolTransfer ) it.next();
                 String site = pt.getPoolName() ;
                 job.setSiteHandle( site );
 
-                SubInfo parentSyncJob = this.getSyncJob( site );
+                Job parentSyncJob = this.getSyncJob( site );
                 
                 
                 //add a child synch job for this level if required
-                SubInfo childSyncJob = null;
+                Job childSyncJob = null;
                 if( createChildSyncJob ){
                     childSyncJob = createSyncJobBetweenLevels( 
                                                     getSyncJobBetweenLevelsName( site, mCurrentSILevel - 1 ) );
@@ -485,7 +485,7 @@ public class Cluster extends Bundle {
                     }
 
                     //add the stagein job if required
-                    SubInfo siJob = null;
+                    Job siJob = null;
                     if( !tc.getFileTransfers().isEmpty() ){
                         mLogger.log( "Adding stage-in job " + tc.getTXName(),
                                      LogManager.DEBUG_MESSAGE_LEVEL);
@@ -498,7 +498,7 @@ public class Cluster extends Bundle {
                                                                   tc.getTXName(),
                                                                   jobType );
                         //always set job type to stage in even for symlink after creation
-                        siJob.setJobType( SubInfo.STAGE_IN_JOB );
+                        siJob.setJobType( Job.STAGE_IN_JOB );
                         addJob( siJob );
                     }
                     
@@ -535,7 +535,7 @@ public class Cluster extends Bundle {
      * 
      * @return value as String or NULL
      */
-    protected String getComputeJobBundleValue( SubInfo job ){
+    protected String getComputeJobBundleValue( Job job ){
         return  job.vdsNS.getStringValue( Pegasus.CLUSTER_STAGE_OUT_KEY );
     }
        
@@ -607,7 +607,7 @@ public class Cluster extends Bundle {
         //this should be parameterised Karan Dec 20,2005
         TransformationCatalogEntry entry  =
             mTXStageInImplementation.getTransformationCatalogEntry(site);
-        SubInfo sub = new SubInfo();
+        Job sub = new Job();
         String value = (deflt == null)?
                         this.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR:
                         deflt;
@@ -658,9 +658,9 @@ public class Cluster extends Bundle {
      * @return  the noop job.
      */
 
-    private SubInfo createSyncJobBetweenLevels( String name ) {
+    private Job createSyncJobBetweenLevels( String name ) {
 
-        SubInfo newJob = new SubInfo();
+        Job newJob = new Job();
         
         List entries = null;
         String execPath =  null;
@@ -681,7 +681,7 @@ public class Cluster extends Bundle {
 
         //construct noop keys
         newJob.setSiteHandle( "local" );
-        newJob.setJobType( SubInfo.CREATE_DIR_JOB );
+        newJob.setJobType( Job.CREATE_DIR_JOB );
         constructCondorKey( newJob, "noop_job", "true" );
         constructCondorKey( newJob, "noop_job_exit_code", "0" );
 
@@ -701,7 +701,7 @@ public class Cluster extends Bundle {
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    protected void constructCondorKey(SubInfo job, String key, String value){
+    protected void constructCondorKey(Job job, String key, String value){
         job.condorVariables.checkKeyInNS(key,value);
     }
     
@@ -712,8 +712,8 @@ public class Cluster extends Bundle {
      * 
      * @return synch job if exists else null
      */
-    public SubInfo getSyncJob( String site ){
-        return (SubInfo)mSyncJobMap.get( site );
+    public Job getSyncJob( String site ){
+        return (Job)mSyncJobMap.get( site );
     }
     
 }

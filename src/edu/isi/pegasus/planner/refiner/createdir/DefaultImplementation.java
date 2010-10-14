@@ -22,7 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -154,8 +154,8 @@ public class DefaultImplementation implements Implementation {
      *
      * @return create dir job.
      */
-    public SubInfo makeCreateDirJob( String site, String name, String directory ) {
-        SubInfo newJob  = new SubInfo();
+    public Job makeCreateDirJob( String site, String name, String directory ) {
+        Job newJob  = new Job();
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
@@ -238,7 +238,7 @@ public class DefaultImplementation implements Implementation {
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = argString;
-        newJob.jobClass = SubInfo.CREATE_DIR_JOB;
+        newJob.jobClass = Job.CREATE_DIR_JOB;
         newJob.jobID = name;
 
         //the profile information from the pool catalog needs to be

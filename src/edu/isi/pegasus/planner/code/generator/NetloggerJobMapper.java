@@ -23,7 +23,7 @@ import edu.isi.pegasus.common.logging.LoggingKeys;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 
 import java.io.IOException;
@@ -71,8 +71,8 @@ public class NetloggerJobMapper{
      */
     public void writeOutMappings( Writer writer , ADag dag ) throws IOException{
         
-        for( Iterator<SubInfo> it = dag.jobIterator(); it.hasNext(); ){
-            SubInfo job = it.next();
+        for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
+            Job job = it.next();
             int type = job.getJobType();
             mLogFormatter.addEvent( "pegasus.job", LoggingKeys.JOB_ID, job.getID() );
             mLogFormatter.add( "job.class" , Integer.toString( type ) );
@@ -89,8 +89,8 @@ public class NetloggerJobMapper{
             if( taskCount > 0 ){
                 if ( job instanceof AggregatedJob ){
                   AggregatedJob j = (AggregatedJob)job;
-                    for( Iterator<SubInfo> jit = j.constituentJobsIterator(); jit.hasNext(); ){
-                        SubInfo cJob = jit.next();
+                    for( Iterator<Job> jit = j.constituentJobsIterator(); jit.hasNext(); ){
+                        Job cJob = jit.next();
                     
                         mLogFormatter.addEvent( "pegasus.job.map", LoggingKeys.JOB_ID, job.getID() ); 
                         writer.write( generateLogEvent( cJob, "task." ) );
@@ -116,10 +116,10 @@ public class NetloggerJobMapper{
      * 
      * @return netlogger formatted message
      */
-    private String generateLogEvent ( SubInfo job,  String prefix ) {
+    private String generateLogEvent ( Job job,  String prefix ) {
         String result = null;
-        /*String taskID = (( job.getJobType() == SubInfo.COMPUTE_JOB || 
-                              job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ) &&
+        /*String taskID = (( job.getJobType() == Job.COMPUTE_JOB ||
+                              job.getJobType() == Job.STAGED_COMPUTE_JOB ) &&
                                 !(job instanceof AggregatedJob) )?
                         job.getLogicalID():
                         "";
@@ -156,18 +156,18 @@ public class NetloggerJobMapper{
      * 
      * @return task count
      */
-    private int getTaskCount( SubInfo job ) {
+    private int getTaskCount( Job job ) {
         int count = 0;
         int type = job.getJobType();
         //explicitly exclude cleanup jobs that are instance
         //of aggregated jobs. This is because while creating
         //the cleanup job we use the clone method. To be fixed.
         //Karan April 17 2009
-        if ( job instanceof AggregatedJob && type != SubInfo.CLEANUP_JOB ){
+        if ( job instanceof AggregatedJob && type != Job.CLEANUP_JOB ){
             //a clustered job the number of constituent is count
             count = ((AggregatedJob)job).numberOfConsitutentJobs();
         }
-        else if ( type == SubInfo.COMPUTE_JOB || type == SubInfo.STAGED_COMPUTE_JOB ){
+        else if ( type == Job.COMPUTE_JOB || type == Job.STAGED_COMPUTE_JOB ){
             //non clustered job check whether compute or not 
             //and make sure there is dax job associated with it
             if( job.getLogicalID().length() == 0 ){

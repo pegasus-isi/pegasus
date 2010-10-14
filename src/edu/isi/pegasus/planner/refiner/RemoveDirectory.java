@@ -20,7 +20,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -204,7 +204,7 @@ public class RemoveDirectory extends Engine {
         Set set = new HashSet();
 
         for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
-            SubInfo job = (SubInfo)it.next();
+            Job job = (Job)it.next();
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
@@ -253,7 +253,7 @@ public class RemoveDirectory extends Engine {
      *
      * @return the remove dir job.
      */
-    public SubInfo makeRemoveDirJob( String site, String jobName ) {
+    public Job makeRemoveDirJob( String site, String jobName ) {
         List l = new LinkedList();
         l.add( mSiteStore.getWorkDirectory( site ) );
         
@@ -271,8 +271,8 @@ public class RemoveDirectory extends Engine {
      *
      * @return the remove dir job.
      */
-    public SubInfo makeRemoveDirJob( String site, String jobName, List files ) {
-        SubInfo newJob  = new SubInfo();
+    public Job makeRemoveDirJob( String site, String jobName, List files ) {
+        Job newJob  = new Job();
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
@@ -359,7 +359,7 @@ public class RemoveDirectory extends Engine {
         newJob.executable = execPath;
         newJob.setSiteHandle( site );
         newJob.setArguments( arguments.toString() );
-        newJob.jobClass = SubInfo.CREATE_DIR_JOB;
+        newJob.jobClass = Job.CREATE_DIR_JOB;
         newJob.jobID = jobName;
 
         //the profile information from the pool catalog needs to be

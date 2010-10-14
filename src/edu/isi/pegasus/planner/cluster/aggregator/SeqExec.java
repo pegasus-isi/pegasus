@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -110,7 +110,7 @@ public class SeqExec extends Abstract {
      * the seqexec itself is not being kickstarted. At the same time, appropriate
      * postscript is constructed to be invoked on the job.
      *
-     * @param jobs the list of <code>SubInfo</code> objects that need to be
+     * @param jobs the list of <code>Job</code> objects that need to be
      *             collapsed. All the jobs being collapsed should be scheduled
      *             at the same pool, to maintain correct semantics.
      * @param name  the logical name of the jobs in the list passed to this
@@ -129,7 +129,7 @@ public class SeqExec extends Abstract {
                                    GridStartFactory.GRIDSTART_SHORT_NAMES[
                                                           GridStartFactory.NO_GRIDSTART_INDEX] );
 
-        SubInfo firstJob = (SubInfo)jobs.get(0);
+        Job firstJob = (Job)jobs.get(0);
         StringBuffer message = new StringBuffer();
         message.append( " POSTScript for merged job " ).
                 append( mergedJob.getName() ).append( " " );
@@ -171,7 +171,7 @@ public class SeqExec extends Abstract {
      * @return AggregatedJob
      */
     protected AggregatedJob  enable(  AggregatedJob mergedJob, List jobs  ){
-        SubInfo firstJob = (SubInfo)jobs.get(0);
+        Job firstJob = (Job)jobs.get(0);
         
 //        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
 //                                                  Condor.VANILLA_UNIVERSE);

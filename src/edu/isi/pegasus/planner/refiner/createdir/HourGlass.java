@@ -21,7 +21,7 @@ package edu.isi.pegasus.planner.refiner.createdir;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
@@ -141,8 +141,8 @@ public class HourGlass extends AbstractStrategy{
 
         String pool = null;
         String jobName = null;
-        SubInfo newJob = null;
-        SubInfo concatJob = null;
+        Job newJob = null;
+        Job concatJob = null;
 
         //add the concat job
         if (!set.isEmpty()) {
@@ -198,9 +198,9 @@ public class HourGlass extends AbstractStrategy{
      * 
      * @return  the dummy concat job.
      */
-    public SubInfo makeDummyConcatJob( ADag dag ) {
+    public Job makeDummyConcatJob( ADag dag ) {
 
-        SubInfo newJob = new SubInfo();
+        Job newJob = new Job();
         List entries = null;
         String execPath =  null;
 
@@ -224,7 +224,7 @@ public class HourGlass extends AbstractStrategy{
 
         //construct noop keys
         newJob.executionPool = "local";
-        newJob.jobClass = SubInfo.CREATE_DIR_JOB;
+        newJob.jobClass = Job.CREATE_DIR_JOB;
         construct(newJob,"noop_job","true");
         construct(newJob,"noop_job_exit_code","0");
 
@@ -269,7 +269,7 @@ public class HourGlass extends AbstractStrategy{
      * @param key   the key of the profile.
      * @param value the associated value.
      */
-    private void construct(SubInfo job, String key, String value){
+    private void construct(Job job, String key, String value){
         job.condorVariables.checkKeyInNS(key,value);
     }
 

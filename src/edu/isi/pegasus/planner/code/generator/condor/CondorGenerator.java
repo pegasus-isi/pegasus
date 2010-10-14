@@ -42,7 +42,7 @@ import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.PCRelation;
-import edu.isi.pegasus.planner.classes.SubInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
@@ -377,7 +377,7 @@ public class CondorGenerator extends Abstract {
                                LogManager.DEBUG_MESSAGE_LEVEL);
         for(Iterator it = vSubInfo.iterator();it.hasNext();){
             //get information about each job making the ADag
-            SubInfo sinfo = (SubInfo) it.next();
+            Job sinfo = (Job) it.next();
 
             //write out the submit file for each job
             //in addition makes the corresponding
@@ -471,12 +471,12 @@ public class CondorGenerator extends Abstract {
      * Generates the code (condor submit file) for a single job.
      *
      * @param dag    the dag of which the job is a part of.
-     * @param job    the <code>SubInfo</code> object holding the information about
+     * @param job    the <code>Job</code> object holding the information about
      *               that particular job.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    public void generateCode( ADag dag, SubInfo job ) throws CodeGeneratorException{
+    public void generateCode( ADag dag, Job job ) throws CodeGeneratorException{
         String dagname  = dag.dagInfo.nameOfADag;
         String dagindex = dag.dagInfo.index;
         String dagcount = dag.dagInfo.count;
@@ -512,7 +512,7 @@ public class CondorGenerator extends Abstract {
                          LogManager.DEBUG_MESSAGE_LEVEL );
 
             //translate the current job into DAGMan submit file
-            SubInfo dagCondorJob = this.constructDAGJob( job.getName(),
+            Job dagCondorJob = this.constructDAGJob( job.getName(),
                                                          dagFile.getParent(),
                                                          dagFile.getName() );
 
@@ -735,11 +735,11 @@ public class CondorGenerator extends Abstract {
      *
      * @return the constructed DAG job.
      */
-    protected SubInfo constructDAGJob( String name,
+    protected Job constructDAGJob( String name,
                                        String directory,
                                        String dagBasename){
         //for time being use the old functions.
-        SubInfo job = new SubInfo();
+        Job job = new Job();
 
         //set the logical transformation
         job.setTransformation( CONDOR_DAGMAN_NAMESPACE,
@@ -797,7 +797,7 @@ public class CondorGenerator extends Abstract {
         //the job itself is the main job of the super node
         //construct the classad specific information
         job.jobID = job.getName();
-        job.jobClass = SubInfo.COMPUTE_JOB;
+        job.jobClass = Job.COMPUTE_JOB;
 
 
         //directory where all the dagman related files for the nested dagman
@@ -1397,12 +1397,12 @@ public class CondorGenerator extends Abstract {
      * various sources the following order is followed,property file, pool config
      * file and then dax.
      *
-     * @param sinfo  The SubInfo object containing the information about the job.
+     * @param sinfo  The Job object containing the information about the job.
      *
      *
      * @throws CodeGeneratorException
      */
-    protected void handleCondorVarForJob(SubInfo sinfo) throws CodeGeneratorException{
+    protected void handleCondorVarForJob(Job sinfo) throws CodeGeneratorException{
         Condor cvar = sinfo.condorVariables;
 
         String key = null;
@@ -1532,11 +1532,11 @@ public class CondorGenerator extends Abstract {
      * local pool. This function changes the path of the executable to the one on
      * the local pool, so that it can be shipped.
      *
-     * @param sinfo the <code>SubInfo</code> containing the job description.
+     * @param sinfo the <code>Job</code> containing the job description.
      *
      * @throws CodeGeneratorException
      */
-    protected void handleTransferOfExecutable(SubInfo sinfo) throws CodeGeneratorException{
+    protected void handleTransferOfExecutable(Job sinfo) throws CodeGeneratorException{
         Condor cvar = sinfo.condorVariables;
 
         if (!cvar.getBooleanValue("transfer_executable")) {
@@ -1602,7 +1602,7 @@ public class CondorGenerator extends Abstract {
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
-    protected void applyStyle( SubInfo job, PrintWriter writer )
+    protected void applyStyle( Job job, PrintWriter writer )
                                                   throws CodeGeneratorException{
 
         //load  the appropriate style for the job
@@ -1636,23 +1636,23 @@ public class CondorGenerator extends Abstract {
      * transformation catalog, pool config file and then dax.
      * At present values are not picked from the properties file.
      *
-     * @param sinfo  The SubInfo object containing the information about the job.
+     * @param sinfo  The Job object containing the information about the job.
      */
-    protected void handleEnvVarForJob(SubInfo sinfo) {
+    protected void handleEnvVarForJob(Job sinfo) {
 
     }
 
     /**
      * It updates/adds the the Globus RSL parameters got through the dax that are
-     * in SubInfo object. In addition inserts the additional rsl attributes
+     * in Job object. In addition inserts the additional rsl attributes
      * that can be specified in the properties file or the pool config files in
      * the profiles tags. In case of clashes of RSL attributes from various
      * sources the following order is followed,property file, pool config file
      * and then dax.
      *
-     * @param sinfo  The SubInfo object containing the information about the job.
+     * @param sinfo  The Job object containing the information about the job.
      */
-    protected void handleGlobusRSLForJob(SubInfo sinfo) {
+    protected void handleGlobusRSLForJob(Job sinfo) {
         Globus rsl = sinfo.globusRSL;
 
         String key = null;
@@ -1736,7 +1736,7 @@ public class CondorGenerator extends Abstract {
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     private String gridstart(PrintWriter writer,
-                             SubInfo job,
+                             Job job,
                              boolean isGlobusJob) throws CodeGeneratorException {
         //To get the gridstart/kickstart path on the remote
         //pool, querying with entry for vanilla universe.
