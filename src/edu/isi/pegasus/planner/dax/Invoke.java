@@ -21,6 +21,14 @@ import edu.isi.pegasus.common.util.XMLWriter;
         protected WHEN mWhen;
         protected String mWhat;
 
+        
+        public Invoke(Invoke i){
+            this(WHEN.valueOf(i.getWhen()),i.getWhat());
+        }
+        public Invoke(WHEN when) {
+            mWhen = when;
+        }
+
         public Invoke(WHEN when, String what) {
             mWhen = when;
             mWhat = what;
@@ -43,6 +51,10 @@ import edu.isi.pegasus.common.util.XMLWriter;
         public Invoke setWhat(String what) {
             mWhat = what;
             return this;
+        }
+
+        public Invoke clone(Invoke i){
+            return new Invoke(WHEN.valueOf(i.getWhen()),i.getWhat());
         }
 
     public void toXML(XMLWriter writer) {
