@@ -126,6 +126,7 @@ public class File extends CatalogType{
             //used in job's argument element
             writer.startElement("file");
             writer.writeAttribute("name", mName);
+            writer.noLine();
             writer.endElement();
         }else if(elementname.equalsIgnoreCase("uses")) {
             // used by job, dax, dag and transformation elements

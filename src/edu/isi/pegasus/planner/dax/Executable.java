@@ -101,6 +101,7 @@ public class Executable extends CatalogType {
     @Override
     public void toXML(XMLWriter writer) {
         writer.startElement("executable");
+        writer.incIndent();
         if (mNamespace != null && !mNamespace.isEmpty()) {
             writer.writeAttribute("namespace", mNamespace);
         }
@@ -124,6 +125,7 @@ public class Executable extends CatalogType {
             writer.writeAttribute("glibc", mGlibc);
         }
         super.toXML(writer);
+        writer.decIndent();
         writer.endElement();
 
     }

@@ -123,6 +123,7 @@ public class CatalogType {
        return Collections.unmodifiableList(mProfiles);
    }
    public void toXML(XMLWriter writer){
+       writer.incIndent();
         for(Profile p: mProfiles){
             p.toXML(writer);
         }
@@ -132,6 +133,7 @@ public class CatalogType {
         for(PFN f: mPFNs){
             f.toXML(writer);
         }
+        writer.decIndent();
    }
 
 }

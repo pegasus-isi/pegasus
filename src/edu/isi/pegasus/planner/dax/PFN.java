@@ -93,9 +93,11 @@ public class PFN {
        if(mSite!=null || !mSite.equals("local")){
            writer.writeAttribute("site", mSite);
        }
+       writer.incIndent();
        for(Profile p : mProfiles){
            p.toXML(writer);
        }
+       writer.decIndent();
        writer.endElement();
    }
 }

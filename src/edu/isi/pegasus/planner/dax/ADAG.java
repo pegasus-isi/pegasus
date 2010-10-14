@@ -21,6 +21,10 @@ public class ADAG {
      * The "official" namespace URI of the site catalog schema.
      */
     public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX";
+
+    /**
+     * XSI SCHEMA NAMESPACE
+     */
     public static final String SCHEMA_NAMESPACE_XSI = "http://www.w3.org/2001/XMLSchema-instance";
     /**
      * The "not-so-official" location URL of the DAX schema definition.
@@ -155,6 +159,7 @@ public class ADAG {
         writer.writeAttribute("name", mName);
         writer.writeAttribute("index", Integer.toString(mIndex));
         writer.writeAttribute("count", Integer.toString(mCount));
+
         if (mJobCount > 0) {
             writer.writeAttribute("jobcount", Integer.toString(mJobCount));
         }
@@ -165,16 +170,20 @@ public class ADAG {
             writer.writeAttribute("childcount", Integer.toString(mChildCount));
         }
 
+        writer.incIndent();
+
         //print file
         writer.writeXMLComment("Section 1: Files - Acts as a Replica Catalog (can be empty)");
         for (File f : mFiles) {
             f.toXML(writer);
         }
+
         //print executable
         writer.writeXMLComment("Section 2: Executables - Acts as a Transformaton Catalog (can be empty)");
         for (Executable e : mExecutables) {
             e.toXML(writer);
         }
+
         //print transformation
         writer.writeXMLComment("Section 3: Transformations - Aggregates executables and Files (can be empty)");
         for (Transformation t : mTransformations) {
@@ -196,6 +205,7 @@ public class ADAG {
             writer.endElement();
         }
         //end adag
+        writer.indent=0;
         writer.endElement();
 
     }

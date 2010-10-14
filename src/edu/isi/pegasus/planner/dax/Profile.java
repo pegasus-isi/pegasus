@@ -48,6 +48,7 @@ public class Profile {
         writer.writeAttribute("key", mKey);
         writer.writeData(mValue);
         writer.endElement();
+ 
     }
 }
 
