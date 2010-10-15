@@ -1,9 +1,25 @@
+/**
+ *  Copyright 2007-2008 University Of Southern California
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package edu.isi.pegasus.planner.dax;
 
-import java.util.*;
-//import edu.isi.pegasus.planner.catalog.classes.*;
-
-import edu.isi.pegasus.common.logging.*;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Collections;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
@@ -24,7 +40,6 @@ public class AbstractJob {
     protected String mNamespace;
     protected String mVersion;
     protected String mNodeLabel;
-
     protected static LogManager mLogger;
 
     protected AbstractJob() {
@@ -164,23 +179,28 @@ public class AbstractJob {
     }
 
     public void toXML(XMLWriter writer) {
-       Class c = this.getClass();
-       //Check if its a dax, dag or job class
-        if (c==DAX.class){
-            writer.startElement("dax");
-        }else if (c==DAG.class){
-            writer.startElement("dag");
-        } else if (c==Job.class){
-            writer.startElement("job");
-            
+        toXML(writer, 0);
+    }
+
+    public void toXML(XMLWriter writer, int indent) {
+
+        Class c = this.getClass();
+        //Check if its a dax, dag or job class
+        if (c == DAX.class) {
+            writer.startElement("dax", indent);
+        } else if (c == DAG.class) {
+            writer.startElement("dag", indent);
+        } else if (c == Job.class) {
+            writer.startElement("job", indent);
+
         }
         //add job attributes
         writer.writeAttribute("id", mId);
-        if (c==Job.class && mNamespace != null && !mNamespace.isEmpty()) {
+        if (c == Job.class && mNamespace != null && !mNamespace.isEmpty()) {
             writer.writeAttribute("namespace", mNamespace);
         }
         writer.writeAttribute("name", mName);
-        if (c==Job.class && mVersion != null && !mVersion.isEmpty()) {
+        if (c == Job.class && mVersion != null && !mVersion.isEmpty()) {
             writer.writeAttribute("version", mVersion);
         }
         if (mNodeLabel != null && !mNodeLabel.isEmpty()) {
@@ -188,44 +208,48 @@ public class AbstractJob {
         }
         //add argument
         if (!mArguments.isEmpty()) {
-            writer.startElement("argument");
+            writer.startElement("argument", indent + 1);
             for (Object o : mArguments) {
                 if (o.getClass() == String.class) {
                     //if class is string add argument string in the data section
-                    writer.writeData(" "+(String) o);
+                    writer.writeData(" " + (String) o);
                 }
                 if (o.getClass() == File.class) {
                     //add file tags in the argument elements data section
-                    ((File) o).toXML(writer, "argument");
+                    ((File) o).toXML(writer, 0, "argument");
                 }
             }
             writer.endElement();
         }
         //add profiles
         for (Profile p : mProfiles) {
-            p.toXML(writer);
+            p.toXML(writer, indent + 1);
         }
         //add stdin
-        if(mStdin!=null){
-            mStdin.toXML(writer, "stdin");
+        if (mStdin != null) {
+            mStdin.toXML(writer, indent + 1, "stdin");
         }
         //add stdout
-        if(mStdout!=null){
-            mStdout.toXML(writer, "stdout");
+        if (mStdout != null) {
+            mStdout.toXML(writer, indent + 1, "stdout");
         }
         //add stderr
-        if(mStderr!=null){
-            mStderr.toXML(writer, "stderr");
+        if (mStderr != null) {
+            mStderr.toXML(writer, indent + 1, "stderr");
         }
         //add uses
         for (File f : mUses) {
-            f.toXML(writer, "uses");
+            f.toXML(writer, indent + 1, "uses");
         }
         //add invoke
         for (Invoke i : mInvokes) {
-            i.toXML(writer);
+            i.toXML(writer, indent + 1);
         }
-        writer.endElement();
+        if (!(mUses.isEmpty() && mInvokes.isEmpty() && mStderr == null && mStdout == null && mStdin == null && mProfiles.isEmpty() && mArguments.isEmpty())) {
+            writer.endElement(indent);
+        } else {
+            writer.endElement();
+        }
 
     }
 }

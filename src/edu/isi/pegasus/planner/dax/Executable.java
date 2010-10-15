@@ -1,7 +1,19 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ *  Copyright 2007-2008 University Of Southern California
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
+
 package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.util.XMLWriter;
@@ -98,10 +110,13 @@ public class Executable extends CatalogType {
         return (mGlibc == null) ? "" : mGlibc;
     }
 
-    @Override
     public void toXML(XMLWriter writer) {
-        writer.startElement("executable");
-        writer.incIndent();
+        toXML(writer, 0);
+    }
+
+    @Override
+    public void toXML(XMLWriter writer, int indent) {
+        writer.startElement("executable", indent);
         if (mNamespace != null && !mNamespace.isEmpty()) {
             writer.writeAttribute("namespace", mNamespace);
         }
@@ -109,24 +124,23 @@ public class Executable extends CatalogType {
         if (mVersion != null && !mVersion.isEmpty()) {
             writer.writeAttribute("version", mVersion);
         }
-        if(mArch!=ARCH.x86){
+        if (mArch != ARCH.x86) {
             writer.writeAttribute("arch", mArch.toString().toLowerCase());
         }
-                if(mOs!=OS.LINUX){
+        if (mOs != OS.LINUX) {
             writer.writeAttribute("os", mOs.toString().toLowerCase());
         }
-        if(mOsRelease!=null && !mOsRelease.isEmpty()){
+        if (mOsRelease != null && !mOsRelease.isEmpty()) {
             writer.writeAttribute("osrelease", mOsRelease);
         }
-        if(mOsVersion!=null && !mOsVersion.isEmpty()){
+        if (mOsVersion != null && !mOsVersion.isEmpty()) {
             writer.writeAttribute("osversion", mOsVersion);
         }
-        if(mGlibc!=null && !mGlibc.isEmpty()){
+        if (mGlibc != null && !mGlibc.isEmpty()) {
             writer.writeAttribute("glibc", mGlibc);
         }
-        super.toXML(writer);
-        writer.decIndent();
-        writer.endElement();
+        super.toXML(writer, indent);
+        writer.endElement(indent);
 
     }
 }

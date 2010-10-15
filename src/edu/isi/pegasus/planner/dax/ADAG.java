@@ -1,10 +1,24 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ *  Copyright 2007-2008 University Of Southern California
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
+
 package edu.isi.pegasus.planner.dax;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -21,7 +35,6 @@ public class ADAG {
      * The "official" namespace URI of the site catalog schema.
      */
     public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX";
-
     /**
      * XSI SCHEMA NAMESPACE
      */
@@ -151,6 +164,7 @@ public class ADAG {
     }
 
     public void toXML(XMLWriter writer) {
+        int indent = 0;
         writer.startElement("adag");
         writer.writeAttribute("xmlns", SCHEMA_NAMESPACE);
         writer.writeAttribute("xmlns:xsi", SCHEMA_NAMESPACE_XSI);
@@ -170,42 +184,39 @@ public class ADAG {
             writer.writeAttribute("childcount", Integer.toString(mChildCount));
         }
 
-        writer.incIndent();
-
         //print file
         writer.writeXMLComment("Section 1: Files - Acts as a Replica Catalog (can be empty)");
         for (File f : mFiles) {
-            f.toXML(writer);
+            f.toXML(writer, indent + 1);
         }
 
         //print executable
         writer.writeXMLComment("Section 2: Executables - Acts as a Transformaton Catalog (can be empty)");
         for (Executable e : mExecutables) {
-            e.toXML(writer);
+            e.toXML(writer, indent + 1);
         }
 
         //print transformation
         writer.writeXMLComment("Section 3: Transformations - Aggregates executables and Files (can be empty)");
         for (Transformation t : mTransformations) {
-            t.toXML(writer);
+            t.toXML(writer, indent + 1);
         }
         //print jobs, daxes and dags
         writer.writeXMLComment("Section 4: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)");
         for (AbstractJob j : mJobs) {
-            j.toXML(writer);
+            j.toXML(writer, indent + 1);
         }
         //print dependencies
         writer.writeXMLComment("Section 5: Dependencies - Parent Child relationships (can be empty)");
 
         for (String child : mDependencies.keySet()) {
-            writer.startElement("child").writeAttribute("ref", child);
+            writer.startElement("child", indent + 1).writeAttribute("ref", child);
             for (Parent p : mDependencies.get(child)) {
-                p.toXML(writer);
+                p.toXML(writer, indent + 2);
             }
-            writer.endElement();
+            writer.endElement(indent + 1);
         }
         //end adag
-        writer.indent=0;
         writer.endElement();
 
     }

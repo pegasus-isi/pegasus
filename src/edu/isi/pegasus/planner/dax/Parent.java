@@ -1,7 +1,19 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ *  Copyright 2007-2008 University Of Southern California
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
+
 package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.util.XMLWriter;
@@ -10,7 +22,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *
  * @author gmehta
  */
-public class Parent implements Comparable {
+public class Parent {
 
     /**
      * The name of the parent
@@ -27,6 +39,10 @@ public class Parent implements Comparable {
      */
     public Parent(String name) {
         mName = name;
+    }
+
+    public Parent(Parent p) {
+        this(p.getName(), p.getLabel());
     }
 
     /**
@@ -67,10 +83,8 @@ public class Parent implements Comparable {
         mLabel = label;
     }
 
-    @Override
-    public int compareTo(Object o) {
-        int cmp = mName.compareTo(((Parent) o).getName());
-        return cmp == 0 ? mLabel.compareTo(((Parent) o).getLabel()) : cmp;
+    public Parent clone() {
+        return new Parent(this.mName, this.mLabel);
     }
 
     @Override
@@ -99,15 +113,18 @@ public class Parent implements Comparable {
     public String toString() {
         return "(" + mName + ", " + mLabel == null ? "" : mLabel + ')';
     }
-    
-    public void toXML(XMLWriter writer){
-        writer.startElement("parent");
-        writer.writeAttribute("ref",mName);
-        if(mLabel!=null && !mLabel.isEmpty()){
-            writer.writeAttribute("edge-label",mLabel);
-        }
-        writer.endElement();
-        
+
+    public void toXML(XMLWriter writer) {
+        toXML(writer, 0);
     }
 
+    public void toXML(XMLWriter writer, int indent) {
+        writer.startElement("parent", indent);
+        writer.writeAttribute("ref", mName);
+        if (mLabel != null && !mLabel.isEmpty()) {
+            writer.writeAttribute("edge-label", mLabel);
+        }
+        writer.endElement();
+
+    }
 }
