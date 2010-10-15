@@ -161,9 +161,6 @@ public class File extends CatalogType{
             if(mLink!=null) {
                 writer.writeAttribute("link", mLink.toString().toLowerCase());
             }
-            if(mOptional){
-                writer.writeAttribute("optional", "true");
-            }
             //call CatalogType's writer method to generate the profile, metadata and pfn elements
             super.toXML(writer);
 
