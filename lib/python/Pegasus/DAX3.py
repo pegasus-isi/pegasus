@@ -259,7 +259,6 @@ class File(CatalogType):
 		xml = StringIO()
 		xml.write(u'%s<file name="%s"' % (indents,self.name))
 		if self.link: xml.write(u' link="%s"' % self.link)
-		if self.optional: xml.write(u' optional="%s"' % unicode(self.optional).lower())
 				
 		inner = self.getInnerXML(level+1,indent)
 		if inner is None:
@@ -1188,12 +1187,11 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 		elif element == "file":
 			name = attrs.get("name")
 			link = attrs.get("link")
-			optional = attrs.get("optional")
 			
 			if name in self.filemap:
 				f = self.filemap[name]
 			else:
-				f = File(name=name, link=link, optional=optional)
+				f = File(name=name, link=link)
 				self.filemap[name] = f
 					
 			if parent == 'adag':
