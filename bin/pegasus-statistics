@@ -18,12 +18,17 @@ use Cwd;
 # use local modules
 use Work::Common;
 
+#global variables
 my $MAX_LOG_FILE = 1000;
 my $job_state_file_name = 'jobstate.log';
 my ($log_dir) = undef;
 my($keep) = undef;
-
+# list of sub workflows
+my (@sub_workflow_submit_dirs) = ();
+my (@workflow_statistics) =();
 $SIG{'INT'} = 'clean_exit';
+$main::DEBUG =0;
+
 END{
 	remove_logs();
 }
@@ -39,6 +44,7 @@ sub print_usage() {
 	print "\t -m|--monitord: invokes pegasus-monitord before running pegasus-statistics\n";
 	print "\t -c|--condor: specifies a pure condor run with no GRID_SUBMIT events\n";
 	print "\t -k|--keep: keeps the logs of the pegasus-statistics run  \n";
+	print "\t -v|--verbose: enter verbose mode \n";
 	print "\t -h|--help: display this help message\n";
 }
 
@@ -67,6 +73,7 @@ sub main(){
 		"monitord|m"=>\$monitord,
 		"condor|c"=>\$condor,
 		"keep|k"=>\$keep,
+		"verbose|v" => \$main::DEBUG,
 		"help|h"=>\$help)){
 			 print "Unable to parse the options .$!\n";
 			 print_usage();
@@ -143,14 +150,106 @@ sub main(){
 	}
 	
 	my($dag_file_path) =  File::Spec->catfile("$submit_dir","$dag_file_name");
-	my($workflow_statistics_status, $workflow_statistics_summary_msg) = print_workflow_statistics($submit_dir,$jsd_file_path,$dag_file_path,$condor);
+	my($workflow_statistics_status) = print_workflow_statistics($submit_dir,$jsd_file_path,$dag_file_path,$condor);
+	@sub_workflow_submit_dirs = get_sub_workflow_list($dag_file_path);
+	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
+	my $sub_submit_dir;
+	if($number_of_elements > 0){
+		foreach $sub_submit_dir (@sub_workflow_submit_dirs){
+			my (%sub_config) = slurp_braindb( $sub_submit_dir ) or die "ERROR: open braindump.txt in directory $sub_submit_dir: $!\n";
+			my($sub_dag_file_name , $sub_jsd_file_path) =  ($sub_config{'dag'} ,$sub_config{'jsd'});
+			my($sub_dag_file_path) =  File::Spec->catfile("$sub_submit_dir","$sub_dag_file_name");
+			if(!$sub_dag_file_name){
+					print STDERR "ERROR: Unable to find the dag file name in the braindump.txt file.\n";
+					exit 1;
+			}
+			if(!$sub_jsd_file_path){
+					print STDERR "ERROR: Unable to find the jobstate file path in the braindump.txt file.\n";
+					exit 1;
+			}
+			my($sub_workflow_statistics_status) = print_workflow_statistics($sub_submit_dir,$sub_jsd_file_path,$sub_dag_file_path,$condor);
+		}
+	}
+	
+	my $wf_summary_msg;
+	my ($all_exec_time) =((defined $workflow_statistics[0]{'total_execution_time'})?$workflow_statistics[0]{'total_execution_time'}:undef);
+	my ($all_wall_time) = ((defined $workflow_statistics[0]{'total_execution_time'})?$workflow_statistics[0]{'total_wall_time'}:undef);
+	my( $all_total_jobs,$all_total_tasks,$all_succceeded,$all_failed,$all_unsubmitted, $all_unknown) =(0,0,0,0,0,0);
+	for my $wstats (@workflow_statistics){
+    	$wf_summary_msg .= "\n#$wstats->{'submit_dir'} \n";
+    	if((defined $wstats->{'total_execution_time'})){
+    		$wf_summary_msg .= sprintf("%-30s % 12d \n", "Total workflow execution time      :",  $wstats->{'total_execution_time'});
+    	}else{
+    		$wf_summary_msg .= sprintf("%-30s % 12s \n", "Total workflow execution time      :",  '-');
+    	}
+    	if(defined $wstats->{'total_wall_time'}){ 
+			$wf_summary_msg .= sprintf("%-30s % 12.3f \n", "Total workflow execution wall time :",$wstats->{'total_wall_time'});
+		}else{
+			$wf_summary_msg .= sprintf("%-30s % 12s \n", "Total workflow execution wall time :",'-');
+		}
+		$wf_summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $wstats->{'total_jobs'} );
+		
+		if((defined $wstats->{'total_tasks'})){
+			$wf_summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $wstats->{'total_tasks'});
+		}else{
+			$wf_summary_msg .= sprintf("%-30s % 12s \n","Total tasks                        :", '-');
+		}
+    	$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs succeeded                   :", $wstats->{'succeeded'} );
+   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs failed                      :", $wstats->{'failed'} );
+   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :", $wstats->{'unsubmitted'} );
+   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $wstats->{'unknown'});
+   		
+   		$all_total_jobs +=$wstats->{'total_jobs'};
+   		if(defined $all_total_tasks ){
+   			if(defined $wstats->{'total_tasks'}){
+   				$all_total_tasks += $wstats->{'total_tasks'};
+   			}else{
+   				$all_total_tasks = undef;
+   			}
+   			
+   		}
+   		$all_succceeded += $wstats->{'succeeded'};
+   		$all_failed +=$wstats->{'failed'};
+   		$all_unsubmitted +=$wstats->{'unsubmitted'};
+   		$all_unknown +=$wstats->{'unknown'};
+   	}
+	my $summary_msg = "";
+	if (defined $all_exec_time){
+		$summary_msg .= sprintf("%-30s % 12d \n", "Total workflow execution time      :", $all_exec_time );
+	}else{
+		$summary_msg .= sprintf("%-30s % 12s \n", "Total workflow execution time      :", '-' );
+	} 
+	if(defined $all_wall_time){
+		$summary_msg .= sprintf("%-30s % 12.3f \n", "Total workflow execution wall time :",$all_wall_time );
+	}else{
+		$summary_msg .= sprintf("%-30s % 12s \n", "Total workflow execution wall time :",'-' );
+	}
+	$summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $all_total_jobs );
+	if(defined $all_total_tasks){
+		$summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $all_total_tasks);
+	}else{
+		$summary_msg .= sprintf("%-30s % 12s \n","Total tasks                        :", '-');
+	}
+	$summary_msg .= sprintf("%-30s % 12d \n","# jobs succeeded                   :", $all_succceeded );
+	$summary_msg .= sprintf("%-30s % 12d \n","# jobs failed                      :", $all_failed );
+	$summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :", $all_unsubmitted );
+	$summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $all_unknown);
+	
+	
+	my $workflow_stats_file_path =  File::Spec->catfile("$output_dir","workflow");
+	open(STATSOUT,">$workflow_stats_file_path") || die("Unable to open file $workflow_stats_file_path.\n$!" );
+	print STATSOUT "$wf_summary_msg\n";
+	print STATSOUT "#All \n$summary_msg";
+	close STATSOUT;
+	
+	$summary_msg .= "\nWorkflow execution statistics created at :\n$workflow_stats_file_path\n";
 	# Executing genstat command
 	my($genstats_status ,$genstats_summary_msg) =run_genstats($dag_file_path ,$jsd_file_path,$output_dir ,$condor );
 	## Executing genstats-breakdown command
-	my($genstats_breakdown_status ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir ,$condor  );
+	my($genstats_breakdown_status ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir  );
 	
 	print "******************************************** SUMMARY ********************************************\n";
-	print $workflow_statistics_summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
+	print $summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
 	
 	print "**************************************************************************************************\n";
 	
@@ -202,31 +301,47 @@ sub get_task_count($){
 
 sub print_workflow_statistics($$$$){
 	# purpose : determine workflow duration command
-	# returns : status code and status message
+	# returns : status code
 	my($submit_dir,$jsd,$dag_file_path,$condor) =@_;
-	my $foundStart = 0;
-    my $globalStartTime = undef;
-    my $globalEndTime = undef;
+    my $startTime = undef;
+    my $endTime = undef;
+    my $total_execution_time = 0;
     my $status = 1;
-    my $summary_msg ='';
     my %job_status_hash =();
     my %job_state_hoh = (); 
 	open(JOBSTATE, "$jsd") || die "Unable to open $jsd .$!\n";
 	foreach my $line (<JOBSTATE>) {
         if ($line =~ /INTERNAL/) {
-            if ($line =~ /MONITORD_STARTED*/) {
+            if ($line =~ /DAGMAN_STARTED*/) {
             	my @tokens = split(' ', $line);
-                if (!$foundStart) {
-                    $foundStart = 1;
-                    $globalStartTime = $tokens[0];
-                }
+                if($startTime){
+                	if ($main::DEBUG){
+        	 			print STDERR "WARNING: Mismatch between DAGMAN_STARTED and DAGMAN_FINISHED event in the jobstate file $jsd  ....\n";
+        	 		}
+                }else{
+        	 		$startTime = $tokens[0];
+        	 	}
             } else {
+            	if ($line =~ /DAGMAN_FINISHED*/) {
+            		my @tokens = split(' ', $line);
+            	 	if($startTime){
+            	 		$endTime = $tokens[0];
+            	 		$total_execution_time += $endTime- $startTime;
+            	 		$startTime = undef;
+            	 		$endTime = undef;
+            	 	}else{
+            	 		if ($main::DEBUG){
+            	 			print STDERR "WARNING: Mismatch between DAGMAN_STARTED and DAGMAN_FINISHED event in the jobstate file $jsd  ....\n";
+            	 		}
+            	 	}
+            	}
+            	
                 if ($line =~ /MONITORD_FINISHED ([0-9])*/) {
                     if ($1 != 0) {
-                        print STDOUT "Workflow execution failed/restarted.\n";
+                    	if ($main::DEBUG){
+                        	print STDERR "Warning: Workflow execution failed/restarted.\n";
+                        }
                     }
-                    my @tokens = split(' ', $line);
-                    $globalEndTime = $tokens[0];
                 }
             }
         }else{
@@ -252,7 +367,7 @@ sub print_workflow_statistics($$$$){
     my $current_dir = getcwd();
     # Change the directory to submit directory
     chdir $submit_dir || die "Cannot chdir to $submit_dir\n";
-    my ($total_wall_time ,$total_wall_time_status_msg) = (0, ' ');
+    my ($total_wall_time ,$total_wall_time_status_msg) = (0.0, ' ');
     print STDOUT "******  calculating workflow execution wall time  ***** \n";
     print STDOUT "Please wait, this may take a few minutes ...\n";
     foreach my $job (@job_list) {
@@ -303,12 +418,14 @@ sub print_workflow_statistics($$$$){
 	    			$total_wall_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
 	    			last;
 	    		}
-			}
-			
+	    	}
 		}
+		
 	}
 	if(!$total_wall_time){ 
-    	print STDERR "WARNING: Unable to find the total execution wall time.$total_wall_time_status_msg ....\n";
+		if ($main::DEBUG){
+    		print STDERR "WARNING: Unable to find the total execution wall time.$total_wall_time_status_msg ....\n";
+    	} 
     }
     print STDOUT "****** Finished calculating workflow execution wall time  ***** \n";
   	
@@ -328,7 +445,6 @@ sub print_workflow_statistics($$$$){
 			}else{
 				$total_task_count = undef;
 				$total_task_count_msg = "Failed to find the task count for the job '$job' \n";
-				
 			}
 		
 		}else{
@@ -336,7 +452,9 @@ sub print_workflow_statistics($$$$){
 		}
 	}
 	if(!$total_task_count){ 
-    	print STDERR "WARNING: Unable to find the total tasks .$total_task_count_msg ....\n";
+		if ($main::DEBUG){
+    		print STDERR "WARNING: Unable to find the total tasks .$total_task_count_msg ....\n";
+    	}
     }
     print STDOUT "****** Finished calculating total tasks    ***** \n";
     # Revert back to the old directory
@@ -353,31 +471,37 @@ sub print_workflow_statistics($$$$){
      		++$job_unknown_count;
      	}
    }
-   	 if($globalStartTime && $globalEndTime){
-    	my $duration =($globalEndTime -$globalStartTime );
-    	$summary_msg .= sprintf("%-30s % 12d \n", "Total workflow execution time      :",  $duration); 
+   	my $workflow_stats_hash ={};
+   	$workflow_stats_hash->{'submit_dir'} =$submit_dir;
+   	if($startTime || $endTime){
+    	if ($main::DEBUG){
+    		print STDERR "WARNING: Failed to find the workflow execution time ....\n";
+    	}
     }else{
-    	print STDERR "WARNING: Failed to find the workflow execution time ....\n";
-    	$summary_msg .= "Failed to find the workflow execution time ....\n";
+    	$workflow_stats_hash->{'total_execution_time'} = $total_execution_time;
     }
     if($total_wall_time){
-    	$summary_msg .= sprintf("%-30s % 12d \n", "Total workflow execution wall time :", $total_wall_time); 
+    	$workflow_stats_hash->{'total_wall_time'} =  $total_wall_time; 
     }else{
-    	$summary_msg .= "Unable to find the total execution wall time.$total_wall_time_status_msg";
+    	if ($main::DEBUG){
+    		print STDERR "Unable to find the total execution wall time.$total_wall_time_status_msg";
+    	}
     }
    	$job_unsubmitted_count = $total_job_count - $job_state_count;
-   	$summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $total_job_count );
+   	$workflow_stats_hash->{'total_jobs'} =  $total_job_count;
    	 if($total_task_count){
-    	$summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $total_task_count ); 
+   	 	$workflow_stats_hash->{'total_tasks'} =  $total_task_count;
     }else{
-    	$summary_msg .= "Unable to find the total tasks.$total_task_count_msg";
+    	if ($main::DEBUG){
+    		print STDERR "Unable to find the total tasks.$total_task_count_msg" ;
+    	}
     }
-   	$summary_msg .= sprintf("%-30s % 12d \n","# jobs succeeded                   :", $job_succeeded_count );
-   	$summary_msg .= sprintf("%-30s % 12d \n","# jobs failed                      :", $job_failed_count );
-   	$summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :",$job_unsubmitted_count );
-   	$summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $job_unknown_count);
-   	
-   	return ($status,$summary_msg );
+    $workflow_stats_hash->{'succeeded'} = $job_succeeded_count;
+    $workflow_stats_hash->{'failed'} = $job_failed_count;
+    $workflow_stats_hash->{'unsubmitted'} = $job_unsubmitted_count;
+    $workflow_stats_hash->{'unknown'} = $job_unknown_count;
+   	push(@workflow_statistics,$workflow_stats_hash);
+   	return ($status );
 }
 
 
@@ -400,8 +524,9 @@ sub invoke_monitord($$){
 	my ($pegasus_monitord_path) =  File::Spec->catfile( @pegasus_monitord_directory_path, 'pegasus-monitord');
 	my ($pegasus_monitord_command) = "$pegasus_monitord_path ".join(" ",@args);
 	
-	
-	print STDOUT "Executing command :-\n$pegasus_monitord_command \n";
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n$pegasus_monitord_command \n";
+	}
 	my($status,$exec_msg) = execute_command($pegasus_monitord_command,'pegasus-monitord');
 	if($status == 0  ){
 		print STDOUT "****** Finished executing pegasus-monitord  ***** \n";
@@ -463,21 +588,27 @@ sub run_genstats($$$$){
 	my ($genstats_path) =  File::Spec->catfile( @genstats_directory_path, 'genstats');
 	my ($genstats_command) = "$genstats_path ".join(" ",@args);
 	
-	print STDOUT "Executing command :-\n $genstats_command \n";
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $genstats_command \n";
+	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status,$exec_msg) = execute_command($genstats_command,'genstats');
 	if($status == 0  ){
 		my (@genstats_misc_files) =  (File::Spec->catfile($output_dir ,'dag'),File::Spec->catfile($output_dir ,'dax'),File::Spec->catfile($output_dir ,'files'));
 		foreach my $file (@genstats_misc_files) {
 	 		if (!unlink($file)) {
-	    		print STDERR "WARNING : Failed to remove file . $file\n";
+	 			if ($main::DEBUG){
+	    			print STDERR "WARNING : Failed to remove file . $file\n";
+	    		}
 			}
 		}
 		
 		my ($genstats_job_path) =  File::Spec->catfile($output_dir ,'jobs');
 		my ($genstats_out_path) =  File::Spec->catfile($output_dir ,'out');
 		print STDOUT "****** Finished executing genstats  ***** \n";
-		print STDOUT "The genstats result is created at $output_dir \n************ \n";
+		if ($main::DEBUG){
+			print STDOUT "The genstats result is created at $output_dir \n************ \n";
+		}
 		$summary_msg = "\nWorkflow events with time starting with zero is created at :\n$genstats_out_path\n";
 		$summary_msg .= "\nJob statistics is created at : \n$genstats_job_path\n";
 	}else{
@@ -488,13 +619,12 @@ sub run_genstats($$$$){
 	
 }
 
-sub run_genstats_breakdown($$$$){
+sub run_genstats_breakdown($$$){
 # purpose : executing genstats-breakdown command
 # returns : status code and status message
-	my ($dag_file_path , $submit_dir , $output_dir ,$condor )=(@_);
+	my ($dag_file_path , $submit_dir , $output_dir )=(@_);
 	my (@args);
 	my ($submit_dirs) = $submit_dir;
-	my (@sub_workflow_submit_dirs) = get_sub_workflow_list($dag_file_path);
 	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
 	my $summary_msg;
 	
@@ -507,22 +637,22 @@ sub run_genstats_breakdown($$$$){
     my $output_file = 	File::Spec->catfile($output_dir ,"breakdown.txt");
 	#Adding arguments
 	push(@args ,"--output ".$output_file); #/adding output file argument
-	if($condor){
-		push(@args ,"--condor"); #adding pure condor run argument
-	}
 	push(@args ,"-f ".$submit_dirs_file); #adding submit directories
 	
 	# creating genstats-breakdown command 
 	my (@genstats_breakdown_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","statistics");
 	my ($genstats_breakdown_path) =  File::Spec->catfile( @genstats_breakdown_directory_path, 'genstats-breakdown');
 	my ($genstats_breakdown_command) = "$genstats_breakdown_path ".join(" ", @args);
-	
-	print STDOUT "Executing command :-\n $genstats_breakdown_command \n";
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $genstats_breakdown_command \n";
+	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status,$exec_msg) = execute_command($genstats_breakdown_command, 'genstats_breakdown');
 	if($status == 0  ){
 		print STDOUT "****** Finished executing genstats-breakdown  ***** \n";
-		print STDOUT "The genstats breakdown result is created at $output_file \n************ \n";
+		if ($main::DEBUG){
+			print STDOUT "The genstats breakdown result is created at $output_file \n************ \n";
+		}
 		$summary_msg = "\nLogical transformation statistics is created at :\n$output_file\n";
 	}else{
 		print STDERR "ERROR:Failed to execute genstats-breakdown command . $exec_msg\n";
@@ -637,10 +767,14 @@ sub get_sub_workflow_list($){
 	     			$sub_dag_file_path = File::Spec->catfile($sub_wf_submit_dir,$sub_dag_file_name);
 	     			push(@dag_path_list,$sub_dag_file_path);
 		     	}else{
-		     		print STDERR "WARNING: Unable to find dag file name in the braindump file in $sub_wf_submit_dir.\n";
+		     		if ($main::DEBUG){
+		     			print STDERR "WARNING: Unable to find dag file name in the braindump file in $sub_wf_submit_dir.\n";
+		     		}
 		     	}
 		     }else{
-		     	print "Skipping sub workflow $sub_wf_submit_file_name \n"
+		     	if ($main::DEBUG){
+		     		print STDERR "Skipping sub workflow $sub_wf_submit_file_name \n"
+		     	}
 		     }
 		     
 		}   
@@ -668,10 +802,14 @@ sub parse_submit_file($){
 	    	
 		}
 		close(CONFIG);
-		print STDERR "WARNING: Unable to find 'initialdir' configuration value in the submit file $submit_file.\n";
+		if ($main::DEBUG){
+			print STDERR "WARNING: Unable to find 'initialdir' configuration value in the submit file $submit_file.\n";
+		}
 		return undef;
 	}else{
-		print STDERR "WARNING: Unable to open submit file: $submit_file . $! \n";
+		if ($main::DEBUG){
+			print STDERR "WARNING: Unable to open submit file: $submit_file . $! \n" ;
+		}
 		return undef;
 	}
 	
