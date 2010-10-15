@@ -212,7 +212,7 @@ public class AbstractJob {
             for (Object o : mArguments) {
                 if (o.getClass() == String.class) {
                     //if class is string add argument string in the data section
-                    writer.writeData(" " + (String) o);
+                    writer.writeData((String) o);
                 }
                 if (o.getClass() == File.class) {
                     //add file tags in the argument elements data section
