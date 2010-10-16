@@ -28,6 +28,8 @@ my @predefined_transformations =
 my ($log_dir) = undef;    
 my($keep) = undef;
 $SIG{'INT'} = 'clean_exit';
+$main::DEBUG =0;
+
 END{
 	remove_logs();
 }
@@ -47,6 +49,7 @@ sub print_usage() {
 	print "\t -K|--kickstart: parallelize host over time chart with kickstart intervals, default is Condor\n";
 	print "\t -O|--omit: omit the gridstart gray boxes from the host over time chart, default draw\n";
 	print "\t -k|--keep: keeps the logs of the pegasus-plot run  \n";
+	print "\t -v|--verbose: enter verbose mode \n";
 	print "\t -h|--help: display this help message\n";
 }
 
@@ -79,6 +82,7 @@ sub main(){
 		"monitord|m"=>\$monitord,
 		"omit|M"=>\$omit,
 		"keep|k"=>\$keep,
+		"verbose|v" => \$main::DEBUG,
 		"help|h"=>\$help)){
 			 print "Unable to parse the options. $! \n";
 			 print_usage();
@@ -148,13 +152,17 @@ sub main(){
 	if(!$output_dir){
 		$output_dir =  File::Spec->catdir($submit_dir,"graph");
 		if (-d "$output_dir") {
-			print STDERR "WARNING: Output directory $output_dir exists. Overwriting the contents ....\n";
+			if ($main::DEBUG){
+				print STDERR "WARNING: Output directory $output_dir exists. Overwriting the contents ....\n";
+			}
 			rmtree($output_dir) or die "Unable to delete $output_dir . $! \n";
 		}
 		mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
 	}else{
 		if (!(-d "$output_dir")) {
-			print STDERR "WARNING: Output directory $output_dir doesn't exists. Creating the directory ....\n";
+			if ($main::DEBUG){
+				print STDERR "WARNING: Output directory $output_dir doesn't exists. Creating the directory ....\n";
+			}
 			mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
 		}
 	}
@@ -165,13 +173,15 @@ sub main(){
 	my ($color_file_path) = &generate_compute_job_color($dag_file_path);
 	my($show_job_status , $show_job_status_msg ,$show_job_summary_msg);
 	my($show_run_status , $show_run_status_msg ,$show_run_summary_msg);
-	if(find_exec('ploticus')){
+	if(find_exec('ploticus') || find_exec('pl')){
 		# Executing show job command
 		($show_job_status ,$show_job_summary_msg ) =run_show_job($dag_file_path ,$output_dir, $color_file_path,$show_job_title);
 		# Executing show run command
 		($show_run_status ,$show_run_summary_msg) =run_show_run($dag_file_path ,$output_dir, $host_show_run_title ,$kickstart,$use_site,$omit);
 	}else{
-		print STDERR  "ERROR: Application \'ploticus\' not available. Unable to create workflow execution Gantt chart and job over time chart\n";
+		if ($main::DEBUG){
+			print STDERR  "ERROR: Application \'ploticus\' not available. Unable to create workflow execution Gantt chart and job over time chart\n";
+		}
 		$show_job_summary_msg = "ERROR: Application \'ploticus\' not available. Unable to create workflow execution Gantt chart\n";
 		$show_run_summary_msg =  "ERROR: Application \'ploticus\' not available. Unable to create host over time chart\n";
 	}
@@ -208,8 +218,9 @@ sub invoke_monitord($$){
 	my ($pegasus_monitord_path) =  File::Spec->catfile( @pegasus_monitord_directory_path, 'pegasus-monitord');
 	my ($pegasus_monitord_command) = "$pegasus_monitord_path ".join(" ",@args);
 	
-	
-	print STDOUT "Executing command :-\n$pegasus_monitord_command \n";
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n$pegasus_monitord_command \n";
+	}
 	my($status,$exec_msg) = execute_command($pegasus_monitord_command, 'pegasus-monitord');
 	if($status == 0  ){
 		print STDOUT "****** Finished executing pegasus-monitord  ***** \n";
@@ -272,7 +283,9 @@ sub run_show_job($$$$){
 	my ($show_job_path) =  File::Spec->catfile( @show_job_directory_path, 'show-job');
 	my ($show_job_command) = "$show_job_path ".join(" ",@args);
 	
-	print STDOUT "Executing command :-\n $show_job_command \n";
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $show_job_command \n";
+	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status,$exec_msg) = execute_command($show_job_command,'show-job');
 	if($status == 0  ){
@@ -291,23 +304,31 @@ sub run_show_job($$$$){
 	
 	#Moving the output file to <submit dir>/graph directory
 	if(!move($eps_file,$output_dir)){
-		print STDERR  "ERROR : Failed to move the eps file to $output_dir. $! \n";
+		if ($main::DEBUG){
+			print STDERR  "ERROR : Failed to move the eps file to $output_dir. $! \n";
+		}
 		$summary_msg = "ERROR : Failed to move the eps file to $output_dir. $! \n";
 		return ($status,$summary_msg);
 	}
 	my ($eps_out_path , $png_out_path) = (File::Spec->catfile( $output_dir, $eps_file_name) , File::Spec->catfile( $output_dir, $png_file_name));
 	if(find_exec('convert')){
 		if(!move($png_file,$output_dir)) {
-			print STDERR "ERROR : Failed to move the png file to $output_dir. $! \n";
+			if ($main::DEBUG){
+				print STDERR "ERROR : Failed to move the png file to $output_dir. $! \n";
+			}
 			$summary_msg = "ERROR : Failed to move the png file to $output_dir. $! \n";
 			return ($status,$summary_msg);
 		}
 	}else{
-			print STDERR "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The workflow execution Gantt chart is created at :-\neps format :- $eps_out_path \n************ \n";
+			if ($main::DEBUG){	
+				print STDERR "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The workflow execution Gantt chart is created at :-\neps format :- $eps_out_path \n************ \n";
+			}
 			$summary_msg = "Application \'convert\' not available. Only eps file will be generated.\n.The workflow execution Gantt chart is created at :-\neps format :-$eps_out_path \n";
 			return ($status,$summary_msg);
 	}
-	print STDOUT "The workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n************ \n";
+	if ($main::DEBUG){
+		print STDOUT "The workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n************ \n";
+	}
 	$summary_msg = "The workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n";
 	return ($status,$summary_msg);
 	
@@ -324,8 +345,8 @@ sub run_show_run($$$$$$){
 	
     $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
     $dagbase =~ s/-\d+$//;
-    my($job_eps_file_name ,$host_eps_file_name ,$host_png_file_name) =("$dagbase-job".".eps" ,"$dagbase-host".".eps" ,"$dagbase-host".".png" );
-    my($job_eps_file ,$host_eps_file,$host_png_file) = (File::Spec->catfile("$output_dir",$job_eps_file_name) ,File::Spec->catfile("$output_dir",$host_eps_file_name),File::Spec->catfile("$output_dir",$host_png_file_name));
+    my($job_eps_file_name ,$job_png_file_name ,$host_eps_file_name ,$host_png_file_name) =("$dagbase-job".".eps" ,"$dagbase-job".".png" ,"$dagbase-host".".eps" ,"$dagbase-host".".png" );
+    my($job_eps_file ,$job_png_file ,$host_eps_file,$host_png_file) = (File::Spec->catfile("$output_dir",$job_eps_file_name) ,File::Spec->catfile("$output_dir",$job_png_file_name) ,File::Spec->catfile("$output_dir",$host_eps_file_name),File::Spec->catfile("$output_dir",$host_png_file_name));
     
     
 	#Adding arguments
@@ -344,41 +365,47 @@ sub run_show_run($$$$$$){
 		push(@args,"-K"); # parallelize the host over time chart with kickstart intervals
 	}
 	push(@args, "-D ".$dag_file_path); # adding dag file path
-	push(@args,"-e"); # setting the format to eps
-	push(@args,"-p"); # setting to do post ploticus run  
+	push(@args,"-p"); # setting to do post ploticus run
+	push(@args,"-P"); # setting the format to png  
 	
 	# creating show id command 
 	my (@show_run_directory_path) = ("$ENV{PEGASUS_HOME}","libexec" ,"visualize");
 	my ($show_run_path) =  File::Spec->catfile( @show_run_directory_path, 'show-run');
 	my ($show_run_command) = "$show_run_path ".join(" ", @args);
-	
-	print STDOUT "Executing command :-\n $show_run_command \n";
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $show_run_command \n";
+	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status,$exec_msg) = execute_command($show_run_command,'show-run');
 	if($status == 0  ){
 		print STDOUT "****** Finished executing show-run  ***** \n";
 		if (!unlink($job_eps_file)) {
-	    		print STDERR "WARNING : Failed to remove file . $job_eps_file\n";
+				if ($main::DEBUG){
+	    			print STDERR "WARNING : Failed to remove file . $job_eps_file\n";
+	    		}
 		}
 		#Creating png fromat
 		my ($convert_path) = find_exec('convert');
 		if($convert_path){
-			@args = ( $convert_path, '-density', '96x96','-background', 'white', '-flatten', $host_eps_file, $host_png_file );
-			my ($convert_command) =  join(" ", @args);
-			my($status_convert,$convert_exec_msg) = execute_command($convert_command,'show-run');
-			if($status == 0  ){	 	
-				print STDOUT "The host over time chart is created at -\npng format :-$host_png_file \neps format :-  $host_eps_file.  \n************ \n";
-				$summary_msg = "\nThe host over time chart is created at -\npng format :-$host_png_file \neps format :-$host_eps_file.\n";
-			}else{
-				print STDERR "WARNING: Failed to generate png format $convert_exec_msg. \nOnly eps file will be generated.\n.The host over time chart is created at:-\neps format :- $host_eps_file \n************ \n";
-				$summary_msg = "\nWARNING: Failed to generate png format $convert_exec_msg. \nOnly eps file will be generated.\n.The host over time chart is created at:-\neps format :-$host_eps_file \n";
+			if (!unlink($job_png_file)) {
+				if ($main::DEBUG){
+	    			print STDERR "WARNING : Failed to remove file . $job_eps_file\n";
+	    		}
 			}
+			if ($main::DEBUG){ 	
+				print STDOUT "The host over time chart is created at -\npng format :-$host_png_file \neps format :-  $host_eps_file.  \n************ \n";
+			}
+			$summary_msg = "\nThe host over time chart is created at -\npng format :-$host_png_file \neps format :-$host_eps_file\n";
 		}else{
-			print STDERR "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The host over time chart is created at::-\neps format :- $host_eps_file \n************ \n";
+			if ($main::DEBUG){
+				print STDERR "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The host over time chart is created at::-\neps format :- $host_eps_file \n************ \n";
+			}
 			$summary_msg = "\nApplication \'convert\' not available. Only eps file will be generated.\n.The host over time chart is created at:-\neps format :-$host_eps_file \n";	
 		}
 	}else{
-		print STDERR "ERROR:Failed to execute show-run command . $exec_msg\n";
+		if ($main::DEBUG){
+			print STDERR "ERROR:Failed to execute show-run command . $exec_msg\n";
+		}
 		$summary_msg = "\nERROR:Failed to create host over time chart with job type classification. $exec_msg\n";
 	}
 	return ($status ,$summary_msg);
@@ -407,13 +434,16 @@ sub run_dag2dot($$){
 	my (@dag2dot_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","visualize");
 	my ($dag2dot_path) =  File::Spec->catfile( @dag2dot_directory_path, 'dag2dot');
 	my ($dag2dot_command) = "$dag2dot_path ".join(" ",@args);
-	
-	print STDOUT "Executing command :-\n $dag2dot_command \n";
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $dag2dot_command \n";
+	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status ,$exec_msg) = execute_command($dag2dot_command ,'dag2dot');
-	print STDOUT "****** Finished executing dag2dot ***** \n";
 	if($status == 0  ){
-		print STDOUT "dot file corresponding to the dag is created at $dot_img_file \n************\n";
+		print STDOUT "****** Finished executing dag2dot ***** \n";
+		if ($main::DEBUG){
+			print STDOUT "dot file corresponding to the dag is created at $dot_img_file \n************\n";
+		}
 	}else{
 		print STDERR "ERROR : Failed to execute dag2dot command. $exec_msg \n";
 		$summary_msg = "ERROR : Failed to create dot file corresponding to the dag file. $exec_msg \n";
@@ -435,19 +465,24 @@ sub run_dag2dot($$){
 		
 		# creating dag2jpeg command 
 		my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
-		
-		print STDOUT "Executing command :-\n $dag2jpeg_command \n";
+		if ($main::DEBUG){
+			print STDOUT "Executing command :-\n $dag2jpeg_command \n";
+		}
 		my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command ,'dag_dot2jpeg');
 		if($dot_jpeg_status == 0  ){
 			print STDOUT "****** Finished executing dot2jpeg ***** \n";
-			print STDOUT "JPEG file corresponding to the dag is created at $dot_jpeg_img_file \n************\n";
+			if ($main::DEBUG){
+				print STDOUT "JPEG file corresponding to the dag is created at $dot_jpeg_img_file \n************\n";
+			}
 			$summary_msg = "\nJPEG file corresponding to the dag is created at: \n$dot_jpeg_img_file \n";
 		}else{
 			print STDERR "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
 			$summary_msg = "\nWARNING : Failed to create JPEG file. $dot_jpeg_exec_msg .dot file corresponding to the dag is created at: \n$dot_img_file "
 		}
 	}else{
-		print STDERR "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+		if ($main::DEBUG){
+			print STDERR "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+		}
 		$summary_msg = "\nApplication \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dag is created at: \n$dot_img_file \n";
 	}
 	return ($status ,$summary_msg);
@@ -476,13 +511,16 @@ sub run_dax2dot($$){
 	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'dag2dot');
 	my ($dax2dot_command) = "$dax2dot_path ".join(" ",@args);
 	
-	
-	print STDOUT "Executing command :-\n $dax2dot_command \n";
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $dax2dot_command \n";
+	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status ,$exec_msg) = execute_command($dax2dot_command,'dax2dot');
 	if($status == 0  ){
 		print STDOUT "****** Finished executing dax2dot ***** \n";
-		print STDOUT "dot file corresponding to the dax is created at $dot_img_file \n************ \n";
+		if ($main::DEBUG){
+			print STDOUT "dot file corresponding to the dax is created at $dot_img_file \n************ \n";
+		}
 	}else{
 		print STDERR "ERROR : Failed to execute dax2dot. $exec_msg \n";
 		$summary_msg = "ERROR : Failed to create dot file corresponding to the dax file. $exec_msg \n";
@@ -504,20 +542,25 @@ sub run_dax2dot($$){
 		
 		# creating dag2jpeg command 
 		my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
-		
-		print STDOUT "Executing command :-\n $dag2jpeg_command \n";
+		if ($main::DEBUG){
+			print STDOUT "Executing command :-\n $dag2jpeg_command \n";
+		}
 		my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command,'dax_dot2jpeg');
 		
 		if($dot_jpeg_status == 0  ){
 			print STDOUT "****** Finished executing dot2jpeg ***** \n";
-			print STDOUT "JPEG file corresponding to the dax is created at $dot_jpeg_img_file \n************\n";
+			if ($main::DEBUG){
+				print STDOUT "JPEG file corresponding to the dax is created at $dot_jpeg_img_file \n************\n";
+			}
 			$summary_msg = "\nJPEG file corresponding to the dax is created at: \n$dot_jpeg_img_file \n";
 		}else{
 			print STDERR "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
 			$summary_msg ="\nWARNING : Failed to create JPEG file. $dot_jpeg_exec_msg .dot file corresponding to the dax is created at: \n$dot_img_file \n";
 		}
 	}else{
-		print STDERR "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+		if ($main::DEBUG){
+			print STDERR "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+		}
 		$summary_msg = "\nApplication \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dax is created at: \n$dot_img_file \n";
 	}
 	return ($status ,$summary_msg);
@@ -610,10 +653,14 @@ sub parse_submit_file($){
 	    	
 		}
 		close(CONFIG);
-		print STDERR "WARNING: Unable to find '+pegasus_wf_xformation' configuration value in the submit file $submit_file.\n";
+		if ($main::DEBUG){
+			print STDERR "WARNING: Unable to find '+pegasus_wf_xformation' configuration value in the submit file $submit_file.\n";
+		}
 		return undef;
 	}else{
-		print STDERR "WARNING: Unable to open submit file: $submit_file . $! \n";
+		if ($main::DEBUG){
+			print STDERR "WARNING: Unable to open submit file: $submit_file . $! \n";
+		}
 		return undef;
 	}
 	
