@@ -51,7 +51,20 @@ sub ungarble($) {
   '017' => [ 'Job submitted to Globus', 'ULOG_GLOBUS_SUBMIT' ],
   '018' => [ 'Globus submit failed', 'ULOG_GLOBUS_SUBMIT_FAILED' ],
   '019' => [ 'Globus resource up', 'ULOG_GLOBUS_RESOURCE_UP' ],
-  '020' => [ 'Globus resource down', 'ULOG_GLOBUS_RESOURCE_DOWN' ]
+  '020' => [ 'Globus resource down', 'ULOG_GLOBUS_RESOURCE_DOWN' ],
+
+  '021' => [ 'Remote error', 'ULOG_REMOTE_ERROR' ],
+  '022' => [ 'RSC socket lost', 'ULOG_JOB_DISCONNECTED' ],
+  '023' => [ 'RSC socket re-established', 'ULOG_JOB_RECONNECTED' ],
+  '024' => [ 'RSC reconnect failure', 'ULOG_JOB_RECONNECT_FAILED' ],
+  '025' => [ 'Grid machine is up', 'ULOG_GRID_RESOURCE_UP' ],
+  '026' => [ 'Grid machine is down', 'ULOG_GRID_RESOURCE_DOWN' ],
+  '027' => [ 'Job submitted to Grid', 'ULOG_GRID_SUBMIT' ],
+  '028' => [ 'Job Ad information update', 'ULOG_JOB_AD_INFORMATION' ],
+  '029' => [ 'Job state is unknown', 'ULOG_JOB_STATUS_UNKNOWN' ],
+  '030' => [ 'Job state is known', 'ULOG_JOB_STATUS_KNOWN' ],
+  '031' => [ 'Condor-I/O stage-in', 'ULOG_JOB_STAGE_IN' ],
+  '032' => [ 'Condor-I/O stage-out', 'ULOG_JOB_STAGE_OUT' ]
 );
 
 @main::statmsg = 
@@ -64,7 +77,7 @@ GetOptions( 'help|h|?' => sub { $opts{h}=1 },
 	    'base|b=s' => sub { $opts{b}=$_[1] },
 	    'debug|d=o' => sub { $opts{d}=$_[1] },
 	    'dag|dagfile|D=s' => sub { $opts{D}=$_[1] },
-	    'eps|e' => sub { $opts{e}=1 },
+	    'eps|e' => sub { warn "Option -e has been deprecated, ignoring\n" },
 	    'omit|g=o' => sub { $opts{g}=$_[1] },
 	    'keep|k' => sub { $opts{k}=1 },
 	    'kickstart|K' => sub { $opts{K}=1 },
@@ -72,6 +85,7 @@ GetOptions( 'help|h|?' => sub { $opts{h}=1 },
 	    'ypic|o=s' => sub { $opts{o}=$_[1] },
 	    'zpic|O=s' => sub { $opts{O}=$_[1] },
 	    'ploticus|p' => sub { $opts{p}=1 },
+	    'png|P' => sub { $opts{P} = 1 },
 	    'use-site|S=i' => sub { $opts{S}=$_[1]+0 },
 	    'ytitle|t=s' => sub { $opts{t}=$_[1] },
 	    'ztitle|T=s' => sub { $opts{T}=$_[1] } );
@@ -80,7 +94,7 @@ if ( exists $opts{h} || ! exists $opts{D} ) {
     my $base = basename($0,'.pl');
     print << "EOF";
 
-Usage: $base [-d level] -D dagfile [-b basedir] [-o ypic] [-O zpic] [-p [-e]]
+Usage: $base [-d level] -D dagfile [-b basedir] [-o ypic] [-O zpic] [-p [-P]]
 
  -a|--offset s  use the time zone offset in seconds for non-local logs
  -b|--base dir  specifies the dir where DAG was started, default dirname(dagfn)
@@ -94,16 +108,16 @@ Usage: $base [-d level] -D dagfile [-b basedir] [-o ypic] [-O zpic] [-p [-e]]
     0x40:\treport files that were accessed.
     0x80:\tadd debug message to XML parser. 
  -D|--dag fn    specifies the Condor DAGMan dag file to parse, mandatory option
- -e|--eps       if post-processing, use EPS instead of JPEG
  -g|--omit lvl  tomit the gridstart gray boxes in the output, default draw
     0x01:\tomit gridstart gray boxes from ypic
     0x02:\tomit gridstart gray boxes from zpic
  -k|--keep      if set, keep the temporary files in /tmp, and don\'t remove
  -K|--kickstart parallelize zpic from kickstart intervals, default is Condor
  -l|--log fn    Condor\'s common user log, if in a non-standard location
- -o|--ypic fn   specifies the jobnr picture, default is ypic.jpeg
- -O|--zpic fn   specifies the host picture, default is zpic.jpeg
- -p|--ploticus  try to post-process with ploticus to JPEG, default is not
+ -o|--ypic fn   specifies the jobnr picture, default is ypic.eps
+ -O|--zpic fn   specifies the host picture, default is zpic.eps
+ -P|--png       Use ImageMagick\'s convert to create PNG from EPS files.
+ -p|--ploticus  try to post-process with ploticus to EPS, default is not
  -S|--use-site  0: use gatekeeper host (default)
                 1: use site handle 
 	        2: use reported workernode handle
@@ -115,7 +129,7 @@ EOF
 }
 
 if ( $opts{d} ) {
-    foreach my $i ( qw(a b d D e g k K l o O p t T S) ) {
+    foreach my $i ( qw(a b d D e g k K l o O p P t T S) ) {
 	print "## option $i is $opts{$i}\n" 
 	    if ( defined $opts{$i} && exists $opts{$i} );
     }
@@ -133,17 +147,18 @@ END {
     unlink( @main::unlink ) if @main::unlink > 0;
 }
 
-my $suffix = ( $opts{e} ? 'eps' : 'jpeg' );
 my @y=File::Temp->tempfile( 'ydata-XXXXX', DIR => '/tmp', SUFFIX => '.dat' );
+die "ERROR: Unable to create transient ydata file" unless defined $y[0]; 
 my @z=File::Temp->tempfile( 'zdata-XXXXX', DIR => '/tmp', SUFFIX => '.dat' );
+die "ERROR: Unable to create transient zdata file" unless defined $z[0]; 
 
 my $ypic = $y[1];
 my $zpic = $z[1];
 push( @main::unlink, $y[1], $z[1] ) unless $opts{k};
 
-$opts{o}=File::Spec->catfile( File::Spec->curdir, "ypic.$suffix" )
+$opts{o}=File::Spec->catfile( File::Spec->curdir, "ypic.eps" )
     unless $opts{o};
-$opts{O}=File::Spec->catfile( File::Spec->curdir, "zpic.$suffix" )
+$opts{O}=File::Spec->catfile( File::Spec->curdir, "zpic.eps" )
     unless $opts{O};
 
 my $dagfn = $opts{D};
@@ -197,24 +212,41 @@ sub graphics($$$$$) {
     $width = sprintf("%.2f",$width+1);
     $height = sprintf("%.2f",$height);
 
-    my $ploticus = find_exec('ploticus');
+    my $ploticus = find_exec('ploticus') || find_exec('pl');
+    my $convert = find_exec('convert'); 
     if ( defined $ploticus ) {
 	my $pos = rindex( $datafn, '.' );
 	my $plsfn = ($pos >= 0 ? substr($datafn,0,$pos) : $datafn) . '.pls';
-	if ( $opts{e} ) {
-	    @arg = ( $ploticus, $plsfn, '-eps' );
-	} else {
-	    @arg = ( $ploticus, $plsfn, '-jpeg', '-pagesize', "$width,$height" );
+	@arg = ( $ploticus, $plsfn, '-eps' );
+	# @arg = ( $ploticus, $plsfn, '-jpeg', '-pagesize', "$width,$height" );
+	push( @arg, '-maxrows', $count+1, '-cpulimit', 600 ) if $count > 9999;
+
+	warn "# running @arg...\n"; # if $main::debug;
+	system { $arg[0] } @arg;
+	if ( $? == 0 ) {
+	    my $fn = ($pos >= 0 ? substr($datafn,0,$pos) : $datafn) . '.eps'; 
+	    @arg = ( '/bin/mv', '-f', $fn, $outfn );
+	    warn "# running @arg...\n"; # if $main::debug;
+	    system { $arg[0] } @arg;
+
+	    if ( $? == 0 ) { 
+		if ( defined $convert ) { 
+		    @arg = ( $convert, '-density', '96x96', 
+			     '-background', 'white', '-flatten' ); 
+		    $fn = basename($outfn,('.eps','.png','.jpeg'));
+		    push( @arg, $outfn, File::Spec->catfile( dirname($outfn), $fn.".png" ) ); 
+
+		    warn "# running @arg...\n"; # if $main::debug;
+		    system { $arg[0] } @arg;
+		    warn( "Warning: @arg returned ", ($?>>8), '/', ($? & 127), "\n" )
+			if $?;
+		}
+	    } else {
+		warn( "Warning: @arg returned ", ($?>>8), '/', ($? & 127), "\n" );
+	    }
+	} else { 
+	    warn( "Warning: @arg returned ", ($?>>8), '/', ($? & 127), "\n" );
 	}
-	push( @arg, '-maxrows', $count+1 ) if $count > 9999;
-
-	warn "# running @arg...\n"; # if $main::debug;
-	system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
-
-	my $fn = ($pos >= 0 ? substr($datafn,0,$pos) : $datafn) . ".$suffix";
-	@arg = ( '/bin/mv', '-f', $fn, $outfn );
-	warn "# running @arg...\n"; # if $main::debug;
-	system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
     } else {
 	warn "# unable to run ploticus: executable not found\n";
     }
@@ -333,7 +365,7 @@ sub node_type ($) {
 	warn "# reading $subfn...\n" if ( $main::debug & 0x40 );
 	# search for ClassAd with job type
 	while ( <SUB> ) {
-	    $result=$1 if /^\s*\+vds_job_class\s*=\s*(\S+)/; 
+	    $result=$1 if /^\s*\+(?:pegasus|vds)_job_class\s*=\s*(\S+)/; 
 	}
 	close SUB;
 	goto GUESS if ( $result <= 0 );
@@ -377,7 +409,7 @@ sub read_site ($) {
     if ( open( SUB, "<$subfn" ) ) {
 	warn "# reading $subfn...\n" if ( $main::debug & 0x40 );
 	while ( <SUB> ) {
-	    if ( /^\s*\+(vds_|wf_){1,2}site\s*=\s*(\S+)/i ) {
+	    if ( /^\s*\+(vds_|wf_|pegasus_){1,2}site\s*=\s*(\S+)/i ) {
 		$result = $2;
 		my $first = substr($result,0,1);
 		$result = substr($result,1,-1)
@@ -462,19 +494,24 @@ sub read_log ($\%\%\%) {
 		    warn "# unable to extract hostname for $tag/$job/$tds!\n";
 		}
 
-	    } elsif ( $tag eq '017' ) {
-		# job was sumitted to Globus -- only globus universe
+	    } elsif ( $tag eq '017' || $tag eq '027' ) {
+		# job was sumitted to Globus or Grid
 		# [ stamp, GK_host ]
-		if ( /RM-Contact: (\S+)/ ) {
+		if ( /RM-Contact:\s+(\S+)/ ) {
 		    my @a = split /\//, $1;
 		    my $host = ( @a > 3 ? $a[2] : $a[0] );
 		    $dbase{$job}{'017'} = [ $tds, $host ];
 		    warn "# ($job,$tag)=($tds,$host)\n" 
 			if ( $main::debug & 0x02 );
+		} elsif ( /GridResource:\s+\S+\s+(\S+)/ ) { 
+		    my @a = split /\//, $1;
+		    my $host = ( @a > 3 ? $a[2] : $a[0] );
+		    $dbase{$job}{'017'} = [ $tds, $host ];
+		    warn "# ($job,$tag)=($tds,$host)\n" 
+			if ( $main::debug & 0x02 );		    
 		} else {
 		    warn "# unable to extract hostname for $tag/$job/$tds\n";
 		}
-
 	    } elsif ( $tag eq '005' ) {
 		# result
 		# [ stamp, result, start, duration, WN_ipv4, exitcode [, site ] ]
