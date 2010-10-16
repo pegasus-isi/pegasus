@@ -42,6 +42,14 @@ public class File extends CatalogType {
     protected TRANSFER mTransfer = TRANSFER.TRUE;
     protected boolean mExecutable = false;
 
+
+    public File(File f){
+        this(f.getNamespace(),f.getName(),f.getVersion(),f.getLink());
+        this.mOptional=f.getOptional();
+        this.mRegister=f.getRegister();
+        this.mTransfer=f.getTransfer();
+        this.mExecutable=f.getOptional();
+    }
     public File(String name) {
         mName = name;
     }
@@ -112,6 +120,15 @@ public class File extends CatalogType {
 
     public TRANSFER getTransfer() {
         return mTransfer;
+    }
+
+    public File clone(){
+        File f= new File(mNamespace,mName,mVersion,mLink);
+        this.mOptional=f.getOptional();
+        this.mRegister=f.getRegister();
+        this.mTransfer=f.getTransfer();
+        this.mExecutable=f.getOptional();
+        return f;
     }
 
     public void toXML(XMLWriter writer) {

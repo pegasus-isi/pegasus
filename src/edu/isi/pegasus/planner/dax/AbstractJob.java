@@ -133,12 +133,15 @@ public class AbstractJob {
     }
 
     public AbstractJob addUses(File file) {
-        mUses.add(file);
+        mUses.add(new File(file));
         return this;
+
     }
 
     public AbstractJob addUses(List<File> files) {
-        mUses.addAll(files);
+        for (File f : files) {
+            mUses.add(new File(f));
+        }
         return this;
     }
 
@@ -188,20 +191,22 @@ public class AbstractJob {
         //Check if its a dax, dag or job class
         if (c == DAX.class) {
             writer.startElement("dax", indent);
+            writer.writeAttribute("id", mId);
+            writer.writeAttribute("file", mName);
         } else if (c == DAG.class) {
             writer.startElement("dag", indent);
+            writer.writeAttribute("id", mId);
+            writer.writeAttribute("file", mName);
         } else if (c == Job.class) {
             writer.startElement("job", indent);
-
-        }
-        //add job attributes
-        writer.writeAttribute("id", mId);
-        if (c == Job.class && mNamespace != null && !mNamespace.isEmpty()) {
-            writer.writeAttribute("namespace", mNamespace);
-        }
-        writer.writeAttribute("name", mName);
-        if (c == Job.class && mVersion != null && !mVersion.isEmpty()) {
-            writer.writeAttribute("version", mVersion);
+            writer.writeAttribute("id", mId);
+            if (mNamespace != null && !mNamespace.isEmpty()) {
+                writer.writeAttribute("namespace", mNamespace);
+            }
+            writer.writeAttribute("name", mName);
+            if (mVersion != null && !mVersion.isEmpty()) {
+                writer.writeAttribute("version", mVersion);
+            }
         }
         if (mNodeLabel != null && !mNodeLabel.isEmpty()) {
             writer.writeAttribute("node-label", mNodeLabel);
