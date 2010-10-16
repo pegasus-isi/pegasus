@@ -582,7 +582,7 @@ END
 # sanity check: find apps first, and fail early
 my %app = ();
 foreach my $app ( qw(ploticus) ) {
-    $app{$app} = find_exec($app) || die "ERROR: Unable to locate $app\n";
+	$app{$app} = (find_exec($app) || find_exec(qw(pl)) ) or die "ERROR: Unable to locate $app\n";
 }
 foreach my $app ( qw(convert) ) {
     $app{$app} = find_exec($app);
