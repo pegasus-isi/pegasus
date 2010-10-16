@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
+import edu.isi.pegasus.planner.dax.PFN;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -100,6 +101,16 @@ public class ReplicaLocation
 
     }
 
+    /**
+     * Adds a PFN specified in the DAX to the object
+     * 
+     * @param pfn the PFN
+     */
+    public void addPFN(PFN pfn) {
+        ReplicaCatalogEntry rce = new ReplicaCatalogEntry( );
+        rce.setPFN( pfn.getURL() );
+        rce.setResourceHandle( pfn.getSite() );
+    }
 
     /**
      * Add a PFN and it's attributes. Any existing
@@ -302,4 +313,6 @@ public class ReplicaLocation
             tuple.setResourceHandle( this.UNDEFINED_SITE_NAME );
         }
     }
+
+
 }

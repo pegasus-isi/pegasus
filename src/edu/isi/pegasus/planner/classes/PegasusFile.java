@@ -35,6 +35,14 @@ import java.util.BitSet;
 public class PegasusFile extends Data {
 
     /**
+     * Enumeration for denoting type of linkage
+     */
+    public static enum LINKAGE {
+        INPUT, OUTPUT, INOUT, NONE
+    };
+
+
+    /**
      * The index of the flags field which when set indicates that the file
      * is to be considered optional.
      */
@@ -122,6 +130,11 @@ public class PegasusFile extends Data {
     protected int mType;
 
     /**
+     * Linkage of the file. Only used for parsers
+     */
+    protected LINKAGE mLink;
+
+    /**
      * The transfer flag associated with the file containing tristate of
      * transfer,dontTransfer and optional.
      *
@@ -156,6 +169,7 @@ public class PegasusFile extends Data {
         mType        = DATA_FILE;
         mTransferFlag= this.TRANSFER_MANDATORY;
         mSize        = -1;
+        mLink        = LINKAGE.NONE;
     }
 
     /**
@@ -172,6 +186,26 @@ public class PegasusFile extends Data {
         mType        = DATA_FILE;
         mTransferFlag= this.TRANSFER_MANDATORY;
         mSize        = -1;
+        mLink        = LINKAGE.NONE;
+    }
+
+    /**
+     * Sets the linkage for the file during parsing.
+     * 
+     * @param link  linkage type
+     */
+    public  void setLinkage( LINKAGE link ){
+        mLink = link;
+    }
+
+
+    /**
+     * Returns the linkage for the file during parsing.
+     *
+     * @return the linkage
+     */
+    public  LINKAGE getLinkage(){
+        return mLink;
     }
 
     /**
@@ -311,6 +345,24 @@ public class PegasusFile extends Data {
         else{
             throw new IllegalArgumentException();
         }
+    }
+
+    /**
+     * Sets the transient transfer flag corresponding to the string
+     * value of transfer mode passed. The legal range of transfer values is
+     * true|false|optional.
+     *
+     * @param flag            tri-state transfer value as got from dontTransfer flag.
+     *
+     * @exception IllegalArgumentException if the transfer mode is outside
+     * its legal range.
+     *
+     * @see #TRANSFER_MANDATORY
+     * @see #TRANSFER_NOT
+     * @see #TRANSFER_OPTIONAL
+     */
+    public void setTransferFlag( String flag  ) throws IllegalArgumentException{
+        this.setTransferFlag( flag, false );
     }
 
     /**

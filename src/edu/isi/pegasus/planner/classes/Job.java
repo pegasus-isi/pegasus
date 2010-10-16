@@ -1689,4 +1689,48 @@ public class Job extends Data implements GraphNodeContent{
            append(value).append(closingBrace).append(separator);
     }
 
+    /**
+     * Adds a profile to the job object
+     *
+     * @param p  the profile to be added
+     */
+    public void addProfile( Profile p ) {
+        String namespace = p.getProfileNamespace();
+        String key = p.getProfileKey();
+        String value = p.getProfileValue();
+        switch( namespace.charAt(0) ){
+
+                case 'c'://condor
+                    this.condorVariables.checkKeyInNS( key, value );
+                    break;
+
+                case 'd'://dagman
+                    this.dagmanVariables.checkKeyInNS(key, value );
+                    break;
+
+                case 'e'://env
+                    this.envVariables.checkKeyInNS(key, value );
+                    break;
+
+                case 'g'://globus
+                    this.globusRSL.checkKeyInNS(key, value );
+                    break;
+
+                case 'h'://hint
+                    this.hints.checkKeyInNS(key, value );
+                    break;
+
+                case 'p'://pegasus
+                    this.vdsNS.checkKeyInNS(key, value );
+                    break;
+
+                default:
+                    //ignore should not come here ever.
+                    mLogger.log("Namespace not supported. ignoring "+ mNamespace,
+                            LogManager.WARNING_MESSAGE_LEVEL);
+                    break;
+
+            }
+    }
+
 }

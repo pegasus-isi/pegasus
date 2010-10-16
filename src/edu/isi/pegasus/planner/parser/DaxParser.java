@@ -1408,6 +1408,16 @@ public class DaxParser extends Parser {
 
     }
 
+    /**
+     * Returns the XML schema namespace that a document being parsed conforms
+     * to.
+     *
+     * @return the schema namespace
+     */
+    public  String getSchemaNamespace( ){
+        return DaxParser.SCHEMA_NAMESPACE;
+    }
+
 
     /**
      * Helps the load database to locate the DAX XML schema, if available.

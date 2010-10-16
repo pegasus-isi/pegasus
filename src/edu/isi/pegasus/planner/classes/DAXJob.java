@@ -18,85 +18,85 @@
 package edu.isi.pegasus.planner.classes;
 
 /**
- * This is a data class that stores the contents of the DAG job in a DAX conforming
+ * This is a data class that stores the contents of the DAX job in a DAX conforming
  * to schema 3.0 or higher.
  *
  * @author Karan Vahi
  * 
  * @version $Revision$
  */
-public class DAGJob extends Job {
+public class DAXJob extends Job {
 
     /**
-     * The DAG LFN.
+     * The DAX LFN.
      */
-    private String mDAGLFN;
+    private String mDAXLFN;
 
     /**
-     * The DAG File that the job refers to.
+     * The DAX File that the job refers to.
      */
-    private String mDAGFile;
+    private String mDAXFile;
 
     /**
-     * The directory in which the DAG needs to execute.
+     * The directory in which the DAX needs to execute.
      */
     private String mDirectory;
     
     /**
      * The default constructor.
      */
-    public DAGJob() {
+    public DAXJob() {
         super();
-        mDAGFile = null;
+        mDAXFile = null;
         mDirectory = null;
     }
 
     /**
-     * The overloaded construct that constructs a DAG job by wrapping around
+     * The overloaded construct that constructs a DAX job by wrapping around
      * the <code>Job</code> job.
      *
      * @param job  the original job description.
      */
-    public DAGJob(Job job){
+    public DAXJob(Job job){
         super(job);
-        mDAGFile = null;
+        mDAXFile = null;
     }
 
     
     /**
-     * Sets the DAG file LFN
+     * Sets the DAX file LFN
      *
-     * @param lfn  the LFN of the DAG file.
+     * @param lfn  the LFN of the DAX file.
      */
-    public void setDAGLFN(String lfn ){
-        mDAGLFN = lfn ;
+    public void setDAXLFN(String lfn ){
+        mDAXLFN = lfn ;
     }
     
     /**
-     * Returns the lfn for the DAGFile the job refers to.
+     * Returns the lfn for the DAXFile the job refers to.
      *
      * @return the lfn
      */
-    public String getDAGLFN(){
-        return mDAGLFN;
+    public String getDAXLFN(){
+        return mDAXLFN;
     }
 
     /**
-     * Sets the DAG file
+     * Sets the DAX file
      *
-     * @param file  the path to the DAG file.
+     * @param file  the path to the DAX file.
      */
-    public void setDAGFile(String file ){
-        mDAGFile = file ;
+    public void setDAXFile(String file ){
+        mDAXFile = file ;
     }
 
     /**
-     * Returns the DAGFile the job refers to.
+     * Returns the DAXFile the job refers to.
      *
      * @return dag file
      */
-    public String getDAGFile(){
-        return mDAGFile;
+    public String getDAXFile(){
+        return mDAXFile;
     }
 
     /**
@@ -120,7 +120,7 @@ public class DAGJob extends Job {
 
     
     /**
-     * Returns a textual description of the DAG Job.
+     * Returns a textual description of the DAX Job.
      *
      * @return the textual description.
      */
@@ -140,9 +140,9 @@ public class DAGJob extends Job {
      * @return Object
      */
     public Object clone(){
-        DAGJob newJob = new DAGJob((Job)super.clone());
-        newJob.setDAGLFN( this.getDAGLFN() );
-        newJob.setDAGFile( this.getDAGFile() );
+        DAXJob newJob = new DAXJob((Job)super.clone());
+        newJob.setDAXLFN( this.getDAXLFN() );
+        newJob.setDAXFile( this.getDAXFile() );
         newJob.setDirectory( this.getDirectory() );
         return newJob;
     }

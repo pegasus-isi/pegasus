@@ -170,7 +170,7 @@ public abstract class Parser extends DefaultHandler{
 
 
     /**
-     * Helps the load database to locate the VDLx XML schema, if available.
+     * Helps the load database to locate the XML schema, if available.
      * Please note that the schema location URL in the instance document
      * is only a hint, and may be overriden by the findings of this method.
      *
@@ -180,6 +180,13 @@ public abstract class Parser extends DefaultHandler{
      */
     public abstract String getSchemaLocation();
 
+    /**
+     * Returns the XML schema namespace that a document being parsed conforms
+     * to.
+     * 
+     * @return the schema namespace
+     */
+    public abstract String getSchemaNamespace( );
 
 
     /**
