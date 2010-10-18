@@ -893,6 +893,17 @@ public class SiteCatalogParser extends Parser {
         }
         
     }
+
+    /**
+     * Returns the XML schema namespace that a document being parsed conforms
+     * to.
+     *
+     * @return the schema namespace
+     */
+    public  String getSchemaNamespace( ){
+        return this.SCHEMA_NAMESPACE;
+    }
+
     
     /**
      * Returns the local path to the XML schema against which to validate.

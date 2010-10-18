@@ -134,39 +134,7 @@ public class DaxParser extends Parser {
      */
     private String mProfileKey = new String();
 
-    /**
-     * For holding the environment variables if specified in the Profile Element.
-     *
-     */
-    //private ENV mEnvNS;
-
-
-    /**
-     * Holds the extra options for Condor which maybe specified in the profile tags
-     * with namespace Condor.
-     */
-    //private Condor mCondorNS;
-
-    /**
-     * Objects that handle the various namespaces. For generating the rslstring
-     * if specified.
-     */
-    //private Globus mGlobusNS;
-
-    /**
-     * Holds the information got in the profile tag for hint namespace.
-     */
-    //private Hints mHintNS;
-
-    /**
-     * Holds the information got in the profile tag for vds namespace.
-     */
-    //private Pegasus mVdsNS;
-
-    /**
-     * Holds the information got in the profile tag for dagman namespace.
-     */
-    //private Dagman mDagmanNS;
+   
 
     /**
      * For holding the namespace if specified in the Profile Element.
@@ -266,15 +234,6 @@ public class DaxParser extends Parser {
     public DaxParser( PegasusBag bag ) { //default constructor
         super( bag );
         
-        //namespace class member variables removed
-        /*
-        mGlobusNS = new Globus();
-        mCondorNS = new Condor();
-        mEnvNS    = new ENV();
-        mDagmanNS = new Dagman();
-        mHintNS   = new Hints();
-        mVdsNS    = new Pegasus();
-        */
         
         mUseDoubleNegative = false;
         mJobPrefix = ( bag.getPlannerOptions() == null ) ?
@@ -321,14 +280,7 @@ public class DaxParser extends Parser {
 
         //initialising the namespace handles
         //namespace class member variables removed
-        /*
-        mCondorNS = new Condor();
-        mEnvNS    = new ENV();
-        mGlobusNS = new Globus();
-        mDagmanNS = new Dagman();
-        mHintNS   = new Hints();
-        mVdsNS    = new Pegasus();
-        */
+      
 
         mCallback = callback;
 
@@ -646,32 +598,7 @@ public class DaxParser extends Parser {
             //contain the linkage information
             //logicalFilesInADag.addElement(fileName);
 
-            /*
-            Now linkage information is only gotten from the individual jobs.
-
-            linkType = attrs.getValue("", "link").trim();
-
-            String type = "n";
-
-            //adding logical i/p and o/p files for the ADAG
-            if (linkType.equalsIgnoreCase("input")) {
-                mVADagInputFiles.addElement(pf);
-                type = "i";
-            }
-            else if (linkType.equalsIgnoreCase("output")) {
-                mVADagOutputFiles.addElement(pf);
-                type = "o";
-            }
-            else if (linkType.equalsIgnoreCase("inout")) {
-                mVADagInputFiles.addElement(pf);
-                mVADagOutputFiles.addElement(pf);
-                type = "b";
-            }
-
-            //putting the filename and the
-            //type information in the map
-            mDagInfo.lfnMap.put(fileName,type);
-            */
+            
         }
         else if (mArgumentTag) {
             //means that the filename tag is nested in
@@ -794,27 +721,7 @@ public class DaxParser extends Parser {
         
         //store for later reference in endUses method
         mUsesPegasusFile = pf;
-        
-        //adding the file to input vector or the output vector
-        /* moved to handle uses tag end function. Karan June 3, 2009 
-        if (linkType.trim().equalsIgnoreCase("input")) {
-            mVJobInpFiles.add(pf);
-        }
-        else if (linkType.trim().equalsIgnoreCase("output")) {
-            mVJobOutFiles.add(pf);
-            //the notion of an optional file as an output would mean it
-            //has the optional transfer flag set.
-            if(pf.fileOptional() &&
-               pf.getTransferFlag() == PegasusFile.TRANSFER_MANDATORY){
-                //update the transfer flag to optional
-                pf.setTransferFlag(PegasusFile.TRANSFER_OPTIONAL);
-            }
-        }
-        else if (linkType.trim().equalsIgnoreCase("inout")) {
-            mVJobInpFiles.add(pf);
-            mVJobOutFiles.add(pf);
-        }
-        */
+   
     }
     
    

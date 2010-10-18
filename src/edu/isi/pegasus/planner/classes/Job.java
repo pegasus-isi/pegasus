@@ -1726,7 +1726,7 @@ public class Job extends Data implements GraphNodeContent{
 
                 default:
                     //ignore should not come here ever.
-                    mLogger.log("Namespace not supported. ignoring "+ mNamespace,
+                    mLogger.log("Namespace not supported. ignoring "+ namespace,
                             LogManager.WARNING_MESSAGE_LEVEL);
                     break;
 

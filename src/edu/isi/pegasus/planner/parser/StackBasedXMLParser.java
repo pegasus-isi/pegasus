@@ -85,6 +85,36 @@ public abstract class StackBasedXMLParser extends Parser {
         setSchemaLocations( list );
     }
 
+    /**
+     * Composes the  <code>SiteData</code> object corresponding to the element
+     * name in the XML document.
+     *
+     * @param element the element name encountered while parsing.
+     * @param names   is a list of attribute names, as strings.
+     * @param values  is a list of attribute values, to match the key list.
+     *
+     * @return the relevant SiteData object, else null if unable to construct.
+     *
+     * @exception IllegalArgumentException if the element name is too short.
+     */
+    public abstract  Object createObject( String element, List names, List values );
+
+    /**
+     * This method sets the relations between the currently finished XML
+     * element(child) and its containing element in terms of Java objects.
+     * Usually it involves adding the object to the parent's child object
+     * list.
+     *
+     * @param childElement name  is the  the child element name
+     * @param parent is a reference to the parent's Java object
+     * @param child is the completed child object to connect to the parent
+     *
+     * @return true if the element was added successfully, false, if the
+     *              child does not match into the parent.
+     */
+    public abstract boolean setElementRelation( String childElement, Object parent, Object child );
+
+
 
 
 

@@ -186,6 +186,16 @@ public class ConfigXmlParser extends Parser {
 
     }
 
+    /**
+     * Returns the XML schema namespace that a document being parsed conforms
+     * to.
+     *
+     * @return the schema namespace
+     */
+    public  String getSchemaNamespace( ){
+        return ConfigXmlParser.SCHEMA_NAMESPACE;
+    }
+
     public String getSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
         File uri = new File( ConfigXmlParser.SCHEMA_LOCATION );

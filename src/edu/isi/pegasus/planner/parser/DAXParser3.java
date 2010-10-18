@@ -61,7 +61,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import org.xml.sax.SAXException;
 
@@ -141,7 +140,7 @@ public class DAXParser3 extends StackBasedXMLParser {
      */
     public SiteStore getDAX() {
         if( mParsingDone ){
-            return mResult;
+            return null;
         }
         else{
             throw new RuntimeException( "Parsing of file needs to complete before function can be called" );
@@ -164,8 +163,6 @@ public class DAXParser3 extends StackBasedXMLParser {
             if ( mDepth != 0 ){
                 throw new RuntimeException( "Invalid stack depth at end of parsing " + mDepth );
             }
-            mLogger.log( "Object constructed is " + mResult.toXML(), 
-                         LogManager.DEBUG_MESSAGE_LEVEL );
         } catch ( IOException ioe ) {
             mLogger.log( "IO Error :" + ioe.getMessage(),
                         LogManager.ERROR_MESSAGE_LEVEL );
@@ -1071,9 +1068,7 @@ public class DAXParser3 extends StackBasedXMLParser {
      */
     public static void main( String[] args ){
         LogManagerFactory.loadSingletonInstance().setLevel( 5 );
-        List s = new ArrayList(1);
-        s.add( "*" );
-        DAXParser3 parser = new DAXParser3( s );
+        DAXParser3 parser = new DAXParser3(  );
         if (args.length == 1) {
             parser.startParser( args[0] );
  

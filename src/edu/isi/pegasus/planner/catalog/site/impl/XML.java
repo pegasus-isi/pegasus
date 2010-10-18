@@ -345,6 +345,17 @@ public class XML extends Parser implements SiteCatalog{
 
     }
 
+    /**
+     * Returns the XML schema namespace that a document being parsed conforms
+     * to.
+     *
+     * @return the schema namespace
+     */
+    public  String getSchemaNamespace( ){
+        return this.SCHEMA_NAMESPACE;
+    }
+
+
     public String getSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
         File uri = new File( XML.SCHEMA_LOCATION );

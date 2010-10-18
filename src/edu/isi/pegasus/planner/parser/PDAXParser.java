@@ -126,6 +126,16 @@ public class PDAXParser extends Parser {
     }
 
     /**
+     * Returns the XML schema namespace that a document being parsed conforms
+     * to.
+     *
+     * @return the schema namespace
+     */
+    public  String getSchemaNamespace( ){
+        return PDAXParser.SCHEMA_NAMESPACE;
+    }
+
+    /**
      * Sets the callback handler for this parsing instance.
      */
     public void setCallback(Callback callback){

@@ -145,6 +145,16 @@ public class MYOSGSiteCatalogParser extends Parser {
 				.getProperty(MYOSGSiteConstants.SITE_NAME_ID)));
 	}
 
+        /**
+         * Returns the XML schema namespace that a document being parsed conforms
+         * to.
+        *
+        * @return the schema namespace
+        */
+        public  String getSchemaNamespace( ){
+            return null;
+        }
+
 	public String getSchemaLocation() {
 		// No Schema supported
 		return null;
