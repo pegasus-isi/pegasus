@@ -15,12 +15,12 @@
     need Globus and Pegasus installed, both on the machine you are submitting
     from, and the cluster.</para>
 
-    <section>
-      <title id="example_black_diamond">Black Diamond</title>
+    <section id="example_black_diamond" xreflabel="Black Diamond">
+      <title>Black Diamond</title>
 
       <para>This example can be found under
       <filename>examples/grid-blackdiamond/</filename> in the Pegasus install
-      directory. </para>
+      directory.</para>
 
       <para>This is a sample workflow with 4 nodes, layed out in a diamond
       shape:</para>
@@ -84,8 +84,9 @@
       all have to be projected, background modeled and adjusted to come out as
       one seamless image.</para>
 
-      <para>Just like the black <link linkend="example_black_diamond">diamond
-      example</link> above, this example uses a <filename>./submit</filename>
+      <para>Just like the <xref linkend="example_black_diamond">
+          black diamond example
+        </xref> above, this example uses a <filename>./submit</filename>
       script.</para>
     </section>
 
@@ -123,8 +124,9 @@
         </listitem>
       </itemizedlist>
 
-      <para>Just like the black <link linkend="example_black_diamond">diamond
-      example</link> above, this example uses a <filename>./submit</filename>
+      <para>Just like the <xref linkend="example_black_diamond">
+          black diamond example
+        </xref> above, this example uses a <filename>./submit</filename>
       script.</para>
     </section>
 
@@ -165,7 +167,9 @@ pegasus.gridstart = SeqExec          </programlisting>
       <para>You also need to set pool="[sitehandle]" in the replica catalog.
       Example:</para>
 
-      <programlisting>minirosetta_database/Rama08.dat gsiftp://yggdrasil.isi.edu/home/rynge/Pegasus/rosetta-sls/minirosetta_database/Rama08.dat pool="RENCI-Engagement"
+      <programlisting>minirosetta_database/Rama08.dat
+    gsiftp://yggdrasil.isi.edu/home/rynge/Pegasus/rosetta-sls/minirosetta_database/Rama08.dat
+    pool="RENCI-Engagement"
 </programlisting>
 
       <para>Some potential issues when using second level staging:</para>
@@ -182,8 +186,9 @@ pegasus.gridstart = SeqExec          </programlisting>
         </listitem>
       </itemizedlist>
 
-      <para>Just like the black <link linkend="example_black_diamond">diamond
-      example</link> above, this example uses a <filename>./submit</filename>
+      <para>Just like the <xref linkend="example_black_diamond">
+          black diamond example
+        </xref> above, this example uses a <filename>./submit</filename>
       script.</para>
     </section>
 
