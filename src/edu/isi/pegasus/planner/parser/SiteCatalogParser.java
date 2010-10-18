@@ -68,7 +68,7 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
  */
-public class SiteCatalogParser extends Parser {
+public class SiteCatalogParser extends StackBasedXMLParser {
 
     /**
      * The "not-so-official" location URL of the Site Catalog Schema.
@@ -82,16 +82,7 @@ public class SiteCatalogParser extends Parser {
     public static final String SCHEMA_NAMESPACE =
                                         "http://pegasus.isi.edu/schema/sitecatalog";
 
-    /**
-    * Count the depths of elements in the document
-    */
-    private int mDepth;
-    
-    /**
-     * The stack of objects kept around.
-     */
-    private Stack mStack;
-    
+   
     /**
      * The final result constructed.
      */
@@ -106,11 +97,6 @@ public class SiteCatalogParser extends Parser {
      * A boolean indicating whether to load all sites.
      */
     private boolean mLoadAll;
-    
-    /**
-     * A boolean indicating that parsing is done.
-     */
-    private boolean mParsingDone;
     
     /**
      * The default Constructor.
@@ -140,12 +126,7 @@ public class SiteCatalogParser extends Parser {
         }
         mLoadAll = mSites.contains( "*" );                
         
-        //setting the schema Locations
-        String schemaLoc = getSchemaLocation();
-        mLogger.log( "Picking schema for site catalog" + schemaLoc,
-                     LogManager.CONFIG_MESSAGE_LEVEL);
-        String list = SiteCatalogParser.SCHEMA_NAMESPACE + " " + schemaLoc;
-        setSchemaLocations( list );
+        
     }
 
     /**
@@ -194,109 +175,7 @@ public class SiteCatalogParser extends Parser {
         }
     }
 
-    /**
-     * 
-     */
-    public void endDocument() {
-        mParsingDone = true;
-    }
 
-    
-
-    
-     /**
-      * This method defines the action to take when the parser begins to parse
-      * an element.
-      *
-      * @param namespaceURI is the URI of the namespace for the element
-      * @param localName is the element name without namespace
-      * @param qName is the element name as it appears in the docment
-      * @param atts has the names and values of all the attributes
-      */
-    public void startElement( String namespaceURI,
-                              String localName,
-                              String qName,
-                              Attributes atts ) throws SAXException{
-        
-       /* to be added later when logging is fixed.
-        mLogger.log( "parser", 3,
-	       "<" + map(namespaceURI) + localName + "> at " +
-	       m_location.getLineNumber() + ":" +
-	       m_location.getColumnNumber() );
-         */
-
-        //one more element level
-        mDepth++;
-
-        List names = new java.util.ArrayList();
-        List values = new java.util.ArrayList();
-        for ( int i=0; i < atts.getLength(); ++i ) {
-            String name = new String( atts.getLocalName(i) );
-            String value = new String( atts.getValue(i) );            
-            names.add(name);
-            values.add(value);
-        }
-
-        //System.out.println( "QNAME " + qName + " NAME " + names + "\t Values" + values );
-
-        Object object = createObject( qName, names, values );
-        if ( object != null ){
-            mStack.push( new ParserStackElement( qName, object ) );
-        }
-        else{
-            mLogger.log(
-                    "Unknown element in xml :" + namespaceURI + ":" +
-                    localName + ":" + qName, LogManager.ERROR_MESSAGE_LEVEL );
-            
-            throw new SAXException( "Unknown or Empty element while parsing" );
-        }
-    }
-
-    /**
-     * The parser is at the end of an element. Triggers the association of
-     * the child elements with the appropriate parent elements.
-     *
-     * @param namespaceURI is the URI of the namespace for the element
-     * @param localName is the element name without namespace
-     * @param qName is the element name as it appears in the docment
-     */  
-    public void endElement( String namespaceURI,
-                            String localName,
-                            String qName )   throws SAXException{
-
-        // that's it for this level
-        mDepth--;
-        mLogger.log( "</" +  localName + "> at " +
-                     this.mLocator.getLineNumber() + ":" +
-                     mLocator.getColumnNumber() , LogManager.DEBUG_MESSAGE_LEVEL );
-
-        ParserStackElement tos = ( ParserStackElement ) mStack.pop();
-        if ( ! qName.equals( tos.getElementName() ) ) {
-            String error = "Top of Stack " + tos.getElementName() + " does not mactch " + qName;
-            mLogger.log( error,
-                         LogManager.FATAL_MESSAGE_LEVEL );
-            throw new SAXException( error );
-        }
-
-        if ( ! mStack.empty() ) {
-            // add pieces to lower levels
-            ParserStackElement peek = ( ParserStackElement ) mStack.peek();
-            
-            if ( !setElementRelation( tos.getElementName(), peek.getElementObject(), tos.getElementObject() )){
-                    mLogger.log( "Element " + tos.getElementName() +
-                     		  " does not fit into element " + peek.getElementName(),
-                                  LogManager.DEBUG_MESSAGE_LEVEL );
-            }
-            
-        } else {
-          // run finalizer, if available
-          mLogger.log( "End of last element reached ",
-                        LogManager.DEBUG_MESSAGE_LEVEL );
-        }
-        //reinitialize our cdata handler at end of each element
-        mTextContent.setLength( 0 );    
-  }
-   
     
     /**
      * Composes the  <code>SiteData</code> object corresponding to the element
@@ -310,7 +189,7 @@ public class SiteCatalogParser extends Parser {
      * 
      * @exception IllegalArgumentException if the element name is too short.
      */
-    private Object createObject(String element, List names, List values) {
+    public Object createObject(String element, List names, List values) {
         if ( element == null || element.length() < 1 ){
             throw new IllegalArgumentException("illegal element length");
         }
@@ -648,7 +527,7 @@ public class SiteCatalogParser extends Parser {
      * @return true if the element was added successfully, false, if the
      *              child does not match into the parent.
      */
-    private boolean setElementRelation( String childElement, Object parent, Object child ) {
+    public boolean setElementRelation( String childElement, Object parent, Object child ) {
     
         switch ( childElement.charAt( 0 ) ) {
             // a alias
@@ -901,7 +780,7 @@ public class SiteCatalogParser extends Parser {
      * @return the schema namespace
      */
     public  String getSchemaNamespace( ){
-        return this.SCHEMA_NAMESPACE;
+        return SiteCatalogParser.SCHEMA_NAMESPACE;
     }
 
     
@@ -926,7 +805,7 @@ public class SiteCatalogParser extends Parser {
      * @param attribute
      * @param value
      */
-    private void log( String element, String attribute, String value) {
+    public void log( String element, String attribute, String value) {
         //to be enabled when logging per queue.
         mLogger.log( "For element " + element + " found " + attribute + " -> " + value,
                      LogManager.DEBUG_MESSAGE_LEVEL );
@@ -938,7 +817,7 @@ public class SiteCatalogParser extends Parser {
      * @param attribute
      * @param value
      */
-    private void complain(String element, String attribute, String value) {
+    public void complain(String element, String attribute, String value) {
         mLogger.log( "For element " + element + " invalid attribute found " + attribute + " -> " + value,
                      LogManager.ERROR_MESSAGE_LEVEL );
     }

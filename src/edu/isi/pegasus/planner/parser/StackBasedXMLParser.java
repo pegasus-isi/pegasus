@@ -79,7 +79,7 @@ public abstract class StackBasedXMLParser extends Parser {
        
         //setting the schema Locations
         String schemaLoc = getSchemaLocation();
-        mLogger.log( "Picking schema for site catalog" + schemaLoc,
+        mLogger.log( "Picking schema " + schemaLoc,
                      LogManager.CONFIG_MESSAGE_LEVEL);
         String list = getSchemaNamespace( ) + " " + schemaLoc;
         setSchemaLocations( list );
