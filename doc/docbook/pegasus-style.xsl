@@ -17,9 +17,10 @@
         book toc
         chapter toc
     </xsl:param>
-    <xsl:param name="toc.section.depth" select="'1'"/>
+    <!-- xsl:param name="toc.section.depth" select="'1'"/ -->
+    <xsl:param name="toc.max.depth" select="'2'"/>
 
-    <xsl:param name="navig.showtitles">0</xsl:param>
+    <xsl:param name="navig.showtitles">1</xsl:param>
 
     <xsl:template match="processing-instruction('php')">
         <xsl:processing-instruction name="php">
@@ -40,6 +41,7 @@
         <xsl:call-template name="user.preroot"/>
         <html>
             <head>
+                <title>Pegasus WMS User Guide</title>
                 <link rel="stylesheet" type="text/css" href="/css/default.css"/>   
                 <script type="text/javascript" src="/js/jquery-1.3.2.min.js"></script>
                 <script type="text/javascript" src="/js/pegasus_menu.js"></script>
