@@ -1,3 +1,6 @@
+ifndef ${prefix}
+prefix = $(PEGASUS_HOME)
+endif
 
 all: touch.pysqlite touch.sqlalchemy
 
@@ -6,7 +9,7 @@ touch.pysqlite:
 	tar xzf pysqlite-2.6.0.tar.gz
 	(cd pysqlite-2.6.0 && \
 	  python setup.py build_static && \
-	  cp -a build/lib*/pysqlite2 $(PEGASUS_HOME)/lib/python/ \
+	  cp -a build/lib*/pysqlite2 ${prefix}/lib/python/ \
 	)
 	@rm -rf pysqlite-2.6.0
 	touch touch.pysqlite
@@ -16,7 +19,7 @@ touch.sqlalchemy:
 	tar xzf SQLAlchemy-0.6.4.tar.gz
 	(cd SQLAlchemy-0.6.4 && \
 	  python setup.py build && \
-	  cp -a build/lib*/sqlalchemy $(PEGASUS_HOME)/lib/python/ \
+	  cp -a build/lib*/sqlalchemy ${prefix}/lib/python/ \
 	)
 	@rm -rf SQLAlchemy-0.6.4
 	touch touch.sqlalchemy
