@@ -27,38 +27,50 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
+
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
+
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
-import edu.isi.pegasus.planner.classes.ADag;
+
+import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PCRelation;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
+
 import edu.isi.pegasus.planner.code.GridStartFactory;
+
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
+import edu.isi.pegasus.planner.dax.Transformation;
+
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
+import edu.isi.pegasus.planner.parser.dax.Callback;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -108,6 +120,11 @@ public class DAXParser3 extends StackBasedXMLParser {
      */
     protected TransformationStore mTransformationStore;
 
+    /**
+     * List of parents for a child node in the graph
+     */
+    private List<PCRelation> mParents;
+
 
     
     /**
@@ -115,11 +132,11 @@ public class DAXParser3 extends StackBasedXMLParser {
      * 
      *
      */
-    public DAXParser3(  ) {
+   /* public DAXParser3(  ) {
        super();
        this.mReplicaStore = new ReplicaStore();
        this.mTransformationStore = new TransformationStore();
-    }
+    }*/
     
     
     /**
@@ -127,26 +144,30 @@ public class DAXParser3 extends StackBasedXMLParser {
      *
      * @param properties the <code>PegasusProperties</code> to be used.
      */
-    public DAXParser3( PegasusProperties properties  ) {
-        super( properties );
+    public DAXParser3( PegasusBag bag  ) {
+        super( bag );
         this.mReplicaStore = new ReplicaStore();
         this.mTransformationStore = new TransformationStore();
     }
 
     /**
-     * Returns the constructed site store object
-     * 
-     * @return <code>SiteStore<code> if parsing completed 
+     * The constructor initialises the parser, and turns on the validation feature
+     * in Xerces.
+     *
+     * @param daxFileName the file which you want to parse.
+     * @param bag   the bag of objects that is useful for initialization.
+     * @param callback    the object which implements the callback.
      */
-    public SiteStore getDAX() {
-        if( mParsingDone ){
-            return null;
+    public DAXParser3(String daxFileName, PegasusBag bag, Callback callback) {
+        this( bag );
+
+        try{
+            this.testForFile(daxFileName);
         }
-        else{
-            throw new RuntimeException( "Parsing of file needs to complete before function can be called" );
+        catch( Exception e){
+            throw new RuntimeException( e );
         }
     }
-
 
 
     /**
@@ -242,6 +263,32 @@ public class DAXParser3 extends StackBasedXMLParser {
                 }//end of element adag
                 else if( element.equals( "argument" ) ){
                     return new Arguments();
+                }
+                return null;
+
+            //c child compound
+            case 'c':
+                if( element.equals( "child") ){
+                    this.mParents = new LinkedList<PCRelation>();
+                    PCRelation pc = new PCRelation();
+                    String child = null;
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "ref" ) ) {
+                            child = value;
+                        }
+                    }
+                    if( child == null ){
+                        this.complain( element, "child", child );
+                        return null;
+                    }
+                    pc.setChild( child );
+                    return pc;
+                }
+                else if ( element.equals( "compound") ){
+
                 }
                 return null;
 
@@ -520,9 +567,34 @@ public class DAXParser3 extends StackBasedXMLParser {
 
                 return null;//end of case m
 
-            //p profile pfn
+            //p parent profile pfn
             case 'p':
-                if( element.equals( "profile" ) ){
+                if( element.equals( "parent" ) ){
+                    String parent = null;
+
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "ref" ) ) {
+                            parent = value;
+                        }
+                        else if( name.equals( "edge-label" ) ){
+                            this.attributeNotSupported( "parent", "edge-label", value);
+                        }
+                        else {
+                	    this.complain( element, name, value );
+                        }
+
+                    }
+                    if( parent == null ){
+                        this.complain( element, "parent", parent );
+                        return null;
+                    }
+                    return parent;
+
+                }
+                else if( element.equals( "profile" ) ){
                     Profile p = new Profile();
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
@@ -603,7 +675,29 @@ public class DAXParser3 extends StackBasedXMLParser {
                 }//end of stdin|stdout|stderr
                 return null;//end of case s
 
-           //u uses
+            //t transformation
+            case 't':
+                if( element.equals( "tranformation" ) ){
+                    String namespace = null,lname = null, version = null;
+                    for ( int i=0; i < names.size(); ++i ) {
+                        String name = (String) names.get( i );
+                        String value = (String) values.get( i );
+
+                        if ( name.equals( "namespace" ) ) {
+                            namespace = value;
+                        }
+                        else if( name.equals( "name" ) ){
+                            lname = value;
+                        }
+                        else if( name.equals( "version" ) ){
+                            version = value;
+                        }
+                    }
+                    return new CompoundTransformation( namespace, lname, version );
+                }
+                return null;
+
+            //u uses
             case 'u':
                 if( element.equals( "uses" ) ){
                     PegasusFile pf = new PegasusFile( );
@@ -724,9 +818,20 @@ public class DAXParser3 extends StackBasedXMLParser {
                 }
                 return false;
 
+            //c child compount
+            case 'c':
+                if( parent instanceof Map ){
+                    if( child instanceof PCRelation ){
+                        PCRelation pc = (PCRelation)child;
+                        //call the callback
+                        return true;
+                    }
+                }
+                return false;
+
             //d dax dag
             case 'd':
-                if( parent instanceof ADag ){
+                if( parent instanceof Map ){
 
                     if( child instanceof DAGJob ){
                         //dag appears in adag element
@@ -837,6 +942,14 @@ public class DAXParser3 extends StackBasedXMLParser {
                 }
                 return false;
 
+            //j job
+            case 'j':
+                if( child instanceof Job  && parent instanceof Map ){
+                    //callback for Job
+                    return true;
+                }
+                return false;
+
             //m metadata
             case 'm':
                 if ( child instanceof MetaData ) {
@@ -850,9 +963,19 @@ public class DAXParser3 extends StackBasedXMLParser {
                 }
                 return false;
 
-           //p profile pfn
+            //p parent profile pfn
             case 'p':
-                if ( child instanceof Profile ){
+                if( parent instanceof PCRelation ){
+                    if( child instanceof String ){
+                        //parent appears in child element
+                        String parentNode = ( String )child;
+                        PCRelation pc = ( PCRelation )parent;
+                        pc.setParent( parentNode );
+                        mParents.add( pc );
+                        return true;
+                    }
+                }
+                else if ( child instanceof Profile ){
                     Profile p = ( Profile ) child;
                     p.setProfileValue( mTextContent.toString().trim() );
                     mLogger.log( "Set Profile Value to " + p.getProfileValue(), LogManager.DEBUG_MESSAGE_LEVEL );
@@ -905,6 +1028,15 @@ public class DAXParser3 extends StackBasedXMLParser {
                 }
                 return false;
 
+            //t transformation
+            case 't':
+                if( parent instanceof Map ){
+                    //callback
+
+                    return true;
+                }
+                return false;
+
             //u uses
             case 'u':
                 if( child instanceof PegasusFile ){
@@ -923,6 +1055,11 @@ public class DAXParser3 extends StackBasedXMLParser {
                             j.addInputFile(pf);
                             j.addOutputFile(pf);
                         }
+                        return true;
+                    }
+                    else if( parent instanceof Transformation ){
+                        CompoundTransformation compound = (CompoundTransformation)parent;
+                        compound.addDependantFile( pf );
                         return true;
                     }
                 }
@@ -1068,13 +1205,13 @@ public class DAXParser3 extends StackBasedXMLParser {
      */
     public static void main( String[] args ){
         LogManagerFactory.loadSingletonInstance().setLevel( 5 );
-        DAXParser3 parser = new DAXParser3(  );
+        /*DAXParser3 parser = new DAXParser3(  );
         if (args.length == 1) {
             parser.startParser( args[0] );
  
         } else {
             System.out.println("Usage: SiteCatalogParser <input site catalog xml file>");
-        }
+        }*/
         
     }
 

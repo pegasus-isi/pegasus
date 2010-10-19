@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.parser;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
@@ -61,18 +62,18 @@ public abstract class StackBasedXMLParser extends Parser {
      * 
      *
      */
-    public StackBasedXMLParser(  ) {
+   /* public StackBasedXMLParser(  ) {
         this( PegasusProperties.nonSingletonInstance() );
-    }
+    }*/
     
     
     /**
      * The overloaded constructor.
      *
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag the <code>PegasusBag</code> to be used.
      */
-    public StackBasedXMLParser( PegasusProperties properties  ) {
-        super( properties );
+    public StackBasedXMLParser( PegasusBag bag  ) {
+        super( bag );
         mStack = new Stack();
         mDepth = 0;
         

@@ -19,6 +19,8 @@ package edu.isi.pegasus.planner.classes;
 
 import java.util.BitSet;
 
+import edu.isi.pegasus.planner.dax.File;
+
 /**
  * The logical file object that contains the logical filename which is got from
  * the DAX, and the associated set of flags specifying the transient
@@ -590,6 +592,7 @@ public class PegasusFile extends Data {
         }
         return result;
     }
+
 
     /**
      * Returns the String version of the data object, which is in human readable

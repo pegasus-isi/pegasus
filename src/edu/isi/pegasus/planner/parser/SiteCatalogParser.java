@@ -46,6 +46,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
@@ -104,19 +105,19 @@ public class SiteCatalogParser extends StackBasedXMLParser {
      * @param sites   the list of sites to be parsed. * means all.
      *
      */
-    public SiteCatalogParser( List<String> sites ) {
+   /* public SiteCatalogParser( List<String> sites ) {
         this( PegasusProperties.nonSingletonInstance(), sites );
-    }
-    
-    
+    }*/
+
+   
     /**
      * The overloaded constructor.
      *
-     * @param properties the <code>PegasusProperties</code> to be used.
+     * @param bag the bag of initialization objects.
      * @param sites the list of sites that need to be parsed. * means all.
      */
-    public SiteCatalogParser( PegasusProperties properties, List<String> sites ) {
-        super( properties );
+    public SiteCatalogParser( PegasusBag bag, List<String> sites ) {
+        super( bag );
         mStack = new Stack();
         mDepth = 0;
         
@@ -827,7 +828,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
      * @param args
      */
     public static void main( String[] args ){
-        LogManagerFactory.loadSingletonInstance().setLevel( 5 );
+       /* LogManagerFactory.loadSingletonInstance().setLevel( 5 );
         List s = new ArrayList(1);
         s.add( "*" );
         SiteCatalogParser parser = new SiteCatalogParser( s );
@@ -837,7 +838,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
         } else {
             System.out.println("Usage: SiteCatalogParser <input site catalog xml file>");
         }
-        
+        */
     }
 
     

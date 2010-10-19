@@ -29,6 +29,8 @@ import edu.isi.pegasus.planner.parser.SiteCatalogParser;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
 import java.io.IOException;
 
@@ -75,12 +77,21 @@ public class XML3 implements SiteCatalog {
      * The handle to the log manager.
      */
     private LogManager mLogger;
-    
+
+
+    /**
+     * The bag of Pegasus Initialization objects
+     */
+    private PegasusBag mBag;
+
     /**
      * The default constructor.
      */
     public XML3(){
         mLogger = LogManagerFactory.loadSingletonInstance();
+        mBag = new PegasusBag();
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, PegasusProperties.nonSingletonInstance() );
         //mSiteMap = new HashMap<String,SiteCatalogEntry>();
     }
     
@@ -157,7 +168,7 @@ public class XML3 implements SiteCatalog {
         if( this.isClosed() ){
             throw new SiteCatalogException( "Need to connect to site catalog before loading" );
         }
-        mParser = new SiteCatalogParser( sites );
+        mParser = new SiteCatalogParser( this.mBag, sites );
         //mLogger.log( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
          mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG , "site-catalog.id", mFilename,
                                 LogManager.DEBUG_MESSAGE_LEVEL );

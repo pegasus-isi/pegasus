@@ -195,4 +195,23 @@ public class PCRelation extends Data /*implements Comparable*/{
     }
 
 
+    /**
+     * Sets the child of the edge.
+     *
+     * @param childNode  the child node
+     */
+    public void setChild(String childNode) {
+        this.child = childNode;
+    }
+
+    /**
+     * Sets the parent of the edge.
+     *
+     * @param parentNode  the parent node
+     */
+    public void setParent(String parentNode) {
+        this.parent = parentNode;
+    }
+
+
 }
