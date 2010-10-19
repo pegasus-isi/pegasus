@@ -160,14 +160,13 @@ class CatalogType:
 			raise Exception("Invalid argument")
 	
 	def getInnerXML(self, level=0, indent='\t'):
-		indents = ''.join([indent for i in range(0,level)])
 		xml = StringIO()
 		for p in self.profiles:
-			xml.write(indents)
+			xml.write(indent*level)
 			xml.write(p.toXML())
 			xml.write(u'\n')
 		for m in self.metadata:
-			xml.write(indents)
+			xml.write(indent*level)
 			xml.write(m.toXML())
 			xml.write(u'\n')
 		for p in self.pfns:
@@ -255,10 +254,9 @@ class File(CatalogType):
 		
 	def toXML(self, level=0, indent='\t'):
 		"""Returns an XML representation of this file as a filename tag"""
-		indents = ''.join([indent for i in range(0,level)])
 		xml = StringIO()
-		xml.write(u'%s<file name="%s"' % (indents,self.name))
-		if self.link: xml.write(u' link="%s"' % self.link)
+		xml.write(indent*level)
+		xml.write(u'<file name="%s"' % self.name)
 				
 		inner = self.getInnerXML(level+1,indent)
 		if inner is None:
@@ -266,7 +264,8 @@ class File(CatalogType):
 		else:
 			xml.write(u'>\n')
 			xml.write(inner)
-			xml.write('%s</file>'%indents)
+			xml.write(indent*level)
+			xml.write('</file>')
 
 		result = xml.getvalue()
 		xml.close()
@@ -314,10 +313,9 @@ class Executable(CatalogType):
 		
 	def toXML(self, level=0, indent='\t'):
 		"""Returns an XML representation of this file as a filename tag"""
-		indents = ''.join([indent for i in range(0,level)])
 		xml = StringIO()
-		
-		xml.write(u'%s<executable name="%s"' % (indents,self.name))
+		xml.write(indent*level)
+		xml.write(u'<executable name="%s"' % self.name)
 		if self.namespace: xml.write(u' namespace="%s"' % self.namespace)
 		if self.version: xml.write(u' version="%s"' % self.version)
 		if self.arch: xml.write(u' arch="%s"' % self.arch)
@@ -332,7 +330,8 @@ class Executable(CatalogType):
 		else:
 			xml.write(u'>\n')
 			xml.write(inner)
-			xml.write('%s</executable>'%indents)
+			xml.write(indent*level)
+			xml.write('</executable>')
 
 		result = xml.getvalue()
 		xml.close()
@@ -399,20 +398,19 @@ class PFN:
 		
 	def toXML(self, level=0, indent=u'\t'):
 		"""Return an XML representation of this PFN"""
-		indents = ''.join([indent for i in range(0,level)])
 		xml = StringIO()
-		xml.write(u'%s<pfn url="%s" site="%s"'% (indents, self.url, self.site))
-		
+		xml.write(indent*level)
+		xml.write(u'<pfn url="%s" site="%s"'% (self.url, self.site))
 		if len(self.profiles) == 0:
 			xml.write(u'/>')
 		else:
 			xml.write(u'>\n')
 			for p in self.profiles:
-				xml.write(indents)
-				xml.write(indent)
+				xml.write(indent*(level+1))
 				xml.write(p.toXML())
 				xml.write(u'\n')
-			xml.write(u'%s</pfn>' % indents)
+			xml.write(indent*level)
+			xml.write(u'</pfn>')
 			
 		result = xml.getvalue()
 		xml.close()
@@ -474,8 +472,13 @@ class Use:
 		self.optional = optional
 		self.register = register
 		self.transfer = transfer
+		self.pfns = []
+		
+	def addPFN(self, pfn):
+		"""Add a PFN to this use"""
+		self.pfns.append(pfn)
 
-	def toXML(self):
+	def toXML(self, level=0, indent=u'\t'):
 		xml = StringIO()
 
 		link = self.link or self.file.link
@@ -490,7 +493,8 @@ class Use:
 			namespace = None
 			version = None
 			executable = None
-			
+		
+		xml.write(indent*level)
 		xml.write(u'<uses name="%s"' % self.file.name)
 		if link: xml.write(u' link="%s"' % link)
 		if optional: xml.write(u' optional="%s"' % unicode(optional).lower())
@@ -499,7 +503,15 @@ class Use:
 		if namespace: xml.write(u' namespace="%s"' % namespace)
 		if version: xml.write(u' version="%s"' % version)
 		if executable: xml.write(u' executable="true"')
-		xml.write(u'/>')
+		if len(self.pfns) == 0:
+			xml.write(u'/>')
+		else:
+			xml.write('>\n')
+			for pfn in self.pfns:
+				xml.write(pfn.toXML(level+1))
+				xml.write(u'\n')
+			xml.write(indent*level)
+			xml.write(u'</uses>')
 
 		result = xml.getvalue()
 		xml.close()
@@ -580,6 +592,10 @@ class Transformation:
 		if namespace: self.namespace = namespace
 		if version: self.version = version
 		
+	def addUse(self, use):
+		"""Add use to transformation"""
+		self.used_files.append(use)
+		
 	def addUses(self, *args, **kwargs):
 		"""Alias for uses()"""
 		self.uses(*args, **kwargs)
@@ -604,10 +620,9 @@ class Transformation:
 		
 	def toXML(self, level=0, indent=u'\t'):
 		"""Return an XML representation of this transformation"""
-		indentation = u''.join([indent for i in range(0,level)])
 		xml = StringIO()
-		
-		xml.write(u'%s<transformation' % indentation)
+		xml.write(indent*level)
+		xml.write(u'<transformation')
 		if self.namespace: xml.write(u' namespace="%s"' % self.namespace)
 		xml.write(u' name="%s"' % self.name)
 		if self.version: xml.write(u' version="%s"' % self.version)
@@ -617,11 +632,10 @@ class Transformation:
 		else:
 			xml.write(u'>\n')
 			for u in self.used_files:
-				xml.write(indentation)
-				xml.write(indent)
-				xml.write(u.toXML())
+				xml.write(u.toXML(level+1))
 				xml.write(u'\n')
-			xml.write(u'%s</transformation>' % indentation)
+			xml.write(indent*level)
+			xml.write(u'</transformation>')
 			
 		result = xml.getvalue()
 		xml.close()
@@ -658,7 +672,11 @@ class AbstractJob:
 			self.profiles.append(Profile(*profile))
 		else:
 			raise Exception("Invalid argument")
-			
+	
+	def addUse(self, use):
+		"""Add use to Job"""
+		self.used_files.append(use)
+	
 	def addUses(self, *args, **kwargs):
 		"""Alias for uses() to maintain backward-compatibility"""
 		self.uses(*args, **kwargs)
@@ -722,12 +740,10 @@ class AbstractJob:
 	def innerXML(self, level=0, indent=u'\t'):
 		"""Return an XML representation of this job"""
 		xml = StringIO()
-		indentation = u''.join(indent for x in range(0,level))
 		
 		# Arguments
 		if len(self.arguments) > 0:
-			xml.write(indentation)
-			xml.write(indent)
+			xml.write(indent*(level+1))
 			xml.write(u'<argument>')
 			xml.write(u' '.join(unicode(x) for x in self.arguments))
 			xml.write(u'</argument>\n')
@@ -735,38 +751,31 @@ class AbstractJob:
 		# Profiles
 		if len(self.profiles) > 0:
 			for pro in self.profiles:
-				xml.write(indentation)
-				xml.write(indent)
+				xml.write(indent*(level+1))
 				xml.write(u'%s\n' % pro.toXML())
 		
 		# Stdin/xml/err
 		if self.stdin is not None:
-			xml.write(indentation)
-			xml.write(indent)
+			xml.write(indent*(level+1))
 			xml.write(self.stdin.toStdioXML('stdin'))
 			xml.write(u'\n')
 		if self.stdout is not None:
-			xml.write(indentation)
-			xml.write(indent)
+			xml.write(indent*(level+1))
 			xml.write(self.stdout.toStdioXML('stdout'))
 			xml.write(u'\n')
 		if self.stderr is not None:
-			xml.write(indentation)
-			xml.write(indent)
+			xml.write(indent*(level+1))
 			xml.write(self.stderr.toStdioXML('stderr'))
 			xml.write(u'\n')
 
 		# Uses
 		for use in self.used_files:
-			xml.write(indentation)
-			xml.write(indent)
-			xml.write(use.toXML())
+			xml.write(use.toXML(level+1))
 			xml.write(u'\n')
 				
 		# Notifications
 		for invoke in self.notifications:
-			xml.write(indentation)
-			xml.write(indent)
+			xml.write(indent*(level+1))
 			xml.write(u'<invoke when="%s">%s</invoke>\n'%invoke)
 		
 		result = xml.getvalue()
@@ -840,11 +849,10 @@ class Job(AbstractJob):
 		
 	def toXML(self, level=0, indent=u'\t'):
 		"""Return an XML representation of this job"""
-		xml = StringIO()
-		indentation = u''.join(indent for x in range(0,level))
 		
 		# Open tag
-		xml.write(indentation)
+		xml = StringIO()
+		xml.write(indent*level)
 		xml.write(u'<job id="%s"' % self.id)
 		if self.namespace: xml.write(u' namespace="%s"' % self.namespace)
 		xml.write(u' name="%s"' % self.name)
@@ -855,7 +863,7 @@ class Job(AbstractJob):
 		if inner:
 			xml.write(u'>\n')
 			xml.write(inner)
-			xml.write(indentation)
+			xml.write(indent*level)
 			xml.write(u'</job>')
 		else:
 			xml.write(u'/>\n')
@@ -899,11 +907,10 @@ class DAX(AbstractJob):
 		
 	def toXML(self, level=0, indent=u'\t'):
 		"""Return an XML representation of this job"""
-		xml = StringIO()
-		indentation = u''.join(indent for x in range(0,level))
 		
 		# Open tag
-		xml.write(indentation)
+		xml = StringIO()
+		xml.write(indent*level)
 		xml.write(u'<dax id="%s" file="%s"' % (self.id, self.name))
 		if self.node_label: xml.write(u' node-label="%s"' % self.node_label)
 		
@@ -911,7 +918,7 @@ class DAX(AbstractJob):
 		if inner:
 			xml.write(u'>\n')
 			xml.write(inner)
-			xml.write(indentation)
+			xml.write(indent*level)
 			xml.write(u'</dax>')
 		else:
 			xml.write(u'/>')
@@ -954,11 +961,10 @@ class DAG(AbstractJob):
 			
 	def toXML(self, level=0, indent=u'\t'):
 		"""Return an XML representation of this DAG"""
-		xml = StringIO()
-		indentation = u''.join(indent for x in range(0,level))
 		
 		# Open tag
-		xml.write(indentation)
+		xml = StringIO()
+		xml.write(indent*level)
 		xml.write(u'<dag id="%s" file="%s"' % (self.id, self.name))
 		if self.node_label: xml.write(u' node-label="%s"' % self.node_label)
 		
@@ -966,7 +972,7 @@ class DAG(AbstractJob):
 		if inner:
 			xml.write(u'>\n')
 			xml.write(inner)
-			xml.write(indentation)
+			xml.write(indent*level)
 			xml.write(u'</dag>')
 		else:
 			xml.write(u'/>')
@@ -987,19 +993,16 @@ class Dependency:
 	def toXML(self, level=0, indent=u'\t'):
 		"""Generate an XML representation of this"""
 		xml = StringIO()
-		indentation = ''.join([indent for x in range(0,level)])
-			
-		xml.write(indentation)
+		xml.write(indent*level)
 		xml.write(u'<child ref="%s">\n' % self.child.id)
 		for parent, edge_label in self.parents:
-			xml.write(indentation)
-			xml.write(indent)
+			xml.write(indent*(level+1))
 			if edge_label is None:
 				xml.write(u'<parent ref="%s"/>\n' % parent.id)
 			else:
 				xml.write(u'<parent ref="%s" edge-label="%s"/>\n'
 					% (parent.id, edge_label))
-		xml.write(indentation)
+		xml.write(indent*level)
 		xml.write(u'</child>')
 			
 		result = xml.getvalue()
@@ -1170,6 +1173,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 		self.lastArgument = None
 		self.lastProfile = None
 		self.lastMetadata = None
+		self.lastUse = None
 		self.lastPFN = None
 		self.lastFile = None
 		self.lastInvoke = None
@@ -1188,12 +1192,11 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 			self.adag = ADAG(name,count,index)
 		elif element == "file":
 			name = attrs.get("name")
-			link = attrs.get("link")
 			
 			if name in self.filemap:
 				f = self.filemap[name]
 			else:
-				f = File(name=name, link=link)
+				f = File(name=name)
 				self.filemap[name] = f
 					
 			if parent == 'adag':
@@ -1280,6 +1283,8 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 			pfn = PFN(url=url, site=site)
 			if parent in ["file","executable"]:
 				self.lastFile.addPFN(pfn)
+			elif parent == "uses":
+				self.lastUse.addPFN(pfn)
 			else:
 				raise Exception("Adding PFN to %s" % parent)
 			self.lastPFN = pfn
@@ -1314,12 +1319,14 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 					transfer=transfer)
 				self.filemap[name] = f
 				
+			u = Use(f, link=link, register=register, transfer=transfer,
+					optional=optional)
+			self.lastUse = u
+				
 			if parent in ['job','dax','dag']:
-				self.lastJob.uses(f, link=link, register=register,
-					transfer=transfer, optional=optional)
+				self.lastJob.addUse(u)
 			elif parent == 'transformation':
-				self.lastTransformation.uses(f, link=link, register=register,
-					transfer=transfer, optional=optional)
+				self.lastTransformation.addUse(u)
 			else:
 				raise Exception("Adding uses to %s" % parent)
 		elif element == "invoke":
@@ -1361,6 +1368,8 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 			self.lastProfile = None
 		elif element == "metadata":
 			self.lastMetadata = None
+		elif element == "uses":
+			self.lastUse = None
 		elif element == "pfn":
 			self.lastPFN = None
 		elif element == "invoke":
@@ -1471,6 +1480,12 @@ def test():
 	analyze.uses(c1,link=Link.INPUT)
 	analyze.uses(c2,link=Link.INPUT)
 	analyze.uses(d,link=Link.OUTPUT)
+	
+	u = Use(c1)
+	p = PFN("foo")
+	p.addProfile(Profile("foo","bar","baz"))
+	u.addPFN(p)
+	analyze.addUse(u)
 	diamond.addJob(analyze)
 	
 	# A DAG
