@@ -4,14 +4,28 @@
 # is sourced from the shell wrapper scripts. 
 # $Id$
 #
-if [ "X${JAVA_HOME}" = "X" ]; then
-    echo "ERROR: Please set your JAVA_HOME variable" 1>&2
-    exit 1
+
+# Find Java
+if [ "X${JAVA_HOME}" != "X" ]; then
+	JAVA="${JAVA_HOME}/bin/java"
+fi
+if [ ! -x "${JAVA}" ]; then
+	JAVA="`which java`"
+fi
+if [ ! -e "${JAVA}" ]; then
+	echo "ERROR: java not found. Please set JAVA_HOME or PATH."
+	exit 1
 fi
 
+JAVA_VERSION=`${JAVA} -version 2>&1 | awk '/^java version/ {gsub(/"/,""); print $3}'`
+if [ `echo ${JAVA_VERSION} | cut -c1,3` -lt 16 ]; then
+	echo "ERROR: Java 1.6 or later required. Please set JAVA_HOME or PATH to point to a newer Java."
+	exit 1
+fi
+
+# Find PEGASUS_HOME
 if [ "X${PEGASUS_HOME}" = "X" ]; then
-    echo "ERROR: Please set your PEGASUS_HOME variable" 1>&2
-    exit 1
+	PEGASUS_HOME="`dirname $0`/.."
 fi
 
 # normalize PEGASUS_HOME - remove trailing slashes, double slashes, ...
@@ -24,6 +38,7 @@ CLASSPATH=`( find ${PEGASUS_HOME}/lib -name '*.jar' | sort | tr '\012' ':' ; ech
 if [ "x${PEGASUS_CLASSPATH_PREPEND}" != "x" ]; then
     CLASSPATH="${PEGASUS_CLASSPATH_PREPEND}:${CLASSPATH}"
 fi
+CLASSPATH=$PEGASUS_HOME/build/classes:$CLASSPATH
 export CLASSPATH
 
 addon=''
