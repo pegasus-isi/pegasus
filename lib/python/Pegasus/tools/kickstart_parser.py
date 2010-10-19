@@ -39,24 +39,21 @@ class Parser:
     requested information.
     """
 
-    _kickstart_output_file = None
-    _parsing_arguments = False
-    _parsing_main_job = False
-    _parsing_machine = False
-    _parsing_cwd = False
-    _arguments = ""
-    _keys = {}
-    _ks_elements = {}
-    _cwd = ""
-    _fh = None
-    _open_error = False
-
     def __init__(self, filename):
 	"""
 	This function initializes the Parser class with the kickstart
 	output file that should be parsed.
 	"""
 	self._kickstart_output_file = filename
+        self._parsing_arguments = False
+        self._parsing_main_job = False
+        self._parsing_machine = False
+        self._parsing_cwd = False
+        self._arguments = ""
+        self._keys = {}
+        self._ks_elements = {}
+        self._cwd = ""
+        self._fh = None
         self._open_error = False
 
     def open(self):

@@ -153,6 +153,35 @@ def pipe_out_cmd(cmd_string):
 
     return my_result
 
+def add_to_braindb(run, missing_keys, brain_alternate=None):
+    """
+    This function adds to the braindump database the missing
+    keys from missing_keys.
+    """
+    my_config = {}
+
+    if brain_alternate is None:
+        my_braindb = os.path.join(run, brainbase)
+    else:
+        my_braindb = os.path.join(run, brain_alternate)
+
+    try:
+	my_file = open(my_braindb, 'a')
+    except:
+        return
+
+    try:
+        for key in missing_keys:
+            my_file.write("%s %s\n" % (str(key), str(missing_keys[key])))
+    except:
+        # Nothing to do...
+        pass
+
+    try:
+        my_file.close()
+    except:
+        pass
+
 def slurp_braindb(run, brain_alternate=None):
     """
     Reads extra configuration from braindump database
@@ -295,6 +324,19 @@ def log10(x):
         return result
 
     return 1
+
+def make_boolean(value):
+    # purpose: convert an input string into something boolean
+    # paramtr: $x (IN): a property value
+    # returns: 0 (false) or 1 (true)
+    my_val = str(value)
+    if (my_val.lower() == 'true' or
+	my_val.lower() == 'on' or
+	my_val.lower() == 'yes' or
+	my_val.isdigit() and int(value) > 0):
+	return 1
+
+    return 0
 
 def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     ''' Fork the current process as a daemon, redirecting standard file

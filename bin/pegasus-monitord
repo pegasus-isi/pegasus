@@ -144,7 +144,9 @@ re_parse_jobtype = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
 re_parse_transformation = re.compile(r"^\s*\+pegasus_wf_xformation\s*=\s*(\S+)")
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
+re_parse_environment = re.compile(r'^\s*environment\s*=\s*(.*)')
 re_site_parse_euryale = re.compile(r"^\#!\s+site=(\S+)")
+re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 
 # Used in process
 re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
@@ -178,6 +180,7 @@ speak = "TSSP/1.0"
 PRESCRIPT_TASK_ID = -1			# id for prescript tasks
 POSTSCRIPT_TASK_ID = -2			# id for postscript tasks
 MONITORD_STATE_FILE = "monitord.info" 	# filename for writing monitord state information
+MAX_SLEEP_TIME = 10			# in seconds
 
 # Events that constitute a pending job. Note that event SUBMIT is
 # excluded on purpose since due to throttling inside DAGMan and
@@ -199,6 +202,7 @@ unsubmitted_events = {"UN_READY": 1,
 		      "PRE_SCRIPT_FAILURE": 1}
 
 # Global variables
+wfs = []			# list of workflow entries monitord is tracking
 wf = None			# instance of workflow class
 replay_mode = 0			# disable checking if DAGMan's pid is gone
 use_db = 1			# flag for using the database
@@ -208,15 +212,10 @@ db_stats = 'no'			# collect and print database stats at the end of execution
 use_nllog = 0			# flag for using Netlogger's log api
 use_nllogfile = 0		# flag for using a file to log Netlogger events
 nllog_string = None		# Filename or host:port when using Netlogger's log api
-pending = {} 			# remember when GLOBUS_SUBMIT was entered
-				# jid --> [stamp, condor_id, wtime, site]
-running = {}			# ditto for EXECUTE for hidden starvation
-				# jid --> [stamp, condor_id, wtime, site]
-job_site = {}			# last site a job was planned for
 jobstate = {}			# jid --> [stamp, event, condor_id, wtime, site]
 siteinfo = {}			# site --> { [RPSF] --> [ #, mtime] }
-walltime = {}			# jid --> walltime
 waiting = {}			# site --> stamp/60 --> [ #P->R, sum(ptime)]
+monitord_exit_code = 0		# Exit code for pegasus-monitord
 
 # Revision handling
 revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
@@ -304,37 +303,9 @@ class Job:
     # Some will be initialized in the init method, others will
     # get their values from the kickstart output file when a job
     # finished
-    _wf_uuid = None
-    _job_submit_seq = None
-    _condor_id = None
-    _name = None
-    _jobtype = None
-    _clustered = None
-    _site_name = None
-    _host_id = None
-    _remote_user = None
-    _remote_working_dir = None
-    _cluster_start_time = None
-    _cluster_duration = None
-    _job_state = None
-    _job_state_seq = 0
-    _job_state_timestamp = None
-    _walltime = None
-    _job_site = None
-    _job_info = [-1, -1, -1, -1]
-    _job_output_counter = None
-    _pre_script_start = None
-    _pre_script_done = None
-    _pre_script_exitcode = None
-    _main_job_start = None
-    _main_job_done = None
-    _main_job_transformation = None
-    _main_job_executable = None
-    _main_job_arguments = None
-    _main_job_exitcode = None
-    _post_script_start = None
-    _post_script_done = None
-    _post_script_exitcode = None
+#    _wf_uuid = None
+#    _job_submit_seq = None
+#    _name = None
 
     def __init__(self, wf_uuid, name, job_submit_seq):
 	"""
@@ -346,6 +317,33 @@ class Job:
 	self._wf_uuid = wf_uuid
 	self._name = name
 	self._job_submit_seq = job_submit_seq
+        self._condor_id = None
+        self._jobtype = None
+        self._clustered = None
+        self._site_name = None
+        self._host_id = None
+        self._remote_user = None
+        self._remote_working_dir = None
+        self._cluster_start_time = None
+        self._cluster_duration = None
+        self._job_state = None
+        self._job_state_seq = 0
+        self._job_state_timestamp = None
+        self._job_info = [-1, -1, -1, -1]
+        self._job_output_counter = None
+        self._pre_script_start = None
+        self._pre_script_done = None
+        self._pre_script_exitcode = None
+        self._main_job_start = None
+        self._main_job_done = None
+        self._main_job_transformation = None
+        self._main_job_executable = None
+        self._main_job_arguments = None
+        self._main_job_exitcode = None
+        self._post_script_start = None
+        self._post_script_done = None
+        self._post_script_exitcode = None
+        self._job_dagman_out = None		# _CONDOR_DAGMAN_LOG from environment line for pegasus-plan jobs
 
     def set_job_state(self, job_state, timestamp, status):
 	"""
@@ -376,43 +374,50 @@ class Job:
 	elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
 	    self._post_script_exitcode = status
 
-    def parse_sub_file(self, stamp, my_fn):
+    def parse_sub_file(self, stamp, submit_file):
 	"""
 	This function parses a job's submit file and returns job
 	planning information. In addition, we try to populate the job
 	type from information in the submit file.
 	# paramtr: stamp(IN): timestamp associated with the log line
-	# paramtr: my_fn(IN): submit file name
+	# paramtr: submit_file(IN): submit file name
 	# class m: _job_info(MODIFIED): [dev#, ino#, size, mtime]
 	# globals: good_rsl(IN): which RSL keys constitute time requirements
 	# returns: (largest job time requirement in minutes, destination site)
 	# returns: (None, None) if sub file not found
 	"""
+        parse_environment = False
 	my_result = None
 	my_site = None
 
 	# Update stat record for submit file
 	try:
-	    my_stats = os.stat(my_fn)
+	    my_stats = os.stat(submit_file)
 	except:
 	    # Could not stat file
-	    logger.error("stat %s" % (my_fn))
+	    logger.error("stat %s" % (submit_file))
 	    return my_result, my_site
 
 	self._job_info[0] = my_stats[2] # dev #
 	self._job_info[1] = my_stats[1] # inode #
-	self._job_info[2] = my_stats[6] # Size
+	self._job_info[2] = my_stats[6] # size
 	self._job_info[3] = my_stats[8] # mtime
 
+        # Check submit file timestamp
 	if stamp < self._job_info[3]:
-            logger.info("%s: submit file was modified after job ran: job timestamp=%d, sub file mtime=%d, diff = %d" % (my_fn, stamp, self._job_info[3], self._job_info[3]-stamp))
+            logger.info("%s: submit file was modified after job ran: job timestamp=%d, sub file mtime=%d, diff = %d" % (submit_file, stamp, self._job_info[3], self._job_info[3]-stamp))
+
+        # Check if we need to parse the environment line
+        if self._name.startswith("pegasus-plan"):
+            parse_environment = True
 
 	try:
-	    SUB = open(my_fn, "r")
+	    SUB = open(submit_file, "r")
 	except:
-	    logger.error("unable to parse %s" % (my_fn))
+	    logger.error("unable to parse %s" % (submit_file))
 	    return my_result, my_site
 
+        # Parse submit file
 	for my_line in SUB:
 	    if re_rsl_string.search(my_line):
 		# Found RSL string, do parse now
@@ -459,6 +464,18 @@ class Job:
                 # Remove quotes, if any
                 my_arguments = my_arguments.strip('"')
                 self._main_job_arguments = my_arguments
+            elif parse_environment and re_parse_environment.search(my_line):
+                # Found line with environment
+                v = re_parse_environment.search(my_line).group(1)
+                sub_props = v.split(';')
+                for sub_prop_line in sub_props:
+                    sub_prop_line = sub_prop_line.strip() # Remove any spaces
+                    if len(sub_prop_line) == 0:
+                        continue
+                    sub_prop = re_parse_property.search(sub_prop_line)
+                    if sub_prop:
+                        if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
+                            self._job_dagman_out = sub_prop.group(2)
 
 	SUB.close()
 
@@ -519,43 +536,6 @@ class Workflow:
     """
     Class used to keep everything needed to track a particular workflow
     """
-
-    # Variables that describe a workflow, as per the Stampede schema
-    # These are initialized in the init method
-    _db = None
-    _wf_uuid = None
-    _dax_label = None
-    _timestamp = None
-    _submit_hostname = None
-    _submit_dir = None
-    _planner_arguments = None
-    _user = None
-    _grid_dn = None
-    _planner_version = None
-    _parent_workflow_id = None
-    _last_submitted_job = None
-    _jobs_map = {}
-    _jobs = {}
-    _job_submit_seq = 1
-    _out_file = None			# .dag.dagman.out file
-    _run_dir = None			# run directory for this workflow
-    _log_file = None			# monitord.log file
-    _jsd_file = None			# jobstate.log file
-    _JSDB = None			# Handle for jobstate.log file
-    _job_counters = {}			# Job counters for figuring out which output file to parse
-    _job_info = {}			# jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
-    _valid_braindb = True		# Flag for creating a new brain db if we don't find one
-    _line = 0 				# line number from dagman.out file
-    _last_processed_line = 0		# line last processed by the monitoring daemon
-    _restart_count = 0			# Keep track of how many times the workflow was restarted
-    _skipping_recovery_lines = False	# Flag for skipping the repeat duplicate messages generated by DAGMan
-    _dagman_condor_id = None		# Condor id of the current DAGMan
-    _dagman_pid = 0			# Condor DAGMan's PID
-    _workflow_start = 0			# Time we started tracking this workflow (initialized in __init__)
-    _current_timestamp = 0		# Last timestamp from DAGMan
-    _terminate = None			# Keep track of when to finish this workflow
-    _condorlog = None			# Condor common logfile
-    _multiline_file_flag = False	# Track multiline user log files, DAGMan > 6.6
 
     def output_to_db(self, event, kwargs):
 	"""
@@ -863,7 +843,7 @@ class Workflow:
             self._JSDB.write("%d INTERNAL *** DAGMAN_STARTED %s ***\n" % (self._current_timestamp, self._dagman_condor_id))
             self._restart_count = self._restart_count + 1
         elif state == "end":
-            self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (self._current_timestamp, self._terminate))
+            self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (self._current_timestamp, self._dagman_exit_code))
         
         self.db_send_wf_state(state)
 
@@ -875,12 +855,49 @@ class Workflow:
         if specified). Keys in wfparams override values in the configuration
         file. Here we also open the jobstate.log file, and parse the dag.
 	"""
-	# Initialize basic class variables
+	# Initialize class variables
         self._out_file = outfile
 	self._run_dir = rundir
         self._parent_workflow_id = parent_id
 	self._db = database
         self._workflow_start = int(time.time())
+        self._wf_uuid = None
+        self._dax_label = None
+        self._timestamp = None
+        self._submit_hostname = None
+        self._submit_dir = None
+        self._planner_arguments = None
+        self._user = None
+        self._grid_dn = None
+        self._planner_version = None
+        self._last_submitted_job = None
+        self._jobs_map = {}
+        self._jobs = {}
+        self._job_submit_seq = 1
+        self._log_file = None			# monitord.log file
+        self._jsd_file = None			# jobstate.log file
+        self._JSDB = None			# Handle for jobstate.log file
+        self._job_counters = {}			# Job counters for figuring out which output file to parse
+        self._job_info = {}			# jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
+        self._valid_braindb = True		# Flag for creating a new brain db if we don't find one
+        self._write_wf_uuid = False		# Flag for appending the generated wf_uuid to the braindump file
+        self._line = 0 				# line number from dagman.out file
+        self._last_processed_line = 0		# line last processed by the monitoring daemon
+        self._restart_count = 0			# Keep track of how many times the workflow was restarted
+        self._skipping_recovery_lines = False	# Flag for skipping the repeat duplicate messages generated by DAGMan
+        self._dagman_condor_id = None		# Condor id of the current DAGMan
+        self._dagman_pid = 0			# Condor DAGMan's PID
+        self._current_timestamp = 0		# Last timestamp from DAGMan
+        self._dagman_exit_code = None		# Keep track of when to finish this workflow
+        self._monitord_exit_code = 0		# Keep track of errors inside monitord
+        self._condorlog = None			# Condor common logfile
+        self._multiline_file_flag = False	# Track multiline user log files, DAGMan > 6.6
+        self._pending = {} 			# remember when GLOBUS_SUBMIT was entered
+        					# jid --> [stamp, condor_id, wtime, site]
+        self._running = {}			# ditto for EXECUTE for hidden starvation
+					        # jid --> [stamp, condor_id, wtime, site]
+        self._walltime = {}			# jid --> walltime
+        self._job_site = {}			# last site a job was planned for
 
         # Determine location of jobstate.log file
         if jsd is None:
@@ -902,7 +919,8 @@ class Workflow:
                 self._JSDB = open(self._jsd_file, 'w', 0)
         except:
             logger.critical("error creating/appending to %s!" % (self._jsd_file))
-            sys.exit(1)
+            self._monitord_exit_code = 1
+            return
 
         # Say hello.... add start information to JSDB
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
@@ -913,6 +931,7 @@ class Workflow:
 
         # Parse the braindump file
         wfparams = utils.slurp_braindb(rundir, workflow_config_file)
+        missing_keys = {}
 
         if len(wfparams) == 0:
             # Set flag for creating a braindb file if nothing was read
@@ -933,6 +952,8 @@ class Workflow:
             else:
                 logger.info("uuid module is not present, using time.time() to generate wf_uuid")
                 self._wf_uuid = str(time.time())
+            self._write_wf_uuid = True
+            missing_keys["wf_uuid"] = self._wf_uuid
         if "dax_label" in wfparams:
             self._dax_label = wfparams["dax_label"]
         else:
@@ -994,6 +1015,10 @@ class Workflow:
             # Add workflow info to database
             self.db_send_wf_info()
 
+        # Add any missing keys to the braindump file
+        if len(missing_keys) > 0:
+            utils.add_to_braindb(rundir, missing_keys, workflow_config_file)
+
     def end_workflow(self):
         """
         This function writes the last line in the jobstate.log and closes
@@ -1001,8 +1026,11 @@ class Workflow:
         """
         my_workflow_end = int(time.time())
 
-        self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (my_workflow_end, self._terminate))
+        self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (my_workflow_end, self._monitord_exit_code))
         self._JSDB.close()
+
+        # Save all state to disk so that we can start again later
+        self.write_workflow_state()
 
         if not replay_mode:
             # Write monitord.done file
@@ -1545,7 +1573,8 @@ class Workflow:
 	if not jobid in self._job_info:
 	    return None, None
 
-	# Make sure if we have a file for this entry (should always be there)
+	# Make sure if we have a file for this entry
+        # (should always be there, except for SUBDAG jobs)
 	if self._job_info[jobid][0] is None:
 	    return None, None
 
@@ -1558,23 +1587,65 @@ class Workflow:
 	# All done
 	return my_diff, my_site
 
-def make_boolean(value):
-    # purpose: convert an input string into something boolean
-    # paramtr: $x (IN): a property value
-    # returns: 0 (false) or 1 (true)
-    my_val = str(value)
-    if (my_val.lower() == 'true' or
-	my_val.lower() == 'on' or
-	my_val.lower() == 'yes' or
-	my_val.isdigit() and int(value) > 0):
-	return 1
+    def has_subworkflow(self, jobid):
+        """
+        This function returns a new dagman.out file to follow if the job
+        is either a SUBDAG job, or a pegasus-plan job. Otherwise, it returns None.
+        """
+        # This shouldn't be the case...
+        if not jobid in self._job_info:
+            return None
 
-    return 0
+        # First we take care of SUBDAG jobs
+        if self._job_info[jobid][5] == True:
+            # This is a SUBDAG job, return new dagman.out
+            return (self._job_info[jobid][6] + ".dagman.out")
+
+        # Now check if this is a pegasus-plan job
+
+	# First, look for a jobid
+	my_job_submit_seq = self.find_jobid(jobid)
+
+	# No such job, return None
+	if my_job_submit_seq is None:
+	    return None
+
+	# Make sure the job is there
+	if not (jobid, my_job_submit_seq) in self._jobs:
+	    logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+	    return None
+
+	my_job = self._jobs[jobid, my_job_submit_seq]
+
+        # Got it!
+
+        # Hack to work on LIGO
+        if my_job._job_dagman_out is not None:
+            pos = my_job._job_dagman_out.find("/./")
+            if pos > 0:
+                return my_job._job_dagman_out[(pos+3):]
+        return my_job._job_dagman_out
+
+# Workflow Entry Class
+class WorkflowEntry:
+    """
+    Class used to store one workflow entry
+    """
+    run_dir = None			# Run directory for the workflow
+    dagman_out = None			# Location of the dagman.out file
+    n_retries = 0			# Number of retries for looking for the dagman.out file
+    wf = None				# Pointer to the Workflow class for this Workflow
+    DMOF = None				# File pointer once we open the dagman.out file
+    ml_buffer = ''			# Buffer for reading the dagman.out file
+    ml_retries = 0			# Keep track of how many times we have looked for new content
+    ml_current = 0			# Keep track of where we are in the dagman.out file
+    delete_workflow = False		# Flag for dropping this workflow
+    sleep_time = None			# Time to sleep for this workflow
 
 # Parse properties
 props = properties.Properties()
 props.new(properties.PARSE_ALL)
-doplot = make_boolean(props.property("pegasus.tailstatd.show"))
+doplot = utils.make_boolean(props.property("pegasus.tailstatd.show"))
 
 fuse = int(props.property("pegasus.tailstatd.fuse") or 300)
 if fuse < 60:
@@ -1809,16 +1880,16 @@ def add(wf, jobid, event, condor_id=None, status=None):
 
     # Remove existing site info during replanning
     if event in unsubmitted_events:
-	if jobid in job_site:
-	    del job_site[jobid]
-	if jobid in walltime:
-	    del walltime[jobid]
+	if jobid in wf._job_site:
+	    del wf._job_site[jobid]
+	if jobid in wf._walltime:
+	    del wf._walltime[jobid]
 
     # Variables originally from submit file information
-    if jobid in job_site:
-	my_site = job_site[jobid]
-    if jobid in walltime:
-	my_time = walltime[jobid]
+    if jobid in wf._job_site:
+	my_site = wf._job_site[jobid]
+    if jobid in wf._walltime:
+	my_time = wf._walltime[jobid]
 
     # A PRE_SCRIPT_START event always means a new job
     if event == "PRE_SCRIPT_STARTED":
@@ -1842,14 +1913,14 @@ def add(wf, jobid, event, condor_id=None, status=None):
 	if my_time is not None:
 	    my_time = my_time * 60
             logger.info("job %s requests %d s walltime" % (jobid, my_time))
-	    walltime[jobid] = my_time
+	    wf._walltime[jobid] = my_time
 	else:
             logger.info("job %s does not request a walltime" % (jobid))
 
 	# Remember the run-site
 	if my_site is not None:
             logger.info("job %s is planned for site %s" % (jobid, my_site))
-	    job_site[jobid] = my_site
+	    wf._job_site[jobid] = my_site
 	else:
             logger.info("job %s does not have a site information!" % (jobid))
 
@@ -1875,32 +1946,32 @@ def add(wf, jobid, event, condor_id=None, status=None):
 
     # Remember when we changed into a pending state
     if event in pending_job_events:
-	if not jobid in pending:
+	if not jobid in wf._pending:
 	    # Remember when -- and which Condor ID
-	    pending[jobid] = [wf._current_timestamp, condor_id, my_time, my_site]
+	    wf._pending[jobid] = [wf._current_timestamp, condor_id, my_time, my_site]
 	else:
             logger.info("%s remains a pending event for %s" % (event, jobid))
     else:
 	# Remember time spent in pending, if previous state was pending
 	if jobid in jobstate:
-	    if jobstate[jobid][1] in pending_job_events and jobid in pending:
-		aggregate(my_site, wf_current_timestamp, pending[jobid])
+	    if jobstate[jobid][1] in pending_job_events and jobid in wf._pending:
+		aggregate(my_site, wf_current_timestamp, wf._pending[jobid])
 
 	# Remove when transitioning into any other state
-	if jobid in pending:
-	    del pending[jobid]
+	if jobid in wf._pending:
+	    del wf._pending[jobid]
 
     # Remember when we changed into a running state
     if event in running_job_events:
-	if not jobid in running:
+	if not jobid in wf._running:
 	    # Remember when -- and which Condor ID
-	    running[jobid] = [wf._current_timestamp, condor_id, my_time, my_site]
+	    wf._running[jobid] = [wf._current_timestamp, condor_id, my_time, my_site]
 	else:
             logger.info("%s remains a running event for %s" % (event, jobid))
     else:
 	# Remove when transitioning into any other state
-	if jobid in running:
-	    del running[jobid]
+	if jobid in wf._running:
+	    del wf._running[jobid]
 
     # NEW: maintain site statistics
     if my_site is not None:
@@ -1999,7 +2070,15 @@ def process(wf, log_line):
 	    # Found Event
 	    my_expr = re_parse_event.search(log_line)
 	    # groups = jobid, event, condor_id
-	    add(wf, my_expr.group(2), my_expr.group(1), condor_id=my_expr.group(3))
+            my_event = my_expr.group(1)
+            my_jobid = my_expr.group(2)
+            my_condor_id = my_expr.group(3)
+	    add(wf, my_jobid, my_event, condor_id=my_condor_id)
+            if my_event == "SUBMIT":
+                # For SUBMIT ULOG events, check if this is a sub-workflow
+                my_new_dagman_out = wf.has_subworkflow(my_jobid)
+                # Ok, return result to main loop
+                return my_new_dagman_out
         elif re_parse_job_submit.search(log_line) is not None:
             # Found job submit event
             my_expr = re_parse_job_submit.search(log_line)
@@ -2016,7 +2095,9 @@ def process(wf, log_line):
 	    # Starting of scripts is not a regular Condor event
 	    my_expr = re_parse_script_running.search(log_line)
 	    # groups = script, jobid
-	    add(wf, my_expr.group(2), "%s_SCRIPT_STARTED" % (my_expr.group(1).upper()))
+	    my_script = my_expr.group(1).upper()
+	    my_jobid = my_expr.group(2)
+	    add(wf, my_jobid, "%s_SCRIPT_STARTED" % (my_script))
 	elif re_parse_script_done.search(log_line) is not None:
 	    my_expr = re_parse_script_done.search(log_line)
 	    # groups = script, jobid
@@ -2065,16 +2146,15 @@ def process(wf, log_line):
 	    my_expr = re_parse_dagman_finished.search(log_line)
 	    # groups = exit code
 	    try:
-		wf._terminate = int(my_expr.group(1))
+		wf._dagman_exit_code = int(my_expr.group(1))
 	    except:
 		# Cannot convert exit code to integer!
 		logger.warning("cannot convert DAGMan's exit code to integer!")
-		wf._terminate = 0
-	    logger.info("DAGMan finished with exit code %s" % (wf._terminate))
+		wf._dagman_exit_code = 0
+                wf._monitord_exit_code = 1
+	    logger.info("DAGMan finished with exit code %s" % (wf._dagman_exit_code))
 	    # Send info to database
 	    wf.change_wf_state("end")
-            # Save all state to disk so that we can start again later
-            wf.write_workflow_state()
         elif re_parse_dagman_condor_id.search(log_line) is not None:
             # DAGMan starting, capture its condor id
             my_expr = re_parse_dagman_condor_id.search(log_line)
@@ -2530,7 +2610,7 @@ def sleepy(retries, server=None):
 def sleeptime(retries):
     # purpose: compute suggested sleep time as a function of retries
     # paramtr: $retries (IN): number of retries so far
-    # returns: recommended sleep time
+    # returns: recommended sleep time in seconds
     if retries < 5:
 	my_y = 1
     elif retries < 50:
@@ -2547,9 +2627,15 @@ def prog_sighup_handler(signum, frame):
 
 def prog_sigint_handler(signum, frame):
     logger.info("graceful exit on signal %d" % (signum))
-    # Close output files
-    if wf is not None:
-        wf.end_workflow()
+    # Go through all workflows we are tracking
+    for my_wf in wfs:
+        if my_wf.wf is not None:
+            # Update monitord exit code
+            if my_wf.wf._monitord_exit_code == 0:
+                my_wf.wf._monitord_exit_code = 1
+            # Close open files
+            my_wf.wf.end_workflow()
+    # All done!
     sys.exit(1)
 
 def prog_sigusr1_handler(signum, frame):
@@ -2630,9 +2716,6 @@ logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
 if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
 
-# Instantiate workflow class
-wf = Workflow(run, out, config, database=workdb)
-
 # Ignore dying shells
 signal.signal(signal.SIGHUP, prog_sighup_handler)
 
@@ -2681,141 +2764,239 @@ if "GLOBUS_LOCATION" in os.environ:
 else:
     logger.info("env: GLOBUS_LOCATION=")
 
-# Now we wait for the .out file to appear
-f_stat = None
-n_retries = 0
+# Ok! Let's start now...
 
-# Test if dagman.out file is there in case we are running in replay_mode
-if replay_mode:
-    try:
-	f_stat = os.stat(out)
-    except:
-	logger.critical("error: workflow not started, %s does not exist, exiting..." % (out))
-        sys.exit(1)
+# Instantiate workflow class
+wf = Workflow(run, out, config, database=workdb)
+# If everything went well, create a workflow entry for this workflow
+if wf._monitord_exit_code == 0:
+    workflow_entry = WorkflowEntry()
+    workflow_entry.run_dir = run
+    workflow_entry.dagman_out = out
+    workflow_entry.wf = wf
 
-# Start looking for the file
-while True:
-    try:
-	f_stat = os.stat(out)
-    except OSError, e:
-	if errno.errorcode[e.errno] == 'ENOENT':
-	    # File doesn't exist yet, keep looking
-	    n_retries = n_retries + 1
-	    if n_retries > 100:
-		# We tried too long, just exit
-		logger.critical("%s never made an appearance" % (out))
-                sys.exit(42)
-	    # Continue waiting
-	    logger.info("waiting for out file, retry %d" % ( n_retries))
-	    sleepy(n_retries, server)
-	else:
-	    # Another error
-	    logger.critical("stat %s" % (out))
-            sys.exit(42)
-    except:
-	logger.critical("stat %s" % (out))
-        sys.exit(42)
-    else:
-	# Found file!
-	break
-
-# post condition: stat is a valid stat record from the dagman.out file
-
-# open dagman.out file
-try:
-    DMOF = open(out, "r")
-except:
-    logger.critical("opening %s" % (out))
-    sys.exit(42)
+    # And add it to our list of workflows
+    wfs.append(workflow_entry)
 
 #
-# --- main loop --------------------------------------------------------------------------
+# --- main loop begin --------------------------------------------------------------------
 #
 
-ml_buffer = ''
-ml_rbuffer = ''
-ml_retries = 0
-ml_current = 0
-ml_pos = 0
+# Loop while we have workflows to follow...
+while (len(wfs) > 0):
+    # Go through each of our workflows
+    for workflow_entry in wfs:
 
-while True:
-    # Say Hello
-    logger.debug("wake up and smell the silicon")
+        # Check if we are waiting for the dagman.out file to appear...
+        if workflow_entry.DMOF is None:
+
+            # Yes... check if it has shown up...
+
+            # First, we test if the file is already there, in case we are running in replay mode
+            if replay_mode:
+                try:
+                    f_stat = os.stat(workflow_entry.dagman_out)
+                except:
+                    logger.critical("error: workflow not started, %s does not exist, dropping this workflow..." % (workflow_entry.dagman_out))
+                    workflow_entry.delete_workflow = True
+                    # Go to the next workflow_entry in the for loop
+                    continue
+
+            try:
+                f_stat = os.stat(workflow_entry.dagman_out)
+            except OSError, e:
+                if errno.errorcode[e.errno] == 'ENOENT':
+                    # File doesn't exist yet, keep looking
+                    workflow_entry.n_retries = workflow_entry.n_retries + 1
+                    if workflow_entry.n_retries > 100:
+                        # We tried too long, just exit
+                        logger.critical("%s never made an appearance" % (workflow_entry.dagman_out))
+                        workflow_entry.delete_workflow = True
+                        # Go to the next workflow_entry in the for loop
+                        continue
+                    # Continue waiting
+                    logger.info("waiting for dagman.out file, retry %d" % (workflow_entry.n_retries))
+                    workflow_entry.sleep_time = time.time() + sleeptime(workflow_entry.n_retries)
+                else:
+                    # Another error
+                    logger.critical("stat %s" % (workflow_entry.dagman.out))
+                    workflow_entry.delete_workflow = True
+                    # Go to the next workflow_entry in the for loop
+                    continue
+            except:
+                # Another exception
+                logger.critical("stat %s" % (workflow_entry.dagman.out))
+                workflow_entry.delete_workflow = True
+                # Go to the next workflow_entry in the for loop
+                continue
+            else:
+                # Found it, open dagman.out file
+                try:
+                    workflow_entry.DMOF = open(workflow_entry.dagman_out, "r")
+                except:
+                    logger.critical("opening %s" % (workflow_entry.dagman_out))
+                    workflow_entry.delete_workflow = True
+                    # Go to the next workflow_entry in the for loop
+                    continue
+        if workflow_entry.DMOF is not None:
+
+            # Say Hello
+            logger.debug("wake up and smell the silicon")
+
+            try:
+                f_stat = os.stat(workflow_entry.dagman_out)
+            except:
+                # stat error
+                logger.critical("stat %s" % (workflow_entry.dagman_out))
+                workflow_entry.delete_workflow = True
+                # Go to the next workflow_entry in the for loop
+                continue
+
+            # f_stat[6] is the file size
+            if f_stat[6] == workflow_entry.ml_current:
+                # Death by natural causes
+                if workflow_entry.wf._dagman_exit_code is not None:
+                    logger.info("workflow %s ended" % (workflow_entry.dagman_out))
+                    workflow_entry.delete_workflow = True
+                    # Go to the next workflow_entry in the for loop
+                    continue
+
+                # Check if DAGMan is alive -- if we know where it lives
+                if workflow_entry.ml_retries > 10 and workflow_entry.wf._dagman_pid > 0:
+                    # Just send signal 0 to check if the pid is ours
+                    try:
+                        os.kill(int(workflow_entry.wf._dagman_pid), 0)
+                    except:
+                        logger.critical("DAGMan is gone! Sudden death syndrome detected!")
+                        workflow_entry.wf._monitord_exit_code = 42
+                        workflow_entry.delete_workflow = True
+                        # Go to the next workflow_entry in the for loop
+                        continue
+
+                # No change, wait a while
+                workflow_entry.ml_retries = workflow_entry.ml_retries + 1
+                if workflow_entry.ml_retries > 17280:
+                    # Too long without change
+                    logger.critical("too long without action, stopping workflow %s" % (workflow_entry.dagman_out))
+                    workflow_entry.delete_workflow = True
+                    # Go to the next workflow_entry in the for loop
+                    continue
+
+            elif f_stat[6] < workflow_entry.ml_current:
+                # Truncated file, booh!
+                logger.critical("%s file truncated, time to exit" % (workflow_entry.dagman_out))
+                workflow_entry.delete_workflow = True
+                # Go to the next workflow_entry in the for loop
+                continue
+
+            elif f_stat[6] > workflow_entry.ml_current:
+                # We have something to read!
+                try:
+                    ml_rbuffer = workflow_entry.DMOF.read(32768)
+                except:
+                    # Error while reading
+                    logger.critical("while reading %s" % (workflow_entry.dagman_out))
+                    workflow_entry.wf._monitord_exit_code = 42
+                    workflow_entry.delete_workflow = True
+                    # Go to the next workflow_entry in the for loop
+                    continue
+                if len(ml_rbuffer) == 0:
+                    # Detected EOF
+                    logger.critical("detected EOF, resetting position to %d" % (workflow_entry.ml_current))
+                    workflow_entry.DMOF.seek(workflow_entry.ml_current)
+                else:
+                    # Something in the read buffer, merge it with our buffer
+                    workflow_entry.ml_buffer = workflow_entry.ml_buffer + ml_rbuffer
+                    # Look for end of line
+                    ml_pos = workflow_entry.ml_buffer.find('\n')
+                    while (ml_pos >= 0):
+                        # Take out 1 line, and adjust buffer
+                        new_dagman_out = process(workflow_entry.wf, workflow_entry.ml_buffer[0:ml_pos])
+                        workflow_entry.ml_buffer = workflow_entry.ml_buffer[ml_pos+1:]
+                        ml_pos = workflow_entry.ml_buffer.find('\n')
+
+                        # Do we need to start following another workflow?
+                        if new_dagman_out is not None:
+                            # Only if we are not already tracking it...
+                            tracking_already = False
+                            for my_wf in wfs:
+                                if my_wf.dagman_out == new_dagman_out and not my_wf.delete_workflow:
+                                    # Found it, exit loop
+                                    tracking_already = True
+                                    break
+                            if not tracking_already:
+                                # Not tracking this workflow, let's try to add it to our list
+                                new_dagman_out = os.path.abspath(new_dagman_out)
+                                # Add the current run directory in case this is a relative path
+                                new_dagman_out = os.path.join(workflow_entry.run_dir, new_dagman_out)
+                                new_run_dir = os.path.dirname(new_dagman_out)
+                                parent_wf_id = workflow_entry.wf._wf_uuid
+                                new_wf = Workflow(new_run_dir, new_dagman_out, config, database=workdb, parent_id = parent_wf_id)
+
+                                if new_wf._monitord_exit_code == 0:
+                                    new_workflow_entry = WorkflowEntry()
+                                    new_workflow_entry.run_dir = new_run_dir
+                                    new_workflow_entry.dagman_out = new_dagman_out
+                                    new_workflow_entry.wf = new_wf
+
+                                    # And add it to our list of workflows
+                                    wfs.append(new_workflow_entry)
+
+                        if millisleep is not None:
+                            if server is not None:
+                                check_request(server, millisleep / 1000.0)
+                            else:
+                                time.sleep(millisleep / 1000.0)
+
+                    ml_pos = workflow_entry.DMOF.tell()
+                    logger.info("processed chunk of %d byte" % (ml_pos - workflow_entry.ml_current -len(workflow_entry.ml_buffer)))
+                    workflow_entry.ml_current = ml_pos
+                    workflow_entry.ml_retries = 0
+
+            workflow_entry.sleep_time = time.time() + sleeptime(workflow_entry.ml_retries)
+    
+    # Go through the workflows again, and finish any marked ones
+    wf_index = 0
+    while wf_index < len(wfs):
+        workflow_entry = wfs[wf_index]
+        if workflow_entry.delete_workflow == True:
+            # Close dagman.out file, if any
+            if workflow_entry.DMOF is not None:
+                workflow_entry.DMOF.close()
+            # Close jobstate.log, if any
+            if workflow_entry.wf is not None:
+                workflow_entry.wf.end_workflow()
+            # Delete this workflow from our list
+            deleted_entry = wfs.pop(wf_index)
+            # Don't move index to next one
+        else:
+            # Mode index to next workflow
+            wf_index = wf_index + 1
+
+    # Skip sleeping, if we have no more workflow to track...
+    if len(wfs) == 0:
+        continue
 
     # Periodically check for service requests
     if server is not None:
-	check_request(server)
+        check_request(server)
 
-    try:
-	f_stat = os.stat(out)
-    except:
-	# stat error
-	logger.critical("stat %s" % (out))
-        sys.exit(42)
+    # All done... let's figure out how long to sleep...
+    time_to_sleep = time.time() + MAX_SLEEP_TIME
+    for workflow_entry in wfs:
+        # Figure out if we have anything more urgent to do
+        if workflow_entry.sleep_time < time_to_sleep:
+            time_to_sleep = workflow_entry.sleep_time
 
-    # f_stat[6] is the file size
-    if f_stat[6] == ml_current:
-	# Death by natural causes
-	if wf._terminate is not None:
-	    break
+    # Sleep
+    time_to_sleep = time_to_sleep - time.time()
+    if time_to_sleep < 0:
+        time_to_sleep = 0
+    time.sleep(time_to_sleep)
 
-	# Check if DAGMan is alive -- if we know where it lives
-	if ml_retries > 10 and wf._dagman_pid > 0:
-	    # Just send signal 0 to check if the pid is ours
-	    try:
-		os.kill(int(wf._dagman_pid), 0)
-	    except:
-		logger.critical("DAGMan is gone! Sudden death syndrome detected!")
-		wf._terminate = 42
-		break
-	
-	# No change, wait a while
-	ml_retries = ml_retries + 1
-	if ml_retries > 17280:
-	    # Too long without change
-	    logger.critical("too long without action, self-destructing")
-	    break
-
-	sleepy(ml_retries, server)
-    elif f_stat[6] < ml_current:
-	# Truncated file, booh!
-	logger.critical("file truncated, time to exit")
-	break
-    elif f_stat[6] > ml_current:
-	# We have something to read!
-	try:
-	    ml_rbuffer = DMOF.read(32768)
-	except:
-	    # Error while reading
-	    logger.critical("while reading")
-            sys.exit(42)
-	if len(ml_rbuffer) == 0:
-	    # Detected EOF
-	    logger.critical("detected EOF, resetting position to %d" % (ml_current))
-	    DMOF.seek(ml_current)
-	else:
-	    # Something in the read buffer, merge it with our buffer
-	    ml_buffer = ml_buffer + ml_rbuffer
-	    # Look for end of line
-	    ml_pos = ml_buffer.find('\n')
-	    while (ml_pos >= 0):
-		# Take out 1 line, and adjust buffer
-		process(wf, ml_buffer[0:ml_pos])
-		ml_buffer = ml_buffer[ml_pos+1:]
-		ml_pos = ml_buffer.find('\n')
-
-		if millisleep is not None:
-		    if server is not None:
-			check_request(server, millisleep / 1000.0)
-		    else:
-			time.sleep(millisleep / 1000.0)
-
-	    ml_pos = DMOF.tell()
-	    logger.info("processed chunk of %d byte" % (ml_pos - ml_current -len(ml_buffer)))
-	    ml_current = ml_pos
-	    ml_retries = 0
-
-DMOF.close()
+#
+# --- main loop end -----------------------------------------------------------------------
+#
 
 if not replay_mode:
     # Finish trailing connection requests
@@ -2838,9 +3019,6 @@ if not replay_mode:
 	service_request_site(SI)
 	SI.close()
     
-# Finish, and close output file
-wf.end_workflow()
-
 # Try to run the hurricane graphics
 if doplot:
     pass
@@ -2848,6 +3026,6 @@ else:
     logger.info("skipping plots")
 
 # done
-logger.info("finishing, exit with %d" % (wf._terminate))
-sys.exit(wf._terminate)
+logger.info("finishing, exit with 0")
+sys.exit(0)
 

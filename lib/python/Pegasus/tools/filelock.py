@@ -51,12 +51,10 @@ class Intent:
     locks.
     """
 
-    m_filename = None
-    m_pid = None
-    m_count = {}
-
     def __init__(self):
+        self.m_filename = None
 	self.m_pid = os.getpid()
+        self.m_count = {}
 
     def new(self, fn):
 	"""

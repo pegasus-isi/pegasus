@@ -198,12 +198,10 @@ def parse_properties(fn, hashref={}):
 
 class Properties:
 
-    m_config = {}
-    m_flags = None
-
     def __init__(self):
-	# Nothing to do here
-	pass
+        # Initialize class variables
+        self.m_config = {}
+        self.m_flags = None
 
     def new(self, flags=PARSE_ALL, hashref=None):
 	"""
