@@ -4,12 +4,15 @@
   <description>Manages Pegasus</description>
   <property name="build.src" location="build/classes"/>
   <property environment="env"/>
-  <property name="pegasus.home" value="${env.PEGASUS_HOME}"/>
-
+  <property name="pegasus.home" location="${basedir}"/>
+  <path id="build.classpath">
+    <fileset dir="lib" includes="*.jar"/>
+  </path>
+  
   <target name="getsystem"
           description="Obtains the system information and architecture"
           unless="dist.arch">
-    <exec executable="${env.PEGASUS_HOME}/release-tools/getsystem/getsystem"
+    <exec executable="${pegasus.home}/release-tools/getsystem/getsystem"
           outputproperty="dist.arch"
           failonerror="true"/>
     <echo>Architecture ${dist.arch}</echo>
@@ -40,9 +43,9 @@
 
 
   <target name="checkjava" depends="init">
-  <property name="build.source" value="${ant.java.version}"/>
-  <property name="build.target" value="${ant.java.version}"/>   
-<!--  <condition property="build.target" value="${build.target}" else="1.5">
+     <property name="build.source" value="${ant.java.version}"/>
+     <property name="build.target" value="${ant.java.version}"/>   
+<!-- <condition property="build.target" value="${build.target}" else="1.5">
         <os arch="ia64"/>
      </condition> -->
      <echo>JAVA TARGET is ${build.target}</echo>
@@ -71,53 +74,59 @@
   <target name="commonversion" depends="checkjava"
 	  description="Compiles the code common to both, Chimera and Pegasus">
     <javac destdir="${build.src}" srcdir="src" 
-	   encoding="UTF-8" debug="true"
+           encoding="UTF-8" debug="true"
            target="${build.target}" source="${build.source}"
-	   includes="src/edu/isi/pegasus/common/util/Version.java,*.java"
-	   excludes="org/griphyn/common/**/*Test.java,*Test.java"/>
+           includes="src/edu/isi/pegasus/common/util/Version.java,*.java"
+           excludes="org/griphyn/common/**/*Test.java,*Test.java"
+           classpathref="build.classpath"/>
   </target>
 
   <target name="common" depends="checkjava"
 	  description="Compiles the code common to both, Chimera and Pegasus">
     <javac destdir="${build.src}" srcdir="src" 
-	   encoding="UTF-8" deprecation="true" debug="true"
+           encoding="UTF-8" deprecation="true" debug="true"
            target="${build.target}" source="${build.source}"
-	   includes="org/griphyn/common/**/*.java"
-	   excludes="org/griphyn/common/**/*Test.java"/>
+           includes="org/griphyn/common/**/*.java"
+           excludes="org/griphyn/common/**/*Test.java"
+           classpathref="build.classpath"/>
   </target>
 
   <target name="chimera" depends="checkjava"
 	  description="Compiles the abstract planner Chimera">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
-	   encoding="UTF-8" debug="true"
-	   includes="org/griphyn/vdl/*.java,org/griphyn/vdl/**/*.java"
-           excludes="org/griphyn/vdl/*Test.java,org/griphyn/vdl/**/*Test.java"/>
+           encoding="UTF-8" debug="true"
+           includes="org/griphyn/vdl/*.java,org/griphyn/vdl/**/*.java"
+           excludes="org/griphyn/vdl/*Test.java,org/griphyn/vdl/**/*Test.java"
+           classpathref="build.classpath"/>
   </target>
 
   <target name="pegasus" depends="checkjava"
 	  description="Compiles the concrete planner Pegasus">
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
-	   encoding="UTF-8" debug="true"
-	   includes="org/griphyn/cPlanner/**/*.java,edu/isi/pegasus/planner/**/*.java"
-	   excludes="org/griphyn/cPlanner/**/*Test.java,edu/isi/pegasus/planner/**/*.java"/>
+           encoding="UTF-8" debug="true"
+           includes="org/griphyn/cPlanner/**/*.java,edu/isi/pegasus/planner/**/*.java"
+           excludes="org/griphyn/cPlanner/**/*Test.java,edu/isi/pegasus/planner/**/*.java"
+           classpathref="build.classpath"/>
   </target>
 
   <target name="compile" depends="checkjava"
 	  description="Compiles all sources, including tests">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
-	   encoding="UTF-8" debug="true"
-	   includes="*.java,edu/**/*.java,examples/**/*.java,org/**/*.java"/>
+           encoding="UTF-8" debug="true"
+           includes="*.java,edu/**/*.java,examples/**/*.java,org/**/*.java"
+           classpathref="build.classpath"/>
   </target>
 
   <target name="deprecation" depends="checkjava"
 	  description="compiles everything with deprecation flag">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
-	   encoding="UTF-8" deprecation="true" debug="true"
-	   includes="*.java,org/**/*.java"/>
+           encoding="UTF-8" deprecation="true" debug="true"
+           includes="*.java,org/**/*.java"
+           classpathref="build.classpath"/>
   </target>
 
   <target name="jar" depends="compile,version"
@@ -174,6 +183,7 @@
     <exec executable="${pegasus.home}/libexec/assemble-sample-props"
 	  failonerror="true">
       <arg file="${dist.doc}/properties.pdf"/>
+      <env key="PEGASUS_HOME" value="${pegasus.home}"/>
     </exec>
   </target>
 
@@ -203,7 +213,8 @@
 	     Use="true"
              Version="true"
              Private="true"
-             Windowtitle="PEGASUS">
+             Windowtitle="PEGASUS"
+             classpathref="build.classpath">
       <packageset dir="src">
         <include name="org/griphyn/common/**"/>
         <include name="org/griphyn/vdl/**"/>
