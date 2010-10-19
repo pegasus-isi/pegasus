@@ -16,15 +16,28 @@
 package edu.isi.pegasus.planner.dax;
 
 /**
+ * DAG Class to hold the DAG job object.
  *
- * @author gmehta
+ * @see AbstractJob
+ * @author Gaurang Mehta gmehta at isi dot edu
  */
 public class DAG extends AbstractJob {
 
+    /**
+     * Create a DAG object
+     * @param id The unique id of the DAG job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
+     * @param dagname The dag file to submit
+     */
     public DAG(String id, String dagname) {
         this(id, dagname, null);
     }
 
+    /**
+     * Create a DAG object
+     * @param id The unique id of the DAG job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
+     * @param dagname The dag file to submit
+     * @param label The label for this job.
+     */
     public DAG(String id, String dagname, String label) {
         super();
         checkID(id);
