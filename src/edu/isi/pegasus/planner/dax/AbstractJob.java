@@ -76,16 +76,7 @@ public class AbstractJob {
         return this;
     }
 
-//    public Profiles addProfile(String namespace, String key, String value) {
-//        mProfiles.addProfileDirectly(namespace, key, value);
-//        return mProfiles;
-//
-//    }
-//
-//        public Profiles addProfile(Profiles.NAMESPACES namespace, String key, String value) {
-//        mProfiles.addProfileDirectly(namespace, key, value);
-//        return mProfiles;
-//    }
+
     public AbstractJob addProfile(String namespace, String key, String value) {
         mProfiles.add(new Profile(namespace, key, value));
         return this;

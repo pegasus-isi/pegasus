@@ -123,6 +123,5 @@ public class CatalogType {
         for (PFN f : mPFNs) {
             f.toXML(writer, indent + 1);
         }
-
     }
 }

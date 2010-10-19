@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
@@ -40,6 +42,7 @@ public class Executable extends CatalogType {
     protected String mOsRelease;
     protected String mOsVersion;
     protected String mGlibc;
+    private LogManager mLogger;
 
     public Executable(String name) {
         this("", name, "");
@@ -49,6 +52,7 @@ public class Executable extends CatalogType {
         mNamespace = (namespace == null) ? "" : namespace;
         mName = (name == null) ? "" : name;
         mVersion = (version == null) ? "" : null;
+        mLogger = LogManagerFactory.loadSingletonInstance();
 
     }
 
@@ -116,34 +120,34 @@ public class Executable extends CatalogType {
     @Override
     public void toXML(XMLWriter writer, int indent) {
         if (mProfiles.isEmpty() || mPFNs.isEmpty() || mMetadata.isEmpty()) {
-            throw new RuntimeException("The file element for file " + mName + " must have atleast 1 profile or 1 pfn or 1 metadata entry");
+            mLogger.log("The file element for file " + mName + " must have atleast 1 pfn or 1 metadata entry. Skipping empty file element", LogManager.WARNING_MESSAGE_LEVEL);
+        } else {
+            writer.startElement("executable", indent);
+            if (mNamespace != null && !mNamespace.isEmpty()) {
+                writer.writeAttribute("namespace", mNamespace);
+            }
+            writer.writeAttribute("name", mName);
+            if (mVersion != null && !mVersion.isEmpty()) {
+                writer.writeAttribute("version", mVersion);
+            }
+            if (mArch != ARCH.x86) {
+                writer.writeAttribute("arch", mArch.toString().toLowerCase());
+            }
+            if (mOs != OS.LINUX) {
+                writer.writeAttribute("os", mOs.toString().toLowerCase());
+            }
+            if (mOsRelease != null && !mOsRelease.isEmpty()) {
+                writer.writeAttribute("osrelease", mOsRelease);
+            }
+            if (mOsVersion != null && !mOsVersion.isEmpty()) {
+                writer.writeAttribute("osversion", mOsVersion);
+            }
+            if (mGlibc != null && !mGlibc.isEmpty()) {
+                writer.writeAttribute("glibc", mGlibc);
+            }
+            super.toXML(writer, indent);
+            writer.endElement(indent);
         }
-        writer.startElement("executable", indent);
-        if (mNamespace != null && !mNamespace.isEmpty()) {
-            writer.writeAttribute("namespace", mNamespace);
-        }
-        writer.writeAttribute("name", mName);
-        if (mVersion != null && !mVersion.isEmpty()) {
-            writer.writeAttribute("version", mVersion);
-        }
-        if (mArch != ARCH.x86) {
-            writer.writeAttribute("arch", mArch.toString().toLowerCase());
-        }
-        if (mOs != OS.LINUX) {
-            writer.writeAttribute("os", mOs.toString().toLowerCase());
-        }
-        if (mOsRelease != null && !mOsRelease.isEmpty()) {
-            writer.writeAttribute("osrelease", mOsRelease);
-        }
-        if (mOsVersion != null && !mOsVersion.isEmpty()) {
-            writer.writeAttribute("osversion", mOsVersion);
-        }
-        if (mGlibc != null && !mGlibc.isEmpty()) {
-            writer.writeAttribute("glibc", mGlibc);
-        }
-        super.toXML(writer, indent);
-        writer.endElement(indent);
-
 
     }
 }

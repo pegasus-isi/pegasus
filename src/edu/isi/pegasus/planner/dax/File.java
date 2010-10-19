@@ -13,9 +13,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package edu.isi.pegasus.planner.dax;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
@@ -41,15 +42,17 @@ public class File extends CatalogType {
     protected boolean mRegister = true;
     protected TRANSFER mTransfer = TRANSFER.TRUE;
     protected boolean mExecutable = false;
+    private LogManager mLogger;
 
-
-    public File(File f){
-        this(f.getNamespace(),f.getName(),f.getVersion(),f.getLink());
-        this.mOptional=f.getOptional();
-        this.mRegister=f.getRegister();
-        this.mTransfer=f.getTransfer();
-        this.mExecutable=f.getOptional();
+    public File(File f) {
+        this(f.getNamespace(), f.getName(), f.getVersion(), f.getLink());
+        this.mOptional = f.getOptional();
+        this.mRegister = f.getRegister();
+        this.mTransfer = f.getTransfer();
+        this.mExecutable = f.getOptional();
+        this.mLogger = LogManagerFactory.loadSingletonInstance();
     }
+
     public File(String name) {
         mName = name;
     }
@@ -122,12 +125,12 @@ public class File extends CatalogType {
         return mTransfer;
     }
 
-    public File clone(){
-        File f= new File(mNamespace,mName,mVersion,mLink);
-        this.mOptional=f.getOptional();
-        this.mRegister=f.getRegister();
-        this.mTransfer=f.getTransfer();
-        this.mExecutable=f.getOptional();
+    public File clone() {
+        File f = new File(mNamespace, mName, mVersion, mLink);
+        this.mOptional = f.getOptional();
+        this.mRegister = f.getRegister();
+        this.mTransfer = f.getTransfer();
+        this.mExecutable = f.getOptional();
         return f;
     }
 
@@ -189,8 +192,8 @@ public class File extends CatalogType {
             writer.endElement();
         } else if (elementname.equalsIgnoreCase("file")) {
             //Used by the file element at the top of the dax
-            if(mPFNs.isEmpty() || mMetadata.isEmpty()){
-                throw new RuntimeException("The file element for file "+mName+" must have atleast 1 pfn or 1 metadata entry");
+            if (mPFNs.isEmpty() || mMetadata.isEmpty()) {
+                mLogger.log("The file element for file " + mName + " must have atleast 1 pfn or 1 metadata entry. Skipping empty file element",LogManager.WARNING_MESSAGE_LEVEL);
             } else {
                 writer.startElement("file", indent);
                 writer.writeAttribute("name", mName);
@@ -199,8 +202,8 @@ public class File extends CatalogType {
                 super.toXML(writer, indent);
 
                 writer.endElement(indent);
-                }
             }
+        }
 
     }
 }
