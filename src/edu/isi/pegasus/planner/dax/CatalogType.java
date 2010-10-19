@@ -84,31 +84,7 @@ public class CatalogType {
         return Collections.unmodifiableList(mMetadata);
     }
 
-    /**
-    public CatalogType addProfile(String namespace, String key, String value){
-    mProfiles.addProfileDirectly(namespace, key, value);
-    return this;
-    }
 
-    public CatalogType addProfile(Profiles.NAMESPACES namespace, String key, String value){
-    mProfiles.addProfileDirectly(namespace,key,value);
-    return this;
-    }
-
-    public CatalogType addProfiles(List<Profile> profiles){
-    mProfiles.addProfilesDirectly(profiles);
-    return this;
-    }
-
-    public CatalogType addProfiles(Profiles profiles){
-    mProfiles.addProfilesDirectly(profiles);
-    return this;
-    }
-
-    public Profiles getProfiles(){
-    return mProfiles;
-    }
-     **/
     public CatalogType addProfile(String namespace, String key, String value) {
         mProfiles.add(new Profile(namespace, key, value));
         return this;

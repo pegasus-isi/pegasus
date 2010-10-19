@@ -189,16 +189,18 @@ public class File extends CatalogType {
             writer.endElement();
         } else if (elementname.equalsIgnoreCase("file")) {
             //Used by the file element at the top of the dax
-            writer.startElement("file", indent);
-            writer.writeAttribute("name", mName);
-            if (mLink != null) {
-                writer.writeAttribute("link", mLink.toString().toLowerCase());
-            }
-            //call CatalogType's writer method to generate the profile, metadata and pfn elements
-            super.toXML(writer, indent);
+            if(mPFNs.isEmpty() || mMetadata.isEmpty()){
+                throw new RuntimeException("The file element for file "+mName+" must have atleast 1 pfn or 1 metadata entry");
+            } else {
+                writer.startElement("file", indent);
+                writer.writeAttribute("name", mName);
 
-            writer.endElement(indent);
-        }
+                //call CatalogType's writer method to generate the profile, metadata and pfn elements
+                super.toXML(writer, indent);
+
+                writer.endElement(indent);
+                }
+            }
 
     }
 }

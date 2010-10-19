@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.util.XMLWriter;
@@ -116,6 +115,9 @@ public class Executable extends CatalogType {
 
     @Override
     public void toXML(XMLWriter writer, int indent) {
+        if (mProfiles.isEmpty() || mPFNs.isEmpty() || mMetadata.isEmpty()) {
+            throw new RuntimeException("The file element for file " + mName + " must have atleast 1 profile or 1 pfn or 1 metadata entry");
+        }
         writer.startElement("executable", indent);
         if (mNamespace != null && !mNamespace.isEmpty()) {
             writer.writeAttribute("namespace", mNamespace);
@@ -141,6 +143,7 @@ public class Executable extends CatalogType {
         }
         super.toXML(writer, indent);
         writer.endElement(indent);
+
 
     }
 }
