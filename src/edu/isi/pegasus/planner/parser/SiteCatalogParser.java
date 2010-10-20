@@ -736,12 +736,11 @@ public class SiteCatalogParser extends StackBasedXMLParser {
                     }
                     return true;
                 }
-                else if ( child instanceof SiteStore ){
-                    //should never happen.
-                    //XML totally messed up
-                    mLogger.log( "sitecatalog element appears as child to " + parent,
-                                 LogManager.ERROR_MESSAGE_LEVEL );
-                    return false;
+                else if ( child instanceof SiteStore && parent == null){
+                    //end of parsing reached
+                    mLogger.log( "End of last element </sitecatalog> reached ",
+                                  LogManager.DEBUG_MESSAGE_LEVEL );
+                    return true;
                   
                 }
                 else{

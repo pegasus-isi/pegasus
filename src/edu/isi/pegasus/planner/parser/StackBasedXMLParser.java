@@ -198,21 +198,19 @@ public abstract class StackBasedXMLParser extends Parser {
             throw new SAXException( error );
         }
 
-        if ( ! mStack.empty() ) {
-            // add pieces to lower levels
-            ParserStackElement peek = ( ParserStackElement ) mStack.peek();
-            
-            if ( !setElementRelation( tos.getElementName(), peek.getElementObject(), tos.getElementObject() )){
-                    mLogger.log( "Element " + tos.getElementName() +
-                     		  " does not fit into element " + peek.getElementName(),
-                                  LogManager.DEBUG_MESSAGE_LEVEL );
-            }
-            
-        } else {
-          // run finalizer, if available
-          mLogger.log( "End of last element reached ",
-                        LogManager.DEBUG_MESSAGE_LEVEL );
+        // add pieces to lower levels
+        ParserStackElement peek = mStack.empty() ? null : (ParserStackElement) mStack.peek();
+
+        if (!setElementRelation( tos.getElementName(),
+                                 peek == null ? null : peek.getElementObject(),
+                                 tos.getElementObject())) {
+
+            String element = peek == null ? "root-element" : peek.getElementName();
+            mLogger.log( "Element " + tos.getElementName() +
+                         " does not fit into element " + element,
+                         LogManager.ERROR_MESSAGE_LEVEL );
         }
+            
         //reinitialize our cdata handler at end of each element
         mTextContent.setLength( 0 );    
   }
