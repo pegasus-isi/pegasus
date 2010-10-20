@@ -21,7 +21,6 @@ package edu.isi.pegasus.planner.parser;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 
 
@@ -52,7 +51,6 @@ import edu.isi.pegasus.planner.classes.ReplicaStore;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
-import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
@@ -65,6 +63,7 @@ import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.parser.dax.Callback;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -123,9 +122,13 @@ public class DAXParser3 extends StackBasedXMLParser {
     /**
      * List of parents for a child node in the graph
      */
-    private List<PCRelation> mParents;
+    protected List<PCRelation> mParents;
 
 
+    /**
+     * Handle to the callback
+     */
+    protected Callback mCallback;
     
     /**
      * The default Constructor.
@@ -160,7 +163,7 @@ public class DAXParser3 extends StackBasedXMLParser {
      */
     public DAXParser3(String daxFileName, PegasusBag bag, Callback callback) {
         this( bag );
-
+        this.mCallback = callback;
         try{
             this.testForFile(daxFileName);
         }
@@ -258,7 +261,7 @@ public class DAXParser3 extends StackBasedXMLParser {
                     }
 
                     //put the call to the callback
-
+                    this.mCallback.cbDocument( m );
                     return m;
                 }//end of element adag
                 else if( element.equals( "argument" ) ){
@@ -803,7 +806,7 @@ public class DAXParser3 extends StackBasedXMLParser {
     public  boolean setElementRelation( String childElement, Object parent, Object child ){
 
         switch ( childElement.charAt( 0 ) ) {
-            //a argument
+            //a argument adag
             case 'a':
                 if( child instanceof Arguments ){
                     Arguments a = (Arguments)child;
@@ -816,14 +819,23 @@ public class DAXParser3 extends StackBasedXMLParser {
                         return true;
                     }
                 }
+                else if( child instanceof Map && parent == null){
+                    //end of parsing reached
+                    mLogger.log( "End of last element </adag> reached ",
+                                  LogManager.DEBUG_MESSAGE_LEVEL );
+
+                    this.mCallback.cbDone();
+                    return true;
+                }
                 return false;
 
-            //c child compount
+            //c child compound
             case 'c':
                 if( parent instanceof Map ){
                     if( child instanceof PCRelation ){
                         PCRelation pc = (PCRelation)child;
                         //call the callback
+                        this.mCallback.cbParents( pc.getChild(), mParents);
                         return true;
                     }
                 }
@@ -863,6 +875,7 @@ public class DAXParser3 extends StackBasedXMLParser {
 
 
                         //call the callback function
+                        this.mCallback.cbJob(dagJob);
                         return true;
                     }
                     else if( child instanceof DAXJob ){
@@ -893,6 +906,7 @@ public class DAXParser3 extends StackBasedXMLParser {
                                   append( " --dax ").append( dax );
                         daxJob.setArguments( arguments.toString() );
                         //call the callback function
+                        this.mCallback.cbJob( daxJob );
                         return true;
                     }
                 }
@@ -946,6 +960,7 @@ public class DAXParser3 extends StackBasedXMLParser {
             case 'j':
                 if( child instanceof Job  && parent instanceof Map ){
                     //callback for Job
+                    this.mCallback.cbJob( (Job)child );
                     return true;
                 }
                 return false;
