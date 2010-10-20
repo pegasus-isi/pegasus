@@ -25,11 +25,15 @@ import java.io.IOException;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.XMLWriter;
 
 
 /**
- * DAX Generator for Pegasus. To generate an example DIAMOND DAX run the ADAG
+ * DAX Generator for Pegasus. The DAX SCHEMA is available at https://pegasus.isi.edu/wms/docs/
+ * To generate an example DIAMOND DAX run the ADAG
  * Class like this
  * java ADAG <filename>
  *
@@ -195,6 +199,9 @@ public class ADAG {
      */
     private XMLWriter mWriter;
 
+    private LogManager mLogger;
+
+
     /**
      * The Simple constructor for the DAX object
      * @param name DAX LABEL
@@ -219,6 +226,9 @@ public class ADAG {
         mExecutables = new LinkedList<Executable>();
         mFiles = new LinkedList<File>();
         mDependencies = new HashMap<String, List<Parent>>();
+        mLogger=LogManagerFactory.loadSingletonInstance();
+        mLogger.logEventStart( "event.dax.generate", "pegasus.version", Version.instance().toString() );
+
     }
 
     /**

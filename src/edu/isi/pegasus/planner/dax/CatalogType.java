@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Collections;
@@ -30,11 +32,13 @@ public class CatalogType {
     protected List<Profile> mProfiles;
     protected List<MetaData> mMetadata;
     protected List<PFN> mPFNs;
+    protected LogManager mLogger;
 
     protected CatalogType() {
         mProfiles = new LinkedList<Profile>();
         mMetadata = new LinkedList<MetaData>();
         mPFNs = new LinkedList<PFN>();
+        mLogger=LogManagerFactory.loadSingletonInstance();
 
     }
 
