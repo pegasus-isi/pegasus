@@ -17,9 +17,12 @@
 package edu.isi.pegasus.planner.parser.dax;
 
 
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 
 
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
@@ -111,5 +114,39 @@ public class ExampleDAXCallback implements Callback {
     public Object getConstructedObject(){
         //RETURN YOUR CONVERTED OBJECT HERE
         return new String( "Shallow Object" );
+    }
+
+    /**
+     * Callback when a compound transformation is encountered in the DAX
+     *
+     * @param compoundTransformation   the compound transforamtion
+     */
+    public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
+        System.out.println();
+        System.out.println( "CompoundTransformation ");
+        System.out.println( compoundTransformation );
+    }
+
+    /**
+     * Callback when a replica catalog entry is encountered in the DAX
+     *
+     * @param rl  the ReplicaLocation object
+     */
+    public void cbFile( ReplicaLocation rl ){
+        System.out.println();
+        System.out.println( "Replica Catalog Entry ");
+        System.out.println(  rl );
+    }
+
+    /**
+     * Callback when a transformation catalog entry is encountered in the DAX
+     *
+     * @param tce  the transformationc catalog entry object.
+     */
+    public void cbExecutable( TransformationCatalogEntry tce ){
+
+        System.out.println();
+        System.out.println( "TransformationCatalogEntry Entry ");
+        System.out.println(  tce );
     }
 }

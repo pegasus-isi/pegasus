@@ -168,7 +168,7 @@ public abstract class StackBasedXMLParser extends Parser {
                     "Unknown element in xml :" + namespaceURI + ":" +
                     localName + ":" + qName, LogManager.ERROR_MESSAGE_LEVEL );
             
-            throw new SAXException( "Unknown or Empty element while parsing" );
+            throw new SAXException( "Unknown or Empty element while parsing " );
         }
     }
 

@@ -161,7 +161,7 @@ public class DaxParser extends Parser {
     /**
      * The list of parents of a node referred to by mCurrentChildId.
      */
-    private List mParents;
+    private List<PCRelation> mParents;
 
 
     /**
@@ -1143,15 +1143,14 @@ public class DaxParser extends Parser {
      */
     private void handleParentTagStart(String local, Attributes attrs) {
         //stores the child parent Relation
-        PCRelation parentChildRelation = new PCRelation();
+        
 
-        String childName = new String();
-        String parentName = new String();
         String parentId = attrs.getValue("", "ref");
 
         //looking up the parent name
         //parentName = lookupName(parentId);
-        mParents.add(parentId);
+//        mParents.add(parentId);
+        mParents.add(  new PCRelation( parentId, this.mCurrentChildId ));
     }
 
     /**

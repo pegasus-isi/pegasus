@@ -106,19 +106,7 @@ public class DAXParser3 extends StackBasedXMLParser {
      */
     private String DEFAULT_METADATA_TYPE = "String";
 
-    /**
-     * Handle to the replica store that stores the replica catalog
-     * user specifies in the DAX
-     */
-    protected ReplicaStore mReplicaStore;
-
-
-    /**
-     * Handle to the transformation store that stores the transformation catalog
-     * user specifies in the DAX
-     */
-    protected TransformationStore mTransformationStore;
-
+    
     /**
      * List of parents for a child node in the graph
      */
@@ -129,18 +117,13 @@ public class DAXParser3 extends StackBasedXMLParser {
      * Handle to the callback
      */
     protected Callback mCallback;
-    
+
     /**
-     * The default Constructor.
-     * 
-     *
+     * A job prefix specifed at command line.
      */
-   /* public DAXParser3(  ) {
-       super();
-       this.mReplicaStore = new ReplicaStore();
-       this.mTransformationStore = new TransformationStore();
-    }*/
+    protected String mJobPrefix;
     
+   
     
     /**
      * The overloaded constructor.
@@ -149,8 +132,10 @@ public class DAXParser3 extends StackBasedXMLParser {
      */
     public DAXParser3( PegasusBag bag  ) {
         super( bag );
-        this.mReplicaStore = new ReplicaStore();
-        this.mTransformationStore = new TransformationStore();
+        mJobPrefix = ( bag.getPlannerOptions() == null ) ?
+                       null:
+                       bag.getPlannerOptions().getJobnamePrefix();
+
     }
 
     /**
@@ -170,6 +155,8 @@ public class DAXParser3 extends StackBasedXMLParser {
         catch( Exception e){
             throw new RuntimeException( e );
         }
+        startParser(daxFileName);
+        mLogger.logEventCompletion();
     }
 
 
@@ -393,6 +380,7 @@ public class DAXParser3 extends StackBasedXMLParser {
 
                         daxJob.level       = -1;
 
+                        return daxJob;
                     }
 
                 }//end of element job
@@ -534,6 +522,20 @@ public class DAXParser3 extends StackBasedXMLParser {
                         }
                     }
 
+                    //construct the jobname/primary key for job
+                    StringBuffer name = new StringBuffer();
+
+                    //prepend a job prefix to job if required
+                    if( mJobPrefix != null ){
+                        name.append( mJobPrefix );
+                    }
+
+                    //append the name and id recevied from dax
+                    name.append( j.getTXName() );
+                    name.append( "_" );
+                    name.append( j.getLogicalID() );
+
+                    j.setName( name.toString() );
                     return j;
                 }//end of element job
                 return null;//end of j
@@ -728,7 +730,7 @@ public class DAXParser3 extends StackBasedXMLParser {
                  	    this.log( element, name, value );
                         }
                         else if ( name.equals( "link" ) ) {
-                            pf.setLinkage( PegasusFile.LINKAGE.valueOf( value.toLowerCase() ) );
+                            pf.setLinkage( PegasusFile.LINKAGE.valueOf( value.toUpperCase() ) );
                             this.log( element, name, value );
                         }
                         else if ( name.equals( "optional" ) ) {
@@ -779,6 +781,7 @@ public class DAXParser3 extends StackBasedXMLParser {
                     if( pf.getType() == PegasusFile.EXECUTABLE_FILE ){
                         pf.setLFN( Separator.combine(fNamespace, fName, fVersion) );
                     }
+                    return pf;
 
                 }//end of uses
                 return null;//end of case u
@@ -836,6 +839,10 @@ public class DAXParser3 extends StackBasedXMLParser {
                         PCRelation pc = (PCRelation)child;
                         //call the callback
                         this.mCallback.cbParents( pc.getChild(), mParents);
+                        return true;
+                    }
+                    if( child instanceof CompoundTransformation ){
+                        this.mCallback.cbCompoundTransformation( (CompoundTransformation)child );
                         return true;
                     }
                 }
@@ -916,10 +923,11 @@ public class DAXParser3 extends StackBasedXMLParser {
             //f file
             case 'f':
                 if( child instanceof ReplicaLocation ){
-                    ReplicaLocation rl = ( ReplicaLocation )parent;
+                    ReplicaLocation rl = ( ReplicaLocation )child;
                     if( parent instanceof Map ){
                         //file appears in adag element
-                        this.mReplicaStore.add( rl );
+//                        this.mReplicaStore.add( rl );
+                        this.mCallback.cbFile( rl );
                         return true;
                     }
                     else if( parent instanceof Arguments ){
@@ -937,7 +945,8 @@ public class DAXParser3 extends StackBasedXMLParser {
                     if( parent instanceof Map ){
                         //executable appears in adag element
                         TransformationCatalogEntry tce = ( TransformationCatalogEntry )parent;
-                        this.mTransformationStore.addEntry( tce );
+//                        this.mTransformationStore.addEntry( tce );
+                        this.mCallback.cbExecutable( tce );
                         return true;
                     }
                 }

@@ -44,6 +44,7 @@ public class TestDAXParser {
     public static void main( String[] args ){
        if( args.length != 1 ){
            System.err.println( "The class takes in one argument - the path to the DAX file" );
+           System.exit( 1 );
        }
 
        String daxFile = args[0];
@@ -55,6 +56,7 @@ public class TestDAXParser {
        //setup the logger for the default streams.
        LogManager logger = LogManagerFactory.loadSingletonInstance( properties );
        logger.logEventStart( "example.dax.parser", "planner.version", Version.instance().toString() );
+       logger.setLevel( 5 );
 
        /* pass the logger and properties to Pegasus Bag*/
        PegasusBag bag = new PegasusBag();
@@ -63,11 +65,12 @@ public class TestDAXParser {
 
        
        /* instantiate the Callback via the callback Factory */
-       Callback mycallback = DAXCallbackFactory.loadInstance( properties, daxFile, "org.griphyn.cPlanner.parser.dax.ExampleDAXCallback" );
+       Callback mycallback = DAXCallbackFactory.loadInstance( properties, daxFile, "edu.isi.pegasus.planner.parser.dax.ExampleDAXCallback" );
 
        /* instantiate the DAX Parser and start parsing */
        try{
-           DaxParser parser = new DaxParser( daxFile, bag, mycallback );
+//           DaxParser parser = new DaxParser( daxFile, bag, mycallback );
+           DAXParser3 parser3 = new DAXParser3( daxFile, bag, mycallback );
        }
        catch( Exception e ){
            e.printStackTrace();

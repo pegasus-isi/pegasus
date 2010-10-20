@@ -17,13 +17,18 @@
 package edu.isi.pegasus.planner.parser.dax;
 
 
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.HashMap;
@@ -68,6 +73,20 @@ public class DAX2CDAG implements Callback {
      */
     private boolean mDone;
 
+    /**
+     * Handle to the replica store that stores the replica catalog
+     * user specifies in the DAX
+     */
+    protected ReplicaStore mReplicaStore;
+
+
+    /**
+     * Handle to the transformation store that stores the transformation catalog
+     * user specifies in the DAX
+     */
+    protected TransformationStore mTransformationStore;
+
+
 
     /**
      * The overloaded constructor.
@@ -82,6 +101,8 @@ public class DAX2CDAG implements Callback {
         mJobMap       = new HashMap();
         mProps        = properties;
         mDone         = false;
+        this.mReplicaStore = new ReplicaStore();
+        this.mTransformationStore = new TransformationStore();
     }
 
 
@@ -106,6 +127,7 @@ public class DAX2CDAG implements Callback {
      *             gotten from parser.
      */
     public void cbJob(Job job) {
+
         mJobMap.put(job.logicalId,job.jobName);
         mVSubInfo.add(job);
         mDagInfo.addNewJob( job );
@@ -140,14 +162,14 @@ public class DAX2CDAG implements Callback {
      * @param child is the IDREF of the child element.
      * @param parents is a list of IDREFs of the included parents.
      */
-    public void cbParents(String child, List parents) {
+    public void cbParents(String child, List<PCRelation> parents) {
         PCRelation relation;
-
         child  = (String)mJobMap.get(child);
         String parent;
 
-        for ( Iterator it = parents.iterator(); it.hasNext(); ){
-            parent = (String)mJobMap.get((String)it.next());
+        for ( PCRelation pc : parents  ){
+//            parent = (String)mJobMap.get((String)it.next());
+            parent = (String)mJobMap.get( pc.getParent() );
             if(parent == null){
                 //this actually means dax is generated wrong.
                 //probably some one tinkered with it by hand.
@@ -183,5 +205,32 @@ public class DAX2CDAG implements Callback {
 
 
         return new ADag(mDagInfo,mVSubInfo);
+    }
+
+    /**
+     * Callback when a compound transformation is encountered in the DAX
+     *
+     * @param compoundTransformation   the compound transforamtion
+     */
+    public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
+        System.out.println( compoundTransformation );
+    }
+
+    /**
+     * Callback when a replica catalog entry is encountered in the DAX
+     *
+     * @param rl  the ReplicaLocation object
+     */
+    public void cbFile( ReplicaLocation rl ){
+        System.out.println( rl );
+    }
+
+    /**
+     * Callback when a transformation catalog entry is encountered in the DAX
+     *
+     * @param tce  the transformationc catalog entry object.
+     */
+    public void cbExecutable( TransformationCatalogEntry tce ){
+        System.out.println( tce );
     }
 }

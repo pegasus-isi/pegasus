@@ -17,9 +17,12 @@
 
 package edu.isi.pegasus.planner.parser.dax;
 
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.HashMap;
@@ -128,5 +131,32 @@ public class DAX2Metadata implements Callback {
         if(!mDone)
             throw new RuntimeException( "Method called before the metadata was parsed" );
         return mMetadata;
+    }
+
+     /**
+     * Callback when a compound transformation is encountered in the DAX
+     *
+     * @param compoundTransformation   the compound transforamtion
+     */
+    public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Callback when a replica catalog entry is encountered in the DAX
+     *
+     * @param rl  the ReplicaLocation object
+     */
+    public void cbFile( ReplicaLocation rl ){
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Callback when a transformation catalog entry is encountered in the DAX
+     *
+     * @param tce  the transformationc catalog entry object.
+     */
+    public void cbExecutable( TransformationCatalogEntry tce ){
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

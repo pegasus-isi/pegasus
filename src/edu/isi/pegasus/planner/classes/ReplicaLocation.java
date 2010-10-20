@@ -110,6 +110,7 @@ public class ReplicaLocation
         ReplicaCatalogEntry rce = new ReplicaCatalogEntry( );
         rce.setPFN( pfn.getURL() );
         rce.setResourceHandle( pfn.getSite() );
+        this.mPFNList.add( rce );
     }
 
     /**

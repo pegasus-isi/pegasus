@@ -18,8 +18,11 @@ package edu.isi.pegasus.planner.parser.dax;
 
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -231,5 +234,31 @@ public class DAX2Graph implements Callback {
         return mAbstractGraph.get(key);
     }
 
+    /**
+     * Callback when a compound transformation is encountered in the DAX
+     *
+     * @param compoundTransformation   the compound transforamtion
+     */
+    public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
+    /**
+     * Callback when a replica catalog entry is encountered in the DAX
+     *
+     * @param rl  the ReplicaLocation object
+     */
+    public void cbFile( ReplicaLocation rl ){
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Callback when a transformation catalog entry is encountered in the DAX
+     *
+     * @param tce  the transformationc catalog entry object.
+     */
+    public void cbExecutable( TransformationCatalogEntry tce ){
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
 }
