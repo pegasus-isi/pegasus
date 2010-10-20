@@ -42,14 +42,7 @@ export CLASSPATH=.:$CLASSPATH
 javac RosettaDAX.java
 
 # generate the dax
-java RosettaDAX dax.xml
-
-# generate the replica catalog
-rm -f rc.data
-BASE=file://`pwd`
-for FILE in `find minirosetta_database -type f` repack.resfile design.resfile outputs/.transfer-me-to-get-output-dir `find pdbs -type f`; do
-    echo "$FILE $BASE/$FILE pool=\"local\"" >> rc.data
-done
+java -Dpegasus.home=$PEGASUS_HOME RosettaDAX dax.xml
 
 
 # create the transformation catalogue (tc)
@@ -115,6 +108,7 @@ pegasus-plan \
     --dir work \
     --output local \
     --dax dax.xml \
-    --submit
+
+#    --submit
 
 

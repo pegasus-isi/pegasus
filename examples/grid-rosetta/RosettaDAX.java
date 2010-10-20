@@ -1,62 +1,91 @@
-import org.griphyn.vdl.classes.LFN;
-import org.griphyn.vdl.dax.ADAG;
-import org.griphyn.vdl.dax.Filename;
-import org.griphyn.vdl.dax.Job;
-import org.griphyn.vdl.dax.PseudoText;
+/**
+ *  Copyright 2007-2008 University Of Southern California
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 
-import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class RosettaDAX{
+import edu.isi.pegasus.planner.dax.*;
 
-
-    public RosettaDAX(){
-    }
+public class RosettaDAX {
 
     public void constructDAX(String daxfile){
 
         try{
-            // construct a dax object 
-            ADAG dax = new ADAG(1, 1, "rosetta");
-    
-            HashSet<Filename> inputs = new HashSet<Filename>();
-            recursiveAddToFileNameCollection(inputs, "minirosetta_database");
-            inputs.add(new Filename("design.resfile", LFN.INPUT));
-            inputs.add(new Filename("repack.resfile", LFN.INPUT));
+            java.io.File cwdFile = new java.io.File (".");
+            String cwd = cwdFile.getCanonicalPath(); 
 
-            File pdbDir = new File("pdbs/");
+            // construct a dax object 
+            ADAG dax = new ADAG("rosetta");
+    
+            // all jobs depend on the flatfile databases
+            List<File> inputs = new ArrayList<File>();
+            recursiveAddToFileCollection(inputs, "minirosetta_database",
+                                         "Rosetta Database");
+            dax.addFiles(inputs); // for replica catalog
+
+            // and some top level files
+            File f1 = new File("design.resfile", File.LINK.INPUT);
+            f1.addMetaData("string", "Description", "Rosetta input file");
+            f1.addPhysicalFile("file://" + cwd + "/design.resfile", "local");
+            dax.addFile(f1);
+
+            File f2 = new File("repack.resfile", File.LINK.INPUT);
+            f2.addMetaData("string", "Description", "Rosetta input file");
+            f2.addPhysicalFile("file://" + cwd + "/design.resfile", "local");
+            dax.addFile(f2);
+
+            java.io.File pdbDir = new java.io.File("pdbs/");
             String pdbs[] = pdbDir.list();
             for (int i = 0; i < pdbs.length; i++) {
-                File pdb = new File("pdbs/" + pdbs[i]);
+                java.io.File pdb = new java.io.File("pdbs/" + pdbs[i]);
                 if (pdb.isFile()) {
-                    Job j = createJobFromPDB(pdb, inputs);
+                    Job j = createJobFromPDB(cwd, dax, pdb, inputs);
                     dax.addJob(j);
                 }
             }
 
             //write DAX to file
-            FileWriter daxFw = new FileWriter(daxfile);
-            dax.toXML(daxFw, "", null);
-            daxFw.close();
+            dax.writeToFile(daxfile);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void recursiveAddToFileNameCollection(HashSet<Filename> set, String dir) {
+    /*
+     * This adds all the files in a directory to a set which can be used for job
+     * data dependencies
+     */ 
+    private void recursiveAddToFileCollection(List<File> list, String dir, String desc) {
         try {
-            File d = new File(dir);
+            java.io.File d = new java.io.File(dir);
             String items[] = d.list();
             for (int i = 0; i < items.length; i++) {
                 if (items[i].substring(0,1).equals(".")) {
                     continue;
                 }
-                File f = new File(dir + "/" + items[i]);
+                java.io.File f = new java.io.File(dir + "/" + items[i]);
                 if (f.isFile()) {
-                    set.add(new Filename(f.getPath(), LFN.INPUT));
+                    // File found, let's add it to the list
+                    File input = new File(f.getName(), File.LINK.INPUT);
+                    input.addPhysicalFile("file://" + f.getAbsolutePath(), "local");
+                    input.addMetaData("string", "Description", desc);
+                    list.add(input);
                 }
                 else {
-                    recursiveAddToFileNameCollection(set, f.getPath());
+                    recursiveAddToFileCollection(list, f.getPath(), desc);
                 }
             }
         } catch (Exception e) {
@@ -65,40 +94,39 @@ public class RosettaDAX{
 
     }
 
-    private Job createJobFromPDB(File pdb, HashSet<Filename> inputs) {
+    private Job createJobFromPDB(String cwd, ADAG dax, java.io.File pdb, List<File> inputs) {
 
         Job job = null;
-    
+
         try {
             String id = pdb.getName();
             id = id.replaceAll(".pdb", "");
 
             job = new Job("rosetta", "rosetta.exe", "1.0", id);
-
+            
             // general rosetta inputs (database, design, ...)
-            job.setUses(inputs);
+            job.addUses(inputs);
+
+            // input pdb file
+            File pdbFile = new File(pdb.getName(), File.LINK.INPUT);
+            pdbFile.addPhysicalFile("file://" + cwd + "/" + pdb.getName(), "local");
+            job.addUses(pdbFile); // the job uses the file
+            dax.addFile(pdbFile); // the dax needs to know about it to handle transfers
+            
+            // outputs
+            File outFile = new File(pdb.getName() + ".score.sc", File.LINK.OUTPUT);
+            job.addUses(outFile); // the job uses the file
 
             // add the arguments to the job
-            job.addArgument(new PseudoText(" -in:file:s "));
-            job.addArgument(new Filename(pdb.getPath()));
-            job.addArgument(new PseudoText(" -out:prefix " + pdb.getName() + "."));
-            job.addArgument(new PseudoText(" -out:path:all outputs"));
-            job.addArgument(new PseudoText(" -database ./minirosetta_database"));
-            job.addArgument(new PseudoText(" -linmem_ig 10"));
-            job.addArgument(new PseudoText(" -nstruct 1"));
-            job.addArgument(new PseudoText(" -pert_num 2"));
-            job.addArgument(new PseudoText(" -inner_num 1"));
-            job.addArgument(new PseudoText(" -jd2::ntrials 1"));
-
-            // input pdb
-            Filename f = new Filename(pdb.getPath(), LFN.INPUT);
-            f.setRegister(false);
-            job.addUses(f);
-
-            // outputs
-            f = new Filename("outputs/" + pdb.getName() + ".score.sc", LFN.OUTPUT);
-            f.setRegister(false);
-            job.addUses(f);
+            job.addArgument(" -in:file:s ");
+            job.addArgument(pdbFile);
+            job.addArgument(" -out:prefix " + pdb.getName() + ".");
+            job.addArgument(" -database ./minirosetta_database");
+            job.addArgument(" -linmem_ig 10");
+            job.addArgument(" -nstruct 1");
+            job.addArgument(" -pert_num 2");
+            job.addArgument(" -inner_num 1");
+            job.addArgument(" -jd2::ntrials 1");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -120,7 +148,7 @@ public class RosettaDAX{
             daxgen.constructDAX(args[0]);
 
         } else {
-            System.out.println("Usage: CreateDAX <outputdaxfile>");
+            System.out.println("Usage: RosettaDAX <outputdaxfile>");
         }
     }
 

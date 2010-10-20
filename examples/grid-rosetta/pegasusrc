@@ -6,11 +6,8 @@ pegasus.catalog.site.file=sites.xml
 
 pegasus.catalog.transformation=File
 pegasus.catalog.transformation.file=tc.data
-pegasus.catalog.transformation.mapper=Staged
 
-pegasus.transfer.refiner=Bundle
-pegasus.transfer.*.thirdparty.sites=*
-pegasus.transfer.worker.package = true
+#pegasus.transfer.worker.package = true
 
 pegasus.dir.useTimestamp=true
 pegasus.dir.storage.deep=false
@@ -19,5 +16,4 @@ pegasus.dir.storage.deep=false
 pegasus.condor.release=3
 pegasus.dagman.retry=3
 
-pegasus.exitcode.scope=all
 
