@@ -663,6 +663,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
                     else if ( parent instanceof SiteCatalogEntry ){
                         SiteCatalogEntry s = ( SiteCatalogEntry )parent;
                         s.addProfile( p );
+                        return true;
                     }
                 }
                 else{
@@ -733,6 +734,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
                                      LogManager.DEBUG_MESSAGE_LEVEL );
                         c.addEntry( site );
                     }
+                    return true;
                 }
                 else if ( child instanceof SiteStore ){
                     //should never happen.
