@@ -446,7 +446,7 @@ public class ADAG {
         writer.startElement("adag");
         writer.writeAttribute("xmlns", SCHEMA_NAMESPACE);
         writer.writeAttribute("xmlns:xsi", SCHEMA_NAMESPACE_XSI);
-        writer.writeAttribute("xsi:schemaLocation", SCHEMA_LOCATION);
+        writer.writeAttribute("xsi:schemaLocation", SCHEMA_NAMESPACE+" "+SCHEMA_LOCATION);
         writer.writeAttribute("version", SCHEMA_VERSION);
         writer.writeAttribute("name", mName);
         writer.writeAttribute("index", Integer.toString(mIndex));
