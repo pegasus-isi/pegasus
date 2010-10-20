@@ -353,7 +353,7 @@ public class DAXParser3 extends StackBasedXMLParser {
                         return dagJob;
                     }
                     else if (element.equals( "dax" ) ){
-                        DAXJob daxJob = new DAXJob();
+                        DAXJob daxJob = new DAXJob( j );
 
                         //the job should be tagged type pegasus
                         daxJob.setTypeRecursive();
@@ -606,7 +606,7 @@ public class DAXParser3 extends StackBasedXMLParser {
                         String value = (String) values.get( i );
 
                         if ( name.equals( "namespace" ) ) {
-                            p.setProfileNamespace( value );
+                            p.setProfileNamespace( value.toLowerCase() );
                  	    this.log( element, name, value );
                         }
                         else if ( name.equals( "key" ) ) {
@@ -933,6 +933,7 @@ public class DAXParser3 extends StackBasedXMLParser {
                     else if( parent instanceof Arguments ){
                         //file appears in the argument element
                         Arguments a = (Arguments)parent;
+                        a.addArgument( mTextContent.toString() );
                         a.addArgument( rl );
                         return true;
                     }
