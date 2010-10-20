@@ -522,41 +522,40 @@ public class ADAG {
         fa.addPhysicalFile("file:///scratch/f.a", "local");
         dax.addFile(fa);
 
-        File fb1 = new File("f.b1", File.LINK.INOUT);
+        File fb1 = new File("f.b1");
         fb1.addMetaData("string", "foo", "bar");
-        fb1.addMetaData("int", "num", "1");
-        fb1.addProfile("env", "PATH", "/usr/bin");
+        fb1.addMetaData("int", "num", "2");
+        fb1.addProfile("env", "GOO", "/usr/foo");
         fb1.addProfile("globus", "walltime", "40");
         dax.addFile(fb1);
 
-        File fb2 = new File("f.b2", File.LINK.INOUT);
+        File fb2 = new File("f.b2");
         fb2.addMetaData("string", "foo", "bar");
-        fb2.addMetaData("int", "num", "1");
-        fb2.addProfile("env", "PATH", "/usr/bin");
+        fb2.addMetaData("int", "num", "3");
+        fb2.addProfile("env", "BAR", "/usr/goo");
         fb2.addProfile("globus", "walltime", "40");
         dax.addFile(fb2);
 
-        File fc1 = new File("f.c1", File.LINK.INOUT);
-        fc1.addProfile("env", "PATH", "/usr/bin");
+        File fc1 = new File("f.c1");
+        fc1.addProfile("env", "TEST", "/usr/bin/true");
         fc1.addProfile("globus", "walltime", "40");
         dax.addFile(fc1);
 
-        File fc2 = new File("f.c2", File.LINK.INOUT);
+        File fc2 = new File("f.c2");
         fc2.addMetaData("string", "foo", "bar");
-        fc2.addMetaData("int", "num", "1");
+        fc2.addMetaData("int", "num", "5");
         dax.addFile(fc2);
 
         File fd = new File("f.d", File.LINK.OUTPUT);
         dax.addFile(fd);
 
         Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
-        j1.addArgument("-a preprocess -i ").addArgument(fa);
+        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
-        j1.addUses(new File("f.a", File.LINK.INPUT));
-        j1.addUses(new File("f.b1", File.LINK.OUTPUT));
+        j1.addUses(fa);
+        j1.addUses(fb1);
         j1.addUses(new File("f.b2", File.LINK.OUTPUT));
         j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
-        j1.addProfile("condor", "universe", "vanilla");
         dax.addJob(j1);
 
         DAG j2 = new DAG("j2", "findrange.dag", "j2");
@@ -576,7 +575,8 @@ public class ADAG {
         dax.addDAX(j3);
 
         Job j4 = new Job("j4", "pegasus", "analyze", "");
-        j4.addArgument("-a analyze -i ").addArgument(fc1).addArgument(fc2);
+        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+            j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
         fc1.setLink(File.LINK.INPUT);
         fc2.setLink(File.LINK.INPUT);
