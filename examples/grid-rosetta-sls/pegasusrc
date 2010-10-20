@@ -1,0 +1,28 @@
+pegasus.catalog.replica=SimpleFile
+pegasus.catalog.replica.file=rc.data
+
+pegasus.catalog.site=XML3
+pegasus.catalog.site.file=sites.xml
+
+pegasus.catalog.transformation=File
+pegasus.catalog.transformation.file=tc.data
+#pegasus.catalog.transformation.mapper=Staged
+
+pegasus.transfer.refiner=Bundle
+pegasus.transfer.*.thirdparty.sites=*
+pegasus.transfer.worker.package = true
+
+pegasus.dir.useTimestamp=true
+pegasus.dir.storage.deep=false
+
+# retries
+pegasus.condor.release=3
+pegasus.dagman.retry=3
+
+pegasus.exitcode.scope=all
+
+# turn on second level staging
+pegasus.execute.*.filesystem.local = true
+pegasus.transfer.stage.sls.file = false
+pegasus.gridstart = SeqExec
+

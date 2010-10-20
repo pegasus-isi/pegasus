@@ -1,0 +1,124 @@
+#!/bin/bash
+
+set -e
+
+
+#######################################################################
+#
+#  Settings
+#
+CLUSTER_NAME="RENCI-Engagement"
+CLUSTER_HOSTNAME="belhaven-1.renci.org"
+CLUSTER_SCHEDULER="condor"
+
+# pegasus still has to create a shared directory - hopefully this
+# will go away after Pegasus 3.0
+CLUSTER_WORK_DIR="/nfs/osg-data/engage/tmp"
+
+# local filesystem where the jobs will actually run
+CLUSTER_WN_TMP="/condor/osg_wn_tmp"
+
+# Globus is required on the remote side for globus-url-copy
+CLUSTER_GLOBUS_LOCATION="/nfs/software/osg-wn/current/globus"
+
+#######################################################################
+
+TOPDIR=`pwd`
+LOCAL_HOSTNAME=`hostname -f`
+
+# do we have the required minirosetta_database?
+if [ ! -e minirosetta_database ]; then
+   wget -nv http://www.isi.edu/~rynge/pegasus/example-workflows/minirosetta_database.tar.gz
+   tar xzf minirosetta_database.tar.gz
+   rm minirosetta_database.tar.gz
+fi
+
+# what about the required pdbs?
+if [ ! -e pdbs ]; then
+   wget http://www.isi.edu/~rynge/pegasus/example-workflows/pdbs.tar.gz
+   tar xzf pdbs.tar.gz
+   rm pdbs.tar.gz
+fi
+
+# build the dax generator
+export CLASSPATH=.:$CLASSPATH
+javac RosettaDAX.java
+
+# generate the dax
+java RosettaDAX dax.xml
+
+# generate the replica catalog
+# setting pool=$CLUSTER_NAME is key to trigger the staging
+rm -f rc.data
+for FILE in `find minirosetta_database -type f | grep -v .svn` repack.resfile design.resfile `find pdbs -type f | grep -v .svn`; do
+    echo "$FILE gsiftp://$LOCAL_HOSTNAME$TOPDIR/$FILE pool=\"$CLUSTER_NAME\"" >> rc.data
+done
+
+# create the transformation catalogue (tc)
+cat >tc.data <<EOF
+# Site  LFN  PFN  TYPE  SYSTEM PROFILE
+$CLUSTER_NAME    rosetta::rosetta.exe:1.0     gsiftp://$LOCAL_HOSTNAME$TOPDIR/rosetta.exe       STATIC_BINARY       INTEL32::LINUX 
+$CLUSTER_NAME    pegasus::worker              http://pegasus.isi.edu/wms/download/3.0/nightly/pegasus-worker-3.0.0cvs-x86_rhel_5.tar.gz     STATIC_BINARY       INTEL32::LINUX
+EOF
+
+# site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://$LOCAL_HOSTNAME" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://$LOCAL_HOSTNAME" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
+    </site>
+    <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$CLUSTER_WORK_DIR"/>
+                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$CLUSTER_WORK_DIR"/>
+                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="pegasus" key="bundle.stagein" >4</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
+        <profile namespace="env" key="wmtmp" >$CLUSTER_WN_TMP</profile>
+    </site>
+</sitecatalog>
+EOF
+
+echo
+echo
+pegasus-plan \
+    -D pegasus.user.properties=pegasusrc \
+    --sites $CLUSTER_NAME \
+    --nocleanup \
+    --dir work \
+    --output local \
+    --dax dax.xml \
+    --submit
+
+
