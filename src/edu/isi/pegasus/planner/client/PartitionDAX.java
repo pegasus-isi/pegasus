@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.planner.client;
 
-import edu.isi.pegasus.planner.parser.DaxParser;
+import edu.isi.pegasus.planner.parser.DAXParser2;
 
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAX2Graph;
@@ -251,7 +251,7 @@ public class PartitionDAX extends Executable {
             bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
             bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
 
-            DaxParser d = new DaxParser( daxFile, bag, callback );
+            DAXParser2 d = new DAXParser2( daxFile, bag, callback );
             state = 2;
             //get the graph map
             Map graphMap = (Map) callback.getConstructedObject();

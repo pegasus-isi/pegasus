@@ -30,7 +30,7 @@ import edu.isi.pegasus.planner.namespace.Dagman;
 
 import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
-import edu.isi.pegasus.planner.parser.DaxParser;
+import edu.isi.pegasus.planner.parser.DAXParser2;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
@@ -944,7 +944,7 @@ public class SUBDAXGenerator{
         Callback cb =  DAXCallbackFactory.loadInstance( mProps, dax, "DAX2Metadata" );
 
         try{
-            DaxParser daxParser = new DaxParser( dax, mBag, cb);
+            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb);
         }
         catch( RuntimeException e ){
             //check explicity for file not found exception

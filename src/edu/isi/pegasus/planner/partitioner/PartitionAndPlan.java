@@ -30,7 +30,7 @@ import java.io.BufferedReader;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
-import edu.isi.pegasus.planner.parser.DaxParser;
+import edu.isi.pegasus.planner.parser.DAXParser2;
 
 
 import edu.isi.pegasus.planner.client.CPlanner;
@@ -199,7 +199,7 @@ public class PartitionAndPlan{
         Callback cb =  DAXCallbackFactory.loadInstance( properties, options.getDAX(), "DAX2Metadata" );
 
         try{
-            DaxParser daxParser = new DaxParser(options.getDAX(), mBag, cb);
+            DAXParser2 daxParser = new DAXParser2(options.getDAX(), mBag, cb);
         }
         catch( RuntimeException e ){
             //check explicity for file not found exception

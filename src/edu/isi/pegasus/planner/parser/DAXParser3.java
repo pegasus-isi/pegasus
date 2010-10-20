@@ -82,7 +82,7 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
  */
-public class DAXParser3 extends StackBasedXMLParser {
+public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
     /**
      * The "not-so-official" location URL of the Site Catalog Schema.
@@ -146,6 +146,7 @@ public class DAXParser3 extends StackBasedXMLParser {
      * @param bag   the bag of objects that is useful for initialization.
      * @param callback    the object which implements the callback.
      */
+    /*
     public DAXParser3(String daxFileName, PegasusBag bag, Callback callback) {
         this( bag );
         this.mCallback = callback;
@@ -157,6 +158,15 @@ public class DAXParser3 extends StackBasedXMLParser {
         }
         startParser(daxFileName);
         mLogger.logEventCompletion();
+    }*/
+
+    /**
+     * Set the DAXCallback for the parser to call out to.
+     *
+     * @param c  the callback
+     */
+    public void setDAXCallback( Callback c ){
+        this.mCallback = c;
     }
 
 

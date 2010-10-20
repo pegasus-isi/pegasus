@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+
 /**
  * This creates a dag corresponding to one particular partition of the whole
  * abstract plan. The partition can be as big as the whole abstract graph or can

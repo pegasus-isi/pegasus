@@ -53,7 +53,7 @@ import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
 
 import edu.isi.pegasus.planner.parser.pdax.PDAXCallbackFactory;
 
-import edu.isi.pegasus.planner.parser.DaxParser;
+import edu.isi.pegasus.planner.parser.DAXParser2;
 import edu.isi.pegasus.planner.parser.PDAXParser;
 
 
@@ -401,7 +401,7 @@ public class CPlanner extends Executable{
 
             Callback cb =  DAXCallbackFactory.loadInstance( mProps, dax, "DAX2CDAG" );
 
-            DaxParser daxParser = new DaxParser( dax, mBag, cb );
+            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb );
 
             ADag orgDag = (ADag)cb.getConstructedObject();
 
@@ -906,7 +906,7 @@ public class CPlanner extends Executable{
         //we first need to get the label of DAX
         Callback cb =  DAXCallbackFactory.loadInstance( properties, options.getDAX(), "DAX2Metadata" );
         try{
-            DaxParser daxParser = new DaxParser( options.getDAX(), mBag, cb );
+            DAXParser2 daxParser = new DAXParser2( options.getDAX(), mBag, cb );
         }catch( Exception e ){
             //ignore
         }

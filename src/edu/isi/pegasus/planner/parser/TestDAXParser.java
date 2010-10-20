@@ -70,7 +70,10 @@ public class TestDAXParser {
        /* instantiate the DAX Parser and start parsing */
        try{
 //           DaxParser parser = new DaxParser( daxFile, bag, mycallback );
-           DAXParser3 parser3 = new DAXParser3( daxFile, bag, mycallback );
+           //DAXParser3 parser3 = new DAXParser3( daxFile, bag, mycallback );
+           Parser daxParser = new DAXParser3( bag );
+           ((DAXParser)daxParser).setDAXCallback( mycallback );
+           daxParser.startParser( daxFile );
        }
        catch( Exception e ){
            e.printStackTrace();

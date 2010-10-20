@@ -70,7 +70,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
  * @see org.griphyn.cPlanner.classes.PCRelation
  */
 
-public class DaxParser extends Parser {
+public class DAXParser2 extends Parser implements DAXParser {
 
     /**
      * The "not-so-official" location URL of the DAX schema definition.
@@ -231,7 +231,7 @@ public class DaxParser extends Parser {
      *
      * @param bag   the bag of objects that is useful for initialization.
      */
-    public DaxParser( PegasusBag bag ) { //default constructor
+    public DAXParser2( PegasusBag bag ) { //default constructor
         super( bag );
         
         
@@ -249,7 +249,7 @@ public class DaxParser extends Parser {
      * @param bag   the bag of objects that is useful for initialization.
      * @param callback    the object which implements the callback.
      */
-    public DaxParser(String daxFileName, PegasusBag bag, Callback callback) {
+    public DAXParser2(String daxFileName, PegasusBag bag, Callback callback) {
         this( bag );
 
         try{
@@ -266,7 +266,7 @@ public class DaxParser extends Parser {
                       LogManager.DEBUG_MESSAGE_LEVEL );
         String schemaLoc = getSchemaLocation();
         mLogger.log( "Picking schema for DAX" + schemaLoc, LogManager.CONFIG_MESSAGE_LEVEL );
-        String list = DaxParser.SCHEMA_NAMESPACE + " " + schemaLoc;
+        String list = DAXParser2.SCHEMA_NAMESPACE + " " + schemaLoc;
         setSchemaLocations(list);
 
         //figure out whether to pick up the double negative flags or not
@@ -289,11 +289,47 @@ public class DaxParser extends Parser {
     }
 
     /**
+     * Set the DAXCallback for the parser to call out to.
+     *
+     * @param c  the callback
+     */
+    public void setDAXCallback( Callback c ){
+        this.mCallback = c;
+    }
+
+    /**
      * This starts the parsing of the file by the parser.
      *
      * @param daxFileName    the path/uri to the XML file you want to parse.
      */
     public void startParser(String daxFileName) {
+        try{
+            this.testForFile(daxFileName);
+        }
+        catch( Exception e){
+            throw new RuntimeException( e );
+        }
+
+        //try to get the version number
+        //of the dax
+        mDaxSchemaVersion = getVersionOfDAX( daxFileName );
+        mLogger.log( "Version of DAX as picked up from the DAX " + mDaxSchemaVersion,
+                      LogManager.DEBUG_MESSAGE_LEVEL );
+        String schemaLoc = getSchemaLocation();
+        mLogger.log( "Picking schema for DAX" + schemaLoc, LogManager.CONFIG_MESSAGE_LEVEL );
+        String list = DAXParser2.SCHEMA_NAMESPACE + " " + schemaLoc;
+        setSchemaLocations(list);
+
+        //figure out whether to pick up the double negative flags or not
+        mUseDoubleNegative = useDoubleNegative( mDaxSchemaVersion );
+        mLogger.log( "Picking up the dontTransfer and dontRegister flags " + mUseDoubleNegative,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, daxFileName );
+
+        mCurrentJobSubInfo.condorUniverse = GridGateway.JOB_TYPE.compute.toString(); //default value
+
+
         try {
             mParser.parse(daxFileName);
         }
@@ -307,6 +343,7 @@ public class DaxParser extends Parser {
             throw new RuntimeException(message, e);
         }
 
+        mLogger.logEventCompletion();
     }
 
     /**
@@ -1291,17 +1328,17 @@ public class DaxParser extends Parser {
     }
 
     /**
-     * The main program. The DaxParser can be run standalone, by which it just
+     * The main program. The DAXParser2 can be run standalone, by which it just
      * parses the file and populates the required data objects.
      *
      */
 
     public static void main(String args[]) {
         //System.setProperty("vds.home","/nfs/asd2/vahi/test/chimera/");
-        //DaxParser d = new DaxParser("sdss.xml","isi",null);
-        //DaxParser d = new DaxParser("sonal.xml",new DAX2CDAG("./sonal.xml"));
-        //DaxParser d = new DaxParser("./testcases/black-diamond/blackdiamond_dax_1.7.xml");
-        //DaxParser d = new DaxParser("/nfs/asd2/vahi/gurmeet_dax.xml");
+        //DAXParser2 d = new DAXParser2("sdss.xml","isi",null);
+        //DAXParser2 d = new DAXParser2("sonal.xml",new DAX2CDAG("./sonal.xml"));
+        //DAXParser2 d = new DAXParser2("./testcases/black-diamond/blackdiamond_dax_1.7.xml");
+        //DAXParser2 d = new DAXParser2("/nfs/asd2/vahi/gurmeet_dax.xml");
 
         /*DagInfo dagInfo = d.getDagInfo();
 
@@ -1321,7 +1358,7 @@ public class DaxParser extends Parser {
      * @return the schema namespace
      */
     public  String getSchemaNamespace( ){
-        return DaxParser.SCHEMA_NAMESPACE;
+        return DAXParser2.SCHEMA_NAMESPACE;
     }
 
 
@@ -1336,7 +1373,7 @@ public class DaxParser extends Parser {
      */
     public String getSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
-        File uri = new File(DaxParser.SCHEMA_LOCATION);
+        File uri = new File(DAXParser2.SCHEMA_LOCATION);
 
         //get the default version with decimal point shifted right
         float defaultVersion = shiftRight( extractVersionFromSchema( uri.getName() ) );
