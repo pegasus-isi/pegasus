@@ -85,7 +85,7 @@
       one seamless image.</para>
 
       <para>Just like the <xref linkend="example_black_diamond">
-          black diamond example
+           black diamond example 
         </xref> above, this example uses a <filename>./submit</filename>
       script.</para>
     </section>
@@ -125,7 +125,7 @@
       </itemizedlist>
 
       <para>Just like the <xref linkend="example_black_diamond">
-          black diamond example
+           black diamond example 
         </xref> above, this example uses a <filename>./submit</filename>
       script.</para>
     </section>
@@ -142,8 +142,11 @@
           and is only partially implemented in the 3.0 release. The first hop
           is not implemented, and therefore you either have to use the submit
           host for the data staging, or manually stage into the storage server
-          you want to use. Also, data is kept on the shared filesystem at the
-          site in between nodes in the workflow.</para>
+          you want to use</para>
+
+          <para>intermediate data is kept on the shared filesystem at the
+          site, and outputs are staged out with separate stage out
+          jobs.</para>
         </caution>This is similar to the previous example, except that the
       data files are staged directly from the submit host to a local
       filesystem on the compute node. The changes below are already in place,
@@ -165,7 +168,8 @@ pegasus.gridstart = SeqExec          </programlisting>
       <programlisting>&lt;profile namespace="env" key="wmtmp" &gt;/condor/osg_wn_tmp&lt;/profile&gt;</programlisting>
 
       <para>You also need to set pool="[sitehandle]" in the replica catalog.
-      Example:</para>
+      When doing second level staging, this is a required hint to the Pegasus
+      planner to know what files need to be staged. Example:</para>
 
       <programlisting>minirosetta_database/Rama08.dat
     gsiftp://yggdrasil.isi.edu/home/rynge/Pegasus/rosetta-sls/minirosetta_database/Rama08.dat
@@ -184,10 +188,15 @@ pegasus.gridstart = SeqExec          </programlisting>
           <para>Hard to control gridftp access pattern / bandwidth usage as
           the workflow scales up</para>
         </listitem>
+
+        <listitem>
+          <para>If a lot of jobs are using the same files, you will end up
+          seeing many transfers of the same file over and over again</para>
+        </listitem>
       </itemizedlist>
 
       <para>Just like the <xref linkend="example_black_diamond">
-          black diamond example
+           black diamond example 
         </xref> above, this example uses a <filename>./submit</filename>
       script.</para>
     </section>
