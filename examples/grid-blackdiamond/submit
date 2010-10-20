@@ -7,7 +7,6 @@ set -e
 #
 #  Settings
 #
-CLUSTER_NAME="ISIViz"
 CLUSTER_HOSTNAME="viz-login.isi.edu"
 CLUSTER_SCHEDULER="condor"
 CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
@@ -32,20 +31,8 @@ fi
 echo "This is sample input to KEG" >f.a
 
 # generate the dax
-./blackdiamond.py >blackdiamond.dax
-
-# create the replica catalog (in this case, where to find the inputs)
-cat >rc.data <<EOF
-f.a file://$TOPDIR/f.a pool="local"
-EOF
-
-# create the transformation catalog
-cat >tc.data <<EOF
-# Site  LFN  PFN  TYPE  SYSTEM PROFILE
-$CLUSTER_NAME  diamond::preprocess:2.0  $CLUSTER_PEGASUS_HOME/bin/keg   INSTALLED INTEL32::LINUX ENV::KEY1="VALUE1"
-$CLUSTER_NAME  diamond::findrange:2.0   $CLUSTER_PEGASUS_HOME/bin/keg   INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
-$CLUSTER_NAME  diamond::analyze:2.0     $CLUSTER_PEGASUS_HOME/bin/keg   INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
-EOF
+export PYTHONPATH=$PEGASUS_HOME/lib/python
+./blackdiamond.py $CLUSTER_PEGASUS_HOME >blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
@@ -71,7 +58,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
     </site>
-    <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
+    <site  handle="TestCluster" arch="x86" os="LINUX">
         <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
         <head-fs>
@@ -98,7 +85,7 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     -D pegasus.user.properties=pegasusrc \
-    --sites $CLUSTER_NAME \
+    --sites TestCluster \
     --dir work \
     --output local \
     --dax blackdiamond.dax \
