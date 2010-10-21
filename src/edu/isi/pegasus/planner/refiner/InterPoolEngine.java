@@ -422,7 +422,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         //installed or static binary
         entry.setType( executable.startsWith("/") ?
                             TCType.INSTALLED : 
-                            TCType.STATIC_BINARY);
+                            TCType.STAGEABLE );
                     
         return entry;
     }
@@ -503,7 +503,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             //installed or static binary
             tcEntry.setType( executable.startsWith( "/" ) ?
                              TCType.INSTALLED:
-                             TCType.STATIC_BINARY );
+                             TCType.STAGEABLE );
                 
         }
 
@@ -511,7 +511,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         //something seriously wrong in this code line below.
         //Need to verify further after more runs. (Gaurang 2-7-2006).
 //            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
-        if(tcEntry.getType().equals( TCType.STATIC_BINARY )){
+        if(tcEntry.getType().equals( TCType.STAGEABLE )){
             SiteCatalogEntry site = mSiteStore.lookup( siteHandle );
             //construct a file transfer object and add it
             //as an input file to the job in the dag
@@ -641,7 +641,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                     }
 
                     //            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
-                    if (tcEntry.getType().equals(TCType.STATIC_BINARY)) {
+                    if (tcEntry.getType().equals(TCType.STAGEABLE )) {
 //                        SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,
 //                            "vanilla");
                         

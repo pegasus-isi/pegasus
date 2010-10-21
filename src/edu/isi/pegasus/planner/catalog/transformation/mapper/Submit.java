@@ -102,7 +102,7 @@ public class Submit
             try {
                 tcentries = mTCHandle.lookup( namespace, name, version,
                     "local",
-                    TCType.STATIC_BINARY );
+                    TCType.STAGEABLE );
             } catch ( Exception e ) {
                 mLogger.log(
                     "Unable to get physical names from TC in the TC Mapper\n",
@@ -115,7 +115,7 @@ public class Submit
                 throw new RuntimeException(
                     "There are no entries for the transformation \"" + lfn +
                     "\" on the \"local\" site in the TC for type \"" +
-                    TCType.STATIC_BINARY  );
+                    TCType.STAGEABLE  );
             }
             if ( sysinfomap != null ) {
                 for ( Iterator i = siteids.iterator(); i.hasNext(); ) {

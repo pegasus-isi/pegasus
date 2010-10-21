@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * This implementation of the Selector select a transformation of type STATIC_BINARY and only on the submit site.
+ * This implementation of the Selector select a transformation of type STAGEABLE and only on the submit site.
  * @author Gaurang Mehta
  * @version $Revision$
  */
@@ -47,7 +47,7 @@ public class Submit
         for ( Iterator i = tcentries.iterator(); i.hasNext(); ) {
             TransformationCatalogEntry tc = ( TransformationCatalogEntry ) i.
                 next();
-            if ( ( tc.getType().equals( TCType.STATIC_BINARY ) ) &&
+            if ( ( tc.getType().equals( TCType.STAGEABLE ) ) &&
                 ( tc.getResourceId().equalsIgnoreCase( "local" ) ) ) {
                 if ( results == null ) {
                     results = new ArrayList( 5 );

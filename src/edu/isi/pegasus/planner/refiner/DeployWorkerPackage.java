@@ -444,7 +444,7 @@ public class DeployWorkerPackage
                 if( entry == null ){
                     StringBuffer error = new StringBuffer();
                     error.append( "Unable to construct default entry for pegasus::worker for site " ).append( site )
-                         .append( " Add entry in TC for pegasus::worker of type STATIC_BINARY for sysinfo ")
+                         .append( " Add entry in TC for pegasus::worker of type STAGEABLE for sysinfo ")
                          .append(  mSiteStore.getSysInfo( site ) );
                     throw new RuntimeException( error.toString() );
                 }
@@ -1123,7 +1123,7 @@ public class DeployWorkerPackage
 
         defaultTCEntry.setPhysicalTransformation( path );
         defaultTCEntry.setResourceId( "pegasus" );
-        defaultTCEntry.setType( TCType.STATIC_BINARY );
+        defaultTCEntry.setType( TCType.STAGEABLE );
         defaultTCEntry.setSysInfo( sysinfo );
 
 

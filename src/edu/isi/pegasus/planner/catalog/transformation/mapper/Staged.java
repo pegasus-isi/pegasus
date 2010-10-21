@@ -96,7 +96,7 @@ public class Staged
             try {
                 tcentries = mTCHandle.lookup( namespace, name, version,
                     ( List )null,
-                    TCType.STATIC_BINARY );
+                    TCType.STAGEABLE );
             } catch ( Exception e ) {
                 mLogger.log(
                     "Unable to get physical names from TC in the TC Mapper",

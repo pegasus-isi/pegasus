@@ -1319,10 +1319,23 @@ public class File
                                 tc.setPhysicalTransformation(tokens[i]);
                                 break;
                             case 3: //type
+                                if( tokens[i].equalsIgnoreCase( "null") ){
+                                    tc.setType( TCType.INSTALLED );
+                                }
+                                else if ( tokens[i].equalsIgnoreCase( "STATIC_BINARY") ){
+                                    //if entry is static binary we set it to stageable
+                                    tc.setType( TCType.STAGEABLE );
+                                }
+                                else{
+                                    //set to whatever the value was
+                                    TCType.valueOf(tokens[i]);
+                                }
+                                /*
                                 tc.setType( (tokens[i].equalsIgnoreCase(
                                     "null")) ?
                                            TCType.INSTALLED :
                                            TCType.valueOf(tokens[i]));
+                                */
                                 break;
                             case 4: //systeminfo
                                 tc.setVDSSysInfo( (tokens[i].equalsIgnoreCase(

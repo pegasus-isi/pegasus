@@ -341,7 +341,7 @@ public class TCClient extends Executable{
             "\n -p | ---pfn <physical txmation> The physical transfromation to be added. " +
             "\n                                 For INSTALLED executables its a local file path, for all others its a url." +
             "\n -t | --type <type of txmation>  The type of physical transformation. Valid values are :" +
-            "\n                                 INSTALLED, STATIC_BINARY, DYNAMIC_BINARY, SCRIPT, SOURCE, PACMAN_PACKAGE. " +
+            "\n                                 INSTALLED, STAGEABLE. " +
             "\n -r | --resource <resource id>   The Id of the resource where the transformation is located. " +
             "\n -e | --profile <profiles>       The profiles belonging to the transformation." +
             "\n                                 Mulitple profiles of same namespace can be added simultaneously" +

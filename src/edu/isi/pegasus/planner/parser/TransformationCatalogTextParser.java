@@ -78,7 +78,7 @@ import edu.isi.pegasus.planner.classes.Profile;
  *   os    "linux"
  *   osrelease "fc"
  *   osversion "4"
- *   type "STATIC_BINARY"
+ *   type "STAGEABLE"
  *  }
  * }
 

@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * This implementation of the Selector select a transformation of type STATIC_BINARY on all sites.
+ * This implementation of the Selector select a transformation of type STAGEABLE on all sites.
  *
  * @author Gaurang Mehta
  * @version $Revision$
@@ -46,7 +46,7 @@ public class Staged
         for ( Iterator i = tcentries.iterator(); i.hasNext(); ) {
             TransformationCatalogEntry tc = ( TransformationCatalogEntry ) i.
                 next();
-            if ( tc.getType().equals( TCType.STATIC_BINARY ) ) {
+            if ( tc.getType().equals( TCType.STAGEABLE ) ) {
                 if ( results == null ) {
                     results = new ArrayList( 5 );
                 }

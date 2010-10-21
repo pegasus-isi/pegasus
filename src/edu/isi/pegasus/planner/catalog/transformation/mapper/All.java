@@ -126,7 +126,7 @@ public class All
                             ( ( txsiteid.equalsIgnoreCase( site ) ) &&
                             ( txtype.equals( TCType.INSTALLED ) ) )
                             ||
-                            ( txtype.equals( TCType.STATIC_BINARY ) )
+                            ( txtype.equals( TCType.STAGEABLE ) )
                             ) {
 
                             //add the TC entries in the map.

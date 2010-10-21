@@ -90,7 +90,7 @@ import java.util.Set;
  *   os    "linux"
  *   osrelease "fc"
  *   osversion "4"
- *   type "STATIC_BINARY"
+ *   type "STAGEABLE"
  *  }
  * }
  *
@@ -292,7 +292,7 @@ public class Text
      *   os    "linux"
      *   osrelease "fc"
      *   osversion "4"
-     *   type "STATIC_BINARY"
+     *   type "STAGEABLE"
      *  }
      * 
      * @param entry   the transformation catalog entry
