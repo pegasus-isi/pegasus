@@ -15,6 +15,7 @@
  */
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
@@ -24,11 +25,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.MissingResourceException;
 
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.common.util.StreamGobbler;
-
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
+import edu.isi.pegasus.common.util.StreamGobbler;
 /**
  * This class provides a bridge for creating and initializing transformation catalog on database .
  *  
@@ -254,7 +254,7 @@ public class CreateTCDatabase {
              Runtime r = Runtime.getRuntime();
 
              //creating the command
-             String command = mDatabaseAbsolutePath+"/bin/mysql --host " +mDatabaseHost + " --user="+mUsername +" --password="+mPassword +" "+databaseName ;
+             String command = mDatabaseAbsolutePath+ File.separator +"bin"+ File.separator +"mysql" +" --host " +mDatabaseHost + " --user="+mUsername +" --password="+mPassword +" "+databaseName ;
              mLogger.log("Executing command " + command,
                          LogManager.DEBUG_MESSAGE_LEVEL);
              String sqlCommand ="source "+ fileName + ";\n";
