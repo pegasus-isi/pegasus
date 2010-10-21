@@ -26,7 +26,7 @@ __all__ = ["ADAG","DAX","DAG","Namespace","Arch","Link","When",
 		   "Profile","Transformation","Job","parse","parseString"]
 __version__ = "3.2"
 
-import datetime, pwd, os
+import datetime, pwd, os, sys
 from cStringIO import StringIO
 import xml.sax
 import xml.sax.handler
@@ -36,6 +36,74 @@ SCHEMA_NAMESPACE = u"http://pegasus.isi.edu/schema/DAX"
 SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/dax-3.2.xsd"
 SCHEMA_VERSION = u"3.2"
 
+def escape(text):
+	"""Escape special characters in XML"""
+	o = ""
+	for c in text:
+		if   c == '"':	o += "&quot;"
+		elif c == "'":	o += "&apos;"
+		elif c == "<":	o += "&lt;"
+		elif c == ">":	o += "&gt;"
+		elif c == "&":	o += "&amp;"
+		else: o += c
+	return unicode(o)
+	
+class Element:
+	def __init__(self, name, attrs=[]):
+		self.name = name
+		self.attrs = []
+		for attr,value in attrs:
+			if value is not None:
+				if type(value) == bool:
+					value = unicode(value).lower()
+				attr = unicode(attr.replace('__',':'))
+				self.attrs.append((attr,value))
+		self.children = []
+		self.flat = False
+		
+	def element(self, element):
+		self.children.append(element)
+		return element
+		
+	def text(self, value):
+		self.children.append(escape(value))
+		return self
+		
+	def comment(self, message):
+		self.children.append(u"<!- %s -->" % escape(message))
+		
+	def flatten(self):
+		self.flat = True
+		return self
+		
+	def toXML(self, stream=sys.stdout, level=0, flatten=False):
+		flat = self.flat or flatten
+		
+		stream.write(u'<%s' % self.name)
+		
+		for attr,value in self.attrs:
+			value = escape(value)
+			stream.write(u' %s="%s"' % (attr, value))
+		
+		if len(self.children) == 0:
+			stream.write(u'/>')
+		else:
+			stream.write(u'>')
+			if not flat:
+				stream.write(u'\n')
+			for child in self.children:
+				if not flat:
+					stream.write(u'\t'*(level+1))
+				if type(child) == unicode:
+					stream.write(child)
+				else:
+					child.toXML(stream, level+1, flat)
+				if not flat:
+					stream.write(u'\n')
+			if not flat:
+				stream.write(u'\t'*level)
+			stream.write(u'</%s>' % self.name)
+			
 class Namespace:
 	"""
 	Namespace values recognized by Pegasus. See Executable, 
@@ -132,6 +200,12 @@ class CatalogType:
 		self.metadata = []
 		self.pfns = []
 		
+	def __unicode__(self):
+		return unicode(self.name)
+		
+	def __str__(self):
+		return str(self.name)
+		
 	def addProfile(self, profile):
 		"""Add a profile to this replica"""
 		if isinstance(profile, Profile):
@@ -158,27 +232,14 @@ class CatalogType:
 			self.pfns.append(PFN(*pfn))
 		else:
 			raise Exception("Invalid argument")
-	
-	def getInnerXML(self, level=0, indent='\t'):
-		indents = ''.join([indent for i in range(0,level)])
-		xml = StringIO()
+			
+	def innerXML(self, element):
 		for p in self.profiles:
-			xml.write(indents)
-			xml.write(p.toXML())
-			xml.write(u'\n')
+			element.element(p.toXML())
 		for m in self.metadata:
-			xml.write(indents)
-			xml.write(m.toXML())
-			xml.write(u'\n')
+			element.element(m.toXML())
 		for p in self.pfns:
-			xml.write(p.toXML(level, indent))
-			xml.write(u'\n')
-		result = xml.getvalue()
-		xml.close()
-		if len(result) == 0:
-			return None
-		else:
-			return result
+			element.element(p.toXML())
 
 class File(CatalogType):
 	"""File(name[,link][,register][,transfer][,optional])
@@ -230,46 +291,28 @@ class File(CatalogType):
 			optional: The default value for optional (True/False)
 		"""
 		CatalogType.__init__(self, name, link, register, transfer, optional)
-	
-	def __str__(self):
-		return self.toArgumentXML()
 		
 	def toArgumentXML(self):
 		"""Returns an XML representation of this file as a short filename 
 		tag for use in job arguments"""
-		return u'<file name="%s"/>' % (self.name)
+		return Element('file',[('name',self.name)])
 		
 	def toStdioXML(self, tag):
 		"""Returns an XML representation of this file as a stdin/out/err tag"""
-		xml = StringIO()
-		xml.write(u'<%s name="%s"' % (tag, self.name))
 		if tag is 'stdin':
-			xml.write(u' link="input"') # stdin is always input
+			link = "input" # stdin is always input
 		else:
-			xml.write(u' link="output"') # stdout/stderr are always output
-		xml.write(u'/>')
+			link = "output" # stdout/stderr are always output
 		
-		result = xml.getvalue()
-		xml.close()
-		return result
+		return Element(tag, [
+			('name',self.name),
+			('link',link)
+		])
 		
-	def toXML(self, level=0, indent='\t'):
-		"""Returns an XML representation of this file as a filename tag"""
-		indents = ''.join([indent for i in range(0,level)])
-		xml = StringIO()
-		xml.write(u'%s<file name="%s"' % (indents,self.name))
-				
-		inner = self.getInnerXML(level+1,indent)
-		if inner is None:
-			xml.write(u'/>')
-		else:
-			xml.write(u'>\n')
-			xml.write(inner)
-			xml.write('%s</file>'%indents)
-
-		result = xml.getvalue()
-		xml.close()
-		return result
+	def toXML(self):
+		e = Element('file',[('name',self.name)])
+		self.innerXML(e)
+		return e
 	
 class Executable(CatalogType):
 	"""Executable(name[,link][,register][,transfer][,optional][,namespace]
@@ -311,31 +354,20 @@ class Executable(CatalogType):
 		self.osversion = osversion
 		self.glibc = glibc
 		
-	def toXML(self, level=0, indent='\t'):
+	def toXML(self):
 		"""Returns an XML representation of this file as a filename tag"""
-		indents = ''.join([indent for i in range(0,level)])
-		xml = StringIO()
-		
-		xml.write(u'%s<executable name="%s"' % (indents,self.name))
-		if self.namespace: xml.write(u' namespace="%s"' % self.namespace)
-		if self.version: xml.write(u' version="%s"' % self.version)
-		if self.arch: xml.write(u' arch="%s"' % self.arch)
-		if self.os: xml.write(u' os="%s"' % self.os)
-		if self.osrelease: xml.write(u' osrelease="%s"' % self.osrelease)
-		if self.osversion: xml.write(u' osversion="%s"' % self.osversion)
-		if self.glibc: xml.write(u' glibc="%s"' % self.glibc)
-		
-		inner = self.getInnerXML(level+1,indent)
-		if inner is None:
-			xml.write(u'/>')
-		else:
-			xml.write(u'>\n')
-			xml.write(inner)
-			xml.write('%s</executable>'%indents)
-
-		result = xml.getvalue()
-		xml.close()
-		return result
+		e = Element('executable', [
+			('name',self.name),
+			('namespace',self.namespace),
+			('version',self.version),
+			('arch',self.arch),
+			('os',self.os),
+			('osrelease',self.osrelease),
+			('osversion',self.osversion),
+			('glibc',self.glibc)
+		])
+		self.innerXML(e)
+		return e
 	
 class Metadata:
 	"""Metadata(key,type,value)
@@ -362,12 +394,12 @@ class Metadata:
 		self.value = value
 		
 	def toXML(self):
-		xml = StringIO()
-		xml.write(u'<metadata key="%s" type="%s">%s</metadata>' 
-			% (self.key, self.type, self.value))
-		result = xml.getvalue()
-		xml.close()
-		return result
+		m = Element('metadata', [
+			('key',self.key),
+			('type',self.type)
+		])
+		m.text(self.value).flatten()
+		return m
 		
 class PFN:
 	"""PFN(url[,site])
@@ -396,26 +428,14 @@ class PFN:
 		"""Add a profile to this PFN"""
 		self.profiles.extend(profile)
 		
-	def toXML(self, level=0, indent=u'\t'):
-		"""Return an XML representation of this PFN"""
-		indents = ''.join([indent for i in range(0,level)])
-		xml = StringIO()
-		xml.write(u'%s<pfn url="%s" site="%s"'% (indents, self.url, self.site))
-		
-		if len(self.profiles) == 0:
-			xml.write(u'/>')
-		else:
-			xml.write(u'>\n')
-			for p in self.profiles:
-				xml.write(indents)
-				xml.write(indent)
-				xml.write(p.toXML())
-				xml.write(u'\n')
-			xml.write(u'%s</pfn>' % indents)
-			
-		result = xml.getvalue()
-		xml.close()
-		return result
+	def toXML(self):
+		pfn = Element('pfn', [
+			('url',self.url),
+			('site',self.site)
+		])
+		for p in self.profiles:
+			pfn.element(p.toXML())
+		return pfn
 
 class Profile:
 	"""Profile(namespace,key,value)
@@ -443,17 +463,16 @@ class Profile:
 		self.namespace = namespace
 		self.key = key
 		self.value = value
-
+		
 	def toXML(self):
-		"""Return an XML representation of this profile"""
-		xml = StringIO()
-		xml.write(u'<profile namespace="%s" key="%s">' % (self.namespace, self.key))
-		xml.write(unicode(self.value))
-		xml.write(u'</profile>')
-		result = xml.getvalue()
-		xml.close()
-		return result
-
+		"""Return an XML element for this profile"""
+		p = Element("profile", [
+			('namespace', self.namespace),
+			('key', self.key)
+		])
+		p.text(self.value).flatten()
+		return p
+		
 class Use:
 	"""Use(file[,link][,register][,transfer][,optional])
 
@@ -473,10 +492,8 @@ class Use:
 		self.optional = optional
 		self.register = register
 		self.transfer = transfer
-
+		
 	def toXML(self):
-		xml = StringIO()
-
 		link = self.link or self.file.link
 		optional = self.optional or self.file.optional
 		register = self.register or self.file.register
@@ -490,19 +507,15 @@ class Use:
 			version = None
 			executable = None
 			
-		xml.write(u'<uses name="%s"' % self.file.name)
-		if link: xml.write(u' link="%s"' % link)
-		if optional: xml.write(u' optional="%s"' % unicode(optional).lower())
-		if register: xml.write(u' register="%s"' % unicode(register).lower())
-		if transfer: xml.write(u' transfer="%s"' % unicode(transfer).lower())
-		if namespace: xml.write(u' namespace="%s"' % namespace)
-		if version: xml.write(u' version="%s"' % version)
-		if executable: xml.write(u' executable="true"')
-		xml.write(u'/>')
-
-		result = xml.getvalue()
-		xml.close()
-		return result
+		return Element('uses', [
+			('name',self.file.name),
+			('optional',optional),
+			('register',register),
+			('transfer',transfer),
+			('namespace',namespace),
+			('version',version),
+			('executable',True)
+		])
 
 class Transformation:
 	"""Transformation((name|executable)[,namespace][,version])
@@ -601,31 +614,16 @@ class Transformation:
 		use = Use(file,link,register,transfer,optional)
 		self.used_files.append(use)
 		
-	def toXML(self, level=0, indent=u'\t'):
+	def toXML(self):
 		"""Return an XML representation of this transformation"""
-		indentation = u''.join([indent for i in range(0,level)])
-		xml = StringIO()
-		
-		xml.write(u'%s<transformation' % indentation)
-		if self.namespace: xml.write(u' namespace="%s"' % self.namespace)
-		xml.write(u' name="%s"' % self.name)
-		if self.version: xml.write(u' version="%s"' % self.version)
-		
-		if len(self.used_files) == 0:
-			xml.write("/>")
-		else:
-			xml.write(u'>\n')
-			for u in self.used_files:
-				xml.write(indentation)
-				xml.write(indent)
-				xml.write(u.toXML())
-				xml.write(u'\n')
-			xml.write(u'%s</transformation>' % indentation)
-			
-		result = xml.getvalue()
-		xml.close()
-		
-		return result
+		e = Element('transformation', [
+			('namespace',self.namespace),
+			('name',self.name),
+			('version',self.version)
+		])
+		for u in self.used_files:
+			e.element(u.toXML())
+		return e
 		
 class AbstractJob:
 	"""The base class for Job, DAX, and DAG"""
@@ -718,63 +716,43 @@ class AbstractJob:
 		"""
 		self.notifications.append((when, what))
 		
-	def innerXML(self, level=0, indent=u'\t'):
+	def innerXML(self, element):
 		"""Return an XML representation of this job"""
-		xml = StringIO()
-		indentation = u''.join(indent for x in range(0,level))
-		
 		# Arguments
 		if len(self.arguments) > 0:
-			xml.write(indentation)
-			xml.write(indent)
-			xml.write(u'<argument>')
-			xml.write(u' '.join(unicode(x) for x in self.arguments))
-			xml.write(u'</argument>\n')
+			args = Element('argument').flatten()
+			element.element(args)
+			first=True
+			for x in self.arguments:
+				if not first:
+					args.text(' ')
+				first=False
+				if x.__class__ == File:
+					args.element(x.toArgumentXML())
+				else:
+					args.text(x)
 
 		# Profiles
 		if len(self.profiles) > 0:
 			for pro in self.profiles:
-				xml.write(indentation)
-				xml.write(indent)
-				xml.write(u'%s\n' % pro.toXML())
+				element.element(pro.toXML())
 		
 		# Stdin/xml/err
 		if self.stdin is not None:
-			xml.write(indentation)
-			xml.write(indent)
-			xml.write(self.stdin.toStdioXML('stdin'))
-			xml.write(u'\n')
+			element.element(self.stdin.toStdioXML('stdin'))
 		if self.stdout is not None:
-			xml.write(indentation)
-			xml.write(indent)
-			xml.write(self.stdout.toStdioXML('stdout'))
-			xml.write(u'\n')
+			element.element(self.stdout.toStdioXML('stdout'))
 		if self.stderr is not None:
-			xml.write(indentation)
-			xml.write(indent)
-			xml.write(self.stderr.toStdioXML('stderr'))
-			xml.write(u'\n')
+			element.element(self.stderr.toStdioXML('stderr'))
 
 		# Uses
 		for use in self.used_files:
-			xml.write(indentation)
-			xml.write(indent)
-			xml.write(use.toXML())
-			xml.write(u'\n')
+			element.element(use.toXML())
 				
 		# Notifications
-		for invoke in self.notifications:
-			xml.write(indentation)
-			xml.write(indent)
-			xml.write(u'<invoke when="%s">%s</invoke>\n'%invoke)
-		
-		result = xml.getvalue()
-		xml.close()
-		
-		if len(result)==0:
-			return None
-		else:
-			return result
+		for when,what in self.notifications:
+			n = Element('invoke',[('when',when)]).text(what).flatten()
+			element.element(n)
 
 class Job(AbstractJob):
 	"""Job((name|transformation)[,id][,namespace][,version][,node_label])
@@ -837,31 +815,16 @@ class Job(AbstractJob):
 		if namespace: self.namespace = namespace
 		if version: self.version = version
 		
-	def toXML(self, level=0, indent=u'\t'):
-		"""Return an XML representation of this job"""
-		xml = StringIO()
-		indentation = u''.join(indent for x in range(0,level))
-		
-		# Open tag
-		xml.write(indentation)
-		xml.write(u'<job id="%s"' % self.id)
-		if self.namespace: xml.write(u' namespace="%s"' % self.namespace)
-		xml.write(u' name="%s"' % self.name)
-		if self.version: xml.write(u' version="%s"' % self.version)
-		if self.node_label: xml.write(u' node-label="%s"' % self.node_label)
-		
-		inner = self.innerXML(level,indent)
-		if inner:
-			xml.write(u'>\n')
-			xml.write(inner)
-			xml.write(indentation)
-			xml.write(u'</job>')
-		else:
-			xml.write(u'/>\n')
-		
-		result = xml.getvalue()
-		xml.close()
-		return result
+	def toXML(self):
+		e = Element('job',[
+			('id',self.id),
+			('namespace',self.namespace),
+			('name',self.name),
+			('version',self.version),
+			('node-label',self.node_label)
+		])
+		self.innerXML(e)
+		return e
 		
 class DAX(AbstractJob):
 	"""DAX(file[,id][,node_label])
@@ -896,28 +859,15 @@ class DAX(AbstractJob):
 			t_name = file
 		AbstractJob.__init__(self, name=t_name, id=id, node_label=node_label)
 		
-	def toXML(self, level=0, indent=u'\t'):
+	def toXML(self):
 		"""Return an XML representation of this job"""
-		xml = StringIO()
-		indentation = u''.join(indent for x in range(0,level))
-		
-		# Open tag
-		xml.write(indentation)
-		xml.write(u'<dax id="%s" file="%s"' % (self.id, self.name))
-		if self.node_label: xml.write(u' node-label="%s"' % self.node_label)
-		
-		inner = self.innerXML(level,indent)
-		if inner:
-			xml.write(u'>\n')
-			xml.write(inner)
-			xml.write(indentation)
-			xml.write(u'</dax>')
-		else:
-			xml.write(u'/>')
-		
-		result = xml.getvalue()
-		xml.close()
-		return result
+		e = Element('dax', [
+			('id',self.id),
+			('file',self.name),
+			('node-label',self.node_label)
+		])
+		self.innerXML(e)
+		return e
 	
 class DAG(AbstractJob):
 	"""DAG(file[,id][,node_label])
@@ -951,28 +901,15 @@ class DAG(AbstractJob):
 			t_name = file
 		AbstractJob.__init__(self, name=t_name, id=id, node_label=node_label)
 			
-	def toXML(self, level=0, indent=u'\t'):
+	def toXML(self):
 		"""Return an XML representation of this DAG"""
-		xml = StringIO()
-		indentation = u''.join(indent for x in range(0,level))
-		
-		# Open tag
-		xml.write(indentation)
-		xml.write(u'<dag id="%s" file="%s"' % (self.id, self.name))
-		if self.node_label: xml.write(u' node-label="%s"' % self.node_label)
-		
-		inner = self.innerXML(level,indent)
-		if inner:
-			xml.write(u'>\n')
-			xml.write(inner)
-			xml.write(indentation)
-			xml.write(u'</dag>')
-		else:
-			xml.write(u'/>')
-		
-		result = xml.getvalue()
-		xml.close()
-		return result
+		e = Element('dag', [
+			('id',self.id),
+			('file',self.name),
+			('node-label',self.node_label)
+		])
+		self.innerXML(e)
+		return e
 
 class Dependency:
 	"""A control-flow dependency between a child and its parents"""
@@ -983,28 +920,17 @@ class Dependency:
 	def addParent(self, parent, edge_label=None):
 		self.parents.append([parent,edge_label])
 
-	def toXML(self, level=0, indent=u'\t'):
+	def toXML(self):
 		"""Generate an XML representation of this"""
-		xml = StringIO()
-		indentation = ''.join([indent for x in range(0,level)])
-			
-		xml.write(indentation)
-		xml.write(u'<child ref="%s">\n' % self.child.id)
+		e = Element('child',[('ref',self.child.id)])
 		for parent, edge_label in self.parents:
-			xml.write(indentation)
-			xml.write(indent)
-			if edge_label is None:
-				xml.write(u'<parent ref="%s"/>\n' % parent.id)
-			else:
-				xml.write(u'<parent ref="%s" edge-label="%s"/>\n'
-					% (parent.id, edge_label))
-		xml.write(indentation)
-		xml.write(u'</child>')
-			
-		result = xml.getvalue()
-		xml.close()
-		return result
-
+			p = Element('parent',[
+				('ref',parent.id),
+				('edge-label',edge_label)
+			])
+			e.element(p)
+		return e
+		
 class ADAG:
 	"""ADAG(name[,count][,index])
 	
@@ -1104,7 +1030,7 @@ class ADAG:
 			self.dependencies.append(dep)
 		self.lookup[child].addParent(parent,edge_label)
 
-	def writeXML(self, out, level=0, indent='\t'):
+	def writeXML(self, out):
 		"""Write the DAX as XML to a stream"""
 		# Preamble
 		out.write(u'<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -1125,30 +1051,35 @@ class ADAG:
 		out.write(u'>\n')
 
 		# Files and executables
-		out.write(u'\n%s<!-- part 1: Replica catalog (may be empty) -->\n' % indent)
-		for file in self.files:
-			out.write(file.toXML(level=level+1,indent=indent))
+		out.write(u'\n\t<!-- part 1: Replica catalog (may be empty) -->\n')
+		for f in self.files:
+			out.write(u'\t')
+			f.toXML().toXML(stream=out,level=1)
 			out.write(u'\n')
-		for exe in self.executables:
-			out.write(exe.toXML(level=level+1,indent=indent))
+		for e in self.executables:
+			out.write(u'\t')
+			e.toXML().toXML(stream=out,level=1)
 			out.write(u'\n')
 			
 		# Transformations
-		out.write(u'\n%s<!-- part 2: Transformation catalog (may be empty) -->\n' % indent)
+		out.write(u'\n\t<!-- part 2: Transformation catalog (may be empty) -->\n')
 		for t in self.transformations:
-			out.write(t.toXML(level=level+1,indent=indent))
+			out.write(u'\t')
+			t.toXML().toXML(stream=out,level=1)
 			out.write(u'\n')
 		
 		# Jobs
-		out.write(u'\n%s<!-- part 3: Definition of all jobs/dags/daxes (at least one) -->\n' % indent)
+		out.write(u'\n\t<!-- part 3: Definition of all jobs/dags/daxes (at least one) -->\n')
 		for job in self.jobs:
-			out.write(job.toXML(level=level+1,indent=indent))
+			out.write(u'\t')
+			job.toXML().toXML(stream=out,level=1)
 			out.write(u'\n')
 		
 		# Dependencies
-		out.write(u'\n%s<!-- part 4: List of control-flow dependencies (may be empty) -->\n' % indent)
+		out.write(u'\n\t<!-- part 4: List of control-flow dependencies (may be empty) -->\n')
 		for dep in self.dependencies:
-			out.write(dep.toXML(level=level+1,indent=indent))
+			out.write(u'\t')
+			dep.toXML().toXML(stream=out,level=1)
 			out.write(u'\n')
 		
 		# Close tag
@@ -1474,12 +1405,13 @@ def test():
 	# A DAG
 	dagfile = File("pre.dag")
 	predag = DAG(dagfile,node_label="predag")
+	predag.invoke('at_end','/bin/echo "foo bar"')
 	diamond.addDAG(predag)
 	
 	# A DAX
 	daxfile = File("post.xml")
 	postdax = DAX(daxfile,node_label="postdax")
-	postdax.invoke('at_end','/bin/echo "yay"')
+	postdax.invoke('at_end',"/bin/echo 'yay'")
 	diamond.addDAX(postdax)
 
 	# Add control-flow dependencies
