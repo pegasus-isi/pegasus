@@ -20,7 +20,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -64,15 +64,11 @@ public class TestDAXParser {
        bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
 
        
-       /* instantiate the Callback via the callback Factory */
-       Callback mycallback = DAXCallbackFactory.loadInstance( properties, daxFile, "edu.isi.pegasus.planner.parser.dax.ExampleDAXCallback" );
-
        /* instantiate the DAX Parser and start parsing */
        try{
 //           DaxParser parser = new DaxParser( daxFile, bag, mycallback );
            //DAXParser3 parser3 = new DAXParser3( daxFile, bag, mycallback );
-           Parser daxParser = new DAXParser3( bag );
-           ((DAXParser)daxParser).setDAXCallback( mycallback );
+           Parser daxParser = DAXParserFactory.loadDAXParser( bag, "edu.isi.pegasus.planner.parser.dax.ExampleDAXCallback", daxFile );
            daxParser.startParser( daxFile );
        }
        catch( Exception e ){

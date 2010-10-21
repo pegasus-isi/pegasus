@@ -25,7 +25,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.parser.DAXParser2;
 
-import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import java.util.Collection;
@@ -109,7 +109,7 @@ public class Rank {
         long runtime;
         for( Iterator it = daxes.iterator(); it.hasNext(); ){
             String dax = ( String ) it.next();
-            Callback cb = DAXCallbackFactory.loadInstance( mBag.getPegasusProperties(),
+            Callback cb = DAXParserFactory.loadDAXParserCallback( mBag.getPegasusProperties(),
                                                            dax,
                                                            "DAX2CDAG" );
 

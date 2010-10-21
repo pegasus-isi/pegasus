@@ -28,7 +28,7 @@ import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 
-import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.DAXParser2;
 
@@ -941,7 +941,7 @@ public class SUBDAXGenerator{
      * @return Map containing the metadata.
      */
     public Map getDAXMetadata( String dax ){
-        Callback cb =  DAXCallbackFactory.loadInstance( mProps, dax, "DAX2Metadata" );
+        Callback cb =  DAXParserFactory.loadDAXParserCallback( mProps, dax, "DAX2Metadata" );
 
         try{
             DAXParser2 daxParser = new DAXParser2( dax, mBag, cb);

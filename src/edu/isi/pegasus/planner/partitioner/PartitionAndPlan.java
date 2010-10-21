@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
 
-import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import edu.isi.pegasus.planner.classes.ADag;
@@ -196,7 +196,7 @@ public class PartitionAndPlan{
      */
     public Collection<File> doPartitionAndPlan( PegasusProperties properties, PlannerOptions options ) {
         //we first need to get the label of DAX
-        Callback cb =  DAXCallbackFactory.loadInstance( properties, options.getDAX(), "DAX2Metadata" );
+        Callback cb =  DAXParserFactory.loadDAXParserCallback( properties, options.getDAX(), "DAX2Metadata" );
 
         try{
             DAXParser2 daxParser = new DAXParser2(options.getDAX(), mBag, cb);

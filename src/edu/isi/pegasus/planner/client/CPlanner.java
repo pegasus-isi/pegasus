@@ -49,7 +49,7 @@ import edu.isi.pegasus.planner.refiner.createdir.WindwardImplementation;
 
 
 import edu.isi.pegasus.planner.parser.dax.Callback;
-import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
 
 import edu.isi.pegasus.planner.parser.pdax.PDAXCallbackFactory;
 
@@ -399,7 +399,7 @@ public class CPlanner extends Executable{
         else if(pdax == null && dax != null
              && !eSites.isEmpty()){
 
-            Callback cb =  DAXCallbackFactory.loadInstance( mProps, dax, "DAX2CDAG" );
+            Callback cb =  DAXParserFactory.loadDAXParserCallback( mProps, dax, "DAX2CDAG" );
 
             DAXParser2 daxParser = new DAXParser2( dax, mBag, cb );
 
@@ -904,7 +904,7 @@ public class CPlanner extends Executable{
      */
     protected void doPartitionAndPlan( PegasusProperties properties, PlannerOptions options ){
         //we first need to get the label of DAX
-        Callback cb =  DAXCallbackFactory.loadInstance( properties, options.getDAX(), "DAX2Metadata" );
+        Callback cb =  DAXParserFactory.loadDAXParserCallback( properties, options.getDAX(), "DAX2Metadata" );
         try{
             DAXParser2 daxParser = new DAXParser2( options.getDAX(), mBag, cb );
         }catch( Exception e ){
@@ -1146,7 +1146,7 @@ public class CPlanner extends Executable{
             bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
             bag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
             bag.add( PegasusBag.PLANNER_OPTIONS, mPOptions );
-//            bag.add( PegasusBag.TRANSFORMATION_CATALOG, TCMode.loadInstance() );
+//            bag.add( PegasusBag.TRANSFORMATION_CATALOG, TCMode.loadDAXParserCallback() );
           //bag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
             bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
             bag.add( PegasusBag.SITE_STORE, mBag.getHandleToSiteStore() );

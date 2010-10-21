@@ -21,7 +21,7 @@ import edu.isi.pegasus.planner.parser.DAXParser2;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAX2Graph;
 import edu.isi.pegasus.planner.parser.dax.DAX2LabelGraph;
-import edu.isi.pegasus.planner.parser.dax.DAXCallbackFactory;
+import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
 
 import edu.isi.pegasus.planner.partitioner.WriterCallback;
 import edu.isi.pegasus.planner.partitioner.Partitioner;
@@ -236,7 +236,7 @@ public class PartitionDAX extends Executable {
         String daxName          = null;
         int state = 0;
         try{
-            callback = DAXCallbackFactory.loadInstance( type,
+            callback = DAXParserFactory.loadDAXParserCallback( type,
                                                         properties,
                                                         daxFile );
 
