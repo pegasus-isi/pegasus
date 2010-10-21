@@ -16,12 +16,12 @@
 
 package edu.isi.pegasus.planner.client;
 
-import edu.isi.pegasus.planner.parser.DAXParser2;
+import edu.isi.pegasus.planner.parser.dax.DAXParser2;
 
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.dax.DAX2Graph;
 import edu.isi.pegasus.planner.parser.dax.DAX2LabelGraph;
-import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
+import edu.isi.pegasus.planner.parser.DAXParserFactory;
 
 import edu.isi.pegasus.planner.partitioner.WriterCallback;
 import edu.isi.pegasus.planner.partitioner.Partitioner;

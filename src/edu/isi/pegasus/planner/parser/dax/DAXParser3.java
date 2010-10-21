@@ -16,8 +16,9 @@
  * 
  */
 
-package edu.isi.pegasus.planner.parser;
+package edu.isi.pegasus.planner.parser.dax;
 
+import edu.isi.pegasus.planner.parser.*;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 

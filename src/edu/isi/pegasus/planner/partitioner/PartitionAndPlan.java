@@ -18,7 +18,7 @@ package edu.isi.pegasus.planner.partitioner;
 
 import edu.isi.pegasus.common.logging.LoggingKeys;
 
-import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
+import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import edu.isi.pegasus.planner.classes.ADag;
@@ -30,7 +30,7 @@ import java.io.BufferedReader;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
-import edu.isi.pegasus.planner.parser.DAXParser2;
+import edu.isi.pegasus.planner.parser.dax.DAXParser2;
 
 
 import edu.isi.pegasus.planner.client.CPlanner;

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.parser.dax;
+package edu.isi.pegasus.planner.parser;
 
 import edu.isi.pegasus.common.util.FactoryException;
 

@@ -14,8 +14,9 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.parser.dax;
+package edu.isi.pegasus.planner.parser;
 
+import edu.isi.pegasus.planner.parser.dax.*;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -23,7 +24,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.parser.DAXParser;
 import edu.isi.pegasus.planner.parser.Parser;
 import java.io.File;
 
@@ -47,7 +47,7 @@ public class DAXParserFactory {
      * Package to prefix "just" class names with.
      */
     public static final String DEFAULT_PARSER_PACKAGE_NAME =
-                                             "edu.isi.pegasus.planner.parser";
+                                             "edu.isi.pegasus.planner.parser.dax";
 
     /**
      * Package to prefix "just" class names with.

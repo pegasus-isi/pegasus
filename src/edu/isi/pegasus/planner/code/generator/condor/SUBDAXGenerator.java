@@ -28,9 +28,9 @@ import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 
-import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
+import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
-import edu.isi.pegasus.planner.parser.DAXParser2;
+import edu.isi.pegasus.planner.parser.dax.DAXParser2;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;

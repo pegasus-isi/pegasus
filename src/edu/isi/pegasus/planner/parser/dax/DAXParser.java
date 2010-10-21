@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.parser;
+package edu.isi.pegasus.planner.parser.dax;
 
 import edu.isi.pegasus.planner.parser.dax.Callback;
 

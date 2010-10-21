@@ -49,11 +49,11 @@ import edu.isi.pegasus.planner.refiner.createdir.WindwardImplementation;
 
 
 import edu.isi.pegasus.planner.parser.dax.Callback;
-import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
+import edu.isi.pegasus.planner.parser.DAXParserFactory;
 
 import edu.isi.pegasus.planner.parser.pdax.PDAXCallbackFactory;
 
-import edu.isi.pegasus.planner.parser.DAXParser2;
+import edu.isi.pegasus.planner.parser.dax.DAXParser2;
 import edu.isi.pegasus.planner.parser.PDAXParser;
 
 

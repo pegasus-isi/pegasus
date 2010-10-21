@@ -14,9 +14,10 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.parser;
+package edu.isi.pegasus.planner.parser.dax;
 
 
+import edu.isi.pegasus.planner.parser.*;
 import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 

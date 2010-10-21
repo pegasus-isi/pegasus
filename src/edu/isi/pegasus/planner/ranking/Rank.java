@@ -23,9 +23,9 @@ import edu.isi.pegasus.planner.classes.ADag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.parser.DAXParser2;
+import edu.isi.pegasus.planner.parser.dax.DAXParser2;
 
-import edu.isi.pegasus.planner.parser.dax.DAXParserFactory;
+import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import java.util.Collection;
