@@ -172,7 +172,7 @@ class When:
 class CatalogType:
 	"""Base class for File and Executable"""
 	
-	def __init__(self, name, link, register, transfer, optional):
+	def __init__(self, name):
 		"""
 		All arguments specify the workflow-level behavior of this File. Job-level
 		behavior can be defined when adding the File to a Job's uses. If the
@@ -183,19 +183,11 @@ class CatalogType:
 		of link is ignored when generating the <std*> tags.
 		
 		Arguments:
-			filename: The name of the file (required)
-			link: Is this file a workflow-level input/output/both? (see Link)
-			register: The default value for register (True/False)
-			transfer: The default value for transfer (see Transfer, or True/False)
-			optional: The default value for optional (True/False)
+			name: The name of the file (required)
 		"""
 		if name is None:
 			raise ValueError, 'name required'
 		self.name = name
-		self.link = link
-		self.register = register
-		self.transfer = transfer
-		self.optional = optional
 		self.profiles = []
 		self.metadata = []
 		self.pfns = []
@@ -242,38 +234,22 @@ class CatalogType:
 			element.element(p.toXML())
 
 class File(CatalogType):
-	"""File(name[,link][,register][,transfer][,optional])
+	"""File(name)
 	
 	A file entry for the DAX-level replica catalog, or a reference to a logical file
 	used by the workflow.
 	
 	Examples:
-		input = File('input.txt',link=Link.INPUT,transfer=True)
-		intermediate = File('intermediate.txt',link=Link.OUTPUT)
-		result = File('result.txt',link=Link.OUTPUT,register=True,transfer=True)
-		opt = File('optional.txt',link=Link.OUTPUT,optional=True)
-		binary = File('binary',link=Link.INPUT,transfer=True)
+		input = File('input.txt')
 		
 	Example use in job:
-		input = File('input.txt', link=Link.INPUT, transfer=True)
-		output = File('output.txt', link=Link.OUTPUT, transfer=True, register=True)
+		input = File('input.txt')
+		output = File('output.txt')
 		job = Job(name="compute")
-		job.uses(input)
-		job.uses(output)
-		
-	Example use across several jobs:
-		input = File('input.txt', link=Link.INPUT, transfer=True)
-		intermediate = File('intermediate.txt')
-		output = File('output.txt', link=Link.OUTPUT, transfer=True, register=True)
-		pre = Job(name="preprocess")
-		pre.uses(input)
-		pre.uses(intermediate, link=Link.OUTPUT)
-		post = Job(name="postprocess")
-		post.uses(intermediate, link=Link.INPUT)
-		post.uses(output)
+		job.uses(input, link=Link.INPUT, transfer=True)
+		job.uses(output, link=Link.OUTPUT, transfer=True, register=True)
 	"""
-	def __init__(self, name, link=None, 
-				 register=False, transfer=False, optional=None):
+	def __init__(self, name):
 		"""
 		All arguments specify the workflow-level behavior of this File. Job-level
 		behavior can be defined when adding the File to a Job's uses. If the
@@ -284,13 +260,9 @@ class File(CatalogType):
 		of link is ignored when generating the <std*> tags.
 		
 		Arguments:
-			filename: The name of the file (required)
-			link: Is this file a workflow-level input/output/both? (see Link)
-			register: The default value for register (True/False)
-			transfer: The default value for transfer (see Transfer, or True/False)
-			optional: The default value for optional (True/False)
+			name: The name of the file (required)
 		"""
-		CatalogType.__init__(self, name, link, register, transfer, optional)
+		CatalogType.__init__(self, name)
 		
 	def toArgumentXML(self):
 		"""Returns an XML representation of this file as a short filename 
@@ -315,8 +287,7 @@ class File(CatalogType):
 		return e
 	
 class Executable(CatalogType):
-	"""Executable(name[,link][,register][,transfer][,optional][,namespace]
-				  [,version][,arch][,os][,osrelease][,osversion][,glibc])
+	"""Executable(name[,namespace][,version][,arch][,os][,osrelease][,osversion][,glibc])
 				
 	An entry for an executable in the DAX-level replica catalog.
 	
@@ -326,17 +297,11 @@ class Executable(CatalogType):
 		grep = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86)
 		grep = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86,os=OS.LINUX)
 	"""
-	def __init__(self, name, link=Link.INPUT, 
-				 register=False, transfer=True, optional=None, 
-				 namespace=None, version=None, arch=None, os=None, 
+	def __init__(self, name, namespace=None, version=None, arch=None, os=None, 
 				 osrelease=None, osversion=None, glibc=None):
 		"""
 		Arguments:
 			name: Logical name of executable
-			link: See CatalogType
-			register: See CatalogType
-			transfer: See CatalogType
-			optional: See CatalogType
 			namespace: Executable namespace
 			version: Executable version
 			arch: Architecture that this exe was compiled for
@@ -345,7 +310,7 @@ class Executable(CatalogType):
 			osversion: Version of os that this exe was compiled for
 			glibc: Version of glibc this exe was compiled against
 		"""
-		CatalogType.__init__(self, name, link, register, transfer, optional)
+		CatalogType.__init__(self, name)
 		self.namespace = namespace
 		self.version = version
 		self.arch = arch
@@ -487,6 +452,10 @@ class Use:
 				optional=None):
 		if file is None:
 			raise ValueError, 'file required'
+		if isinstance(file, CatalogType):
+			self.name = file.name
+		else:
+			self.name = file
 		self.file = file
 		self.link = link
 		self.optional = optional
@@ -494,10 +463,6 @@ class Use:
 		self.transfer = transfer
 		
 	def toXML(self):
-		link = self.link or self.file.link
-		optional = self.optional or self.file.optional
-		register = self.register or self.file.register
-		transfer = self.transfer or self.file.transfer
 		if isinstance(self.file, Executable):
 			namespace = self.file.namespace
 			version = self.file.version
@@ -508,13 +473,13 @@ class Use:
 			executable = None
 			
 		return Element('uses', [
-			('name',self.file.name),
-			('optional',optional),
-			('register',register),
-			('transfer',transfer),
 			('namespace',namespace),
+			('name',self.file.name),
 			('version',version),
-			('executable',True)
+			('optional',self.optional),
+			('register',self.register),
+			('transfer',self.transfer),
+			('executable',executable)
 		])
 
 class Transformation:
@@ -1214,8 +1179,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 			self.lastPFN = pfn
 		elif element in ["stdin","stdout","stderr"]:
 			name = attrs.get("name")
-			link = attrs.get("link")
-			f = File(name,link=link)
+			f = File(name)
 			if element == "stdin":
 				self.lastJob.setStdin(f)
 			elif element == "stdout":
@@ -1324,12 +1288,12 @@ def test():
 	diamond = ADAG("diamond")
 
 	# Create some logical file names
-	a = File("f.a",link=Link.INPUT,transfer=True)
-	b1 = File("f.b1",link=Link.OUTPUT,transfer=True)
-	b2 = File("f.b2",link=Link.OUTPUT,transfer=True)
-	c1 = File("f.c1",link=Link.OUTPUT,transfer=True)
-	c2 = File("f.c2",link=Link.OUTPUT,transfer=True)
-	d = File("f.d",link=Link.OUTPUT,transfer=True,register=True)
+	a = File("f.a")
+	b1 = File("f.b1")
+	b2 = File("f.b2")
+	c1 = File("f.c1")
+	c2 = File("f.c2")
+	d = File("f.d")
 	
 	# Add a bunch of stuff to test functionality
 	a.addProfile(Profile(namespace="test",key="foo",value="baz"))
@@ -1362,7 +1326,7 @@ def test():
 	# Add transformation (long form)
 	t_preprocess = Transformation(namespace="diamond",name="preprocess",version="2.0")
 	t_preprocess.uses(e_preprocess)
-	t_preprocess.uses(a)
+	t_preprocess.uses(a,link=Link.INPUT,transfer=True)
 	diamond.addTransformation(t_preprocess)
 	
 	# Add transformation (short form)
@@ -1375,31 +1339,31 @@ def test():
 	# Add a preprocess job
 	preprocess = Job(t_preprocess,node_label="foobar")
 	preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-	preprocess.uses(a,link=Link.INPUT)
-	preprocess.uses(b1,link=Link.OUTPUT)
-	preprocess.uses(b2,link=Link.OUTPUT)
+	preprocess.uses(a,link=Link.INPUT, transfer=True)
+	preprocess.uses(b1,link=Link.OUTPUT, transfer=True)
+	preprocess.uses(b2,link=Link.OUTPUT, transfer=True)
 	diamond.addJob(preprocess)
 
 	# Add left Findrange job
 	frl = Job(t_findrange)
 	frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-	frl.uses(b1,link=Link.INPUT)
-	frl.uses(c1,link=Link.OUTPUT)
+	frl.uses(b1,link=Link.INPUT, transfer=True)
+	frl.uses(c1,link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frl)
 
 	# Add right Findrange job
 	frr = Job(namespace="diamond",name="findrange",version="2.0")
 	frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-	frr.uses(b2,link=Link.INPUT)
-	frr.uses(c2,link=Link.OUTPUT)
+	frr.uses(b2,link=Link.INPUT, transfer=True)
+	frr.uses(c2,link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frr)
 
 	# Add Analyze job
 	analyze = Job(namespace="diamond",name="analyze",version="2.0")
 	analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-	analyze.uses(c1,link=Link.INPUT)
-	analyze.uses(c2,link=Link.INPUT)
-	analyze.uses(d,link=Link.OUTPUT)
+	analyze.uses(c1,link=Link.INPUT, transfer=True)
+	analyze.uses(c2,link=Link.INPUT, transfer=True)
+	analyze.uses(d,link=Link.OUTPUT, transfer=True, register=True)
 	diamond.addJob(analyze)
 	
 	# A DAG
@@ -1448,7 +1412,7 @@ def diamond():
 	diamond = ADAG("diamond")
 	
 	# Add input file to the DAX-level replica catalog
-	a = File("f.a", link=Link.INPUT, transfer=True)
+	a = File("f.a")
 	a.addPFN(PFN("gsiftp://site.com/inputs/f.a","site"))
 	diamond.addFile(a)
 	
@@ -1477,37 +1441,37 @@ def diamond():
 
 	# Add a preprocess job
 	preprocess = Job(t_preprocess)
-	b1 = File("f.b1", link=Link.OUTPUT, transfer=True)
-	b2 = File("f.b2", link=Link.OUTPUT, transfer=True)
+	b1 = File("f.b1")
+	b2 = File("f.b2")
 	preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-	preprocess.uses(a, link=Link.INPUT)
-	preprocess.uses(b1, link=Link.OUTPUT)
-	preprocess.uses(b2, link=Link.OUTPUT)
+	preprocess.uses(a, link=Link.INPUT, transfer=True)
+	preprocess.uses(b1, link=Link.OUTPUT, transfer=True)
+	preprocess.uses(b2, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(preprocess)
 
 	# Add left Findrange job
 	frl = Job(t_findrange)
-	c1 = File("f.c1", link=Link.OUTPUT, transfer=True)
+	c1 = File("f.c1")
 	frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-	frl.uses(b1, link=Link.INPUT)
-	frl.uses(c1, link=Link.OUTPUT)
+	frl.uses(b1, link=Link.INPUT, transfer=True)
+	frl.uses(c1, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frl)
 
 	# Add right Findrange job
 	frr = Job(t_findrange)
-	c2 = File("f.c2", link=Link.OUTPUT, transfer=True)
+	c2 = File("f.c2")
 	frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-	frr.uses(b2, link=Link.INPUT)
-	frr.uses(c2, link=Link.OUTPUT)
+	frr.uses(b2, link=Link.INPUT, transfer=True)
+	frr.uses(c2, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frr)
 
 	# Add Analyze job
 	analyze = Job(t_analyze)
-	d = File("f.d", link=Link.OUTPUT, transfer=True, register=True)
+	d = File("f.d")
 	analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-	analyze.uses(c1, link=Link.INPUT)
-	analyze.uses(c2, link=Link.INPUT)
-	analyze.uses(d, link=Link.OUTPUT)
+	analyze.uses(c1, link=Link.INPUT, transfer=True)
+	analyze.uses(c2, link=Link.INPUT, transfer=True)
+	analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
 	diamond.addJob(analyze)
 
 	# Add control-flow dependencies
@@ -1522,4 +1486,4 @@ def diamond():
 	
 if __name__ == '__main__':
 	test()
-	#diamond()
+	diamond()
