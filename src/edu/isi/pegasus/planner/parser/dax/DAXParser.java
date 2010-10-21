@@ -33,4 +33,11 @@ public interface DAXParser {
      */
     public void setDAXCallback( Callback c );
 
+    /**
+     * Retuns the DAXCallback for the parser
+     *
+     * @return  the callback
+     */
+    public Callback getDAXCallback(  );
+
 }

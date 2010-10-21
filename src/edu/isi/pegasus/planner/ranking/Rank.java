@@ -26,6 +26,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.parser.dax.DAXParser2;
 
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
+import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import java.util.Collection;
@@ -114,9 +115,9 @@ public class Rank {
                                                            "DAX2CDAG" );
 
             mLogger.log( "Ranking dax " + dax, LogManager.DEBUG_MESSAGE_LEVEL );
-            DAXParser2 daxParser = new DAXParser2( dax,
-                                                 mBag,
-                                                 cb );
+//            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb );
+            Parser p = DAXParserFactory.loadDAXParser( mBag, cb );
+            p.startParser( dax );
 
             ADag dag = (ADag)cb.getConstructedObject();
             //dag.setRequestID( mRequestID );

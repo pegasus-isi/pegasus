@@ -170,6 +170,14 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         this.mCallback = c;
     }
 
+    /**
+     * Retuns the DAXCallback for the parser
+     *
+     * @return  the callback
+     */
+    public Callback getDAXCallback(  ){
+        return this.mCallback;
+    }
 
     /**
      * The main method that starts the parsing.

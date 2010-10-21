@@ -36,6 +36,7 @@ import edu.isi.pegasus.planner.parser.dax.DAXParser2;
 import edu.isi.pegasus.planner.client.CPlanner;
 import edu.isi.pegasus.planner.client.PartitionDAX;
 
+import edu.isi.pegasus.planner.parser.Parser;
 import java.util.Map;
 
 import java.io.File;
@@ -199,7 +200,9 @@ public class PartitionAndPlan{
         Callback cb =  DAXParserFactory.loadDAXParserCallback( properties, options.getDAX(), "DAX2Metadata" );
 
         try{
-            DAXParser2 daxParser = new DAXParser2(options.getDAX(), mBag, cb);
+//            DAXParser2 daxParser = new DAXParser2(options.getDAX(), mBag, cb);
+            Parser p = DAXParserFactory.loadDAXParser( mBag, cb );
+            p.startParser( options.getDAX() );
         }
         catch( RuntimeException e ){
             //check explicity for file not found exception

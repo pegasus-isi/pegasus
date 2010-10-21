@@ -30,7 +30,6 @@ import edu.isi.pegasus.planner.namespace.Dagman;
 
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 import edu.isi.pegasus.planner.parser.dax.Callback;
-import edu.isi.pegasus.planner.parser.dax.DAXParser2;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
@@ -40,6 +39,14 @@ import edu.isi.pegasus.planner.client.CPlanner;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+
+
+import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.ENV;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.pdax.PDAX2MDAG;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -56,12 +63,6 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Properties;
 import java.util.Map;
-import edu.isi.pegasus.planner.code.GridStartFactory;
-import edu.isi.pegasus.planner.namespace.Condor;
-import edu.isi.pegasus.planner.namespace.ENV;
-import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.parser.pdax.PDAX2MDAG;
-
 /**
  * The class that takes in a dax job specified in the DAX and renders it into
  * a SUBDAG with pegasus-plan as the appropriate prescript.
@@ -944,7 +945,9 @@ public class SUBDAXGenerator{
         Callback cb =  DAXParserFactory.loadDAXParserCallback( mProps, dax, "DAX2Metadata" );
 
         try{
-            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb);
+//            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb);
+            Parser p = DAXParserFactory.loadDAXParser( mBag, cb );
+            p.startParser( dax );
         }
         catch( RuntimeException e ){
             //check explicity for file not found exception

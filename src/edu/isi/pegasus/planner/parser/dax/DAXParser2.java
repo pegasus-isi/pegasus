@@ -250,7 +250,7 @@ public class DAXParser2 extends Parser implements DAXParser {
      * @param bag   the bag of objects that is useful for initialization.
      * @param callback    the object which implements the callback.
      */
-    public DAXParser2(String daxFileName, PegasusBag bag, Callback callback) {
+    /*public DAXParser2(String daxFileName, PegasusBag bag, Callback callback) {
         this( bag );
 
         try{
@@ -287,7 +287,7 @@ public class DAXParser2 extends Parser implements DAXParser {
 
         startParser(daxFileName);
         mLogger.logEventCompletion();
-    }
+    }*/
 
     /**
      * Set the DAXCallback for the parser to call out to.
@@ -296,6 +296,15 @@ public class DAXParser2 extends Parser implements DAXParser {
      */
     public void setDAXCallback( Callback c ){
         this.mCallback = c;
+    }
+
+    /**
+     * Retuns the DAXCallback for the parser
+     *
+     * @return  the callback
+     */
+    public Callback getDAXCallback(  ){
+        return this.mCallback;
     }
 
     /**

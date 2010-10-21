@@ -91,6 +91,8 @@ import java.util.Properties;
 import java.util.Set;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.dax.DAXParser;
 
 
 /**
@@ -399,9 +401,11 @@ public class CPlanner extends Executable{
         else if(pdax == null && dax != null
              && !eSites.isEmpty()){
 
-            Callback cb =  DAXParserFactory.loadDAXParserCallback( mProps, dax, "DAX2CDAG" );
-
-            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb );
+//            Callback cb =  DAXParserFactory.loadDAXParserCallback( mProps, dax, "DAX2CDAG" );
+//            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb );
+            Parser p = DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
+            Callback cb = ((DAXParser)p).getDAXCallback();
+            p.startParser( dax );
 
             ADag orgDag = (ADag)cb.getConstructedObject();
 
@@ -904,9 +908,19 @@ public class CPlanner extends Executable{
      */
     protected void doPartitionAndPlan( PegasusProperties properties, PlannerOptions options ){
         //we first need to get the label of DAX
-        Callback cb =  DAXParserFactory.loadDAXParserCallback( properties, options.getDAX(), "DAX2Metadata" );
+//        Callback cb =  DAXParserFactory.loadDAXParserCallback( properties, options.getDAX(), "DAX2Metadata" );
+//        try{
+//            DAXParser2 daxParser = new DAXParser2( options.getDAX(), mBag, cb );
+
+        PegasusBag bag = new PegasusBag();
+        bag.add( PegasusBag.PEGASUS_LOGMANAGER, this.mLogger );
+        bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
+        bag.add( PegasusBag.PLANNER_OPTIONS, options );
+        String dax = options.getDAX();
+        Parser p = DAXParserFactory.loadDAXParser( bag, "DAX2Metadata" , dax );
+        Callback cb = ((DAXParser)p).getDAXCallback();
         try{
-            DAXParser2 daxParser = new DAXParser2( options.getDAX(), mBag, cb );
+            p.startParser( dax );
         }catch( Exception e ){
             //ignore
         }
