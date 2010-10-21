@@ -87,6 +87,11 @@ public class DAX2CDAG implements Callback {
      */
     protected TransformationStore mTransformationStore;
 
+    /**
+     * Map of Compound Transfomations indexed by complete name of the compound
+     * transformation.
+     */
+    protected Map<String,CompoundTransformation> mCompoundTransformations;
 
 
     /**
@@ -104,6 +109,7 @@ public class DAX2CDAG implements Callback {
         mDone         = false;
         this.mReplicaStore = new ReplicaStore();
         this.mTransformationStore = new TransformationStore();
+        this.mCompoundTransformations = new HashMap<String,CompoundTransformation>();
     }
 
 
@@ -133,9 +139,21 @@ public class DAX2CDAG implements Callback {
         mVSubInfo.add(job);
         mDagInfo.addNewJob( job );
 
+        //check for compound executables
+        if( this.mCompoundTransformations.containsKey( job.getCompleteTCName() ) ){
+            CompoundTransformation ct = this.mCompoundTransformations.get( job.getCompleteTCName() );
+            //add all the dependant executables and data files
+            for( PegasusFile pf : ct.getDependantFiles() ){
+                job.addInputFile( pf );
+                String lfn = pf.getLFN();
+                mDagInfo.updateLFNMap(lfn,"i");
+            }
+        }
+
         //put the input files in the map
         for ( Iterator it = job.inputFiles.iterator(); it.hasNext(); ){
-            String lfn = ((PegasusFile)it.next()).getLFN();
+            PegasusFile pf = (PegasusFile)it.next();
+            String lfn = pf.getLFN();
             mDagInfo.updateLFNMap(lfn,"i");
         }
 
@@ -214,7 +232,7 @@ public class DAX2CDAG implements Callback {
      * @param compoundTransformation   the compound transforamtion
      */
     public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
-        System.out.println( compoundTransformation );
+        this.mCompoundTransformations.put( compoundTransformation.getCompleteName(), compoundTransformation );
     }
 
     /**
@@ -223,7 +241,7 @@ public class DAX2CDAG implements Callback {
      * @param rl  the ReplicaLocation object
      */
     public void cbFile( ReplicaLocation rl ){
-        System.out.println( rl );
+        this.mReplicaStore.add( rl );
     }
 
     /**
@@ -232,6 +250,6 @@ public class DAX2CDAG implements Callback {
      * @param tce  the transformationc catalog entry object.
      */
     public void cbExecutable( TransformationCatalogEntry tce ){
-        System.out.println( tce );
+        this.mTransformationStore.addEntry( tce );
     }
 }

@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.classes;
 
 
+import edu.isi.pegasus.common.util.Separator;
 import java.util.List;
 import java.util.LinkedList;
 
@@ -108,4 +109,59 @@ public class CompoundTransformation {
     public void addDependantFile( PegasusFile pf ){
         this.mUses.add( pf );
     }
+    
+    /**
+     * Returns the List of dependant files
+     * 
+     * @return List of Dependant Files
+     */
+    public List<PegasusFile> getDependantFiles() {
+        return this.mUses;
+    }
+
+    /**
+     * Returns whether two objects are equal or not on the basis of the
+     * complete name of the transformation.
+     *
+     * @param obj the reference object with which to compare.
+     *
+     * @return true, if the primary keys match, false otherwise.
+     */
+    public boolean equals( Object obj ){
+       // ward against null
+        if ( obj == null ) return false;
+
+        // shortcut
+        if ( obj == this ) return true;
+
+        // compare similar objects only
+        if ( ! (obj instanceof CompoundTransformation) ) return false;
+
+        // now we can safely cast
+        CompoundTransformation c = (CompoundTransformation) obj;
+        return  this.getCompleteName().equals( c.getCompleteName() );
+    }
+
+
+    /**
+     * Calculate a hash code value for the object to support hash tables.
+     * The hashcode value is computed only on basis of namespace, name and version
+     * fields
+     *
+     * @return a hash code value for the object.
+     */
+    public int hashCode(){
+        return this.getCompleteName().hashCode();
+    }
+
+    /**
+     * Returns the complete name for the transformation.
+     *
+     * @return the complete name
+     */
+    public String getCompleteName(){
+        return Separator.combine(mNamespace, mName, mVersion);
+    }
+
+
 }
