@@ -33,6 +33,10 @@ public class Executable extends CatalogType {
 
         LINUX, SUNOS, AIX, MACOS, DARWIN, WINDOWS, SOLARIS
     }
+    public static enum TYPE {
+        STAGEABLE, INSTALLED
+    }
+
     protected String mNamespace;
     protected String mName;
     protected String mVersion;
@@ -41,6 +45,7 @@ public class Executable extends CatalogType {
     protected String mOsRelease;
     protected String mOsVersion;
     protected String mGlibc;
+    protected TYPE mType;
 
     public Executable(String name) {
         this("", name, "");
@@ -89,7 +94,16 @@ public class Executable extends CatalogType {
         return this;
     }
 
-    public ARCH getARCH() {
+    public Executable setType(TYPE type){
+        mType=type;
+        return this;
+    }
+
+    public TYPE getType(){
+        return mType;
+    }
+
+    public ARCH getArchitecture() {
         return mArch;
     }
 
@@ -109,6 +123,7 @@ public class Executable extends CatalogType {
         return (mGlibc == null) ? "" : mGlibc;
     }
 
+    @Override
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
@@ -125,6 +140,9 @@ public class Executable extends CatalogType {
             writer.writeAttribute("name", mName);
             if (mVersion != null && !mVersion.isEmpty()) {
                 writer.writeAttribute("version", mVersion);
+            }
+            if (mType != null) {
+                writer.writeAttribute("type", mType.toString());
             }
             if (mArch != ARCH.x86) {
                 writer.writeAttribute("arch", mArch.toString().toLowerCase());
