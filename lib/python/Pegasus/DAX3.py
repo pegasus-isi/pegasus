@@ -169,6 +169,13 @@ class When:
 	AT_END = u'at_end'
 	ALL = u'all'
 	
+class ExecutableType:
+	"""
+	Executable type
+	"""
+	INSTALLED = u'installed'
+	STAGEABLE = u'stageable'
+	
 class CatalogType:
 	"""Base class for File and Executable"""
 	
@@ -298,7 +305,7 @@ class Executable(CatalogType):
 		grep = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86,os=OS.LINUX)
 	"""
 	def __init__(self, name, namespace=None, version=None, arch=None, os=None, 
-				 osrelease=None, osversion=None, glibc=None):
+				 osrelease=None, osversion=None, glibc=None, type=None):
 		"""
 		Arguments:
 			name: Logical name of executable
@@ -309,6 +316,7 @@ class Executable(CatalogType):
 			osrelease: Release of os that this exe was compiled for
 			osversion: Version of os that this exe was compiled for
 			glibc: Version of glibc this exe was compiled against
+			type: Executable type (STAGEABLE, INSTALLED)
 		"""
 		CatalogType.__init__(self, name)
 		self.namespace = namespace
@@ -318,6 +326,7 @@ class Executable(CatalogType):
 		self.osrelease = osrelease
 		self.osversion = osversion
 		self.glibc = glibc
+		self.type = type
 		
 	def toXML(self):
 		"""Returns an XML representation of this file as a filename tag"""
@@ -329,7 +338,8 @@ class Executable(CatalogType):
 			('os',self.os),
 			('osrelease',self.osrelease),
 			('osversion',self.osversion),
-			('glibc',self.glibc)
+			('glibc',self.glibc),
+			('type',self.type)
 		])
 		self.innerXML(e)
 		return e
@@ -1106,9 +1116,10 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 			osrelease = attrs.get("osrelease")
 			osversion = attrs.get("osversion")
 			glibc = attrs.get("glibc")
+			type = attrs.get("type")
 			e = Executable(name=name, namespace=namespace, version=version,
 				arch=arch, os=os, osrelease=osrelease, osversion=osversion,
-				glibc=glibc)
+				glibc=glibc, type=type)
 			self.filemap[name] = e
 			self.adag.addExecutable(e)
 			self.lastFile = e
@@ -1307,9 +1318,9 @@ def test():
 	diamond.addFile(d)
 	
 	# Add executables
-	e_preprocess = Executable(namespace="diamond", name="preprocess", version="2.0")
-	e_findrange = Executable(namespace="diamond", name="findrange", version="2.0")
-	e_analyze = Executable(namespace="diamond", name="analyze", version="2.0")
+	e_preprocess = Executable(namespace="diamond", name="preprocess", version="2.0", type=ExecutableType.STAGEABLE)
+	e_findrange = Executable(namespace="diamond", name="findrange", version="2.0", type=ExecutableType.STAGEABLE)
+	e_analyze = Executable(namespace="diamond", name="analyze", version="2.0", type=ExecutableType.STAGEABLE)
 	
 	# Add a bunch of stuff to test functionality
 	e_preprocess.addProfile(Profile(namespace="test",key="pre",value="process"))
@@ -1417,15 +1428,15 @@ def diamond():
 	diamond.addFile(a)
 	
 	# Add executables to the DAX-level replica catalog
-	e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
+	e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", type=ExecutableType.INSTALLED)
 	e_preprocess.addPFN(PFN("gsiftp://site.com/bin/preprocess","site"))
 	diamond.addExecutable(e_preprocess)
 	
-	e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
+	e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", type=ExecutableType.STAGEABLE)
 	e_findrange.addPFN(PFN("gsiftp://site.com/bin/findrange","site"))
 	diamond.addExecutable(e_findrange)
 	
-	e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
+	e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", type=ExecutableType.STAGEABLE)
 	e_analyze.addPFN(PFN("gsiftp://site.com/bin/analyze","site"))
 	diamond.addExecutable(e_analyze)
 	
