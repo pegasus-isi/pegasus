@@ -420,7 +420,7 @@
     </chmod>
   </target>
 
-  <target name="dist" depends="jar,latex,withoutlatex,javadoc,man-roff,ctools-all,getsystem"
+  <target name="dist" depends="jar,latex,withoutlatex,man-roff,ctools-all,getsystem"
           description="Sets up the dist directory">
     <!-- bin -->
     <mkdir dir="${dist.dir}/bin"/>
