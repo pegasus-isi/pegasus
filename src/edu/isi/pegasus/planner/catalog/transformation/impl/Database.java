@@ -301,11 +301,11 @@ public class Database
                 String qtype = pfnresult[2];
                 VDSSysInfo qsysinfo = new VDSSysInfo(pfnresult[3]);
                 List pfnprofiles = this.lookupPFNProfiles(qpfn, qresourceid,
-                    TCType.fromString(qtype));
+                    TCType.valueOf(qtype));
                 TransformationCatalogEntry tc = new TransformationCatalogEntry(
                     namespace, name, version, pfnresult[0],
                     pfnresult[1],
-                    TCType.fromString(pfnresult[2]), null, qsysinfo);
+                    TCType.valueOf(pfnresult[2]), null, qsysinfo);
 
                 try {
                     if (lfnprofiles != null) {
@@ -399,7 +399,7 @@ public class Database
                                          rs.getString(9), rs.getString(10)).
                 toString();
             List pfnprofiles = this.lookupPFNProfiles(pfn, resourceid,
-                TCType.fromString(type));
+                TCType.valueOf(type));
             List lfnprofiles = this.lookupLFNProfiles(namespace, name, version);
             //         String profiles = null;
             List allprofiles = null;
@@ -422,7 +422,7 @@ public class Database
             //add them to the array.
             TransformationCatalogEntry tcentry = new TransformationCatalogEntry(
                 namespace, name, version, resourceid, pfn,
-                TCType.fromValue(type), allprofiles, new VDSSysInfo(sysinfo));
+                TCType.valueOf(type), allprofiles, new VDSSysInfo(sysinfo));
             //caculate the max length of each column
 //            columnLength( s, count );
             //add the array to the list to be returned.

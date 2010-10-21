@@ -67,7 +67,7 @@ public class TCDelete
                             LogManager.DEBUG_MESSAGE_LEVEL);
                         status = tc.removeByLFN( namespace, name, version,
                                 resource,
-                                ( ( type == null ) ? null : TCType.fromString( type ) ) );
+                                ( ( type == null ) ? null : TCType.valueOf( type ) ) );
                         if(status ==0) {
                         	mLogger.log(
                                     "No match found for TC entries by logical name " + lfn +
@@ -113,7 +113,7 @@ public class TCDelete
                             LogManager.DEBUG_MESSAGE_LEVEL);
                         status = tc.removeByPFN( pfn, namespace, name,
                                 version, resource,
-                                ( ( type == null ) ? null : TCType.fromString( type ) ) );
+                                ( ( type == null ) ? null : TCType.valueOf( type ) ) );
                         if ( status == 0) {
                             mLogger.log(
                                 "No match found for TC entries by physicalname " + pfn +
@@ -216,7 +216,7 @@ public class TCDelete
                             pfn + " type " + type + " resource " + resource,
                            LogManager.DEBUG_MESSAGE_LEVEL );
                         status = tc.deletePFNProfiles( pfn,
-                                TCType.fromString( type ),
+                                TCType.valueOf( type ),
                                 resource, profiles ) ;
                         if ( status == 0) {
                             mLogger.log(
@@ -250,7 +250,7 @@ public class TCDelete
                             type + "and resource " +
                             ( ( resource == null ) ? "ALL" :
                             resource ), LogManager.DEBUG_MESSAGE_LEVEL);
-                        status = tc.removeByType( TCType.fromString( type ),
+                        status = tc.removeByType( TCType.valueOf( type ),
                                 resource );
                         if ( status  == 0) {
                             mLogger.log(

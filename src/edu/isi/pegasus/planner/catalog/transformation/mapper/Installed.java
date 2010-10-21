@@ -134,7 +134,7 @@ public class Installed
             if( cacheSites.isEmpty() ){
                 throw new RuntimeException(
                     "There are no entries for the transformation \"" + lfn +
-                    "\" of type \"" + TCType._INSTALLED + "\" the TC" +
+                    "\" of type \"" + TCType.INSTALLED + "\" the TC" +
                     " for sites " +
                     siteids);
             }

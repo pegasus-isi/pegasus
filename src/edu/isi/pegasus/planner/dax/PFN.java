@@ -56,27 +56,7 @@ public class PFN {
         return (mSite == null) ? "" : mSite;
     }
 
-    /**
-    public PFN addProfile(String namespace, String key, String value){
-    mProfiles.addProfileDirectly(namespace, key, value);
-    return this;
-    }
 
-    public PFN addProfile(Profiles.NAMESPACES namespace, String key, String value){
-    mProfiles.addProfileDirectly(namespace,key,value);
-    return this;
-    }
-
-    public PFN addProfiles(List<Profile> profiles){
-    mProfiles.addProfilesDirectly(profiles);
-    return this;
-    }
-
-    public PFN addProfiles(Profiles profiles){
-    mProfiles.addProfilesDirectly(profiles);
-    return this;
-    }
-     **/
     public PFN addProfile(String namespace, String key, String value) {
         mProfiles.add(new Profile(namespace, key, value));
         return this;
@@ -108,7 +88,7 @@ public class PFN {
     public void toXML(XMLWriter writer, int indent) {
         writer.startElement("pfn", indent);
         writer.writeAttribute("url", mURL);
-        if (mSite != null || !mSite.equals("local")) {
+        if (mSite != null && !mSite.equals("local")) {
             writer.writeAttribute("site", mSite);
         }
         for (Profile p : mProfiles) {

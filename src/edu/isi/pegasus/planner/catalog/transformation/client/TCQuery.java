@@ -93,7 +93,7 @@ public class TCQuery
      */
     private void getLfn( String resource, String type ) {
         List l = null;
-        TCType t = ( type == null ) ? null : TCType.fromString( type );
+        TCType t = ( type == null ) ? null : TCType.valueOf( type );
         try {
             mLogger.log(
                 "Querying the TC for logical names on resource " +
@@ -147,7 +147,7 @@ public class TCQuery
         String resource, String type ) {
         if ( name != null ) {
             List l = null;
-            TCType t = ( type == null ) ? null : TCType.fromString( type );
+            TCType t = ( type == null ) ? null : TCType.valueOf( type );
             try {
                 mLogger.log(
                     "Querying the TC for physical names for lfn " + lfn +
@@ -252,7 +252,7 @@ public class TCQuery
                 mLogger.log( "Query the TC for profiles with pfn=" + pfn +
                     " type=" + type + " resource=" +
                     resource, LogManager.FATAL_MESSAGE_LEVEL );
-                l = tc.lookupPFNProfiles( pfn, resource, TCType.fromString( type ) );
+                l = tc.lookupPFNProfiles( pfn, resource, TCType.valueOf( type ) );
             } catch ( Exception e ) {
 
                 mLogger.log(
@@ -287,7 +287,7 @@ public class TCQuery
      */
     private void getResource( String type ) {
         List l = null;
-        TCType t = ( type == null ) ? null : TCType.fromString( type );
+        TCType t = ( type == null ) ? null : TCType.valueOf( type );
         try {
             l = tc.lookupSites( namespace, name, version, t );
         } catch ( Exception e ) {

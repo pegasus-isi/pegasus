@@ -114,7 +114,7 @@ public class TCAdd
                         pfn +
                         " " + resource + " " + type + " " +
                         profiles,LogManager.DEBUG_MESSAGE_LEVEL);
-                    if ( (count = tc.addPFNProfile( pfn, TCType.fromString( type ),
+                    if ( (count = tc.addPFNProfile( pfn, TCType.valueOf( type ),
                         resource, profiles )) >= 1 ) {
                         mLogger.log( "Added " +count +  "pfn profiles sucessfully",
                                     LogManager.INFO_MESSAGE_LEVEL );
@@ -157,7 +157,7 @@ public class TCAdd
             return false;
         }
         TCType t = ( type == null ) ? TCType.INSTALLED :
-            TCType.fromString( type );
+            TCType.valueOf( type );
         mLogger.log( "Trying to add entry in TC with " + namespace +
             "::" +
             name + ":" + version +
@@ -214,7 +214,7 @@ public class TCAdd
                             case 3: //type
                                 ttype = ( tokens[ i ].equalsIgnoreCase( "null" ) ) ?
                                     TCType.INSTALLED :
-                                    TCType.fromString( tokens[ i ] );
+                                    TCType.valueOf( tokens[ i ] );
                                 break;
                             case 4: //systeminfo
                                 system = ( tokens[ i ].equalsIgnoreCase( "null" ) ) ?

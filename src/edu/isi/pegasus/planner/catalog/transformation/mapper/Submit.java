@@ -115,7 +115,7 @@ public class Submit
                 throw new RuntimeException(
                     "There are no entries for the transformation \"" + lfn +
                     "\" on the \"local\" site in the TC for type \"" +
-                    TCType._STATIC_BINARY  );
+                    TCType.STATIC_BINARY  );
             }
             if ( sysinfomap != null ) {
                 for ( Iterator i = siteids.iterator(); i.hasNext(); ) {

@@ -293,7 +293,7 @@ public class TransformationCatalogTextParser {
 
                 case TransformationCatalogReservedWord.TYPE:
                     value = getQuotedValue( "type" );
-                    entry.setType( TCType.fromValue(value) );
+                    entry.setType( TCType.valueOf(value) );
                     break;
 
                 default:

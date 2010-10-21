@@ -1322,7 +1322,7 @@ public class File
                                 tc.setType( (tokens[i].equalsIgnoreCase(
                                     "null")) ?
                                            TCType.INSTALLED :
-                                           TCType.fromString(tokens[i]));
+                                           TCType.valueOf(tokens[i]));
                                 break;
                             case 4: //systeminfo
                                 tc.setVDSSysInfo( (tokens[i].equalsIgnoreCase(

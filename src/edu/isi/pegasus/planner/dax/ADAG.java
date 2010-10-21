@@ -32,17 +32,19 @@ import edu.isi.pegasus.common.util.XMLWriter;
 
 
 /**
- * DAX Generator for Pegasus. The DAX SCHEMA is available at https://pegasus.isi.edu/wms/docs/
- * To generate an example DIAMOND DAX run the ADAG
- * Class like this
- * java ADAG <filename>
- *
- * Shown below is the Code for generating the DIAMOND DAX
- *
- *     //create a new ADAG object
+ * <pre>
+  DAX Generator for Pegasus. The DAX SCHEMA is available at https://pegasus.isi.edu/wms/docs/
+  To generate an example DIAMOND DAX run the ADAG
+  Class like this
+  java ADAG <filename>
+ 
+  Shown below is the Code for generating the DIAMOND DAX
+ 
+
+      //create a new ADAG object
        ADAG dax = new ADAG("test");
 
- *
+ 
         File fa = new File("f.a", File.LINK.INPUT);
         fa.addMetaData("string", "foo", "bar");
         fa.addMetaData("int", "num", "1");
@@ -120,6 +122,8 @@ import edu.isi.pegasus.common.util.XMLWriter;
 
         //Finally write the dax to a file
         dax.writeToFile("diamond.dax");
+ </pre>
+ *
  *
  * @author Gaurang Mehta gmehta at isi dot edu
  */

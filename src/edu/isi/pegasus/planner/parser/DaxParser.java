@@ -1,5 +1,5 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ *  Copyright 2007-2011 University Of Southern California
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,17 +14,23 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.planner.catalog.transformation.classes;
+package edu.isi.pegasus.planner.parser;
+
+import edu.isi.pegasus.planner.parser.dax.Callback;
 
 /**
- * This is an enumerated data class for the different types of transformation.
+ * An interface for all the DAX Parsers
  *
- * @author Gaurang Mehta gmehta@isi.edu
- * @version $Revision$
+ * @author Karan Vahi
+ * @version $Revision: 2635 $
  */
+public interface DAXParser {
 
+    /**
+     * Set the DAXCallback for the parser to call out to.
+     *
+     * @param c  the callback
+     */
+    public void setDAXCallback( Callback c );
 
-public enum TCType {
-    STATIC_BINARY, INSTALLED, STAGEABLE
 }
- 
