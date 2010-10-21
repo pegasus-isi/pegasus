@@ -4,11 +4,15 @@ from Pegasus.DAX3 import *
 import sys
 import os
 
+if len(sys.argv) != 2:
+	print "Usage: %s PEGASUS_HOME" % (sys.argv[0])
+	sys.exit(1)
+
 # Create a abstract dag
 diamond = ADAG("diamond")
 
 # Add input file to the DAX-level replica catalog
-a = File("f.a", link=Link.INPUT, transfer=True)
+a = File("f.a")
 a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
 diamond.addFile(a)
 	
@@ -39,37 +43,37 @@ diamond.addTransformation(t_analyze)
 
 # Add a preprocess job
 preprocess = Job(t_preprocess)
-b1 = File("f.b1", link=Link.OUTPUT, transfer=True)
-b2 = File("f.b2", link=Link.OUTPUT, transfer=True)
+b1 = File("f.b1")
+b2 = File("f.b2")
 preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-preprocess.uses(a, link=Link.INPUT)
-preprocess.uses(b1, link=Link.OUTPUT)
-preprocess.uses(b2, link=Link.OUTPUT)
+preprocess.uses(a, link=Link.INPUT, transfer=True)
+preprocess.uses(b1, link=Link.OUTPUT, transfer=True)
+preprocess.uses(b2, link=Link.OUTPUT, transfer=True)
 diamond.addJob(preprocess)
 
 # Add left Findrange job
 frl = Job(t_findrange)
-c1 = File("f.c1", link=Link.OUTPUT, transfer=True)
+c1 = File("f.c1")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-frl.uses(b1, link=Link.INPUT)
-frl.uses(c1, link=Link.OUTPUT)
+frl.uses(b1, link=Link.INPUT, transfer=True)
+frl.uses(c1, link=Link.OUTPUT, transfer=True)
 diamond.addJob(frl)
 
 # Add right Findrange job
 frr = Job(t_findrange)
-c2 = File("f.c2", link=Link.OUTPUT, transfer=True)
+c2 = File("f.c2")
 frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-frr.uses(b2, link=Link.INPUT)
-frr.uses(c2, link=Link.OUTPUT)
+frr.uses(b2, link=Link.INPUT, transfer=True)
+frr.uses(c2, link=Link.OUTPUT, transfer=True)
 diamond.addJob(frr)
 
 # Add Analyze job
 analyze = Job(t_analyze)
-d = File("f.d", link=Link.OUTPUT, transfer=True, register=True)
+d = File("f.d")
 analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-analyze.uses(c1, link=Link.INPUT)
-analyze.uses(c2, link=Link.INPUT)
-analyze.uses(d, link=Link.OUTPUT)
+analyze.uses(c1, link=Link.INPUT, transfer=True)
+analyze.uses(c2, link=Link.INPUT, transfer=True)
+analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
 diamond.addJob(analyze)
 
 # Add control-flow dependencies
