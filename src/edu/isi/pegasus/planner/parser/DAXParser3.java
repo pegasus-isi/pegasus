@@ -433,7 +433,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                         else if( name.equals( "type" ) ){
                             //ignore dont need to do anything
-                            tce.setType( TCType.valueOf( value ) );
+                            tce.setType( TCType.valueOf( value.toUpperCase() ) );
                         }
                     }
                     tce.setSysInfo(sysinfo);
