@@ -17,6 +17,7 @@
 
 package edu.isi.pegasus.planner.client;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -346,6 +347,13 @@ public class TCConverter
                 }
         	}
         }else{
+        	// Sanity check
+        	for( String inputFile : inputFiles ){
+            	File input = new File(inputFile);
+            	if(!input.canRead()){
+            		throw new IOException( "File not found or cannot be read." + inputFile );
+            	}
+        	}
             for( String inputFile : inputFiles ){
                 mProps.setProperty( "pegasus.catalog.transformation.file", inputFile );
                 entries = parseTC(mProps);
@@ -511,7 +519,7 @@ public class TCConverter
                             if (!jdbcTC.createDatabase(mDatabaseName)) {
                                 throw new RuntimeException("Failed to create database " + mDatabaseName);
                             }
-                            String initFilePath = mProps.getPegasusHome() + "/sql/";
+                            String initFilePath = mProps.getPegasusHome() + File.separator + "sql" + File.separator ;
                             for (String name : TC_INITIALIZATION_FILES) {
                                 if (!jdbcTC.initializeDatabase(mDatabaseName, initFilePath + name)) {
                                     jdbcTC.deleteDatabase(mDatabaseName);
@@ -544,6 +552,10 @@ public class TCConverter
         List<TransformationCatalogEntry> entries = output.getEntries(null, (TCType)null);
         for(TransformationCatalogEntry tcentry:entries){
             try {
+            	// Related to JIRA PM-228 
+            	if(tcentry.getType().equals(TCType.STATIC_BINARY)){
+            		tcentry.setType(TCType.STAGEABLE);
+            	}
                 catalog.insert(tcentry);
 		
             } catch (Exception e) {
