@@ -245,8 +245,11 @@ public class DAX2CDAG implements Callback {
      * @param rl  the ReplicaLocation object
      */
     public void cbFile( ReplicaLocation rl ){
-        System.out.println( "File Locations passed are " + rl );
-        this.mReplicaStore.add( rl );
+        //System.out.println( "File Locations passed are " + rl );
+        //we only add to replica store if there is a PFN specified
+        if( rl.getPFNCount() > 0 ){
+            this.mReplicaStore.add( rl );
+        }
     }
 
     /**
