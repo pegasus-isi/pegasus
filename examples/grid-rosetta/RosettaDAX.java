@@ -46,25 +46,23 @@ public class RosettaDAX {
 
             // and some top level files
             File f1 = new File("design.resfile", File.LINK.INPUT);
-            f1.addMetaData("string", "Description", "Rosetta input file");
+            //f1.addMetaData("string", "Description", "Rosetta input file");
             f1.addPhysicalFile("file://" + cwd + "/design.resfile", "local");
             dax.addFile(f1);
 
             File f2 = new File("repack.resfile", File.LINK.INPUT);
-            f2.addMetaData("string", "Description", "Rosetta input file");
+            //f2.addMetaData("string", "Description", "Rosetta input file");
             f2.addPhysicalFile("file://" + cwd + "/design.resfile", "local");
             dax.addFile(f2);
 
             java.io.File pdbDir = new java.io.File("pdbs/");
             String pdbs[] = pdbDir.list();
-            for (int n = 0; n < 100; n++) {
             for (int i = 0; i < pdbs.length; i++) {
                 java.io.File pdb = new java.io.File("pdbs/" + pdbs[i]);
                 if (pdb.isFile()) {
                     Job j = createJobFromPDB(cwd, dax, pdb, inputs);
                     dax.addJob(j);
                 }
-            }
             }
 
             //write DAX to file
@@ -91,7 +89,7 @@ public class RosettaDAX {
                     // File found, let's add it to the list
                     File input = new File(f.getName(), File.LINK.INPUT);
                     input.addPhysicalFile("file://" + f.getAbsolutePath(), "local");
-                    input.addMetaData("string", "Description", desc);
+                    //input.addMetaData("string", "Description", desc);
                     list.add(input);
                 }
                 else {

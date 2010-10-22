@@ -42,9 +42,7 @@ export CLASSPATH=.:$CLASSPATH
 javac RosettaDAX.java
 
 # generate the dax
-java -Xms2048M -Xmx2048M RosettaDAX dax.xml
-
-exit 1
+java RosettaDAX dax.xml
 
 # create the transformation catalogue (tc)
 #cat >tc.data <<EOF
