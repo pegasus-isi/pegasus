@@ -188,6 +188,15 @@ public class TransformationStore {
     }
 
     /**
+     * Returns all the entries in the Transformation Store
+     * 
+     * @return  all entries.
+     */
+    public List<TransformationCatalogEntry> getAllEntries( ){
+        return this.getEntries( (String)null, (TCType)null );
+    }
+
+    /**
      * Returns a list of TransformationCatalogEntry objects matching on a site and
      * transformation type.
      *

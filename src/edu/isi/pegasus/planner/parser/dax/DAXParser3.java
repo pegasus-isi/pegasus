@@ -429,7 +429,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         else if( name.equals( "version" ) ){
                             tce.setLogicalVersion( value );
                         }
-                        else if( name.equals( "arc" ) ){
+                        else if( name.equals( "arch" ) ){
                             sysinfo.setArchitecture( SysInfo.Architecture.valueOf( value ) );
                         }
                         else if( name.equals( "os" ) ){

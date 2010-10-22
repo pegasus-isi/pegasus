@@ -58,6 +58,7 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
@@ -127,6 +128,12 @@ public class InterPoolEngine extends Engine implements Refiner {
     private boolean mWorkerNodeExecution;
 
     /**
+     * Handle to the transformation store that stores the transformation catalog
+     * user specifies in the DAX
+     */
+    protected TransformationStore mDAXTransformationStore;
+
+    /**
      * Default constructor.
      *
      *
@@ -140,16 +147,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         //initialize the transformation mapper
         mTCMapper = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
         mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-/*        
-        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
 
-        //intialize the bag of objects and load the site selector
-        mBag = new PegasusBag();
-        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
-        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
-        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-*/
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
 
@@ -179,22 +177,12 @@ public class InterPoolEngine extends Engine implements Refiner {
         
         mTCMapper = Mapper.loadTCMapper( mProps.getTCMapperMode(), mBag );
         mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-/*        
-        //initialize the transformation mapper
-        mTCMapper   = Mapper.loadTCMapper( mProps.getTCMapperMode() );
 
-        //intialize the bag of objects and load the site selector
-        mBag = new PegasusBag();
-        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
-        mBag.add( PegasusBag.PLANNER_OPTIONS, mPOptions );
-        mBag.add( PegasusBag.TRANSFORMATION_CATALOG, mTCHandle );
-        mBag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-        mBag.add( PegasusBag.SITE_CATALOG, mSiteStore );
-*/
         mTXSelector = null;
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
 
+        this.mDAXTransformationStore = aDag.getTransformationStore();
+        
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
             //load SLS
@@ -267,8 +255,8 @@ public class InterPoolEngine extends Engine implements Refiner {
         
         //before loading the site selector we need to
         //update the transformation with the hints in the 
-        //DAX for the job.
-        for( Iterator it = dag.jobIterator(); it.hasNext(); ){
+        //DAX for the job. This is for DAX 3.0
+/*        for( Iterator it = dag.jobIterator(); it.hasNext(); ){
             Job job = ( Job ) it.next();
             //some sanity check for hints namespace
             if( job.hints.containsKey( Hints.PFN_HINT_KEY ) &&
@@ -287,7 +275,22 @@ public class InterPoolEngine extends Engine implements Refiner {
                 }
             }
         }
-        
+ */
+        //we iterate through the DAX Transformation Store and update
+        //the transformation catalog with any transformation specified.
+        for( TransformationCatalogEntry entry : this.mDAXTransformationStore.getAllEntries() ) {
+            try {
+                //insert an entry into the transformation catalog
+                //for the mapper to pick up later on
+                mLogger.log("Addding entry into transformation catalog " + entry, LogManager.DEBUG_MESSAGE_LEVEL);
+
+                if (mTCHandle.insert(entry, false) != 1) {
+                    mLogger.log("Unable to add entry to transformation catalog " + entry, LogManager.WARNING_MESSAGE_LEVEL);
+                }
+            } catch (Exception ex) {
+                throw new RuntimeException("Exception while inserting into TC in Interpool Engine " + ex );
+            }
+        }
 
         mSiteSelector = SiteSelectorFactory.loadInstance( mBag );
         mSiteSelector.mapWorkflow( dag, sites );
