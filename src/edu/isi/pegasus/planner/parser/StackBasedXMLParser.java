@@ -264,9 +264,8 @@ public abstract class StackBasedXMLParser extends Parser {
      */
     public void unSupportedNestingOfElements(String parent, String child ) {
         StringBuffer sb = new StringBuffer();
-        sb.append( "Support for element " ).append( child ).
-           append( " in parent element " ).append( parent ).
-           append( " not supported " );
+        sb.append( "Unsupported nesting for element " ).append( child ).
+           append( " in parent element " ).append( parent );
         mLogger.log( sb.toString(), LogManager.WARNING_MESSAGE_LEVEL  );
     }
 

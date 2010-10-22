@@ -186,6 +186,8 @@ public class DAX2CDAG implements Callback {
         child  = (String)mJobMap.get(child);
         String parent;
 
+        //System.out.println( child + " -> " + parents );
+
         for ( PCRelation pc : parents  ){
 //            parent = (String)mJobMap.get((String)it.next());
             parent = (String)mJobMap.get( pc.getParent() );
@@ -241,6 +243,7 @@ public class DAX2CDAG implements Callback {
      * @param rl  the ReplicaLocation object
      */
     public void cbFile( ReplicaLocation rl ){
+        System.out.println( "File Locations passed are " + rl );
         this.mReplicaStore.add( rl );
     }
 

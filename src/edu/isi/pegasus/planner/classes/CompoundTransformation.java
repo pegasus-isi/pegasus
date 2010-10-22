@@ -163,5 +163,22 @@ public class CompoundTransformation {
         return Separator.combine(mNamespace, mName, mVersion);
     }
 
+    /**
+     * Converts object to String
+     *
+     * @return the textual description
+     */
+    public String toString(){
+        StringBuffer sb = new StringBuffer();
+        sb.append( "Transformation -> " ).append( this.getCompleteName() ).append( "\n" );
+
+        for( PegasusFile pf : this.getDependantFiles() ){
+           sb.append( "\t " );
+           sb.append( pf.getType() == PegasusFile.DATA_FILE ? "data" : "executable" ).
+             append( " -> ").append( pf ).
+             append( "\n" );
+        }
+        return sb.toString();
+    }
 
 }

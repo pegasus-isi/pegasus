@@ -35,7 +35,6 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
@@ -48,7 +47,6 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
-import edu.isi.pegasus.planner.classes.ReplicaStore;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
@@ -57,13 +55,11 @@ import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
-import edu.isi.pegasus.planner.dax.Transformation;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import java.io.File;
 import java.io.IOException;
@@ -201,7 +197,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
             if ( mLocator != null ) {
                 mLogger.log( "Error in " + mLocator.getSystemId() +
                     " at line " + mLocator.getLineNumber() +
-                    "at column " + mLocator.getColumnNumber() + " :" +
+                    " at column " + mLocator.getColumnNumber() + " :" +
                     se.getMessage() , LogManager.ERROR_MESSAGE_LEVEL);
             }
         }
@@ -334,6 +330,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                     }
 
+
                     if( file == null ){
                         this.complain( element, "file", file );
                         return null;
@@ -368,7 +365,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                                 GridStartFactory.GRIDSTART_SHORT_NAMES[GridStartFactory.NO_GRIDSTART_INDEX]);
 
 
-
+                        //set the internal primary id for job
+                        dagJob.setName( constructJobID( dagJob ) );
                         return dagJob;
                     }
                     else if (element.equals( "dax" ) ){
@@ -399,6 +397,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         daxJob.level       = -1;
 
+                        //set the internal primary id for job
+                        daxJob.setName( constructJobID( daxJob ) );
                         return daxJob;
                     }
 
@@ -541,20 +541,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                     }
 
-                    //construct the jobname/primary key for job
-                    StringBuffer name = new StringBuffer();
-
-                    //prepend a job prefix to job if required
-                    if( mJobPrefix != null ){
-                        name.append( mJobPrefix );
-                    }
-
-                    //append the name and id recevied from dax
-                    name.append( j.getTXName() );
-                    name.append( "_" );
-                    name.append( j.getLogicalID() );
-
-                    j.setName( name.toString() );
+                    //set the internal primary id for job
+                    j.setName( constructJobID( j ) );
                     return j;
                 }//end of element job
                 return null;//end of j
@@ -701,7 +689,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
             //t transformation
             case 't':
-                if( element.equals( "tranformation" ) ){
+                if( element.equals( "transformation" ) ){
                     String namespace = null,lname = null, version = null;
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
@@ -851,7 +839,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 }
                 return false;
 
-            //c child compound
+            //c child 
             case 'c':
                 if( parent instanceof Map ){
                     if( child instanceof PCRelation ){
@@ -860,10 +848,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         this.mCallback.cbParents( pc.getChild(), mParents);
                         return true;
                     }
-                    if( child instanceof CompoundTransformation ){
-                        this.mCallback.cbCompoundTransformation( (CompoundTransformation)child );
-                        return true;
-                    }
+                    
                 }
                 return false;
 
@@ -964,9 +949,12 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 if( child instanceof TransformationCatalogEntry ){
                     if( parent instanceof Map ){
                         //executable appears in adag element
-                        TransformationCatalogEntry tce = ( TransformationCatalogEntry )parent;
-//                        this.mTransformationStore.addEntry( tce );
-                        this.mCallback.cbExecutable( tce );
+                        TransformationCatalogEntry tce = ( TransformationCatalogEntry )child;
+
+                        //moved the callback call to end of pfn
+                        //each new pfn is a new transformation
+                        //catalog entry
+                        //this.mCallback.cbExecutable( tce );
                         return true;
                     }
                 }
@@ -1004,6 +992,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         unSupportedNestingOfElements( "file", "metadata" );
                         return true;
                     }
+                    //metadata appears in executable element
+                    if( parent instanceof TransformationCatalogEntry ){
+                        unSupportedNestingOfElements( "executable", "metadata" );
+                        return true;
+                    }
                 }
                 return false;
 
@@ -1028,6 +1021,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         unSupportedNestingOfElements( "file", "profile" );
                         return true;
                     }
+                    else if ( parent instanceof TransformationCatalogEntry ) {
+                        //profile appears in file element
+                        unSupportedNestingOfElements( "executable", "profile" );
+                        return true;
+                    }
                     else if ( parent instanceof Job ){
                         //profile appears in the job element
                         Job j = (Job)parent;
@@ -1041,6 +1039,16 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         ReplicaLocation rl = ( ReplicaLocation )parent;
                         PFN pfn = ( PFN )child;
                         rl.addPFN( pfn );
+                        return true;
+                    }
+                    else if ( parent instanceof TransformationCatalogEntry){
+                        //pfn appears in executable element
+                        TransformationCatalogEntry tce = (TransformationCatalogEntry)parent;
+                        PFN pfn = ( PFN )child;
+                        tce.setResourceId( pfn.getSite() );
+                        tce.setPhysicalTransformation( pfn.getURL() );
+                        this.mCallback.cbExecutable( tce );
+
                         return true;
                     }
                 }
@@ -1075,8 +1083,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
             //t transformation
             case 't':
                 if( parent instanceof Map ){
-                    //callback
-
+                    if( child instanceof CompoundTransformation ){
+                        this.mCallback.cbCompoundTransformation( (CompoundTransformation)child );
+                        return true;
+                    }
                     return true;
                 }
                 return false;
@@ -1101,7 +1111,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                         return true;
                     }
-                    else if( parent instanceof Transformation ){
+                    else if( parent instanceof CompoundTransformation ){
                         CompoundTransformation compound = (CompoundTransformation)parent;
                         compound.addDependantFile( pf );
                         return true;
@@ -1114,6 +1124,29 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 return false;
 
         }
+    }
+
+    /**
+     * Returns the id for a job
+     *
+     * @param j the job
+     *
+     * @return the id.
+     */
+    protected String constructJobID( Job j ){
+        //construct the jobname/primary key for job
+        StringBuffer name = new StringBuffer();
+
+        //prepend a job prefix to job if required
+        if (mJobPrefix != null) {
+            name.append(mJobPrefix);
+        }
+
+        //append the name and id recevied from dax
+        name.append(j.getTXName());
+        name.append("_");
+        name.append(j.getLogicalID());
+        return name.toString();
     }
 
     /**
