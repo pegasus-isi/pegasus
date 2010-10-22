@@ -153,7 +153,7 @@ public class XMLWriter {
         return this;
     }
 
-    private XMLWriter writeLine() {
+    public XMLWriter writeLine() {
         try {
             mWriter.write(mLineSeparator);
         } catch (IOException ioe) {
@@ -257,19 +257,30 @@ public class XMLWriter {
         return this;
     }
 
-    public XMLWriter writeXMLComment(String comment) {
+        public XMLWriter writeXMLComment(String comment, boolean linepadded) {
+
         try {
             closeElement();
+            if(linepadded){
+            writeLine();
+            }
             mWriter.write(START_COMMENT_TAG);
             mWriter.write(comment);
             mWriter.write(CLOSE_COMMENT_TAG);
             writeLine();
+            if(linepadded){
+            writeLine();
+            }
         } catch (IOException ioe) {
             mLogger.log(
                     "Could not write xml comment using XMLWriter",
                     LogManager.ERROR_MESSAGE_LEVEL);
             mLogger.log(ioe.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL);
         }
+        return this;
+    }
+    public XMLWriter writeXMLComment(String comment) {
+        this.writeXMLComment(comment, false);
         return this;
     }
 

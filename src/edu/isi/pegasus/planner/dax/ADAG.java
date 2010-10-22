@@ -32,24 +32,40 @@ import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
  * <pre>
-DAX Generator for Pegasus. The DAX SCHEMA is available at https://pegasus.isi.edu/wms/docs/
-To generate an example DIAMOND DAX run the ADAG
-Class like this
+DAX Generator for Pegasus. The DAX SCHEMA is available at http://pegasus.isi.edu/schema/dax-3.2.xsd
+and documentation available at http://pegasus.isi.edu/wms/doc.php
+To generate an example DIAMOND DAX run the ADAG Class as shown below
 java ADAG <filename>
 
-Shown below is the Code for generating the DIAMOND DAX
+Shown below is the Code for generating the DIAMOND DAX.
+NOTE: This is an illustrative example only. Please see examples directory for a working example
 
+create a new ADAG object
 
-//create a new ADAG object
+@see ADAG
 ADAG dax = new ADAG("test");
 
+create a File object
+ @see File
 File fa = new File("f.a");
+
+ //add MetaData entry to the file objects
+ @see MetaData
 fa.addMetaData("string", "foo", "bar");
 fa.addMetaData("int", "num", "1");
+
+ // add Profile entry to the file objects
+ @see Profile
 fa.addProfile("env", "FOO", "/usr/bar");
 fa.addProfile("globus", "walltime", "40");
+
+ //add PFN to the File object
+ @see PFN
 fa.addPhysicalFile("file:///scratch/f.a", "local");
-dax.addFile(fa);
+
+ //add the File object to the Replica Catalog section of the DAX
+ dax.addFile(fa);
+
 
 File fb1 = new File("f.b1");
 fb1.addMetaData("string", "foo", "bar");
@@ -78,12 +94,15 @@ dax.addFile(fc2);
 File fd = new File("f.d");
 dax.addFile(fd);
 
+//Create an Executable object
+ @see Executable
 Executable preprocess = new Executable("pegasus", "preproces", "1.0");
 preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
 preprocess.setType(Executable.TYPE.STAGEABLE);
 preprocess.addPhysicaFile(new PFN("file:///opt/pegasus/default/bin/keg"));
 preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
 preprocess.addMetaData("string", "project", "pegasus");
+
 
 Executable findrange = new Executable("pegasus", "findrange", "1.0");
 findrange.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
@@ -100,8 +119,12 @@ analyze.addPhysicaFile(new PFN("gsiftp://localhost/opt/pegasus/default/bin/keg")
 analyze.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
 analyze.addMetaData("string", "project", "pegasus");
 
+//add all the executables to the DAX's Tranformation Catalog Section
+
 dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 
+//Create a compound Executable (Exectuable depending on other executable and files)
+ @see Transformation
 Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
 diamond.uses(preprocess).uses(findrange).uses(analyze);
 diamond.uses(new File("config", File.LINK.INPUT));
@@ -472,29 +495,29 @@ public class ADAG {
         writer.writeAttribute("count", Integer.toString(mCount));
 
         //print file
-        writer.writeXMLComment("Section 1: Files - Acts as a Replica Catalog (can be empty)");
+        writer.writeXMLComment("Section 1: Files - Acts as a Replica Catalog (can be empty)",true);
         for (File f : mFiles) {
             f.toXML(writer, indent + 1);
         }
 
         //print executable
-        writer.writeXMLComment("Section 2: Executables - Acts as a Transformaton Catalog (can be empty)");
+        writer.writeXMLComment("Section 2: Executables - Acts as a Transformaton Catalog (can be empty)",true);
         for (Executable e : mExecutables) {
             e.toXML(writer, indent + 1);
         }
 
         //print transformation
-        writer.writeXMLComment("Section 3: Transformations - Aggregates executables and Files (can be empty)");
+        writer.writeXMLComment("Section 3: Transformations - Aggregates executables and Files (can be empty)",true);
         for (Transformation t : mTransformations) {
             t.toXML(writer, indent + 1);
         }
         //print jobs, daxes and dags
-        writer.writeXMLComment("Section 4: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)");
+        writer.writeXMLComment("Section 4: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",true);
         for (AbstractJob j : mJobs) {
             j.toXML(writer, indent + 1);
         }
         //print dependencies
-        writer.writeXMLComment("Section 5: Dependencies - Parent Child relationships (can be empty)");
+        writer.writeXMLComment("Section 5: Dependencies - Parent Child relationships (can be empty)",true);
 
         for (String child : mDependencies.keySet()) {
             writer.startElement("child", indent + 1).writeAttribute("ref", child);
