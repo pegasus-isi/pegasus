@@ -125,7 +125,13 @@ public class AbstractJob {
     public AbstractJob uses(File file, File.LINK link) {
         mUses.add(new File(file, link));
         return this;
-
+    }
+    
+    public AbstractJob uses(List<File> files, File.LINK link) {
+        for (File file : files) {
+            mUses.add(new File(file, link));
+        }
+        return this;
     }
 
     public List<Invoke> getInvoke() {
