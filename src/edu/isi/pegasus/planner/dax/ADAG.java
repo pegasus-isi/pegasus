@@ -98,7 +98,7 @@ dax.addFile(fd);
  @see Executable
 Executable preprocess = new Executable("pegasus", "preproces", "1.0");
 preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-preprocess.setType(Executable.TYPE.STAGEABLE);
+preprocess.unsetInstalled();
 preprocess.addPhysicaFile(new PFN("file:///opt/pegasus/default/bin/keg"));
 preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
 preprocess.addMetaData("string", "project", "pegasus");
@@ -106,7 +106,7 @@ preprocess.addMetaData("string", "project", "pegasus");
 
 Executable findrange = new Executable("pegasus", "findrange", "1.0");
 findrange.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-findrange.setType(Executable.TYPE.STAGEABLE);
+findrange.unsetInstalled();
 findrange.addPhysicaFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
 findrange.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
 findrange.addMetaData("string", "project", "pegasus");
@@ -114,7 +114,7 @@ findrange.addMetaData("string", "project", "pegasus");
 
 Executable analyze = new Executable("pegasus", "analyze", "1.0");
 analyze.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-analyze.setType(Executable.TYPE.STAGEABLE);
+analyze.unsetInstalled();
 analyze.addPhysicaFile(new PFN("gsiftp://localhost/opt/pegasus/default/bin/keg"));
 analyze.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
 analyze.addMetaData("string", "project", "pegasus");
@@ -583,14 +583,14 @@ public class ADAG {
 
         Executable preprocess = new Executable("pegasus", "preproces", "1.0");
         preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-        preprocess.setType(Executable.TYPE.STAGEABLE);
+        preprocess.setInstalled(false);
         preprocess.addPhysicaFile(new PFN("file:///opt/pegasus/default/bin/keg"));
         preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         preprocess.addMetaData("string", "project", "pegasus");
 
         Executable findrange = new Executable("pegasus", "findrange", "1.0");
         findrange.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-        findrange.setType(Executable.TYPE.STAGEABLE);
+        findrange.unsetInstalled();
         findrange.addPhysicaFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
         findrange.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         findrange.addMetaData("string", "project", "pegasus");
@@ -598,7 +598,7 @@ public class ADAG {
 
         Executable analyze = new Executable("pegasus", "analyze", "1.0");
         analyze.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-        analyze.setType(Executable.TYPE.STAGEABLE);
+        analyze.unsetInstalled();
         analyze.addPhysicaFile(new PFN("gsiftp://localhost/opt/pegasus/default/bin/keg"));
         analyze.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         analyze.addMetaData("string", "project", "pegasus");

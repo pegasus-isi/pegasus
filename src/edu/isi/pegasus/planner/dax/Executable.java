@@ -46,7 +46,7 @@ public class Executable extends CatalogType {
     protected String mOsRelease;
     protected String mOsVersion;
     protected String mGlibc;
-    protected TYPE mType;
+    protected boolean mInstalled=true;
 
     public Executable(String name) {
         this("", name, "");
@@ -95,13 +95,22 @@ public class Executable extends CatalogType {
         return this;
     }
 
-    public Executable setType(TYPE type) {
-        mType = type;
+    public Executable setInstalled() {
+        mInstalled=true;
         return this;
     }
 
-    public TYPE getType() {
-        return mType;
+    public Executable unsetInstalled(){
+        mInstalled=false;
+        return this;
+    }
+
+    public Executable setInstalled(boolean installed){
+        mInstalled=installed;
+        return this;
+    }
+    public boolean getInstalled() {
+        return mInstalled;
     }
 
     public ARCH getArchitecture() {
@@ -142,8 +151,10 @@ public class Executable extends CatalogType {
             if (mVersion != null && !mVersion.isEmpty()) {
                 writer.writeAttribute("version", mVersion);
             }
-            if (mType != null) {
-                writer.writeAttribute("type", mType.toString());
+            if (mInstalled) {
+                writer.writeAttribute("installed", "true");
+            } else {
+                writer.writeAttribute("installed","false");
             }
             if (mArch != null) {
                 writer.writeAttribute("arch", mArch.toString().toLowerCase());
