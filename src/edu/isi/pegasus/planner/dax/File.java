@@ -41,7 +41,6 @@ public class File extends CatalogType {
     protected boolean mRegister = true;
     protected TRANSFER mTransfer = TRANSFER.TRUE;
     protected boolean mExecutable = false;
-    
 
     public File(File f) {
         this(f.getNamespace(), f.getName(), f.getVersion(), f.getLink());
@@ -51,7 +50,7 @@ public class File extends CatalogType {
         this.mExecutable = f.getExecutable();
     }
 
-     public File(File f,LINK link) {
+    public File(File f, LINK link) {
         this(f.getNamespace(), f.getName(), f.getVersion(), link);
         this.mOptional = f.getOptional();
         this.mRegister = f.getRegister();
@@ -59,14 +58,13 @@ public class File extends CatalogType {
         this.mExecutable = f.getExecutable();
     }
 
-
     public File(String namespace, String name, String version) {
         mNamespace = namespace;
         mName = name;
         mVersion = version;
     }
 
-        public File(String name) {
+    public File(String name) {
         mName = name;
     }
 
@@ -132,16 +130,17 @@ public class File extends CatalogType {
         return mTransfer;
     }
 
-    public File setExecutable(boolean executable){
-        mExecutable=executable;
+    public File setExecutable(boolean executable) {
+        mExecutable = executable;
         return this;
     }
 
-    public File SetExecutable(){
-        mExecutable=true;
+    public File SetExecutable() {
+        mExecutable = true;
         return this;
     }
-    public boolean getExecutable(){
+
+    public boolean getExecutable() {
         return mExecutable;
     }
 
@@ -212,8 +211,8 @@ public class File extends CatalogType {
             writer.endElement();
         } else if (elementname.equalsIgnoreCase("file")) {
             //Used by the file element at the top of the dax
-            if ( mPFNs.isEmpty() &&  mMetadata.isEmpty()) {
-                mLogger.log("The file element for " + mName + " must have atleast 1 pfn or 1 metadata entry. Skipping empty file element",LogManager.WARNING_MESSAGE_LEVEL);
+            if (mPFNs.isEmpty() && mMetadata.isEmpty()) {
+                mLogger.log("The file element for " + mName + " must have atleast 1 pfn or 1 metadata entry. Skipping empty file element", LogManager.WARNING_MESSAGE_LEVEL);
             } else {
                 writer.startElement("file", indent);
                 writer.writeAttribute("name", mName);

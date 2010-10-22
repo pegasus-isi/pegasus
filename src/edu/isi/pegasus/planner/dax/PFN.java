@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package edu.isi.pegasus.planner.dax;
 
 import java.util.List;
@@ -55,7 +54,6 @@ public class PFN {
     public String getSite() {
         return (mSite == null) ? "" : mSite;
     }
-
 
     public PFN addProfile(String namespace, String key, String value) {
         mProfiles.add(new Profile(namespace, key, value));

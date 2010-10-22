@@ -76,7 +76,6 @@ public class AbstractJob {
         return this;
     }
 
-
     public AbstractJob addProfile(String namespace, String key, String value) {
         mProfiles.add(new Profile(namespace, key, value));
         return this;
@@ -123,12 +122,11 @@ public class AbstractJob {
         return Collections.unmodifiableList(mUses);
     }
 
-    public AbstractJob uses(File file,File.LINK link) {
-        mUses.add(new File(file,link));
+    public AbstractJob uses(File file, File.LINK link) {
+        mUses.add(new File(file, link));
         return this;
 
     }
-
 
     public List<Invoke> getInvoke() {
         return Collections.unmodifiableList(mInvokes);

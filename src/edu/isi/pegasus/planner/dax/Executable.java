@@ -33,10 +33,11 @@ public class Executable extends CatalogType {
 
         LINUX, SUNOS, AIX, MACOS, DARWIN, WINDOWS, SOLARIS
     }
+
     public static enum TYPE {
+
         STAGEABLE, INSTALLED
     }
-
     protected String mNamespace;
     protected String mName;
     protected String mVersion;
@@ -94,12 +95,12 @@ public class Executable extends CatalogType {
         return this;
     }
 
-    public Executable setType(TYPE type){
-        mType=type;
+    public Executable setType(TYPE type) {
+        mType = type;
         return this;
     }
 
-    public TYPE getType(){
+    public TYPE getType() {
         return mType;
     }
 

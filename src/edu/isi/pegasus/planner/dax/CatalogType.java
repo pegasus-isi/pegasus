@@ -38,7 +38,7 @@ public class CatalogType {
         mProfiles = new LinkedList<Profile>();
         mMetadata = new LinkedList<MetaData>();
         mPFNs = new LinkedList<PFN>();
-        mLogger=LogManagerFactory.loadSingletonInstance();
+        mLogger = LogManagerFactory.loadSingletonInstance();
 
     }
 
@@ -87,7 +87,6 @@ public class CatalogType {
     public List<MetaData> getMetaData() {
         return Collections.unmodifiableList(mMetadata);
     }
-
 
     public CatalogType addProfile(String namespace, String key, String value) {
         mProfiles.add(new Profile(namespace, key, value));
