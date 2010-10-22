@@ -33,6 +33,7 @@ import edu.isi.pegasus.common.util.Version;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
@@ -302,6 +303,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
             case 'd':
                 if( element.equals( "dag" ) || element.equals( "dax" ) ){
                     Job j = new Job( );
+                    //all jobs in the DAX are of type compute
+                    j.setUniverse( GridGateway.JOB_TYPE.compute.toString() );
                     String file = null;
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
@@ -517,6 +520,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
             case 'j':
                 if( element.equals( "job" ) ){
                     Job j = new Job( );
+                    //all jobs in the DAX are of type compute
+                    j.setUniverse( GridGateway.JOB_TYPE.compute.toString() ); 
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
                         String value = (String) values.get( i );
