@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
 <xs:schema targetNamespace="http://pegasus.isi.edu/schema/DAX" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/DAX" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.2">
+	<xs:annotation>
+		<xs:documentation xml:lang="en">Subversion: 2010-10-22 ($Id$)</xs:documentation>
+	</xs:annotation>
 	<xs:simpleType name="TransferType">
 		<xs:annotation>
 			<xs:documentation>defines the tri-state transfer modes.</xs:documentation>
@@ -108,6 +111,23 @@
 			<xs:enumeration value="stat"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:complexType name="InvokeType">
+		<xs:annotation>
+			<xs:documentation>defines notifications. Notifications are currently NOT SUPPORTED.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="when" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:NMTOKEN">
+					<xs:enumeration value="never"/>
+					<xs:enumeration value="start"/>
+					<xs:enumeration value="on_error"/>
+					<xs:enumeration value="on_success"/>
+					<xs:enumeration value="at_end"/>
+					<xs:enumeration value="all"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
 	<xs:complexType name="ProfileType" mixed="true">
 		<xs:annotation>
 			<xs:documentation>type of the ubiquitous profile element.</xs:documentation>
@@ -123,7 +143,7 @@
 	</xs:complexType>
 	<xs:complexType name="FilenameType">
 		<xs:annotation>
-			<xs:documentation>logical filename representation. Add "type" attribute yourself.</xs:documentation>
+			<xs:documentation>logical filename representation. Add "executable" attribute yourself.</xs:documentation>
 		</xs:annotation>
 		<xs:complexContent>
 			<xs:extension base="PlainFilenameType">
@@ -134,15 +154,27 @@
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
-	<xs:complexType name="UsesType">
+	<xs:complexType name="JobUsesType">
 		<xs:annotation>
-			<xs:documentation>type for uses element refers either to data or to executables. Add "type" attribute yourself. </xs:documentation>
+			<xs:documentation>type for job-like uses elements that refers either to data or to executables. </xs:documentation>
 		</xs:annotation>
 		<xs:complexContent>
 			<xs:extension base="FilenameType">
 				<xs:attribute name="namespace" type="xs:string" use="optional"/>
 				<xs:attribute name="version" type="VersionPattern" use="optional"/>
 				<xs:attribute name="exectuable" type="xs:boolean" use="optional" default="false"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="TransformationUsesType">
+		<xs:annotation>
+			<xs:documentation>type for transformation uses elements that refers either to data or to executables. </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="PlainFilenameType">
+				<xs:attribute name="namespace" type="xs:string" use="optional"/>
+				<xs:attribute name="version" type="VersionPattern" use="optional"/>
+				<xs:attribute name="exectuable" type="xs:boolean" use="optional" default="true"/>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -202,28 +234,13 @@
 					</xs:complexContent>
 				</xs:complexType>
 			</xs:element>
-			<xs:element name="uses" type="UsesType" minOccurs="0" maxOccurs="unbounded"/>
-			<xs:element name="invoke" minOccurs="0" maxOccurs="unbounded">
+			<xs:element name="uses" type="JobUsesType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="invoke" type="InvokeType" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
 					<xs:documentation>very simple notifications.</xs:documentation>
 				</xs:annotation>
-				<xs:complexType>
-					<xs:attribute name="when" use="required">
-						<xs:simpleType>
-							<xs:restriction base="xs:NMTOKEN">
-								<xs:enumeration value="never"/>
-								<xs:enumeration value="start"/>
-								<xs:enumeration value="on_error"/>
-								<xs:enumeration value="on_success"/>
-								<xs:enumeration value="at_end"/>
-								<xs:enumeration value="all"/>
-							</xs:restriction>
-						</xs:simpleType>
-					</xs:attribute>
-				</xs:complexType>
 			</xs:element>
 		</xs:sequence>
-		<xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
 		<xs:attribute name="id" type="NodeIdentifierPattern" use="required"/>
 		<xs:attribute name="node-label" type="xs:string" use="optional"/>
 	</xs:complexType>
@@ -257,25 +274,17 @@
 	</xs:complexType>
 	<xs:element name="adag">
 		<xs:annotation>
-			<xs:documentation>abstract DAG in XML</xs:documentation>
+			<xs:documentation>abstract DAG in XML.</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
 				<xs:annotation>
 					<xs:documentation>A dependency must not be used before all the jobs it references were declared. It is suggested to keep all jobs, all deps and all lfns together, a total of three sections.</xs:documentation>
 				</xs:annotation>
-				<xs:element name="file" minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="file" type="CatalogType" minOccurs="0" maxOccurs="unbounded">
 					<xs:annotation>
 						<xs:documentation>Optional list of all data files used. The new extension is a kind of included replica catalog.</xs:documentation>
 					</xs:annotation>
-					<xs:complexType>
-						<xs:complexContent>
-							<xs:extension base="CatalogType">
-								<xs:attribute name="link" type="LinkageType" use="optional"/>
-								<xs:attribute name="optional" type="xs:boolean" use="optional" default="false"/>
-							</xs:extension>
-						</xs:complexContent>
-					</xs:complexType>
 				</xs:element>
 				<xs:element name="executable" minOccurs="0" maxOccurs="unbounded">
 					<xs:annotation>
@@ -286,6 +295,7 @@
 							<xs:extension base="CatalogType">
 								<xs:attribute name="namespace" type="xs:string" use="optional"/>
 								<xs:attribute name="version" type="VersionPattern" use="optional"/>
+								<xs:attribute name="installed" type="xs:boolean" use="optional" default="false"/>
 								<xs:attributeGroup ref="SystemInformationGroup"/>
 							</xs:extension>
 						</xs:complexContent>
@@ -297,7 +307,7 @@
 					</xs:annotation>
 					<xs:complexType>
 						<xs:sequence>
-							<xs:element name="uses" type="UsesType" maxOccurs="unbounded"/>
+							<xs:element name="uses" type="TransformationUsesType" maxOccurs="unbounded"/>
 						</xs:sequence>
 						<xs:attribute name="namespace" type="xs:string" use="optional"/>
 						<xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
@@ -315,26 +325,36 @@
 						<xs:complexType>
 							<xs:complexContent>
 								<xs:extension base="AbstractJobType">
+									<xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
 									<xs:attribute name="namespace" type="xs:string" use="optional"/>
 									<xs:attribute name="version" type="VersionPattern" use="optional"/>
 								</xs:extension>
 							</xs:complexContent>
 						</xs:complexType>
 					</xs:element>
-					<xs:element name="dag" type="AbstractJobType">
+					<xs:element name="dag">
 						<xs:annotation>
 							<xs:documentation>An already concrete workflow, stored mostly as file reference. </xs:documentation>
 						</xs:annotation>
+						<xs:complexType>
+							<xs:complexContent>
+								<xs:extension base="AbstractJobType">
+									<xs:attribute name="file" type="FilenameSafePattern" use="required"/>
+								</xs:extension>
+							</xs:complexContent>
+						</xs:complexType>
 					</xs:element>
-					<xs:element name="dax" type="AbstractJobType">
+					<xs:element name="dax">
 						<xs:annotation>
 							<xs:documentation>A workflow to be planned, stored mostly as file reference. </xs:documentation>
 						</xs:annotation>
-					</xs:element>
-					<xs:element ref="adag">
-						<xs:annotation>
-							<xs:documentation>Invisible documentation: No support for nesting in this version.</xs:documentation>
-						</xs:annotation>
+						<xs:complexType>
+							<xs:complexContent>
+								<xs:extension base="AbstractJobType">
+									<xs:attribute name="file" type="FilenameSafePattern" use="required"/>
+								</xs:extension>
+							</xs:complexContent>
+						</xs:complexType>
 					</xs:element>
 				</xs:choice>
 				<xs:element name="child" minOccurs="0" maxOccurs="unbounded">
@@ -361,9 +381,6 @@
 			<xs:attribute name="name" type="FilenameSafePattern" use="required"/>
 			<xs:attribute name="index" type="xs:nonNegativeInteger" use="optional" default="0"/>
 			<xs:attribute name="count" type="xs:nonNegativeInteger" use="optional" default="1"/>
-			<xs:attribute name="jobCount" type="xs:positiveInteger" use="optional"/>
-			<xs:attribute name="fileCount" type="xs:nonNegativeInteger" use="optional"/>
-			<xs:attribute name="childCount" type="xs:nonNegativeInteger" use="optional"/>
 		</xs:complexType>
 	</xs:element>
 </xs:schema>
