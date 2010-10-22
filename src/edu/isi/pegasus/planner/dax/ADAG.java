@@ -158,18 +158,6 @@ public class ADAG {
      */
     private int mCount;
     /**
-     * The Total number of JOB/DAX/DAG elements in the DAX
-     */
-    private int mJobCount;
-    /**
-     *  The number of unique files mentioned in the file
-     */
-    private int mFileCount;
-    /**
-     *  Don't know
-     */
-    private int mChildCount;
-    /**
      *  The List of Job,DAX and DAG objects
      * @see DAG
      * @see DAX
@@ -230,6 +218,7 @@ public class ADAG {
         mExecutables = new LinkedList<Executable>();
         mFiles = new LinkedList<File>();
         mDependencies = new HashMap<String, List<Parent>>();
+        System.setProperty("pegasus.home", System.getProperty("user.dir"));
         mLogger=LogManagerFactory.loadSingletonInstance();
         mLogger.logEventStart( "event.dax.generate", "pegasus.version", Version.instance().toString() );
 
@@ -456,16 +445,6 @@ public class ADAG {
         writer.writeAttribute("index", Integer.toString(mIndex));
         writer.writeAttribute("count", Integer.toString(mCount));
 
-        if (mJobCount > 0) {
-            writer.writeAttribute("jobcount", Integer.toString(mJobCount));
-        }
-        if (mFileCount > 0) {
-            writer.writeAttribute("filecount", Integer.toString(mFileCount));
-        }
-        if (mChildCount > 0) {
-            writer.writeAttribute("childcount", Integer.toString(mChildCount));
-        }
-
         //print file
         writer.writeXMLComment("Section 1: Files - Acts as a Replica Catalog (can be empty)");
         for (File f : mFiles) {
@@ -518,7 +497,7 @@ public class ADAG {
     private static ADAG Diamond() {
         ADAG dax = new ADAG("test");
 
-        File fa = new File("f.a", File.LINK.INPUT);
+        File fa = new File("f.a");
         fa.addMetaData("string", "foo", "bar");
         fa.addMetaData("int", "num", "1");
         fa.addProfile("env", "FOO", "/usr/bar");
@@ -550,29 +529,60 @@ public class ADAG {
         fc2.addMetaData("int", "num", "5");
         dax.addFile(fc2);
 
-        File fd = new File("f.d", File.LINK.OUTPUT);
+        File fd = new File("f.d");
         dax.addFile(fd);
+
+        Executable preprocess =new Executable("pegasus","preproces","1.0");
+        preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
+        preprocess.setType(Executable.TYPE.STAGEABLE);
+        preprocess.addPhysicaFile(new PFN("file:///opt/pegasus/default/bin/keg"));
+        preprocess.addProfile(Profile.NAMESPACE.globus,"walltime" , "120");
+        preprocess.addMetaData("string","project","pegasus");
+
+        Executable findrange =new Executable("pegasus","findrange","1.0");
+        findrange.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
+        findrange.setType(Executable.TYPE.STAGEABLE);
+        findrange.addPhysicaFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
+        findrange.addProfile(Profile.NAMESPACE.globus,"walltime" , "120");
+                findrange.addMetaData("string","project","pegasus");
+
+
+        Executable analyze =new Executable("pegasus","analyze","1.0");
+        analyze.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
+        analyze.setType(Executable.TYPE.STAGEABLE);
+        analyze.addPhysicaFile(new PFN("gsiftp://localhost/opt/pegasus/default/bin/keg"));
+        analyze.addProfile(Profile.NAMESPACE.globus,"walltime" , "120");
+               analyze.addMetaData("string","project","pegasus");
+
+                dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+
+        Transformation diamond = new Transformation("pegasus","diamond","1.0");
+        diamond.uses(preprocess).uses(findrange).uses(analyze);
+        diamond.uses(new File("config",File.LINK.INPUT));
+
+        dax.addTransformation(diamond);
+
 
         Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
         j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
-        j1.addUses(fa);
-        j1.addUses(fb1);
-        j1.addUses(new File("f.b2", File.LINK.OUTPUT));
+        j1.uses(fa,File.LINK.INPUT);
+        j1.uses(fb1,File.LINK.OUTPUT);
+        j1.uses(new File("f.b2"),File.LINK.OUTPUT);
         j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
         dax.addJob(j1);
 
         DAG j2 = new DAG("j2", "findrange.dag", "j2");
-        j2.addUses(new File("f.b1", File.LINK.INPUT));
-        j2.addUses(new File("f.c1", File.LINK.OUTPUT));
+        j2.uses(new File("f.b1"),File.LINK.INPUT);
+        j2.uses(new File("f.c1"), File.LINK.OUTPUT);
         j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
         j2.addProfile("condor", "universe", "vanilla");
         dax.addDAG(j2);
 
         DAX j3 = new DAX("j3", "findrange.dax", "j3");
         j3.addArgument("--site ").addArgument("local");
-        j3.addUses(new File("f.b2", File.LINK.INPUT));
-        j3.addUses(new File("f.c2", File.LINK.OUTPUT));
+        j3.uses(new File("f.b2"),File.LINK.INPUT);
+        j3.uses(new File("f.c2"), File.LINK.OUTPUT);
         j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");
         j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");
         j3.addProfile("ENV", "HAHA", "YADAYADAYADA");
@@ -582,11 +592,9 @@ public class ADAG {
         j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
             j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
-        fc1.setLink(File.LINK.INPUT);
-        fc2.setLink(File.LINK.INPUT);
-        j4.addUses(fc1);
-        j4.addUses(fc2);
-        j4.addUses(fd);
+        j4.uses(fc1,File.LINK.INPUT);
+        j4.uses(fc2,File.LINK.INPUT);
+        j4.uses(fd,File.LINK.OUTPUT);
         dax.addJob(j4);
 
         dax.addDependency("j1", "j2", "1-2");

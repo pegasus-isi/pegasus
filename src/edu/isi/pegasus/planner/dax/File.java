@@ -26,7 +26,7 @@ public class File extends CatalogType {
 
     public static enum LINK {
 
-        INPUT, OUTPUT, INOUT, NONE
+        INPUT, OUTPUT, INOUT
     };
 
     public static enum TRANSFER {
@@ -48,17 +48,26 @@ public class File extends CatalogType {
         this.mOptional = f.getOptional();
         this.mRegister = f.getRegister();
         this.mTransfer = f.getTransfer();
-        this.mExecutable = f.getOptional();
+        this.mExecutable = f.getExecutable();
     }
 
-    public File(String name) {
-        mName = name;
+     public File(File f,LINK link) {
+        this(f.getNamespace(), f.getName(), f.getVersion(), link);
+        this.mOptional = f.getOptional();
+        this.mRegister = f.getRegister();
+        this.mTransfer = f.getTransfer();
+        this.mExecutable = f.getExecutable();
     }
+
 
     public File(String namespace, String name, String version) {
         mNamespace = namespace;
         mName = name;
         mVersion = version;
+    }
+
+        public File(String name) {
+        mName = name;
     }
 
     public File(String name, LINK link) {
@@ -123,12 +132,25 @@ public class File extends CatalogType {
         return mTransfer;
     }
 
+    public File setExecutable(boolean executable){
+        mExecutable=executable;
+        return this;
+    }
+
+    public File SetExecutable(){
+        mExecutable=true;
+        return this;
+    }
+    public boolean getExecutable(){
+        return mExecutable;
+    }
+
     public File clone() {
         File f = new File(mNamespace, mName, mVersion, mLink);
         this.mOptional = f.getOptional();
         this.mRegister = f.getRegister();
         this.mTransfer = f.getTransfer();
-        this.mExecutable = f.getOptional();
+        this.mExecutable = f.getExecutable();
         return f;
     }
 

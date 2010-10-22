@@ -22,15 +22,15 @@ package edu.isi.pegasus.planner.dax;
 public class Job extends AbstractJob {
 
     public Job(String id, String name) {
-        this(id, null, name, null, null);
+        this(id, "", name, "", "");
     }
 
     public Job(String id, String name, String label) {
-        this(id, null, name, null, label);
+        this(id, "", name, "", label);
     }
 
     public Job(String id, String namespace, String name, String version) {
-        this(id, namespace, name, version, null);
+        this(id, namespace, name, version, "");
     }
 
     public Job(String id, String namespace, String name, String version, String label) {

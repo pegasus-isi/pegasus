@@ -54,7 +54,7 @@ public class Executable extends CatalogType {
     public Executable(String namespace, String name, String version) {
         mNamespace = (namespace == null) ? "" : namespace;
         mName = (name == null) ? "" : name;
-        mVersion = (version == null) ? "" : null;
+        mVersion = (version == null) ? "" : version;
     }
 
     public String getName() {

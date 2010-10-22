@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package edu.isi.pegasus.planner.dax;
 
 import java.util.Collections;
@@ -30,7 +29,7 @@ public class Transformation {
     protected String mNamespace;
     protected String mName;
     protected String mVersion;
-    protected List<File> mUses;
+    protected List<CatalogType> mUses;
 
     public Transformation(String name) {
         this("", name, "");
@@ -41,7 +40,7 @@ public class Transformation {
         mName = (name == null) ? "" : name;
 
         mVersion = (version == null) ? "" : null;
-        mUses = new LinkedList<File>();
+        mUses = new LinkedList<CatalogType>();
     }
 
     public String getName() {
@@ -56,17 +55,17 @@ public class Transformation {
         return mVersion;
     }
 
-    public Transformation uses(File file) {
-        mUses.add(file);
+    public Transformation uses(CatalogType fileorexecutable) {
+        mUses.add(fileorexecutable);
         return this;
     }
 
-    public Transformation uses(List<File> files) {
-        mUses.addAll(files);
+    public Transformation uses(List<CatalogType> filesorexecutables) {
+        mUses.addAll(filesorexecutables);
         return this;
     }
 
-    public List<File> getUses() {
+    public List<CatalogType> getUses() {
         return Collections.unmodifiableList(mUses);
     }
 
@@ -83,8 +82,25 @@ public class Transformation {
         if (mVersion != null && !mVersion.isEmpty()) {
             writer.writeAttribute("version", mVersion);
         }
-        for (File f : mUses) {
-            f.toXML(writer, indent + 1, "uses");
+        for (CatalogType c : mUses) {
+            if (c.getClass() == File.class) {
+                File f = (File) c;
+                writer.startElement("uses", indent + 1);
+                writer.writeAttribute("name", f.getName());
+                writer.endElement();
+            } else if (c.getClass() == Executable.class) {
+                Executable e = (Executable) c;
+                writer.startElement("uses", indent + 1);
+                if (e.mNamespace != null && !e.mNamespace.isEmpty()) {
+                    writer.writeAttribute("namespace", e.mNamespace);
+                }
+                writer.writeAttribute("name", e.mName);
+                if (e.mVersion != null && !e.mVersion.isEmpty()) {
+                    writer.writeAttribute("version", e.mVersion);
+                }
+                writer.writeAttribute("executable", "true");
+                writer.endElement();
+            }
         }
         writer.endElement(indent);
     }

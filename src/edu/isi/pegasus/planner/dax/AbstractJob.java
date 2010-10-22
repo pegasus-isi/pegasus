@@ -123,18 +123,12 @@ public class AbstractJob {
         return Collections.unmodifiableList(mUses);
     }
 
-    public AbstractJob addUses(File file) {
-        mUses.add(new File(file));
+    public AbstractJob uses(File file,File.LINK link) {
+        mUses.add(new File(file,link));
         return this;
 
     }
 
-    public AbstractJob addUses(List<File> files) {
-        for (File f : files) {
-            mUses.add(new File(f));
-        }
-        return this;
-    }
 
     public List<Invoke> getInvoke() {
         return Collections.unmodifiableList(mInvokes);
