@@ -29,7 +29,15 @@ public class RosettaDAX {
 
             // construct a dax object 
             ADAG dax = new ADAG("rosetta");
-    
+
+            // executables and transformations
+            // including this in the dax is a new feature in 
+            // 3.0. Earlier you had a standalone transformation catalog
+            Executable exe = new Executable("rosetta.exe");
+            exe.setType(Executable.TYPE.STAGEABLE);
+            exe.addPhysicalFile("file://" + cwd + "/rosetta.exe", "local");
+            dax.addExecutable(exe);
+
             // all jobs depend on the flatfile databases
             List<File> inputs = new ArrayList<File>();
             recursiveAddToFileCollection(inputs, "minirosetta_database",
@@ -49,12 +57,14 @@ public class RosettaDAX {
 
             java.io.File pdbDir = new java.io.File("pdbs/");
             String pdbs[] = pdbDir.list();
+            for (int n = 0; n < 100; n++) {
             for (int i = 0; i < pdbs.length; i++) {
                 java.io.File pdb = new java.io.File("pdbs/" + pdbs[i]);
                 if (pdb.isFile()) {
                     Job j = createJobFromPDB(cwd, dax, pdb, inputs);
                     dax.addJob(j);
                 }
+            }
             }
 
             //write DAX to file
@@ -102,20 +112,20 @@ public class RosettaDAX {
             String id = pdb.getName();
             id = id.replaceAll(".pdb", "");
 
-            job = new Job("rosetta", "rosetta.exe", "1.0", id);
+            job = new Job(id, "rosetta", "rosetta.exe", "1.0");
             
             // general rosetta inputs (database, design, ...)
-            job.addUses(inputs);
+            job.uses(inputs, File.LINK.INPUT);
 
             // input pdb file
-            File pdbFile = new File(pdb.getName(), File.LINK.INPUT);
+            File pdbFile = new File(pdb.getName());
             pdbFile.addPhysicalFile("file://" + cwd + "/" + pdb.getName(), "local");
-            job.addUses(pdbFile); // the job uses the file
+            job.uses(pdbFile, File.LINK.INPUT); // the job uses the file
             dax.addFile(pdbFile); // the dax needs to know about it to handle transfers
             
             // outputs
-            File outFile = new File(pdb.getName() + ".score.sc", File.LINK.OUTPUT);
-            job.addUses(outFile); // the job uses the file
+            File outFile = new File(pdb.getName() + ".score.sc");
+            job.uses(outFile, File.LINK.OUTPUT); // the job uses the file
 
             // add the arguments to the job
             job.addArgument(" -in:file:s ");

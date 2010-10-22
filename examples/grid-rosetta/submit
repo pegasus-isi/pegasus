@@ -42,15 +42,16 @@ export CLASSPATH=.:$CLASSPATH
 javac RosettaDAX.java
 
 # generate the dax
-java -Dpegasus.home=$PEGASUS_HOME RosettaDAX dax.xml
+java -Xms2048M -Xmx2048M RosettaDAX dax.xml
 
+exit 1
 
 # create the transformation catalogue (tc)
-cat >tc.data <<EOF
+#cat >tc.data <<EOF
 # Site  LFN  PFN  TYPE  SYSTEM PROFILE
-$CLUSTER_NAME    rosetta::rosetta.exe:1.0     file://$TOPDIR/rosetta.exe       STATIC_BINARY       INTEL32::LINUX            $JOB_CLUSTERING
-$CLUSTER_NAME    pegasus::worker              http://pegasus.isi.edu/wms/download/nightly/pegasus-worker-3.0.0cvs-x86_rhel_5.tar.gz     STATIC_BINARY       INTEL32::LINUX
-EOF
+#$CLUSTER_NAME    rosetta::rosetta.exe:1.0     file://$TOPDIR/rosetta.exe       STATIC_BINARY       INTEL32::LINUX            $JOB_CLUSTERING
+#$CLUSTER_NAME    pegasus::worker              http://pegasus.isi.edu/wms/download/nightly/pegasus-worker-3.0.0cvs-x86_rhel_5.tar.gz     STATIC_BINARY       INTEL32::LINUX
+#EOF
 
 # site catalog
 cat >sites.xml <<EOF
