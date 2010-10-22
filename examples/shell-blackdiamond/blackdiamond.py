@@ -17,31 +17,31 @@ d = File("f.d")
 # Add a preprocess job
 preprocess = Job(namespace="diamond",name="preprocess",version="2.0")
 preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-preprocess.addUses(a,link=Link.INPUT,transfer=True)
-preprocess.addUses(b1,link=Link.OUTPUT,transfer=True)
-preprocess.addUses(b2,link=Link.OUTPUT,transfer=True)
+preprocess.addUses(a,link=Link.INPUT)
+preprocess.addUses(b1,link=Link.OUTPUT)
+preprocess.addUses(b2,link=Link.OUTPUT)
 diamond.addJob(preprocess)
 
 # Add left Findrange job
 frl = Job(namespace="diamond",name="findrange",version="2.0")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-frl.addUses(b1,link=Link.INPUT,transfer=True)
-frl.addUses(c1,link=Link.OUTPUT,transfer=True)
+frl.addUses(b1,link=Link.INPUT)
+frl.addUses(c1,link=Link.OUTPUT)
 diamond.addJob(frl)
 
 # Add right Findrange job
 frr = Job(namespace="diamond",name="findrange",version="2.0")
 frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-frr.addUses(b2,link=Link.INPUT,transfer=True)
-frr.addUses(c2,link=Link.OUTPUT,transfer=True)
+frr.addUses(b2,link=Link.INPUT)
+frr.addUses(c2,link=Link.OUTPUT)
 diamond.addJob(frr)
 
 # Add Analyze job
 analyze = Job(namespace="diamond",name="analyze",version="2.0")
 analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-analyze.addUses(c1,link=Link.INPUT,transfer=True)
-analyze.addUses(c2,link=Link.INPUT,transfer=True)
-analyze.addUses(d,link=Link.OUTPUT,transfer=True,register=True)
+analyze.addUses(c1,link=Link.INPUT)
+analyze.addUses(c2,link=Link.INPUT)
+analyze.addUses(d,link=Link.OUTPUT, register=True)
 diamond.addJob(analyze)
 
 # Add control-flow dependencies
