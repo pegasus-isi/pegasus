@@ -86,7 +86,7 @@ public class PFN {
     public void toXML(XMLWriter writer, int indent) {
         writer.startElement("pfn", indent);
         writer.writeAttribute("url", mURL);
-        if (mSite != null && !mSite.equals("local")) {
+        if (mSite != null) {
             writer.writeAttribute("site", mSite);
         }
         for (Profile p : mProfiles) {
