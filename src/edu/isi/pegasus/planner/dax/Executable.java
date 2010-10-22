@@ -145,10 +145,10 @@ public class Executable extends CatalogType {
             if (mType != null) {
                 writer.writeAttribute("type", mType.toString());
             }
-            if (mArch != ARCH.x86) {
+            if (mArch != null) {
                 writer.writeAttribute("arch", mArch.toString().toLowerCase());
             }
-            if (mOs != OS.LINUX) {
+            if (mOs != null) {
                 writer.writeAttribute("os", mOs.toString().toLowerCase());
             }
             if (mOsRelease != null && !mOsRelease.isEmpty()) {
