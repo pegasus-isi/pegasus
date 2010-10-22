@@ -867,30 +867,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         //dag appears in adag element
                         DAGJob dagJob = ( DAGJob )child;
 
-                        //dag appears in adag element
-                        String dag = null;
-                        //go through all the job input files
-                        //and set transfer flag to false
-                        for( Iterator<PegasusFile> it = dagJob.getInputFiles().iterator(); it.hasNext(); ){
-                            PegasusFile pf = it.next();
-                            if( pf.getLFN().equals( dagJob.getDAGLFN()  )){
-
-                                //retrieve the source url
-                                if ( pf instanceof FileTransfer ){
-                                    dag = ((FileTransfer)pf).getSourceURL().getValue();
-                                }
-
-                                //at the moment dag files are not staged in.
-                                //remove from input set of files
-                                it.remove();
-                            }
-                        }
-
                         
-                        dagJob.setDAGFile( dag );
-                        //set the directory if specified
-                        dagJob.setDirectory( (String)dagJob.dagmanVariables.removeKey( Dagman.DIRECTORY_EXTERNAL_KEY ));
-
 
                         //call the callback function
                         this.mCallback.cbJob(dagJob);
@@ -900,29 +877,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         //dag appears in adag element
                         DAXJob daxJob = ( DAXJob )child;
 
-                        //determine the dax input file and specify
-                        //the path in the argument string for now.
-                        String dax = daxJob.getDAXLFN();
-                        for( Iterator<PegasusFile> it = daxJob.getInputFiles().iterator(); it.hasNext(); ){
-                            PegasusFile pf = it.next();
-                            if( pf.getLFN().equals( daxJob.getDAXLFN()  )){
-
-                                //retrieve the source url
-                                if ( pf instanceof FileTransfer ){
-                                    dax = ((FileTransfer)pf).getSourceURL().getValue();
-                                }
-
-                                //at the moment dax files are not staged in.
-                                //remove from input set of files
-                                it.remove();
-                            }
-                        }
-
-                        //add the dax to the argument
-                        StringBuffer arguments = new StringBuffer();
-                        arguments.append( daxJob.getArguments() ).
-                                  append( " --dax ").append( dax );
-                        daxJob.setArguments( arguments.toString() );
+                        
                         //call the callback function
                         this.mCallback.cbJob( daxJob );
                         return true;

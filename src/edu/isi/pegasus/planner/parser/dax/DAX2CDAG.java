@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -171,6 +172,7 @@ public class DAX2CDAG implements Callback {
             }
             mDagInfo.updateLFNMap(lfn,"o");
         }
+
 
 
     }

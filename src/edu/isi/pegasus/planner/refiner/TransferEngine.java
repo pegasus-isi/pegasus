@@ -54,7 +54,9 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import edu.isi.pegasus.common.util.FactoryException;
 
-import edu.isi.pegasus.planner.classes.ReplicaStore;
+import edu.isi.pegasus.planner.classes.DAGJob;
+import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
@@ -362,7 +364,7 @@ public class TransferEngine extends Engine {
         String outputSite = mPOptions.getOutputSite();
 
 
-        //convert the dag to a graph representation and walk it
+        //convert the dax to a graph representation and walk it
         //in a top down manner
         Graph workflow = Adapter.convert( mDag );
 
@@ -577,8 +579,16 @@ public class TransferEngine extends Engine {
         }
 
         if (!vRCSearchFiles.isEmpty()) {
-            //get the locations from the RC
-            getFilesFromRC(job, vRCSearchFiles);
+            if( job instanceof DAXJob ){
+                getFilesFromRC( (DAXJob)job, vRCSearchFiles);
+            }
+            else if( job instanceof DAGJob ){
+                getFilesFromRC( (DAGJob)job, vRCSearchFiles);
+            }
+            else{
+                //get the locations from the RC
+                getFilesFromRC(job, vRCSearchFiles);
+            }
         }
     }
 
@@ -877,6 +887,115 @@ public class TransferEngine extends Engine {
     }
 
     /**
+     * Special Handling for a DAGJob for retrieving files from the Replica Catalog.
+     *
+     * @param job           the DAGJob
+     * @param searchFiles   file that need to be looked in the Replica Catalog.
+     */
+    private void getFilesFromRC( DAGJob job, Collection searchFiles ){
+        //dax appears in adag element
+        String dag = null;
+
+        //go through all the job input files
+        //and set transfer flag to false
+        for (Iterator<PegasusFile> it = job.getInputFiles().iterator(); it.hasNext();) {
+            PegasusFile pf = it.next();
+            //at the moment dax files are not staged in.
+            //remove from input set of files
+            //part of the reason is about how to handle where
+            //to run the DAGJob. We dont have much control over it.
+            it.remove();
+        }
+
+        String lfn = job.getDAGLFN();
+        ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
+
+        if (rl == null) { //flag an error
+            throw new RuntimeException(
+                    "TransferEngine.java: Can't determine a location to " +
+                    "transfer input file for DAG lfn " + lfn + " for job " +
+                    job.getName());
+        }
+
+        ReplicaCatalogEntry selLoc = mReplicaSelector.selectReplica( rl,
+                                                                     job.getSiteHandle(),
+                                                                     true );
+        String pfn = selLoc.getPFN();
+        //some extra checks to ensure paths
+        if( pfn.startsWith( File.separator ) ){
+            dag = pfn;
+        }
+        else if( pfn.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+            dag = Utility.getAbsolutePath( pfn );
+        }
+        else{
+            throw new RuntimeException( "Invalid URL Specified for DAG Job " + job.getName() + " -> " + pfn );
+        }
+        
+        job.setDAGFile(dag);
+        
+        //set the directory if specified
+        job.setDirectory((String) job.dagmanVariables.removeKey(Dagman.DIRECTORY_EXTERNAL_KEY));
+
+
+
+    }
+
+    /**
+     * Special Handling for a DAXJob for retrieving files from the Replica Catalog.
+     *
+     * @param job           the DAXJob
+     * @param searchFiles   file that need to be looked in the Replica Catalog.
+     */
+    private void getFilesFromRC( DAXJob job, Collection searchFiles ){
+        //dax appears in adag element
+        String dax = null;
+
+        System.out.println( job.getInputFiles() );
+        //go through all the job input files
+        //and set transfer flag to false
+        for (Iterator<PegasusFile> it = job.getInputFiles().iterator(); it.hasNext();) {
+            PegasusFile pf = it.next();
+            //at the moment dax files are not staged in.
+            //remove from input set of files
+            //part of the reason is about how to handle where
+            //to run the DAGJob. We dont have much control over it.
+            it.remove();
+        }
+
+        String lfn = job.getDAXLFN();
+        ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
+
+        if (rl == null) { //flag an error
+            throw new RuntimeException(
+                    "TransferEngine.java: Can't determine a location to " +
+                    "transfer input file for DAX lfn " + lfn + " for job " +
+                    job.getName());
+        }
+
+        ReplicaCatalogEntry selLoc = mReplicaSelector.selectReplica( rl,
+                                                                     job.getSiteHandle(),
+                                                                     true );
+        String pfn = selLoc.getPFN();
+        //some extra checks to ensure paths
+        if( pfn.startsWith( File.separator ) ){
+            dax = pfn;
+        }
+        else if( pfn.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+            dax = Utility.getAbsolutePath( pfn );
+        }
+        else{
+            throw new RuntimeException( "Invalid URL Specified for DAX Job " + job.getName() + " -> " + pfn );
+        }
+
+        //add the dax to the argument
+        StringBuffer arguments = new StringBuffer();
+        arguments.append(job.getArguments()).
+                append(" --dax ").append(dax);
+        job.setArguments(arguments.toString());
+    }
+
+    /**
      * It looks up the RCEngine Hashtable to lookup the locations for the
      * files and add nodes to transfer them. If a file is not found to be in
      * the Replica Catalog the Transfer Engine flags an error and exits
@@ -887,7 +1006,7 @@ public class TransferEngine extends Engine {
      *                      to the files that need to have their mapping looked
      *                      up from the Replica Mechanism.
      */
-    private void getFilesFromRC( Job job, Vector searchFiles ) {
+    private void getFilesFromRC( Job job, Collection searchFiles ) {
         //Vector vFileTX = new Vector();
         //Collection<FileTransfer> symLinkFileTransfers = new LinkedList();
         Collection<FileTransfer> localFileTransfers = new LinkedList();
