@@ -207,6 +207,7 @@ public class DAX2CDAG implements Callback {
      * ADag object has been fully generated or not.
      */
     public void cbDone() {
+
         mDone = true;
     }
 
@@ -223,9 +224,10 @@ public class DAX2CDAG implements Callback {
                                        " for the partition was fully generated");
 
 
-
-
-        return new ADag(mDagInfo,mVSubInfo);
+        ADag dag = new ADag(mDagInfo,mVSubInfo);
+        dag.setReplicaStore(mReplicaStore);
+        dag.setTransformationStore(mTransformationStore);
+        return dag;
     }
 
     /**

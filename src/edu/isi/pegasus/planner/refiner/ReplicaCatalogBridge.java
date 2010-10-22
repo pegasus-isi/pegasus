@@ -192,7 +192,11 @@ public class ReplicaCatalogBridge
      * The DAG being worked upon.
      */
     private ADag mDag;
-    
+
+    /**
+     * The DAX Replica Store.
+     */
+    private ReplicaStore mDAXReplicaStore;
 
     /**
      * The overloaded constructor.
@@ -220,7 +224,7 @@ public class ReplicaCatalogBridge
                             PegasusBag bag ){
         
         this.initialize( dag, bag.getPegasusProperties(), bag.getPlannerOptions() );
-
+        this.mDAXReplicaStore = dag.getReplicaStore();
     }
     
     /**
@@ -339,6 +343,9 @@ public class ReplicaCatalogBridge
             return lfnsFound;
         }
 
+        //lookup from the DAX Replica Store
+        lfnsFound.addAll( this.mDAXReplicaStore.getLFNs() );
+
         //look up from the the main replica catalog
         lfnsFound.addAll( mReplicaStore.getLFNs() );
 
@@ -368,6 +375,12 @@ public class ReplicaCatalogBridge
             mLogger.log( "Location of file " + rl +
                          " retrieved from cache" , LogManager.DEBUG_MESSAGE_LEVEL);
             return rl;
+        }
+
+
+        //we prefer location in DAX over the Replica Catalog
+        if( this.mDAXReplicaStore.containsLFN( lfn ) ){
+            return this.mDAXReplicaStore.getReplicaLocation(lfn);
         }
 
         ReplicaLocation rcEntry = mReplicaStore.getReplicaLocation( lfn );

@@ -54,6 +54,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import edu.isi.pegasus.common.util.FactoryException;
 
+import edu.isi.pegasus.planner.classes.ReplicaStore;
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
@@ -231,6 +232,7 @@ public class TransferEngine extends Engine {
      * An instance to the Create Direcotry Implementation being used in Pegasus.
      */
     private Implementation mCreateDirImpl;
+
     
 
     /**
@@ -949,6 +951,7 @@ public class TransferEngine extends Engine {
                 if( destNV == null ){
                     //the source URL was specified in the DAX
                     //no transfer of executables case
+                    throw new RuntimeException( "Unreachable code . Signifies error in internal logic " );
                 }
                 else{//staging of executables case
                     destURL = destNV.getValue();

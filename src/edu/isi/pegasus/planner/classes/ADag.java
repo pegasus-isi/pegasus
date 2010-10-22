@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.classes;
 
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Set;
@@ -71,12 +72,26 @@ public class ADag extends Data {
     private String mRequestID;
 
     /**
+     * Handle to the replica store that stores the replica catalog
+     * user specifies in the DAX
+     */
+    protected ReplicaStore mReplicaStore;
+
+
+    /**
+     * Handle to the transformation store that stores the transformation catalog
+     * user specifies in the DAX
+     */
+    protected TransformationStore mTransformationStore;
+
+    /**
      * Initialises the class member variables.
      */
     public ADag() {
         dagInfo          = new DagInfo();
         vJobSubInfos     = new Vector();
         mSubmitDirectory = ".";
+        resetStores();
     }
 
     /**
@@ -89,6 +104,15 @@ public class ADag extends Data {
         this.dagInfo      = (DagInfo)dg.clone();
         this.vJobSubInfos = (Vector)vSubs.clone();
         mSubmitDirectory  = ".";
+        resetStores();
+    }
+
+    /**
+     * Resets the replica and transformation stores;
+     */
+    public void resetStores( ){
+        this.mReplicaStore = new ReplicaStore();
+        this.mTransformationStore = new TransformationStore();
     }
 
     /**
@@ -102,6 +126,9 @@ public class ADag extends Data {
         newAdag.vJobSubInfos= (Vector)this.vJobSubInfos.clone();
         newAdag.setBaseSubmitDirectory( this.mSubmitDirectory );
         newAdag.setRequestID( this.mRequestID );
+        //the stores are not a true clone
+        newAdag.setReplicaStore(mReplicaStore);
+        newAdag.setTransformationStore(mTransformationStore);
         return newAdag;
     }
 
@@ -350,6 +377,44 @@ public class ADag extends Data {
         set.remove("stork");
 
         return set;
+    }
+
+    /**
+     * Sets the Replica Store
+     *
+     * @param store    the Replica Store
+     */
+    public void setReplicaStore( ReplicaStore store ){
+        this.mReplicaStore = store;
+    }
+
+
+    /**
+     * Returns the Replica Store
+     *
+     * @return the Replica Store
+     */
+    public ReplicaStore getReplicaStore(  ){
+        return this.mReplicaStore;
+    }
+
+
+    /**
+     * Sets the Transformation Store
+     *
+     * @param store    the Transformation Store
+     */
+    public void setTransformationStore( TransformationStore store ){
+        this.mTransformationStore = store;
+    }
+
+    /**
+     * Returns the Transformation Store
+     *
+     * @return the Replica Store
+     */
+    public TransformationStore getTransformationStore(  ){
+        return this.mTransformationStore;
     }
 
     /**
