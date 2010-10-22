@@ -452,37 +452,45 @@ class Use:
 	"""
 
 	def __init__(self, file, link=None, register=None, transfer=None, 
-				optional=None):
+				optional=None, namespace=None, version=None, executable=None):
 		if file is None:
 			raise ValueError, 'file required'
+		
 		if isinstance(file, CatalogType):
 			self.name = file.name
 		else:
 			self.name = file
-		self.file = file
+		
 		self.link = link
 		self.optional = optional
 		self.register = register
 		self.transfer = transfer
+		self.namespace = None
+		self.version = None
+		self.executable = None
+		
+		if isinstance(file, Executable):
+			self.namespace = file.namespace
+			self.version = file.version
+			self.executable = True
+			
+		if namespace is not None:
+			self.namespace = namespace
+		if version is not None:
+			self.version = version
+		if executable is not None:
+			self.executable = executable
 		
 	def toXML(self):
-		if isinstance(self.file, Executable):
-			namespace = self.file.namespace
-			version = self.file.version
-			executable = True
-		else:
-			namespace = None
-			version = None
-			executable = None
-			
 		return Element('uses', [
-			('namespace',namespace),
-			('name',self.file.name),
-			('version',version),
-			('optional',self.optional),
+			('namespace',self.namespace),
+			('name',self.name),
+			('version',self.version),
+			('link',self.link),
 			('register',self.register),
 			('transfer',self.transfer),
-			('executable',executable)
+			('optional',self.optional),
+			('executable',self.executable)
 		])
 
 class Transformation:
@@ -554,7 +562,6 @@ class Transformation:
 			self.name = name.name
 			self.namespace = name.namespace
 			self.version = name.version
-			self.uses(name, link=Link.INPUT, transfer=True, register=False)
 		else:
 			self.name = name
 		if namespace: self.namespace = namespace
@@ -564,22 +571,20 @@ class Transformation:
 		"""Alias for uses()"""
 		self.uses(*args, **kwargs)
 		
-	def uses(self, file, link=None, register=None, transfer=None, 
-			 optional=None):
+	def uses(self, file, namespace=None, version=None, executable=None):
 		"""Add a file or executable that the transformation uses.
 		
 		Optional arguments to this method specify job-level attributes of
-		the 'uses' tag in the DAX. If not specified, these values default
-		to those specified when creating the File or Executable object.
+		the 'uses' tag in the DAX.
 		
 		Arguments:
-			file: A File or Executable object representing the logical file
-			link: Is this file a job input, output or both
-			register: Should this file be registered in RLS? (True/False)
-			transfer: Should this file be transferred? (True/False or See LFN)
-			optional: Is this file optional, or should its absence be an error?
+			file: A File or Executable object representing the logical file,
+			      or a string containing the name of the file (required)
+			namespace: The namespace of an executable (optional)
+			version: The version of an executable (optional)
+			executable: Is the file an executable? (optional)
 		"""
-		use = Use(file,link,register,transfer,optional)
+		use = Use(file, namespace=namespace, version=version, executable=executable)
 		self.used_files.append(use)
 		
 	def toXML(self):
@@ -595,10 +600,7 @@ class Transformation:
 		
 class AbstractJob:
 	"""The base class for Job, DAX, and DAG"""
-	def __init__(self, name, id=None, node_label=None):
-		if name is None:
-			raise ValueError, 'name required'
-		self.name = name
+	def __init__(self, id=None, node_label=None):
 		self.id = id
 		self.node_label = node_label
 		
@@ -613,7 +615,10 @@ class AbstractJob:
 	
 	def addArguments(self, *arguments):
 		"""Add one or more arguments to the job"""
-		self.arguments.extend(arguments)
+		for arg in arguments:
+			if len(self.arguments) > 0:
+				self.arguments.append(' ')
+			self.arguments.append(arg)
 
 	def addProfile(self, profile):
 		"""Add a profile to the job"""
@@ -629,7 +634,7 @@ class AbstractJob:
 		self.uses(*args, **kwargs)
 
 	def uses(self, file, link=None, register=None, transfer=None, 
-			 optional=None):
+			 optional=None, namespace=None, version=None, executable=None):
 		"""Add a logical filename that the job uses.
 		
 		Optional arguments to this method specify job-level attributes of
@@ -638,12 +643,15 @@ class AbstractJob:
 		
 		Arguments:
 			file: A Filename object representing the logical file name
-			link: Is this file a job input, output or both (See LFN)
-			register: Should this file be registered in RLS? (True/False)
-			transfer: Should this file be transferred? (True/False or See LFN)
-			optional: Is this file optional, or should its absence be an error?
+			link: Is this file a job input, output or both (See LFN) (optional)
+			register: Should this file be registered in RLS? (True/False) (optional)
+			transfer: Should this file be transferred? (True/False or See LFN) (optional)
+			optional: Is this file optional, or should its absence be an error? (optional)
+			namespace: Namespace of executable (optional)
+			version: version of executable (optional)
+			executable: Is file an executable? (True/False) (optional)
 		"""
-		use = Use(file,link,register,transfer,optional)
+		use = Use(file,link,register,transfer,optional,namespace,version,executable)
 		self.used_files.append(use)
 
 	def setStdout(self, filename):
@@ -690,11 +698,7 @@ class AbstractJob:
 		if len(self.arguments) > 0:
 			args = Element('argument').flatten()
 			element.element(args)
-			first=True
 			for x in self.arguments:
-				if not first:
-					args.text(' ')
-				first=False
 				if x.__class__ == File:
 					args.element(x.toArgumentXML())
 				else:
@@ -774,12 +778,12 @@ class Job(AbstractJob):
 		self.namespace = None
 		self.version = None
 		if isinstance(name, Transformation):
-			t_name = name.name
+			self.name = name.name
 			self.namespace = name.namespace
 			self.version = name.version
 		else:
-			t_name = name
-		AbstractJob.__init__(self, name=t_name, id=id, node_label=node_label)
+			self.name = name
+		AbstractJob.__init__(self, id=id, node_label=node_label)
 		if namespace: self.namespace = namespace
 		if version: self.version = version
 		
@@ -821,17 +825,15 @@ class DAX(AbstractJob):
 		"""
 		if isinstance(file, File):
 			self.file = file
-			t_name = file.name
 		else:
 			self.file = File(name=file)
-			t_name = file
-		AbstractJob.__init__(self, name=t_name, id=id, node_label=node_label)
+		AbstractJob.__init__(self, id=id, node_label=node_label)
 		
 	def toXML(self):
 		"""Return an XML representation of this job"""
 		e = Element('dax', [
 			('id',self.id),
-			('file',self.name),
+			('file',self.file.name),
 			('node-label',self.node_label)
 		])
 		self.innerXML(e)
@@ -863,17 +865,15 @@ class DAG(AbstractJob):
 		"""
 		if isinstance(file, File):
 			self.file = file
-			t_name = file.name
 		else:
 			self.file = File(name=file)
-			t_name = file
-		AbstractJob.__init__(self, name=t_name, id=id, node_label=node_label)
+		AbstractJob.__init__(self, id=id, node_label=node_label)
 			
 	def toXML(self):
 		"""Return an XML representation of this DAG"""
 		e = Element('dag', [
 			('id',self.id),
-			('file',self.name),
+			('file',self.file.name),
 			('node-label',self.node_label)
 		])
 		self.innerXML(e)
@@ -970,10 +970,6 @@ class ADAG:
 	def addDAG(self, dag):
 		"""Add a sub-DAG"""
 		self.addJob(dag)
-		
-	def addADAG(self, adag):
-		"""Add a recursive adag"""
-		self.addJob(adag)
 		
 	def addFile(self, file):
 		"""Add a file"""
@@ -1200,25 +1196,17 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 			transfer = attrs.get("transfer")
 			namespace = attrs.get("namespace")
 			version = attrs.get("version")
-			executable = bool(attrs.get("executable",False))
-			
-			if name in self.filemap:
-				f = self.filemap[name]
-			elif executable:
-				f = Executable(name, namespace=namespace, version=version, 
-					link=link, register=register, transfer=transfer)
-				self.filemap[name] = f
-			else:
-				f = File(name, link=link, register=register, 
-					transfer=transfer)
-				self.filemap[name] = f
+			executable = attrs.get("executable")
+			if executable is not None:
+				executable = bool(executable)
 				
 			if parent in ['job','dax','dag']:
-				self.lastJob.uses(f, link=link, register=register,
-					transfer=transfer, optional=optional)
+				self.lastJob.uses(name, link=link, register=register,
+					transfer=transfer, optional=optional, namespace=namespace,
+					version=version, executable=executable)
 			elif parent == 'transformation':
-				self.lastTransformation.uses(f, link=link, register=register,
-					transfer=transfer, optional=optional)
+				self.lastTransformation.uses(name, namespace=namespace,
+					version=version, executable=executable)
 			else:
 				raise Exception("Adding uses to %s" % parent)
 		elif element == "invoke":
@@ -1238,8 +1226,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 		parent = self.elements[0]
 		
 		if parent == "argument":
-			print chars
-			self.lastArgument += [unicode(a.strip()) for a in shlex.split(chars)]
+			self.lastArgument.append(unicode(chars))
 		elif parent == "profile":
 			self.lastProfile.value += chars
 		elif parent == "metadata":
@@ -1255,7 +1242,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 		elif element in ["job","dax","dag"]:
 			self.lastJob = None
 		elif element == "argument":
-			self.lastJob.addArguments(*self.lastArgument)
+			self.lastJob.arguments = self.lastArgument[:]
 			self.lastArgument = None
 		elif element == "profile":
 			self.lastProfile = None
@@ -1333,7 +1320,7 @@ def test():
 	# Add transformation (long form)
 	t_preprocess = Transformation(namespace="diamond",name="preprocess",version="2.0")
 	t_preprocess.uses(e_preprocess)
-	t_preprocess.uses(a,link=Link.INPUT,transfer=True)
+	t_preprocess.uses(a)
 	diamond.addTransformation(t_preprocess)
 	
 	# Add transformation (short form)
@@ -1346,7 +1333,7 @@ def test():
 	# Add a preprocess job
 	preprocess = Job(t_preprocess,node_label="foobar")
 	preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-	preprocess.uses(a,link=Link.INPUT, transfer=True)
+	preprocess.uses(a,link=Link.INPUT)
 	preprocess.uses(b1,link=Link.OUTPUT, transfer=True)
 	preprocess.uses(b2,link=Link.OUTPUT, transfer=True)
 	diamond.addJob(preprocess)
@@ -1354,22 +1341,22 @@ def test():
 	# Add left Findrange job
 	frl = Job(t_findrange)
 	frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-	frl.uses(b1,link=Link.INPUT, transfer=True)
+	frl.uses(b1,link=Link.INPUT)
 	frl.uses(c1,link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frl)
 
 	# Add right Findrange job
 	frr = Job(namespace="diamond",name="findrange",version="2.0")
-	frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-	frr.uses(b2,link=Link.INPUT, transfer=True)
+	frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2,"'FOO BAR'")
+	frr.uses(b2,link=Link.INPUT)
 	frr.uses(c2,link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frr)
 
 	# Add Analyze job
 	analyze = Job(namespace="diamond",name="analyze",version="2.0")
 	analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-	analyze.uses(c1,link=Link.INPUT, transfer=True)
-	analyze.uses(c2,link=Link.INPUT, transfer=True)
+	analyze.uses(c1,link=Link.INPUT)
+	analyze.uses(c2,link=Link.INPUT)
 	analyze.uses(d,link=Link.OUTPUT, transfer=True, register=True)
 	diamond.addJob(analyze)
 	
@@ -1451,7 +1438,7 @@ def diamond():
 	b1 = File("f.b1")
 	b2 = File("f.b2")
 	preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-	preprocess.uses(a, link=Link.INPUT, transfer=True)
+	preprocess.uses(a, link=Link.INPUT)
 	preprocess.uses(b1, link=Link.OUTPUT, transfer=True)
 	preprocess.uses(b2, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(preprocess)
@@ -1460,7 +1447,7 @@ def diamond():
 	frl = Job(t_findrange)
 	c1 = File("f.c1")
 	frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-	frl.uses(b1, link=Link.INPUT, transfer=True)
+	frl.uses(b1, link=Link.INPUT)
 	frl.uses(c1, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frl)
 
@@ -1468,7 +1455,7 @@ def diamond():
 	frr = Job(t_findrange)
 	c2 = File("f.c2")
 	frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-	frr.uses(b2, link=Link.INPUT, transfer=True)
+	frr.uses(b2, link=Link.INPUT)
 	frr.uses(c2, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frr)
 
@@ -1476,8 +1463,8 @@ def diamond():
 	analyze = Job(t_analyze)
 	d = File("f.d")
 	analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-	analyze.uses(c1, link=Link.INPUT, transfer=True)
-	analyze.uses(c2, link=Link.INPUT, transfer=True)
+	analyze.uses(c1, link=Link.INPUT)
+	analyze.uses(c2, link=Link.INPUT)
 	analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
 	diamond.addJob(analyze)
 
