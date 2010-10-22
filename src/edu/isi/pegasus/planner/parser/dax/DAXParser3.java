@@ -18,7 +18,8 @@
 
 package edu.isi.pegasus.planner.parser.dax;
 
-import edu.isi.pegasus.planner.parser.*;
+import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
+
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 
@@ -443,9 +444,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         else if( name.equals( "glibc" ) ){
                             sysinfo.setGlibc( value );
                         }
-                        else if( name.equals( "type" ) ){
+                        else if( name.equals( "installed" ) ){
+                            Boolean installed = Boolean.parseBoolean( value );
                             //ignore dont need to do anything
-                            tce.setType( TCType.valueOf( value.toUpperCase() ) );
+                            tce.setType( installed ? TCType.INSTALLED : TCType.STAGEABLE  );
                         }
                     }
                     tce.setSysInfo(sysinfo);
