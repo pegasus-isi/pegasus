@@ -36,6 +36,12 @@ import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import edu.isi.pegasus.common.util.Version;
 
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
+import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -52,6 +58,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import edu.isi.pegasus.planner.classes.DAGJob;
+import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -813,7 +821,7 @@ public class DAXParser2 extends Parser implements DAXParser {
         
         //convert the existing PegasusFile object to it's physical
         //mapping , FileTransfer object
-        FileTransfer ft = new FileTransfer( mUsesPegasusFile );
+       /*        FileTransfer ft = new FileTransfer( mUsesPegasusFile );
         //the linkage type determines whether it is input or source
         if ( mUsesLinkType.trim().equalsIgnoreCase("input")) {
             ft.addSource( site, url );
@@ -822,6 +830,20 @@ public class DAXParser2 extends Parser implements DAXParser {
             ft.addDestination( site, url );
         }
         mUsesPegasusFile = ft;
+       */
+
+        if ( mUsesLinkType.trim().equalsIgnoreCase("input")) {
+            //create a new replica catalog entry
+            //only for input files. we dont care about output file pfn's
+            ReplicaLocation rl = new ReplicaLocation( );
+            rl.setLFN( this.mUsesPegasusFile.getLFN() );
+            ReplicaCatalogEntry rce = new ReplicaCatalogEntry( );
+            //site = ( site == null || site.length() == 0 )? "unknown" : site;
+            rce.setResourceHandle( site );
+            rce.setPFN( url );
+            rl.addPFN( rce );
+            this.mCallback.cbFile(rl);
+        }
     }
  
     /**
@@ -846,6 +868,7 @@ public class DAXParser2 extends Parser implements DAXParser {
         
         //retrieve the extra attribute about the DAX
         mDAGLFN = attrs.getValue("", "file");
+        ((DAGJob)mCurrentJobSubInfo).setDAGLFN( mDAGLFN );
         
         //add default name and namespace information
         mCurrentJobSubInfo.setTransformation( "condor",
@@ -879,7 +902,7 @@ public class DAXParser2 extends Parser implements DAXParser {
      * @param attrs  the attributes
      */
     private void handleDAXTagStart( String local, Attributes attrs ) {
-        mCurrentJobSubInfo = new Job();
+        mCurrentJobSubInfo = new DAXJob();
         
         //the job should be tagged type pegasus
         mCurrentJobSubInfo.setTypeRecursive();
@@ -893,6 +916,7 @@ public class DAXParser2 extends Parser implements DAXParser {
         
         //retrieve the extra attribute about the DAX
         mDAXLFN = attrs.getValue("", "file");
+        ((DAXJob)mCurrentJobSubInfo).setDAXLFN( mDAXLFN );
         
         //add default name and namespace information
         mCurrentJobSubInfo.setTransformation( "pegasus",
@@ -994,6 +1018,8 @@ public class DAXParser2 extends Parser implements DAXParser {
      * It removes the dag file referred in the element.
      */
     private void handleDAGTagEnd() {
+        /*
+        //Moved to Transfer Engine
         String dag = null;
         //go through all the job input files
         //and set transfer flag to false
@@ -1020,7 +1046,8 @@ public class DAXParser2 extends Parser implements DAXParser {
         //set the directory if specified
         ((DAGJob)mCurrentJobSubInfo).setDirectory(
                 (String)mCurrentJobSubInfo.dagmanVariables.removeKey( Dagman.DIRECTORY_EXTERNAL_KEY ));
-        
+
+        */
         
         handleJobTagEnd();
         
@@ -1030,6 +1057,9 @@ public class DAXParser2 extends Parser implements DAXParser {
      * Invoked when the end of the job tag is reached.
      */
     private void handleDAXTagEnd() {
+        /*
+        //Moved to Transfer Engine
+
         //determine the dax input file and specify
         //the path in the argument string for now.
         String dax = mDAXLFN;
@@ -1053,7 +1083,7 @@ public class DAXParser2 extends Parser implements DAXParser {
         arguments.append( mCurrentJobSubInfo.getArguments() ).
                   append( " --dax ").append( dax );
         mCurrentJobSubInfo.setArguments( arguments.toString() );
-        
+        */
         handleJobTagEnd();
         
     }
@@ -1098,7 +1128,39 @@ public class DAXParser2 extends Parser implements DAXParser {
      */
     private void handleExecutionTagEnd() {
         handleProfileTagEnd();
+
+        //check if we an executable path is specified
+        if( this.mCurrentJobSubInfo.hints.containsKey( Hints.PFN_HINT_KEY ) ){
+            TransformationCatalogEntry entry = this.constructTCEntryFromJobHints(mCurrentJobSubInfo);
+            this.mCallback.cbExecutable( entry );
+        }
     }
+
+    /**
+     * Constructs a TC entry object from the contents of a job.
+     * The architecture assigned to this entry is default ( INTEL32::LINUX )
+     * and resource id is set to unknown.
+     *
+     * @param job  the job object
+     *
+     * @return constructed TransformationCatalogEntry
+     */
+    private TransformationCatalogEntry constructTCEntryFromJobHints( Job job ){
+        String executable = (String) job.hints.get( Hints.PFN_HINT_KEY );
+        TransformationCatalogEntry entry = new TransformationCatalogEntry();
+        entry.setLogicalTransformation(job.getTXNamespace(), job.getTXName(), job.getTXVersion());
+        entry.setResourceId( "unknown" );
+        entry.setVDSSysInfo( new VDSSysInfo( Arch.INTEL64, Os.LINUX, "", "" ) );
+        entry.setPhysicalTransformation( executable );
+        //hack to determine whether an executable is
+        //installed or static binary
+        entry.setType( executable.startsWith("/") ?
+                            TCType.INSTALLED :
+                            TCType.STAGEABLE );
+
+        return entry;
+    }
+
 
 
     /**
