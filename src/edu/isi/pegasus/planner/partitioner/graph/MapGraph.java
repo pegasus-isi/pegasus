@@ -214,7 +214,7 @@ public class MapGraph implements Graph{
         GraphNode childNode = (GraphNode)getNode( child );
         GraphNode parentNode = (GraphNode)getNode( parent );
 
-        String notExist = ( childNode == null )? childNode.getID() :
+        String notExist = ( childNode == null )? child :
                                                 ( parentNode == null ) ? parent : null;
 
         if ( notExist != null ) {
