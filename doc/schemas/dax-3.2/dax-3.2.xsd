@@ -2,7 +2,7 @@
 <!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
 <xs:schema targetNamespace="http://pegasus.isi.edu/schema/DAX" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/DAX" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.2">
 	<xs:annotation>
-		<xs:documentation xml:lang="en">Subversion: 2010-10-22 ($Id$)</xs:documentation>
+		<xs:documentation xml:lang="en">$Id$</xs:documentation>
 	</xs:annotation>
 	<xs:simpleType name="TransferType">
 		<xs:annotation>
@@ -12,16 +12,6 @@
 			<xs:enumeration value="false"/>
 			<xs:enumeration value="optional"/>
 			<xs:enumeration value="true"/>
-		</xs:restriction>
-	</xs:simpleType>
-	<xs:simpleType name="FileType">
-		<xs:annotation>
-			<xs:documentation>defines the type of files data|executable|pattern</xs:documentation>
-		</xs:annotation>
-		<xs:restriction base="xs:NMTOKEN">
-			<xs:enumeration value="file"/>
-			<xs:enumeration value="executable"/>
-			<xs:enumeration value="pattern"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="LinkageType">
@@ -37,10 +27,10 @@
 	</xs:simpleType>
 	<xs:simpleType name="FilenameSafePattern">
 		<xs:annotation>
-			<xs:documentation>narrowly defines a string subset safe in most file systems as file name (not path).</xs:documentation>
+			<xs:documentation>narrowly defines a string subset safe in most file systems as file name (excluding path).</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:NMTOKEN">
-			<xs:pattern value="[-.0-9a-zA-Z]+"/>
+			<xs:pattern value="[\-.0-9a-zA-Z]+"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="NodeIdentifierPattern">
@@ -48,7 +38,7 @@
 			<xs:documentation>defines an ASCII-restricted set of identifiers for graph nodes (jobs, daxes, dags).</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:NMTOKEN">
-			<xs:pattern value="[-0-9a-zA-Z_]+"/>
+			<xs:pattern value="[\-0-9a-zA-Z_]+"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="VersionPattern">
@@ -162,7 +152,7 @@
 			<xs:extension base="FilenameType">
 				<xs:attribute name="namespace" type="xs:string" use="optional"/>
 				<xs:attribute name="version" type="VersionPattern" use="optional"/>
-				<xs:attribute name="exectuable" type="xs:boolean" use="optional" default="false"/>
+				<xs:attribute name="executable" type="xs:boolean" use="optional" default="false"/>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -174,7 +164,7 @@
 			<xs:extension base="PlainFilenameType">
 				<xs:attribute name="namespace" type="xs:string" use="optional"/>
 				<xs:attribute name="version" type="VersionPattern" use="optional"/>
-				<xs:attribute name="exectuable" type="xs:boolean" use="optional" default="true"/>
+				<xs:attribute name="executable" type="xs:boolean" use="optional" default="true"/>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
