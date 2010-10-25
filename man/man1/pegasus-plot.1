@@ -24,12 +24,16 @@ pegasus-plot \- A tool to generate graphs and charts to visualize workflow execu
 .SH "SYNOPSIS"
 .B pegasus-plot <submit directory>
 [\-o|\-\-output <output directory>] 
-[\-show\-job\-title title of the show\-job chart] [\-show\-id\-title title of the show-id chart]
+[\-G|\-\-gnatt\-chart\-title workflow execution Gnatt chart title] [\-H|\-\-host\-chart\-title host over time chart title]
+[\-S|\-\-use\-site site information handle]
+[\-K|\-\-kickstart]
+[\-O|\-\-omit]
 [\-m|\-\-monitord] 
-[\-k|\-\-keep] [\-h|\-\-help] 
+[\-k|\-\-keep]
+[\-v|\-\-verbose] 
+[\-h|\-\-help] 
 .SH "DESCRIPTION"
-The pegasus-plot generates graphs and charts to visualize workflow execution.pegasus-plot generates dax and dag graph.
-It also generates workflow execution Gantt chart and job over time timeline graph. 
+pegasus-plot generates graphs and charts to visualize workflow execution. It generates workflow execution Gantt chart, job over time chart, dax and dag graph. It uses executables \'ploticus\',\'convert\' and \'dot\' to generate graphs and charts. Tool looks for these executable in your path and generates graphs and charts based on it\'s availability .
 
 .SH "ARGUMENTS"
 .TP
@@ -41,15 +45,53 @@ It also generates workflow execution Gantt chart and job over time timeline grap
 Writes the output to the given directory 
 
 .TP
-.B \-\-show\-job\-title  show\-job chart title
-The title of the show\-job chart which generates the Gantt workflow execution chart.
-.IP
+.B \-G
+.PD 0
+.TP
+.PD 1
+.B \-\-gnatt\-chart\-title  workflow execution Gnatt chart title
+The title of the  Gantt workflow execution chart.
+
 
 
 .TP
-.B \-\-show\-id\-title  show\-id chart title
-The title of the show\-id chart which generates the job over time timeline chart.
+.B \-H
+.PD 0
+.TP
+.PD 1
+.B \-\-host\-chart\-title  host over time chart title
+The title of the host over time chart.
+
+
+.TP
+.B \-S
+.PD 0
+.TP
+.PD 1
+.B \-\-use\-site  site information handle
+Specifies where to get the site information.
 .IP
+Valid values for the use\-site are
+.B 0: use gatekeeper host (default)
+.B  1: use site handle
+and
+.B 2:use reported workernode handle
+
+.TP
+.B \-K
+.PD 0
+.TP
+.PD 1
+.B \-\-kickstart
+Parallelize host over time chart with kickstart intervals, default is Condor.
+
+.TP
+.B \-O
+.PD 0
+.TP
+.PD 1
+.B \-\-omit
+Omit the gridstart gray boxes from the host over time chart, default draw.
 
 .TP
 .B \-m
@@ -66,6 +108,14 @@ Invokes pegasus-monitord beforre running pegasus-plot.
 .PD 1
 .B \-\-keep
 Keeps the log created by the pegasus-plot run.
+
+.TP
+.B \-v
+.PD 0
+.TP
+.PD 1
+.B \-\-verbose
+Enters the verbose mode.
 
 .TP
 .B \-h
