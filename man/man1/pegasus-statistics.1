@@ -26,7 +26,9 @@ pegasus-statistics \- A tool to generate statistics about the workflow execution
 [\-o|\-\-output <output directory>] 
 [\-m|\-\-monitord]
 [\-c|\-\-condor]
-[\-k|\-\-keep] [\-h|\-\-help] 
+[\-k|\-\-keep]
+[\-v|\-\-verbose] 
+[\-h|\-\-help] 
 .SH "DESCRIPTION"
 The pegasus-statistics generates statistics about the workflow execution like job's run time, condor queue delay etc. 
 
@@ -62,6 +64,14 @@ Specifies a pure condor run with no GRID_SUBMIT events
 .PD 1
 .B \-\-keep
 Keeps the log created by the pegasus-statistics run.
+
+.TP
+.B \-v
+.PD 0
+.TP
+.PD 1
+.B \-\-verbose
+Enters the verbose mode.
 
 .TP
 .B \-h
