@@ -145,10 +145,14 @@ public class DAXParserFactory {
                     version = daxSchema.substring( daxSchema.indexOf( "dax-" ) + 4,
                                                    daxSchema.lastIndexOf(".xsd") );
 
+                    
+                    logger.log( "DAX Version as determined from schema " + version,
+                        LogManager.DEBUG_MESSAGE_LEVEL );
+                    
                     //append .0 to the version number
                     //to be able to convert to numberic value
                     version = version + ".0";
-                    System.out.println( version );
+        
                     if( CondorVersion.numericValue(version) < DAXParserFactory.DAX_VERSION_3_2_0 ){
                         daxClass = DAXParserFactory.DAX_PARSER2_CLASS;
                     }
@@ -162,9 +166,10 @@ public class DAXParserFactory {
                             LogManager.ERROR_MESSAGE_LEVEL );
             }
 
-            logger.log( "DAX Parser Class to be loaded is " + daxClass,
-                        LogManager.DEBUG_MESSAGE_LEVEL );
         }
+        logger.log( "DAX Parser Class to be loaded is " + daxClass,
+                        LogManager.DEBUG_MESSAGE_LEVEL );
+        
 
         Parser daxParser = null;
         try{
