@@ -57,20 +57,29 @@ sub uses {
     my $self = shift; 
     my $uses = shift; 
     if ( defined $uses && ref $uses ) {
-	if ( $uses->isa('Pegasus::DAX::Filename') ) {
-	    $self->{uses}->{ $uses->name } =
+	if ( $uses->isa('Pegasus::DAX::TUType' ) ) {
+	    $self->{uses}->{ $uses->namespace || '', 
+			     $uses->name,
+			     $uses->version || '' } = 
+		Pegasus::DAX::TUType->new( $uses ); # deep copy!
+	} elsif ( $uses->isa('Pegasus::DAX::Filename') ) {
+	    $self->{uses}->{ $uses->namespace || '', 
+			     $uses->name,
+			     $uses->version || '' } = 
 		Pegasus::DAX::TUType->new( namespace => $uses->namespace,
 					   name => $uses->name,
 					   version => $uses->version,
 					   exectuable => $uses->executable ); 
 	} elsif ( $uses->isa('Pegasus::DAX::Executable') ) {
-	    $self->{uses}->{ $uses->name } =
+	    $self->{uses}->{ $uses->namespace || '', 
+			     $uses->name,
+			     $uses->version || '' } = 
 		Pegasus::DAX::TUType->new( namespace => $uses->namespace,
 					   name => $uses->name,
 					   version => $uses->version,
 					   executable => 1 );
 	} elsif ( $uses->isa('Pegasus::DAX::File') ) {
-	    $self->{uses}->{ $uses->name } =
+	    $self->{uses}->{ '', $uses->name, '' } =
 		Pegasus::DAX::TUType->new( name => $uses->name,
 					   executable => 0 ); 
 	} else {
@@ -100,8 +109,7 @@ sub toXML {
 	     , ">\n" );
 
     #
-    # <uses> -- at least one
-    # FIXME: Does order matter? I claim yes, yet here I don't? 
+    # <uses> -- may be empty according to Karan+Gideon
     #
     while ( my ($name,$i) = each %{$self->{uses}} ) {
 	$i->toXML($f,"  $indent",$xmlns);
@@ -174,14 +182,33 @@ Setter and getter for the optional transformation version string.
 
 Alias method for C<uses> method.
 
+=item uses( $tutype_instance )
+
+This method deeply copies the passed L<Pegasus::DAX::TUType> instance. 
+
 =item uses( $filename_instance )
+
+This method constructs an internal L<Pegasus::DAX::TUType> instance
+by copying the I<namespace>, I<name>, I<version> and I<executable>
+attributes from the L<Pegasus::DAX::Filename> instance passed as 
+argument. 
 
 =item uses( $file_instance )
 
+This method constructs an internal L<Pegasus::DAX::TUType> instance by
+copying the I<name> attributes from the L<Pegasus::DAX::Filename>
+instance passed as argument, and sets its I<executable> attribute to
+C<false>. You will have to add a proper L<Pegasus::DAX::TUType> instance
+to overwrite these defaults.
+
+
 =item uses( $executable_instance )
 
-This method adds a filename, file, or executable to the things that will
-end up in the uses section of a job.
+This method constructs an internal L<Pegasus::DAX::TUType> instance by
+copying the I<namespace>, I<name>, and I<version> attributes from the
+L<Pegasus::DAX::Executable> instance passed as argument, and sets the
+I<executable> attribute to C<true>. You will have to add a proper
+L<Pegasus::DAX::TUType> instance to overwrite these defaults.
 
 =item toXML( $handle, $indent, $xmlns )
 

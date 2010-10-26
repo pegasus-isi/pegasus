@@ -27,6 +27,8 @@ our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
 
+use Pegasus::DAX::Filename qw(LINK_INPUT); 
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -55,14 +57,16 @@ sub addArgument {
 	    # plain text -- take as is
 	    $arg = "$name"; 	# deep copy
 	} elsif ( $name->isa('Pegasus::DAX::PlainFilename')) {
-	    # auto-add uses for P::D::Filename
+	    # auto-add uses for P::D::Filename only!
 	    $self->uses($name) if $name->isa('Pegasus::DAX::Filename'); 
 
 	    # sub-classing not permissible for storing/printing
 	    $arg = Pegasus::DAX::PlainFilename->new( $name->name )
 	} elsif ( $name->isa('Pegasus::DAX::CatalogType') ) {
-	    # File or Executable
+	    # auto-add uses for File or Executable
 	    $self->uses($name); 
+
+	    # sub-classing not permissible for storing/printing
 	    $arg = Pegasus::DAX::PlainFilename->new( $name->name ); 
 	} else {
 	    croak "Illegal argument to addArgument"; 
@@ -159,7 +163,7 @@ sub uses {
 	} elsif ( $uses->isa('Pegasus::DAX::File') ) { 
 	    $self->{uses}->{ $uses->name } =
 		Pegasus::DAX::Filename->new( name => $uses->name,
-					     link => LINK_IN,
+					     link => LINK_INPUT,
 					     optional => 0,
 					     executable => 0 ); 
 	} else {
@@ -357,12 +361,19 @@ section.
 
 =item addArgument( $filename_instance )
 
+This method adds a full filename to the ordered list of arguments B<and>
+also adds the filename to the C<uses> section.
+
 =item addArgument( $file_instance )
 
 =item addArgument( $exectuable_instance )
 
 This method adds a full filename to the ordered list of arguments B<and>
-also adds the filename to the C<uses> section.
+also adds the filename to the C<uses> section. However, being of
+L<Pegasus::DAX::CatalogType> that lacks a I<link> attribute, please
+refer to I<uses> below for details. You may have to override the
+automatically added defaults entity by separately and explicitly adding
+the proper L<Pegasus::DAX::Filename> to the I<uses> section.
 
 =item addArgument( ... )
 
@@ -401,14 +412,27 @@ Alias method for C<uses> method.
 
 =item uses( $filename_instance )
 
+This method adds a deep copy of a L<Pegasus::DAX::Filename> instance to
+the I<uses> section of a job. A deep copy is made so that you can change
+attributes on your passed object later.
+
 =item uses( $file_instance )
+
+This method converts a L<Pegasus::DAX::File> instance into an internal
+L<Pegasus::DAX::Filename> entity for I<uses> section of a job. This
+method assumes copies the I<name> attribute, sets the I<link> attribute
+to C<INPUT>, the I<optional> attribute to C<false>, and the
+I<executable> attribute to C<false>. You will have to add a proper
+L<Pegasus::DAX::Filename> instance to overwrite these defaults.
 
 =item uses( $executable_instance )
 
-This method adds a filename, file, or executable to the things that will
-end up in the uses section of a job. In case of a L<Pegasus::DAX::Filename>
-instance, a deep copy is made so that you can change attributes on your
-object. 
+This method converts a L<Pegasus::DAX::Executable> instance into an
+internal L<Pegasus::DAX::Filename> instance for the I<uses> section of a
+job. This method copies the I<name>, I<namespace> and I<version>
+attributes, and sets the I<executable> attribute to C<true>. You will
+have to add a proper L<Pegasus::DAX::Filename> instance to overwrite
+these defaults.
 
 =item addInvoke( $when, $cmd )
 
