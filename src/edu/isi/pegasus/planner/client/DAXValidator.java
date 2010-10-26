@@ -69,6 +69,21 @@ public class DAXValidator extends DefaultHandler
   protected boolean m_verbose; 
 
   /**
+   * Counts the number of warnings. 
+   */
+  protected int m_warnings; 
+
+  /**
+   * Counts the number of errors. 
+   */
+  protected int m_errors; 
+
+  /**
+   * Counts the number of fatal errors. 
+   */
+  protected int m_fatals; 
+
+  /**
    * Sets a feature while capturing failed features right here.
    *
    * @param uri is the feature's URI to modify
@@ -125,6 +140,7 @@ public class DAXValidator extends DefaultHandler
     m_reader.setContentHandler(this);
     m_reader.setErrorHandler(this);
     m_verbose = verbose; 
+    m_warnings = m_errors = m_fatals = 0; 
 
     if ( m_verbose ) {
       System.err.println( "# XMLReader is " +
@@ -411,18 +427,21 @@ public class DAXValidator extends DefaultHandler
   public void warning(SAXParseException ex) 
     throws SAXException 
   {
+    m_warnings++; 
     System.err.println("WARNING: " + ex.getMessage());
   }
        
   public void error(SAXParseException ex) 
     throws SAXException 
   {
+    m_errors++; 
     System.err.println("ERROR: " + ex.getMessage());
   } 
   
   public void fatalError(SAXParseException ex) 
     throws SAXException 
   {
+    m_fatals++; 
     System.err.println("FATAL: " + ex.getMessage());
   } 
 
@@ -501,18 +520,37 @@ public class DAXValidator extends DefaultHandler
     m_reader.parse(filename); 
   }
 
+  /**
+   * Show how many warnings, errors and fatals were shown.
+   *
+   * @return true, if we should transmit an error exit code.
+   */
+  public boolean statistics()
+  {
+    System.out.println(); 
+    System.out.print( m_warnings + " warnings, " );
+    System.out.print( m_errors + " errors, and " ); 
+    System.out.println( m_fatals + " fatal errors detected." ); 
+    return ( m_errors > 0 || m_fatals > 0 );
+  }
+
   // --- main ---
 
   public static void main( String args[] )
     throws Exception
   {
+    boolean fail = true; 
+
     try { 
       DAXValidator validator = new DAXValidator( args.length > 1 );
       validator.parse( args[0] ); 
+      fail = validator.statistics(); 
     } catch ( IOException ioe ) {
       System.err.println( ioe ); 
     } catch ( SAXException spe ) { 
       System.err.println( spe ); 
     }
+
+    if ( fail ) System.exit(1); 
   }
 }
