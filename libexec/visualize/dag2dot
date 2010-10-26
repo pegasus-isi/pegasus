@@ -44,14 +44,19 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 		self.dag = {}
 		
 	def startElement(self, name, attrs):
-		if name == "job":
+		if name in ["job","dax","dag"]:
 			job = Job()
 			job.id = attrs.get("id")
 			if job.id is None:
 				raise Exception("Invalid DAX: attribute 'id' missing")
-			job.name = attrs.get("name")
+			label = attrs.get("node-label")
+			if label is None:
+				label = attrs.get("name")
+				if label is None:
+					label = attrs.get("file")
+			job.name = label
 			if job.name is None:
-				job.name = job.id[0:8]
+				raise Exception("Invalid DAX: unable to determine label for job %s" % job.id)
 			self.dag[job.id] = job
 		elif name == "child":
 			self.lastchild = attrs.get("ref")
