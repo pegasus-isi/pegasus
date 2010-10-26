@@ -187,6 +187,8 @@ public class Text
             else{
                 //empty TCStore
                 mTCStore = new TransformationStore();
+                mLogger.log( "Considering an empty Transformation Catalog . File pointed to in the properties for TC does not exist " + mTCFile,
+                              LogManager.DEBUG_MESSAGE_LEVEL );
             }
         }
         catch (FileNotFoundException ex) {
