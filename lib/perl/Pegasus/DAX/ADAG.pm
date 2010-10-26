@@ -231,8 +231,6 @@ sub toXML {
 	$f->print( "<!-- generator: Perl -->\n" ); 
     }
 
-    my $jobCount = scalar keys %{$self->{jobs}};
-    my $depCount = exists $self->{deps} ? scalar keys %{$self->{deps}} : 0; 
     my $ns = defined $xmlns && $xmlns ? "xmlns:$xmlns" : 'xmlns'; 
     $f->print( "$indent<$tag"
 	     , attribute($ns,SCHEMA_NAMESPACE)
@@ -242,8 +240,6 @@ sub toXML {
 	     , attribute('name',$self->name,$xmlns)
 	     , attribute('index',$self->index,$xmlns)
 	     , attribute('count',$self->count,$xmlns)
-	     , attribute('jobCount',$jobCount,$xmlns)
-	     , attribute('childCount',$depCount,$xmlns)
 	     , ">\n" ); 
 
     #

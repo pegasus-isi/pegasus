@@ -13,10 +13,10 @@ use Exporter;
 our @ISA = qw(Pegasus::DAX::PlainFilename Exporter); 
 
 use constant LINK_NONE   => 'none';
-use constant LINK_IN     => 'in'; 
-use constant LINK_OUT    => 'out';
-use constant LINK_INPUT  => 'in'; 
-use constant LINK_OUTPUT => 'out';
+use constant LINK_IN     => 'input'; 
+use constant LINK_OUT    => 'output';
+use constant LINK_INPUT  => 'input'; 
+use constant LINK_OUTPUT => 'output';
 use constant LINK_INOUT  => 'inout'; 
 use constant LINK_IO     => 'inout'; 
 

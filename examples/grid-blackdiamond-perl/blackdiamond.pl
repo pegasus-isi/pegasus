@@ -14,7 +14,7 @@ my $job2 = newJob( namespace => NS, name => 'findrange', version => '2.0' );
 my $job3 = newJob( namespace => NS, name => 'findrange', version => '2.0' );
 my $job4 = newJob( namespace => NS, name => 'analyze', version => '2.0' );
 
-my $file = newFile( name => 'f.a', link => LINK_IN ); 
+my $file = newFile( name => 'f.a' );
 $file->addPFN( newPFN( url => 'f.a', site => 'local' ) ); 
 $adag->addFile($file); 
 
@@ -32,9 +32,10 @@ if ( exists $ENV{'PEGASUS_HOME'} ) {
 }
 
 my %hash = ( link => LINK_OUT, register => 'false', transfer => 'true' ); 
+my $fna = newFilename( name => $file->name, link => LINK_IN );
 my $fnb1 = newFilename( name => 'f.b1', %hash );
 my $fnb2 = newFilename( name => 'f.b2', %hash ); 
-$job1->addArgument( '-a', $job1->name, '-T60', '-i', $file,
+$job1->addArgument( '-a', $job1->name, '-T60', '-i', $fna,
 		    '-o', $fnb1, $fnb2 ); 
 $adag->addJob($job1); 
 

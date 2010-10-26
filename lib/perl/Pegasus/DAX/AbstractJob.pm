@@ -153,12 +153,12 @@ sub uses {
 					     name => $uses->name,
 					     version => $uses->version,
 					     executable => 1 );
-	} elsif ( $uses->isa('Pegasus::DAX::File') ) { 
-	    $self->{uses}->{ $uses->name } =
-		Pegasus::DAX::Filename->new( name => $uses->name,
-					     link => $uses->link,
-					     optional => $uses->optional,
-					     executable => 0 ); 
+#	} elsif ( $uses->isa('Pegasus::DAX::File') ) { 
+#	    $self->{uses}->{ $uses->name } =
+#		Pegasus::DAX::Filename->new( name => $uses->name,
+#					     link => LINK_IN,
+#					     optional => 0, 
+#					     executable => 0 ); 
 	} else {
 	    croak( "Instance of ", ref $uses, ' is an invalid argument' );
 	}

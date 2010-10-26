@@ -42,8 +42,6 @@ sub new {
 
 # forward declarations
 #sub name;			# inherited
-sub link;
-sub optional;
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -59,8 +57,6 @@ sub toXML {
 
     $f->print( "$indent<$tag"
 	     , attribute('name',$self->name,$xmlns)
-	     , attribute('link',$self->link,$xmlns)
-	     , attribute('optional',boolean($self->optional),$xmlns)
 	     , ">\n" );
     $self->innerXML($f,"  $indent",$xmlns); 
     $f->print( "$indent</$tag>\n" );
@@ -80,8 +76,6 @@ Pegasus::DAX::File - stores an included replica catalog entry.
 
     my $a = Pegasus::DAX::File(); 
     $a->name( 'lfn' );
-    $a->link( LINK_IN );
-    $a->optional( 0 ); 
     $a->addPFN( ... ); 
   
 =head1 DESCRIPTION
@@ -109,17 +103,6 @@ successfully.
 =item name
 
 Setter and getter for the logical filename. 
-
-=item link
-
-Setter and getter for the link attribute string. Please use the
-constants from L<Pegasus::DAX::Filename> for proper linkage.
-
-=item optional
-
-Setter and getter for the I<optional> boolean attribute. Please use
-Perl's notion of Truth. If you give the setter the string I<false>, it
-will be printed as I<true>, because it is true by Perl's logic.
 
 =item toXML( $handle, $indent, $xmlns )
 
