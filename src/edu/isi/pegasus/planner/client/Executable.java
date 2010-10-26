@@ -106,7 +106,6 @@ public abstract class Executable {
             //append just one elment of stack trace for each exception
             message.append( " at " ).append( cause.getStackTrace()[0] );
         }
-        e.printStackTrace();
         return message.toString();
     }
 

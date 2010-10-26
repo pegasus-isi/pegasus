@@ -223,8 +223,8 @@ public class ReplicaCatalogBridge
     public void initialize( ADag dag ,
                             PegasusBag bag ){
         
-        this.initialize( dag, bag.getPegasusProperties(), bag.getPlannerOptions() );
         this.mDAXReplicaStore = dag.getReplicaStore();
+        this.initialize( dag, bag.getPegasusProperties(), bag.getPlannerOptions() );
     }
     
     /**
@@ -273,14 +273,19 @@ public class ReplicaCatalogBridge
 
         } catch ( Exception ex ) {
             String msg = "Problem while connecting with the Replica Catalog: ";
-            mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
+            
             //set the flag to denote RLI is down
             mRCDown = true;
             //mReplicaStore = new ReplicaStore();
 
+            
             //exit if there is no cache overloading specified.
-            if ( options.getCacheFiles().isEmpty() ) {
+            if ( options.getCacheFiles().isEmpty() && this.mDAXReplicaStore.isEmpty() ) {
+                mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( msg , ex );
+            }
+            else{
+                mLogger.log( msg + ex.getMessage(),LogManager.DEBUG_MESSAGE_LEVEL  );
             }
         }
         finally{

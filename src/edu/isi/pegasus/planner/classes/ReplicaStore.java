@@ -215,6 +215,14 @@ public class ReplicaStore
         return s;
     }
 
+    /**
+     * Returns a boolean indicating whether a store is empty or not.
+     * 
+     * @return boolean
+     */
+    public boolean isEmpty(){
+        return this.getLFNCount() == 0;
+    }
 
     /**
      * Returns the number of LFN's for which the mappings are stored in the
