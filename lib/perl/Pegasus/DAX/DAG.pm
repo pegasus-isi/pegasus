@@ -40,6 +40,9 @@ sub new {
     bless $self, $class; 
 }
 
+# forward declaration to auto loaders
+sub file; 
+
 sub toXML {
     # purpose: put self onto stream as XML
     # paramtr: F (IN): perl file handle open for writing
@@ -53,7 +56,7 @@ sub toXML {
     my $tag = defined $xmlns && $xmlns ? "$xmlns:dag" : 'dag';
 
     $f->print( "$indent<$tag"
-	     , attribute('name',$self->name,$xmlns)
+	     , attribute('file',$self->file,$xmlns)
 	     , attribute('id',$self->id,$xmlns)
 	     , attribute('node-label',$self->nodelabel,$xmlns)
 	     , ">\n" );
@@ -73,7 +76,7 @@ Pegasus::DAX::DAG - Job node to store a concrete DAG workflow.
 
     use Pegasus::DAX::DAG; 
 
-    my $a = Pegasus::DAX::DAG->new( name => 'fubar' ); 
+    my $a = Pegasus::DAX::DAG->new( file => 'fubar' ); 
     $a->addArgument( '-flag' ); 
 
 =head1 DESCRIPTION
@@ -95,6 +98,11 @@ attributes can be adjusted using the getters and setters provided by the
 C<AUTOLOAD> inherited method.
 
 Other means of construction is to use named lists.
+
+=item name
+
+Getter and setter for the job's name required string. Regardless of the
+child class, any job always some form of name.
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -133,8 +141,6 @@ Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 =item stdout
 
 =item stderr
-
-=item name
 
 =item id
 

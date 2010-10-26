@@ -353,6 +353,11 @@ C<AUTOLOAD> inherited method.
 
 Other means of construction is to use named lists.
 
+=item name
+
+Getter and setter for the job's name required string. Regardless of the
+child class, any job always some form of name.
+
 =item index
 
 Getter and setter to the slot number, starting with 0, of this workflow
@@ -461,8 +466,6 @@ Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 =item stdout
 
 =item stderr
-
-=item name
 
 =item id
 

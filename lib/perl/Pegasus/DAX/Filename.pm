@@ -233,9 +233,7 @@ Base class.
 
 =item Pegasus::DAX::AbstractJob
 
-=item Pegasus::DAX::Transformation
-
-Aggregating classes. 
+Aggregating class. 
 
 =back 
 

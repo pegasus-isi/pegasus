@@ -58,19 +58,21 @@ sub uses {
     my $uses = shift; 
     if ( defined $uses && ref $uses ) {
 	if ( $uses->isa('Pegasus::DAX::Filename') ) {
-	    $self->{uses}->{ $uses->name } = $uses; 
+	    $self->{uses}->{ $uses->name } =
+		Pegasus::DAX::TUType->new( namespace => $uses->namespace,
+					   name => $uses->name,
+					   version => $uses->version,
+					   exectuable => $uses->executable ); 
 	} elsif ( $uses->isa('Pegasus::DAX::Executable') ) {
 	    $self->{uses}->{ $uses->name } =
-		Pegasus::DAX::Filename->new( namespace => $uses->namespace,
-					     name => $uses->name,
-					     version => $uses->version,
-					     executable => 1 );
+		Pegasus::DAX::TUType->new( namespace => $uses->namespace,
+					   name => $uses->name,
+					   version => $uses->version,
+					   executable => 1 );
 	} elsif ( $uses->isa('Pegasus::DAX::File') ) {
 	    $self->{uses}->{ $uses->name } =
-		Pegasus::DAX::Filename->new( name => $uses->name,
-					     link => $uses->link,
-					     optional => $uses->optional,
-					     executable => 0 ); 
+		Pegasus::DAX::TUType->new( name => $uses->name,
+					   executable => 0 ); 
 	} else {
 	    croak "argument is not an instance I understand";
 	}
@@ -99,6 +101,7 @@ sub toXML {
 
     #
     # <uses> -- at least one
+    # FIXME: Does order matter? I claim yes, yet here I don't? 
     #
     while ( my ($name,$i) = each %{$self->{uses}} ) {
 	$i->toXML($f,"  $indent",$xmlns);

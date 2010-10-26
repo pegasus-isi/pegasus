@@ -71,6 +71,7 @@ sub os;
 sub osrelease;
 sub osversion;
 sub glibc;
+sub installed;
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -93,6 +94,7 @@ sub toXML {
 	     , attribute('osrelease',$self->osrelease,$xmlns)
 	     , attribute('osversion',$self->osversion,$xmlns)
 	     , attribute('glibc',$self->glibc,$xmlns)
+	     , attribute('installed',boolean($self->installed),$xmlns)
 	     , ">\n" );
     $self->innerXML($f,"  $indent",$xmlns); 
     $f->print( "$indent</$tag>\n" );

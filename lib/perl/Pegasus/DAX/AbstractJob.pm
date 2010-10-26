@@ -68,6 +68,9 @@ sub addArgument {
 	    croak "Illegal argument to addArgument"; 
 	}
 
+	# 
+	# add $arg to list of arguments
+	#
 	if ( exists $self->{arguments} ) { 
 	    push( @{$self->{arguments}}, $arg );
 	} else {
@@ -153,12 +156,12 @@ sub uses {
 					     name => $uses->name,
 					     version => $uses->version,
 					     executable => 1 );
-#	} elsif ( $uses->isa('Pegasus::DAX::File') ) { 
-#	    $self->{uses}->{ $uses->name } =
-#		Pegasus::DAX::Filename->new( name => $uses->name,
-#					     link => LINK_IN,
-#					     optional => 0, 
-#					     executable => 0 ); 
+	} elsif ( $uses->isa('Pegasus::DAX::File') ) { 
+	    $self->{uses}->{ $uses->name } =
+		Pegasus::DAX::Filename->new( name => $uses->name,
+					     link => LINK_IN,
+					     optional => 0,
+					     executable => 0 ); 
 	} else {
 	    croak( "Instance of ", ref $uses, ' is an invalid argument' );
 	}
@@ -194,7 +197,6 @@ sub invoke {
 }
 
 # forward declarations
-sub name;
 sub id;
 sub nodelabel;
 
@@ -421,11 +423,6 @@ Alias for C<invoke> method.
 This method adds a simple executable instruction to run (on the submit
 host) when a job reaches the state in C<$when>. Please refer to the 
 constants C<INVOKE_*> for details. 
-
-=item name
-
-Getter and setter for the job's name required string. Regardless of the
-child class, any job always some form of name.
 
 =item id
 
