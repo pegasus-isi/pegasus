@@ -968,7 +968,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     if( child instanceof String ){
                         //parent appears in child element
                         String parentNode = ( String )child;
-                        PCRelation pc = ( PCRelation )parent;
+                        PCRelation pc = (PCRelation) (( PCRelation )parent).clone();
                         pc.setParent( parentNode );
                         mParents.add( pc );
                         return true;
