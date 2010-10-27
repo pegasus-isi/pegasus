@@ -22,11 +22,6 @@ import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 
-
-
-
-
-
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Separator;
@@ -66,12 +61,16 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.xml.sax.SAXException;
 
 /**
@@ -95,6 +94,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public static final String SCHEMA_NAMESPACE =
                                         "http://pegasus.isi.edu/schema/dax";
 
+    /**
+     * The scheme name for file url.
+     */
+    public static final String FILE_URL_SCHEME = "file:";
+    
     /**
      * Constant denoting an undefined site
      */
@@ -1008,7 +1012,18 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         TransformationCatalogEntry tce = (TransformationCatalogEntry)parent;
                         PFN pfn = ( PFN )child;
                         tce.setResourceId( pfn.getSite() );
-                        tce.setPhysicalTransformation( pfn.getURL() );
+                        String url = pfn.getURL();
+                        
+                        //convert file url appropriately for installed executables
+                        if( tce.getType().equals( TCType.INSTALLED ) &&
+                                url.startsWith(DAXParser3.FILE_URL_SCHEME)) {
+                            try {
+                                url = new URL(url).getFile();
+                            } catch (MalformedURLException ex) {
+                                throw new RuntimeException( "Error while converting file url ", ex );
+                            }
+                        }
+                        tce.setPhysicalTransformation( url );
                         this.mCallback.cbExecutable( tce );
 
                         return true;
