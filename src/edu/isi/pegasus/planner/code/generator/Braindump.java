@@ -278,7 +278,7 @@ public class Braindump {
         entries.put( "pegasushome", mProps.getPegasusHome());
         entries.put( "vogroup" , mPOptions.getVOGroup() );
         
-        
+/*                
         //to be deleted once gaurang fixes pegasus-run
         entries.put( "run" , absPath);
         entries.put( "label", workflow.getLabel() );
@@ -286,6 +286,7 @@ public class Braindump {
         if (dinfo.getMTime() != null) {
             entries.put( WF_TIMESTAMP_KEY, dinfo.getFlowTimestamp() );
         }
+*/ 
         
         return entries;
     }
