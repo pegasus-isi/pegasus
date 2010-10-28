@@ -31,13 +31,14 @@ public class Executable extends CatalogType {
 
     public static enum OS {
 
-        LINUX, SUNOS, AIX, MACOS, DARWIN, WINDOWS, SOLARIS
+        LINUX, SUNOS, AIX, MACOSX, DARWIN, WINDOWS, SOLARIS
     }
 
     public static enum TYPE {
 
         STAGEABLE, INSTALLED
     }
+
     protected String mNamespace;
     protected String mName;
     protected String mVersion;

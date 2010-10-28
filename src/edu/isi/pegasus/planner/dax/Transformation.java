@@ -74,34 +74,36 @@ public class Transformation {
     }
 
     public void toXML(XMLWriter writer, int indent) {
-        writer.startElement("transformation", indent);
-        if (mNamespace != null && !mNamespace.isEmpty()) {
-            writer.writeAttribute("namespace", mNamespace);
-        }
-        writer.writeAttribute("name", mName);
-        if (mVersion != null && !mVersion.isEmpty()) {
-            writer.writeAttribute("version", mVersion);
-        }
-        for (CatalogType c : mUses) {
-            if (c.getClass() == File.class) {
-                File f = (File) c;
-                writer.startElement("uses", indent + 1);
-                writer.writeAttribute("name", f.getName());
-                writer.endElement();
-            } else if (c.getClass() == Executable.class) {
-                Executable e = (Executable) c;
-                writer.startElement("uses", indent + 1);
-                if (e.mNamespace != null && !e.mNamespace.isEmpty()) {
-                    writer.writeAttribute("namespace", e.mNamespace);
-                }
-                writer.writeAttribute("name", e.mName);
-                if (e.mVersion != null && !e.mVersion.isEmpty()) {
-                    writer.writeAttribute("version", e.mVersion);
-                }
-                writer.writeAttribute("executable", "true");
-                writer.endElement();
+        if (!mUses.isEmpty()) {
+            writer.startElement("transformation", indent);
+            if (mNamespace != null && !mNamespace.isEmpty()) {
+                writer.writeAttribute("namespace", mNamespace);
             }
+            writer.writeAttribute("name", mName);
+            if (mVersion != null && !mVersion.isEmpty()) {
+                writer.writeAttribute("version", mVersion);
+            }
+            for (CatalogType c : mUses) {
+                if (c.getClass() == File.class) {
+                    File f = (File) c;
+                    writer.startElement("uses", indent + 1);
+                    writer.writeAttribute("name", f.getName());
+                    writer.endElement();
+                } else if (c.getClass() == Executable.class) {
+                    Executable e = (Executable) c;
+                    writer.startElement("uses", indent + 1);
+                    if (e.mNamespace != null && !e.mNamespace.isEmpty()) {
+                        writer.writeAttribute("namespace", e.mNamespace);
+                    }
+                    writer.writeAttribute("name", e.mName);
+                    if (e.mVersion != null && !e.mVersion.isEmpty()) {
+                        writer.writeAttribute("version", e.mVersion);
+                    }
+                    writer.writeAttribute("executable", "true");
+                    writer.endElement();
+                }
+            }
+            writer.endElement(indent);
         }
-        writer.endElement(indent);
     }
 }
