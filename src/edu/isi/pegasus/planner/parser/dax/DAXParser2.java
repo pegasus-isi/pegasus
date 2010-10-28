@@ -891,6 +891,7 @@ public class DAXParser2 extends Parser implements DAXParser {
 
         
         handleJobTagStart( mCurrentJobSubInfo  );
+        mCurrentJobSubInfo.setName( ((DAGJob)mCurrentJobSubInfo).generateName( this.mJobPrefix) );
     }
     
     /**
@@ -935,6 +936,8 @@ public class DAXParser2 extends Parser implements DAXParser {
         mCurrentJobSubInfo.setLogicalID( attrs.getValue("", "id") );
         
         handleJobTagStart( mCurrentJobSubInfo  );
+        
+        mCurrentJobSubInfo.setName( ((DAXJob)mCurrentJobSubInfo).generateName( this.mJobPrefix) );
     }
     
     /**

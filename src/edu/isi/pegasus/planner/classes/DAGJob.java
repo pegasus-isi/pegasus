@@ -28,6 +28,12 @@ package edu.isi.pegasus.planner.classes;
 public class DAGJob extends Job {
 
     /**
+     * The prefix to be attached for the DAX jobs
+     */
+    public static final String JOB_PREFIX = "subdag_";
+
+    
+    /**
      * The DAG LFN.
      */
     private String mDAGLFN;
@@ -116,6 +122,40 @@ public class DAGJob extends Job {
      */
     public String getDirectory(){
         return mDirectory;
+    }
+
+    /**
+     * Generates a name for the job that serves as the primary id for the job
+     * 
+     * @param prefix any prefix that needs to be applied while constructing the 
+     *               job name
+     * 
+     * @return  the id for the job
+     */
+    public String generateName( String prefix ){
+        StringBuffer sb = new StringBuffer();
+        
+        //prepend a job prefix to job if required
+        if (prefix != null) {
+            sb.append( prefix );
+        }
+        
+        String lfn =  this.getDAGLFN();
+        String lid = this.getLogicalID();
+        if( lfn == null || this.getLogicalID() == null ){
+            //sanity check
+            throw new RuntimeException( "Generate name called for job before setting the DAGLFN/Logicalid"
+                                        + lfn + "," + lid );
+        }
+        
+        if( lfn.contains( "." ) ){
+            lfn = lfn.substring( 0, lfn.lastIndexOf( "." ) );
+        }
+        
+        sb.append( DAGJob.JOB_PREFIX ).append( lfn ).append( "_" ).
+           append( lid );
+        
+        return sb.toString();
     }
 
     

@@ -60,8 +60,6 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 import java.io.IOException;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -366,7 +364,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
 
                         //set the internal primary id for job
-                        dagJob.setName( constructJobID( dagJob ) );
+                        //dagJob.setName( constructJobID( dagJob ) );
+                        dagJob.setName( dagJob.generateName( this.mJobPrefix) );
                         return dagJob;
                     }
                     else if (element.equals( "dax" ) ){
@@ -398,7 +397,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         daxJob.level       = -1;
 
                         //set the internal primary id for job
-                        daxJob.setName( constructJobID( daxJob ) );
+                        //daxJob.setName( constructJobID( daxJob ) );
+                        daxJob.setName( daxJob.generateName( this.mJobPrefix) );
                         return daxJob;
                     }
 
