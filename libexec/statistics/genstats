@@ -277,7 +277,7 @@ sub processJobstateLog {
                 $tokens[0] -= $globalStartTime;
                 print OUT join(' ', @tokens), "\n";
             } else {
-                if ($line =~ /MONITORD_FINISHED ([0-9])*/) {
+                if ($line =~ /DAGMAN_FINISHED ([0-9])+/) {
                     if ($1 != 0) {
                         warn "Workflow execution failed/restarted.";
                     }
