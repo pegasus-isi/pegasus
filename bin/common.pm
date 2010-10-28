@@ -33,7 +33,15 @@ our @EXPORT = ();
 # with $PEGASUS_HOME/lib/perl at compile-time. 
 #
 use File::Spec; 
-BEGIN { 
+use File::Basename qw(dirname); 
+use Cwd qw(abs_path);
+
+BEGIN {
+    if ( ! exists $ENV{'PEGASUS_HOME'} ) { 
+	my $scriptdir = abs_path($0); 
+	$ENV{'PEGASUS_HOME'} = dirname(dirname($scriptdir)); 
+    }
+
     if ( exists $ENV{'PEGASUS_HOME'} && -d $ENV{'PEGASUS_HOME'} ) {
 	my $dir = File::Spec->catdir( $ENV{'PEGASUS_HOME'}, 'lib', 'perl' );
 	unshift( @INC, $dir ) if -d $dir;

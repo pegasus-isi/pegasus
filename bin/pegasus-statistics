@@ -15,6 +15,9 @@ use File::Spec;
 use File::Temp qw/ tempfile tempdir  /;
 use Cwd;
 
+use lib dirname($0);
+use common ':all'; 
+
 # use local modules
 use Work::Common;
 
@@ -26,7 +29,9 @@ my($keep) = undef;
 # list of sub workflows
 my (@sub_workflow_submit_dirs) = ();
 my (@workflow_statistics) =();
-$SIG{'INT'} = 'clean_exit';
+
+sub clean_exit();		# { }
+$SIG{'INT'} = \&clean_exit; 
 $main::DEBUG =0;
 
 END{
