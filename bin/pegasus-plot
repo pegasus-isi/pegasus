@@ -14,6 +14,9 @@ use File::Copy;
 use File::Spec;
 use File::Temp qw/ tempfile tempdir  /;
 
+use lib dirname($0);
+use common ':all'; 
+
 # use local modules
 use Work::Common;
 
@@ -27,7 +30,9 @@ my @predefined_transformations =
     );
 my ($log_dir) = undef;    
 my($keep) = undef;
-$SIG{'INT'} = 'clean_exit';
+
+sub clean_exit();
+$SIG{'INT'} =  \&clean_exit; 
 $main::DEBUG =0;
 
 END{
