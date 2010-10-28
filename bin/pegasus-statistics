@@ -24,13 +24,16 @@ use Work::Common;
 #global variables
 my $MAX_LOG_FILE = 1000;
 my $job_state_file_name = 'jobstate.log';
+my $brain_db_file_name ='braindump.txt';
 my ($log_dir) = undef;
 my($keep) = undef;
+my ($base_submit_dir) = undef;
+my ($base_path_len) =0;
 # list of sub workflows
 my (@sub_workflow_submit_dirs) = ();
 my (@workflow_statistics) =();
 
-sub clean_exit();		# { }
+sub clean_exit();		
 $SIG{'INT'} = \&clean_exit; 
 $main::DEBUG =0;
 
@@ -106,7 +109,19 @@ sub main(){
 	if($output_dir){
 		$output_dir = File::Spec->rel2abs($output_dir);
 	}
+	($submit_dir) = File::Spec->rel2abs($submit_dir);
+	$base_submit_dir = $submit_dir;
 	my (%config) = slurp_braindb( $submit_dir ) or die "ERROR: open braindump.txt in directory $submit_dir: $!\n";
+	# Gets the new and old submit directory value
+	my ($bd_submit_dir,$bd_run_dir) = parse_run_dir_db_file(File::Spec->catfile( $submit_dir, $brain_db_file_name ));
+	if(!$bd_submit_dir){
+			$bd_submit_dir = $bd_run_dir;
+			if(!$bd_submit_dir){
+				print STDERR "ERROR: Unable to find the submit directory in the braindump.txt file.\n";
+				exit 1;
+			}
+	}
+	$base_path_len = length($bd_submit_dir);
 	my($dag_file_name , $jsd_file_path) =  ($config{'dag'} ,$config{'jsd'});
 	
 	if(!$dag_file_name){
@@ -126,7 +141,7 @@ sub main(){
 			$job_state_backup = setup_monitord($job_state_base_file);
 		}
 		my($dagman_out_file) = File::Spec->catfile( $submit_dir ,$dag_file_name .".dagman.out");
-		my($monitord_status , $monitord_summary_msg)  = invoke_monitord($dagman_out_file,$jsd_file_path );
+		my($monitord_status , $monitord_summary_msg)  = invoke_monitord($dagman_out_file,rlb($jsd_file_path) );
 		if($monitord_status !=0 ){
 			if($job_state_backup){
 			# Revert back the jobstate file
@@ -155,7 +170,7 @@ sub main(){
 	}
 	
 	my($dag_file_path) =  File::Spec->catfile("$submit_dir","$dag_file_name");
-	my($workflow_statistics_status) = print_workflow_statistics($submit_dir,$jsd_file_path,$dag_file_path,$condor);
+	my($workflow_statistics_status) = print_workflow_statistics($submit_dir,rlb($jsd_file_path),$dag_file_path,$condor);
 	@sub_workflow_submit_dirs = get_sub_workflow_list($dag_file_path);
 	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
 	my $sub_submit_dir;
@@ -173,7 +188,7 @@ sub main(){
 					print STDERR "ERROR: Unable to find the jobstate file path in the braindump.txt file.\n";
 					exit 1;
 			}
-			my($sub_workflow_statistics_status) = print_workflow_statistics($sub_submit_dir,$sub_jsd_file_path,$sub_dag_file_path,$condor);
+			my($sub_workflow_statistics_status) = print_workflow_statistics($sub_submit_dir,rlb($sub_jsd_file_path),$sub_dag_file_path,$condor);
 		}
 	}
 	
@@ -250,7 +265,7 @@ sub main(){
 	
 	$summary_msg .= "\nWorkflow execution statistics created at :\n$workflow_stats_file_path\n";
 	# Executing genstat command
-	my($genstats_status ,$genstats_summary_msg) =run_genstats($dag_file_path ,$jsd_file_path,$output_dir ,$condor );
+	my($genstats_status ,$genstats_summary_msg) =run_genstats($dag_file_path ,rlb($jsd_file_path),$output_dir ,$condor );
 	## Executing genstats-breakdown command
 	my($genstats_breakdown_status ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir  );
 	
@@ -262,6 +277,45 @@ sub main(){
 	exit 0;
 }
 
+sub parse_run_dir_db_file($){
+	# purpose : parses the brain dump file to find the  'run'(old format) or 'submit_dir' config value in the brain dump file.
+	#returns : submit,run directory if it exists, undef otherwise
+	my ($braindump_file)=(@_);
+	my ($run_dir,$sub_dir) = (undef,undef);
+	open CONFIG, "$braindump_file" or die "Unable to open brain dump file: $braindump_file . $! \n";
+	for (<CONFIG>) {
+    	chomp;
+    	s/\#.*//;
+    	s/^\s+//;
+    	s/\s+$//;
+    	next unless length;
+    	my ($var, $val) = split(/\s/, $_, 2);
+    	# new format
+		if ($var eq 'submit_dir'){
+    		$sub_dir =  $val;
+		}
+    	# old format
+    	if ($var eq 'run'){
+    		$run_dir =  $val;
+		}
+	}	
+	close(CONFIG);
+	return ($sub_dir ,$run_dir);
+}
+
+sub rlb($){
+	# purpose : changes the path relative to the base directory
+	# returns : path relative to the base directory
+	my( $file_path) =@_;
+	chomp($file_path);
+    $file_path =~ s/^\s+//;
+	$file_path =~ s/\s+$//;
+	my $file_relative_path = substr($file_path ,$base_path_len );
+	# Removing '/' from the path
+	$file_relative_path =~ s/^\///;
+	my $relative_to_base_path =  File::Spec->catfile("$base_submit_dir" , "$file_relative_path" );
+	return $relative_to_base_path;
+}
 
 sub get_job_list($){
 	# purpose : parses dag file to find all the jobs
@@ -342,8 +396,8 @@ sub print_workflow_statistics($$$$){
             	 	}
             	}
             	
-                if ($line =~ /MONITORD_FINISHED ([0-9])*/) {
-                    if ($1 != 0) {
+            	if ($line =~ /DAGMAN_FINISHED ([0-9])+/) {
+            		if ($1 != 0) {
                     	if ($main::DEBUG){
                         	print STDERR "Warning: Workflow execution failed/restarted.\n";
                         }
@@ -529,6 +583,7 @@ sub invoke_monitord($$){
 	my $summary_msg;
 	print STDOUT "******  pegasus-monitord  ***** \n";
 	# Adding arguments
+	push(@args ,"-r "); # add replay option
 	push(@args ,"-j ".$job_state_file); # adding job state option
 	push(@args ,"$dagman_out_file"); #/adding show-jobnames option
 	
@@ -698,7 +753,7 @@ sub invoke_monitord_for_sub_workflow(@){
 			$job_state_backup = setup_monitord($job_state_base_file);
 		}
 		my($dagman_out_file) = File::Spec->catfile( $submit_dir ,$dag_file_name .".dagman.out");
-		my($monitord_status , $monitord_summary_msg)  = invoke_monitord($dagman_out_file,$jsd_file_path );
+		my($monitord_status , $monitord_summary_msg)  = invoke_monitord($dagman_out_file,rlb($jsd_file_path) );
 		if($monitord_status !=0 ){
 			if($job_state_backup){
 			# Revert back the jobstate file
@@ -772,6 +827,7 @@ sub get_sub_workflow_list($){
 	 		 $submit_file_path = File::Spec->catfile($submit_dir,$sub_wf_submit_file_name);
 		     $sub_wf_submit_dir = &parse_submit_file($submit_file_path);
 		     if($sub_wf_submit_dir){
+		     	$sub_wf_submit_dir = rlb($sub_wf_submit_dir);
 		        %config = slurp_braindb( $sub_wf_submit_dir ) or die "ERROR: open braindump.txt in directory $sub_wf_submit_dir: $!\n";
 	     	    $sub_dag_file_name = $config{'dag'};
 	     	    push (@sub_workflow_submit_dirs ,$sub_wf_submit_dir);
