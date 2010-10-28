@@ -339,10 +339,14 @@ sub processJobstateLog {
     # Calculate runtimes for each job
     #
     foreach my $job (keys %{$jobsRef}) {
-        if (defined $jobsRef->{$job}->{'EXECUTE'}) {
-            $jobsRef->{$job}->{'runtime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} - $jobsRef->{$job}->{'EXECUTE'};
-        } else {
-            $jobsRef->{$job}->{'runtime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} - $jobsRef->{$job}->{'SUBMIT'};
+    	if (defined $jobsRef->{$job}->{'JOB_TERMINATED'}) {
+	        if (defined $jobsRef->{$job}->{'EXECUTE'}) {
+	            $jobsRef->{$job}->{'runtime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} - $jobsRef->{$job}->{'EXECUTE'};
+	        } else {
+	            $jobsRef->{$job}->{'runtime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} - $jobsRef->{$job}->{'SUBMIT'};
+	        }
+        }else{
+        	$jobsRef->{$job}->{'runtime'} =0;
         }
 
 	
@@ -418,7 +422,10 @@ sub processJobstateLog {
                 $maxParentEnd = $parentEnd;
             }
         }
-        my $dagmanDelay = $jobsRef->{$child}->{'SUBMIT'} - $maxParentEnd;
+        my $dagmanDelay = 0;
+        if(defined $jobsRef->{$child}->{'SUBMIT'}){
+        	$dagmanDelay = $jobsRef->{$child}->{'SUBMIT'} - $maxParentEnd;
+        }
         my ($condorDelay, $resourceDelay);
 
         if (defined $jobsRef->{$child}->{'GRID_SUBMIT'}) {
