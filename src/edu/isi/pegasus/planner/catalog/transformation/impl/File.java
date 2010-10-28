@@ -61,8 +61,8 @@ import edu.isi.pegasus.planner.classes.Profile;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class File
-    implements TransformationCatalog {
+public class File  extends Abstract
+    implements  TransformationCatalog{
 
     /**
      * The singleton handler to the contents of the transformation catalog.
@@ -1392,7 +1392,7 @@ public class File
                         entries = (List) lfnMap.get(tc.
                             getLogicalTransformation());
                     }
-                    entries.add(tc);
+                    entries.add( Abstract.modifyForFileURLS(tc) );
                     lfnMap.put(tc.getLogicalTransformation(), entries);
                     mTreeMap.put(tc.getResourceId(), lfnMap);
                     count++;

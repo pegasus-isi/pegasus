@@ -32,11 +32,11 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
-import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -53,7 +53,6 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
 
-import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -64,13 +63,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.xml.sax.SAXException;
 
 /**
@@ -94,10 +90,6 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public static final String SCHEMA_NAMESPACE =
                                         "http://pegasus.isi.edu/schema/dax";
 
-    /**
-     * The scheme name for file url.
-     */
-    public static final String FILE_URL_SCHEME = "file:";
     
     /**
      * Constant denoting an undefined site
@@ -1012,19 +1004,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         TransformationCatalogEntry tce = (TransformationCatalogEntry)parent;
                         PFN pfn = ( PFN )child;
                         tce.setResourceId( pfn.getSite() );
-                        String url = pfn.getURL();
+                        tce.setPhysicalTransformation( pfn.getURL() );
                         
                         //convert file url appropriately for installed executables
-                        if( tce.getType().equals( TCType.INSTALLED ) &&
-                                url.startsWith(DAXParser3.FILE_URL_SCHEME)) {
-                            try {
-                                url = new URL(url).getFile();
-                            } catch (MalformedURLException ex) {
-                                throw new RuntimeException( "Error while converting file url ", ex );
-                            }
-                        }
-                        tce.setPhysicalTransformation( url );
-                        this.mCallback.cbExecutable( tce );
+                        //before returning
+                        this.mCallback.cbExecutable( Abstract.modifyForFileURLS(tce) );
 
                         return true;
                     }

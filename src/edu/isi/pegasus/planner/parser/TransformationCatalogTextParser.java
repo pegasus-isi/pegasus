@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -317,10 +318,10 @@ public class TransformationCatalogTextParser {
         }
 
         mLookAhead = mScanner.nextToken();
-        return entry;
         
-       
-       
+        //modify the entry to handle for file URL's
+        //specified for the PFN's
+        return Abstract.modifyForFileURLS( entry );
     }
 
     /**

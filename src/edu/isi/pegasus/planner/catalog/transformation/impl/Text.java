@@ -101,8 +101,8 @@ import java.util.Set;
  * @author Karan Vahi
  * @version $Revision: 2183 $
  */
-public class Text
-    implements TransformationCatalog {
+public class Text extends Abstract
+    implements TransformationCatalog  {
 
     /**
      * Describes the transformation catalog mode.
