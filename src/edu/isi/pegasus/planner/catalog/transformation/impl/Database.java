@@ -334,7 +334,7 @@ public class Database
 
                 }
 
-                resultEntries.add(tc);
+                resultEntries.add(Abstract.modifyForFileURLS(tc));
             }
         }
         return resultEntries;
@@ -562,8 +562,11 @@ public class Database
             if(TCType.valueOf(ttype)==TCType.STATIC_BINARY){
                 ttype=TCType.STAGEABLE.toString();
             }
+
+            String pfn=rs.getString(2);
+            pfn=Abstract.modifyForFileURLS(pfn, ttype);
             String[] s = {
-                rs.getString(1), rs.getString(2), ttype,
+                rs.getString(1), pfn, ttype,
                 (new
                  VDSSysInfo(rs.getString(4), rs.getString(5), rs.getString(6),
                          rs.getString(7))).toString()};

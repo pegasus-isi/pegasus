@@ -73,4 +73,40 @@ public abstract class Abstract implements TransformationCatalog{
         return entry;
     }
 
+       /**
+     * Modifies a Transformation Catalog Entry to handle file URL's.
+     * A file URL if specified for the physical path is converted to an
+     * absolute path if the type of entry is set to INSTALLED.
+     *
+     * Alternately it modifies the TC to handle absolute file paths by converting
+     * them to file URL if the type of entry is set to STAGEABLE.
+     *
+     * @param pfn The PFN to modify
+     * @param type The type of PFN
+     *
+     * @return the Transformed PFN.
+     */
+    public static String modifyForFileURLS( String pfn, String type){
+        //sanity checks
+        if( pfn== null ){
+            //return without modifying
+            return pfn;
+        }
+
+        if ( TCType.valueOf(type)== TCType.INSTALLED &&
+                pfn.startsWith(TransformationCatalog.FILE_URL_SCHEME)) {
+            try {
+                pfn = new URL(pfn).getFile();
+            } catch (MalformedURLException ex) {
+                throw new RuntimeException("Error while converting file url ", ex);
+            }
+        } else
+        if ( TCType.valueOf(type) == TCType.STAGEABLE &&
+                pfn.startsWith("/")) {
+                pfn = TransformationCatalog.FILE_URL_SCHEME + "//" + pfn;
+        }
+
+        return pfn;
+    }
+
 }
