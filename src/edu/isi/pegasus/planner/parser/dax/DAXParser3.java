@@ -24,6 +24,7 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
 
@@ -76,6 +77,7 @@ import org.xml.sax.SAXException;
  */
 public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
+   
     /**
      * The "not-so-official" location URL of the Site Catalog Schema.
      */
@@ -94,6 +96,11 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      */
     public static final String UNDEFINED_SITE = "undefined";
 
+    /*
+     * Predefined Constant for condor version 7.1.0
+     */
+    public static final long DAX_VERSION_3_2_0 = CondorVersion.numericValue( "3.2.0" );
+    
     /**
      * Constant denoting default metadata type
      */
@@ -131,28 +138,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
     }
 
-    /**
-     * The constructor initialises the parser, and turns on the validation feature
-     * in Xerces.
-     *
-     * @param daxFileName the file which you want to parse.
-     * @param bag   the bag of objects that is useful for initialization.
-     * @param callback    the object which implements the callback.
-     */
-    /*
-    public DAXParser3(String daxFileName, PegasusBag bag, Callback callback) {
-        this( bag );
-        this.mCallback = callback;
-        try{
-            this.testForFile(daxFileName);
-        }
-        catch( Exception e){
-            throw new RuntimeException( e );
-        }
-        startParser(daxFileName);
-        mLogger.logEventCompletion();
-    }*/
-
+   
     /**
      * Set the DAXCallback for the parser to call out to.
      *
@@ -251,13 +237,15 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 if ( element.equals( "adag" ) ) {
                     //for now the adag element is just a map of
                     //key value pair
-                    Map m = new HashMap();
+                    Map<String,String> m = new HashMap();
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
                         String value = (String) values.get( i );
                         m.put( name, value );
                     }
 
+                    sanityCheckOnVersion( m.get( "version" ) );
+                    
                     //put the call to the callback
                     this.mCallback.cbDocument( m );
                     return m;
@@ -1108,6 +1096,30 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         name.append("_");
         name.append(j.getLogicalID());
         return name.toString();
+    }
+
+    /**
+     * Sanity check on the version that this parser works on.
+     * 
+     * @param version  the version as specified in the DAX
+     */
+    protected void sanityCheckOnVersion( String  version ) {
+        if( version == null ){
+            mLogger.log( "Version not specified in the adag element " ,
+                         LogManager.WARNING_MESSAGE_LEVEL );
+            return ;
+        }
+        
+        //add a 0 suffix
+        String nversion = version + ".0";
+        if( CondorVersion.numericValue( nversion) < DAXParser3.DAX_VERSION_3_2_0 ){
+            StringBuffer sb = new StringBuffer();
+            sb.append( "DAXParser3 Unsupported DAX Version " ).append( version ).
+               append( ". Set pegasus.schema.dax property to load the old DAXParser" );
+            throw new RuntimeException( sb.toString() );
+        }
+        
+        return;
     }
 
     /**
