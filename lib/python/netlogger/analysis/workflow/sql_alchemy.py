@@ -4,7 +4,7 @@ SQLAlchemy interface to the Stampede backend.
 Named sql_alchemy to avoid import errors with the library proper.
 """
 
-__rcsid__ = "$Id: sql_alchemy.py 26579 2010-10-11 23:52:11Z mgoode $"
+__rcsid__ = "$Id: sql_alchemy.py 26605 2010-10-14 22:18:57Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 import calendar
@@ -13,7 +13,7 @@ import time
 
 from netlogger.analysis.schema.stampede_schema import initializeToPegasusDB, func, orm, \
     Workflow as WorkflowTable, Workflowstate as WorkflowstateTable, Job as JobTable, \
-    Jobstate as JobstateTable, Host as HostTable, Task as TaskTable
+    Jobstate as JobstateTable, Host as HostTable, Task as TaskTable, Edge as EdgeTable
 from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
     Job as BaseJob, Host as BaseHost, Task as BaseTask, Jobstate as BaseJobstate, \
@@ -79,6 +79,15 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
         # Job information
         self._jobs = []
         self._jobtypes_executed = {}
+        
+        # A debug flag that can be manually switched to turn off
+        # generation of job edges.  Just used in development
+        # to quiet down the amount of output generated.
+        # ie:
+        # w = Workflow()
+        # w._edges = False
+        # w.initialize(wf_uuid)
+        self._edges = True
     
     def initialize(self, wf_id):
         """
@@ -114,14 +123,30 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
         
     def _check_states(self):
         if not self._startstate:
+            state_cache = []
             query = self.session.query(WorkflowstateTable.state, WorkflowstateTable.timestamp).filter(WorkflowstateTable.wf_id == self._wf_id).order_by(WorkflowstateTable.timestamp)
             for row in query.all():
                 wfs = Workflowstate()
                 wfs.initialize(row.state, row.timestamp)
-                if wfs.state.startswith('start'):
+                # seed with the first start event
+                if wfs.state == 'start':
                     self._startstate.append(wfs)
+                    state_cache.append(wfs)
+                    continue
+                if wfs.state.startswith('start'):
+                    if state_cache[-1].state.startswith('start'):
+                        self.log.warn('_check_states', 
+                            msg='Workflow state missing end event - padding list.')
+                        self._endstate.append(None)
+                    self._startstate.append(wfs)
+                    state_cache.append(wfs)
                 elif wfs.state.startswith('end'):
+                    if state_cache[-1].state.startswith('end'):
+                        self.log.warn('_check_states', 
+                            msg='Workflow state missing start event - padding list.')
+                        self._startstate.append(None)
                     self._endstate.append(wfs)
+                    state_cache.append(wfs)
                 else:
                     self.log.error('_check_states', msg='Bad state attribute:' % wfs.state)
         pass
@@ -246,8 +271,12 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
 
         In the event that there are no logged workflow states an empty
         list should be returned.
+        
+        In the case that there is a dropped event (ie: no matching end
+        event to a start event or vice versa), the missing event will
+        be padded as a None.
 
-        @rtype:     List of Workflowstate object instances
+        @rtype:     List of Workflowstate object instances (or None)
         @return:    Returns a list with workflow start events.
         """
         self._check_states()
@@ -261,6 +290,10 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
 
         In the event that there are no logged workflow states an empty
         list should be returned.
+        
+        In the case that there is a dropped event (ie: no matching end
+        event to a start event or vice versa), the missing event will
+        be padded as a None.
 
         @rtype:     List of Workflowstate object instances
         @return:    Returns a list with workflow end events.
@@ -314,42 +347,6 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
         return len(self._startstate) - 1
         
     @property
-    def running_time(self):
-        """
-        Returns the running time of the workflow.  The running time
-        is the sum of the start and end durations.  If the workflow 
-        is still running, then the current epoch UTC time should be
-        subbed in as the "last" end time.
-        
-        @rtype:     python datetime.timedelta object or None
-        @return:    The running time of the workflow (including restarts).
-        """
-        self._check_states()
-        if len(self._startstate) == 0:
-            return None
-        starts = self._startstate[:]
-        ends = self._endstate[:]
-        
-        delta = len(starts) - len(ends)
-        if delta > 0:
-            if delta == 1:
-                wfs = Workflowstate()
-                wfs.initialize('current', time.time())
-                ends.append(wfs)
-            else:
-                self.log.error('running_time', msg='Start/end delta > 1')
-        
-        rt = None
-        for i in zip(starts, ends):
-            dlt = i[1].timestamp - i[0].timestamp
-            if rt == None:
-                rt = dlt
-            else:
-                rt += dlt
-                
-        return rt
-        
-    @property
     def total_time(self):
         """
         Returns the total runtime of the workflow.  This is defined
@@ -363,7 +360,8 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
         self._check_states()
         if len(self._startstate) == 0:
             return None
-        
+        if self._endstate[-1] == None or self._startstate[0] == None:
+            return None
         if len(self._startstate) == len(self._endstate):
             return self._endstate[-1].timestamp - self._startstate[0].timestamp
         else:
@@ -391,7 +389,7 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
             query = self.session.query(JobTable.job_id).filter(JobTable.wf_id == self._wf_id).order_by(JobTable.job_submit_seq)
             for row in query.all():
                 j = Job(self.session)
-                j._sql_initialize(row[0])
+                j._sql_initialize(row[0], find_edges=self._edges)
                 self._jobs.append(j)
                 if debug:
                     break
@@ -528,7 +526,7 @@ class Workflowstate(BaseWorkflowstate):
         @type   timestamp: float
         @param  timestamp: the epoch timestamp as reported by Pegasus.
         """
-        self._state = state
+        self._state = as_string(state)
         self._timestamp = timestamp
 
     @property
@@ -603,8 +601,12 @@ class Job(BaseJob):
         self._submit_time = None
         self._current_js_ss = None
         self._jobstates = []
+        self._parent_edge_ids = []
+        self._child_edge_ids = []
+        self._parent_edges = []
+        self._child_edges = []
     
-    def _sql_initialize(self, job_id):
+    def _sql_initialize(self, job_id, find_edges=True):
         """
         This private method is the initialization method that accepts
         the sql DB job_id primary key from the job table to use
@@ -639,6 +641,22 @@ class Job(BaseJob):
             msg='Multiple job results for job_id: %s : %s' % (self._job_id, e))
             return
             
+        if find_edges:
+            self._find_edge_id()
+                
+    def _find_edge_id(self):
+        """
+        Private method to get the job_ids of the parent and child edge
+        jobs.
+        """
+        query = self.session.query(EdgeTable.parent_id).filter(EdgeTable.child_id == self._job_id)
+        for row in query.all():
+            self._parent_edge_ids.append(row[0])
+        query = self.session.query(EdgeTable.child_id).filter(EdgeTable.parent_id == self._job_id)
+        for row in query.all():
+            self._child_edge_ids.append(row[0])
+        pass
+    
     def _get_current_js_ss(self):
         """
         This private method hits the jobstate table to get the most
@@ -951,6 +969,46 @@ class Job(BaseJob):
             return self.current_state.timestamp - self.submit_time
         else:
             return None
+            
+    @property
+    def edge_parents(self):
+        """
+        Return a list of job objects for the parent job edges for
+        this current job object.  The job objects returned by this
+        property will NOT contain additional edge information (ie: this
+        method will return an empty list) to avoid a recursive situation.
+        
+        @rtype:     list containing Job objects
+        @return:    Return the parent edge Job objects.
+        """
+        if self._parent_edge_ids and not self._parent_edges:
+            for p_id in self._parent_edge_ids:
+                j = Job(self.session)
+                j._sql_initialize(p_id, find_edges=False)
+                self._parent_edges.append(j)
+                if debug:
+                    break
+        return self._parent_edges
+            
+    @property
+    def edge_children(self):
+        """
+        Return a list of job objects for the child job edges for
+        this current job object.  The job objects returned by this
+        property will NOT contain additional edge information (ie: this
+        method will return an empty list) to avoid a recursive situation.
+
+        @rtype:     list containing Job objects
+        @return:    Return the child edge Job objects.
+        """
+        if self._child_edge_ids and not self._child_edges:
+            for c_id in self._child_edge_ids:
+                j = Job(self.session)
+                j._sql_initialize(c_id, find_edges=False)
+                self._child_edges.append(j)
+                if debug:
+                    break
+        return self._child_edges
         
 class Jobstate(BaseJobstate):
     """
@@ -1367,13 +1425,14 @@ if __name__ == '__main__':
     os.chdir('/Users/monte/Desktop/Pegasus')
     debug = True
     
-    #db_conn = 'sqlite:///pegasusMontage.db'
-    db_conn = 'sqlite:///diamond.db'
+    db_conn = 'sqlite:///pegasusMontage.db'
+    #db_conn = 'sqlite:///diamond.db'
     
     d = Discovery(db_conn)
 
     for uuid in d.fetch_all():
         w = Workflow(db_conn)
+        #w._edges = False
         w.initialize(uuid)
         print w
         #test_workflow_types(w)

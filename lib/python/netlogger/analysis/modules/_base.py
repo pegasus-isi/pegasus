@@ -157,9 +157,9 @@ class Analyzer(DoesLogging):
             self.log.error("parameter.error",
                            name="add_hash", value=add_hash, msg=err)
             self._add_hash = False
-        # Parameter: data_types
+        # Parameter: schemata
         self._schema = None
-        if schemata is not None:
+        if schemata:
             schema_files = [s.strip() for s in schemata.split(',')]
             try:
                 p = schemacfg.SchemaParser(files=schema_files)
@@ -167,7 +167,7 @@ class Analyzer(DoesLogging):
                 self._do_preprocess = True
             except (IOError, ValueError),err:
                 self.log.error("parameter.error",
-                               name="data_types", value=schema_files,
+                               name="schemata", value=schema_files,
                                msg=err)
             
     def process(self, data):

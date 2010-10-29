@@ -7,7 +7,7 @@ Has all the appropriate @property methods filled in, base class initializations,
 from netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
     Job as BaseJob, Host as BaseHost, Task as BaseTask, Jobstate as BaseJobstate
 
-__rcsid__ = "$Id: example.py 26579 2010-10-11 23:52:11Z mgoode $"
+__rcsid__ = "$Id: example.py 26605 2010-10-14 22:18:57Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 class Workflow(BaseWorkflow):
@@ -160,8 +160,12 @@ class Workflow(BaseWorkflow):
 
         In the event that there are no logged workflow states an empty
         list should be returned.
+        
+        In the case that there is a dropped event (ie: no matching end
+        event to a start event or vice versa), the missing event will
+        be padded as a None.  This is an error situation.
 
-        @rtype:     List of Workflowstate object instances
+        @rtype:     List of Workflowstate object instances (or None)
         @return:    Returns a list with workflow start events.
         """
         raise NotImplementedError, \
@@ -175,8 +179,12 @@ class Workflow(BaseWorkflow):
 
         In the event that there are no logged workflow states an empty
         list should be returned.
+        
+        In the case that there is a dropped event (ie: no matching end
+        event to a start event or vice versa), the missing event will
+        be padded as a None.  This is an error situation.
 
-        @rtype:     List of Workflowstate object instances
+        @rtype:     List of Workflowstate object instances (or None)
         @return:    Returns a list with workflow end events.
         """
         raise NotImplementedError, \
@@ -219,20 +227,6 @@ class Workflow(BaseWorkflow):
         """
         raise NotImplementedError, \
             'restart_count not yet implemented'
-
-    @property
-    def running_time(self):
-        """
-        Returns the running time of the workflow.  The running time
-        is the sum of the start and end duration pairs.  If the workflow 
-        is still running, then the current epoch UTC time should be
-        subbed in as the "last" end time.
-
-        @rtype:     python datetime.timedelta object or None
-        @return:    The running time of the workflow (including restarts).
-        """
-        raise NotImplementedError, \
-            'running_time not yet implemented'
 
     @property
     def total_time(self):
@@ -628,6 +622,34 @@ class Job(BaseJob):
         """
         raise NotImplementedError, \
             'elapsed_time not yet implemented'
+            
+    @property
+    def edge_parents(self):
+        """
+        Return a list of job objects for the parent job edges for
+        this current job object.  The job objects returned by this
+        property will NOT contain additional edge information (ie: this
+        method will return an empty list) to avoid a recursive situation.
+
+        @rtype:     list containing Job objects
+        @return:    Return the parent edge Job objects.
+        """
+        raise NotImplementedError, \
+            'edge_parents not yet implemented'
+
+    @property
+    def edge_children(self):
+        """
+        Return a list of job objects for the child job edges for
+        this current job object.  The job objects returned by this
+        property will NOT contain additional edge information (ie: this
+        method will return an empty list) to avoid a recursive situation.
+
+        @rtype:     list containing Job objects
+        @return:    Return the child edge Job objects.
+        """
+        raise NotImplementedError, \
+            'edge_children not yet implemented'
 
 
 class Jobstate(BaseJobstate):

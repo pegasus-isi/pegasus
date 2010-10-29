@@ -44,7 +44,7 @@ Sample usage::
 
 """
 __author__ = "Dan Gunter <dkgunter@lbl.gov>"
-__rcsid__ = "$Id: schemacfg.py 26576 2010-10-08 23:27:02Z dang $"
+__rcsid__ = "$Id: schemacfg.py 26624 2010-10-18 14:05:03Z dang $"
 
 # System imports
 from datetime import datetime
@@ -139,11 +139,16 @@ class SchemaParser(nllog.DoesLogging):
             m = name_expr.match(sect)
             if m is None:
                 raise ValueError("Event name [%s]: %s" % (sect, msg))
-            type_map, drop, defaults = { }, False, { }
+            type_map, defaults = { }, { }
+            # process directives (since they apply to all values in loop)
+            try:
+                drop_opt = self._parser.get(sect, '@drop')
+                drop = util.as_bool(drop_opt)
+            except ConfigParser.NoOptionError:
+                drop = False
             for name, value in self._parser.items(sect):
-                # check if name is directive
-                if name == '@drop':
-                    drop = util.as_bool(value)
+                # skip to next, if name is directive
+                if name[0] == '@':
                     continue
                 # check that name is legal
                 m = name_expr.match(name)
@@ -161,7 +166,7 @@ class SchemaParser(nllog.DoesLogging):
                     fn = self._TYPEFN[value_type]
                     # If not dropping, make the 'str' function even cheaper
                     # by skipping the type map
-                    if not drop and fn is str:
+                    if (not drop) and (fn is str):
                         pass
                     # Otherwise, put function into mapping
                     else:
@@ -256,7 +261,7 @@ class Schema(nllog.DoesLogging):
                     if self._trace:
                         self.log.trace("convert.end", key=key, status=0)
             # Drop unknown by walking event
-            if self.drop_unknown:
+            if self.drop_unknown.get(event_name, False):
                 for ekey in event.keys():
                     if ekey != 'event' and ekey != 'ts' and \
                            ekey not in type_map:
