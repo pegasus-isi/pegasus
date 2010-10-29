@@ -343,7 +343,7 @@ class Job:
         self._post_script_start = None
         self._post_script_done = None
         self._post_script_exitcode = None
-        self._job_dagman_out = None		# _CONDOR_DAGMAN_LOG from environment line for pegasus-plan jobs
+        self._job_dagman_out = None		# _CONDOR_DAGMAN_LOG from environment line for pegasus-plan and subdax_ jobs
 
     def set_job_state(self, job_state, timestamp, status):
 	"""
@@ -408,10 +408,10 @@ class Job:
             logger.info("%s: submit file was modified after job ran: job timestamp=%d, sub file mtime=%d, diff = %d" % (submit_file, stamp, self._job_info[3], self._job_info[3]-stamp))
 
         # Check if we need to parse the environment line
-        if self._name.startswith("pegasus-plan"):
+        if self._name.startswith("pegasus-plan") or self._name.startswith("subdax_"):
             parse_environment = True
 
-	try:
+        try:
 	    SUB = open(submit_file, "r")
 	except:
 	    logger.error("unable to parse %s" % (submit_file))
@@ -1589,8 +1589,8 @@ class Workflow:
 
     def has_subworkflow(self, jobid):
         """
-        This function returns a new dagman.out file to follow if the job
-        is either a SUBDAG job, or a pegasus-plan job. Otherwise, it returns None.
+        This function returns a new dagman.out file to follow if the job is either a
+        SUBDAG job, a pegasus-plan, or a subdax_ job. Otherwise, it returns None.
         """
         # This shouldn't be the case...
         if not jobid in self._job_info:
@@ -1620,10 +1620,10 @@ class Workflow:
         # Got it!
 
         # Hack to work on LIGO
-        if my_job._job_dagman_out is not None:
-            pos = my_job._job_dagman_out.find("/./")
-            if pos > 0:
-                return my_job._job_dagman_out[(pos+3):]
+        #if my_job._job_dagman_out is not None:
+        #    pos = my_job._job_dagman_out.find("/./")
+        #    if pos > 0:
+        #        return my_job._job_dagman_out[(pos+3):]
         return my_job._job_dagman_out
 
 # Workflow Entry Class
