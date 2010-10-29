@@ -47,6 +47,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.List;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -135,6 +136,7 @@ public class Database
                                                 "WHERE l.id=m.lfnid and p.id=m.pfnid and p.resourceid like ? and p.type like ? " +
                                                 "ORDER BY resourceid,name,namespace,version");
 
+
         this.m_dbdriver.insertPreparedStatement("stmt.query.pfns",
                                                 "SELECT p.resourceid, p.pfn, p.type, s.architecture, s.os, " +
                                                 "s.osversion, s.glibc " +
@@ -143,10 +145,12 @@ public class Database
                                                 "l.namespace=? and l.name=? and l.version=? and p.resourceid like ? and p.type like ? " +
                                                 "ORDER by p.resourceid");
 
+
         this.m_dbdriver.insertPreparedStatement("stmt.query.resource",
                                                 "SELECT DISTINCT p.resourceid FROM tc_logicaltx l, tc_physicaltx p, tc_lfnpfnmap m " +
                                                 "WHERE l.id=m.lfnid and p.id=m.pfnid and l.namespace like ? and " +
                                                 "l.name like ? and l.version like ? and p.type like ? ORDER by resourceid");
+      
 
         this.m_dbdriver.insertPreparedStatement("stmt.query.lfnprofiles",
                                                 "SELECT pr.namespace, pr.name, pr.value FROM " +
@@ -158,6 +162,7 @@ public class Database
                                                 "WHERE p.id=pr.pfnid and p.pfn=? and p.resourceid like ? and " +
                                                 "p.type like ? ORDER BY namespace");
 
+
         this.m_dbdriver.insertPreparedStatement("stmt.query.lfnid",
                                                 "SELECT id FROM tc_logicaltx WHERE namespace=? and name=? and version=?");
 
@@ -166,7 +171,14 @@ public class Database
                                                 "architecture=? and os=? and osversion=? and glibc=?");
 
         this.m_dbdriver.insertPreparedStatement("stmt.query.pfnid",
-                                                "SELECT id FROM tc_physicaltx p WHERE p.pfn = ? and p.type like ? and p.resourceid like ?");
+                                                "SELECT id FROM tc_physicaltx p WHERE p.pfn = ? and p.type like ?  and p.resourceid like ?");
+
+
+
+        this.m_dbdriver.insertPreparedStatement("stmt.query.pfnid2",
+                                                "SELECT p.id FROM tc_physicaltx p,tc_lfnpfnmap m " +
+                                                "WHERE m.pfnid=p.id and p.resourceid like ? and p.type like ? and m.lfnid=?");
+
 
         this.m_dbdriver.insertPreparedStatement("stmt.query.lfnpfnmap",
                                                 "SELECT * FROM tc_lfnpfnmap WHERE lfnid like ? and pfnid like ?");
@@ -186,9 +198,7 @@ public class Database
                                                 "SELECT * FROM tc_pfnprofile WHERE " +
                                                 "namespace=? and name = ? and value =? and pfnid=?");
 
-        this.m_dbdriver.insertPreparedStatement("stmt.query.pfnid2",
-                                                "SELECT p.id FROM tc_physicaltx p,tc_lfnpfnmap m " +
-                                                "WHERE m.pfnid=p.id and p.resourceid like ? and p.type like ? and m.lfnid=?");
+
 
         /**
          * DELETE SECTION
@@ -281,7 +291,7 @@ public class Database
      */
     public List<TransformationCatalogEntry> lookup( String namespace, String name, String version,
         String resourceid, TCType type ) throws Exception {
-        List resultEntries = null;
+        List<TransformationCatalogEntry> resultEntries = null;
         mLogger.log("Trying to get TCEntries for " +
                     Separator.combine(namespace, name, version) +
                     " on resource " +
@@ -292,7 +302,7 @@ public class Database
         List pfnentries = this.lookupNoProfiles(namespace, name, version,
                                                   resourceid, type);
         if (pfnentries != null) {
-            resultEntries = new ArrayList(pfnentries.size());
+            resultEntries = new LinkedList<TransformationCatalogEntry>();
             List lfnprofiles = this.lookupLFNProfiles(namespace, name, version);
             for (int i = 0; i < pfnentries.size() - 1; i++) {
                 String[] pfnresult = (String[]) pfnentries.get(i);
@@ -303,9 +313,9 @@ public class Database
                 List pfnprofiles = this.lookupPFNProfiles(qpfn, qresourceid,
                     TCType.valueOf(qtype));
                 TransformationCatalogEntry tc = new TransformationCatalogEntry(
-                    namespace, name, version, pfnresult[0],
-                    pfnresult[1],
-                    TCType.valueOf(pfnresult[2]), null, qsysinfo);
+                    namespace, name, version, qresourceid,
+                    qpfn,
+                    TCType.valueOf(qtype), null, qsysinfo);
 
                 try {
                     if (lfnprofiles != null) {
@@ -350,14 +360,15 @@ public class Database
      */
     public List<TransformationCatalogEntry> lookup( String namespace, String name, String version,
         List resourceids, TCType type ) throws Exception {
-        List results = null;
-        if (resourceids != null) {
-            for (Iterator i = resourceids.iterator(); i.hasNext(); ) {
-                List tempresults = lookup(namespace, name, version,
-                                                (String) i.next(), type);
+        List<TransformationCatalogEntry> results = null;
+        List<String> siteids=resourceids;
+        if (siteids != null) {
+            for (String site : siteids) {
+                List<TransformationCatalogEntry> tempresults = lookup(namespace, name, version,
+                                                site, type);
                 if (tempresults != null) {
                     if (results == null) {
-                        results = new ArrayList();
+                        results = new LinkedList<TransformationCatalogEntry>();
                     }
                     results.addAll(tempresults);
                 }
@@ -470,15 +481,22 @@ public class Database
             ps.setString(3, makeNotNull(version));
         }
         //if type is null then search for all type
-        String temp = (type != null) ? type.toString() : "%";
+        String temp;
+         if( type==null){
+           temp="%";
+       } else if (type==TCType.STAGEABLE || type==TCType.STATIC_BINARY) {
+           temp="STA%";
+       } else {
+            temp=type.toString();
+       }
         ps.setString(4, temp);
         //execute the query.
         ResultSet rs = ps.executeQuery();
 
-        List result = null;
+        List<String> result = null;
         while (rs.next()) {
             if (result == null) {
-                result = new ArrayList();
+                result = new ArrayList<String>();
             }
             //add the results to the list.
             result.add(rs.getString(1));
@@ -524,7 +542,13 @@ public class Database
         String temp = (resourceid != null) ? resourceid : "%";
         ps.setString(4, temp);
 
-        temp = (type != null) ? type.toString() : "%";
+         if( type==null){
+           temp="%";
+       } else if (type==TCType.STAGEABLE || type==TCType.STATIC_BINARY) {
+           temp="STA%";
+       } else {
+            temp=type.toString();
+       }
         ps.setString(5, temp);
 
         ResultSet rs = ps.executeQuery();
@@ -534,8 +558,12 @@ public class Database
             if (result == null) {
                 result = new ArrayList();
             }
+            String ttype=rs.getString(3);
+            if(TCType.valueOf(ttype)==TCType.STATIC_BINARY){
+                ttype=TCType.STAGEABLE.toString();
+            }
             String[] s = {
-                rs.getString(1), rs.getString(2), rs.getString(3),
+                rs.getString(1), rs.getString(2), ttype,
                 (new
                  VDSSysInfo(rs.getString(4), rs.getString(5), rs.getString(6),
                          rs.getString(7))).toString()};
@@ -555,7 +583,7 @@ public class Database
      * Get the list of LogicalNames available on a particular resource.
      * @param resourceid String The id of the resource on which you want to search
      * @param type       TCType The type of the transformation to search for. <BR>
-     *                  (Enumerated type includes source, binary, dynamic-binary, pacman, installed)<BR>
+     *                  (Enumerated type includes stageable and installed)<BR>
      *                   If <B>NULL</B> then return logical name for all types.
      * 
      * @return List      Returns a list of String Arrays.
@@ -573,9 +601,17 @@ public class Database
             */
         PreparedStatement ps = null;
         ps = this.m_dbdriver.getPreparedStatement("stmt.query.lfns");
-        String temp = (resourceid == null) ? "%" : resourceid;
+        String temp;
+        temp = (resourceid == null) ? "%" : resourceid;
         ps.setString(1, temp);
-        temp = (type == null) ? "%" : type.toString();
+       if( type==null){
+           temp="%";
+       } else if (type==TCType.STAGEABLE || type==TCType.STATIC_BINARY) {
+           temp="STA%";
+       } else {
+            temp=type.toString();
+       }
+        
         ps.setString(2, temp);
         ResultSet rs = ps.executeQuery();
 
@@ -584,10 +620,14 @@ public class Database
             if (result == null) {
                 result = new ArrayList();
             }
+           String ttype= rs.getString(5);
+           if(TCType.valueOf(ttype)==TCType.STATIC_BINARY){
+               ttype=TCType.STAGEABLE.toString();
+           }
             String[] st = {
                 rs.getString(1),
                 Separator.combine(rs.getString(2), rs.getString(3),
-                                  rs.getString(4)), rs.getString(5)};
+                                  rs.getString(4)), ttype};
             //columnLength(st, count);
             result.add(st);
         }
@@ -607,7 +647,7 @@ public class Database
      * @param version    String The version of the transformation to search for.
      * 
      * @return List      Returns a list of Profile Objects containing profiles
-     *                   assocaited with the transformation.
+     *                   associated with the transformation.
      *                   Returns <B>NULL</B> if no profiles found.
      * 
      * @throws Exception NotImplementedException if not implemented.
@@ -622,10 +662,10 @@ public class Database
         ps.setString(3, makeNotNull(version));
         ResultSet rs = ps.executeQuery();
 
-        List result = null;
+        List<Profile> result = null;
         while (rs.next()) {
             if (result == null) {
-                result = new ArrayList();
+                result = new LinkedList<Profile>();
             }
 
             Profile p = new Profile(rs.getString(1), rs.getString(2),
@@ -646,8 +686,8 @@ public class Database
      *
      * @throws Exception NotImplementedException if not implemented.
      * @return List      Returns a list of Profile Objects containing profiles 
-     *                   assocaited with the transformation.
-     *                   Returns <B>NULL</B> if no profiless found.
+     *                   associated with the transformation.
+     *                   Returns <B>NULL</B> if no profiles found.
      * 
      * @see org.griphyn.cPlanner.classes.Profile
      */
@@ -659,15 +699,21 @@ public class Database
         String temp = (resourceid != null) ? resourceid : "%";
         ps.setString(2, temp);
 
-        temp = (type != null) ? type.toString() : "%";
+         if( type==null){
+           temp="%";
+       } else if (type==TCType.STAGEABLE || type==TCType.STATIC_BINARY) {
+           temp="STA%";
+       } else {
+            temp=type.toString();
+       }
         ps.setString(3, temp);
 
         ResultSet rs = ps.executeQuery();
 
-        List result = null;
+        List<Profile> result = null;
         while (rs.next()) {
             if (result == null) {
-                result = new ArrayList();
+                result = new LinkedList<Profile>();
             }
             Profile p = new Profile(rs.getString(1), rs.getString(2),
                                     rs.getString(3));
@@ -2109,10 +2155,20 @@ if(!write) return false;
      */
     private long getPhysicalId(String pfn, TCType type, String resourceid) throws
         Exception {
-        PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
+        PreparedStatement ps;
+        
+         ps = this.m_dbdriver.getPreparedStatement(
             "stmt.query.pfnid");
         ps.setString(1, this.makeNotNull(pfn));
-        ps.setString(2, this.makeNotNull(type.toString()));
+        String ttype;
+        if (type==null) {
+            ttype=null;
+        }else if(type==TCType.STAGEABLE || type == TCType.STATIC_BINARY){
+            ttype="STA%";
+        } else {
+            ttype=type.toString();
+        }
+        ps.setString(2, this.makeNotNull(ttype));
         ps.setString(3, this.makeNotNull(resourceid));
         ResultSet rs = ps.executeQuery();
 
@@ -2126,6 +2182,7 @@ if(!write) return false;
         else {
             return -1;
         }
+
     }
 
     /**
@@ -2140,7 +2197,14 @@ if(!write) return false;
         Exception {
         PreparedStatement ps = this.m_dbdriver.getPreparedStatement(
             "stmt.query.pfnid");
-        String temp = (type == null) ? "%" : type.toString();
+        String temp;
+        if(type==null){
+            temp="%";
+        } else if(type==TCType.STAGEABLE || type==TCType.STATIC_BINARY){
+            temp="STA%";
+        } else {
+            temp=type.toString();
+        }
         ps.setString(1, pfn);
         ps.setString(2, temp);
         temp = (resourceid == null) ? "%" : resourceid;
