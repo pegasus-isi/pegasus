@@ -365,7 +365,26 @@ sub run_show_job($$$$){
     $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
     $dagbase =~ s/-\d+$//;
     my($eps_file_name ,$png_file_name) =("$dagbase"."-2.eps" ,"$dagbase"."-2.png" );
+    my($eps_file_name_xtra ,$png_file_name_xtra) =("$dagbase"."-1.eps" ,"$dagbase"."-1.png" );
     my($eps_file ,$png_file) = (File::Spec->catfile("$submit_dir",$eps_file_name) ,File::Spec->catfile("$submit_dir",$png_file_name));
+    my($eps_file_xtra ,$png_file_xtra) = (File::Spec->catfile("$submit_dir",$eps_file_name_xtra) ,File::Spec->catfile("$submit_dir",$png_file_name_xtra));
+    
+    if (-e $eps_file_xtra){
+    	if(!unlink($eps_file_xtra)){
+    		if ($main::DEBUG){
+				print STDERR  "ERROR : Failed to delete the eps file.$eps_file_xtra $! \n";
+			}
+    	}
+    }
+    
+    if (-e $png_file_xtra){
+    	if(!unlink($png_file_xtra)){
+    		if ($main::DEBUG){
+				print STDERR  "ERROR : Failed to delete the png file.$png_file_xtra $! \n";
+			}
+    	}
+    }
+    
 	
 	#Moving the output file to <submit dir>/graph directory
 	if(!move($eps_file,$output_dir)){
