@@ -951,7 +951,6 @@ public class TransferEngine extends Engine {
         //dax appears in adag element
         String dax = null;
 
-        System.out.println( job.getInputFiles() );
         //go through all the job input files
         //and set transfer flag to false
         for (Iterator<PegasusFile> it = job.getInputFiles().iterator(); it.hasNext();) {
@@ -1564,7 +1563,6 @@ public class TransferEngine extends Engine {
                 StringBuffer execURL = new StringBuffer();
                 execURL.append( ((S3)mCreateDirImpl).getBucketNameURL( site ) ).append( File.separatorChar ).append( lfn );
                 pfn = execURL.toString();
-                System.out.println( execURL.toString() );
             }
         }
         
