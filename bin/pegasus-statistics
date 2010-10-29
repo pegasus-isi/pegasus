@@ -269,7 +269,7 @@ sub main(){
 	## Executing genstats-breakdown command
 	my($genstats_breakdown_status ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir  );
 	
-	print "******************************************** SUMMARY ********************************************\n";
+	print "\n\n******************************************** SUMMARY ********************************************\n";
 	print $summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
 	
 	print "**************************************************************************************************\n";
@@ -815,7 +815,7 @@ sub get_sub_workflow_list($){
 	    		my @values = split(/\s+/, $line);
 	    		$job_name =$values[1];
 	    		$submit_file_name = $values[2];
-	    		if($job_name  =~m/^pegasus-plan.*/i){
+	    		if(($job_name  =~m/^pegasus-plan.*/i) || ($job_name  =~m/^subdax_.*/i) ){
 	  				push(@sub_workflow_list,$submit_file_name);
 	  			}
 	    	}
