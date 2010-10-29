@@ -34,33 +34,42 @@ public class RosettaDAX {
             // including this in the dax is a new feature in 
             // 3.0. Earlier you had a standalone transformation catalog
             Executable exe = new Executable("rosetta.exe");
-            exe.setType(Executable.TYPE.STAGEABLE);
+            
+            // the executable is not installed on the remote sites, so 
+            // pick it up from the local file system
+            exe.setInstalled(false);
             exe.addPhysicalFile("file://" + cwd + "/rosetta.exe", "local");
+            
+            // cluster the jobs together to lessen the grid overhead
+            exe.addProfile("pegasus", "clusters.size", "3");
+            
+            // the dag needs to know about the executable to handle
+            // transferrring 
             dax.addExecutable(exe);
 
             // all jobs depend on the flatfile databases
             List<File> inputs = new ArrayList<File>();
-            recursiveAddToFileCollection(inputs, "minirosetta_database",
+            recursiveAddToFileCollection(inputs,
+                                         "minirosetta_database",
                                          "Rosetta Database");
             dax.addFiles(inputs); // for replica catalog
 
             // and some top level files
             File f1 = new File("design.resfile", File.LINK.INPUT);
-            //f1.addMetaData("string", "Description", "Rosetta input file");
             f1.addPhysicalFile("file://" + cwd + "/design.resfile", "local");
             dax.addFile(f1);
-
+            inputs.add(f1); // dependency for the job
             File f2 = new File("repack.resfile", File.LINK.INPUT);
-            //f2.addMetaData("string", "Description", "Rosetta input file");
-            f2.addPhysicalFile("file://" + cwd + "/design.resfile", "local");
+            f2.addPhysicalFile("file://" + cwd + "/repack.resfile", "local");
             dax.addFile(f2);
+            inputs.add(f2); // dependency for the job
 
             java.io.File pdbDir = new java.io.File("pdbs/");
             String pdbs[] = pdbDir.list();
             for (int i = 0; i < pdbs.length; i++) {
                 java.io.File pdb = new java.io.File("pdbs/" + pdbs[i]);
                 if (pdb.isFile()) {
-                    Job j = createJobFromPDB(cwd, dax, pdb, inputs);
+                    Job j = createJobFromPDB(dax, pdb, inputs);
                     dax.addJob(j);
                 }
             }
@@ -87,9 +96,8 @@ public class RosettaDAX {
                 java.io.File f = new java.io.File(dir + "/" + items[i]);
                 if (f.isFile()) {
                     // File found, let's add it to the list
-                    File input = new File(f.getName(), File.LINK.INPUT);
+                    File input = new File(dir + "/" + items[i], File.LINK.INPUT);
                     input.addPhysicalFile("file://" + f.getAbsolutePath(), "local");
-                    //input.addMetaData("string", "Description", desc);
                     list.add(input);
                 }
                 else {
@@ -102,7 +110,7 @@ public class RosettaDAX {
 
     }
 
-    private Job createJobFromPDB(String cwd, ADAG dax, java.io.File pdb, List<File> inputs) {
+    private Job createJobFromPDB(ADAG dax, java.io.File pdb, List<File> inputs) {
 
         Job job = null;
 
@@ -110,14 +118,14 @@ public class RosettaDAX {
             String id = pdb.getName();
             id = id.replaceAll(".pdb", "");
 
-            job = new Job(id, "rosetta", "rosetta.exe", "1.0");
+            job = new Job(id, "rosetta.exe");
             
             // general rosetta inputs (database, design, ...)
             job.uses(inputs, File.LINK.INPUT);
 
             // input pdb file
             File pdbFile = new File(pdb.getName());
-            pdbFile.addPhysicalFile("file://" + cwd + "/" + pdb.getName(), "local");
+            pdbFile.addPhysicalFile("file://" + pdb.getAbsolutePath(), "local");
             job.uses(pdbFile, File.LINK.INPUT); // the job uses the file
             dax.addFile(pdbFile); // the dax needs to know about it to handle transfers
             

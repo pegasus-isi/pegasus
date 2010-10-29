@@ -17,7 +17,7 @@ CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.1"
 
 # you can cluster shorter jobs into a bundle of jobs - in this
 # case we want to bundle all rosetta jobs into 30 GRAM jobs
-JOB_CLUSTERING="PEGASUS::bundle=30"
+#JOB_CLUSTERING="PEGASUS::clust=30"
 #######################################################################
 
 
@@ -43,13 +43,6 @@ javac RosettaDAX.java
 
 # generate the dax
 java RosettaDAX dax.xml
-
-# create the transformation catalogue (tc)
-#cat >tc.data <<EOF
-# Site  LFN  PFN  TYPE  SYSTEM PROFILE
-#$CLUSTER_NAME    rosetta::rosetta.exe:1.0     file://$TOPDIR/rosetta.exe       STATIC_BINARY       INTEL32::LINUX            $JOB_CLUSTERING
-#$CLUSTER_NAME    pegasus::worker              http://pegasus.isi.edu/wms/download/nightly/pegasus-worker-3.0.0cvs-x86_rhel_5.tar.gz     STATIC_BINARY       INTEL32::LINUX
-#EOF
 
 # site catalog
 cat >sites.xml <<EOF
@@ -107,7 +100,6 @@ pegasus-plan \
     --dir work \
     --output local \
     --dax dax.xml \
-
-#    --submit
+    --submit
 
 
