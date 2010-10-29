@@ -26,11 +26,10 @@ public class File extends CatalogType {
 
     public static enum LINK {
 
-        INPUT, OUTPUT, INOUT
+        INPUT, input, OUTPUT, output, INOUT, inout
     };
 
     public static enum TRANSFER {
-
         TRUE, FALSE, OPTIONAL
     }
     protected String mNamespace;

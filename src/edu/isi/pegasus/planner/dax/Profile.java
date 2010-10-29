@@ -25,7 +25,7 @@ public class Profile {
 
     public static enum NAMESPACE {
 
-        condor, pegasus, dagman, globus, hints, selector, stat, env
+        CONDOR,condor, PEGASUS, pegasus, DAGMAN, dagman, GLOBUS, globus, HINTS,hints, SELECTOR,selector, STAT, stat,ENV,env
     }
     protected String mNamespace;
     protected String mKey;
@@ -79,7 +79,7 @@ public class Profile {
     }
 
     public void toXML(XMLWriter writer, int indent) {
-        writer.startElement("profile", indent).writeAttribute("namespace", mNamespace);
+        writer.startElement("profile", indent).writeAttribute("namespace", mNamespace.toLowerCase());
         writer.writeAttribute("key", mKey).writeData(mValue).endElement();
 
     }

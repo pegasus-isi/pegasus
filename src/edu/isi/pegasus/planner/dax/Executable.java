@@ -26,18 +26,15 @@ public class Executable extends CatalogType {
 
     public static enum ARCH {
 
-        x86, x86_64, ppc, ppc_64, ia64, sparcv7, sparcv9
+        X86, x_86, X86_64, x86_64, PPC,ppc, PPC_64,ppc_64, IA64, ia64,SPARCV7,sparcv7, SPARCV9,sparcv9
     }
 
     public static enum OS {
 
-        LINUX, SUNOS, AIX, MACOSX, DARWIN, WINDOWS, SOLARIS
+        LINUX,linux, SUNOS,sunos, AIX,aix, MACOSX,macosx, DARWIN,darwin, WINDOWS,windows, SOLARIS,solaris
     }
 
-    public static enum TYPE {
 
-        STAGEABLE, INSTALLED
-    }
 
     protected String mNamespace;
     protected String mName;
