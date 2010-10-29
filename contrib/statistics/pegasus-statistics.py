@@ -333,6 +333,10 @@ def parse_submit_file(sub_fn):
 	return rlb(init_dir_path)
 
 def rlb(file_path):
+	"""
+	This function converts the path relative to base path
+	Returns : path relative to the base 
+	"""
 	file_path = file_path.replace(braindb_submit_dir,base_submit_dir)
 	return file_path
 							
@@ -589,7 +593,8 @@ def print_workflow_details(workflow_stat_list):
 		logger.error("Unable to write to file " + transformation_stats_file)
 		sys.exit(1)
 	else:
-		fh.close()			
+		fh.close()
+	logger.info("Workflow run statistics at " + wf_stats_file)				
 	logger.info("Job statistics at " + jobs_stats_file)
 	logger.info("Logical transformation statistics at " + transformation_stats_file)
 	return
