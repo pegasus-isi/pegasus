@@ -66,6 +66,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
@@ -845,10 +846,13 @@ public class SeqExec implements GridStart {
     protected File enableAndGenerateSeqexecInputFile( AggregatedJob job, boolean isGlobusJob) {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
 
+        //reset the list of sls files that are transferred via condor file transfer
+        job.condorVariables.removeIPFilesForTransfer();
+        
+        
         Job jobcopy = (Job)job.clone();
 
         
-
         //enable the job first using kickstart to get PRE JOB and POST JOB populated
         this.mKickstartGridStartImpl.enable( jobcopy, isGlobusJob );
         String directory  = this.mKickstartGridStartImpl.getWorkerNodeDirectory( job );
@@ -885,7 +889,10 @@ public class SeqExec implements GridStart {
                 if( mSLS.needsSLSOutput( job ) ){
                     filesToBeCopied.add( mSLS.getSLSOutputLFN( jobcopy ) );
                 }
-                
+                String base =  this.mSubmitDir + File.separator ;
+                for( String lfn: filesToBeCopied ){
+                    job.condorVariables.addIPFileForTransfer( base + lfn );
+                }
             }
 
             //transfer the proxy and set x bit accordingly
