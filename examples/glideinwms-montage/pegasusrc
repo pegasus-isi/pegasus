@@ -1,3 +1,6 @@
+
+pegasus.schema.dax=/home/rynge/Pegasus/install/current/etc/dax-2.1.xsd
+
 pegasus.catalog.replica=SimpleFile
 pegasus.catalog.replica.file=rc
 
@@ -6,9 +9,6 @@ pegasus.catalog.site.file=sites.xml
 
 pegasus.catalog.transformation=Text
 pegasus.catalog.transformation.file=tc
-
-pegasus.transfer.refiner=Bundle
-pegasus.transfer.*.thirdparty.sites=*
 
 pegasus.dir.useTimestamp=true
 pegasus.dir.storage.deep=false

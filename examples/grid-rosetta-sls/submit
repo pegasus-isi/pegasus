@@ -45,21 +45,14 @@ export CLASSPATH=.:$CLASSPATH
 javac RosettaDAX.java
 
 # generate the dax
-java RosettaDAX dax.xml
+java RosettaDAX dax.xml $CLUSTER_NAME
 
 # generate the replica catalog
 # setting pool=$CLUSTER_NAME is key to trigger the staging
-rm -f rc.data
-for FILE in `find minirosetta_database -type f | grep -v .svn` repack.resfile design.resfile `find pdbs -type f | grep -v .svn`; do
-    echo "$FILE gsiftp://$LOCAL_HOSTNAME$TOPDIR/$FILE pool=\"$CLUSTER_NAME\"" >> rc.data
-done
-
-# create the transformation catalogue (tc)
-cat >tc.data <<EOF
-# Site  LFN  PFN  TYPE  SYSTEM PROFILE
-$CLUSTER_NAME    rosetta::rosetta.exe:1.0     gsiftp://$LOCAL_HOSTNAME$TOPDIR/rosetta.exe       STATIC_BINARY       INTEL32::LINUX 
-$CLUSTER_NAME    pegasus::worker              http://pegasus.isi.edu/wms/download/3.0/nightly/pegasus-worker-3.0.0cvs-x86_rhel_5.tar.gz     STATIC_BINARY       INTEL32::LINUX
-EOF
+#rm -f rc.data
+#for FILE in `find minirosetta_database -type f | grep -v .svn` repack.resfile design.resfile `find pdbs -type f | grep -v .svn`; do
+#    echo "$FILE gsiftp://$LOCAL_HOSTNAME$TOPDIR/$FILE pool=\"$CLUSTER_NAME\"" >> rc.data
+#done
 
 # site catalog
 cat >sites.xml <<EOF

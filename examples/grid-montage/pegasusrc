@@ -1,3 +1,6 @@
+
+pegasus.schema.dax=${pegasus.home}/etc/dax-2.1.xsd
+
 pegasus.catalog.replica=SimpleFile
 pegasus.catalog.replica.file=rc
 
