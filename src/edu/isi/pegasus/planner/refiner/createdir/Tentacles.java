@@ -25,6 +25,8 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.classes.DAGJob;
+import edu.isi.pegasus.planner.classes.DAXJob;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -99,7 +101,7 @@ public class Tentacles extends AbstractStrategy {
             local = pool.equals("local");
             if( (job instanceof TransferJob &&  type != Job.STAGE_OUT_JOB )
                 || (!local
-                          || (type == Job.COMPUTE_JOB || type == Job.STAGED_COMPUTE_JOB))){
+                          || (type == Job.COMPUTE_JOB || type == Job.STAGED_COMPUTE_JOB || job instanceof DAXJob || job instanceof DAGJob ))){
                 mLogger.log("Adding relation " + parent + " -> " + jobName,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 dag.addNewRelation(parent,jobName);
