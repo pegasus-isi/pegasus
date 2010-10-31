@@ -54,7 +54,7 @@ public class CatalogType {
         return this;
     }
 
-    public CatalogType addPhysicaFile(PFN pfn) {
+    public CatalogType addPhysicalFile(PFN pfn) {
         mPFNs.add(pfn);
         return this;
     }
