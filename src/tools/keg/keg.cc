@@ -19,31 +19,28 @@
 #include <net/if.h>
 #include <netdb.h>
 
-#ifdef DARWIN
-#include <sys/param.h>
-#include <sys/mount.h>
-#endif // DARWIN
-
-#ifdef HAS_SYS_STATVFS
-#include <sys/statvfs.h>
-#endif
-
-#ifdef LINUX
-#include <sys/sysinfo.h>
-#endif 
-
 #ifdef HAS_SYS_SOCKIO
 #include <sys/sockio.h>
 #endif
 
+#ifdef MACHINE_SPECIFIC
+#ifdef DARWIN
+#include "darwin.hh"
+#endif // DARWIN
+
+#if defined(SUNOS) || defined(SOLARIS)
+#include "sunos.hh"
+#endif // SUNOS || SOLARIS
+
+#ifdef LINUX
+#include "basic.hh"
+#include "linux.hh"
+#endif // LINUX
+#endif // MACHINE_SPECIFIC
+
 static char output[4096];
 static char pattern[] = 
 "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n";
-
-inline unsigned long int megs( unsigned long long int x ) 
-  { return (x >> 20); }
-inline unsigned long int gigs( unsigned long long int x )
-  { return (x >> 30); }
 
 class DirtyVector {
   // using malloc/free instead of new/delete to avoid linking
@@ -178,159 +175,6 @@ append( char* buffer, size_t capacity, char ch )
   }
   return buffer;
 }
-
-static const char* cpu_info = 0;
-
-void
-cpuinfo( char* buffer, size_t capacity )
-{
-  // fill cache once, if empty
-  if ( cpu_info == 0 ) {
-    unsigned n_cpu = 0;
-    char* cpu_speed = 0;
-    char* model_name = 0;
-    char line[1024];
-
-    // open /proc/cpuinfo to read
-    FILE* proc = fopen( "/proc/cpuinfo", "r" );
-    if ( proc == 0 ) return;
-  
-    // FIXME: This assumes SMP for now
-    bool within = false;
-    while ( fgets( line, sizeof(line), proc ) ) {
-      within = true;
-      if ( strncasecmp( line, "processor", 9 ) == 0 ) n_cpu++;
-#ifdef MARCH_IA64
-      if ( model_name == 0 && strncasecmp( line, "family", 6 ) == 0 ) {
-#else
-      if ( model_name == 0 && strncasecmp( line, "model name", 10 ) == 0 ) {
-#endif
-	line[strlen(line)-1] = '\0';
-	char* s = strchr(line,':');
-	if ( s ) model_name = strdup(s+2);
-      }
-      if ( cpu_speed == 0 && strncasecmp( line, "cpu mhz", 7 ) == 0 ) {
-	line[strlen(line)-1] = '\0';
-	char* s = strchr(line,':');
-	if ( s ) cpu_speed = strdup(s+2);
-      }
-    }
-    fclose(proc); 
-
-    if ( within ) {
-      size_t cpu_size = 256;
-      char* dynamic = static_cast<char*>( malloc(cpu_size) );
-      snprintf( dynamic, cpu_size, "Processor Info.: %d x %s @ %s\n",
-		n_cpu, model_name ? model_name : "[unknown]", 
-		cpu_speed ? cpu_speed : "[unknown]" );
-      cpu_info = const_cast<const char*>( dynamic ); 
-    } else {
-      cpu_info = "";
-    }
-  }
-
-  // append information to buffer, if we got this far
-  if ( cpu_info && *cpu_info ) strncat( buffer, cpu_info, capacity );
-}
-
-#if defined(HAS_SYS_STATVFS) && defined(MTAB_LOCATION)
-
-void
-mystatvfs( char* buffer, size_t capacity )
-{
-  FILE* mtab = fopen( MTAB_LOCATION, "r" ); 
-  if ( mtab ) {
-#ifdef WANT_STATFS
-    struct statfs fs;
-#else
-    struct statvfs fs;
-#endif
-    size_t vfs_size = getpagesize();
-    char* dynamic = static_cast<char*>( malloc(vfs_size) );
-    char* line = static_cast<char*>( malloc(vfs_size) ); 
-
-    while ( fgets( line, vfs_size, mtab ) ) {
-      char* t, *s = line; 
-
-#ifndef DARWIN
-      // only work on real devices
-      if ( *s != '/' ) continue; 
-#endif
-
-      // terminate first word
-      while ( *s && ! isspace(*s) ) s++; 
-      while ( *s && isspace(*s) ) *s++ = 0; 
-
-      // point s to second word and terminate mount point
-      t = s; 
-      while ( *t && ! isspace(*t) ) t++;
-      while ( *t && isspace(*t) ) *t++ = 0; 
-
-      // try to stat the mount point
-#ifdef WANT_STATFS
-      if ( statfs( s, &fs ) != -1 ) {
-#else
-      if ( statvfs( s, &fs ) != -1 ) {
-#endif
-	char unit = 'G';
-	unsigned long long int pagesize = fs.f_bsize;
-	unsigned long int b_total = gigs(fs.f_blocks * pagesize);
-	unsigned long int b_avail = gigs(fs.f_bavail * pagesize); 
-
-	if ( b_total == 0 && b_avail == 0 ) {
-	  unit = 'M'; 
-	  b_total = megs(fs.f_blocks * pagesize);
-	  b_avail = megs(fs.f_bavail * pagesize); 
-	}
-
-	snprintf( dynamic, vfs_size, 
-		  "Filesystem Info: %-24s %5lu%cB total, %5lu%cB avail\n",
-		  s, b_total, unit, b_avail, unit ); 
-	
-	strncat( buffer, dynamic, capacity ); 
-      }
-    }
-    fclose(mtab); 
-    free((void*) line); 
-    free((void*) dynamic); 
-#if 0
-  } else {
-    fprintf( stderr, "open /etc/mtab: %s\n", strerror(errno) ); 
-#endif
-  }
-}
-
-#endif // HAS_SYS_STATVFS && MTAB_LOCATION
-
-#ifdef LINUX
-void
-mysysinfo( char* buffer, size_t capacity )
-{
-  struct sysinfo si; 
-  if ( sysinfo(&si) != -1 ) {
-    unsigned long long int pagesize = si.mem_unit;
-    unsigned long int ram_total  = megs(si.totalram * pagesize);
-    unsigned long int ram_free   = megs(si.freeram * pagesize);
-    unsigned long int ram_shared = megs(si.sharedram * pagesize);
-    unsigned long int ram_buffer = megs(si.bufferram * pagesize);
-    unsigned long int swap_total = megs(si.totalswap * pagesize);
-    unsigned long int swap_free  = megs(si.freeswap * pagesize); 
-
-    size_t sys_size = 256;
-    char* dynamic = static_cast<char*>( malloc(sys_size) );
-    snprintf( dynamic, sys_size, 
-	      "Load Averages  : %.3f %.3f %.3f\n"
-	      "Memory Usage MB: %lu total, %lu free, %lu shared, %lu buffered\n"
-	      "Swap Usage   MB: %lu total, %lu free\n",
-	      si.loads[0] / 65536.0, si.loads[1] / 65536.0, si.loads[2] / 65536.0,
-	      ram_total, ram_free, ram_shared, ram_buffer,
-	      swap_total, swap_free ); 
-    strncat( buffer, dynamic, capacity ); 
-    free((void*) dynamic); 
-  }
-}
-
-#endif // LINUX
 
 static
 int
@@ -619,13 +463,12 @@ identify( char* result, size_t size, const char* arg0,
 
   // phase 2: this machine?
   append( result, size, "Systemenvironm.: %s-%s %s\n", machine, sysname, release );
-  cpuinfo( result, size );
-#ifdef LINUX
-  mysysinfo( result, size ); 
-#endif // LINUX
-#ifdef HAS_SYS_STATVFS
-  mystatvfs( result, size ); 
-#endif // HAS_SYS_STATVFS
+#ifdef MACHINE_SPECIFIC
+  pegasus_cpuinfo( result, size ); 
+  pegasus_loadavg( result, size ); 
+  pegasus_meminfo( result, size ); 
+  pegasus_statfs( result, size ); 
+#endif // MACHINE_SPECIFIC
   append( result, size, "Output Filename: %s\n", outfn );
 
   // 

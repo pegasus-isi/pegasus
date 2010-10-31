@@ -16,8 +16,10 @@ MARCH	= $(shell uname -m | tr '[A-Z]' '[a-z]')
 MAJOR   = $(firstword $(subst ., ,$(VERSION)))
 CONDOR	= condor_compile
 SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
-STATVFS = $(shell /bin/ls /usr/include/sys/statvfs.h 2>/dev/null)
+## STATVFS = $(shell /bin/ls /usr/include/sys/statvfs.h 2>/dev/null)
 CONDOR_LOCATION = $(shell condor_config_val RELEASE_DIR)
+EXTRA_OBJ = 
+EXTRA_INC = 
 
 ifndef ${prefix}
 prefix = $(PEGASUS_HOME)
@@ -36,7 +38,9 @@ CXXFLAGS = -g -pipe -arch x86_64 -arch i686 -nostdinc \
 	-isystem${SDK}/usr/include -F${SDK}/System/Library/Frameworks
 LDFLAGS = -arch x86_64 -arch i686 -Wl,-syslibroot,${SDK}
 endif
-CXXFLAGS += -DWANT_STATFS=1 -DMTAB_LOCATION=\"/var/db/mountdtab\"
+EXTRA_OBJ = darwin.o
+EXTRA_INC = darwin.hh
+CXXFLAGS += -DMACHINE_SPECIFIC=darwin
 endif
 
 ifeq (SUNOS,${SYSTEM})
@@ -52,7 +56,9 @@ CXXFLAGS  = '-library=%none,Cstd,Crun' -dalign -ftrap=%none -fsimple -xlibmil $(
 #EXTRACXXFLAGS = $(V7FLAGS)
 LD       := $(CXX) $(EXTRACXXFLAGS)
 CXXFLAGS := -DSOLARIS $(CXXFLAGS) -xO4 -D__EXTENSIONS__=1
-CXXFLAGS += -DMTAB_LOCATION=\"/etc/mnttab\"
+CXXFLAGS += -DMACHINE_SPECIFIC=sunos
+EXTRA_OBJ = sunos.o
+EXTRA_INC = sunos.hh
 LOADLIBES_VANILLA = -lnsl -lsocket
 LOADLIBES_CONDOR  = -lnsl -lsocket
 INSTALL = /usr/ucb/install
@@ -93,7 +99,9 @@ LOADLIBES_VANILLA = -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
 LOADLIBES_CONDOR  = -lstdc++
 LD	= gcc
 endif
-CXXFLAGS += -DMTAB_LOCATION=\"/etc/mtab\"
+CXXFLAGS += -DMACHINE_SPECIFIC=linux
+EXTRA_OBJ = linux.o
+EXTRA_INC = linux.hh
 endif
 
 #
@@ -103,9 +111,9 @@ CXXFLAGS += -D${SYSTEM} -DMAJOR=${MAJOR} # -DSOCKLEN=${SOCKLEN}
 ifneq (,${SOCKIO})
 CXXFLAGS += -DHAS_SYS_SOCKIO=1
 endif
-ifneq (,${STATVFS})
-CXXFLAGS += -DHAS_SYS_STATVFS=1
-endif
+##ifneq (,${STATVFS})
+##CXXFLAGS += -DHAS_SYS_STATVFS=1
+##endif
 GENDOC = keg.html keg.txt keg.ps
 CONDOR_LD = $(CONDOR) $(LD)
 CONDOR_CXX = $(CONDOR) $(CXX)
@@ -132,13 +140,15 @@ endif
 
 all : $(TARGET) $(GENDOC)
 
-keg: keg.o
+keg.o: keg.cc $(EXTRA_INC)
+
+keg: keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES_VANILLA) $(LOADLIBES)
 
-keg.condor: keg.condor.o
+keg.condor: keg.condor.o $(EXTRA_OBJ)
 	$(CONDOR_LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES_CONDOR) $(LOADLIBES)
 
-keg.condor.o: keg.cc
+keg.condor.o: keg.cc $(EXTRA_INC)
 	$(CONDOR_CXX) $(CXXFLAGS) $< -c -o $@
 
 $(GENDOC): keg.1
@@ -167,7 +177,7 @@ test check: keg
 	@./keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
 clean:
-	$(RM) keg.o keg.condor.o $(GENDOC) core
+	$(RM) keg.o keg.condor.o $(GENDOC) core $(EXTRA_OBJ)
 
 distclean: clean
 	$(RM) keg keg.condor
