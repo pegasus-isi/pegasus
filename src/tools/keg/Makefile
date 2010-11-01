@@ -20,6 +20,8 @@ SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 CONDOR_LOCATION = $(shell condor_config_val RELEASE_DIR)
 EXTRA_OBJ = 
 EXTRA_INC = 
+LFS_CFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
+LFS_LDFLAGS =
 
 ifndef ${prefix}
 prefix = $(PEGASUS_HOME)
@@ -50,6 +52,8 @@ ifeq (5,${MAJOR})
 # gcc -Wl,-Bstatic keg.o -lstdc++ -lm -lnsl -lsocket -Wl,-Bdynamic -ldl -o keg
 CXX     = CC 
 ## SPARCv7
+LFS_CFLAGS = $(shell getconf LFS_CFLAGS 2>>/dev/null)
+LFS_LDFLAGS = $(shell getconf LFS_LDFLAGS 2>>/dev/null)
 V7FLAGS	= -xtarget=generic
 V9FLAGS	= -xtarget=ultra -xarch=v9
 CXXFLAGS  = '-library=%none,Cstd,Crun' -dalign -ftrap=%none -fsimple -xlibmil $(EXTRACXXFLAGS)
@@ -57,10 +61,10 @@ CXXFLAGS  = '-library=%none,Cstd,Crun' -dalign -ftrap=%none -fsimple -xlibmil $(
 LD       := $(CXX) $(EXTRACXXFLAGS)
 CXXFLAGS := -DSOLARIS $(CXXFLAGS) -xO4 -D__EXTENSIONS__=1
 CXXFLAGS += -DMACHINE_SPECIFIC=sunos
-EXTRA_OBJ = sunos.o
+EXTRA_OBJ = sunos.o sunos-swap.o
 EXTRA_INC = sunos.hh
-LOADLIBES_VANILLA = -lnsl -lsocket
-LOADLIBES_CONDOR  = -lnsl -lsocket
+LOADLIBES_VANILLA = -lkstat -lnsl -lsocket
+LOADLIBES_CONDOR  = -lkstat -lnsl -lsocket
 INSTALL = /usr/ucb/install
 else
 # old Solaris 1 not supported!
@@ -102,6 +106,8 @@ endif
 CXXFLAGS += -DMACHINE_SPECIFIC=linux
 EXTRA_OBJ = linux.o
 EXTRA_INC = linux.hh
+LFS_CFLAGS = $(shell getconf LFS_CFLAGS 2>>/dev/null)
+LFS_LDFLAGS = $(shell getconf LFS_LDFLAGS 2>>/dev/null)
 endif
 
 #
@@ -117,6 +123,15 @@ endif
 GENDOC = keg.html keg.txt keg.ps
 CONDOR_LD = $(CONDOR) $(LD)
 CONDOR_CXX = $(CONDOR) $(CXX)
+
+# add large file support
+ifneq (,${LFS_CFLAGS})
+NOLFS_CFLAGS := $(CXXFLAGS)
+CXXFLAGS += $(LFS_CFLAGS)
+endif
+ifneq (,${LFS_LDFLAGS})
+LDFLAGS += $(LFS_LDFLAGS)
+endif
 
 %.html : %.1 ;
 	$(NROFF) $(HTML) $< > $@
@@ -150,6 +165,12 @@ keg.condor: keg.condor.o $(EXTRA_OBJ)
 
 keg.condor.o: keg.cc $(EXTRA_INC)
 	$(CONDOR_CXX) $(CXXFLAGS) $< -c -o $@
+
+darwin.o: darwin.cc darwin.hh basic.hh
+linux.o: linux.cc linux.hh basic.hh
+sunos.o: sunos.cc sunos.hh basic.hh
+sunos-swap.o: sunos-swap.cc sunos-swap.hh
+	$(CXX) $(NOLFS_CFLAGS) $< -c -o $@
 
 $(GENDOC): keg.1
 
