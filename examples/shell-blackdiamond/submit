@@ -13,26 +13,14 @@ fi
 echo "This is sample input file" >f.a
 
 # generate the dax
-./blackdiamond.py >blackdiamond.dax
-
-# create the replica catalog (in this case, where to find the inputs)
-cat >rc.data <<EOF
-f.a file://`pwd`/f.a pool="local"
-EOF
-
-# create the transformation catalog
-cat >tc.data <<EOF
-# Site  LFN  PFN  TYPE  SYSTEM PROFILE
-local  diamond::preprocess:2.0  $PEGASUS_HOME/bin/keg                 INSTALLED INTEL32::LINUX ENV::KEY1="VALUE1"
-local  diamond::findrange:2.0   $PEGASUS_HOME/bin/keg                 INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
-local  diamond::analyze:2.0     $PEGASUS_HOME/bin/keg                 INSTALLED INTEL32::LINUX ENV::KEY2="VALUE2"
-EOF
+export PYTHONPATH=$PEGASUS_HOME/lib/python
+./blackdiamond.py $PEGASUS_HOME >blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86" os="LINUX">
+    <site  handle="local" arch="x86_64" os="LINUX">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="compute"/>
         <head-fs>

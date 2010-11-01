@@ -1,10 +1,40 @@
 #!/usr/bin/env python
 
 from Pegasus.DAX3 import *
+import os
 import sys
 
 # Create a DAX
 diamond = ADAG("diamond")
+
+# Add input file to the DAX-level replica catalog
+a = File("f.a")
+a.addPFN(PFN("file://" + os.getcwd() + "/f.a", "local"))
+diamond.addFile(a)
+
+# Add executables to the DAX-level replica catalog
+# In this case the binary is keg, which is shipped with Pegasus
+e_preprocess = Executable(namespace="diamond", name="preprocess", version="2.0", os="linux", arch="x86_64")
+e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "local"))
+diamond.addExecutable(e_preprocess)
+
+e_findrange = Executable(namespace="diamond", name="findrange", version="2.0", os="linux", arch="x86_64")
+e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "local"))
+diamond.addExecutable(e_findrange)
+
+e_analyze = Executable(namespace="diamond", name="analyze", version="2.0", os="linux", arch="x86_64")
+e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "local"))
+diamond.addExecutable(e_analyze)
+
+# Add transformations to the DAX-level transformation catalog
+#t_preprocess = Transformation(e_preprocess)
+#diamond.addTransformation(t_preprocess)
+
+#t_findrange = Transformation(e_findrange)
+#diamond.addTransformation(t_findrange)
+
+#t_analyze = Transformation(e_analyze)
+#diamond.addTransformation(t_analyze)
 
 # Create some logical file names
 a = File("f.a")
@@ -18,22 +48,22 @@ d = File("f.d")
 preprocess = Job(namespace="diamond",name="preprocess",version="2.0")
 preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
 preprocess.addUses(a,link=Link.INPUT)
-preprocess.addUses(b1,link=Link.OUTPUT)
-preprocess.addUses(b2,link=Link.OUTPUT)
+preprocess.addUses(b1,link=Link.OUTPUT, register=False)
+preprocess.addUses(b2,link=Link.OUTPUT, register=False)
 diamond.addJob(preprocess)
 
 # Add left Findrange job
 frl = Job(namespace="diamond",name="findrange",version="2.0")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
 frl.addUses(b1,link=Link.INPUT)
-frl.addUses(c1,link=Link.OUTPUT)
+frl.addUses(c1,link=Link.OUTPUT, register=False)
 diamond.addJob(frl)
 
 # Add right Findrange job
 frr = Job(namespace="diamond",name="findrange",version="2.0")
 frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
 frr.addUses(b2,link=Link.INPUT)
-frr.addUses(c2,link=Link.OUTPUT)
+frr.addUses(c2,link=Link.OUTPUT, register=False)
 diamond.addJob(frr)
 
 # Add Analyze job
@@ -41,7 +71,7 @@ analyze = Job(namespace="diamond",name="analyze",version="2.0")
 analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
 analyze.addUses(c1,link=Link.INPUT)
 analyze.addUses(c2,link=Link.INPUT)
-analyze.addUses(d,link=Link.OUTPUT, register=True)
+analyze.addUses(d,link=Link.OUTPUT, register=False)
 diamond.addJob(analyze)
 
 # Add control-flow dependencies
