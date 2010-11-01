@@ -58,7 +58,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
     </site>
-    <site  handle="TestCluster" arch="x86" os="LINUX">
+    <site  handle="TestCluster" arch="x86_64" os="LINUX">
         <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
         <head-fs>
