@@ -321,10 +321,14 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         this.complain( element, "file", file );
                         return null;
                     }
+                    PegasusFile pf = new PegasusFile( file );
+                    pf.setLinkage( LINKAGE.INPUT );
+                    
                     if( element.equals( "dag" ) ){
                         DAGJob dagJob = new DAGJob( j );
                         dagJob.setDAGLFN( file );
-
+                        dagJob.addInputFile( pf );
+                        
                         //the job should always execute on local site
                         //for time being
                         dagJob.hints.construct(Hints.EXECUTION_POOL_KEY, "local");
@@ -371,6 +375,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
                         //retrieve the extra attribute about the DAX
                         daxJob.setDAXLFN( file );
+                        daxJob.addInputFile( pf );
 
                         //add default name and namespace information
                         daxJob.setTransformation( "pegasus",
