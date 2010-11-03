@@ -293,11 +293,6 @@ public class NoGridStart implements GridStart {
 
                     String key = getDirectoryKey( job );
                     
-                    //always have the remote dir set to /tmp as
-                    //we are banking on kickstart to change directory 
-                    //for us for compute jobs
-                    job.condorVariables.construct( key, "/tmp" );
-
                     AggregatedJob clusteredJob = (AggregatedJob) job;
                     Job firstJob = clusteredJob.getConstituentJob(0);
 
@@ -309,6 +304,17 @@ public class NoGridStart implements GridStart {
                     //let the figure out how to handle clustered jobs
                     if( gs instanceof SeqExecOld || gs instanceof SeqExec ){
                         return gs.enable( job, isGlobusJob );
+                    }
+                    else{
+                        //always have the remote dir set to /tmp as
+                        //we are banking on kickstart to change directory 
+                        //for us for compute jobs
+                    
+                        //Bug fix for JIRA PM-250
+                        //for worker node execution we dont want existing
+                        //remote_initialdir overriden before handing over 
+                        //to SeqExec launcher.
+                        job.condorVariables.construct( key, "/tmp" );
                     }
                     
                     //if gs is  not of type seqexec we revert to 
