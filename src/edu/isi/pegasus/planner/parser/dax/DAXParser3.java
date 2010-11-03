@@ -288,6 +288,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     Job j = new Job( );
                     //all jobs in the DAX are of type compute
                     j.setUniverse( GridGateway.JOB_TYPE.compute.toString() );
+                    j.setJobType( Job.COMPUTE_JOB );
+                    
                     String file = null;
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
@@ -513,6 +515,8 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     Job j = new Job( );
                     //all jobs in the DAX are of type compute
                     j.setUniverse( GridGateway.JOB_TYPE.compute.toString() ); 
+                    j.setJobType( Job.COMPUTE_JOB );
+                    
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
                         String value = (String) values.get( i );
