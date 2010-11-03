@@ -483,6 +483,12 @@ public class Condor extends Namespace{
                 if (key.compareTo("remote_initialdir") == 0) {
                     res = NOT_PERMITTED_KEY;
                 }
+                else if( key.compareTo( "requirements" ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else if( key.compareTo( "rank" ) == 0 ){
+                    res = VALID_KEY;
+                }
                 else {
                     res = UNKNOWN_KEY;
                 }
@@ -494,6 +500,9 @@ public class Condor extends Namespace{
                     key.compareTo("stream_output") == 0) {
                     res = NOT_PERMITTED_KEY;
                 }
+                else if( key.compareTo( "should_transfer_files" ) == 0 ){
+                    res = VALID_KEY;
+                }
                 else {
                     res = UNKNOWN_KEY;
                 }
@@ -502,6 +511,12 @@ public class Condor extends Namespace{
             case 't':
                 if (key.compareTo(TRANSFER_EXECUTABLE_KEY) == 0 ||
                     key.compareTo(TRANSFER_IP_FILES_KEY) == 0){
+                    res = VALID_KEY;
+                }
+                else if( key.compareTo( "transfer_output" ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else if( key.compareTo( "transfer_error" ) == 0 ){
                     res = VALID_KEY;
                 }
                 else {
@@ -518,6 +533,19 @@ public class Condor extends Namespace{
 
                 }
                 break;
+                
+            case 'w':
+                if (key.compareTo( "whentotransferoutput" ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else if( key.compareTo( "transfer_error" ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+                
                 
             case '+':
                 res = VALID_KEY;
