@@ -1201,11 +1201,11 @@ public class Job extends Data implements GraphNodeContent{
                                   String name,
                                   String version) {
         StringBuffer result = new StringBuffer(32);
-        if ( namespace != null ) {
+        if ( namespace != null && namespace.length() > 0 ) {
             result.append( namespace ).append( DELIMITER);
         }
         result.append(name);
-        if (version != null) {
+        if (version != null && version.length() > 0 ) {
             result.append( DELIMITER ).append( version );
         }
         return result.toString();
