@@ -45,74 +45,60 @@ public class BlackDiamondDAX {
         ADAG dax = new ADAG("blackdiamond");
 
         File fa = new File("f.a");
-        fa.addProfile("env", "FOO", "/usr/bar");
-        fa.addProfile("globus", "walltime", "40");
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
         dax.addFile(fa);
 
         File fb1 = new File("f.b1");
-        fb1.addProfile("env", "GOO", "/usr/foo");
-        fb1.addProfile("globus", "walltime", "40");
-        dax.addFile(fb1);
-
         File fb2 = new File("f.b2");
-        fb2.addProfile("env", "BAR", "/usr/goo");
-        fb2.addProfile("globus", "walltime", "40");
-        dax.addFile(fb2);
-
         File fc1 = new File("f.c1");
-        dax.addFile(fc1);
-
         File fc2 = new File("f.c2");
-        dax.addFile(fc2);
-
         File fd = new File("f.d");
-        dax.addFile(fd);
 
-        Executable preprocess = new Executable("pegasus", "preprocess", "1.0");
+        Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
         preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
-        preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
 
-        Executable findrange = new Executable("pegasus", "findrange", "1.0");
+        Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
         findrange.setInstalled(true);
         findrange.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
 
-        Executable analyze = new Executable("pegasus", "analyze", "1.0");
+        Executable analyze = new Executable("pegasus", "analyze", "4.0");
         analyze.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
         analyze.setInstalled(true);
         analyze.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 
-        Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
-        diamond.uses(preprocess).uses(findrange).uses(analyze);
-        diamond.uses(new File("config", File.LINK.INPUT));
-
-        dax.addTransformation(diamond);
-
-        Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
+	// Add a preprocess job
+        Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
         j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
-        j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
+        j1.addArgument("-o ").addArgument(fb1);
+	j1.addArgument(" ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
-        j1.uses(new File("f.b2"), File.LINK.OUTPUT);
+        j1.uses(fb2, File.LINK.OUTPUT);
         dax.addJob(j1);
 
-        DAG j2 = new DAG("j2", "findrange.dag", "j2");
-        j2.uses(new File("f.b1"), File.LINK.INPUT);
-        j2.uses(new File("f.c1"), File.LINK.OUTPUT);
-        dax.addDAG(j2);
+	// Add left Findrange job
+        Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
+        j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j2.addArgument("-o ").addArgument(fc1);
+        j2.uses(fb1, File.LINK.INPUT);
+        j2.uses(fc1, File.LINK.OUTPUT);
+        dax.addJob(j2);
 
-        DAX j3 = new DAX("j3", "findrange.dax", "j3");
-        j3.addArgument("--site ").addArgument("local");
-        j3.uses(new File("f.b2"), File.LINK.INPUT);
-        j3.uses(new File("f.c2"), File.LINK.OUTPUT);
-        dax.addDAX(j3);
+	// Add right Findrange job
+        Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
+        j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
+        j3.addArgument("-o ").addArgument(fc2);
+        j3.uses(fb2, File.LINK.INPUT);
+        j3.uses(fc2, File.LINK.OUTPUT);
+        dax.addJob(j3);
 
-        Job j4 = new Job("j4", "pegasus", "analyze", "1.0");
+	// Add analyze job
+        Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
         j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
         j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
@@ -121,8 +107,8 @@ public class BlackDiamondDAX {
         j4.uses(fd, File.LINK.OUTPUT);
         dax.addJob(j4);
 
-        dax.addDependency("j1", "j2", "1-2");
-        dax.addDependency("j1", "j3", "1-3");
+        dax.addDependency("j1", "j2");
+        dax.addDependency("j1", "j3");
         dax.addDependency("j2", "j4");
         dax.addDependency("j3", "j4");
         return dax;

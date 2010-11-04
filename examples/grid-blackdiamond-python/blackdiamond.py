@@ -30,19 +30,9 @@ diamond.addExecutable(e_findrange)
 e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
 e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
 diamond.addExecutable(e_analyze)
-	
-# Add transformations to the DAX-level transformation catalog
-t_preprocess = Transformation(e_preprocess)
-diamond.addTransformation(t_preprocess)
-	
-t_findrange = Transformation(e_findrange)
-diamond.addTransformation(t_findrange)
-	
-t_analyze = Transformation(e_analyze)
-diamond.addTransformation(t_analyze)
 
 # Add a preprocess job
-preprocess = Job(t_preprocess)
+preprocess = Job(namespace="diamond", name="preprocess", version="4.0")
 b1 = File("f.b1")
 b2 = File("f.b2")
 preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
@@ -52,7 +42,7 @@ preprocess.uses(b2, link=Link.OUTPUT)
 diamond.addJob(preprocess)
 
 # Add left Findrange job
-frl = Job(t_findrange)
+frl = Job(namespace="diamond", name="findrange", version="4.0")
 c1 = File("f.c1")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
 frl.uses(b1, link=Link.INPUT)
@@ -60,7 +50,7 @@ frl.uses(c1, link=Link.OUTPUT)
 diamond.addJob(frl)
 
 # Add right Findrange job
-frr = Job(t_findrange)
+frr = Job(namespace="diamond", name="findrange", version="4.0")
 c2 = File("f.c2")
 frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
 frr.uses(b2, link=Link.INPUT)
@@ -68,7 +58,7 @@ frr.uses(c2, link=Link.OUTPUT)
 diamond.addJob(frr)
 
 # Add Analyze job
-analyze = Job(t_analyze)
+analyze = Job(namespace="diamond", name="analyze", version="4.0")
 d = File("f.d")
 analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
 analyze.uses(c1, link=Link.INPUT)
