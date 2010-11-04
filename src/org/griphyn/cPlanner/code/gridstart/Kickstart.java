@@ -152,17 +152,17 @@ public class Kickstart implements GridStart {
     /**
      * The LogManager object which is used to log all the messages.
      */
-    private LogManager mLogger;
+    protected LogManager mLogger;
 
     /**
      * The object holding all the properties pertaining to Pegasus.
      */
-    private PegasusProperties mProps;
+    protected PegasusProperties mProps;
 
     /**
      * The options passed to the planner.
      */
-    private PlannerOptions mPOptions;
+    protected PlannerOptions mPOptions;
 
     /**
      * The handle to the workflow that is being enabled.
@@ -172,19 +172,19 @@ public class Kickstart implements GridStart {
     /**
      * Handle to the site catalog store.
      */
-    private SiteStore mSiteStore;
+    protected SiteStore mSiteStore;
     //private PoolInfoProvider mSiteHandle;
 
     /**
      * Handle to Transformation Catalog.
      */
-    private TransformationCatalog mTCHandle;
+    protected TransformationCatalog mTCHandle;
 
     /**
      * The submit directory where the submit files are being generated for
      * the workflow.
      */
-    private String mSubmitDir;
+    protected String mSubmitDir;
 
     /**
      * A boolean indicating whether to use invoke always or not.
@@ -399,7 +399,6 @@ public class Kickstart implements GridStart {
      *         the job is scheduled.
      */
     protected boolean enable( SubInfo job, boolean isGlobusJob, boolean stat, boolean addPostScript ) {
-
         //take care of relative submit directory if specified.
         String submitDir = mSubmitDir + mSeparator;
 //        String submitDir = getSubmitDirectory( mSubmitDir , job) + mSeparator;
@@ -606,24 +605,7 @@ public class Kickstart implements GridStart {
             }
         }//end of if ( stat )
         else if( mGenerateLOF ){
-            //dostat is false. so no generation of stat option
-            //but generate lof files nevertheless
-
-
-            //inefficient check here again. just a prototype
-            //we need to generate -S option only for non transfer jobs
-            //generate the list of filenames file for the input and output files.
-            if (! (job instanceof TransferJob)) {
-                 generateListofFilenamesFile( job.getInputFiles(),
-                                              job.getID() + ".in.lof");
-            }
-
-            //for cleanup jobs no generation of stats for output files
-            if (job.getJobType() != SubInfo.CLEANUP_JOB) {
-                generateListofFilenamesFile(job.getOutputFiles(),
-                                            job.getID() + ".out.lof");
-
-            }
+            modifyJobForLOFFiles( job );
         }///end of mGenerateLOF
 
         //append any arguments that need to be passed
@@ -998,6 +980,7 @@ public class Kickstart implements GridStart {
                 "remote_initialdir";
     }
 
+    
 
 
     /**
@@ -1203,6 +1186,36 @@ public class Kickstart implements GridStart {
 
        return postJob.toString();
    }*/
+
+    /**
+     * Modifies a job for LOF file creation. This is done  only when
+     * the lof property pegasus.gridstart.generate.lof is set to true.
+     * 
+     * @param job the job to be modified.
+     */
+    protected void modifyJobForLOFFiles(SubInfo job) {
+        //dostat is false. so no generation of stat option
+        //but generate lof files nevertheless
+
+
+        //inefficient check here again. just a prototype
+        //we need to generate -S option only for non transfer jobs
+        //generate the list of filenames file for the input and output files.
+        if (! (job instanceof TransferJob)) {
+            generateListofFilenamesFile( job.getInputFiles(),
+                                         job.getID() + ".in.lof");
+            
+        }
+        
+        //for cleanup jobs no generation of stats for output files
+        if (job.getJobType() != SubInfo.CLEANUP_JOB) {
+            generateListofFilenamesFile(job.getOutputFiles(),
+                                        job.getID() + ".out.lof");
+
+        
+        }
+        
+    }
 
 
     /**
