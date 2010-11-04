@@ -265,10 +265,12 @@ public class Partition extends Data {
     public String toString(){
         StringBuffer sb = new StringBuffer();
         sb.append("Partition ID ->").append(mID);
-        Iterator it = mNodeSet.iterator();
-        while(it.hasNext()){
-            String id = (String)it.next();
-            sb.append("\nJob ->").append(id);
+        
+        for( Iterator it = this.mNodeList.iterator(); it.hasNext(); ){
+            GraphNode gn = (GraphNode)it.next();
+            String id = (String)gn.getID();
+            sb.append( "\nJob ->").append(id);
+            sb.append( "\nBag ->" ).append( gn.getBag() );
 
             List l = (List)mParentsMap.get(id);
             if( l == null)
@@ -282,6 +284,7 @@ public class Partition extends Data {
             }
             sb.append("}");
         }
+        
 
         return sb.toString();
     }

@@ -21,6 +21,9 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.partitioner.Topological;
 import edu.isi.pegasus.planner.partitioner.Partition;
 
+import edu.isi.pegasus.planner.partitioner.graph.Bag;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.LabelBag;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -56,7 +59,7 @@ public class Vertical extends Abstract {
      * @return a short textual description
      */
     public String description(){
-        return this.DESCRIPTION;
+        return Vertical.DESCRIPTION;
     }
 
 
@@ -137,5 +140,37 @@ public class Vertical extends Abstract {
     }
 
 
+    /**
+     * Returns the ID for the clustered job corresponding to a partition.
+     *
+     * @param partition  the partition.
+     *
+     * @return the ID of the clustered job
+     */
+    protected String constructClusteredJobID( Partition partition ){
+        StringBuffer id = new StringBuffer();
+        
+        //get the label key from the last added job
+        GraphNode gn = partition.lastAddedNode();
+        Bag b = gn.getBag();
+        if( b instanceof LabelBag ){
+            LabelBag bag = ( LabelBag )b;
+            String label = (String) bag.get( LabelBag.LABEL_KEY );
+            if( label == null ){
+                //add the partition id
+                id.append( partition.getID() );
+            }
+            else{
+                //add the label
+                id.append( label );
+            }
+        }
+        else{
+            throw new RuntimeException( "Wrong type of bag associated with node " + gn );
+        }
+        
+        
+        return id.toString();
+    }
 
 }
