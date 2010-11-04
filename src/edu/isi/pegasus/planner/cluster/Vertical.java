@@ -139,6 +139,17 @@ public class Vertical extends Abstract {
 
     }
 
+    /**
+     * Returns null as for label based clustering we dont want the transformation
+     * name to be considered for constructing the name of the clustered jobs
+     * 
+     * @param jobs List of jobs
+     * 
+     * @return name
+     */
+    protected String getLogicalNameForJobs( List<Job> jobs ){
+        return null;
+    }
 
     /**
      * Returns the ID for the clustered job corresponding to a partition.

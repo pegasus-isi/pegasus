@@ -236,7 +236,7 @@ public abstract class Abstract implements Clusterer {
         }
 
         AggregatedJob clusteredJob = aggregator.construct( l,
-                                                           firstJob.getStagedExecutableBaseName(),
+                                                           getLogicalNameForJobs( l ),//firstJob.getStagedExecutableBaseName(),
                                                            this.constructClusteredJobID( partition ) );
 
 
@@ -263,6 +263,20 @@ public abstract class Abstract implements Clusterer {
         mScheduledDAG.add( clusteredJob );
 
         associate( partition, clusteredJob );
+    }
+    
+    /**
+     * Returns the logical names for the jobs. It picks the first job in the list
+     * and uses that to construct the name
+     * 
+     * @param jobs List of jobs
+     * 
+     * @return name
+     */
+    protected String getLogicalNameForJobs( List<Job> jobs ){
+        
+        Job firstJob = (Job)jobs.get(0);
+        return firstJob.getStagedExecutableBaseName();
     }
 
     /**

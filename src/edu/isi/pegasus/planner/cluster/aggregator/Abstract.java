@@ -66,7 +66,7 @@ public abstract class Abstract implements JobAggregator {
      * The prefix that is assigned to the jobname of the collapsed jobs to
      * get the jobname for the fat job.
      */
-    public static final String FAT_JOB_PREFIX  = "merge_";
+    public static final String CLUSTERED_JOB_PREFIX  = "merge_";
 
     /**
      * The transformation namespace for the cluster jobs.
@@ -269,7 +269,14 @@ public abstract class Abstract implements JobAggregator {
 
 
         Job job    = null;
-        String mergedJobName = Abstract.FAT_JOB_PREFIX + name + "_" + id;
+        StringBuffer sb = new StringBuffer();
+        sb.append( Abstract.CLUSTERED_JOB_PREFIX );
+        if( name != null && name.length() > 0 ){
+            sb.append( name ).append( "_" );
+        }
+        sb.append( id );
+        String mergedJobName = sb.toString();
+        
         mLogger.log("Constructing clustered job " + mergedJobName,
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
@@ -354,12 +361,12 @@ public abstract class Abstract implements JobAggregator {
         }
 
         
-        mergedJob.setTransformation( this.TRANSFORMATION_NAMESPACE,
+        mergedJob.setTransformation( Abstract.TRANSFORMATION_NAMESPACE,
                                      mergeLFN,
-                                     this.TRANSFORMATION_VERSION  );
-        mergedJob.setDerivation( this.DERIVATION_NAMESPACE,
+                                     Abstract.TRANSFORMATION_VERSION  );
+        mergedJob.setDerivation( Abstract.DERIVATION_NAMESPACE,
                                  mergeLFN,
-                                 this.DERIVATION_VERSION);
+                                 Abstract.DERIVATION_VERSION);
 
         mergedJob.setLogicalID( id );
 
@@ -493,7 +500,7 @@ public abstract class Abstract implements JobAggregator {
         home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
-                     this.getCompleteTranformationName( name ) +
+                     Abstract.getCompleteTranformationName( name ) +
                      " at site " + site,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -501,7 +508,7 @@ public abstract class Abstract implements JobAggregator {
         if ( home == null ){
             //cannot create default TC
             mLogger.log( "Unable to create a default entry for " +
-                         this.getCompleteTranformationName( name ),
+                         Abstract.getCompleteTranformationName( name ),
                          LogManager.DEBUG_MESSAGE_LEVEL );
             //set the flag back to true
             return defaultTCEntry;
