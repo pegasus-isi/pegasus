@@ -140,6 +140,11 @@ public class NoGridStart implements GridStart {
      * See Bug 21 comments on Pegasus Bugzilla
      */
     protected boolean mEnablingPartOfAggregatedJob;
+    
+    /**
+     * The handle to the LOF File Generator.
+     */
+    private LOFGenerator mLOFGenerator;
 
 
     /**
@@ -158,6 +163,8 @@ public class NoGridStart implements GridStart {
         mProps     = bag.getPegasusProperties();
         mGenerateLOF  = mProps.generateLOFFiles();
         mExitParserArguments = getExitCodeArguments();
+        
+        mLOFGenerator = LOFGeneratorFactory.loadInstance(bag, dag);
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
@@ -421,22 +428,7 @@ public class NoGridStart implements GridStart {
 
         if( mGenerateLOF ){
             //but generate lof files nevertheless
-
-
-            //inefficient check here again. just a prototype
-            //we need to generate -S option only for non transfer jobs
-            //generate the list of filenames file for the input and output files.
-            if (! (job instanceof TransferJob)) {
-                generateListofFilenamesFile( job.getInputFiles(),
-                                             job.getID() + ".in.lof");
-            }
-
-            //for cleanup jobs no generation of stats for output files
-            if (job.getJobType() != SubInfo.CLEANUP_JOB) {
-                generateListofFilenamesFile(job.getOutputFiles(),
-                                           job.getID() + ".out.lof");
-
-            }
+            mLOFGenerator.modifyJobForLOFFiles(job);
         }///end of mGenerateLOF
 
         return true;

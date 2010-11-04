@@ -140,6 +140,8 @@ public class PegasusProperties {
     public static final String ALL_TRANSFER_PRIORITY_PROPERTY =
                                                       "pegasus.transfer.*.priority";
 
+    
+
 
     
     /**
@@ -1451,7 +1453,7 @@ public class PegasusProperties {
      * Return a boolean indicating whether to generate the LOF files for the jobs
      * or not. This is used to generate LOF files, but not trigger the stat option
      *
-     * Referred to by the "pegasus.gridstart.kickstart.generate.loft" property.
+     * Referred to by the "pegasus.gridstart.generate.lof" property.
      *
      * @return the boolean value specified in the property file,
      *         else false if not specified or non boolean specified.
@@ -1459,6 +1461,17 @@ public class PegasusProperties {
     public boolean generateLOFFiles(){
         return Boolean.parse( mProps.getProperty( "pegasus.gridstart.generate.lof"),
                                                    false );
+    }
+    
+    /**
+     * Returns the implementing class for LOF generator
+     *
+     * Referred to by the "pegasus.gridstart.generate.lof.impl" property.
+     *
+     * @return the value specified in the property file, else null
+     */
+    public String getLOFGeneratorImplementation() {
+        return mProps.getProperty( "pegasus.gridstart.generate.lof.impl");
     }
 
 

@@ -13,12 +13,14 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.griphyn.cPlanner.code.gridstart;
+package org.griphyn.cPlanner.code.gridstart.lof;
 
+import org.griphyn.cPlanner.code.gridstart.*;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import org.griphyn.cPlanner.classes.ADag;
 import org.griphyn.cPlanner.classes.PegasusBag;
 import org.griphyn.cPlanner.classes.PegasusFile;
@@ -35,6 +37,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import org.griphyn.common.catalog.TransformationCatalog;
+import org.griphyn.common.util.Separator;
 
 /**
  * An extension to Kickstart Gridstart that tells kickstart to add
@@ -46,7 +50,7 @@ import java.util.Set;
  *
  * To use this the following properties need to be set
  * <pre>
- *      pegasus.gridstart                KickstartPDPS
+ *      pegasus.gridstart.generate.lof.impl   PDPS
  *      pegasus.gridstart.generate.lof   true
  * </pre>
  * 
@@ -56,7 +60,8 @@ import java.util.Set;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class KickstartPDPS extends Kickstart {
+public class PDPS implements LOFGenerator {
+    
     
     /**
      * The namespace for the polling executable.
@@ -74,13 +79,44 @@ public class KickstartPDPS extends Kickstart {
     public static final String POLL_TRANSFORMATION_VERSION = null;
     
     /**
+     * The complete TC name for pdps polling.
+     */
+    public static final String COMPLETE_TRANSFORMATION_NAME = Separator.combine(
+                                                                    POLL_TRANSFORMATION_NAMESPACE,
+                                                                    POLL_TRANSFORMATION_LOGICAL_NAME,
+                                                                    POLL_TRANSFORMATION_VERSION  );
+
+    /**
+     * Handle to Transformation Catalog.
+     */
+    protected TransformationCatalog mTCHandle;
+    
+    /**
+     * Handle to the site catalog store.
+     */
+    protected SiteStore mSiteStore;
+    
+    /**
+     * The submit directory
+     */
+    private String mSubmitDir;
+    
+    /**
+     * Handle to the LogManager
+     */
+    private LogManager mLogger;
+
+    /**
      * Initializes the GridStart implementation.
      *
      * @param bag   the bag of objects that is used for initialization.
      * @param dag   the concrete dag so far.
      */
     public void initialize( PegasusBag bag, ADag dag ){
-        super.initialize( bag, dag );
+        mLogger = bag.getLogger();
+        mSubmitDir    = bag.getPlannerOptions().getSubmitDirectory();
+        mTCHandle = bag.getHandleToTransformationCatalog();
+        mSiteStore = bag.getHandleToSiteStore();
     }
     
     /**
@@ -91,15 +127,16 @@ public class KickstartPDPS extends Kickstart {
      * 
      * @param job the job to be modified.
      */
-    protected void modifyJobForLOFFiles( SubInfo job ) {
-        System.out.println( job.getID() );
+    public void modifyJobForLOFFiles( SubInfo job ) {
+        //System.out.println( job.getID() );
         
         //only generate for compute jobs or clustered jobs.
         if ( job.getJobType() == SubInfo.COMPUTE_JOB ||
              job.getJobType() == SubInfo.STAGED_COMPUTE_JOB ) {
             String inputLOFBasename = job.getID() + ".in.lof";
-            String submitDirFN = generateListofFilenamesFile( job.getInputFiles(),
-                                                              job,
+            String submitDirFN = generateListofFilenamesFile( job,
+                                                              job.getInputFiles(),
+                                                              mSubmitDir,
                                                               inputLOFBasename );
             
             job.condorVariables.addIPFileForTransfer( submitDirFN );
@@ -108,11 +145,11 @@ public class KickstartPDPS extends Kickstart {
             //retrieve the path to the polling script
             List entries = null;
             try{
-                entries = mTCHandle.getTCEntries( KickstartPDPS.POLL_TRANSFORMATION_NAMESPACE,
-                                                  KickstartPDPS.POLL_TRANSFORMATION_LOGICAL_NAME,
-                                                  KickstartPDPS.POLL_TRANSFORMATION_VERSION,
+                entries = mTCHandle.getTCEntries( PDPS.POLL_TRANSFORMATION_NAMESPACE,
+                                                  PDPS.POLL_TRANSFORMATION_LOGICAL_NAME,
+                                                  PDPS.POLL_TRANSFORMATION_VERSION,
                                                   job.getSiteHandle(),
-                                                  TCType.INSTALLED );
+                                                  TCType.INSTALLED  );
             }
             catch (Exception e) {
                 //non sensical catching
@@ -152,16 +189,22 @@ public class KickstartPDPS extends Kickstart {
     /**
      * Writes out the list of filenames file for the job.
      *
+     * @param job  the job
+     * 
      * @param files  the list of <code>PegasusFile</code> objects contains the files
      *               whose stat information is required.
      *
-     * @param site       the site at which the job has to execute.
+     * @param directory  the submit directory
+     * 
      * @param basename   the basename of the file that is to be created
      *
      * @return the full path to lof file created, else null if no file is written out.
      */
-     public String generateListofFilenamesFile( Set files, SubInfo job, String basename ){
-         //sanity check
+     public String generateListofFilenamesFile( SubInfo job,
+                                                Set files, 
+                                                String directory,
+                                                String basename ){
+           //sanity check
          if ( files == null || files.isEmpty() ){
              return null;
          }
@@ -177,7 +220,7 @@ public class KickstartPDPS extends Kickstart {
          String result = null;
          //writing the stdin file
         try {
-            File f = new File( mSubmitDir, basename );
+            File f = new File( directory, basename );
             FileWriter input;
             input = new FileWriter( f );
             PegasusFile pf;
@@ -199,4 +242,6 @@ public class KickstartPDPS extends Kickstart {
 
         return result;
      }
+
+    
 }

@@ -236,6 +236,11 @@ public class Kickstart implements GridStart {
      * Whether kickstart should set the X Bit on the staged executables.
      */
     private boolean mSetXBit;
+    
+    /**
+     * Handle to the LOF generator
+     */
+    private LOFGenerator mLOFGenerator;
 
 
     /**
@@ -272,6 +277,8 @@ public class Kickstart implements GridStart {
         }
         mEnablingPartOfAggregatedJob = false;
         mSetXBit = mProps.setXBitWithKickstart();
+        
+        mLOFGenerator = LOFGeneratorFactory.loadInstance(bag, dag);
     }
 
 
@@ -604,8 +611,11 @@ public class Kickstart implements GridStart {
                 if( addPostScript ) {addCleanupPostScript(job, files); }
             }
         }//end of if ( stat )
-        else if( mGenerateLOF ){
-            modifyJobForLOFFiles( job );
+        else if( mGenerateLOF && !mEnablingPartOfAggregatedJob ){
+            
+                        System.out.println( job.getID() );
+            //modifyJobForLOFFiles( job );
+            mLOFGenerator.modifyJobForLOFFiles(job);
         }///end of mGenerateLOF
 
         //append any arguments that need to be passed
