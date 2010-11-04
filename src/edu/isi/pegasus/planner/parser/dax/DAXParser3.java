@@ -88,7 +88,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      * uri namespace
      */
     public static final String SCHEMA_NAMESPACE =
-                                        "http://pegasus.isi.edu/schema/dax";
+                                        "http://pegasus.isi.edu/schema/DAX";
 
     
     /**
