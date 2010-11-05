@@ -485,6 +485,18 @@ public class PegasusFile extends Data {
     }
 
     /**
+     * Returns the value of the register flag
+     *
+     * @return true denoting the file needs be registered into the replica
+     *              catalog.
+     *         false denoting that file does not need to be registered.
+     */
+    public boolean getRegisterFlag(){
+        return !mFlags.get(TRANSIENT_REGISTRATION_FLAG);
+    }
+
+    
+    /**
      * Returns the transient registration flag (the value of dontRegister).
      *
      * @return true denoting the file need not be registered into the replica

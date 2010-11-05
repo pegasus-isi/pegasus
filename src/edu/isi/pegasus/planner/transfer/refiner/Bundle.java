@@ -472,7 +472,7 @@ public class Bundle extends Default {
             if (!ft.getTransientTransferFlag()) {
                 txFiles.add(ft);
             }
-            if (!ft.getTransientRegFlag()) {
+            if ( mCreateRegistrationJobs && ft.getRegisterFlag() ) {
                 regFiles.add(ft);
             }
         }

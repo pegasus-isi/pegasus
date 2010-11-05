@@ -58,7 +58,7 @@ public class PegasusProperties {
 
     public static final String DEFAULT_RLS_EXIT_MODE = "error";
 
-    public static final String DEFAULT_REPLICA_MODE = "rls";
+    //public static final String DEFAULT_REPLICA_MODE = "rls";
 
     public static final String DEFAULT_RLS_QUERY_ATTRIB = "false";
 
@@ -772,12 +772,10 @@ public class PegasusProperties {
      *
      * @return the replica mode, that is used to load the appropriate
      *         implementing class if property is specified,
-     *         else the DEFAULT_REPLICA_MODE
-     *
-     * @see #DEFAULT_REPLICA_MODE
+     *         else null
      */
     public String getReplicaMode() {
-        return mProps.getProperty( "pegasus.catalog.replica", DEFAULT_REPLICA_MODE);
+        return mProps.getProperty( "pegasus.catalog.replica" );
     }
 
     /**

@@ -20,18 +20,14 @@ package edu.isi.pegasus.planner.transfer.refiner;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.NameValue;
 
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.refiner.ReplicaCatalogBridge;
 
 import edu.isi.pegasus.planner.transfer.MultipleFTPerXFERJobRefiner;
 
-import edu.isi.pegasus.planner.provenance.pasoa.XMLProducer;
-import edu.isi.pegasus.planner.provenance.pasoa.producer.XMLProducerFactory;
 
 import edu.isi.pegasus.planner.provenance.pasoa.PPS;
 import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
@@ -89,6 +85,11 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * The handle to the provenance store implementation.
      */
     protected PPS mPPS;
+    
+    /**
+     * Boolean indicating whether to create registration jobs or not.
+     */
+    protected Boolean mCreateRegistrationJobs;
 
     /**
      * The overloaded constructor.
@@ -102,7 +103,13 @@ public class Default extends MultipleFTPerXFERJobRefiner {
         super( dag, bag );
         mLogMsg = null;
         mFileTable = new TreeMap();
-
+        
+        mCreateRegistrationJobs = ( mProps.getReplicaMode() != null );
+        if( !mCreateRegistrationJobs ){
+            mLogger.log( "No Replica Registration Jobs will be created as Replica Catalog not configured.",
+                          LogManager.CONFIG_MESSAGE_LEVEL );
+        }
+        
         //load the PPS implementation
         mPPS = PPSFactory.loadPPS( this.mProps );
 
@@ -515,7 +522,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             if (!ft.getTransientTransferFlag()) {
                 txFiles.add(ft);
             }
-            if (!ft.getTransientRegFlag()) {
+            if ( mCreateRegistrationJobs && ft.getRegisterFlag() ) {
                 regFiles.add(ft);
             }
         }
