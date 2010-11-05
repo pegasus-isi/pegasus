@@ -50,9 +50,9 @@ class Parser:
         self._parsing_machine = False
         self._parsing_cwd = False
         self._arguments = ""
+        self._cwd = ""
         self._keys = {}
         self._ks_elements = {}
-        self._cwd = ""
         self._fh = None
         self._open_error = False
 
@@ -242,7 +242,14 @@ class Parser:
 	"""
 	Parses the xml record in buffer, returning the desired keys.
 	"""
-	self._keys = {}
+        # Initialize variables
+        self._parsing_arguments = False
+        self._parsing_main_job = False
+        self._parsing_machine = False
+        self._parsing_cwd = False
+        self._arguments = ""
+        self._cwd = ""
+        self._keys = {}
 
 	# Check if we have an invocation record
 	if self.is_invocation_record(buffer) == False:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Small daemon process to update the job state file from DAGMan logs.
+Logging daemon process to update the jobstate.log file from DAGMan logs.
 This program is to be run automatically by the pegasus-run command.
 
 Usage: pegasus-monitord [options] dagoutfile
@@ -79,33 +79,8 @@ DECREASE_LOG_LEVELS = {logging.DEBUG: logging.INFO,
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
 
-# Figure out where our lib/Python directory is located, and put that in our module search path
-if "PEGASUS_HOME" in os.environ:
-    lib_path = os.path.join(os.environ["PEGASUS_HOME"], "lib/python")
-    # Check if this is a directory
-    if os.path.isdir(lib_path):
-        # Insert this directory in our search path
-        os.sys.path.insert(0, lib_path)
-    else:
-        # Something is wrong!
-        logger.critical("PEGASUS_HOME appears to be set incorrectly... exiting!")
-        sys.exit(1)
-else:
-    # PEGASUS_HOME is not set, let's try to figure out where it is
-    pegasus_home = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]), ".."))
-    os.environ["PEGASUS_HOME"] = pegasus_home
-    lib_path = os.path.join(pegasus_home, "lib/python")
-
-    # Check if this is a directory
-    if os.path.isdir(lib_path):
-        # Insert this directory in our search path
-        os.sys.path.insert(0, lib_path)
-    else:
-        # Cannot figure out what to do!
-        logger.critical("cannot find Pegasus's Python library directory... exiting!")
-        sys.exit(1)
-
 # Import our modules
+import common	       		# Takes care of setting up PEGASUS_HOME and PYTHONPATH
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.tools import kickstart_parser
@@ -172,29 +147,12 @@ re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 # Constants
 debug_level = logging.WARNING	# For now
 logbase = "monitord.log" 	# Basename of daemon logfile
-brainkeys = {}
-brainkeys["required"] = ["basedir", "vogroup", "label", "rundir"]
-brainkeys["optional"] = ["dax", "dag", "jsd", "run", "pegasushome"]
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
-speak = "TSSP/1.0"
+speak = "PMD/1.0"
 PRESCRIPT_TASK_ID = -1			# id for prescript tasks
 POSTSCRIPT_TASK_ID = -2			# id for postscript tasks
 MONITORD_STATE_FILE = "monitord.info" 	# filename for writing monitord state information
 MAX_SLEEP_TIME = 10			# in seconds
-
-# Events that constitute a pending job. Note that event SUBMIT is
-# excluded on purpose since due to throttling inside DAGMan and
-# Condor-G, a locally SUBMITted job may only become remotely
-# GLOBUS_SUBMITted as throttles permits
-pending_job_events = {"GLOBUS_SUBMIT": 1,
-		      "GRID_SUBMIT": 1}
-
-# Events that constitute a running job
-running_job_events = {"EXECUTE": 1,
-		      "GLOBUS_RESOURCE_DOWN": 1,
-		      "GLOBUS_RESOURCE_UP": 1,
-		      "JOB_SUSPENDED": 1,
-		      "JOB_UNSUSPENDED": 1}
 
 unsubmitted_events = {"UN_READY": 1,
 		      "PRE_SCRIPT_STARTED": 1,
@@ -203,18 +161,14 @@ unsubmitted_events = {"UN_READY": 1,
 
 # Global variables
 wfs = []			# list of workflow entries monitord is tracking
-wf = None			# instance of workflow class
+follow_subworkflows = True	# Flag for tracking sub-workflows
 replay_mode = 0			# disable checking if DAGMan's pid is gone
 use_db = 1			# flag for using the database
-single_db = 0			# flag for using a single db at the top level workflow
 output_db = None		# connection string for the database
 db_stats = 'no'			# collect and print database stats at the end of execution
 use_nllog = 0			# flag for using Netlogger's log api
 use_nllogfile = 0		# flag for using a file to log Netlogger events
 nllog_string = None		# Filename or host:port when using Netlogger's log api
-jobstate = {}			# jid --> [stamp, event, condor_id, wtime, site]
-siteinfo = {}			# site --> { [RPSF] --> [ #, mtime] }
-waiting = {}			# site --> stamp/60 --> [ #P->R, sum(ptime)]
 monitord_exit_code = 0		# Exit code for pegasus-monitord
 
 # Revision handling
@@ -264,6 +218,7 @@ def translate_job_type(my_jobtype_id):
     """
     This function translates an integer jobtype into its more
     user-friendly string representation that can be used in databases.
+    It returns None, if the mapping cannot be done.
     """
     try:
 	my_jt = int(my_jobtype_id)
@@ -303,9 +258,6 @@ class Job:
     # Some will be initialized in the init method, others will
     # get their values from the kickstart output file when a job
     # finished
-#    _wf_uuid = None
-#    _job_submit_seq = None
-#    _name = None
 
     def __init__(self, wf_uuid, name, job_submit_seq):
 	"""
@@ -852,7 +804,7 @@ class Workflow:
 	"""
 	This function initializes the workflow object. It looks
         for the workflow configuration file (or for workflow_config_file,
-        if specified). Keys in wfparams override values in the configuration
+        if specified). Keys in extra_params override values in the configuration
         file. Here we also open the jobstate.log file, and parse the dag.
 	"""
 	# Initialize class variables
@@ -865,7 +817,8 @@ class Workflow:
         self._dax_label = None
         self._timestamp = None
         self._submit_hostname = None
-        self._submit_dir = None
+        self._submit_dir = None			# submit dir from braindump file (run dir, if submit_dir key is not found)
+        self._original_submit_dir = None	# submit dir from braindump file (jsd dir, if submit_dir key is not found)
         self._planner_arguments = None
         self._user = None
         self._grid_dn = None
@@ -892,10 +845,6 @@ class Workflow:
         self._monitord_exit_code = 0		# Keep track of errors inside monitord
         self._condorlog = None			# Condor common logfile
         self._multiline_file_flag = False	# Track multiline user log files, DAGMan > 6.6
-        self._pending = {} 			# remember when GLOBUS_SUBMIT was entered
-        					# jid --> [stamp, condor_id, wtime, site]
-        self._running = {}			# ditto for EXECUTE for hidden starvation
-					        # jid --> [stamp, condor_id, wtime, site]
         self._walltime = {}			# jid --> walltime
         self._job_site = {}			# last site a job was planned for
 
@@ -992,10 +941,14 @@ class Workflow:
             self._timestamp = int(time.time())
         if "submit_dir" in wfparams:
             self._submit_dir = wfparams["submit_dir"]
+            self._original_submit_dir = os.path.normpath(wfparams["submit_dir"])
         else:
             # Use "run" if "submit_dir" not found
             if "run" in wfparams:
                 self._submit_dir = wfparams["run"]
+            # Use "jsd" if "submit_dir" is not found
+            if "jsd" in wfparams:
+                self._original_submit_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
         if "planner_version" in wfparams:
             self._planner_version = wfparams["planner_version"]
         else:
@@ -1247,6 +1200,9 @@ class Workflow:
             else:
                 # Not in the invocation record, let's use our own time keeping
                 my_start = my_job._main_job_start
+                if my_start is None:
+                    # This must be a zero duration job (without an ULOG_EXECUTE), just use the end time
+                    my_start = my_job._main_job_done
             if my_start is not None:
                 kwargs["start_time"] = my_start
 	    if "duration" in invocation_record:
@@ -1260,6 +1216,10 @@ class Workflow:
                         my_duration = None
                     if my_duration is not None:
                         kwargs["duration"] = my_duration
+                elif my_job._main_job_done is not None:
+                    # This must be a zero duration job (without an ULOG_EXECUTE)
+                    # In this case, duration should be set to ZERO
+                    kwargs["duration"] = 0
 	    if my_start is not None and "duration" in invocation_record:
 		# Calculate timestamp for when this task finished
 		try:
@@ -1599,32 +1559,37 @@ class Workflow:
         # First we take care of SUBDAG jobs
         if self._job_info[jobid][5] == True:
             # This is a SUBDAG job, return new dagman.out
-            return (self._job_info[jobid][6] + ".dagman.out")
+            my_dagman_out = self._job_info[jobid][6] + ".dagman.out"
+        else:
+            # Now check if this is a pegasus-plan or a subdax_ job
 
-        # Now check if this is a pegasus-plan job
+            # First, look for a jobid
+            my_job_submit_seq = self.find_jobid(jobid)
 
-	# First, look for a jobid
-	my_job_submit_seq = self.find_jobid(jobid)
+            # No such job, return None
+            if my_job_submit_seq is None:
+                return None
 
-	# No such job, return None
-	if my_job_submit_seq is None:
-	    return None
+            # Make sure the job is there
+            if not (jobid, my_job_submit_seq) in self._jobs:
+                logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+                return None
 
-	# Make sure the job is there
-	if not (jobid, my_job_submit_seq) in self._jobs:
-	    logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
-	    return None
-
-	my_job = self._jobs[jobid, my_job_submit_seq]
+            my_job = self._jobs[jobid, my_job_submit_seq]
+            my_dagman_out = my_job._job_dagman_out
+            if my_dagman_out is None:
+                return None
 
         # Got it!
-
-        # Hack to work on LIGO
-        #if my_job._job_dagman_out is not None:
-        #    pos = my_job._job_dagman_out.find("/./")
-        #    if pos > 0:
-        #        return my_job._job_dagman_out[(pos+3):]
-        return my_job._job_dagman_out
+        my_dagman_out = os.path.normpath(my_dagman_out)
+        if my_dagman_out.find(self._original_submit_dir) >= 0:
+            # Path to new dagman.out file includes original submit_dir, let's try to change it
+            new_dagman_out = os.path.normpath(my_dagman_out.replace((self._original_submit_dir + os.sep), '', 1))
+            # Join with current run directory
+            new_dagman_out = os.path.join(self._run_dir, new_dagman_out)
+            return new_dagman_out
+            
+        return my_dagman_out
 
 # Workflow Entry Class
 class WorkflowEntry:
@@ -1655,7 +1620,7 @@ jsd = None				# location of jobstate.log file
 nodaemon = 0				# foreground mode
 logfile = None				# location of monitord.log file
 millisleep = None			# emulated run mode delay
-config = {}				# braindump database (textual file)
+config = {}				# command-line configuration key-value pairs
 adjustment = 0				# time zone adjustment (@#~! Condor)
 
 # Parse command line options
@@ -1684,11 +1649,10 @@ parser.add_option("-l", "--log", action = "store", type = "string", dest = "logf
 		  help = "alternative %s log file, default is %s in the workflow's directory"
 		  % (prog_base, logbase))
 parser.add_option("-C", "--config", action = "append", type = "string", dest = "config_opts",
-		  help = "k=v defines configurations instead of reading from braindump.txt. Required keys include %s. Suggested keys include %s"
-		  % (brainkeys["required"], brainkeys["optional"]))
-#parser.add_option("-D", "--database", action = "store_const", const = 1, dest = "use_db",
-#		  help = "turn on database entries for work DB (this is the default mode and overrides the broker option below)")
-parser.add_option("--nodatabase", action = "store_const", const = 0, dest = "use_db",
+		  help = "k=v defines configurations that override values read from the braindump.txt file.")
+parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
+		  help = "disable pegasus-monitord the automatic recursive following of sub-workflows as they are found")
+parser.add_option("--no-database", action = "store_const", const = 0, dest = "use_db",
 		  help = "turn off logging information to the database (this option must be given when using the NL api's option's below)")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
@@ -1696,8 +1660,6 @@ parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "r
 		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
 parser.add_option("-o", "--output-db", action = "store", type = "string", dest = "output_db",
 		  help = "name of the database file to use, default is workflow basename in the submit directory (this should contain the complete connection string to the database, for example to use SQLite, it should be sqlite:///<path_to_file>)")
-parser.add_option("-s", "--single-db", action = "store_const", const = 1, dest = "single_db",
-		  help = "use a single db at the top level workflow")
 parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "db_stats",
                   help = "collect and print database stats at the end")
 parser.add_option("-f", "--output-file", action = "store", type = "string", dest = "file_string",
@@ -1738,10 +1700,10 @@ if options.replay_mode is not None:
     replay_mode = options.replay_mode
     # Replay mode always runs in foreground
     nodaemon = 1
+if options.disable_subworkflows is not None:
+    follow_subworkflows = False
 if options.output_db is not None:
     output_db = options.output_db
-if options.single_db is not None:
-    single_db = options.single_db
 if options.db_stats is not None:
     db_stats = options.db_stats
 if options.file_string is not None or options.host_string is not None:
@@ -1841,30 +1803,6 @@ def systell(fh):
     # returns: current file position
     os.lseek(fh, 0, os.SEEK_CUR)
 
-def aggregate(site, stamp, pending):
-    # purpose: aggregates pending information into raster intervals
-    # paramtr: site(IN): run site
-    # paramtr: stamp(IN): current timestamp
-    # paramtr: pending(IN): pending record
-
-    my_slot = int(stamp / 60)
-    my_diff = abs(stamp - pending[0])
-
-    # FIXME: Insert clean-up code here to remove any but last four slots
-
-    # Check if keys are in dictionary
-    if not site in waiting:
-	waiting[site] = {}
-    if not my_slot in waiting[site]:
-	waiting[site][my_slot] = [0, 0]
-
-    # Aggregate information
-    waiting[site][my_slot][0] = waiting[site][my_slot][0] + 1
-    waiting[site][my_slot][1] = waiting[site][my_slot][1] + my_diff
-
-    my_n = waiting[site][my_slot][0]
-    logger.debug("%s:%s %s / %d = %.3f" % (site, my_slot, my_diff, my_n, my_diff / my_n))
-
 def add(wf, jobid, event, condor_id=None, status=None):
     # purpose: append atomically a line to the jobstate file
     # paramtr: wf(IN): workflow object for this operation
@@ -1942,82 +1880,6 @@ def add(wf, jobid, event, condor_id=None, status=None):
 
     # Make sure job has the updated state
     wf.update_job_state(jobid, my_job_submit_seq, event, status, my_time)
-    jobstate[jobid] = [wf._current_timestamp, event, condor_id, my_time, my_site]
-
-    # Remember when we changed into a pending state
-    if event in pending_job_events:
-	if not jobid in wf._pending:
-	    # Remember when -- and which Condor ID
-	    wf._pending[jobid] = [wf._current_timestamp, condor_id, my_time, my_site]
-	else:
-            logger.info("%s remains a pending event for %s" % (event, jobid))
-    else:
-	# Remember time spent in pending, if previous state was pending
-	if jobid in jobstate:
-	    if jobstate[jobid][1] in pending_job_events and jobid in wf._pending:
-		aggregate(my_site, wf_current_timestamp, wf._pending[jobid])
-
-	# Remove when transitioning into any other state
-	if jobid in wf._pending:
-	    del wf._pending[jobid]
-
-    # Remember when we changed into a running state
-    if event in running_job_events:
-	if not jobid in wf._running:
-	    # Remember when -- and which Condor ID
-	    wf._running[jobid] = [wf._current_timestamp, condor_id, my_time, my_site]
-	else:
-            logger.info("%s remains a running event for %s" % (event, jobid))
-    else:
-	# Remove when transitioning into any other state
-	if jobid in wf._running:
-	    del wf._running[jobid]
-
-    # NEW: maintain site statistics
-    if my_site is not None:
-	if event in pending_job_events:
-	    my_state = 'P'
-	elif event in running_job_events:
-	    my_state = 'R'
-	elif event == "POST_SCRIPT_SUCCESS":
-	    my_state = 'S'
-	elif event == "POST_SCRIPT_FAILURE":
-	    my_state = 'F'
-	else:
-	    my_state = 'O'
-    else:
-	my_state = None
-
-    if my_site in siteinfo and jobid in siteinfo[my_site]:
-	my_old = siteinfo[my_site][jobid]
-	if my_old != my_state:
-	    # Job changed state
-	    if my_old != 'S' and my_old != 'F':
-		# Gauge
-		if my_old in siteinfo[my_site]:
-		    siteinfo[my_site][my_old] = siteinfo[my_site][my_old] - 1
-		else:
-		    # Should not have to do this!
-		    siteinfo[my_site][my_old] = 0
-	    if my_state in siteinfo[my_site]:
-		siteinfo[my_site][my_state] = siteinfo[my_site][my_state] + 1
-	    else:
-		siteinfo[my_site][my_state] = 1
-    else:
-	if my_site is not None:
-	    if not my_site in siteinfo:
-		# First add first-level dictionary
-		siteinfo[my_site] = {}
-	    # Add new state
-	    siteinfo[my_site][my_state] = 1
-
-    if my_site is not None:
-	if my_state == 'S':
-	    siteinfo[my_site]["mtime_succ"] = wf._current_timestamp
-	if my_state == 'F':
-	    siteinfo[my_site]["mtime_fail"] = wf._current_timestamp
-	siteinfo[my_site][jobid] = my_state
-	siteinfo[my_site]["mtime"] = wf._current_timestamp
 
     return
 
@@ -2074,7 +1936,7 @@ def process(wf, log_line):
             my_jobid = my_expr.group(2)
             my_condor_id = my_expr.group(3)
 	    add(wf, my_jobid, my_event, condor_id=my_condor_id)
-            if my_event == "SUBMIT":
+            if my_event == "SUBMIT" and follow_subworkflows == True:
                 # For SUBMIT ULOG events, check if this is a sub-workflow
                 my_new_dagman_out = wf.has_subworkflow(my_jobid)
                 # Ok, return result to main loop
@@ -2286,187 +2148,6 @@ def server_socket(low, hi, bind_addr="127.0.0.1"):
     # Return socket
     return my_socket
 
-def show_job(client_conn, jid, ref_array=None):
-    # purpose: print job information onto the given socket descriptor
-    # paramtr: client_conn(IN): socket connection to client
-    # paramtr: jid(IN): job id from jobstate
-    # paramtr: refarray(IN, OPT): array from jobstate
-    # globals: jobstate(IN): jobstate dictionary
-    # returns: None on error, 1 on success
-
-    # Get refarray from jobstate if not provided
-    if ref_array is None:
-	if jid in jobstate:
-	    ref_array = jobstate[jid]
-	else:
-	    return None
-
-    my_line = "%s %u %s %s %s %s\r\n" % (jid, 
-					 ref_array[0],
-					 ref_array[1],
-					 ref_array[2] or '-',
-					 ref_array[3] or '-',
-					 ref_array[4] or '-')
-
-    return sendmsg(client_conn, my_line)
-
-def service_request_job(client_conn, job=None):
-    # purpose: service a request for a job status
-    # paramtr: client_conn(IN): socket connection to client
-    # paramtr: job(IN, OPT): Either an asterix "*" for all (default), or a specific job
-    # returns: number of entries written
-
-    my_count = 0
-
-    if (job is None) or job == '*':
-	# All jobs, this is an optimization over regexp match below
-	for my_key in jobstate:
-	    if show_job(client_conn, my_key, jobstate[my_key]) is None:
-		break
-	    my_count = my_count + 1
-    elif job in jobstate:
-	# Looking for a specific job
-	if show_job(client_conn, job, jobstate[job]) is not None:
-	    my_count = my_count + 1
-    else:
-	# Treat job as a regular expression
-	for my_key in jobstate:
-	    if re.search(job, my_key):
-		# Match!
-		if show_job(client_conn, my_key, jobstate[my_key]) is None:
-		    break
-		my_count = my_count + 1
-
-    return my_count
-
-def show_site(client_conn, site, site_values=None):
-    # purpose: print site information onto the given socket descriptor
-    # paramtr: client_conn(IN): socket connection to client
-    # paramtr: site(IN): site id from siteinfo
-    # paramtr: site_values(IN, OPT): array from siteinfo
-    # globals: siteinfo(IN): site dictionary
-    # globals: waiting(IN): history of P->R transitions
-    # returns: None on error, 1 on success
-
-    # Get site_values from jobstate if not provided
-    if site_values is None:
-	if site in siteinfo:
-	    site_values = siteinfo[site]
-	else:
-	    return None
-
-    if "mtime_fail" in site_values:
-	my_mtime_fail = utils.isodate(site_values["mtime_fail"], False, True)
-    else:
-	my_mtime_fail = "null"
-
-    if "mtime_succ" in site_values:
-	my_mtime_succ = utils.isodate(site_values["mtime_succ"], False, True)
-    else:
-	my_mtime_succ = "null"
-
-    if "P" in site_values:
-	my_state_p = int(site_values["P"])
-    else:
-	my_state_p = 0
-    if "R" in site_values:
-	my_state_r = int(site_values["R"])
-    else:
-	my_state_r = 0
-    if "O" in site_values:
-	my_state_o = int(site_values["O"])
-    else:
-	my_state_o = 0
-    if "S" in site_values:
-	my_state_s = int(site_values["S"])
-    else:
-	my_state_s = 0
-    if "F" in site_values:
-	my_state_f = int(site_values["F"])
-    else:
-	my_state_f = 0
-
-    my_line = "%-16s %-21s %4u %4u %4u %6u %6u %-20s %s\r\n" % (site,
-								utils.isodate(site_values["mtime"], False, True),
-								my_state_p,
-								my_state_r,
-								my_state_o,
-								my_state_s,
-								my_state_f,
-								my_mtime_succ,
-								my_mtime_fail)
-
-    # Check if we output to a file or to a socket
-    if type(client_conn).__name__ == "file":
-	# Write information to a file
-	client_conn.write(my_line)
-    else:
-	# Send information to client (type(client_conn).__name__ should be _socketobject)
-	if sendmsg(client_conn, my_line) is None:
-	    return None
-
-    # No need to proceed if nothing in waiting
-    if not site in waiting:
-	return 1
-
-    # Sort dictionary and create a list sorted by timestamp (reverse)
-    my_sorted_vals = sorted(waiting[site].items(), reverse=True)
-
-    # Sort dictionary by value (not key) and create a list, this is
-    # not what we want to do here, as it will create a list sorted by
-    # jobs
-    # my_sorted_vals = sorted(waiting[site].items(), key=operator.itemgetter(1))
-
-    for i in range(0, len(my_sorted_vals)):
-	my_val = my_sorted_vals[i]
-	if my_val[1][0] == 0:
-	    my_number = my_val[1][1]
-	else:
-	    my_number = my_val[1][1] / my_val[1][0]
-	my_line = "\t%-20s %lu %lu %.3f\r\n" % (utils.isodate(my_val[0] * 60, False, True),
-						my_val[1][0],
-						my_val[1][1],
-						my_number)
-	if type(client_conn).__name__ == "file":
-	    # Write to file
-	    client_conn.write(my_line)
-	else:
-	    # type(client_conn).__name__ should be _socketobject
-	    if sendmsg(client_conn, my_line) is None:
-		return None
-
-    # All done!
-    return 1
-
-def service_request_site(client_conn, site=None):
-    # purpose: service a request for a site status
-    # paramtr: client_conn(IN): socket connection to client, or file object to output to a file
-    # paramtr: site(IN, OPT): Either an asterix "*" for all (default), or a specific site
-    # returns: number of entries written
-
-    my_count = 0
-
-    if (site is None) or site == '*':
-	# All sites, this is an optimization over regexp match below
-	for my_key in siteinfo:
-	    if show_site(client_conn, my_key, siteinfo[my_key]) is None:
-		break
-	    my_count = my_count + 1
-    elif site in siteinfo:
-	# Looking for a specific site
-	if show_site(client_conn, site, siteinfo[site]) is not None:
-	    my_count = my_count + 1
-    else:
-	# Treat site as a regular expression
-	for my_key in siteinfo:
-	    if re.search(site, my_key):
-		# Match!
-		if show_site(client_conn, my_key, siteinfo[my_key]) is None:
-		    break
-		my_count = my_count + 1
-
-    return my_count
-
 def untaint(text):
     # purpose: do not trust anything we get from the internet
     # paramtr: text(IN): text to untaint
@@ -2479,8 +2160,17 @@ def untaint(text):
 
     return my_text
 
-jumptable = {'site': service_request_site,
-	     'job': service_request_job}
+def list_workflows(client_conn, param=""):
+    # purpose: lists the workflows currently being tracked
+    # globals: wfs(IN): array of workflows
+
+    for workflow_entry in wfs:
+        if workflow_entry.wf is not None:
+            my_wf = workflow_entry.wf
+            my_line = "%d - %s\r\n" % (my_wf._workflow_start, my_wf._wf_uuid)
+        sendmsg(client_conn, my_line)
+
+jumptable = {'list-wf': list_workflows}
 
 def service_request(server):
     # purpose: accept an incoming connection and service its request
@@ -2543,10 +2233,10 @@ def service_request(server):
 	return my_count
 
     # Read information we need
+    my_proto = my_args.pop(0).upper()
     my_method = my_args.pop(0)
-    my_proto = my_args.pop()
-    my_what = my_args.pop().lower()
-    
+    my_what = my_args.pop(0)
+
     if my_proto != speak:
 	# Illegal or unknown protocol
 	sendmsg(my_conn, "%s 400 Bad request\r\n" % (speak))
@@ -2557,12 +2247,9 @@ def service_request(server):
 	# Request item is not supported
 	sendmsg(my_conn, "%s 501 Not implemented\r\n" % (speak))
     else:
-	# OK
+	# OK, process the command
 	sendmsg(my_conn, "%s 200 OK\r\n" % (speak))
-	if len(my_args) > 0:
-	    my_count = jumptable[my_what](my_conn, str(my_args.pop(0)))
-	else:
-	    my_count = jumptable[my_what](my_conn)
+        my_count = jumptable[my_what](my_conn, " ".join(my_args).lower())
 
     try:
 	my_conn.close()
@@ -3010,15 +2697,6 @@ if not replay_mode:
 	# Just be silent
 	pass
 
-    # Dump siteinfo when we are done
-    try:
-	SI = open(os.path.join(run, "sitedump.txt"), 'w')
-    except:
-	logger.warning("could not create file %s" % (os.path.join(run, "sitedump.txt")))
-    else:
-	service_request_site(SI)
-	SI.close()
-    
 # Try to run the hurricane graphics
 if doplot:
     pass
