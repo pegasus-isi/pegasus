@@ -343,12 +343,24 @@ public class SUBDAXGenerator{
             else{
                 //the else look should not be there.
                 //construct path from base relative exec dir
-                File innerRelativeExecDir = new File( baseRelativeExecDir, options.getRelativeSubmitDirectory() );
+                File innerRelativeExecDir = null;
                 if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
+                    innerRelativeExecDir = new File( baseRelativeExecDir, options.getRelativeSubmitDirectory() );
                     //this is temporary till LIGO fixes it's dax
                     //and above property will go away.
                     //we dont want label in the exec dir
                     innerRelativeExecDir = innerRelativeExecDir.getParentFile();
+                }
+                else{
+                    //starting 3.0 onwards we dont want long paths
+                    //in execution directories for sub workflows
+                    //JIRA PM-260
+                    String innerRelative = options.getRelativeDirectory();
+                    innerRelative = ( innerRelative == null )?
+                                     //construct something on basis of label
+                                     label :
+                                     innerRelative;
+                    innerRelativeExecDir = new File( baseRelativeExecDir, innerRelative);
                 }
                 options.setRelativeDirectory(innerRelativeExecDir.getPath() );
             }
