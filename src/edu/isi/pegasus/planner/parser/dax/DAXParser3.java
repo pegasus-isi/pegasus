@@ -749,11 +749,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         }
                         else if( name.equals( "register") ){
                             Boolean bValue = Boolean.parseBoolean( value );
-                            if( bValue ){
-                                pf.setRegisterFlag( bValue );
-                            }else{
-                                pf.setRegisterFlag( !bValue );
-                            }
+                            pf.setRegisterFlag( bValue );
                         }
                         else if ( name.equals( "transfer" ) ) {
                             pf.setTransferFlag( value );
