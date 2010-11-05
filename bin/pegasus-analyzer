@@ -47,33 +47,30 @@ re_collapse_condor_subs = re.compile(r'\$\([^\)]*\)')
 
 class Job:
 
-    name = ""			# Job name
-    state = ""			# Job state
-    sub_file = ""	    	# Submit file for this job
-    out_file = ""		# Output file for this job
-    err_file = ""		# Error file for this job
-    cluster = ""		# Cluster id for this job (from Condor)
-    process = ""		# Process id for this job (from Condor)
-    sub_file_parsed = False 	# Flag to tell if we were able to parse this job's submit file
-    site = ""			# Site where the job ran
-    executable = ""		# Job's executable
-    arguments = ""		# Job's arguments
-    initial_dir = ""		# Job's initial dir (from submit file)
-    transfer_input_files = ""	# Files to transfer when debugging a job
-    is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
-    subdag_dir = ""		# Subdag directory from a SUBDAG job in the dag file
-    dag_path = ""		# Full path to the dag file from a SUBDAG job
-    dagman_out = ""		# dagman.out file for this job (only for clustered jobs)
-    pre_script = ""		# SCRIPT PRE line from the dag file
-    condor_subs = {}		# Lits of condor substitutions rom DAG VARS line
-
     def __init__(self, job_name, job_state=""):
 	"""
 	Initializes the Job class, setting job name,
 	and state, if provided
 	"""
-	self.name = job_name
-	self.state = job_state
+	self.name = job_name		# Job name
+	self.state = job_state		# Job state
+        self.sub_file = ""	    	# Submit file for this job
+        self.out_file = ""		# Output file for this job
+        self.err_file = ""		# Error file for this job
+        self.cluster = ""		# Cluster id for this job (from Condor)
+        self.process = ""		# Process id for this job (from Condor)
+        self.sub_file_parsed = False 	# Flag to tell if we were able to parse this job's submit file
+        self.site = ""			# Site where the job ran
+        self.executable = ""		# Job's executable
+        self.arguments = ""		# Job's arguments
+        self.initial_dir = ""		# Job's initial dir (from submit file)
+        self.transfer_input_files = ""	# Files to transfer when debugging a job
+        self.is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
+        self.subdag_dir = ""		# Subdag directory from a SUBDAG job in the dag file
+        self.dag_path = ""		# Full path to the dag file from a SUBDAG job
+        self.dagman_out = ""		# dagman.out file for this job (only for clustered jobs)
+        self.pre_script = ""		# SCRIPT PRE line from the dag file
+        self.condor_subs = {}		# Lits of condor substitutions rom DAG VARS line
 
     def set_state(self, new_state):
 	"""
@@ -233,7 +230,7 @@ def parse_submit_file(my_job):
 	my_job.sub_file_parsed = True
 
 	# Check if this job includes sub workflows
-	if my_job.name.startswith("pegasus-plan"):
+	if my_job.name.startswith("pegasus-plan") or my_job.name.startswith("subdax_"):
 	    has_sub_workflow = True
 	else:
 	    has_sub_workflow = False
@@ -804,7 +801,7 @@ parser.add_option("-i", "-d", "--dir", action = "store", type = "string", dest =
 		  help = "input directory where the jobstate.log file is located, default is the current directory")
 parser.add_option("-f", "--file", action = "store", type = "string", dest = "dag_filename",
 		  help = "full path to the dag file to use -- this option overrides the -d option")
-parser.add_option("-t", "--monitord", action = "store_const", const = 1, dest = "run_monitord",
+parser.add_option("-m", "-t", "--monitord", action = "store_const", const = 1, dest = "run_monitord",
 		  help = "run pegasus-monitord before analyzing the output")
 parser.add_option("-k", "--keep", action = "store_const", const = 1, dest = "keep_log",
 		  help = "keeps temporary jobstate.log file created by monitord in the /tmp directory")
