@@ -235,6 +235,8 @@ public class SUBDAXGenerator{
             Map metadata = getDAXMetadata( options.getDAX() );
             label = (String) metadata.get( "name" );
             index = (String) metadata.get( "index" );
+            //the label for directory purposes includes the logical id too
+            label = label + "_" + job.getLogicalID();
         }
         else{
             //try and construct on basis of basename prefix option
