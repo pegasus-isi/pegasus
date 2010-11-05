@@ -254,7 +254,9 @@ public class SUBDAXGenerator{
 
 
         //check if we want a label based submit directory for the sub workflow
-        if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
+       // if( mProps.labelBasedSubmitDirectoryForSubWorkflows()  ){
+        //From 3.0 onwards if a user does not specify a relative submit 
+        //we always create a label/job id based directory structure
             String relative = options.getRelativeSubmitDirectoryOption();
 
             relative = ( relative == null )?
@@ -262,7 +264,7 @@ public class SUBDAXGenerator{
                         new File( relative, label ).getPath();
 
             options.setRelativeSubmitDirectory( relative );
-        }
+        //}
         String submit = options.getSubmitDirectory();
 
         mLogger.log( "Submit directory in sub dax specified is " + submit,
