@@ -229,6 +229,7 @@ public class SUBDAXGenerator{
         String label = null;
         String index = null;
         File dax = new File( options.getDAX() );
+        String labelBasedDir = null;
         if( dax.exists() ){
             //retrieve the metadata in the subdax.
             //means the the dax needs to be generated beforehand.
@@ -236,7 +237,7 @@ public class SUBDAXGenerator{
             label = (String) metadata.get( "name" );
             index = (String) metadata.get( "index" );
             //the label for directory purposes includes the logical id too
-            label = label + "_" + job.getLogicalID();
+            labelBasedDir = label + "_" + job.getLogicalID();
         }
         else{
             //try and construct on basis of basename prefix option
@@ -249,6 +250,7 @@ public class SUBDAXGenerator{
             }
             label = options.getBasenamePrefix();
             index = "0";
+            labelBasedDir = label;
             mLogger.log( "DAX File for subworkflow does not exist. Set label value to the basename option passed ",
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
@@ -262,8 +264,8 @@ public class SUBDAXGenerator{
             String relative = options.getRelativeSubmitDirectoryOption();
 
             relative = ( relative == null )?
-                        label ://no relative-submit-dir option specified. set to label
-                        new File( relative, label ).getPath();
+                        labelBasedDir ://no relative-submit-dir option specified. set to label
+                        new File( relative, labelBasedDir ).getPath();
 
             options.setRelativeSubmitDirectory( relative );
         //}
@@ -358,7 +360,7 @@ public class SUBDAXGenerator{
                     String innerRelative = options.getRelativeDirectory();
                     innerRelative = ( innerRelative == null )?
                                      //construct something on basis of label
-                                     label :
+                                     labelBasedDir :
                                      innerRelative;
                     innerRelativeExecDir = new File( baseRelativeExecDir, innerRelative);
                 }
