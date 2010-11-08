@@ -599,13 +599,15 @@ def stats_summarize():
         return
 
     total_secs = stats_end - stats_start
-    bps = stats_total_bytes / total_secs
+    Bps = stats_total_bytes / total_secs
 
-    logger.info("Stats: %s transferred in %.0f seconds. Rate: %s/s" % (bytes_formatted(stats_total_bytes), total_secs, bytes_formatted(bps)))
+    logger.info("Stats: %s transferred in %.0f seconds. Rate: %sB/s (%sb/s)" % (
+                iso_prefix_formatted(stats_total_bytes), total_secs, 
+                iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
     logger.info("NOTE: stats do not include third party gsiftp transfers")
 
 
-def bytes_formatted(n):
+def iso_prefix_formatted(n):
     prefix = ""
     n = float(n)
     if n > (1024*1024*1024):
@@ -617,7 +619,7 @@ def bytes_formatted(n):
     elif n > (1024):
         prefix = "K"
         n = n / (1024)
-    return "%.1f %sB" % (n, prefix)
+    return "%.1f %s" % (n, prefix)
 
 
 def myexit(rc):
