@@ -23,6 +23,7 @@ EXTRA_INC =
 LFS_CFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 LFS_LDFLAGS =
 
+
 ifndef ${prefix}
 prefix = $(PEGASUS_HOME)
 endif
@@ -123,6 +124,11 @@ endif
 GENDOC = keg.html keg.txt keg.ps
 CONDOR_LD = $(CONDOR) $(LD)
 CONDOR_CXX = $(CONDOR) $(CXX)
+
+SVNVERSION = $(shell svnversion . 2>> /dev/null)
+ifneq (,${SVNVERSION})
+CXXFLAGS += -DHAS_SVNVERSION=\"${SVNVERSION}\"
+endif
 
 # add large file support
 ifneq (,${LFS_CFLAGS})

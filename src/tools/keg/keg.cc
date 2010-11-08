@@ -457,7 +457,13 @@ identify( char* result, size_t size, const char* arg0,
 	  line, ms+1, hours, minutes, start, that-start );
 
   // phase 1: Say hi
+#ifdef HAS_SVNVERSION
+  append( result, size, "Applicationname: %s [%s] @ %s\n", 
+	  arg0, HAS_SVNVERSION, hostname );
+#else
   append( result, size, "Applicationname: %s @ %s\n", arg0, hostname );
+#endif // HAS_SVNVERSION
+
   if ( getcwd( line, linsize ) == 0 ) strcpy( line, "(n.a.)" );
   append( result, size, "Current Workdir: %s\n", line );
 
