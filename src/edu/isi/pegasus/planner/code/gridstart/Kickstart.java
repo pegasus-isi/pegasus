@@ -1024,7 +1024,6 @@ public class Kickstart implements GridStart {
                      (String)job.condorVariables.removeKey("remote_initialdir"):
                      (String)job.condorVariables.removeKey("initialdir");
         */ 
-        System.out.println( job.condorVariables );
         String universe = (String) job.condorVariables.get( Condor.UNIVERSE_KEY );
         
         return ( universe.equals( Condor.STANDARD_UNIVERSE ) ||
