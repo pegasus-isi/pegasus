@@ -274,7 +274,7 @@ if ( $config{dag} ) {
 	# run pegasus-monitord to update job stats until DAGMan finishes
 	if(!$database){
 	    #@args=create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
-	    push(@tsdargs,'--nodatabase');
+	    push(@tsdargs,'--no-database');
 	    push(@tsdargs, $config{dag} . '.dagman.out' );
 	} else {
 	    #@args = create_args( $tsd, ,"-n", $config{dag} . '.dagman.out' );
