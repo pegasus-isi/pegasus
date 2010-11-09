@@ -57,6 +57,9 @@ import edu.isi.pegasus.planner.namespace.Globus;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.ENV;
 
+import edu.isi.pegasus.planner.partitioner.graph.Adapter;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import org.griphyn.vdl.euryale.VTorInUseException;
 
 import java.io.BufferedWriter;
@@ -375,9 +378,21 @@ public class CondorGenerator extends Abstract {
                                LoggingKeys.DAX_ID,
                                dag.getAbstractWorkflowID(),
                                LogManager.DEBUG_MESSAGE_LEVEL);
-        for(Iterator it = vSubInfo.iterator();it.hasNext();){
+        
+  
+        //convert the dax to a graph representation and walk it
+        //in a top down manner
+        Graph workflow = Adapter.convert( dag );
+        SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
+        subdaxGen.initialize( mBag, workflow, mDagWriter );
+                    
+        for( Iterator it = workflow.iterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            Job sinfo = (Job)node.getContent();
+                 
+//        for(Iterator it = vSubInfo.iterator();it.hasNext();){
             //get information about each job making the ADag
-            Job sinfo = (Job) it.next();
+//            Job sinfo = (Job) it.next();
 
             //write out the submit file for each job
             //in addition makes the corresponding
@@ -416,8 +431,7 @@ public class CondorGenerator extends Abstract {
             else{ //normal jobs and subdax jobs
                 
                 if( sinfo.typeRecursive() ){
-                    SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
-                    subdaxGen.initialize( mBag, mDagWriter );
+                    
                     sinfo = subdaxGen.generateCode( sinfo );
                 }
                 

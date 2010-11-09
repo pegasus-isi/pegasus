@@ -349,7 +349,7 @@ public class MainEngine
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append(adag.dagInfo.nameOfADag).append("_").
+            sb.append(adag.dagInfo.nameOfADag).append("-").
            append(adag.dagInfo.index);
         }
         //append the suffix

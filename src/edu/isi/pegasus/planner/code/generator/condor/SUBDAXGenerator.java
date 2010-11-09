@@ -41,6 +41,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 
+import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
@@ -48,6 +49,8 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.pdax.PDAX2MDAG;
 
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -60,9 +63,12 @@ import java.io.PrintWriter;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Map;
+import java.util.Set;
 /**
  * The class that takes in a dax job specified in the DAX and renders it into
  * a SUBDAG with pegasus-plan as the appropriate prescript.
@@ -76,6 +82,12 @@ public class SUBDAXGenerator{
      * Whether to generate the SUBDAG keyword or not.
      */
     public static final boolean GENERATE_SUBDAG_KEYWORD = false;
+    
+    /**
+     * Suffix to be applied for cache file generation.
+     */
+    private static final String CACHE_FILE_SUFFIX = ".cache";
+            
     
     /**
      * The logical name with which to query the transformation catalog for
@@ -163,6 +175,14 @@ public class SUBDAXGenerator{
      */
     private String mDAGManKnobs;
 
+    /**
+     * Maps a sub dax job id to it's submit directory. The population relies
+     * on top down traversal during Code Generation.
+     */
+    private Map<String,String>mDAXJobIDToSubmitDirectoryCacheFile;
+    
+    private Graph mWorkflow;
+    
     
     /**
      * The default constructor.
@@ -178,16 +198,20 @@ public class SUBDAXGenerator{
      * Initializes the class.
      *
      * @param bag  the bag of objects required for initialization
+     * @param workflow  the dag for which code is being generated
+     * @param dagWriter  handle to the dag writer
      */
-    public void initialize( PegasusBag bag, PrintWriter dagWriter ){
+    public void initialize( PegasusBag bag, Graph workflow, PrintWriter dagWriter ){
         mBag = bag;
+        mWorkflow = workflow;
         mDAGWriter = dagWriter;
         mProps  = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mTCHandle = bag.getHandleToTransformationCatalog();
         this.mPegasusPlanOptions  = bag.getPlannerOptions();
         mCleanupScope = mProps.getCleanupScope();
-
+        mDAXJobIDToSubmitDirectoryCacheFile = new HashMap();
+                
         mUser = mProps.getProperty( "user.name" ) ;
         if ( mUser == null ){ mUser = "user"; }
 
@@ -219,6 +243,9 @@ public class SUBDAXGenerator{
     public Job generateCode( Job job ){
         String arguments = job.getArguments();
         String [] args = arguments.split( " " );
+        
+        mLogger.log( "Generating code for DAX job  " + job.getID(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         mLogger.log( "Arguments passed to SUBDAX Generator are " + arguments,
                      LogManager.DEBUG_MESSAGE_LEVEL );
         
@@ -306,6 +333,16 @@ public class SUBDAXGenerator{
                          LogManager.DEBUG_MESSAGE_LEVEL );
             options.getExecutionSites().addAll( mPegasusPlanOptions.getExecutionSites() );
         }
+        
+        //add the parents generated transient rc to the cache files
+        //arguments for the sub workflow
+        Set cacheFiles = options.getCacheFiles();
+        Set parentsTransientRCs = getParentsTransientRC( job );
+        if ( !parentsTransientRCs.isEmpty() ){
+            mLogger.log( "Parent DAX Jobs Transient RC's are " + parentsTransientRCs,
+                         LogManager.DEBUG_MESSAGE_LEVEL  );
+            cacheFiles.addAll( parentsTransientRCs  );
+        }
 
         //do some sanitization of the path to the dax file.
         //if it is a relative path, then ???
@@ -333,7 +370,8 @@ public class SUBDAXGenerator{
 
         options.setSubmitDirectory( baseDir, relativeDir  );
         mLogger.log( "Submit Directory for SUB DAX  is " + options.getSubmitDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
-
+        
+     
          
         if( options.getRelativeDirectory() == null || !options.getRelativeDirectory().startsWith( File.separator ) ){
             //then set the relative directory relative to the parent workflow relative dir
@@ -428,6 +466,11 @@ public class SUBDAXGenerator{
             
             mLogger.log( "Basename prefix for the sub workflow is " + basenamePrefix,
                          LogManager.DEBUG_MESSAGE_LEVEL );
+            String subDAXCache = new File( options.getSubmitDirectory(),
+                                           basenamePrefix + CACHE_FILE_SUFFIX ).getAbsolutePath();
+            mLogger.log( "Cache File for the sub workflow is " + subDAXCache,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mDAXJobIDToSubmitDirectoryCacheFile.put( job.getID(), subDAXCache);
             
             Job dagJob = constructDAGJob( job,
                                     new File( mPegasusPlanOptions.getSubmitDirectory() ),
@@ -1231,7 +1274,29 @@ public class SUBDAXGenerator{
 
     }
 
-
+    /**
+     * Returns a set containing the paths to the parent dax jobs
+     * transient replica catalogs.
+     * 
+     * @param  job  the job 
+     * 
+     * @return  Set of paths
+     */
+    public Set<String> getParentsTransientRC( Job job ){
+        Set<String> s = new HashSet();
+        
+        //get the graph node corresponding to the jobs
+        GraphNode node = this.mWorkflow.getNode( job.getID() );
+        
+        for( GraphNode parent : node.getParents() ){
+            Job p = ( Job )parent.getContent();
+            if( p instanceof DAXJob ){
+                s.add( this.mDAXJobIDToSubmitDirectoryCacheFile.get( p.getID() ));
+            }
+        }
+        
+        return s;
+    }
 
 
 }

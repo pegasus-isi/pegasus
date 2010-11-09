@@ -190,7 +190,7 @@ public class GraphNode extends Data {
      *
      * @return list of <code>GraphNode</code> objects.
      */
-    public List getParents() {
+    public List<GraphNode> getParents() {
         return mParents;
     }
 
@@ -202,7 +202,7 @@ public class GraphNode extends Data {
      *
      * @return list of <code>GraphNode</code> objects.
      */
-    public List getChildren() {
+    public List<GraphNode> getChildren() {
         return mChildren;
     }
 
