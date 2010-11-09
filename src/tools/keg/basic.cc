@@ -12,27 +12,28 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
-#ifndef _PEGASUS_BASIC_HH
-#define _PEGASUS_BASIC_HH
+#include "basic.hh"
 
-inline unsigned long int kils( unsigned long long int x ) 
-{ return (x >> 10); }
+static const char* RCS_ID =
+  "$Id$";
 
-inline unsigned long int megs( unsigned long long int x ) 
-{ return (x >> 20); }
+#include <stdio.h>
+#include <string.h>
 
-inline unsigned long int gigs( unsigned long long int x )
-{ return (x >> 30); }
-
-inline unsigned long int ters( unsigned long long int x )
-{ return (x >> 40); }
-
-#include <sys/types.h>
-
-extern
 void
 smart_units( char* buffer, size_t capacity,
-	     unsigned long long int value ); 
-	     
-
-#endif // _PEGASUS_BASIC_HH
+	     unsigned long long int value )
+{
+  if ( value < 8192ull ) {
+    unsigned long t = (unsigned long) value; 
+    snprintf( buffer, capacity, "%5luB", t );
+  } else if ( value < 8388608ull ) {
+    snprintf( buffer, capacity, "%5lukB", kils(value) ); 
+  } else if ( value < 8589934592ull ) {
+    snprintf( buffer, capacity, "%5luMB", megs(value) ); 
+  } else if ( value < 8796093022208ul ) {
+    snprintf( buffer, capacity, "%5luGB", gigs(value) ); 
+  } else { 
+    snprintf( buffer, capacity, "%5luTB", ters(value) ); 
+  }
+}

@@ -49,20 +49,15 @@ pegasus_statfs( char* buffer, size_t capacity )
       struct statvfs vfs; 
       if ( mtab.vfs_special[0] == '/' && statvfs( mtab.vfs_mountp, &vfs ) != -1 ) {
 	if ( vfs.f_bsize > 0 && vfs.f_blocks > 0 ) { 
-	  char units = 'G'; 
+	  char total[16], avail[16]; 
 	  unsigned long long size = vfs.f_frsize;
-	  unsigned long total = gigs(size * vfs.f_blocks);
-	  unsigned long avail = gigs(size * vfs.f_bavail); 
-	  if ( total == 0 ) {
-	    units = 'M';
-	    total = megs(size * vfs.f_blocks);
-	    avail = megs(size * vfs.f_bavail); 
-	  }
+	  smart_units( total, sizeof(total), (size * vfs.f_blocks) );
+	  smart_units( avail, sizeof(avail), (size * vfs.f_bavail) );
 
 	  snprintf( line, sizeof(line),
-		    "Filesystem Info: %-24s %s %5lu%cB total, %5lu%cB avail\n",
+		    "Filesystem Info: %-24s %s %s total, %s avail\n",
 		    mtab.vfs_mountp, mtab.vfs_fstype,
-		    total, units, avail, units ); 
+		    total, avail ); 
 	  strncat( buffer, line, capacity );
 	}
       }

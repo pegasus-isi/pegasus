@@ -18,7 +18,7 @@ CONDOR	= condor_compile
 SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
 ## STATVFS = $(shell /bin/ls /usr/include/sys/statvfs.h 2>/dev/null)
 CONDOR_LOCATION = $(shell condor_config_val RELEASE_DIR)
-EXTRA_OBJ = 
+EXTRA_OBJ = basic.o
 EXTRA_INC = 
 LFS_CFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 LFS_LDFLAGS =
@@ -41,7 +41,7 @@ CXXFLAGS = -g -pipe -arch x86_64 -arch i686 -nostdinc \
 	-isystem${SDK}/usr/include -F${SDK}/System/Library/Frameworks
 LDFLAGS = -arch x86_64 -arch i686 -Wl,-syslibroot,${SDK}
 endif
-EXTRA_OBJ = darwin.o
+EXTRA_OBJ += darwin.o
 EXTRA_INC = darwin.hh
 CXXFLAGS += -DMACHINE_SPECIFIC=darwin
 endif
@@ -62,7 +62,7 @@ CXXFLAGS  = '-library=%none,Cstd,Crun' -dalign -ftrap=%none -fsimple -xlibmil $(
 LD       := $(CXX) $(EXTRACXXFLAGS)
 CXXFLAGS := -DSOLARIS $(CXXFLAGS) -xO4 -D__EXTENSIONS__=1
 CXXFLAGS += -DMACHINE_SPECIFIC=sunos
-EXTRA_OBJ = sunos.o sunos-swap.o
+EXTRA_OBJ += sunos.o sunos-swap.o
 EXTRA_INC = sunos.hh
 LOADLIBES_VANILLA = -lkstat -lnsl -lsocket
 LOADLIBES_CONDOR  = -lkstat -lnsl -lsocket
@@ -105,7 +105,7 @@ LOADLIBES_CONDOR  = -lstdc++
 LD	= gcc
 endif
 CXXFLAGS += -DMACHINE_SPECIFIC=linux
-EXTRA_OBJ = linux.o
+EXTRA_OBJ += linux.o
 EXTRA_INC = linux.hh
 LFS_CFLAGS = $(shell getconf LFS_CFLAGS 2>>/dev/null)
 LFS_LDFLAGS = $(shell getconf LFS_LDFLAGS 2>>/dev/null)
@@ -172,6 +172,7 @@ keg.condor: keg.condor.o $(EXTRA_OBJ)
 keg.condor.o: keg.cc $(EXTRA_INC)
 	$(CONDOR_CXX) $(CXXFLAGS) $< -c -o $@
 
+basic.o: basic.cc basic.hh
 darwin.o: darwin.cc darwin.hh basic.hh
 linux.o: linux.cc linux.hh basic.hh
 sunos.o: sunos.cc sunos.hh basic.hh

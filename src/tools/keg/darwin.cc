@@ -45,20 +45,15 @@ pegasus_statfs( char* buffer, size_t capacity )
     for ( i=0; i<n; ++i ) { 
       struct statfs* e = mtab + i; 
       if ( mtab[i].f_mntfromname[0] == '/' && mtab[i].f_blocks > 0 ) {
-	char units = 'G';
+	char total[16], avail[16]; 
 	unsigned long long size = mtab[i].f_bsize; 
-	unsigned long total = gigs(size * mtab[i].f_blocks); 
-	unsigned long avail = gigs(size * mtab[i].f_bavail); 
-	if ( total == 0 ) { 
-	  units = 'M'; 
-	  total = megs(size * mtab[i].f_blocks);
-	  avail = megs(size * mtab[i].f_bavail);
-	}
+	smart_units( total, sizeof(total), (size * mtab[i].f_blocks) );
+	smart_units( avail, sizeof(avail), (size * mtab[i].f_bavail) );
 
 	snprintf( line, sizeof(line),
-		  "Filesystem Info: %-24s %s %5lu%cB total, %5lu%cB avail\n",
+		  "Filesystem Info: %-24s %s %s total, %s avail\n",
 		  mtab[i].f_mntonname, mtab[i].f_fstypename, 
-		  total, units, avail, units ); 
+		  total, avail ); 
 	strncat( buffer, line, capacity );
       }
     }
