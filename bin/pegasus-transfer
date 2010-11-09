@@ -150,20 +150,21 @@ delay_exit_code = 0
 
 # this is the map of what tool to use for a given protocol pair (src, dest)
 tool_map = {}
-tool_map[('file'  , 'file'    )] = 'cp'
-tool_map[('file'  , 'gsiftp'  )] = 'gsiftp'
-tool_map[('file'  , 'scp'     )] = 'scp'
-tool_map[('file'  , 'srm'     )] = 'srm'
-tool_map[('file'  , 'symlink' )] = 'symlink'
-tool_map[('gsiftp', 'file'    )] = 'gsiftp'
-tool_map[('gsiftp', 'gsiftp'  )] = 'gsiftp'
-tool_map[('gsiftp', 'srm'     )] = 'srm'
-tool_map[('http'  , 'file'    )] = 'webget'
-tool_map[('http'  , 'gsiftp'  )] = 'gsiftp'
-tool_map[('https' , 'file'    )] = 'webget'
-tool_map[('scp'   , 'file'    )] = 'scp'
-tool_map[('srm'   , 'gsiftp'  )] = 'srm'
-tool_map[('srm'   , 'srm'     )] = 'srm'
+tool_map[('file'    , 'file'    )] = 'cp'
+tool_map[('file'    , 'gsiftp'  )] = 'gsiftp'
+tool_map[('file'    , 'scp'     )] = 'scp'
+tool_map[('file'    , 'srm'     )] = 'srm'
+tool_map[('file'    , 'symlink' )] = 'symlink'
+tool_map[('gsiftp'  , 'file'    )] = 'gsiftp'
+tool_map[('gsiftp'  , 'gsiftp'  )] = 'gsiftp'
+tool_map[('gsiftp'  , 'srm'     )] = 'srm'
+tool_map[('http'    , 'file'    )] = 'webget'
+tool_map[('http'    , 'gsiftp'  )] = 'gsiftp'
+tool_map[('https'   , 'file'    )] = 'webget'
+tool_map[('scp'     , 'file'    )] = 'scp'
+tool_map[('srm'     , 'gsiftp'  )] = 'srm'
+tool_map[('srm'     , 'srm'     )] = 'srm'
+tool_map[('symlink' , 'symlink' )] = 'symlink'
 
 tool_info = {}
 
