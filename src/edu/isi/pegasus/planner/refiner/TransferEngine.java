@@ -1120,11 +1120,14 @@ public class TransferEngine extends Engine {
             //symbolic linking
             boolean symLinkSelectedLocation;
             
+            
             if ( symLinkSelectedLocation = 
                     (mUseSymLinks && selLoc.getResourceHandle().equals( job.getSiteHandle() )) ) {
-                //create symbolic links instead of going through gridftp server
-                selLoc = replaceProtocolFromURL( selLoc );
+                
+                //resolve any srm url's that are specified
+                selLoc = replaceSRMProtocolFromURL( selLoc );
             }
+            
                                         
             //get the file to the job's execution pool
             //this is assuming that there are no directory paths
@@ -1146,7 +1149,8 @@ public class TransferEngine extends Engine {
                 if( symLinkSelectedLocation ){
                     //we use the file URL location to dest dir
                     //in case we are symlinking
-                    destPFN.append( fileDestDir );
+                    //destPFN.append( fileDestDir );
+                    destPFN.append( this.replaceProtocolFromURL( destDir ) );
                 }
                 else{
                     //we use whatever destDir was set to earlier
@@ -1249,23 +1253,18 @@ public class TransferEngine extends Engine {
     }
 
     /**
-     * Replaces the gsiftp URL scheme from the url, and replaces it with the
-     * file url scheme and returns in a new object. The original object
-     * passed as a parameter still remains the same.
+     * Replaces the SRM URL scheme from the url, and replaces it with the
+     * file url scheme and returns in a new object if replacement happens.
+     * The original object passed as a parameter still remains the same.
      *
      * @param rce  the <code>ReplicaCatalogEntry</code> object whose url need to be
      *             replaced.
      *
      * @return  the object with the url replaced.
      */
-    protected ReplicaCatalogEntry replaceProtocolFromURL( ReplicaCatalogEntry rce ) {
+    protected ReplicaCatalogEntry replaceSRMProtocolFromURL( ReplicaCatalogEntry rce ) {
         String pfn = rce.getPFN();
         
-        //if the pfn starts with a file url we 
-        //dont need to replace . a sanity check
-        /*if( pfn.startsWith( FILE_URL_SCHEME ) ){
-            return rce;
-        }*/
         
         /* special handling for SRM urls */
         StringBuffer newPFN = new StringBuffer();
@@ -1278,30 +1277,48 @@ public class TransferEngine extends Engine {
                 newPFN.append( FILE_URL_SCHEME ).append( "//" );
                 newPFN.append( nv.getValue() );
                 newPFN.append( pfn.substring( urlPrefix.length(), pfn.length() ));
-                
             }
         }
-        
-        if( newPFN.length() == 0 ){
-            //we have to the manual replacement 
-            String hostName = Utility.getHostName( pfn );
-
-            newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).append( "//" );
-       
-            //we want to skip out the hostname
-            newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
+        else{
+            //there is no replacement to do
+            //return the original object
+            return rce;
         }
-
+        
         //we do not need a full clone, just the PFN
         ReplicaCatalogEntry result = new ReplicaCatalogEntry( newPFN.toString(),
                                                               rce.getResourceHandle() );
-        String key;
+        
         for( Iterator it = rce.getAttributeIterator(); it.hasNext();){
-            key = (String)it.next();
+            String key = (String)it.next();
             result.addAttribute( key, rce.getAttribute( key ) );
         }
 
         return result;
+    }
+    
+    /**
+     * Replaces the gsiftp URL scheme from the url, and replaces it with the
+     * symlink url scheme and returns in a new object. The original object
+     * passed as a parameter still remains the same.
+     *
+     * @param pfn  the pfn that needs to be replaced
+     *
+     * @return  the replaced PFN
+     */
+    protected String replaceProtocolFromURL( String pfn ) {
+        /* special handling for SRM urls */
+        StringBuffer newPFN = new StringBuffer();
+                
+        //we have to the manual replacement 
+        String hostName = Utility.getHostName( pfn );
+
+        newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).append( "//" );
+       
+        //we want to skip out the hostname
+        newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
+                
+        return newPFN.toString();
     }
     
     /**
