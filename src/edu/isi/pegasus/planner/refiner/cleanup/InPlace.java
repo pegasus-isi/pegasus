@@ -146,7 +146,7 @@ public class InPlace implements CleanupStrategy{
         reset();
 
         //add the priorities to all the jobs
-        applyJobPriorities( workflow );
+        //applyJobPriorities( workflow );
 
 
         //determine the files that should not be removed from the resource where it is produced

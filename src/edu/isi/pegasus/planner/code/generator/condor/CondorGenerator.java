@@ -117,7 +117,31 @@ public class CondorGenerator extends Abstract {
      * The prefix for DAGMan specific properties
      */
     public static final String DAGMAN_PROPERTIES_PREFIX = "pegasus.dagman.";
-
+    
+    /**
+     * The default priority key associated with the stagein jobs.
+     */
+    public static final int DEFAULT_STAGE_IN_PRIORITY_KEY = 700;
+ 
+    /**
+     * The default priority key associated with the inter site transfer jobs.
+     */
+    public static final int DEFAULT_INTER_SITE_PRIORITY_KEY = 700;
+    
+    /**
+     * The default priority key associated with the create dir jobs.
+     */
+    public static final int DEFAULT_CREATE_DIR_PRIORITY_KEY = 800;
+    
+    /**
+     * The default priority key associated with the stage out jobs.
+     */
+    public static final int DEFAULT_STAGE_OUT_PRIORITY_KEY = 900;
+    
+    /**
+     * The default priority key associated with the cleanup jobs.
+     */
+    public static final int DEFAULT_CLEANUP_PRIORITY_KEY = 1000;
    
     /**
      * Handle to the Transformation Catalog.
@@ -388,33 +412,46 @@ public class CondorGenerator extends Abstract {
                     
         for( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
-            Job sinfo = (Job)node.getContent();
-                 
-//        for(Iterator it = vSubInfo.iterator();it.hasNext();){
-            //get information about each job making the ADag
-//            Job sinfo = (Job) it.next();
+            Job job = (Job)node.getContent();
+            
+            //only apply priority if job is not associated with a priority
+            //beforehand
+            if( !job.condorVariables.containsKey( Condor.PRIORITY_KEY ) ){
+                int priority = getJobPriority( job, node.getDepth() );
+                
+                //apply a priority to the job overwriting any preexisting priority
+                job.condorVariables.construct( Condor.PRIORITY_KEY,
+                                               new Integer(priority).toString() );
+                                               
+                //log to debug
+                StringBuffer sb = new StringBuffer();
+                sb.append( "Applying priority of " ).append( priority ).
+                        append( " to " ).append( job.getID() );
+                mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+            }
 
+                 
             //write out the submit file for each job
             //in addition makes the corresponding
             //entries in the .dag file corresponding
             //to the job and it's postscript
-            if ( sinfo.getSiteHandle().equals( "stork" ) ) {
+            if ( job.getSiteHandle().equals( "stork" ) ) {
                 //write the job information in the .dag file
                 StringBuffer dagString = new StringBuffer();
-                dagString.append( "DATA " ).append( sinfo.getName() ).append( " " );
-                dagString.append( sinfo.getName() ).append( ".stork" );
+                dagString.append( "DATA " ).append( job.getName() ).append( " " );
+                dagString.append( job.getName() ).append( ".stork" );
                 printDagString( dagString.toString() );
-                storkGenerator.generateCode( dag, sinfo );
+                storkGenerator.generateCode( dag, job  );
             }
             //for dag jobs we dont need to generate submit file
-            else if( sinfo instanceof DAGJob ){
+            else if( job instanceof DAGJob ){
                 //SUBDAG EXTERNAL  B  inner.dag
-                DAGJob djob = ( DAGJob )sinfo;
+                DAGJob djob = ( DAGJob )job;
                 
                 //djob.dagmanVariables.checkKeyInNS( Dagman.SUBDAG_EXTERNAL_KEY,
                 //                                  djob.getDAGFile() );
                 StringBuffer sb = new StringBuffer();
-                sb.append( Dagman.SUBDAG_EXTERNAL_KEY ).append( " " ).append( sinfo.getName() ).
+                sb.append( Dagman.SUBDAG_EXTERNAL_KEY ).append( " " ).append( job.getName() ).
                    append( " " ).append( djob.getDAGFile() );
                 
                 //check if dag needs to run in a specific directory
@@ -426,29 +463,30 @@ public class CondorGenerator extends Abstract {
                 
                 printDagString( sb.toString() );
             
-                printDagString( sinfo.dagmanVariables.toString( sinfo.getName()) );
+                printDagString( job.dagmanVariables.toString( job.getName()) );
             }
             else{ //normal jobs and subdax jobs
                 
-                if( sinfo.typeRecursive() ){
+                if( job.typeRecursive() ){
                     
-                    sinfo = subdaxGen.generateCode( sinfo );
+                    job = subdaxGen.generateCode( job  );
                 }
                 
-                if( sinfo != null ){
+                if( job != null ){
                     //the submit file for the job needs to be written out
                     //write out a condor submit file
-                    generateCode( dag, sinfo );
+                    generateCode( dag, job  );
                 }
                 
                 //write out all the dagman profile variables associated
                 //with the job to the .dag file.
-                printDagString( sinfo.dagmanVariables.toString( sinfo.getName()) );
+                printDagString( job.dagmanVariables.toString( job.getName()) );
 
             }
-
+            
+            
             mLogger.log("Written Submit file : " +
-                        getFileBaseName(sinfo), LogManager.DEBUG_MESSAGE_LEVEL);
+                        getFileBaseName(job), LogManager.DEBUG_MESSAGE_LEVEL);
         }
         mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -1411,7 +1449,7 @@ public class CondorGenerator extends Abstract {
      * various sources the following order is followed,property file, pool config
      * file and then dax.
      *
-     * @param sinfo  The Job object containing the information about the job.
+     * @param job  The Job object containing the information about the job.
      *
      *
      * @throws CodeGeneratorException
@@ -1492,7 +1530,7 @@ public class CondorGenerator extends Abstract {
         //transfer_executable key do some magic
 // No longer handled here. Handled in Kickstart.java
 // Karan Vahi January 16, 2008
-//        handleTransferOfExecutable(sinfo);
+//        handleTransferOfExecutable(job);
 
         //correctly quote the arguments according to
         //Condor Quoting Rules.
@@ -1502,7 +1540,7 @@ public class CondorGenerator extends Abstract {
                 mLogger.log("Unquoted arguments are " + args,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 //insert a comment for the old args
-                //sinfo.condorVariables.construct("#arguments",args);
+                //job.condorVariables.construct("#arguments",args);
                 args = CondorQuoteParser.quote(args, true);
                 sinfo.condorVariables.construct("arguments", args);
                 mLogger.log("Quoted arguments are " + args,
@@ -1546,7 +1584,7 @@ public class CondorGenerator extends Abstract {
      * local pool. This function changes the path of the executable to the one on
      * the local pool, so that it can be shipped.
      *
-     * @param sinfo the <code>Job</code> containing the job description.
+     * @param job the <code>Job</code> containing the job description.
      *
      * @throws CodeGeneratorException
      */
@@ -1650,7 +1688,7 @@ public class CondorGenerator extends Abstract {
      * transformation catalog, pool config file and then dax.
      * At present values are not picked from the properties file.
      *
-     * @param sinfo  The Job object containing the information about the job.
+     * @param job  The Job object containing the information about the job.
      */
     protected void handleEnvVarForJob(Job sinfo) {
 
@@ -1664,7 +1702,7 @@ public class CondorGenerator extends Abstract {
      * sources the following order is followed,property file, pool config file
      * and then dax.
      *
-     * @param sinfo  The Job object containing the information about the job.
+     * @param job  The Job object containing the information about the job.
      */
     protected void handleGlobusRSLForJob(Job sinfo) {
         Globus rsl = sinfo.globusRSL;
@@ -1675,8 +1713,8 @@ public class CondorGenerator extends Abstract {
         //Getting all the rsl parameters specified
         //in dax
         /*
-                 if (sinfo.globusRSL != null) {
-            rsl.putAll(sinfo.globusRSL);
+                 if (job.globusRSL != null) {
+            rsl.putAll(job.globusRSL);
 
             // 19-05 jsv: Need to change to {remote_}initialdir commands
             // allow TR to spec its own directory
@@ -1724,6 +1762,48 @@ public class CondorGenerator extends Abstract {
         }
 
 
+    }
+
+    /**
+     * Computes the priority for a job based on job type and depth in the workflow
+     * 
+     * @param job       the job whose priority needs to be computed
+     * @param depth     the depth in the workflow
+     * 
+     * @return
+     */
+    protected int getJobPriority(Job job, int depth) {
+        int priority = 0;
+        
+        int type = job.getJobType();
+        switch ( type ){
+            case Job.CREATE_DIR_JOB:
+                priority = CondorGenerator.DEFAULT_CREATE_DIR_PRIORITY_KEY;
+                break;
+                
+            case Job.CLEANUP_JOB:
+                priority = CondorGenerator.DEFAULT_CLEANUP_PRIORITY_KEY;
+                break;
+                
+            case Job.STAGE_IN_JOB:
+                priority = CondorGenerator.DEFAULT_STAGE_IN_PRIORITY_KEY;
+                break;
+                
+            case Job.INTER_POOL_JOB:
+                priority = CondorGenerator.DEFAULT_INTER_SITE_PRIORITY_KEY;
+                break;
+                
+            case Job.STAGE_OUT_JOB:
+                priority = CondorGenerator.DEFAULT_STAGE_OUT_PRIORITY_KEY;
+                break;
+             
+            default:
+                //compute on the basis of the depth
+                priority = depth * 10;
+                break;
+        }
+        
+        return priority;
     }
 
 

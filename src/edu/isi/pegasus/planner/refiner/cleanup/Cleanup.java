@@ -62,11 +62,6 @@ public class Cleanup implements CleanupImplementation{
     public static final String TRANSFORMATION_NAMESPACE = "pegasus";
 
     /**
-     * The default priority key associated with the cleanup jobs.
-     */
-    public static final String DEFAULT_PRIORITY_KEY = "1000";
-
-    /**
      * The name of the underlying transformation that is queried for in the
      * Transformation Catalog.
      */
@@ -262,9 +257,7 @@ public class Cleanup implements CleanupImplementation{
         //catalog.
         cJob.updateProfiles( mProps );
 
-        //let us put some priority for the cleaunup jobs
-        cJob.condorVariables.construct( Condor.PRIORITY_KEY,
-                                        DEFAULT_PRIORITY_KEY );
+        
 
         //a remote hack that only works for condor pools
         //cJob.globusRSL.construct( "condorsubmit",
