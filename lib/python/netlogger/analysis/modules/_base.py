@@ -3,6 +3,7 @@ Base for analysis modules.
 """
 from logging import DEBUG
 import Queue
+import sys
 import threading
 import time
 #
@@ -279,7 +280,8 @@ class BufferedAnalyzer(Analyzer, threading.Thread):
             if not self.queue.empty():
                 row = self.queue.get()
                 self.process_buffer(row)
-                self.queue.task_done()
+                if sys.version_info >= (2,5):
+                    self.queue.task_done()
             else:
                 time.sleep(0.1)
         self.log.info('run.end')

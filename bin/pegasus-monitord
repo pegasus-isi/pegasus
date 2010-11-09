@@ -1164,8 +1164,13 @@ class Workflow:
 	    # This is a PRE SCRIPT task
 	    event_type = "task.prescript"
 	    kwargs["transformation"] = "dagman::pre"
-	    kwargs["start_time"] = my_job._pre_script_start
-	    kwargs["duration"] = my_job._pre_script_done - my_job._pre_script_start
+            if my_job._pre_script_start is not None:
+                kwargs["start_time"] = my_job._pre_script_start
+            try:
+                kwargs["duration"] = my_job._pre_script_done - my_job._pre_script_start
+            except:
+                # Duration cannot be determined, possibly a missing PRE_SCRIPT_START event
+                kwargs["duration"] = 0
 	    kwargs["exitcode"] = my_job._pre_script_exitcode
 	    if my_job._name in self._job_info:
 		kwargs["executable"] = self._job_info[my_job._name][1]
@@ -1175,8 +1180,13 @@ class Workflow:
 	    # This is a POST SCRIPT task
 	    event_type = "task.postscript"
 	    kwargs["transformation"] = "dagman::post"
-	    kwargs["start_time"] = my_job._post_script_start
-	    kwargs["duration"] = my_job._post_script_done - my_job._post_script_start
+            if my_job._post_script_start is not None:
+                kwargs["start_time"] = my_job._post_script_start
+            try:
+                kwargs["duration"] = my_job._post_script_done - my_job._post_script_start
+            except:
+                # Duration cannot be determined, possibly a missing POST_SCRIPT_START event
+                kwargs["duration"] = 0
 	    kwargs["exitcode"] = my_job._post_script_exitcode
 	    if my_job._name in self._job_info:
 		kwargs["executable"] = self._job_info[my_job._name][3]
@@ -1588,7 +1598,12 @@ class Workflow:
             # Join with current run directory
             new_dagman_out = os.path.join(self._run_dir, new_dagman_out)
             return new_dagman_out
-            
+
+#        try:
+#            my_dagman_out = os.path.relpath(my_dagman_out, self._original_submit_dir)
+#        except:
+#            pass
+
         return my_dagman_out
 
 # Workflow Entry Class

@@ -245,6 +245,7 @@ def initializeToPegasusDB(db, metadata):
     
     Index('task_id_UNIQUE', st_task.c.task_id, unique=True)
     Index('FK_TASK_JOB_ID', st_task.c.job_id, unique=False)
+    Index('UNIQUE_TASK', st_task.c.job_id, st_task.c.task_submit_seq, unique=True)
     
     try:
         orm.mapper(Task, st_task)
