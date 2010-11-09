@@ -315,8 +315,6 @@ cd $run
 *** To monitor the workflow you can run ***
 
 pegasus-status -l $run
-or
-pegasus-status $workflow -t $time 
 
 *** To remove your workflow run ***
 EOF
