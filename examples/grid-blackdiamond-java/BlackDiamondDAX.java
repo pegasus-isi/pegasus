@@ -38,10 +38,10 @@ public class BlackDiamondDAX {
     }
 
     private static ADAG Diamond(String site_handle, String pegasus_location) throws Exception {
-       
+
         java.io.File cwdFile = new java.io.File (".");
         String cwd = cwdFile.getCanonicalPath(); 
-        
+
         ADAG dax = new ADAG("blackdiamond");
 
         File fa = new File("f.a");
@@ -53,6 +53,7 @@ public class BlackDiamondDAX {
         File fc1 = new File("f.c1");
         File fc2 = new File("f.c2");
         File fd = new File("f.d");
+        fd.setRegister(true);
 
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
@@ -71,17 +72,17 @@ public class BlackDiamondDAX {
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 
-	// Add a preprocess job
+        // Add a preprocess job
         Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
         j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1);
-	j1.addArgument(" ").addArgument(fb2);
+        j1.addArgument(" ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
         dax.addJob(j1);
 
-	// Add left Findrange job
+        // Add left Findrange job
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
         j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
         j2.addArgument("-o ").addArgument(fc1);
@@ -89,7 +90,7 @@ public class BlackDiamondDAX {
         j2.uses(fc1, File.LINK.OUTPUT);
         dax.addJob(j2);
 
-	// Add right Findrange job
+        // Add right Findrange job
         Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
         j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
         j3.addArgument("-o ").addArgument(fc2);
@@ -97,7 +98,7 @@ public class BlackDiamondDAX {
         j3.uses(fc2, File.LINK.OUTPUT);
         dax.addJob(j3);
 
-	// Add analyze job
+        // Add analyze job
         Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
         j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
         j4.addArgument(" ").addArgument(fc2);
