@@ -21,12 +21,13 @@ import edu.isi.pegasus.common.util.XMLWriter;
 /**
  *
  * @author gmehta
+ * @version $Revision$
  */
 public class Executable extends CatalogType {
 
     public static enum ARCH {
 
-        X86, x_86, X86_64, x86_64, PPC,ppc, PPC_64,ppc_64, IA64, ia64,SPARCV7,sparcv7, SPARCV9,sparcv9
+        X86, x86, X86_64, x86_64, PPC, ppc, PPC_64,ppc_64, IA64, ia64,SPARCV7,sparcv7, SPARCV9,sparcv9
     }
 
     public static enum OS {

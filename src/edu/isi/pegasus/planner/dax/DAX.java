@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.dax;
  * Creates a DAX job object
  * @author GAURANG MEHTA gmehta at isi dot edu
  * @see AbstractJob
+ * @version $Revision$
  */
 public class DAX extends AbstractJob {
 

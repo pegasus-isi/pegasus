@@ -32,41 +32,50 @@ import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
  * <pre>
-DAX Generator for Pegasus. The DAX SCHEMA is available at http://pegasus.isi.edu/schema/dax-3.2.xsd
-and documentation available at http://pegasus.isi.edu/wms/doc.php
-To generate an example DIAMOND DAX run the ADAG Class as shown below
-java ADAG <filename>
+ * <b>This class provides the Java API to create DAX files.</b>
+ *
+ * The DAX XML SCHEMA is available at <a href="http://pegasus.isi.edu/schema/dax-3.2.xsd">http://pegasus.isi.edu/schema/dax-3.2.xsd</a>
+ * and documentation available at <a href="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html</a>
+ *
+ * The DAX consists of 5 parts the first 3 are optional and the last is optional.
+ * </pre>
+ * <ol>
+ *  <li><b>file:</b>Used as "In DAX" Replica Catalog (Optional)</li><br>
+ *  <li><b>executable:</b> Used as "In DAX" Transformation Catalog (Optional)</li><br>
+ *  <li><b>transformation:</b> Used to describe compound executables. i.e. Executable depending on other executables (Optional)</li><br>
+ *  <li><b>job|dax|dag:</b> Used to describe a single job or sub dax or sub dax. Atleast 1 required.</li><br>
+ *  <li><b>child:</b> The dependency section to describe dependencies between job|dax|dag elements. (Optional)</li><br>
+ * </ol>
+ *
+ * <img src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2_p1.png"/>
+ * <pre>
+ * To generate an example DIAMOND DAX run the ADAG Class as shown below
+ * <b>java ADAG filename</b>
+ * <b>NOTE: This is an illustrative example only. Please see examples directory for a working example</b>
+ *
+ * Shown below are some of the steps in creating a  DIAMOND DAX.
+ * </pre>
+ * <ol>
+ *   <li>
+ *   <B>create a new {@link ADAG} object </B><br><br>
+ *   <i>ADAG dax = new ADAG("test");</i>
+ *   </li><br>
+ *  <li>
+ *     <B>create a {@link File} object</B><br><br>
+ *     <i>File fa = new File("f.a");</i>
+ *  </li><br>
+ *  <li><b>add {@link MetaData} entry to the file objects</b><br><br>
+ * <i>fa.addMetaData("string", "foo", "bar");</i><br>
+ * <i>fa.addMetaData("int", "num", "1");</i><br>
+ * </li>
 
-Shown below is the Code for generating the DIAMOND DAX.
-NOTE: This is an illustrative example only. Please see examples directory for a working example
-
- <ol>
- <li>
-<B>create a new {@link ADAG} object </B>
-<br>
-<i>ADAG dax = new ADAG("test");</i>
-</li>
-<br>
-<li>
-<B>create a {@link File} object</B>
- </li>
-</pre>
- @see File
-<pre>
-File fa = new File("f.a");
-
- //add MetaData entry to the file objects
- @see MetaData
-fa.addMetaData("string", "foo", "bar");
-fa.addMetaData("int", "num", "1");
-
- // add Profile entry to the file objects
- @see Profile
+// add Profile entry to the file objects
+@link Profile
 fa.addProfile("env", "FOO", "/usr/bar");
 fa.addProfile("globus", "walltime", "40");
 
  //add PFN to the File object
- @see PFN
+ @link PFN
 fa.addPhysicalFile("file:///scratch/f.a", "local");
 
  //add the File object to the Replica Catalog section of the DAX
@@ -101,7 +110,7 @@ File fd = new File("f.d");
 dax.addFile(fd);
 
 //Create an Executable object
- @see Executable
+ @link Executable
 Executable preprocess = new Executable("pegasus", "preproces", "1.0");
 preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
 preprocess.unsetInstalled();
@@ -130,7 +139,7 @@ analyze.addMetaData("string", "project", "pegasus");
 dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 
 //Create a compound Executable (Exectuable depending on other executable and files)
- @see Transformation
+ @link Transformation
 Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
 diamond.uses(preprocess).uses(findrange).uses(analyze);
 diamond.uses(new File("config", File.LINK.INPUT));
@@ -171,18 +180,20 @@ j4.uses(fc1, File.LINK.INPUT);
 j4.uses(fc2, File.LINK.INPUT);
 j4.uses(fd, File.LINK.OUTPUT);
 dax.addJob(j4);
-
-dax.addDependency("j1", "j2", "1-2");
-dax.addDependency("j1", "j3", "1-3");
-dax.addDependency("j2", "j4");
-dax.addDependency("j3", "j4");
-
-//Finally write the dax to a file
-dax.writeToFile("diamond.dax");
-</pre>
+ * <li><b>Add the Job dependencies</b>
+ * <i>dax.addDependency("j1", "j2", "1-2");
+ * dax.addDependency("j1", "j3", "1-3");
+ * dax.addDependency("j2", "j4");
+ * dax.addDependency("j3", "j4");</i>
+ * </li>
+*  <li><b>Finally write the dax to a file</b>
+*  <i>dax.writeToFile("diamond.dax");</i>
+ * </li>
+ * </ol>
  *
  *
  * @author Gaurang Mehta gmehta at isi dot edu
+ * @version $Revision$
  */
 public class ADAG {
 

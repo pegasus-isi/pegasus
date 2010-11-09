@@ -20,6 +20,7 @@ import java.util.regex.*;
 /**
  *
  * @author gmehta
+ * @version $Revision$
  */
 public class Patterns {
 

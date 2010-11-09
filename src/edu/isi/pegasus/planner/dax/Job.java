@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.dax;
 /**
  *
  * @author gmehta
+ * @version $Revision$
  */
 public class Job extends AbstractJob {
 

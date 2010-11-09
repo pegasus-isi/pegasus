@@ -20,6 +20,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
 /**
  *
  * @author gmehta
+ * @version $Revision$
  */
 public class MetaData {
 

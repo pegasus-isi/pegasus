@@ -25,6 +25,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
 /**
  *
  * @author gmehta
+ * @version $Revision$
  */
 public class AbstractJob {
 
@@ -93,8 +94,86 @@ public class AbstractJob {
     }
 
     public AbstractJob setStdin(File stdin) {
-        mStdin = stdin;
-        mStdin.setLink(File.LINK.INPUT);
+        File f = new File(stdin, File.LINK.INPUT);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(File stdin, File.TRANSFER transfer) {
+        File f = new File(stdin, File.LINK.INPUT);
+        f.setTransfer(transfer);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(File stdin, boolean register) {
+        File f = new File(stdin, File.LINK.INPUT);
+        f.setRegister(register);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(File stdin, File.TRANSFER transfer, boolean register) {
+        File f = new File(stdin, File.LINK.INPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(File stdin, File.TRANSFER transfer, boolean register, boolean optional) {
+        File f = new File(stdin, File.LINK.INPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setOptional(optional);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(String stdin) {
+        File f = new File(stdin, File.LINK.INPUT);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(String stdin, File.TRANSFER transfer) {
+        File f = new File(stdin, File.LINK.INPUT);
+        f.setTransfer(transfer);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(String stdin, boolean register) {
+        File f = new File(stdin, File.LINK.INPUT);
+        f.setRegister(register);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(String stdin, File.TRANSFER transfer, boolean register) {
+        File f = new File(stdin, File.LINK.INPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        mStdin = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdin(String stdin, File.TRANSFER transfer, boolean register, boolean optional) {
+        File f = new File(stdin, File.LINK.INPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setOptional(optional);
+        mStdin = f;
+        mUses.add(f);
         return this;
     }
 
@@ -103,8 +182,86 @@ public class AbstractJob {
     }
 
     public AbstractJob setStdout(File stdout) {
-        mStdout = stdout;
-        mStdout.setLink(File.LINK.OUTPUT);
+        File f = new File(stdout, File.LINK.OUTPUT);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(File stdout, File.TRANSFER transfer) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(File stdout, boolean register) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        f.setRegister(register);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(File stdout, File.TRANSFER transfer, boolean register) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(File stdout, File.TRANSFER transfer, boolean register, boolean optional) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setOptional(optional);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(String stdout) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(String stdout, File.TRANSFER transfer) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(String stdout, boolean register) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        f.setRegister(register);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(String stdout, File.TRANSFER transfer, boolean register) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        mStdout = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStdout(String stdout, File.TRANSFER transfer, boolean register, boolean optional) {
+        File f = new File(stdout, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setOptional(optional);
+        mStdout = f;
+        mUses.add(f);
         return this;
     }
 
@@ -113,8 +270,86 @@ public class AbstractJob {
     }
 
     public AbstractJob setStderr(File stderr) {
-        mStderr = stderr;
-        mStderr.setLink(File.LINK.OUTPUT);
+        File f = new File(stderr, File.LINK.OUTPUT);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(File stderr, File.TRANSFER transfer) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(File stderr, boolean register) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        f.setRegister(register);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(File stderr, File.TRANSFER transfer, boolean register) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(File stderr, File.TRANSFER transfer, boolean register, boolean optional) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setOptional(optional);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(String stderr) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(String stderr, File.TRANSFER transfer) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(String stderr, boolean register) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        f.setRegister(register);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(String stderr, File.TRANSFER transfer, boolean register) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        mStderr = f;
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob setStderr(String stderr, File.TRANSFER transfer, boolean register, boolean optional) {
+        File f = new File(stderr, File.LINK.OUTPUT);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setOptional(optional);
+        mStderr = f;
+        mUses.add(f);
         return this;
     }
 
@@ -122,11 +357,80 @@ public class AbstractJob {
         return Collections.unmodifiableList(mUses);
     }
 
+    public AbstractJob uses(String file, File.LINK link) {
+        mUses.add(new File(file, link));
+        return this;
+    }
+
+    public AbstractJob uses(String file, File.LINK link, boolean register) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer, boolean register) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        f.setTransfer(transfer);
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer, boolean register, boolean optional, boolean executable) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        f.setOptional(optional);
+        f.setTransfer(transfer);
+        f.setExecutable(executable);
+        mUses.add(f);
+        return this;
+    }
+
     public AbstractJob uses(File file, File.LINK link) {
         mUses.add(new File(file, link));
         return this;
     }
-    
+
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob uses(File file, File.LINK link, boolean register) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer, boolean register) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        mUses.add(f);
+        return this;
+    }
+
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer, boolean register, boolean optional, boolean executable) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setOptional(optional);
+        f.setExecutable(executable);
+        mUses.add(f);
+        return this;
+    }
+
     public AbstractJob uses(List<File> files, File.LINK link) {
         for (File file : files) {
             mUses.add(new File(file, link));

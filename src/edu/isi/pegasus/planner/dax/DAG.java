@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.dax;
  *
  * @see AbstractJob
  * @author Gaurang Mehta gmehta at isi dot edu
+ * @version $Revision$
  */
 public class DAG extends AbstractJob {
 
