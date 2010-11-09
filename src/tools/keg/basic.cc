@@ -31,7 +31,7 @@ smart_units( char* buffer, size_t capacity,
     snprintf( buffer, capacity, "%5lukB", kils(value) ); 
   } else if ( value < 8589934592ull ) {
     snprintf( buffer, capacity, "%5luMB", megs(value) ); 
-  } else if ( value < 8796093022208ul ) {
+  } else if ( value < 8796093022208ull ) {
     snprintf( buffer, capacity, "%5luGB", gigs(value) ); 
   } else { 
     snprintf( buffer, capacity, "%5luTB", ters(value) ); 
