@@ -517,7 +517,7 @@ def invoke_monitord(dagman_out_file, output_log):
     """
     This function runs monitord on the given dagman_out_file.
     """
-    monitord_cmd = "pegasus-monitord -n --nodatabase -r"
+    monitord_cmd = "pegasus-monitord -r --no-database"
     monitord_cmd = monitord_cmd + " -j " + output_log
     monitord_cmd = monitord_cmd + " " + dagman_out_file
     print "running: %s" % (monitord_cmd)
@@ -565,7 +565,7 @@ def print_job_info(job):
     if jobs[job].is_subdag == True:
 	print " This is a SUBDAG job:"
 	print " For more information, please run the following command:"
-	user_cmd = " %s -t -s " % (prog_base)
+	user_cmd = " %s -m -s " % (prog_base)
 	if keep_log:
 	    user_cmd = user_cmd + " -k"
 	print "%s -f %s" % (user_cmd, jobs[job].dag_path)
@@ -592,7 +592,7 @@ def print_job_info(job):
 	# This job has a sub workflow
 	print " This job contains sub workflows!"
 	print " Please run the command below for more information:"
-	user_cmd = " %s -t " % (prog_base)
+	user_cmd = " %s -m " % (prog_base)
 	if keep_log:
 	    user_cmd = user_cmd + " -k"
 	print "%s -d %s" % (user_cmd, os.path.split(jobs[job].dagman_out)[0])
