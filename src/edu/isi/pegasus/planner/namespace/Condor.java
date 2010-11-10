@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.util.Iterator;
@@ -571,6 +572,27 @@ public class Condor extends Namespace{
      * @param pool        the pool name where the job is scheduled to run.
      */
     public void checkKeyInNS(PegasusProperties properties, String pool){
+        //retrieve the relevant profiles from properties
+       //and merge them into the existing.
+       this.assimilate( properties , Profiles.NAMESPACES.condor );
+    }
+    
+   
+
+    
+    /**
+     * It puts in the namespace specific information specified in the properties
+     * file into the namespace. The name of the pool is also passed, as many of
+     * the properties specified in the properties file are on a per pool basis.
+     * It handles the periodic_remove and periodic_release characteristics for
+     * condor jobs.
+     *
+     * @param properties  the <code>PegasusProperties</code> object containing
+     *                    all the properties that the user specified at various
+     *                    places (like .chimerarc, properties file, command line).
+     * @param pool        the pool name where the job is scheduled to run.
+     */
+    /*public void checkKeyInNS(PegasusProperties properties, String pool){
         String value = null;
 
         //Karan Oct 19, 2005. The values in property file
@@ -611,7 +633,7 @@ public class Condor extends Namespace{
                 //throw a warning down
                 mLogger.log(
                     " periodic_remove > periodic_release " +
-                    "for job " + /*sinfo.jobName +*/
+                    "for job " + 
                      ". Setting periodic_remove=periodic_release",
                     LogManager.WARNING_MESSAGE_LEVEL);
             }
@@ -645,6 +667,7 @@ public class Condor extends Namespace{
 
 
     }
+     * */
     
     /**
      * Returns a boolean value indicating if the string passed is an integer or not

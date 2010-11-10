@@ -23,17 +23,21 @@ import edu.isi.pegasus.planner.catalog.transformation.TCMode;
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Boolean;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.namespace.Namespace;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * A Central Properties class that keeps track of all the properties used by
@@ -133,6 +137,7 @@ public class PegasusProperties {
     public static final String ALL_TRANSFER_PRIORITY_PROPERTY =
                                                       "pegasus.transfer.*.priority";
 
+    
 
     
     /**
@@ -205,7 +210,27 @@ public class PegasusProperties {
     private String mPropsInSubmitDir;
 
 
+    /**
+     * Profiles that are specified in the properties
+     */
+    private Profiles mProfiles;
 
+    private static Map<Profiles.NAMESPACES,String> mNamepsaceToPropertiesPrefix;
+    
+    public Map<Profiles.NAMESPACES, String> namespaceToPropertiesPrefix(){
+        if( mNamepsaceToPropertiesPrefix == null ){
+            mNamepsaceToPropertiesPrefix = new HashMap<Profiles.NAMESPACES, String>();
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.condor, "condor" );
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.dagman, "dagman" );
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.env,     "env" );
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.hints, "hints" );
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.pegasus, "pegasus" );
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.selector, "selector" );
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.stat, "stat" );
+        }
+        
+        return mNamepsaceToPropertiesPrefix;
+    }
 
     /**
      * Returns an instance to this properties object.
@@ -272,6 +297,7 @@ public class PegasusProperties {
      */
     private PegasusProperties( String propertiesFile ) {
 //        mLogger = LogManager.getInstance();
+        
         mDeprecatedProperties   = new HashSet(5);
         initializePropertyFile( propertiesFile );
         mPegasusHome = mProps.getPegasusHome();
@@ -281,8 +307,55 @@ public class PegasusProperties {
         mDefaultTC              = getDefaultPathToTC();
         mDefaultTransferPriority= getDefaultTransferPriority();
 
+        }
+
+    /**
+     * Retrieves profiles from the properties
+     * 
+     * @param properties    the common properties so far
+     * 
+     * @return profiles object.
+     */
+    public  Profiles retrieveProfilesFromProperties(  ) {
+        //retrieve up all the profiles that are specified in 
+        //the properties
+        if( mProfiles == null ){
+            mProfiles = retrieveProfilesFromProperties( mProps );
+        }
+        return mProfiles;
+    }
+    
+    /**
+     * Retrieves profiles from the properties
+     * 
+     * @param properties    the common properties so far
+     * 
+     * @return profiles object.
+     */
+    protected  Profiles retrieveProfilesFromProperties( CommonProperties properties ) {
+        Profiles profiles = new Profiles( );
+        
+        //retrieve some matching properties first
+        //traverse through all the enum keys
+        for ( Profiles.NAMESPACES n : Profiles.NAMESPACES.values() ){
+            Properties p = properties.matchingSubset( namespaceToPropertiesPrefix().get( n ),
+                                                false );
+            for( Map.Entry<Object,Object> entry : p.entrySet() ){
+                profiles.addProfile( n, (String)entry.getKey(), (String)entry.getValue() );
+            }
+        }
+        return profiles;
     }
 
+    /**
+     * Returns all the profiles relevant to a particular namespace
+     * 
+     * @param ns  the namespace corresponding to which you need the profiles
+     */
+    public Namespace getProfiles( Profiles.NAMESPACES ns ){
+        return this.retrieveProfilesFromProperties().get( ns );
+    }
+    
     /**
      * Returns the default path to the transformation catalog. Currently the
      * default path defaults to  $PEGASUS_HOME/var/tc.data.

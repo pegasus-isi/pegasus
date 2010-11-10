@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.namespace;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -314,6 +315,10 @@ public class Dagman extends Namespace {
      * @param pool        the pool name where the job is scheduled to run.
      */
     public void checkKeyInNS(PegasusProperties properties, String pool){
+        //retrieve the relevant profiles from properties
+        //and merge them into the existing.
+        this.assimilate( properties , Profiles.NAMESPACES.dagman  );
+        
         //check if RETRY key already exists
         if(!this.containsKey(this.RETRY_KEY)){
             //try to get one from the condor file
@@ -348,7 +353,9 @@ public class Dagman extends Namespace {
         }
 
     }
-
+    
+    
+    
     /**
      * Merge the profiles in the namespace in a controlled manner.
      * In case of intersection, the new profile value overrides, the existing

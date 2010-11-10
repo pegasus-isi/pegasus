@@ -18,6 +18,7 @@
 package edu.isi.pegasus.planner.namespace;
 
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -361,6 +362,10 @@ public class Globus extends Namespace {
      */
     public void checkKeyInNS(PegasusProperties properties, String pool){
 
+        //retrieve the relevant profiles from properties
+        //and merge them into the existing.
+        this.assimilate( properties ,Profiles.NAMESPACES.globus ) ;
+        
         //the time rsl's are correctly handled here.
         //the other RSL's are handled in the CodeGenerator.
         enforceMinTime( properties, "maxwalltime" );

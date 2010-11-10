@@ -21,6 +21,8 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -39,8 +41,14 @@ import java.util.Set;
  * @version $Revision$
  */
 
-public abstract class Namespace extends Data{
+public abstract class Namespace /*extends Data*/{
 
+    /**
+     * The LogManager object which is used to log all the messages.
+     *
+     */
+    public LogManager mLogger = LogManagerFactory.loadSingletonInstance( );
+    
     /**
      * The version number associated with this API of Profile Namespaces.
      */
@@ -311,6 +319,24 @@ public abstract class Namespace extends Data{
         }
 
    }
+
+    
+   /**
+     * Assimilate the profiles in the namespace in a controlled manner.
+     * In case of intersection, the new profile value overrides, the existing
+     * profile value.
+     *
+     * @param profiles  the <code>Namespace</code> object containing the profiles.
+     * @param namespace the namespace for which the profiles need to be assimilated.
+     */
+    public void assimilate( PegasusProperties properties, Profiles.NAMESPACES namespace ){
+        Namespace profiles = properties.getProfiles( namespace ) ;
+        for ( Iterator it = profiles.getProfileKeyIterator(); it.hasNext(); ){
+            //construct directly. bypassing the checks!
+            String key = (String)it.next();
+            this.construct( key, (String)profiles.get( key ) );
+        }
+    }
 
 
    /**

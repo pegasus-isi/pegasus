@@ -17,6 +17,7 @@
 
 package edu.isi.pegasus.planner.namespace;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -227,7 +228,9 @@ public class Hints extends Namespace {
      * @param pool        the pool name where the job is scheduled to run.
      */
     public void checkKeyInNS(PegasusProperties properties, String pool){
-
+        //retrieve the relevant profiles from properties
+       //and merge them into the existing.
+       this.assimilate( properties, Profiles.NAMESPACES.hints  );
     }
 
     /**

@@ -610,8 +610,8 @@ public class Pegasus extends Namespace {
     * @param value is the right hand side
     */
    public void unknownKey(String key, String value) {
-       mLogger.log("unknown profile " + mNamespace + "." + key +
-                   ",  using anyway", LogManager.DEBUG_MESSAGE_LEVEL);
+       //mLogger.log("unknown profile " + mNamespace + "." + key +
+       //            ",  using anyway", LogManager.DEBUG_MESSAGE_LEVEL);
        construct(key, value);
    }
 

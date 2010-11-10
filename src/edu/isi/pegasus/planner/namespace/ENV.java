@@ -17,6 +17,7 @@
 
 package edu.isi.pegasus.planner.namespace;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -183,6 +184,7 @@ public class ENV extends Namespace {
     * @param pool        the pool name where the job is scheduled to run.
     */
    public void checkKeyInNS(PegasusProperties properties, String pool){
+       /*
        //get from the properties for pool local
        String prop = pool.equalsIgnoreCase("local") ?
             //check if property in props file
@@ -192,7 +194,11 @@ public class ENV extends Namespace {
         if (prop != null) {
             checkKeyInNS(prop);
         }
-
+        */
+       //retrieve the relevant profiles from properties
+       //and merge them into the existing.
+       this.assimilate( properties , Profiles.NAMESPACES.env );
+       
    }
 
 
@@ -227,6 +233,8 @@ public class ENV extends Namespace {
         }
 
     }
+    
+    
 
     /**
      * Merge the profiles in the namespace in a controlled manner.
