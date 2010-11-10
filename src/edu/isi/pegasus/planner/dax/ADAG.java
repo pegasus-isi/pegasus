@@ -46,8 +46,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *  <li><b>job|dax|dag:</b> Used to describe a single job or sub dax or sub dax. Atleast 1 required.</li><br>
  *  <li><b>child:</b> The dependency section to describe dependencies between job|dax|dag elements. (Optional)</li><br>
  * </ol>
- *
- * <img src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2_p1.png"/>
+ * <center><img src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2_p1.png"/></center>
  * <pre>
  * To generate an example DIAMOND DAX run the ADAG Class as shown below
  * <b>java ADAG filename</b>
@@ -64,50 +63,22 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *     <B>create a {@link File} object</B><br><br>
  *     <i>File fa = new File("f.a");</i>
  *  </li><br>
- *  <li><b>add {@link MetaData} entry to the file objects</b><br><br>
- * <i>fa.addMetaData("string", "foo", "bar");</i><br>
- * <i>fa.addMetaData("int", "num", "1");</i><br>
- * </li>
-
-// add Profile entry to the file objects
-@link Profile
-fa.addProfile("env", "FOO", "/usr/bar");
-fa.addProfile("globus", "walltime", "40");
-
- //add PFN to the File object
- @link PFN
-fa.addPhysicalFile("file:///scratch/f.a", "local");
-
- //add the File object to the Replica Catalog section of the DAX
- dax.addFile(fa);
-
-
-File fb1 = new File("f.b1");
-fb1.addMetaData("string", "foo", "bar");
-fb1.addMetaData("int", "num", "2");
-fb1.addProfile("env", "GOO", "/usr/foo");
-fb1.addProfile("globus", "walltime", "40");
-dax.addFile(fb1);
-
-File fb2 = new File("f.b2");
-fb2.addMetaData("string", "foo", "bar");
-fb2.addMetaData("int", "num", "3");
-fb2.addProfile("env", "BAR", "/usr/goo");
-fb2.addProfile("globus", "walltime", "40");
-dax.addFile(fb2);
-
-File fc1 = new File("f.c1");
-fc1.addProfile("env", "TEST", "/usr/bin/true");
-fc1.addProfile("globus", "walltime", "40");
-dax.addFile(fc1);
-
-File fc2 = new File("f.c2");
-fc2.addMetaData("string", "foo", "bar");
-fc2.addMetaData("int", "num", "5");
-dax.addFile(fc2);
-
-File fd = new File("f.d");
-dax.addFile(fd);
+ *    <ol type=a>
+ *      <li><b>Add {@link MetaData} entry to the file objects</b><br><br>
+ *          <i>fa.addMetaData("string", "foo", "bar");</i><br>
+ *          <i>fa.addMetaData("int", "num", "1");</i><br>
+ *      </li><br>
+ *      <li><b>add {@link Profile} entry to the file objects</b><br><br>
+ *          <i>fa.addProfile("env", "FOO", "/usr/bar");</i><br>
+ *          <i>fa.addProfile("globus", "walltime", "40");
+ *      </li><br>
+ *      <li><b>Add {@link PFN} to the File object</b><br><br>
+ *          <i>fa.addPhysicalFile("file:///scratch/f.a", "local");</i>
+ *      </li><br>
+ *      <li><b>Add the File object to the Replica Catalog section of the DAX</b><br><br>
+ *          <i>dax.addFile(fa);</i>
+ *      </li>
+ *    </ol>
 
 //Create an Executable object
  @link Executable

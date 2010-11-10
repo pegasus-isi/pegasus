@@ -17,6 +17,7 @@ package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.common.util.Separator;
 
 /**
  *
@@ -144,6 +145,19 @@ public class File extends CatalogType {
         return mExecutable;
     }
 
+
+    public boolean equals(Object o){
+        if(o instanceof File){
+            File f = (File)o;
+            return Separator.combine(mNamespace, mName, mVersion).equalsIgnoreCase(Separator.combine(f.mNamespace, f.mName, f.mVersion));
+        }
+        return false;
+    }
+
+    public int hashCode(){
+        return Separator.combine(mNamespace, mName, mVersion).hashCode();
+    }
+    
     public File clone() {
         File f = new File(mNamespace, mName, mVersion, mLink);
         this.mOptional = f.getOptional();
@@ -199,12 +213,8 @@ public class File extends CatalogType {
             if (mOptional) {
                 writer.writeAttribute("optional", "true");
             }
-            if (mTransfer != TRANSFER.TRUE) {
-                writer.writeAttribute("transfer", mTransfer.toString().toLowerCase());
-            }
-            if (!mRegister) {
-                writer.writeAttribute("register", "false");
-            }
+            writer.writeAttribute("transfer", mTransfer.toString().toLowerCase());
+            writer.writeAttribute("register", Boolean.toString(mRegister));
             if (mExecutable) {
                 writer.writeAttribute("executable", "true");
             }
