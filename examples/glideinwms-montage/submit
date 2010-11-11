@@ -43,39 +43,6 @@ cp $TOP_DIR/pegasusrc .
 # create the transformation catalogue (tc)
 echo
 echo "Creating the transformation catalog..."
-cat >tc <<EOF
-tr pegasus::dirmanager {
-    site $CLUSTER_NAME {
-        pfn "$CLUSTER_PEGASUS_HOME/bin/pegasus-dirmanager"
-        arch "x86"
-        os "linux"
-    }
-}
-tr pegasus::kickstart {
-    site $CLUSTER_NAME {
-        pfn "$CLUSTER_PEGASUS_HOME/bin/kickstart"
-        arch "x86"
-        os "linux"
-        type "installed"
-    }
-}
-tr pegasus::seqexec {
-    site $CLUSTER_NAME {
-        pfn "$CLUSTER_PEGASUS_HOME/bin/seqexec"
-        arch "x86"
-        os "linux"
-        type "installed"
-    }
-}
-tr pegasus::cleanup {
-    site $CLUSTER_NAME {
-        pfn "$CLUSTER_PEGASUS_HOME/bin/pegasus-cleanup"
-        arch "x86"
-        os "linux"
-        type "installed"
-    }
-}
-EOF
 for BINARY in `(cd $LOCAL_MONTAGE_LOCATION/bin && ls)`; do
     cat >>tc <<EOF
 tr $BINARY:3.0 {
@@ -83,7 +50,7 @@ tr $BINARY:3.0 {
         pfn "$CLUSTER_MONTAGE_LOCATION/bin/$BINARY"
         arch "x86"
         os "linux"
-        type "installed"
+        type "INSTALLED"
     }
 }
 EOF
