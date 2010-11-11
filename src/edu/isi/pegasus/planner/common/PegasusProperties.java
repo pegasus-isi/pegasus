@@ -2365,8 +2365,14 @@ public class PegasusProperties {
         //sanity check on the directory
         sanityCheck( dir );
 
-        //we only want to write out the VDS properties for time being
-        Properties properties = mProps.matchingSubset( "pegasus", true );
+        //we only want to write out the Pegasus properties for time being
+        //and any profiles that were mentioned in the properties.
+        Properties properties = new Properties();
+        for ( Profiles.NAMESPACES n : Profiles.NAMESPACES.values() ){
+            Properties p = this.mProps.matchingSubset( namespaceToPropertiesPrefix().get( n ),
+                                                       true );
+            properties.putAll( p );
+        }
 
         //check if we need to sanitize paths for certain properties or not
         if( sanitizePath ){
