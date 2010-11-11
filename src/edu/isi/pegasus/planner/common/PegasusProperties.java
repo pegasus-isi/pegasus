@@ -1815,51 +1815,6 @@ public class PegasusProperties {
     }
 
     /**
-     * Returns the number of release attempts that are written into the condor
-     * submit files. Condor holds jobs on certain kind of failures, which many
-     * a time are transient, and if a job is released it usually progresses.
-     *
-     * Referred to by the "pegasus.condor.release" property.
-     *
-     * @return an int denoting the number of times to release.
-     *         null if not  specified or invalid entry.
-     */
-    public String getCondorPeriodicReleaseValue() {
-        String prop = mProps.getProperty( "pegasus.condor.release" );
-        int val = -1;
-
-        try {
-            val = Integer.parseInt( prop );
-        } catch ( Exception e ) {
-            return null;
-        }
-
-        return ( val < 0 ) ? null : Integer.toString( val );
-    }
-
-    /**
-     * Returns the number of release attempts that are attempted before
-     * Condor removes the job from the queue and marks it as failed.
-     *
-     * Referred to by the "pegasus.condor.remove" property.
-     *
-     * @return an int denoting the number of times to release.
-     *         null if not  specified or invalid entry.
-     */
-    public String getCondorPeriodicRemoveValue() {
-        String prop = mProps.getProperty( "pegasus.condor.remove" );
-        int val = -1;
-
-        try {
-            val = Integer.parseInt( prop );
-        } catch ( Exception e ) {
-            return null;
-        }
-
-        return ( val < 0 ) ? null : Integer.toString( val );
-    }
-
-    /**
      * Returns the number of times Condor should retry running a job in case
      * of failure. The retry ends up reinvoking the prescript, that can change
      * the site selection decision in case of failure.
@@ -2145,27 +2100,7 @@ public class PegasusProperties {
         return mProps.getProperty( "pegasus.partition.parser.load", "single" );
     }
 
-    /**
-     * Returns the default priority that needs to be applied to all job.
-     *
-     * Referred to by the "pegasus.job.priority" property.
-     *
-     * @return the value specified in the properties file, null if a non
-     *         integer value is passed.
-     */
-    public String getJobPriority(){
-        String prop = mProps.getProperty( "pegasus.job.priority" );
-        int val = -1;
-
-        try {
-            val = Integer.parseInt( prop );
-        } catch ( Exception e ) {
-            return null;
-        }
-
-        return ( val < 0 ) ? null : Integer.toString( val );
-
-    }
+    
 
     //JOB COLLAPSING PROPERTIES
 

@@ -1454,8 +1454,8 @@ public class CondorGenerator extends Abstract {
      *
      * @throws CodeGeneratorException
      */
-    protected void handleCondorVarForJob(Job sinfo) throws CodeGeneratorException{
-        Condor cvar = sinfo.condorVariables;
+    protected void handleCondorVarForJob(Job job) throws CodeGeneratorException{
+        Condor cvar = job.condorVariables;
 
         String key = null;
         String value = null;
@@ -1463,26 +1463,7 @@ public class CondorGenerator extends Abstract {
         //put in the classad expression for the values
         //construct the periodic_release and periodic_remove
         //values only if their final computed values are > 0
-        value = (String)cvar.removeKey("periodic_release");
-        int release = this.getNaturalNumberValue( value );
-        if( release > 0){
-            value = "(NumSystemHolds <= " + value + ")";
-            cvar.construct("periodic_release", value);
-        }
-        else{
-            cvar.construct( "periodic_release", value );
-        }
-
-        value = (String)cvar.removeKey("periodic_remove");
-        int remove = this.getNaturalNumberValue(value);
-        if( remove > 0){
-            value = "(NumSystemHolds > " + value + ")";
-            cvar.construct("periodic_remove", value);
-        }
-        else{
-            cvar.construct( "periodic_remove", value );
-        }
-
+        this.populatePeriodicReleaseAndRemoveInJob( job  );
 
         // have to change this later maybe
         key = "notification";
@@ -1523,7 +1504,7 @@ public class CondorGenerator extends Abstract {
 
         //also add the information as for the submit event trigger
         //for mei retry mechanism
-        cvar.construct("submit_event_user_notes","pool:" + sinfo.executionPool);
+        cvar.construct("submit_event_user_notes","pool:" + job.executionPool);
 
 
         //on the basis of the
@@ -1534,7 +1515,7 @@ public class CondorGenerator extends Abstract {
 
         //correctly quote the arguments according to
         //Condor Quoting Rules.
-        String args = (String) sinfo.condorVariables.get("arguments");
+        String args = (String) job.condorVariables.get("arguments");
         if( mProps.useCondorQuotingForArguments() && args != null){
             try {
                 mLogger.log("Unquoted arguments are " + args,
@@ -1542,7 +1523,7 @@ public class CondorGenerator extends Abstract {
                 //insert a comment for the old args
                 //job.condorVariables.construct("#arguments",args);
                 args = CondorQuoteParser.quote(args, true);
-                sinfo.condorVariables.construct("arguments", args);
+                job.condorVariables.construct("arguments", args);
                 mLogger.log("Quoted arguments are " + args,
                             LogManager.DEBUG_MESSAGE_LEVEL);
             }
@@ -1557,6 +1538,84 @@ public class CondorGenerator extends Abstract {
 
     }
 
+    
+    /**
+     * Populates the periodic release and remove values in the job.
+     * If an integer value is specified it is used to construct the default
+     * expression, else the value specified in the profiles is used as is.
+     * 
+     * The default expression for periodic_release and periodic_remove is
+     * <pre>
+     *   periodic_release = (NumSystemHolds <= releasevalue)
+     *   periodic_remove = (NumSystemHolds > removevalue)
+     * </pre>
+     * where releasevalue is value of condor profile periodic_release
+     * and   removevalue  is value of condor profile periodic_remove
+     * 
+     * @param job  the job object.
+     */
+    public void populatePeriodicReleaseAndRemoveInJob( Job job ){
+
+        //Karan Oct 19, 2005. The values in property file
+        //should only be treated as default. Need to reverse
+        //below.
+
+        //get the periodic release values always a default
+        //value is got if not specified.
+        String releaseval = (String) job.condorVariables.get( Condor.PERIODIC_RELEASE_KEY );
+        releaseval = (releaseval == null) ?
+            //put in default value
+            "3" :
+            //keep the one from profiles or dax
+            releaseval;
+        
+
+        String removeval = (String) job.condorVariables.get( Condor.PERIODIC_REMOVE_KEY );
+        removeval = (removeval == null) ?
+            //put in default value
+            "3" :
+            //keep the one from profiles or dax
+            removeval;
+
+
+        int removeint  = this.getNaturalNumberValue( removeval );
+        int releaseint = this.getNaturalNumberValue( releaseval );
+
+        if( removeint > 0 && releaseint > 0 ){
+            if( removeint > releaseint ){
+                removeval = releaseval;
+                //throw a warning down
+                mLogger.log(
+                    " periodic_remove > periodic_release " +
+                    "for job " + 
+                     ". Setting periodic_remove=periodic_release",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+            }
+        }
+
+    
+        String value = null;
+        if( releaseint > 0){
+            value = "(NumSystemHolds <= " + releaseint + ")";
+            job.condorVariables.construct( Condor.PERIODIC_RELEASE_KEY, value);
+        }
+        else{
+            job.condorVariables.construct( Condor.PERIODIC_RELEASE_KEY, releaseval );
+        }
+
+        
+        if( removeint > 0){
+            value = "(NumSystemHolds > " + removeint + ")";
+            job.condorVariables.construct( Condor.PERIODIC_REMOVE_KEY, value );
+        }
+        else{
+            job.condorVariables.construct( Condor.PERIODIC_REMOVE_KEY, removeval );
+        }
+
+    
+    }
+    
+    
     /**
      * Returns a natural number value ( > 0 ) if the parameter passed is an integer
      * and greater than zero, else -1

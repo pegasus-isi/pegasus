@@ -124,6 +124,16 @@ public class Condor extends Namespace{
      * The name of the key that specifies the priority for the job.
      */
     public static final String PRIORITY_KEY = "priority";
+    
+    /**
+     * The name of the key that specifies the peridic release
+     */
+    public static final String  PERIODIC_RELEASE_KEY = "periodic_release";
+
+    /**
+     * The name of the key that specifies the peridic remove
+     */
+    public static final String  PERIODIC_REMOVE_KEY = "periodic_remove";
 
     /**
      * The condor key for designation the grid_resource.
@@ -460,9 +470,9 @@ public class Condor extends Namespace{
                 break;
 
             case 'p':
-                if (key.compareTo("periodic_release") == 0 ||
-                    key.compareTo("periodic_remove") == 0 ||
-                    key.compareTo(PRIORITY_KEY) == 0) {
+                if (key.compareTo( Condor.PERIODIC_RELEASE_KEY ) == 0 ||
+                    key.compareTo( Condor.PERIODIC_REMOVE_KEY ) == 0 ||
+                    key.compareTo( Condor.PRIORITY_KEY ) == 0) {
                     res = VALID_KEY;
                 }
                 else {
