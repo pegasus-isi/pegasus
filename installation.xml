@@ -63,15 +63,24 @@ Python 2.6.2</programlisting></para>
     <para>In order to use Pegasus, you will have to set the PEGASUS_HOME
     environment variable, and source the Pegasus setup script.</para>
 
-    <para>This document assumes you are using a Bourne Shell derived shell.
-    e.g. /bin/sh or /bin/bash. csh setup scripts are available with the .csh
-    extension.</para>
+    <note>
+      <para>Pegasus 3.0 has partial support for running without PEGASUS_HOME
+      being defined. This feature is still being tested, so to be on the safe
+      side, continue setting PEGASUS_HOME.</para>
+    </note>
 
-    <para>Set PEGASUS_HOME environment variable</para>
+    <note>
+      <para>This document assumes you are using a Bourne Shell derived shell.
+      e.g. /bin/sh or /bin/bash. csh setup scripts are available with the .csh
+      extension.</para>
+    </note>
 
-    <programlisting><emphasis>$ export PEGASUS_HOME=&lt;path to pegasus directory&gt;</emphasis></programlisting>
+    <para>Set PEGASUS_HOME environment variable:</para>
 
-    <para>Set up the PEGASUS user environment<programlisting><emphasis>$ source $PEGASUS_HOME/setup.sh</emphasis></programlisting></para>
+    <programlisting>$ <emphasis role="bold">export PEGASUS_HOME=&lt;path to pegasus directory&gt;</emphasis></programlisting>
+
+    <para>Set up the PEGASUS user environment<programlisting>$<emphasis
+          role="bold"> . $PEGASUS_HOME/setup.sh</emphasis></programlisting></para>
   </section>
 
   <section>
@@ -88,15 +97,68 @@ Python 2.6.2</programlisting></para>
     <programlisting>/opt/pegasus/2.4/
 /opt/pegasus/3.0/</programlisting>
 
-    <para>You can find the packages and instructions for YUM and APT
-    repositories, see the <ulink
-    url="http://pegasus.isi.edu/wms/download.php">download
-    page</ulink>.</para>
+    <section>
+      <title>RHEL 5 / CentOS 5 / Scientific Linux 5</title>
+
+      <para>Add the Pegasus repository to yum by creating a file named
+      <filename>/etc/yum.repos.d/pegasus</filename> with the content:</para>
+
+      <programlisting># Pegasus 3.0
+[Pegasus30]
+name=Pegasus30
+baseurl=http://pegasus.isi.edu/wms/download/3.0/yum/rhel/$releasever/$basearch/
+gpgcheck=0
+enabled=1</programlisting>
+
+      <para>You should then be able to search for, and install Pegasus:</para>
+
+      <programlisting># <emphasis role="bold">yum search pegasus</emphasis>
+pegasus-3.0 : Pegasus Workflow Management System
+# <emphasis role="bold">yum install pegasus</emphasis>
+Running Transaction
+Installing     : pegasus-3.0 
+
+Installed:
+pegasus-3.0 :3.0.0-1                                                                                                                        
+
+Complete!</programlisting>
+    </section>
+
+    <section>
+      <title>Debian 5 (Lenny)</title>
+
+      <para>To be able to install and upgrade from the Pegasus apt repository,
+      you will have to trust the repository key. You only need to add the
+      repository key once.</para>
+
+      <programlisting># <emphasis role="bold">gpg --keyserver keyring.debian.org --recv-keys 81C2A4AC</emphasis>
+# <emphasis role="bold">gpg -a --export 81C2A4AC | apt-key add</emphasis>  </programlisting>
+
+      <para>Add the Pegasus apt repository to your
+      <filename>/etc/apt/sources.list</filename> file:</para>
+
+      <programlisting>deb http://pegasus.isi.edu/wms/download/3.0/apt/debian lenny main</programlisting>
+
+      <para>Install Pegasus with apt-get:</para>
+
+      <programlisting># <emphasis role="bold">apt-get update</emphasis>
+...
+# <emphasis role="bold">apt-get install pegasus-3.0</emphasis></programlisting>
+    </section>
+
+    <section>
+      <title>Debian 4 (Etch)</title>
+
+      <para>Same procedure as for Debian 5, but with a different entry in your
+      <filename>/etc/apt/sources.list</filename> file:</para>
+
+      <programlisting>deb http://pegasus.isi.edu/wms/download/3.0/apt/debian etch main</programlisting>
+    </section>
   </section>
 
   <section>
     <title>Pegasus from Tarballs</title>
-    
+
     <para>The Pegaus prebuild tarballs can be downloaded from the <ulink
     url="http://pegasus.isi.edu/wms/download.php">download
     page</ulink>.</para>
@@ -104,9 +166,9 @@ Python 2.6.2</programlisting></para>
     <section>
       <title>Tarball without Condor</title>
 
-      <para>Use these tarballs if you already have Condor installed or prefer to keep
-              the Condor installation separate from the Pegasus installation.
-      </para>
+      <para>Use these tarballs if you already have Condor installed or prefer
+      to keep the Condor installation separate from the Pegasus
+      installation.</para>
 
       <itemizedlist>
         <listitem>
@@ -132,7 +194,6 @@ Python 2.6.2</programlisting></para>
 
           <para><programlisting>$ . setup.csh</programlisting></para>
         </listitem>
-
       </itemizedlist>
     </section>
 
