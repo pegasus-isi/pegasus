@@ -694,11 +694,6 @@ if ( $main::duration <= 60 ) {
 	 "Extend this perl script with sensible larger data\n\t" );
 }
 
-my $selflocatingstubs = '';
-for ( my $x = 0; $x < $main::duration; $x += $xstubs ) {
-    $selflocatingstubs .= sprintf "\t%d %.1f\n", $x, $x / $xdivider;
-}
-
 while ( $mywidth > 24.0 ) {
     warn "Warning: too wide picture, halfing width\n";
     $mywidth /= 2.0;
@@ -718,6 +713,11 @@ log( "n=$n, height=$height, title=\"$title\"" )
 my $scaleduration = int($main::duration)+1;
 $scaleduration = int( ceil($main::duration / 3600) * 3600.0 )
     if $main::duration > 7200;
+
+my $selflocatingstubs = '';
+for ( my $x = 0; $x < $scaleduration; $x += $xstubs ) {
+    $selflocatingstubs .= sprintf "\t%d %.1f\n", $x, $x / $xdivider;
+}
 
 my $plot = substr( $data->filename, 0, -4 ) . '.pls';
 log( "writing commands into $plot" ) if $main::debug;
