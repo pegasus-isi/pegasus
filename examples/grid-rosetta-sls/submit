@@ -47,13 +47,6 @@ javac RosettaDAX.java
 # generate the dax
 java RosettaDAX dax.xml $CLUSTER_NAME
 
-# generate the replica catalog
-# setting pool=$CLUSTER_NAME is key to trigger the staging
-#rm -f rc.data
-#for FILE in `find minirosetta_database -type f | grep -v .svn` repack.resfile design.resfile `find pdbs -type f | grep -v .svn`; do
-#    echo "$FILE gsiftp://$LOCAL_HOSTNAME$TOPDIR/$FILE pool=\"$CLUSTER_NAME\"" >> rc.data
-#done
-
 # site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
