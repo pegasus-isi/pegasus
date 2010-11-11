@@ -60,7 +60,8 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *   <i>ADAG dax = new ADAG("test");</i>
  *   </li><br>
  *  <li>
- *     <B>create a {@link File} object</B><br><br>
+ *     <B>create a {@link File} object</B><br>
+ *      You only need to add entries to this section if you want to use an "IN-DAX" Replica Catalog"<br><br>
  *     <i>File fa = new File("f.a");</i>
  *  </li><br>
  *    <ol type=a>
@@ -79,89 +80,74 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *          <i>dax.addFile(fa);</i>
  *      </li>
  *    </ol>
-
-//Create an Executable object
- @link Executable
-Executable preprocess = new Executable("pegasus", "preproces", "1.0");
-preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-preprocess.unsetInstalled();
-preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg"));
-preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-preprocess.addMetaData("string", "project", "pegasus");
-
-
-Executable findrange = new Executable("pegasus", "findrange", "1.0");
-findrange.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-findrange.unsetInstalled();
-findrange.addPhysicalFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
-findrange.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-findrange.addMetaData("string", "project", "pegasus");
-
-
-Executable analyze = new Executable("pegasus", "analyze", "1.0");
-analyze.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);
-analyze.unsetInstalled();
-analyze.addPhysicalFile(new PFN("gsiftp://localhost/opt/pegasus/default/bin/keg"));
-analyze.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
-analyze.addMetaData("string", "project", "pegasus");
-
-//add all the executables to the DAX's Tranformation Catalog Section
-
-dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
-
-//Create a compound Executable (Exectuable depending on other executable and files)
- @link Transformation
-Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
-diamond.uses(preprocess).uses(findrange).uses(analyze);
-diamond.uses(new File("config", File.LINK.INPUT));
-
-dax.addTransformation(diamond);
-
-
+ * <li><b>Create an {@link Executable} object</b><br>
+ *      You only need to add entries to this section if you want to use an "IN-DAX" Replica Catalog"<br><br>
+ *      <i>Executable preprocess = new Executable("pegasus", "preproces", "1.0");
+ *      <ol type=a>
+ *      <li><b>Set the {@link Executable.ARCH} and {@link Executable.OS} for the executable. Default is x86 and LINUX</b><br><br>
+ *          <i>preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);</i>
+ *      </li><br>
+ *      <li><b>Set the executable as available to be staged. Default is installed executable</b><br><br>
+ *          <i>preprocess.unsetInstalled();</i>
+ *      </li><br>
+ *      <li><b>Add the physical location {@link PFN} of the executable. In case of stageable executables the path should be a url</b><br><br>
+ *          <i>preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg"));</i>
+ *      </li><br>
+ *      <li><b>Add {@link Profile} and {@link Metadata} objects to the executable</b><br><br>
+ *          <i>preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");</i><br>
+ *          <i>preprocess.addMetaData("string", "project", "pegasus");</i>
+ *      </li><br>
+ *      <li><b>Add the {@link Executable} object to the {@link ADAG}object</b><br><br>
+ *          <i>dax.addExecutable(preprocess);</i>
+ *      </li>
+ *    </ol>
+ * </li><br>
+ * <li>
+ * Create a {@link Transformation} : compound Executable (Executable depending on other executable and files)
+ * Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
+ * diamond.uses(preprocess).uses(findrange).uses(analyze);
+ * diamond.uses(new File("config", File.LINK.INPUT));
+ * dax.addTransformation(diamond);
+ * </li><br><br>
+ * <li><b></b><br><br>
 Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
 j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
 j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
 j1.uses(fa, File.LINK.INPUT);
 j1.uses(fb1, File.LINK.OUTPUT);
 j1.uses(new File("f.b2"), File.LINK.OUTPUT);
+ * j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");<br>
+j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");<br>
+
 j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
 dax.addJob(j1);
-
-DAG j2 = new DAG("j2", "findrange.dag", "j2");
-j2.uses(new File("f.b1"), File.LINK.INPUT);
-j2.uses(new File("f.c1"), File.LINK.OUTPUT);
-j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
-j2.addProfile("condor", "universe", "vanilla");
+ * </li><br>
+ * <li><b></b><br><br>
+DAG j2 = new DAG("j2", "findrange.dag", "j2");<br>
+j2.uses(new File("f.b1"), File.LINK.INPUT);<br>
+j2.uses(new File("f.c1"), File.LINK.OUTPUT);<br>
+j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");<br>
+j2.addProfile("condor", "universe", "vanilla");<br>
 dax.addDAG(j2);
-
-DAX j3 = new DAX("j3", "findrange.dax", "j3");
-j3.addArgument("--site ").addArgument("local");
-j3.uses(new File("f.b2"), File.LINK.INPUT);
-j3.uses(new File("f.c2"), File.LINK.OUTPUT);
-j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");
-j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");
-j3.addProfile("ENV", "HAHA", "YADAYADAYADA");
-dax.addDAX(j3);
-
-Job j4 = new Job("j4", "pegasus", "analyze", "");
-j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
-j4.addArgument(" ").addArgument(fc2);
-j4.addArgument("-o ").addArgument(fd);
-j4.uses(fc1, File.LINK.INPUT);
-j4.uses(fc2, File.LINK.INPUT);
-j4.uses(fd, File.LINK.OUTPUT);
-dax.addJob(j4);
- * <li><b>Add the Job dependencies</b>
- * <i>dax.addDependency("j1", "j2", "1-2");
- * dax.addDependency("j1", "j3", "1-3");
- * dax.addDependency("j2", "j4");
- * dax.addDependency("j3", "j4");</i>
- * </li>
-*  <li><b>Finally write the dax to a file</b>
+ * </li><br>
+ * <li><b>Add a DAX job object.</b><br><br>
+ *      <i>DAX j3 = new DAX("j3", "findrange.dax", "j3");<br>
+ * j3.addArgument("--site ").addArgument("local");<br>
+ * j3.uses(new File("f.b2"), File.LINK.INPUT);<br>
+ * j3.uses(new File("f.c2"), File.LINK.OUTPUT);<br>
+ * j3.addProfile("ENV", "HAHA", "YADAYADAYADA");<br>
+ * dax.addDAX(j3);</i>
+ * </li><br>
+ * <li><b>Add the Job dependencies</b><br><br>
+ * Dependencies can be added by specifiying the job id's like so<br><br>
+ * <i>dax.addDependency("j1", "j2", "1-2").addDependency("j1", "j3", "1-3");</i><br><br>
+ * or by specifying the job|dax|dag objects directly as below<br><br>
+ * <i>dax.addDependency(j1,j3);
+ * </li><br>
+*  <li><b>Finally write the dax to a file</b><br><br>
 *  <i>dax.writeToFile("diamond.dax");</i>
  * </li>
  * </ol>
- *
  *
  * @author Gaurang Mehta gmehta at isi dot edu
  * @version $Revision$
@@ -413,6 +399,17 @@ public class ADAG {
     }
 
     /**
+     * Add a parent child dependency between two jobs,dax,dag
+     * @param parent Job|DAX|DAG object
+     * @param child Job|DAX|DAG object
+     * @return
+     */
+    public ADAG addDependency(AbstractJob parent, AbstractJob child) {
+        addDependency(parent.getId(), child.getId(), null);
+        return this;
+    }
+
+    /**
      * Add a parent child dependency with a dependency label
      * @param parent String job,dax,dag id
      * @param child String job,dax,dag id
@@ -422,11 +419,23 @@ public class ADAG {
     public ADAG addDependency(String parent, String child, String label) {
         List<Parent> parents = mDependencies.get(child);
         if (parents == null) {
-            parents = new LinkedList();
+            parents = new LinkedList<Parent>();
         }
         Parent p = new Parent(parent, label);
         parents.add(p);
         mDependencies.put(child, parents);
+        return this;
+    }
+
+    /**
+     *  Add a parent child  dependency with a dependency label
+     * @param parent  Job|DAX|DAG object
+     * @param child  Job|DAX|DAG object
+     * @param label String label for annotation
+     * @return ADAG
+     */
+     public ADAG addDependency(AbstractJob parent, AbstractJob child, String label) {
+        addDependency(parent.getId(), child.getId(), label);
         return this;
     }
 
