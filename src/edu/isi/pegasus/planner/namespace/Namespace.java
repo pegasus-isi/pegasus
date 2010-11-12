@@ -332,9 +332,8 @@ public abstract class Namespace /*extends Data*/{
     public void assimilate( PegasusProperties properties, Profiles.NAMESPACES namespace ){
         Namespace profiles = properties.getProfiles( namespace ) ;
         for ( Iterator it = profiles.getProfileKeyIterator(); it.hasNext(); ){
-            //construct directly. bypassing the checks!
             String key = (String)it.next();
-            this.checkKey( key, (String)profiles.get( key ) );
+            this.checkKeyInNS( key, (String)profiles.get( key ) );
         }
     }
 

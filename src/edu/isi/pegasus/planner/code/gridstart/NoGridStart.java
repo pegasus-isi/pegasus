@@ -152,7 +152,7 @@ public class NoGridStart implements GridStart {
         mSubmitDir = mPOptions.getSubmitDirectory();
         mProps     = bag.getPegasusProperties();
         mGenerateLOF  = mProps.generateLOFFiles();
-        mExitParserArguments = getExitCodeArguments();
+//        mExitParserArguments = getExitCodeArguments();
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
@@ -594,10 +594,10 @@ public class NoGridStart implements GridStart {
      *
      * @return the argument string.
      */
-    private String getExitCodeArguments(){
+/*    private String getExitCodeArguments(){
         return mProps.getPOSTScriptArguments();
     }
-
+*/
     /**
      * Writes out the list of filenames file for the job.
      *

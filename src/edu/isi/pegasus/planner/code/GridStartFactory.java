@@ -374,7 +374,8 @@ public class GridStartFactory {
             //load via reflection and register in the cache
             obj = this.loadPOSTScript( mProps,
                                        mSubmitDir,
-                                       mProps.getPOSTScriptPath( postScriptType ),
+                                       //mProps.getPOSTScriptPath( postScriptType ),
+                                       job.dagmanVariables.getPOSTScriptPath( postScriptType ),
                                        className );
             this.registerPOSTScript( postScriptType, (POSTScript)obj );
         }

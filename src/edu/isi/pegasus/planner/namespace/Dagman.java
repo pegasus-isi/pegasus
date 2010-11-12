@@ -55,7 +55,18 @@ public class Dagman extends Namespace {
      * The name of the key that determines the arguments that need to be passed
      * to the postscript.
      */
-    public static final String POST_SCRIPT_ARGUMENTS_KEY = "POST_ARGS";
+    public static final String POST_SCRIPT_ARGUMENTS_KEY = "POST.ARGUMENTS";
+    
+    
+    /**
+     * The key prefix that determines the path to a postscript
+     */
+    public static final String POST_SCRIPT_PATH_PREFIX = "POST.PATH";
+    
+    /**
+     * The default value for the arguments passed to postscript
+     */
+    public static final String DEFAULT_POST_SCRIPT_ARGUMENTS_KEY_VALUE = "";
 
     /**
      * The name of the key that determines the file on the submit host on
@@ -73,7 +84,12 @@ public class Dagman extends Namespace {
      * The name of the key that determines the arguments that need to be passed
      * to the postscript.
      */
-    public static final String PRE_SCRIPT_ARGUMENTS_KEY = "PRE_ARGS";
+    public static final String PRE_SCRIPT_ARGUMENTS_KEY = "PRE.ARGUMENTS";
+    
+    /**
+     * The default value for the arguments passed to prescript
+     */
+    public static final String DEFAULT_PRE_SCRIPT_ARGUMENTS_KEY_VALUE = "";
 
     /**
      * The name of the key that determines how many times DAGMAN should be
@@ -230,7 +246,7 @@ public class Dagman extends Namespace {
         switch (key.charAt(0)) {
 
             case 'C':
-                if ( key.compareTo( this.CATEGORY_KEY ) == 0 ){
+                if ( key.compareTo( Dagman.CATEGORY_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else {
@@ -239,7 +255,7 @@ public class Dagman extends Namespace {
                 break;
                 
             case 'D':
-                if( key.compareTo( this.DIRECTORY_EXTERNAL_KEY) == 0 ){
+                if( key.compareTo( Dagman.DIRECTORY_EXTERNAL_KEY) == 0 ){
                     res = VALID_KEY;
                 }
                 else {
@@ -248,7 +264,7 @@ public class Dagman extends Namespace {
                 break;
 
             case 'J':
-                if (key.compareTo(this.JOB_KEY) == 0) {
+                if (key.compareTo(Dagman.JOB_KEY) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -257,7 +273,7 @@ public class Dagman extends Namespace {
                 break;
 
             case 'O':
-                if (key.compareTo(this.OUTPUT_KEY) == 0) {
+                if (key.compareTo(Dagman.OUTPUT_KEY) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -266,10 +282,11 @@ public class Dagman extends Namespace {
                 break;
 
             case 'P':
-                if ( (key.compareTo(this.POST_SCRIPT_KEY) == 0) ||
-                     (key.compareTo(this.POST_SCRIPT_ARGUMENTS_KEY) == 0)||
-                     (key.compareTo(this.PRE_SCRIPT_KEY) == 0) ||
-                     (key.compareTo(this.PRE_SCRIPT_ARGUMENTS_KEY) == 0)
+                if ( (key.compareTo(Dagman.POST_SCRIPT_KEY) == 0) ||
+                     (key.compareTo(Dagman.POST_SCRIPT_ARGUMENTS_KEY) == 0)||
+                     (key.compareTo(Dagman.PRE_SCRIPT_KEY) == 0) ||
+                     (key.compareTo(Dagman.PRE_SCRIPT_ARGUMENTS_KEY) == 0 ) || 
+                     ( key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX ) )
                      ) {
                     res = VALID_KEY;
                 }
@@ -279,7 +296,7 @@ public class Dagman extends Namespace {
                 break;
 
             case 'R':
-                if (key.compareTo(this.RETRY_KEY) == 0) {
+                if (key.compareTo(Dagman.RETRY_KEY) == 0) {
                     res = VALID_KEY;
                 }
                 else {
@@ -305,6 +322,21 @@ public class Dagman extends Namespace {
     }
 
     /**
+     * Returns the path to the postscript of a particular type
+     * 
+     * @param type  type of postscript
+     * 
+     * @return  the path
+     */
+    public String getPOSTScriptPath( String type ){
+        StringBuffer property = new StringBuffer();
+        property.append( Dagman.POST_SCRIPT_PATH_PREFIX  ).
+                 append( "." ).append( type.toUpperCase() );
+       
+        return (String) this.get( property.toString() );
+    }
+    
+    /**
      * It puts in the namespace specific information specified in the properties
      * file into the namespace. The profile information is populated only if the
      * corresponding key does not exist in the object already.
@@ -319,41 +351,34 @@ public class Dagman extends Namespace {
         //and merge them into the existing.
         this.assimilate( properties , Profiles.NAMESPACES.dagman  );
         
-        //check if RETRY key already exists
-        if(!this.containsKey(this.RETRY_KEY)){
-            //try to get one from the condor file
-            String val = properties.getCondorRetryValue();
-            if (val != null && Integer.parseInt(val) > 0)
-                //construct the RETRY key and put it in
-                //assuming val is a proper integer
-                this.checkKeyInNS(this.RETRY_KEY, val);
-        }
-
         //check if the arguments for the
         //post script are specified or not
-        if(!this.containsKey(this.POST_SCRIPT_ARGUMENTS_KEY)){
+
+        //System.out.println( this.mProfileMap );
+        if(!this.containsKey(Dagman.POST_SCRIPT_ARGUMENTS_KEY)){
             //push in the default arguments for the post script
-            this.checkKeyInNS(this.POST_SCRIPT_ARGUMENTS_KEY,
-                              properties.getPOSTScriptArguments());
+            this.checkKeyInNS( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
+                               Dagman.DEFAULT_POST_SCRIPT_ARGUMENTS_KEY_VALUE );
         }
 
         //check if the arguments for the
         //pre script are specified or not
-        if(!this.containsKey(this.PRE_SCRIPT_ARGUMENTS_KEY)){
+        if(!this.containsKey(Dagman.PRE_SCRIPT_ARGUMENTS_KEY)){
             //push in the default arguments for the post script
-            this.checkKeyInNS(this.PRE_SCRIPT_ARGUMENTS_KEY,
-                              properties.getPrescriptArguments());
+            this.checkKeyInNS( Dagman.PRE_SCRIPT_ARGUMENTS_KEY,
+                               Dagman.DEFAULT_PRE_SCRIPT_ARGUMENTS_KEY_VALUE );
         }
 
         //what type of postscript needs to be invoked for the job
+        /*
         if( !this.containsKey( this.POST_SCRIPT_KEY ) ){
             //get one from the properties
             String ps = properties.getPOSTScript();
             if( ps != null ){ checkKeyInNS( this.POST_SCRIPT_KEY, properties.getPOSTScript() ); }
         }
-
+*/
     }
-    
+   
     
     
     /**
@@ -420,8 +445,8 @@ public class Dagman extends Namespace {
         }
 
         //add the category key in the end if required
-        if( this.containsKey( this.CATEGORY_KEY ) ){
-            append( sb, replacementKey( this.CATEGORY_KEY  ), name, replacementValue( this.CATEGORY_KEY  ) );
+        if( this.containsKey( Dagman.CATEGORY_KEY ) ){
+            append( sb, replacementKey( Dagman.CATEGORY_KEY  ), name, replacementValue( Dagman.CATEGORY_KEY  ) );
         }
 
         return sb.toString();
@@ -444,10 +469,11 @@ public class Dagman extends Namespace {
      * @return boolean
      */
     private boolean ignore(String key){
-        return key.equals( this.POST_SCRIPT_ARGUMENTS_KEY ) ||
-               key.equals( this.PRE_SCRIPT_ARGUMENTS_KEY) ||
-               key.equals( this.OUTPUT_KEY ) ||
-               key.equals( this.CATEGORY_KEY );
+        return key.equals( Dagman.POST_SCRIPT_ARGUMENTS_KEY ) ||
+               key.equals( Dagman.PRE_SCRIPT_ARGUMENTS_KEY) ||
+               key.equals( Dagman.OUTPUT_KEY ) ||
+               key.equals( Dagman.CATEGORY_KEY ) ||
+               key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX );
     }
 
 
@@ -461,11 +487,11 @@ public class Dagman extends Namespace {
      */
     private String replacementKey(String key){
         String replacement = key;
-        if(key.equalsIgnoreCase(this.POST_SCRIPT_KEY)){
-            replacement = this.POST_SCRIPT_REPLACEMENT_KEY;
+        if(key.equalsIgnoreCase(Dagman.POST_SCRIPT_KEY)){
+            replacement = Dagman.POST_SCRIPT_REPLACEMENT_KEY;
         }
-        else if(key.equalsIgnoreCase(this.PRE_SCRIPT_KEY)){
-            replacement = this.PRE_SCRIPT_REPLACEMENT_KEY;
+        else if(key.equalsIgnoreCase(Dagman.PRE_SCRIPT_KEY)){
+            replacement = Dagman.PRE_SCRIPT_REPLACEMENT_KEY;
         }
         return replacement;
     }
@@ -486,17 +512,17 @@ public class Dagman extends Namespace {
         value.append( (String)mProfileMap.get(key));
 
         //for postscript and prescript in addition put in the arguments.
-        if(key.equalsIgnoreCase(this.POST_SCRIPT_KEY)){
+        if(key.equalsIgnoreCase(Dagman.POST_SCRIPT_KEY)){
             //append the postscript arguments
-            value.append(" ").append( (String)this.get( this.POST_SCRIPT_ARGUMENTS_KEY) );
+            value.append(" ").append( (String)this.get( Dagman.POST_SCRIPT_ARGUMENTS_KEY) );
             //append the output file
-            value.append(" ").append( (String)this.get( this.OUTPUT_KEY ) );
+            value.append(" ").append( (String)this.get( Dagman.OUTPUT_KEY ) );
 
         }
-        else if(key.equalsIgnoreCase(this.PRE_SCRIPT_KEY)){
+        else if(key.equalsIgnoreCase(Dagman.PRE_SCRIPT_KEY)){
             //append the prescript arguments
             value.append(" ").
-                  append( (String)this.get( this.PRE_SCRIPT_ARGUMENTS_KEY));
+                  append( (String)this.get( Dagman.PRE_SCRIPT_ARGUMENTS_KEY));
         }
         return value.toString();
     }

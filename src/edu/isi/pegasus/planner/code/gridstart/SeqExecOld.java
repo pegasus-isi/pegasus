@@ -199,7 +199,7 @@ public class SeqExecOld implements GridStart {
         mSubmitDir = mPOptions.getSubmitDirectory();
         mProps     = bag.getPegasusProperties();
         mGenerateLOF  = mProps.generateLOFFiles();
-        mExitParserArguments = getExitCodeArguments();
+//        mExitParserArguments = getExitCodeArguments();
         mTCHandle  = bag.getHandleToTransformationCatalog();
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
@@ -720,10 +720,11 @@ public class SeqExecOld implements GridStart {
      *
      * @return the argument string.
      */
-    private String getExitCodeArguments(){
+/*    private String getExitCodeArguments(){
         return mProps.getPOSTScriptArguments();
     }
-
+*/
+    
     /**
      * Writes out the list of filenames file for the job.
      *

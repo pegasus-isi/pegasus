@@ -155,7 +155,7 @@ public class SeqExec implements GridStart {
      * The argument string containing the arguments with which the exitcode
      * is invoked on kickstart output.
      */
-    protected String mExitParserArguments;
+//    protected String mExitParserArguments;
 
     /**
      * A boolean indicating whether to generate lof files or not.
@@ -238,7 +238,7 @@ public class SeqExec implements GridStart {
         mSubmitDir = mPOptions.getSubmitDirectory();
         mProps     = bag.getPegasusProperties();
         mGenerateLOF  = mProps.generateLOFFiles();
-        mExitParserArguments = getExitCodeArguments();
+//        mExitParserArguments = getExitCodeArguments();
         mTCHandle  = bag.getHandleToTransformationCatalog();
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
@@ -708,10 +708,11 @@ public class SeqExec implements GridStart {
      *
      * @return the argument string.
      */
+/*    
     private String getExitCodeArguments(){
         return mProps.getPOSTScriptArguments();
     }
-
+*/
     /**
      * Writes out the list of filenames file for the job.
      *

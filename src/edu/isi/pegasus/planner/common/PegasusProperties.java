@@ -1666,10 +1666,10 @@ public class PegasusProperties {
      * @return the postscript to use for the workflow, else null if not
      *         specified in the properties.
      */
-    public String getPOSTScript(){
+/*    public String getPOSTScript(){
         return mProps.getProperty( "pegasus.exitcode.impl" );
     }
-
+*/
     /**
      * Returns the path to the exitcode executable to be used.
      *
@@ -1680,14 +1680,14 @@ public class PegasusProperties {
      *
      * @return the path to the postscript if specified in properties file.
      */
-    public String getPOSTScriptPath( String value ){
+/*    public String getPOSTScriptPath( String value ){
         value = ( value == null ) ? "*" : value;
         StringBuffer key = new StringBuffer();
         key.append( "pegasus.exitcode.path." ).append( value );
 
         return mProps.getProperty( key.toString() );
     }
-
+*/
 
     /**
      * Returns the argument string containing the arguments by which exitcode is
@@ -1697,10 +1697,11 @@ public class PegasusProperties {
      *
      * @return String containing the arguments,else empty string.
      */
+/*
     public String getPOSTScriptArguments() {
         return mProps.getProperty( "pegasus.exitcode.arguments", "");
     }
-
+*/
     /**
      * Returns a boolean indicating whether to turn debug on or not for exitcode.
      * By default false is returned.
@@ -1722,10 +1723,11 @@ public class PegasusProperties {
      * @return String containing the arguments.
      *         null if not specified.
      */
+/*
     public String getPrescriptArguments() {
         return mProps.getProperty( "pegasus.prescript.arguments","" );
     }
-
+*/
 
     //PROPERTIES RELATED TO REMOTE SCHEDULERS
     /**
@@ -1826,7 +1828,7 @@ public class PegasusProperties {
      * @return an int denoting the number of times to retry.
      *         null if not specified or invalid entry.
      */
-    public String getCondorRetryValue() {
+/*    public String getCondorRetryValue() {
         String prop = mProps.getProperty( "pegasus.dagman.retry" );
         int val = -1;
 
@@ -1838,6 +1840,7 @@ public class PegasusProperties {
 
         return Integer.toString( val );
     }
+*/ 
 
     /**
      * Tells whether to stream condor output or not. By default it is true ,
