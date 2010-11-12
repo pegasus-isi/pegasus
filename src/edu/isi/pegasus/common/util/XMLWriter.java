@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package edu.isi.pegasus.common.util;
 
 import java.io.IOException;
@@ -153,6 +152,21 @@ public class XMLWriter {
         return this;
     }
 
+    public XMLWriter writeUnEscapedData(String data) {
+        try {
+            mEmptyElement = false;
+            closeElement();
+            mWriter.write(data);
+        } catch (IOException ioe) {
+            mLogger.log(
+                    "Could not write data for element " + mStack.peek() + " using XMLWriter",
+                    LogManager.ERROR_MESSAGE_LEVEL);
+            mLogger.log(ioe.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL);
+
+        }
+        return this;
+    }
+
     public XMLWriter writeLine() {
         try {
             mWriter.write(mLineSeparator);
@@ -257,19 +271,19 @@ public class XMLWriter {
         return this;
     }
 
-        public XMLWriter writeXMLComment(String comment, boolean linepadded) {
+    public XMLWriter writeXMLComment(String comment, boolean linepadded) {
 
         try {
             closeElement();
-            if(linepadded){
-            writeLine();
+            if (linepadded) {
+                writeLine();
             }
             mWriter.write(START_COMMENT_TAG);
             mWriter.write(comment);
             mWriter.write(CLOSE_COMMENT_TAG);
             writeLine();
-            if(linepadded){
-            writeLine();
+            if (linepadded) {
+                writeLine();
             }
         } catch (IOException ioe) {
             mLogger.log(
@@ -279,6 +293,7 @@ public class XMLWriter {
         }
         return this;
     }
+
     public XMLWriter writeXMLComment(String comment) {
         this.writeXMLComment(comment, false);
         return this;

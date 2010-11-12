@@ -45,6 +45,8 @@ public class AbstractJob {
     protected String mVersion;
     protected String mNodeLabel;
     protected static LogManager mLogger;
+    private static final String ARG_DELIMITER = " ";
+    private static final String FILE_DELIMITER = " ";
 
     protected AbstractJob() {
         mLogger = LogManagerFactory.loadSingletonInstance();
@@ -62,40 +64,268 @@ public class AbstractJob {
         }
     }
 
+    /**
+     *
+     * @return
+     */
     public List getArguments() {
         return Collections.unmodifiableList(mArguments);
     }
 
+    /**
+     *
+     * @param argument
+     * @return
+     */
     public AbstractJob addArgument(String argument) {
         if (argument != null) {
+            if (!mArguments.isEmpty()) {
+                mArguments.add(ARG_DELIMITER);
+            }
             mArguments.add(argument);
         }
         return this;
     }
 
+    /**
+     *
+     * @param file
+     * @return
+     */
     public AbstractJob addArgument(File file) {
         if (file != null) {
+            if (!mArguments.isEmpty()) {
+                mArguments.add(ARG_DELIMITER);
+            }
             mArguments.add(file);
         }
         return this;
     }
 
-    public AbstractJob addProfile(String namespace, String key, String value) {
-        mProfiles.add(new Profile(namespace, key, value));
+    /**
+     *
+     * @param files
+     * @return
+     */
+    public AbstractJob addArgument(File[] files) {
+        this.addArgument(files, FILE_DELIMITER);
+        return this;
+    }
+
+    /**
+     *
+     * @param files
+     * @return
+     */
+    public AbstractJob addArgument(List<File> files) {
+        this.addArgument(files, FILE_DELIMITER);
+        return this;
+    }
+
+    /**
+     *
+     * @param files
+     * @param filedelimiter
+     * @return
+     */
+    public AbstractJob addArgument(File[] files, String filedelimiter) {
+        filedelimiter = (filedelimiter == null) ? FILE_DELIMITER : filedelimiter;
+        if (files != null && files.length > 0) {
+            if (!mArguments.isEmpty()) {
+                mArguments.add(ARG_DELIMITER);
+            }
+            boolean first = true;
+            for (File f : files) {
+                if (!first) {
+                    mArguments.add(filedelimiter);
+                }
+                mArguments.add(f);
+                first = false;
+            }
+        }
+        return this;
+    }
+
+    /**
+     *
+     * @param files
+     * @param filedelimiter
+     * @return
+     */
+    public AbstractJob addArgument(List<File> files, String filedelimiter) {
+        if (files != null && !files.isEmpty()) {
+            this.addArgument((File[]) files.toArray(), filedelimiter);
+        }
+        return this;
+    }
+
+    /**
+     *
+     * @param argkey
+     * @param argvalue
+     * @return
+     */
+    public AbstractJob addArgument(String argkey, String argvalue) {
+        this.addArgument(argkey, argvalue, ARG_DELIMITER);
+        return this;
+    }
+
+    /**
+     *
+     * @param argkey
+     * @param argvalue
+     * @param argdelimiter
+     * @return
+     */
+    public AbstractJob addArgument(String argkey, String argvalue,
+            String argdelimiter) {
+        argdelimiter = (argdelimiter == null) ? ARG_DELIMITER : argdelimiter;
+        if (argkey != null && argvalue != null) {
+            this.addArgument(argkey + argdelimiter + argvalue);
+        }
         return this;
 
     }
 
+    /**
+     *
+     * @param argkey
+     * @param argvalue
+     * @return
+     */
+    public AbstractJob addArgument(String argkey, File argvalue) {
+        this.addArgument(argkey, argvalue, ARG_DELIMITER);
+        return this;
+    }
+
+    /**
+     *
+     * @param argkey
+     * @param argvalue
+     * @param argdelimiter
+     * @return
+     */
+    public AbstractJob addArgument(String argkey, File argvalue,
+            String argdelimiter) {
+        argdelimiter = (argdelimiter == null) ? ARG_DELIMITER : argdelimiter;
+        if (argkey != null && argvalue != null) {
+            this.addArgument(argkey + argdelimiter);
+            mArguments.add(argvalue);
+        }
+        return this;
+    }
+
+    /**
+     *
+     * @param argkey
+     * @param argvalue
+     * @return
+     */
+    public AbstractJob addArgument(String argkey, File[] argvalue) {
+        this.addArgument(argkey, argvalue, ARG_DELIMITER, FILE_DELIMITER);
+        return this;
+    }
+
+    /**
+     *
+     * @param argkey
+     * @param argvalue
+     * @return
+     */
+    public AbstractJob addArgument(String argkey, List<File> argvalue) {
+        this.addArgument(argkey, argvalue, ARG_DELIMITER, FILE_DELIMITER);
+        return this;
+    }
+
+    /**
+     *
+     * @param argkey
+     * @param argvalue
+     * @param argdelimiter
+     * @param filedelimiter
+     * @return
+     */
+    public AbstractJob addArgument(String argkey, File[] argvalue,
+            String argdelimiter, String filedelimiter) {
+        argdelimiter = (argdelimiter == null) ? ARG_DELIMITER : argdelimiter;
+        filedelimiter = (filedelimiter == null) ? FILE_DELIMITER : filedelimiter;
+
+        if (argkey != null && argvalue != null && argvalue.length > 0) {
+            this.addArgument(argkey + argdelimiter);
+            boolean first = true;
+            for (File f : argvalue) {
+                if (!first) {
+                    mArguments.add(filedelimiter);
+                }
+                mArguments.add(f);
+                first = false;
+            }
+        }
+        return this;
+    }
+
+    /**
+     *
+     * @param argkey
+     * @param argvalue
+     * @param argdelimiter
+     * @param filedelimiter
+     * @return
+     */
+    public AbstractJob addArgument(String argkey, List<File> argvalue,
+            String argdelimiter, String filedelimiter) {
+        if (argkey != null && argvalue != null && !argvalue.isEmpty()) {
+            this.addArgument(argkey, (File[]) argvalue.toArray(), argdelimiter,
+                    filedelimiter);
+        }
+        return this;
+    }
+
+    /**
+     *
+     * @param namespace
+     * @param key
+     * @param value
+     * @return
+     */
+    public AbstractJob addProfile(String namespace, String key, String value) {
+        mProfiles.add(new Profile(namespace, key, value));
+
+
+        return this;
+
+
+
+    }
+
+    /**
+     *
+     * @param namespace
+     * @param key
+     * @param value
+     * @return
+     */
     public AbstractJob addProfile(Profile.NAMESPACE namespace, String key,
             String value) {
         mProfiles.add(new Profile(namespace, key, value));
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public File getStdin() {
         return mStdin;
+
+
     }
 
+    /**
+     *
+     * @param stdin
+     * @return
+     */
     public AbstractJob setStdin(File stdin) {
         File f = new File(stdin, File.LINK.INPUT);
         mStdin = f;
@@ -105,6 +335,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdin
+     * @param transfer
+     * @return
+     */
     public AbstractJob setStdin(File stdin, File.TRANSFER transfer) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
@@ -115,6 +351,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdin
+     * @param register
+     * @return
+     */
     public AbstractJob setStdin(File stdin, boolean register) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setRegister(register);
@@ -125,7 +367,15 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStdin(File stdin, File.TRANSFER transfer, boolean register) {
+    /**
+     *
+     * @param stdin
+     * @param transfer
+     * @param register
+     * @return
+     */
+    public AbstractJob setStdin(File stdin, File.TRANSFER transfer,
+            boolean register) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -136,7 +386,16 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStdin(File stdin, File.TRANSFER transfer, boolean register, boolean optional) {
+    /**
+     *
+     * @param stdin
+     * @param transfer
+     * @param register
+     * @param optional
+     * @return
+     */
+    public AbstractJob setStdin(File stdin, File.TRANSFER transfer,
+            boolean register, boolean optional) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -148,6 +407,11 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdin
+     * @return
+     */
     public AbstractJob setStdin(String stdin) {
         File f = new File(stdin, File.LINK.INPUT);
         mStdin = f;
@@ -157,6 +421,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdin
+     * @param transfer
+     * @return
+     */
     public AbstractJob setStdin(String stdin, File.TRANSFER transfer) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
@@ -167,6 +437,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdin
+     * @param register
+     * @return
+     */
     public AbstractJob setStdin(String stdin, boolean register) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setRegister(register);
@@ -177,7 +453,15 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStdin(String stdin, File.TRANSFER transfer, boolean register) {
+    /**
+     *
+     * @param stdin
+     * @param transfer
+     * @param register
+     * @return
+     */
+    public AbstractJob setStdin(String stdin, File.TRANSFER transfer,
+            boolean register) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -188,7 +472,16 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStdin(String stdin, File.TRANSFER transfer, boolean register, boolean optional) {
+    /**
+     *
+     * @param stdin
+     * @param transfer
+     * @param register
+     * @param optional
+     * @return
+     */
+    public AbstractJob setStdin(String stdin, File.TRANSFER transfer,
+            boolean register, boolean optional) {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -200,10 +493,19 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public File getStdout() {
         return mStdout;
     }
 
+    /**
+     *
+     * @param stdout
+     * @return
+     */
     public AbstractJob setStdout(File stdout) {
         File f = new File(stdout, File.LINK.OUTPUT);
         mStdout = f;
@@ -213,6 +515,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdout
+     * @param transfer
+     * @return
+     */
     public AbstractJob setStdout(File stdout, File.TRANSFER transfer) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
@@ -223,6 +531,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdout
+     * @param register
+     * @return
+     */
     public AbstractJob setStdout(File stdout, boolean register) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setRegister(register);
@@ -233,7 +547,15 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStdout(File stdout, File.TRANSFER transfer, boolean register) {
+    /**
+     *
+     * @param stdout
+     * @param transfer
+     * @param register
+     * @return
+     */
+    public AbstractJob setStdout(File stdout, File.TRANSFER transfer,
+            boolean register) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -244,7 +566,16 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStdout(File stdout, File.TRANSFER transfer, boolean register, boolean optional) {
+    /**
+     *
+     * @param stdout
+     * @param transfer
+     * @param register
+     * @param optional
+     * @return
+     */
+    public AbstractJob setStdout(File stdout, File.TRANSFER transfer,
+            boolean register, boolean optional) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -256,6 +587,11 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdout
+     * @return
+     */
     public AbstractJob setStdout(String stdout) {
         File f = new File(stdout, File.LINK.OUTPUT);
         mStdout = f;
@@ -265,6 +601,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdout
+     * @param transfer
+     * @return
+     */
     public AbstractJob setStdout(String stdout, File.TRANSFER transfer) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
@@ -275,6 +617,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stdout
+     * @param register
+     * @return
+     */
     public AbstractJob setStdout(String stdout, boolean register) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setRegister(register);
@@ -285,7 +633,15 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStdout(String stdout, File.TRANSFER transfer, boolean register) {
+    /**
+     *
+     * @param stdout
+     * @param transfer
+     * @param register
+     * @return
+     */
+    public AbstractJob setStdout(String stdout, File.TRANSFER transfer,
+            boolean register) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -294,7 +650,16 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStdout(String stdout, File.TRANSFER transfer, boolean register, boolean optional) {
+    /**
+     *
+     * @param stdout
+     * @param transfer
+     * @param register
+     * @param optional
+     * @return
+     */
+    public AbstractJob setStdout(String stdout, File.TRANSFER transfer,
+            boolean register, boolean optional) {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -306,10 +671,20 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public File getStderr() {
         return mStderr;
+
     }
 
+    /**
+     * 
+     * @param stderr
+     * @return
+     */
     public AbstractJob setStderr(File stderr) {
         File f = new File(stderr, File.LINK.OUTPUT);
         mStderr = f;
@@ -319,6 +694,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stderr
+     * @param transfer
+     * @return
+     */
     public AbstractJob setStderr(File stderr, File.TRANSFER transfer) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
@@ -329,6 +710,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stderr
+     * @param register
+     * @return
+     */
     public AbstractJob setStderr(File stderr, boolean register) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setRegister(register);
@@ -339,7 +726,15 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStderr(File stderr, File.TRANSFER transfer, boolean register) {
+    /**
+     *
+     * @param stderr
+     * @param transfer
+     * @param register
+     * @return
+     */
+    public AbstractJob setStderr(File stderr, File.TRANSFER transfer,
+            boolean register) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -350,7 +745,16 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStderr(File stderr, File.TRANSFER transfer, boolean register, boolean optional) {
+    /**
+     *
+     * @param stderr
+     * @param transfer
+     * @param register
+     * @param optional
+     * @return
+     */
+    public AbstractJob setStderr(File stderr, File.TRANSFER transfer,
+            boolean register, boolean optional) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -362,6 +766,11 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stderr
+     * @return
+     */
     public AbstractJob setStderr(String stderr) {
         File f = new File(stderr, File.LINK.OUTPUT);
         mStderr = f;
@@ -371,6 +780,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     * 
+     * @param stderr
+     * @param transfer
+     * @return
+     */
     public AbstractJob setStderr(String stderr, File.TRANSFER transfer) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
@@ -381,6 +796,12 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @param stderr
+     * @param register
+     * @return
+     */
     public AbstractJob setStderr(String stderr, boolean register) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setRegister(register);
@@ -391,7 +812,15 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStderr(String stderr, File.TRANSFER transfer, boolean register) {
+    /**
+     *
+     * @param stderr
+     * @param transfer
+     * @param register
+     * @return
+     */
+    public AbstractJob setStderr(String stderr, File.TRANSFER transfer,
+            boolean register) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -402,7 +831,16 @@ public class AbstractJob {
         return this;
     }
 
-    public AbstractJob setStderr(String stderr, File.TRANSFER transfer, boolean register, boolean optional) {
+    /**
+     *
+     * @param stderr
+     * @param transfer
+     * @param register
+     * @param optional
+     * @return
+     */
+    public AbstractJob setStderr(String stderr, File.TRANSFER transfer,
+            boolean register, boolean optional) {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -414,55 +852,110 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public Set<File> getUses() {
         return Collections.unmodifiableSet(mUses);
     }
 
+    /**
+     *
+     *
+     *
+     *
+     * @param file
+     * @param link
+     * @return
+     */
     public AbstractJob uses(String file, File.LINK link) {
         File f = new File(file, link);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
+                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
+    /**
+     *
+     * @param file
+     * @param link
+     * @param register
+     * @return
+     */
     public AbstractJob uses(String file, File.LINK link, boolean register) {
         File f = new File(file, link);
         f.setRegister(register);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
+                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
+    /**
+     *
+     * @param file
+     * @param link
+     * @param transfer
+     * @return
+     */
     public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
+                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
-    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer, boolean register) {
+    /**
+     *
+     * @param file
+     * @param link
+     * @param transfer
+     * @param register
+     * @return
+     */
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
+            boolean register) {
         File f = new File(file, link);
         f.setRegister(register);
         f.setTransfer(transfer);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
+                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
-    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer, boolean register, boolean optional, boolean executable) {
+    /**
+     * 
+     * @param file
+     * @param link
+     * @param transfer
+     * @param register
+     * @param optional
+     * @param executable
+     * @return
+     */
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
+            boolean register, boolean optional, boolean executable) {
         File f = new File(file, link);
         f.setRegister(register);
         f.setOptional(optional);
@@ -471,56 +964,113 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
+    /**
+     *
+     * @param file
+     * @param link
+     * @return
+     */
     public AbstractJob uses(File file, File.LINK link) {
         File f = new File(file, link);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
+    /**
+     * 
+     * @param file
+     * @param link
+     * @param transfer
+     * @return
+     */
     public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
+    /**
+     * 
+     * @param file
+     * @param link
+     * @param register
+     * @return
+     */
     public AbstractJob uses(File file, File.LINK link, boolean register) {
         File f = new File(file, link);
         f.setRegister(register);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file "
+                    + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
+
+
     }
 
-    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer, boolean register) {
+    /**
+     *
+     * @param file
+     * @param link
+     * @param transfer
+     * @param register
+     * @return
+     */
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
+            boolean register) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setRegister(register);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
-    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer, boolean register, boolean optional, boolean executable) {
+    /**
+     *
+     * @param file
+     * @param link
+     * @param transfer
+     * @param register
+     * @param optional
+     * @param executable
+     * @return
+     */
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
+            boolean register, boolean optional, boolean executable) {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setRegister(register);
@@ -529,78 +1079,143 @@ public class AbstractJob {
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
-            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
         }
         return this;
     }
 
+    /**
+     *
+     * @param files
+     * @param link
+     * @return
+     */
     public AbstractJob uses(List<File> files, File.LINK link) {
         for (File file : files) {
             File f = new File(file, link);
             if (!mUses.contains(f)) {
                 mUses.add(f);
             } else {
-                mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+                mLogger.log("Job " + Separator.combine(mNamespace, mName,
+                        mVersion)
+                        + "already contains a file " + Separator.combine(
+                        f.mNamespace, f.mName, f.mVersion)
+                        + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
             }
         }
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public List<Invoke> getInvoke() {
         return Collections.unmodifiableList(mInvokes);
     }
 
+    /**
+     * 
+     * @param when
+     * @param what
+     * @return
+     */
     public AbstractJob addInvoke(Invoke.WHEN when, String what) {
         Invoke i = new Invoke(when, what);
         mInvokes.add(i);
         return this;
     }
 
+    /**
+     *
+     * @param invoke
+     * @return
+     */
     public AbstractJob addInvoke(Invoke invoke) {
         mInvokes.add(invoke);
         return this;
     }
 
+    /**
+     *
+     * @param invokes
+     * @return
+     */
     public AbstractJob addInvoke(List<Invoke> invokes) {
         this.mInvokes.addAll(invokes);
         return this;
     }
 
+    /**
+     * 
+     * @return
+     */
     public String getName() {
         return mName;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getId() {
         return mId;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getNodeLabel() {
         return mNodeLabel;
     }
 
+    /**
+     *
+     * @param label
+     */
     public void setNodeLabel(String label) {
         this.mNodeLabel = label;
     }
 
+    /**
+     *
+     * @param writer
+     */
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
 
+    /**
+     * 
+     * @param writer
+     * @param indent
+     */
     public void toXML(XMLWriter writer, int indent) {
-
         Class c = this.getClass();
         //Check if its a dax, dag or job class
         if (c == DAX.class) {
-            writer.startElement("dax", indent);
-            writer.writeAttribute("id", mId);
-            writer.writeAttribute("file", mName);
+            writer.startElement(
+                    "dax", indent);
+            writer.writeAttribute(
+                    "id", mId);
+            writer.writeAttribute(
+                    "file", mName);
         } else if (c == DAG.class) {
-            writer.startElement("dag", indent);
-            writer.writeAttribute("id", mId);
-            writer.writeAttribute("file", mName);
+            writer.startElement(
+                    "dag", indent);
+            writer.writeAttribute(
+                    "id", mId);
+            writer.writeAttribute(
+                    "file", mName);
         } else if (c == Job.class) {
-            writer.startElement("job", indent);
-            writer.writeAttribute("id", mId);
+            writer.startElement(
+                    "job", indent);
+            writer.writeAttribute(
+                    "id", mId);
             if (mNamespace != null && !mNamespace.isEmpty()) {
                 writer.writeAttribute("namespace", mNamespace);
             }
@@ -611,14 +1226,14 @@ public class AbstractJob {
         }
         if (mNodeLabel != null && !mNodeLabel.isEmpty()) {
             writer.writeAttribute("node-label", mNodeLabel);
-        }
-        //add argument
+        } //add argument
         if (!mArguments.isEmpty()) {
             writer.startElement("argument", indent + 1);
             for (Object o : mArguments) {
                 if (o.getClass() == String.class) {
                     //if class is string add argument string in the data section
-                    writer.writeData((String) o);
+                    writer.writeData(
+                            (String) o);
                 }
                 if (o.getClass() == File.class) {
                     //add file tags in the argument elements data section
@@ -626,35 +1241,31 @@ public class AbstractJob {
                 }
             }
             writer.endElement();
-        }
-        //add profiles
+        } //add profiles
         for (Profile p : mProfiles) {
             p.toXML(writer, indent + 1);
-        }
-        //add stdin
+        } //add stdin
         if (mStdin != null) {
             mStdin.toXML(writer, indent + 1, "stdin");
-        }
-        //add stdout
+        } //add stdout
         if (mStdout != null) {
             mStdout.toXML(writer, indent + 1, "stdout");
-        }
-        //add stderr
+        } //add stderr
         if (mStderr != null) {
             mStderr.toXML(writer, indent + 1, "stderr");
-        }
-        //add uses
+        } //add uses
         for (File f : mUses) {
             f.toXML(writer, indent + 1, "uses");
-        }
-        //add invoke
+        } //add invoke
         for (Invoke i : mInvokes) {
             i.toXML(writer, indent + 1);
         }
-        if (!(mUses.isEmpty() && mInvokes.isEmpty() && mStderr == null && mStdout == null && mStdin == null && mProfiles.isEmpty() && mArguments.isEmpty())) {
+        if (!(mUses.isEmpty() && mInvokes.isEmpty() && mStderr == null && mStdout == null && mStdin == null && mProfiles.
+                isEmpty() && mArguments.isEmpty())) {
             writer.endElement(indent);
         } else {
             writer.endElement();
+
         }
 
     }

@@ -93,7 +93,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *      <li><b>Add the physical location {@link PFN} of the executable. In case of stageable executables the path should be a url</b><br><br>
  *          <i>preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg"));</i>
  *      </li><br>
- *      <li><b>Add {@link Profile} and {@link Metadata} objects to the executable</b><br><br>
+ *      <li><b>Add {@link Profile} and {@link MetaData} objects to the executable</b><br><br>
  *          <i>preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");</i><br>
  *          <i>preprocess.addMetaData("string", "project", "pegasus");</i>
  *      </li><br>
@@ -144,8 +144,8 @@ dax.addDAG(j2);
  * or by specifying the job|dax|dag objects directly as below<br><br>
  * <i>dax.addDependency(j1,j3);
  * </li><br>
-*  <li><b>Finally write the dax to a file</b><br><br>
-*  <i>dax.writeToFile("diamond.dax");</i>
+ *  <li><b>Finally write the dax to a file</b><br><br>
+ *  <i>dax.writeToFile("diamond.dax");</i>
  * </li>
  * </ol>
  *
@@ -157,15 +157,18 @@ public class ADAG {
     /**
      * The "official" namespace URI of the site catalog schema.
      */
-    public static final String SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX";
+    public static final String SCHEMA_NAMESPACE =
+            "http://pegasus.isi.edu/schema/DAX";
     /**
      * XSI SCHEMA NAMESPACE
      */
-    public static final String SCHEMA_NAMESPACE_XSI = "http://www.w3.org/2001/XMLSchema-instance";
+    public static final String SCHEMA_NAMESPACE_XSI =
+            "http://www.w3.org/2001/XMLSchema-instance";
     /**
      * The "not-so-official" location URL of the DAX schema definition.
      */
-    public static final String SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.2.xsd";
+    public static final String SCHEMA_LOCATION =
+            "http://pegasus.isi.edu/schema/dax-3.2.xsd";
     /**
      * The version to report.
      */
@@ -243,7 +246,8 @@ public class ADAG {
         mDependencies = new HashMap<String, List<Parent>>();
         System.setProperty("pegasus.home", System.getProperty("user.dir"));
         mLogger = LogManagerFactory.loadSingletonInstance();
-        mLogger.logEventStart("event.dax.generate", "pegasus.version", Version.instance().toString());
+        mLogger.logEventStart("event.dax.generate", "pegasus.version", Version.
+                instance().toString());
 
     }
 
@@ -434,7 +438,8 @@ public class ADAG {
      * @param label String label for annotation
      * @return ADAG
      */
-     public ADAG addDependency(AbstractJob parent, AbstractJob child, String label) {
+    public ADAG addDependency(AbstractJob parent, AbstractJob child,
+            String label) {
         addDependency(parent.getId(), child.getId(), label);
         return this;
     }
@@ -457,7 +462,8 @@ public class ADAG {
      * Generate a DAX representation on STDOUT.
      */
     public void writeToSTDOUT() {
-        mWriter = new XMLWriter(new BufferedWriter(new OutputStreamWriter(System.out)));
+        mWriter = new XMLWriter(new BufferedWriter(new OutputStreamWriter(
+                System.out)));
         toXML(mWriter);
         mWriter.close();
     }
@@ -485,36 +491,47 @@ public class ADAG {
         writer.startElement("adag");
         writer.writeAttribute("xmlns", SCHEMA_NAMESPACE);
         writer.writeAttribute("xmlns:xsi", SCHEMA_NAMESPACE_XSI);
-        writer.writeAttribute("xsi:schemaLocation", SCHEMA_NAMESPACE + " " + SCHEMA_LOCATION);
+        writer.writeAttribute("xsi:schemaLocation",
+                SCHEMA_NAMESPACE + " " + SCHEMA_LOCATION);
         writer.writeAttribute("version", SCHEMA_VERSION);
         writer.writeAttribute("name", mName);
         writer.writeAttribute("index", Integer.toString(mIndex));
         writer.writeAttribute("count", Integer.toString(mCount));
 
         //print file
-        writer.writeXMLComment("Section 1: Files - Acts as a Replica Catalog (can be empty)",true);
+        writer.writeXMLComment(
+                "Section 1: Files - Acts as a Replica Catalog (can be empty)",
+                true);
         for (File f : mFiles) {
             f.toXML(writer, indent + 1);
         }
 
         //print executable
-        writer.writeXMLComment("Section 2: Executables - Acts as a Transformaton Catalog (can be empty)",true);
+        writer.writeXMLComment(
+                "Section 2: Executables - Acts as a Transformaton Catalog (can be empty)",
+                true);
         for (Executable e : mExecutables) {
             e.toXML(writer, indent + 1);
         }
 
         //print transformation
-        writer.writeXMLComment("Section 3: Transformations - Aggregates executables and Files (can be empty)",true);
+        writer.writeXMLComment(
+                "Section 3: Transformations - Aggregates executables and Files (can be empty)",
+                true);
         for (Transformation t : mTransformations) {
             t.toXML(writer, indent + 1);
         }
         //print jobs, daxes and dags
-        writer.writeXMLComment("Section 4: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",true);
+        writer.writeXMLComment(
+                "Section 4: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",
+                true);
         for (AbstractJob j : mJobs) {
             j.toXML(writer, indent + 1);
         }
         //print dependencies
-        writer.writeXMLComment("Section 5: Dependencies - Parent Child relationships (can be empty)",true);
+        writer.writeXMLComment(
+                "Section 5: Dependencies - Parent Child relationships (can be empty)",
+                true);
 
         for (String child : mDependencies.keySet()) {
             writer.startElement("child", indent + 1).writeAttribute("ref", child);
@@ -579,9 +596,11 @@ public class ADAG {
         dax.addFile(fd);
 
         Executable preprocess = new Executable("pegasus", "preproces", "1.0");
-        preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        preprocess.setArchitecture(Executable.ARCH.X86).setOS(
+                Executable.OS.LINUX);
         preprocess.setInstalled(false);
-        preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg"));
+        preprocess.addPhysicalFile(
+                new PFN("file:///opt/pegasus/default/bin/keg"));
         preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         preprocess.addMetaData("string", "project", "pegasus");
 
@@ -596,11 +615,13 @@ public class ADAG {
         Executable analyze = new Executable("pegasus", "analyze", "1.0");
         analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         analyze.unsetInstalled();
-        analyze.addPhysicalFile(new PFN("gsiftp://localhost/opt/pegasus/default/bin/keg"));
+        analyze.addPhysicalFile(new PFN(
+                "gsiftp://localhost/opt/pegasus/default/bin/keg"));
         analyze.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         analyze.addMetaData("string", "project", "pegasus");
 
-        dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+        dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(
+                analyze);
 
         Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
         diamond.uses(preprocess).uses(findrange).uses(analyze);
@@ -614,13 +635,13 @@ public class ADAG {
         j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
-        j1.uses(new File("f.b2"), File.LINK.OUTPUT);
+        j1.uses("f.b2", File.LINK.OUTPUT);
         j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
         dax.addJob(j1);
 
         DAG j2 = new DAG("j2", "findrange.dag", "j2");
         j2.uses(new File("f.b1"), File.LINK.INPUT);
-        j2.uses(new File("f.c1"), File.LINK.OUTPUT);
+        j2.uses("f.c1", File.LINK.OUTPUT, File.TRANSFER.FALSE, false);
         j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
         j2.addProfile("condor", "universe", "vanilla");
         dax.addDAG(j2);
@@ -628,16 +649,17 @@ public class ADAG {
         DAX j3 = new DAX("j3", "findrange.dax", "j3");
         j3.addArgument("--site ").addArgument("local");
         j3.uses(new File("f.b2"), File.LINK.INPUT);
-        j3.uses(new File("f.c2"), File.LINK.OUTPUT);
+        j3.uses(new File("f.c2"), File.LINK.OUTPUT, File.TRANSFER.FALSE, false);
         j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");
         j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");
         j3.addProfile("ENV", "HAHA", "YADAYADAYADA");
         dax.addDAX(j3);
 
         Job j4 = new Job("j4", "pegasus", "analyze", "");
-        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
-        j4.addArgument(" ").addArgument(fc2);
-        j4.addArgument("-o ").addArgument(fd);
+        File[] infiles = {fc1, fc2};
+        j4.addArgument("-a", "analyze").addArgument("-T").addArgument("60").
+                addArgument("-i", infiles, " ", ",");
+        j4.addArgument("-o", fd);
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
