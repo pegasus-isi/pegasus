@@ -30,9 +30,6 @@ import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.parser.ConfigXmlParser;
-
-//import org.griphyn.cPlanner.poolinfo.MdsQuery;
-
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
