@@ -47,7 +47,6 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.Parser;
-import edu.isi.pegasus.planner.parser.pdax.PDAX2MDAG;
 
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -117,7 +116,17 @@ public class SUBDAXGenerator{
      */
     public static final String RETRY_LOGICAL_NAME = "pegasus-plan";
 
-    
+    /**
+     * The dagman knobs controlled through property. They map the property name to
+     * the corresponding dagman option.
+     */
+    public static final String DAGMAN_KNOBS[][]={
+        { Dagman.MAXPRE_KEY,  " -MaxPre " },
+        { Dagman.MAXPOST_KEY, " -MaxPost " },
+        { Dagman.MAXJOBS_KEY, " -MaxJobs " },
+        { Dagman.MAXIDLE_KEY, " -MaxIdle " },
+    };
+
 
     /**
      * The username of the user running the program.
@@ -173,7 +182,7 @@ public class SUBDAXGenerator{
      * Any extra arguments that need to be passed to dagman, as determined
      * from the properties file.
      */
-    private String mDAGManKnobs;
+    // String mDAGManKnobs;
 
     /**
      * Maps a sub dax job id to it's submit directory. The population relies
@@ -226,7 +235,6 @@ public class SUBDAXGenerator{
             mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.DEBUG_MESSAGE_LEVEL );
         }
         
-        mDAGManKnobs = PDAX2MDAG.constructDAGManKnobs( mProps );
     }
 
     
@@ -635,7 +643,7 @@ public class SUBDAXGenerator{
         }
         
        //pass any dagman knobs that were specified in properties file
-       sb.append( this.mDAGManKnobs );
+       sb.append( this.constructDAGManKnobs( job ) );
 
        //put in the environment variables that are required
        job.envVariables.construct("_CONDOR_DAGMAN_LOG",
@@ -693,6 +701,51 @@ public class SUBDAXGenerator{
 
        return job;
     }
+    
+    /**
+     * Constructs Any extra arguments that need to be passed to dagman, as determined
+     * from the properties file.
+     *
+     * @param job  the job 
+     *
+     * @return any arguments to be added, else empty string
+     */
+    public  String constructDAGManKnobs( Job job ){
+        StringBuffer sb = new StringBuffer();
+
+        //get all the values for the dagman knows
+        int value;
+        for( int i = 0; i < SUBDAXGenerator.DAGMAN_KNOBS.length; i++ ){
+            value = parseInt( (String)job.dagmanVariables.get( SUBDAXGenerator.DAGMAN_KNOBS[i][0] ) );
+            if ( value > 0 ){
+                //add the option
+                sb.append( SUBDAXGenerator.DAGMAN_KNOBS[i][1] );
+                sb.append( value );
+            }
+        }
+        return sb.toString();
+
+    }
+    
+    /**
+     * Parses a string into an integer. Non valid values returned as -1
+     *
+     * @param s  the String to be parsed as integer
+     *
+     * @return the int value if valid, else -1
+     */
+    protected static int parseInt( String s ){
+        int value = -1;
+        try{
+            value = Integer.parseInt( s );
+        }
+        catch( Exception e ){
+            //ignore
+        }
+        return value;
+    }
+
+
     
     /**
      * Returns the basename of a dagman (usually) related file for a particular

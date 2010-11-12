@@ -137,6 +137,32 @@ public class Dagman extends Namespace {
      * The key name for the pre script that is put in the .dag file.
      */
     private static final String PRE_SCRIPT_REPLACEMENT_KEY = "SCRIPT PRE";
+    
+    /**
+     * The prefix for the max keys
+     */
+    public static final String MAX_KEYS_PREFIX = "MAX";
+    
+    /**
+     * The key name for max pre setting for dagman
+     */
+    public static final String MAXPRE_KEY = "MAXPRE";
+    
+    /**
+     * The key name for max post setting for dagman
+     */
+    public static final String MAXPOST_KEY = "MAXPOST";
+    
+    /**
+     * The key name for max idle setting for dagman
+     */
+    public static final String MAXIDLE_KEY = "MAXIDLE";
+    
+    /**
+     * The key name for max jobs setting for dagman
+     */
+    public static final String MAXJOBS_KEY = "MAXJOBS";
+    
 
     /**
      * The name of the job (jobname) to which the profiles for this namespace
@@ -277,6 +303,15 @@ public class Dagman extends Namespace {
                 }
                 break;
 
+            case 'M':
+                if( key.startsWith( MAX_KEYS_PREFIX ) ){
+                      res = VALID_KEY;
+                }
+                else {
+                    res = NOT_PERMITTED_KEY;
+                }
+                break;
+                
             case 'O':
                 if (key.compareTo(Dagman.OUTPUT_KEY) == 0) {
                     res = VALID_KEY;
@@ -479,8 +514,9 @@ public class Dagman extends Namespace {
                key.equals( Dagman.PRE_SCRIPT_ARGUMENTS_KEY) ||
                key.equals( Dagman.OUTPUT_KEY ) ||
                key.equals( Dagman.CATEGORY_KEY ) ||
+               key.equals ( Dagman.POST_SCRIPT_SCOPE_KEY ) ||
                key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX ) ||
-               key.equals ( Dagman.POST_SCRIPT_SCOPE_KEY );
+               key.startsWith( Dagman.MAX_KEYS_PREFIX );
     }
 
 
