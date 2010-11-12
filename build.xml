@@ -288,7 +288,7 @@
   </target>
 
   <target name="externals-clean" depends="validate-make"
-          description="INTERNAL: Cleans up all C tools" 
+          description="INTERNAL: Cleans up all externals builds" 
           if="make.available">
     <exec executable="${basedir}/src/tools/make.pl" dir="src/externals" failonerror="true">
       <arg line="clean"/>
@@ -509,6 +509,9 @@
       <fileset dir="${dist.dir}/examples" includes="**/*.pl"/>
       <fileset dir="${dist.dir}/examples" includes="**/*.exe"/>
       <fileset dir="${dist.dir}/examples" includes="**/submit-workflow*"/>
+      <fileset dir="${dist.dir}/examples" includes="**/galactic-plane/galactic-plane"/>
+      <fileset dir="${dist.dir}/examples" includes="**/galactic-plane/local*"/>
+      <fileset dir="${dist.dir}/examples" includes="**/galactic-plane/remote*"/>
     </chmod>
 
     <!-- lib -->
@@ -569,7 +572,7 @@
     <delete file="dist/pegasus-binary-${pegasus.version}.tar"/>
   </target>
 
-  <target name="clean" depends="ctools-clean, externals-clean"
+  <target name="clean" depends="externals-clean, ctools-clean"
 	  description="Removes the build and dist directories">
     <delete dir="dist"/>
     <delete dir="build"/>

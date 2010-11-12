@@ -25,6 +25,6 @@ touch.sqlalchemy:
 	touch touch.sqlalchemy
 	
 clean:
-	@rm -rf touch.pysqlite pysqlite-2.6.0
-	@rm -rf touch.sqlalchemy SQLAlchemy-0.6.4
+	rm -rf touch.pysqlite pysqlite-2.6.0
+	rm -rf touch.sqlalchemy SQLAlchemy-0.6.4
 
