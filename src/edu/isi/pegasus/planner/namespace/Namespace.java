@@ -333,7 +333,11 @@ public abstract class Namespace /*extends Data*/{
         Namespace profiles = properties.getProfiles( namespace ) ;
         for ( Iterator it = profiles.getProfileKeyIterator(); it.hasNext(); ){
             String key = (String)it.next();
-            this.checkKeyInNS( key, (String)profiles.get( key ) );
+            
+            //profiles assimilated from properties have lowest priority
+            if( !this.containsKey(key) ){
+                this.checkKeyInNS( key, (String)profiles.get( key ) );
+           }
         }
     }
 
