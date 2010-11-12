@@ -1859,11 +1859,11 @@ public class PegasusProperties {
      *         false in case of invalid value or property not being specified.
      *
      */
-    public boolean streamCondorOutput() {
+/*    public boolean streamCondorOutput() {
         return Boolean.parse(mProps.getProperty( "pegasus.condor.output.stream"),
                              false );
     }
-
+*/
     /**
      * Tells whether to stream condor error or not. By default it is true ,
      * meaning condor streams the error from the remote hosts back to the submit
@@ -1879,11 +1879,11 @@ public class PegasusProperties {
      * @return the boolean value specified by the property, else
      *         false in case of invalid value or property not being specified.
      */
-    public boolean streamCondorError() {
+/*    public boolean streamCondorError() {
         return Boolean.parse(mProps.getProperty( "pegasus.condor.error.stream"),
                              false );
     }
-
+*/
     //PROPERTIES RELATED TO STORK
     /**
      * Returns the credential name to be used for the stork transfer jobs.

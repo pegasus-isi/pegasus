@@ -48,6 +48,9 @@ import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+
+
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 
@@ -1824,11 +1827,7 @@ public class CondorGenerator extends Abstract {
         return priority;
     }
 
-
-
-
-
-
+   
     /**
      * This function creates the stdio handling with and without gridstart.
      * Please note that gridstart will become the default by end 2003, and
@@ -1882,14 +1881,19 @@ public class CondorGenerator extends Abstract {
 
         //condor streaming is now for both grid and non grid universe jobs
         // we always put in the streaming keys. they default to false
-        if ( mProps.streamCondorError()) {
+        boolean stream = Boolean.parse( (String)job.condorVariables.removeKey( Condor.STREAM_STDERR_KEY ),
+                                        false );
+        if ( stream ) {
             //we want it to be staged
             writer.println("stream_error  = true");
         }
         else {
             writer.println("stream_error  = false");
         }
-        if ( mProps.streamCondorOutput()) {
+        
+        stream = Boolean.parse( (String)job.condorVariables.removeKey( Condor.STREAM_STDOUT_KEY  ),
+                                        false );
+        if ( stream ) {
             //we want it to be staged
             writer.println("stream_output = true" );
         }

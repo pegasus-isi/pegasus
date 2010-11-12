@@ -105,6 +105,16 @@ public class Condor extends Namespace{
     public static final String REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY = "+remote_WhenToTransferOutput";
     
     /**
+     * The name of the key that specifies whether to stream stderr or not
+     */
+    public static final String STREAM_STDERR_KEY = "stream_error";
+
+    /**
+     * The name of the key that specifies whether to stream stderr or not
+     */
+    public static final String STREAM_STDOUT_KEY = "stream_output";
+    
+    /**
      * The name of the key that specifies transfer of input files.
      */
     public static final String TRANSFER_IP_FILES_KEY = "transfer_input_files";
@@ -347,10 +357,10 @@ public class Condor extends Namespace{
      * queue		- required thing. always added
      * remote_initialdir- not allowed, the working directory is picked up from
      *                    pool file and properties file
-     * stream_error     - not supported, as it is applicable only for globus jobs.
-     *                    However it can be set thru properties.
-     * stream_output    - not supported, as it is applicable only for globus jobs.
-     *                    However it can be set thru properties.
+     * stream_error     -  supported,however it is applicable only for globus jobs.
+     *                   
+     * stream_output    -  supported, however it is applicable only for globus jobs.
+     *                    
      * transfer_executable  - supported, limited to LCG sites at present where one needs
      *                        to stage in the kickstart.
      * transfer_input_files - supported, especially used to transfer proxies in
@@ -509,7 +519,7 @@ public class Condor extends Namespace{
             case 's':
                 if (key.compareTo("stream_error") == 0 ||
                     key.compareTo("stream_output") == 0) {
-                    res = NOT_PERMITTED_KEY;
+                    res = VALID_KEY;
                 }
                 else if( key.compareTo( "should_transfer_files" ) == 0 ){
                     res = VALID_KEY;
