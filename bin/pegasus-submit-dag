@@ -191,12 +191,12 @@ sub salvage_logfile($) {
 my $props = Work::Properties->new();
 
 # set true defaults from properties
-$maxpre = $props->property('pegasus.dagman.maxpre') || $maxpre;
-$maxpost = $props->property('pegasus.dagman.maxpost') || $maxpost;
-$maxjobs = $props->property('pegasus.dagman.maxjobs') || $maxjobs;
-$maxidle = $props->property('pegasus.dagman.maxidle') || $maxidle;
-$notify = $props->property('pegasus.dagman.notify') || $notify;
-$verbose = 1 if lc($props->property('pegasus.dagman.verbose')) =~ /(true|on|1)/;
+$maxpre = $props->property('dagman.maxpre') || $maxpre;
+$maxpost = $props->property('dagman.maxpost') || $maxpost;
+$maxjobs = $props->property('dagman.maxjobs') || $maxjobs;
+$maxidle = $props->property('dagman.maxidle') || $maxidle;
+$notify = $props->property('dagman.notify') || $notify;
+$verbose = 1 if lc($props->property('dagman.verbose')) =~ /(true|on|1)/;
 
 GetOptions( "debug|d=i"    => \$main::DEBUG,
 	    "maxpre|P=i"   => \$maxpre,
