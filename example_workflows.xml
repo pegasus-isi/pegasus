@@ -222,7 +222,21 @@ pegasus.gridstart = SeqExec          </programlisting>
       <title>Black Diamond</title>
 
       <para>To aid in workflow development and debugging, Pegasus can now map
-      a workflow to a local shell script.</para>
+      a workflow to a local shell script. One advantage is that you do not
+      need a remote compute resource.</para>
+
+      <para>This example is using the same abstract workflow as the <xref
+          linkend="example_black_diamond">
+           Black Diamond 
+        </xref> grid example above. The difference is that a property is set
+      in pegasusrc to force shell execution:</para>
+
+      <programlisting># tell pegasus to generate shell version of
+# the workflow
+pegasus.code.generator = Shell</programlisting>
+
+      <para>You can run this example with the <filename>./submit</filename>
+      script.</para>
     </section>
   </section>
 
@@ -230,9 +244,40 @@ pegasus.gridstart = SeqExec          </programlisting>
     <title>glideinWMS Examples</title>
 
     <section>
-      <title>Montage</title>
+      <title>NASA/IPAC Montage</title>
 
-      <para>...</para>
+      <para>By default Pegasus generates Condor-G compute jobs, but there are
+      a couple of other job styles available. One is to run the workflow on a
+      local Condor pool (<emphasis>pegasus.style=condor</emphasis>), and an
+      extension of that is the glideinWMS style
+      (<emphasis>pegasus.style=glideinwms</emphasis>).</para>
+
+      <para>glideinWMS is a Condor glidein system which creates an Condor
+      overlay over one or more grid resources. More information can be found
+      at <ulink
+      url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/</ulink>.
+      A glidein system is usually better than Condor-G at handling short jobs.
+      Because of the overlay effect, hides some of the issues with the low
+      level grid protocol, and provides a more homogeneous user
+      environment.</para>
+
+      <para>In this example, Pegasus is told to use the glideinwms styple by
+      setting the style property in the site catalog:</para>
+
+      <programlisting>&lt;profile namespace="pegasus" key="style"&gt;glideinwms&lt;/profile&gt;</programlisting>
+
+      <para>Once submitted, the jobs have attributes fitting for a glideinWMS
+      setup:</para>
+
+      <programlisting>universe = vanilla
+rank = DaemonStartTime
+requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISIViz")) \
+               &amp;&amp; (IS_MONITOR_VM == False) &amp;&amp; (Arch != "") &amp;&amp; (OpSys != "") \
+               &amp;&amp; (Disk != -42) &amp;&amp; (Memory &gt; 1) &amp;&amp; (FileSystemDomain != "")
+</programlisting>
+
+      <para>This example should work against other Condor based glidein
+      systems as well by changing the style to condor.</para>
     </section>
   </section>
 
@@ -241,6 +286,71 @@ pegasus.gridstart = SeqExec          </programlisting>
 
     <section>
       <title>Galactic Plane</title>
+
+      <para>The Galactic Plane workflow is a workflow of many Montage
+      workflows. The output is a set of tiles which can be used in software
+      which takes the tiles and produces a seamless image which can be
+      scrolled and zoomed into. As this is more of a production workflow than
+      an example one, it can be a little bit harder to get running in your
+      environment.</para>
+
+      <para>Highlights of the example are:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The subworkflow DAXes are generated as jobs in the parent
+          workflow - this is an example on how to make more dynamic workflows.
+          For example, if you need a job in your workflow to determine the
+          number of jobs in the next level, you can have the first job create
+          a subworkflow with the right number of jobs.</para>
+        </listitem>
+
+        <listitem>
+          <para>DAGMan job categories are used to limit the number of
+          concurrant jobs in certain places. This is used to limit the number
+          of concurrant connections to the data find service, as well limit
+          the number of concurrant subworkflows to manage disk usage on the
+          compute cluster.</para>
+        </listitem>
+
+        <listitem>
+          <para>Job priorities are used to make sure we overlap staging and
+          computation. Pegasus sets default priorities, which for most jobs
+          are fine, but the priority of the data find job is set explicitly to
+          a higher priority.</para>
+        </listitem>
+
+        <listitem>
+          <para>A specific output site is defined the the site catalog and
+          specified with the --output option of subworkflows.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Note how the DAX API has support for sub workflows (compare adding
+      a sub workflow to adding a simple job):</para>
+
+      <programlisting>    remote_tile_setup = Job(namespace="gp", name="remote_tile_setup", version="1.0")
+    remote_tile_setup.addArguments("%05d" % (tile_id))
+    remote_tile_setup.addProfile(Profile("dagman", "CATEGORY", "remote_tile_setup"))
+    remote_tile_setup.uses(params, link=Link.INPUT, register=False)
+    remote_tile_setup.uses(mdagtar, link=Link.OUTPUT, register=False, transfer=True)
+    uberdax.addJob(remote_tile_setup)
+...
+    subwf = DAX("%05d.dax" % (tile_id), "ID%05d" % (tile_id))
+    subwf.addArguments("-Dpegasus.schema.dax=%s/etc/dax-2.1.xsd" %(os.environ["PEGASUS_HOME"]),
+                       "-Dpegasus.catalog.replica.file=%s/rc.data" % (tile_work_dir),
+                       "-Dpegasus.catalog.site.file=%s/sites.xml" % (work_dir),
+                       "-Dpegasus.transfer.links=true",
+                       "--sites", cluster_name,
+                       "--cluster", "horizontal",
+                       "--basename", "tile-%05d" % (tile_id),
+                       "--force",
+                       "--output", output_name)
+    subwf.addProfile(Profile("dagman", "CATEGORY", "subworkflow"))
+    subwf.uses(subdax_file, link=Link.INPUT, register=False)
+    uberdax.addDAX(subwf)
+
+</programlisting>
 
       <para></para>
     </section>
