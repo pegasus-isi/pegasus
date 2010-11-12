@@ -65,17 +65,17 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @return
+     * Return the argument List. The List contains both {@link String} as well as {@link File} objects
+     * @return List
      */
     public List getArguments() {
         return Collections.unmodifiableList(mArguments);
     }
 
     /**
-     *
+     * Add a string argument to the argument List. Each call to argument adds a space in between entries
      * @param argument
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob addArgument(String argument) {
         if (argument != null) {
@@ -88,9 +88,10 @@ public class AbstractJob {
     }
 
     /**
-     *
+     * Add a file object to the argument List. Each call to argument adds a space between entries.
      * @param file
-     * @return
+     * @return AbstractJob
+     * @see File
      */
     public AbstractJob addArgument(File file) {
         if (file != null) {
@@ -103,9 +104,10 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param files
-     * @return
+     * Add a Array of {@link File} objects to the argument list. The files will be separated by space when rendered on the command line
+     * @param files File[]
+     * @return AbstractJob
+     * @see File
      */
     public AbstractJob addArgument(File[] files) {
         this.addArgument(files, FILE_DELIMITER);
@@ -113,9 +115,10 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param files
-     * @return
+     * Add a List of {@link File} objects to the argument list. The files will be separated by space when rendered on the command line
+     * @param files List<File>
+     * @return AbstractJob
+     * @see File
      */
     public AbstractJob addArgument(List<File> files) {
         this.addArgument(files, FILE_DELIMITER);
@@ -123,10 +126,12 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param files
-     * @param filedelimiter
-     * @return
+     * Add a Array of {@link File} objects to the argument list.
+     * The files will be separated by the filedelimiter(default is space) when rendered on the command line.
+     * @param files File[] Array of file objects
+     * @param filedelimiter String delimiter for the files. Default is space
+     * @return AbstractJob
+     * @see File
      */
     public AbstractJob addArgument(File[] files, String filedelimiter) {
         filedelimiter = (filedelimiter == null) ? FILE_DELIMITER : filedelimiter;
@@ -147,10 +152,12 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param files
-     * @param filedelimiter
-     * @return
+     * Add a List of {@link File} objects to the argument list.
+     * The files will be separated by the filedelimiter(default is space) when rendered on the command line.
+     * @param files List<File> Array of file objects
+     * @param filedelimiter String delimiter for the files. Default is space
+     * @return AbstractJob
+     * @see File
      */
     public AbstractJob addArgument(List<File> files, String filedelimiter) {
         if (files != null && !files.isEmpty()) {
@@ -160,10 +167,14 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param argkey
-     * @param argvalue
-     * @return
+     * Add a argument key and value to the argument List.
+     * The argkey and argvalue are seperated by space.
+     * Example addArgument("-p","0") will result in the argument being added as
+     * -p 0<Br>
+     * Multiple calls to addArgument results in the arguments being separated by space.
+     * @param argkey String
+     * @param argvalue  String
+     * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, String argvalue) {
         this.addArgument(argkey, argvalue, ARG_DELIMITER);
@@ -171,11 +182,16 @@ public class AbstractJob {
     }
 
     /**
+     * Add a argument key and value to the argument List.<Br>
+     * The argkey and argvalue are seperated by argdelimiter.<br>
+     * Example addArgument("-p","0","=") will result in the argument being added as
+     * -p=0<Br>
+     * Multiple calls to addArgument results in the arguments being separated by space.
+     * @param argkey String Key
+     * @param argvalue String Value
+     * @param argdelimiter String argdelimiter
+     * @return AbstractJob
      *
-     * @param argkey
-     * @param argvalue
-     * @param argdelimiter
-     * @return
      */
     public AbstractJob addArgument(String argkey, String argvalue,
             String argdelimiter) {
@@ -188,10 +204,14 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param argkey
-     * @param argvalue
-     * @return
+     * Add a argument key and File value to the argument List.<Br>
+     * The argkey and argvalue are seperated by space.<br>
+     * Example addArgument("-i",new File("f.a")) will result in the argument being added as
+     * -i &lt;file name="f.a"&gt;<Br>
+     * Multiple calls to addArgument results in the arguments being separated by space.
+     * @param argkey String
+     * @param argvalue File
+     * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, File argvalue) {
         this.addArgument(argkey, argvalue, ARG_DELIMITER);
@@ -199,11 +219,15 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param argkey
-     * @param argvalue
+     * Add a argument key and File value to the argument List.<Br>
+     * The argkey and argvalue are separated by the argdelimiter.<br>
+     * Example addArgument("-i",new File("f.a"),"=") will result in the argument being added as
+     * -i=&lt;file name="f.a"&gt;<Br>
+     * Multiple calls to addArgument results in the arguments being separated by space.
+     * @param argkey String
+     * @param argvalue File
      * @param argdelimiter
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, File argvalue,
             String argdelimiter) {
@@ -216,10 +240,18 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param argkey
-     * @param argvalue
-     * @return
+     * Add a argument key and an array of Files  to the argument List.<Br>
+     * The argkey and argvalue are separated space.<br>
+     * The files are separated by a space <br>
+     * Example:<br>
+     * <i>File[] files = {new File("f.a1"), new File("f.a2")};<br>
+     *  job.addArgument("-i",files)</i><br>
+     *  will result in the argument being added as
+     * <b>-i &lt;file name="f.a1"&gt; &lt;file name="f.a2"&gt;</b><Br>
+     * Multiple calls to addArgument results in the arguments being separated by space.
+     * @param argkey String
+     * @param argvalue File[]
+     * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, File[] argvalue) {
         this.addArgument(argkey, argvalue, ARG_DELIMITER, FILE_DELIMITER);
@@ -227,10 +259,20 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param argkey
-     * @param argvalue
-     * @return
+     * Add a argument key and a List of Files  to the argument List.<Br>
+     * The argkey and argvalue are separated space.<br>
+     * The files are separated by a space <br>
+     * Example:<br>
+     * <i>List<File> files = new LinkedList<File>();<br>
+     * files.add(new File("f.a1"));<br>
+     * files.add(new File("f.a2"));<br>
+     *  job.addArgument("-i",files)</i><br>
+     *   will result in the argument being added as
+     * <b>-i &lt;file name="f.a1"&gt; &lt;file name="f.a2"&gt;</b><Br>
+     * Multiple calls to addArgument results in the arguments being separated by space.
+     * @param argkey String
+     * @param argvalue List<File>
+     * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, List<File> argvalue) {
         this.addArgument(argkey, argvalue, ARG_DELIMITER, FILE_DELIMITER);
@@ -238,12 +280,20 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param argkey
-     * @param argvalue
-     * @param argdelimiter
-     * @param filedelimiter
-     * @return
+     * Add a argument key and an array of Files  to the argument List.<Br>
+     * The argkey and argvalue are separated by the argdelimiter.<br>
+     * The files are separated by a filedelimiter <br>
+     * Example:<br>
+     * <i>File[] files = {new File("f.a1"), new File("f.a2")};<br>
+     *  job.addArgument("-i",files,"=",",")</i><br>
+     *  will result in the argument being added as
+     * <b>-i=&lt;file name="f.a1"&gt;,&lt;file name="f.a2"&gt;</b><Br>
+     * Multiple calls to addArgument results in the arguments being separated by space.
+     * @param argkey String
+     * @param argvalue File[]
+     * @param argdelimiter String
+     * @param filedelimiter String
+     * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, File[] argvalue,
             String argdelimiter, String filedelimiter) {
@@ -265,12 +315,22 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param argkey
-     * @param argvalue
-     * @param argdelimiter
-     * @param filedelimiter
-     * @return
+     * Add a argument key and a List of Files  to the argument List.<Br>
+     * The argkey and argvalue are separated by the argdelimiter.<br>
+     * The files are separated by a filedelimter <br>
+     * Example:<br>
+     * <i>List<File> files = new LinkedList<File>();<br>
+     * files.add(new File("f.a1"));<br>
+     * files.add(new File("f.a2"));<br>
+     *  job.addArgument("-i",files,"=",",")</i><br>
+     *   will result in the argument being added as
+     * <b>-i=&lt;file name="f.a1"&gt;,&lt;file name="f.a2"&gt;</b><Br>
+     * Multiple calls to addArgument results in the arguments being separated by space.
+     * @param argkey String
+     * @param argvalue List&lt;File&gt; List of File objects
+     * @param argdelimiter String
+     * @param filedelimiter String
+     * @return AbstractJob
      */
     public AbstractJob addArgument(String argkey, List<File> argvalue,
             String argdelimiter, String filedelimiter) {
@@ -282,28 +342,23 @@ public class AbstractJob {
     }
 
     /**
-     *
-     * @param namespace
-     * @param key
-     * @param value
-     * @return
+     * Add a profile to the job
+     * @param namespace String
+     * @param key String
+     * @param value String
+     * @return AbstractJob
      */
     public AbstractJob addProfile(String namespace, String key, String value) {
         mProfiles.add(new Profile(namespace, key, value));
-
-
         return this;
-
-
-
     }
 
     /**
-     *
-     * @param namespace
-     * @param key
-     * @param value
-     * @return
+     * Add a profile to the job
+     * @param namespace {@link Profile.NAMESPACE}
+     * @param key String
+     * @param value String
+     * @return AbstractJob
      */
     public AbstractJob addProfile(Profile.NAMESPACE namespace, String key,
             String value) {
@@ -312,8 +367,29 @@ public class AbstractJob {
     }
 
     /**
-     *
+     * Add a Profile object
+     * @param profile
+     * @return AbstractJob
+     * @see Profile
+     */
+    public AbstractJob addProfile(Profile profile) {
+        mProfiles.add(new Profile(profile));
+        return this;
+    }
+
+    /**
+     * Add a list of Profile objects
+     * @param profiles List&lt;Profile&gt;
      * @return
+     */
+    public AbstractJob addProfiles(List<Profile> profiles) {
+        mProfiles.addAll(Collections.unmodifiableCollection(profiles));
+        return this;
+    }
+
+    /**
+     * Get the STDIN file object
+     * @return File
      */
     public File getStdin() {
         return mStdin;
@@ -324,7 +400,7 @@ public class AbstractJob {
     /**
      *
      * @param stdin
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin) {
         File f = new File(stdin, File.LINK.INPUT);
@@ -339,7 +415,7 @@ public class AbstractJob {
      *
      * @param stdin
      * @param transfer
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin, File.TRANSFER transfer) {
         File f = new File(stdin, File.LINK.INPUT);
@@ -355,7 +431,7 @@ public class AbstractJob {
      *
      * @param stdin
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin, boolean register) {
         File f = new File(stdin, File.LINK.INPUT);
@@ -372,7 +448,7 @@ public class AbstractJob {
      * @param stdin
      * @param transfer
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin, File.TRANSFER transfer,
             boolean register) {
@@ -391,8 +467,7 @@ public class AbstractJob {
      * @param stdin
      * @param transfer
      * @param register
-     * @param optional
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(File stdin, File.TRANSFER transfer,
             boolean register, boolean optional) {
@@ -410,7 +485,7 @@ public class AbstractJob {
     /**
      *
      * @param stdin
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin) {
         File f = new File(stdin, File.LINK.INPUT);
@@ -425,7 +500,7 @@ public class AbstractJob {
      *
      * @param stdin
      * @param transfer
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin, File.TRANSFER transfer) {
         File f = new File(stdin, File.LINK.INPUT);
@@ -441,7 +516,7 @@ public class AbstractJob {
      *
      * @param stdin
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin, boolean register) {
         File f = new File(stdin, File.LINK.INPUT);
@@ -458,7 +533,7 @@ public class AbstractJob {
      * @param stdin
      * @param transfer
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin, File.TRANSFER transfer,
             boolean register) {
@@ -478,7 +553,7 @@ public class AbstractJob {
      * @param transfer
      * @param register
      * @param optional
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdin(String stdin, File.TRANSFER transfer,
             boolean register, boolean optional) {
@@ -495,7 +570,7 @@ public class AbstractJob {
 
     /**
      *
-     * @return
+     * @return File
      */
     public File getStdout() {
         return mStdout;
@@ -504,7 +579,7 @@ public class AbstractJob {
     /**
      *
      * @param stdout
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout) {
         File f = new File(stdout, File.LINK.OUTPUT);
@@ -519,7 +594,7 @@ public class AbstractJob {
      *
      * @param stdout
      * @param transfer
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout, File.TRANSFER transfer) {
         File f = new File(stdout, File.LINK.OUTPUT);
@@ -535,7 +610,7 @@ public class AbstractJob {
      *
      * @param stdout
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout, boolean register) {
         File f = new File(stdout, File.LINK.OUTPUT);
@@ -552,7 +627,7 @@ public class AbstractJob {
      * @param stdout
      * @param transfer
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout, File.TRANSFER transfer,
             boolean register) {
@@ -572,7 +647,7 @@ public class AbstractJob {
      * @param transfer
      * @param register
      * @param optional
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(File stdout, File.TRANSFER transfer,
             boolean register, boolean optional) {
@@ -590,7 +665,7 @@ public class AbstractJob {
     /**
      *
      * @param stdout
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout) {
         File f = new File(stdout, File.LINK.OUTPUT);
@@ -605,7 +680,7 @@ public class AbstractJob {
      *
      * @param stdout
      * @param transfer
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout, File.TRANSFER transfer) {
         File f = new File(stdout, File.LINK.OUTPUT);
@@ -621,7 +696,7 @@ public class AbstractJob {
      *
      * @param stdout
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout, boolean register) {
         File f = new File(stdout, File.LINK.OUTPUT);
@@ -638,7 +713,7 @@ public class AbstractJob {
      * @param stdout
      * @param transfer
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout, File.TRANSFER transfer,
             boolean register) {
@@ -656,7 +731,7 @@ public class AbstractJob {
      * @param transfer
      * @param register
      * @param optional
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStdout(String stdout, File.TRANSFER transfer,
             boolean register, boolean optional) {
@@ -673,7 +748,7 @@ public class AbstractJob {
 
     /**
      *
-     * @return
+     * @return File
      */
     public File getStderr() {
         return mStderr;
@@ -683,7 +758,7 @@ public class AbstractJob {
     /**
      * 
      * @param stderr
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr) {
         File f = new File(stderr, File.LINK.OUTPUT);
@@ -698,7 +773,7 @@ public class AbstractJob {
      *
      * @param stderr
      * @param transfer
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr, File.TRANSFER transfer) {
         File f = new File(stderr, File.LINK.OUTPUT);
@@ -714,7 +789,7 @@ public class AbstractJob {
      *
      * @param stderr
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr, boolean register) {
         File f = new File(stderr, File.LINK.OUTPUT);
@@ -731,7 +806,7 @@ public class AbstractJob {
      * @param stderr
      * @param transfer
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr, File.TRANSFER transfer,
             boolean register) {
@@ -751,7 +826,7 @@ public class AbstractJob {
      * @param transfer
      * @param register
      * @param optional
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(File stderr, File.TRANSFER transfer,
             boolean register, boolean optional) {
@@ -769,7 +844,7 @@ public class AbstractJob {
     /**
      *
      * @param stderr
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr) {
         File f = new File(stderr, File.LINK.OUTPUT);
@@ -784,7 +859,7 @@ public class AbstractJob {
      * 
      * @param stderr
      * @param transfer
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr, File.TRANSFER transfer) {
         File f = new File(stderr, File.LINK.OUTPUT);
@@ -800,7 +875,7 @@ public class AbstractJob {
      *
      * @param stderr
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr, boolean register) {
         File f = new File(stderr, File.LINK.OUTPUT);
@@ -817,7 +892,7 @@ public class AbstractJob {
      * @param stderr
      * @param transfer
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr, File.TRANSFER transfer,
             boolean register) {
@@ -837,7 +912,7 @@ public class AbstractJob {
      * @param transfer
      * @param register
      * @param optional
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob setStderr(String stderr, File.TRANSFER transfer,
             boolean register, boolean optional) {
@@ -854,7 +929,7 @@ public class AbstractJob {
 
     /**
      *
-     * @return
+     * @return Set<File>
      */
     public Set<File> getUses() {
         return Collections.unmodifiableSet(mUses);
@@ -867,7 +942,7 @@ public class AbstractJob {
      *
      * @param file
      * @param link
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link) {
         File f = new File(file, link);
@@ -886,7 +961,7 @@ public class AbstractJob {
      * @param file
      * @param link
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, boolean register) {
         File f = new File(file, link);
@@ -906,7 +981,7 @@ public class AbstractJob {
      * @param file
      * @param link
      * @param transfer
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer) {
         File f = new File(file, link);
@@ -927,7 +1002,7 @@ public class AbstractJob {
      * @param link
      * @param transfer
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
             boolean register) {
@@ -952,7 +1027,7 @@ public class AbstractJob {
      * @param register
      * @param optional
      * @param executable
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
             boolean register, boolean optional, boolean executable) {
@@ -976,7 +1051,7 @@ public class AbstractJob {
      *
      * @param file
      * @param link
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link) {
         File f = new File(file, link);
@@ -996,7 +1071,7 @@ public class AbstractJob {
      * @param file
      * @param link
      * @param transfer
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer) {
         File f = new File(file, link);
@@ -1017,7 +1092,7 @@ public class AbstractJob {
      * @param file
      * @param link
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, boolean register) {
         File f = new File(file, link);
@@ -1041,7 +1116,7 @@ public class AbstractJob {
      * @param link
      * @param transfer
      * @param register
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
             boolean register) {
@@ -1067,7 +1142,7 @@ public class AbstractJob {
      * @param register
      * @param optional
      * @param executable
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
             boolean register, boolean optional, boolean executable) {
@@ -1091,7 +1166,7 @@ public class AbstractJob {
      *
      * @param files
      * @param link
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob uses(List<File> files, File.LINK link) {
         for (File file : files) {
@@ -1111,7 +1186,7 @@ public class AbstractJob {
 
     /**
      *
-     * @return
+     * @return List<Invoke>
      */
     public List<Invoke> getInvoke() {
         return Collections.unmodifiableList(mInvokes);
@@ -1121,7 +1196,7 @@ public class AbstractJob {
      * 
      * @param when
      * @param what
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob addInvoke(Invoke.WHEN when, String what) {
         Invoke i = new Invoke(when, what);
@@ -1132,7 +1207,7 @@ public class AbstractJob {
     /**
      *
      * @param invoke
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob addInvoke(Invoke invoke) {
         mInvokes.add(invoke);
@@ -1142,7 +1217,7 @@ public class AbstractJob {
     /**
      *
      * @param invokes
-     * @return
+     * @return AbstractJob
      */
     public AbstractJob addInvoke(List<Invoke> invokes) {
         this.mInvokes.addAll(invokes);
@@ -1151,7 +1226,7 @@ public class AbstractJob {
 
     /**
      * 
-     * @return
+     * @return String
      */
     public String getName() {
         return mName;
@@ -1159,7 +1234,7 @@ public class AbstractJob {
 
     /**
      *
-     * @return
+     * @return String
      */
     public String getId() {
         return mId;
@@ -1167,7 +1242,7 @@ public class AbstractJob {
 
     /**
      *
-     * @return
+     * @return String
      */
     public String getNodeLabel() {
         return mNodeLabel;
