@@ -287,7 +287,9 @@ requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISI
     <section>
       <title>Galactic Plane</title>
 
-      <para>The Galactic Plane workflow is a workflow of many Montage
+      <para>The
+          <ulink url="http://en.wikipedia.org/wiki/Galactic_plane">Galactic Plane</ulink>
+      workflow is a workflow of many Montage
       workflows. The output is a set of tiles which can be used in software
       which takes the tiles and produces a seamless image which can be
       scrolled and zoomed into. As this is more of a production workflow than
