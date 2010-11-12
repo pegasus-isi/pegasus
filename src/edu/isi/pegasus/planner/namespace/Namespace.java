@@ -334,7 +334,7 @@ public abstract class Namespace /*extends Data*/{
         for ( Iterator it = profiles.getProfileKeyIterator(); it.hasNext(); ){
             //construct directly. bypassing the checks!
             String key = (String)it.next();
-            this.construct( key, (String)profiles.get( key ) );
+            this.checkKey( key, (String)profiles.get( key ) );
         }
     }
 
