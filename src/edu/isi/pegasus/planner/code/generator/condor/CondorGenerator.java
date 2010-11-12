@@ -166,23 +166,7 @@ public class CondorGenerator extends Abstract {
      */
     protected String mPoolClass;
 
-    /**
-     * Maps pool handles to project names. This is needed for some remote
-     * scheduling systems (not limited to LSF) for accounting purposes.
-     */
-    private java.util.Map mProjectMap;
-
-    /**
-     * Maps pool handles to queue names. This is needed for some remote
-     * scheduling systems (not limited to LSF) for accounting purposes.
-     */
-    private java.util.Map mQueueMap;
-
-    /**
-     * Maps pool handles to walltimes for that pool.
-     */
-    private java.util.Map mWalltimeMap;
-
+   
     /**
      * The file handle to the .dag file. A part of the dag file is printed
      * as we write the submit files, to insert the appropriate postscripts
@@ -297,9 +281,6 @@ public class CondorGenerator extends Abstract {
 
         mTCHandle    = bag.getHandleToTransformationCatalog();
         mSiteStore   = bag.getHandleToSiteStore();
-        mProjectMap  = constructMap(mProps.getRemoteSchedulerProjects());
-        mQueueMap    = constructMap(mProps.getRemoteSchedulerQueues());
-        mWalltimeMap = constructMap(mProps.getRemoteSchedulerMaxWallTimes());
 
         //instantiate and intialize the style factory
         mStyleFactory.initialize( mProps, mSiteStore );
@@ -1780,29 +1761,7 @@ public class CondorGenerator extends Abstract {
                  }
          */
 
-        //check if any projects name need to be
-        //added
-        value = (String) mProjectMap.get(sinfo.executionPool);
-        if (value != null) {
-            rsl.construct("project", value);
-
-        }
-
-        //check if the walltimes for the pool
-        //has been specified
-        value = (String) mWalltimeMap.get(sinfo.executionPool);
-        if (value != null) {
-            rsl.construct("maxwalltime", value);
-
-        }
-
-        //check if any queue needs to be specified
-        //for the execution pool in the RSL string.
-        value = (String) mQueueMap.get(sinfo.executionPool);
-        if (value != null) {
-            rsl.construct("queue", value);
-        }
-
+        
         // check job type, unless already specified
         // Note, we may need to adjust this again later
         if (!rsl.containsKey("jobtype")) {

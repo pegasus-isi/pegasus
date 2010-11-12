@@ -221,7 +221,8 @@ public class PegasusProperties {
         if( mNamepsaceToPropertiesPrefix == null ){
             mNamepsaceToPropertiesPrefix = new HashMap<Profiles.NAMESPACES, String>();
             mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.condor, "condor" );
-            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.dagman, "dagman" );
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.dagman, "dagman" ); 
+            mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.globus, "globus" );
             mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.env,     "env" );
             mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.hints, "hints" );
             mNamepsaceToPropertiesPrefix.put( Profiles.NAMESPACES.pegasus, "pegasus" );
@@ -321,6 +322,7 @@ public class PegasusProperties {
         //the properties
         if( mProfiles == null ){
             mProfiles = retrieveProfilesFromProperties( mProps );
+            //System.out.println( mProfiles );
         }
         return mProfiles;
     }
@@ -1735,9 +1737,9 @@ public class PegasusProperties {
      * @return a comma separated list of key value pairs if property specified,
      *         else null.
      */
-    public String getRemoteSchedulerProjects() {
-        return mProps.getProperty( "pegasus.remote.scheduler.projects" );
-    }
+//    public String getRemoteSchedulerProjects() {
+//        return mProps.getProperty( "pegasus.remote.scheduler.projects" );
+//    }
 
     /**
      * Returns the queue names that need to be  appended to the RSL String while
@@ -1748,9 +1750,9 @@ public class PegasusProperties {
      * @return a comma separated list of key value pairs if property specified,
      *         else null.
      */
-    public String getRemoteSchedulerQueues() {
-        return mProps.getProperty( "pegasus.remote.scheduler.queues" );
-    }
+//    public String getRemoteSchedulerQueues() {
+//        return mProps.getProperty( "pegasus.remote.scheduler.queues" );
+//    }
 
     /**
      * Returns the maxwalltimes for the various pools that need to be  appended
@@ -1762,9 +1764,9 @@ public class PegasusProperties {
      * @return a comma separated list of key value pairs if property specified,
      *         else null.
      */
-    public String getRemoteSchedulerMaxWallTimes() {
-        return mProps.getProperty( "pegasus.remote.scheduler.min.maxwalltime" );
-    }
+//    public String getRemoteSchedulerMaxWallTimes() {
+//        return mProps.getProperty( "pegasus.remote.scheduler.min.maxwalltime" );
+//    }
 
     /**
      * Returns the  minimum walltimes that need to be enforced.
@@ -1776,18 +1778,18 @@ public class PegasusProperties {
      *
      * @return the integer value as specified, -1 in case of no value being specified.
      */
-    public int getMinimumRemoteSchedulerTime( String key ){
-        StringBuffer property = new StringBuffer();
-        property.append( "pegasus.remote.scheduler.min." ).append( key );
-
-        int val = -1;
-
-        try {
-            val = Integer.parseInt( mProps.getProperty( property.toString() ) );
-        } catch ( Exception e ) {
-        }
-        return val;
-    }
+//    public int getMinimumRemoteSchedulerTime( String key ){
+//        StringBuffer property = new StringBuffer();
+//        property.append( "pegasus.remote.scheduler.min." ).append( key );
+//
+//        int val = -1;
+//
+//        try {
+//            val = Integer.parseInt( mProps.getProperty( property.toString() ) );
+//        } catch ( Exception e ) {
+//        }
+//        return val;
+//    }
 
     //PROPERTIES RELATED TO CONDOR
     

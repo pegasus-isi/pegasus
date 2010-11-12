@@ -365,14 +365,7 @@ public class Globus extends Namespace {
         //retrieve the relevant profiles from properties
         //and merge them into the existing.
         this.assimilate( properties ,Profiles.NAMESPACES.globus ) ;
-        
-        //the time rsl's are correctly handled here.
-        //the other RSL's are handled in the CodeGenerator.
-        enforceMinTime( properties, "maxwalltime" );
-        enforceMinTime( properties, "maxtime" );
-        enforceMinTime( properties, "maxcputime" );
-
-
+       
     }
 
     /**
@@ -393,26 +386,7 @@ public class Globus extends Namespace {
     public Object clone(){
        return new Globus(this.mProfileMap);
     }
-
-    /**
-     * Enforces a minimum time if specified in the properties.
-     *
-     * @param properties   the properties object holding the properties.
-     * @param key          the RSL time key .
-     */
-    protected void enforceMinTime( PegasusProperties properties, String key ){
-        //try to get the existing value if any
-        String val = (String)this.get( key );
-        int existing = ( val == null ) ? -1 : Integer.parseInt( val );
-
-        int value = properties.getMinimumRemoteSchedulerTime( key );
-        //we enforce the min value specified in properties only if it is
-        //greater than the existing value
-        if ( value > existing ){
-            //user asked for enforcement
-            this.construct( key, Integer.toString( value ) );
-        }
-    }
+ 
 
 
     /**
