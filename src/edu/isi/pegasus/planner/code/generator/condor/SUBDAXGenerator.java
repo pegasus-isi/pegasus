@@ -433,7 +433,7 @@ public class SUBDAXGenerator{
         //write out the properties in the submit directory
         String propertiesFile = null;
         try{
-            propertiesFile = this.writeOutProperties( options.getSubmitDirectory() );
+            propertiesFile = this.mProps.writeOutProperties( options.getSubmitDirectory(), true );
         }
         catch( IOException ioe ){
             throw new RuntimeException( "Unable to write out properties to directory " + options.getSubmitDirectory() );
@@ -1079,40 +1079,6 @@ public class SUBDAXGenerator{
     }
     
     
-    /**
-     * Writes out the properties to a temporary file in the directory passed.
-     *
-     * @param directory   the directory in which the properties file needs to
-     *                    be written to.
-     *
-     * @return the absolute path to the properties file written in the directory.
-     *
-     * @throws IOException in case of error while writing out file.
-     */
-    protected String writeOutProperties( String directory ) throws IOException{
-        File dir = new File(directory);
-
-        //sanity check on the directory
-        sanityCheck( dir );
-
-        //we only want to write out the Pegasus properties for time being
-        Properties properties = mProps.matchingSubset( "pegasus", true );
-
-        //create a temporary file in directory
-        File f = File.createTempFile( "pegasus.", ".properties", dir );
-
-        //the header of the file
-        StringBuffer header = new StringBuffer(64);
-        header.append("PEGASUS USER PROPERTIES AT RUNTIME \n")
-              .append("#ESCAPES IN VALUES ARE INTRODUCED");
-
-        //create an output stream to this file and write out the properties
-        OutputStream os = new FileOutputStream(f);
-        properties.store( os, header.toString() );
-        os.close();
-
-        return f.getAbsolutePath();
-    }
     
 
 
