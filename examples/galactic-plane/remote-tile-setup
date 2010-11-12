@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+
+TILE_ID=$1
+
+. $TILE_ID.params
+
+WORK_DIR=`pwd`/tile-inputs/$TILE_ID
+
+rm -rf $WORK_DIR
+mkdir -p $WORK_DIR
+cd $WORK_DIR
+
+# generate dag for the tile
+mDAGGalacticPlane $SURVEY $BAND $CENTER_LON $CENTER_LAT $TILE_SIZE $TILE_SIZE 0.0002777778 . "gsiftp://$WF_MANAGER_HOST$TILE_WORK_DIR" "gsiftp://$WF_MANAGER_HOST$TILE_WORK_DIR/inputs"
+
+# download inputs
+echo "Downloading images from IPAC..."
+mkdir images
+cd images
+time mArchiveExec ../images.tbl
+du -s --si .
+
+# add the inputs to the rc
+cd $WORK_DIR
+cat cache.list | grep -v ".fits " >rc.data
+cat url.list | cut -d' ' -f 1 | while read FILENAME; do
+    echo "$FILENAME file://$WORK_DIR/images/$FILENAME pool=\"$CLUSTER_NAME\"" >>rc.data
+done
+
+# prepare tarball that we can give to the local setup script
+tar czf ../../$TILE_ID.tar.gz *.hdr *.list *.data *.tbl *.xml
+
