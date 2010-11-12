@@ -167,7 +167,7 @@ public class GridStartFactory {
      *         all   add postscripts for jobs where kickstart is present.
      *         none  do not add postscripts to anyjob
      */
-    private String mPostScriptScope;
+//    private String mPostScriptScope;
 
 
 
@@ -231,7 +231,7 @@ public class GridStartFactory {
         mProps     = bag.getPegasusProperties();
         mSubmitDir = bag.getPlannerOptions().getSubmitDirectory() ;
         mDAG       = dag;
-        mPostScriptScope = mProps.getPOSTScriptScope();
+//        mPostScriptScope = mProps.getPOSTScriptScope();
 
         //load all the known implementations and initialize them
         for( int i = 0; i < GRIDSTART_IMPLEMENTING_CLASSES.length; i++){
@@ -336,8 +336,13 @@ public class GridStartFactory {
 
         //figure out the postscript type. the scope takes precedence
         String postScriptType;
-        if ( mPostScriptScope.equals( this.ALL_POST_SCRIPT_SCOPE ) ||
-            ( mPostScriptScope.equals( this.ESSENTIAL_POST_SCRIPT_SCOPE ) &&
+        String postScriptScope = (String) job.dagmanVariables.get( Dagman.POST_SCRIPT_SCOPE_KEY );
+        postScriptScope = ( postScriptScope == null )? 
+                          GridStartFactory.ALL_POST_SCRIPT_SCOPE:
+                          postScriptScope;
+        
+        if ( postScriptScope.equals( GridStartFactory.ALL_POST_SCRIPT_SCOPE ) ||
+            ( postScriptScope.equals( GridStartFactory.ESSENTIAL_POST_SCRIPT_SCOPE ) &&
              job.getJobType() != Job.REPLICA_REG_JOB)
             ) {
                 //we need to apply some postscript
@@ -363,11 +368,11 @@ public class GridStartFactory {
         POSTScript ps = null;
         if( obj == null ){
             //determine the className for postScriptType
-            String className = this.implementingPOSTScriptClass( postScriptType );
+            String className = GridStartFactory.implementingPOSTScriptClass( postScriptType );
 
             if( className == null ){
                 //so this is a user specified postscript
-                className = this.implementingPOSTScriptClass( UserPOSTScript.SHORT_NAME );
+                className = GridStartFactory.implementingPOSTScriptClass( UserPOSTScript.SHORT_NAME );
             }
 
 

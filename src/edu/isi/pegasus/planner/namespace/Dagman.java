@@ -64,6 +64,11 @@ public class Dagman extends Namespace {
     public static final String POST_SCRIPT_PATH_PREFIX = "POST.PATH";
     
     /**
+     * The key prefix that determines the path to a postscript
+     */
+    public static final String POST_SCRIPT_SCOPE_KEY = "POST.SCOPE";
+    
+    /**
      * The default value for the arguments passed to postscript
      */
     public static final String DEFAULT_POST_SCRIPT_ARGUMENTS_KEY_VALUE = "";
@@ -286,6 +291,7 @@ public class Dagman extends Namespace {
                      (key.compareTo(Dagman.POST_SCRIPT_ARGUMENTS_KEY) == 0)||
                      (key.compareTo(Dagman.PRE_SCRIPT_KEY) == 0) ||
                      (key.compareTo(Dagman.PRE_SCRIPT_ARGUMENTS_KEY) == 0 ) || 
+                     (key.compareTo(Dagman.POST_SCRIPT_SCOPE_KEY) == 0 ) || 
                      ( key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX ) )
                      ) {
                     res = VALID_KEY;
@@ -473,7 +479,8 @@ public class Dagman extends Namespace {
                key.equals( Dagman.PRE_SCRIPT_ARGUMENTS_KEY) ||
                key.equals( Dagman.OUTPUT_KEY ) ||
                key.equals( Dagman.CATEGORY_KEY ) ||
-               key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX );
+               key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX ) ||
+               key.equals ( Dagman.POST_SCRIPT_SCOPE_KEY );
     }
 
 

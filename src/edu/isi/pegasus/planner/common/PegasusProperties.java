@@ -83,8 +83,7 @@ public class PegasusProperties {
 
     public static final String DEFAULT_CONDOR_CONFIG_DIR = "";
 
-    public static final String DEFAULT_POSTSCRIPT_MODE = "all";
-
+   
     public static final String POOL_CONFIG_FILE = "sites.";
 
     public static final String CONDOR_KICKSTART = "kickstart-condor";
@@ -1652,11 +1651,13 @@ public class PegasusProperties {
      *
      * @see #DEFAULT_POSTSCRIPT_MODE
      */
-    public String getPOSTScriptScope() {
+    
+/*    public String getPOSTScriptScope() {
         return mProps.getProperty( "pegasus.exitcode.scope",
                                    DEFAULT_POSTSCRIPT_MODE );
     }
-
+*/
+    
     /**
      * Returns the postscript to use with the jobs in the workflow. They
      * maybe overriden by values specified in the profiles.
