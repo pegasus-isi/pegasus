@@ -97,46 +97,65 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *          <i>preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");</i><br>
  *          <i>preprocess.addMetaData("string", "project", "pegasus");</i>
  *      </li><br>
- *      <li><b>Add the {@link Executable} object to the {@link ADAG}object</b><br><br>
+ *      <li><b>Add the {@link Executable} object to the {@link ADAG} object</b><br><br>
  *          <i>dax.addExecutable(preprocess);</i>
  *      </li>
  *    </ol>
  * </li><br>
- * <li>
- * Create a {@link Transformation} : compound Executable (Executable depending on other executable and files)
- * Transformation diamond = new Transformation("pegasus", "diamond", "1.0");
- * diamond.uses(preprocess).uses(findrange).uses(analyze);
- * diamond.uses(new File("config", File.LINK.INPUT));
- * dax.addTransformation(diamond);
- * </li><br><br>
- * <li><b></b><br><br>
-Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");
-j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
-j1.addArgument("-o ").addArgument(fb1).addArgument(fb2);
-j1.uses(fa, File.LINK.INPUT);
-j1.uses(fb1, File.LINK.OUTPUT);
-j1.uses(new File("f.b2"), File.LINK.OUTPUT);
- * j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");<br>
-j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");<br>
-
-j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
-dax.addJob(j1);
+ * <li><b>Create a {@link Transformation} object : compound Executable (Executable depending on other executable and files)</b><Br><br>
+ *     <i>Transformation diamond = new Transformation("pegasus", "diamond", "1.0");</i><br>
+ *     <ol type=a>
+ *          <li><b>Add the sub executable for this transformation</b><br><br>
+ *              <i>diamond.uses(preprocess).uses(findrange).uses(analyze);</i><br>
+ *          </li><br>
+ *          <li><b>Add the sub files(e.g config files) for this transformation</b><br><br>
+                <i>diamond.uses(new File("config", File.LINK.INPUT));</i><br>
+ *          </li><br>
+ *          <li><b>Finally Add the Transformation to the {@link ADAG} object</b><br><br>
+ *              <i>dax.addTransformation(diamond);</i>
+ *          </li>
+ *      </ol>
  * </li><br>
- * <li><b></b><br><br>
-DAG j2 = new DAG("j2", "findrange.dag", "j2");<br>
-j2.uses(new File("f.b1"), File.LINK.INPUT);<br>
-j2.uses(new File("f.c1"), File.LINK.OUTPUT);<br>
-j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");<br>
-j2.addProfile("condor", "universe", "vanilla");<br>
-dax.addDAG(j2);
+ * <li><b>Create a {@link Job} object</b><br><br>
+       <i>Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");</i><br>
+ *     <ol type=a>
+ *       <li><b>Add Arguments to the job object</b><br><br>
+ *           <i>j1.addArgument("-a","preprocess")<br>
+ *              j1.addArgument("-T","60").addArgument("-i",fa);<br>
+ *              j1.addArgument("-o").addArgument(fb1).addArgument(fb2);</i>
+ *       </li><br>
+ *       <li><b>Add the Files that are used by this job</b><br><br>
+ *           <i>j1.uses(fa, File.LINK.INPUT);<br>
+ *              j1.uses(fb1, File.LINK.OUTPUT);<br>
+ *              j1.uses(new File("f.b2"), File.LINK.OUTPUT);</i>
+ *      </li><br>
+ *      <li><b>Add the Notifications to this job</b><br><br>
+ *          <i>j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");<br>
+ *              j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");</i>
+ *      </li><br>
+ *      <li><b>Add {@link Profile}s to the job</b><br><br>
+ *          <i>j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");</i>
+ *      </li><br>
+ *      <li><b>Add the Job object to {@link ADAG}</b><br><br>
+ *          <i>dax.addJob(j1);</i>
+ *       </li>
+ *      </ol>
  * </li><br>
- * <li><b>Add a DAX job object.</b><br><br>
+ * <li><b>Add a {@link DAG} object</b><br><br>
+ *      <i>DAG j2 = new DAG("j2", "findrange.dag", "j2");<br>
+ *      j2.uses(new File("f.b1"), File.LINK.INPUT);<br>
+ *      j2.uses(new File("f.c1"), File.LINK.OUTPUT);<br>
+ *      j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");<br>
+ *      j2.addProfile("condor", "universe", "vanilla");<br>
+ *      dax.addDAG(j2);</i>
+ * </li><br>
+ * <li><b>Add a {@link DAX} job object.</b><br><br>
  *      <i>DAX j3 = new DAX("j3", "findrange.dax", "j3");<br>
- * j3.addArgument("--site ").addArgument("local");<br>
- * j3.uses(new File("f.b2"), File.LINK.INPUT);<br>
- * j3.uses(new File("f.c2"), File.LINK.OUTPUT);<br>
- * j3.addProfile("ENV", "HAHA", "YADAYADAYADA");<br>
- * dax.addDAX(j3);</i>
+ *      j3.addArgument("--site").addArgument("local");<br>
+ *      j3.uses(new File("f.b2"), File.LINK.INPUT);<br>
+ *      j3.uses(new File("f.c2"), File.LINK.OUTPUT);<br>
+ *      j3.addProfile("ENV", "HAHA", "YADAYADAYADA");<br>
+ *      dax.addDAX(j3);</i>
  * </li><br>
  * <li><b>Add the Job dependencies</b><br><br>
  * Dependencies can be added by specifiying the job id's like so<br><br>
