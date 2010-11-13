@@ -157,7 +157,7 @@ public class Default extends LogManager{
         Default.mFormatter = new Currently( "yyyy.MM.dd HH:mm:ss.SSS zzz: " );
         //by default we are logging only CONSOLE
         //and all message less than WARN
-        mMask = generateMask(WARNING_MESSAGE_LEVEL,true);
+        mMask = generateMask( CONSOLE_MESSAGE_LEVEL, false );
     }
 
     
@@ -211,13 +211,12 @@ public class Default extends LogManager{
 
     /**
      * Sets the debug level. All those messages are logged which have a
-     * level less than equal to the debug level. In addition the info messages
-     * are always logged.
+     * level less than equal to the debug level. 
      *
      * @param level   the level to which the debug level needs to be set to.
      */
     public void setLevel(int level){
-        setLevel(level,true);
+        setLevel(level, false );
     }
 
 

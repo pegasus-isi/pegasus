@@ -705,7 +705,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:",
+                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -808,6 +808,10 @@ public class CPlanner extends Executable{
                     options.setPDAX(g.getOptarg());
                     break;
 
+                case 'q'://quiet
+                    options.decrementLogging();
+                    break;
+                    
                 case 'r'://randomdir
                     options.setRandomDir(g.getOptarg());
                     break;
@@ -1010,7 +1014,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[27];
+        LongOpt[] longopts = new LongOpt[28];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1042,6 +1046,8 @@ public class CPlanner extends Executable{
         longopts[24]  = new LongOpt( "forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
         longopts[25]  = new LongOpt( "X", LongOpt.REQUIRED_ARGUMENT, null, 'X' );
         longopts[26]  = new LongOpt( "relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4' );
+        longopts[27]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
+        
         return longopts;
     }
 
@@ -1058,7 +1064,7 @@ public class CPlanner extends Executable{
           "\n [-a] [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [ --relative-dir <relative directory to base directory> ] [ --relative-submit-dir <relative submit directory to base directory> ]" +
           "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]] [--monitor] [-F option[=value] ] " +
-          "\n [-S] [-n]  [-v] [-V] [-X[non standard jvm option] [-h]";
+          "\n [-S] [-n]  [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
 
         System.out.println(text);
     }
@@ -1107,6 +1113,7 @@ public class CPlanner extends Executable{
            "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the concrete workflow." +
            "\n -S |--submit       submit the executable workflow generated" +
            "\n -v |--verbose      increases the verbosity of messages about what is going on" +
+           "\n -q |--quiet        decreases the verbosity of messages about what is going on" +
            "\n -V |--version      displays the version of the Pegasus Workflow Management System" +
            "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m" +
            "\n -h |--help         generates this help." +
