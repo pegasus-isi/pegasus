@@ -240,7 +240,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mForwardOptions   = new java.util.LinkedList<NameValue>();
         mOutputPool       = null;
         mDisplayHelp      = false;
-        mLoggingLevel     = LogManager.CONSOLE_MESSAGE_LEVEL;
+        mLoggingLevel     = LogManager.WARNING_MESSAGE_LEVEL;
         mForce            = false;
         mSubmit           = false;
         mGenRandomDir     = false;

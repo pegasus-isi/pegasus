@@ -87,15 +87,17 @@ public class Default extends LogManager{
     private static final int ERROR_MESSAGE_TYPE = 0x2;
 
     /**
-     * The type value to indicate a WARNING message.
-     */
-    private static final int WARNING_MESSAGE_TYPE = 0x4;
-    
-    /**
      * The type value to indicate a CONSOLE message.
      */
-    private static final int CONSOLE_MESSAGE_TYPE = 0x8;
+    private static final int CONSOLE_MESSAGE_TYPE = 0x4;
 
+    
+    /**
+     * The type value to indicate a WARNING message.
+     */
+    private static final int WARNING_MESSAGE_TYPE = 0x8;
+    
+    
     /**
      * The type value to indicate an INFORMATIVE message.
      */
@@ -157,7 +159,7 @@ public class Default extends LogManager{
         Default.mFormatter = new Currently( "yyyy.MM.dd HH:mm:ss.SSS zzz: " );
         //by default we are logging only CONSOLE
         //and all message less than WARN
-        mMask = generateMask( CONSOLE_MESSAGE_LEVEL, false );
+        mMask = generateMask( WARNING_MESSAGE_LEVEL, false );
     }
 
     
@@ -531,13 +533,13 @@ public class Default extends LogManager{
                 result = "[ERROR]";
                 break;
 
+            case CONSOLE_MESSAGE_TYPE:
+                result = "";
+                break;    
+            
             case WARNING_MESSAGE_TYPE:
                 result = "[WARNING]";
                 break;
-
-            case CONSOLE_MESSAGE_TYPE:
-                result = "[CONSOLE]";
-                break;    
                 
             case INFO_MESSAGE_TYPE:
                 result = "[INFO]";
@@ -598,7 +600,8 @@ public class Default extends LogManager{
      * @return PrintWriter for logging the message.
      */
     private PrintWriter getWriter(int level){
-        return (level >= FATAL_MESSAGE_LEVEL && level <= WARNING_MESSAGE_LEVEL)?
+        return ( (level >= FATAL_MESSAGE_LEVEL && level < CONSOLE_MESSAGE_LEVEL)
+                  || level == WARNING_MESSAGE_LEVEL )?
                mErrWriter:
                mWriter;
     }

@@ -97,16 +97,16 @@ public abstract class LogManager {
      * The level value, to indicate an ERROR message.
      */
     public static final int ERROR_MESSAGE_LEVEL = 1;
-
-    /**
-     * The level value, to indicate a WARNING error message.
-     */
-    public static final int WARNING_MESSAGE_LEVEL = 2;
     
     /**
      * The level value, to indicate a CONSOLE error message.
      */
-    public static final int CONSOLE_MESSAGE_LEVEL = 3;
+    public static final int CONSOLE_MESSAGE_LEVEL = 2;
+    
+    /**
+     * The level value, to indicate a WARNING error message.
+     */
+    public static final int WARNING_MESSAGE_LEVEL = 3;
 
     /**
      * The level value, to indicate a INFO message.
