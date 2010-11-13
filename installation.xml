@@ -132,7 +132,7 @@ Complete!</programlisting>
       repository key once.</para>
 
       <programlisting># <emphasis role="bold">gpg --keyserver keyring.debian.org --recv-keys 81C2A4AC</emphasis>
-# <emphasis role="bold">gpg -a --export 81C2A4AC | apt-key add</emphasis>  </programlisting>
+# <emphasis role="bold">gpg -a --export 81C2A4AC | apt-key add -</emphasis>  </programlisting>
 
       <para>Add the Pegasus apt repository to your
       <filename>/etc/apt/sources.list</filename> file:</para>
