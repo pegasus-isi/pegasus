@@ -251,7 +251,7 @@ public class CPlanner extends Executable{
         else{
             //log the time taken to execute
             cPlanner.log("Time taken to execute is " + execTime + " seconds",
-                         LogManager.INFO_MESSAGE_LEVEL);
+                         LogManager.CONSOLE_MESSAGE_LEVEL );
         }
 
         cPlanner.mLogger.logEventCompletion();
@@ -316,7 +316,7 @@ public class CPlanner extends Executable{
 
         if( dax == null && pdax == null ){
             mLogger.log( "\nNeed to specify either a dax file ( using --dax )  or a pdax file (using --pdax) to plan",
-                         LogManager.INFO_MESSAGE_LEVEL);
+                         LogManager.CONSOLE_MESSAGE_LEVEL);
             this.printShortVersion();
             return result;
         }
@@ -455,7 +455,7 @@ public class CPlanner extends Executable{
             boolean rescue = handleRescueDAG( orgDag, mPOptions );
             if( rescue ){
                 mLogger.log( "No planning attempted. Rescue dag will be submitted", 
-                             LogManager.INFO_MESSAGE_LEVEL );
+                             LogManager.CONSOLE_MESSAGE_LEVEL );
                 result = new LinkedList(  );
                 result.add(  new File ( mPOptions.getSubmitDirectory(), 
                                         this.getDAGFilename( orgDag, mPOptions)));
@@ -1593,7 +1593,7 @@ public class CPlanner extends Executable{
         message.append( emptyWorkflow ? CPlanner.EMPTY_FINAL_WORKFLOW_MESSAGE : CPlanner.SUCCESS_MESSAGE ).
                 append( "" ).append( getPegasusRunInvocation(  ) ).
                 append( "\n\n" );
-        mLogger.log( message.toString(), LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.log( message.toString(), LogManager.CONSOLE_MESSAGE_LEVEL );
 
     }
 

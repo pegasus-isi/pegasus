@@ -90,21 +90,31 @@ public class Default extends LogManager{
      * The type value to indicate a WARNING message.
      */
     private static final int WARNING_MESSAGE_TYPE = 0x4;
+    
+    /**
+     * The type value to indicate a CONSOLE message.
+     */
+    private static final int CONSOLE_MESSAGE_TYPE = 0x8;
 
     /**
      * The type value to indicate an INFORMATIVE message.
      */
-    private static final int INFO_MESSAGE_TYPE = 0x8;
+    private static final int INFO_MESSAGE_TYPE = 0x10;
 
     /**
      * The type value to indicate a CONFIG message.
      */
-    private static final int CONFIG_MESSAGE_TYPE = 0x10;
+    private static final int CONFIG_MESSAGE_TYPE = 0x20;
 
     /**
      * The type value to indicate a DEBUG message.
      */
-    private static final int DEBUG_MESSAGE_TYPE = 0x20;
+    private static final int DEBUG_MESSAGE_TYPE = 0x40;
+    
+    /**
+     * The type value to indicate a DEBUG message.
+     */
+    private static final int TRACE_MESSAGE_TYPE = 0x80;
 
     /**
      * Ensures only one object is created always. Implements the Singleton.
@@ -145,7 +155,7 @@ public class Default extends LogManager{
         mWriter        = new PrintWriter(System.out,true);
         mErrWriter     = new PrintWriter(System.err,true);
         Default.mFormatter = new Currently( "yyyy.MM.dd HH:mm:ss.SSS zzz: " );
-        //by default we are logging only INFO
+        //by default we are logging only CONSOLE
         //and all message less than WARN
         mMask = generateMask(WARNING_MESSAGE_LEVEL,true);
     }
@@ -484,7 +494,7 @@ public class Default extends LogManager{
      * passed.
      *
      * @param level the level to which the debug level needs to be set to.
-     * @param info  boolean denoting whether the INFO messages need to be
+     * @param info  boolean denoting whether the CONSOLE messages need to be
      *              logged or not.
      *
      * @return mask corresponding to the debug level passed.
@@ -497,7 +507,7 @@ public class Default extends LogManager{
             mask |= (int)Math.pow(2,i);
         }
         if(info){
-            mask |= INFO_MESSAGE_TYPE;
+            mask |= CONSOLE_MESSAGE_TYPE;
         }
         return mask;
     }
@@ -526,6 +536,10 @@ public class Default extends LogManager{
                 result = "[WARNING]";
                 break;
 
+            case CONSOLE_MESSAGE_TYPE:
+                result = "[CONSOLE]";
+                break;    
+                
             case INFO_MESSAGE_TYPE:
                 result = "[INFO]";
                 break;
@@ -536,6 +550,10 @@ public class Default extends LogManager{
 
             case DEBUG_MESSAGE_TYPE:
                 result = "[DEBUG]";
+                break;
+                
+            case TRACE_MESSAGE_TYPE:
+                result = "[TRACE]";
                 break;
 
             default:

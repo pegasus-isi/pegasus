@@ -102,23 +102,32 @@ public abstract class LogManager {
      * The level value, to indicate a WARNING error message.
      */
     public static final int WARNING_MESSAGE_LEVEL = 2;
+    
+    /**
+     * The level value, to indicate a CONSOLE error message.
+     */
+    public static final int CONSOLE_MESSAGE_LEVEL = 3;
 
     /**
      * The level value, to indicate a INFO message.
      */
-    public static final int INFO_MESSAGE_LEVEL = 3;
+    public static final int INFO_MESSAGE_LEVEL = 4;
 
     /**
      * The level value, to indicate a CONFIG message.
      */
-    public static final int CONFIG_MESSAGE_LEVEL = 4;
+    public static final int CONFIG_MESSAGE_LEVEL = 5;
 
     /**
      * The level value, to indicate a DEBUG message.
      */
-    public static final int DEBUG_MESSAGE_LEVEL = 5;
+    public static final int DEBUG_MESSAGE_LEVEL = 6;
 
-    
+    /**
+     * The level value, to indicate a DEBUG message.
+     */
+    public static final int TRACE_MESSAGE_LEVEL = 7;
+
 
     /**
      * Ensures only one object is created always. Implements the Singleton.
@@ -299,7 +308,7 @@ public abstract class LogManager {
 
     /**
      * Sets the debug level. All those messages are logged which have a
-     * level less than equal to the debug level. In addition the info messages
+     * level less than equal to the debug level. In addition the console messages
      * are always logged.
      *
      * @param level   the level to which the debug level needs to be set to.
@@ -315,7 +324,7 @@ public abstract class LogManager {
      * is set, all the info messages are also logged.
      *
      * @param level the level to which the debug level needs to be set to.
-     * @param info  boolean denoting whether the INFO messages need to be
+     * @param info  boolean denoting whether the CONSOLE messages need to be
      *              logged or not.
      */
     protected abstract void setLevel(int level, boolean info);
