@@ -872,7 +872,7 @@ public class CPlanner extends Executable{
             //spawn off the gobblers with the already initialized default callback
             StreamGobbler ips =
                 new StreamGobbler( p.getInputStream(), new DefaultStreamGobblerCallback(
-                                                                   LogManager.INFO_MESSAGE_LEVEL ));
+                                                                   LogManager.CONSOLE_MESSAGE_LEVEL ));
             StreamGobbler eps =
                 new StreamGobbler( p.getErrorStream(), new DefaultStreamGobblerCallback(
                                                              LogManager.ERROR_MESSAGE_LEVEL));
