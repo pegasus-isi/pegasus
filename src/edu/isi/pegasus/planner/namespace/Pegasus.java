@@ -23,6 +23,7 @@ import java.util.TreeMap;
 import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.aggregator.Aggregator;
 import edu.isi.pegasus.planner.namespace.aggregator.Sum;
@@ -490,6 +491,10 @@ public class Pegasus extends Namespace {
      * @see #TRANSFER_PROXY_KEY
      */
     public void checkKeyInNS(PegasusProperties properties, String pool){
+        
+        this.assimilate( properties ,Profiles.NAMESPACES.pegasus ) ;
+        
+        /*
         //get the value that might have been populated
         //from other profile sources
         String value = (String)get(this.COLLAPSER_KEY);
@@ -526,8 +531,16 @@ public class Pegasus extends Namespace {
 	    this.construct(Pegasus.TRANSFER_ARGUMENTS_KEY,value);
 	}
 
+        value = (String)get( this.GRIDSTART_PATH_KEY );
+        value = ( value == null ) ?
+                */
     }
 
+   
+
+    
+     
+    
     /**
      * Merge the profiles in the namespace in a controlled manner.
      * In case of intersection, the new profile value (except for key runtime where
