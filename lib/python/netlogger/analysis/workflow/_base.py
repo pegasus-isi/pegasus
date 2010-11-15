@@ -18,7 +18,7 @@ This signals that the attr or method is subclass-specific and
 also allows the inherited __repr__() method to ignore it.
 """
 
-__rcsid__ = "$Id: _base.py 26605 2010-10-14 22:18:57Z mgoode $"
+__rcsid__ = "$Id: _base.py 26758 2010-11-10 19:09:16Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 import logging
@@ -47,7 +47,7 @@ class WorkflowBase(DoesLogging):
             retval = '\n%s+++ %s:' % (spacer * self._indent, self.__class__)
         for i in dir(self):
             if i.startswith('_') or i == 'initialize' or i == 'db' \
-                or i == 'metadata' or i == 'session':
+                or i == 'metadata' or i == 'session' or i == 'log':
                 continue
             try:
                 retval += '\n%s* %s : %s' % (spacer * self._indent, i, eval('self.%s' % i))

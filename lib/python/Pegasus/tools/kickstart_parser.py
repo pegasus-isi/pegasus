@@ -48,8 +48,14 @@ class Parser:
         self._parsing_arguments = False
         self._parsing_main_job = False
         self._parsing_machine = False
+        self._parsing_stdout = False
+        self._parsing_stderr = False
+        self._parsing_data = False
         self._parsing_cwd = False
+        self._line_number = 0
         self._arguments = ""
+        self._stdout = ""
+        self._stderr = ""
         self._cwd = ""
         self._keys = {}
         self._ks_elements = {}
@@ -179,6 +185,9 @@ class Parser:
 	elif name == "cwd" and name in self._ks_elements:
 	    # Start parsing cwd
 	    self._parsing_cwd = True
+        elif name == "data":
+            # Start parsing data for stdout and stderr output
+            self._parsing_data = True
 	elif name == "file" and name in self._ks_elements:
 	    if self._parsing_main_job == True:
 		# Special case for name inside the mainjob element (will change this later)
@@ -197,6 +206,12 @@ class Parser:
 		for my_element in self._ks_elements[name]:
 		    if my_element in attrs:
 			self._keys[my_element] = attrs[my_element]
+        elif name == "statcall":
+            if "id" in attrs:
+                if attrs["id"] == "stdout" and "stdout" in self._ks_elements:
+                    self._parsing_stdout = True
+                elif attrs["id"] == "stderr" and "stderr" in self._ks_elements:
+                    self._parsing_stderr = True
 	else:
 	    # For all other elements, check if we want them
 	    if name in self._ks_elements:
@@ -217,6 +232,13 @@ class Parser:
 	    self._parsing_main_job = False
 	elif name == "machine":
 	    self._parsing_machine = False
+        elif name == "statcall":
+            if self._parsing_stdout == True:
+                self._parsing_stdout = False
+            if self._parsing_stderr == True:
+                self._parsing_stderr = False
+        elif name == "data":
+            self._parsing_data = False
 
     def char_data(self, data=''):
 	"""
@@ -238,6 +260,38 @@ class Parser:
 	    else:
 		self._arguments = self._arguments + " " + data
 
+        # Capture stdout
+        if self._parsing_stdout == True and self._parsing_data == True:
+            # If empty, just copy
+            if self._stdout == "":
+                self._stdout = data
+            else:
+                # If we already have something, let's check if we need to add a newline
+                if self._my_parser.CurrentLineNumber > self._line_number:
+                    # Yes, we are in a new line, add newline to our _stdout
+                    self._stdout = self._stdout + "\n" + data
+                else:
+                    # No, still on the same line, this is probably an XML substitution
+                    self._stdout = self._stdout + data
+            # Track line number
+            self._line_number = self._my_parser.CurrentLineNumber
+
+        # Capture stderr
+        if self._parsing_stderr == True and self._parsing_data == True:
+            # If empty, just copy
+            if self._stderr == "":
+                self._stderr = data
+            else:
+                # If we already have something, let's check if we need to add a newline
+                if self._my_parser.CurrentLineNumber > self._line_number:
+                    # Yes, we are in a new line, add newline to our _stdout
+                    self._stderr = self._stderr + "\n" + data
+                else:
+                    # No, still on the same line, this is probably an XML substitution
+                    self._stderr = self._stderr + data
+            # Track line number
+            self._line_number = self._my_parser.CurrentLineNumber
+
     def parse_invocation_record(self, buffer=''):
 	"""
 	Parses the xml record in buffer, returning the desired keys.
@@ -246,8 +300,14 @@ class Parser:
         self._parsing_arguments = False
         self._parsing_main_job = False
         self._parsing_machine = False
+        self._parsing_stdout = False
+        self._parsing_stderr = False
+        self._parsing_data = False
         self._parsing_cwd = False
+        self._line_number = 0
         self._arguments = ""
+        self._stdout = ""
+        self._stderr = ""
         self._cwd = ""
         self._keys = {}
 
@@ -262,20 +322,26 @@ class Parser:
 	buffer = '<?xml version="1.0" encoding="ISO-8859-1"?>\n' + buffer
 
 	# Create parser
-	my_parser = expat.ParserCreate()
-	my_parser.StartElementHandler = self.start_element
-	my_parser.EndElementHandler = self.end_element
-	my_parser.CharacterDataHandler = self.char_data
+	self._my_parser = expat.ParserCreate()
+	self._my_parser.StartElementHandler = self.start_element
+	self._my_parser.EndElementHandler = self.end_element
+	self._my_parser.CharacterDataHandler = self.char_data
 
 	# Parse everything!
-	output = my_parser.Parse(buffer)
+	output = self._my_parser.Parse(buffer)
 
-	# Add cwd and arguments to keys
+	# Add cwd, arguments, stdout, and stderr to keys
 	if "cwd" in self._ks_elements:
 	    self._keys["cwd"] = self._cwd
 
 	if "argument-vector" in self._ks_elements:
 	    self._keys["argument-vector"] = self._arguments
+
+        if "stdout" in self._ks_elements:
+            self._keys["stdout"] = self._stdout
+
+        if "stderr" in self._ks_elements:
+            self._keys["stderr"] = self._stderr
 
 	return self._keys
 
@@ -302,7 +368,7 @@ class Parser:
 
 	return self._keys
 
-    def parse(self, keys_dict):
+    def parse(self, keys_dict, clustered=True):
 	"""
 	This function parses the kickstart output file, looking for
         the keys specified in the keys_dict variable. It returns a
@@ -329,8 +395,10 @@ class Parser:
 		# We have an invocation record, parse it!
 		my_reply.append(self.parse_invocation_record(my_buffer))
 	    elif self.is_clustered_record(my_buffer) == True:
-		# We have a clustered record, parse it!
-		my_reply.append(self.parse_clustered_record(my_buffer))
+                # Check if we want clustered records too
+                if clustered:
+                    # We have a clustered record, parse it!
+                    my_reply.append(self.parse_clustered_record(my_buffer))
 	    else:
 		# We have something else, this shouldn't happen!
 		# Just skip it
@@ -361,7 +429,20 @@ class Parser:
 			     "argument-vector": [],
 			     "cwd": []}
 
-	return self.parse(stampede_elements)
+	return self.parse(stampede_elements, clustered=True)
+
+    def parse_stdout_stderr(self):
+        """
+        This function extracts the stdout and stderr from a kickstart output file.
+        It returns an array containing the output for each task in a job.
+        """
+
+        stdout_stderr_elements = {"invocation": ["derivation", "transformation"],
+                                  "regular": ["exitcode"],
+                                  "stdout": [],
+                                  "stderr": []}
+
+        return self.parse(stdout_stderr_elements, clustered=False)
 
 if __name__ == "__main__":
 

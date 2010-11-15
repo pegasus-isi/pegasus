@@ -2,10 +2,14 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-from netlogger.analysis.schema._base import SABase
+__rcsid__ = "$Id: stampede_schema.py 26757 2010-11-10 18:59:09Z mgoode $"
+__author__ = "Monte Goode MMGoode@lbl.gov"
+
+from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
 try:
     from sqlalchemy import *
     from sqlalchemy import orm, exceptions, func, exc
+    from sqlalchemy.orm import relation, backref
 except ImportError, e:
     print '** SQLAlchemy library needs to be installed: http://www.sqlalchemy.org/ **\n'
     raise ImportError, e
@@ -122,7 +126,12 @@ def initializeToPegasusDB(db, metadata):
     Index('FK_PARENT_WF_ID', st_workflow.c.parent_workflow_id, unique=False)
     
     try:
-        orm.mapper(Workflow, st_workflow)
+        orm.mapper(Workflow, st_workflow, properties = {
+                'child_wf':relation(Workflow, cascade='all'),
+                'child_job':relation(Job, backref='st_workflow', cascade='all'),
+                'child_wfs':relation(Workflowstate, backref='st_workflow', cascade='all')
+            }
+        )
     except exc.ArgumentError:
         pass
     
@@ -177,15 +186,22 @@ def initializeToPegasusDB(db, metadata):
                     Column('remote_user', VARCHAR(255), nullable=True),
                     Column('remote_working_dir', TEXT, nullable=True),
                     Column('cluster_start_time', NUMERIC(16,6), nullable=True),
-                    Column('cluster_duration', NUMERIC(scale=3), nullable=True)
+                    Column('cluster_duration', NUMERIC(10,3), nullable=True)
     )
     
     Index('FK_JOB_WF_ID', st_job.c.wf_id, unique=False)
     Index('FK_JOB_HOST_ID', st_job.c.host_id, unique=False)
     Index('UNIQUE_JOB', st_job.c.wf_id, st_job.c.job_submit_seq, unique=True)
     
+    Edge.parent_id = Column('parent_id', KeyInt)
+    
     try:
-        orm.mapper(Job, st_job)
+        orm.mapper(Job, st_job, properties = {
+                'child_tsk':relation(Task, backref='st_job', cascade='all'),
+                'child_jst':relation(Jobstate, backref='st_job', cascade='all'),
+                'child_file':relation(File, backref='st_job', cascade='all'),
+            }
+        )
     except exc.ArgumentError:
         pass
     
@@ -236,7 +252,7 @@ def initializeToPegasusDB(db, metadata):
                     Column('task_submit_seq', INT, nullable=False),
                     Column('start_time', NUMERIC(16,6), nullable=False,
                             default=time.time()),
-                    Column('duration', NUMERIC(scale=3), nullable=False),
+                    Column('duration', NUMERIC(10,3), nullable=False),
                     Column('exitcode', INT, nullable=False),
                     Column('transformation', TEXT, nullable=False),
                     Column('executable', TEXT, nullable=False),

@@ -22,8 +22,21 @@ import os
 import sys
 import logging
 
-# Get logger object (initialized elsewhere)
+# Get logger object
 logger = logging.getLogger()
+# Set default level to WARNING
+logger.setLevel(logging.WARNING)
+
+# Format our log messages the way we want
+cl = logging.StreamHandler()
+
+# Don't add funcName to the formatter for Python versions < 2.5
+if sys.version_info < (2, 5):
+    formatter = logging.Formatter("%(asctime)s:%(filename)s:%(lineno)d: %(levelname)s: %(message)s")
+else:
+    formatter = logging.Formatter("%(asctime)s:%(filename)s:%(funcName)s:%(lineno)d: %(levelname)s: %(message)s")
+cl.setFormatter(formatter)
+logger.addHandler(cl)
 
 # Figure out where our lib/Python directory is located, and put that in our module search path
 

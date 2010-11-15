@@ -16,11 +16,11 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id$"
+__rcsid__ = "$Id: stampede_loader.py 26765 2010-11-11 22:51:21Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
-from netlogger.analysis.modules._base import BufferedAnalyzer as BaseAnalyzer
+from netlogger.analysis.modules._base import Analyzer as BaseAnalyzer
 from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger import util
 import sys
@@ -89,7 +89,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
         self.log.info('init.end')
         
-    def process_buffer(self, linedata):
+    def process(self, linedata):
         """
         @type   linedata: dict
         @param  linedata: One line of BP data dict-ified.
@@ -111,7 +111,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             # the passed in event.
             self.log.error('process', 
                 msg='no handler for event type "%s" defined' % linedata['event'])
-        except exceptions.IntegrityError, e:
+        except SchemaIntegrityError, e:
             # This is raised when an attempted insert violates the
             # schema (unique indexes, etc).
             self.log.error('process',
@@ -312,9 +312,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         tsk = self.linedataToObject(linedata, Task())
         tsk.job_id = self.jobIdFromUnique(tsk)
+        if tsk.duration == None:
+            tsk.duration = 0
+            self.log.warn('task',
+                msg='Task event lacked duration - setting to zero')
+        
         if tsk.job_id == None:
             self.log.error('task',
-                msg='Could not determine job_id for task: %s' % js)
+                msg='Could not determine job_id for task: %s' % tsk)
             return
         del tsk.wf_uuid, tsk.name, tsk.job_submit_seq, tsk.ts
         
@@ -335,7 +340,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.log.debug('host', msg=host)
         try:
             host.commit_to_db(self.session)
-        except exceptions.IntegrityError, e:
+        except SchemaIntegrityError, e:
             # In this case, catch the duplicate insert exception
             # and ignore - we are bound to see duplicate host events
             # during a load.
