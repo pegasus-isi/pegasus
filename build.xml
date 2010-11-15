@@ -110,15 +110,7 @@
            classpathref="build.classpath"/>
   </target>
 
-<!--  <target name="compile" depends="checkjava"
-	  description="Compiles all sources, including tests">
-    <javac destdir="${build.src}" srcdir="src" 
-           target="${build.target}" source="${build.source}"
-           encoding="UTF-8" debug="true"
-           includes="*.java,edu/**/*.java,examples/**/*.java"
-           classpathref="build.classpath"/>
-  </target>
--->
+
   <target name="examples" depends="version"
 	  description="Compiles all examples">
     <javac destdir="${build.src}" srcdir="src" 
@@ -158,14 +150,6 @@
     <chmod perm="a+x" file="${dist.lib}/vdl.jar"/>
   </target>
 
-
-<!--  <target name="abstract-jar" depends="version,chimera"
-          description="Compiles a jar to test web services with">
-    <mkdir dir="${dist.lib}"/>
-    <jar destfile="${dist.lib}/abstract.jar" basedir="${build.src}"
-	 excludes="*.class,org/griphyn/**/*Test.class,org/griphyn/cPlanner/**/*.class"/>
-  </target>
--->
   <target name="validate-latex">
     <condition property="latex.available">
       <and>
@@ -302,6 +286,8 @@
   <target name="externals" depends="version,validate-make"
           description="INTERNAL: Compiles and installs external dependencies" 
           if="make.available">
+    <mkdir dir="${dist.dir}/lib"/>
+    <mkdir dir="${dist.dir}/lib/python"/>
     <exec executable="${basedir}/src/tools/make.pl" dir="src/externals" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
       <arg line="prefix=${dist.dir} all"/>
@@ -432,18 +418,10 @@
     </exec>
   </target>
 
-  <target name="dist-copy-lib" depends="version">
+  <target name="dist-copy-lib">
     <mkdir dir="${dist.lib}"/>
     <copy preservelastmodified="true" todir="${dist.lib}">
-      <fileset dir="lib" includes="*.jar">
-	<exclude name="antlr.debug.jar"/>
-	<exclude name="antlr.jar"/>
-	<exclude name="cog.jar"/>
-	<exclude name="loggerservice.jar"/>
-	<exclude name="mysql-connector-java-2*"/>
-	<exclude name="pg*jdbc2.jar"/>
-	<exclude name="pg73*.jar"/>
-      </fileset>
+      <fileset dir="lib" includes="*.jar"/>
       <fileset dir="lib" includes="*.sh"/>
       <fileset dir="lib">
         <include name="0*"/>
