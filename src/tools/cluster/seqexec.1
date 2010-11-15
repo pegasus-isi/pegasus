@@ -21,7 +21,7 @@
 .SH "NAME"
 seqexec \- run a bunch of applications
 .SH "SYNTAX"
-.B seqexec [\-d] [\-f [\-S\~ec]] [\-s\~fn] [\-R\~fn] [inputfile]
+.B seqexec [\-d] [\-f [\-S\~ec]] [\-s\~fn] [\-R\~fn] [\-n\~nr] [inputfile]
 .SH "DESCRIPTION"
 The 
 .B seqexec
@@ -100,6 +100,30 @@ mode, this means that
 will not fail when seeing this exit code from any application it runs. 
 .IP
 By default, all non-zero exit code constitute failure. 
+.TP
+.B \-n nr
+This option determines the amount of parallel execution. Typically, 
+parallel execution is only recommended on multi-core systems, and 
+must be deployed rather carefully, i.e. only completely independent
+jobs across of whole
+.I inputfile
+should ever be attempted to be run in parallel.
+.IP
+The argument 
+.B nr
+is the number of parallel jobs that should be used. In addition to
+a non-negative integer, the word
+.I auto
+is also understood. When
+.I auto
+is specified, 
+.B seqexec
+will attempt to automatically determine the number of cores 
+available in the system.
+.IP 
+Strictly sequential execution, as if
+.I nr
+was 1, is the default.
 .TP
 .B inputfile
 The input file specifies a list of application to run, one per line. 

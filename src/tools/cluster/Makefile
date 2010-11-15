@@ -97,7 +97,7 @@ endif
 %.o : %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-all: seqexec newexec $(GENDOC)
+all: seqexec $(GENDOC)
 
 #mpiexec.o: mpiexec.c mypopen.h mympi.h
 #mympi.o: mympi.c mympi.h
@@ -107,14 +107,10 @@ mysystem.o: mysystem.c tools.h report.h mysystem.h
 parser.o: parser.c parser.h
 report.o: report.c tools.h report.h
 tools.o: tools.c tools.h
-seqexec.o: seqexec.c tools.h parser.h report.h mysystem.h
-newexec.o: newexec.c tools.h parser.h report.h mysystem.h job.h
+seqexec.o: seqexec.c tools.h parser.h report.h mysystem.h job.h
 try-cpus.o: try-cpus.c
 
-seqexec: seqexec.o tools.o parser.o report.o mysystem.o 
-	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
-
-newexec: newexec.o tools.o parser.o report.o mysystem.o job.o 
+seqexec: seqexec.o tools.o parser.o report.o mysystem.o job.o 
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES)
 
 try-cpus: try-cpus.o
@@ -130,12 +126,11 @@ mpiexec.condor: mpiexec.c mypopen.c
 	$(MPICC_CONDOR) $(CFLAGS) -c -o mympiMPI_condor.o mympi.c ;\
 	$(MPICC_CONDOR) $(LDFLAGS) -o mpiexec.condor mpiexec.c mypopenMPI_condor.o mympiMPI_condor.o $(LOADLIBES) -lpthread
 
-install: seqexec newexec
-	$(INSTALL) -m 0755 seqexec $(prefix)/bin
-	$(INSTALL) -m 0755 newexec $(prefix)/bin
+install: seqexec
+	$(INSTALL) -m 0755 $^ $(prefix)/bin
 
 install.man: seqexec.1
-	$(INSTALL) -m 0644 seqexec.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 $^ $(prefix)/man/man1
 
 install.doc: $(GENDOC)
 	$(INSTALL) -m 0644 $(GENDOC) $(prefix)/man
@@ -148,4 +143,4 @@ clean:
 	$(RM) *.o $(GENDOC) core core.*
 
 distclean: clean
-	$(RM) seqexec newexec mpiexec try-cpus mpiexec.condor
+	$(RM) seqexec mpiexec try-cpus mpiexec.condor

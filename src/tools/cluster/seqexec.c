@@ -31,6 +31,8 @@
 #include "report.h"
 #include "mysystem.h"
 
+#include "job.h"
+
 static const char* RCS_ID =
 "$Id$";
 
@@ -57,14 +59,40 @@ helpMe( const char* programname, int rc )
 "\tis to execute all entries in the input file regardless of their exit.\n"
 " -s fn\tProtocol anything to given status file, default stdout.\n"
 " -R fn\tRecords progress into the given file, see also SEQEXEC_PROGRESS_REPORT.\n"
-" -S ec\tMulti-option: Mark non-zero exit-code ec as success (for -f mode)\n"
+" -S ec\tMulti-option: Mark non-zero exit-code ec as success (for -f mode).\n"
+" -n nr\tNumber of CPUs to use, defaults to 1, string 'auto' permitted.\n"
 " input\tFile with list of applications and args to execute, default stdin.\n" );
   exit(rc);
 }
 
 static
+int
+processors( void )
+{
+  long config = 
+#ifdef _SC_NPROCESSORS_CONF
+    sysconf( _SC_NPROCESSORS_CONF )
+#else
+    1
+#endif 
+    ; 
+
+  long online = 
+#ifdef _SC_NPROCESSORS_ONLN
+    sysconf( _SC_NPROCESSORS_ONLN )
+#else
+    1 
+#endif
+    ;
+
+  if ( config <= 0 ) config = 1; 
+  if ( online <= 0 ) online = 1; 
+  return config < online ? config : online;
+}
+
+static
 void
-parseCommandline( int argc, char* argv[], int* fail_hard )
+parseCommandline( int argc, char* argv[], int* fail_hard, int* cpus )
 {
   char *s, *ptr = strrchr( argv[0], '/' );
   int option, tmp;
@@ -72,6 +100,7 @@ parseCommandline( int argc, char* argv[], int* fail_hard )
   /* exit code 0 is always good, just in case */
   memset( success, 0, sizeof(success) );
   success[0] = 1;
+  *cpus = 1; 
 
   if ( ptr == NULL ) ptr = argv[0];
   else ptr++;
@@ -86,7 +115,7 @@ parseCommandline( int argc, char* argv[], int* fail_hard )
   }
 
   opterr = 0;
-  while ( (option = getopt( argc, argv, "R:S:dfhs:" )) != -1 ) {
+  while ( (option = getopt( argc, argv, "R:S:dfhn:s:" )) != -1 ) {
     switch ( option ) {
     case 'R':
       if ( progress != -1 ) close(progress);
@@ -108,6 +137,12 @@ parseCommandline( int argc, char* argv[], int* fail_hard )
 
     case 'f':
       (*fail_hard)++;
+      break;
+
+    case 'n':
+      if ( strcasecmp( optarg, "auto" ) == 0 ) *cpus = processors();
+      else *cpus = atoi(optarg); 
+      if ( *cpus < 0 ) *cpus = 1; 
       break;
 
     case 's':
@@ -164,6 +199,65 @@ merge( char* s1, char* s2, int use_space )
   }
 }
 
+
+pid_t
+wait_for_child( Jobs* jobs, int* status )
+{
+  struct rusage usage; 
+  Signals save;
+  int saverr; 
+  double final; 
+  size_t slot; 
+  pid_t child = ((pid_t) -1);  
+
+  save_signals(&save); 
+  while ( (child = wait4( ((pid_t) 0), status, 0, &usage )) < 0 ) {
+    saverr = errno;
+    perror( "wait4" ); 
+    errno = saverr; 
+
+    if ( errno != EINTR ) {
+      *status = -1;
+      break;
+    }
+  }
+  saverr = errno; 
+  final = now(NULL); 
+  restore_signals(&save); 
+
+  /* find child that has finished */ 
+  for ( slot=0; slot < jobs->cpus; ++slot ) {
+    if ( jobs->jobs[slot].child == child ) break;
+  }
+
+  if ( slot == jobs->cpus ) { 
+    /* reaped child not found, not good */
+    showerr( "%s: process %d (status %d) is not a known child, ignoring.\n", 
+	     application, child, *status ); 
+  } else { 
+    /* free slot and report */ 
+    Job* j = (jobs->jobs) + slot; 
+    
+    /* say hi */ 
+    if ( debug > 1 ) { 
+      char date[32]; 
+      printf( "<job pid=\"%d\" app=\"%s\" start=\"%s\" duration=\"%.3f\" status=\"%d\"/>\n",
+	      child, j->argv[0], isodate( j->when, date, sizeof(date) ),
+	      (final - j->start), *status ); 
+    }
+    
+    /* progress report at finish of job */ 
+    if ( progress != -1 ) 
+      report( progress, j->when, (final - j->start), *status, j->argv, &usage, NULL ); 
+    
+    /* free reported job */ 
+    job_done(j); 
+  }	   
+
+  errno = saverr; 
+  return child; 
+}
+
 int
 isafailure( int status )
 {
@@ -176,20 +270,35 @@ main( int argc, char* argv[], char* envp[] )
   size_t len;
   char line[MAXSTR];
   int appc, other, status = 0;
-  int fail_hard = 0;
+  int slot, cpus, fail_hard = 0;
   char* cmd;
   char** appv = NULL;
-
   char* save = NULL;
   unsigned long total = 0;
   unsigned long failure = 0;
   unsigned long lineno = 0;
   time_t when;
+  Jobs jobs;
   double diff, start = now(&when);
-  parseCommandline( argc, argv, &fail_hard );
-
+  parseCommandline( argc, argv, &fail_hard, &cpus );
+  
   /* progress report finish */
   if ( progress != -1 ) report( progress, time(NULL), 0.0, -1, argv, NULL, NULL );
+
+  /* allocate job management memory */ 
+  if ( jobs_init( &jobs, cpus ) == -1 ) {
+    showerr( "%s: out of memory: %d: %s\n", 
+	     application, errno, strerror(errno) );
+    return 42;
+  }
+  
+  /* since we will create multiple concurrent processes, let's create a
+   * process group to order them by.
+   */
+  if ( setpgid( 0, 0 ) == -1 ) {
+    showerr( "%s: unable to become process group leader: %d: %s (ignoring)\n", 
+	     application, errno, strerror(errno) ); 
+  }
 
   /* NEW: unconditionally run a setup job */
   if ( (cmd = getenv("SEQEXEC_SETUP")) != NULL ) { 
@@ -197,7 +306,7 @@ main( int argc, char* argv[], char* envp[] )
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       other = mysystem( appv, envp, "setup" ); 
       if ( other || debug )
-	showerr( "%s: setup returned %d/%d\n", /* application */ argv[0],
+	showerr( "%s: setup returned %d/%d\n", application,
 		 (other >> 8), (other & 127) ); 
       for ( len=0; len<appc; len++ ) free((void*) appv[len]);
       free((void*) appv); 
@@ -251,13 +360,47 @@ main( int argc, char* argv[], char* envp[] )
       cmd = line;
     }
 
-    /* and run it */
-    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
-      total++;
-      if ( (status = mysystem( appv, envp, NULL )) ) failure++;
-      /* free resource -- we must free argv[] elements */
-      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
-      free((void*) appv);
+    /* find a free slot */ 
+    while ( (slot = jobs_first_slot( &jobs, EMPTY )) == jobs.cpus ) {
+      /* wait for any child to finish */
+      if ( debug ) showerr( "%s: %d slot%s busy, wait()ing\n", 
+			    application, jobs.cpus, ( jobs.cpus == 1 ? "" : "s" ) ); 
+      wait_for_child( &jobs, &status ); 
+    }
+    /* post-condition: there is a free slot; slot number in "slot" */ 
+
+    /* found free slot */ 
+    if ( slot < jobs.cpus ) { 
+      /* there is a free slot. Spawn and continue */ 
+      Job* j = jobs.jobs + slot; 
+      if ( (j->argc = interpreteArguments( cmd, &(j->argv) )) > 0 ) {
+	total++;
+	j->envp = envp; /* for now */ 
+	if ( (j->child = fork()) == ((pid_t) -1) ) { 
+	  /* fork error, bad */
+	  perror( "fork" );
+	  failure++; 
+	  job_done( j ); 
+	} else if ( j->child == ((pid_t) 0) ) {
+	  /* child code */
+	  start_child( j->argv, j->envp, NULL ); 
+	  return 127; /* never reached, just in case */ 
+	} else {
+	  /* parent code */
+	  j->count = total; 
+	  j->state = RUNNING;
+	  j->start = now( &(j->when) ); 
+	}
+      } else {
+	/* error parsing args */
+	if ( debug ) 
+	  showerr( "%s: error parsing arguments on line %lu, ignoring\n", 
+		   application, lineno ); 
+      }
+    } else {
+      /* no free slots, wait for children to finish */ 
+      showerr( "%s: %s:%d THIS SHOULD NOT HAPPEN! (ignoring)\n", 
+	       application, __FILE__, __LINE__ ); 
     }
 
     if ( cmd != line ) free((void*) cmd);
@@ -266,13 +409,22 @@ main( int argc, char* argv[], char* envp[] )
     if ( fail_hard && status && isafailure(status) ) break;
   }
 
+  /* wait for all children */ 
+  while ( (slot=jobs_in_state( &jobs, EMPTY )) < jobs.cpus ) {
+    /* wait for any child to finish */
+    size_t n = jobs.cpus - slot; 
+    showerr( "%s: %d task%s remaining\n", application, n, (n == 1 ? "" : "s" ) ); 
+    wait_for_child( &jobs, &status ); 
+  }
+
+
   /* NEW: unconditionally run a clean-up job */
   if ( (cmd = getenv("SEQEXEC_CLEANUP")) != NULL ) { 
 #ifndef USE_SYSTEM_SYSTEM
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       other = mysystem( appv, envp, "cleanup" ); 
       if ( other || debug )
-	showerr( "%s: cleanup returned %d/%d\n", /* application */ argv[0],
+	showerr( "%s: cleanup returned %d/%d\n", application,
 		 (other >> 8), (other & 127) ); 
       for ( len=0; len<appc; len++ ) free((void*) appv[len]);
       free((void*) appv); 
@@ -289,6 +441,7 @@ main( int argc, char* argv[], char* envp[] )
   }
 
   /* provide final statistics */
+  jobs_done( &jobs ); 
   diff = now(NULL) - start;
   printf( "[struct stat=\"OK\", lines=%lu, count=%lu, failed=%lu, "
 	  "duration=%.3f, start=\"%s\"]\n",
