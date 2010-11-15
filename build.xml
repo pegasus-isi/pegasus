@@ -9,7 +9,7 @@
     <fileset dir="lib" includes="*.jar"/>
   </path>
   
-  <target name="getsystem"
+  <target name="get-system"
           description="Obtains the system information and architecture"
           unless="dist.arch">
     <exec executable="${pegasus.home}/release-tools/getsystem/getsystem"
@@ -18,7 +18,8 @@
     <echo>Architecture ${dist.arch}</echo>
   </target>
 
-  <target name="init" depends="getsystem" unless="ISODATE.full">
+  <target name="get-timestamps" unless="ISODATE.full"
+	  description="Set the timestamps in Version.java">
     <tstamp/>
     <mkdir dir="dist"/>  
     <mkdir dir="${build.src}"/>
@@ -42,18 +43,15 @@
   </target>
 
 
-  <target name="checkjava" depends="init">
+  <target name="check-java"  description="Check the version of java">
      <property name="build.source" value="${ant.java.version}"/>
      <property name="build.target" value="${ant.java.version}"/>   
-<!-- <condition property="build.target" value="${build.target}" else="1.5">
-        <os arch="ia64"/>
-     </condition> -->
      <echo>JAVA TARGET is ${build.target}</echo>
      <echo>JAVA SOURCE is ${build.source}</echo>
   </target>
 
 
-  <target name="version" depends="commonversion"
+  <target name="version" depends="compile-version"
 	  unless="dist.dir"
 	  description="Provides the version number from within PEGASUS to ANT">
     <taskdef name="versiontask"
@@ -71,27 +69,27 @@
     <echo file="stamp">${ISODATE.utc} ${dist.arch}${line.separator}</echo>
   </target>
 
-  <target name="commonversion" depends="checkjava"
-	  description="Compiles the code common to both, Chimera and Pegasus">
+  <target name="compile-version" depends="check-java,get-timestamps,get-system"
+	  description="Compiles the Version.java and helper code">
     <javac destdir="${build.src}" srcdir="src" 
            encoding="UTF-8" debug="true"
            target="${build.target}" source="${build.source}"
-           includes="src/edu/isi/pegasus/common/util/Version.java,*.java"
-           excludes="org/griphyn/common/**/*Test.java,*Test.java"
+           includes="edu/isi/pegasus/common/util/Version.java,VersionTask.java"
            classpathref="build.classpath"/>
   </target>
 
-  <target name="common" depends="checkjava"
-	  description="Compiles the code common to both, Chimera and Pegasus">
+  <target name="common" depends="version"
+	  description="Compiles the code common to all Pegasus modules">
     <javac destdir="${build.src}" srcdir="src" 
            encoding="UTF-8" deprecation="true" debug="true"
            target="${build.target}" source="${build.source}"
-           includes="org/griphyn/common/**/*.java"
-           excludes="org/griphyn/common/**/*Test.java"
+           includes="edu/isi/pegasus/common/**/*.java"
+           excludes="edu/isi/pegasus/common/**/*Test.java,edu/isi/pegasus/planner/**/*.java"
            classpathref="build.classpath"/>
   </target>
 
-  <target name="chimera" depends="checkjava"
+
+  <target name="vdl" depends="version"
 	  description="Compiles the abstract planner Chimera">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
@@ -101,49 +99,73 @@
            classpathref="build.classpath"/>
   </target>
 
-  <target name="pegasus" depends="checkjava"
-	  description="Compiles the concrete planner Pegasus">
+
+  <target name="planner" depends="version"
+	  description="Compiles the concrete planner module of Pegasus">
     <javac destdir="${build.src}" srcdir="src"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
-           includes="org/griphyn/cPlanner/**/*.java,edu/isi/pegasus/planner/**/*.java"
-           excludes="org/griphyn/cPlanner/**/*Test.java,edu/isi/pegasus/planner/**/*.java"
+           includes="edu/isi/pegasus/planner/**/*.java"
+           excludes="edu/isi/pegasus/planner/**/*Test.java,org/griphyn/**/*.java"
            classpathref="build.classpath"/>
   </target>
 
-  <target name="compile" depends="checkjava"
+<!--  <target name="compile" depends="checkjava"
 	  description="Compiles all sources, including tests">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
-           includes="*.java,edu/**/*.java,examples/**/*.java,org/**/*.java"
+           includes="*.java,edu/**/*.java,examples/**/*.java"
+           classpathref="build.classpath"/>
+  </target>
+-->
+  <target name="examples" depends="version"
+	  description="Compiles all examples">
+    <javac destdir="${build.src}" srcdir="src" 
+           target="${build.target}" source="${build.source}"
+           encoding="UTF-8" debug="true"
+           includes="examples/**/*.java"
+	   excludes="org/griphyn/**/*.java"
            classpathref="build.classpath"/>
   </target>
 
-  <target name="deprecation" depends="checkjava"
-	  description="compiles everything with deprecation flag">
+
+  <target name="deprecation" depends="version"
+	  description="compiles everything under edu.isi.pegasus with deprecation flag">
     <javac destdir="${build.src}" srcdir="src" 
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" deprecation="true" debug="true"
-           includes="*.java,org/**/*.java"
+           includes="*.java,edu/isi/pegasus/**/*.java"
            classpathref="build.classpath"/>
   </target>
 
-  <target name="jar" depends="compile,version"
-	  description="Create the PEGASUS JAR files excluding tests">
+
+  <target name="jar" depends="common,planner,examples"
+	   description="Create the PEGASUS JAR files excluding tests">
     <mkdir dir="${dist.lib}"/>
     <jar destfile="${dist.lib}/pegasus.jar" basedir="${build.src}"
-	 excludes="*.class,org/griphyn/**/*Test.class"/>
+	 includes="edu/isi/pegasus/**/*.class"
+	 excludes="*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
     <chmod perm="a+x" file="${dist.lib}/pegasus.jar"/>
   </target>
 
-  <target name="abstract-jar" depends="version,chimera"
+  <target name="vdl-jar" depends="vdl"
+	  description="Create the VDL JAR files excluding tests">
+    <mkdir dir="${dist.lib}"/>
+    <jar destfile="${dist.lib}/vdl.jar" basedir="${build.src}"
+	 includes="org/griphyn/vdl/**/*.class,org/griphyn/vdl/*.class"
+	 excludes="*.class,org/griphyn/vdl/**/*Test.class,org/griphyn/vdl/*Test.class,edu/isi/pegasus/**/*.jar"/>
+    <chmod perm="a+x" file="${dist.lib}/vdl.jar"/>
+  </target>
+
+
+<!--  <target name="abstract-jar" depends="version,chimera"
           description="Compiles a jar to test web services with">
     <mkdir dir="${dist.lib}"/>
     <jar destfile="${dist.lib}/abstract.jar" basedir="${build.src}"
 	 excludes="*.class,org/griphyn/**/*Test.class,org/griphyn/cPlanner/**/*.class"/>
   </target>
-
+-->
   <target name="validate-latex">
     <condition property="latex.available">
       <and>
@@ -176,7 +198,7 @@
     </uptodate>
   </target>
   
-  <target name="latex" depends="latex-pre,validate-latex,jar"
+  <target name="latex" depends="latex-pre,validate-latex"
           description="Runs PDF-LaTeX to auto-document properties" 
 	  if="latex.available"
           unless="pegasus.predicate.latex">
@@ -187,7 +209,7 @@
     </exec>
   </target>
 
-  <target name="withoutlatex" depends="validate-latex,jar"
+  <target name="withoutlatex" depends="validate-latex"
           description="Copies properties to document if latex is not installed" 
 	  if="latex.notavailable">
      <mkdir dir="${dist.doc}"/>
@@ -198,13 +220,13 @@
 
   <target name="javadoc-pre" depends="version">
     <uptodate property="pegasus.predicate.doc">
-      <srcfiles dir="src" includes="org/griphyn/**/*.java,edu/isi/pegasus/**/*.jva" 
+      <srcfiles dir="src" includes="edu/isi/pegasus/**/*.java" 
 	        excludes="**/*Test.java"/>
       <mapper type="glob" from="*.java" to="${dist.doc}/javadoc/*.html"/>
     </uptodate>
   </target>    
 
-  <target name="javadoc" depends="compile,javadoc-pre"
+  <target name="javadoc" depends="planner,common,javadoc-pre"
           description="Generates the javadoc auto-documentation"
           unless="pegasus.predicate.doc">
     <!-- <delete dir="${dist.doc}/javadoc"/> -->
@@ -216,20 +238,19 @@
              Windowtitle="PEGASUS"
              classpathref="build.classpath">
       <packageset dir="src">
-        <include name="org/griphyn/common/**"/>
-        <include name="org/griphyn/vdl/**"/>
-        <include name="org/griphyn/cPlanner/**"/>
+<!--        <include name="org/griphyn/vdl/**"/> -->
         <include name="edu/isi/pegasus/**"/>
       </packageset>
       <fileset dir="src" includes="*.java"/>
       <doctitle><![CDATA[PEGASUS ${pegasus.version}]]></doctitle>
       <bottom><![CDATA[<i>Copyright &#169; 2007 The University of Southern California. All Rights Reserved.</i>]]></bottom>
-      <group title="Common Shared Code" packages="org.griphyn.common.*"/>
-      <group title="Chimera">
+<!--      <group title="Common Shared Code" packages="org.griphyn.common.*"/> -->
+<!--      <group title="Chimera">
 	<package name="org.griphyn.vdl"/>
 	<package name="org.griphyn.vdl.*"/>
       </group>
-      <group title="Pegasus" packages="org.griphyn.cPlanner.*"/>
+-->
+      <group title="Pegasus" packages="edu.isi.pegasus.*"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
     </javadoc>
   </target>
@@ -288,7 +309,7 @@
   </target>
 
   <target name="externals-clean" depends="validate-make"
-          description="INTERNAL: Cleans up all externals builds" 
+          description="INTERNAL: Cleans up all external tools" 
           if="make.available">
     <exec executable="${basedir}/src/tools/make.pl" dir="src/externals" failonerror="true">
       <arg line="clean"/>
@@ -356,7 +377,6 @@
 
   <target name="man" depends="man-roff,man-ps,man-html,man-txt"
           description="Copies and formats the client tool manpages"/>
-
 
 
   <target name="dist-setup-app">
@@ -445,7 +465,7 @@
     </chmod>
   </target>
 
-  <target name="dist" depends="jar,latex,withoutlatex,man-roff,ctools-all,externals,getsystem"
+  <target name="dist" depends="jar,vdl-jar,latex,withoutlatex,man-roff,ctools-all,externals"
           description="Sets up the dist directory">
     <!-- bin -->
     <mkdir dir="${dist.dir}/bin"/>
@@ -572,12 +592,12 @@
     <delete file="dist/pegasus-binary-${pegasus.version}.tar"/>
   </target>
 
-  <target name="clean" depends="externals-clean, ctools-clean"
+  <target name="clean" depends="ctools-clean,externals-clean"
 	  description="Removes the build and dist directories">
     <delete dir="dist"/>
     <delete dir="build"/>
     <delete file="stamp"/>
   </target>
- <target name="build" depends="ctools-all, externals, jar"/>
+ <target name="build" depends="ctools-all,externals,jar,vdl-jar"/>
 </project>
 
