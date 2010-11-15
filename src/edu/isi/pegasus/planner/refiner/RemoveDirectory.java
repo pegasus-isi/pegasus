@@ -290,7 +290,7 @@ public class RemoveDirectory extends Engine {
         catch (Exception e) {
             //non sensical catching
             mLogger.log("Unable to retrieve entry from TC " + e.getMessage(),
-                        LogManager.ERROR_MESSAGE_LEVEL);
+                        LogManager.DEBUG_MESSAGE_LEVEL );
         }
         entry = ( entries == null ) ?
                      this.defaultTCEntry( ePool ): //try using a default one

@@ -417,13 +417,6 @@ public class SiteCatalogEntry extends AbstractSiteData{
      */
     public String getKickstartPath() {
         
-        //check to see if user specified gridstart.path profile 
-        //in the site catalog.
-        String profile = (String) this.getProfiles().get( NAMESPACES.pegasus ).get( Pegasus.GRIDSTART_PATH_KEY );
-        if( profile != null ){
-            //return the path specified in profile
-            return profile;
-        }
         
         //try to construct the default path on basis of
         //PEGASUS_HOME environment variable.

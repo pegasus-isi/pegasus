@@ -717,16 +717,27 @@ public class Kickstart implements GridStart {
      * Else, we pick up the path from the site catalog that is passed as input
      *
      * @param job   the <code>Job</code> containing the job description.
-     * @param path  the path to kickstart on the remote compute site.
+     * @param path  the path to kickstart on the remote compute site, as determined
+     *              from the site catalog.
      *
      * @return the path that needs to be set as the executable
      */
     protected String handleTransferOfExecutable( Job job, String path ) {
         Condor cvar = job.condorVariables;
+        
+        
 
         if ( cvar.getBooleanValue("transfer_executable")) {
             SiteCatalogEntry site = mSiteStore.lookup( "local" );
-            String gridStartPath = site.getKickstartPath();
+            TransformationCatalogEntry entry = this.getTransformationCatalogEntry( site.getSiteHandle() );
+
+            
+            String gridStartPath = ( entry == null )?
+                             //rely on the path determined from sc
+                             site.getKickstartPath():
+                             //the tc entry has highest priority
+                             entry.getPhysicalTransformation();
+            
             if (gridStartPath == null) {
                 mLogger.log(
                     "Gridstart needs to be shipped from the submit host to pool" +
@@ -741,28 +752,12 @@ public class Kickstart implements GridStart {
             return gridStartPath;
         }
         else if( mDynamicDeployment &&
-                 job.runInWorkDirectory()  ){//any jobs that run in submit directory use local kickstart path
+                 job.runInWorkDirectory()  ){
+            //worker package deployment 
+            //any jobs that run in submit directory use local kickstart path
             //pick up the path from the transformation catalog of
             //dynamic deployment
-            List entries = null;
-            try{
-                entries = mTCHandle.lookup( this.TRANSFORMATION_NAMESPACE,
-                                                  this.TRANSFORMATION_NAME,
-                                                  this.TRANSFORMATION_VERSION,
-                                                  job.getSiteHandle(),
-                                                  TCType.INSTALLED );
-            }
-            catch (Exception e) {
-                //non sensical catching
-                mLogger.log("Unable to retrieve entries from TC " +
-                            e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL );
-            }
-
-
-
-            TransformationCatalogEntry entry = ( entries == null ) ?
-                                                 null  :
-                                                 (TransformationCatalogEntry) entries.get(0);
+            TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
 
             if( entry == null ){
                 //NOW THROWN AN EXCEPTION
@@ -779,13 +774,58 @@ public class Kickstart implements GridStart {
             return entry.getPhysicalTransformation();
         }
         else{
-            //the executable paths are correct and
-            //point to the executable on the remote pool
-            return path;
+            //the vanilla case where kickstart is pre installed.
+            TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
+            
+            String ksPath = ( entry == null )?
+                             //rely on the path determined from profiles 
+                             (String)job.vdsNS.get( Pegasus.GRIDSTART_PATH_KEY ):
+                             //the tc entry has highest priority
+                             entry.getPhysicalTransformation();
+            
+            
+            ksPath =  ( ksPath == null )?
+                      //rely on the path from the site catalog
+                      path:
+                      ksPath;
+            
+            //sanity check 
+            if( ksPath == null ){
+                throw new RuntimeException( "Unable to determine path to kickstart for site " + job.getSiteHandle() );
+            }
+            
+            return ksPath;
         }
 
     }
 
+    /**
+     * Returns the transformation catalog entry for kickstart on a site
+     * 
+     * @param site  the site on which the entry is required
+     * 
+     * @return the entry if found else null
+     */
+    public TransformationCatalogEntry getTransformationCatalogEntry( String site ){
+        List entries = null;
+        try {
+            entries = mTCHandle.lookup( Kickstart.TRANSFORMATION_NAMESPACE,
+                                        Kickstart.TRANSFORMATION_NAME,
+                                        Kickstart.TRANSFORMATION_VERSION,
+                                        site,
+                                        TCType.INSTALLED );
+        } catch (Exception e) {
+            //non sensical catching
+            mLogger.log("Unable to retrieve entries from TC " +
+                    e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL);
+
+
+        }
+        
+        return ( entries == null ) ?
+                null  :
+               (TransformationCatalogEntry) entries.get(0);
+    }
 
 
     /**
