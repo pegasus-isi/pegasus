@@ -46,12 +46,19 @@ def isodate(now=int(time.time()), utc=False, short=False):
     if utc:
         my_time = time.gmtime(now)
     else:
+        # FIXME: Zone offset is wrong on CentOS 5.5 with python 2.4
         my_time = time.localtime(now)
-
+        
     if short:
-        return time.strftime("%Y%m%dT%H%M%S%z", my_time)
+        if utc:
+            return time.strftime("%Y%m%dT%H%M%SZ", my_time)
+        else:
+            return time.strftime("%Y%m%dT%H%M%S%z", my_time)
     else:
-        return time.strftime("%Y-%m-%dT%H:%M:%S%z", my_time)
+        if utc:
+            return time.strftime("%Y-%m-%dT%H:%M:%SZ", my_time)
+        else:
+            return time.strftime("%Y-%m-%dT%H:%M:%S%z", my_time)
 
 parse_iso8601 = re.compile(r'(\d{4})-?(\d{2})-?(\d{2})[ tT]?(\d{2}):?(\d{2}):?(\d{2})([.,]\d+)?([zZ]|[-+](\d{2}):?(\d{2}))')
 
@@ -79,8 +86,11 @@ def epochdate(timestamp, short=False):
             # no zulu time, has zone offset
             my_offset = datetime.timedelta(hours=int(m.group(9)),minutes=int(m.group(10)))
 
-            # Subtract offset
-            my_time = my_time - my_offset
+            # adjust for time zone offset
+            if tz[0] == '-':
+                my_time = my_time + my_offset
+            else:
+                my_time = my_time - my_offset
 
         # Turn my_time into Epoch format
         return int(calendar.timegm(my_time.timetuple()))
@@ -398,11 +408,18 @@ def keep_foreground():
 	sys.exit(1)
 
 if __name__ == "__main__":
-    print "Testing isodate() function"
-    print " long local timestamp:", isodate()
-    print "   long utc timestamp:", isodate(utc=True)
-    print "short local timestamp:", isodate(short=True)
-    print "  short utc timestamp:", isodate(utc=True,short=True)
+    now = int(time.time())
+    print "Testing isodate() function from now=%lu" % (now)
+    print " long local timestamp:", isodate(now=now)
+    print "   long utc timestamp:", isodate(now=now,utc=True)
+    print "short local timestamp:", isodate(now=now,short=True)
+    print "  short utc timestamp:", isodate(now=now,utc=True,short=True)
+    print
+    print "Testing epochdate() function from above ISO dates"
+    print " long local epochdate:", epochdate(isodate(now=now))
+    print "   long utc epochdate:", epochdate(isodate(now=now,utc=True))
+    print "short local timestamp:", epochdate(isodate(now=now,short=True))
+    print "  short utc timestamp:", epochdate(isodate(now=now,utc=True,short=True))
     print
     print "Looking for ls...", find_exec('ls')
     print "Looking for test.pl...", find_exec('test.pl', True)
