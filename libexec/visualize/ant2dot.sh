@@ -2,4 +2,6 @@
 #
 # Constructs the most common use case
 #
-perl build.pl $PEGASUS_HOME/build.xml > build.dot && dot -Tpng build.dot > build.png
+dir=`dirname $0`;
+antfile=$1;
+perl $dir/ant2dot.pl $antfile > build.dot && dot -Tpng build.dot > build.png

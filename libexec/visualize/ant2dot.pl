@@ -13,11 +13,10 @@ my $buildfn = shift || 'build.xml';
 my $parser = new XML::Parser::Expat() || 
     die "ERROR: Unable to instantiate XML parser";
 
-print 'Digraph DAG {', "\n";
+print 'digraph E {', "\n";
 print '  size="16.0,11.0"', "\n";
 print '  ratio = fill', "\n";
-print '  node [shape=rectangle, color=orange, style=filled]', "\n";
-
+print '  node [fontname="Courier",shape=rectangle, color=lightblue, style=filled]', "\n";
 my (%result,@stack,@deps,$name) = ();
 $parser->setHandlers( 'Start' => sub {
         my $self = shift;
