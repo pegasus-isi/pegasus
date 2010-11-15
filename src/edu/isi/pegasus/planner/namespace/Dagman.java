@@ -107,6 +107,11 @@ public class Dagman extends Namespace {
      * belongs to.
      */
     public static final String CATEGORY_KEY = "CATEGORY";
+    
+    /**
+     * The name of the key that determines the priority a job is assigned.
+     */
+    public static final String PRIORITY_KEY = "PRIORITY";
 
 
     /**
@@ -322,11 +327,12 @@ public class Dagman extends Namespace {
                 break;
 
             case 'P':
-                if ( (key.compareTo(Dagman.POST_SCRIPT_KEY) == 0) ||
-                     (key.compareTo(Dagman.POST_SCRIPT_ARGUMENTS_KEY) == 0)||
-                     (key.compareTo(Dagman.PRE_SCRIPT_KEY) == 0) ||
-                     (key.compareTo(Dagman.PRE_SCRIPT_ARGUMENTS_KEY) == 0 ) || 
-                     (key.compareTo(Dagman.POST_SCRIPT_SCOPE_KEY) == 0 ) || 
+                if ( ( key.compareTo(Dagman.POST_SCRIPT_KEY) == 0) ||
+                     ( key.compareTo(Dagman.POST_SCRIPT_ARGUMENTS_KEY) == 0)||
+                     ( key.compareTo(Dagman.PRE_SCRIPT_KEY) == 0) ||
+                     ( key.compareTo(Dagman.PRE_SCRIPT_ARGUMENTS_KEY) == 0 ) || 
+                     ( key.compareTo(Dagman.POST_SCRIPT_SCOPE_KEY) == 0 ) ||
+                     ( key.compareTo( Dagman.PRIORITY_KEY) == 0 ) ||
                      ( key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX ) )
                      ) {
                     res = VALID_KEY;
