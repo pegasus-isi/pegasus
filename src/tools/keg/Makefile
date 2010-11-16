@@ -213,7 +213,7 @@ test check: keg
 	@./keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
 clean:
-	$(RM) keg.o keg.condor.o $(GENDOC) core $(EXTRA_OBJ)
+	$(RM) keg.o keg.co $(GENDOC) core $(EXTRA_OBJ) $(EXTRA_COBJ)
 
 distclean: clean
 	$(RM) keg keg.condor
