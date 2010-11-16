@@ -966,7 +966,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                 else if ( child instanceof Profile ){
                     Profile p = ( Profile ) child;
                     p.setProfileValue( mTextContent.toString().trim() );
-                    mLogger.log( "Set Profile Value to " + p.getProfileValue(), LogManager.DEBUG_MESSAGE_LEVEL );
+                    mLogger.log( "Set Profile Value to " + p.getProfileValue(), LogManager.TRACE_MESSAGE_LEVEL );
                     if ( parent instanceof ReplicaLocation ) {
                         //profile appears in file element
                         unSupportedNestingOfElements( "file", "profile" );

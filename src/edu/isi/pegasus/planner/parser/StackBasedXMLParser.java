@@ -188,7 +188,7 @@ public abstract class StackBasedXMLParser extends Parser {
         mDepth--;
         mLogger.log( "</" +  localName + "> at " +
                      this.mLocator.getLineNumber() + ":" +
-                     mLocator.getColumnNumber() , LogManager.DEBUG_MESSAGE_LEVEL );
+                     mLocator.getColumnNumber() , LogManager.TRACE_MESSAGE_LEVEL );
 
         ParserStackElement tos = ( ParserStackElement ) mStack.pop();
         if ( ! qName.equals( tos.getElementName() ) ) {
@@ -226,7 +226,7 @@ public abstract class StackBasedXMLParser extends Parser {
     public void log( String element, String attribute, String value) {
         //to be enabled when logging per queue.
         mLogger.log( "For element " + element + " found " + attribute + " -> " + value,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
+                     LogManager.TRACE_MESSAGE_LEVEL  );
     }
     
     /**

@@ -644,7 +644,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
                 if ( child instanceof Profile ){
                     Profile p = ( Profile ) child;
                     p.setProfileValue( mTextContent.toString().trim() );
-                    mLogger.log( "Set Profile Value to " + p.getProfileValue(), LogManager.DEBUG_MESSAGE_LEVEL );
+                    mLogger.log( "Set Profile Value to " + p.getProfileValue(), LogManager.TRACE_MESSAGE_LEVEL );
                     if ( parent instanceof FileServer ) {
                         FileServer server = ( FileServer )parent;
                         server.addProfile( p );
@@ -801,17 +801,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
 
     }
 
-    /**
-     * 
-     * @param element
-     * @param attribute
-     * @param value
-     */
-    public void log( String element, String attribute, String value) {
-        //to be enabled when logging per queue.
-        mLogger.log( "For element " + element + " found " + attribute + " -> " + value,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
-    }
+   
     
     /**
      * 
