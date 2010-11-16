@@ -553,12 +553,8 @@
         <include name="MIGRATING_FROM_VDS"/>
         <include name="RELEASE_NOTES"/>
 	<include name="CHANGELOG"/>
-	<include name="setup.*sh"/>
       </fileset>
     </copy>
-    <chmod perm="ugo+rx" type="file">
-      <fileset dir="${dist.dir}" includes="setup.*sh"/>
-    </chmod>
 
     <!-- creates the binary tarball -->
     <exec executable="sh" dir="dist">

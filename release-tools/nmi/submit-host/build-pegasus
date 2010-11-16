@@ -92,7 +92,6 @@ sub env_setup
     }
 
     $ENV{'CLASSPATH'} = "";
-    $ENV{'PEGASUS_HOME'} = $src_dir;
     
     cmd("env", 1, 1);
     cmd("which java 2>&1", 1, 0);
@@ -115,7 +114,7 @@ sub build_binary
     
     cd($src_dir);
 
-    cmd(". ./setup-devel.sh && ant clean", 1, 0);
+    cmd("ant clean", 1, 0);
     cmd("rm -rf dist/*", 1, 0);
     cmd("mkdir -p build-results", 1, 1);
 
@@ -131,11 +130,11 @@ sub build_worker
     
     cd($src_dir);
 
-    cmd(". ./setup-devel.sh && ant clean", 1, 0);
+    cmd("ant clean", 1, 0);
     cmd("rm -rf dist/*", 1, 0);
     cmd("mkdir -p build-results", 1, 1);
 
-    cmd(". ./setup-devel.sh && ant dist-worker", 1, 1);
+    cmd("ant dist-worker", 1, 1);
     cmd("mv dist/*.tar.gz build-results/", 1, 1);
     cmd("cd build-results/ && ls -l -h", 1, 1);
 }
@@ -182,7 +181,7 @@ sub build_wms
     chomp($pegasus_version);
     logmsg("Pegasus version is $pegasus_version");
 
-    my $pegasus_system = `\$PEGASUS_HOME/release-tools/getsystem/getsystem`;
+    my $pegasus_system = `$src_dir/release-tools/getsystem/getsystem`;
     chomp($pegasus_system);
     logmsg("Pegasus system is $pegasus_system");
 
@@ -195,19 +194,19 @@ sub build_wms
     
     cmd("cp $src_dir/release-tools/nmi/condor* condor/etc/", 1, 1);
 
-    open(SETUP, ">>setup.sh") or die("Unable to open setup.sh");
-    print SETUP "\n# condor setup\n";
-    print SETUP "PATH=\$PEGASUS_HOME/condor/bin:\$PEGASUS_HOME/condor/sbin:\$PATH\n";
-    print SETUP "export PATH\n";
-    print SETUP "CONDOR_CONFIG=\$PEGASUS_HOME/condor/etc/condor_config\n";
-    print SETUP "export CONDOR_CONFIG\n";
-    close(SETUP);
+    #open(SETUP, ">>setup.sh") or die("Unable to open setup.sh");
+    #print SETUP "\n# condor setup\n";
+    #print SETUP "PATH=\$PEGASUS_HOME/condor/bin:\$PEGASUS_HOME/condor/sbin:\$PATH\n";
+    #print SETUP "export PATH\n";
+    #print SETUP "CONDOR_CONFIG=\$PEGASUS_HOME/condor/etc/condor_config\n";
+    #print SETUP "export CONDOR_CONFIG\n";
+    #close(SETUP);
 
-    open(SETUP, ">>setup.csh") or die("Unable to open setup.csh");
-    print SETUP "\n# condor setup\n";
-    print SETUP "setenv PATH \$PEGASUS_HOME/condor/bin:\$PEGASUS_HOME/condor/sbin:\$PATH\n";
-    print SETUP "setenv CONDOR_CONFIG \$PEGASUS_HOME/condor/etc/condor_config\n";
-    close(SETUP);
+    #open(SETUP, ">>setup.csh") or die("Unable to open setup.csh");
+    #print SETUP "\n# condor setup\n";
+    #print SETUP "setenv PATH \$PEGASUS_HOME/condor/bin:\$PEGASUS_HOME/condor/sbin:\$PATH\n";
+    #print SETUP "setenv CONDOR_CONFIG \$PEGASUS_HOME/condor/etc/condor_config\n";
+    #close(SETUP);
 
     # work dirs
     cmd("mkdir -p condor/var/execute", 1, 1);
@@ -254,7 +253,7 @@ sub build_deb
 
     cd("$top_dir/tmp/");
     cmd("$top_dir/tmp/fakeroot-install/bin/fakeroot" .
-        " \$PEGASUS_HOME/release-tools/nmi/deb/build-pegasus-deb" .
+        " $src_dir/release-tools/nmi/deb/build-pegasus-deb" .
         " $src_dir/build-results/pegasus-binary-*.tar.gz", 1, 1);
 
     cmd("rm -rf fakeroot*", 1, 1);
@@ -281,7 +280,7 @@ sub build_rpm
 
     # rpmbuild has TMPDIR bug
     cmd("(unset TMPDIR &&" .
-        " \$PEGASUS_HOME/release-tools/nmi/rpm/build-pegasus-rpm" .
+        " $src_dir/release-tools/nmi/rpm/build-pegasus-rpm" .
         " $src_dir/build-results/pegasus-binary-*.tar.gz)", 1, 1);
 
     cmd("find . -type f -exec ls -l -h {} \\;", 1, 1);
@@ -302,8 +301,6 @@ sub test_binary
     cmd("tar xzf $src_dir/build-results/pegasus-binary-*.tar.gz", 1, 1);
     my $dir = `ls`;
     chomp($dir);
-    $ENV{'PEGASUS_HOME'} = "$top_dir/binary-test/$dir";
-    logmsg("PEGASUS_HOME set to " . $ENV{PEGASUS_HOME});
 
     # make sure we are not missing any expected files
     announce("Checking install for missing files");
@@ -348,8 +345,6 @@ sub test_worker
     cmd("tar xzf $src_dir/build-results/pegasus-worker-*.tar.gz", 1, 1);
     my $dir = `ls`;
     chomp($dir);
-    $ENV{'PEGASUS_HOME'} = "$top_dir/worker-test/$dir";
-    logmsg("PEGASUS_HOME set to " . $ENV{PEGASUS_HOME});
 
     # make sure we are not missing any expected files
     announce("Checking install for missing files");
@@ -413,9 +408,9 @@ sub test_wms
     # wait for the daemons to register
     sleep(120);
 
-    announce("simple condor tests");
-    $rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_status", 1, 0);
-    $rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_q", 1, 0);
+    #announce("simple condor tests");
+    #$rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_status", 1, 0);
+    #$rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_q", 1, 0);
 
     #announce("black diamond test");
     #$rc += cmd("wget -nv http://yggdrasil.isi.edu/~rynge/pegasus-testing/blackdiamond.tar.gz" .
@@ -439,13 +434,13 @@ sub test_wms
     #    cmd(". \$PEGASUS_HOME/setup.sh && pegasus-analyzer -q", 1, 0);
     #}
     
-    announce("stopping condor");
-    cmd(". \$PEGASUS_HOME/setup.sh && condor_off -master", 1, 0);
+    #announce("stopping condor");
+    #cmd(". \$PEGASUS_HOME/setup.sh && condor_off -master", 1, 0);
     
     sleep(20);
 
-    announce("showing logs");
-    cmd("cd \$PEGASUS_HOME/condor/var/log && for LOG in `ls *Log`; do echo; echo \"## cat \$LOG\"; cat \$LOG; done", 1, 1);    
+    #announce("showing logs");
+    #cmd("cd \$PEGASUS_HOME/condor/var/log && for LOG in `ls *Log`; do echo; echo \"## cat \$LOG\"; cat \$LOG; done", 1, 1);    
     
     announce("cleaning up");
     cd($top_dir);

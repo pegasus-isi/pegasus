@@ -5,6 +5,27 @@
 # $Id$
 #
 
+# If JAVA_HOME is not set, try some system defaults. This is useful for
+# RPMs and DEBs which have explicit Java dependencies
+if [ "X${JAVA_HOME}" = "X" ]; then
+    for TARGET in \
+        /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/jre \
+        /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0/jre \
+        /usr/lib/jvm/java-6-openjdk/jre \
+    ; do
+        if [ -e "${TARGET}" -a -x "${TARGET}/bin/java" ]; then
+            JAVA_HOME="${TARGET}"
+            export JAVA_HOME
+            break
+        fi
+    done
+
+    # macos
+    if [ "X${JAVA_HOME}" = "X" -a -x /usr/libexec/java_home ]; then
+        JAVA_HOME=`/usr/libexec/java_home -version 1.6`
+    fi
+fi
+
 # Find Java
 if [ "X${JAVA_HOME}" != "X" ]; then
 	JAVA="${JAVA_HOME}/bin/java"
