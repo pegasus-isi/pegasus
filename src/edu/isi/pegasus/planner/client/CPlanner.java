@@ -303,9 +303,12 @@ public class CPlanner extends Executable{
         if( mPOptions.getHelp() ) { printLongVersion(); return result; }
 
         //set the logging level only if -v was specified
-        //else bank upon the the default logging level
-        if(mPOptions.getLoggingLevel() > 0){
+        if(mPOptions.getLoggingLevel() >= 0){
             mLogger.setLevel(mPOptions.getLoggingLevel());
+        }
+        else{
+            //set log level to FATAL only
+            mLogger.setLevel( LogManager.FATAL_MESSAGE_LEVEL );
         }
 
 
