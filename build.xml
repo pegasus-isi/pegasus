@@ -18,7 +18,7 @@
     <echo>Architecture ${dist.arch}</echo>
   </target>
 
-  <target name="get-timestamps" unless="ISODATE.full"
+  <target name="get-timestamps" unless="ISODATE.full" depends="get-system"
 	  description="Set the timestamps in Version.java">
     <tstamp/>
     <mkdir dir="dist"/>  
@@ -69,7 +69,7 @@
     <echo file="stamp">${ISODATE.utc} ${dist.arch}${line.separator}</echo>
   </target>
 
-  <target name="compile-version" depends="check-java,get-timestamps,get-system"
+  <target name="compile-version" depends="check-java,get-timestamps"
 	  description="Compiles the Version.java and helper code">
     <javac destdir="${build.src}" srcdir="src" 
            encoding="UTF-8" debug="true"
