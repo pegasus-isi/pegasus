@@ -202,8 +202,9 @@ print << 'EOF';
 EOF
 
 # which version 
-my $v_v = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'pegasus-version' );
-my $version = `$v_v`;
+#my $v_v = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'pegasus-version' );
+#my $version = `$v_v`;
+my $version=$ENV{'PEGASUS_VERSION'};
 chomp($version);
 
 #

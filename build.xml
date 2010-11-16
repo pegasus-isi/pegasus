@@ -190,6 +190,8 @@
 	  failonerror="true">
       <arg file="${dist.doc}/properties.pdf"/>
       <env key="PEGASUS_HOME" value="${pegasus.home}"/>
+      <env key="PEGASUS_VERSION" value="${pegasus.version}"/>
+      <env key="PEGAUS_TIMESTAMP" value="${ISODATE.full}"/>
     </exec>
   </target>
 
