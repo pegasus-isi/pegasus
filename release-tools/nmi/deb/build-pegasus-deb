@@ -40,7 +40,7 @@ ls -al pegasus-*
 
 # pegasus version
 VERSION=`ls $PEGASUS_TAR | sed 's/.*binary-//' | sed 's/-.*//'`
-MAJOR_VERSION=`echo $VERSION | sed -r 's/\.[0-9]+$//' | sed -r 's/\.[0-9]+cvs$/cvs/'`
+MAJOR_VERSION=`echo $VERSION | sed -r 's/\.[0-9]+([0-9a-zA-Z]*)$/\1/'`
 
 DEB_VERSION="$VERSION"
 # cvs versions get a timestamp in the version to help dpkg figure out updates

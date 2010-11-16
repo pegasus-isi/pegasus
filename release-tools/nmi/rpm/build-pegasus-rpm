@@ -44,7 +44,7 @@ fi
 
 # pegasus version
 VERSION=`ls $PEGASUS_TAR | sed 's/.*binary-//' | sed 's/-.*//' | sed 's/\.tar.*//'`
-MAJOR_VERSION=`echo $VERSION | sed -r 's/\.[0-9]+$//' | sed -r 's/\.[0-9]+cvs$/cvs/'`
+MAJOR_VERSION=`echo $VERSION | sed -r 's/\.[0-9]+([0-9a-zA-Z]*)$/\1/'`
 
 RPM_VERSION="1"
 # cvs versions get a timestamp in the version to help yum figure out updates
