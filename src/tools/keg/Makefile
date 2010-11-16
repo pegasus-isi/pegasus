@@ -16,8 +16,7 @@ MARCH	= $(shell uname -m | tr '[A-Z]' '[a-z]')
 MAJOR   = $(firstword $(subst ., ,$(VERSION)))
 CONDOR	= condor_compile
 SOCKIO  = $(shell /bin/ls /usr/include/sys/sockio.h 2>/dev/null)
-## STATVFS = $(shell /bin/ls /usr/include/sys/statvfs.h 2>/dev/null)
-CONDOR_LOCATION = $(shell condor_config_val RELEASE_DIR)
+CONDOR_LOCATION = $(shell condor_config_val RELEASE_DIR 2>/dev/null)
 EXTRA_OBJ = basic.o
 EXTRA_INC = 
 LFS_CFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
@@ -147,6 +146,8 @@ endif
 	$(NROFF) $(TEXT) $< > $@
 %.o : %.cc
 	$(CXX) $(CXXFLAGS) $< -c -o $@
+%.co : %.cc
+	$(CONDOR_CXX) $(CXXFLAGS) $< -c -o $@
 
 TARGET	= keg
 INST_TG = install-keg
@@ -160,24 +161,31 @@ endif
 endif
 
 all : $(TARGET) $(GENDOC)
+EXTRA_COBJ = $(EXTRA_OBJ:.o=.co)
 
 keg.o: keg.cc $(EXTRA_INC)
 
 keg: keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES_VANILLA) $(LOADLIBES)
 
-keg.condor: keg.condor.o $(EXTRA_OBJ)
+keg.condor: keg.co $(EXTRA_COBJ)
 	$(CONDOR_LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES_CONDOR) $(LOADLIBES)
 
-keg.condor.o: keg.cc $(EXTRA_INC)
+keg.co: keg.cc $(EXTRA_INC)
 	$(CONDOR_CXX) $(CXXFLAGS) $< -c -o $@
 
 basic.o: basic.cc basic.hh
+basic.co: basic.cc basic.hh
 darwin.o: darwin.cc darwin.hh basic.hh
+darwin.co: darwin.cc darwin.hh basic.hh
 linux.o: linux.cc linux.hh basic.hh
+linux.co: linux.cc linux.hh basic.hh
 sunos.o: sunos.cc sunos.hh basic.hh
+sunos.co: sunos.cc sunos.hh basic.hh
 sunos-swap.o: sunos-swap.cc sunos-swap.hh
 	$(CXX) $(NOLFS_CFLAGS) $< -c -o $@
+sunos-swap.co: sunos-swap.cc sunos-swap.hh
+	$(CONDOR_CXX) $(NOLFS_CFLAGS) $< -c -o $@
 
 $(GENDOC): keg.1
 
