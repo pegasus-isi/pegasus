@@ -134,7 +134,7 @@ public class RankDAX extends Executable {
         catch ( RuntimeException rte ) {
             //catch all runtime exceptions including our own that
             //are thrown that may have chained causes
-            me.log( convertException(rte),
+            me.log( convertException(rte, me.mLogger.getLevel()),
                          LogManager.FATAL_MESSAGE_LEVEL );
             rte.printStackTrace();
             result = 1;

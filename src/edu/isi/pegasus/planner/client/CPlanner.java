@@ -228,7 +228,7 @@ public class CPlanner extends Executable{
         catch ( RuntimeException rte ) {
             //catch all runtime exceptions including our own that
             //are thrown that may have chained causes
-            cPlanner.log( convertException(rte),
+            cPlanner.log( convertException(rte, cPlanner.mLogger.getLevel() ),
                          LogManager.FATAL_MESSAGE_LEVEL );
             result = 1;
         }

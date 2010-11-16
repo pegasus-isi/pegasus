@@ -158,7 +158,7 @@ public class PlotSpaceUsage extends Executable{
         catch ( RuntimeException rte ) {
             //catch all runtime exceptions including our own that
             //are thrown that may have chained causes
-            me.log( convertException(rte),
+            me.log( convertException(rte, me.mLogger.getLevel()),
                          LogManager.FATAL_MESSAGE_LEVEL );
             result = 1;
         }
@@ -274,11 +274,11 @@ public class PlotSpaceUsage extends Executable{
                 su.parseKickstartFile(file);
             }
             catch (IOException ioe) {
-                log( "Unable to parse kickstart file " + file + convertException( ioe ),
+                log( "Unable to parse kickstart file " + file + convertException( ioe, mLogger.getLevel() ),
                      LogManager.DEBUG_MESSAGE_LEVEL);
             }
             catch( FriendlyNudge fn ){
-                log( "Problem parsing file " + file + convertException( fn ),
+                log( "Problem parsing file " + file + convertException( fn, mLogger.getLevel() ),
                      LogManager.WARNING_MESSAGE_LEVEL );
             }
         }
@@ -303,7 +303,7 @@ public class PlotSpaceUsage extends Executable{
             }
         }
         catch (IOException ioe) {
-            log( "Unable to plot the files " + convertException( ioe ),
+            log( "Unable to plot the files " + convertException( ioe , mLogger.getLevel()),
                  LogManager.DEBUG_MESSAGE_LEVEL);
         }
 

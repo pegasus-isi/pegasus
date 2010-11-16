@@ -203,13 +203,14 @@ public class NetloggerExitcode extends Executable{
                    
         }
         catch (IOException ioe) {
-            log( "Unable to parse kickstart file " + mFilename + convertException( ioe ),
+            log( "Unable to parse kickstart file " + mFilename + convertException( ioe, 
+                                                                                   mLogger.getLevel() ),
             LogManager.DEBUG_MESSAGE_LEVEL);
             result = 5;
         }
         catch( FriendlyNudge fn ){
             mLogger.add( "job.exitcode" , "9" );
-            log( "Problem parsing file " + mFilename + convertException( fn ),
+            log( "Problem parsing file " + mFilename + convertException( fn , mLogger.getLevel()),
                     LogManager.WARNING_MESSAGE_LEVEL );
             result = 9;
         }

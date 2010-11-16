@@ -27,6 +27,8 @@ import edu.isi.pegasus.common.util.CommonProperties;
 
 import gnu.getopt.LongOpt;
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -87,11 +89,34 @@ public abstract class Executable {
      * that might have been thrown.
      *
      * @param e  the Exception for which the error message has to be composed.
+     * 
      * @return  the error message.
      */
     public static String convertException( Exception e ){
+        return Executable.convertException( e, LogManager.TRACE_MESSAGE_LEVEL );
+    }
+    /**
+     * Returns an error message that chains all the lower order error messages
+     * that might have been thrown.
+     *
+     * @param e  the Exception for which the error message has to be composed.
+     * @param logLevel  the user specified level for the logger
+     * 
+     * @return  the error message.
+     */
+    public static String convertException( Exception e , int logLevel ){
         StringBuffer message = new StringBuffer();
         int i = 0;
+        
+        //check if we want to throw the whole stack trace
+        if( logLevel >= LogManager.TRACE_MESSAGE_LEVEL ){
+            //we want the stack trace to a String Writer.
+            StringWriter sw = new StringWriter();
+            e.printStackTrace( new PrintWriter( sw ) );
+            
+            return sw.toString();
+        }
+        
         //append all the causes
         for(Throwable cause = e; cause != null ; cause  = cause.getCause()){
             if( cause instanceof FactoryException ){
