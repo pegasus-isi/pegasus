@@ -13,11 +13,8 @@ o  Condor
 
 BUILDING PEGASUS FROM SOURCE
 =========================
-
 o Untar the pegasus-source.*.tar.gz
-o Unset CLASSPATH
-o Set env PEGASUS_HOME=<directory that was untarred>
-o Source $PEGASUS_HOME/setup-devel.csh or setup-devel.sh
+o Lets call the directory where you untarred PEGASUS_HOME
 
 BUILD BINARY Package
 ====================
@@ -44,7 +41,7 @@ The worker and binary tarball is in the $PEGASUS_HOME/dist directory.
 
 The PEGASUS binary or worker tar ball should be available in the dist directory
 
-Mail 		: pegasus-discuss@isi.edu
-Bugzilla 	: http://pegasus.isi.edu/bugzilla
-Web 		: http://pegasus.isi.edu
-
+Mail 		: pegasus-support@isi.edu
+Jira 		: https://jira.isi.edu
+Web 		: http://pegasus.isi.edu/wms
+SVN		: https://pegasus.isi.edu/svn/pegasus
