@@ -23,11 +23,11 @@ keg \- kanonical executable for grids
 .SH SYNOPSIS
 .B keg
 [\-a\~appname] [\-t\~interval |\-T\~ interval] [\-l\~logname] [\-P\~prefix]
-[-o\~fn [..]] [-i\~fn [..]] [\-e\~env [..]] [\-p\~parm [..]]
+[\-o\~fn [..]] [\-i\~fn [..]] [\-G\~sz] [\-e\~env [..]] [\-p\~parm [..]]
 .PP
 .B keg.condor
 [\-a\~appname] [\-t\~interval |\-T\~ interval] [\-l\~logname] [\-P\~prefix]
-[-o\~fn [..]] [-i\~fn [..]] [\-e\~env [..]] [\-p\~parm [..]]
+[\-o\~fn [..]] [\-i\~fn [..]] [\-G\~sz] [\-e\~env [..]] [\-p\~parm [..]]
 .SH DESCRIPTION
 The kanonical executable is a stand-in for regular binaries in a DAG -
 but not for their arguments. It allows to trace the shape of the
@@ -143,6 +143,14 @@ Without output files,
 operates in 
 .I data sink
 mode.
+.TP
+.B -\G size
+If you want 
+.B keg
+to generate a lot of output, the generator option will do that for you.
+Just specify how much, in bytes, you want. 
+.IP
+This option is off by default. 
 .TP
 .B \-p string [..]
 Any number of parameters can be reported, without being specific
