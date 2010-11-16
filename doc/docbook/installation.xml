@@ -60,27 +60,16 @@ Python 2.6.2</programlisting></para>
   <section>
     <title>Environment</title>
 
-    <para>In order to use Pegasus, you will have to set the PEGASUS_HOME
-    environment variable, and source the Pegasus setup script.</para>
+    <para>In order to use Pegasus, just add the bin/ directory to your PATH.
+    Example for bourne shells:</para>
 
-    <note>
-      <para>Pegasus 3.0 has partial support for running without PEGASUS_HOME
-      being defined. This feature is still being tested, so to be on the safe
-      side, continue setting PEGASUS_HOME.</para>
-    </note>
+    <programlisting>$ <emphasis role="bold">export PATH=/some/install/pegasus-3.0.0/bin:$PATH</emphasis></programlisting>
 
-    <note>
-      <para>This document assumes you are using a Bourne Shell derived shell.
-      e.g. /bin/sh or /bin/bash. csh setup scripts are available with the .csh
-      extension.</para>
-    </note>
-
-    <para>Set PEGASUS_HOME environment variable:</para>
-
-    <programlisting>$ <emphasis role="bold">export PEGASUS_HOME=&lt;path to pegasus directory&gt;</emphasis></programlisting>
-
-    <para>Set up the PEGASUS user environment<programlisting>$<emphasis
-          role="bold"> . $PEGASUS_HOME/setup.sh</emphasis></programlisting></para>
+    <tip>
+      <para>Pegasus 3.0 is different from previous versions of Pegasus in that
+      it does not require PEGASUS_HOME to be set or sourcing of any
+      environtment setup scripts.</para>
+    </tip>
   </section>
 
   <section>
@@ -178,21 +167,9 @@ Complete!</programlisting>
         </listitem>
 
         <listitem>
-          <para>set environment PEGASUS_HOME to the directory
-          pegasus-3.0.0</para>
+          <para>include the Pegasus bin directory in your PATH</para>
 
-          <para><programlisting>$ setenv PEGASUS_HOME /path/to/pegasus-3.0.0</programlisting>or
-          in bash<programlisting>$ export PEGASUS_HOME=/path/to/pegasus-3.0.0</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Source the setup scripts setup.sh for BASH or setup.csh for
-          CSH/TCSH</para>
-
-          <para><programlisting>$ source setup.csh</programlisting>or in
-          bash</para>
-
-          <para><programlisting>$ . setup.csh</programlisting></para>
+          <para><programlisting>$ export PATH=/path/to/pegasus-3.0.0:$PATH</programlisting></para>
         </listitem>
       </itemizedlist>
     </section>
@@ -209,24 +186,6 @@ Complete!</programlisting>
           <para>Untar the tarball</para>
 
           <para><programlisting>$ tar zxf pegasus-wms-*.tar.gz</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>set environment PEGASUS_HOME to the directory
-          pegasus-wms-3.0.0</para>
-
-          <para><programlisting>$ setenv PEGASUS_HOME /path/to/pegasus-wms-3.0.0</programlisting>or
-          in bash<programlisting>$ export PEGASUS_HOME=/path/to/pegasus-wms-3.0.0</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Source the setup scripts setup.sh for BASH or setup.csh for
-          CSH/TCSH</para>
-
-          <para><programlisting>$ source setup.csh</programlisting>or in
-          bash</para>
-
-          <para><programlisting>$ . setup.csh</programlisting></para>
         </listitem>
 
         <listitem>
@@ -254,7 +213,7 @@ CONDOR_ADMIN = !!USER!! # CHANGE THIS To THE USER WHO wILL GET EMAIL INCASE OF E
           <para>Start Condor by running
           $PEGASUS_HOME/sbin/condor_master</para>
 
-          <para><programlisting>$ $PEGASUS_HOME/sbin/condor_master</programlisting></para>
+          <para><programlisting>$ ./sbin/condor_master</programlisting></para>
         </listitem>
 
         <listitem>
