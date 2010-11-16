@@ -21,7 +21,7 @@ use strict;
 
 use File::Basename; 		# standard module since 5.005
 use File::Spec;			# standard module since 5.005 or 5.6.0
-use Cwd qw(abs_path);
+use Cwd qw(getcwd abs_path);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use Work::Common;
 use Data::Dumper;
@@ -225,12 +225,15 @@ GetOptions( "workflow|w=s"    => \$workflow,
 	    "help|h|?" => \&usage );
 
 
+my $guess = 0; 
+my $run = getcwd(); 
+if ( @ARGV == 0 ) {
+    $guess = 1;
+} else {
+    $run = shift; 
+}
+warn "# Using run dir $run\n" if $main::DEBUG;
 
-my $run=shift || undef;
-
-
-
-warn "# Got run dir $run\n" if $main::DEBUG;
 #  
 # JOBTYPE to num mappings
 my %jobtypes=("compute",1,
@@ -242,10 +245,13 @@ my %jobtypes=("compute",1,
 	      "computestaged",7,
 	      "cleanup",8);
 
-
-
-if(defined $run){
-    my %config=slurp_braindb($run) or die "ERROR: open braindb: $!\n";
+if (defined $run) {
+    my %config = slurp_braindb($run) or
+	die( "FATAL: ", 
+	     ( $guess ? 
+	       "I was guessing the run-directory but failed. Please provide your\n" .
+	       "run-dir as argument, or cd into your run-dir, and re-run.\n" :
+	       "$run is not a valid run-directory.\n" ) ); 
     $workflow=$config{pegasus_wf_name};
     $time=$config{pegasus_wf_time};
     $dag=$config{dag};
