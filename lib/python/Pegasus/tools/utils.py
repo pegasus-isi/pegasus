@@ -30,6 +30,9 @@ import commands
 import datetime
 import subprocess
 
+# Regular expressions
+parse_iso8601 = re.compile(r'(\d{4})-?(\d{2})-?(\d{2})[ tT]?(\d{2}):?(\d{2}):?(\d{2})([.,]\d+)?([zZ]|[-+](\d{2}):?(\d{2}))')
+
 # Module variables
 MAXLOGFILE = 1000		# For log rotation, check files from .000 to .999
 jobbase = "jobstate.log"	# Default name for jobstate.log file
@@ -60,8 +63,6 @@ def isodate(now=int(time.time()), utc=False, short=False):
         else:
             return time.strftime("%Y-%m-%dT%H:%M:%S%z", my_time)
 
-parse_iso8601 = re.compile(r'(\d{4})-?(\d{2})-?(\d{2})[ tT]?(\d{2}):?(\d{2}):?(\d{2})([.,]\d+)?([zZ]|[-+](\d{2}):?(\d{2}))')
-
 def epochdate(timestamp, short=False):
     """
     This function converts an ISO timestamp into seconds since epoch
@@ -73,10 +74,15 @@ def epochdate(timestamp, short=False):
         # Split date/time and timezone information
         m = parse_iso8601.search(timestamp)
         if m is None:
-            logger.warn("ERROR: Unable to match \"%s\" to ISO 8601" % timestamp)
+            logger.warn("unable to match \"%s\" to ISO 8601" % timestamp)
             return None
         else:
-            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)))
+            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (int(m.group(1)),
+                                                    int(m.group(2)),
+                                                    int(m.group(3)),
+                                                    int(m.group(4)),
+                                                    int(m.group(5)),
+                                                    int(m.group(6)))
             tz = m.group(8)
 
         # my_time = datetime.datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
@@ -84,7 +90,7 @@ def epochdate(timestamp, short=False):
 
         if tz.upper() != 'Z':
             # no zulu time, has zone offset
-            my_offset = datetime.timedelta(hours=int(m.group(9)),minutes=int(m.group(10)))
+            my_offset = datetime.timedelta(hours=int(m.group(9)), minutes=int(m.group(10)))
 
             # adjust for time zone offset
             if tz[0] == '-':
@@ -96,7 +102,7 @@ def epochdate(timestamp, short=False):
         return int(calendar.timegm(my_time.timetuple()))
 
     except:
-        logger.warn("ERROR: Unable to parse timestamp \"%s\"" % timestamp)
+        logger.warn("unable to parse timestamp \"%s\"" % timestamp)
         return None
 
 

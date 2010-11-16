@@ -461,7 +461,7 @@ class Job:
 		self._cluster_duration = my_record["duration"]
 	    if "start" in my_record:
 		# Convert timestamp to EPOCH
-		my_start = utils.epochdate(my_record["start"], short=False)
+		my_start = utils.epochdate(my_record["start"])
 		if my_start is not None:
 		    self._cluster_start_time = my_start
 
@@ -2470,7 +2470,7 @@ else:
 # Ok! Let's start now...
 
 # Instantiate workflow class
-wf = Workflow(run, out, config, database=workdb)
+wf = Workflow(run, out, config, database=workdb, jsd=jsd)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
