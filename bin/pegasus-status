@@ -23,6 +23,13 @@ use File::Basename; 		# standard module since 5.005
 use File::Spec;			# standard module since 5.005 or 5.6.0
 use Cwd qw(getcwd abs_path);
 use Getopt::Long qw(:config bundling no_ignore_case);
+
+# path to load our libs.. 
+BEGIN { 
+    require File::Spec->catfile( dirname($0), 'common.pm' );
+    common->import(':all');
+}
+
 use Work::Common;
 use Data::Dumper;
 
