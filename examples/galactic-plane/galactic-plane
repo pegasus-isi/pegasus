@@ -34,10 +34,20 @@ import subprocess
 import math
 import time
 import socket
+import string
 import ConfigParser
 
-sys.path.append(os.getenv("PEGASUS_HOME") + "/lib/python")
+# set PEGASUS_HOME - transition from Pegasus 2.4
+pegasus_home = None
+paths = string.split(os.environ["PATH"], ":")
+for path in paths:
+    if os.path.isfile(os.path.join(path, "pegasus-plan")):
+        pegasus_home = os.path.normpath(os.path.join(path, ".."))
+        os.environ["PEGASUS_HOME"] = pegasus_home
+if pegasus_home == None:
+    raise RuntimeError("pegasus-plan not found in the PATH")
 
+sys.path.append(os.getenv("PEGASUS_HOME") + "/lib/python")
 from Pegasus.DAX3 import *
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
@@ -99,6 +109,7 @@ gp_relations = []
 
 # --- functions -----------------------------------------------------------------------
 
+
 def myexec(cmd_line):
     sys.stdout.flush()
     p = subprocess.Popen(cmd_line + " 2>&1", shell=True)
@@ -141,14 +152,16 @@ def add_tile(uberdax, tile_id, lon, lat):
     uberdax.addFile(params)
     mdagtar = File("%05d.tar.gz" % (tile_id))
 
-    remote_tile_setup = Job(namespace="gp", name="remote_tile_setup", version="1.0")
+    remote_tile_setup = Job(namespace="gp", name="remote_tile_setup", version="1.0",
+                            id="rts%05d"%(tile_id))
     remote_tile_setup.addArguments("%05d" % (tile_id))
     remote_tile_setup.addProfile(Profile("dagman", "CATEGORY", "remote_tile_setup"))
     remote_tile_setup.uses(params, link=Link.INPUT, register=False)
     remote_tile_setup.uses(mdagtar, link=Link.OUTPUT, register=False, transfer=True)
     uberdax.addJob(remote_tile_setup)
 
-    local_tile_setup = Job(namespace="gp", name="local_tile_setup", version="1.0")
+    local_tile_setup = Job(namespace="gp", name="local_tile_setup", version="1.0",
+                           id="lts%05d"%(tile_id))
     local_tile_setup.addArguments("%05d" % (tile_id))
     local_tile_setup.addProfile(Profile("hints", "executionPool", "local"))
     local_tile_setup.uses(params, link=Link.INPUT, register=False)
@@ -161,7 +174,7 @@ def add_tile(uberdax, tile_id, lon, lat):
     subdax_file.addPFN(PFN("file://%s/dag.xml" % (tile_work_dir), "local"))
     uberdax.addFile(subdax_file)
 
-    subwf = DAX("%05d.dax" % (tile_id), "ID%05d" % (tile_id))
+    subwf = DAX("%05d.dax" % (tile_id), id="sub%05d" % (tile_id))
     subwf.addArguments("-Dpegasus.schema.dax=%s/etc/dax-2.1.xsd" %(os.environ["PEGASUS_HOME"]),
                        "-Dpegasus.catalog.replica.file=%s/rc.data" % (tile_work_dir),
                        "-Dpegasus.catalog.site.file=%s/sites.xml" % (work_dir),
@@ -176,7 +189,8 @@ def add_tile(uberdax, tile_id, lon, lat):
     uberdax.addDAX(subwf)
     uberdax.addDependency(parent=local_tile_setup, child=subwf)
 
-    remote_extra_cleanup = Job(namespace="gp", name="remote_extra_cleanup", version="1.0")
+    remote_extra_cleanup = Job(namespace="gp", name="remote_extra_cleanup", version="1.0",
+                               id="rec%05d"%(tile_id))
     remote_extra_cleanup.addArguments("%05d" % (tile_id))
     remote_extra_cleanup.uses(params, link=Link.INPUT, register=False)
     uberdax.addJob(remote_extra_cleanup)
@@ -197,10 +211,11 @@ def generate_pegasus_rc():
     rc.write("pegasus.file.cleanup.scope=deferred\n")
     rc.write("pegasus.dir.useTimestamp=true\n")
     rc.write("pegasus.dir.storage.deep=false\n")
-    rc.write("pegasus.dagman.maxpre=5\n")
-    rc.write("pegasus.condor.release=2\n")
-    rc.write("pegasus.dagman.retry=2\n")
-    rc.write("pegasus.dagman.remote_tile_setup.maxjobs=20\n")
+    rc.write("dagman.maxpre=5\n")
+    rc.write("condor.periodic_release=2\n")
+    rc.write("condor.periodic_remove=2\n")
+    rc.write("dagman.retry=2\n")
+    rc.write("pegasus.dagman.remote_tile_setup.maxjobs=25\n")
     rc.write("pegasus.dagman.subworkflow.maxjobs=70\n")
     rc.close()
 
@@ -283,7 +298,7 @@ def generate_tc():
     # tc needs to be in old format to work with montage
     tc = open(work_dir + "/tc.data", 'w')
     tc.write("%s        gp::remote_tile_setup:1.0         gsiftp://%s%s/remote-tile-setup      STATIC_BINARY   INTEL32::LINUX     condor::priority=100\n" % (cluster_name, local_hostname, local_galacticplane_location))
-    tc.write("%s        gp::remote_extra_cleanup:1.0      gsiftp://%s%s/remote-extra-cleanup   STATIC_BINARY   INTEL32::LINUX\n" % (cluster_name, local_hostname, local_galacticplane_location))
+    tc.write("%s        gp::remote_extra_cleanup:1.0      gsiftp://%s%s/remote-extra-cleanup   STATIC_BINARY   INTEL32::LINUX     condor::priority=1000\n" % (cluster_name, local_hostname, local_galacticplane_location))
     tc.write("local     gp::local_tile_setup:1.0          %s/local-tile-setup                  INSTALLED   INTEL32::LINUX\n" % (local_galacticplane_location))
     # for the sub workflows
     tc.write("%s        pegasus::dirmanager               %s/bin/pegasus-dirmanager            INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
@@ -344,6 +359,7 @@ def main():
     uberdax.writeXML(daxfile)
     daxfile.close()
 
+    print "Planning and submitting the uberdax..."
     os.chdir(work_dir)
     os.environ["JAVA_HEAPMAX"] = "512"
     cmd = "pegasus-plan -Dpegasus.user.properties=pegasusrc --sites " + cluster_name + " --dir work --output local --dax gp.dax --nocleanup --submit"

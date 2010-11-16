@@ -18,8 +18,11 @@ CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
 
 TOPDIR=`pwd`
 
+# figure out where Pegasus is installed
+export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
 if [ "x$PEGASUS_HOME" = "x" ]; then
-    echo "Pelase set PEGASUS_HOME to the location of your Pegasus install"
+    echo "Unable to determine location of your Pegasus install"
+    echo "Please make sure pegasus-plan is in your path"
     exit 1
 fi 
 
@@ -32,7 +35,7 @@ fi
 echo "This is sample input to KEG" >f.a
 
 # build the dax generator
-export CLASSPATH=.:$CLASSPATH
+export CLASSPATH=.:$PEGASUS_HOME/lib/pegasus.jar:$CLASSPATH
 javac BlackDiamondDAX.java
 
 # generate the dax

@@ -26,6 +26,14 @@ CLUSTER_GLOBUS_LOCATION="/nfs/software/osg-wn/current/globus"
 TOPDIR=`pwd`
 LOCAL_HOSTNAME=`hostname -f`
 
+# figure out where Pegasus is installed
+export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
+if [ "x$PEGASUS_HOME" = "x" ]; then
+    echo "Unable to determine location of your Pegasus install"
+    echo "Please make sure pegasus-plan is in your path"
+    exit 1
+fi 
+
 # do we have the required minirosetta_database?
 if [ ! -e minirosetta_database ]; then
    wget -nv http://www.isi.edu/~rynge/pegasus/example-workflows/minirosetta_database.tar.gz
@@ -41,7 +49,7 @@ if [ ! -e pdbs ]; then
 fi
 
 # build the dax generator
-export CLASSPATH=.:$CLASSPATH
+export CLASSPATH=.:$PEGASUS_HOME/lib/pegasus.jar:$CLASSPATH
 javac RosettaDAX.java
 
 # generate the dax
@@ -89,7 +97,6 @@ cat >sites.xml <<EOF
             </storage>
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="pegasus" key="bundle.stagein" >4</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
         <profile namespace="env" key="wmtmp" >$CLUSTER_WN_TMP</profile>
     </site>

@@ -31,9 +31,6 @@ TOP_DIR=`pwd`
 LOCAL_HOSTNAME=`hostname -f`
 
 export PATH=$LOCAL_MONTAGE_LOCATION/bin:$PATH
-unset CLASSPATH
-export PEGASUS_HOME=$LOCAL_PEGASUS_HOME
-. $PEGASUS_HOME/setup.sh
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
