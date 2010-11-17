@@ -236,7 +236,6 @@ public class CPlanner extends Executable{
             //unaccounted for exceptions
             cPlanner.log( convertException(e, cPlanner.mLogger.getLevel() ),
                           LogManager.FATAL_MESSAGE_LEVEL );
-            e.printStackTrace();
             result = 3;
         } finally {
             double endtime = new Date().getTime();
