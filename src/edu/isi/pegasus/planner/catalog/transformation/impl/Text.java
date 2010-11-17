@@ -187,8 +187,8 @@ public class Text extends Abstract
             else{
                 //empty TCStore
                 mTCStore = new TransformationStore();
-                mLogger.log( "Considering an empty Transformation Catalog . File pointed to in the properties for TC does not exist " + mTCFile,
-                              LogManager.DEBUG_MESSAGE_LEVEL );
+                mLogger.log("The Transformation Catalog file " + mTCFile +
+                        " was not found - Will consider only TC Entries from the DAX", LogManager.WARNING_MESSAGE_LEVEL);
             }
         }
         catch (FileNotFoundException ex) {

@@ -250,10 +250,18 @@ public class File  extends Abstract
         if (mTCFile == null) {
             throw new RuntimeException( "The File to be used as TC should be " +
                                         "defined with the property pegasus.catalog.transformation.file");
-        }        
-        
-        //populate the TC
-        populateTC();
+        } else {
+
+            java.io.File f = new java.io.File(  mTCFile );
+            
+            if( f.exists() ){
+                populateTC();
+            }
+            else{
+                mLogger.log("The Transformation Catalog file " + mTCFile +
+                        " was not found - Will consider only TC Entries from the DAX", LogManager.WARNING_MESSAGE_LEVEL);
+            }
+        }
     }
     
 
@@ -1260,15 +1268,7 @@ public class File  extends Abstract
 
         try {
             result = populateTC(new FileReader(mTCFile));
-        }
-        catch (FileNotFoundException ex) {
-            mLogger.log("The tc text file " + mTCFile +
-                        " was not found", LogManager.ERROR_MESSAGE_LEVEL);
-            mLogger.log("Considering it as Empty TC",
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            return true;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             mLogger.log("Unable to open the file " +
                         mTCFile, e, LogManager.ERROR_MESSAGE_LEVEL);
             return false;
