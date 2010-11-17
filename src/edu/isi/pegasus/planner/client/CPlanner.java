@@ -833,7 +833,7 @@ public class CPlanner extends Executable{
                     break;
 
                 case 'V'://version
-                    mLogger.log(getGVDSVersion(),LogManager.INFO_MESSAGE_LEVEL);
+                    mLogger.log(getGVDSVersion(),LogManager.CONSOLE_MESSAGE_LEVEL );
                     System.exit(0);
 
                 case 'X'://jvm options
