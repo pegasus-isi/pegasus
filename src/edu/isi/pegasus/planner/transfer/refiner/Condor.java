@@ -93,6 +93,7 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
      */
 //    protected PoolInfoProvider mSCHandle;
     protected SiteStore mSiteStore;
+    private boolean mCreateRegistrationJobs;
 
 
 
@@ -108,7 +109,12 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
 
         /* load the catalog using the factory */
         mSiteStore = bag.getHandleToSiteStore();
-
+        mCreateRegistrationJobs = ( mProps.getReplicaMode() != null );
+        if( !mCreateRegistrationJobs ){
+            mLogger.log( "No Replica Registration Jobs will be created as Replica Catalog not configured.",
+                          LogManager.CONFIG_MESSAGE_LEVEL );
+        }
+        
     }
     
         
@@ -256,6 +262,9 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
         
         String destinationDirectory = null;
         List<FileTransfer> txFiles = new LinkedList();
+        List<FileTransfer> regFiles   = new LinkedList();
+        String regJobName = Refiner.REGISTER_PREFIX + job.getName();
+        
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer)it.next();
             
@@ -263,6 +272,10 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
             if ( !ft.getTransientRegFlag() ){
                 mLogger.log( "Condor Refiner does not support registration of output files " + ft.getLFN(),
                              LogManager.WARNING_MESSAGE_LEVEL );
+            }
+            
+            if ( mCreateRegistrationJobs && ft.getRegisterFlag() ) {
+                regFiles.add(ft);
             }
 
             //check if need to stageout the file or not
@@ -299,6 +312,9 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
             }
         }
 
+        boolean makeTNode = !txFiles.isEmpty();
+        boolean makeRNode = !regFiles.isEmpty();
+        
         if( !txFiles.isEmpty() ){
             String txName = Refiner.STAGE_OUT_PREFIX + Refiner.LOCAL_PREFIX + job.getName() + "_0" ;
             Job txJob = this.createStageOutTransferJob( job,
@@ -313,7 +329,22 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
             if( !deletedLeaf ){
                 this.addRelation( job.getName(), txName );
             }
+            
+            //register job to be added, add edge 
+            //between stageout job and registration job
+            if (makeRNode) {
+                addRelation( txName, regJobName);
+            }
         }
+        else if (!makeTNode && makeRNode) {
+            addRelation(job.getName(), regJobName);
+        }
+        if (makeRNode) {
+            //call to make the reg subinfo
+            //added in make registration node
+            this.mDAG.add( rcb.makeRCRegNode( regJobName, job, regFiles ) );
+        }
+
 
         
 
