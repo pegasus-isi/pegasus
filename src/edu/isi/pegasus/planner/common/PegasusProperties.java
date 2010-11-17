@@ -75,9 +75,9 @@ public class PegasusProperties {
 
     public static final String DEFAULT_STORAGE_DIR = "";
 
-    public static final String DEFAULT_TC_MODE = TCMode.DEFAULT_TC_CLASS;
+    public static final String DEFAULT_TC_MODE = "Text";
 
-    public static final String DEFAULT_POOL_MODE = "XML";
+    public static final String DEFAULT_POOL_MODE = "XML3";
 
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
 
@@ -186,11 +186,7 @@ public class PegasusProperties {
      */
     private String mDefaultPoolFile;
 
-    /**
-     * The default path to the kickstart condor script, that allows the user to
-     * submit the concrete DAG directly to the underlying CondorG.
-     */
-    private String mDefaultCondorKickStart;
+    
 
     /**
      * The default transfer priority that needs to be applied to the transfer
@@ -302,7 +298,6 @@ public class PegasusProperties {
         initializePropertyFile( propertiesFile );
         mPegasusHome = mProps.getPegasusHome();
 
-        mDefaultCondorKickStart = getDefaultPathToCondorKickstart();
         mDefaultPoolFile        = getDefaultPathToSC();
         mDefaultTC              = getDefaultPathToTC();
         mDefaultTransferPriority= getDefaultTransferPriority();
@@ -367,7 +362,7 @@ public class PegasusProperties {
         StringBuffer sb = new StringBuffer( 50 );
         sb.append( mPegasusHome );
         sb.append( File.separator );
-        sb.append( "var" );
+        sb.append( "etc" );
         File f = new File( sb.toString(), TC_DATA_FILE );
 
         return f.getAbsolutePath();
