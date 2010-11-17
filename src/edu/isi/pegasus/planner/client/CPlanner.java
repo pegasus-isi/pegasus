@@ -234,8 +234,8 @@ public class CPlanner extends Executable{
         }
         catch ( Exception e ) {
             //unaccounted for exceptions
-            cPlanner.log(e.getMessage(),
-                         LogManager.FATAL_MESSAGE_LEVEL );
+            cPlanner.log( convertException(e, cPlanner.mLogger.getLevel() ),
+                          LogManager.FATAL_MESSAGE_LEVEL );
             e.printStackTrace();
             result = 3;
         } finally {
