@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.namespace;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -73,12 +74,7 @@ public class Dagman extends Namespace {
      */
     public static final String DEFAULT_POST_SCRIPT_ARGUMENTS_KEY_VALUE = "";
 
-    /**
-     * The name of the key that determines the file on the submit host on
-     * which postscript is to be invoked.
-     */
-    public static final String OUTPUT_KEY = "OUTPUT";
-
+    
     /**
      * The name of the key that determines what pre script is to be invoked
      * when the job is run.
@@ -90,6 +86,13 @@ public class Dagman extends Namespace {
      * to the postscript.
      */
     public static final String PRE_SCRIPT_ARGUMENTS_KEY = "PRE.ARGUMENTS";
+    
+    /**
+     * The name of the key that determines the file on the submit host on
+     * which postscript is to be invoked.
+     */
+    public static final String OUTPUT_KEY = "OUTPUT";
+
     
     /**
      * The default value for the arguments passed to prescript
@@ -168,6 +171,37 @@ public class Dagman extends Namespace {
      */
     public static final String MAXJOBS_KEY = "MAXJOBS";
     
+
+    /**
+     * Determines whether a key is category related or not.
+     * 
+     * @param key  the key in question
+     * 
+     * @return
+     */
+    public static boolean categoryRelatedKey(String key) {
+        boolean result = true;
+        int dotIndex = -1;
+        if( (dotIndex = key.indexOf( "." )) != -1 && dotIndex != key.length() - 1 ){
+            //the key has a . in it
+            if( key.equals( Dagman.POST_SCRIPT_ARGUMENTS_KEY) ||
+                key.equals( Dagman.POST_SCRIPT_SCOPE_KEY) ||
+                key.equals( Dagman.PRE_SCRIPT_ARGUMENTS_KEY ) ||
+                key.startsWith( Dagman.POST_SCRIPT_PATH_PREFIX) ){
+                
+                //these are note category related keys
+                
+                return !result;
+            }
+        }
+        else{
+            
+            return !result;
+        }
+        
+        return result; 
+    }
+
 
     /**
      * The name of the job (jobname) to which the profiles for this namespace
@@ -255,6 +289,60 @@ public class Dagman extends Namespace {
         mProfileMap.put(key.toUpperCase(), value);
     }
 
+    /**
+     * This checks the whether a key value pair specified is valid in the current
+     * namespace or not by calling the checkKey function and then on the basis of
+     * the values returned puts them into the associated map in the class.
+     *
+     * @param key   key that needs to be checked in the namespace for validity.
+     * @param value value of the key
+     *
+     */
+    public void checkKeyInNS(String key, String value){
+        
+        //convert key to lower case
+        key = key.toUpperCase();
+        
+        //special handling for category related keys
+        if( categoryRelatedKey( key ) ){
+            //category related key is ignored
+            mLogger.log( "Dagman category related key not associated with job " + key,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            return;
+        }
+        
+        int rslVal = checkKey(key,value);
+
+        switch (rslVal){
+
+            case Namespace.MALFORMED_KEY:
+                //key is malformed ignore
+                malformedKey(key,value);
+                break;
+
+            case Namespace.NOT_PERMITTED_KEY:
+                notPermitted(key);
+                break;
+
+            case Namespace.UNKNOWN_KEY:
+                unknownKey(key, value);
+                break;
+
+            case Namespace.VALID_KEY:
+                construct(key, value);
+                break;
+
+            case Namespace.DEPRECATED_KEY:
+                deprecatedKey(key,value);
+                break;
+                        
+            case Namespace.EMPTY_KEY:
+                emptyKey( key );
+                break;
+        }
+
+   }
+
 
     /**
      * This checks whether the key passed by the user is valid in the current
@@ -276,8 +364,7 @@ public class Dagman extends Namespace {
             res = MALFORMED_KEY ;
         }
 
-        //convert key to lower case
-        key = key.toUpperCase();
+        
 
         switch (key.charAt(0)) {
 
@@ -426,6 +513,25 @@ public class Dagman extends Namespace {
 */
     }
    
+    /**
+     * Assimilate the profiles in the namespace in a controlled manner.
+     * During assimilation all category related keys are ignored.
+     *
+     * @param profiles  the <code>Namespace</code> object containing the profiles.
+     * @param namespace the namespace for which the profiles need to be assimilated.
+     */
+    public void assimilate( PegasusProperties properties, Profiles.NAMESPACES namespace ){
+        Namespace profiles = properties.getProfiles( namespace ) ;
+        for ( Iterator it = profiles.getProfileKeyIterator(); it.hasNext(); ){
+            String key = (String)it.next();
+            
+            //profiles assimilated from properties have lowest priority
+            if( !this.containsKey(key) ){
+                this.checkKeyInNS( key, (String)profiles.get( key ) );
+           }
+        }
+    }
+
     
     
     /**
@@ -507,15 +613,16 @@ public class Dagman extends Namespace {
 
     }
 
-
+    
     /**
      * Helper method to decide whether a key has to be ignored or not.
-     *
+     * 
      * @param key  the key
      *
      * @return boolean
      */
     private boolean ignore(String key){
+        
         return key.equals( Dagman.POST_SCRIPT_ARGUMENTS_KEY ) ||
                key.equals( Dagman.PRE_SCRIPT_ARGUMENTS_KEY) ||
                key.equals( Dagman.OUTPUT_KEY ) ||

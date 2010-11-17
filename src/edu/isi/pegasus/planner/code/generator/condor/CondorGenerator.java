@@ -119,7 +119,7 @@ public class CondorGenerator extends Abstract {
     /**
      * The prefix for DAGMan specific properties
      */
-    public static final String DAGMAN_PROPERTIES_PREFIX = "pegasus.dagman.";
+    public static final String DAGMAN_PROPERTIES_PREFIX = "dagman.";
     
     /**
      * The default priority key associated with the stagein jobs.
@@ -1095,15 +1095,16 @@ public class CondorGenerator extends Abstract {
         String newLine = System.getProperty( "line.separator", "\r\n" );
 
         //iterate through all the properties
-        int dotIndex = -1;
         for( Iterator it = dagman.keySet().iterator(); it.hasNext(); ){
             String name = ( String ) it.next();//like bigjob.maxjobs
             //System.out.println( name );
 
             //figure out whether it is a category property or not
             //really a short cut way of doing it
-            if( (dotIndex = name.indexOf( "." )) != -1 && dotIndex != name.length() - 1 ){
+            //if( (dotIndex = name.indexOf( "." )) != -1 && dotIndex != name.length() - 1 ){
+            if( Dagman.categoryRelatedKey( name.toUpperCase() ) ){
                 //we have a category and a key
+                int dotIndex = name.indexOf( "." );
                 String category = name.substring( 0, dotIndex   );//like bigjob
                 String knob     = name.substring( dotIndex + 1 );//like maxjobs
                 String value    = dagman.getProperty( name );//the value of the property in the properties
