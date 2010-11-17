@@ -104,6 +104,11 @@ public class SCClient
      * The input format for the site catalog.
      */
     private String mInputFormat;
+    
+    /**
+     * Denotes the logging level that is to be used for logging the messages.
+     */
+    private int mLoggingLevel;
 
     /**
      * The default constructor.
@@ -114,7 +119,7 @@ public class SCClient
         //the output format is whatever user specified in the properties
         mOutputFormat = mProps.getPoolMode();
         mInputFormat  = SCClient.TEXT_FORMAT;
-        
+        mLoggingLevel     = LogManager.WARNING_MESSAGE_LEVEL;
         //mText = false;
         
         mInputFiles = null;
@@ -141,7 +146,7 @@ public class SCClient
     }
 
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[ 9 ];
+        LongOpt[] longopts = new LongOpt[ 10 ];
         longopts[ 0 ] = new LongOpt( "text", LongOpt.NO_ARGUMENT, null, 't' );
         longopts[ 1 ] = new LongOpt( "files", LongOpt.REQUIRED_ARGUMENT, null,            'f' );
         longopts[ 2 ] = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
@@ -151,6 +156,7 @@ public class SCClient
         longopts[ 6 ] = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[ 7 ] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[ 8 ] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
+        longopts[ 9 ]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
 
         return longopts;
 
@@ -164,12 +170,11 @@ public class SCClient
     public void executeCommand( String[] opts ) throws IOException {
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt( "SCClient", opts, "lthvVi:I:o:O:f:",
+        Getopt g = new Getopt( "SCClient", opts, "lthvqVi:I:o:O:f:",
             longOptions, false );
 
         int option = 0;
         int noOfOptions = 0;
-        int level = 0;
         while ( ( option = g.getopt() ) != -1 ) {
             switch ( option ) {
                 case 't': //text 
@@ -212,7 +217,7 @@ public class SCClient
                     break;
 
                 case 'V': //version
-                    mLogger.log( getGVDSVersion(), LogManager.INFO_MESSAGE_LEVEL);
+                    System.out.println(getGVDSVersion());
                     System.exit( 0 );
                     break;
                     
@@ -223,8 +228,11 @@ public class SCClient
                      */
                     
                 case 'v': //Verbose mode
-                    level++;
+                    incrementLogging();
                     break;
+                case 'q': //Quiet mode
+                    decrementLogging();
+                    break;    
 
                 default:
                     mLogger.log( "Unrecognized Option : " + (char)option,
@@ -233,18 +241,44 @@ public class SCClient
                     System.exit( 1 );
             }
         }
-        if(level > 0){
+        if(getLoggingLevel() >= 0){
             //set the logging level only if -v was specified
             //else bank upon the the default logging level
-            mLogger.setLevel(level);
+            mLogger.setLevel(getLoggingLevel());
         }
-        
+        else{
+            //set log level to FATAL only
+            mLogger.setLevel( LogManager.FATAL_MESSAGE_LEVEL );
+        }
         String result = this.parseInputFiles( mInputFiles, mInputFormat, mOutputFormat );
         //write out the result to the output file
         this.toFile( mOutputFile, result );
 	
     }
+    
+    
+    /**
+     * Increments the logging level by 1.
+     */
+    public void incrementLogging(){
+        mLoggingLevel++;
+    }
+    
+    /**
+     * Decrements the logging level by 1.
+     */
+    public void decrementLogging(){
+        mLoggingLevel--;
+    }
 
+    /**
+     * Returns the logging level.
+     *
+     * @return  the logging level.
+     */
+    public int getLoggingLevel(){
+        return mLoggingLevel;
+    }
 
     /**
      * Parses the input files in the input format and returns a String in the 
@@ -363,19 +397,19 @@ public class SCClient
             "\n $Id$ " +
             "\n " + getGVDSVersion() +
             "\n Usage: sc-client [-Dprop  [..]]  -i <list of input files> -o <output file to write> " +
-            "\n        [-I input format] [-O <output format> [-v] [-V] [-h]" ;
+            "\n        [-I input format] [-O <output format> [-v] [-q] [-V] [-h]" ;
 
-        mLogger.log( text,LogManager.ERROR_MESSAGE_LEVEL );
+        System.out.print(text);
     }
 
     public void printLongVersion() {
         String text =
-           "\n $Id $ " +
+           "\n $Id$ " +
            "\n " + getGVDSVersion() +
            "\n sc-client - Parses the site catalogs in old format ( Text and XML3 ) and generates site catalog in new format ( XML3 )"  +
            "\n " +
            "\n Usage: sc-client [-Dprop  [..]]  --input <list of input files> --output <output file to write> " +
-            "\n        [--iformat input format] [--oformat <output format> [--verbose] [--Version] [--help]" +
+            "\n        [--iformat input format] [--oformat <output format> [--verbose] [--quiet] [--Version] [--help]" +
             "\n" +   
             "\n" +
             "\n Mandatory Options " +
@@ -389,6 +423,7 @@ public class SCClient
             "\n -I |--iformat    the input format for the files . Can be [XML , Text] "  + 
             "\n -O |--oformat    the output format of the file. Usually [XML3] " +
             "\n -v |--verbose       increases the verbosity of messages about what is going on" +
+            "\n -q |--quiet        decreases the verbosity of messages about what is going on" +
             "\n -V |--version       displays the version of the Pegasus Workflow Planner" +
             "\n -h |--help          generates this help." +
             "\n" + 
@@ -413,7 +448,7 @@ public class SCClient
             "\n" + 
             "\n sc-client --files sites.txt --output sites.xml" ;
 
-        mLogger.log( text,LogManager.INFO_MESSAGE_LEVEL );
+        System.out.print(text);
 
     }
 
@@ -520,7 +555,7 @@ public class SCClient
             outfile ) ) );
         pw.println( output );
         pw.close();
-        mLogger.log( "Written out the converted file to " + filename, LogManager.INFO_MESSAGE_LEVEL );
+        mLogger.log( "Written out the converted file to " + filename, LogManager.CONSOLE_MESSAGE_LEVEL );
     }
 
     public static void main( String[] args ) throws Exception {
@@ -534,18 +569,17 @@ public class SCClient
              me.executeCommand( args );
         }
         catch ( IOException ioe ){
-            me.log( ioe.getMessage(), LogManager.FATAL_MESSAGE_LEVEL);
+            me.log( convertException(ioe,me.getLoggingLevel()), LogManager.FATAL_MESSAGE_LEVEL);
             result = 1;
         }
         catch ( FactoryException fe){
-            me.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
+            me.log( convertException(fe, me.getLoggingLevel()) , LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         }
         catch ( Exception e ) {
             //unaccounted for exceptions
-            me.log(e.getMessage(),
+            me.log(convertException(e,me.getLoggingLevel()),
                          LogManager.FATAL_MESSAGE_LEVEL );
-            e.printStackTrace();
             result = 3;
         } finally {
             double endtime = new Date().getTime();
