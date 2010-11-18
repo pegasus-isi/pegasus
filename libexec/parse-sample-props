@@ -34,7 +34,7 @@
 # The following keywords are approved, parsed, and may have special
 # meaning:
 # 
-#    Systems     the subsystem this applies to, e.g. Pegasus, Chimera
+#    Systems     the subsystem this applies to, e.g. Pegasus
 #    Type        a symbolic description of the type the prop can have
 #    Value[X]    For enumeration types, the possible values 1 <= X <= N
 #    Default     value assumed in absence of property
