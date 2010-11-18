@@ -135,6 +135,11 @@ public class NoGridStart implements GridStart {
      * See Bug 21 comments on Pegasus Bugzilla
      */
     protected boolean mEnablingPartOfAggregatedJob;
+    
+    /**
+     * Boolean indicating whether worker package staging is enabled or not.
+     */
+    protected boolean mWorkerPackageStagingEnabled;
 
 
     /**
@@ -152,6 +157,7 @@ public class NoGridStart implements GridStart {
         mSubmitDir = mPOptions.getSubmitDirectory();
         mProps     = bag.getPegasusProperties();
         mGenerateLOF  = mProps.generateLOFFiles();
+        mWorkerPackageStagingEnabled = mProps.transferWorkerPackage();
 //        mExitParserArguments = getExitCodeArguments();
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
@@ -466,6 +472,11 @@ public class NoGridStart implements GridStart {
                 //the executable is being staged to the remote site.
                 //all we need to do is unset transfer_executable
                 cvar.construct( "transfer_executable", "false" );
+            }
+            else if ( mWorkerPackageStagingEnabled && 
+                      job.getJobType() == Job.CREATE_DIR_JOB  ){
+                //we dont complain. 
+                //JIRA PM-281
             }
             else{
                 mLogger.log( "Transfer of Executables in NoGridStart only works for staged computes jobs ",
