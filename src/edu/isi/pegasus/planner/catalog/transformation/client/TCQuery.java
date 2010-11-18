@@ -366,9 +366,9 @@ public class TCQuery
                 System.exit( 1 );
             }
         } catch ( Exception e ) {
-            mLogger.log( "Unable to query entire TC", e,
+            mLogger.log( "Unable to query entire TC", 
                 LogManager.FATAL_MESSAGE_LEVEL );
-                e.printStackTrace();
+            mLogger.log(convertException(e,mLogger.getLevel()),LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 1 );
         }
     }
