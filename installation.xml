@@ -4,7 +4,7 @@
 <chapter id="installation">
   <title>Installation</title>
 
-  <section>
+  <section id="prereqs">
     <title>Prerequisites</title>
 
     <para>Pegasus has a few dependencies:</para>
@@ -57,7 +57,7 @@ Python 2.6.2</programlisting></para>
     </itemizedlist>
   </section>
 
-  <section>
+  <section id="env">
     <title>Environment</title>
 
     <para>In order to use Pegasus, just add the bin/ directory to your PATH.
@@ -72,7 +72,7 @@ Python 2.6.2</programlisting></para>
     </note>
   </section>
 
-  <section>
+  <section id="native_packages">
     <title>Native Packages (RPM/DEB)</title>
 
     <para>The preferred way to install Pegasus is with native (RPM/DEB)
@@ -86,7 +86,7 @@ Python 2.6.2</programlisting></para>
     <programlisting>/opt/pegasus/2.4/
 /opt/pegasus/3.0/</programlisting>
 
-    <section>
+    <section id="rhel5">
       <title>RHEL 5 / CentOS 5 / Scientific Linux 5</title>
 
       <para>Add the Pegasus repository to yum by creating a file named
@@ -113,7 +113,7 @@ pegasus-3.0 :3.0.0-1
 Complete!</programlisting>
     </section>
 
-    <section>
+    <section id="deb5">
       <title>Debian 5 (Lenny)</title>
 
       <para>To be able to install and upgrade from the Pegasus apt repository,
@@ -136,7 +136,7 @@ Complete!</programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="tarballs">
     <title>Pegasus from Tarballs</title>
 
     <para>The Pegaus prebuild tarballs can be downloaded from the <ulink
@@ -144,7 +144,7 @@ Complete!</programlisting>
     page</ulink>.</para>
 
     <section>
-      <title>Tarball without Condor</title>
+      <title id="tarballs_plain">Tarball without Condor</title>
 
       <para>Use these tarballs if you already have Condor installed or prefer
       to keep the Condor installation separate from the Pegasus
@@ -165,7 +165,7 @@ Complete!</programlisting>
       </itemizedlist>
     </section>
 
-    <section>
+    <section id="tarball_condor">
       <title>Tarball with Included Condor</title>
 
       <para>For convenience, there is Pegasus WMS tarballs which has Condor
