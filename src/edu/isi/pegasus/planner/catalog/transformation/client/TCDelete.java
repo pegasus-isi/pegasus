@@ -74,7 +74,7 @@ public class TCDelete
                                     " on resource " +
                                     ( ( resource == null ) ? "ALL" : resource ) +
                                     " and type " + ( ( type == null ) ? null : type ),
-                                   LogManager.INFO_MESSAGE_LEVEL );
+                                   LogManager.CONSOLE_MESSAGE_LEVEL );
                         }
                         else if ( status >= 1) {
                             mLogger.log(
@@ -82,7 +82,7 @@ public class TCDelete
                                 " on resource " +
                                 ( ( resource == null ) ? "ALL" : resource ) +
                                 " and type " + ( ( type == null ) ? null : type ),
-                               LogManager.INFO_MESSAGE_LEVEL );
+                               LogManager.CONSOLE_MESSAGE_LEVEL );
                         } else {
                             mLogger.log(
                                 "Unable to detele TC by logical name " +
@@ -120,14 +120,14 @@ public class TCDelete
                                 " and logical name " + lfn + " on resource " +
                                 ( ( resource == null ) ? "ALL" : resource ) +
                                 " and type " + ( ( type == null ) ? "ALL" :
-                                type ) ,LogManager.INFO_MESSAGE_LEVEL);
+                                type ) ,LogManager.CONSOLE_MESSAGE_LEVEL);
                         } else if ( status >= 1) {
                             mLogger.log(
                                 "Deleted the TC entries by physicalname " + pfn +
                                 " and logical name " + lfn + " on resource " +
                                 ( ( resource == null ) ? "ALL" : resource ) +
                                 " and type " + ( ( type == null ) ? "ALL" :
-                                type ) ,LogManager.INFO_MESSAGE_LEVEL);
+                                type ) ,LogManager.CONSOLE_MESSAGE_LEVEL);
                         } else {
                             mLogger.log(
                                 "Unable to delete TC by physicalname " +
@@ -157,11 +157,11 @@ public class TCDelete
                         if ( status == 0 ) {
                             mLogger.log(
                                 "No match found for TC entries by resourceid " +
-                                resource,LogManager.INFO_MESSAGE_LEVEL );
+                                resource,LogManager.CONSOLE_MESSAGE_LEVEL );
                         } else if ( status >= 1 ) {
                             mLogger.log(
                                 "Deleted the TC entries by resourceid " +
-                                resource,LogManager.INFO_MESSAGE_LEVEL );
+                                resource,LogManager.CONSOLE_MESSAGE_LEVEL );
                         } else {
                             mLogger.log(
                                 "Unable to delete TC by resourceid" ,
@@ -188,11 +188,11 @@ public class TCDelete
                         if ( status == 0 ) {
                             mLogger.log(
                                 "No match found for TC LFN profile entries for LFN " +
-                                lfn , LogManager.INFO_MESSAGE_LEVEL);
+                                lfn , LogManager.CONSOLE_MESSAGE_LEVEL);
                         } else if ( status >= 1 ) {
                             mLogger.log(
                                 "Deleted the TC LFN profile entries for LFN " +
-                                lfn , LogManager.INFO_MESSAGE_LEVEL);
+                                lfn , LogManager.CONSOLE_MESSAGE_LEVEL);
                         } else {
                             mLogger.log(
                                 "Unable to delete the TC LFN profiles",
@@ -222,12 +222,12 @@ public class TCDelete
                             mLogger.log(
                                 "No match found for TC PFN profile entries for PFN " +
                                 pfn + " type " + type + " resource " + resource,
-                               LogManager.DEBUG_MESSAGE_LEVEL );
+                               LogManager.CONSOLE_MESSAGE_LEVEL );
                         } else if ( status >= 1) {
                             mLogger.log(
-                                "Delete the TC PFN profile entries for PFN " +
+                                "Deleted the TC PFN profile entries for PFN " +
                                 pfn + " type " + type + " resource " + resource,
-                               LogManager.DEBUG_MESSAGE_LEVEL );
+                               LogManager.CONSOLE_MESSAGE_LEVEL );
                         } else {
                             mLogger.log(
                                 "Unable to delete the TC PFN profiles",
@@ -257,13 +257,13 @@ public class TCDelete
                                 "No match found for TC entries for Type " + type +
                                 " resource " +
                                 ( ( resource == null ) ? "ALL" : resource ),
-                               LogManager.INFO_MESSAGE_LEVEL );
+                               LogManager.CONSOLE_MESSAGE_LEVEL );
                         } else if ( status  >= 1) {
                             mLogger.log(
                                 "Deleted the TC entries for Type " + type +
                                 " resource " +
                                 ( ( resource == null ) ? "ALL" : resource ),
-                               LogManager.INFO_MESSAGE_LEVEL );
+                               LogManager.CONSOLE_MESSAGE_LEVEL );
                         } else {
                             mLogger.log(
                                 "Unable to delete the TC by type" ,
@@ -290,11 +290,11 @@ public class TCDelete
                         if ( status  == 0) {
                             mLogger.log(
                                 "No match found for TC entries for VDSSysInfo " +
-                                systemstring ,LogManager.INFO_MESSAGE_LEVEL);
+                                systemstring ,LogManager.CONSOLE_MESSAGE_LEVEL);
                         } else if ( status  >= 1) {
                             mLogger.log(
                                 "Deleted the TC entries for VDSSysInfo " +
-                                systemstring ,LogManager.INFO_MESSAGE_LEVEL);
+                                systemstring ,LogManager.CONSOLE_MESSAGE_LEVEL);
                         } else {
                             mLogger.log(
                                 "Unable to delete the TC by VDSSysInfo",
@@ -309,7 +309,7 @@ public class TCDelete
                                  LogManager.DEBUG_MESSAGE_LEVEL);
                     if ( tc.clear() >= 0 ) {
                         mLogger.log( "Deleted the entire tc succesfully",
-                                    LogManager.INFO_MESSAGE_LEVEL );
+                                    LogManager.CONSOLE_MESSAGE_LEVEL );
                     } else {
                         mLogger.log(
                             "Error while deleting entire TC",
@@ -325,9 +325,9 @@ public class TCDelete
                     System.exit( 1 );
             }
         } catch ( Exception e ) {
-            mLogger.log( "Unable to do delete operation", e,
+            mLogger.log( "Unable to do delete operation",
                         LogManager.FATAL_MESSAGE_LEVEL );
-            e.printStackTrace();
+            mLogger.log(convertException(e,mLogger.getLevel()),LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 1 );
         }
     }
