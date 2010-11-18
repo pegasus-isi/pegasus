@@ -11,6 +11,16 @@
 #
 # The following markup is required to be adhered to:
 #
+# 0. You must now (new) start your document with a title like this:
+#
+# # 
+# # TITLE "ALL CAPS TITLE IN QUOTES"
+# #
+#
+# Only after the TITLE was met in the input, the table of contents
+# will be generated right there. Thus, it is imperative that you
+# start your document with the TITLE you want to give it. 
+#
 # 1. Any new section starts like this:
 #
 # #
@@ -66,6 +76,7 @@
 use 5.006;
 use strict;
 use File::Spec;
+use Cwd qw(abs_path);
 use POSIX qw(strftime);
 
 die "Set your PEGASUS_HOME environment variable\n" 
@@ -198,27 +209,32 @@ print << 'EOF';
 \begin{document}
 
 \subject{The Pegasus Workflow Planner Properties}
-\title{Property Documentation}
+%% \title{Property Documentation}
 EOF
 
 # which version 
-#my $v_v = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'pegasus-version' );
-#my $version = `$v_v`;
 my $version=$ENV{'PEGASUS_VERSION'};
-chomp($version);
+if ( ! defined $version || $version eq '' ) {
+    # didn't find a valid version, ask pegasus-version
+    my $v_v = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 
+				   'bin', 'pegasus-version' );
+    chomp($version = `$v_v`);
+}
 
 #
 # print LaTeX preamble, 2nd part, now with interpolation
 #
 print << "EOF";
-\\author{V~$version automatically generated at}
+\\author{V~$version automatically generated on}
 \\date{@{[POSIX::strftime("%Y-%m-%d %H:%M", localtime())]}}
-\\maketitle
-\\tableofcontents
-\\clearpage
+%% defer until we hit TITLE in input
+%% \\maketitle
+%% \\tableofcontents
+%% \\clearpage
 
 EOF
 
+$main::title = 0; 
 my (@line,%line,$k,$v,$i);
 my $depth = 0;
 while ( <SP> ) {
@@ -291,6 +307,10 @@ while ( <SP> ) {
                 $flag = 1;
 		$depth = 2;
             } elsif ( $line[$i] =~ /^TITLE "([^\"]+)"/ ) {
+		$main::title += 1; # remember 
+		my @title = map { ucfirst lc } split /\s+/,$1;
+		print "\n\n\\title{@title}\n"; 
+		print "\\maketitle\n\\tableofcontents\n\\clearpage\n\n";
                 $flag = 1;
 		$depth = 0;
             }
@@ -313,6 +333,8 @@ while ( <SP> ) {
     }
 }
 close SP;
+die "FATAL: You didn't have a TITLE in your input\n"
+    unless $main::title > 0; 
 
 #
 # print LaTeX post-amble
