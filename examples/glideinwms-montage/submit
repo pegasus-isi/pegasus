@@ -8,26 +8,23 @@ set -e
 #
 #  Settings
 #
-DEGREES=1.0
+DEGREES=0.5
 LOCAL_PEGASUS_HOME="/home/rynge/Pegasus/install/current"
 LOCAL_GLOBUS_LOCATION="/opt/globus/5.0.1"
 LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
 LOCAL_MONTAGE_LOCATION="/home/rynge/Projects/Montage/src/Montage_v3.2_beta6_mats"
-CLUSTER_NAME="ISIViz"
-CLUSTER_HOSTNAME="viz-login.isi.edu"
-CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
-CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/testing/latest"
-CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
-CLUSTER_MONTAGE_LOCATION="/cluster-software/montage/3.2_beta6_mats"
+CLUSTER_NAME="RENCI-Engagement"
+CLUSTER_HOSTNAME="belhaven-1.renci.org"
+CLUSTER_WORK_DIR="/nfs/osg-data/engage/tmp"
+CLUSTER_PEGASUS_HOME="/nfs/software/pegasus/pegasus-3.0.0cvs"
+CLUSTER_GLOBUS_LOCATION="/nfs/software/osg-wn/current/globus"
+CLUSTER_MONTAGE_LOCATION="/nfs/software/montage/Montage_v3.2_beta6_mats"
 #######################################################################
 
 TOP_DIR=`pwd`
 LOCAL_HOSTNAME=`hostname -f`
 
-export PATH=$LOCAL_MONTAGE_LOCATION/bin:$PATH
-unset CLASSPATH
-export PEGASUS_HOME=$LOCAL_PEGASUS_HOME
-. $PEGASUS_HOME/setup.sh
+export PATH=$LOCAL_PEGASUS_HOME/bin:$LOCAL_MONTAGE_LOCATION/bin:$PATH
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
@@ -65,12 +62,7 @@ cat >sites.xml <<EOF
     <site handle="local" arch="x86" os="LINUX">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs" free-size="100G" total-size="30G"/>
-                </shared>
-            </scratch>
+            <scratch />
             <storage>
                 <shared>
                     <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
@@ -84,8 +76,7 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >$LOCAL_GLOBUS_TCP_PORT_RANGE</profile>
     </site>
     <site handle="$CLUSTER_NAME" arch="x86" os="LINUX">
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-condor" scheduler="unknown" jobtype="compute"/>
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="compute"/>
         <head-fs>
             <scratch>
                 <shared>
@@ -93,14 +84,8 @@ cat >sites.xml <<EOF
                     <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
                 </shared>
             </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
-                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
-                </shared>
-            </storage>
+            <storage />
         </head-fs>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
 
         <profile namespace="pegasus" key="style">glideinwms</profile>
 
