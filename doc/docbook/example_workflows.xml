@@ -58,18 +58,18 @@ examples/grid-blackdiamond-python/</programlisting>
       and change the cluster config to the setup and install locations for
       your cluster. Then run:</para>
 
-      <para><programlisting>./submit</programlisting></para>
+      <para><programlisting>$ <emphasis role="bold">./submit</emphasis></programlisting></para>
 
       <para>The workflow should now be submitted and in the output you should
-      see a submit dir location for the instance. With that directory you can
+      see a work dir location for the instance. With that directory you can
       monitor the workflow with:</para>
 
-      <para><programlisting>pegasus-status [submitdir]</programlisting></para>
+      <para><programlisting>$ <emphasis role="bold">pegasus-status [workdir]</emphasis></programlisting></para>
 
       <para>Once the workflow is done, you can make sure it was sucessful
       with:</para>
 
-      <para><programlisting>pegasus-analyzer -d [submitdir]</programlisting></para>
+      <para><programlisting>$ <emphasis role="bold">pegasus-analyzer -d [workdir]</emphasis></programlisting></para>
     </section>
 
     <section>
@@ -212,6 +212,33 @@ pegasus.gridstart = SeqExec          </programlisting>
            black diamond example 
         </xref> above, this example uses a <filename>./submit</filename>
       script</para>
+    </section>
+  </section>
+
+  <section id="condor_examples">
+    <title>Condor Examples</title>
+
+    <section>
+      <title>Black Diamond</title>
+
+      <para>This example can be found under</para>
+
+      <programlisting><filename>examples/condor-blackdiamond/</filename></programlisting>
+
+      <para>This example is using the same abstract workflow as the <xref
+          linkend="example_black_diamond">
+           Black Diamond 
+        </xref> grid example above, and can be executed either on the submit
+      machine (universe="local") or on a local Condor pool
+      (universe="vanilla"). The latter requires a shared filesystem for the
+      pool.</para>
+
+      <para>You can run this example with the <filename>./submit</filename>
+      script, but you have to pass an argument: <emphasis>condor</emphasis>
+      for universe=local or <emphasis>condorpool</emphasis> for
+      universe="vanilla". Example:</para>
+
+      <programlisting>$ <emphasis role="bold">./submit condorpool</emphasis></programlisting>
     </section>
   </section>
 
