@@ -32,8 +32,7 @@ public class Executable extends CatalogType {
 
     public static enum OS {
 
-        LINUX,linux, SUNOS,sunos, AIX,aix, MACOSX,macosx, DARWIN,darwin, WINDOWS,windows, SOLARIS,solaris
-    }
+        LINUX,linux, SUNOS,sunos, AIX,aix, MACOSX,macosx, WINDOWS,windows    }
 
 
 
