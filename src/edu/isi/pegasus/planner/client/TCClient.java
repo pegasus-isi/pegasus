@@ -216,8 +216,7 @@ public class TCClient extends Executable{
                     System.exit( 0 );
                     break;
                 case 'V': //version
-                    mLogger.log( version.toString(),
-                        LogManager.INFO_MESSAGE_LEVEL );
+                    System.out.println(version.toString());
                     System.exit( 0 );
                 case 'v': //Verbose mode
                     level++;
@@ -233,7 +232,11 @@ public class TCClient extends Executable{
                     break;
             }
         }
-        mLogger.setLevel( level );
+        if(level >0){
+        	mLogger.setLevel( level );
+        }else{
+        	mLogger.setLevel(LogManager.WARNING_MESSAGE_LEVEL);
+        }
 
         //calculating the value of the trigger
         int trigger = bulk + islfn + ispfn + isresource + isprofile + istype +
@@ -260,7 +263,7 @@ public class TCClient extends Executable{
             }
         }
         catch ( FactoryException fe){
-            mLogger.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
+            mLogger.log( convertException(fe,mLogger.getLevel()) , LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 2 );
         }
         try{
@@ -303,7 +306,7 @@ public class TCClient extends Executable{
             "\n Usage :tc-client  [ operation ]  [ operation arguments ]" +
             "\n Type tc-client -h for more details";
 
-        mLogger.log( text, LogManager.ERROR_MESSAGE_LEVEL );
+        System.out.println(text);
         System.exit( 1 );
     }
 
@@ -396,7 +399,7 @@ public class TCClient extends Executable{
             "\n\tQuery Pfn Profile  : -q -P -E -p <pfn> -r <resource> -t <type>" +
             "\n";
 
-        mLogger.log( text, LogManager.INFO_MESSAGE_LEVEL );
+        System.out.println(text);
         System.exit( 0 );
     }
 
