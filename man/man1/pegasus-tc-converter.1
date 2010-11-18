@@ -27,7 +27,7 @@ pegasus-tc-converter \- A client to convert transformation catalog from one form
  		\-i <list of input files> \-o <output file to write> 
           [\-I input format] [\-O <output format>
           [\-N <database user name>] [\-P <database user password>] [\-U <database url>] [\-H <database host>] 
-          [\-v] [\-V] [\-h]
+          [\-v] [\-q] [\-V] [\-h]
 .SH "DESCRIPTION"
 The tc-convert program is used to convert the transformation catalog from one format to another. 
 .IP
@@ -169,7 +169,18 @@ The database host.
 .B \-\-verbose
 increases the verbosity of messages about what is going on.
 .IP
-By default, all FATAL ERROR, ERROR , WARNINGS and INFO messages are
+By default, all FATAL ERROR, ERROR , CONSOLE and WARNINGS messages are
+logged.
+
+.TP
+.B \-q
+.PD 0
+.TP
+.PD 1
+.B \-\-quiet
+decreases the verbosity of messages about what is going on.
+.IP
+By default, all FATAL ERROR, ERROR , CONSOLE and WARNINGS messages are
 logged.
 
 .TP
@@ -197,14 +208,14 @@ command.
 Text to file format conversion :-
 .nf 
 \f(CB
- pegasus-tc-converter  -i tc.data -I File -o tc.txt  -O Text -vvvvv
+ pegasus-tc-converter  -i tc.data -I File -o tc.txt  -O Text -v
 \fP
 .fi 
 .TP
 File to Database(new) format conversion  :-
 .nf 
 \f(CB
- pegasus-tc-converter  -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost  -O Database -vvvvv
+ pegasus-tc-converter  -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost  -O Database -v
 \fP
 .fi 
 .TP
