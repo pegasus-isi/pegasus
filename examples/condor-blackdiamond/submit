@@ -1,0 +1,97 @@
+#!/bin/bash
+
+set -e
+
+TOPDIR=`pwd`
+
+if [ "x$1" = "x" ]; then
+    echo "Please specify local or condorpool as argument. Examples:"
+    echo "  ./submit local"
+    echo "  ./submit condorpool"
+    exit 1
+fi
+
+if [ "$1" = "condorpool" ]; then
+    echo "Submitting to the Condor pool"
+    TARGET="condorpool"
+else
+    echo "Submitting to the local universe"
+    TARGET="condorpool"
+fi
+
+# figure out where Pegasus is installed
+export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
+if [ "x$PEGASUS_HOME" = "x" ]; then
+    echo "Unable to determine location of your Pegasus install"
+    echo "Please make sure pegasus-plan is in your path"
+    exit 1
+fi 
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# build the dax generator
+export CLASSPATH=.:$PEGASUS_HOME/lib/pegasus.jar:$CLASSPATH
+javac BlackDiamondDAX.java
+
+# generate the dax
+java BlackDiamondDAX $TARGET $PEGASUS_HOME blackdiamond.dax
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="unknown" jobtype="compute"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
+    </site>
+    <site  handle="condorpool" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="unknown" jobtype="compute"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
+    </site>
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    -D pegasus.user.properties=pegasusrc \
+    --sites $TARGET \
+    --dir work \
+    --output local \
+    --dax blackdiamond.dax \
+    --submit
+
