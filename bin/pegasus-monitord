@@ -116,6 +116,7 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 # Used in process
 re_parse_dag_name = re.compile(r"Parsing (.+) ...$")
 re_parse_timestamp = re.compile(r"^\s*(\d{1,2})\/(\d{1,2})(\/(\d{1,2}))?\s+(\d{1,2}):(\d{2}):(\d{2})")
+re_parse_iso_stamp = re.compile(r"^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))")
 re_parse_event = re.compile(r"Event:\s+ULOG_(\S+) for Condor (?:Job|Node) (\S+)\s+\((-?[0-9]+\.[0-9]+)(\.[0-9]+)?\)$")
 re_parse_script_running = re.compile(r"\d{2}\sRunning (PRE|POST) script of (?:Job|Node) (.+)\.{3}")
 re_parse_script_done = re.compile(r"\d{2}\s(PRE|POST) Script of (?:Job|Node) (\S+)")
@@ -914,6 +915,11 @@ class Workflow:
         # Convert timestamp from YYYYMMDDTHHMMSSZZZZZ to Epoch
         if self._timestamp is not None:
             try:
+                # FIXME: This offset computation is wrong, please fix (see utils.py)
+                # FIXME: We have 3 different locations doing ISO parsing. Create a
+                # more sane function in utils to achieve just iso2epoch - and use it.
+                # Or use the existing function here. 
+
                 # Split date/time and timezone information
                 dt = self._timestamp[:-5]
                 tz = self._timestamp[-5:]
@@ -1912,13 +1918,10 @@ def process(wf, log_line):
     log_line = log_line.rstrip()
 
     # Check log_line for timestamp at the beginning
+    found = False
     my_expr = re_parse_timestamp.search(log_line)
-
+    
     if my_expr is not None:
-        split_log_line = log_line.split(None, 3)
-        if len(split_log_line) >= 3:
-            logger.debug("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
-	
 	# Found time stamp, let's assume valid log line
 	curr_time = time.localtime()
 	adj_time = list(curr_time)
@@ -1934,12 +1937,53 @@ def process(wf, log_line):
             adj_time[0] = int(my_expr.group(4)) + 2000 # Year
 
 	wf._current_timestamp = time.mktime(adj_time) + adjustment
+        found = True
+    else:
+        # FIXME: Use method from utils.py, do not re-invent the wheel!
+        # FIXME: Slated for 3.1
+        my_expr = re_parse_iso_stamp.search(log_line)
+        if my_expr is not None:
+            # /^\s*(\d{4}).?(\d{2}).?(\d{2}).(\d{2}).?(\d{2}).?(\d{2})([.,]\d+)?([Zz]|[-+](\d{2}).?(\d{2}))/
+            dt = "%04d-%02d-%02d %02d:%02d:%02d" % (int(my_expr.group(1)),
+                                                    int(my_expr.group(2)),
+                                                    int(my_expr.group(3)),
+                                                    int(my_expr.group(4)),
+                                                    int(my_expr.group(5)),
+                                                    int(my_expr.group(6)))
+            my_time = datetime.datetime(*(time.strptime(dt, "%Y-%m-%d %H:%M:%S")[0:6]))
+
+            tz = my_expr.group(8)
+            if tz.upper() != 'Z':
+                # no zulu time, has zone offset
+                my_offset = datetime.timedelta(hours=int(my_expr.group(9)),
+                                               minutes=int(my_expr.group(10)))
+
+                # adjust for time zone offset
+                if tz[0] == '-':
+                    my_time = my_time + my_offset
+                else:
+                    my_time = my_time - my_offset
+
+            # Turn my_time into Epoch format
+            wf._current_timestamp = int(calendar.timegm(my_time.timetuple())) + adjustment
+            found = True
+
+    if found:
+        split_log_line = log_line.split(None, 3)
+        if len(split_log_line) >= 3:
+            logger.debug("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
 
         # If in recovery mode, check if we reached the end of it
         if wf._skipping_recovery_lines:
             if log_line.find("...done with RECOVERY mode") >= 0:
                 wf._skipping_recovery_lines = False
             return
+
+        if re_debug_event.search(log_line) is not None:
+            a = re_debug_event.search(log_line)
+            b = re_parse_event.search(log_line)
+            if a is not None and b is None:
+                sys.stderr.write( "# weird submit: %s\n" % (log_line) )
 
 	# Search for more content
 	if re_parse_event.search(log_line) is not None:
@@ -2105,6 +2149,9 @@ def process(wf, log_line):
             # Entering recovery mode, skip lines until we reach the end
             wf._skipping_recovery_lines = True
             return
+
+    else:
+        logger.warning( "time stamp format not recognized" )
 
 def server_socket(low, hi, bind_addr="127.0.0.1"):
     # purpose: create a local TCP server socket to listen to sitesel requests
