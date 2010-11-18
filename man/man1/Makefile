@@ -8,9 +8,11 @@ HTML	= -Thtml
 # use /usr/ucb/install on Solaris
 INSTALL	= install
 
-SRC	= pegasus-bug-report.1 \
+SRC	= pegasus-analyzer.1 \
+	pegasus-bug-report.1 \
 	pegasus-check-sites.1 \
 	pegasus-get-sites-old.1 \
+	pegasus-monitord.1 \
 	pegasus-plan.1 \
 	pegasus-plot.1 \
 	pegasus-rc-client.1 \
