@@ -1297,7 +1297,7 @@ public class File  extends Abstract
                        line.trim().equalsIgnoreCase(""))) {
                     TransformationCatalogEntry tc = new
                         TransformationCatalogEntry();
-                    String[] tokens = line.split("[ \t]+", 6);
+                    String[] tokens = line.trim().split("[ \t]+", 6);
                     for (int i = 0; i < tokens.length; i++) {
                         switch (i) {
                             case 0: //poolname
