@@ -973,8 +973,9 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         return true;
                     }
                     else if ( parent instanceof TransformationCatalogEntry ) {
-                        //profile appears in file element
-                        unSupportedNestingOfElements( "executable", "profile" );
+                        //profile appears in executable element
+                        TransformationCatalogEntry tce = ( TransformationCatalogEntry)parent;
+                        tce.addProfile(p);
                         return true;
                     }
                     else if ( parent instanceof Job ){
