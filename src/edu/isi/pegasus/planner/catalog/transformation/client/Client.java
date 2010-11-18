@@ -26,10 +26,13 @@ package edu.isi.pegasus.planner.catalog.transformation.client;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -101,6 +104,45 @@ public class Client {
         if ( systemstring == null ) {
             system = new VDSSysInfo( systemstring );
         }
+    }
+    
+    /**
+     * Returns an error message that chains all the lower order error messages
+     * that might have been thrown.
+     *
+     * @param e  the Exception for which the error message has to be composed.
+     * @param logLevel  the user specified level for the logger
+     * 
+     * @return  the error message.
+     */
+    public static String convertException( Exception e , int logLevel ){
+        StringBuffer message = new StringBuffer();
+        int i = 0;
+        
+        //check if we want to throw the whole stack trace
+        if( logLevel >= LogManager.TRACE_MESSAGE_LEVEL ){
+            //we want the stack trace to a String Writer.
+            StringWriter sw = new StringWriter();
+            e.printStackTrace( new PrintWriter( sw ) );
+            
+            return sw.toString();
+        }
+        
+        //append all the causes
+        for(Throwable cause = e; cause != null ; cause  = cause.getCause()){
+            if( cause instanceof FactoryException ){
+                //do the specialized convert for Factory Exceptions
+                message.append(((FactoryException)cause).convertException(i));
+                break;
+            }
+            message.append("\n [").append( Integer.toString(++i)).append("] ").
+                    append(cause.getClass().getName()).append(": ").
+                    append(cause.getMessage());
+
+            //append just one elment of stack trace for each exception
+            message.append( " at " ).append( cause.getStackTrace()[0] );
+        }
+        return message.toString();
     }
 
 }
