@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # verify that a given DAX-3.2 is sane and parsable. 
 # Warning: This requires Xerces-J 2.10 or greater. 

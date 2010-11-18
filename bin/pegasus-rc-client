@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # manipulate any replica catalog implementation through a generic
 # interface from the shell.

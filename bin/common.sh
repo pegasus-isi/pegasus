@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Common structure to all shell wrappers. This file
 # is sourced from the shell wrapper scripts. 

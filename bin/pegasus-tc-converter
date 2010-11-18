@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Converts transformation catalog from one format to another
 #

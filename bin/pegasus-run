@@ -327,7 +327,7 @@ EOF
     die "ERROR: Unable to execute $config{script}\n" unless -x $config{script};
     print STDERR "# found $config{script}\n" if $main::DEBUG;
 
-    my @args=( "/bin/sh", $config{script} );
+    my @args=( "/bin/bash", $config{script} );
     system(@args) == 0 
 	or die( "ERROR: Running $config{script} failed with ", 
 		parse_exit($?) );
