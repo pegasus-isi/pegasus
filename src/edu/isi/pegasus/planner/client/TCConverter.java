@@ -133,7 +133,11 @@ public class TCConverter
      */
     private String mDatabaseHost;
 
-
+    /**
+     * Denotes the logging level that is to be used for logging the messages.
+     */
+    private int mLoggingLevel;
+    
     /**
      * The default constructor.
      */
@@ -147,6 +151,7 @@ public class TCConverter
         mDatabaseHost ="localhost";
         mInputFiles = null;
         mOutputFile = null;
+        mLoggingLevel     = LogManager.WARNING_MESSAGE_LEVEL;
     }
 
     /**
@@ -173,7 +178,7 @@ public class TCConverter
     * @return LongOpt[] list of valide options
     */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[ 11 ];
+        LongOpt[] longopts = new LongOpt[ 12 ];
         longopts[ 0 ] = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
         longopts[ 1 ] = new LongOpt( "iformat", LongOpt.REQUIRED_ARGUMENT, null, 'I' );
         longopts[ 2 ] = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
@@ -185,6 +190,7 @@ public class TCConverter
         longopts[ 8 ] = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[ 9 ] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[ 10 ] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
+        longopts[ 11 ]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
 
         return longopts;
 
@@ -198,12 +204,11 @@ public class TCConverter
     public void executeCommand( String[] opts ) throws IOException {
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt( "TCConverter", opts, "hVvI:i:O:o:U:P:N:H:",
+        Getopt g = new Getopt( "TCConverter", opts, "hVvqI:i:O:o:U:P:N:H:",
             longOptions, false );
 
         int option = 0;
         int noOfOptions = 0;
-        int level = 0;
         while ( ( option = g.getopt() ) != -1 ) {
             switch ( option ) {
                 case 'i': //input
@@ -248,13 +253,17 @@ public class TCConverter
                     break;
 
                 case 'V': //version
-                    mLogger.log( getGVDSVersion(), LogManager.INFO_MESSAGE_LEVEL);
+                    System.out.println(getGVDSVersion());
                     System.exit( 0 );
                     break;
                     
                 case 'v': //Verbose mode
-                    level++;
+                    incrementLogging();
                     break;
+                    
+                case 'q': //Quiet mode
+                    decrementLogging();
+                    break;    
 
                 default:
                     mLogger.log( "Unrecognized Option : " + (char)option,
@@ -263,14 +272,40 @@ public class TCConverter
                     System.exit( 1 );
             }
         }
-        if(level > 0){
+        if(getLoggingLevel() >= 0){
             //set the logging level only if -v was specified
             //else bank upon the the default logging level
-            mLogger.setLevel(level);
+            mLogger.setLevel(getLoggingLevel());
+        }else{
+            //set log level to FATAL only
+            mLogger.setLevel( LogManager.FATAL_MESSAGE_LEVEL );
         }
         
         convertTC();
 	
+    }
+    
+    /**
+     * Increments the logging level by 1.
+     */
+    public void incrementLogging(){
+        mLoggingLevel++;
+    }
+    
+    /**
+     * Decrements the logging level by 1.
+     */
+    public void decrementLogging(){
+        mLoggingLevel--;
+    }
+
+    /**
+     * Returns the logging level.
+     *
+     * @return  the logging level.
+     */
+    public int getLoggingLevel(){
+        return mLoggingLevel;
     }
     
     
@@ -433,9 +468,9 @@ public class TCConverter
             "\n Usage: pegasus-tc-converter [-Dprop  [..]]  -I <input format> -O <output format> " +
             "\n        [-i <list of input files>] [-o <output file to write>] " +
             "\n        [-N <database user name>] [-P <database user password>] [-U <database url>] [-H <database host>] " +
-            "\n        [-v] [-V] [-h]";
+            "\n        [-v] [-q] [-V] [-h]";
 
-        mLogger.log( text,LogManager.ERROR_MESSAGE_LEVEL );
+        System.out.println(text);
     }
 
     public void printLongVersion() {
@@ -447,7 +482,7 @@ public class TCConverter
         text.append("\n Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>] [--oformat <output format>]" );
         text.append("\n       [--input <list of input files>] [--output <output file to write>] ");
         text.append("\n       [--db-user-name <database user name>] [--db-user-pwd <database user password>] [--db-url <database url>] [--db-host <database host>]");
-        text.append("\n       [--verbose] [--Version] [--help]" );
+        text.append("\n       [--verbose] [--quiet][--Version] [--help]" );
         text.append("\n" );   
         text.append("\n" );
         text.append("\n Mandatory Options " );
@@ -465,19 +500,20 @@ public class TCConverter
         text.append("\n -U |--db-url         the database url "  ); 
         text.append("\n -H |--db-host        the database host " );
         text.append("\n -v |--verbose        increases the verbosity of messages about what is going on" );
+        text.append("\n -q |--quiet          decreases the verbosity of messages about what is going on" );
         text.append("\n -V |--version        displays the version of the Pegasus Workflow Planner" );
         text.append("\n -h |--help           generates this help." );
         text.append("\n" ); 
         text.append("\n" ); 
         text.append("\n Example Usage " );
         text.append("\n Text to file format conversion :- " ); 
-        text.append("  pegasus-tc-converter  -i tc.txt -I Text -o tc.data  -O File -vvvvv");
+        text.append("  pegasus-tc-converter  -i tc.txt -I Text -o tc.data  -O File -v");
         text.append("\n File to Database(new) format conversion  :- " ); 
-        text.append("  pegasus-tc-converter  -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost  -O Database -vvvvv" );
+        text.append("  pegasus-tc-converter  -i tc.data -I File -N mysql_user -P mysql_pwd -U jdbc:mysql://localhost:3306/tc -H localhost  -O Database -v" );
         text.append("\n Database(existing specified in properties file) to text format conversion  :-" ); 
         text.append("  pegasus-tc-converter  -I Database -o tc.txt -O Text -vvvvv");
             
-        mLogger.log( text.toString(),LogManager.INFO_MESSAGE_LEVEL );
+        System.out.println(text.toString());
 
     }
 
@@ -568,10 +604,10 @@ public class TCConverter
         catalog.close();
         
     	mLogger.log( "Successfully converted Transformation Catalog from "+ mInputFormat +" to " + mOutputFormat ,
-                       LogManager.INFO_MESSAGE_LEVEL );
+                       LogManager.CONSOLE_MESSAGE_LEVEL );
         if( filename != null ){
             mLogger.log( "The output transfomation catalog is in file  "+ new java.io.File(filename).getAbsolutePath() ,
-                       LogManager.INFO_MESSAGE_LEVEL );
+                       LogManager.CONSOLE_MESSAGE_LEVEL );
         }
     }
 
@@ -593,16 +629,16 @@ public class TCConverter
              me.executeCommand( args );
         }
         catch ( IOException ioe ){
-            me.log( ioe.getMessage(), LogManager.FATAL_MESSAGE_LEVEL);
+            me.log(convertException( ioe,me.mLogger.getLevel()), LogManager.FATAL_MESSAGE_LEVEL);
             result = 1;
         }
         catch ( FactoryException fe){
-            me.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
+            me.log( convertException(fe,me.mLogger.getLevel()) , LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         }
         catch ( Exception e ) {
             //unaccounted for exceptions
-            me.log(e.getMessage(),
+            me.log(convertException(e,me.mLogger.getLevel()),
                          LogManager.FATAL_MESSAGE_LEVEL );
             result = 3;
         } finally {
