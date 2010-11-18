@@ -26,10 +26,8 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.SiteCatalog;
 import edu.isi.pegasus.planner.catalog.site.SiteFactory;
-import edu.isi.pegasus.planner.catalog.site.SiteFactoryException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.parser.ConfigXmlParser;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
@@ -47,8 +45,6 @@ import java.util.StringTokenizer;
 
 //import javax.naming.NamingEnumeration;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
-import edu.isi.pegasus.planner.common.PegasusProperties;
-//import javax.naming.directory.SearchControls;
 import edu.isi.pegasus.common.util.FactoryException;
 //import javax.naming.ldap.LdapContext;
 
@@ -133,7 +129,7 @@ public class SCClient
     protected void setupLogging(){
         //setup the logger for the default streams.
         mLogger = LogManagerFactory.loadSingletonInstance( mProps );
-        mLogger.logEventStart( "event.pegasus.sc-client", "pegasus.version",  mVersion );
+        mLogger.logEventStart( "event.pegasus.pegasus-sc-converter", "pegasus.version",  mVersion );
 
     }
     /**
@@ -396,7 +392,7 @@ public class SCClient
         String text =
             "\n $Id$ " +
             "\n " + getGVDSVersion() +
-            "\n Usage: sc-client [-Dprop  [..]]  -i <list of input files> -o <output file to write> " +
+            "\n Usage: pegasus-sc-converter [-Dprop  [..]]  -i <list of input files> -o <output file to write> " +
             "\n        [-I input format] [-O <output format> [-v] [-q] [-V] [-h]" ;
 
         System.out.print(text);
@@ -406,9 +402,9 @@ public class SCClient
         String text =
            "\n $Id$ " +
            "\n " + getGVDSVersion() +
-           "\n sc-client - Parses the site catalogs in old format ( Text and XML3 ) and generates site catalog in new format ( XML3 )"  +
+           "\n pegasus-sc-converter - Parses the site catalogs in old format ( Text and XML3 ) and generates site catalog in new format ( XML3 )"  +
            "\n " +
-           "\n Usage: sc-client [-Dprop  [..]]  --input <list of input files> --output <output file to write> " +
+           "\n Usage: pegasus-sc-converter [-Dprop  [..]]  --input <list of input files> --output <output file to write> " +
             "\n        [--iformat input format] [--oformat <output format> [--verbose] [--quiet] [--Version] [--help]" +
             "\n" +   
             "\n" +
@@ -441,12 +437,12 @@ public class SCClient
             "\n" +
             "\n Example Usage " +
             "\n" + 
-            "\n sc-client  -i sites.xml -I XML -o sites.xml.new  -O XML3 -vvvvv" +
+            "\n pegasus-sc-converter  -i sites.xml -I XML -o sites.xml.new  -O XML3 -vvvvv" +
             "\n" +
             "\n" +
             "\n Deprecated Usage . Exists only for backward compatibility " +
             "\n" + 
-            "\n sc-client --files sites.txt --output sites.xml" ;
+            "\n pegasus-sc-converter --files sites.txt --output sites.xml" ;
 
         System.out.print(text);
 
