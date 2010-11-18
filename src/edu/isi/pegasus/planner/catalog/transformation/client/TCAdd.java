@@ -56,7 +56,7 @@ public class TCAdd
                 case 0: //normal tc entry
                     if ( this.addEntry() ) {
                         mLogger.log( "Added tc entry sucessfully",
-                                    LogManager.INFO_MESSAGE_LEVEL );
+                                    LogManager.CONSOLE_MESSAGE_LEVEL );
                     } else {
                         mLogger.log( "Unable to add tc entry",
                                     LogManager.FATAL_MESSAGE_LEVEL );
@@ -66,7 +66,7 @@ public class TCAdd
                 case 1: //bulk mode tc entry
                     if ( this.addBulk() ) {
                         mLogger.log( "Added bulk tc entries sucessfully",
-                                    LogManager.INFO_MESSAGE_LEVEL );
+                                    LogManager.CONSOLE_MESSAGE_LEVEL );
                     } else {
                         mLogger.log( "Unable to add bulk tc entries",
                                     LogManager.FATAL_MESSAGE_LEVEL );
@@ -91,7 +91,7 @@ public class TCAdd
                     if ( (count = tc.addLFNProfile( namespace, name, version,
                         profiles )) >= 1 ) {
                         mLogger.log( "Added " + count + " lfn profiles sucessfully",
-                                    LogManager.INFO_MESSAGE_LEVEL );
+                                    LogManager.CONSOLE_MESSAGE_LEVEL );
                     } else {
                         mLogger.log( "Unable to add LFN profiles",
                                      LogManager.FATAL_MESSAGE_LEVEL );
@@ -117,7 +117,7 @@ public class TCAdd
                     if ( (count = tc.addPFNProfile( pfn, TCType.valueOf( type ),
                         resource, profiles )) >= 1 ) {
                         mLogger.log( "Added " +count +  "pfn profiles sucessfully",
-                                    LogManager.INFO_MESSAGE_LEVEL );
+                                    LogManager.CONSOLE_MESSAGE_LEVEL );
                     } else {
                         mLogger.log( "Unable to add PFN profiles",
                                      LogManager.FATAL_MESSAGE_LEVEL );
@@ -136,8 +136,8 @@ public class TCAdd
             }
         } catch ( Exception e ) {
             mLogger.log(
-                "Unable to add entry to TC", e ,LogManager.ERROR_MESSAGE_LEVEL);
-            e.printStackTrace();
+                "Unable to add entry to TC", LogManager.FATAL_MESSAGE_LEVEL);
+            mLogger.log(convertException(e,mLogger.getLevel()),LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 1 );
         }
 
