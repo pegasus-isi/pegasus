@@ -177,8 +177,14 @@
   <target name="latex-pre" depends="version">
     <mkdir dir="${dist.doc}"/>
     <uptodate property="pegasus.predicate.latex">
+      <!--
       <srcfiles dir="etc" includes="sample.properties"/>
       <mapper type="regexp" from="^(.*)sample\.(.*)$" to="${dist.doc}/\2.pdf"/>
+      -->
+      <srcfiles dir="etc" includes="*.properties"/>
+      <mapper type="regexp" 
+	      from="^(.*)(basic|advanced)\.properties" 
+	      to="${dist.doc}/\2-properties.pdf"/>
     </uptodate>
   </target>
   
@@ -186,20 +192,34 @@
           description="Runs PDF-LaTeX to auto-document properties" 
 	  if="latex.available"
           unless="pegasus.predicate.latex">
+
     <exec executable="${pegasus.home}/libexec/assemble-sample-props"
-	  failonerror="true">
-      <arg file="${dist.doc}/properties.pdf"/>
+          failonerror="true">
+      <arg file="${pegasus.home}/etc/basic.properties"/>
+      <arg file="${dist.doc}/basic-properties.pdf"/>
       <env key="PEGASUS_HOME" value="${pegasus.home}"/>
       <env key="PEGASUS_VERSION" value="${pegasus.version}"/>
       <env key="PEGAUS_TIMESTAMP" value="${ISODATE.full}"/>
     </exec>
+
+    <exec executable="${pegasus.home}/libexec/assemble-sample-props"
+	  failonerror="true">
+      <arg file="${pegasus.home}/etc/advanced.properties"/>
+      <arg file="${dist.doc}/advanced-properties.pdf"/>
+      <env key="PEGASUS_HOME" value="${pegasus.home}"/>
+      <env key="PEGASUS_VERSION" value="${pegasus.version}"/>
+      <env key="PEGAUS_TIMESTAMP" value="${ISODATE.full}"/>
+    </exec>
+    
+
   </target>
 
   <target name="withoutlatex" depends="validate-latex"
           description="Copies properties to document if latex is not installed" 
 	  if="latex.notavailable">
      <mkdir dir="${dist.doc}"/>
-     <copy preservelastmodified="true" todir="${dist.doc}" file="doc/properties.pdf"/> 
+     <copy preservelastmodified="true" todir="${dist.doc}" file="doc/basic-properties.pdf"/> 
+     <copy preservelastmodified="true" todir="${dist.doc}" file="doc/advanced-properties.pdf"/> 
   </target>
 
 
@@ -489,7 +509,7 @@
     <mkdir dir="${dist.doc}"/>
     <copy preservelastmodified="true" todir="${dist.doc}">
       <fileset dir="doc" includes="**/*" 
-               excludes="properties.pdf,wfrc.pdf"/>
+               excludes="advanced-properties.pdf,basic-properties.pdf"/>
     </copy>
 
     <!-- etc -->
