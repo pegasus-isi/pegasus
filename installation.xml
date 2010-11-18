@@ -65,11 +65,11 @@ Python 2.6.2</programlisting></para>
 
     <programlisting>$ <emphasis role="bold">export PATH=/some/install/pegasus-3.0.0/bin:$PATH</emphasis></programlisting>
 
-    <tip>
+    <note>
       <para>Pegasus 3.0 is different from previous versions of Pegasus in that
       it does not require PEGASUS_HOME to be set or sourcing of any
       environtment setup scripts.</para>
-    </tip>
+    </note>
   </section>
 
   <section>
@@ -133,15 +133,6 @@ Complete!</programlisting>
       <programlisting># <emphasis role="bold">apt-get update</emphasis>
 ...
 # <emphasis role="bold">apt-get install pegasus-3.0</emphasis></programlisting>
-    </section>
-
-    <section>
-      <title>Debian 4 (Etch)</title>
-
-      <para>Same procedure as for Debian 5, but with a different entry in your
-      <filename>/etc/apt/sources.list</filename> file:</para>
-
-      <programlisting>deb http://pegasus.isi.edu/wms/download/3.0/apt/debian etch main</programlisting>
     </section>
   </section>
 
@@ -210,8 +201,14 @@ CONDOR_ADMIN = !!USER!! # CHANGE THIS To THE USER WHO wILL GET EMAIL INCASE OF E
         </listitem>
 
         <listitem>
-          <para>Start Condor by running
-          $PEGASUS_HOME/sbin/condor_master</para>
+          <para>Set up the environment:</para>
+
+          <para><programlisting>$ export PATH=PEGASUS_HOME/bin:PEGASUS_HOME/condor/bin:$PATH
+$ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Start Condor by running ./sbin/condor_master</para>
 
           <para><programlisting>$ ./sbin/condor_master</programlisting></para>
         </listitem>

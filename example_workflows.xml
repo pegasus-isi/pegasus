@@ -7,7 +7,7 @@
   <para>These examples are included in the Pegasus distribution and can be
   found under <filename>$PEGASUS_HOME/examples/</filename></para>
 
-  <section>
+  <section id="grid_examples">
     <title>Grid Examples</title>
 
     <para>These examples assumes you have access to a cluster with Globus
@@ -215,7 +215,7 @@ pegasus.gridstart = SeqExec          </programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="local_shell_examples">
     <title>Local Shell Examples</title>
 
     <section>
@@ -240,7 +240,7 @@ pegasus.code.generator = Shell</programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="glideinwms_examples">
     <title>glideinWMS Examples</title>
 
     <section>
@@ -282,19 +282,18 @@ requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISI
   </section>
 
   <section>
-    <title>Workflow of Workflows</title>
+    <title id="workflow_of_workflows">Workflow of Workflows</title>
 
     <section>
       <title>Galactic Plane</title>
 
-      <para>The
-          <ulink url="http://en.wikipedia.org/wiki/Galactic_plane">Galactic Plane</ulink>
-      workflow is a workflow of many Montage
-      workflows. The output is a set of tiles which can be used in software
-      which takes the tiles and produces a seamless image which can be
-      scrolled and zoomed into. As this is more of a production workflow than
-      an example one, it can be a little bit harder to get running in your
-      environment.</para>
+      <para>The <ulink
+      url="http://en.wikipedia.org/wiki/Galactic_plane">Galactic Plane</ulink>
+      workflow is a workflow of many Montage workflows. The output is a set of
+      tiles which can be used in software which takes the tiles and produces a
+      seamless image which can be scrolled and zoomed into. As this is more of
+      a production workflow than an example one, it can be a little bit harder
+      to get running in your environment.</para>
 
       <para>Highlights of the example are:</para>
 
