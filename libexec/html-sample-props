@@ -163,6 +163,7 @@ $/ = '';                        # activate paragraph mode
 open( SP, '<' . $fn ) || die "open $fn: $!\n";
 
 
+if (!defined($ENV{'HTML_SNIPPET_ONLY'})) {
 #
 # print LaTeX preamble -- do not interpolate anything here
 #
@@ -229,6 +230,7 @@ instead.</p>
 <h2>Table Of Contents</h2>
 
 EOF
+}
 
 select $tmpfh;			# write all regular prints to tmpfh
 
@@ -364,26 +366,28 @@ while ( <$tmpfh> ) {
 close $tmpfh;
 unlink $tmpfn if -e $tmpfn;
 
-# 
-# index
-#
-print "\n\n\n<h2 id=\"Index\">Index</h2>\n\n<table>\n";
-foreach my $i ( sort keys %index ) {
-    print "<tr>";
-    print "<td><a href=\"#$i\">$i</a></td>";
-    print "<td>$index{$i}</td>";
-    print "</tr>\n";
-}
-print "</table>\n\n";
+if (!defined($ENV{'HTML_SNIPPET_ONLY'})) {
+    # 
+    # index
+    #
+    print "\n\n\n<h2 id=\"Index\">Index</h2>\n\n<table>\n";
+    foreach my $i ( sort keys %index ) {
+        print "<tr>";
+        print "<td><a href=\"#$i\">$i</a></td>";
+        print "<td>$index{$i}</td>";
+        print "</tr>\n";
+    }
+    print "</table>\n\n";
 
-#
-# print HTML post-amble
-#
-print << 'EOF';
+    #
+    # print HTML post-amble
+    #
+p   rint << 'EOF';
 
 </body>
 </html>
 
 
 EOF
+}
 
