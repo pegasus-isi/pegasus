@@ -10,7 +10,7 @@ html/basic.properties.html: html/index.php ../../etc/basic.properties ../../etc/
         && export HTML_SNIPPET_ONLY="1" \
         && ../../libexec/html-sample-props ../../etc/basic.properties > html/basic.properties.html \
 	    && ../../libexec/html-sample-props ../../etc/advanced.properties > html/advanced.properties.html 
-	perl -p -i -e 's/PHP_BASIC_PROPERTIES/<?php include("basic.properties.html");?>/' html/configuration.php
+	perl -p -i -e 's/PHP_BASIC_PROPERTIES/<div class="titlepage"><?php include("basic.properties.html");?><\/div>/' html/configuration.php
 
 html/index.php: html pegasus-book.xml pegasus-style.xsl
 	mkdir -p html
