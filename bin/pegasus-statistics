@@ -175,7 +175,9 @@ sub main(){
 	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
 	my $sub_submit_dir;
 	if($number_of_elements > 0){
-		invoke_monitord_for_sub_workflow(@sub_workflow_submit_dirs);
+		if($monitord){
+			invoke_monitord_for_sub_workflow(@sub_workflow_submit_dirs);
+		}
 		foreach $sub_submit_dir (@sub_workflow_submit_dirs){
 			my (%sub_config) = slurp_braindb( $sub_submit_dir ) or die "ERROR: open braindump.txt in directory $sub_submit_dir: $!\n";
 			my($sub_dag_file_name , $sub_jsd_file_path) =  ($sub_config{'dag'} ,$sub_config{'jsd'});
