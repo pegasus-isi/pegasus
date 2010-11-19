@@ -95,15 +95,7 @@ pegasus.exitcode.scope=all</programlisting>
     http://pegasus.isi.edu/doc.php</para>
 
 
-       <section>
-           <title>Basic Properties ( about 8 ) to start</title>
-           <para>...</para>
-       </section>
-       
-       <section>
-           <title>Advanced Properties grouped by categories</title>
-           <para>...</para>
-       </section>
+PHP_BASIC_PROPERTIES
 
    </section>
 </chapter>
