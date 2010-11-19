@@ -914,30 +914,13 @@ class Workflow:
                 self._timestamp = wfparams["pegasus_wf_time"]
         # Convert timestamp from YYYYMMDDTHHMMSSZZZZZ to Epoch
         if self._timestamp is not None:
-            try:
-                # FIXME: This offset computation is wrong, please fix (see utils.py)
-                # FIXME: We have 3 different locations doing ISO parsing. Create a
-                # more sane function in utils to achieve just iso2epoch - and use it.
-                # Or use the existing function here. 
-
-                # Split date/time and timezone information
-                dt = self._timestamp[:-5]
-                tz = self._timestamp[-5:]
-                # Convert date/time to datetime format
-                # my_time = datetime.datetime.strptime(dt, "%Y%m%dT%H%M%S")
-                # Python < 2.5 doesn't have the datetime.datetime.strptime function
-                my_time = datetime.datetime(*(time.strptime(dt, "%Y%m%dT%H%M%S")[0:6]))
-                # Split timezone in hours and minutes
-                my_hour = int(tz[:-2])
-                my_min = int(tz[-2:])
-                # Calculate offset
-                my_offset = datetime.timedelta(hours=my_hour, minutes=my_min)
-                # Subtract offset
-                my_time = my_time - my_offset
-                # Turn my_time into Epoch format
-                self._timestamp = int(calendar.timegm(my_time.timetuple()))
-            except:
-                logger.warning("error converting timestamp %s to Epoch format" % self._timestamp)
+            # Convert timestamp to epoch
+            wf_timestamp = utils.epochdate(self._timestamp)
+            if wf_timestamp is not None:
+                self._timestamp = wf_timestamp
+            else:
+                # Couldn't do it, let's just use the current time
+                self._timestamp = int(time.time())
         else:
             # No timestamp information is available, just use current time
             self._timestamp = int(time.time())
@@ -1668,7 +1651,7 @@ parser.add_option("-l", "--log", action = "store", type = "string", dest = "logf
 parser.add_option("-C", "--config", action = "append", type = "string", dest = "config_opts",
 		  help = "k=v defines configurations that override values read from the braindump.txt file.")
 parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
-		  help = "disable pegasus-monitord the automatic recursive following of sub-workflows as they are found")
+		  help = "disable pegasus-monitord the automatic follow any sub-workflows that are found")
 parser.add_option("--no-database", action = "store_const", const = 0, dest = "use_db",
 		  help = "turn off logging information to the database (this option must be given when using the NL api's option's below)")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
@@ -1775,12 +1758,21 @@ if not logfile:
     logfile = os.path.join(run, logbase)
 logfile = os.path.abspath(logfile)
 
+# Check if the user-provided jsd file is an absolute path, if so, we
+# disable recursive mode
+if jsd is not None:
+    if os.path.isabs(jsd):
+        # Yes, this is an absolute path
+        follow_subworkflows = False
+        logger.warning("jsd file is an absolute filename, disabling sub-workflow tracking")
+
 # To use NetLogger's command-line parser
 # from netlogger.nllog import get_root_logger, OptionParser
 # Import NetLogger DB loader
 if use_db == 1:
     try:
 	from netlogger.analysis.modules import stampede_loader
+        from netlogger.analysis.workflow.util import Expunge
     except:
 	logger.warning("cannot import NetLogger's stampede_loader library, disabling database output!")
 	use_db = 0
@@ -1918,7 +1910,7 @@ def process(wf, log_line):
     log_line = log_line.rstrip()
 
     # Check log_line for timestamp at the beginning
-    found = False
+    timestamp_found = False
     my_expr = re_parse_timestamp.search(log_line)
     
     if my_expr is not None:
@@ -1937,7 +1929,7 @@ def process(wf, log_line):
             adj_time[0] = int(my_expr.group(4)) + 2000 # Year
 
 	wf._current_timestamp = time.mktime(adj_time) + adjustment
-        found = True
+        timestamp_found = True
     else:
         # FIXME: Use method from utils.py, do not re-invent the wheel!
         # FIXME: Slated for 3.1
@@ -1966,9 +1958,9 @@ def process(wf, log_line):
 
             # Turn my_time into Epoch format
             wf._current_timestamp = int(calendar.timegm(my_time.timetuple())) + adjustment
-            found = True
+            timestamp_found = True
 
-    if found:
+    if timestamp_found:
         split_log_line = log_line.split(None, 3)
         if len(split_log_line) >= 3:
             logger.debug("debug: ## %d: %s" % (wf._line, split_log_line[2][:64]))
@@ -1978,12 +1970,6 @@ def process(wf, log_line):
             if log_line.find("...done with RECOVERY mode") >= 0:
                 wf._skipping_recovery_lines = False
             return
-
-        if re_debug_event.search(log_line) is not None:
-            a = re_debug_event.search(log_line)
-            b = re_parse_event.search(log_line)
-            if a is not None and b is None:
-                sys.stderr.write( "# weird submit: %s\n" % (log_line) )
 
 	# Search for more content
 	if re_parse_event.search(log_line) is not None:
@@ -2149,9 +2135,9 @@ def process(wf, log_line):
             # Entering recovery mode, skip lines until we reach the end
             wf._skipping_recovery_lines = True
             return
-
     else:
-        logger.warning( "time stamp format not recognized" )
+        # Could not parse timestamp
+        logger.info( "time stamp format not recognized" )
 
 def server_socket(low, hi, bind_addr="127.0.0.1"):
     # purpose: create a local TCP server socket to listen to sitesel requests
@@ -2372,6 +2358,37 @@ def sleeptime(retries):
 
     return my_y
 
+def purge_wf_uuid_from_database(rundir, output_db):
+    """
+    This function purges a workflow id from the output database.
+    """
+    if output_db.lower().find('sqlite:///') != 0:
+        # Not a SQLite database, nothing to do
+        return
+
+    # Ok, we have a SQLite database, let's get the filename and check if it exists
+    filename = output_db[10:]
+
+    # Check if SQLite database exists
+    if not os.path.isfile(filename):
+        # No, nothing to do
+        return
+
+    # Ok, file is there, let's continue
+
+    # Parse the braindump file
+    wfparams = utils.slurp_braindb(rundir)
+    
+    if "wf_uuid" in wfparams:
+        if wfparams["wf_uuid"] is not None:
+            # Get wf_uuid
+            wf_uuid = wfparams["wf_uuid"]
+            e = Expunge(output_db, wf_uuid)
+            e.expunge()
+
+            # Done, make this connection go away
+            e = None
+
 def prog_sighup_handler(signum, frame):
     pass
 
@@ -2450,6 +2467,8 @@ if use_db == 1:
     # Figure out the database connection string
     if output_db is None:
 	output_db = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
+    if replay_mode:
+        purge_wf_uuid_from_database(run, output_db)
     workdb = stampede_loader.Analyzer(output_db, perf=db_stats)
     atexit.register(finish_stampede_loader)
 
@@ -2701,7 +2720,8 @@ while (len(wfs) > 0):
                                 # Not tracking this workflow, let's try to add it to our list
                                 new_run_dir = os.path.dirname(new_dagman_out)
                                 parent_wf_id = workflow_entry.wf._wf_uuid
-                                new_wf = Workflow(new_run_dir, new_dagman_out, config, database=workdb, parent_id = parent_wf_id)
+                                new_wf = Workflow(new_run_dir, new_dagman_out, config, database=workdb,
+                                                  parent_id=parent_wf_id, jsd=jsd)
 
                                 if new_wf._monitord_exit_code == 0:
                                     new_workflow_entry = WorkflowEntry()
