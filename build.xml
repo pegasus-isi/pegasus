@@ -88,6 +88,16 @@
            classpathref="build.classpath"/>
   </target>
 
+  <target name="contrib" depends="version"
+	  description="Compiles contributed code .e.g Clemson">
+    <javac destdir="${build.src}" srcdir="src" 
+           encoding="UTF-8" deprecation="true" debug="true"
+           target="${build.target}" source="${build.source}"
+           includes="edu/clemson/**/*.java"
+           excludes="edu/clemson/**/*Test.java"
+           classpathref="build.classpath"/>
+  </target>
+
 
   <target name="vdl" depends="version"
 	  description="Compiles the abstract planner Chimera">
@@ -132,11 +142,11 @@
   </target>
 
 
-  <target name="jar" depends="common,planner,examples"
+  <target name="jar" depends="contrib,common,planner,examples"
 	   description="Create the PEGASUS JAR files excluding tests">
     <mkdir dir="${dist.lib}"/>
     <jar destfile="${dist.lib}/pegasus.jar" basedir="${build.src}"
-	 includes="edu/isi/pegasus/**/*.class"
+	 includes="edu/isi/pegasus/**/*.class, edu/clemson/**/*.class"
 	 excludes="*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
     <chmod perm="a+x" file="${dist.lib}/pegasus.jar"/>
   </target>
