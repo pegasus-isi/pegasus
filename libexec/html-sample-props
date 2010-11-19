@@ -246,14 +246,14 @@ while ( <SP> ) {
 #	    print "\\subsubsection{$title}\n";
 	    $count[2]++;
 	    $secmark = join('.',@count[0,1,2]);
-	    print "\n\n\n<h4 id=\"$title\">$secmark&nbsp;$title</h4>\n\n";
+	    print "\n\n\n<h4 class=\"prop_name\" id=\"$title\">$title</h4>\n\n";
 #	    print STDOUT "&nbsp;";
 	} else {
 #	    print "\\subsection{$title}\n";
 	    $count[1]++;
 	    $count[2] = 0;
 	    $secmark = join('.',@count[0,1]);
-	    print "\n\n\n<h3 id=\"$title\">$secmark&nbsp;$title</h3>\n\n";
+	    print "\n\n\n<h3 class=\"prop_name\" id=\"$title\">$title</h3>\n\n";
 	}
 #        print '\label{sec:', $title, "}\n";
 #        print '\index{', $title, "}\n"; 
@@ -310,7 +310,7 @@ while ( <SP> ) {
 		$count[0]++;
 		$count[1] = $count[2] = 0;
 		my $title = join('',@title);
-		print "\n\n\n<h2 id=\"$title\">$count[0]&nbsp;@title</h2>\n\n";
+		print "\n\n\n<h2 class=\"title\" id=\"$title\">$count[0]&nbsp;@title</h2>\n\n";
 		print STDOUT "$count[0]&nbsp;<a href=\"#$title\">@title</a><br>\n";
 
                 $flag = 1;
@@ -323,7 +323,7 @@ while ( <SP> ) {
 		$count[1]++;
 		$count[2] = 0;
 		my $mark = join('.',@count[0,1]);
-		print "\n\n\n<h3 id=\"$title\">$mark&nbsp;@title</h3>\n\n";
+		print "\n\n\n<h3 class=\"title\" id=\"$title\">$mark&nbsp;@title</h3>\n\n";
 		print STDOUT "&nbsp;$mark&nbsp;<a href=\"#$title\">@title</a><br>\n";
                 $flag = 1;
 		$depth = 2;
