@@ -26,7 +26,7 @@ if [ "x$PEGASUS_HOME" = "x" ]; then
 fi 
 
 if [ "x$GLOBUS_LOCATION" = "x" ]; then
-    echo "Pelase set GLOBUS_LOCATION to the location of your Pegasus install"
+    echo "Please set GLOBUS_LOCATION to the location of your Pegasus install"
     exit 1
 fi 
 
