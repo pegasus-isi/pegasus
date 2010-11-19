@@ -118,7 +118,7 @@ sub build_binary
     cmd("rm -rf dist/*", 1, 0);
     cmd("mkdir -p build-results", 1, 1);
 
-    cmd(". ./setup-devel.sh && ant dist", 1, 1);
+    cmd("ant dist", 1, 1);
     cmd("mv dist/*.tar.gz build-results/", 1, 1);
     cmd("cd build-results/ && ls -l -h", 1, 1);
 }
@@ -395,22 +395,32 @@ sub test_wms
     cmd("tar xzf $src_dir/build-results/pegasus-wms-*", 1, 1);
     my $dir = `ls`;
     chomp($dir);
-    $ENV{'PEGASUS_HOME'} = "$top_dir/wms/$dir";
-    logmsg("PEGASUS_HOME set to " . $ENV{PEGASUS_HOME});
+    my $install_dir = "$top_dir/wms/$dir";
+    cd($install_dir);
 
-    announce("setting up and starting the master");
-    cmd("perl -p -i -e \"s:^RELEASE_DIR.*:RELEASE_DIR=\$PEGASUS_HOME/condor:\"" .
-        " \$PEGASUS_HOME/condor/etc/condor_config", 1, 1);
+    # env
+    $ENV{'CONDOR_CONFIG'} = "$install_dir/condor/etc/condor_config";
+    $ENV{'PATH'} = "$install_dir/bin:$install_dir/condor/bin:$install_dir/condor/sbin:" . $ENV{'PATH'};
+
+    announce("setting up condor");
+    cmd("perl -p -i -e \"s:^RELEASE_DIR.*:RELEASE_DIR=$install_dir/condor:\"" .
+        " $install_dir/condor/etc/condor_config", 1, 1);
     cmd("perl -p -i -e \"s:^CONDOR_ADMIN.*:CONDOR_ADMIN=rynge\@isi.edu:\"" .
-        " \$PEGASUS_HOME/condor/etc/condor_config", 1, 1);
-    $rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_master", 1, 0);
+        " $install_dir/condor/etc/condor_config", 1, 1);
+
+    announce("checking condor");
+    $rc += cmd("condor_version", 1, 0);
+    $rc += cmd("condor_config_val RELEASE_DIR", 1, 0);
+
+    announce("starting master");
+    $rc += cmd("condor_master", 1, 0);
 
     # wait for the daemons to register
     sleep(120);
 
-    #announce("simple condor tests");
-    #$rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_status", 1, 0);
-    #$rc += cmd(". \$PEGASUS_HOME/setup.sh && condor_q", 1, 0);
+    announce("simple condor tests");
+    $rc += cmd("condor_status", 1, 0);
+    $rc += cmd("condor_q", 1, 0);
 
     #announce("black diamond test");
     #$rc += cmd("wget -nv http://yggdrasil.isi.edu/~rynge/pegasus-testing/blackdiamond.tar.gz" .
@@ -434,13 +444,15 @@ sub test_wms
     #    cmd(". \$PEGASUS_HOME/setup.sh && pegasus-analyzer -q", 1, 0);
     #}
     
-    #announce("stopping condor");
-    #cmd(". \$PEGASUS_HOME/setup.sh && condor_off -master", 1, 0);
+    announce("stopping condor");
+    cmd("condor_off -master", 1, 0);
     
     sleep(20);
 
-    #announce("showing logs");
-    #cmd("cd \$PEGASUS_HOME/condor/var/log && for LOG in `ls *Log`; do echo; echo \"## cat \$LOG\"; cat \$LOG; done", 1, 1);    
+    announce("showing logs");
+    cd("$install_dir/condor/var/log");
+    cmd("find $install_dir/condor");
+    cmd("for LOG in `ls *Log`; do echo; echo \"## cat \$LOG\"; cat \$LOG; done", 1, 1);    
     
     announce("cleaning up");
     cd($top_dir);
