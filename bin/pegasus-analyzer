@@ -36,6 +36,11 @@ import commands
 import optparse
 import tempfile
 
+# Initialize logging object
+logger = logging.getLogger()
+# Set default level to WARNING
+logger.setLevel(logging.WARNING)
+
 # Import our modules
 import common
 from Pegasus.tools import utils
