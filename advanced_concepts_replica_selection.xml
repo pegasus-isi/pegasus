@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="advanced_concepts_configs">
+  <title>Advanced Concepts and Configurations - Replica Selection</title>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>Each job in the DAX maybe associated with input LFN’s denoting the
+    files that are required for the job to run. To determine the physical
+    replica (PFN) for a LFN, Pegasus queries the Replica catalog to get all
+    the PFN’s (replicas) associated with a LFN. The Replica Catalog may return
+    multiple PFN's for each of the LFN's queried. Hence, Pegasus needs to
+    select a single PFN amongst the various PFN's returned for each LFN. This
+    process is known as replica selection in Pegasus. Users can specify the
+    replica selector to use in the properties file.</para>
+
+    <para>This document describes the various Replica Selection Strategies in
+    Pegasus.</para>
+  </section>
+
+  <section>
+    <title>Configuration</title>
+
+    <para>The user properties determine what replica selector Pegasus Workflow
+    Mapper uses. The property <emphasis
+    role="bold">pegasus.selector.replica</emphasis> is used to specify the
+    replica selection strategy. Currently supported Replica Selection
+    strategies are</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Default</para>
+      </listitem>
+
+      <listitem>
+        <para>Restricted</para>
+      </listitem>
+
+      <listitem>
+        <para>Regex</para>
+      </listitem>
+    </orderedlist>
+
+    <para>The values are case sensitive. For example the following property
+    setting will throw a Factory Exception .</para>
+
+    <programlisting>pegasus.selector.replica  default</programlisting>
+
+    <para>The correct way to specify is</para>
+
+    <programlisting>pegasus.selector.replica  Default</programlisting>
+  </section>
+
+  <section>
+    <title>Supported Replica Selectors</title>
+
+    <para>The various Replica Selectors supported in Pegasus Workflow Mapper
+    are explained below</para>
+
+    <section>
+      <title>Default</title>
+
+      <para>This is the default replica selector used in the Pegasus Workflow
+      Mapper. If the property pegasus.selector.replica is not defined in
+      properties, then Pegasus uses this selector.</para>
+
+      <para>This selector looks at each PFN returned for a LFN and checks to
+      see if</para>
+
+      <orderedlist>
+        <listitem>
+          <para>the PFN is a file URL (starting with file:///)</para>
+        </listitem>
+
+        <listitem>
+          <para>the PFN has a pool attribute matching to the site handle of
+          the site where the compute job that requires the input file is to be
+          run.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>If a PFN matching the conditions above exists then that is
+      returned by the selector .</para>
+
+      <para><emphasis role="bold">Else,</emphasis> a random PFN is selected
+      amongst all the PFN’s that have a pool attribute matching to the site
+      handle of the site where a compute job is to be run.</para>
+
+      <para><emphasis role="bold">Else,</emphasis> a random pfn is selected
+      amongst all the PFN’s</para>
+
+      <para>To use this replica selector set the following
+      property<programlisting>pegasus.selector.replica                  Default</programlisting></para>
+    </section>
+
+    <section>
+      <title>Restricted</title>
+
+      <para>This replica selector, allows the user to specify good sites and
+      bad sites for staging in data to a particular compute site. A good site
+      for a compute site X, is a preferred site from which replicas should be
+      staged to site X. If there are more than one good sites having a
+      particular replica, then a random site is selected amongst these
+      preferred sites.</para>
+
+      <para>A bad site for a compute site X, is a site from which replica’s
+      should not be staged. The reason of not accessing replica from a bad
+      site can vary from the link being down, to the user not having
+      permissions on that site’s data.</para>
+
+      <para>The good | bad sites are specified by the following
+      properties</para>
+
+      <programlisting>pegasus.replica.*.prefer.stagein.sites
+pegasus.replica.*.ignore.stagein.sites</programlisting>
+
+      <para>where the * in the property name denotes the name of the compute
+      site. A * in the property key is taken to mean all sites. The value to
+      these properties is a comma separated list of sites.</para>
+
+      <para>For example the following settings</para>
+
+      <programlisting>pegasus.selector.replica.*.prefer.stagein.sites            usc
+pegasus.replica.uwm.prefer.stagein.sites                   isi,cit 
+</programlisting>
+
+      <para>means that prefer all replicas from site usc for staging in to any
+      compute site. However, for uwm use a tighter constraint and prefer only
+      replicas from site isi or cit. The pool attribute associated with the
+      PFN's tells the replica selector to what site a replica/PFN is
+      associated with.</para>
+
+      <para>The pegasus.replica.*.prefer.stagein.sites property takes
+      precedence over pegasus.replica.*.ignore.stagein.sites property i.e. if
+      for a site X, a site Y is specified both in the ignored and the
+      preferred set, then site Y is taken to mean as only a preferred site for
+      a site X.</para>
+
+      <para>To use this replica selector set the following property</para>
+
+      <programlisting>pegasus.selector.replica                  Restricted</programlisting>
+    </section>
+
+    <section>
+      <title>Regex</title>
+
+      <para>This replica selector allows the user allows the user to specific
+      regex expressions that can be used to rank various PFN’s returned from
+      the Replica Catalog for a particular LFN. This replica selector selects
+      the highest ranked PFN i.e the replica with the lowest rank
+      value.</para>
+
+      <para>The regular expressions are assigned different rank, that
+      determine the order in which the expressions are employed. The rank
+      values for the regex can expressed in user properties using the
+      property.</para>
+
+      <programlisting>pegasus.selector.replica.regex.rank.<emphasis
+          role="bold">[value]</emphasis>                  regex-expression</programlisting>
+
+      <para>The <emphasis role="bold">[value]</emphasis> in the above property
+      is an integer value that denotes the rank of an expression with a rank
+      value of 1 being the highest rank.</para>
+
+      <para>For example, a user can specify the following regex expressions
+      that will ask Pegasus to prefer file URL's over gsiftp url's from
+      example.isi.edu</para>
+
+      <programlisting>pegasus.selector.replica.regex.rank.1                       file://.*
+pegasus.selector.replica.regex.rank.2                       gsiftp://example\.isi\.edu.*</programlisting>
+
+      <para>User can specify as many regex expressions as they want.</para>
+
+      <para>Since Pegasus is in Java , the regex expression support is what
+      Java supports. It is pretty close to what is supported by Perl. More
+      details can be found at
+      http://java.sun.com/j2se/1.5.0/docs/api/java/util/regex/Pattern.html</para>
+
+      <para>Before applying any regular expressions on the PFN’s for a
+      particular LFN that has to be staged to a site X, the file URL’s that
+      don't match the site X are explicitly filtered out.</para>
+    </section>
+  </section>
+</chapter>
