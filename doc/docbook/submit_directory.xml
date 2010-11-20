@@ -184,31 +184,39 @@
 ######################################################################
 
 <emphasis role="bold">JOB</emphasis> create_dir_blackdiamond_0_isi_viz create_dir_blackdiamond_0_isi_viz.sub
-<emphasis role="bold">SCRIPT POST</emphasis> create_dir_blackdiamond_0_isi_viz /pegasus/bin/pegasus-exitcode   /submit-dir/create_dir_blackdiamond_0_isi_viz.out
+<emphasis role="bold">SCRIPT POST</emphasis> create_dir_blackdiamond_0_isi_viz /pegasus/bin/pegasus-exitcode   \
+                                   /submit-dir/create_dir_blackdiamond_0_isi_viz.out
 <emphasis role="bold">RETRY</emphasis> create_dir_blackdiamond_0_isi_viz 3
 
 JOB create_dir_blackdiamond_0_local create_dir_blackdiamond_0_local.sub
-SCRIPT POST create_dir_blackdiamond_0_local /pegasus/bin/pegasus-exitcode   /submit-dir/create_dir_blackdiamond_0_local.out
+SCRIPT POST create_dir_blackdiamond_0_local /pegasus/bin/pegasus-exitcode   
+                                   /submit-dir/create_dir_blackdiamond_0_local.out
 
 JOB pegasus_concat_blackdiamond_0 pegasus_concat_blackdiamond_0.sub
 
 JOB stage_in_local_isi_viz_0 stage_in_local_isi_viz_0.sub
-SCRIPT POST stage_in_local_isi_viz_0 /pegasus/bin/pegasus-exitcode   /submit-dir/stage_in_local_isi_viz_0.out
+SCRIPT POST stage_in_local_isi_viz_0 /pegasus/bin/pegasus-exitcode   \
+                                     /submit-dir/stage_in_local_isi_viz_0.out
 
 JOB chmod_preprocess_ID000001_0 chmod_preprocess_ID000001_0.sub
-SCRIPT POST chmod_preprocess_ID000001_0 /pegasus/bin/pegasus-exitcode   /submit-dir/chmod_preprocess_ID000001_0.out
+SCRIPT POST chmod_preprocess_ID000001_0 /pegasus/bin/pegasus-exitcode \
+                                        /submit-dir/chmod_preprocess_ID000001_0.out
 
 JOB preprocess_ID000001 preprocess_ID000001.sub
-SCRIPT POST preprocess_ID000001 /pegasus/bin/pegasus-exitcode   /submit-dir/preprocess_ID000001.out
+SCRIPT POST preprocess_ID000001 /pegasus/bin/pegasus-exitcode   \
+                                         /submit-dir/preprocess_ID000001.out
 
 JOB subdax_black_ID000002 subdax_black_ID000002.sub
 <emphasis role="bold">SCRIPT PRE</emphasis> subdax_black_ID000002 /pegasus/bin/pegasus-plan  \
       -Dpegasus.user.properties=/submit-dir/./dag_1/test_ID000002/pegasus.3862379342822189446.properties\
       -Dpegasus.log.*=/submit-dir/subdax_black_ID000002.pre.log \
-      -Dpegasus.dir.exec=raphael -Dpegasus.dir.storage=duncan -Xmx1024 -Xms512 --dir /pegasus-features/dax-3.2/dags \
+      -Dpegasus.dir.exec=app_domain/app -Dpegasus.dir.storage=duncan -Xmx1024 -Xms512\
+      --dir /pegasus-features/dax-3.2/dags \
       --relative-dir user/pegasus/blackdiamond/run0005/user/pegasus/blackdiamond/run0005/./dag_1 \
-      --relative-submit-dir user/pegasus/blackdiamond/run0005/./dag_1/test_ID000002 --basename black --sites dax_site \
-      --output local --force  --nocleanup  --verbose  --verbose  --verbose  --verbose  --verbose  --verbose  --verbose \
+      --relative-submit-dir user/pegasus/blackdiamond/run0005/./dag_1/test_ID000002\
+      --basename black --sites dax_site \
+      --output local --force  --nocleanup  \
+      --verbose  --verbose  --verbose  --verbose  --verbose  --verbose  --verbose \
       --verbose  --monitor  --deferred  --group pegasus --rescue 0 \
       --dax /submit-dir/./dag_1/test_ID000002/dax/blackdiamond_dax.xml 
 
@@ -218,10 +226,12 @@ SCRIPT POST stage_out_local_isi_viz_0_0 /pegasus/bin/pegasus-exitcode   /submit-
 <emphasis role="bold">SUBDAG EXTERNAL</emphasis> subdag_black_ID000003 /Users/user/Pegasus/work/dax-3.2/black.dag DIR /duncan/test
 
 JOB clean_up_stage_out_local_isi_viz_0_0 clean_up_stage_out_local_isi_viz_0_0.sub
-SCRIPT POST clean_up_stage_out_local_isi_viz_0_0 /lfs1/devel/Pegasus/pegasus/bin/pegasus-exitcode   /submit-dir/clean_up_stage_out_local_isi_viz_0_0.out
+SCRIPT POST clean_up_stage_out_local_isi_viz_0_0 /lfs1/devel/Pegasus/pegasus/bin/pegasus-exitcode  \
+                                          /submit-dir/clean_up_stage_out_local_isi_viz_0_0.out
 
 JOB clean_up_preprocess_ID000001 clean_up_preprocess_ID000001.sub
-SCRIPT POST clean_up_preprocess_ID000001 /lfs1/devel/Pegasus/pegasus/bin/pegasus-exitcode   /submit-dir/clean_up_preprocess_ID000001.out
+SCRIPT POST clean_up_preprocess_ID000001 /lfs1/devel/Pegasus/pegasus/bin/pegasus-exitcode  \
+                                     /submit-dir/clean_up_preprocess_ID000001.out
 <emphasis role="bold">
 PARENT create_dir_blackdiamond_0_isi_viz CHILD pegasus_concat_blackdiamond_0</emphasis>
 PARENT create_dir_blackdiamond_0_local CHILD pegasus_concat_blackdiamond_0
@@ -353,9 +363,13 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
 
       <programlisting>&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
 
-&lt;invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.0.xsd" version="2.0"\
- start="2009-01-30T19:17:41.157-06:00" duration="0.321" transformation="pegasus::dirmanager" derivation="pegasus::dirmanager:1.0" resource="cobalt" wf-label="scb" \
- wf-stamp="2009-01-30T17:12:55-08:00"<emphasis role="bold"> hostaddr="141.142.30.219" hostname="co-login.ncsa.uiuc.edu"</emphasis> pid="27714" uid="29548" user="vahi" gid="13872" group="bvr" umask="0022"&gt;
+&lt;invocation xmlns="http://pegasus.isi.edu/schema/invocation" \
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
+       xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.0.xsd" \
+       version="2.0" start="2009-01-30T19:17:41.157-06:00" duration="0.321" transformation="pegasus::dirmanager"\
+      derivation="pegasus::dirmanager:1.0" resource="cobalt" wf-label="scb" \
+      wf-stamp="2009-01-30T17:12:55-08:00"<emphasis role="bold"> hostaddr="141.142.30.219" hostname="co-login.ncsa.uiuc.edu"</emphasis>\
+      pid="27714" uid="29548" user="vahi" gid="13872" group="bvr" umask="0022"&gt;
 
 <emphasis role="bold">&lt;mainjob start="2009-01-30T19:17:41.426-06:00" duration="0.052" pid="27783"&gt;
 </emphasis>
@@ -366,7 +380,9 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
 &lt;statcall error="0"&gt;
 &lt;!-- deferred flag: 0 --&gt;
 &lt;file name="/u/ac/vahi/SOFTWARE/pegasus/default/bin/dirmanager"&gt;23212F7573722F62696E2F656E762070&lt;/file&gt;
-&lt;statinfo mode="0100755" size="8202" inode="85904615883" nlink="1" blksize="16384" blocks="24" mtime="2008-09-22T18:52:37-05:00" atime="2009-01-30T14:54:18-06:00" ctime="2009-01-13T19:09:47-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/&gt;
+&lt;statinfo mode="0100755" size="8202" inode="85904615883" nlink="1" blksize="16384" \
+    blocks="24" mtime="2008-09-22T18:52:37-05:00" atime="2009-01-30T14:54:18-06:00" \
+    ctime="2009-01-13T19:09:47-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/&gt;
 &lt;/statcall&gt;
 
 <emphasis role="bold">&lt;argument-vector&gt;
@@ -382,7 +398,8 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
 &lt;usage utime="0.012" stime="0.208" minflt="4232" majflt="0" nswap="0" nsignals="0" nvcsw="15" nivcsw="74"/&gt;
 &lt;machine page-size="16384" provider="LINUX"&gt;
 &lt;stamp&gt;2009-01-30T19:17:41.157-06:00&lt;/stamp&gt;
-&lt;uname system="linux" nodename="co-login" release="2.6.16.54-0.2.5-default" machine="ia64"&gt;#1 SMP Mon Jan 21 13:29:51 UTC 2008&lt;/uname&gt;
+&lt;uname system="linux" nodename="co-login" release="2.6.16.54-0.2.5-default" machine="ia64"&gt;#1 SMP Mon Jan 21\
+         13:29:51 UTC 2008&lt;/uname&gt;
 &lt;ram total="148299268096" free="123371929600" shared="0" buffer="2801664"/&gt;
 &lt;swap total="1179656486912" free="1179656486912"/&gt;
 &lt;boot idle="1315786.920"&gt;2009-01-15T10:19:50.283-06:00&lt;/boot&gt;
@@ -394,37 +411,43 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
 &lt;statcall error="0" id="stdin"&gt;
 &lt;!-- deferred flag: 0 --&gt;
 &lt;file name="/dev/null"/&gt;
-&lt;statinfo mode="020666" size="0" inode="68697" nlink="1" blksize="16384" blocks="0" mtime="2007-05-04T05:54:02-05:00" atime="2007-05-04T05:54:02-05:00" \
-ctime="2009-01-15T10:21:54-06:00" uid="0" user="root" gid="0" group="root"/&gt;
+&lt;statinfo mode="020666" size="0" inode="68697" nlink="1" blksize="16384" blocks="0" \
+     mtime="2007-05-04T05:54:02-05:00" atime="2007-05-04T05:54:02-05:00" \
+   ctime="2009-01-15T10:21:54-06:00" uid="0" user="root" gid="0" group="root"/&gt;
 &lt;/statcall&gt;
 
 <emphasis role="bold">&lt;statcall error="0" id="stdout"&gt;
 &lt;temporary name="/tmp/gs.out.s9rTJL" descriptor="3"/&gt;
-&lt;statinfo mode="0100600" size="29" inode="203420686" nlink="1" blksize="16384" blocks="128" mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00"\
+&lt;statinfo mode="0100600" size="29" inode="203420686" nlink="1" blksize="16384" blocks="128" \
+ mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00"\
  ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/&gt;
 &lt;data&gt;mkdir finished successfully.
 &lt;/data&gt;
 &lt;/statcall&gt;
 &lt;statcall error="0" id="stderr"&gt;
 &lt;temporary name="/tmp/gs.err.kobn3S" descriptor="5"/&gt;
-&lt;statinfo mode="0100600" size="0" inode="203420689" nlink="1" blksize="16384" blocks="0" mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00" \
+&lt;statinfo mode="0100600" size="0" inode="203420689" nlink="1" blksize="16384" blocks="0" \
+ mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00" \
 ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/&gt;
 &lt;/statcall&gt;
 </emphasis>
 &lt;statcall error="0" id="gridstart"&gt;
 &lt;!-- deferred flag: 0 --&gt;
 &lt;file name="/u/ac/vahi/SOFTWARE/pegasus/default/bin/kickstart"&gt;7F454C46020101000000000000000000&lt;/file&gt;
-&lt;statinfo mode="0100755" size="255445" inode="85904615876" nlink="1" blksize="16384" blocks="504" mtime="2009-01-30T18:06:28-06:00" atime="2009-01-30T19:17:41-06:00"\
+&lt;statinfo mode="0100755" size="255445" inode="85904615876" nlink="1" blksize="16384" blocks="504" \
+  mtime="2009-01-30T18:06:28-06:00" atime="2009-01-30T19:17:41-06:00"\
  ctime="2009-01-30T18:06:28-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/&gt;
 &lt;/statcall&gt;
 &lt;statcall error="0" id="logfile"&gt;
 &lt;descriptor number="1"/&gt;
-&lt;statinfo mode="0100600" size="0" inode="53040253" nlink="1" blksize="16384" blocks="0" mtime="2009-01-30T19:17:39-06:00" atime="2009-01-30T19:17:39-06:00" \
+&lt;statinfo mode="0100600" size="0" inode="53040253" nlink="1" blksize="16384" blocks="0" \
+ mtime="2009-01-30T19:17:39-06:00" atime="2009-01-30T19:17:39-06:00" \
 ctime="2009-01-30T19:17:39-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/&gt;
 &lt;/statcall&gt;
 &lt;statcall error="0" id="channel"&gt;
 &lt;fifo name="/tmp/gs.app.Ien1m0" descriptor="7" count="0" rsize="0" wsize="0"/&gt;
-&lt;statinfo mode="010640" size="0" inode="203420696" nlink="1" blksize="16384" blocks="0" mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00" \
+&lt;statinfo mode="010640" size="0" inode="203420696" nlink="1" blksize="16384" blocks="0" \
+  mtime="2009-01-30T19:17:41-06:00" atime="2009-01-30T19:17:41-06:00" \
 ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr"/&gt;
 &lt;/statcall&gt;
 
@@ -824,12 +847,18 @@ type dag
 
         <para>Some sample entries are as follows</para>
 
-        <programlisting>ts=2009-04-21T23:09:03.091658Z event=pegasus.job job.id=analyze_ID000004 job.class="7" job.xform="vahi::analyze:1.0" task.count="1"
-ts=2009-04-21T23:09:03.091772Z event=pegasus.job.map job.id=analyze_ID000004 task.id="ID000004" task.class="7" task.xform="vahi::analyze:1.0"
-ts=2009-04-21T23:09:03.092063Z event=pegasus.job job.id=create_dir_blackdiamond_0_isi_viz job.class="6" job.xform="pegasus::dirmanager" task.count="0"
-ts=2009-04-21T23:09:03.092165Z event=pegasus.job job.id=merge_vahi-findrange-1.0_PID2_ID1 job.class="1" job.xform="pegasus::seqexec" task.count="2"
-ts=2009-04-21T23:09:03.093259Z event=pegasus.job.map job.id=merge_vahi-findrange-1.0_PID2_ID1 task.id="ID000002" task.class="7" task.xform="vahi::findrange:1.0"
-ts=2009-04-21T23:09:03.093402Z event=pegasus.job.map job.id=merge_vahi-findrange-1.0_PID2_ID1 task.id="ID000003" task.class="7" task.xform="vahi::findrange:1.0"</programlisting>
+        <programlisting>ts=2009-04-21T23:09:03.091658Z event=pegasus.job job.id=analyze_ID000004 job.class="7" \
+                          job.xform="vahi::analyze:1.0" task.count="1"
+ts=2009-04-21T23:09:03.091772Z event=pegasus.job.map job.id=analyze_ID000004 task.id="ID000004" \
+                          task.class="7" task.xform="vahi::analyze:1.0"
+ts=2009-04-21T23:09:03.092063Z event=pegasus.job job.id=create_dir_blackdiamond_0_isi_viz \
+                          job.class="6" job.xform="pegasus::dirmanager" task.count="0"
+ts=2009-04-21T23:09:03.092165Z event=pegasus.job job.id=merge_vahi-findrange-1.0_PID2_ID1 \
+                          job.class="1" job.xform="pegasus::seqexec" task.count="2"
+ts=2009-04-21T23:09:03.093259Z event=pegasus.job.map job.id=merge_vahi-findrange-1.0_PID2_ID1 \
+                          task.id="ID000002" task.class="7" task.xform="vahi::findrange:1.0"
+ts=2009-04-21T23:09:03.093402Z event=pegasus.job.map job.id=merge_vahi-findrange-1.0_PID2_ID1 \
+                          task.id="ID000003" task.class="7" task.xform="vahi::findrange:1.0"</programlisting>
       </listitem>
     </itemizedlist>
   </section>
