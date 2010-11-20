@@ -22,7 +22,7 @@ pegasus\-analyzer \- debug a workflow.
 .TP 17 
 .B pegasus\-analyzer [\-\-help|\-h] [\-\-quiet|\-q] [\-\-strict|\-s]
 .br
-.B [\-\-monitord|\-m|\-t] [\-\-keep|\-k]
+.B [\-\-monitord|\-m|\-t] [\-\-keep|\-k] [\-\-debug level]
 .br
 .B [\-\-file|\-f dag_filename] [\-\-dir|\-d|\-i input_dir]
 .br
@@ -97,6 +97,23 @@ before it exits. With this option,
 will output the temporary filename at the end, so that users know
 where to look.
 .TP
+.B \-\-debug level
+Sets the log level for
+.BR "pegasus\-analyzer" .
+Possible values are
+.IR "INFO" ,
+.IR "DEBUG" ,
+.IR "WARNING" ,
+.IR "ERROR"
+and
+.IR "CRITICAL" ,
+in the more verbose to least verbose order.
+.br
+If omitted, the default
+.I level
+will be set to
+.IR "WARNING" .
+.TP
 .B \-\-file | \-f dag_filename
 In this option,
 .I dag_filename
@@ -105,7 +122,7 @@ specifies the path to the
 file to use.
 .B "pegasus\-analyzer"
 will get the directory information from the
-.I dag_filename.
+.IR "dag_filename" .
 This option overrides the
 .B \-\-dir
 option below.
