@@ -5,13 +5,36 @@
   <title>Monitoring, Debugging and Statistics</title>
 
   <section>
-    <title>pegasus-status</title>
+    <title>Introduction</title>
 
-    <para>To monitor the execution of the workflow lets run the pegasus-status
-    command as suggested by the output of the pegasus-run command
-    above.</para>
+    <para>Pegasus comes bundled with useful tools that help users debug
+    workflows and generate useful statistics and plots about their workflow
+    runs. These tools internally parse the Condor log files and have a similar
+    interface. All tools take in the submit directory as an argument. Users
+    can invoke the tools listed in this chapter as follows </para>
 
-    <programlisting>$ <emphasis>pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis>
+    <programlisting>$ pegasus-[toolname]   &lt;path to the submit directory&gt;</programlisting>
+  </section>
+
+  <section>
+    <title>Monitoring and Debugging</title>
+
+    <para></para>
+
+    <section>
+      <title>pegasus-monitord</title>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>pegasus-status</title>
+
+      <para>To monitor the execution of the workflow lets run the
+      pegasus-status command as suggested by the output of the pegasus-run
+      command above.</para>
+
+      <programlisting>$ <emphasis>pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis>
 
 
 -- Submitter: smarty.isi.edu : &lt;128.9.72.26:53194&gt; : smarty.isi.edu
@@ -21,40 +44,76 @@
 22424.0    |-rc_tx_findr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas
 22425.0    |-rc_tx_prepr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas</programlisting>
 
-    <para>The above output shows that several jobs are running under the main
-    DAGMan process. Keep a lookout to track whether a workflow is running or
-    not. If you do not see any of your job in the output for sometime (say 30
-    seconds), we know the workflow has finished. We need to wait, as there
-    might be delay in CondorDAGMAN releasing the next job into the queue after
-    a job has finished successfully.</para>
+      <para>The above output shows that several jobs are running under the
+      main DAGMan process. Keep a lookout to track whether a workflow is
+      running or not. If you do not see any of your job in the output for
+      sometime (say 30 seconds), we know the workflow has finished. We need to
+      wait, as there might be delay in CondorDAGMAN releasing the next job
+      into the queue after a job has finished successfully.</para>
 
-    <para>If output of pegasus-status is empty, then either your workflow
-    has</para>
+      <para>If output of pegasus-status is empty, then either your workflow
+      has</para>
 
-    <itemizedlist>
-      <listitem>
-        <para>successfully completed</para>
-      </listitem>
+      <itemizedlist>
+        <listitem>
+          <para>successfully completed</para>
+        </listitem>
 
-      <listitem>
-        <para>stopped midway due to non recoverable error.</para>
-      </listitem>
-    </itemizedlist>
-  </section>
+        <listitem>
+          <para>stopped midway due to non recoverable error.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
 
-  <section>
-    <title>pegasus-analyzer</title>
+    <section>
+      <title>pegasus-analyzer</title>
 
-    <para>...</para>
-  </section>
+      <para>...</para>
+    </section>
 
-  <section>
-    <title>pegasus-statistics</title>
+    <section>
+      <title>pegasus-remove</title>
 
-    <para>pegasus-statistics generates workflow execution statistics. To
-    generate statistics run the command as shown below.</para>
+      <para>If you want to abort your workflow for any reason you can use the
+      pegasus-remove command listed in the output of pegasus-run invocation or
+      by specifiying the Dag directory for the workflow you want to
+      terminate.</para>
 
-    <programlisting>$ <emphasis>pegasus-statistics /scratch/grid-setup/run0001/</emphasis>
+      <programlisting>$ <emphasis>pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</emphasis></programlisting>
+    </section>
+
+    <section>
+      <title>Resubmitting failed workflows</title>
+
+      <para>Pegasus will remove the DAGMan and all the jobs related to the
+      DAGMan from the condor queue. A rescue DAG will be generated in case you
+      want to resubmit the same workflow and continue execution from where it
+      last stopped. A rescue DAG only skips jobs that have completely
+      finished. It does not continue a partially running job unless the
+      executable supports checkpointing.</para>
+
+      <para>To resubmit an aborted or failed workflow with the same submit
+      files and rescue Dag just rerun the pegasus-run command</para>
+
+      <programlisting>$ <emphasis>pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
+/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
+--nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
+</emphasis></programlisting>
+    </section>
+
+    <section>
+      <title>Plotting and Statistics </title>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>pegasus-statistics</title>
+
+      <para>pegasus-statistics generates workflow execution statistics. To
+      generate statistics run the command as shown below.</para>
+
+      <programlisting>$ <emphasis>pegasus-statistics /scratch/grid-setup/run0001/</emphasis>
 
 
 ...
@@ -82,865 +141,865 @@ Logical transformation statistics is created at :
 /scratch/grid-setup/run0001/statistics/breakdown.txt
 **************************************************************************************************</programlisting>
 
-    <para>By default the output gets generated to statistics folder inside the
-    submit directory. pegasus-statistics generates the following statistics
-    list and tables.</para>
+      <para>By default the output gets generated to statistics folder inside
+      the submit directory. pegasus-statistics generates the following
+      statistics list and tables.</para>
 
-    <para><emphasis role="bold">Workflow statistics table</emphasis></para>
+      <para><emphasis role="bold">Workflow statistics table</emphasis></para>
 
-    <para>Workflow statistics table contains information about the workflow
-    run like total execution time, job's failed etc. A sample table is shown
-    below.</para>
+      <para>Workflow statistics table contains information about the workflow
+      run like total execution time, job's failed etc. A sample table is shown
+      below.</para>
 
-    <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
+      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
-    <table>
-      <title>Table 3.1</title>
+      <table>
+        <title>Table 3.1</title>
 
-      <tgroup cols="2">
-        <tbody>
-          <row>
-            <entry>Total workflow execution time</entry>
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry>Total workflow execution time</entry>
 
-            <entry>1741</entry>
-          </row>
+              <entry>1741</entry>
+            </row>
 
-          <row>
-            <entry>Total workflow execution wall time</entry>
+            <row>
+              <entry>Total workflow execution wall time</entry>
 
-            <entry>276.963</entry>
-          </row>
+              <entry>276.963</entry>
+            </row>
 
-          <row>
-            <entry>Total jobs</entry>
+            <row>
+              <entry>Total jobs</entry>
 
-            <entry>17</entry>
-          </row>
+              <entry>17</entry>
+            </row>
 
-          <row>
-            <entry>Total tasks</entry>
+            <row>
+              <entry>Total tasks</entry>
 
-            <entry>17</entry>
-          </row>
+              <entry>17</entry>
+            </row>
 
-          <row>
-            <entry># jobs succeeded</entry>
+            <row>
+              <entry># jobs succeeded</entry>
 
-            <entry>17</entry>
-          </row>
+              <entry>17</entry>
+            </row>
 
-          <row>
-            <entry># jobs failed</entry>
+            <row>
+              <entry># jobs failed</entry>
 
-            <entry>0</entry>
-          </row>
+              <entry>0</entry>
+            </row>
 
-          <row>
-            <entry># jobs unsubmitted</entry>
+            <row>
+              <entry># jobs unsubmitted</entry>
 
-            <entry>0</entry>
-          </row>
+              <entry>0</entry>
+            </row>
 
-          <row>
-            <entry># jobs unknown</entry>
+            <row>
+              <entry># jobs unknown</entry>
 
-            <entry>0</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
+              <entry>0</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
 
-    <para><link linkend="???">All</link></para>
+      <para><link linkend="???">All</link></para>
 
-    <table>
-      <title>Table 3.2</title>
+      <table>
+        <title>Table 3.2</title>
 
-      <tgroup cols="2">
-        <tbody>
-          <row>
-            <entry>Total workflow execution time</entry>
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry>Total workflow execution time</entry>
 
-            <entry>1741</entry>
-          </row>
+              <entry>1741</entry>
+            </row>
 
-          <row>
-            <entry>Total workflow execution wall time</entry>
+            <row>
+              <entry>Total workflow execution wall time</entry>
 
-            <entry>276.963</entry>
-          </row>
+              <entry>276.963</entry>
+            </row>
 
-          <row>
-            <entry>Total jobs</entry>
+            <row>
+              <entry>Total jobs</entry>
 
-            <entry>17</entry>
-          </row>
+              <entry>17</entry>
+            </row>
 
-          <row>
-            <entry>Total tasks</entry>
+            <row>
+              <entry>Total tasks</entry>
 
-            <entry>17</entry>
-          </row>
+              <entry>17</entry>
+            </row>
 
-          <row>
-            <entry># jobs succeeded</entry>
-
-            <entry>17</entry>
-          </row>
+            <row>
+              <entry># jobs succeeded</entry>
+
+              <entry>17</entry>
+            </row>
 
-          <row>
-            <entry># jobs failed</entry>
+            <row>
+              <entry># jobs failed</entry>
 
-            <entry>0</entry>
-          </row>
+              <entry>0</entry>
+            </row>
 
-          <row>
-            <entry># jobs unsubmitted</entry>
+            <row>
+              <entry># jobs unsubmitted</entry>
 
-            <entry>0</entry>
-          </row>
+              <entry>0</entry>
+            </row>
 
-          <row>
-            <entry># jobs unknown</entry>
+            <row>
+              <entry># jobs unknown</entry>
 
-            <entry>0</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
+              <entry>0</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
 
-    <para><emphasis role="bold">Job statistics table</emphasis></para>
+      <para><emphasis role="bold">Job statistics table</emphasis></para>
 
-    <para>Job statistics table contains the following details about the jobs
-    in the workflow. A sample table is shown below.</para>
+      <para>Job statistics table contains the following details about the jobs
+      in the workflow. A sample table is shown below.</para>
 
-    <itemizedlist>
-      <listitem>
-        <para>Job - the name of the job</para>
-      </listitem>
+      <itemizedlist>
+        <listitem>
+          <para>Job - the name of the job</para>
+        </listitem>
 
-      <listitem>
-        <para>Site - the site where the job ran</para>
-      </listitem>
+        <listitem>
+          <para>Site - the site where the job ran</para>
+        </listitem>
 
-      <listitem>
-        <para>Kickstart - the actual duration of the job in seconds on the
-        remote compute node</para>
-      </listitem>
+        <listitem>
+          <para>Kickstart - the actual duration of the job in seconds on the
+          remote compute node</para>
+        </listitem>
 
-      <listitem>
-        <para>Post - the postscript time as reported by DAGMan</para>
-      </listitem>
+        <listitem>
+          <para>Post - the postscript time as reported by DAGMan</para>
+        </listitem>
 
-      <listitem>
-        <para>DAGMan - the time between the last parent job of a job completes
-        and the job gets submitted</para>
-      </listitem>
+        <listitem>
+          <para>DAGMan - the time between the last parent job of a job
+          completes and the job gets submitted</para>
+        </listitem>
 
-      <listitem>
-        <para>CondorQTime - the time between submission by DAGMan and the
-        remote Grid submission. It is an estimate of the time spent in the
-        condor q on the submit node</para>
-      </listitem>
+        <listitem>
+          <para>CondorQTime - the time between submission by DAGMan and the
+          remote Grid submission. It is an estimate of the time spent in the
+          condor q on the submit node</para>
+        </listitem>
 
-      <listitem>
-        <para>Resource - the time between the remote Grid submission and start
-        of remote execution . It is an estimate of the time job spent in the
-        remote queue</para>
-      </listitem>
+        <listitem>
+          <para>Resource - the time between the remote Grid submission and
+          start of remote execution . It is an estimate of the time job spent
+          in the remote queue</para>
+        </listitem>
 
-      <listitem>
-        <para>Runtime - the time spent on the resource as seen by Condor
-        DAGMan . Is always &gt;=kickstart</para>
-      </listitem>
+        <listitem>
+          <para>Runtime - the time spent on the resource as seen by Condor
+          DAGMan . Is always &gt;=kickstart</para>
+        </listitem>
 
-      <listitem>
-        <para>CondorQLen - the number of outstanding jobs in the queue when
-        this job was released</para>
-      </listitem>
+        <listitem>
+          <para>CondorQLen - the number of outstanding jobs in the queue when
+          this job was released</para>
+        </listitem>
 
-      <listitem>
-        <para>Seqexec - the time taken for the completion of a clustered
-        job</para>
-      </listitem>
+        <listitem>
+          <para>Seqexec - the time taken for the completion of a clustered
+          job</para>
+        </listitem>
 
-      <listitem>
-        <para>Seqexec-Delay- the time difference between the time for the
-        completion of a clustered job and sum of all the individual tasks
-        kickstart time</para>
-      </listitem>
-    </itemizedlist>
+        <listitem>
+          <para>Seqexec-Delay- the time difference between the time for the
+          completion of a clustered job and sum of all the individual tasks
+          kickstart time</para>
+        </listitem>
+      </itemizedlist>
 
-    <table>
-      <title>Table 3.3</title>
+      <table>
+        <title>Table 3.3</title>
 
-      <tgroup align="center" cols="11">
-        <thead>
-          <row>
-            <entry align="center">Job</entry>
+        <tgroup align="center" cols="11">
+          <thead>
+            <row>
+              <entry align="center">Job</entry>
 
-            <entry align="center">Site</entry>
+              <entry align="center">Site</entry>
 
-            <entry align="center">Kickstart</entry>
+              <entry align="center">Kickstart</entry>
 
-            <entry align="center">Post</entry>
+              <entry align="center">Post</entry>
 
-            <entry align="center">DAGMan</entry>
+              <entry align="center">DAGMan</entry>
 
-            <entry align="center">CondorQTime</entry>
+              <entry align="center">CondorQTime</entry>
 
-            <entry align="center">Resource</entry>
+              <entry align="center">Resource</entry>
 
-            <entry align="center">Runtime</entry>
+              <entry align="center">Runtime</entry>
 
-            <entry align="center">CondorQLen</entry>
+              <entry align="center">CondorQLen</entry>
 
-            <entry align="center">Seqexec</entry>
+              <entry align="center">Seqexec</entry>
 
-            <entry align="center">Seqexec-Delay</entry>
-          </row>
-        </thead>
+              <entry align="center">Seqexec-Delay</entry>
+            </row>
+          </thead>
 
-        <tbody>
-          <row>
-            <entry>analyze_ID0000004</entry>
+          <tbody>
+            <row>
+              <entry>analyze_ID0000004</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>60.16</entry>
+              <entry>60.16</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>6.00</entry>
+              <entry>6.00</entry>
 
-            <entry>23.00</entry>
+              <entry>23.00</entry>
 
-            <entry>145.00</entry>
+              <entry>145.00</entry>
 
-            <entry>160.00</entry>
+              <entry>160.00</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>clean_up_analyze_ID0000004</entry>
+            <row>
+              <entry>clean_up_analyze_ID0000004</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>8.05</entry>
+              <entry>8.05</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>15.00</entry>
+              <entry>15.00</entry>
 
-            <entry>20.00</entry>
+              <entry>20.00</entry>
 
-            <entry>101.00</entry>
+              <entry>101.00</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>clean_up_findrange_ID0000003</entry>
+            <row>
+              <entry>clean_up_findrange_ID0000003</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>0.97</entry>
+              <entry>0.97</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>8.00</entry>
+              <entry>8.00</entry>
 
-            <entry>10.00</entry>
+              <entry>10.00</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>110.00</entry>
+              <entry>110.00</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>clean_up_preprocess_ID0000001</entry>
+            <row>
+              <entry>clean_up_preprocess_ID0000001</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>1.00</entry>
+              <entry>1.00</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>6.00</entry>
+              <entry>6.00</entry>
 
-            <entry>20.00</entry>
+              <entry>20.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>20.00</entry>
+              <entry>20.00</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>clean_up_stage_out_local_ISIViz_0_0</entry>
+            <row>
+              <entry>clean_up_stage_out_local_ISIViz_0_0</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>0.99</entry>
+              <entry>0.99</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>6.00</entry>
+              <entry>6.00</entry>
 
-            <entry>20.00</entry>
+              <entry>20.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>150.00</entry>
+              <entry>150.00</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>clean_up_stage_out_local_ISIViz_1_0</entry>
+            <row>
+              <entry>clean_up_stage_out_local_ISIViz_1_0</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>1.16</entry>
+              <entry>1.16</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>17.00</entry>
+              <entry>17.00</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>15.00</entry>
+              <entry>15.00</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>clean_up_stage_out_local_ISIViz_2_0</entry>
+            <row>
+              <entry>clean_up_stage_out_local_ISIViz_2_0</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>10.28</entry>
+              <entry>10.28</entry>
 
-            <entry>6.00</entry>
+              <entry>6.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>15.00</entry>
+              <entry>15.00</entry>
 
-            <entry>20.00</entry>
+              <entry>20.00</entry>
 
-            <entry>100.00</entry>
+              <entry>100.00</entry>
 
-            <entry>2</entry>
+              <entry>2</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>create_dir_diamond_0_ISIViz</entry>
+            <row>
+              <entry>create_dir_diamond_0_ISIViz</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>0.33</entry>
+              <entry>0.33</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>14.00</entry>
+              <entry>14.00</entry>
 
-            <entry>15.00</entry>
+              <entry>15.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>20.00</entry>
+              <entry>20.00</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>findrange_ID0000002</entry>
+            <row>
+              <entry>findrange_ID0000002</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>60.25</entry>
+              <entry>60.25</entry>
 
-            <entry>6.00</entry>
+              <entry>6.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>21.00</entry>
+              <entry>21.00</entry>
 
-            <entry>20.00</entry>
+              <entry>20.00</entry>
 
-            <entry>290.00</entry>
+              <entry>290.00</entry>
 
-            <entry>3</entry>
+              <entry>3</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>findrange_ID0000003</entry>
+            <row>
+              <entry>findrange_ID0000003</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>60.37</entry>
+              <entry>60.37</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>26.00</entry>
+              <entry>26.00</entry>
 
-            <entry>25.00</entry>
+              <entry>25.00</entry>
 
-            <entry>822.00</entry>
+              <entry>822.00</entry>
 
-            <entry>2</entry>
+              <entry>2</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>preprocess_ID0000001</entry>
+            <row>
+              <entry>preprocess_ID0000001</entry>
 
-            <entry>ISIViz</entry>
+              <entry>ISIViz</entry>
 
-            <entry>60.48</entry>
+              <entry>60.48</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>15.00</entry>
+              <entry>15.00</entry>
 
-            <entry>20.00</entry>
+              <entry>20.00</entry>
 
-            <entry>235.00</entry>
+              <entry>235.00</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>register_ISIViz_2_0</entry>
+            <row>
+              <entry>register_ISIViz_2_0</entry>
 
-            <entry>local</entry>
+              <entry>local</entry>
 
-            <entry>3.58</entry>
+              <entry>3.58</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>0</entry>
+              <entry>0</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>stage_in_local_ISIViz_0</entry>
+            <row>
+              <entry>stage_in_local_ISIViz_0</entry>
 
-            <entry>local</entry>
+              <entry>local</entry>
 
-            <entry>1.88</entry>
+              <entry>1.88</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>6.00</entry>
+              <entry>6.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0</entry>
+              <entry>0</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>stage_out_local_ISIViz_0_0</entry>
+            <row>
+              <entry>stage_out_local_ISIViz_0_0</entry>
 
-            <entry>local</entry>
+              <entry>local</entry>
 
-            <entry>1.82</entry>
+              <entry>1.82</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>0</entry>
+              <entry>0</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>stage_out_local_ISIViz_1_0</entry>
+            <row>
+              <entry>stage_out_local_ISIViz_1_0</entry>
 
-            <entry>local</entry>
+              <entry>local</entry>
 
-            <entry>1.72</entry>
+              <entry>1.72</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>6.00</entry>
+              <entry>6.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>0</entry>
+              <entry>0</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>stage_out_local_ISIViz_1_1</entry>
+            <row>
+              <entry>stage_out_local_ISIViz_1_1</entry>
 
-            <entry>local</entry>
+              <entry>local</entry>
 
-            <entry>2.15</entry>
+              <entry>2.15</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>6.00</entry>
+              <entry>6.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0</entry>
+              <entry>0</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
+              <entry>-</entry>
+            </row>
 
-          <row>
-            <entry>stage_out_local_ISIViz_2_0</entry>
+            <row>
+              <entry>stage_out_local_ISIViz_2_0</entry>
 
-            <entry>local</entry>
+              <entry>local</entry>
 
-            <entry>1.76</entry>
+              <entry>1.76</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>7.00</entry>
+              <entry>7.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>5.00</entry>
+              <entry>5.00</entry>
 
-            <entry>0</entry>
+              <entry>0</entry>
 
-            <entry>-</entry>
+              <entry>-</entry>
 
-            <entry>-</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
+              <entry>-</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
 
-    <para><emphasis role="bold">Logical transformation statistics
-    table</emphasis></para>
+      <para><emphasis role="bold">Logical transformation statistics
+      table</emphasis></para>
 
-    <para>Logical transformation statistics table contains information about
-    each type of transformation in the workflow. A sample table is shown
-    below.</para>
+      <para>Logical transformation statistics table contains information about
+      each type of transformation in the workflow. A sample table is shown
+      below.</para>
 
-    <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
+      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
-    <table>
-      <title>Table 3.4</title>
+      <table>
+        <title>Table 3.4</title>
 
-      <tgroup align="center" cols="7">
-        <thead>
-          <row>
-            <entry align="center">Transformation</entry>
+        <tgroup align="center" cols="7">
+          <thead>
+            <row>
+              <entry align="center">Transformation</entry>
 
-            <entry align="center">Count</entry>
+              <entry align="center">Count</entry>
 
-            <entry align="center">Mean</entry>
+              <entry align="center">Mean</entry>
 
-            <entry align="center">Variance</entry>
+              <entry align="center">Variance</entry>
 
-            <entry align="center">Min</entry>
+              <entry align="center">Min</entry>
 
-            <entry align="center">Max</entry>
+              <entry align="center">Max</entry>
 
-            <entry align="center">Total</entry>
-          </row>
-        </thead>
+              <entry align="center">Total</entry>
+            </row>
+          </thead>
 
-        <tbody>
-          <row>
-            <entry>pegasus::dirmanager</entry>
+          <tbody>
+            <row>
+              <entry>pegasus::dirmanager</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>0.33</entry>
+              <entry>0.33</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.33</entry>
+              <entry>0.33</entry>
 
-            <entry>0.33</entry>
+              <entry>0.33</entry>
 
-            <entry>0.33</entry>
-          </row>
+              <entry>0.33</entry>
+            </row>
 
-          <row>
-            <entry>diamond::analyze:2.0</entry>
+            <row>
+              <entry>diamond::analyze:2.0</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>60.16</entry>
+              <entry>60.16</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>60.16</entry>
+              <entry>60.16</entry>
 
-            <entry>60.16</entry>
+              <entry>60.16</entry>
 
-            <entry>60.16</entry>
-          </row>
+              <entry>60.16</entry>
+            </row>
 
-          <row>
-            <entry>diamond::findrange:2.0</entry>
+            <row>
+              <entry>diamond::findrange:2.0</entry>
 
-            <entry>2</entry>
+              <entry>2</entry>
 
-            <entry>60.31</entry>
+              <entry>60.31</entry>
 
-            <entry>0.01</entry>
+              <entry>0.01</entry>
 
-            <entry>60.25</entry>
+              <entry>60.25</entry>
 
-            <entry>60.37</entry>
+              <entry>60.37</entry>
 
-            <entry>120.62</entry>
-          </row>
+              <entry>120.62</entry>
+            </row>
 
-          <row>
-            <entry>diamond::preprocess:2.0</entry>
+            <row>
+              <entry>diamond::preprocess:2.0</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>60.48</entry>
+              <entry>60.48</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>60.48</entry>
+              <entry>60.48</entry>
 
-            <entry>60.48</entry>
+              <entry>60.48</entry>
 
-            <entry>60.48</entry>
-          </row>
+              <entry>60.48</entry>
+            </row>
 
-          <row>
-            <entry>pegasus::cleanup</entry>
+            <row>
+              <entry>pegasus::cleanup</entry>
 
-            <entry>6</entry>
+              <entry>6</entry>
 
-            <entry>3.74</entry>
+              <entry>3.74</entry>
 
-            <entry>18.15</entry>
+              <entry>18.15</entry>
 
-            <entry>0.97</entry>
+              <entry>0.97</entry>
 
-            <entry>10.28</entry>
+              <entry>10.28</entry>
 
-            <entry>22.46</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
+              <entry>22.46</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
 
-    <para><link linkend="???">All</link></para>
+      <para><link linkend="???">All</link></para>
 
-    <table>
-      <title>Table 3.5</title>
+      <table>
+        <title>Table 3.5</title>
 
-      <tgroup align="center" cols="7">
-        <thead>
-          <row>
-            <entry align="center">Transformation</entry>
+        <tgroup align="center" cols="7">
+          <thead>
+            <row>
+              <entry align="center">Transformation</entry>
 
-            <entry align="center">Count</entry>
+              <entry align="center">Count</entry>
 
-            <entry align="center">Mean</entry>
+              <entry align="center">Mean</entry>
 
-            <entry align="center">Variance</entry>
+              <entry align="center">Variance</entry>
 
-            <entry align="center">Min</entry>
+              <entry align="center">Min</entry>
 
-            <entry align="center">Max</entry>
+              <entry align="center">Max</entry>
 
-            <entry align="center">Total</entry>
-          </row>
-        </thead>
+              <entry align="center">Total</entry>
+            </row>
+          </thead>
 
-        <tbody>
-          <row>
-            <entry>pegasus::dirmanager</entry>
+          <tbody>
+            <row>
+              <entry>pegasus::dirmanager</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>0.33</entry>
+              <entry>0.33</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>0.33</entry>
+              <entry>0.33</entry>
 
-            <entry>0.33</entry>
+              <entry>0.33</entry>
 
-            <entry>0.33</entry>
-          </row>
+              <entry>0.33</entry>
+            </row>
 
-          <row>
-            <entry>diamond::analyze:2.0</entry>
+            <row>
+              <entry>diamond::analyze:2.0</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>60.16</entry>
+              <entry>60.16</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>60.16</entry>
+              <entry>60.16</entry>
 
-            <entry>60.16</entry>
+              <entry>60.16</entry>
 
-            <entry>60.16</entry>
-          </row>
+              <entry>60.16</entry>
+            </row>
 
-          <row>
-            <entry>diamond::findrange:2.0</entry>
+            <row>
+              <entry>diamond::findrange:2.0</entry>
 
-            <entry>2</entry>
+              <entry>2</entry>
 
-            <entry>60.31</entry>
+              <entry>60.31</entry>
 
-            <entry>0.01</entry>
+              <entry>0.01</entry>
 
-            <entry>60.25</entry>
+              <entry>60.25</entry>
 
-            <entry>60.37</entry>
+              <entry>60.37</entry>
 
-            <entry>120.62</entry>
-          </row>
+              <entry>120.62</entry>
+            </row>
 
-          <row>
-            <entry>diamond::preprocess:2.0</entry>
+            <row>
+              <entry>diamond::preprocess:2.0</entry>
 
-            <entry>1</entry>
+              <entry>1</entry>
 
-            <entry>60.48</entry>
+              <entry>60.48</entry>
 
-            <entry>0.00</entry>
+              <entry>0.00</entry>
 
-            <entry>60.48</entry>
+              <entry>60.48</entry>
 
-            <entry>60.48</entry>
+              <entry>60.48</entry>
 
-            <entry>60.48</entry>
-          </row>
+              <entry>60.48</entry>
+            </row>
 
-          <row>
-            <entry>pegasus::cleanup</entry>
+            <row>
+              <entry>pegasus::cleanup</entry>
 
-            <entry>6</entry>
+              <entry>6</entry>
 
-            <entry>3.74</entry>
+              <entry>3.74</entry>
 
-            <entry>18.15</entry>
+              <entry>18.15</entry>
 
-            <entry>0.97</entry>
+              <entry>0.97</entry>
 
-            <entry>10.28</entry>
+              <entry>10.28</entry>
 
-            <entry>22.46</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
+              <entry>22.46</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
 
-    <para><emphasis role="bold">Workflow events list</emphasis></para>
+      <para><emphasis role="bold">Workflow events list</emphasis></para>
 
-    <para>Workflow events list contains the events listed with time starting
-    with zero. A sample list is shown below.</para>
+      <para>Workflow events list contains the events listed with time starting
+      with zero. A sample list is shown below.</para>
 
-    <programlisting>1287528335 INTERNAL *** MONITORD_STARTED ***
+      <programlisting>1287528335 INTERNAL *** MONITORD_STARTED ***
 0 INTERNAL *** DAGMAN_STARTED 517.0 ***
 14 create_dir_diamond_0_ISIViz SUBMIT 518.0 ISIViz - 1
 29 create_dir_diamond_0_ISIViz EXECUTE 518.0 ISIViz - 1
@@ -953,16 +1012,16 @@ Logical transformation statistics is created at :
 1741 clean_up_analyze_ID0000004 POST_SCRIPT_SUCCESS 0 ISIViz - 17
 1741 INTERNAL *** DAGMAN_FINISHED 0 ***
 1287530077 INTERNAL *** MONITORD_FINISHED 0 ***</programlisting>
-  </section>
+    </section>
 
-  <section>
-    <title>pegasus-plot</title>
+    <section>
+      <title>pegasus-plot</title>
 
-    <para>pegasus-plot generates graphs and charts to visualize workflow
-    execution. To generate graphs and charts run the command as shown
-    below.</para>
+      <para>pegasus-plot generates graphs and charts to visualize workflow
+      execution. To generate graphs and charts run the command as shown
+      below.</para>
 
-    <programlisting>$ <emphasis>pegasus-plot /scratch/grid-setup/run0001/</emphasis>
+      <programlisting>$ <emphasis>pegasus-plot /scratch/grid-setup/run0001/</emphasis>
 
 
 ...
@@ -983,99 +1042,70 @@ JPEG file corresponding to the dax is created at:
 /scratch/grid-setup/run0001/graph/blackdiamond-dax.jpg 
 **************************************************************************************************</programlisting>
 
-    <para>By default the output gets generated to graph folder inside the
-    submit directory. pegasus-plot generates the following graphs and
-    charts.</para>
+      <para>By default the output gets generated to graph folder inside the
+      submit directory. pegasus-plot generates the following graphs and
+      charts.</para>
 
-    <para><emphasis role="bold">Gantt workflow execution
-    chart</emphasis></para>
+      <para><emphasis role="bold">Gantt workflow execution
+      chart</emphasis></para>
 
-    <para>Gantt chart of the workflow execution run. A sample chart is shown
-    below.</para>
+      <para>Gantt chart of the workflow execution run. A sample chart is shown
+      below.</para>
 
-    <figure>
-      <title>Figure 4.1</title>
+      <figure>
+        <title>Figure 4.1</title>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/diamond-2.png" />
-        </imageobject>
-      </mediaobject>
-    </figure>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-2.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
 
-    <para><emphasis role="bold">Host over time chart</emphasis></para>
+      <para><emphasis role="bold">Host over time chart</emphasis></para>
 
-    <para>Host over time chart of the workflow execution run. A sample chart
-    is shown below.</para>
+      <para>Host over time chart of the workflow execution run. A sample chart
+      is shown below.</para>
 
-    <figure>
-      <title>Figure 4.2</title>
+      <figure>
+        <title>Figure 4.2</title>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/diamond-host.png" />
-        </imageobject>
-      </mediaobject>
-    </figure>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-host.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
 
-    <para><emphasis role="bold">Dag Graph</emphasis></para>
+      <para><emphasis role="bold">Dag Graph</emphasis></para>
 
-    <para>Graph representation of the DAG file. A sample graph is shown
-    below.</para>
+      <para>Graph representation of the DAG file. A sample graph is shown
+      below.</para>
 
-    <figure>
-      <title>Figure 4.3</title>
+      <figure>
+        <title>Figure 4.3</title>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/diamond-dag.jpg" />
-        </imageobject>
-      </mediaobject>
-    </figure>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-dag.jpg" />
+          </imageobject>
+        </mediaobject>
+      </figure>
 
-    <para><emphasis role="bold">Dax Graph</emphasis></para>
+      <para><emphasis role="bold">Dax Graph</emphasis></para>
 
-    <para>Graph representation of the DAX file. A sample graph is shown
-    below.</para>
+      <para>Graph representation of the DAX file. A sample graph is shown
+      below.</para>
 
-    <figure>
-      <title>Figure 4.4</title>
+      <figure>
+        <title>Figure 4.4</title>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="images/blackdiamond-dax.jpg" />
-        </imageobject>
-      </mediaobject>
-    </figure>
-  </section>
-
-  <section>
-    <title>pegasus-remove</title>
-
-    <para>If you want to abort your workflow for any reason you can use the
-    pegasus-remove command listed in the output of pegasus-run invocation or
-    by specifiying the Dag directory for the workflow you want to
-    terminate.</para>
-
-    <programlisting>$ <emphasis>pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</emphasis></programlisting>
-  </section>
-
-  <section>
-    <title>Resubmitting failed workflows</title>
-
-    <para>Pegasus will remove the DAGMan and all the jobs related to the
-    DAGMan from the condor queue. A rescue DAG will be generated in case you
-    want to resubmit the same workflow and continue execution from where it
-    last stopped. A rescue DAG only skips jobs that have completely finished.
-    It does not continue a partially running job unless the executable
-    supports checkpointing.</para>
-
-    <para>To resubmit an aborted or failed workflow with the same submit files
-    and rescue Dag just rerun the pegasus-run command</para>
-
-    <programlisting>$ <emphasis>pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
-/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
---nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
-</emphasis></programlisting>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/blackdiamond-dax.jpg" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
   </section>
 </chapter>
