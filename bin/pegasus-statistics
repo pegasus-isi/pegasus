@@ -170,7 +170,9 @@ sub main(){
 	}
 	
 	my($dag_file_path) =  File::Spec->catfile("$submit_dir","$dag_file_name");
+	print STDOUT "\n******  calculating workflow statistics for workflow : $submit_dir  ***** \n";
 	my($workflow_statistics_status) = print_workflow_statistics($submit_dir,rlb($jsd_file_path),$dag_file_path,$condor);
+	print STDOUT "******  Finished workflow statistics for workflow : $submit_dir  ***** \n\n";
 	@sub_workflow_submit_dirs = get_sub_workflow_list($dag_file_path);
 	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
 	my $sub_submit_dir;
@@ -190,13 +192,15 @@ sub main(){
 					print STDERR "ERROR: Unable to find the jobstate file path in the braindump.txt file.\n";
 					exit 1;
 			}
+			print STDOUT "\n******  calculating workflow statistics for workflow : $sub_submit_dir  ***** \n";
 			my($sub_workflow_statistics_status) = print_workflow_statistics($sub_submit_dir,rlb($sub_jsd_file_path),$sub_dag_file_path,$condor);
+			print STDOUT "******  Finished calculating workflow statistics for workflow : $sub_submit_dir  ***** \n\n";
 		}
 	}
 	
 	my $wf_summary_msg;
 	my ($all_exec_time) =((defined $workflow_statistics[0]{'total_execution_time'})?$workflow_statistics[0]{'total_execution_time'}:undef);
-	my ($all_wall_time) = ((defined $workflow_statistics[0]{'total_execution_time'})?$workflow_statistics[0]{'total_wall_time'}:undef);
+	my ($all_wall_time) = ((defined $workflow_statistics[0]{'total_wall_time'})?$workflow_statistics[0]{'total_wall_time'}:undef);
 	my( $all_total_jobs,$all_total_tasks,$all_succceeded,$all_failed,$all_unsubmitted, $all_unknown) =(0,0,0,0,0,0);
 	for my $wstats (@workflow_statistics){
     	$wf_summary_msg .= "\n#$wstats->{'submit_dir'} \n";
@@ -485,11 +489,10 @@ sub print_workflow_statistics($$$$){
 		
 	}
 	if(!$total_wall_time){ 
-		if ($main::DEBUG){
-    		print STDERR "WARNING: Unable to find the total execution wall time.$total_wall_time_status_msg ....\n";
-    	} 
+			print STDERR "****** WARNING: Failed to calculate the total execution wall time.$total_wall_time_status_msg ******\n";
+    }else{
+    	print STDOUT "****** Finished calculating workflow execution wall time  ***** \n";
     }
-    print STDOUT "****** Finished calculating workflow execution wall time  ***** \n";
   	
   	#Finding total task count
   	my $total_task_count =0;
@@ -514,11 +517,10 @@ sub print_workflow_statistics($$$$){
 		}
 	}
 	if(!$total_task_count){ 
-		if ($main::DEBUG){
-    		print STDERR "WARNING: Unable to find the total tasks .$total_task_count_msg ....\n";
-    	}
+		print STDERR "****** WARNING: Failed to find the total tasks .$total_task_count_msg ******\n";
+    }else{
+    	print STDOUT "****** Finished calculating total tasks    ***** \n";
     }
-    print STDOUT "****** Finished calculating total tasks    ***** \n";
     # Revert back to the old directory
     chdir $current_dir || die "Cannot chdir to $current_dir\n";
     
@@ -535,36 +537,29 @@ sub print_workflow_statistics($$$$){
    }
    	my $workflow_stats_hash ={};
    	$workflow_stats_hash->{'submit_dir'} =$submit_dir;
+   	print STDOUT "******  calculating workflow execution time  ***** \n";
    	if($startTime || $endTime){
-    	if ($main::DEBUG){
-    		print STDERR "WARNING: Failed to find the workflow execution time ....\n";
-    	}
+    	print STDERR "****** WARNING: Failed to find the workflow execution time ****** \n";
     }else{
     	if($total_execution_time){
     		$workflow_stats_hash->{'total_execution_time'} = $total_execution_time;
+    		print STDOUT "****** Finished calculating workflow execution time    ***** \n";
     	}else{
-    	#case where it doesn't find start or end time
-    		if ($main::DEBUG){
-    			print STDERR "WARNING: Failed to find the workflow execution time ....\n";
-    		}
+    		#case where it doesn't find start or end time
+    		print STDERR "****** WARNING: Failed to find the workflow execution time ****** \n";
     	}
     }
     if($total_wall_time){
     	$workflow_stats_hash->{'total_wall_time'} =  $total_wall_time; 
-    }else{
-    	if ($main::DEBUG){
-    		print STDERR "Unable to find the total execution wall time.$total_wall_time_status_msg";
-    	}
     }
+    
    	$job_unsubmitted_count = $total_job_count - $job_state_count;
    	$workflow_stats_hash->{'total_jobs'} =  $total_job_count;
-   	 if($total_task_count){
+   	
+   	if($total_task_count){
    	 	$workflow_stats_hash->{'total_tasks'} =  $total_task_count;
-    }else{
-    	if ($main::DEBUG){
-    		print STDERR "Unable to find the total tasks.$total_task_count_msg" ;
-    	}
     }
+    
     $workflow_stats_hash->{'succeeded'} = $job_succeeded_count;
     $workflow_stats_hash->{'failed'} = $job_failed_count;
     $workflow_stats_hash->{'unsubmitted'} = $job_unsubmitted_count;
