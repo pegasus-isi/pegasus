@@ -3,7 +3,33 @@
 use 5.006;
 use strict;
 use IO::Handle; 
+use File::Spec;
+use File::Basename; 
 
+#
+# all this to determine PEGASUS_HOME, which we don't set any more.
+# and from there derive the PERL5LIB that we need for the DAX API.
+# 
+BEGIN {
+    my $found; 
+    foreach my $dir ( File::Spec->path ) { 
+	if ( -x File::Spec->catfile( $dir, 'pegasus-plan' ) ) {
+	    $found = dirname($dir);
+	    last; 
+	}
+    }
+
+    # last resort, if PATH search fails
+    if ( ! defined $found && exists $ENV{'PEGASUS_HOME'} ) {
+	warn "Warning: Using PEGASUS_HOME to locate Perl API.\n"; 
+	$found = $ENV{'PEGASUS_HOME'}; 
+    }
+
+    die "FATAL: Sorry, but you need to include Pegasus into your PATH."
+	unless defined $found; 
+    unshift( @INC, File::Spec->catdir( $found, 'lib', 'perl' ) ); 
+    $ENV{'PEGASUS_HOME'} = $found; 
+}
 use Pegasus::DAX::Factory qw(:all); 
 
 use constant NS => 'diamond'; 
@@ -23,6 +49,8 @@ if ( exists $ENV{'PEGASUS_HOME'} ) {
     use POSIX (); 
     my $keg = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'keg' ); 
     my @os = POSIX::uname(); 
+    $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
+
     if ( -x $keg ) { 
 	my $app1 = newExecutable( namespace => NS, name => 'preprocess', version => '2.0',
 				  arch => $os[4], os => lc($^O), osversion => $os[2] ); 
