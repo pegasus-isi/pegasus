@@ -18,7 +18,7 @@
 
     <orderedlist>
       <listitem>
-        <para>Simple File</para>
+        <para>File</para>
       </listitem>
 
       <listitem>
@@ -30,47 +30,124 @@
       </listitem>
     </orderedlist>
 
-    <para>In this guide we will only use the Simple File. The same client will
-    however work for all 3 implementations. The implementation that the client
-    talks to is configured using Pegasus properties.</para>
+    <section>
+      <title>File</title>
 
-    <para>The black diamond example mentioned in Section 2 takes one input
-    file, which we will have to tell the replica catalog. Create a file f.a by
-    running the date command as shown</para>
+      <para>In this mode, Pegasus queries a file based replica catalog. The
+      file format is a simple multicolumn format. It is neither
+      transactionally safe, nor advised to use for production purposes in any
+      way. Multiple concurrent instances will clobber each other. The site
+      attribute should be specified whenever possible. The attribute key for
+      the site attribute is <emphasis role="bold">"pool".</emphasis></para>
 
-    <programlisting>$ <emphasis>date &gt; $HOME/f.a </emphasis></programlisting>
+      <programlisting>
+LFN PFN
+LFN PFN a=b [..]
+LFN PFN a="b" [..]
+"LFN w/LWS" "PFN w/LWS" [..]
+      </programlisting>
 
-    <para>We now need to register this file in the replica catalog using the
-    rc-client. Replace the gsiftp://url with the appropriate parameters for
-    your grid site.</para>
+      <para>The LFN may or may not be quoted. If it contains linear
+      whitespace, quotes, backslash or an equality sign, it must be quoted and
+      escaped. Ditto for the PFN. The attribute key-value pairs are separated
+      by an equality sign without any whitespaces. The value may be in quoted.
+      The LFN sentiments about quoting apply.</para>
 
-    <programlisting><emphasis>$ rc-client -Dpegasus.catalog.replica=SimpleFile -Dpegasus.catalog.replica.file=$HOME/rc \
-    insert f.a gsiftp://somehost:port/path/to/file/f.a pool=local</emphasis></programlisting>
+      <para>The file mode is the default mode. In order to use the File mode
+      you have to set the property <emphasis
+      role="bold">pegasus.catalog.replica.file=&lt;path to replica catalog
+      file&gt;</emphasis></para>
+    </section>
 
-    <para></para>
+    <section>
+      <title>JDBCRC</title>
 
-    <para>You may first want to check, if the file registeration made it into
-    the replica catalog. Since we are using a Simple File catalog we can just
-    go look at the file $HOME/rc to see if there are any entries in
-    there.</para>
+      <para>In this mode, Pegasus queries a SQL based replica catalog that is
+      accessed via JDBC. The sql schema’s for this catalog can be found at
+      <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory. You will
+      have to install the schema into either PostgreSQL or MySQL by running
+      the appropriate commands to load the two scheams <emphasis
+      role="bold">create-XX-init.sql</emphasis> and <emphasis
+      role="bold">create-XX-rc.sql</emphasis> where XX is either <emphasis
+      role="bold">my</emphasis> (for MySQL) or <emphasis
+      role="bold">pg</emphasis> (for PostgreSQL)</para>
 
-    <programlisting>$ <emphasis>cat $HOME/rc</emphasis>
+      <para>To use JDBCRC, the user additionally needs to set the following
+      properties </para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.db.url</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.db.user</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.db.password</emphasis></para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+      <title>RLS</title>
+
+      <para>RLS (Replica Location Service) is a distributed replica catalog,
+      which ships with Globus. There is an index service called Replica
+      Location Index (RLI) to which 1 or more Local Replica Catalog (LRC)
+      report. Each LRC can contain all or a subset of mappings. </para>
+
+      <para>In this mode, Pegasus queries the central RLI to discover in which
+      LRC’s the mappings for a LFN reside. It then queries the individual
+      LRC’s for the PFN’s. To use RLS, the user additionally needs to set the
+      property <emphasis role="bold">pegasus.catalog.replica.url</emphasis> to
+      specify the URL for the RLI to query. Details about RLS can be found at
+      <ulink
+      url="http://www.globus.org/toolkit/data/rls/">http://www.globus.org/toolkit/data/rls/</ulink></para>
+    </section>
+
+    <section>
+      <title>Replica Catalog Client pegasus-rc-client</title>
+
+      <para>The client used to interact with the Replica Catalogs is
+      pegasus-rc-client. The implementation that the client talks to is
+      configured using Pegasus properties.</para>
+
+      <para>Lets assume we create a file f.a in your home directory as shown
+      below.</para>
+
+      <programlisting>$ <emphasis>date &gt; $HOME/f.a </emphasis></programlisting>
+
+      <para>We now need to register this file in the <emphasis
+      role="bold">File</emphasis> replica catalog located in <emphasis
+      role="bold">$HOME/rc</emphasis> using the pegasus-rc-client. Replace the
+      gsiftp://url with the appropriate parameters for your grid site.</para>
+
+      <programlisting><emphasis>$ rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert f.a gsiftp://somehost:port/path/to/file/f.a pool=local</emphasis></programlisting>
+
+      <para>You may first want to check, if the file registeration made it
+      into the replica catalog. Since we are using a File catalog we can just
+      go look at the file $HOME/rc to see if there are any entries in
+      there.</para>
+
+      <programlisting>$ <emphasis>cat $HOME/rc</emphasis>
     
-    # file-based replica catalog: 2007-07-10T17:52:53.405-07:00
-    f.a gsiftp://smarty.isi.edu/nfs/asd2/gmehta/f.a pool="local"</programlisting>
+    # file-based replica catalog: 2010-11-10T17:52:53.405-07:00
+    f.a gsiftp://somehost:port/path/to/file/f.a pool=local</programlisting>
 
-    <para>The above line shows that entry for file f.a was made
-    correctly.</para>
+      <para>The above line shows that entry for file f.a was made
+      correctly.</para>
 
-    <para>If you are using some other mode of RC you can also use the
-    rc-client to look for entries.</para>
+      <para>You can also use the rc-client to look for entries.</para>
 
-    <programlisting>$ <emphasis>rc-client -Dpegasus.catalog.replica=SimpleFile -Dpegasus.catalog.replica.file=$HOME/rc \
-    lookup LFN f.a
+      <programlisting>$ <emphasis>rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a
     </emphasis>
-    f.a gsiftp://smarty.isi.edu/nfs/asd2/gmehta/f.a pool="local"</programlisting>
-
-    <para>Your Replica Catalog is now set.</para>
+    f.a gsiftp://somehost:port/path/to/file/f.a pool=local</programlisting>
+    </section>
   </section>
 
   <section>
@@ -292,117 +369,177 @@ profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
 
     <orderedlist>
       <listitem>
-        <para><emphasis role="bold">File: </emphasis>A simple multi column
-        text file</para>
+        <para><emphasis role="bold">Text: </emphasis>A multiline text based
+        Transformation Catalog (DEFAULT)</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">File:</emphasis> A simple multi column
+        text based Transformation Catalog</para>
       </listitem>
 
       <listitem>
         <para><emphasis role="bold">Database:</emphasis> A database backend
-        (MySQL or PostgreSQL) via JDBC</para>
+        (MySQL or PostgreSQL) via JDB</para>
       </listitem>
     </orderedlist>
 
-    <para>In this guide we will look at the format of the File based TC. The
-    File based TC is also used as a bulk input for populating the Database
-    implementation.</para>
+    <para>In this guide we will look at the format of the Multiline Text based
+    TC.</para>
 
-    <para>The format of the File is as follows</para>
+    <section>
+      <title>MultiLine Text based TC (Text)</title>
 
-    <programlisting>#site  logicaltr   physicaltr   type  system  profiles(NS::KEY="VALUE")
+      <para>The multile line text based TC is the new default TC in Pegasus.
+      This format allows you to define the transformations</para>
 
-site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6
-                   ENV::PATH="/usr/bin";PEGASUS_HOME="/usr/local/pegasus"</programlisting>
+      <para><programlisting>tr example::keg:1.0 { 
 
-    <para>The system and profile entries are optional and will use default
-    values if not specified. The entries in the file format have the following
-    meaning:</para>
+#specify profiles that apply for all the sites for the transformation 
+#in each site entry the profile can be overriden 
+profile env "APP_HOME" "/tmp/myscratch"
+profile env "JAVA_HOME" "/opt/java/1.6"
 
-    <orderedlist>
-      <listitem>
-        <para>site - A site identifier.</para>
-      </listitem>
+site isi {
+profile env "HELLo" "WORLD"
+profile condor "FOO" "bar"
+profile env "JAVA_HOME" "/bin/java.1.6"
+pfn "/path/to/keg"
+arch "x86"
+os "linux"
+osrelease "fc"
+osversion "4"
+type "INSTALLED"
+}
 
-      <listitem>
-        <para>logicaltr - The logical transformation name. The format is
-        NAMESPACE::NAME:VERSION where NAMESPACE and NAME are optional.</para>
-      </listitem>
+site wind {
+profile env "CPATH" "/usr/cpath"
+profile condor "universe" "condor"
+pfn "file:///path/to/keg"
+arch "x86"
+os "linux"
+osrelease "fc"
+osversion "4"
+type "STAGEABLE"
+}</programlisting></para>
+    </section>
 
-      <listitem>
-        <para>physicaltr - The physical transformation path or URL.</para>
+    <section>
+      <title>Singleline Text based TC (File)</title>
 
-        <para>If the transformation type is INSTALLED then it needs to be an
-        absolute path to the executable. If the type is STATIC_BINARY then the
-        path needs to be a HTTP, FTP or gsiftp URL</para>
-      </listitem>
+      <warning>
+        <para>This format is now deprecated in favor of the multiline TC. If
+        you are still using the single line TC you should convert it to
+        multiline using the tc-converter client.</para>
+      </warning>
 
-      <listitem>
-        <para>type - The type of transformation. Can have on of two
-        values</para>
+      <para>The format of the this TC is as follows.</para>
 
-        <itemizedlist>
-          <listitem>
-            <para>INSTALLED: This means that the transformation is installed
-            on the remote site</para>
-          </listitem>
+      <programlisting>#site  logicaltr   physicaltr   type  system  profiles(NS::KEY="VALUE")
 
-          <listitem>
-            <para>STATIC_BINARY: This means that the transformation is
-            available as a static binary and can be staged to a remote
-            site.</para>
-          </listitem>
-        </itemizedlist>
-      </listitem>
+site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH="/usr/bin";PEGASUS_HOME="/usr/local/pegasus"</programlisting>
 
-      <listitem>
-        <para>system - The system for which the transformation is
-        compiled.</para>
+      <para>The system and profile entries are optional and will use default
+      values if not specified. The entries in the file format have the
+      following meaning:</para>
 
-        <para>The formation of the sytem is ARCH::OS:OSVERSION:GLIBC where the
-        GLIBC and OS VERSION are optional. ARCH can have one of the following
-        values INTEL32, INTEL64, SPARCV7, SPARCV9, AIX, AMD64. OS can have one
-        of the following values LINUX,SUNOS. The default value for system if
-        none specified is INTEL32::LINUX</para>
-      </listitem>
+      <orderedlist>
+        <listitem>
+          <para>site - A site identifier.</para>
+        </listitem>
 
-      <listitem>
-        <para>Profiles - The profiles associated with the transformation. For
-        indepth information about profiles and their priorities read the
-        Profile Guide.</para>
+        <listitem>
+          <para>logicaltr - The logical transformation name. The format is
+          NAMESPACE::NAME:VERSION where NAMESPACE and NAME are
+          optional.</para>
+        </listitem>
 
-        <para>The format for profiles is NS::KEY="VALUE" where NS is the
-        namespace of the profile e.g. Pegasus,condor,DAGMan,env,globus. The
-        key and value can be any strings. Remember to quote the value with
-        double quotes. If you need to specify several profiles you can do it
-        in several ways</para>
+        <listitem>
+          <para>physicaltr - The physical transformation path or URL.</para>
 
-        <itemizedlist>
-          <listitem>
-            <para>NS1::KEY1="VALUE1",KEY2="VALUE2";NS2::KEY3="VALUE3",KEY4="VALUE4"</para>
+          <para>If the transformation type is INSTALLED then it needs to be an
+          absolute path to the executable. If the type is STATIC_BINARY then
+          the path needs to be a HTTP, FTP or gsiftp URL</para>
+        </listitem>
 
-            <para>This is the most optimized form. Multiple key values for the
-            same namespace are separated by a comma "," and different
-            namespaces are separated by a semicolon ";"</para>
-          </listitem>
+        <listitem>
+          <para>type - The type of transformation. Can have on of two
+          values</para>
 
-          <listitem>
-            <para>NS1::KEY1="VALUE1";NS1::KEY2="VALUE2";NS2::KEY3="VALUE3";NS2::KEY4="VALUE4"</para>
+          <itemizedlist>
+            <listitem>
+              <para>INSTALLED: This means that the transformation is installed
+              on the remote site</para>
+            </listitem>
 
-            <para>You can also just repeat the triple of NS::KEY="VALUE"
-            separated by semicolons for a simple format;</para>
-          </listitem>
-        </itemizedlist>
-      </listitem>
-    </orderedlist>
+            <listitem>
+              <para>STATIC_BINARY: This means that the transformation is
+              available as a static binary and can be staged to a remote
+              site.</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
 
-    <para>We need to map our declared transformations (preprocess, findranage,
-    and analyze) from the example DAX above to a simple "mock application"
-    name "keg" ("canonical example for the grid") which reads input files
-    designated by arguments, writes them back onto output files, and produces
-    on STDOUT a summary of where and when it was run. Keg ships with Pegasus
-    in the bin directory. Run keg on the command line to see how it
-    works.</para>
+        <listitem>
+          <para>system - The system for which the transformation is
+          compiled.</para>
 
-    <programlisting>$<emphasis> keg -o /dev/fd/1</emphasis>
+          <para>The formation of the sytem is ARCH::OS:OSVERSION:GLIBC where
+          the GLIBC and OS VERSION are optional. ARCH can have one of the
+          following values INTEL32, INTEL64, SPARCV7, SPARCV9, AIX, AMD64. OS
+          can have one of the following values LINUX,SUNOS. The default value
+          for system if none specified is INTEL32::LINUX</para>
+        </listitem>
+
+        <listitem>
+          <para>Profiles - The profiles associated with the transformation.
+          For indepth information about profiles and their priorities read the
+          Profile Guide.</para>
+
+          <para>The format for profiles is NS::KEY="VALUE" where NS is the
+          namespace of the profile e.g. Pegasus,condor,DAGMan,env,globus. The
+          key and value can be any strings. Remember to quote the value with
+          double quotes. If you need to specify several profiles you can do it
+          in several ways</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>NS1::KEY1="VALUE1",KEY2="VALUE2";NS2::KEY3="VALUE3",KEY4="VALUE4"</para>
+
+              <para>This is the most optimized form. Multiple key values for
+              the same namespace are separated by a comma "," and different
+              namespaces are separated by a semicolon ";"</para>
+            </listitem>
+
+            <listitem>
+              <para>NS1::KEY1="VALUE1";NS1::KEY2="VALUE2";NS2::KEY3="VALUE3";NS2::KEY4="VALUE4"</para>
+
+              <para>You can also just repeat the triple of NS::KEY="VALUE"
+              separated by semicolons for a simple format;</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+      <title>Datbase TC (Datbase)</title>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>TC Client</title>
+
+      <para>We need to map our declared transformations (preprocess,
+      findranage, and analyze) from the example DAX above to a simple "mock
+      application" name "keg" ("canonical example for the grid") which reads
+      input files designated by arguments, writes them back onto output files,
+      and produces on STDOUT a summary of where and when it was run. Keg ships
+      with Pegasus in the bin directory. Run keg on the command line to see
+      how it works.</para>
+
+      <programlisting>$<emphasis> keg -o /dev/fd/1</emphasis>
 
 Timestamp Today: 20040624T054607-05:00 (1088073967.418;0.022)
 Applicationname: keg @ 10.10.0.11 (VPN)
@@ -411,17 +548,18 @@ Systemenvironm.: i686-Linux 2.4.18-3
 Processor Info.: 1 x Pentium III (Coppermine) @ 797.425
 Output Filename: /dev/fd/1</programlisting>
 
-    <para>Now we need to map all 3 transformations onto the "keg" executable.
-    We place these mappings in our File transformation catalog for site clus1.
-    In earlier version of Pegasus one had to define entries for Pegasus
-    executables like transfer, replica client, dirmanager etc on each site as
-    well as site "local". This is no longer required. Pegasus 2.0 and later
-    automatically picks up the paths for these binaries from the environment
-    profile PEGASUS_HOME set in the site catalog for each site.</para>
+      <para>Now we need to map all 3 transformations onto the "keg"
+      executable. We place these mappings in our File transformation catalog
+      for site clus1. In earlier version of Pegasus one had to define entries
+      for Pegasus executables like transfer, replica client, dirmanager etc on
+      each site as well as site "local". This is no longer required. Pegasus
+      2.0 and later automatically picks up the paths for these binaries from
+      the environment profile PEGASUS_HOME set in the site catalog for each
+      site.</para>
 
-    <para>Create a file called tc.data and edit the contents</para>
+      <para>Create a file called tc.data and edit the contents</para>
 
-    <programlisting><emphasis>$ vim $HOME/tc</emphasis>
+      <programlisting><emphasis>$ vim $HOME/tc</emphasis>
 
 
 # Site  LFN  PFN  TYPE  SYSTEM PROFILE
@@ -433,29 +571,32 @@ clus1 black::findrange:1.0  gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
 
 </programlisting>
 
-    <para>Note: A single entry needs to be on one line. The above example is
-    just formatted for convenience.</para>
+      <para>Note: A single entry needs to be on one line. The above example is
+      just formatted for convenience.</para>
 
-    <para>Alternatively you can also use the tc-client to add entries to any
-    implementation of the transformation catalog. The following eg: shows us
-    adding the last entry in the File based transformation catalog.</para>
+      <para>Alternatively you can also use the tc-client to add entries to any
+      implementation of the transformation catalog. The following eg: shows us
+      adding the last entry in the File based transformation catalog.</para>
 
-    <programlisting>$ <emphasis>tc-client -Dpegasus.catalog.transformation=File \
+      <programlisting>$ <emphasis>tc-client -Dpegasus.catalog.transformation=File \
 -Dpegasus.catalog.transformation.file=$HOME/tc -a -r clus1 -l black::analyze:1.0 \
 -p gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg  -t STATIC_BINARY -s INTEL32::LINUX \
 -e ENV::KEY3="VALUE3"</emphasis>
 
 2007.07.11 16:12:03.712 PDT: [INFO] Added tc entry sucessfully</programlisting>
 
-    <para>To verify if the entry was correctly added to the transformation
-    catalog you can use the tc-client to query.</para>
+      <para>To verify if the entry was correctly added to the transformation
+      catalog you can use the tc-client to query.</para>
 
-    <programlisting>$ <emphasis>tc-client -Dpegasus.catalog.transformation=File \
+      <programlisting>$ <emphasis>tc-client -Dpegasus.catalog.transformation=File \
 -Dpegasus.catalog.transformation.file=$HOME/tc -q -P -l black::analyze:1.0
 </emphasis>
 #RESID     LTX          PFN                  TYPE              SYSINFO
 
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STATIC_BINARY    INTEL32::LINUX</programlisting>
+
+      <para></para>
+    </section>
   </section>
 </chapter>
