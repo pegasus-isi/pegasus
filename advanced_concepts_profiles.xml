@@ -343,7 +343,7 @@
 
               <entry>is the number of times job is released back to the queue
               if it goes to HOLD, e.g. due to Globus errors. Pegasus defaults
-              to 3. </entry>
+              to 3.</entry>
             </row>
 
             <row>
@@ -392,15 +392,15 @@
 
       <orderedlist>
         <listitem>
-          <para>should_transfer_files </para>
+          <para>should_transfer_files</para>
         </listitem>
 
         <listitem>
-          <para>transfer_output </para>
+          <para>transfer_output</para>
         </listitem>
 
         <listitem>
-          <para>transfer_error </para>
+          <para>transfer_error</para>
         </listitem>
 
         <listitem>
@@ -543,7 +543,7 @@
                       role="bold">POST.PATH.[value</emphasis>] where [value]
                       is this legal identifier specified. The user postscript
                       is passed the name of the .out file of the job as the
-                      last argument on the command line. </para>
+                      last argument on the command line.</para>
 
                       <para>For e.g. if the following dagman profiles were
                       associated with a job X</para>
@@ -689,11 +689,11 @@
                   </listitem>
 
                   <listitem>
-                    <para> If set to <emphasis
+                    <para>If set to <emphasis
                     role="bold">essential</emphasis>, means only essential
                     jobs have post scripts associated with them. At present
                     the only non essential job is the replica registration
-                    job. </para>
+                    job.</para>
                   </listitem>
                 </orderedlist></entry>
             </row>
@@ -899,55 +899,56 @@
         </tgroup>
       </table>
     </section>
+  </section>
+
+  <section>
+    <title>Sources for Profiles</title>
+
+    <para>Profiles may enter the job-processing stream at various stages.
+    Depending on the requirements and scope a profile is to apply, profiles
+    can be associated at</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>as user property settings.</para>
+      </listitem>
+
+      <listitem>
+        <para>dax level</para>
+      </listitem>
+
+      <listitem>
+        <para>in the site catalog</para>
+      </listitem>
+
+      <listitem>
+        <para>in the transformation catalog</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Unfortunately, a different syntax applies to each level and context.
+    This section shows the different profile sources and syntaxes. However, at
+    the foundation of each profile lies the triple of namespace, key and
+    value.</para>
 
     <section>
-      <title>Sources for Profiles</title>
+      <title>User Profiles in Properties</title>
 
-      <para>Profiles may enter the job-processing stream at various stages.
-      Depending on the requirements and scope a profile is to apply, profiles
-      can be associated at</para>
+      <para>Users can specify all profiles in the properties files where the
+      property name is <emphasis role="bold">[namespace].key</emphasis> and
+      <emphasis role="bold">value</emphasis> of the property is the value of
+      the profile.</para>
 
-      <itemizedlist>
-        <listitem>
-          <para>as user property settings.</para>
-        </listitem>
+      <para>Namespace can be env|condor|globus|dagman|pegasus</para>
 
-        <listitem>
-          <para>dax level</para>
-        </listitem>
+      <para>Any profile specified as a property applies to the whole workflow
+      unless overridden at the DAX level , Site Catalog , Transformation
+      Catalog Level.</para>
 
-        <listitem>
-          <para>in the site catalog</para>
-        </listitem>
+      <para>Some profiles that they can be set in the properties file are
+      listed below</para>
 
-        <listitem>
-          <para>in the transformation catalog</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>Unfortunately, a different syntax applies to each level and
-      context. This section shows the different profile sources and syntaxes.
-      However, at the foundation of each profile lies the triple of namespace,
-      key and value.</para>
-
-      <section>
-        <title>User Profiles in Properties</title>
-
-        <para>Users can specify all profiles in the properties files where the
-        property name is <emphasis role="bold">[namespace].key</emphasis> and
-        <emphasis role="bold">value</emphasis> of the property is the value of
-        the profile.</para>
-
-        <para> Namespace can be env|condor|globus|dagman|pegasus</para>
-
-        <para>Any profile specified as a property applies to the whole
-        workflow unless overridden at the DAX level , Site Catalog ,
-        Transformation Catalog Level.</para>
-
-        <para>Some profiles that they can be set in the properties file are
-        listed below</para>
-
-        <programlisting>env.JAVA_HOME "/software/bin/java"
+      <programlisting>env.JAVA_HOME "/software/bin/java"
 
 condor.periodic_release 5
 condor.periodic_remove  my_own_expression
@@ -974,17 +975,16 @@ dagman.bigjobs.maxjobs 1
 pegasus.clusters.size 5
 
 pegasus.stagein.clusters 3</programlisting>
-      </section>
+    </section>
 
-      <section>
-        <title>Profiles in DAX</title>
+    <section>
+      <title>Profiles in DAX</title>
 
-        <para>The user can associate profiles with logical transformations in
-        DAX. Environment settings required by a job's application, or a
-        maximum estimate on the run-time are examples for profiles at this
-        stage.</para>
+      <para>The user can associate profiles with logical transformations in
+      DAX. Environment settings required by a job's application, or a maximum
+      estimate on the run-time are examples for profiles at this stage.</para>
 
-        <programlisting>&lt;job id="ID000001" namespace="asdf" name="preprocess" version="1.0"
+      <programlisting>&lt;job id="ID000001" namespace="asdf" name="preprocess" version="1.0"
  level="3" dv-namespace="voeckler" dv-name="top" dv-version="1.0"&gt;
   &lt;argument&gt;-a top -T10  -i &lt;filename file="voeckler.f.a"/&gt; 
  -o &lt;filename file="voeckler.f.b1"/&gt;
@@ -994,34 +994,34 @@ pegasus.stagein.clusters 3</programlisting>
   …
 &lt;/job&gt;
 </programlisting>
-      </section>
+    </section>
 
-      <section>
-        <title>Profiles in Site Catalog</title>
+    <section>
+      <title>Profiles in Site Catalog</title>
 
-        <para>If it becomes necessary to limit the scope of a profile to a
-        single site, these profiles should go into the site catalog. A profile
-        in the site catalog applies to all jobs and all application run at the
-        site. Commonly, site catalog profiles set environment settings like
-        the LD_LIBRARY_PATH, or globus rsl parameters like queue and project
-        names.</para>
+      <para>If it becomes necessary to limit the scope of a profile to a
+      single site, these profiles should go into the site catalog. A profile
+      in the site catalog applies to all jobs and all application run at the
+      site. Commonly, site catalog profiles set environment settings like the
+      LD_LIBRARY_PATH, or globus rsl parameters like queue and project
+      names.</para>
 
-        <para>Currently, there is no tool to manipulate the site catalog, e.g.
-        by adding profiles. Modifying the site catalog requires that you load
-        it into your editor.</para>
+      <para>Currently, there is no tool to manipulate the site catalog, e.g.
+      by adding profiles. Modifying the site catalog requires that you load it
+      into your editor.</para>
 
-        <para>The XML version of the site catalog uses the following
-        syntax:</para>
+      <para>The XML version of the site catalog uses the following
+      syntax:</para>
 
-        <programlisting><emphasis role="bold">&lt;profile namespace=</emphasis>"<emphasis>namespace</emphasis>" <emphasis
-            role="bold">key=</emphasis>"<emphasis>key</emphasis>"&gt;<emphasis>value</emphasis><emphasis
-            role="bold">&lt;/profile&gt;</emphasis></programlisting>
+      <programlisting><emphasis role="bold">&lt;profile namespace=</emphasis>"<emphasis>namespace</emphasis>" <emphasis
+          role="bold">key=</emphasis>"<emphasis>key</emphasis>"&gt;<emphasis>value</emphasis><emphasis
+          role="bold">&lt;/profile&gt;</emphasis></programlisting>
 
-        <para>The XML schema requires that profiles are the first children of
-        a pool element. If the element ordering is wrong, the XML parser will
-        produce errors and warnings:</para>
+      <para>The XML schema requires that profiles are the first children of a
+      pool element. If the element ordering is wrong, the XML parser will
+      produce errors and warnings:</para>
 
-        <programlisting>&lt;pool handle="isi_condor" gridlaunch="/home/shared/pegasus/bin/kickstart"&gt;
+      <programlisting>&lt;pool handle="isi_condor" gridlaunch="/home/shared/pegasus/bin/kickstart"&gt;
   <emphasis role="bold">&lt;profile namespace="env"
    key="GLOBUS_LOCATION"&gt;/home/shared/globus/&lt;/profile&gt;
   &lt;profile namespace="env"
@@ -1031,102 +1031,101 @@ pegasus.stagein.clusters 3</programlisting>
 &lt;/pool&gt;
 </programlisting>
 
-        <para>The multi-line textual version of the site catalog uses the
-        following syntax:</para>
+      <para>The multi-line textual version of the site catalog uses the
+      following syntax:</para>
 
-        <programlisting><emphasis role="bold">profile</emphasis> <emphasis>namespace "key" "value"</emphasis></programlisting>
+      <programlisting><emphasis role="bold">profile</emphasis> <emphasis>namespace "key" "value"</emphasis></programlisting>
 
-        <para>The order within the textual pool definition is not important.
-        Profiles can appear anywhere:</para>
+      <para>The order within the textual pool definition is not important.
+      Profiles can appear anywhere:</para>
 
-        <programlisting>pool isi_condor {
+      <programlisting>pool isi_condor {
   gridlaunch "/home/shared/pegasus/bin/kickstart"
   <emphasis role="bold">profile env "GLOBUS_LOCATION" "/home/shared/globus"
   profile env "LD_LIBRARY_PATH" "/home/shared/globus/lib"</emphasis>
   …
 }
 </programlisting>
-      </section>
-
-      <section>
-        <title>Profiles in Transformation Catalog</title>
-
-        <para>Some profiles require a narrower scope than the site catalog
-        offers. Some profiles only apply to certain applications on certain
-        sites, or change with each application and site.
-        Transformation-specific and CPU-specific environment variables, or job
-        clustering profiles are good candidates. Such profiles are best
-        specified in the transformation catalog.</para>
-
-        <para>Profiles associate with a physical transformation and site in
-        the transformation catalog. The Database version of the transformation
-        catalog also permits the convenience of connecting a transformation
-        with a profile.</para>
-
-        <para>The Pegasus tc-client tool is a convenient helper to associate
-        profiles with transformation catalog entries. As benefit, the user
-        does not have to worry about formats of profiles in the various
-        transformation catalog instances.</para>
-
-        <programlisting>tc-client -a -P -E -p /home/shared/executables/analyze -t INSTALLED -r isi_condor -e env::GLOBUS_LOCATION=”/home/shared/globus”</programlisting>
-
-        <para>The above example adds an environment variable GLOBUS_LOCATION
-        to the application /home/shared/executables/analyze on site
-        isi_condor. The transformation catalog guide has more details on the
-        usage of the tc-client.</para>
-      </section>
     </section>
 
     <section>
-      <title>Profiles Conflict Resolution</title>
+      <title>Profiles in Transformation Catalog</title>
 
-      <para>Irrespective of where the profiles are specified, eventually the
-      profiles are associated with jobs. Multiple sources may specify the same
-      profile for the same job. For instance, DAX may specify an environment
-      variable X. The site catalog may also specify an environment variable X
-      for the chosen site. The transformation catalog may specify an
-      environment variable X for the chosen site and application. When the job
-      is concretized, these three conflicts need to be resolved.</para>
+      <para>Some profiles require a narrower scope than the site catalog
+      offers. Some profiles only apply to certain applications on certain
+      sites, or change with each application and site. Transformation-specific
+      and CPU-specific environment variables, or job clustering profiles are
+      good candidates. Such profiles are best specified in the transformation
+      catalog.</para>
 
-      <para>Pegasus defines a priority ordering of profiles. The higher
-      priority takes precedence (overwrites) a profile of a lower
-      priority.</para>
+      <para>Profiles associate with a physical transformation and site in the
+      transformation catalog. The Database version of the transformation
+      catalog also permits the convenience of connecting a transformation with
+      a profile.</para>
 
-      <orderedlist>
-        <listitem>
-          <para>Transformation Catalog Profiles</para>
-        </listitem>
+      <para>The Pegasus tc-client tool is a convenient helper to associate
+      profiles with transformation catalog entries. As benefit, the user does
+      not have to worry about formats of profiles in the various
+      transformation catalog instances.</para>
 
-        <listitem>
-          <para>Site Catalog Profiles</para>
-        </listitem>
+      <programlisting>tc-client -a -P -E -p /home/shared/executables/analyze -t INSTALLED -r isi_condor -e env::GLOBUS_LOCATION=”/home/shared/globus”</programlisting>
 
-        <listitem>
-          <para>DAX Profiles</para>
-        </listitem>
-
-        <listitem>
-          <para>Profiles in Properties</para>
-        </listitem>
-      </orderedlist>
+      <para>The above example adds an environment variable GLOBUS_LOCATION to
+      the application /home/shared/executables/analyze on site isi_condor. The
+      transformation catalog guide has more details on the usage of the
+      tc-client.</para>
     </section>
+  </section>
+
+  <section>
+    <title>Profiles Conflict Resolution</title>
+
+    <para>Irrespective of where the profiles are specified, eventually the
+    profiles are associated with jobs. Multiple sources may specify the same
+    profile for the same job. For instance, DAX may specify an environment
+    variable X. The site catalog may also specify an environment variable X
+    for the chosen site. The transformation catalog may specify an environment
+    variable X for the chosen site and application. When the job is
+    concretized, these three conflicts need to be resolved.</para>
+
+    <para>Pegasus defines a priority ordering of profiles. The higher priority
+    takes precedence (overwrites) a profile of a lower priority.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Transformation Catalog Profiles</para>
+      </listitem>
+
+      <listitem>
+        <para>Site Catalog Profiles</para>
+      </listitem>
+
+      <listitem>
+        <para>DAX Profiles</para>
+      </listitem>
+
+      <listitem>
+        <para>Profiles in Properties</para>
+      </listitem>
+    </orderedlist>
+  </section>
+
+  <section>
+    <title>Details of Profile Handling</title>
+
+    <para>The previous sections omitted some of the finer details for the sake
+    of clarity. To understand some of the constraints that Pegasus imposes, it
+    is required to look at the way profiles affect jobs.</para>
 
     <section>
-      <title>Details of Profile Handling</title>
+      <title>Details of env Profiles</title>
 
-      <para>The previous sections omitted some of the finer details for the
-      sake of clarity. To understand some of the constraints that Pegasus
-      imposes, it is required to look at the way profiles affect jobs.</para>
+      <para>Profiles in the env namespace are translated to a
+      semicolon-separated list of key-value pairs. The list becomes the
+      argument for the Condor environment command in the job's submit
+      file.</para>
 
-      <section>
-        <title>Details of env Profiles</title>
-
-        <para>Profiles in the env namespace are translated to a
-        semicolon-separated list of key-value pairs. The list becomes the
-        argument for the Condor environment command in the job's submit
-        file.</para>
-
-        <programlisting>######################################################################
+      <programlisting>######################################################################
 # Pegasus WMS  SUBMIT FILE GENERATOR
 # DAG : black-diamond, Index = 0, Count = 1
 # SUBMIT FILE NAME : findrange_ID000002.sub
@@ -1143,29 +1142,26 @@ queue
 # END OF SUBMIT FILE
 </programlisting>
 
-        <para>Condor-G, in turn, will translate the
-        <emphasis>environment</emphasis> command for any remote job into
-        Globus RSL environment settings, and append them to any existing RSL
-        syntax it generates. To permit proper mixing, all
-        <emphasis>environment</emphasis> setting should solely use the env
-        profiles, and none of the Condor nor Globus environment
-        settings.</para>
+      <para>Condor-G, in turn, will translate the
+      <emphasis>environment</emphasis> command for any remote job into Globus
+      RSL environment settings, and append them to any existing RSL syntax it
+      generates. To permit proper mixing, all <emphasis>environment</emphasis>
+      setting should solely use the env profiles, and none of the Condor nor
+      Globus environment settings.</para>
 
-        <para>If <emphasis>kickstart</emphasis> starts a job, it may make use
-        of environment variables in its executable and arguments
-        setting.</para>
-      </section>
+      <para>If <emphasis>kickstart</emphasis> starts a job, it may make use of
+      environment variables in its executable and arguments setting.</para>
+    </section>
 
-      <section>
-        <title>Details of globus Profiles</title>
+    <section>
+      <title>Details of globus Profiles</title>
 
-        <para>Profiles in the <emphasis>globus</emphasis> Namespaces are
-        translated into a list of paranthesis-enclosed equal-separated
-        key-value pairs. The list becomes the value for the Condor
-        <emphasis>globusrsl</emphasis> setting in the job's submit
-        file:</para>
+      <para>Profiles in the <emphasis>globus</emphasis> Namespaces are
+      translated into a list of paranthesis-enclosed equal-separated key-value
+      pairs. The list becomes the value for the Condor
+      <emphasis>globusrsl</emphasis> setting in the job's submit file:</para>
 
-        <programlisting>######################################################################
+      <programlisting>######################################################################
 # Pegasus WMS SUBMIT FILE GENERATOR
 # DAG : black-diamond, Index = 0, Count = 1
 # SUBMIT FILE NAME : findrange_ID000002.sub
@@ -1181,10 +1177,9 @@ queue
 # END OF SUBMIT FILE
 </programlisting>
 
-        <para>For this reason, Pegasus prohibits the use of the
-        <emphasis>globusrsl</emphasis> key in the <emphasis>condor</emphasis>
-        profile namespace.</para>
-      </section>
+      <para>For this reason, Pegasus prohibits the use of the
+      <emphasis>globusrsl</emphasis> key in the <emphasis>condor</emphasis>
+      profile namespace.</para>
     </section>
   </section>
 </chapter>
