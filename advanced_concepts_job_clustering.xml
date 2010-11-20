@@ -99,22 +99,22 @@ Valid clustering techniques are horizontal and label.</programlisting></para>
 
         <itemizedlist>
           <listitem>
-            <para><emphasis role="bold">collapse factor</emphasis></para>
+            <para><emphasis role="bold">clusters.size factor</emphasis></para>
 
-            <para>The collapse factor denotes how many jobs need to be merged
-            into a single clustered job. It is specified via the use of a
-            PEGASUS namespace profile key “collapse”. for e.g. if at a
+            <para>The clusters.size factor denotes how many jobs need to be
+            merged into a single clustered job. It is specified via the use of
+            a PEGASUS namespace profile key “clusters.size”. for e.g. if at a
             particular level, say 4 jobs referring to logical transformation B
-            have been scheduled to a siteX. The collapse factor associated
-            with job B for siteX is say 3. This will result in 2 clustered
-            jobs, one composed of 3 jobs and another of 2 jobs. The collapse
-            factor can be specified in the transformation catalog as
-            follows</para>
+            have been scheduled to a siteX. The clusters.size factor
+            associated with job B for siteX is say 3. This will result in 2
+            clustered jobs, one composed of 3 jobs and another of 2 jobs. The
+            clusters.size factor can be specified in the transformation
+            catalog as follows</para>
 
             <programlisting><emphasis role="bold">#site   transformation   pfn            type               architecture  profiles
 </emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX  PEGASUS::collapse=3
-siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS::collapse=2
+siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX  PEGASUS::clusters.size=3
+siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS::clusters.size=2
 </programlisting>
 
             <figure>
@@ -129,37 +129,38 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS:
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">bundle factor</emphasis></para>
+            <para><emphasis role="bold">clusters.num factor</emphasis></para>
 
-            <para>The bundle factor denotes how many clustered jobs does the
-            user want to see per level per site. It is specified via the use
-            of a PEGASUS namespace profile key “bundle”. for e.g. if at a
-            particular level, say 4 jobs referring to logical transformation B
-            have been scheduled to a siteX. The “bundle” factor associated
-            with job B for siteX is say 3. This will result in 3 clustered
-            jobs, one composed of 2 jobs and others of a single job each. The
-            bundle factor in the transformation catalog can be specified as
-            follows</para>
+            <para>The clusters.num factor denotes how many clustered jobs does
+            the user want to see per level per site. It is specified via the
+            use of a PEGASUS namespace profile key “clusters.num”. for e.g. if
+            at a particular level, say 4 jobs referring to logical
+            transformation B have been scheduled to a siteX. The
+            “clusters.num” factor associated with job B for siteX is say 3.
+            This will result in 3 clustered jobs, one composed of 2 jobs and
+            others of a single job each. The clusters.num factor in the
+            transformation catalog can be specified as follows</para>
 
             <programlisting><emphasis role="bold">#site  transformation      pfn           type            architecture    profiles
 </emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX  PEGASUS::bundle=3
-siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS::bundle=2
+siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX  PEGASUS::clusters.num=3
+siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS::clusters.num=2
 </programlisting>
 
             <para>In the case, where both the factors are associated with the
-            job, the bundle value supersedes the collapse value.</para>
+            job, the clusters.num value supersedes the clusters.size
+            value.</para>
 
             <programlisting><emphasis role="bold">#site  transformation   pfn             type             architecture   profiles
 </emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::collapse=3,bundle=3
+siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::clusters.size=3,clusters.num=3
 </programlisting>
 
             <para>In the above case the jobs referring to logical
             transformation B scheduled on siteX will be clustered on the basis
-            of “bundle” value. Hence, if there are 4 jobs referring to logical
-            transformation B scheduled to siteX, then 3 clustered jobs will be
-            created.</para>
+            of “clusters.num” value. Hence, if there are 4 jobs referring to
+            logical transformation B scheduled to siteX, then 3 clustered jobs
+            will be created.</para>
 
             <figure>
               <title></title>
@@ -399,7 +400,7 @@ pegasus.clusterer.job.aggregator seqexec|mpiexec</programlisting>
 
           <programlisting><emphasis role="bold">#site  transformation   pfn            type                architecture profiles
 </emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::collapse=3,collapser=mpiexec</programlisting>
+siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::clusters.size=3,collapser=mpiexec</programlisting>
 
           <para>In the above example, all the clustered jobs that consist of
           transformation B on siteX will be executed via mpiexec.</para>
