@@ -55,8 +55,7 @@
 
       <listitem>
         <para><emphasis
-        role="bold">&lt;daxlabel-daxindex&gt;.dag.dagman.out</emphasis>
-        </para>
+        role="bold">&lt;daxlabel-daxindex&gt;.dag.dagman.out</emphasis></para>
 
         <para>When a DAG ( .dag file ) is executed by Condor DAGMan , the
         DAGMan writes out it's output to the
@@ -67,12 +66,22 @@
       </listitem>
 
       <listitem>
+        <para><emphasis
+        role="bold">&lt;daxlabel-daxindex&gt;.job.map</emphasis></para>
+
+        <para>This file links jobs in the DAG with the jobs in the DAX. The
+        contents of the file are in netlogger format. The purpose of this file
+        is to be able to link an invocation record of a task to the
+        corresponding job in the DAX</para>
+      </listitem>
+
+      <listitem>
         <para><emphasis role="bold">&lt;daxlabel-daxindex&gt;.dot
         </emphasis></para>
 
         <para>Pegasus creates a dot file for the executable workflow in
         addition to the .dag file. This can be used to visualize the
-        executable workflow using the dot program. </para>
+        executable workflow using the dot program.</para>
       </listitem>
 
       <listitem>
@@ -84,7 +93,7 @@
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">&lt;job&gt;.out.00n</emphasis> </para>
+        <para><emphasis role="bold">&lt;job&gt;.out.00n</emphasis></para>
 
         <para>The stdout of the executable referred in the job submit file. In
         case of Pegasus, mostly the jobs are launched via kickstart. Hence,
@@ -123,7 +132,7 @@
       <listitem>
         <para><emphasis role="bold">braindump.txt </emphasis></para>
 
-        <para> Contains information about pegasus version, dax file, dag file,
+        <para>Contains information about pegasus version, dax file, dag file,
         dax label</para>
       </listitem>
     </orderedlist>
@@ -136,7 +145,7 @@
     workflow executor used by Pegasus ) .</para>
 
     <para>Pegasus generated .dag file usually contains the following
-    information for each job </para>
+    information for each job</para>
 
     <orderedlist>
       <listitem>
@@ -233,14 +242,14 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
   </section>
 
   <section>
-    <title>Kickstart XML Record </title>
+    <title>Kickstart XML Record</title>
 
     <para>Kickstart is a light weight C executable that is shipped with the
     pegasus worker package. All jobs are launced via Kickstart on the remote
     end, unless explicitly disabled at the time of running
     pegasus-plan.</para>
 
-    <para>Kickstart does not work with </para>
+    <para>Kickstart does not work with</para>
 
     <orderedlist>
       <listitem>
@@ -252,13 +261,13 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
       </listitem>
     </orderedlist>
 
-    <para>Pegasus automatically disables kickstart for the above jobs. </para>
+    <para>Pegasus automatically disables kickstart for the above jobs.</para>
 
     <para>Kickstart captures useful runtime provenance information about the
     job launched by it on the remote note, and puts in an XML record that it
     writes to it's stdout. The stdout appears in the workflow submit directory
     as &lt;job&gt;.out.00n . Some useful information captured by kickstart and
-    logged are as follows </para>
+    logged are as follows</para>
 
     <orderedlist>
       <listitem>
@@ -297,7 +306,7 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
     </orderedlist>
 
     <para>Amongst the above information, the dagman.out file gives a coarser
-    grained estimate of the job duration and start time. </para>
+    grained estimate of the job duration and start time.</para>
 
     <section>
       <title>Reading a Kickstart Output File</title>
@@ -489,13 +498,13 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
       </listitem>
 
       <listitem>
-        <para>the pegasus site to which the job is mapped </para>
+        <para>the pegasus site to which the job is mapped</para>
       </listitem>
     </orderedlist>
 
     <table>
-      <title>Table 1: The job lifecycle when executed as part of the workflow
-      </title>
+      <title>Table 1: The job lifecycle when executed as part of the
+      workflow</title>
 
       <tgroup cols="2">
         <tbody>
@@ -508,79 +517,79 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           <row>
             <entry>SUBMIT</entry>
 
-            <entry>job is submitted by condor schedd for execution. </entry>
+            <entry>job is submitted by condor schedd for execution.</entry>
           </row>
 
           <row>
             <entry>EXECUTE</entry>
 
-            <entry>condor schedd detects that a job has started execution.
-            </entry>
+            <entry>condor schedd detects that a job has started
+            execution.</entry>
           </row>
 
           <row>
             <entry>GLOBUS_SUBMIT</entry>
 
             <entry>the job has been submitted to the remote resource. It's
-            only written for GRAM jobs (i.e. gt2 and gt4). </entry>
+            only written for GRAM jobs (i.e. gt2 and gt4).</entry>
           </row>
 
           <row>
             <entry>GRID_SUBMIT</entry>
 
             <entry>same as GLOBUS_SUBMIT event. The ULOG_GRID_SUBMIT event is
-            written for all grid universe jobs./ </entry>
+            written for all grid universe jobs./</entry>
           </row>
 
           <row>
-            <entry>JOB_TERMINATED </entry>
+            <entry>JOB_TERMINATED</entry>
 
-            <entry>job terminated on the remote node. </entry>
+            <entry>job terminated on the remote node.</entry>
           </row>
 
           <row>
             <entry>JOB_SUCCESS</entry>
 
             <entry>job succeeded on the remote host, condor id will be zero
-            (successful exit code). </entry>
+            (successful exit code).</entry>
           </row>
 
           <row>
             <entry>JOB_FAILURE</entry>
 
             <entry>job failed on the remote host, condor id will be the job's
-            exit code. </entry>
+            exit code.</entry>
           </row>
 
           <row>
             <entry>POST_SCRIPT_STARTED</entry>
 
             <entry>post script started by DAGMan on the submit host, usually
-            to parse the kickstart output </entry>
+            to parse the kickstart output</entry>
           </row>
 
           <row>
             <entry>POST_SCRIPT_TERMINATED</entry>
 
-            <entry>post script finished on the submit node. </entry>
+            <entry>post script finished on the submit node.</entry>
           </row>
 
           <row>
-            <entry>POST_SCRIPT_SUCCESS | POST_SCRIPT_FAILURE </entry>
+            <entry>POST_SCRIPT_SUCCESS | POST_SCRIPT_FAILURE</entry>
 
-            <entry>post script succeeded or failed. </entry>
+            <entry>post script succeeded or failed.</entry>
           </row>
         </tbody>
       </tgroup>
     </table>
 
     <section>
-      <title>Pegasus Workflow Job States and Delays </title>
+      <title>Pegasus Workflow Job States and Delays</title>
 
       <para>The various job states that a job goes through ( as caputured in
       the dagman.out and jobstate.log file) during it's lifecycle are
       illustrated below. The figure below highlights the various local and
-      remote delays during job lifecycle. </para>
+      remote delays during job lifecycle.</para>
 
       <mediaobject>
         <imageobject>
@@ -594,7 +603,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
     <title>Braindump File</title>
 
     <para>The braindump file is created per workflow in the submit file and
-    contains metadata about the workflow. </para>
+    contains metadata about the workflow.</para>
 
     <table>
       <title>Table 2: Information Captured in Braindump File</title>
@@ -616,7 +625,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           <row>
             <entry>grid_dn</entry>
 
-            <entry>the Distinguished Name in the proxy </entry>
+            <entry>the Distinguished Name in the proxy</entry>
           </row>
 
           <row>
@@ -626,7 +635,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           </row>
 
           <row>
-            <entry>dax </entry>
+            <entry>dax</entry>
 
             <entry>the path to the dax file</entry>
           </row>
@@ -678,7 +687,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           <row>
             <entry>pegasus_build</entry>
 
-            <entry>the build timestamp </entry>
+            <entry>the build timestamp</entry>
           </row>
 
           <row>
@@ -747,7 +756,7 @@ type dag
   </section>
 
   <section>
-    <title>Pegasus job.map file </title>
+    <title>Pegasus job.map file</title>
 
     <para>Pegasus creates a workflow.job.map file that links jobs in the DAG
     with the jobs in the DAX. The contents of the file are in netlogger
@@ -755,13 +764,13 @@ type dag
     record of a task to the corresponding job in the DAX</para>
 
     <para>The workflow is replaced by the name of the workflow i.e. same
-    prefix as the .dag file </para>
+    prefix as the .dag file</para>
 
-    <para>In the file there are two types of events. </para>
+    <para>In the file there are two types of events.</para>
 
     <itemizedlist>
       <listitem>
-        <para>pegasus.job </para>
+        <para>pegasus.job</para>
       </listitem>
 
       <listitem>
@@ -810,10 +819,10 @@ type dag
       </listitem>
 
       <listitem>
-        <para>task.xform the logical transformation which the job refers to.
-        </para>
+        <para>task.xform the logical transformation which the job refers
+        to.</para>
 
-        <para>Some sample entries are as follows </para>
+        <para>Some sample entries are as follows</para>
 
         <programlisting>ts=2009-04-21T23:09:03.091658Z event=pegasus.job job.id=analyze_ID000004 job.class="7" job.xform="vahi::analyze:1.0" task.count="1"
 ts=2009-04-21T23:09:03.091772Z event=pegasus.job.map job.id=analyze_ID000004 task.id="ID000004" task.class="7" task.xform="vahi::analyze:1.0"
