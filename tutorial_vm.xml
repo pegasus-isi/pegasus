@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="tutorial_vm">
-  <title>Pegasus Tutorial Using Self-contained Virtal Machine</title>
+  <title>Pegasus Tutorial Using Self-contained Virtual Machine</title>
+
+  <note>
+    <para>These tutorial notes refer to Pegasus 2.4. The VM Tutorial for
+    Pegasus 3.0 will be available in the first week of December 2010.</para>
+  </note>
 
   <para>These are the student notes for the Pegasus WMS tutorial on the
   Virtual Machine that can be downloaded from the Pegasus Website. They are
@@ -43,7 +48,9 @@ Mon June 1 11:54:58 BST 2008</computeroutput></programlisting>
 
     <itemizedlist>
       <listitem>
-              <para><ulink url="http://pegasus.isi.edu/tutorial/virtual/PegasusVM.tar.bz2">VMWare Pegasus Image</ulink></para>
+        <para><ulink
+        url="http://pegasus.isi.edu/tutorial/virtual/PegasusVM.tar.bz2">VMWare
+        Pegasus Image</ulink></para>
       </listitem>
     </itemizedlist>
 
