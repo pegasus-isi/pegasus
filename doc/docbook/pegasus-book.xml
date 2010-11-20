@@ -19,4 +19,5 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_hierarichal_workflows.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="api.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="tutorial_vm.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="useful_tips.xml"/>
 </book>
