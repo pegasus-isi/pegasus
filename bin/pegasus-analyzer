@@ -91,12 +91,14 @@ class Job:
 # --- constants -----------------------------------------------------------------------
 
 MAXLOGFILE = 1000				# For log file rotation, check files .000 to .999
+debug_level = logging.WARNING			# For now
 
 # --- global variables ----------------------------------------------------------------
 
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 input_dir = None				# Directory given in -i command line option
 dag_path = None					# Path of the dag file
+dagman_out_path = None				# Path to the dagman.out file
 jsdl_path = None				# Path of the jobstate.log file
 tsdl_path = None				# Path to monitord's log file
 temp_log = None					# Temporary log file created
@@ -854,6 +856,9 @@ def debug_workflow():
 # Configure command line option parser
 prog_usage = "usage: %s [options]" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
+parser.add_option("--debug", action = "store", type = "string", dest = "debug_level",
+		  help = "set log level, possible values are INFO, DEBUG, WARNING, ERROR, CRITICAL. Default level is %s."
+		  % logging.getLevelName(debug_level))
 parser.add_option("-i", "-d", "--dir", action = "store", type = "string", dest = "input_dir",
 		  help = "input directory where the jobstate.log file is located, default is the current directory")
 parser.add_option("-f", "--file", action = "store", type = "string", dest = "dag_filename",
@@ -881,6 +886,13 @@ parser.add_option("--type", action = "store", type = "string", dest = "workflow_
 print "%s: initializing..." % (prog_base)
 
 # Copy options from the command line parser
+if options.debug_level is not None:
+    try:
+        # Convert the user-specified debug level (string) into a logging level value
+        debug_level = LOG_LEVELS.get(options.debug_level.lower(), debug_level)
+        logger.setLevel(debug_level)
+    except:
+        logger.warning("could not set logging level to %s" % options.debug_level)
 if options.run_monitord is not None:
     run_monitord = options.run_monitord
 if options.strict_mode is not None:
@@ -925,6 +937,10 @@ if debug_mode == 1:
 # Get the dag file if it was not specified by the user
 if dag_path is None:
     dag_path = find_file(input_dir, ".dag")
+    logger.info("using %s, use -f/--file option to override this" % (dag_path))
+
+# Build dagman.out path
+dagman_out_path = dag_path + ".dagman.out"
 
 # Check if we can write to the run directory
 run_directory_writable = os.access(input_dir, os.W_OK)
@@ -946,6 +962,23 @@ if run_monitord:
 	invoke_monitord("%s.dagman.out" % (dag_path), jsdl_path)
 else:
     jsdl_path = os.path.join(input_dir, jsdl_filename)
+
+# Compare timestamps of jsdl_path with dagman_out_path
+try:
+    jsdl_stat = os.stat(jsdl_path)
+except:
+    logger.error("could not access %s, exiting..." % (jsdl_path))
+    sys.exit(1)
+
+try:
+    dagman_out_stat = os.stat(dagman_out_path)
+except:
+    logger.error("could not access %s, exiting..." % (dagman_out_path))
+    sys.exit(1)
+
+# Compare mtime for both files
+if dagman_out_stat[8] > jsdl_stat[8]:
+    logger.warning("jobstate.log is older than the dagman.out file, workflow logs may not be up to date...")
 
 # Try to parse workflow parameters from braindump.txt file
 wfparams = utils.slurp_braindb(input_dir)
