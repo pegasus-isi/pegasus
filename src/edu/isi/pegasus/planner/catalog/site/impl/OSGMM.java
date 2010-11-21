@@ -104,7 +104,7 @@ public class OSGMM implements SiteCatalog {
     /**
      * The default condor collector to query to for LIGO VO
      */
-    public static final String DEFAULT_LIGO_CONDOR_COLLECTOR = "ligo-osgmm.renci.org";
+    public static final String DEFAULT_LIGO_CONDOR_COLLECTOR = "osg-itb.ligo.caltech.edu";
 
     
     /**
