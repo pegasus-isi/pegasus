@@ -10,8 +10,9 @@
     <para>Pegasus comes bundled with useful tools that help users debug
     workflows and generate useful statistics and plots about their workflow
     runs. These tools internally parse the Condor log files and have a similar
-    interface. All tools take in the submit directory as an argument. Users
-    can invoke the tools listed in this chapter as follows </para>
+    interface. With the exception of pegasus-monitord (see below), all tools
+    take in the submit directory as an argument. Users can invoke the tools
+    listed in this chapter as follows</para>
 
     <programlisting>$ pegasus-[toolname]   &lt;path to the submit directory&gt;</programlisting>
   </section>
@@ -19,12 +20,58 @@
   <section>
     <title>Monitoring and Debugging</title>
 
-    <para></para>
+    <para>As the number of jobs and tasks in workflows increase, the ability
+    to track the progress and quickly debug a workflow becomes more and more
+    important. Pegasus comes with a series of utilities that can be used to
+    monitor and debug workflows both in real-time as well as after execution
+    is already completed.</para>
 
     <section>
       <title>pegasus-monitord</title>
 
-      <para></para>
+      <para>pegasus-monitord is used to follow a workflow, parsing the output
+      of DAGMan's dagman.out file. In addition to generating the jobstate.log
+      file, which contains the various states that a job goes through during
+      the workflow execution, pegasus-monitord can also be used to mine
+      information from jobs' submit and output files, and either populate a
+      database, or write a file with NetLogger events containing this
+      information.</para>
+
+      <para>pegasus-monitord is automatically invoked by pegasus-run, and
+      tracks workflows in real-time. By default, it produces the jobstate.log
+      file, and a SQLite database, which contains all the information listed
+      in the Stampede schema. When a workflow fails, and is re-submitted with
+      a rescue DAG, pegasus-monitord will automatically pick up from where it
+      left previously and continue to write the jobstate.log file and populate
+      the database.</para>
+
+      <para>If, after the workflow has already finished, users need to
+      re-create the jobstate.log file, or re-populate the database from
+      scratch, pegasus-monitord's --replay option should be used when running
+      it manually. In addition to SQLite, pegasus-monitord supports other
+      types of databases, such as MySQL and Postgres. Users will need to
+      install the low-level database drivers, and should consult
+      pegasus-monitord's man page for more detailed information.</para>
+
+      <para>As an example:</para>
+
+      <para><programlisting>$ pegasus-monitord -r diamond-0.dag.dagman.out</programlisting>will
+      launch pegasus-monitord in replay mode. In this case, if a jobstate.log
+      file already exists, it will be rotated and a new file will be created.
+      It will also create/use a SQLite database in the workflow's run
+      directory, with the name of diamond-0.stampede.db. If the database
+      already exists, it will make sure to remove any references to the
+      current workflow before it populates the database. In this case,
+      pegasus-monitord will process the workflow information from start to
+      finish, including any restarts that may have happened.</para>
+
+      <para>One important detail is that while processing a workflow,
+      pegasus-monitord will automatically detect if/when sub-workflows are
+      initiated, and will automatically track those sub-workflows as well. In
+      this case, although pegasus-monitord will create a separate jobstate.log
+      file in each workflow directory, the database at the top-level workflow
+      will contain the information from not only the main workflow, but also
+      from all sub-workflows.</para>
     </section>
 
     <section>
@@ -68,7 +115,50 @@
     <section>
       <title>pegasus-analyzer</title>
 
-      <para>...</para>
+      <para>pegasus-analyzer is a command-line utility for parsing several
+      files in the workflow directory and summarizing useful information to
+      the user. It should be used after the workflow has already finished
+      execution. pegasus-analyzer quickly goes through the jobstate.log file,
+      and isolates jobs that did not complete successfully. It then parses
+      their submit, and kickstart output files, printing to the user detailed
+      information for helping the user debug what happened to his/her
+      workflow.</para>
+
+      <para>The simplest way to invoke pegasus-analyzer is to simply give it a
+      workflow run directory, like in the example below:</para>
+
+      <para><programlisting>$ pegasus-analyzer -d /home/user/run0004
+pegasus-analyzer: initializing...
+
+************************************Summary*************************************
+
+ Total jobs         :     26 (100.00%)
+ # jobs succeeded   :     25 (96.15%)
+ # jobs failed      :      1 (3.84%)
+ # jobs unsubmitted :      0 (0.00%)
+
+******************************Failed jobs' details******************************
+
+============================register_viz_glidein_7_0============================
+
+ last state: POST_SCRIPT_FAILURE
+       site: local
+submit file: /home/user/run0004/register_viz_glidein_7_0.sub
+output file: /home/user/run0004/register_viz_glidein_7_0.out.002
+ error file: /home/user/run0004/register_viz_glidein_7_0.err.002
+
+--------------pegasus::rc-client - pegasus::rc-client:1.0 - stdout--------------
+
+2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
+2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1</programlisting>In
+      the case above, pegasus-analyzer's output contains a brief summary
+      section, showing how many jobs have succeeded and how many have failed.
+      After that, pegasus-analyzer will print information about each job that
+      failed, showing its last known state, along with the location of its
+      submit, output, and error files. pegasus-analyzer will also display any
+      stdout and stderr from the job, as recorded in its kickstart record.
+      Please consult pegasus-analyzer's man page for more examples and a
+      detailed description of its various command-line options.</para>
     </section>
 
     <section>
@@ -102,7 +192,7 @@
     </section>
 
     <section>
-      <title>Plotting and Statistics </title>
+      <title>Plotting and Statistics</title>
 
       <para></para>
     </section>
