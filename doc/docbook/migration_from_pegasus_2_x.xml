@@ -257,15 +257,6 @@
           </tbody>
         </tgroup>
       </table>
-
-      <para>This is especially relevant, while writing scripts around the
-      algorithm codes. At that point specifying the relative paths do not
-      work. This is because the relative path is constructed from the
-      directory where the script is being invoked. A suggested workaround is
-      to pick up the base directory where the software is installed from the
-      environment or by using the dirname cmd or api. The workflow system can
-      set appropriate environment variables while launching jobs on the
-      Grid.</para>
     </section>
 
     <section>
