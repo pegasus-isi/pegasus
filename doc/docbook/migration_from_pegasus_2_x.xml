@@ -44,9 +44,9 @@
       of API's is highly encouraged. Support for the old DAX schema's has been
       deprecated and will be removed in a future version.</para>
 
-      <para>For users, who still want to run using the old DAX format can for
-      the time being set the following property in the properties and point it
-      to dax-3.0 xsd of the installation.</para>
+      <para>For users, who still want to run using the old DAX formats i.e 3.0
+      or earlier, can for the time being set the following property in the
+      properties and point it to dax-3.0 xsd of the installation.</para>
 
       <programlisting><emphasis role="bold">pegasus.schema.dax  /some/install/pegasus-3.0/etc/dax-3.0.xsd</emphasis></programlisting>
     </section>
