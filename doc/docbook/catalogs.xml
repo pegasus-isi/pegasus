@@ -26,7 +26,21 @@
       </listitem>
 
       <listitem>
-        <para>Replica Location Service (RLS)</para>
+        <para>Replica Location Service</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>RLS</para>
+          </listitem>
+
+          <listitem>
+            <para>LRC</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+
+      <listitem>
+        <para>MRC</para>
       </listitem>
     </orderedlist>
 
@@ -53,10 +67,21 @@ LFN PFN a="b" [..]
       by an equality sign without any whitespaces. The value may be in quoted.
       The LFN sentiments about quoting apply.</para>
 
-      <para>The file mode is the default mode. In order to use the File mode
-      you have to set the property <emphasis
-      role="bold">pegasus.catalog.replica.file=&lt;path to replica catalog
-      file&gt;</emphasis></para>
+      <para>The file mode is the Default mode. In order to use the File mode
+      you have to set the following properties</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica=File</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.file=<replaceable>&lt;path to
+            the replica catalog file&gt;</replaceable></emphasis></para>
+          </listitem>
+        </orderedlist></para>
     </section>
 
     <section>
@@ -73,41 +98,137 @@ LFN PFN a="b" [..]
       role="bold">pg</emphasis> (for PostgreSQL)</para>
 
       <para>To use JDBCRC, the user additionally needs to set the following
-      properties </para>
+      properties</para>
 
       <orderedlist>
         <listitem>
           <para><emphasis
-          role="bold">pegasus.catalog.replica.db.url</emphasis></para>
+          role="bold">pegasus.catalog.replica.db.url=<replaceable>&lt;jdbc url
+          to the databse&gt;</replaceable></emphasis></para>
         </listitem>
 
         <listitem>
           <para><emphasis
-          role="bold">pegasus.catalog.replica.db.user</emphasis></para>
+          role="bold">pegasus.catalog.replica.db.user=<replaceable>&lt;database
+          user&gt;</replaceable></emphasis></para>
         </listitem>
 
         <listitem>
           <para><emphasis
-          role="bold">pegasus.catalog.replica.db.password</emphasis></para>
+          role="bold">pegasus.catalog.replica.db.password=<replaceable>&lt;database
+          password&gt;</replaceable></emphasis></para>
         </listitem>
       </orderedlist>
     </section>
 
     <section>
-      <title>RLS</title>
+      <title>Replica Location Service</title>
 
       <para>RLS (Replica Location Service) is a distributed replica catalog,
       which ships with Globus. There is an index service called Replica
       Location Index (RLI) to which 1 or more Local Replica Catalog (LRC)
-      report. Each LRC can contain all or a subset of mappings. </para>
+      report. Each LRC can contain all or a subset of mappings.</para>
 
-      <para>In this mode, Pegasus queries the central RLI to discover in which
-      LRC’s the mappings for a LFN reside. It then queries the individual
-      LRC’s for the PFN’s. To use RLS, the user additionally needs to set the
-      property <emphasis role="bold">pegasus.catalog.replica.url</emphasis> to
-      specify the URL for the RLI to query. Details about RLS can be found at
-      <ulink
+      <para>Details about RLS can be found at <ulink
       url="http://www.globus.org/toolkit/data/rls/">http://www.globus.org/toolkit/data/rls/</ulink></para>
+
+      <section>
+        <title>RLS</title>
+
+        <para>In this mode, Pegasus queries the central RLI to discover in
+        which LRC’s the mappings for a LFN reside. It then queries the
+        individual LRC’s for the PFN’s. To use this mode the following
+        properties need to be set</para>
+
+        <para><orderedlist>
+            <listitem>
+              <para><emphasis
+              role="bold">pegasus.catalog.replica=RLS</emphasis></para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis
+              role="bold">pegasus.catalog.replica.url=<replaceable>&lt;url to
+              the globus LRC&gt;</replaceable></emphasis></para>
+            </listitem>
+          </orderedlist></para>
+      </section>
+
+      <section>
+        <title>LRC</title>
+
+        <para>This mode is availabe If the user does not want to query the RLI
+        (Replica Location Index), but directly a single Local Replica Catalog.
+        To use the LRC mode the follow properties need to be set</para>
+
+        <para><orderedlist>
+            <listitem>
+              <para><emphasis
+              role="bold">pegasus.catalog.replica=<replaceable>LRC</replaceable></emphasis></para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis
+              role="bold">pegasus.catalog.replica.url=<replaceable>&lt;url to
+              the globus LRC&gt;</replaceable></emphasis></para>
+            </listitem>
+          </orderedlist></para>
+
+        <para>Details about Globus Replica Catalog and LRC can be found at
+        <ulink
+        url="http://www.globus.org/toolkit/data/rls/">http://www.globus.org/toolkit/data/rls/</ulink></para>
+      </section>
+    </section>
+
+    <section>
+      <title>MRC</title>
+
+      <para>In this mode, Pegasus queries multiple replica catalogs to
+      discover the file locations on the grid. </para>
+
+      <para>To use it set </para>
+
+      <para><orderedlist>
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica=<replaceable>MRC</replaceable></emphasis></para>
+          </listitem>
+        </orderedlist></para>
+
+      <para>Each associated replica catalog can be configured via properties
+      as follows. </para>
+
+      <para>The user associates a variable name referred to as [value] for
+      each of the catalogs, where [value] is any legal identifier (concretely
+      [A-Za-z][_A-Za-z0-9]*) For each associated replica catalogs the user
+      specifies the following properties</para>
+
+      <para>pegasus.catalog.replica.mrc.[value] specifies the type of replica
+      catalog. </para>
+
+      <para>pegasus.catalog.replica.mrc.[value].key specifies a property name
+      key for a particular catalog </para>
+
+      <para>For example, if a user wants to query two lrc’s at the same time
+      he/she can specify as follows </para>
+
+      <para><orderedlist>
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.mrc.lrc1=LRC</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.url=<replaceable>&lt;url to
+            the globus LRC&gt;</replaceable></emphasis></para>
+          </listitem>
+        </orderedlist>pegasus.catalog.replica.mrc.lrc1 LRC
+      pegasus.catalog.replica.mrc.lrc2.url rls://sukhna
+      pegasus.catalog.replica.mrc.lrc2 LRC
+      pegasus.catalog.replica.mrc.lrc2.url rls://smarty In the above example,
+      lrc1, lrc2 are any valid identifier names and url is the property key
+      that needed to be specified.</para>
     </section>
 
     <section>
@@ -120,14 +241,14 @@ LFN PFN a="b" [..]
       <para>Lets assume we create a file f.a in your home directory as shown
       below.</para>
 
-      <programlisting>$ <emphasis>date &gt; $HOME/f.a </emphasis></programlisting>
+      <screen><command>$ date &gt; $HOME/f.a </command></screen>
 
       <para>We now need to register this file in the <emphasis
       role="bold">File</emphasis> replica catalog located in <emphasis
       role="bold">$HOME/rc</emphasis> using the pegasus-rc-client. Replace the
       gsiftp://url with the appropriate parameters for your grid site.</para>
 
-      <programlisting><emphasis>$ rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert f.a gsiftp://somehost:port/path/to/file/f.a pool=local</emphasis></programlisting>
+      <screen><emphasis>$<command> rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert f.a</command> <replaceable>gsiftp://somehost:port/path/to/file/f.a pool=local</replaceable></emphasis></screen>
 
       <para>You may first want to check, if the file registeration made it
       into the replica catalog. Since we are using a File catalog we can just
