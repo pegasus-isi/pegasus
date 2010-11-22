@@ -471,34 +471,35 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
   <section>
     <title>Jobstate.log File</title>
 
-    <para>The jobstate.log file logs the various states that a job goes
-    through during workflow execution. It is created by the <emphasis
-    role="bold">pegasus-monitord</emphasis> daemon that is launched when a
-    workflow is submitted to Condor DAGMan by pegasus-run. Tailstatd parses
-    the dagman.out file and writes out the jobstate.log file, the format of
-    which is more amenable to parsing.</para>
+    <para>The jobstate.log file logs the various states that a job
+    goes through during workflow execution. It is created by
+    the <emphasis role="bold">pegasus-monitord</emphasis> daemon that
+    is launched when a workflow is submitted to Condor DAGMan by
+    pegasus-run. <emphasis role="bold">pegasus-monitord</emphasis>
+    parses the dagman.out file and writes out the jobstate.log file,
+    the format of which is more amenable to parsing.</para>
 
     <para><emphasis role="bold">Note: </emphasis>The jobstate.log file is not
     created if a user uses condor_submit_dag to submit a workflow to Condor
     DAGMan.</para>
 
-    <para>The jobstate.log file can be created after a workflow has finished
-    executing by running tailstatd on the .dag file in the workflow submit
-    directory.</para>
+    <para>The jobstate.log file can be created after a workflow has
+    finished executing by
+    running <emphasis role="bold">pegasus-monitord</emphasis> on the
+    .dagman.out file in the workflow submit directory.</para>
 
     <para>Below is a snippet from the jobstate.log for a single job executed
     via condorg</para>
 
-    <programlisting>1239666049 create_dir_blackdiamond_0_isi_viz SUBMIT 3758.0 isi_viz -
-1239666059 create_dir_blackdiamond_0_isi_viz EXECUTE 3758.0 isi_viz -
-1239666059 create_dir_blackdiamond_0_isi_viz GLOBUS_SUBMIT 3758.0 isi_viz -
-1239666059 create_dir_blackdiamond_0_isi_viz GRID_SUBMIT 3758.0 isi_viz -
-1239666064 create_dir_blackdiamond_0_isi_viz JOB_TERMINATED 3758.0 isi_viz -
-1239666064 create_dir_blackdiamond_0_isi_viz JOB_SUCCESS 0 isi_viz -
-1239666064 create_dir_blackdiamond_0_isi_viz POST_SCRIPT_STARTED - isi_viz -
-1239666069 create_dir_blackdiamond_0_isi_viz POST_SCRIPT_TERMINATED 3758.0 isi_viz -
-1239666069 create_dir_blackdiamond_0_isi_viz POST_SCRIPT_SUCCESS - isi_viz -
-</programlisting>
+    <programlisting>1239666049 create_dir_blackdiamond_0_isi_viz SUBMIT 3758.0 isi_viz - 1
+1239666059 create_dir_blackdiamond_0_isi_viz EXECUTE 3758.0 isi_viz - 1
+1239666059 create_dir_blackdiamond_0_isi_viz GLOBUS_SUBMIT 3758.0 isi_viz - 1
+1239666059 create_dir_blackdiamond_0_isi_viz GRID_SUBMIT 3758.0 isi_viz - 1
+1239666064 create_dir_blackdiamond_0_isi_viz JOB_TERMINATED 3758.0 isi_viz - 1
+1239666064 create_dir_blackdiamond_0_isi_viz JOB_SUCCESS 0 isi_viz - 1
+1239666064 create_dir_blackdiamond_0_isi_viz POST_SCRIPT_STARTED - isi_viz - 1
+1239666069 create_dir_blackdiamond_0_isi_viz POST_SCRIPT_TERMINATED 3758.0 isi_viz - 1
+1239666069 create_dir_blackdiamond_0_isi_viz POST_SCRIPT_SUCCESS - isi_viz - 1</programlisting>
 
     <para>Each entry in jobstate.log has the following</para>
 
@@ -517,11 +518,19 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
       </listitem>
 
       <listitem>
-        <para>the condor id of the job is the queue on the submit node</para>
+        <para>the condor id of the job in the queue on the submit node</para>
       </listitem>
 
       <listitem>
         <para>the pegasus site to which the job is mapped</para>
+      </listitem>
+
+      <listitem>
+        <para>job time requirements from submit file</para>
+      </listitem>
+
+      <listitem>
+        <para>the job submit sequence for this workflow</para>
       </listitem>
     </orderedlist>
 
