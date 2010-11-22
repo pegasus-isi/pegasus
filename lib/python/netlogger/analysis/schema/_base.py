@@ -28,28 +28,26 @@ class SABase(object):
     """
     Base class for all the DB mapper objects.
     """
-    def _commit(self, session, merge=False):
-        try:
-            if merge:
-                session.merge(self)
-            else:
-                session.add(self)
-            session.flush()
-            session.commit()
-        except exceptions.IntegrityError, e:
-            raise SchemaIntegrityError, e
-            
-    
-    def commit_to_db(self, session):
+    def _commit(self, session, batch, merge=False):
+        if merge:
+            session.merge(self)
+        else:
+            session.add(self)
+        if batch:
+            return
+        session.flush()
+        session.commit()
+        
+    def commit_to_db(self, session, batch=False):
         """
         Commit the DB object/row to the database.
         
         @type   session: sqlalchemy.orm.scoping.ScopedSession object
         @param  session: SQLAlch session to commit row to.
         """ 
-        self._commit(session)
+        self._commit(session, batch)
         
-    def merge_to_db(self, session):
+    def merge_to_db(self, session, batch=False):
         """
         Merge the DB object/row with an existing row in the database.
         
@@ -60,7 +58,7 @@ class SABase(object):
         assigned any primary key information to the object before
         calling.
         """
-        self._commit(session, merge=True)
+        self._commit(session, batch, merge=True)
 
     def __repr__(self):
         retval = '%s:\n' % self.__class__

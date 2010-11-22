@@ -118,8 +118,8 @@ class SQLAlchemyInit:
         self.metadata = MetaData()
         initFunction(self.db, self.metadata)
         self.metadata.bind = self.db
-        sm = orm.sessionmaker(bind=self.db, autoflush=True, autocommit=False,
-                                expire_on_commit=True)
+        sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False, 
+                                expire_on_commit=False)
         self.session = orm.scoped_session(sm)
 
 """

@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 26765 2010-11-11 22:51:21Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 26779 2010-11-17 20:30:32Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -40,7 +40,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         expects the database to exist (ie: will not issue CREATE DB)
         but will populate an empty DB with tables/indexes/etc.
     """
-    def __init__(self, connString=None, perf='no', **kw):
+    def __init__(self, connString=None, perf='no', batch='no', **kw):
         """Init object
         
         @type   connString: string
@@ -87,7 +87,13 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self._insert_time, self._insert_num = 0, 0
             self._start_time = time.time()
         
-        self.log.info('init.end')
+        # flags and state for batching
+        self._batch = util.as_bool(batch)
+        self._flush_every = 300
+        self._flush_count = 0
+        self._last_flush = time.time()
+        
+        self.log.info('init.end', msg='Batching: %s' % self._batch)
         
     def process(self, linedata):
         """
@@ -111,12 +117,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             # the passed in event.
             self.log.error('process', 
                 msg='no handler for event type "%s" defined' % linedata['event'])
-        except SchemaIntegrityError, e:
+        except exceptions.IntegrityError, e:
             # This is raised when an attempted insert violates the
             # schema (unique indexes, etc).
             self.log.error('process',
                 msg='Insert failed for event "%s" : %s' % (linedata['event'], e))
             self.session.rollback()
+            
+        self.check_flush()
         
     def linedataToObject(self, linedata, o):
         """
@@ -171,6 +179,41 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         return o
         
     #############################################
+    # Methods to handle batching/flushing
+    #############################################
+    
+    def reset_flush_state(self):
+        if self._batch:
+            self.log.debug('reset_flush_state', msg='Resetting flush state')
+            self._flush_count = 0
+            self._last_flush = time.time()
+            
+    def check_flush(self):
+        if not self._batch:
+            return
+        
+        if self._flush_count >= self._flush_every:
+            self.hard_flush()
+            self.log.debug('reset_flush_state', msg='Flush: flush count')
+            return
+        else:
+            self._flush_count += 1
+            
+        if (time.time() - self._last_flush) > 30:
+            self.hard_flush()
+            self.log.debug('reset_flush_state', msg='Flush: time based')
+            
+    def hard_flush(self):
+        if not self._batch:
+            return
+        self.log.debug('hard_flush.begin')
+        self.session.flush()
+        self.session.commit()
+        self.reset_flush_state()
+        self.log.debug('hard_flush.end')
+            
+        
+    #############################################
     # Methods to handle the various insert events
     #############################################
     def workflow(self, linedata):
@@ -188,7 +231,9 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             wf.parent_workflow_id = self.wf_uuidToId(wf.parent_workflow_id)
         del wf.event, wf.ts
         self.log.debug('workflow', msg=wf)
-        wf.commit_to_db(self.session)
+        # workflow inserts must be explicitly written to db
+        wf.commit_to_db(self.session, batch=False)
+        self.reset_flush_state()
         pass
         
     def workflowstate(self, linedata):
@@ -213,7 +258,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 msg='Workflow state event lacks restart_count attribute.  Reprocess log with updated monitord.')
         del wfs.event, wfs.ts
         self.log.debug('workflowstate', msg=wfs)
-        wfs.commit_to_db(self.session)
+        wfs.commit_to_db(self.session, batch=self._batch)
         
         if wfs.state.startswith('end'):
             self.flushCaches(wfs)
@@ -250,7 +295,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             jcheck = self.session.query(Job).filter(Job.wf_id == job.wf_id).filter(Job.job_submit_seq == job.job_submit_seq).first()
             if not jcheck:
                 # A job entry does not exist so insert
-                job.commit_to_db(self.session)
+                # job inserts must be explicitly flushed to db
+                job.commit_to_db(self.session, batch=False)
                 self.job_id_cache[(job.wf_id, job.job_submit_seq)] = job.job_id
                 self.log.debug('job', msg='Inserting new jobid: %s' % job.job_id)
             else:
@@ -259,13 +305,17 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 # as this is a non-optimal state.
                 self.job_id_cache[(jcheck.wf_id, jcheck.job_submit_seq)] = jcheck.job_id
                 job.job_id = jcheck.job_id
-                job.merge_to_db(self.session)
+                # job inserts must be explicitly flushed to db
+                job.merge_to_db(self.session, batch=False)
                 self.log.warn('job', msg='Updating non-cached job: %s' % job)
+            self.reset_flush_state()
         else:
             jid = self.jobIdFromUnique(job)
             self.log.debug('job', msg='Updating jobid: %s' % jid)
             job.job_id = jid # set PK from cache for merge
-            job.merge_to_db(self.session)
+            # job inserts must be explicitly flushed to db
+            job.merge_to_db(self.session, batch=False)
+            self.reset_flush_state()
             
         # process edge information
         query = self.session.query(Edge).filter(Edge.child_id == job.job_id)
@@ -279,7 +329,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                     edge = Edge()
                     edge.parent_id = parentid[0]
                     edge.child_id = job.job_id
-                    edge.commit_to_db(self.session)
+                    edge.commit_to_db(self.session, batch=self._batch)
         pass
         
     def jobstate(self, linedata):
@@ -300,7 +350,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         del js.name, js.wf_uuid, js.job_submit_seq, js.ts, js.event
         
         self.log.debug('jobstate', msg=js)
-        js.commit_to_db(self.session)
+        js.commit_to_db(self.session, batch=self._batch)
         pass
         
     def task(self, linedata):
@@ -316,6 +366,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             tsk.duration = 0
             self.log.warn('task',
                 msg='Task event lacked duration - setting to zero')
+                
+        if tsk.executable == None:
+            tsk.executable = ''
+            self.log.warn('task',
+                msg='Task event lacked executable - setting to empty string')
         
         if tsk.job_id == None:
             self.log.error('task',
@@ -324,7 +379,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         del tsk.wf_uuid, tsk.name, tsk.job_submit_seq, tsk.ts
         
         self.log.debug('task', msg=tsk)
-        tsk.commit_to_db(self.session)
+        tsk.commit_to_db(self.session, batch=self._batch)
         pass
         
     def host(self, linedata):
@@ -338,9 +393,15 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         del host.ts, host.event, host.name
         
         self.log.debug('host', msg=host)
+        # XXX: currently savepoints are broken in 6.5.0/sqlite
+        #self.session.begin_nested()
+        # flush before a probable integrity error in lieu of savepoint
+        self.hard_flush()
         try:
-            host.commit_to_db(self.session)
-        except SchemaIntegrityError, e:
+            # host info needs to be written to the db
+            host.commit_to_db(self.session, batch=False)
+            self.reset_flush_state()
+        except exceptions.IntegrityError, e:
             # In this case, catch the duplicate insert exception
             # and ignore - we are bound to see duplicate host events
             # during a load.
@@ -360,7 +421,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         del edge.ts, edge.event
         
         self.log.debug('edge_static', msg=edge)
-        edge.commit_to_db(self.session)
+        # XXX: if batching, the static edges should be flushed
+        # and written by the very first job call before lookups
+        # occur.  test/verify
+        edge.commit_to_db(self.session, batch=self._batch)
         pass
         
     def noop(self, linedata):
@@ -449,7 +513,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             wf_id = self.wf_uuidToId(host.wf_uuid)
             job = self.session.query(Job).filter(Job.wf_id == wf_id).filter(Job.job_submit_seq == host.job_submit_seq).one()
             job.host_id = host.host_id
-            job.merge_to_db(self.session)
+            job.merge_to_db(self.session, batch=self._batch)
             self.host_cache[(host.wf_uuid, host.job_submit_seq)] = True
         
         pass
@@ -483,6 +547,9 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
     def finish(self):
         BaseAnalyzer.finish(self)
+        if self._batch:
+            self.log.info('finish', msg='Executing final flush')
+            self.hard_flush()
         if self._perf:
             run_time = time.time() - self._start_time
             self.log.info("performance", insert_time=self._insert_time,

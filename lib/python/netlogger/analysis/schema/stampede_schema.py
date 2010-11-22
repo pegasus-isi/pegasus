@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 26757 2010-11-10 18:59:09Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 26790 2010-11-22 18:34:13Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -84,7 +84,7 @@ def initializeToPegasusDB(db, metadata):
                     Column('total_ram', Integer, nullable=True)
     )
     
-    Index('host_id_UNIQUE', st_host.c.host_id, unique=True)
+    #Index('host_id_UNIQUE', st_host.c.host_id, unique=True)
     Index('UNIQUE_HOST', st_host.c.site_name, st_host.c.hostname,
         st_host.c.ip_address, unique=True)
     
@@ -123,7 +123,7 @@ def initializeToPegasusDB(db, metadata):
     )
     
     Index('wf_uuid_UNIQUE', st_workflow.c.wf_uuid, unique=True)
-    Index('FK_PARENT_WF_ID', st_workflow.c.parent_workflow_id, unique=False)
+    #Index('FK_PARENT_WF_ID', st_workflow.c.parent_workflow_id, unique=False)
     
     try:
         orm.mapper(Workflow, st_workflow, properties = {
@@ -146,7 +146,7 @@ def initializeToPegasusDB(db, metadata):
                         default=time.time())
     )
     
-    Index('FK_STATE_WF_ID', st_workflowstate.c.wf_id, unique=False)
+    #Index('FK_STATE_WF_ID', st_workflowstate.c.wf_id, unique=False)
     Index('UNIQUE_WORKFLOWSTATE', st_workflowstate.c.wf_id, st_workflowstate.c.state, 
         st_workflowstate.c.timestamp, unique=True)
     
@@ -189,9 +189,10 @@ def initializeToPegasusDB(db, metadata):
                     Column('cluster_duration', NUMERIC(10,3), nullable=True)
     )
     
-    Index('FK_JOB_WF_ID', st_job.c.wf_id, unique=False)
-    Index('FK_JOB_HOST_ID', st_job.c.host_id, unique=False)
+    #Index('FK_JOB_WF_ID', st_job.c.wf_id, unique=False)
+    #Index('FK_JOB_HOST_ID', st_job.c.host_id, unique=False)
     Index('UNIQUE_JOB', st_job.c.wf_id, st_job.c.job_submit_seq, unique=True)
+    Index('IDX_JOB_LOOKUP', st_job.c.wf_id, st_job.c.name, unique=False)
     
     Edge.parent_id = Column('parent_id', KeyInt)
     
@@ -225,7 +226,7 @@ def initializeToPegasusDB(db, metadata):
                         Column('jobstate_submit_seq', INT, nullable=False, primary_key=True)
     )
     
-    Index('FK_STATE_JOB_ID', st_jobstate.c.job_id, unique=False)
+    #Index('FK_STATE_JOB_ID', st_jobstate.c.job_id, unique=False)
     Index('UNIQUE_JOBSTATE', st_jobstate.c.job_id, st_jobstate.c.state, 
         st_jobstate.c.timestamp, st_jobstate.c.jobstate_submit_seq, unique=True)
     
@@ -259,8 +260,8 @@ def initializeToPegasusDB(db, metadata):
                     Column('arguments', TEXT, nullable=True)
     )
     
-    Index('task_id_UNIQUE', st_task.c.task_id, unique=True)
-    Index('FK_TASK_JOB_ID', st_task.c.job_id, unique=False)
+    #Index('task_id_UNIQUE', st_task.c.task_id, unique=True)
+    #Index('FK_TASK_JOB_ID', st_task.c.job_id, unique=False)
     Index('UNIQUE_TASK', st_task.c.job_id, st_task.c.task_submit_seq, unique=True)
     
     try:
@@ -281,8 +282,8 @@ def initializeToPegasusDB(db, metadata):
                     Column('type', VARCHAR(255), nullable=True)
     )
     
-    Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
-    Index('FK_FILE_JOB_ID', st_file.c.job_id, unique=False)
+    #Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
+    #Index('FK_FILE_JOB_ID', st_file.c.job_id, unique=False)
     
     try:
         orm.mapper(File, st_file)
