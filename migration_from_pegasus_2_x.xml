@@ -285,9 +285,11 @@
         <tgroup cols="2">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Old Key</emphasis></entry>
+              <entry><emphasis role="bold">Old Pegasus Profile
+              Key</emphasis></entry>
 
-              <entry><emphasis role="bold">New Keys</emphasis></entry>
+              <entry><emphasis role="bold">New Pegasus Profile
+              Keys</emphasis></entry>
             </row>
 
             <row>
@@ -322,9 +324,9 @@
     <section>
       <title>Profile Keys for Clustering</title>
 
-      <para>The pegasus profile keys for job clustering were renamed. The
-      following table lists the old and the new names for the profile
-      keys.</para>
+      <para>The pegasus profile keys for job clustering were <emphasis
+      role="bold">renamed</emphasis>. The following table lists the old and
+      the new names for the profile keys.</para>
 
       <table>
         <title>Table 3: Old and New Names For Job Clustering Profile
@@ -333,9 +335,11 @@
         <tgroup cols="2">
           <tbody>
             <row>
-              <entry><emphasis role="bold">Old Key</emphasis></entry>
+              <entry><emphasis role="bold">Old Pegasus Profile
+              Key</emphasis></entry>
 
-              <entry><emphasis role="bold">New Key</emphasis></entry>
+              <entry><emphasis role="bold">New Pegasus Profile
+              Key</emphasis></entry>
             </row>
 
             <row>
