@@ -17,10 +17,10 @@
 .TH "pegasus-get-sites\" "1" "1.0.0"  ""PEGASUS Workflow Planner""
 .SH "NAME"
 .LP 
-pegasus\-get\-sites \- generates a site catalog by querying sources.
+pegasus\-sc\-client \- generates a site catalog by querying sources.
 .SH "SYNTAX"
 .LP 
-.B pegasus\-get\-sites 
+.B pegasus\-sc\-client 
 [\-Dprops] 
 [\-\-source <source for querying site information>] 
 [\-g|\-\-grid <given grid for generating site catalog>] 
@@ -34,7 +34,7 @@ pegasus\-get\-sites \- generates a site catalog by querying sources.
 
 .SH "DESCRIPTION"
 .LP 
-pegasus-get-sites generates site catalog by querying sources like OSGMM,MYSOG etc.
+pegasus-sc-client generates site catalog by querying sources like OSGMM,MYSOG etc.
 .LP 
 
 .SH "ARGUMENTS"
@@ -104,15 +104,15 @@ Software.
 .PD 1
 .B \-\-help
 Displays all the options to the
-.B pegasus-get-sites
+.B pegasus-sc-client
 command.
 
 .SH "EXAMPLE"
 .TP
-Runs pegasus-get-sites and generates the site catalog :\-
+Runs pegasus-sc-client and generates the site catalog :\-
 .nf 
 \f(CB
- pegasus-get-sites --source OSGMM --sc osg-sites.xml --vo LIGO --grid OSG
+ pegasus-sc-client --source OSGMM --sc osg-sites.xml --vo LIGO --grid OSG
 \fP
 .fi 
  
