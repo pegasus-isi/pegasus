@@ -5,6 +5,7 @@
    <title>Pegasus User Guide</title>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="introduction.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="installation.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="migration_from_pegasus_2_x.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concepts.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="configuration.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="catalogs.xml"/>
