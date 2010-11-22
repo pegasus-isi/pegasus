@@ -260,7 +260,7 @@ if (defined $run) {
 	       "run-dir as argument, or cd into your run-dir, and re-run.\n" :
 	       "$run is not a valid run-directory.\n" ) ); 
     $workflow=$config{pegasus_wf_name};
-    $time=$config{pegasus_wf_time};
+    $time=$config{timestamp};
     $dag=$config{dag};
     warn "#Got workflow = $workflow, time =$time from rundir\n" if $main::DEBUG;  
 } 
