@@ -2283,6 +2283,7 @@ public class PegasusProperties {
         return this.writeOutProperties( directory, true );
     }
 
+
     /**
      * Writes out the properties to a temporary file in the directory passed.
      *
@@ -2295,7 +2296,28 @@ public class PegasusProperties {
      *
      * @throws IOException in case of error while writing out file.
      */
-    public String writeOutProperties( String directory , boolean sanitizePath ) throws IOException{
+    public String writeOutProperties( String directory ,
+                                      boolean sanitizePath ) throws IOException{
+        return this.writeOutProperties( directory, sanitizePath, true );
+    }
+
+    /**
+     * Writes out the properties to a temporary file in the directory passed.
+     *
+     * @param directory    the directory in which the properties file needs to
+     *                     be written to.
+     * @param sanitizePath boolean indicating whether to sanitize paths for
+     *                     certain properties or not.
+     * @param setInternalVariable   whether to set the internal variable that stores
+     *                              the path to the properties file.
+     *
+     * @return the absolute path to the properties file written in the directory.
+     *
+     * @throws IOException in case of error while writing out file.
+     */
+    public String writeOutProperties( String directory ,
+                                      boolean sanitizePath,
+                                      boolean setInternalVariable ) throws IOException{
         File dir = new File(directory);
 
         //sanity check on the directory
@@ -2331,8 +2353,13 @@ public class PegasusProperties {
         os.close();
 
         //also set it to the internal variable
-        mPropsInSubmitDir  = f.getAbsolutePath();
-        return mPropsInSubmitDir;
+        if ( setInternalVariable ){
+            mPropsInSubmitDir  = f.getAbsolutePath();
+            return mPropsInSubmitDir;
+        }
+        else {
+            return f.getAbsolutePath();
+        }
     }
 
     /**

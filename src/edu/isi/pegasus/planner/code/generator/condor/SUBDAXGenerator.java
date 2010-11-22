@@ -433,7 +433,9 @@ public class SUBDAXGenerator{
         //write out the properties in the submit directory
         String propertiesFile = null;
         try{
-            propertiesFile = this.mProps.writeOutProperties( options.getSubmitDirectory(), true );
+            //we dont want to store the path to sub workflow properties files in the
+            //internal variable in PegasusProperties.
+            propertiesFile = this.mProps.writeOutProperties( options.getSubmitDirectory(), true, false );
         }
         catch( IOException ioe ){
             throw new RuntimeException( "Unable to write out properties to directory " + options.getSubmitDirectory() );
