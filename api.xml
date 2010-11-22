@@ -7,8 +7,6 @@
   <section>
     <title>DAX XML Schema</title>
 
-    <para></para>
-
     <para>The DAX format is described by the XML schema instance document
     <ulink
     url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>.
@@ -158,7 +156,8 @@
 
                 <entry>string</entry>
 
-                <entry>name of this DAX (or set of DAXes).</entry>
+                <entry>name of this DAX (or set of DAXes). Must be
+                3.2.</entry>
               </row>
 
               <row>
@@ -217,34 +216,401 @@
         </table>
 
         <para>The <emphasis>version</emphasis> attribute is restricted to the
-        regular expression <code>\d+(\.\d+(\.\d+)?)?</code>.</para>
+        regular expression <code>\d+(\.\d+(\.\d+)?)?</code>.This expression
+        represents the <emphasis>VersionPattern</emphasis> type that is used
+        in other places, too. It is a more restrictive expression than before,
+        but allows us to compute comparable version number using the following
+        formula:</para>
+
+        <informaltable border="1">
+          <tr>
+            <td>version1: a.b.c</td>
+
+            <td>version2: d.e.f</td>
+          </tr>
+
+          <tr>
+            <td>n = a * 1,000,000 + b * 1,000 + c</td>
+
+            <td>m = d * 1,000,000 + e * 1,000 + f</td>
+          </tr>
+
+          <tr>
+            <td colspan="2">version1 &gt; version2 if n &gt; m</td>
+          </tr>
+        </informaltable>
       </section>
 
       <section>
-        <title>The Catalog Section</title>
+        <title>The Catalogs Section</title>
+
+        <para>The initial section features three sub-sections:</para>
+
+        <orderedlist>
+          <listitem>
+            <para>a catalog of files used,</para>
+          </listitem>
+
+          <listitem>
+            <para>a catalog of transformations used, and</para>
+          </listitem>
+
+          <listitem>
+            <para>compound transformation declarations.</para>
+          </listitem>
+        </orderedlist>
 
         <section>
           <title>The Replica Catalog Section</title>
 
-          <para>asdf.</para>
+          <para>The file section acts as in in-file replica catalog (RC). Any
+          files declared in this section take precedence over files in
+          external replica catalogs during planning.</para>
 
-          <programlisting></programlisting>
+          <programlisting>  &lt;!-- part 1.1: included replica catalog --&gt;
+  &lt;file name="example.a" &gt;
+    &lt;!-- profiles are optional --&gt;
+    &lt;!-- The "stat" namespace is ONLY AN EXAMPLE --&gt;
+    &lt;profile namespace="stat" key="size"&gt;/* integer to be defined */&lt;/profile&gt;
+    &lt;profile namespace="stat" key="md5sum"&gt;/* 32 char hex string */&lt;/profile&gt;
+    &lt;profile namespace="stat" key="mtime"&gt;/* ISO-8601 timestamp */&lt;/profile&gt;
+
+    &lt;!-- metadata is currently NOT SUPPORTED --&gt;
+    &lt;metadata key="timestamp" type="int"&gt;/* ISO-8601 *or* 20100417134523:int */&lt;/metadata&gt;
+    &lt;metadata key="origin" type="string"&gt;ocean&lt;/metadata&gt;
+    
+    &lt;!-- PFN to by-pass replica catalog --&gt;
+    &lt;!-- The "site attribute is optional --&gt;
+    &lt;pfn url="file:///tmp/example.a" site="local"&gt;
+      &lt;profile namespace="stat" key="owner"&gt;voeckler&lt;/profile&gt;
+    &lt;/pfn&gt;
+    &lt;pfn url="file:///storage/funky.a" site="local"/&gt;    
+  &lt;/file&gt;
+
+  &lt;!-- a more typical example from the black diamond --&gt;
+  &lt;file name="f.a"&gt;
+    &lt;pfn url="file:///Users/voeckler/f.a" site="local"/&gt;
+  &lt;/file&gt;</programlisting>
+
+          <para>The first <emphasis>file</emphasis> entry above is an example
+          of a data file with two replicas. The <emphasis>file</emphasis>
+          element requires a logical file <emphasis>name</emphasis>. Each
+          logical filename may have additional information associated with it,
+          enumerated by <emphasis>profile</emphasis> elements. Each file entry
+          may have 0 or more <emphasis>metadata</emphasis> associated with it.
+          Each piece of metadata has a <emphasis>key</emphasis> string and
+          <emphasis>type</emphasis> attribute describing the element's
+          value.</para>
+
+          <warning>
+            <para>The <emphasis>metadata</emphasis> element is not support as
+            of this writing! Details may change in the future.</para>
+          </warning>
+
+          <para>The <emphasis>file</emphasis> element can provide 0 or more
+          <emphasis>pfn</emphasis> locations, taking precedence over the
+          replica catalog. A <emphasis>file</emphasis> element that does not
+          name any <emphasis>pfn</emphasis> children-elements will still
+          require look-ups in external replica catalogs. Each
+          <emphasis>pfn</emphasis> element names a concrete location of a
+          file. Multiple locations constitute replicas of the same file, and
+          are assumed to be usable interchangably. The
+          <emphasis>url</emphasis> attribute is mandatory, and typically would
+          use a file schema URL. The <emphasis>site</emphasis> attribute is
+          optional, and defaults to value <emphasis>local</emphasis> if
+          missing. A <emphasis>pfn</emphasis> element may have
+          <emphasis>profile</emphasis> children-elements, which refer to
+          attributes of the physical file. The file-level profiles refer to
+          attributes of the logical file.</para>
+
+          <note>
+            <para>The <literal>stat</literal> profile namespace is ony an
+            example, and details about stat are not yet implemented. The
+            proper namespaces <literal>pegasus</literal>,
+            <literal>condor</literal>, <literal>dagman</literal>,
+            <literal>env</literal>, <literal>hints</literal>,
+            <literal>globus</literal> and <literal>selector</literal> enjoy
+            full support.</para>
+          </note>
+
+          <para>The second <emphasis>file</emphasis> entry above shows a usage
+          example from the black-diamond example workflow that you are more
+          likely to encouter or write.</para>
+
+          <para>The presence of an in-file replica catalog lets you declare a
+          couple of interesting advanced features. The DAG and DAX file
+          declarations are just files for all practical purposes. For deferred
+          planning, the location of the site catalog (SC) can be captured in a
+          file, too, that is passed to the job dealing with the deferred
+          planning as logical filename.</para>
+
+          <programlisting>  &lt;file name="black.dax" &gt;
+    &lt;!-- specify the location of the DAX file --&gt;
+    &lt;pfn url="file:///Users/vahi/Pegasus/work/dax-3.0/blackdiamond_dax.xml" site="local"/&gt;
+  &lt;/file&gt;
+
+  &lt;file name="black.dag" &gt;
+    &lt;!-- specify the location of the DAG file --&gt;
+    &lt;pfn url="file:///Users/vahi/Pegasus/work/dax-3.0/blackdiamond.dag" site="local"/&gt;
+  &lt;/file&gt;
+  
+  &lt;file name="sites.xml" &gt;
+    &lt;!-- specify the location of a site catalog to use for deferred planning --&gt;
+    &lt;pfn url="file:///Users/vahi/Pegasus/work/dax-3.0/conf/sites.xml" site="local"/&gt;
+  &lt;/file&gt;</programlisting>
         </section>
 
         <section>
           <title>The Transformation Catalog Section</title>
 
-          <para>asdf.</para>
+          <para>The executable section acts as an in-file transformation
+          catalog (TC). Any transformations declared in this section take
+          precedence over the external transformation catalog during
+          planning.</para>
 
-          <programlisting></programlisting>
+          <programlisting>  &lt;!-- part 1.2: included transformation catalog --&gt;
+  &lt;executable namespace="example" name="mDiffFit" version="1.0" 
+              arch="x86_64" os="linux" installed="true" &gt;
+    &lt;!-- profiles are optional --&gt;
+    &lt;!-- The "stat" namespace is ONLY AN EXAMPLE! --&gt;
+    &lt;profile namespace="stat" key="size"&gt;5000&lt;/profile&gt;
+    &lt;profile namespace="stat" key="md5sum"&gt;AB454DSSDA4646DS&lt;/profile&gt;
+    &lt;profile namespace="stat" key="mtime"&gt;2010-11-22T10:05:55.470606000-0800&lt;/profile&gt;
+
+    &lt;!-- metadata is currently NOT SUPPORTED! --&gt;
+    &lt;metadata key="timestamp" type="int"&gt;/* see above */&lt;/metadata&gt;
+    &lt;metadata key="origin" type="string"&gt;ocean&lt;/metadata&gt;
+ 
+    &lt;!-- PFN to by-pass transformation catalog --&gt;
+    &lt;!-- The "site" attribute is optional --&gt;
+    &lt;pfn url="file:///tmp/mDiffFit"          site="local"/&gt;     
+    &lt;pfn url="file:///tmp/storage/mDiffFit"  site="local"/&gt;     
+  &lt;/executable&gt;
+
+  &lt;!-- to be used in compound transformation later --&gt;
+  &lt;executable namespace="example" name="mDiff" version="1.0" 
+              arch="x86_64" os="linux" installed="true" &gt;
+    &lt;pfn url="file:///tmp/mDiff" site="local"/&gt;        
+  &lt;/executable&gt;
+
+  &lt;!-- to be used in compound transformation later --&gt;
+  &lt;executable namespace="example" name="mFitplane" version="1.0"
+              arch="x86_64" os="linux" installed="true" &gt;
+    &lt;pfn url="file:///tmp/mDiffFitplane"  site="local"&gt;
+      &lt;profile namespace="stat" key="md5sum"&gt;0a9c38b919c7809cb645fc09011588a6&lt;/profile&gt;
+    &lt;/pfn&gt;
+  &lt;/executable&gt;
+
+  &lt;!-- a more likely example from the black diamond --&gt;
+  &lt;executable namespace="diamond" name="preprocess" version="2.0" 
+              arch="x86_64"
+              os="linux" 
+              osversion="2.6.18"&gt;
+    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="local" /&gt;
+  &lt;/executable&gt;</programlisting>
+
+          <para>Logical filenames pertaining to a single executables in the
+          transformation catalog use the <emphasis>executable</emphasis>
+          element. Any <emphasis>executable</emphasis> element features the
+          optional <emphasis>namespace</emphasis> attribute, a mandatory
+          <emphasis>name</emphasis> attribute, and an optional
+          <emphasis>version</emphasis> attribute. The
+          <emphasis>version</emphasis> attribute defaults to "1.0" when
+          absent. An executable typically needs additional attributes to
+          describe it properly, like the architecture, OS release and other
+          flags typically seen with transformations, or found in the
+          transformation catalog.</para>
+
+          <table>
+            <tgroup cols="4">
+              <thead>
+                <row>
+                  <entry>attribute</entry>
+
+                  <entry>optional?</entry>
+
+                  <entry>type</entry>
+
+                  <entry>meaning</entry>
+                </row>
+              </thead>
+
+              <tbody>
+                <row>
+                  <entry>name</entry>
+
+                  <entry>required</entry>
+
+                  <entry>string</entry>
+
+                  <entry>logical transformation name</entry>
+                </row>
+
+                <row>
+                  <entry>namespace</entry>
+
+                  <entry>optional</entry>
+
+                  <entry>string</entry>
+
+                  <entry>namespace of logical transformation, default to
+                  <emphasis>null</emphasis> value.</entry>
+                </row>
+
+                <row>
+                  <entry>version</entry>
+
+                  <entry>optional</entry>
+
+                  <entry>VersionPattern</entry>
+
+                  <entry>version of logical transformation, defaults to
+                  "1.0".</entry>
+                </row>
+
+                <row>
+                  <entry>installed</entry>
+
+                  <entry>optional</entry>
+
+                  <entry>boolean</entry>
+
+                  <entry>whether to stage the file (false), or not (true,
+                  default).</entry>
+                </row>
+
+                <row>
+                  <entry>arch</entry>
+
+                  <entry>optional</entry>
+
+                  <entry>Architecture</entry>
+
+                  <entry>restricted set of tokens, see schema definition
+                  file.</entry>
+                </row>
+
+                <row>
+                  <entry>os</entry>
+
+                  <entry>optional</entry>
+
+                  <entry>OSType</entry>
+
+                  <entry>restricted set of tokens, see schema definition
+                  file.</entry>
+                </row>
+
+                <row>
+                  <entry>osversion</entry>
+
+                  <entry>optional</entry>
+
+                  <entry>VersionPattern</entry>
+
+                  <entry>kernel version as beginning of `uname -r`.</entry>
+                </row>
+
+                <row>
+                  <entry>glibc</entry>
+
+                  <entry>optional</entry>
+
+                  <entry>VersionPattern</entry>
+
+                  <entry>version of libc.</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table>
+
+          <para>The rationale for giving these flags in the
+          <emphasis>executable</emphasis> element header is that PFNs are just
+          identical replicas or instances of a given LFN. If you need a
+          different 32/64 bit-ed-ness or OS release, the underlying PFN would
+          be different, and thus the LFN for it should be different,
+          too.</para>
+
+          <note>
+            <para>We are still discussing some details and implications of
+            this decision.</para>
+          </note>
+
+          <para>The initial examples come with the same caveats as for the
+          included replica catalog.</para>
+
+          <warning>
+            <para>The <emphasis>metadata</emphasis> element is not support as
+            of this writing! Details may change in the future.</para>
+          </warning>
+
+          <para>Similar to the replica catalog, each
+          <emphasis>executable</emphasis> element may have 0 or more
+          <emphasis>profile</emphasis> elements abstracting away site-specific
+          details, zero or more <emphasis>metadata</emphasis> elements, and
+          zero or more <emphasis>pfn</emphasis> elements. If there are no
+          <emphasis>pfn</emphasis> elements, the transformation must still be
+          searched for in the external transformation catalog. As before, the
+          <emphasis>pfn</emphasis> element may have
+          <emphasis>profile</emphasis> children-elements, referring to
+          attributes of the physical filename itself.</para>
+
+          <para>The last example above comes from the black diamond example
+          workflow, and presents the kind and extend of attributes you are
+          most likely to see and use in your own workflows.</para>
         </section>
 
         <section>
           <title>The Compound Transformation Section</title>
 
-          <para>asdf.</para>
+          <para>The compound transformation section declares a transformation
+          that comprises multiple plain transformation. You can think of a
+          compound transformation like a script interpreter and the script
+          itself. In order to properly run the application, you must start
+          both, the script interpreter and the script passed to it. The
+          compound transformation helps Pegasus to properly deal with this
+          case, especially when it needs to stage executables.</para>
 
-          <programlisting></programlisting>
+          <programlisting>  &lt;transformation namespace="example" version="1.0" name="mDiffFit" &gt;
+    &lt;uses name="mDiffFit" /&gt;
+    &lt;uses name="mDiff" namespace="example" version="2.0" /&gt;
+    &lt;uses name="mFitPlane" /&gt;
+    &lt;uses name="mDiffFit.config" executable="false" /&gt;
+  &lt;/transformation&gt;</programlisting>
+
+          <para>A <emphasis>transformation</emphasis> element declares a set
+          of purely logical entities, executables and config (data) files,
+          that are all required together for the same job. Being purely
+          logical entities, the lookup happens only when the transformation
+          element is referenced (or instantiated) by a job element later
+          on.</para>
+
+          <para>The <emphasis>namespace</emphasis> and
+          <emphasis>version</emphasis> attributes of the transformation
+          element are optional, and provide the defaults for the inner uses
+          elements. They are also essential for matching the transformation
+          with a job.</para>
+
+          <para>The <emphasis>transformation</emphasis> is made up of 1 or
+          more <emphasis>uses</emphasis> element. Each
+          <emphasis>uses</emphasis> has a boolean attribute
+          <emphasis>executable</emphasis>, <literal>true</literal> by default,
+          or <literal>false</literal> to indicate a data file. The
+          <emphasis>name</emphasis> is a mandatory attribute, refering to an
+          LFN declared previously in the File Catalog
+          (<emphasis>executable</emphasis> is <literal>false</literal>),
+          Executable Catalog (<emphasis>executable</emphasis> is
+          <literal>true</literal>), or to be looked up as necessary at
+          instantiation time. The lookup catalog is determined by the
+          <emphasis>executable</emphasis> attribute.</para>
+
+          <para>The <emphasis>namespace</emphasis> and
+          <emphasis>version</emphasis> attributes' default values inside
+          <emphasis>uses</emphasis> elements are inherited from the
+          <emphasis>transformation</emphasis> attributes of the same name.
+          There is no such inheritance for <emphasis>uses</emphasis> elements
+          with <emphasis>executable</emphasis> attribute of
+          <literal>false</literal>.</para>
         </section>
       </section>
 
@@ -264,6 +630,50 @@
         <emphasis>node-label</emphasis> value, a workflow grapher could use
         the label value to show graph nodes to the user. It may also come in
         handy while debugging.</para>
+
+        <para>Any job-like graph node has the following set of children
+        elements, as defined in the <emphasis>AbstractJobType</emphasis>
+        declaration in the schema definition:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>0 or 1 <emphasis>argument</emphasis> element to declare the
+            command-line of the job's invocation.</para>
+          </listitem>
+
+          <listitem>
+            <para>0 or more <emphasis>profile</emphasis> elements to abstract
+            away site-specific or job-specific details.</para>
+          </listitem>
+
+          <listitem>
+            <para>0 or 1 <emphasis>stdin</emphasis> element to link a logical
+            file the the job's standard input.</para>
+          </listitem>
+
+          <listitem>
+            <para>0 or 1 <emphasis>stdout</emphasis> element to link a logical
+            file to the job's standard output.</para>
+          </listitem>
+
+          <listitem>
+            <para>0 or 1 <emphasis>stderr</emphasis> element to link a logical
+            file to the job's standard error. </para>
+          </listitem>
+
+          <listitem>
+            <para>0 or more <emphasis>uses</emphasis> elements to declare
+            consumed data files and produced data files.</para>
+          </listitem>
+
+          <listitem>
+            <para>0 or more <emphasis>invoke</emphasis> elements</para>
+          </listitem>
+        </itemizedlist>
+
+        <warning>
+          <para>The invoke element is not supported as of this writing.</para>
+        </warning>
 
         <section>
           <title>Job Nodes</title>
@@ -317,6 +727,11 @@
           imperative that you declare even hidden files that your task
           requires in this section, so that the proper ancilliary staging- and
           clean-up tasks can be generated during planning.</para>
+
+          <warning>
+            <para>The <emphasis>invoke</emphasis> element is not supported as
+            of this writing!</para>
+          </warning>
 
           <para>The invoke element is currently not supported! It may be
           specified multiple times, as needed. It has a mandatory when
@@ -489,25 +904,85 @@
         <section>
           <title>DAG Nodes</title>
 
-          <para>asdf.</para>
+          <para>A workflow that has already been concretized, either by an
+          earlier run of Pegasus, or otherwise constructed for DAGMan
+          execution, can be included into the current workflow using the
+          <emphasis>dag</emphasis> element.</para>
 
-          <programlisting></programlisting>
+          <programlisting>  &lt;dag id="ID000003" name="black.dag" node-label="foo" &gt;
+    &lt;profile namespace="dagman" key="DIR"&gt;/dag-dir/test&lt;/profile&gt;
+    &lt;invoke&gt; &lt;!-- optional, should be possible --&gt; &lt;/invoke&gt;
+    &lt;uses file="sites.xml" link="input" register="false" transfer="true" type="data"/&gt;     
+  &lt;/dag&gt;</programlisting>
+
+          <para>The <emphasis>id</emphasis> and
+          <emphasis>node-label</emphasis> attributes were described
+          previously. The <emphasis>name</emphasis> attribute refers to a file
+          from the File Catalog that provides the actual DAGMan DAG as data
+          content. The <emphasis>dag</emphasis> element features optional
+          <emphasis>profile</emphasis> elements. These would most likely
+          pertain to the <literal>dagman</literal> and <literal>env</literal>
+          profile namespaces. It should be possible to have the optional
+          <emphasis>notify</emphasis> element in the same manner as for
+          jobs.</para>
+
+          <warning>
+            <para>The <emphasis>invoke</emphasis> element is not supported as
+            of this writing!</para>
+          </warning>
+
+          <para>A graph node that is a dag instead of a job would just use a
+          different submit file generator to create a DAGMan invocation. There
+          can be an <emphasis>argument</emphasis> element to modify the
+          command-line passed to DAGMan.</para>
         </section>
 
         <section>
           <title>DAX Nodes</title>
 
-          <para>asdf.</para>
+          <para>A still to be planned workflow incurs an invocation of the
+          Pegasus planner as part of the workflow. This still abstract
+          sub-workflow uses the <emphasis>dax</emphasis> element.</para>
 
-          <programlisting></programlisting>
+          <programlisting>  &lt;dax id="ID000002" name="black.dax" node-label="bar" &gt;
+    &lt;profile namespace="env" key="foo"&gt;bar&lt;/profile&gt;
+    &lt;argument&gt;-Xmx1024 -Xms512 -Dpegasus.dir.storage=duncan  -Dpegasus.dir.exec=raphael -o local --dir ./datafind -vvvvv --force -s dax_site --basename karan&lt;/argument&gt;
+    &lt;invoke&gt; &lt;!-- optional, may not be possible here --&gt; &lt;/invoke&gt;
+    &lt;uses file="sites.xml" link="input" register="false" transfer="true" type="data" /&gt;
+  &lt;/dax&gt;</programlisting>
+
+          <para>The <emphasis>id</emphasis> and
+          <emphasis>node-label</emphasis> attributes were described
+          previously. The <emphasis>name</emphasis> attribute refers to a file
+          from the File Catalog that provides the to be planned DAX as
+          external file data content. The <emphasis>dax</emphasis> element
+          features optional <emphasis>profile</emphasis> elements. These would
+          most likely pertain to the <literal>pegasus</literal>,
+          <literal>dagman</literal> and <literal>env</literal> profile
+          namespaces. It may be possible to have the optional
+          <emphasis>notify</emphasis> element in the same manner as for
+          jobs.</para>
+
+          <warning>
+            <para>The <emphasis>invoke</emphasis> element is not supported as
+            of this writing!</para>
+          </warning>
+
+          <para>A graph node that is a <emphasis>dax</emphasis> instead of a
+          job would just use yet another submit file and pre-script generator
+          to create a DAGMan invocation. The <emphasis>argument</emphasis>
+          string pertains to the command line of the to-be-generated DAGMan
+          invocation.</para>
         </section>
 
         <section>
-          <title>ADAG Nodes</title>
+          <title>Inner ADAG Nodes</title>
 
-          <para>asdf.</para>
-
-          <programlisting></programlisting>
+          <para>While completeness would argue to have a recursive nesting of
+          <emphasis>adag</emphasis> elements, such recursive nestings are
+          currently not supported, not even in the schema. If you need to nest
+          workflows, please use the <emphasis>dax</emphasis> or
+          <emphasis>dag</emphasis> element to achieve the same goal.</para>
         </section>
       </section>
 
@@ -538,9 +1013,13 @@
         identifiers.</para>
 
         <para>The <emphasis>parent</emphasis> element has an optional
-        <emphasis>edge-label</emphasis> attribute. While the attribute is
-        currently unused, its goal is to annotate edges when drawing workflow
-        graphs.</para>
+        <emphasis>edge-label</emphasis> attribute. </para>
+
+        <warning>
+          <para>While the <emphasis>edge-label</emphasis> attribute is
+          currently unused, its goal is to annotate edges when drawing
+          workflow graphs.</para>
+        </warning>
       </section>
 
       <section>
@@ -561,55 +1040,113 @@
 
       <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;!-- generated: 2010-11-19T20:00:29Z --&gt;
-&lt;!-- generator: Perl --&gt;
-&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
- xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd"
- version="3.2" name="diamond" index="0" count="1"&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" 
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd"
+      version="3.2" 
+      name="diamond" 
+      index="0" 
+      count="1"&gt;
   &lt;!-- part 1.1: included replica catalog --&gt;
   &lt;file name="f.a"&gt;
-    &lt;pfn url="f.a" site="local" /&gt;
+    &lt;pfn url="file:///home/voeckler/f.a" site="local" /&gt;
   &lt;/file&gt;
   &lt;!-- part 1.2: included transformation catalog --&gt;
-  &lt;executable namespace="diamond" name="preprocess" version="2.0" arch="x86_64" os="linux" osversion="2.6.18"&gt;
+  &lt;executable namespace="diamond" name="preprocess" version="2.0" 
+              arch="x86_64" os="linux" osversion="2.6.18"&gt;
+    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="local" /&gt;
+  &lt;/executable&gt;
+  &lt;executable namespace="diamond" name="findrange" version="2.0" 
+              arch="x86_64" os="linux" osversion="2.6.18"&gt;
+    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="local" /&gt;
+  &lt;/executable&gt;
+  &lt;executable namespace="diamond" name="analyze" version="2.0" 
+              arch="x86_64" os="linux" osversion="2.6.18"&gt;
     &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="local" /&gt;
   &lt;/executable&gt;
   &lt;!-- part 2: definition of all jobs (at least one) --&gt;
   &lt;job namespace="diamond" name="preprocess" version="2.0" id="ID000001"&gt;
     &lt;argument&gt;-a preprocess -T60 -i &lt;file name="f.a" /&gt; -o &lt;file name="f.b1" /&gt; &lt;file name="f.b2" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.b2" link="output" register="false" transfer="true" /&gt;
-    &lt;uses name="f.b1" link="output" register="false" transfer="true" /&gt;
+    &lt;uses name="f.b2" link="output" register="false" transfer="false" /&gt;
+    &lt;uses name="f.b1" link="output" register="false" transfer="false" /&gt;
     &lt;uses name="f.a" link="input" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000002"&gt;
     &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b1" /&gt; -o &lt;file name="f.c1" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.b1" link="input" register="false" transfer="true" /&gt;
-    &lt;uses name="f.c1" link="output" register="false" transfer="true" /&gt;
+    &lt;uses name="f.b1" link="input" register="false" transfer="false" /&gt;
+    &lt;uses name="f.c1" link="output" register="false" transfer="false" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000003"&gt;
     &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b2" /&gt; -o &lt;file name="f.c2" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.c2" link="output" register="false" transfer="true" /&gt;
-    &lt;uses name="f.b2" link="input" register="false" transfer="true" /&gt;
+    &lt;uses name="f.c2" link="output" register="false" transfer="false" /&gt;
+    &lt;uses name="f.b2" link="input" register="false" transfer="false" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="analyze" version="2.0" id="ID000004"&gt;
     &lt;argument&gt;-a analyze -T60 -i &lt;file name="f.c1" /&gt; &lt;file name="f.c2" /&gt; -o &lt;file name="f.d" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.c2" link="input" register="false" transfer="true" /&gt;
+    &lt;uses name="f.c2" link="input" register="false" transfer="false" /&gt;
     &lt;uses name="f.d" link="output" register="false" transfer="true" /&gt;
-    &lt;uses name="f.c1" link="input" register="false" transfer="true" /&gt;
+    &lt;uses name="f.c1" link="input" register="false" transfer="false" /&gt;
   &lt;/job&gt;
   &lt;!-- part 3: list of control-flow dependencies --&gt;
   &lt;child ref="ID000002"&gt;
-    &lt;parent ref="ID000001" edge-label="edge1" /&gt;
+    &lt;parent ref="ID000001" /&gt;
   &lt;/child&gt;
   &lt;child ref="ID000003"&gt;
-    &lt;parent ref="ID000001" edge-label="edge2" /&gt;
+    &lt;parent ref="ID000001" /&gt;
   &lt;/child&gt;
   &lt;child ref="ID000004"&gt;
-    &lt;parent ref="ID000002" edge-label="edge3" /&gt;
-    &lt;parent ref="ID000003" edge-label="edge4" /&gt;
+    &lt;parent ref="ID000002" /&gt;
+    &lt;parent ref="ID000003" /&gt;
   &lt;/child&gt;
 &lt;/adag&gt;</programlisting>
 
-      <para>[INSERT EXPLANATION HERE]</para>
+      <para>The above workflow defines the black diamond from figure [INSERT
+      INTERNAL LINK HERE]. It will require minimal configuration, because the
+      catalog sections include all necessary declarations. </para>
+
+      <para>The file element defines the location of the required input file
+      in terms of the local machine. Please note that </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The <emphasis>file</emphasis> element declares the required
+          input file "f.a" in terms of the local machine. Please note that if
+          you plan the workflow for a remote site, the has to be some way for
+          the file to be staged from the local site to the remote site. While
+          Pegasus will augment the workflow with such ancillary jobs, the site
+          catalog as well as local and remote site have to be set up
+          properlyl. For a locally run workflow you don't need to do
+          anything.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis>executable</emphasis> elements declare the same
+          executable keg that is to be run for each the logical transformation
+          in terms of the local site. To declare it for a remote site, you
+          would have to adjust the <emphasis>site</emphasis> attribute's value
+          to the proper remote site handle. This section also shows that the
+          same executable may come in different guises as
+          transformation.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis>job</emphasis> elements define the workflow's
+          logical constituents, the way to invoke the <literal>keg</literal>
+          command, where to put filenames on the commandline, and what files
+          are consumed or produced. In addition to the direction of files,
+          further attributes determine whether to register the file with a
+          replica catalog and whether to transfer it to the output site in
+          case of a product. We are only interested in the final data product
+          "f.d" in this workflow, and not any intermediary files. Typically,
+          you would also want to register the data products in the replica
+          catalog, especially in larger scenarios. </para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis>child</emphasis> elements define the control
+          flow between the jobs. </para>
+        </listitem>
+      </itemizedlist>
     </section>
   </section>
 
@@ -816,7 +1353,8 @@ public class BlackDiamondDAX {
     <section>
       <title>The Python DAX generator API</title>
 
-      <para>asdf</para>
+      <para>I am no python master. There is auto-generated pythondoc
+      documentation explaining this API.[INCLUDE REFERENCE HERE].</para>
 
       <programlisting>#!/usr/bin/env python
 
@@ -894,8 +1432,6 @@ diamond.addDependency(parent=frr, child=analyze)
 
 # Write the DAX to stdout
 diamond.writeXML(sys.stdout)</programlisting>
-
-      <para>asdf</para>
     </section>
 
     <section>
@@ -962,13 +1498,12 @@ diamond.writeXML(sys.stdout)</programlisting>
         </listitem>
       </orderedlist>
 
-      <para></para>
-
       <programlisting>#!/usr/bin/env perl
 #
 use 5.006;
 use strict;
 use IO::Handle; 
+use Cwd;
 ##!! PEGASUS_HOME set to install dir of Pegasus
 ##!! PERL5LIB includes $PEGASUS_HOME/lib/perl
 use Pegasus::DAX::Factory qw(:all); 
@@ -982,7 +1517,8 @@ my $job3 = newJob( namespace =&gt; NS, name =&gt; 'findrange', version =&gt; '2.
 my $job4 = newJob( namespace =&gt; NS, name =&gt; 'analyze', version =&gt; '2.0' );
 
 my $file = newFile( name =&gt; 'f.a' );
-$file-&gt;addPFN( newPFN( url =&gt; 'f.a', site =&gt; 'local' ) ); 
+$file-&gt;addPFN( newPFN( url =&gt; 'file://' . Cwd::abs_path(getcwd()) . '/f.a', 
+                       site =&gt; 'local' ) ); 
 $adag-&gt;addFile($file); 
 
 if ( exists $ENV{'PEGASUS_HOME'} ) {
@@ -1036,7 +1572,8 @@ $adag-&gt;addInverse( $job4, $job2, 'edge3', $job3, 'edge4' );
 my $xmlns = shift; 
 $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
 
-      <para>asdf</para>
+      <para>All modules are documented with perldoc. [INCLUDE REFERENCE
+      HERE].</para>
     </section>
   </section>
 
