@@ -190,12 +190,12 @@ output file: /home/user/run0004/register_viz_glidein_7_0.out.002
 --nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
 </emphasis></programlisting>
     </section>
+  </section>
 
-    <section>
-      <title>Plotting and Statistics</title>
+  <section>
+    <title>Plotting and Statistics</title>
 
-      <para></para>
-    </section>
+    <para></para>
 
     <section>
       <title>pegasus-statistics</title>
