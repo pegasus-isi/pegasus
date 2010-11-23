@@ -187,22 +187,28 @@ public class ReplicaCatalog extends AbstractSiteData {
         writer.write( indent );
         writer.write( "<replica-catalog " );        
         writeAttribute( writer, "type", getType() );
-        writeAttribute( writer, "url", getURL() );        
-        writer.write( ">");
-        writer.write( newLine );
-        
-        //list all the aliases first
-        for( Iterator<String> it = this.getAliasIterator(); it.hasNext(); ){
-            writeAlias( writer, newIndent, it.next() );
+        writeAttribute( writer, "url", getURL() );
+
+        if(  this.mAliases.isEmpty() && this.mConnectionParams.isEmpty() ){
+            writer.write( "/>" );
         }
+        else{
+            writer.write( ">");
+            writer.write( newLine );
         
-        //list all the connection params
-        for( Iterator<Connection> it = this.getConnectionIterator(); it.hasNext(); ){
-            it.next().toXML( writer, newIndent );
+            //list all the aliases first
+            for( Iterator<String> it = this.getAliasIterator(); it.hasNext(); ){
+                writeAlias( writer, newIndent, it.next() );
+            }
+        
+            //list all the connection params
+            for( Iterator<Connection> it = this.getConnectionIterator(); it.hasNext(); ){
+                it.next().toXML( writer, newIndent );
+            }
+        
+            writer.write( indent );
+            writer.write( "</replica-catalog>" );
         }
-        
-        writer.write( indent );
-        writer.write( "</replica-catalog>" );
         writer.write( newLine );
     }
     

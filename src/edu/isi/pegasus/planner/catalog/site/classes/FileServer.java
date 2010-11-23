@@ -70,14 +70,19 @@ public class FileServer extends FileServerType {
         writeAttribute( writer, "protocol", getProtocol()  );        
         writeAttribute( writer, "url", getURLPrefix() );        
         writeAttribute( writer, "mount-point", getMountPoint() );        
+
+        if( mProfiles.isEmpty() ){
+            writer.write( "/>" );
+        }
+        else{
+            writer.write( ">" );
+            writer.write( newLine );
         
-        writer.write( ">" );
-        writer.write( newLine );
+            mProfiles.toXML( writer , newIndent );
         
-        mProfiles.toXML( writer , newIndent );
-        
-        writer.write( indent );
-        writer.write( "</file-server>" );
+            writer.write( indent );
+            writer.write( "</file-server>" );
+        }
         writer.write( newLine );
     }
 }
