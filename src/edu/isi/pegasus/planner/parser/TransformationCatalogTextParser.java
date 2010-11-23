@@ -294,7 +294,7 @@ public class TransformationCatalogTextParser {
 
                 case TransformationCatalogReservedWord.TYPE:
                     value = getQuotedValue( "type" );
-                    entry.setType( TCType.valueOf(value) );
+                    entry.setType( TCType.valueOf(value.toUpperCase()) );
                     break;
 
                 default:
