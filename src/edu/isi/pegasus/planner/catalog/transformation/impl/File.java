@@ -252,16 +252,20 @@ public class File  extends Abstract
                                         "defined with the property pegasus.catalog.transformation.file");
         } else {
 
-            java.io.File f = new java.io.File(  mTCFile );
-            
-            if( f.exists() ){
+          java.io.File f = new java.io.File(  mTCFile );
+          try {
+          if( f.exists() || f.createNewFile() ){
                 populateTC();
             }
             else{
                 mLogger.log("The Transformation Catalog file " + mTCFile +
                         " was not found - Will consider only TC Entries from the DAX", LogManager.WARNING_MESSAGE_LEVEL);
             }
+            }  catch (IOException ioe){
+              mLogger.log("Could not create Transformation Catalog file "+mTCFile, LogManager.ERROR_MESSAGE_LEVEL);
+          }
         }
+
     }
     
 
