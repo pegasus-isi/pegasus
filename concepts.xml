@@ -196,10 +196,12 @@
     <section>
       <title>Workflow Gallery</title>
 
-      <para>Pegasus is being used in a broad range of applications. <ulink
-      url="http://pegasus.isi.edu/applications.php">This pages</ulink> shows
-      some of the examples. Also to see the details of the workflows of the
-      applications below you can visit our <ulink
+      <para>Pegasus is being used in a broad range of applications. Our <link
+      linkend="example_workflows">example workflows</link> can be found in a
+      later chapter. <ulink
+      url="http://pegasus.isi.edu/applications.php">These external
+      pages</ulink> shows some of the examples. Also to see the details of the
+      workflows of the applications below you can visit our <ulink
       url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">gallery
       of workflows</ulink>.</para>
 
@@ -343,14 +345,17 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <para>The simplest execution environment does not involve Condor.
         Pegasus is capable of planning small workflows for full-local
         execution using a shell planner. Please refer to the <filename
-        class="directory">examples</filename> directory, or the tutorials, for
-        details.</para>
+        class="directory">examples</filename> directory, the shell planner's
+        <link linkend="local_shell_examples">documentation section</link>, or
+        the tutorials, for details.</para>
       </listitem>
 
       <listitem>
         <para>A slighly more challenging setup is still all-local, but Condor
         manages queued jobs and Condor DAGMan the workflow. This setup permits
-        limited parallelism with full scalability.</para>
+        limited parallelism with full scalability. With proper setup, Condor
+        can scavenge cycles from unused computers in your department, enabling
+        a pool of more than just a single machine. </para>
       </listitem>
 
       <listitem>
@@ -363,7 +368,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <para>Various advanced execution environment setups deal with
         minimally using Globus to obtain remote resources (Glide-ins),
         by-passing Globus completely (Condor-C), or supporting cloud computing
-        (Nimbus, Eucalyptus, EC2).</para>
+        (Nimbus, Eucalyptus, EC2). You should be familiar with the Grid
+        Execution Environment, as some concept are borrowed. </para>
       </listitem>
     </itemizedlist>
 
@@ -386,59 +392,83 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         </figure></para>
 
       <para>The vanilla grid environment shown in the figure <link
-      linkend="concepts-fig-site-layout">above</link>. On on side, you have a
-      submit machine where Pegasus runs, Condor schedules jobs, and workflows
-      are executed. In order to properly communicate over secured channels, it
-      is important that the submit machine has a proper notion of time, i.e.
-      runs an NTP daemon to keep accurate time. To be able to connect to
-      remote clusters and receive connections from the remote clusters, the
-      submit host optimally has a public IP address.</para>
+      linkend="concepts-fig-site-layout">above</link>. We will work from the
+      left to the right top, then the right bottom. </para>
+
+      <para>On the left side, you have a submit machine where Pegasus runs,
+      Condor schedules jobs, and workflows are executed. We call it the
+      <emphasis>submit host</emphasis> (SH), though its functionality can be
+      assumed by a virtual machine image. In order to properly communicate
+      over secured channels, it is important that the submit machine has a
+      proper notion of time, i.e. runs an NTP daemon to keep accurate time. To
+      be able to connect to remote clusters and receive connections from the
+      remote clusters, the submit host has a public IP address to facilitate
+      this communication. </para>
 
       <para>In order to send a job request to the remote cluster, Condor wraps
       the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs
       on remote sites. In terms of a software stack, Pegasus wraps the job
       into Condor. Condor wraps the job into Globus. Globus transports the job
-      to the remote site, and unwraps the Globus component.</para>
+      to the remote site, and unwraps the Globus component, sending it to the
+      remote site's <emphasis>resource manager</emphasis> (RM).</para>
 
-      <para>To be able to talk properly with the Globus security
-      infrastructure (GSI), the submit machine needs to have the CA
+      <para>To be able to communicate using the Globus security infrastructure
+      (GSI), the submit machine needs to have the certificate authority (CA)
       certificates configured, requires a host certificate in certain
       circumstances, and the user a user certificate that is enabled on the
-      remote site. On the other end, the remote gatekeeper node requires a
-      host certificate, the signing CA certificate chain and policy files, and
-      a goot time source.</para>
+      remote site. On the remote end, the remote gatekeeper node requires a
+      host certificate, all signing CA certificate chains and policy files,
+      and a goot time source.</para>
 
       <para>In a grid environment, there are one or more clusters accessible
       via grid middleware like the <ulink url="http://www.globus.org/">Globus
       Toolkit</ulink>. In case of Globus, there is the Globus gatekeeper
-      listening on port 2119 of the remote cluster. The port is opened to a
-      single machine called head-node.The head-node is typically located in a
-      de-militarized zone (DMZ) of the firewall setup, as it requires limited
-      outside connectivity and a public IP address so that it can be
-      contacted. Additionally, once the gatekeeper accepted a job, it passes
-      it on to a jobmanager. Often, these jobmanagers require a limited port
-      range, in the example 40000-41000, to call back to the submit
-      machine.</para>
+      listening on TCP port 2119 of the remote cluster. The port is opened to
+      a single machine called <emphasis>head node</emphasis> (HN).The
+      head-node is typically located in a de-militarized zone (DMZ) of the
+      firewall setup, as it requires limited outside connectivity and a public
+      IP address so that it can be contacted. Additionally, once the
+      gatekeeper accepted a job, it passes it on to a jobmanager. Often, these
+      jobmanagers require a limited port range, in the example TCP ports
+      40000-41000, to call back to the submit machine.</para>
+
+      <para>For the user to be able to run jobs on the remote site, the user
+      must have some form of an account on the remtoe site. The user's grid
+      identity is passed from the submit host. An entity called <emphasis>grid
+      mapfile</emphasis> on the gatekeeper maps the user's grid identity into
+      a remote account. While most sites do not permit account sharing, it is
+      possible to map multiple user certificates to the same account. </para>
 
       <para>The gatekeeper is the interface through which jobs are submitted
       to the remote cluster's resource manager. A resource manager is a
       scheduling system like PBS, Maui, LSF, FBSNG or Condor that queues tasks
-      and allocates worker nodes. Typcially, the worker nodes in the remote
-      cluster do not have outside connectivity and often all private IP
-      addresses. The Globus toolkit requires a shared filesystem to properly
-      stage files between the head node and worker nodes.</para>
+      and allocates worker nodes. The <emphasis>worker nodes</emphasis> (WN)
+      in the remote cluster might not have outside connectivity and often use
+      all private IP addresses. The Globus toolkit requires a shared
+      filesystem to properly stage files between the head node and worker
+      nodes.</para>
+
+      <note>
+        <para>The shared filesystem requirement is imposed by Globus. Pegasus
+        is capable of supporting advanced site layouts that do not require a
+        shared filesystem. Please contact us for details, should you require
+        such a setup. </para>
+      </note>
 
       <para>To stage data between external sites for the job, it is
-      recommended to enable a GridFTP server. While this server can be
-      installed on the head-node, for performance purposes it is recommended
-      to have its own machine. If a shared networked filesystem is involved,
-      the GridFTP server should be located as close to the file-server as
-      possible. The GridFTP server requires port 2811 for the control channel,
-      and a limited port range for data channels, here as an example port
-      40000-41000. The GridFTP server requires a host certificate, the signing
-      CA chain and policy files, a stable time source, and a gridmap file that
-      maps between a user's grid identify and the user's account on the remote
-      site.</para>
+      recommended to enable a GridFTP server. If a shared networked filesystem
+      is involved, the GridFTP server should be located as close to the
+      file-server as possible. The GridFTP server requires TCP port 2811 for
+      the control channel, and a limited port range for data channels, here as
+      an example the TPC ports from 40000 to 41000. The GridFTP server
+      requires a host certificate, the signing CA chain and policy files, a
+      stable time source, and a gridmap file that maps between a user's grid
+      identify and the user's account on the remote site.</para>
+
+      <para>The GridFTP server is often installed on the head node, the same
+      as the gatekeeper, so that they can share the grid mapfile, CA
+      certificate chains and other setups. However, for performance purposes
+      it is recommended that the GridFTP server has its own machine. </para>
     </section>
   </section>
 
