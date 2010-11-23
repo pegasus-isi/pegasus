@@ -18,7 +18,7 @@
 
     <orderedlist>
       <listitem>
-        <para>File</para>
+        <para>File <emphasis role="bold">(Default)</emphasis></para>
       </listitem>
 
       <listitem>
@@ -304,157 +304,130 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
     <orderedlist>
       <listitem>
-        <para>XML3</para>
+        <para>XML3 <emphasis role="bold">(Default)</emphasis></para>
       </listitem>
 
       <listitem>
-        <para>XML</para>
+        <para>XML <emphasis role="bold">(Deprecated)</emphasis></para>
       </listitem>
 
       <listitem>
-        <para>File</para>
+        <para>File <emphasis role="bold">(Deprecated)</emphasis></para>
       </listitem>
     </orderedlist>
 
-    <para>The format for the File is as follows</para>
+    <section>
+      <title>XML3</title>
 
-    <programlisting>site site_id {
-  #required. Can be a dummy value if using Simple File RC
-  lrc "rls://someurl"
+      <para>This is the default format for Pegasus 3.0. This format allows
+      defining filesystem of shared as well as local type on the head node of
+      the remote cluster as well as on the backend nodes</para>
 
-  #required on a shared file system
-  workdir "path/to/a/tmp/shared/file/sytem/"
+      <figure>
+        <title>Schema Image of the Site Catalog XML 3</title>
 
-  #required one or more entries
-  gridftp "gsiftp://hostname/mountpoint” "GLOBUS VERSION"
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="sc-3.0_p2.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
 
-  #required one or more entries
-  universe transfer "hostname/jobmanager-&lt;scheduler&gt;" "GLOBUS VERSION"
+      <para>Below is an example of the XML3 site catalog</para>
 
-  #reqired one or more entries
-  universe vanilla "hostname/jobmanager-&lt;scheduler&gt;" "GLOBUS VERSION"
+      <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog 
+http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
+  &lt;site  handle="isi" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+      &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+      &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+          &lt;head-fs&gt;
+               &lt;scratch&gt;
+                  &lt;shared&gt;
+                     &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu"
+                                  mount-point="/nfs/scratch01" /&gt;
+                     &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                  &lt;/shared&gt;
+               &lt;/scratch&gt;
+               &lt;storage&gt;
+                  &lt;shared&gt;
+                     &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" 
+                                  mount-point="/exports/storage01"/&gt;
+                     &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                  &lt;/shared&gt;
+               &lt;/storage&gt;
+          &lt;/head-fs&gt;
+          &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+  &lt;/site&gt;
+&lt;/sitecatalog&gt;</programlisting>
 
-  #optional
-  sysinfo  "ARCH::OS:OSVER:GLIBC"
+      <para></para>
 
-  #optional
-  gridlaunch "/path/to/gridlaunch/executable"
+      <para><orderedlist>
+          <listitem>
+            <para>site - A site identifier.</para>
+          </listitem>
 
-  #optional zero or more entries
-  profile namespace "key" "value"
-} </programlisting>
+          <listitem>
+            <para>lrc - URL for a local replica catalog (LRC) to register your
+            files in. Only used for RLS implementation of the RC</para>
+          </listitem>
 
-    <para>The gridlaunch and profile entries are optional. All the rest are
-    required for each pool. Also the transfer and vanilla universe are
-    mandatory. You can add multiple transfer and vanilla universe if you have
-    more then one head node on the cluster. The entries in the Site Catalog
-    have the following meaning:</para>
+          <listitem>
+            <para>workdir - A remote working directory (Should be on a shared
+            file system)</para>
+          </listitem>
 
-    <orderedlist>
-      <listitem>
-        <para>site - A site identifier.</para>
-      </listitem>
+          <listitem>
+            <para>gridftp - A URL prefix for a remote storage location.</para>
+          </listitem>
 
-      <listitem>
-        <para>lrc - URL for a local replica catalog (LRC) to register your
-        files in. Only used for RLS implementation of the RC</para>
-      </listitem>
+          <listitem>
+            <para>universe - Different universes are supported which map to
+            different batch jobmanagers.</para>
 
-      <listitem>
-        <para>workdir - A remote working directory (Should be on a shared file
-        system)</para>
-      </listitem>
+            <para>"vanilla" for compute jobs and "transfer" for transfer jobs
+            are mandatory. Generally a transfer universe should map to the
+            fork jobmanager.</para>
+          </listitem>
 
-      <listitem>
-        <para>gridftp - A URL prefix for a remote storage location.</para>
-      </listitem>
+          <listitem>
+            <para>gridlaunch - Path to the remote kickstart tool (provenance
+            tracking)</para>
+          </listitem>
 
-      <listitem>
-        <para>universe - Different universes are supported which map to
-        different batch jobmanagers.</para>
+          <listitem>
+            <para>sysinfo - The arch/os/osversion/glibc of the site. The
+            format is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
+            optiona.</para>
 
-        <para>"vanilla" for compute jobs and "transfer" for transfer jobs are
-        mandatory. Generally a transfer universe should map to the fork
-        jobmanager.</para>
-      </listitem>
+            <para>ARCH can have one of the following values INTEL32, INTEL64,
+            SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
+            values LINUX,SUNOS. The default value for sysinfo if none
+            specified is INTEL32::LINUX</para>
+          </listitem>
 
-      <listitem>
-        <para>gridlaunch - Path to the remote kickstart tool (provenance
-        tracking)</para>
-      </listitem>
+          <listitem>
+            <para>Profiles - One or many profiles can be attached to a
+            pool.</para>
 
-      <listitem>
-        <para>sysinfo - The arch/os/osversion/glibc of the site. The format is
-        ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are optiona.</para>
+            <para>One example is the environments to be set on a remote
+            pool.</para>
+          </listitem>
+        </orderedlist></para>
+    </section>
 
-        <para>ARCH can have one of the following values INTEL32, INTEL64,
-        SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following values
-        LINUX,SUNOS. The default value for sysinfo if none specified is
-        INTEL32::LINUX</para>
-      </listitem>
+    <section>
+      <title>XML</title>
 
-      <listitem>
-        <para>Profiles - One or many profiles can be attached to a
-        pool.</para>
+      <para><warning>
+          <para>This format is now deprecated in favor of the XML3 format. If
+          you are still using the XML or File format you should convert it to
+          XML3 formation using the pegasus-sc-converter client</para>
+        </warning></para>
 
-        <para>One example is the environments to be set on a remote
-        pool.</para>
-      </listitem>
-    </orderedlist>
-
-    <para>Create a file called sites.txt and edit the contents. Replace
-    ‘$HOME’ in the example below to your home directory.</para>
-
-    <programlisting>$ emacs $HOME/sites.txt </programlisting>
-
-    <para>Let’s say you have one cluster available to run your jobs called
-    clus1. You need to add 2 sections in the pool.config.txt file, one for the
-    cluster and one for the local machine. The local site entry is mandatory.
-    Change all the entries below to reflect your local host and cluster
-    setting including all environment variables</para>
-
-    <programlisting>site local {
-lrc "rlsn://localhost"
-workdir "$HOME/workdir"
-gridftp "gsiftp://localhost/$HOME/storage" "4.0.5"
-universe transfer "localhost/jobmanager-fork" "4.0.5"
-universe vanilla  "localhost/jobmanager-fork" "4.0.5"
-gridlaunch "/nfs/vdt/pegasus/bin/kickstart"
-sysinfo "INTEL32::LINUX"
-profile env "PEGASUS_HOME" "/nfs/vdt/pegasus"
-profile env "GLOBUS_LOCATION" "/vdt/globus"
-profile env "LD_LIBRARY_PATH" "/vdt/globus/lib"
-profile env "JAVA_HOME" /vdt/java
-}
-
-site clus1 {
-lrc "rlsn://clus1.com"
-workdir "$HOME/workdir-clus1"
-gridftp "gsiftp://clus1.com/jobmanager-fork" "4.0.3"
-universe transfer "clus1.com/jobmanager-fork" "4.0.3"
-universe vanilla  "clus1.com/jobmanager-pbs" "4.0.3"
-sysinfo "INTEL32::LINUX"
-gridlaunch "/opt/nfs/vdt/pegasus/bin/kickstart"
-profile env "PEGASUS_HOME" "/opt/nfs/vdt/pegasus"
-profile env "GLOBUS_LOCATION" "/opt/vdt/globus"
-profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
-} </programlisting>
-
-    <para>This file can be used as is by Pegasus but we prefer the XML version
-    of the Site Catalog because it allows for a richer description of the
-    site. The tool to convert the text site catalog to XML is called
-    sc-client</para>
-
-    <programlisting>$ <emphasis>sc-client --files $HOME/sites.txt --output $HOME/sites.xml
-
-</emphasis>
-2007.07.10 19:04:34.799 PDT: [INFO] Reading $HOME/sites.txt
-2007.07.10 19:04:34.844 PDT: [INFO] Reading $HOME/sites.txt (completed)
-2007.07.10 19:04:34.851 PDT: [INFO] Written xml output to file : $HOME/sites.xml</programlisting>
-
-    <para>Cat the sites.xml file and just take a look.</para>
-
-    <programlisting>$ <emphasis>cat $HOME/sites.xml</emphasis>
+      <para><programlisting>$ <emphasis>cat $HOME/sites.xml</emphasis>
 
 &lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
   xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
@@ -491,10 +464,217 @@ profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
      patch="3" /&gt;
     &lt;workdirectory &gt;$HOME/workdir-clus1&lt;/workdirectory&gt;
   &lt;/site&gt;
-&lt;/sitecatalog&gt;</programlisting>
+&lt;/sitecatalog&gt;</programlisting><orderedlist>
+          <listitem>
+            <para>site - A site identifier.</para>
+          </listitem>
 
-    <para>The site catalog can also be generated using the pegasus-get-sites
-    command for the OSG grid using the ReSS site information feed.</para>
+          <listitem>
+            <para>lrc - URL for a local replica catalog (LRC) to register your
+            files in. Only used for RLS implementation of the RC</para>
+          </listitem>
+
+          <listitem>
+            <para>workdir - A remote working directory (Should be on a shared
+            file system)</para>
+          </listitem>
+
+          <listitem>
+            <para>gridftp - A URL prefix for a remote storage location.</para>
+          </listitem>
+
+          <listitem>
+            <para>universe - Different universes are supported which map to
+            different batch jobmanagers.</para>
+
+            <para>"vanilla" for compute jobs and "transfer" for transfer jobs
+            are mandatory. Generally a transfer universe should map to the
+            fork jobmanager.</para>
+          </listitem>
+
+          <listitem>
+            <para>gridlaunch - Path to the remote kickstart tool (provenance
+            tracking)</para>
+          </listitem>
+
+          <listitem>
+            <para>sysinfo - The arch/os/osversion/glibc of the site. The
+            format is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
+            optiona.</para>
+
+            <para>ARCH can have one of the following values INTEL32, INTEL64,
+            SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
+            values LINUX,SUNOS. The default value for sysinfo if none
+            specified is INTEL32::LINUX</para>
+          </listitem>
+
+          <listitem>
+            <para>Profiles - One or many profiles can be attached to a
+            pool.</para>
+
+            <para>One example is the environments to be set on a remote
+            pool.</para>
+          </listitem>
+        </orderedlist></para>
+    </section>
+
+    <section>
+      <title>Text</title>
+
+      <para><warning>
+          <para>This format is now deprecated in favor of the XML3 format. If
+          you are still using the File format you should convert it to XML3
+          format using the client pegasus-sc-converter</para>
+        </warning></para>
+
+      <para>The format for the File is as follows</para>
+
+      <programlisting>site site_id {
+  #required. Can be a dummy value if using Simple File RC
+  lrc "rls://someurl"
+
+  #required on a shared file system
+  workdir "path/to/a/tmp/shared/file/sytem/"
+
+  #required one or more entries
+  gridftp "gsiftp://hostname/mountpoint” "GLOBUS VERSION"
+
+  #required one or more entries
+  universe transfer "hostname/jobmanager-&lt;scheduler&gt;" "GLOBUS VERSION"
+
+  #reqired one or more entries
+  universe vanilla "hostname/jobmanager-&lt;scheduler&gt;" "GLOBUS VERSION"
+
+  #optional
+  sysinfo  "ARCH::OS:OSVER:GLIBC"
+
+  #optional
+  gridlaunch "/path/to/gridlaunch/executable"
+
+  #optional zero or more entries
+  profile namespace "key" "value"
+} </programlisting>
+
+      <para>The gridlaunch and profile entries are optional. All the rest are
+      required for each pool. Also the transfer and vanilla universe are
+      mandatory. You can add multiple transfer and vanilla universe if you
+      have more then one head node on the cluster. The entries in the Site
+      Catalog have the following meaning:</para>
+
+      <orderedlist>
+        <listitem>
+          <para>site - A site identifier.</para>
+        </listitem>
+
+        <listitem>
+          <para>lrc - URL for a local replica catalog (LRC) to register your
+          files in. Only used for RLS implementation of the RC</para>
+        </listitem>
+
+        <listitem>
+          <para>workdir - A remote working directory (Should be on a shared
+          file system)</para>
+        </listitem>
+
+        <listitem>
+          <para>gridftp - A URL prefix for a remote storage location.</para>
+        </listitem>
+
+        <listitem>
+          <para>universe - Different universes are supported which map to
+          different batch jobmanagers.</para>
+
+          <para>"vanilla" for compute jobs and "transfer" for transfer jobs
+          are mandatory. Generally a transfer universe should map to the fork
+          jobmanager.</para>
+        </listitem>
+
+        <listitem>
+          <para>gridlaunch - Path to the remote kickstart tool (provenance
+          tracking)</para>
+        </listitem>
+
+        <listitem>
+          <para>sysinfo - The arch/os/osversion/glibc of the site. The format
+          is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
+          optiona.</para>
+
+          <para>ARCH can have one of the following values INTEL32, INTEL64,
+          SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
+          values LINUX,SUNOS. The default value for sysinfo if none specified
+          is INTEL32::LINUX</para>
+        </listitem>
+
+        <listitem>
+          <para>Profiles - One or many profiles can be attached to a
+          pool.</para>
+
+          <para>One example is the environments to be set on a remote
+          pool.</para>
+        </listitem>
+      </orderedlist>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>Site Catalog Client pegasus-sc-client</title>
+
+      <para>Create a file called sites.txt and edit the contents. Replace
+      ‘$HOME’ in the example below to your home directory.</para>
+
+      <programlisting>$ emacs $HOME/sites.txt </programlisting>
+
+      <para>Let’s say you have one cluster available to run your jobs called
+      clus1. You need to add 2 sections in the pool.config.txt file, one for
+      the cluster and one for the local machine. The local site entry is
+      mandatory. Change all the entries below to reflect your local host and
+      cluster setting including all environment variables</para>
+
+      <programlisting>site local {
+lrc "rlsn://localhost"
+workdir "$HOME/workdir"
+gridftp "gsiftp://localhost/$HOME/storage" "4.0.5"
+universe transfer "localhost/jobmanager-fork" "4.0.5"
+universe vanilla  "localhost/jobmanager-fork" "4.0.5"
+gridlaunch "/nfs/vdt/pegasus/bin/kickstart"
+sysinfo "INTEL32::LINUX"
+profile env "PEGASUS_HOME" "/nfs/vdt/pegasus"
+profile env "GLOBUS_LOCATION" "/vdt/globus"
+profile env "LD_LIBRARY_PATH" "/vdt/globus/lib"
+profile env "JAVA_HOME" /vdt/java
+}
+
+site clus1 {
+lrc "rlsn://clus1.com"
+workdir "$HOME/workdir-clus1"
+gridftp "gsiftp://clus1.com/jobmanager-fork" "4.0.3"
+universe transfer "clus1.com/jobmanager-fork" "4.0.3"
+universe vanilla  "clus1.com/jobmanager-pbs" "4.0.3"
+sysinfo "INTEL32::LINUX"
+gridlaunch "/opt/nfs/vdt/pegasus/bin/kickstart"
+profile env "PEGASUS_HOME" "/opt/nfs/vdt/pegasus"
+profile env "GLOBUS_LOCATION" "/opt/vdt/globus"
+profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
+} </programlisting>
+
+      <para>This file can be used as is by Pegasus but we prefer the XML
+      version of the Site Catalog because it allows for a richer description
+      of the site. The tool to convert the text site catalog to XML is called
+      sc-client</para>
+
+      <programlisting>$ <emphasis>sc-client --files $HOME/sites.txt --output $HOME/sites.xml
+
+</emphasis>
+2007.07.10 19:04:34.799 PDT: [INFO] Reading $HOME/sites.txt
+2007.07.10 19:04:34.844 PDT: [INFO] Reading $HOME/sites.txt (completed)
+2007.07.10 19:04:34.851 PDT: [INFO] Written xml output to file : $HOME/sites.xml</programlisting>
+
+      <para>Cat the sites.xml file and just take a look.</para>
+
+      <para>The site catalog can also be generated using the pegasus-get-sites
+      command for the OSG grid using the ReSS site information feed.</para>
+    </section>
   </section>
 
   <section>
@@ -535,6 +715,11 @@ profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
       <para>The multile line text based TC is the new default TC in Pegasus.
       This format allows you to define the transformations</para>
 
+      <para>The file is read and cached in memory. Any modifications, as
+      adding or deleting, causes an update of the memory and hence to the file
+      underneath. All queries are done against the memory representation. The
+      file sample.tc.text in the etc directory contains an example</para>
+
       <para><programlisting>tr example::keg:1.0 { 
 
 #specify profiles that apply for all the sites for the transformation 
@@ -564,6 +749,53 @@ osrelease "fc"
 osversion "4"
 type "STAGEABLE"
 }</programlisting></para>
+
+      <para>The entries in this catalog have the following meanign</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para>tr - A transformation identifier. (Normally a
+            Namespace::Name:Version.. The Namespace and Version are
+            optional.)</para>
+          </listitem>
+
+          <listitem>
+            <para>pfn - URL or file path for the location of the executable.
+            The pfn is a file path if the transformation is of type INSTALLED
+            and generally a url (file:/// or http:// or gridftp://) if of type
+            STAGEABLE</para>
+          </listitem>
+
+          <listitem>
+            <para>site - The site identifier for the site where the
+            transformation is available</para>
+          </listitem>
+
+          <listitem>
+            <para>type - The type of transformation. Whether it is Iinstalled
+            ("INSTALLED") on the remote site or is availabe to stage
+            ("STAGEABLE").</para>
+          </listitem>
+
+          <listitem>
+            <para>arch os, osrelease, osversion - The
+            arch/os/osrelease/osversion of the transformation. osrelease and
+            osversion are optional.</para>
+
+            <para>ARCH can have one of the following values x86, x86_64,
+            sparcv7, sparcv9, ppc, aix. The default value for arch is
+            x86</para>
+
+            <para>OS can have one of the following values linux,sunos,macosx.
+            The default value for OS if none specified is linux</para>
+          </listitem>
+
+          <listitem>
+            <para>Profiles - One or many profiles can be attached to a
+            transformation for all sites or to a transformation on a
+            particular site.</para>
+          </listitem>
+        </orderedlist></para>
     </section>
 
     <section>
@@ -667,7 +899,7 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
     <section>
       <title>Datbase TC (Datbase)</title>
 
-      <para></para>
+      <para>The </para>
     </section>
 
     <section>
