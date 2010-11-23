@@ -11,15 +11,13 @@ INSTALL	= install
 SRC	= pegasus-analyzer.1 \
 	pegasus-bug-report.1 \
 	pegasus-check-sites.1 \
-	pegasus-get-sites.1 \
 	pegasus-monitord.1 \
 	pegasus-plan.1 \
-	pegasus-plot.1 \
+	pegasus-plots.1 \
 	pegasus-rc-client.1 \
 	pegasus-run.1 \
 	pegasus-sc-converter.1 \
 	pegasus-statistics.1 \
-	pegasus-submit-dag.1 \
 	pegasus-tc-client.1 \
 	pegasus-tc-converter.1 \
 	pegasus-verify.1 \
