@@ -1111,13 +1111,13 @@ Logical transformation statistics is created at :
     </section>
 
     <section>
-      <title>pegasus-plot</title>
+      <title>pegasus-plots</title>
 
-      <para>pegasus-plot generates graphs and charts to visualize workflow
+      <para>pegasus-plots generates graphs and charts to visualize workflow
       execution. To generate graphs and charts run the command as shown
       below.</para>
 
-      <programlisting>$ <emphasis>pegasus-plot /scratch/grid-setup/run0001/</emphasis>
+      <programlisting>$ <emphasis>pegasus-plots /scratch/grid-setup/run0001/</emphasis>
 
 
 ...
@@ -1139,7 +1139,7 @@ JPEG file corresponding to the dax is created at:
 **************************************************************************************************</programlisting>
 
       <para>By default the output gets generated to graph folder inside the
-      submit directory. pegasus-plot generates the following graphs and
+      submit directory. pegasus-plots generates the following graphs and
       charts.</para>
 
       <para><emphasis role="bold">Gantt workflow execution
