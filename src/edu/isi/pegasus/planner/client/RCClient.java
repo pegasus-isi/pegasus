@@ -864,7 +864,11 @@ public class RCClient extends Toolkit
     try {
       // create an instance of self
       me = new RCClient( "pegasus-rc-client" );
-
+      if(args.length == 0){
+  		me.m_log.error("Please provide the required options.");
+        me.showUsage();
+        System.exit(1);
+  	  }
       // get the commandline options
       Getopt opts = new Getopt( me.m_application, args,
 				"f:hp:Vi:d:l:", me.generateValidOptions() );
