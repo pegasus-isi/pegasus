@@ -1,6 +1,206 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 3.0
+===============================
+This is a major release that attempts to simplify configuration and
+running workflows through Pegasus. 
+
+Existing users please refer to the Migration Guide available at
+http://pegasus.isi.edu/wms/docs/3.0/Migration_From_Pegasus_2_x.php .
+
+A user guide is now available online at
+http://pegasus.isi.edu/wms/docs/3.0/index.php
+
+NEW FEATURES
+--------------
+
+1) Support for new DAX Schema Version 3.2
+
+   Pegasus 3.0 by default  parses DAX documents conforming to the DAX
+   Schema 3.2 and is explained online at
+   http://pegasus.isi.edu/wms/docs/3.0/api.php . The same link has
+   documentation about using the JAVA/Python and Perl API's to
+   generate DAX3.2 compatible DAX'es. Users are encourage to use the
+   API's in their DAX Generators.
+
+2) New Multiline Text Format for Transformation Catalog
+
+   The default format for Transformation Catalog is now Text which is
+   a multiline textual format. It is explained in the Catalogs Chapter
+   http://pegasus.isi.edu/wms/docs/3.0/catalogs.php#transformation 
+
+3) Shell Code Generator
+
+   Pegasus now has support for a Shell Code Generator that generates a
+   shell script in the submit directory instead of Condor DAGMan and
+   condor submit files. In this mode, all the jobs are run locally on
+   the submit host.
+
+   To use this set 
+      - pegasus.code.generator Shell
+      - make sure that --sites option passed to pegasus only has site
+        local mentioned.
+
+4) Profiles and Properties Simplification
+   
+   Starting with Pegasus 3.0 all profiles can be specified in the
+   properties file. Profiles specified in the properties file have the
+   lowest priority. 
+
+   As a result of this a lot of existing Pegasus Properties were
+   replaced by profiles. An exhaustive list of Properties replaced can
+   be found at
+   http://pegasus.isi.edu/wms/docs/3.0/Migration_From_Pegasus_2_x.php#id2765439
+
+   All Profile Keys are  documented in the Profiles Chapter 
+   http://pegasus.isi.edu/wms/docs/3.0/advanced_concepts_profiles.php
+
+   The properties guide was broken into two parts and can be found in
+   the installation in the etc directory
+       - basic.properties   lists only the basic properties that need to
+                            be set to use Pegasus. Sufficient for most
+   			    users.
+       - advanced.properties lists all the properties that can be used
+       	 		     to configure Pegasus. 
+
+    The properties documentation can be found online at
+    http://pegasus.isi.edu/wms/docs/3.0/configuration.php
+    http://pegasus.isi.edu/wms/docs/3.0/advanced_concepts_properties.php 
+
+
+
+5) Transfers Simplification
+
+   Pegasus 3.0 has a new default transfer client pegasus-transfer that
+   is invoked by default for first level and second level staging. The
+   pegasus-transfer client is a python based wrapper around various
+   transfer clients like globus-url-copy, lcg-copy, wget, cp, ln
+   . pegasus-transfer looks at source and destination url and figures
+   out automatically which underlying client to use. pegasus-transfer
+   is distributed with the PEGASUS and can be found in the bin
+   subdirectory . 
+
+   Also, the Bundle Transfer refiner has been made the default for
+   pegasus 3.0. Most of the users no longer need to set any transfer
+   related properties. The names of the profiles keys that control the
+   Bundle Transfers have been changed . 
+
+   To control the clustering granularity of stagein transfer jobs
+   following Pegasus Profile Keys can be used
+
+   - stagein.clusters
+   - stagein.local.clusters
+   - stagein.remote.clusters
+
+   To control the clustering granularity of stageout transfer jobs
+
+   - stageout.clusters
+   - stageout.local.clusters
+   - stageout.remote.clusters
+
+
+6) New tools called pegasus-statistics and pegasus-plots
+
+   There are new tools called pegasus-statistics and pegasus-plots that
+   can be used to generate statistics and plots about a worklfow run. 
+   
+   The tools are documented in Monitoring and Debugging Chapter
+   http://pegasus.isi.edu/wms/docs/3.0/monitoring_debugging_stats.php#id3083376 
+
+7) Example Workflows
+
+   Pegasus distribution comes with canned examples that users can use
+   to run after installing Pegasus.
+
+   The examples are documented in the Example Workflows Chapter
+   http://pegasus.isi.edu/wms/docs/3.0/example_workflows.php
+
+8) Support for GT5
+
+   Pegasus now has support for GT5. 
+
+   Users can use GT5 only if they are using the new site catalog
+   schema ( XML3 ) , as only that has a place holder to specify grid
+   type with the grid gateways element.  
+   e.g 
+   <site handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""> 
+               <grid type="gt5"  contact="viz-login.isi.edu/jobmanager-pbs" scheduler="PBS"
+   jobtype="compute"/>  
+               <grid type="gt2" contact="viz-login.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/> 
+          .... 
+    </site> 
+
+    Users can use pegasus-sc-converter to convert their site catalogs
+    to the XML3 format.
+    Sample Usage:
+    sc-client -I XML -O XML3 -i sites.xml -o sites.xml3 
+
+ 
+9) pegasus-analyzer can parse kickstart outputs
+   
+   pegasus-analyzer now parses kickstart outputs and prints meaningful
+   information about the failed jobs.  The following information is
+   printed for the failed jobs
+
+   - the executable
+   - the arguments
+   - the site the job ran on
+   - remote the working directory of the job
+   - exitcode
+   - node the job ran on
+   - stdout | stderr
+
+11) Logging improvements
+    
+    pegasus-plan now has a -q option to decrease the logging
+    verbosity. The logging verbosity can be increased by using the -v
+    options. Additionally, there are two new logging levels
+    - CONSOLE ( enabled by default - messages like pegasus-run
+    invocation are printed to this level )
+    - TRACE  ( more verbose that DEBUG level ).
+
+    The INFO level is no longer enabled by default. To see the INFO
+    log level messages pass -v to pegasus-plan
+
+    To turn on the TRACE level pass -vvvv . In the TRACE mode, in case
+    of exceptions  the full stack trace for exceptions is printed.
+
+12) Default condor priorities to jobs
+    
+    Pegasus assigns default Condor priorities to jobs now. The
+    priorities come into play when running jobs in Condor vanilla /
+    standard or local universe jobs. They dont apply for grid universe
+    jobs.
+
+    The default priority for various types of jobs is
+
+    Cleanup     :  1000 
+    Stage out   :  900 
+    Dirmanager  :  800 
+    Stage in    :  700 
+    Compute jobs:  level * 10 where level is the level of the job in
+    	           the workflow as compute from the root of the workflow.
+
+    This priority assignment gives priority to workflows that are
+    further along, but also overlap data staging and computation (data
+    jobs have higher priority, but the assumptions is 
+    that there are relatively few data staging jobs compared to compute
+    jobs) .
+
+
+13) Turning off Condor Log Symlinking to /tmp
+    
+    By default pegasus has the Condor common log -0.log in the submit
+    file as a symlink to a location in /tmp . This is to ensure that
+    condor common log does not get written to a shared filesystem. If
+    the user knows for sure that the workflow submit directory is not
+    on the shared filesystem, then they can opt to turn of the
+    symlinking of condor common log file by setting the property
+    pegasus.condor.logs.symlink to false. 
+
+
+===============================
 Release Notes for PEGASUS 2.4.3
 ===============================
 This is minor release, that fixes some RPM and DEB packaging bugs. It
