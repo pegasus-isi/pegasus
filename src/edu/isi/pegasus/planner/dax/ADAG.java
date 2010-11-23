@@ -56,11 +56,11 @@ import edu.isi.pegasus.common.util.XMLWriter;
  * </pre>
  * <ol>
  *   <li>
- *   <B>create a new {@link ADAG} object </B><br><br>
+ *   <B>Create a new {@link ADAG} object </B><br><br>
  *   <i>ADAG dax = new ADAG("test");</i>
  *   </li><br>
  *  <li>
- *     <B>create a {@link File} object</B><br>
+ *     <B>Create a {@link File} object</B><br>
  *      You only need to add entries to this section if you want to use an "IN-DAX" Replica Catalog"<br><br>
  *     <i>File fa = new File("f.a");</i>
  *  </li><br>
@@ -69,20 +69,20 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *          <i>fa.addMetaData("string", "foo", "bar");</i><br>
  *          <i>fa.addMetaData("int", "num", "1");</i><br>
  *      </li><br>
- *      <li><b>add {@link Profile} entry to the file objects</b><br><br>
+ *      <li><b>Add {@link Profile} entry to the file objects</b><br><br>
  *          <i>fa.addProfile("env", "FOO", "/usr/bar");</i><br>
- *          <i>fa.addProfile("globus", "walltime", "40");
+ *          <i>fa.addProfile("globus", "walltime", "40");</i>
  *      </li><br>
  *      <li><b>Add {@link PFN} to the File object</b><br><br>
  *          <i>fa.addPhysicalFile("file:///scratch/f.a", "local");</i>
  *      </li><br>
  *      <li><b>Add the File object to the Replica Catalog section of the DAX</b><br><br>
  *          <i>dax.addFile(fa);</i>
- *      </li>
+ *      </li><br>
  *    </ol>
  * <li><b>Create an {@link Executable} object</b><br>
  *      You only need to add entries to this section if you want to use an "IN-DAX" Replica Catalog"<br><br>
- *      <i>Executable preprocess = new Executable("pegasus", "preproces", "1.0");
+ *      <i>Executable preprocess = new Executable("pegasus", "preproces", "1.0");</i><br>
  *      <ol type=a>
  *      <li><b>Set the {@link Executable.ARCH} and {@link Executable.OS} for the executable. Default is x86 and LINUX</b><br><br>
  *          <i>preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);</i>
@@ -161,7 +161,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
  * Dependencies can be added by specifiying the job id's like so<br><br>
  * <i>dax.addDependency("j1", "j2", "1-2").addDependency("j1", "j3", "1-3");</i><br><br>
  * or by specifying the job|dax|dag objects directly as below<br><br>
- * <i>dax.addDependency(j1,j3);
+ * <i>dax.addDependency(j1,j3);</i>
  * </li><br>
  *  <li><b>Finally write the dax to a file</b><br><br>
  *  <i>dax.writeToFile("diamond.dax");</i>
