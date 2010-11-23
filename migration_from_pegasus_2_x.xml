@@ -376,9 +376,9 @@
       <tgroup cols="2">
         <tbody>
           <row>
-            <entry><emphasis role="bold">Old Property Key</emphasis></entry>
+            <entry><emphasis role="bold">Old Client</emphasis></entry>
 
-            <entry><emphasis role="bold">New Property Key</emphasis></entry>
+            <entry><emphasis role="bold">New Client</emphasis></entry>
           </row>
 
           <row>
