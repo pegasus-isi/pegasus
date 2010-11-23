@@ -147,6 +147,11 @@ public class TCClient extends Executable{
      */
 
     public void executeCommand( String[] opts ) {
+    	if(opts.length == 0){
+    		mLogger.log("Please provide the required options.",LogManager.ERROR_MESSAGE_LEVEL);
+            this.printShortVersion();
+            System.exit(1);
+    	}
         LongOpt[] longOptions = generateValidOptions();
         Getopt g = new Getopt( "TCClient", opts,
             "adqhvxVLPERTBSs:t:l:p:r:e:f:",
