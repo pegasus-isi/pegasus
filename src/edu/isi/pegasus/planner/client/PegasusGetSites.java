@@ -133,10 +133,10 @@ public class PegasusGetSites extends Executable{
      */
     public void printLongVersion() {
         StringBuffer text = new StringBuffer();
-        text.append( "\n" ).append( " $Id$ ").
+        text.append( "\n" ).append( "$Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
              append( "\n" ).append( "Usage : pegasus-get-sites --source <source> --grid <grid> --vo <vo> --sc <filename> --properties <properties file>" ).
-             append( "\n" ).append( " [-v] [-h]" ).
+             append( "\n" ).append( "[-v] [-h]" ).
              append( "\n" ).
              append( "\n Mandatory Options " ).
              append( "\n  --source     the source to query for information. Valid sources are OSGMM|MYOSG|VORS" ).
@@ -158,10 +158,10 @@ public class PegasusGetSites extends Executable{
      */
     public void printShortVersion() {
             StringBuffer text = new StringBuffer();
-        text.append( "\n" ).append( " $Id$ ").
+        text.append( "\n" ).append( "$Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
              append( "\n" ).append( "Usage : pegasus-get-sites -source <site> -g <grid> -o <vo> -s <filename> -p <filename>" ).
-             append( "\n" ).append( " [-v] [-h]" );
+             append( "\n" ).append( "[-v] [-h]" );
         
        System.out.println( text.toString() );
     }
