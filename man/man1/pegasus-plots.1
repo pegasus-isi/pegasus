@@ -17,12 +17,12 @@
 .\"
 .\" Authors: Prasanth Thomas
 .\"
-.TH "pegasus-plot" "1" "1.0.0" "PEGASUS Workflow Planner"
+.TH "pegasus-plots" "1" "1.0.0" "PEGASUS Workflow Planner"
 .SH "NAME"
-pegasus-plot \- A tool to generate graphs and charts to visualize workflow execution.
+pegasus-plots \- A tool to generate graphs and charts to visualize workflow execution.
 
 .SH "SYNOPSIS"
-.B pegasus-plot <submit directory>
+.B pegasus-plots <submit directory>
 [\-o|\-\-output <output directory>] 
 [\-G|\-\-gnatt\-chart\-title workflow execution Gnatt chart title] [\-H|\-\-host\-chart\-title host over time chart title]
 [\-S|\-\-use\-site site information handle]
@@ -33,7 +33,7 @@ pegasus-plot \- A tool to generate graphs and charts to visualize workflow execu
 [\-v|\-\-verbose] 
 [\-h|\-\-help] 
 .SH "DESCRIPTION"
-pegasus-plot generates graphs and charts to visualize workflow execution. It generates workflow execution Gantt chart, job over time chart, dax and dag graph. It uses executables \'ploticus\',\'convert\' and \'dot\' to generate graphs and charts. Tool looks for these executable in your path and generates graphs and charts based on it\'s availability .
+pegasus-plots generates graphs and charts to visualize workflow execution. It generates workflow execution Gantt chart, job over time chart, dax and dag graph. It uses executables \'ploticus\',\'convert\' and \'dot\' to generate graphs and charts. Tool looks for these executable in your path and generates graphs and charts based on it\'s availability .
 
 .SH "ARGUMENTS"
 .TP
@@ -99,7 +99,7 @@ Omit the gridstart gray boxes from the host over time chart, default draw.
 .TP
 .PD 1
 .B \-\-monitord
-Invokes pegasus-monitord beforre running pegasus-plot.
+Invokes pegasus-monitord beforre running pegasus-plots.
 
 .TP
 .B \-k
@@ -107,7 +107,7 @@ Invokes pegasus-monitord beforre running pegasus-plot.
 .TP
 .PD 1
 .B \-\-keep
-Keeps the log created by the pegasus-plot run.
+Keeps the log created by the pegasus-plots run.
 
 .TP
 .B \-v
@@ -124,7 +124,7 @@ Enters the verbose mode.
 .PD 1
 .B \-\-help
 Displays all the options to the
-.B pegasus-plot
+.B pegasus-plots
 command.
 
 .SH "ENVIRONMENT VARIABLES"
@@ -135,10 +135,10 @@ environment.
 
 .SH "EXAMPLE"
 .TP
-Runs pegasus-plot and writes the output to the given directory :\-
+Runs pegasus-plots and writes the output to the given directory :\-
 .nf 
 \f(CB
- pegasus-plot  -o /scratch/plot /scratch/grid-setup/run0001
+ pegasus-plots  -o /scratch/plot /scratch/grid-setup/run0001
 \fP
 .fi 
  
