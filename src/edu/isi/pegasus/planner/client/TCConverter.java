@@ -202,6 +202,13 @@ public class TCConverter
      */
 
     public void executeCommand( String[] opts ) throws IOException {
+    	
+    	 if(opts.length == 0){
+	     	mLogger.log("Please provide the required options.",LogManager.ERROR_MESSAGE_LEVEL);
+	        this.printShortVersion();
+	        System.exit(1);
+     	}
+    	 
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt( "TCConverter", opts, "hVvqI:i:O:o:U:P:N:H:",
@@ -468,7 +475,7 @@ public class TCConverter
             "\n Usage: pegasus-tc-converter [-Dprop  [..]]  -I <input format> -O <output format> " +
             "\n        [-i <list of input files>] [-o <output file to write>] " +
             "\n        [-N <database user name>] [-P <database user password>] [-U <database url>] [-H <database host>] " +
-            "\n        [-v] [-q] [-V] [-h]";
+            "\n        [-v] [-q] [-V] [-h] \n Type 'pegasus-tc-converter --help' for more help.";
 
         System.out.println(text);
     }
