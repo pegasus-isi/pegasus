@@ -246,7 +246,7 @@ public class SCClient
             //set log level to FATAL only
             mLogger.setLevel( LogManager.FATAL_MESSAGE_LEVEL );
         }
-        if(mInputFiles==null | mInputFiles.isEmpty()|| mOutputFile==null || mOutputFile.isEmpty()){
+        if(mInputFiles==null || mInputFiles.isEmpty()|| mOutputFile==null || mOutputFile.isEmpty()){
             mLogger.log("Please provide the input and the output file",mLogger.ERROR_MESSAGE_LEVEL);
             this.printShortVersion();
             System.exit(1);
