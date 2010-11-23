@@ -81,6 +81,18 @@
       pegasus-status command as suggested by the output of the pegasus-run
       command above.</para>
 
+      <programlisting><emphasis role="bold">$ pegasus-status -l</emphasis> <replaceable>/Workflow/dags/directory</replaceable>
+
+Workflow_1-0.dag succeeded
+10/01/10 12:24:38  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+10/01/10 12:24:38   ===     ===      ===     ===     ===        ===      ===
+10/01/10 12:24:38    48       0        5       0       5          0        0
+
+WORKFLOW STATUS : RUNNING | 48/58 ( 83% ) | (workflow is running)</programlisting>
+
+      <para>To see the jobs in the queue while the workflow is running you can
+      run the pegasus-status without the -l option as shown below.</para>
+
       <programlisting>$ <emphasis>pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis>
 
 
@@ -91,15 +103,9 @@
 22424.0    |-rc_tx_findr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas
 22425.0    |-rc_tx_prepr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas</programlisting>
 
-      <para>The above output shows that several jobs are running under the
-      main DAGMan process. Keep a lookout to track whether a workflow is
-      running or not. If you do not see any of your job in the output for
-      sometime (say 30 seconds), we know the workflow has finished. We need to
-      wait, as there might be delay in CondorDAGMAN releasing the next job
-      into the queue after a job has finished successfully.</para>
-
-      <para>If output of pegasus-status is empty, then either your workflow
-      has</para>
+      <para>If you do not see any of your job in the output of pegasus status
+      or if the the pegasus-status says FAILED or Completed 100% then the
+      workflow has </para>
 
       <itemizedlist>
         <listitem>
@@ -169,7 +175,7 @@ output file: /home/user/run0004/register_viz_glidein_7_0.out.002
       by specifiying the Dag directory for the workflow you want to
       terminate.</para>
 
-      <programlisting>$ <emphasis>pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</emphasis></programlisting>
+      <programlisting><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/PATH/To/WORKFLOW DIRECTORY</replaceable></programlisting>
     </section>
 
     <section>
