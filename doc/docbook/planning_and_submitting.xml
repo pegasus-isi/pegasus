@@ -427,7 +427,7 @@
             of the various sites that the workflows can execute on. A site
             catalog can be generated for OSG by using the client
             pegasus-sc-client that is explained in the Catalogs Chapter <link
-            linkend="???">here</link>.</para>
+            linkend="pegasus_sc_client">here</link>.</para>
           </listitem>
         </orderedlist>
       </listitem>
@@ -593,29 +593,26 @@
       GRAM5</para>
 
       <programlisting> &lt;site  handle="isi" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-                &lt;head-fs&gt;
-                        &lt;scratch&gt;
-                                &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" \
-                                                     mount-point="/nfs/scratch01"&gt;
-                                        &lt;/file-server&gt;
-                                        &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                                &lt;/shared&gt;
-                        &lt;/scratch&gt;
-                        &lt;storage&gt;
-                                &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" \
-                                                     mount-point="/exports/storage01"&gt;
-                                        &lt;/file-server&gt;
-                                        &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                                &lt;/shared&gt;
-                        &lt;/storage&gt;
-                &lt;/head-fs&gt;
-                &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"&gt;
-                &lt;/replica-catalog&gt;
-        &lt;/site&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+       &lt;head-fs&gt;
+               &lt;scratch&gt;
+                   &lt;shared&gt;
+                         &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" \
+                                                     mount-point="/nfs/scratch01"/&gt;
+                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                    &lt;/shared&gt;
+               &lt;/scratch&gt;
+               &lt;storage&gt;
+                   &lt;shared&gt;
+                         &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" \
+                                                     mount-point="/exports/storage01"/&gt;
+                         &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                    &lt;/shared&gt;
+               &lt;/storage&gt;
+        &lt;/head-fs&gt;
+        &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu" /&gt;
+  &lt;/site&gt;
 </programlisting>
     </section>
 
@@ -660,31 +657,28 @@
       select isi_viz as the compute resource.</para>
 
       <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-                &lt;head-fs&gt;
-                        &lt;scratch&gt;
-                                &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                       mount-point="/nfs/scratch01"&gt;
-                                        &lt;/file-server&gt;
-                                        &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                                &lt;/shared&gt;
-                        &lt;/scratch&gt;
-                        &lt;storage&gt;
-                                &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                     mount-point="/exports/storage01"&gt;
-                                        &lt;/file-server&gt;
-                                        &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                                &lt;/shared&gt;
-                        &lt;/storage&gt;
-                &lt;/head-fs&gt;
-                &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"&gt;
-                &lt;/replica-catalog&gt;
-                <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
-                &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
-        &lt;/site&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+       &lt;head-fs&gt;
+              &lt;scratch&gt;
+                    &lt;shared&gt;
+                           &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                              mount-point="/nfs/scratch01"/&gt;
+                           &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                    &lt;/shared&gt;
+              &lt;/scratch&gt;
+              &lt;storage&gt;
+                    &lt;shared&gt;
+                           &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                           mount-point="/exports/storage01"/&gt;
+                           &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                           &lt;/shared&gt;
+               &lt;/storage&gt;
+       &lt;/head-fs&gt;
+       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+       <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
+       &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
+ &lt;/site&gt;
 </programlisting>
     </section>
 
@@ -739,32 +733,29 @@
       site catalog with condor profile namespace as follows</para>
 
       <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-                &lt;head-fs&gt;
-                        &lt;scratch&gt;
-                                &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                       mount-point="/nfs/scratch01"&gt;
-                                        &lt;/file-server&gt;
-                                        &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                                &lt;/shared&gt;
-                        &lt;/scratch&gt;
-                        &lt;storage&gt;
-                                &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                       mount-point="/exports/storage01"&gt;
-                                        &lt;/file-server&gt;
-                                        &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                                &lt;/shared&gt;
-                        &lt;/storage&gt;
-                &lt;/head-fs&gt;
-                &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"&gt;
-                &lt;/replica-catalog&gt;
-                <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glidein&lt;/profile&gt;</emphasis>
-                <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
-                &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
-        &lt;/site&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+       &lt;head-fs&gt;
+              &lt;scratch&gt;
+                    &lt;shared&gt;
+                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                 mount-point="/nfs/scratch01"/&gt;
+                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                    &lt;/shared&gt;
+              &lt;/scratch&gt;
+              &lt;storage&gt;
+                     &lt;shared&gt;
+                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                      mount-point="/exports/storage01"/&gt;
+                          &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                     &lt;/shared&gt;
+              &lt;/storage&gt;
+       &lt;/head-fs&gt;
+       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+       <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glidein&lt;/profile&gt;</emphasis>
+       <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
+       &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
+ &lt;/site&gt;
 </programlisting>
 
       <para>Specifying the FileSystemDomain key in condor namespace for a
@@ -814,33 +805,30 @@
       the site catalog</para>
 
       <programlisting> &lt;site  handle="isi_viz_glite" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-                &lt;head-fs&gt;
-                        &lt;scratch&gt;
-                                &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                       mount-point="/nfs/scratch01"&gt;
-                                        &lt;/file-server&gt;
-                                        &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                                &lt;/shared&gt;
-                        &lt;/scratch&gt;
-                        &lt;storage&gt;
-                                &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                       mount-point="/exports/storage01"&gt;
-                                        &lt;/file-server&gt;
-                                        &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                                &lt;/shared&gt;
-                        &lt;/storage&gt;
-                &lt;/head-fs&gt;
-                &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"&gt;
-                &lt;/replica-catalog&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+       &lt;head-fs&gt;
+             &lt;scratch&gt;
+                   &lt;shared&gt;
+                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                       mount-point="/nfs/scratch01"\&gt;
+                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                   &lt;/shared&gt;
+             &lt;/scratch&gt;
+             &lt;storage&gt;
+                   &lt;shared&gt;
+                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                mount-point="/exports/storage01"\&gt;
+                         &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                    &lt;/shared&gt;
+             &lt;/storage&gt;
+       &lt;/head-fs&gt;
+       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu" /&gt;
                
-          <emphasis role="bold">       &lt;!-- following profiles reqd for glite grid style--&gt;
-                &lt;profile namespace="pegasus" key="style"&gt;glite&lt;/profile&gt; 
-                &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;</emphasis>
-        &lt;/site&gt;
+       <emphasis role="bold">&lt;!-- following profiles reqd for glite grid style--&gt;
+       &lt;profile namespace="pegasus" key="style"&gt;glite&lt;/profile&gt; 
+       &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;</emphasis>
+ &lt;/site&gt;
 </programlisting>
 
       <para></para>
@@ -894,7 +882,7 @@
 
           <orderedlist>
             <listitem>
-              <para> hostcount -&gt; PROCS</para>
+              <para>hostcount -&gt; PROCS</para>
             </listitem>
 
             <listitem>
