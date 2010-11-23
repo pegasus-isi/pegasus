@@ -342,7 +342,8 @@ public class ReplicaCatalogBridge
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
         //check in the main replica catalog
-        if ( mRCDown || mReplicaCatalog == null ) {
+        if ( this.mDAXReplicaStore.isEmpty() &&
+                ( mRCDown || mReplicaCatalog == null )) {
             mLogger.log("Replica Catalog is either down or connection to it was never opened ",
                         LogManager.WARNING_MESSAGE_LEVEL);
             return lfnsFound;
