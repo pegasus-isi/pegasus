@@ -25,7 +25,9 @@ pegasus-plan \- runs Pegasus to generate the executable workflow
 [\-Dprop [..]] \-d|\-P <dax file|pdax file> [\-s site[,site[..]]]
 [\-b prefix][\-c f1[,f2[..]]] [\-f] [\-j job-prefix][\-m style] [\-a]
 [\-C] [\-D <base directory for o/p files>] [\-o <output site>] [\-r[directory
-name]] [\--relative-dir <relative directory to base directory>] [\-s] [\-v] [\-V] [\-h]  
+name]] [\--relative-dir <relative directory to base directory>]
+[\--relative-submit-dir <relative submit directory to the base
+directory>] [\-s] [\-v] [\-q] [\-V] [\-h]   
 .SH DESCRIPTION
 The 
 .B pegasus-plan
@@ -92,26 +94,6 @@ on the abstract workflow (DAX).
 .IP
 This is a mandatory option, which has to be used.
 
-.\".TP
-.\".B \-a
-.\".PD 0
-.\".TP
-.\".PD 1
-.\".B \-\-authenticate
-.\"This option results in authentication tests being performed against
-.\"the remote jobmanagers and the gridftp servers for the site that are
-.\"being used to map the workflow. The jobmanagers and gridftp servers
-.\"against which the authentication tests fail, are not used to run jobs
-.\"or transfer data respectively. In case of a site being associated with
-.\"muliple jobmanagers and gridftp servers, only the bad ones are purged
-.\"from the mapping process.
-.\".IP
-.\"At present for the gridftp servers no gsi authentication is
-.\"done. However a check alive test is done by opening a socket to the
-.\"server and determining if it a ftp server or not.  By default a
-.\"timeout of 120 seconds is used for the socket. The timeout value in
-.\"seconds can be overriden by specifying the property 
-.\".I pegasus.auth.gridftp.timeout.
 
 .TP
 .B \-b \fIprefix
@@ -258,9 +240,19 @@ command.
 .PD 0
 .B \--relative-dir \fIdir name
 The directory relative to the base directory where the executable
-workflow it to be generated. This overrides the default directory
+workflow it to be generated and executed. This overrides the default directory
 structure that Pegasus creates based on username, VO Group and the DAX
 label.
+
+.TP
+.PD 0
+.B \--relative-submit-dir \fIdir name
+The directory relative to the base directory where the executable
+workflow it to be generated. This overrides the default directory
+structure that Pegasus creates based on username, VO Group and the DAX
+label. By specifying \--relative-dir and \--relative-submit-dir you
+can have different relative execution directory on the remote site and
+different relative submit directory on the submit host.
 
 .TP
 .B \-f
@@ -293,68 +285,12 @@ job submit files.
 
 
 .TP
-.B \-m
-.PD 0
-.TP
-.PD 1
-.B \-\-megadag \fIstyle
-In case of deferred planning, a megadag(outer level dag) is run to
-maintain the dependencies between the various partitions. The
-dependencies between the partitions are specfied in an XML file
-conforming to the pdax format.  The pdax file is created while
-partitioning the dax using 
-.B partitiondax client.
-This option indicates how the dependencies between the jobs in a
-partition are maintained, so that jobs are executed in the right order. 
-.TP
-.B dag 
-is the default style and the only one supported currently. This
-results in dagman instance being invoked for each partition. The
-dagman instance launched for each job is responsible for maintaining
-the dependencies between the jobs in a partition. This works well for
-cases, where there are a sufficient number of jobs in a partition, as
-customarily created by level based (BFS) partitioning or a label based
-partitioning. 
-.IP
-The submit directory for each partition resides in a
-separate submit directory under the base directory specified by the 
 .B \-\-dir 
 option. 
 Depending  on the number of partitions. the number of subdirectory
 levels underneath the base directory  is automatically  chosen  to
 balance  the  directory filling.  
-.\"
-.\" The options below no longer work for time being
-.\"
-.\".TP
-.\".B noop 
-.\"can only be used for the 
-.\".B One2One 
-.\"partitioning scheme, where each partition consists of one compute
-.\"job. During the megadag generation, each partition is expanded to a
-.\"linear sequence of noop jobs. The noop jobs are overwritten when the
-.\"concrete planner is invoked as a prescript to the first job in the
-.\"sequence. 
-.\".TP
-.\".B daglite
-.\"can only be used for the 
-.\".B One2One
-.\"partitioning scheme, where each partition consists of one compute
-.\"job. In this mode, each partition is mapped to a daglite job. The
-.\"daglite job maintains the linear dependencies between the concrete
-.\"jobs created for the single node partition. The concrete jobs 
-.\"(create dir, stagein, compute, stageout, registration) are created
-.\"when the concrete workflow is invoked as a prescript to the daglite
-.\"job.  
-.TP
-.PD 1
-.B \-\-monitor
-.IP
-This results in the invocation of a monitoring daemon (tailstatd),
-that parses the condor log files, and maintains the state of the
-workflow in a database. It is still an experimental feature. The user
-still needs to do condor_submit_dag manually, to actually submit the
-workflow after pegasus-plan has been run successfully.
+
 
 .TP
 .B \-n 
@@ -389,8 +325,9 @@ site where it was created. Only those output files are transferred to
 an
 output site for which the transiency attribute (dT) is set to false in
 the DAX.
+
 .TP
-.B \-p \fIlist of execution sites
+.B \-s \fIlist of execution sites
 .PD 0
 .TP
 .PD 1
@@ -403,6 +340,7 @@ site as
 .IP
 In case this option is not specified, all the sites in the site
 catalog are picked up as candidates for running the workflow.
+
 .TP
 .PD 0
 .B \-r\fI[dirname]
@@ -486,7 +424,7 @@ logged should give a clear indication as to where things went wrong.
 .SH "PEGASUS PROPERTIES"
 This is not an exhaustive list of properties used. For the complete
 description and list of properties refer to 
-.B $PEGASUS_HOME/etc/sample.properties.
+.B $PEGASUS_HOME/etc/advanced.properties.
 .TP
 .B pegasus.selector.site
 Identifies what type of site selector you want to use. If not
@@ -542,45 +480,27 @@ $PEGASUS_HOME/etc/sites.xml is used in case of the xml based site catalog
 and $PEGASUS_HOME/etc/sites.txt in case of the text based site catalog.
 .SH FILES
 .TP
-.B $PEGASUS_HOME/etc/vdl-1.21.xsd
-is the suggested location of the latest XML schema to read the database.
-.TP
-.B $PEGASUS_HOME/etc/dax-1.10.xsd
+.B $PEGASUS_HOME/etc/dax-3.2.xsd
 is the suggested location of the latest DAX schema to produce DAX
 output.
-.b $PEGASUS_HOME/etc/pegasus-sitecfg-1.4.xsd
+.b $PEGASUS_HOME/etc/sc-3.0.xsd
 is the suggested location of the latest site config schema that is
-used to create the xml version of the site config file.
+used to create the xml version of the site catalog
 .TP
-.B $PEGASUS_HOME/var/tc.data
+.B $PEGASUS_HOME/etc/tc.data.text
 is the suggested location for the file corresponding to the 
 .I Transformation Catalog
 .TP
-.B $PEGASUS_HOME/etc/sites.xml | $PEGASUS_HOME/etc/sites.txt
+.B $PEGASUS_HOME/etc/sites.xml3 | $PEGASUS_HOME/etc/sites.xml
 is the suggested location for the file containing the site information.
 .TP
 .B pegasus.jar
-contains all compiled Java bytecode to run the Griphyn PEGASUS Planner.
-.SH "ENVIRONMENT VARIABLES"
-.TP
-.B $PEGASUS_HOME
-is the suggested base directory of your the execution environment.
-.TP
-.B $JAVA_HOME
-should be set and point to a valid location to start the intended Java
-virtual machine as
-.IR $JAVA_HOME/bin/java .
-.TP
-.B $CLASSPATH
-should be set to contain all necessary files for the execution environment.
-Please make sure that your 
-.I CLASSPATH
-includes pointer to the Xerces 2.0.1 classes to run this program.
+contains all compiled Java bytecode to run the Pegasus Workflow Planner.
+
 .SH "SEE ALSO"
-.BR partitiondax(1)
-.BR pegasus-get-sites(1)
-.BR tc-client(1)
-.BR rc-client(1)
+.BR pegasus-sc-client(1)
+.BR pegasus-tc-client(1)
+.BR pegasus-rc-client(1)
 .SH RESTRICTIONS
 Plenty. Read the user guide carefully.
 .SH AUTHORS
