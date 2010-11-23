@@ -42,7 +42,7 @@
           <orderedlist>
             <listitem>
               <para>The first sub-section deals with included replica
-              descriptions. </para>
+              descriptions.</para>
             </listitem>
 
             <listitem>
@@ -1016,7 +1016,7 @@
 
         <warning>
           <para>The <emphasis>edge-label</emphasis> attribute is currently
-          unused. </para>
+          unused.</para>
         </warning>
 
         <para>Its goal is to annotate edges when drawing workflow
@@ -1169,8 +1169,9 @@
       applications to generate their abstract DAX. SCEC, which is Southern
       California Earthquake Center, uses this API in their CyberShake workflow
       generator to generate huge DAX containing 10’s of thousands of tasks
-      with 100’s of thousands of input and output files. The Java API is well
-      documented using <ulink
+      with 100’s of thousands of input and output files. The <ulink
+      url="http://pegasus.isi.edu/wms/docs/3.0/javadoc/index.html">Java
+      API</ulink> is well documented using <ulink
       url="http://pegasus.isi.edu/wms/docs/3.0/javadoc/edu/isi/pegasus/planner/dax/ADAG.html">Javadoc
       for ADAGs</ulink> .</para>
 
