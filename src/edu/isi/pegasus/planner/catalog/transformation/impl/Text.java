@@ -179,7 +179,7 @@ public class Text extends Abstract
         try{
             java.io.File f = new java.io.File(  mTCFile );
             
-            if( f.exists() ){
+            if( f.exists() || f.createNewFile() ){
                 mTextParser = new TransformationCatalogTextParser ( new FileReader( f ),
                                                                     mLogger );
                 mTCStore = mTextParser.parse();
