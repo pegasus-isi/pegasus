@@ -1603,13 +1603,15 @@ $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
     <emphasis>executable</emphasis> element:</para>
 
     <screen><prompt>$</prompt> <command>pegasus-dax-validator <replaceable>blackdiamond.dax</replaceable></command>
-ERROR: cvc-pattern-valid: Value '2.6.18-194.26.1.el5' is not facet-valid with respect to pattern '[0-9]+(\.[0-9]+(\.[0-9]+)?)?' for type 'VersionPattern'.
-ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion' on element 'executable' is not valid with respect to its type, 'VersionPattern'.
+ERROR: cvc-pattern-valid: Value '2.6.18-194.26.1.el5' is not facet-valid
+ with respect to pattern '[0-9]+(\.[0-9]+(\.[0-9]+)?)?' for type 'VersionPattern'.
+ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
+ on element 'executable' is not valid with respect to its type, 'VersionPattern'.
 
 0 warnings, 2 errors, and 0 fatal errors detected.</screen>
 
     <para>We are working on improving this program, e.g. provide output with
-    regards to the line number where the issue occurred.However, it will
+    regards to the line number where the issue occurred. However, it will
     return with a non-zero exit code whenever errors were detected.</para>
   </section>
 </chapter>
