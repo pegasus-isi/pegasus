@@ -398,7 +398,7 @@ public class SCClient
             "\n $Id$ " +
             "\n " + getGVDSVersion() +
             "\n Usage: pegasus-sc-converter [-Dprop  [..]]  -i <list of input files> -o <output file to write> " +
-            "\n        [-I input format] [-O <output format> [-v] [-q] [-V] [-h]" ;
+            "\n        [-I input format] [-O <output format> [-v] [-q] [-V] [-h]\n" ;
 
         System.out.print(text);
     }
@@ -447,7 +447,7 @@ public class SCClient
             "\n" +
             "\n Deprecated Usage . Exists only for backward compatibility " +
             "\n" + 
-            "\n pegasus-sc-converter --files sites.txt --output sites.xml" ;
+            "\n pegasus-sc-converter --files sites.txt --output sites.xml\n" ;
 
         System.out.print(text);
 
