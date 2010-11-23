@@ -1,73 +1,18 @@
 Hi,
+
 Welcome to PEGASUS. Before you try to run anything, you might want to
 make sure that your environment works. We depend on a number of packages
-that you need to have installed: Globus 4+, Condor 6.8+ and Java 1.5+
+that you need to have installed: Condor 7.4+, Java 1.6+, and optionally
+Globus 4.2+, Perl 5.6+ and Python 2.4+. 
 
-Please refer to the RELEASE_NOTES for last-minute important changes.
-You must set your PEGASUS_HOME environment variable to the directory where
-the PEGASUS was installed.
+Please refer to the RELEASE_NOTES for important changes. For instance,
+it is no longer necessary to set the PEGASUS_HOME environment
+variable. However, in order to find all tools, you must include
+Pegasus's "bin" directory in your PATH environment variable.
 
-Please refer to the user guide (in doc directory) for instructions on
-the packages and their installation. To check your submit host, make
-sure:
+Please refer to the user guide for instructions on the packages and
+their installation. You can find the documentation online at
 
-o you set up your Globus client software, 
-o you know some Globus lingo like the difference between a gatekeeper
-  and a jobmanager.
-o your personal certificate proxy is active, valid and accepted
-  on the execution sites,
-o you actually have at least one execution site,
-o (personal) Condor-G is up and running,
-o Java is available in recommended version 1.5.*, and
-o you set up your PEGASUS environment by sourcing the setup
-  (see below) script for your shell.
+  http://pegasus.isi.edu/wms/docs/3.0/index.php
 
-
-The whole binary distribution execution environment
-
-1. scripts
-==========
-
-setup.sh   source this script to set-up the user env. / Bourne
-setup.csh  source this script to set-up the user env. / C-Sh
-
-2. directories
-==============
-
-bin		contains the shell wrappers to the java classes
-com		sharable config files that frequently change (empty)
-contrib/showlog		software to visualize logfiles; needs ploticus
-contrib/exitcode	A post-processor for invocation record parsing
-doc		documentation base directory; contains the user guide
-doc/javadoc	javadoc of all classes as far as known
-doc/schemas	The XMLSpy generated documentation on the schemas
-etc		single-machine configuration files that rarely change
-lib		jar files necessary to run
-libexec 	scripts etc used internally
-man		manual pages for the shell wrappers
-man/man1	troff manual pages for the shell wrappers
-share		sharable config files that rarely change (empty)
-sql             contains scripts for the "postgres" and "chunk" backend
-src		the source tree; only in the development distribution
-src/tools	the C/C++ source tree
-src/org		the Java source tree
-var		single-machine data files that frequently change
-tests		a few tests
-
-3. files
-========
-
-etc/dax-?.??.xsd  DAX XML schema definition
-etc/properties	  Java property file - please edit
-etc/iv-?.??.xsd   Invocation record XML schema
-etc/sc-?.??.xsd	  Site Catalog XML schema 
-etc/sample.properties  An example property file to get you started
-etc/sample.sites.xml|.txt A sample pool configuration file
-
-Please note that the distributed var directory is supposed to be empty
-with the exception of a few sample files (which start in "sample").
-
-var/tc.data	The transformation catalog - please edit
-
-
-
+and in the distributed "doc" directory. 
