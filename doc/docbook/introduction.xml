@@ -1,47 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="introduction">
   <title>Introduction to Pegasus</title>
 
-  <para>Pegasus (<link xlink:href="http://pegasus.isi.edu"
-          xmlns:xlink="http://www.w3.org/1999/xlink">http://pegasus.isi.edu</link>) is a
-  configurable system for mapping and executing abstract application workflows
-  over the Grid.</para>
+  <para>Pegasus (http://pegasus.isi.edu) is a configurable system for mapping
+  and executing abstract application workflows over a wide range of execution
+  environment including a laptop, a campus cluster, a Grid, or a commercial or
+  academic cloud. Today, Pegasus runs workflows on Amazon EC2, Nimbus, Open
+  Science Grid, the TeraGrid, and many campus clusters. One workflow can run
+  on a single system or across a heterogeneous set of resources. Pegasus can
+  run workflows consisting of 1 to 106 tasks.</para>
 
   <para>An abstract application workflow is represented as a directed acyclic
   graph where the vertices are the compute tasks and the edges represent the
   data dependencies between the tasks. The input to Pegasus is a description
-  of the abstract workflow in XML format. The mapping of tasks to the
-  execution resources is done based on information derived for static and/or
-  dynamic sources (site catalog, transformation catalog, MDS (<link
-  xlink:href="http://www.globus.org/toolkit/mds"
-  xmlns:xlink="http://www.w3.org/1999/xlink">http://www.globus.org/toolkit/mds/</link>)
-  RLS (<link xlink:href="www.globus.org/toolkit/rls"
-  xmlns:xlink="http://www.w3.org/1999/xlink">www.globus.org/toolkit/rls</link>),
-  etc).</para>
+  of the abstract workflow in XML format. </para>
 
-  <para>The output is an executable workflow (also called the concrete
-  workflow) that can be executed over the Grid resources. In case the workflow
-  tasks are mapped to multiple resources that do not share a file system,
-  explicit nodes are added to the workflow for orchestrating data transfer
-  between the tasks. The format of the concrete workflow is determined by the
-  execution engine used for executing the concrete workflow over the mapped
-  resources. For example, if Condor DAGMan <link
-  xlink:href="http://cs.wisc.edu/condor/dagman"
-  xmlns:xlink="http://www.w3.org/1999/xlink">(http://cs.wisc.edu/condor/dagman)</link>
-  is used as the enactment engine, then the concrete workflow consists of a
-  DAG description file which lists the dependencies and Condor submit files
-  for each task in the concrete workflow. Pegasus has been mostly used with
-  Condor DAGMan. DAGMan can schedule jobs onto Globus (<link
-  xlink:href="www,globus.org"
-  xmlns:xlink="http://www.w3.org/1999/xlink">www.globus.org</link>) and Condor
-  (<link xlink:href="http://cs.wisc.edu/condor"
-  xmlns:xlink="http://www.w3.org/1999/xlink">http://cs.wisc.edu/condor</link>)-managed
-  resources. Condor-G can be used to execute any task in the workflow on any
-  Grid resource that provides a Globus GRAM interface. The purpose of this
-  document is to give an overview of the various resource configurations that
-  can be used with Pegasus when Condor DAGMan is used as the workflow
-  enactment engine. The classification is done based on the mechanism used for
-  submitting jobs to these resources.</para>
+  <para>The Pegasus Workflow Management System consists of three main
+  components: the Pegasus mapper, Condor DAGMan, and the Condor schedd. The
+  mapping of tasks to the execution resources is done by the mapper based on
+  information derived for static and/or dynamic sources. In some cases
+  information systems already in place provide the information about the
+  execution environment and the location of dat. In other cases, users specify
+  this information. The output is an executable workflow (also called the
+  concrete workflow) that can be executed over a variety of resources. In case
+  the workflow tasks are mapped to multiple resources that do not share a file
+  system, explicit nodes are added to the workflow for orchestrating data
+  transfer between the tasks.</para>
+
+  <para>DAGMan relies on the resources (compute, storage and network) defined
+  in the executable workflow to perform the necessary actions. Individual
+  workflow tasks are managed by a task scheduler, which supervises their
+  execution on local and remote resources. In our work scheduling is performed
+  by the schedd a component in the Condor Project.</para>
+
+  <para>When errors occur, Pegasus tries to recover when possible by retrying
+  tasks, by retrying the entire workflow, by providing workflow-level
+  checkpointing, by re-mapping portions of the workflow, by trying alternative
+  data sources for staging data, and, when all else fails, by providing a
+  rescue workflow containing a description of only the work that remains to be
+  done. It cleans up storage as the workflow is executed so that
+  data-intensive workflows have enough space to execute on storage-constrained
+  resource. Pegasus keeps track of what has been done (provenance) including
+  the locations of data used and produced, and which software was used with
+  which parameters. </para>
+
+  <para>Pegasus comes with a set of tools that help monitor the progress of
+  the workflow and collect statistics and performance profiles of the
+  workflows. Pegasus WMS is a user-side application that can be deployed
+  locally by a scientist with no support from a site administrator and has no
+  impact on the target cyberinfrastructure sites. A collaboration can set up a
+  submit host, which hosts the workflow management system. Jobs are sent from
+  the submit host to the campus cluster, the Open Science Grid, the TeraGrid,
+  the cloud, or other resources. </para>
+
+  <para>Pegasus is currently supports applications in a number of scientific
+  domains including astronomy, bioinformatics, earthquake science,
+  gravitational wave physics, ocean science, limnology, and others
+  (http://pegasus.isi.edu/applications.php)</para>
+
+  <para>For Pegasus related publications, please see
+  http://pegasus.isi.edu/publications.php. </para>
 </chapter>
