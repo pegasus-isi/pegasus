@@ -358,6 +358,12 @@ public class PegasusGetSites extends Executable{
         if( level > 0 ){
             mLogger.setLevel( level );
         }
+        
+        if(mSource == null || mSource.isEmpty()){
+        	 mLogger.log("Please provide the source to query for information",LogManager.ERROR_MESSAGE_LEVEL);
+             this.printShortVersion();
+             System.exit(1);
+        }
     }
     
     /**
