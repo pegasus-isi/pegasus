@@ -196,8 +196,16 @@
     <section>
       <title>Workflow Gallery</title>
 
-      <para>You can view a bunch of DAX's from various applications in our
-      Workflow Gallery at [INSERT PROPER LINK HERE].</para>
+      <para>Pegasus is being used in a broad range of applications. <ulink
+      url="http://pegasus.isi.edu/applications.php">This pages</ulink> shows
+      some of the examples. Also to see the details of the workflows of the
+      applications below you can visit our <ulink
+      url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">gallery
+      of workflows</ulink>.</para>
+
+      <para>We are always looking for new applications willing to leverage our
+      workflow technologies. If you are interested please contact us at
+      pegasus at isi dot edu. </para>
     </section>
   </section>
 
@@ -328,7 +336,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     <title>Execution Environment</title>
 
     <para>Pegasus supports a number of execution environments. An execution
-    environment is a setup where jobs from a workflow are running. </para>
+    environment is a setup where jobs from a workflow are running.</para>
 
     <itemizedlist>
       <listitem>
@@ -336,19 +344,19 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         Pegasus is capable of planning small workflows for full-local
         execution using a shell planner. Please refer to the <filename
         class="directory">examples</filename> directory, or the tutorials, for
-        details. </para>
+        details.</para>
       </listitem>
 
       <listitem>
         <para>A slighly more challenging setup is still all-local, but Condor
         manages queued jobs and Condor DAGMan the workflow. This setup permits
-        limited parallelism with full scalability. </para>
+        limited parallelism with full scalability.</para>
       </listitem>
 
       <listitem>
         <para>The vanilla setup are workflows to be executed in a grid
         environment. This setup requires a number of configurations, and an
-        understanding of remote sites. </para>
+        understanding of remote sites.</para>
       </listitem>
 
       <listitem>
@@ -360,7 +368,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </itemizedlist>
 
     <para>The rest of this chapter will focus on the vanilla grid execution
-    environment. </para>
+    environment.</para>
 
     <para><figure id="concepts-fig-site-layout">
         <title>Grid Sample Site Layout</title>
@@ -387,14 +395,14 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs on
     remote sites. In terms of a software stack, Pegasus wraps the job into
     Condor. Condor wraps the job into Globus. Globus transports the job to the
-    remote site, and unwraps the Globus component. </para>
+    remote site, and unwraps the Globus component.</para>
 
     <para>To be able to talk properly with the Globus security infrastructure
     (GSI), the submit machine needs to have the CA certificates configured,
     requires a host certificate in certain circumstances, and the user a user
     certificate that is enabled on the remote site. On the other end, the
     remote gatekeeper node requires a host certificate, the signing CA
-    certificate chain and policy files, and a goot time source. </para>
+    certificate chain and policy files, and a goot time source.</para>
 
     <para>In a grid environment, there are one or more clusters accessible via
     grid middleware like the <ulink url="http://www.globus.org/">Globus
@@ -405,7 +413,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     outside connectivity and a public IP address so that it can be contacted.
     Additionally, once the gatekeeper accepted a job, it passes it on to a
     jobmanager. Often, these jobmanagers require a limited port range, in the
-    example 40000-41000, to call back to the submit machine. </para>
+    example 40000-41000, to call back to the submit machine.</para>
 
     <para>The gatekeeper is the interface through which jobs are submitted to
     the remote cluster's resource manager. A resource manager is a scheduling
@@ -413,7 +421,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     allocates worker nodes. Typcially, the worker nodes in the remote cluster
     do not have outside connectivity and often all private IP addresses. The
     Globus toolkit requires a shared filesystem to properly stage files
-    between the head node and worker nodes. </para>
+    between the head node and worker nodes.</para>
 
     <para>To stage data between external sites for the job, it is recommended
     to enable a GridFTP server. While this server can be installed on the
@@ -424,7 +432,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     range for data channels, here as an example port 40000-41000. The GridFTP
     server requires a host certificate, the signing CA chain and policy files,
     a stable time source, and a gridmap file that maps between a user's grid
-    identify and the user's account on the remote site. </para>
+    identify and the user's account on the remote site.</para>
   </section>
 
   <section>
