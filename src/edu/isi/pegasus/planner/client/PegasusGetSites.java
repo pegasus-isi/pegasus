@@ -225,7 +225,7 @@ public class PegasusGetSites extends Executable{
             //write DAX to file
             FileWriter scFw = new FileWriter( mSCFile  );
             mLogger.log( "Writing out site catalog to " + new File( mSCFile ).getAbsolutePath() ,
-                         LogManager.INFO_MESSAGE_LEVEL );
+                         LogManager.CONSOLE_MESSAGE_LEVEL );
             store.toXML( scFw, "" );
             scFw.close();
            
@@ -235,7 +235,7 @@ public class PegasusGetSites extends Executable{
             if( mCatalog instanceof OSGMM ){
                 Properties properties =  ((OSGMM)mCatalog).generateSRMProperties();
                 mLogger.log( "Number of SRM Properties retrieved " + properties.entrySet().size() ,
-                             LogManager.INFO_MESSAGE_LEVEL );
+                             LogManager.CONSOLE_MESSAGE_LEVEL );
                 mLogger.log( properties.toString(),
                              LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -247,7 +247,7 @@ public class PegasusGetSites extends Executable{
                 
                 OutputStream os = new FileOutputStream( file );
                 mLogger.log( "Writing out properties to " + file.getAbsolutePath() ,
-                             LogManager.INFO_MESSAGE_LEVEL );
+                             LogManager.CONSOLE_MESSAGE_LEVEL );
 
                 properties.store( os, "Pegasus SRM Properties" );
                 os.close();
@@ -355,8 +355,12 @@ public class PegasusGetSites extends Executable{
                                                option);
             }
         }
-        if( level > 0 ){
-            mLogger.setLevel( level );
+
+        if(level >0){
+        	mLogger.setLevel( level );
+        }
+        else{
+        	mLogger.setLevel(LogManager.WARNING_MESSAGE_LEVEL);
         }
         
         if(mSource == null || mSource.isEmpty()){
