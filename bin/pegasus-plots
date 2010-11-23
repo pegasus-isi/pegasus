@@ -47,16 +47,16 @@ END{
 
 sub print_usage() {
 	print "\n";
-	print "Usage : pegasus-plot <submit directory> \n";
+	print "Usage : pegasus-plots <submit directory> \n";
 	print GREEN "Optional :\n";
 	print "\t -o|--output: write outputs in given directory\n";
-	print "\t -m|--monitord: invokes pegasus-monitord before running pegasus-plot\n";
+	print "\t -m|--monitord: invokes pegasus-monitord before running pegasus-plots\n";
 	print "\t -G|--gnatt-chart-title: title of the workflow execution Gnatt chart\n";
 	print "\t -H|--host-chart-title: title of the host over time chart \n";
 	print "\t -S|--use-site: 0: use gatekeeper host (default)\n                        1: use site handle \n                        2: use reported workernode handle\n";
 	print "\t -K|--kickstart: parallelize host over time chart with kickstart intervals, default is Condor\n";
 	print "\t -O|--omit: omit the gridstart gray boxes from the host over time chart, default draw\n";
-	print "\t -k|--keep: keeps the logs of the pegasus-plot run  \n";
+	print "\t -k|--keep: keeps the logs of the pegasus-plots run  \n";
 	print "\t -v|--verbose: enter verbose mode \n";
 	print "\t -h|--help: display this help message\n";
 }
@@ -142,7 +142,7 @@ sub main(){
 	}
 	
 	
-	$log_dir = tempdir('pegasus_plot_XXXXXX' , TMPDIR=> 1);
+	$log_dir = tempdir('pegasus_plots_XXXXXX' , TMPDIR=> 1);
 	if($monitord){
 		my($jsd_file_path) =  ($config{'jsd'});
 		if(!$jsd_file_path){
