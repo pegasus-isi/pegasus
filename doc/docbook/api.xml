@@ -42,20 +42,17 @@
           <orderedlist>
             <listitem>
               <para>The first sub-section deals with included replica
-              descriptions. As an example, the required input file "f.a" is
-              listed here to show a non-empty section.</para>
+              descriptions. </para>
             </listitem>
 
             <listitem>
               <para>The second sub-section deals with included transformation
-              descriptions.As an example, the physical executable
-              <filename>keg</filename> for the logical transformation
-              <emphasis>findrange</emphasis> is shown.</para>
+              descriptions.</para>
             </listitem>
 
             <listitem>
-              <para>The third sub-section, not shown in the example, declares
-              multi-item executables.</para>
+              <para>The third sub-section declares multi-item
+              executables.</para>
             </listitem>
           </orderedlist>
         </listitem>
@@ -83,9 +80,9 @@
           task, its output files. Each file is described with a
           <emphasis>uses</emphasis> element inside the task.</para>
 
-          <para>Not shown in the example above are element to link a logical
-          file to any of the stdio file descriptors. The profile element is
-          Pegasus's way to abstract site-specific data.</para>
+          <para>Elements exist to link a logical file to any of the stdio file
+          descriptors. The profile element is Pegasus's way to abstract
+          site-specific data.</para>
 
           <para>Jobs are nodes in the workflow graph.</para>
         </listitem>
@@ -1018,10 +1015,12 @@
         <emphasis>edge-label</emphasis> attribute.</para>
 
         <warning>
-          <para>While the <emphasis>edge-label</emphasis> attribute is
-          currently unused, its goal is to annotate edges when drawing
-          workflow graphs.</para>
+          <para>The <emphasis>edge-label</emphasis> attribute is currently
+          unused. </para>
         </warning>
+
+        <para>Its goal is to annotate edges when drawing workflow
+        graphs.</para>
       </section>
 
       <section>
@@ -1358,8 +1357,9 @@ public class BlackDiamondDAX {
     <section id="api-python">
       <title>The Python DAX generator API</title>
 
-      <para>I am no python master. There is auto-generated pythondoc
-      documentation explaining this API.[INCLUDE REFERENCE HERE].</para>
+      <para>I am no python master. There is <ulink
+      url="http://pegasus.isi.edu/wms/docs/3.0/python/">auto-generated python
+      documentation</ulink> explaining this API.</para>
 
       <programlisting>#!/usr/bin/env python
 
@@ -1451,9 +1451,10 @@ diamond.writeXML(sys.stdout)</programlisting>
       <filename class="directory">lib/perl</filename> of the Pegasus
       installation. The actual code is longer, and will not require these
       settings, only the example below does. The Perl API is documented using
-      perldoc [INSERT PROPER EXTERNAL LINK HERE]. For each of the modules you
-      can invoke <application>perldoc</application>, if your
-      <envar>PERL5LIB</envar> variable is set.</para>
+      <ulink url="http://pegasus.isi.edu/wms/docs/3.0/perl/">perldoc</ulink>.
+      For each of the modules you can invoke
+      <application>perldoc</application>, if your <envar>PERL5LIB</envar>
+      variable is set.</para>
 
       <para>The steps to generate a DAX from Perl are similar to the Java
       steps. However, since most methods to the classes are deeply within the
@@ -1576,9 +1577,6 @@ $adag-&gt;addInverse( $job4, $job2, 'edge3', $job3, 'edge4' );
 
 my $xmlns = shift; 
 $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
-
-      <para>All modules are documented with perldoc. [INCLUDE REFERENCE
-      HERE].</para>
     </section>
   </section>
 
@@ -1593,17 +1591,17 @@ $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
 
     <para>If you write your own XML, you <emphasis>must</emphasis> ensure that
     the generated XML is well formed and valid with respect to the DAX schema.
-    You can use the <filename>pegasus-dax-validator</filename> to verify the
+    You can use the <command>pegasus-dax-validator</command> to verify the
     validity of your generated file. Typically, you generate a smallish test
     file to, validate that your generator creates valid XML using the
     validator, and then ramp it up to produce the full workflow(s) you want to
-    run. At this point the <filename>pegasus-dax-validator</filename> is a
-    very simple program that will only take exactly one argument, the name of
-    the file to check.The following snippet checks a black-diamond file that
-    uses an improper <emphasis>osversion</emphasis> attribute in its
+    run. At this point the <command>pegasus-dax-validator</command> is a very
+    simple program that will only take exactly one argument, the name of the
+    file to check.The following snippet checks a black-diamond file that uses
+    an improper <emphasis>osversion</emphasis> attribute in its
     <emphasis>executable</emphasis> element:</para>
 
-    <screen><prompt>$</prompt> <command>pegasus-dax-validtor <replaceable>blackdiamond.dax</replaceable></command>
+    <screen><prompt>$</prompt> <command>pegasus-dax-validator <replaceable>blackdiamond.dax</replaceable></command>
 ERROR: cvc-pattern-valid: Value '2.6.18-194.26.1.el5' is not facet-valid with respect to pattern '[0-9]+(\.[0-9]+(\.[0-9]+)?)?' for type 'VersionPattern'.
 ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion' on element 'executable' is not valid with respect to its type, 'VersionPattern'.
 
