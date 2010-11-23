@@ -203,16 +203,23 @@ LFN PFN a="b" [..]
       [A-Za-z][_A-Za-z0-9]*) For each associated replica catalogs the user
       specifies the following properties</para>
 
-      <para>pegasus.catalog.replica.mrc.[value] specifies the type of replica
-      catalog. </para>
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">pegasus.catalog.replica.mrc.[value]
+          </emphasis>- specifies the type of replica catalog. </para>
+        </listitem>
 
-      <para>pegasus.catalog.replica.mrc.[value].key specifies a property name
-      key for a particular catalog </para>
+        <listitem>
+          <para><emphasis role="bold">pegasus.catalog.replica.mrc.[value].key
+          </emphasis>- specifies a property name key for a particular
+          catalog</para>
+        </listitem>
+      </itemizedlist>
 
       <para>For example, if a user wants to query two lrc’s at the same time
       he/she can specify as follows </para>
 
-      <para><orderedlist>
+      <para><itemizedlist>
           <listitem>
             <para><emphasis
             role="bold">pegasus.catalog.replica.mrc.lrc1=LRC</emphasis></para>
@@ -220,15 +227,23 @@ LFN PFN a="b" [..]
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.url=<replaceable>&lt;url to
-            the globus LRC&gt;</replaceable></emphasis></para>
+            role="bold">pegasus.catalog.replica.mrc.lrc1.url=<replaceable>&lt;url
+            to the 1st globus LRC&gt;</replaceable></emphasis></para>
           </listitem>
-        </orderedlist>pegasus.catalog.replica.mrc.lrc1 LRC
-      pegasus.catalog.replica.mrc.lrc2.url rls://sukhna
-      pegasus.catalog.replica.mrc.lrc2 LRC
-      pegasus.catalog.replica.mrc.lrc2.url rls://smarty In the above example,
-      lrc1, lrc2 are any valid identifier names and url is the property key
-      that needed to be specified.</para>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.mrc.lrc2=LRC</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.mrc.lrc2.url=</emphasis><emphasis
+            role="bold">&lt;url to the 2nd globus LRC&gt;</emphasis></para>
+          </listitem>
+        </itemizedlist>In the above example, lrc1, lrc2 are any valid
+      identifier names and url is the property key that needed to be
+      specified.</para>
     </section>
 
     <section>
@@ -246,28 +261,30 @@ LFN PFN a="b" [..]
       <para>We now need to register this file in the <emphasis
       role="bold">File</emphasis> replica catalog located in <emphasis
       role="bold">$HOME/rc</emphasis> using the pegasus-rc-client. Replace the
-      gsiftp://url with the appropriate parameters for your grid site.</para>
+      <emphasis role="bold">gsiftp://url</emphasis> with the appropriate
+      parameters for your grid site.</para>
 
-      <screen><emphasis>$<command> rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert f.a</command> <replaceable>gsiftp://somehost:port/path/to/file/f.a pool=local</replaceable></emphasis></screen>
+      <screen><emphasis>$<command> rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
+ f.a</command> <replaceable>gsiftp://somehost:port/path/to/file/f.a pool=local</replaceable></emphasis></screen>
 
       <para>You may first want to check, if the file registeration made it
       into the replica catalog. Since we are using a File catalog we can just
       go look at the file $HOME/rc to see if there are any entries in
       there.</para>
 
-      <programlisting>$ <emphasis>cat $HOME/rc</emphasis>
+      <screen><command>$ cat $HOME/rc</command><computeroutput>
     
-    # file-based replica catalog: 2010-11-10T17:52:53.405-07:00
-    f.a gsiftp://somehost:port/path/to/file/f.a pool=local</programlisting>
+# file-based replica catalog: 2010-11-10T17:52:53.405-07:00
+f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
       <para>The above line shows that entry for file f.a was made
       correctly.</para>
 
       <para>You can also use the rc-client to look for entries.</para>
 
-      <programlisting>$ <emphasis>rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a
-    </emphasis>
-    f.a gsiftp://somehost:port/path/to/file/f.a pool=local</programlisting>
+      <screen><command>$ rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a</command><computeroutput>
+
+f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
     </section>
   </section>
 
@@ -286,6 +303,10 @@ LFN PFN a="b" [..]
     Catalog</para>
 
     <orderedlist>
+      <listitem>
+        <para>XML3</para>
+      </listitem>
+
       <listitem>
         <para>XML</para>
       </listitem>
