@@ -105,7 +105,7 @@ WORKFLOW STATUS : RUNNING | 48/58 ( 83% ) | (workflow is running)</programlistin
 
       <para>If you do not see any of your job in the output of pegasus status
       or if the the pegasus-status says FAILED or Completed 100% then the
-      workflow has </para>
+      workflow has</para>
 
       <itemizedlist>
         <listitem>
@@ -153,7 +153,16 @@ submit file: /home/user/run0004/register_viz_glidein_7_0.sub
 output file: /home/user/run0004/register_viz_glidein_7_0.out.002
  error file: /home/user/run0004/register_viz_glidein_7_0.err.002
 
---------------pegasus::rc-client - pegasus::rc-client:1.0 - stdout--------------
+-------------------------------Task #1 - Summary--------------------------------
+
+site        : local
+executable  : /lfs1/software/install/pegasus/default/bin/rc-client
+arguments   : -Dpegasus.user.properties=/lfs1/work/pegasus/run0004/pegasus.15181.properties \
+-Dpegasus.catalog.replica.url=rlsn://smarty.isi.edu --insert register_viz_glidein_7_0.in
+exitcode    : 1
+working dir : /lfs1/work/pegasus/run0004
+
+---------Task #1 - pegasus::rc-client - pegasus::rc-client:1.0 - stdout---------
 
 2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
 2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1</programlisting>In
