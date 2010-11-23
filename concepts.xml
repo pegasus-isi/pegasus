@@ -69,7 +69,7 @@
         </listitem>
       </itemizedlist>
 
-      <para><figure>
+      <para><figure id="concepts-fig-dax">
           <title>Black Diamond Dax</title>
 
           <mediaobject>
@@ -114,7 +114,9 @@
 
       <orderedlist>
         <listitem>
-          <para>Using a DAX generating API in Java, Perl or Python.</para>
+          <para>Using a DAX generating API in <link
+          linkend="api-java">Java</link>, <link linkend="api-perl">Perl</link>
+          or <link linkend="api-python">Python</link>.</para>
 
           <para>This option is what we recommend.</para>
         </listitem>
@@ -123,7 +125,7 @@
           <para>Generating XML directly from your script.</para>
 
           <para>This option should only be considered by advanced users who
-          can also read XML schema definitions. </para>
+          can also read XML schema definitions.</para>
         </listitem>
       </orderedlist>
 
@@ -206,7 +208,7 @@
     execution without clean-up nodes, the following concrete workflow is
     built:</para>
 
-    <para><figure>
+    <para><figure id="concepts-fig-dag">
         <title>Black Diamond DAG</title>
 
         <mediaobject>
@@ -232,7 +234,7 @@
       <listitem>
         <para>the stage-in of input files before any task that requires these
         files. Any file consumed by a task needs to be staged to the task, if
-        it does not already exist on that site. </para>
+        it does not already exist on that site.</para>
       </listitem>
 
       <listitem>
@@ -245,19 +247,19 @@
         products with their <emphasis>transfer</emphasis> flag set to
         <literal>false</literal> will not be staged to the output site.
         However, they may still be eligible for staging to other, dependent
-        tasks. </para>
+        tasks.</para>
       </listitem>
 
       <listitem>
         <para>the registration of data products in a replica catalog. Data
         products with their <emphasis>register</emphasis> flag set to
-        <literal>false</literal> will not be registered. </para>
+        <literal>false</literal> will not be registered.</para>
       </listitem>
 
       <listitem>
         <para>the clean-up of transient files and working directories. These
         steps can be omitted with the <command>--no-cleanup</command> option
-        to the planner. </para>
+        to the planner.</para>
       </listitem>
     </itemizedlist>
 
@@ -312,23 +314,27 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     <para>The DAG file declares all jobs and links them to a Condor submit
     file that describes the planned, concrete job. In the same directory as
     the DAG file are all Condor submit files for the jobs from the picture
-    plus a number of additional helper files. </para>
+    plus a number of additional helper files.</para>
 
     <para>The various instructions that can be put into a DAG file are
     described in <ulink
     url="http://www.cs.wisc.edu/condor/manual/v7.5/2_10DAGMan_Applications.html">Condor's
-    DAGMAN documentation</ulink>.</para>
+    DAGMAN documentation</ulink>.The constituents of the submit directory are
+    shown in <link linkend="submit_directory-layout">chapter "submit
+    directory"</link>.</para>
   </section>
 
   <section>
     <title>Execution Environment</title>
 
-    <para>...</para>
+    <para>The vanilla grid environment.</para>
   </section>
 
   <section>
     <title>Pegasus Workflow Job States and Delays</title>
 
-    <para>...</para>
+    <para>The states that a job moves through during execution and possible
+    delays are discussed in <link linkend="submit_directory-delays">chapter
+    "submit directory"</link>.</para>
   </section>
 </chapter>

@@ -614,7 +614,7 @@
         </section>
       </section>
 
-      <section>
+      <section id="api-graph-nodes">
         <title>Graph Nodes</title>
 
         <para>The nodes in the DAX comprise regular job nodes, already
@@ -658,7 +658,7 @@
 
           <listitem>
             <para>0 or 1 <emphasis>stderr</emphasis> element to link a logical
-            file to the job's standard error. </para>
+            file to the job's standard error.</para>
           </listitem>
 
           <listitem>
@@ -675,12 +675,13 @@
           <para>The invoke element is not supported as of this writing.</para>
         </warning>
 
-        <section>
+        <section id="api-job-nodes">
           <title>Job Nodes</title>
 
           <para>A job element has a number of attributes. The
           <emphasis>id</emphasis> and <emphasis>node-label</emphasis>
-          attributes were explained previously. The optional
+          attributes were explained <link
+          linkend="api-graph-nodes">previously</link>. The optional
           <emphasis>namespace</emphasis>, mandatory <emphasis>name</emphasis>
           and optional <emphasis>version</emphasis> identify the
           transformation, and provide the look-up handle: first in the DAX's
@@ -733,9 +734,9 @@
             of this writing!</para>
           </warning>
 
-          <para>The invoke element is currently not supported! It may be
-          specified multiple times, as needed. It has a mandatory when
-          attribute with the following value set:</para>
+          <para>The invoke element may be specified multiple times, as needed.
+          It has a mandatory when attribute with the following value
+          set:</para>
 
           <table>
             <tgroup cols="3">
@@ -916,10 +917,11 @@
   &lt;/dag&gt;</programlisting>
 
           <para>The <emphasis>id</emphasis> and
-          <emphasis>node-label</emphasis> attributes were described
-          previously. The <emphasis>name</emphasis> attribute refers to a file
-          from the File Catalog that provides the actual DAGMan DAG as data
-          content. The <emphasis>dag</emphasis> element features optional
+          <emphasis>node-label</emphasis> attributes were described <link
+          linkend="api-graph-nodes">previously</link>. The
+          <emphasis>name</emphasis> attribute refers to a file from the File
+          Catalog that provides the actual DAGMan DAG as data content. The
+          <emphasis>dag</emphasis> element features optional
           <emphasis>profile</emphasis> elements. These would most likely
           pertain to the <literal>dagman</literal> and <literal>env</literal>
           profile namespaces. It should be possible to have the optional
@@ -952,16 +954,16 @@
   &lt;/dax&gt;</programlisting>
 
           <para>The <emphasis>id</emphasis> and
-          <emphasis>node-label</emphasis> attributes were described
-          previously. The <emphasis>name</emphasis> attribute refers to a file
-          from the File Catalog that provides the to be planned DAX as
-          external file data content. The <emphasis>dax</emphasis> element
-          features optional <emphasis>profile</emphasis> elements. These would
-          most likely pertain to the <literal>pegasus</literal>,
-          <literal>dagman</literal> and <literal>env</literal> profile
-          namespaces. It may be possible to have the optional
-          <emphasis>notify</emphasis> element in the same manner as for
-          jobs.</para>
+          <emphasis>node-label</emphasis> attributes were described <link
+          linkend="???">previously</link>. The <emphasis>name</emphasis>
+          attribute refers to a file from the File Catalog that provides the
+          to be planned DAX as external file data content. The
+          <emphasis>dax</emphasis> element features optional
+          <emphasis>profile</emphasis> elements. These would most likely
+          pertain to the <literal>pegasus</literal>, <literal>dagman</literal>
+          and <literal>env</literal> profile namespaces. It may be possible to
+          have the optional <emphasis>notify</emphasis> element in the same
+          manner as for jobs.</para>
 
           <warning>
             <para>The <emphasis>invoke</emphasis> element is not supported as
@@ -1013,7 +1015,7 @@
         identifiers.</para>
 
         <para>The <emphasis>parent</emphasis> element has an optional
-        <emphasis>edge-label</emphasis> attribute. </para>
+        <emphasis>edge-label</emphasis> attribute.</para>
 
         <warning>
           <para>While the <emphasis>edge-label</emphasis> attribute is
@@ -1035,8 +1037,8 @@
       <title>DAX XML Schema Example</title>
 
       <para>The following code example shows the XML instance document
-      representing the diamond workflow from figure [INSERT INTERNAL LINK
-      HERE].</para>
+      representing the diamond workflow from <link
+      linkend="concepts-fig-dax">the concepts figure</link>.</para>
 
       <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;!-- generated: 2010-11-19T20:00:29Z --&gt;
@@ -1100,12 +1102,13 @@
   &lt;/child&gt;
 &lt;/adag&gt;</programlisting>
 
-      <para>The above workflow defines the black diamond from figure [INSERT
-      INTERNAL LINK HERE]. It will require minimal configuration, because the
-      catalog sections include all necessary declarations. </para>
+      <para>The above workflow defines the black diamond from <link
+      linkend="concepts-fig-dax">the concepts figure</link>. It will require
+      minimal configuration, because the catalog sections include all
+      necessary declarations.</para>
 
       <para>The file element defines the location of the required input file
-      in terms of the local machine. Please note that </para>
+      in terms of the local machine. Please note that</para>
 
       <itemizedlist>
         <listitem>
@@ -1139,12 +1142,12 @@
           case of a product. We are only interested in the final data product
           "f.d" in this workflow, and not any intermediary files. Typically,
           you would also want to register the data products in the replica
-          catalog, especially in larger scenarios. </para>
+          catalog, especially in larger scenarios.</para>
         </listitem>
 
         <listitem>
           <para>The <emphasis>child</emphasis> elements define the control
-          flow between the jobs. </para>
+          flow between the jobs.</para>
         </listitem>
       </itemizedlist>
     </section>
@@ -1159,7 +1162,7 @@
     differences in details, e.g. to show-case certain features, but
     effectively all generate the same basic diamond.</para>
 
-    <section>
+    <section id="api-java">
       <title>The Java DAX generator API</title>
 
       <para>The Java DAX API provided with the Pegasus distribution allows
@@ -1168,7 +1171,9 @@
       California Earthquake Center, uses this API in their CyberShake workflow
       generator to generate huge DAX containing 10’s of thousands of tasks
       with 100’s of thousands of input and output files. The Java API is well
-      documented using Javadocs at [INSERT PROPER LINK HERE].</para>
+      documented using <ulink
+      url="http://pegasus.isi.edu/wms/docs/3.0/javadoc/edu/isi/pegasus/planner/dax/ADAG.html">Javadoc
+      for ADAGs</ulink> .</para>
 
       <para>The steps involved in creating a DAX using the API are</para>
 
@@ -1350,7 +1355,7 @@ public class BlackDiamondDAX {
       class="directory">examples/grid-blackdiamond-java</filename>.</para>
     </section>
 
-    <section>
+    <section id="api-python">
       <title>The Python DAX generator API</title>
 
       <para>I am no python master. There is auto-generated pythondoc
@@ -1434,7 +1439,7 @@ diamond.addDependency(parent=frr, child=analyze)
 diamond.writeXML(sys.stdout)</programlisting>
     </section>
 
-    <section>
+    <section id="api-perl">
       <title>The Perl DAX generator</title>
 
       <para>The Perl API example below can be found in file
@@ -1607,13 +1612,5 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     <para>We are working on improving this program, e.g. provide output with
     regards to the line number where the issue occurred.However, it will
     return with a non-zero exit code whenever errors were detected.</para>
-  </section>
-
-  <section>
-    <title>Provenance Tracking Record (PTR) XML</title>
-
-    <para>...</para>
-
-    <para></para>
   </section>
 </chapter>
