@@ -16,7 +16,7 @@
     Pegasus.</para>
   </section>
 
-  <section>
+  <section id="submit_directory-layout">
     <title>Layout</title>
 
     <para>Each executable workflow is associated with a submit directory. In
@@ -275,9 +275,9 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
 
     <para>Kickstart captures useful runtime provenance information about the
     job launched by it on the remote note, and puts in an XML record that it
-    writes to it's stdout. The stdout appears in the workflow submit directory
-    as &lt;job&gt;.out.00n . Some useful information captured by kickstart and
-    logged are as follows</para>
+    writes to its own stdout. The stdout appears in the workflow submit
+    directory as &lt;job&gt;.out.00n . Some useful information captured by
+    kickstart and logged are as follows</para>
 
     <orderedlist>
       <listitem>
@@ -297,7 +297,7 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
       </listitem>
 
       <listitem>
-        <para>the stdout/stderr of the job</para>
+        <para>the stdout and stderr of the job</para>
       </listitem>
 
       <listitem>
@@ -471,22 +471,21 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
   <section>
     <title>Jobstate.log File</title>
 
-    <para>The jobstate.log file logs the various states that a job
-    goes through during workflow execution. It is created by
-    the <emphasis role="bold">pegasus-monitord</emphasis> daemon that
-    is launched when a workflow is submitted to Condor DAGMan by
-    pegasus-run. <emphasis role="bold">pegasus-monitord</emphasis>
-    parses the dagman.out file and writes out the jobstate.log file,
-    the format of which is more amenable to parsing.</para>
+    <para>The jobstate.log file logs the various states that a job goes
+    through during workflow execution. It is created by the <emphasis
+    role="bold">pegasus-monitord</emphasis> daemon that is launched when a
+    workflow is submitted to Condor DAGMan by pegasus-run. <emphasis
+    role="bold">pegasus-monitord</emphasis> parses the dagman.out file and
+    writes out the jobstate.log file, the format of which is more amenable to
+    parsing.</para>
 
     <para><emphasis role="bold">Note: </emphasis>The jobstate.log file is not
     created if a user uses condor_submit_dag to submit a workflow to Condor
     DAGMan.</para>
 
-    <para>The jobstate.log file can be created after a workflow has
-    finished executing by
-    running <emphasis role="bold">pegasus-monitord</emphasis> on the
-    .dagman.out file in the workflow submit directory.</para>
+    <para>The jobstate.log file can be created after a workflow has finished
+    executing by running <emphasis role="bold">pegasus-monitord</emphasis> on
+    the .dagman.out file in the workflow submit directory.</para>
 
     <para>Below is a snippet from the jobstate.log for a single job executed
     via condorg</para>
@@ -615,7 +614,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
       </tgroup>
     </table>
 
-    <section>
+    <section id="submit_directory-delays">
       <title>Pegasus Workflow Job States and Delays</title>
 
       <para>The various job states that a job goes through ( as caputured in
