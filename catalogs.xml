@@ -44,7 +44,7 @@
       </listitem>
     </orderedlist>
 
-    <section>
+    <section id="rc-FILE">
       <title>File</title>
 
       <para>In this mode, Pegasus queries a file based replica catalog. The
@@ -84,7 +84,7 @@ LFN PFN a="b" [..]
         </orderedlist></para>
     </section>
 
-    <section>
+    <section id="rc-JDBCRC">
       <title>JDBCRC</title>
 
       <para>In this mode, Pegasus queries a SQL based replica catalog that is
@@ -121,7 +121,7 @@ LFN PFN a="b" [..]
       </orderedlist>
     </section>
 
-    <section>
+    <section id="rc-RLS">
       <title>Replica Location Service</title>
 
       <para>RLS (Replica Location Service) is a distributed replica catalog,
@@ -180,13 +180,13 @@ LFN PFN a="b" [..]
       </section>
     </section>
 
-    <section>
+    <section id="rc-MRC">
       <title>MRC</title>
 
       <para>In this mode, Pegasus queries multiple replica catalogs to
-      discover the file locations on the grid. </para>
+      discover the file locations on the grid.</para>
 
-      <para>To use it set </para>
+      <para>To use it set</para>
 
       <para><orderedlist>
           <listitem>
@@ -196,7 +196,7 @@ LFN PFN a="b" [..]
         </orderedlist></para>
 
       <para>Each associated replica catalog can be configured via properties
-      as follows. </para>
+      as follows.</para>
 
       <para>The user associates a variable name referred to as [value] for
       each of the catalogs, where [value] is any legal identifier (concretely
@@ -206,7 +206,7 @@ LFN PFN a="b" [..]
       <itemizedlist>
         <listitem>
           <para><emphasis role="bold">pegasus.catalog.replica.mrc.[value]
-          </emphasis>- specifies the type of replica catalog. </para>
+          </emphasis>- specifies the type of replica catalog.</para>
         </listitem>
 
         <listitem>
@@ -217,7 +217,7 @@ LFN PFN a="b" [..]
       </itemizedlist>
 
       <para>For example, if a user wants to query two lrc’s at the same time
-      he/she can specify as follows </para>
+      he/she can specify as follows</para>
 
       <para><itemizedlist>
           <listitem>
@@ -328,7 +328,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="sc-3.0_p2.png" />
+            <imagedata fileref="images/sc-3.0_p2.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -421,7 +421,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </orderedlist></para>
     </section>
 
-    <section id="XML">
+    <section id="sc-XML">
       <title>XML</title>
 
       <para><warning>
@@ -478,16 +478,18 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para>workdir - A remote working directory (Should be on a shared
-            file system)</para>
+            <para>workdirectory - A remote working directory (Should be on a
+            shared file system)</para>
           </listitem>
 
           <listitem>
-            <para>gridftp - A URL prefix for a remote storage location.</para>
+            <para>gridftp - A URL prefix for a remote storage location. and a
+            path to the storage location</para>
           </listitem>
 
           <listitem>
-            <para>universe - Different universes are supported which map to
+            <para>jobmanager - Url to the jobmanager entrypoints for the
+            remote grid. Different universes are supported which map to
             different batch jobmanagers.</para>
 
             <para>"vanilla" for compute jobs and "transfer" for transfer jobs
@@ -503,7 +505,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           <listitem>
             <para>sysinfo - The arch/os/osversion/glibc of the site. The
             format is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
-            optiona.</para>
+            optional.</para>
 
             <para>ARCH can have one of the following values INTEL32, INTEL64,
             SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
@@ -521,7 +523,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </orderedlist></para>
     </section>
 
-    <section id="Text">
+    <section id="sc-Text">
       <title>Text</title>
 
       <para><warning>
@@ -616,73 +618,21 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           pool.</para>
         </listitem>
       </orderedlist>
-
-      <para></para>
     </section>
 
     <section id="pegasus-sc-client">
       <title>Site Catalog Client pegasus-sc-client</title>
 
-      <para>Create a file called sites.txt and edit the contents. Replace
-      ‘$HOME’ in the example below to your home directory.</para>
-
-      <programlisting>$ emacs $HOME/sites.txt </programlisting>
-
-      <para>Let’s say you have one cluster available to run your jobs called
-      clus1. You need to add 2 sections in the pool.config.txt file, one for
-      the cluster and one for the local machine. The local site entry is
-      mandatory. Change all the entries below to reflect your local host and
-      cluster setting including all environment variables</para>
-
-      <programlisting>site local {
-lrc "rlsn://localhost"
-workdir "$HOME/workdir"
-gridftp "gsiftp://localhost/$HOME/storage" "4.0.5"
-universe transfer "localhost/jobmanager-fork" "4.0.5"
-universe vanilla  "localhost/jobmanager-fork" "4.0.5"
-gridlaunch "/nfs/vdt/pegasus/bin/kickstart"
-sysinfo "INTEL32::LINUX"
-profile env "PEGASUS_HOME" "/nfs/vdt/pegasus"
-profile env "GLOBUS_LOCATION" "/vdt/globus"
-profile env "LD_LIBRARY_PATH" "/vdt/globus/lib"
-profile env "JAVA_HOME" /vdt/java
-}
-
-site clus1 {
-lrc "rlsn://clus1.com"
-workdir "$HOME/workdir-clus1"
-gridftp "gsiftp://clus1.com/jobmanager-fork" "4.0.3"
-universe transfer "clus1.com/jobmanager-fork" "4.0.3"
-universe vanilla  "clus1.com/jobmanager-pbs" "4.0.3"
-sysinfo "INTEL32::LINUX"
-gridlaunch "/opt/nfs/vdt/pegasus/bin/kickstart"
-profile env "PEGASUS_HOME" "/opt/nfs/vdt/pegasus"
-profile env "GLOBUS_LOCATION" "/opt/vdt/globus"
-profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
-} </programlisting>
-
-      <para>This file can be used as is by Pegasus but we prefer the XML
-      version of the Site Catalog because it allows for a richer description
-      of the site. The tool to convert the text site catalog to XML is called
-      sc-client</para>
-
-      <programlisting>$ <emphasis>sc-client --files $HOME/sites.txt --output $HOME/sites.xml
-
-</emphasis>
-2007.07.10 19:04:34.799 PDT: [INFO] Reading $HOME/sites.txt
-2007.07.10 19:04:34.844 PDT: [INFO] Reading $HOME/sites.txt (completed)
-2007.07.10 19:04:34.851 PDT: [INFO] Written xml output to file : $HOME/sites.xml</programlisting>
-
-      <para>Cat the sites.xml file and just take a look.</para>
-
-      <para>The site catalog can also be generated using the pegasus-get-sites
-      command for the OSG grid using the ReSS site information feed.</para>
+      <para>The pegasus-sc-client can be used to generate a site catalog for
+      Open Science Grid (OSG) by querying their Monitoring Interface likes
+      VORS or OSGMM. See pegasus-sc-client --help for more details</para>
     </section>
 
     <section id="pegasus-sc-converter">
       <title>Site Catalog Converter pegasus-sc-converter</title>
 
-      <para></para>
+      <para>The pegasus-sc-converter converts the sitecatalog from one format
+      (File, XML) to another (XML3)..</para>
     </section>
   </section>
 
@@ -718,7 +668,7 @@ profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
     <para>In this guide we will look at the format of the Multiline Text based
     TC.</para>
 
-    <section id="Text">
+    <section id="tc-Text">
       <title>MultiLine Text based TC (Text)</title>
 
       <para>The multile line text based TC is the new default TC in Pegasus.
@@ -733,30 +683,32 @@ profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
 
 #specify profiles that apply for all the sites for the transformation 
 #in each site entry the profile can be overriden 
-profile env "APP_HOME" "/tmp/myscratch"
-profile env "JAVA_HOME" "/opt/java/1.6"
 
-site isi {
-profile env "HELLo" "WORLD"
-profile condor "FOO" "bar"
-profile env "JAVA_HOME" "/bin/java.1.6"
-pfn "/path/to/keg"
-arch "x86"
-os "linux"
-osrelease "fc"
-osversion "4"
-type "INSTALLED"
-}
+  profile env "APP_HOME" "/tmp/myscratch"
+  profile env "JAVA_HOME" "/opt/java/1.6"
 
-site wind {
-profile env "CPATH" "/usr/cpath"
-profile condor "universe" "condor"
-pfn "file:///path/to/keg"
-arch "x86"
-os "linux"
-osrelease "fc"
-osversion "4"
-type "STAGEABLE"
+  site isi {
+    profile env "HELLo" "WORLD"
+    profile condor "FOO" "bar"
+    profile env "JAVA_HOME" "/bin/java.1.6"
+    pfn "/path/to/keg"
+    arch "x86"
+    os "linux"
+    osrelease "fc"
+    osversion "4"
+    type "INSTALLED"
+  }
+
+  site wind {
+    profile env "CPATH" "/usr/cpath"
+    profile condor "universe" "condor"
+    pfn "file:///path/to/keg"
+    arch "x86"
+    os "linux"
+    osrelease "fc"
+    osversion "4"
+    type "STAGEABLE"
+  }
 }</programlisting></para>
 
       <para>The entries in this catalog have the following meanign</para>
@@ -807,7 +759,7 @@ type "STAGEABLE"
         </orderedlist></para>
     </section>
 
-    <section id="File">
+    <section id="tc-File">
       <title>Singleline Text based TC (File)</title>
 
       <warning>
@@ -905,10 +857,45 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
       </orderedlist>
     </section>
 
-    <section id="Database">
+    <section id="tc-Database">
       <title>Datbase TC (Database)</title>
 
-      <para>The </para>
+      <para>The database TC alows you to use a relational database. To use the
+      database TC you need to have installed a MySQL or PostgreSQL server. The
+      schema for the database is available in $PEGASUS_HOME/sql directory. You
+      will have to install the schema into either PostgreSQL or MySQL by
+      running the appropriate commands to load the two scheams <emphasis
+      role="bold">create-XX-init.sql</emphasis> and <emphasis
+      role="bold">create-XX-tc.sql</emphasis> where XX is either <emphasis
+      role="bold">my</emphasis> (for MySQL) or <emphasis
+      role="bold">pg</emphasis> (for PostgreSQL)</para>
+
+      <para>To use the Database TC you need to set the following
+      properties</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para>pegasus.catalog.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.transformation.db.url=<replaceable>&lt;jdbc
+            url to the databse&gt;</replaceable></emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.db.user=<replaceable>&lt;database
+            user&gt;</replaceable></emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.db.password=<replaceable>&lt;database
+            password&gt;</replaceable></emphasis></para>
+          </listitem>
+        </orderedlist></para>
     </section>
 
     <section id="pegasus-tc-client">
@@ -922,14 +909,14 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
       with Pegasus in the bin directory. Run keg on the command line to see
       how it works.</para>
 
-      <programlisting>$<emphasis> keg -o /dev/fd/1</emphasis>
-
+      <screen><command>$ keg -o /dev/fd/1</command>
+<computeroutput>
 Timestamp Today: 20040624T054607-05:00 (1088073967.418;0.022)
 Applicationname: keg @ 10.10.0.11 (VPN)
 Current Workdir: /home/unique-name
 Systemenvironm.: i686-Linux 2.4.18-3
 Processor Info.: 1 x Pentium III (Coppermine) @ 797.425
-Output Filename: /dev/fd/1</programlisting>
+Output Filename: /dev/fd/1</computeroutput></screen>
 
       <para>Now we need to map all 3 transformations onto the "keg"
       executable. We place these mappings in our File transformation catalog
@@ -942,17 +929,14 @@ Output Filename: /dev/fd/1</programlisting>
 
       <para>Create a file called tc.data and edit the contents</para>
 
-      <programlisting><emphasis>$ vim $HOME/tc</emphasis>
-
+      <screen><command>$ vim $HOME/tc</command><computeroutput>
 
 # Site  LFN  PFN  TYPE  SYSTEM PROFILE
 
 clus1 black::preprocess:1.0  gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                      STATIC_BINARY INTEL32::LINUX ENV::KEY1="VALUE1"
 clus1 black::findrange:1.0  gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
-                     STATIC_BINARY INTEL32::LINUX ENV::KEY2="VALUE2"
-
-</programlisting>
+                     STATIC_BINARY INTEL32::LINUX ENV::KEY2="VALUE2"</computeroutput></screen>
 
       <para>Note: A single entry needs to be on one line. The above example is
       just formatted for convenience.</para>
@@ -961,25 +945,32 @@ clus1 black::findrange:1.0  gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
       implementation of the transformation catalog. The following eg: shows us
       adding the last entry in the File based transformation catalog.</para>
 
-      <programlisting>$ <emphasis>tc-client -Dpegasus.catalog.transformation=File \
+      <screen><command>$ tc-client -Dpegasus.catalog.transformation=File \
 -Dpegasus.catalog.transformation.file=$HOME/tc -a -r clus1 -l black::analyze:1.0 \
 -p gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg  -t STATIC_BINARY -s INTEL32::LINUX \
--e ENV::KEY3="VALUE3"</emphasis>
+-e ENV::KEY3="VALUE3"</command><computeroutput>
 
-2007.07.11 16:12:03.712 PDT: [INFO] Added tc entry sucessfully</programlisting>
+2007.07.11 16:12:03.712 PDT: [INFO] Added tc entry sucessfully</computeroutput></screen>
 
       <para>To verify if the entry was correctly added to the transformation
       catalog you can use the tc-client to query.</para>
 
-      <programlisting>$ <emphasis>tc-client -Dpegasus.catalog.transformation=File \
--Dpegasus.catalog.transformation.file=$HOME/tc -q -P -l black::analyze:1.0
-</emphasis>
-#RESID     LTX          PFN                  TYPE              SYSINFO
+      <screen><command>$ tc-client -Dpegasus.catalog.transformation=File \
+-Dpegasus.catalog.transformation.file=$HOME/tc -q -P -l black::analyze:1.0</command>
+
+<computeroutput>#RESID     LTX          PFN                  TYPE              SYSINFO
 
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
-                STATIC_BINARY    INTEL32::LINUX</programlisting>
+                STATIC_BINARY    INTEL32::LINUX</computeroutput></screen>
 
       <para></para>
+    </section>
+
+    <section id="pegasus-tc-converter">
+      <title>TC Converter Client pegasus-tc-converter</title>
+
+      <para>This client converts the simple column based TC to a Multiline
+      based TC.</para>
     </section>
   </section>
 </chapter>
