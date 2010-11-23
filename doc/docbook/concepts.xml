@@ -355,7 +355,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         manages queued jobs and Condor DAGMan the workflow. This setup permits
         limited parallelism with full scalability. With proper setup, Condor
         can scavenge cycles from unused computers in your department, enabling
-        a pool of more than just a single machine. </para>
+        a pool of more than just a single machine.</para>
       </listitem>
 
       <listitem>
@@ -369,7 +369,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         minimally using Globus to obtain remote resources (Glide-ins),
         by-passing Globus completely (Condor-C), or supporting cloud computing
         (Nimbus, Eucalyptus, EC2). You should be familiar with the Grid
-        Execution Environment, as some concept are borrowed. </para>
+        Execution Environment, as some concept are borrowed.</para>
       </listitem>
     </itemizedlist>
 
@@ -393,7 +393,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
       <para>The vanilla grid environment shown in the figure <link
       linkend="concepts-fig-site-layout">above</link>. We will work from the
-      left to the right top, then the right bottom. </para>
+      left to the right top, then the right bottom.</para>
 
       <para>On the left side, you have a submit machine where Pegasus runs,
       Condor schedules jobs, and workflows are executed. We call it the
@@ -403,7 +403,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       proper notion of time, i.e. runs an NTP daemon to keep accurate time. To
       be able to connect to remote clusters and receive connections from the
       remote clusters, the submit host has a public IP address to facilitate
-      this communication. </para>
+      this communication.</para>
 
       <para>In order to send a job request to the remote cluster, Condor wraps
       the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs
@@ -437,7 +437,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       identity is passed from the submit host. An entity called <emphasis>grid
       mapfile</emphasis> on the gatekeeper maps the user's grid identity into
       a remote account. While most sites do not permit account sharing, it is
-      possible to map multiple user certificates to the same account. </para>
+      possible to map multiple user certificates to the same account.</para>
 
       <para>The gatekeeper is the interface through which jobs are submitted
       to the remote cluster's resource manager. A resource manager is a
@@ -452,7 +452,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <para>The shared filesystem requirement is imposed by Globus. Pegasus
         is capable of supporting advanced site layouts that do not require a
         shared filesystem. Please contact us for details, should you require
-        such a setup. </para>
+        such a setup.</para>
       </note>
 
       <para>To stage data between external sites for the job, it is
@@ -468,7 +468,126 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       <para>The GridFTP server is often installed on the head node, the same
       as the gatekeeper, so that they can share the grid mapfile, CA
       certificate chains and other setups. However, for performance purposes
-      it is recommended that the GridFTP server has its own machine. </para>
+      it is recommended that the GridFTP server has its own machine.</para>
+    </section>
+
+    <section>
+      <title>A Cloud Execution Environment</title>
+
+      <para><figure id="concepts-fig-cloud-layout">
+          <title>Cloud Sample Site Layout</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center" fileref="images/fg-pwms-prefio.3.png"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
+
+      <para>The pevious figure shows a sample layout for sky computing (as in:
+      multiple clouds) as supported by Pegasus. At this point, it is up to the
+      user to provision the remote resources with a proper VM image that
+      includes a Condor startd and proper Condor configuration to report back
+      to a Condor collector that the Condor schedd has access to.</para>
+
+      <para>In this discussion, the <emphasis>submit host</emphasis> (SH) is
+      located logically external to the cloud provider(s). The SH is the point
+      where a user submits Pegasus workflows for execution. This site
+      typically runs a Condor collector to gather resource announcements, or
+      is part of a larger Condor pool that collects these announcement. Condor
+      makes the remote resources available to the submit host’s Condor
+      installation.</para>
+
+      <para>The <link linkend="concepts-fig-cloud-layout">figure above</link>
+      shows the way Pegasus WMS is deployed in cloud computing resources,
+      ignoring how these resources were provisioned. The provisioning request
+      shows multiple resources per provisioning request.</para>
+
+      <para>The provisioning broker -- Nimbus, Eucalyptus or EC2 -- at the
+      remote site is responsible to allocate and set up the resources. For a
+      multi-node request, the worker nodes often require access to a form of
+      shared data storage. Concretely, either a POSIX-compliant shared file
+      system (e.g. NFS, PVFS) is available to the nodes, or can be brought up
+      for the lifetime of the application workflow. The task steps of the
+      application workflow facilitate shared file systems to exchange
+      intermediary results between tasks on the same cloud site. Pegasus also
+      supports an S3 data mode for the application workflow data
+      staging.</para>
+
+      <para>The initial stage-in and final stage-out of application data into
+      and out of the node set is part of any Pegasus-planned workflow. Several
+      configuration options exist in Pegasus to deal with the dynamics of push
+      and pull of data, and when to stage data. In many use-cases, some form
+      of external access to or from the shared file system that is visible to
+      the application workflow is required to facilitate successful data
+      staging. However, Pegasus is prepared to deal with a set of boundary
+      cases.</para>
+
+      <para>The data server in the figure is shown at the submit host. This is
+      not a strict requirement. The data server for consumed data and data
+      products may both be different and external to the submit host. </para>
+
+      <para>Once resources begin appearing in the pool managed by the submit
+      machine’s Condor collector, the application workflow can be submitted to
+      Condor. A Condor DAGMan will manage the application workflow execution.
+      Pegasus run-time tools obtain timing-, performance and provenance
+      information as the application workflow is executed. At this point, it
+      is the user's responsibility to de-provision the allocated
+      resources.</para>
+
+      <para>In the figure, the cloud resources on the right side are assumed
+      to have uninhibited outside connectivity. This enables the Condor I/O to
+      communicate with the resources. The right side includes a setup where
+      the worker nodes use all private IP, but have out-going connectivity and
+      a NAT router to talk to the internet. The <emphasis>Condor connection
+      broker</emphasis> (CCB) facilitates this setup almost effortlessly.
+      </para>
+
+      <para>The left side shows a more difficult setup where the connectivity
+      is fully firewalled without any connectivity except to in-site nodes. In
+      this case, a proxy server process, the <emphasis>generic connection
+      broker</emphasis> (GCB), needs to be set up in the DMZ of the cloud site
+      to facilitate Condor I/O between the submit host and worker nodes.
+      </para>
+
+      <para>If the cloud supports data storage servers, Pegasus is starting to
+      support workflows that require staging in two steps: Consumed data is
+      first staged to a data server in the remote site's DMZ, and then a
+      second staging task moves the data from the data server to the worker
+      node where the job runs. For staging out, data needs to be first staged
+      from the job's worker node to the site's data server, and possibly from
+      there to another data server external to the site. Pegasus is capable to
+      plan both steps: Normal staging to the site's data server, and the
+      worker-node staging from and to the site's data server as part of the
+      job. We are working on expanding the current code to support a more
+      generic set by Pegasus 3.1. </para>
+
+      <section>
+        <title>Shared File Systems</title>
+
+        <para>Ideally, any allocation of multiple resources shares a file
+        system among them. This can be either a globally shared file system
+        like NFS, or a per-request file system dynamically allocated like PVFS
+        or NFS. Often, for the sake of speed, it is advisable that each
+        resource has its own fast local non-shared disk space that can be
+        transiently used by application workflow jobs. </para>
+
+        <para>Pegasus recommends the use of a shared file system, because it
+        simplifies workflows and may even improve performance. Without shared
+        file system, the same data may need to be staged to the same site but
+        different resources multiple times. Without shared file systems, data
+        products of a parent job need to be staged out, and staged back in to
+        the child job, currently via an external data server, even if parent
+        and child run on the same multi-resource allocation.</para>
+
+        <para>The Pegasus team explores the option of dynamically bringing up
+        an NFS server on one resource of a multi-resource allocation for the
+        duration of the allocation. This option is part of the configuration
+        for an experiment’s workflow’s provisioning stage. We do not expect
+        cloud sites to ban NFS and RPC traffic between resources of the same
+        multi-resource allocation. </para>
+      </section>
     </section>
   </section>
 
