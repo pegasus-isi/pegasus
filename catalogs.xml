@@ -280,9 +280,9 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
       <para>The above line shows that entry for file f.a was made
       correctly.</para>
 
-      <para>You can also use the rc-client to look for entries.</para>
+      <para>You can also use the pegasus-rc-client to look for entries.</para>
 
-      <screen><command>$ rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a</command><computeroutput>
+      <screen><command>$ pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a</command><computeroutput>
 
 f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
     </section>
@@ -889,8 +889,8 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
           <para>physicaltr - The physical transformation path or URL.</para>
 
           <para>If the transformation type is INSTALLED then it needs to be an
-          absolute path to the executable. If the type is STATIC_BINARY then
-          the path needs to be a HTTP, FTP or gsiftp URL</para>
+          absolute path to the executable. If the type is STAGEABLE then the
+          path needs to be a HTTP, FTP or gsiftp URL</para>
         </listitem>
 
         <listitem>
@@ -904,9 +904,8 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
             </listitem>
 
             <listitem>
-              <para>STATIC_BINARY: This means that the transformation is
-              available as a static binary and can be staged to a remote
-              site.</para>
+              <para>STAGEABLE: This means that the transformation is available
+              as a static binary and can be staged to a remote site.</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -1042,41 +1041,31 @@ Output Filename: /dev/fd/1</computeroutput></screen>
       the environment profile PEGASUS_HOME set in the site catalog for each
       site.</para>
 
-      <para>Create a file called tc.data and edit the contents</para>
-
-      <screen><command>$ vim $HOME/tc</command><computeroutput>
-
-# Site  LFN  PFN  TYPE  SYSTEM PROFILE
-
-clus1 black::preprocess:1.0  gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
-                     STATIC_BINARY INTEL32::LINUX ENV::KEY1="VALUE1"
-clus1 black::findrange:1.0  gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
-                     STATIC_BINARY INTEL32::LINUX ENV::KEY2="VALUE2"</computeroutput></screen>
-
       <para>Note: A single entry needs to be on one line. The above example is
       just formatted for convenience.</para>
 
-      <para>Alternatively you can also use the tc-client to add entries to any
-      implementation of the transformation catalog. The following eg: shows us
-      adding the last entry in the File based transformation catalog.</para>
+      <para>Alternatively you can also use the pegasus-tc-client to add
+      entries to any implementation of the transformation catalog. The
+      following eg: shows us adding the last entry in the File based
+      transformation catalog.</para>
 
-      <screen><command>$ tc-client -Dpegasus.catalog.transformation=File \
+      <screen><command>$ pegasus-tc-client -Dpegasus.catalog.transformation=Text \
 -Dpegasus.catalog.transformation.file=$HOME/tc -a -r clus1 -l black::analyze:1.0 \
--p gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg  -t STATIC_BINARY -s INTEL32::LINUX \
+-p gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg  -t STAGEABLE -s INTEL32::LINUX \
 -e ENV::KEY3="VALUE3"</command><computeroutput>
 
 2007.07.11 16:12:03.712 PDT: [INFO] Added tc entry sucessfully</computeroutput></screen>
 
       <para>To verify if the entry was correctly added to the transformation
-      catalog you can use the tc-client to query.</para>
+      catalog you can use the pegasus-tc-client to query.</para>
 
-      <screen><command>$ tc-client -Dpegasus.catalog.transformation=File \
+      <screen><command>$ pegasus-tc-client -Dpegasus.catalog.transformation=File \
 -Dpegasus.catalog.transformation.file=$HOME/tc -q -P -l black::analyze:1.0</command>
 
 <computeroutput>#RESID     LTX          PFN                  TYPE              SYSINFO
 
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
-                STATIC_BINARY    INTEL32::LINUX</computeroutput></screen>
+                STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
       <para></para>
     </section>
