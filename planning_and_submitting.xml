@@ -270,8 +270,9 @@
       job clustering module, which clusters jobs that are scheduled to the
       same site. Clustering is usually done on short running jobs in order to
       reduce the remote execution overheads associated with a job. Clustering
-      is described in detail in the chapter on Advanced Concepts - Job
-      Clustering.</para>
+      is described in detail in the <link
+      linkend="advanced_concepts_job_clustering">Chapter on Advanced Concepts
+      - Job Clustering.</link></para>
 
       <tip>
         <para>The job clustering is turned on by passing the <emphasis
@@ -290,7 +291,8 @@
       specified for the same input file, the location from where to stage the
       data is selected using a <emphasis role="bold">Replica
       Selector</emphasis> . Replica Selection is described in detail in the
-      chapter on Advanced Concepts - Replica Selection.</para>
+      <link linkend="advanced_concepts_replica_selection">Chapter on Advanced
+      Concepts - Replica Selection.</link></para>
 
       <para>The process of adding the data stage-in and data stage-out nodes
       is handled by Transfer Refiners. All data transfer jobs in Pegasus are
@@ -300,11 +302,12 @@
       at source and destination url and figures out automatically which
       underlying client to use. pegasus-transfer is distributed with the
       PEGASUS and can be found in the bin subdirectory . Pegasus Transfer
-      Refiners are are described in the detail in the chapter on Advanced
-      Concepts - Transfers. The default transfer refiner that is used in
-      Pegasus is the <emphasis role="bold">Bundle</emphasis> Transfer Refiner,
-      that bundles data stage-in nodes and data stage-out nodes on the basis
-      of certain pegasus profile keys associated with the workflow.</para>
+      Refiners are are described in the detail in the <link
+      linkend="advanced_concepts_transfers">Chapter on Advanced Concepts -
+      Transfers</link>. The default transfer refiner that is used in Pegasus
+      is the <emphasis role="bold">Bundle</emphasis> Transfer Refiner, that
+      bundles data stage-in nodes and data stage-out nodes on the basis of
+      certain pegasus profile keys associated with the workflow.</para>
 
       <para>The data staged-in and staged-out from a directory that is created
       on the head node by a create dir job in the workflow. In the vanilla
@@ -402,7 +405,8 @@
             <para>The Replica Catalog needs to be catalogued with the
             locations of the input files required by the workflows. This can
             be done by using pegasus-rc-client that is explained in the
-            Catalogs Chapter here.</para>
+            Catalogs Chapter <link
+            linkend="pegasus-rc-client">here</link>.</para>
           </listitem>
 
           <listitem>
@@ -412,7 +416,8 @@
             <para>The Transformation Catalog needs to be catalogued with the
             locations of the executables that the workflows will use. This can
             be done by using pegasus-tc-client that is explained in the
-            Catalogs Chapter here.</para>
+            Catalogs Chapter <link
+            linkend="pegasus-tc-client">here</link>.</para>
           </listitem>
 
           <listitem>
@@ -421,8 +426,8 @@
             <para>The Site Catalog needs to be catalogued with the site layout
             of the various sites that the workflows can execute on. A site
             catalog can be generated for OSG by using the client
-            pegasus-sc-client that is explained in the Catalogs Chapter
-            here.</para>
+            pegasus-sc-client that is explained in the Catalogs Chapter <link
+            linkend="???">here</link>.</para>
           </listitem>
         </orderedlist>
       </listitem>
