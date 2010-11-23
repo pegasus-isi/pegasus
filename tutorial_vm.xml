@@ -2,8 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="tutorial_vm">
-  <title>Pegasus Tutorial and Quickstart Guide Using Self-contained Virtual
-  Machine</title>
+  <title>Tutorial and Quickstart Guide Using Self-contained Virtual Machine</title>
 
   <note>
     <para>These tutorial notes refer to Pegasus 2.4. The VM Tutorial for
