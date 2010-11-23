@@ -7,10 +7,8 @@
   <section>
     <title>Refinement Steps Explained</title>
 
-    <para>pegasus-plan is the main executable that takes in the abstract
-    workflow ( DAX ) and generates an executable workflow ( usually a Condor
-    DAG ). The abstract workflow undergoes a series of refinement steps that
-    converts it to an executable form.</para>
+    <para>During the mapping process, the abstract workflow undergoes a series
+    of refinement steps that converts it to an executable form.</para>
 
     <section>
       <title>Data Reuse</title>
@@ -30,7 +28,7 @@
       jobs whose output files exist in the Replica Catalog. An output file
       with the transfer flag set to false is treated equivalent to the file
       existing in the Replica Catalog , if the output file is not an input to
-      any of the children of the job X. </para>
+      any of the children of the job X.</para>
 
       <para><emphasis role="bold">Second Pass</emphasis> - The algorithm
       removes the job whose output files exist in the Replica Catalog and
@@ -147,8 +145,8 @@
               =.</para>
 
               <para>The following pairs are currently generated for the site
-              selector temporary file that is generated in the NonJavaCallout.
-              </para>
+              selector temporary file that is generated in the
+              NonJavaCallout.</para>
 
               <table>
                 <title>Table 1: Key Value Pairs that are currently generated
@@ -167,36 +165,34 @@
                       <entry>version</entry>
 
                       <entry>is the version of the site selector api,currently
-                      2.0. </entry>
+                      2.0.</entry>
                     </row>
 
                     <row>
                       <entry>transformation</entry>
 
                       <entry>is the fully-qualified definition identifier for
-                      the transformation (TR) namespace::name:version.
-                      </entry>
+                      the transformation (TR) namespace::name:version.</entry>
                     </row>
 
                     <row>
                       <entry>derivation</entry>
 
                       <entry>is the fully qualified definition identifier for
-                      the derivation (DV), namespace::name:version. </entry>
+                      the derivation (DV), namespace::name:version.</entry>
                     </row>
 
                     <row>
                       <entry>job.level</entry>
 
                       <entry>is the job's depth in the tree of the workflow
-                      DAG. </entry>
+                      DAG.</entry>
                     </row>
 
                     <row>
-                      <entry>job.id </entry>
+                      <entry>job.id</entry>
 
-                      <entry>is the job's ID, as used in the DAX file.
-                      </entry>
+                      <entry>is the job's ID, as used in the DAX file.</entry>
                     </row>
 
                     <row>
@@ -206,7 +202,7 @@
                       followed by a gridftp server. Typically, each gridftp
                       server is enumerated once, so you may have multiple
                       occurances of the same site. There can be multiple
-                      occurances of this key. </entry>
+                      occurances of this key.</entry>
                     </row>
 
                     <row>
@@ -215,7 +211,7 @@
                       <entry>is an input LFN, optionally followed by a
                       whitespace and file size. There can be multiple
                       occurances of this key,one for each input LFN required
-                      by the job. </entry>
+                      by the job.</entry>
                     </row>
 
                     <row>
@@ -223,35 +219,34 @@
 
                       <entry>label of the dax, as found in the DAX's root
                       element. wf.index is the DAX index, that is incremented
-                      for each partition in case of deferred planning.
-                      </entry>
+                      for each partition in case of deferred planning.</entry>
                     </row>
 
                     <row>
                       <entry>wf.time</entry>
 
-                      <entry>is the mtime of the workflow. </entry>
+                      <entry>is the mtime of the workflow.</entry>
                     </row>
 
                     <row>
                       <entry>wf.manager</entry>
 
                       <entry>is the name of the workflow manager being used
-                      .e.g condor </entry>
+                      .e.g condor</entry>
                     </row>
 
                     <row>
                       <entry>vo.name</entry>
 
                       <entry>is the name of the virtual organization that is
-                      running this workflow. It is currently set to NONE
-                      </entry>
+                      running this workflow. It is currently set to
+                      NONE</entry>
                     </row>
 
                     <row>
                       <entry>vo.group</entry>
 
-                      <entry>unused at present and is set to NONE. </entry>
+                      <entry>unused at present and is set to NONE.</entry>
                     </row>
                   </tbody>
                 </tgroup>
@@ -319,7 +314,7 @@
       execution, where the data is staged from the head node directory to a
       directory on the worker node filesystem. This feature will be refined
       further for Pegasus 3.1. To use it with Pegasus 3.0 send email to
-      <emphasis role="bold">pegasus-support aT isi.edu</emphasis>. </para>
+      <emphasis role="bold">pegasus-support aT isi.edu</emphasis>.</para>
 
       <tip>
         <para>The replica selector to use for replica selection can be
@@ -336,7 +331,7 @@
       creates one workflow specific directory per compute site , that is on
       the shared filesystem of compute site. This directory is visible to all
       the worker nodes and that is where the data is staged-in by the data
-      stage-in jobs. </para>
+      stage-in jobs.</para>
 
       <para>After addition of the create dir jobs, the workflow is optionally
       handed to the cleanup module. The cleanup module adds cleanup nodes to
@@ -361,16 +356,16 @@
 
       <orderedlist>
         <listitem>
-          <para><emphasis role="bold">Condor</emphasis> </para>
+          <para><emphasis role="bold">Condor</emphasis></para>
 
           <para>This is the default code generator for Pegasus . This
           generator generates the executable workflow as a Condor DAG file and
           associated job submit files. The Condor DAG file is passed as input
-          to Condor DAGMan for job execution. </para>
+          to Condor DAGMan for job execution.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Shell</emphasis> </para>
+          <para><emphasis role="bold">Shell</emphasis></para>
 
           <para>This Code Generator generates the executable workflow as a
           shell script that can be executed on the submit host. While using
@@ -390,193 +385,545 @@
   <section>
     <title>pegasus-plan</title>
 
-    <para>Pegasus plans an abstract workflow into a concrete/executable
-    workflow by querying various catalogs and performing several refinement
-    steps. We have already setup all the catalogs required by Pegasus in the
-    previous sections and also configured properties that will affect how
-    Pegasus plans the workflow.</para>
+    <para>pegasus-plan is the main executable that takes in the abstract
+    workflow ( DAX ) and generates an executable workflow ( usually a Condor
+    DAG ) by querying various catalogs and performing several refinement
+    steps. Before users can run pegasus plan the following needs to be
+    done</para>
 
-    <para>Pegasus planner is invoked on the command line by running the
-    pegasus-plan command. The client takes several parameters including one or
-    more sites where to compute the workflow, an optional single site if the
-    output data needs to be staged and stored and the input DAX file. </para>
+    <orderedlist>
+      <listitem>
+        <para>Populate the various catalogs</para>
+
+        <orderedlist>
+          <listitem>
+            <para><emphasis role="bold">Replica Catalog</emphasis></para>
+
+            <para>The Replica Catalog needs to be catalogued with the
+            locations of the input files required by the workflows. This can
+            be done by using pegasus-rc-client that is explained in the
+            Catalogs Chapter here.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Transformation
+            Catalog</emphasis></para>
+
+            <para>The Transformation Catalog needs to be catalogued with the
+            locations of the executables that the workflows will use. This can
+            be done by using pegasus-tc-client that is explained in the
+            Catalogs Chapter here.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Site Catalog</emphasis></para>
+
+            <para>The Site Catalog needs to be catalogued with the site layout
+            of the various sites that the workflows can execute on. A site
+            catalog can be generated for OSG by using the client
+            pegasus-sc-client that is explained in the Catalogs Chapter
+            here.</para>
+          </listitem>
+        </orderedlist>
+      </listitem>
+
+      <listitem>
+        <para>Configure Properties</para>
+
+        <para>After the catalogs have been configured, the user properties
+        file need to be updated with the types and locations of the catalogs
+        to use. These properties are explained in the basic.properties files
+        in the etc sub directory of the Pegasus installation.</para>
+
+        <para>The basic properties that need to be set usually are listed
+        below</para>
+
+        <table>
+          <title>Table2: Basic Properties that need to be set</title>
+
+          <tgroup cols="1">
+            <tbody>
+              <row>
+                <entry>pegasus.catalog.replica</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.catalog.replica.file |
+                pegasus.catalog.replica.url</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.catalog.transformation</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.catalog.transformation.file</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.catalog.site</entry>
+              </row>
+
+              <row>
+                <entry>pegasus.catalog.site.file</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </listitem>
+    </orderedlist>
+
+    <para>To execute pegasus-plan user usually requires to specify the
+    following options</para>
+
+    <orderedlist>
+      <listitem>
+        <para><emphasis role="bold">--dax </emphasis> the path to the DAX file
+        that needs to be mapped.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">--dir </emphasis> the base directory where
+        the executable workflow is generated</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">--sites </emphasis> comma separated list
+        of execution sites.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">--output</emphasis> the output site where
+        to transfer the materialized output files.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">--submit </emphasis> boolean value whether
+        to submit the planned workflow for execution after planning is
+        done.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>For a list of all options to pegasus-plan refer to the man
+    page.</para>
+  </section>
+
+  <section>
+    <title>Resource Configurations</title>
+
+    <para>This section discusses the various resource configurations that can
+    be used with Pegasus when Condor DAGMan is used as the workflow execution
+    engine. It is assumed that there is a submit host where the workflow is
+    submitted for execution. The following classification is done based the
+    mechanism used for submitting jobs to the Grid resources and monitoring
+    them. The classifications explored in this document are using Globus GRAM
+    and using a Condor pool. Both of the configurations use Condor DAGMan to
+    maintain the dependencies between the jobs, but differ in the manner as to
+    how the jobs are launched. A combination of the above mentioned approach
+    is also possible where some of the tasks in the workflow are executed in
+    the Condor pool and the rest are executed on remote resources using
+    Condor-G.</para>
 
     <section>
-      <title>Running Locally</title>
+      <title>Locally on the Submit Host</title>
 
-      <para>In this section we will be planning the blackdiamond workflow to
-      run locally on the submit machine and store the data on the submit
-      machine also. Invoke the pegasus-plan command with the --sites option
-      set to local and also the --output option set to local. The -D dags
-      option specifies to Pegasus to create the Dag and submit files in a
-      directory called dags inside the current directory. Lastly specify the
-      blackdiamond.dax file as the input DAX to the client.</para>
-
-      <programlisting><emphasis>$ pegasus-plan --sites local --output local -D dags \
---dax $PEGASUS_HOME/examples/blackdiamond.dax</emphasis>
-
-2007.07.11 17:55:28.118 PDT: [INFO] Parsing the DAX
-2007.07.11 17:55:28.668 PDT: [INFO] Parsing the DAX (completed)
-2007.07.11 17:55:28.725 PDT: [INFO] Parsing the site catalog
-2007.07.11 17:55:28.926 PDT: [INFO] Parsing the site catalog (completed)
-2007.07.11 17:55:28.985 PDT: [INFO] Doing site selection
-2007.07.11 17:55:29.025 PDT: [INFO] Doing site selection (completed)
-2007.07.11 17:55:29.025 PDT: [INFO] Grafting transfer nodes in the workflow
-2007.07.11 17:55:29.137 PDT: [INFO] Grafting transfer nodes in the workflow (completed)
-2007.07.11 17:55:29.142 PDT: [INFO] Grafting the remote workdirectory creation jobs
-                                    in the workflow
-2007.07.11 17:55:29.159 PDT: [INFO] Grafting the remote workdirectory creation jobs
-                                    in the workflow (completed)
-2007.07.11 17:55:29.159 PDT: [INFO] Generating the cleanup workflow
-2007.07.11 17:55:29.164 PDT: [INFO] Generating the cleanup workflow (completed)
-2007.07.11 17:55:29.164 PDT: [INFO] Adding cleanup jobs in the workflow
-2007.07.11 17:55:29.183 PDT: [INFO] Parsing the site catalog
-2007.07.11 17:55:29.223 PDT: [INFO] Parsing the site catalog (completed)
-2007.07.11 17:55:29.248 PDT: [INFO] Adding cleanup jobs in the workflow (completed)
-2007.07.11 17:55:29.280 PDT: [INFO] Generating codes for the concrete workflow
-2007.07.11 17:55:29.476 PDT: [INFO] Generating codes for the concrete workflow(completed)
-2007.07.11 17:55:29.477 PDT: [INFO] Generating code for the cleanup workflow
-2007.07.11 17:55:29.515 PDT: [INFO] Generating code for the cleanup workflow (completed)
-2007.07.11 17:55:29.520 PDT: [INFO]
-
-I have concretized your abstract workflow. The workflow has been entered
-into the workflow database with a state of "planned". The next step is
-to start or execute your workflow. The invocation required is
-
-
-pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS\
-/dags/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
---nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
-
-
-2007.07.11 17:55:29.521 PDT: [INFO] Time taken to execute is 1.71 seconds</programlisting>
-
-      <para>Looks like the planning worked. pegasus-plan tells you what
-      command to use next to submit your workflow. Just copy the pegasus-run
-      line from your output and run the command. pegasus-plan submits your
-      planned workflow to Condor-G for execution either locally or on the
-      grid.</para>
-
-      <programlisting>$<emphasis> pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
-/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
---nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
-</emphasis>
-Checking all your submit files for log file names.
-This might take a while...
-Done.
------------------------------------------------------------------------
-File for submitting this DAG to Condor           : black-diamond-0.dag.condor.sub
-Log of DAGMan debugging messages                 : black-diamond-0.dag.dagman.out
-Log of Condor library output                     : black-diamond-0.dag.lib.out
-Log of Condor library error messages             : black-diamond-0.dag.lib.err
-Log of the life of condor_dagman itself          : black-diamond-0.dag.dagman.log
-
-Condor Log file for all jobs of this DAG         : /tmp/black-diamond-061699.log
--no_submit given, not submitting DAG to Condor.  You can do this with:
-"condor_submit black-diamond-0.dag.condor.sub"
------------------------------------------------------------------------
-Submitting job(s).
-Logging submit event(s).
-1 job(s) submitted to cluster 22402.
-
-I have started your workflow, committed it to DAGMan, and updated its
-state in the work database. A separate daemon was started to collect
-information about the progress of the workflow. The job state will soon
-be visible. Your workflow runs in base directory.
-
-cd /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
-
-*** To monitor the workflow you can run ***
-
-pegasus-status -w black-diamond-0 -t 20070711T175528-0700
-or
-pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
-
-*** To remove your workflow run ***
-
-pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</programlisting>
-
-      <para>The workflow was successfully submitted for execution to the local
-      submit host. The planned workflow Dag and submit files reside in the
-      directory
-      /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001 as
-      mentioned by the output of pegasus-run. Pegasus run also prints out a
-      few monitoring commands that we will use in Section 6.</para>
-
-      <para>If you have a grid site configured the proceed to Section 5.2 else
-      proceed to Section 6.</para>
+      <para>In this configuration , Pegasus schedules the jobs to run locally
+      on the submit host. This is achieved by executing the workflow on site
+      local ( <emphasis role="bold">--sites local </emphasis>option to
+      pegasus-plan ). The <emphasis role="bold">site "local" is a reserved
+      site</emphasis> in Pegasus and results in the jobs to run on the submit
+      host in condor universe local.</para>
     </section>
 
     <section>
-      <title>Running on the Grid</title>
+      <title>Using Globus GRAM</title>
 
-      <para>While the local workflow is executing let us submit another
-      workflow to run on the Grid. We have a grid site clus1 set up for use.
-      Replace the --sites local option in the previous run with --sites clus1.
-      We will also need to add a a --force flag because we already ran the
-      same workflow earlier locally and some out of the output products of the
-      workflow may be registered in the Replica Catalog. Pegasus does workflow
-      reduction based on existence of data products in the Replica Catalog.
-      The --force option is a way to tell Pegasus to ignore existing data
-      products and compute the entire workflow again.</para>
+      <para>In this configuration, it is assumed that the target execution
+      system consists of one or more Grid resources. These resources may be
+      geographically distributed and under various administrative domains.
+      Each resource might be a single desktop computer or a network of
+      workstations (NOW) or a cluster of dedicated machines. However, each
+      resource must provide a Globus GRAM interface which allows the users to
+      submit jobs remotely. In case the Grid resource consists of multiple
+      compute nodes, e.g. a cluster or a network of workstations, there is a
+      central entity called the head node that acts as the single point of job
+      submissions to the resource. It is generally possible to specify whether
+      the submitted job should run on the head node of the resource or a
+      worker node in the cluster or NOW. In the latter case, the head node is
+      responsible for submitting the job to a local resource management system
+      (PBS, LSF, Condor etc) which controls all the machines in the resource.
+      Since, the head node is the central point of job submissions to the
+      resource it should not be used for job execution since that can overload
+      the head node delaying further job submissions. Pegasus does not make
+      any assumptions about the configuration of the remote resource; rather
+      it provides the mechanisms by which such distinctions can be
+      made.</para>
 
-      <programlisting>$ <emphasis>pegasus-plan --sites clus1 --output local -D dags \
---dax $PEGASUS_HOME/examples/blackdiamond.dax --force</emphasis>
-2007.07.11 18:12:14.541 PDT: [INFO] Parsing the DAX
-2007.07.11 18:12:15.287 PDT: [INFO] Parsing the DAX (completed)
+      <figure>
+        <title>Resource Configuration using GRAM</title>
 
-...
-...
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="./images/gram_layout.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
 
-2007.07.11 18:12:15.847 PDT: [INFO] Generating codes for the concrete workflow
-2007.07.11 18:12:16.008 PDT: [INFO] Generating codes for the concrete workflow(completed)
-2007.07.11 18:12:16.008 PDT: [INFO] Generating code for the cleanup workflow
-2007.07.11 18:12:16.049 PDT: [INFO] Generating code for the cleanup workflow (completed)
-2007.07.11 18:12:16.054 PDT: [INFO]
+      <para>In this configuration, Condor-G is used for submitting jobs to
+      these resources. Condor-G is an extension to Condor that allows the jobs
+      to be described in a Condor submit file and when the job is submitted to
+      Condor for execution, it uses the Globus GRAM interface to submit the
+      job to the remote resource and monitor its execution. The distinction is
+      made in the Condor submit files by specify the universe as Grid and the
+      grid_resource or globusscheduler attribute is used to indicate the
+      location of the head node for the remote resource. Thus, Condor DAGMan
+      is used for maintaining the dependencies between the jobs and Condor-G
+      is used to launch the jobs on the remote resources using GRAM. The
+      implicit assumption in this case is that all the worker nodes on a
+      remote resource have access to a shared file system that can be used for
+      data transfer between the tasks mapped on that resource. This data
+      transfer is done using files.</para>
 
+      <para>Below is an example of a site configured to use Globus GRAM2|
+      GRAM5</para>
 
-I have concretized your abstract workflow. The workflow has been entered
-into the workflow database with a state of "planned". The next step is
-to start or execute your workflow. The invocation required is
-
-
-pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
-/gmehta/pegasus/black-diamond/run0002/pegasus.7398.properties \
---nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002
-
-
-2007.07.11 18:12:16.055 PDT: [INFO] Time taken to execute is 1.918 seconds</programlisting>
-
-      <para>Submit the planned workflow also to Condor-G using the pegasus-run
-      command printed by the previous step.</para>
-
-      <programlisting>$ <emphasis>pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
-/gmehta/pegasus/black-diamond/run0002/pegasus.7398.properties \
---nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002
-</emphasis>
-...
-...
-
-
-cd /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002
-
-*** To monitor the workflow you can run ***
-
-pegasus-status -w black-diamond-0 -t 20070711T181215-0700
-or
-pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002
-
-*** To remove your workflow run ***
-
-pegasus-remove -d 22417.0
-or
-pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</programlisting>
+      <programlisting> &lt;site  handle="isi" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+                &lt;head-fs&gt;
+                        &lt;scratch&gt;
+                                &lt;shared&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" mount-point="/nfs/scratch01"&gt;
+                                        &lt;/file-server&gt;
+                                        &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                                &lt;/shared&gt;
+                        &lt;/scratch&gt;
+                        &lt;storage&gt;
+                                &lt;shared&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" mount-point="/exports/storage01"&gt;
+                                        &lt;/file-server&gt;
+                                        &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                                &lt;/shared&gt;
+                        &lt;/storage&gt;
+                &lt;/head-fs&gt;
+                &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"&gt;
+                &lt;/replica-catalog&gt;
+        &lt;/site&gt;
+</programlisting>
     </section>
 
     <section>
-      <title>Running in the Cloud</title>
+      <title>Condor Pool</title>
 
-      <para>...</para>
+      <para>A Condor pool is a set of machines that use Condor for resource
+      management. A Condor pool can be a cluster of dedicated machines or a
+      set of distributively owned machines. Pegasus can generate concrete
+      workflows that can be executed on a Condor pool.</para>
+
+      <figure>
+        <title>The distributed resources appear to be part of a Condor
+        pool.</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/condor_layout.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>The workflow is submitted using DAGMan from one of the job
+      submission machines in the Condor pool. It is the responsibility of the
+      Central Manager of the pool to match the task in the workflow submitted
+      by DAGMan to the execution machines in the pool. This matching process
+      can be guided by including Condor specific attributes in the submit
+      files of the tasks. If the user wants to execute the workflow on the
+      execution machines (worker nodes) in a Condor pool, there should be a
+      resource defined in the site catalog which represents these execution
+      machines. The universe attribute of the resource should be vanilla.
+      There can be multiple resources associated with a single Condor pool,
+      where each resource identifies a subset of machine (worker nodes) in the
+      pool. Pegasus currently uses the FileSystemDomain classad[] attribute to
+      restrict the set of machines that make up a single resource. To clarify
+      this point, suppose there are certain execution machines in the Condor
+      pool whose FileSystemDomain is set to “viz.isi.edu”. If the user wants
+      to execute the workflow on these machines, then there should be a site,
+      say “isi_viz” defined in the site catalog and the FileSystemDomain and
+      universe attributes for this resource should be defined as “viz.isi.edu”
+      and “vanilla” respectively. When invoking Pegasus, the user should
+      select isi_viz as the compute resource.</para>
+
+      <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+                &lt;head-fs&gt;
+                        &lt;scratch&gt;
+                                &lt;shared&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/nfs/scratch01"&gt;
+                                        &lt;/file-server&gt;
+                                        &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                                &lt;/shared&gt;
+                        &lt;/scratch&gt;
+                        &lt;storage&gt;
+                                &lt;shared&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/exports/storage01"&gt;
+                                        &lt;/file-server&gt;
+                                        &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                                &lt;/shared&gt;
+                        &lt;/storage&gt;
+                &lt;/head-fs&gt;
+                &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"&gt;
+                &lt;/replica-catalog&gt;
+                <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
+                &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
+        &lt;/site&gt;
+</programlisting>
+    </section>
+
+    <section>
+      <title>Condor Glideins</title>
+
+      <para>As mentioned Pegasus can execute workflows over Condor pool. This
+      pool can contain machines managed by a single institution or department
+      and belonging to a single administrative domain. This is the case for
+      most of the Condor pools. In this section we describe how machines from
+      different administrative domains and supercomputing centers can be
+      dynamically added to a Condor pool for certain timeframe. These machines
+      join the Condor pool temporarily and can be used to execute jobs in a
+      non preemptive manner. This functionality is achieved using a Condor
+      feature called Glide-in http://cs.wisc.edu/condor/glidein that uses
+      Globus GRAM interface for migrating machines from different domains to a
+      Condor pool. The number of machines and the duration for which they are
+      required can be specified</para>
+
+      <para>In this case, we use the abstraction of a local Condor pool to
+      execute the jobs in the workflow over remote resources that have joined
+      the pool for certain timeframe. Details about the use of this feature
+      can be found in the condor manual
+      (http://cs.wisc.edu/condor/manual/).</para>
+
+      <para>A basic step to migrate in a job to a local condor pool is
+      described below.</para>
+
+      <programlisting><emphasis role="bold">$condor_glidein -count 10 gatekeeper.site.edu/jobmanager-pbs</emphasis></programlisting>
+
+      <para><emphasis role="bold">GlideIn of Remote Globus
+      Resources</emphasis></para>
+
+      <para>The above step glides in 10 nodes to the user’s local condor pool,
+      from the remote pbs scheduler running at gatekeeper.site.edu. By
+      default, the glide in binaries are installed in the users home directory
+      on the remote host.</para>
+
+      <para>It is possible that the Condor pool can contain resources from
+      multiple Grid sites. It is normally the case that the resources from a
+      particular site share the same file system and thus use the same
+      FileSystemDomain attribute while advertising their presence to the
+      Central Manager of the pool. If the user wants to run his jobs on
+      machines from a particular Grid site, he has to specify the
+      FileSystemDomain attribute in the requirements classad expression in the
+      submit files with a value matching the FileSystemDomain of the machines
+      from that site. For example, the user migrates nodes from the ISI
+      cluster (with FileSystemDomain viz.isi.org) into a Condor pool and
+      specifies FileSystemDomain == “viz.isi.edu”. Condor would then schedule
+      the jobs only on the nodes from the ISI VIZ cluster in the local condor
+      pool. The FileSystemDomain can be specified for an execution site in the
+      site catalog with condor profile namespace as follows</para>
+
+      <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+                &lt;head-fs&gt;
+                        &lt;scratch&gt;
+                                &lt;shared&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/nfs/scratch01"&gt;
+                                        &lt;/file-server&gt;
+                                        &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                                &lt;/shared&gt;
+                        &lt;/scratch&gt;
+                        &lt;storage&gt;
+                                &lt;shared&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/exports/storage01"&gt;
+                                        &lt;/file-server&gt;
+                                        &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                                &lt;/shared&gt;
+                        &lt;/storage&gt;
+                &lt;/head-fs&gt;
+                &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"&gt;
+                &lt;/replica-catalog&gt;
+                <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glidein&lt;/profile&gt;</emphasis>
+                <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
+                &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
+        &lt;/site&gt;
+</programlisting>
+
+      <para>Specifying the FileSystemDomain key in condor namespace for a
+      site, triggers Pegasus into generating the requirements classad
+      expression in the submit file for all the jobs scheduled on that
+      particular site. For example, in the above case all jobs scheduled on
+      site isi_condor would have the following expression in the submit
+      file.</para>
+
+      <programlisting>requirements = FileSystemDomain == “viz.isi.edu”</programlisting>
+    </section>
+
+    <section>
+      <title>Condor Glidein's using CorralWMS</title>
+
+      <para>Mats to add description here.</para>
+    </section>
+
+    <section>
+      <title>Glite</title>
+
+      <para>This section describes the various changes required in the site
+      catalog for Pegasus to generate an executable workflow that uses gLite
+      blahp to directly submit to PBS on the local machine. This mode of
+      submission should only be used when the condor on the submit host can
+      directly talk to scheduler running on the cluster. It is recommended
+      that the cluster that gLite talks to is designated as a separate compute
+      site in the Pegasus site catalog. To tag a site as a gLite site the
+      following two profiles need to be specified for the site in the site
+      catalog</para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis role="bold">pegasus</emphasis> profile <emphasis
+          role="bold">style</emphasis> with value set to <emphasis
+          role="bold">glite</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">condor</emphasis> profile <emphasis
+          role="bold">grid_resource</emphasis> with value set to <emphasis
+          role="bold">pbs|lsf</emphasis></para>
+        </listitem>
+      </orderedlist>
+
+      <para>An example site catalog entry for a glite site looks as follows in
+      the site catalog</para>
+
+      <programlisting> &lt;site  handle="isi_viz_glite" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+                &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+                &lt;head-fs&gt;
+                        &lt;scratch&gt;
+                                &lt;shared&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/nfs/scratch01"&gt;
+                                        &lt;/file-server&gt;
+                                        &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                                &lt;/shared&gt;
+                        &lt;/scratch&gt;
+                        &lt;storage&gt;
+                                &lt;shared&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/exports/storage01"&gt;
+                                        &lt;/file-server&gt;
+                                        &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                                &lt;/shared&gt;
+                        &lt;/storage&gt;
+                &lt;/head-fs&gt;
+                &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"&gt;
+                &lt;/replica-catalog&gt;
+               
+          <emphasis role="bold">       &lt;!-- following profiles reqd for glite grid style--&gt;
+                &lt;profile namespace="pegasus" key="style"&gt;glite&lt;/profile&gt; 
+                &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;</emphasis>
+        &lt;/site&gt;
+</programlisting>
+
+      <para></para>
+
+      <section>
+        <title>Changes to Jobs</title>
+
+        <para>As part of applying the style to the job, this style adds the
+        following classads expressions to the job description.</para>
+
+        <orderedlist>
+          <listitem>
+            <para>+remote_queue - value picked up from globus profile
+            queue</para>
+          </listitem>
+
+          <listitem>
+            <para>+remote_cerequirements - See below</para>
+          </listitem>
+        </orderedlist>
+
+        <para></para>
+
+        <section>
+          <title>Remote CE Requirements</title>
+
+          <para>The remote CE requirements are constructed from the following
+          profiles associated with the job. The profiles for a job are derived
+          from various sources</para>
+
+          <orderedlist>
+            <listitem>
+              <para>transformation catalog</para>
+            </listitem>
+
+            <listitem>
+              <para>site catalog</para>
+            </listitem>
+
+            <listitem>
+              <para>DAX</para>
+            </listitem>
+
+            <listitem>
+              <para>user properties</para>
+            </listitem>
+          </orderedlist>
+
+          <para>The following globus profiles if associated with the job are
+          picked up and translated to corresponding glite key</para>
+
+          <orderedlist>
+            <listitem>
+              <para> hostcount -&gt; PROCS</para>
+            </listitem>
+
+            <listitem>
+              <para>count -&gt; NODES</para>
+            </listitem>
+
+            <listitem>
+              <para>maxwalltime -&gt; WALLTIME</para>
+            </listitem>
+          </orderedlist>
+
+          <para>The following condor profiles if associated with the job are
+          picked up and translated to corresponding glite key</para>
+
+          <orderedlist>
+            <listitem>
+              <para>priority -&gt; PRIORITY</para>
+            </listitem>
+          </orderedlist>
+
+          <para>All the env profiles are translated to MYENV</para>
+
+          <para>The remote_cerequirements expression is constructed on the
+          basis of the profiles associated with job . An example
+          +remote_cerequirements classad expression in the submit file is
+          listed below</para>
+
+          <programlisting><emphasis role="bold">+remote_cerequirements = "PROCS==18 &amp;&amp; NODES==1 &amp;&amp; PRIORITY==10 &amp;&amp; WALLTIME==3600 \
+   &amp;&amp; PASSENV==1 &amp;&amp; JOBNAME==\"TEST JOB\" &amp;&amp; MYENV ==\"JAVA_HOME=/bin/java,APP_HOME=/bin/app\""</emphasis></programlisting>
+        </section>
+
+        <section>
+          <title>Specifying directory for the jobs</title>
+
+          <para>gLite blahp does not follow the remote_initialdir or
+          initialdir classad directives. Hence, all the jobs that have this
+          style applied don't have a remote directory specified in the submit
+          directory. Instead, Pegasus relies on kickstart to change to the
+          working directory when the job is launched on the remote
+          node.</para>
+        </section>
+      </section>
     </section>
   </section>
 </chapter>
