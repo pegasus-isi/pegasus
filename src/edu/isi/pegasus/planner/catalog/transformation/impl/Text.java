@@ -496,7 +496,7 @@ public class Text extends Abstract
         result = mTCStore.getEntries( Separator.combine(namespace, name, version), resourceid, type );
         
         //API dictates we return null in case of empty
-        return result.isEmpty() ? null : result;
+        return ( result == null || result.isEmpty() ) ? null : result;
     }
 
     /**
@@ -533,7 +533,7 @@ public class Text extends Abstract
         }
 
         //API dictates we return null in case of empty
-        return result.isEmpty() ? null : new LinkedList( result );
+        return ( result == null ||result.isEmpty()) ? null : new LinkedList( result );
 
         
     }
@@ -572,7 +572,7 @@ public class Text extends Abstract
         List result = entries;
 
         //API dictates we return null in case of empty
-        if( result.isEmpty() ){
+        if( result == null || result.isEmpty() ){
             return null;
         }
         
@@ -613,7 +613,7 @@ public class Text extends Abstract
         }
 
         //API dictates we return null in case of empty
-        if( result.isEmpty() ){
+        if( result == null || result.isEmpty() ){
             return null;
         }
         
@@ -675,7 +675,7 @@ public class Text extends Abstract
         }
 
         //API dictates we return null in case of empty
-        if( result.isEmpty() ){
+        if( result == null || result.isEmpty() ){
             return null;
         }
         return result;
