@@ -249,7 +249,8 @@ def myexec(cmd_line, timeout_secs, should_log, delay_err):
     try:
         stdoutdata, stderrdata = p.communicate()
     except Alarm:
-        p.terminate()
+        if sys.version_info >= (2, 6):
+            p.terminate()
         raise RuntimeError("Command '%s' timed out after %s seconds" % (cmd_line, timeout_secs))
     rc = p.returncode
     if rc != 0:
