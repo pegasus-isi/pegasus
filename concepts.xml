@@ -345,9 +345,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <para>The simplest execution environment does not involve Condor.
         Pegasus is capable of planning small workflows for full-local
         execution using a shell planner. Please refer to the <filename
-        class="directory">examples</filename> directory, the shell planner's
-        <link linkend="local_shell_examples">documentation section</link>, or
-        the tutorials, for details.</para>
+        class="directory">examples</filename> directory in your Pegasus
+        installation, the shell planner's <link
+        linkend="local_shell_examples">documentation section</link>, or the
+        tutorials, for details.</para>
       </listitem>
 
       <listitem>
@@ -526,7 +527,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
       <para>The data server in the figure is shown at the submit host. This is
       not a strict requirement. The data server for consumed data and data
-      products may both be different and external to the submit host. </para>
+      products may both be different and external to the submit host.</para>
 
       <para>Once resources begin appearing in the pool managed by the submit
       machine’s Condor collector, the application workflow can be submitted to
@@ -541,15 +542,15 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       communicate with the resources. The right side includes a setup where
       the worker nodes use all private IP, but have out-going connectivity and
       a NAT router to talk to the internet. The <emphasis>Condor connection
-      broker</emphasis> (CCB) facilitates this setup almost effortlessly.
-      </para>
+      broker</emphasis> (CCB) facilitates this setup almost
+      effortlessly.</para>
 
       <para>The left side shows a more difficult setup where the connectivity
       is fully firewalled without any connectivity except to in-site nodes. In
       this case, a proxy server process, the <emphasis>generic connection
       broker</emphasis> (GCB), needs to be set up in the DMZ of the cloud site
-      to facilitate Condor I/O between the submit host and worker nodes.
-      </para>
+      to facilitate Condor I/O between the submit host and worker
+      nodes.</para>
 
       <para>If the cloud supports data storage servers, Pegasus is starting to
       support workflows that require staging in two steps: Consumed data is
@@ -561,7 +562,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       plan both steps: Normal staging to the site's data server, and the
       worker-node staging from and to the site's data server as part of the
       job. We are working on expanding the current code to support a more
-      generic set by Pegasus 3.1. </para>
+      generic set by Pegasus 3.1.</para>
 
       <section>
         <title>Shared File Systems</title>
@@ -571,7 +572,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         like NFS, or a per-request file system dynamically allocated like PVFS
         or NFS. Often, for the sake of speed, it is advisable that each
         resource has its own fast local non-shared disk space that can be
-        transiently used by application workflow jobs. </para>
+        transiently used by application workflow jobs.</para>
 
         <para>Pegasus recommends the use of a shared file system, because it
         simplifies workflows and may even improve performance. Without shared
@@ -586,7 +587,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         duration of the allocation. This option is part of the configuration
         for an experiment’s workflow’s provisioning stage. We do not expect
         cloud sites to ban NFS and RPC traffic between resources of the same
-        multi-resource allocation. </para>
+        multi-resource allocation.</para>
       </section>
     </section>
   </section>
