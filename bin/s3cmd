@@ -1117,6 +1117,11 @@ def main():
 		sys.exit(1)
 
 if __name__ == '__main__':
+	# Set python path
+	binpath = os.path.dirname(sys.argv[0])
+	pypath = os.path.join(binpath,"..","lib","python")
+	sys.path.insert(0,os.path.normpath(pypath))
+	
 	try:
 		## Our modules
 		## Keep them in try/except block to 
