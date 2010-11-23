@@ -579,31 +579,59 @@ def print_output_error(job):
 
     my_parser = kickstart_parser.Parser(out_file)
     my_output = my_parser.parse_stdout_stderr()
+    my_task_id = 0
 
     if len(my_output) > 0:
         # Ok, we got valid kickstart records, output stdout and stderr for tasks that failed
         for entry in my_output:
-            if not "exitcode" in entry or not "derivation" in entry or not "transformation" in entry:
+            # Count tasks, the same way as pegasus-monitord for Stampede
+            my_task_id = my_task_id + 1
+            if not "derivation" in entry or not "transformation" in entry:
                 continue
-            try:
-                if int(entry["exitcode"]) == 0:
-                    # Skip tasks with exitcode equals to zero
+            if not "exitcode" in entry and not "error" in entry:
+                continue
+            if "exitcode" in entry:
+                try:
+                    if int(entry["exitcode"]) == 0:
+                        # Skip tasks with exitcode equals to zero
+                        continue
+                except:
+                    logger.warn("couldn't convert exitcode to integer!")
                     continue
-            except:
-                logger.warn("couldn't convert exitcode to integer!")
-                continue
-            # Got a task with a non-zero exitcode, let's display stdout and stderr
+            else:
+                # We must have "error" in entry
+                pass
+            # Got a task with a non-zero exitcode
+            print ("Task #" + str(my_task_id) + " - Summary").center(80, '-')
+            print
+            if "resource" in entry:
+                print "site        : %s" % (entry["resource"])
+            if "hostname" in entry:
+                print "hostname    : %s" % (entry["hostname"])
+            if "name" in entry:
+                print "executable  : %s" % (entry["name"])
+            if "argument-vector" in entry:
+                print "arguments   : %s" % (entry["argument-vector"])
+            if "exitcode" in entry:
+                print "exitcode    : %s" % (entry["exitcode"])
+            else:
+                if "error" in entry:
+                    print "error       : %s" % (entry["error"])
+            if "cwd" in entry:
+                print "working dir : %s" % (entry["cwd"])
+            print
+            # Now let's display stdout and stderr
             if "stdout" in entry:
                 if len(entry["stdout"]) > 0:
                     # Something to display
-                    print (entry["transformation"] + " - " + entry["derivation"] + " - stdout").center(80, '-')
+                    print ("Task #" + str(my_task_id) + " - " + entry["transformation"] + " - " + entry["derivation"] + " - stdout").center(80, '-')
                     print
                     print entry["stdout"]
                     print
             if "stderr" in entry:
                 if len(entry["stderr"]) > 0:
                     # Something to display
-                    print (entry["transformation"] + " - " + entry["derivation"] + " - stderr").center(80, '-')
+                    print ("Task #" + str(my_task_id) + " - " + entry["transformation"] + " - " + entry["derivation"] + " - stderr").center(80, '-')
                     print
                     print entry["stderr"]
                     print

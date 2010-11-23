@@ -437,8 +437,12 @@ class Parser:
         It returns an array containing the output for each task in a job.
         """
 
-        stdout_stderr_elements = {"invocation": ["derivation", "transformation"],
+        stdout_stderr_elements = {"invocation": ["hostname", "resource", "derivation", "transformation"],
+                                  "file": ["name"],
                                   "regular": ["exitcode"],
+                                  "failure": ["error"],
+                                  "argument-vector": [],
+                                  "cwd": [],
                                   "stdout": [],
                                   "stderr": []}
 
