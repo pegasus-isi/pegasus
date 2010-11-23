@@ -3,6 +3,7 @@
 use 5.006;
 use strict;
 use IO::Handle; 
+use Cwd; 
 use File::Spec;
 use File::Basename; 
 
@@ -40,8 +41,17 @@ my $job2 = newJob( namespace => NS, name => 'findrange', version => '2.0' );
 my $job3 = newJob( namespace => NS, name => 'findrange', version => '2.0' );
 my $job4 = newJob( namespace => NS, name => 'analyze', version => '2.0' );
 
+# create "f.a" locally 
+my $fn = "f.a"; 
+open( F, ">$fn" ) || die "FATAL: Unable to open $fn: $!\n"; 
+my @now = gmtime(); 
+printf F "%04u-%02u-%02u %02u:%02u:%02uZ\n", 
+	$now[5]+1900, $now[4]+1, @now[3,2,1,0]; 
+close F; 
+
 my $file = newFile( name => 'f.a' );
-$file->addPFN( newPFN( url => 'f.a', site => 'local' ) ); 
+$file->addPFN( newPFN( url => 'file://' . Cwd::abs_path($fn),
+		       site => 'local' ) ); 
 $adag->addFile($file); 
 
 if ( exists $ENV{'PEGASUS_HOME'} ) {
