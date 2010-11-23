@@ -4,7 +4,7 @@
 <chapter id="catalogs">
   <title>Catalogs</title>
 
-  <section>
+  <section id="replica">
     <title>Replica</title>
 
     <para>The Replica Catalog keeps mappings of logical file ids/names (LFN's)
@@ -246,7 +246,7 @@ LFN PFN a="b" [..]
       specified.</para>
     </section>
 
-    <section>
+    <section id="pegasus-rc-client">
       <title>Replica Catalog Client pegasus-rc-client</title>
 
       <para>The client used to interact with the Replica Catalogs is
@@ -288,7 +288,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
     </section>
   </section>
 
-  <section>
+  <section id="site">
     <title>Site</title>
 
     <para>The Site Catalog describes the compute resources (which are often
@@ -316,7 +316,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
       </listitem>
     </orderedlist>
 
-    <section>
+    <section id="XML3">
       <title>XML3</title>
 
       <para>This is the default format for Pegasus 3.0. This format allows
@@ -362,7 +362,10 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
   &lt;/site&gt;
 &lt;/sitecatalog&gt;</programlisting>
 
-      <para></para>
+      <para>Each site in a site catalog consists of a grid entry. Currently
+      atleast 1 grid entry of jobtype=compute is required. If you are runnning
+      a condor pool , glideinwms or glidein style site,you can add a fake
+      contact url and scheduler</para>
 
       <para><orderedlist>
           <listitem>
@@ -418,7 +421,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </orderedlist></para>
     </section>
 
-    <section>
+    <section id="XML">
       <title>XML</title>
 
       <para><warning>
@@ -518,7 +521,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </orderedlist></para>
     </section>
 
-    <section>
+    <section id="Text">
       <title>Text</title>
 
       <para><warning>
@@ -617,7 +620,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       <para></para>
     </section>
 
-    <section>
+    <section id="pegasus-sc-client">
       <title>Site Catalog Client pegasus-sc-client</title>
 
       <para>Create a file called sites.txt and edit the contents. Replace
@@ -675,9 +678,15 @@ profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
       <para>The site catalog can also be generated using the pegasus-get-sites
       command for the OSG grid using the ReSS site information feed.</para>
     </section>
+
+    <section id="pegasus-sc-converter">
+      <title>Site Catalog Converter pegasus-sc-converter</title>
+
+      <para></para>
+    </section>
   </section>
 
-  <section>
+  <section id="transformation">
     <title>Transformation</title>
 
     <para>The Transformation Catalog maps logical transformations to physical
@@ -709,7 +718,7 @@ profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
     <para>In this guide we will look at the format of the Multiline Text based
     TC.</para>
 
-    <section>
+    <section id="Text">
       <title>MultiLine Text based TC (Text)</title>
 
       <para>The multile line text based TC is the new default TC in Pegasus.
@@ -798,7 +807,7 @@ type "STAGEABLE"
         </orderedlist></para>
     </section>
 
-    <section>
+    <section id="File">
       <title>Singleline Text based TC (File)</title>
 
       <warning>
@@ -896,14 +905,14 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
       </orderedlist>
     </section>
 
-    <section>
-      <title>Datbase TC (Datbase)</title>
+    <section id="Database">
+      <title>Datbase TC (Database)</title>
 
       <para>The </para>
     </section>
 
-    <section>
-      <title>TC Client</title>
+    <section id="pegasus-tc-client">
+      <title>TC Client pegasus-tc-client</title>
 
       <para>We need to map our declared transformations (preprocess,
       findranage, and analyze) from the example DAX above to a simple "mock
