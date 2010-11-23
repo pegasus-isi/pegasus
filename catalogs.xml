@@ -316,7 +316,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
       </listitem>
     </orderedlist>
 
-    <section id="XML3">
+    <section id="sc-XML3">
       <title>XML3</title>
 
       <para>This is the default format for Pegasus 3.0. This format allows
@@ -358,14 +358,14 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
                   &lt;/shared&gt;
                &lt;/storage&gt;
           &lt;/head-fs&gt;
-          &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+      &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+      &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/nfs/vdt/pegasus&lt;/profile&gt;
+      &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/vdt/globus&lt;/profile&gt;
   &lt;/site&gt;
 &lt;/sitecatalog&gt;</programlisting>
 
-      <para>Each site in a site catalog consists of a grid entry. Currently
-      atleast 1 grid entry of jobtype=compute is required. If you are runnning
-      a condor pool , glideinwms or glidein style site,you can add a fake
-      contact url and scheduler</para>
+      <para>Described below are some of the entries in the site
+      catalog.</para>
 
       <para><orderedlist>
           <listitem>
@@ -373,42 +373,75 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para>lrc - URL for a local replica catalog (LRC) to register your
-            files in. Only used for RLS implementation of the RC</para>
+            <para>replica-catalog - URL for a local replica catalog (LRC) to
+            register your files in. Only used for RLS implementation of the
+            RC. This is optional</para>
           </listitem>
 
           <listitem>
-            <para>workdir - A remote working directory (Should be on a shared
-            file system)</para>
+            <para>File Systems - Info about filesystems mounted on the remote
+            clusters head node or worker nodes. It has several
+            configurations</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>head-fs/scratch - This describe the scratch file systems
+                (temporary for execution) available on the head node</para>
+              </listitem>
+
+              <listitem>
+                <para>head-fs/storage - This describes the storage file
+                systems (long term) available on the head node</para>
+              </listitem>
+
+              <listitem>
+                <para>worker-fs/scratch - This describe the scratch file
+                systems (temporary for execution) available on the worker
+                node</para>
+              </listitem>
+
+              <listitem>
+                <para>worker-fs/storage - This describes the storage file
+                systems (long term) available on the worker node</para>
+              </listitem>
+            </itemizedlist>
+
+            <para>Each scratch and storage entry can contain two sub
+            entries,</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>SHARED for shared file systems like NFS, LUSTRE
+                etc.</para>
+              </listitem>
+
+              <listitem>
+                <para>LOCAL for local file systems (local to the
+                node/machine)</para>
+              </listitem>
+            </itemizedlist>
+
+            <para>Each of the filesystems are defined by used a file-server
+            element. Protocol defines the protocol uses to access the files,
+            URL defines the url prefix to obtain the files from and
+            mount-point is the mount point exposed by the file server.</para>
+
+            <para>Along with this an internal-mount-point needs to defined to
+            access the files directly from the machine without any file
+            servers.</para>
           </listitem>
 
           <listitem>
-            <para>gridftp - A URL prefix for a remote storage location.</para>
-          </listitem>
+            <para>arch,os,osrelease,osversion, glibc - The
+            arch/os/osrelease/osversion/glibc of the site. OSRELEASE,
+            OSVERSION and GLIBC are optional</para>
 
-          <listitem>
-            <para>universe - Different universes are supported which map to
-            different batch jobmanagers.</para>
+            <para>ARCH can have one of the following values X86, X86_64,
+            SPARCV7, SPARCV9, AIX, PPC. </para>
 
-            <para>"vanilla" for compute jobs and "transfer" for transfer jobs
-            are mandatory. Generally a transfer universe should map to the
-            fork jobmanager.</para>
-          </listitem>
-
-          <listitem>
-            <para>gridlaunch - Path to the remote kickstart tool (provenance
-            tracking)</para>
-          </listitem>
-
-          <listitem>
-            <para>sysinfo - The arch/os/osversion/glibc of the site. The
-            format is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
-            optiona.</para>
-
-            <para>ARCH can have one of the following values INTEL32, INTEL64,
-            SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
-            values LINUX,SUNOS. The default value for sysinfo if none
-            specified is INTEL32::LINUX</para>
+            <para>OS can have one of the following values LINUX,SUNOS,MACOSX.
+            The default value for sysinfo if none specified is
+            X86::LINUX</para>
           </listitem>
 
           <listitem>
@@ -419,6 +452,22 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
             pool.</para>
           </listitem>
         </orderedlist></para>
+
+      <para>To use this site catalog the follow properties need to be
+      set</para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.site=XML3</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.site.file=<replaceable>&lt;path to the
+          site catalog file&gt;</replaceable></emphasis></para>
+        </listitem>
+      </orderedlist>
     </section>
 
     <section id="sc-XML">
@@ -521,6 +570,21 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
             pool.</para>
           </listitem>
         </orderedlist></para>
+
+      <para>To use this format you need to set the following properties</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.site=XML</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.site.file=<replaceable>&lt;path to the
+            site catalog file&gt;</replaceable></emphasis></para>
+          </listitem>
+        </orderedlist></para>
     </section>
 
     <section id="sc-Text">
@@ -618,6 +682,21 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           pool.</para>
         </listitem>
       </orderedlist>
+
+      <para>To use this format you need to set the following properties</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.site=Text</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.site.file=<replaceable>&lt;path to the
+            site catalog file&gt;</replaceable></emphasis></para>
+          </listitem>
+        </orderedlist></para>
     </section>
 
     <section id="pegasus-sc-client">
@@ -757,6 +836,23 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
             particular site.</para>
           </listitem>
         </orderedlist></para>
+
+      <para>To use this format of the Transformation Catalog you need to set
+      the following properties</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.transformation=Text</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.transformation.file=<replaceable>&lt;path
+            to the transformation catalog
+            file&gt;</replaceable></emphasis></para>
+          </listitem>
+        </orderedlist></para>
     </section>
 
     <section id="tc-File">
@@ -855,6 +951,23 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
           </itemizedlist>
         </listitem>
       </orderedlist>
+
+      <para>To use this format of the Transformation Catalog you need to set
+      the following properties</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.transformation=File</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis
+            role="bold">pegasus.catalog.transformation.file=<replaceable>&lt;path
+            to the transformation catalog
+            file&gt;</replaceable></emphasis></para>
+          </listitem>
+        </orderedlist></para>
     </section>
 
     <section id="tc-Database">
@@ -875,7 +988,9 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
 
       <para><orderedlist>
           <listitem>
-            <para>pegasus.catalog.</para>
+            <para><emphasis
+            role="bold">pegasus.catalog.transformation.db=MySQL |
+            Postgres</emphasis></para>
           </listitem>
 
           <listitem>
@@ -886,13 +1001,13 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.db.user=<replaceable>&lt;database
+            role="bold">pegasus.catalog.transformation.db.username=<replaceable>&lt;database
             user&gt;</replaceable></emphasis></para>
           </listitem>
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.replica.db.password=<replaceable>&lt;database
+            role="bold">pegasus.catalog.transformation.db.password=<replaceable>&lt;database
             password&gt;</replaceable></emphasis></para>
           </listitem>
         </orderedlist></para>
