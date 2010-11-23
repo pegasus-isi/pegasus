@@ -1,34 +1,416 @@
-<?xml version="1.0"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-                      "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="planning_and_submitting">
-    <title>Planning and Submitting</title>
+  <title>Planning and Submitting</title>
 
-   <section>
-       <title>pegasus-plan</title>
-   
+  <section>
+    <title>Refinement Steps Explained</title>
 
-    <para>Pegasus plans an abstract workflow into a concrete/executable workflow
-    by querying various catalogs and performing several refinement steps. We
-    have already setup all the catalogs required by Pegasus in the previous
-    sections and also configured properties that will affect how Pegasus plans
-    the workflow.</para>
+    <para>pegasus-plan is the main executable that takes in the abstract
+    workflow ( DAX ) and generates an executable workflow ( usually a Condor
+    DAG ). The abstract workflow undergoes a series of refinement steps that
+    converts it to an executable form.</para>
+
+    <section>
+      <title>Data Reuse</title>
+
+      <para>The abstract workflow after parsing is optionally handed over to
+      the Data Reuse Module. The Data Reuse Algorithm in Pegasus attempts to
+      prune all the nodes in the abstract workflow for which the output files
+      exist in the Replica Catalog. It also attempts to cascade the deletion
+      to the parents of the deleted node for e.g if the output files for the
+      leaf nodes are specified, Pegasus will prune out all the workflow as the
+      output files in which a user is interested in already exist in the
+      Replica Catalog.</para>
+
+      <para>The Data Reuse Algorithm works in two passes</para>
+
+      <para><emphasis role="bold">First Pass</emphasis> - Determine all the
+      jobs whose output files exist in the Replica Catalog. An output file
+      with the transfer flag set to false is treated equivalent to the file
+      existing in the Replica Catalog , if the output file is not an input to
+      any of the children of the job X. </para>
+
+      <para><emphasis role="bold">Second Pass</emphasis> - The algorithm
+      removes the job whose output files exist in the Replica Catalog and
+      tries to cascade the deletion upwards to the parent jobs. We start the
+      breadth first traversal of the workflow bottom up.</para>
+
+      <programlisting>( It is already marked for deletion in Pass 1
+     OR
+      ( ALL of it's children have been marked for deletion
+        AND
+        Node's output files have transfer flags set to false
+       )
+ )</programlisting>
+
+      <tip>
+        <para>The Data Reuse Algorithm can be disabled by passing the
+        <emphasis role="bold">--force</emphasis> option to
+        pegasus-plan.</para>
+      </tip>
+    </section>
+
+    <section>
+      <title>Site Selection</title>
+
+      <para>The abstract workflow is then handed over to the Site Selector
+      module where the abstract jobs in the pruned workflow are mapped to the
+      various sites passed by a user. The target sites for planning are
+      specified on the command line using the<emphasis role="bold">
+      --sites</emphasis> option to pegasus-plan. If not specified, then
+      Pegasus picks up all the sites in the Site Catalog as candidate sites.
+      Pegasus will map a compute job to a site only if Pegasus can</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>find an INSTALLED executable on the site</para>
+        </listitem>
+
+        <listitem>
+          <para>OR find a STAGEABLE executable that can be staged to the site
+          as part of the workflow execution.</para>
+
+          <para>Pegasus supports variety of site selectors with Random being
+          the default</para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis role="bold">Random</emphasis></para>
+
+              <para>The jobs will be randomly distributed among the sites that
+              can execute them.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">RoundRobin</emphasis></para>
+
+              <para>The jobs will be assigned in a round robin manner amongst
+              the sites that can execute them. Since each site cannot execute
+              every type of job, the round robin scheduling is done per level
+              on a sorted list. The sorting is on the basis of the number of
+              jobs a particular site has been assigned in that level so far.
+              If a job cannot be run on the first site in the queue (due to no
+              matching entry in the transformation catalog for the
+              transformation referred to by the job), it goes to the next one
+              and so on. This implementation defaults to classic round robin
+              in the case where all the jobs in the workflow can run on all
+              the sites.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Group</emphasis></para>
+
+              <para>Group of jobs will be assigned to the same site that can
+              execute them. The use of the<emphasis role="bold"> PEGASUS
+              profile key group</emphasis> in the DAX, associates a job with a
+              particular group. The jobs that do not have the profile key
+              associated with them, will be put in the default group. The jobs
+              in the default group are handed over to the "Random" Site
+              Selector for scheduling.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Heft</emphasis></para>
+
+              <para>A version of the HEFT processor scheduling algorithm is
+              used to schedule jobs in the workflow to multiple grid sites.
+              The implementation assumes default data communication costs when
+              jobs are not scheduled on to the same site. Later on this may be
+              made more configurable.</para>
+
+              <para>The runtime for the jobs is specified in the
+              transformation catalog by associating the <emphasis
+              role="bold">pegasus profile key runtime</emphasis> with the
+              entries.</para>
+
+              <para>The number of processors in a site is picked up from the
+              attribute <emphasis role="bold">idle-nodes</emphasis> associated
+              with the vanilla jobmanager of the site in the site
+              catalog.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">NonJavaCallout</emphasis></para>
+
+              <para>Pegasus will callout to an external site selector.In this
+              mode a temporary file is prepared containing the job information
+              that is passed to the site selector as an argument while
+              invoking it. The path to the site selector is specified by
+              setting the property pegasus.site.selector.path. The environment
+              variables that need to be set to run the site selector can be
+              specified using the properties with a pegasus.site.selector.env.
+              prefix. The temporary file contains information about the job
+              that needs to be scheduled. It contains key value pairs with
+              each key value pair being on a new line and separated by a
+              =.</para>
+
+              <para>The following pairs are currently generated for the site
+              selector temporary file that is generated in the NonJavaCallout.
+              </para>
+
+              <table>
+                <title>Table 1: Key Value Pairs that are currently generated
+                for the site selector temporary file that is generated in the
+                NonJavaCallout.</title>
+
+                <tgroup cols="2">
+                  <tbody>
+                    <row>
+                      <entry><emphasis role="bold">Key</emphasis></entry>
+
+                      <entry><emphasis role="bold">Value</emphasis></entry>
+                    </row>
+
+                    <row>
+                      <entry>version</entry>
+
+                      <entry>is the version of the site selector api,currently
+                      2.0. </entry>
+                    </row>
+
+                    <row>
+                      <entry>transformation</entry>
+
+                      <entry>is the fully-qualified definition identifier for
+                      the transformation (TR) namespace::name:version.
+                      </entry>
+                    </row>
+
+                    <row>
+                      <entry>derivation</entry>
+
+                      <entry>is the fully qualified definition identifier for
+                      the derivation (DV), namespace::name:version. </entry>
+                    </row>
+
+                    <row>
+                      <entry>job.level</entry>
+
+                      <entry>is the job's depth in the tree of the workflow
+                      DAG. </entry>
+                    </row>
+
+                    <row>
+                      <entry>job.id </entry>
+
+                      <entry>is the job's ID, as used in the DAX file.
+                      </entry>
+                    </row>
+
+                    <row>
+                      <entry>resource.id</entry>
+
+                      <entry>is a pool handle, followed by whitespace,
+                      followed by a gridftp server. Typically, each gridftp
+                      server is enumerated once, so you may have multiple
+                      occurances of the same site. There can be multiple
+                      occurances of this key. </entry>
+                    </row>
+
+                    <row>
+                      <entry>input.lfn</entry>
+
+                      <entry>is an input LFN, optionally followed by a
+                      whitespace and file size. There can be multiple
+                      occurances of this key,one for each input LFN required
+                      by the job. </entry>
+                    </row>
+
+                    <row>
+                      <entry>wf.name</entry>
+
+                      <entry>label of the dax, as found in the DAX's root
+                      element. wf.index is the DAX index, that is incremented
+                      for each partition in case of deferred planning.
+                      </entry>
+                    </row>
+
+                    <row>
+                      <entry>wf.time</entry>
+
+                      <entry>is the mtime of the workflow. </entry>
+                    </row>
+
+                    <row>
+                      <entry>wf.manager</entry>
+
+                      <entry>is the name of the workflow manager being used
+                      .e.g condor </entry>
+                    </row>
+
+                    <row>
+                      <entry>vo.name</entry>
+
+                      <entry>is the name of the virtual organization that is
+                      running this workflow. It is currently set to NONE
+                      </entry>
+                    </row>
+
+                    <row>
+                      <entry>vo.group</entry>
+
+                      <entry>unused at present and is set to NONE. </entry>
+                    </row>
+                  </tbody>
+                </tgroup>
+              </table>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+
+      <tip>
+        <para>The site selector to use for site selection can be specified by
+        setting the property <emphasis
+        role="bold">pegasus.selector.site</emphasis></para>
+      </tip>
+    </section>
+
+    <section>
+      <title>Job Clustering</title>
+
+      <para>After site selection, the workflow is optionally handed for to the
+      job clustering module, which clusters jobs that are scheduled to the
+      same site. Clustering is usually done on short running jobs in order to
+      reduce the remote execution overheads associated with a job. Clustering
+      is described in detail in the chapter on Advanced Concepts - Job
+      Clustering.</para>
+
+      <tip>
+        <para>The job clustering is turned on by passing the <emphasis
+        role="bold">--cluster</emphasis> option to pegasus-plan.</para>
+      </tip>
+    </section>
+
+    <section>
+      <title>Addition of Data Transfer Nodes</title>
+
+      <para>After job clustering, the workflow is handed to the Data Transfer
+      module that adds data stage-in and stage-out nodes to the workflow. Data
+      Stage-in Nodes transfer input data required by the workflow from the
+      locations specified in the Replica Catalog to a directory on the
+      execution site where the job executes. In case, multiple locations are
+      specified for the same input file, the location from where to stage the
+      data is selected using a <emphasis role="bold">Replica
+      Selector</emphasis> . Replica Selection is described in detail in the
+      chapter on Advanced Concepts - Replica Selection.</para>
+
+      <para>The process of adding the data stage-in and data stage-out nodes
+      is handled by Transfer Refiners. All data transfer jobs in Pegasus are
+      executed using <emphasis role="bold">pegasus-transfer</emphasis> . The
+      pegasus-transfer client is a python based wrapper around various
+      transfer clients like globus-url-copy, lcg-copy, wget, cp, ln . It looks
+      at source and destination url and figures out automatically which
+      underlying client to use. pegasus-transfer is distributed with the
+      PEGASUS and can be found in the bin subdirectory . Pegasus Transfer
+      Refiners are are described in the detail in the chapter on Advanced
+      Concepts - Transfers. The default transfer refiner that is used in
+      Pegasus is the <emphasis role="bold">Bundle</emphasis> Transfer Refiner,
+      that bundles data stage-in nodes and data stage-out nodes on the basis
+      of certain pegasus profile keys associated with the workflow.</para>
+
+      <para>The data staged-in and staged-out from a directory that is created
+      on the head node by a create dir job in the workflow. In the vanilla
+      case, the directory is visible to all the worker nodes and compute jobs
+      are launched in this directory on the shared filesystem. In the case
+      where there is no shared filesystem, users can turn on worker node
+      execution, where the data is staged from the head node directory to a
+      directory on the worker node filesystem. This feature will be refined
+      further for Pegasus 3.1. To use it with Pegasus 3.0 send email to
+      <emphasis role="bold">pegasus-support aT isi.edu</emphasis>. </para>
+
+      <tip>
+        <para>The replica selector to use for replica selection can be
+        specified by setting the property <emphasis
+        role="bold">pegasus.selector.replica</emphasis></para>
+      </tip>
+    </section>
+
+    <section>
+      <title>Addition of Create Dir and Cleanup Jobs</title>
+
+      <para>After the data transfer nodes have been added to the workflow,
+      Pegasus adds a create dir jobs to the workflow. Pegasus usually ,
+      creates one workflow specific directory per compute site , that is on
+      the shared filesystem of compute site. This directory is visible to all
+      the worker nodes and that is where the data is staged-in by the data
+      stage-in jobs. </para>
+
+      <para>After addition of the create dir jobs, the workflow is optionally
+      handed to the cleanup module. The cleanup module adds cleanup nodes to
+      the workflow that remove data from the directory on the shared
+      filesystem when it is no longer required by the workflow. This is useful
+      in reducing the peak storage requirements of the workflow.</para>
+
+      <tip>
+        <para>The addition of the cleanup nodes to the workflow can be
+        disabled by passing the <emphasis role="bold">--nocleanup</emphasis>
+        option to pegasus-plan.</para>
+      </tip>
+    </section>
+
+    <section>
+      <title>Code Generation</title>
+
+      <para>The last step of refinement process, is the code generation where
+      Pegasus writes out the executable workflow in a form understandable by
+      the underlying workflow executor. At present Pegasus supports the
+      following code generators</para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis role="bold">Condor</emphasis> </para>
+
+          <para>This is the default code generator for Pegasus . This
+          generator generates the executable workflow as a Condor DAG file and
+          associated job submit files. The Condor DAG file is passed as input
+          to Condor DAGMan for job execution. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Shell</emphasis> </para>
+
+          <para>This Code Generator generates the executable workflow as a
+          shell script that can be executed on the submit host. While using
+          this code generator, all the jobs should be mapped to site local i.e
+          specify <emphasis role="bold">--sites local </emphasis> to
+          pegasus-plan.</para>
+
+          <tip>
+            <para>To use the Shell code Generator set the property <emphasis
+            role="bold">pegasus.code.generator</emphasis> Shell</para>
+          </tip>
+        </listitem>
+      </orderedlist>
+    </section>
+  </section>
+
+  <section>
+    <title>pegasus-plan</title>
+
+    <para>Pegasus plans an abstract workflow into a concrete/executable
+    workflow by querying various catalogs and performing several refinement
+    steps. We have already setup all the catalogs required by Pegasus in the
+    previous sections and also configured properties that will affect how
+    Pegasus plans the workflow.</para>
 
     <para>Pegasus planner is invoked on the command line by running the
     pegasus-plan command. The client takes several parameters including one or
     more sites where to compute the workflow, an optional single site if the
-    output data needs to be staged and stored and the input DAX file.</para>
+    output data needs to be staged and stored and the input DAX file. </para>
 
     <section>
       <title>Running Locally</title>
 
-      <para>In this section we will be planning the blackdiamond workflow to run
-      locally on the submit machine and store the data on the submit machine
-      also. Invoke the pegasus-plan command with the --sites option set to local
-      and also the --output option set to local. The -D dags option specifies to
-      Pegasus to create the Dag and submit files in a directory called dags
-      inside the current directory. Lastly specify the blackdiamond.dax file as
-      the input DAX to the client.</para>
+      <para>In this section we will be planning the blackdiamond workflow to
+      run locally on the submit machine and store the data on the submit
+      machine also. Invoke the pegasus-plan command with the --sites option
+      set to local and also the --output option set to local. The -D dags
+      option specifies to Pegasus to create the Dag and submit files in a
+      directory called dags inside the current directory. Lastly specify the
+      blackdiamond.dax file as the input DAX to the client.</para>
 
       <programlisting><emphasis>$ pegasus-plan --sites local --output local -D dags \
 --dax $PEGASUS_HOME/examples/blackdiamond.dax</emphasis>
@@ -69,10 +451,11 @@ pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS\
 
 2007.07.11 17:55:29.521 PDT: [INFO] Time taken to execute is 1.71 seconds</programlisting>
 
-      <para>Looks like the planning worked. pegasus-plan tells you what command
-      to use next to submit your workflow. Just copy the pegasus-run line from
-      your output and run the command. pegasus-plan submits your planned
-      workflow to Condor-G for execution either locally or on the grid.</para>
+      <para>Looks like the planning worked. pegasus-plan tells you what
+      command to use next to submit your workflow. Just copy the pegasus-run
+      line from your output and run the command. pegasus-plan submits your
+      planned workflow to Condor-G for execution either locally or on the
+      grid.</para>
 
       <programlisting>$<emphasis> pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
 /gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
@@ -117,8 +500,8 @@ pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run000
       submit host. The planned workflow Dag and submit files reside in the
       directory
       /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001 as
-      mentioned by the output of pegasus-run. Pegasus run also prints out a few
-      monitoring commands that we will use in Section 6.</para>
+      mentioned by the output of pegasus-run. Pegasus run also prints out a
+      few monitoring commands that we will use in Section 6.</para>
 
       <para>If you have a grid site configured the proceed to Section 5.2 else
       proceed to Section 6.</para>
@@ -127,15 +510,15 @@ pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run000
     <section>
       <title>Running on the Grid</title>
 
-      <para>While the local workflow is executing let us submit another workflow
-      to run on the Grid. We have a grid site clus1 set up for use. Replace the
-      --sites local option in the previous run with --sites clus1. We will also
-      need to add a a --force flag because we already ran the same workflow
-      earlier locally and some out of the output products of the workflow may be
-      registered in the Replica Catalog. Pegasus does workflow reduction based
-      on existence of data products in the Replica Catalog. The --force option
-      is a way to tell Pegasus to ignore existing data products and compute the
-      entire workflow again.</para>
+      <para>While the local workflow is executing let us submit another
+      workflow to run on the Grid. We have a grid site clus1 set up for use.
+      Replace the --sites local option in the previous run with --sites clus1.
+      We will also need to add a a --force flag because we already ran the
+      same workflow earlier locally and some out of the output products of the
+      workflow may be registered in the Replica Catalog. Pegasus does workflow
+      reduction based on existence of data products in the Replica Catalog.
+      The --force option is a way to tell Pegasus to ignore existing data
+      products and compute the entire workflow again.</para>
 
       <programlisting>$ <emphasis>pegasus-plan --sites clus1 --output local -D dags \
 --dax $PEGASUS_HOME/examples/blackdiamond.dax --force</emphasis>
@@ -190,14 +573,10 @@ or
 pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</programlisting>
     </section>
 
+    <section>
+      <title>Running in the Cloud</title>
 
-
-   <section>
-       <title>Running in the Cloud</title>
-       <para>...</para>
-   </section>
+      <para>...</para>
+    </section>
   </section>
-
-
 </chapter>
-
