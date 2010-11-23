@@ -769,9 +769,46 @@
     </section>
 
     <section>
-      <title>Condor Glidein's using CorralWMS</title>
+      <title>Condor Glidein's using glideinWMS</title>
 
-      <para>Mats to add description here.</para>
+      <para><ulink url="???">glideinWMS</ulink> is a glidein system widely
+      used on Open Science Grid. Pegasus has a convenience style named
+      glideinWMS to make running workflows on top of glideinWMS easy. This
+      style is similar to the Condor style, but provides some more defaults
+      set up to work well with glideinWMS. All you have to do is specify the
+      style profile in the site catalog:</para>
+
+      <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+       &lt;head-fs&gt;
+              &lt;scratch&gt;
+                    &lt;shared&gt;
+                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                 mount-point="/nfs/scratch01"/&gt;
+                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                    &lt;/shared&gt;
+              &lt;/scratch&gt;
+              &lt;storage&gt;
+                     &lt;shared&gt;
+                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                      mount-point="/exports/storage01"/&gt;
+                          &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                     &lt;/shared&gt;
+              &lt;/storage&gt;
+       &lt;/head-fs&gt;
+       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+       <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glideinwms&lt;/profile&gt;</emphasis>
+ &lt;/site&gt;</programlisting>
+
+      <para>Planned jobs will have universe, requirements and rank set:</para>
+
+      <programlisting>universe = vanilla
+rank = DaemonStartTime
+requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi_viz")) \
+               &amp;&amp; (IS_MONITOR_VM == False) &amp;&amp; (Arch != "") &amp;&amp; (OpSys != "") \
+               &amp;&amp; (Disk != -42) &amp;&amp; (Memory &gt; 1) &amp;&amp; (FileSystemDomain != "")
+</programlisting>
     </section>
 
     <section>
