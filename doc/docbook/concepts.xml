@@ -205,7 +205,7 @@
 
       <para>We are always looking for new applications willing to leverage our
       workflow technologies. If you are interested please contact us at
-      pegasus at isi dot edu. </para>
+      pegasus at isi dot edu.</para>
     </section>
   </section>
 
@@ -333,7 +333,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
   </section>
 
   <section>
-    <title>Execution Environment</title>
+    <title>Execution Environments</title>
 
     <para>Pegasus supports a number of execution environments. An execution
     environment is a setup where jobs from a workflow are running.</para>
@@ -367,72 +367,79 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
     </itemizedlist>
 
-    <para>The rest of this chapter will focus on the vanilla grid execution
-    environment.</para>
+    <section>
+      <title>The Grid Execution Environment</title>
 
-    <para><figure id="concepts-fig-site-layout">
-        <title>Grid Sample Site Layout</title>
+      <para>The rest of this chapter will focus on the vanilla grid execution
+      environment.</para>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/concepts-site-layout.jpg"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
+      <para><figure id="concepts-fig-site-layout">
+          <title>Grid Sample Site Layout</title>
 
-    <para>The vanilla grid environment shown in the figure <link
-    linkend="concepts-fig-site-layout">above</link>. On on side, you have a
-    submit machine where Pegasus runs, Condor schedules jobs, and workflows
-    are executed. In order to properly communicate over secured channels, it
-    is important that the submit machine has a proper notion of time, i.e.
-    runs an NTP daemon to keep accurate time. To be able to connect to remote
-    clusters and receive connections from the remote clusters, the submit host
-    optimally has a public IP address.</para>
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center"
+                         fileref="images/concepts-site-layout.jpg"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
 
-    <para>In order to send a job request to the remote cluster, Condor wraps
-    the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs on
-    remote sites. In terms of a software stack, Pegasus wraps the job into
-    Condor. Condor wraps the job into Globus. Globus transports the job to the
-    remote site, and unwraps the Globus component.</para>
+      <para>The vanilla grid environment shown in the figure <link
+      linkend="concepts-fig-site-layout">above</link>. On on side, you have a
+      submit machine where Pegasus runs, Condor schedules jobs, and workflows
+      are executed. In order to properly communicate over secured channels, it
+      is important that the submit machine has a proper notion of time, i.e.
+      runs an NTP daemon to keep accurate time. To be able to connect to
+      remote clusters and receive connections from the remote clusters, the
+      submit host optimally has a public IP address.</para>
 
-    <para>To be able to talk properly with the Globus security infrastructure
-    (GSI), the submit machine needs to have the CA certificates configured,
-    requires a host certificate in certain circumstances, and the user a user
-    certificate that is enabled on the remote site. On the other end, the
-    remote gatekeeper node requires a host certificate, the signing CA
-    certificate chain and policy files, and a goot time source.</para>
+      <para>In order to send a job request to the remote cluster, Condor wraps
+      the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs
+      on remote sites. In terms of a software stack, Pegasus wraps the job
+      into Condor. Condor wraps the job into Globus. Globus transports the job
+      to the remote site, and unwraps the Globus component.</para>
 
-    <para>In a grid environment, there are one or more clusters accessible via
-    grid middleware like the <ulink url="http://www.globus.org/">Globus
-    Toolkit</ulink>. In case of Globus, there is the Globus gatekeeper
-    listening on port 2119 of the remote cluster. The port is opened to a
-    single machine called head-node.The head-node is typically located in a
-    de-militarized zone (DMZ) of the firewall setup, as it requires limited
-    outside connectivity and a public IP address so that it can be contacted.
-    Additionally, once the gatekeeper accepted a job, it passes it on to a
-    jobmanager. Often, these jobmanagers require a limited port range, in the
-    example 40000-41000, to call back to the submit machine.</para>
+      <para>To be able to talk properly with the Globus security
+      infrastructure (GSI), the submit machine needs to have the CA
+      certificates configured, requires a host certificate in certain
+      circumstances, and the user a user certificate that is enabled on the
+      remote site. On the other end, the remote gatekeeper node requires a
+      host certificate, the signing CA certificate chain and policy files, and
+      a goot time source.</para>
 
-    <para>The gatekeeper is the interface through which jobs are submitted to
-    the remote cluster's resource manager. A resource manager is a scheduling
-    system like PBS, Maui, LSF, FBSNG or Condor that queues tasks and
-    allocates worker nodes. Typcially, the worker nodes in the remote cluster
-    do not have outside connectivity and often all private IP addresses. The
-    Globus toolkit requires a shared filesystem to properly stage files
-    between the head node and worker nodes.</para>
+      <para>In a grid environment, there are one or more clusters accessible
+      via grid middleware like the <ulink url="http://www.globus.org/">Globus
+      Toolkit</ulink>. In case of Globus, there is the Globus gatekeeper
+      listening on port 2119 of the remote cluster. The port is opened to a
+      single machine called head-node.The head-node is typically located in a
+      de-militarized zone (DMZ) of the firewall setup, as it requires limited
+      outside connectivity and a public IP address so that it can be
+      contacted. Additionally, once the gatekeeper accepted a job, it passes
+      it on to a jobmanager. Often, these jobmanagers require a limited port
+      range, in the example 40000-41000, to call back to the submit
+      machine.</para>
 
-    <para>To stage data between external sites for the job, it is recommended
-    to enable a GridFTP server. While this server can be installed on the
-    head-node, for performance purposes it is recommended to have its own
-    machine. If a shared networked filesystem is involved, the GridFTP server
-    should be located as close to the file-server as possible. The GridFTP
-    server requires port 2811 for the control channel, and a limited port
-    range for data channels, here as an example port 40000-41000. The GridFTP
-    server requires a host certificate, the signing CA chain and policy files,
-    a stable time source, and a gridmap file that maps between a user's grid
-    identify and the user's account on the remote site.</para>
+      <para>The gatekeeper is the interface through which jobs are submitted
+      to the remote cluster's resource manager. A resource manager is a
+      scheduling system like PBS, Maui, LSF, FBSNG or Condor that queues tasks
+      and allocates worker nodes. Typcially, the worker nodes in the remote
+      cluster do not have outside connectivity and often all private IP
+      addresses. The Globus toolkit requires a shared filesystem to properly
+      stage files between the head node and worker nodes.</para>
+
+      <para>To stage data between external sites for the job, it is
+      recommended to enable a GridFTP server. While this server can be
+      installed on the head-node, for performance purposes it is recommended
+      to have its own machine. If a shared networked filesystem is involved,
+      the GridFTP server should be located as close to the file-server as
+      possible. The GridFTP server requires port 2811 for the control channel,
+      and a limited port range for data channels, here as an example port
+      40000-41000. The GridFTP server requires a host certificate, the signing
+      CA chain and policy files, a stable time source, and a gridmap file that
+      maps between a user's grid identify and the user's account on the remote
+      site.</para>
+    </section>
   </section>
 
   <section>
