@@ -598,14 +598,16 @@
                 &lt;head-fs&gt;
                         &lt;scratch&gt;
                                 &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" mount-point="/nfs/scratch01"&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" \
+                                                     mount-point="/nfs/scratch01"&gt;
                                         &lt;/file-server&gt;
                                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
                                 &lt;/shared&gt;
                         &lt;/scratch&gt;
                         &lt;storage&gt;
                                 &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" mount-point="/exports/storage01"&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" \
+                                                     mount-point="/exports/storage01"&gt;
                                         &lt;/file-server&gt;
                                         &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
                                 &lt;/shared&gt;
@@ -663,14 +665,16 @@
                 &lt;head-fs&gt;
                         &lt;scratch&gt;
                                 &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/nfs/scratch01"&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                       mount-point="/nfs/scratch01"&gt;
                                         &lt;/file-server&gt;
                                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
                                 &lt;/shared&gt;
                         &lt;/scratch&gt;
                         &lt;storage&gt;
                                 &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/exports/storage01"&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                     mount-point="/exports/storage01"&gt;
                                         &lt;/file-server&gt;
                                         &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
                                 &lt;/shared&gt;
@@ -740,14 +744,16 @@
                 &lt;head-fs&gt;
                         &lt;scratch&gt;
                                 &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/nfs/scratch01"&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                       mount-point="/nfs/scratch01"&gt;
                                         &lt;/file-server&gt;
                                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
                                 &lt;/shared&gt;
                         &lt;/scratch&gt;
                         &lt;storage&gt;
                                 &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/exports/storage01"&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                       mount-point="/exports/storage01"&gt;
                                         &lt;/file-server&gt;
                                         &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
                                 &lt;/shared&gt;
@@ -813,14 +819,16 @@
                 &lt;head-fs&gt;
                         &lt;scratch&gt;
                                 &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/nfs/scratch01"&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                       mount-point="/nfs/scratch01"&gt;
                                         &lt;/file-server&gt;
                                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
                                 &lt;/shared&gt;
                         &lt;/scratch&gt;
                         &lt;storage&gt;
                                 &lt;shared&gt;
-                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/exports/storage01"&gt;
+                                        &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                       mount-point="/exports/storage01"&gt;
                                         &lt;/file-server&gt;
                                         &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
                                 &lt;/shared&gt;
