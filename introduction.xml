@@ -4,7 +4,7 @@
 <chapter id="introduction">
   <title>Introduction to Pegasus</title>
 
-  <para>Pegasus (http://pegasus.isi.edu) is a configurable system for mapping
+  <para><ulink url="???">Pegasus</ulink> is a configurable system for mapping
   and executing abstract application workflows over a wide range of execution
   environment including a laptop, a campus cluster, a Grid, or a commercial or
   academic cloud. Today, Pegasus runs workflows on Amazon EC2, Nimbus, Open
@@ -22,11 +22,11 @@
   mapping of tasks to the execution resources is done by the mapper based on
   information derived for static and/or dynamic sources. In some cases
   information systems already in place provide the information about the
-  execution environment and the location of dat. In other cases, users specify
-  this information. The output is an executable workflow (also called the
-  concrete workflow) that can be executed over a variety of resources. In case
-  the workflow tasks are mapped to multiple resources that do not share a file
-  system, explicit nodes are added to the workflow for orchestrating data
+  execution environment and the location of data. In other cases, users
+  specify this information. The output is an executable workflow (also called
+  the concrete workflow) that can be executed over a variety of resources. In
+  case the workflow tasks are mapped to multiple resources that do not share a
+  file system, explicit nodes are added to the workflow for orchestrating data
   transfer between the tasks.</para>
 
   <para>DAGMan relies on the resources (compute, storage and network) defined
@@ -55,11 +55,11 @@
   the submit host to the campus cluster, the Open Science Grid, the TeraGrid,
   the cloud, or other resources. </para>
 
-  <para>Pegasus is currently supports applications in a number of scientific
-  domains including astronomy, bioinformatics, earthquake science,
-  gravitational wave physics, ocean science, limnology, and others
-  (http://pegasus.isi.edu/applications.php)</para>
+  <para>Pegasus is currently supports applications in a <ulink
+  url="http://pegasus.isi.edu/applications.php">number of scientific
+  domains</ulink> including astronomy, bioinformatics, earthquake science,
+  gravitational wave physics, ocean science, limnology, and others </para>
 
-  <para>For Pegasus related publications, please see
-  http://pegasus.isi.edu/publications.php. </para>
+  <para> Pegasus related publications are available <ulink
+  url="http://pegasus.isi.edu/publications.php">here</ulink> . </para>
 </chapter>
