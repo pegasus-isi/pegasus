@@ -1,100 +1,134 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter>
+<chapter id="quickstart">
   <title>Pegasus Quick Start Guide</title>
 
   <section>
     <title>Getting Started</title>
 
-    <para>This document is structured to get you and up running with the Pegasus
-    planner with minimal effort.</para>
+    <para>This document is structured to get you and up running with the
+    Pegasus planner with minimal effort.</para>
 
-    <para>Download the latest release of Pegasus from
-    http://pegasus.isi.edu</para>
+    <para>Download the latest release of Pegasus WMS 3.0 from <ulink
+    url="http://pegasus.isi.edu/wms/download.php">http://pegasus.isi.edu/wms/download.php</ulink></para>
 
-    <para>Pegasus can alternatively be found in the latest version of VDT at
-    http://vdt.cs.wisc.edu</para>
+    <para>For convenience, there are Pegasus WMS tarballs which has Condor
+    included. This way you can instlal Pegasus and Condor at the same time,
+    with just minor configuration to get up and running.</para>
 
-    <para>To install Untar the distribution</para>
+    <para>To run Pegasus you will need</para>
 
-    <programlisting>$ gtar zxvf pegasus-binary-&lt;version&gt;.tar.gz</programlisting>
+    <itemizedlist>
+      <listitem>
+        <para>JAVA 1.6</para>
+      </listitem>
 
-    <para>This guide assumes you are using a Bourne Shell derived shell. e.g.
-    /bin/sh or /bin/bash.</para>
+      <listitem>
+        <para>Python 2.6</para>
+      </listitem>
 
-    <para>Set PEGASUS_HOME environment variable</para>
+      <listitem>
+        <para>Perl</para>
+      </listitem>
+    </itemizedlist>
 
-    <programlisting>$<emphasis> unset PEGASUS_HOME
+    <para>Check Java version and ensure it is JAVA 1.6.x</para>
 
-$ export PEGASUS_HOME=&lt;path to pegasus directory&gt;</emphasis></programlisting>
-
-    <para>Set up the PEGASUS user environment</para>
-
-    <para><programlisting><emphasis>$ unset CLASSPATH
-$ source $PEGASUS_HOME/setup.sh</emphasis></programlisting></para>
-
-    <para>Check Java version and ensure it is JAVA 1.5.x</para>
-
-    <programlisting>$ <emphasis>java -version</emphasis>
+    <screen><command>$ java -version</command><computeroutput>
 
 java version "1.5.0_07"
 Java(TM) 2 Runtime Environment, Standard Edition (build 1.5.0_07-164)
-Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)</programlisting>
+Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)</computeroutput></screen>
 
-    <para>This guide assumes that you have both Globus http://www.globus.org and
-    Condor http://cs.wisc.edu/condor installed and available on the submit
-    machine. You only need the Globus proxy clients if you plan to run locally
-    on your machine. Pegasus does require a personal Condor installation with a
-    condor queue on the submit machine.</para>
+    <para>To install Pegsus</para>
 
-    <para>Check Globus Installation</para>
+    <itemizedlist>
+      <listitem>
+        <para>Untar the tarball. The code will be untarred in a directory
+        pegasus-&lt;version&gt;. Lets call this PEGASUS_HOME. Change
+        PEGASUS_HOME on the command line to the directory where you untarred
+        the code.</para>
 
-    <programlisting>$ <emphasis>echo $GLOBUS_LOCATION</emphasis>
+        <para><screen><code><command>$ tar zxf pegasus-wms-*.tar.gz</command></code></screen></para>
+      </listitem>
 
-/path/to/globus/install</programlisting>
+      <listitem>
+        <para>Edit the Condor Configuration file located at
+        PEGASUS_HOME/etc/condor_config (Additional configuration may be
+        required for Production Environment).</para>
 
-    <para>Make sure you source the Globus environment</para>
+        <orderedlist>
+          <listitem>
+            <para>Change !!PEGASUS_HOME!! to the actual path where PEGASUS_WMS
+            is installed</para>
+          </listitem>
 
-    <para><programlisting>$<emphasis> GLOBUS_LOCATION/etc/globus-user-env.sh</emphasis></programlisting></para>
+          <listitem>
+            <para>CHANGE !!USER!! to the user who will receive email in case
+            of error. (This can generally be just your username )</para>
+          </listitem>
+        </orderedlist>
 
-    <para>Now generate a proxy certificate from you X509 credentials. If you
-    don't have any Grid credentials you can try to ask your local grid expert or
-    look on the Globus website for instructions on how to use SimpleCA to
-    generate Grid credentials.</para>
+        <para><screen><command>$ vim $PEGASUS_HOME/etc/condor_config</command><computeroutput>
 
-    <para><programlisting>$ <emphasis>grid-proxy-init</emphasis></programlisting>
-    Make sure you have condor installed and can submit jobs into condor. Try
-    checking the status of the condor queue.</para>
+RELEASE_DIR = !!PEGASUS_HOME!!    # CHANGE THIS TO PATH OF PEGASUS_WMS INSTALLATION
 
-    <para><programlisting>$ <emphasis>condor_q</emphasis> </programlisting> If
-    the above tests work all is fine, otherwise contact your friendly
-    neighborhood administrator.</para>
+CONDOR_ADMIN = !!USER!! # CHANGE THIS To THE USER WHO wILL GET EMAIL INCASE OF ERROR.</computeroutput></screen></para>
+      </listitem>
+
+      <listitem>
+        <para>Set up the environment:</para>
+
+        <para><screen><command>$ export PATH=PEGASUS_HOME/bin:PEGASUS_HOME/condor/bin:$PATH
+$ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</command></screen></para>
+      </listitem>
+
+      <listitem>
+        <para>Start Condor by running ./sbin/condor_master</para>
+
+        <para><screen><command>$ PEGASUS_HOME/sbin/condor_master</command></screen></para>
+      </listitem>
+
+      <listitem>
+        <para>Check if condor is up by running the condor_q command</para>
+
+        <para><screen><command>$ condor_q</command>
+
+<computeroutput>-- Submitter: gmehta@smarty.isi.edu : &lt;128.9.72.26:60126&gt; : smarty.isi.edu
+ ID      OWNER            SUBMITTED     RUN_TIME ST PRI SIZE CMD               
+
+0 jobs; 0 idle, 0 running, 0 held</computeroutput></screen></para>
+      </listitem>
+    </itemizedlist>
+
+    <para>This guide assumes you are using a Bourne Shell derived shell. e.g.
+    /bin/sh or /bin/bash.</para>
   </section>
 
   <section>
     <title>Abstract Workflow (DAX)</title>
 
     <para>Pegasus uses an XML format to describe the input abstract workflow
-    (DAX). The DAX is divided into 3 sections.</para>
+    (DAX). The DAX is divided into 5 sections.</para>
 
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">File List:</emphasis> This section lists all
-        the files used in the workflow. They can be of type input, output, inout
-        or executable</para>
+        <para><emphasis role="bold">File List:</emphasis> This section lists
+        all the files used in the workflow. They can be of type input, output,
+        inout or executable</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Tasks:</emphasis> This section lists all the
-        tasks or jobs in the workflow. Along with the tasks are arguments
+        <para><emphasis role="bold">Tasks:</emphasis> This section lists all
+        the tasks or jobs in the workflow. Along with the tasks are arguments
         required to invoke the tasks, any profiles that may be associated with
         the tasks and any files used as input or output by the task.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Dependencies:</emphasis> This section lists
-        all the dependencies betweeen the tasks in the workflow.</para>
+        <para><emphasis role="bold">Dependencies:</emphasis> This section
+        lists all the dependencies betweeen the tasks in the workflow.</para>
       </listitem>
     </itemizedlist>
 
@@ -109,22 +143,22 @@ Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)</programlist
   <section>
     <title>Catalogs</title>
 
-    <para>Pegasus uses several catalogs to help in its planning. These catalogs
-    need to be setup before Pegasus can plan a workflow. The catalogs used by
-    Pegasus are :</para>
+    <para>Pegasus uses several catalogs to help in its planning. These
+    catalogs need to be setup before Pegasus can plan a workflow. The catalogs
+    used by Pegasus are :</para>
 
     <itemizedlist>
       <listitem>
         <para><emphasis role="bold">Replica Catalog</emphasis><emphasis
-        role="bold">:</emphasis> This catalog is used to lookup the location of
-        input data as well as any existing output data referenced in the
+        role="bold">:</emphasis> This catalog is used to lookup the location
+        of input data as well as any existing output data referenced in the
         abstract workflow.</para>
       </listitem>
 
       <listitem>
         <para><emphasis role="bold">Site Catalog</emphasis><emphasis
-        role="bold">:</emphasis> This catalog is used to track information about
-        the various sites and their layout on the grid.</para>
+        role="bold">:</emphasis> This catalog is used to track information
+        about the various sites and their layout on the grid.</para>
       </listitem>
 
       <listitem>
@@ -138,11 +172,11 @@ Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)</programlist
     <section>
       <title>Replica Catalog (RC)</title>
 
-      <para>The Replica Catalog keeps mappings of logical file ids/names (LFN's)
-      to physical file ids/names (PFN's). A single LFN can map to several PFN's.
-      A PFN consists of a URL with protocol, host and port information and a
-      path to a file. Along with the PFN one can also store additional key/value
-      attributes to be associated with a PFN.</para>
+      <para>The Replica Catalog keeps mappings of logical file ids/names
+      (LFN's) to physical file ids/names (PFN's). A single LFN can map to
+      several PFN's. A PFN consists of a URL with protocol, host and port
+      information and a path to a file. Along with the PFN one can also store
+      additional key/value attributes to be associated with a PFN.</para>
 
       <para>Pegasus supports 3 different implemenations of the Replica
       Catalog.</para>
@@ -161,13 +195,13 @@ Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)</programlist
         </listitem>
       </orderedlist>
 
-      <para>In this guide we will only use the Simple File. The same client will
-      however work for all 3 implementations. The implementation that the client
-      talks to is configured using Pegasus properties.</para>
+      <para>In this guide we will only use the Simple File. The same client
+      will however work for all 3 implementations. The implementation that the
+      client talks to is configured using Pegasus properties.</para>
 
       <para>The black diamond example mentioned in Section 2 takes one input
-      file, which we will have to tell the replica catalog. Create a file f.a by
-      running the date command as shown</para>
+      file, which we will have to tell the replica catalog. Create a file f.a
+      by running the date command as shown</para>
 
       <programlisting>$ <emphasis>date &gt; $HOME/f.a </emphasis></programlisting>
 
@@ -180,9 +214,9 @@ insert f.a gsiftp://somehost:port/path/to/file/f.a pool=local</emphasis></progra
 
       <para></para>
 
-      <para>You may first want to check, if the file registeration made it into
-      the replica catalog. Since we are using a Simple File catalog we can just
-      go look at the file $HOME/rc to see if there are any entries in
+      <para>You may first want to check, if the file registeration made it
+      into the replica catalog. Since we are using a Simple File catalog we
+      can just go look at the file $HOME/rc to see if there are any entries in
       there.</para>
 
       <programlisting>$ <emphasis>cat $HOME/rc</emphasis>
@@ -208,12 +242,12 @@ f.a gsiftp://smarty.isi.edu/nfs/asd2/gmehta/f.a pool="local"</programlisting>
       <title>Site Catalog (SC)</title>
 
       <para>The Site Catalog describes the compute resources (which are often
-      clusters) that we intend to run the workflow upon. A site is a homogeneous
-      part of a cluster that has at least a single GRAM gatekeeper with a
-      jobmanager-fork and jobmanager-&lt;scheduler&gt; interface and at least
-      one gridftp server along with a shared file system. The GRAM gatekeeper
-      can be either WS GRAM or Pre-WS GRAM. A site can also be a condor pool or
-      glidein pool with a shared file system.</para>
+      clusters) that we intend to run the workflow upon. A site is a
+      homogeneous part of a cluster that has at least a single GRAM gatekeeper
+      with a jobmanager-fork and jobmanager-&lt;scheduler&gt; interface and at
+      least one gridftp server along with a shared file system. The GRAM
+      gatekeeper can be either WS GRAM or Pre-WS GRAM. A site can also be a
+      condor pool or glidein pool with a shared file system.</para>
 
       <para>Pegasus currently supports two implementation of the Site
       Catalog</para>
@@ -258,9 +292,9 @@ f.a gsiftp://smarty.isi.edu/nfs/asd2/gmehta/f.a pool="local"</programlisting>
 
       <para>The gridlaunch and profile entries are optional. All the rest are
       required for each pool. Also the transfer and vanilla universe are
-      mandatory. You can add multiple transfer and vanilla universe if you have
-      more then one head node on the cluster. The entries in the Site Catalog
-      have the following meaning:</para>
+      mandatory. You can add multiple transfer and vanilla universe if you
+      have more then one head node on the cluster. The entries in the Site
+      Catalog have the following meaning:</para>
 
       <orderedlist>
         <listitem>
@@ -273,8 +307,8 @@ f.a gsiftp://smarty.isi.edu/nfs/asd2/gmehta/f.a pool="local"</programlisting>
         </listitem>
 
         <listitem>
-          <para>workdir - A remote working directory (Should be on a shared file
-          system)</para>
+          <para>workdir - A remote working directory (Should be on a shared
+          file system)</para>
         </listitem>
 
         <listitem>
@@ -285,8 +319,8 @@ f.a gsiftp://smarty.isi.edu/nfs/asd2/gmehta/f.a pool="local"</programlisting>
           <para>universe - Different universes are supported which map to
           different batch jobmanagers.</para>
 
-          <para>"vanilla" for compute jobs and "transfer" for transfer jobs are
-          mandatory. Generally a transfer universe should map to the fork
+          <para>"vanilla" for compute jobs and "transfer" for transfer jobs
+          are mandatory. Generally a transfer universe should map to the fork
           jobmanager.</para>
         </listitem>
 
@@ -296,13 +330,14 @@ f.a gsiftp://smarty.isi.edu/nfs/asd2/gmehta/f.a pool="local"</programlisting>
         </listitem>
 
         <listitem>
-          <para>sysinfo - The arch/os/osversion/glibc of the site. The format is
-          ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are optiona.</para>
+          <para>sysinfo - The arch/os/osversion/glibc of the site. The format
+          is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
+          optiona.</para>
 
           <para>ARCH can have one of the following values INTEL32, INTEL64,
-          SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following values
-          LINUX,SUNOS. The default value for sysinfo if none specified is
-          INTEL32::LINUX</para>
+          SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
+          values LINUX,SUNOS. The default value for sysinfo if none specified
+          is INTEL32::LINUX</para>
         </listitem>
 
         <listitem>
@@ -320,10 +355,10 @@ f.a gsiftp://smarty.isi.edu/nfs/asd2/gmehta/f.a pool="local"</programlisting>
       <programlisting>$ emacs $HOME/sites.txt </programlisting>
 
       <para>Let’s say you have one cluster available to run your jobs called
-      clus1. You need to add 2 sections in the pool.config.txt file, one for the
-      cluster and one for the local machine. The local site entry is mandatory.
-      Change all the entries below to reflect your local host and cluster
-      setting including all environment variables</para>
+      clus1. You need to add 2 sections in the pool.config.txt file, one for
+      the cluster and one for the local machine. The local site entry is
+      mandatory. Change all the entries below to reflect your local host and
+      cluster setting including all environment variables</para>
 
       <programlisting>site local { 
 lrc "rlsn://localhost" 
@@ -352,9 +387,9 @@ profile env "GLOBUS_LOCATION" "/opt/vdt/globus"
 profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"  
 } </programlisting>
 
-      <para>This file can be used as is by Pegasus but we prefer the XML version
-      of the Site Catalog because it allows for a richer description of the
-      site. The tool to convert the text site catalog to XML is called
+      <para>This file can be used as is by Pegasus but we prefer the XML
+      version of the Site Catalog because it allows for a richer description
+      of the site. The tool to convert the text site catalog to XML is called
       sc-client</para>
 
       <programlisting>$ <emphasis>sc-client --files $HOME/sites.txt --output $HOME/sites.xml
@@ -415,14 +450,14 @@ profile env "LD_LIBRARY_PATH" "/opt/vdt/globus/lib"
     <section>
       <title>Transformation Catalog (TC)</title>
 
-      <para>The Transformation Catalog maps logical transformations to physical
-      executables on the system. It also provides additional information about
-      the transformation as to what system they are compiled for, what profiles
-      or environment variables need to be set when the transformation is invoked
-      etc.</para>
+      <para>The Transformation Catalog maps logical transformations to
+      physical executables on the system. It also provides additional
+      information about the transformation as to what system they are compiled
+      for, what profiles or environment variables need to be set when the
+      transformation is invoked etc.</para>
 
-      <para>Pegasus currently supports two implementations of the Transformation
-      Catalog</para>
+      <para>Pegasus currently supports two implementations of the
+      Transformation Catalog</para>
 
       <orderedlist>
         <listitem>
@@ -448,8 +483,8 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6
                    ENV::PATH="/usr/bin";PEGASUS_HOME="/usr/local/pegasus"</programlisting>
 
       <para>The system and profile entries are optional and will use default
-      values if not specified. The entries in the file format have the following
-      meaning:</para>
+      values if not specified. The entries in the file format have the
+      following meaning:</para>
 
       <orderedlist>
         <listitem>
@@ -458,15 +493,16 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6
 
         <listitem>
           <para>logicaltr - The logical transformation name. The format is
-          NAMESPACE::NAME:VERSION where NAMESPACE and NAME are optional.</para>
+          NAMESPACE::NAME:VERSION where NAMESPACE and NAME are
+          optional.</para>
         </listitem>
 
         <listitem>
           <para>physicaltr - The physical transformation path or URL.</para>
 
           <para>If the transformation type is INSTALLED then it needs to be an
-          absolute path to the executable. If the type is STATIC_BINARY then the
-          path needs to be a HTTP, FTP or gsiftp URL</para>
+          absolute path to the executable. If the type is STATIC_BINARY then
+          the path needs to be a HTTP, FTP or gsiftp URL</para>
         </listitem>
 
         <listitem>
@@ -491,16 +527,16 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6
           <para>system - The system for which the transformation is
           compiled.</para>
 
-          <para>The formation of the sytem is ARCH::OS:OSVERSION:GLIBC where the
-          GLIBC and OS VERSION are optional. ARCH can have one of the following
-          values INTEL32, INTEL64, SPARCV7, SPARCV9, AIX, AMD64. OS can have one
-          of the following values LINUX,SUNOS. The default value for system if
-          none specified is INTEL32::LINUX</para>
+          <para>The formation of the sytem is ARCH::OS:OSVERSION:GLIBC where
+          the GLIBC and OS VERSION are optional. ARCH can have one of the
+          following values INTEL32, INTEL64, SPARCV7, SPARCV9, AIX, AMD64. OS
+          can have one of the following values LINUX,SUNOS. The default value
+          for system if none specified is INTEL32::LINUX</para>
         </listitem>
 
         <listitem>
-          <para>Profiles - The profiles associated with the transformation. For
-          indepth information about profiles and their priorities read the
+          <para>Profiles - The profiles associated with the transformation.
+          For indepth information about profiles and their priorities read the
           Profile Guide.</para>
 
           <para>The format for profiles is NS::KEY="VALUE" where NS is the
@@ -513,8 +549,8 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6
             <listitem>
               <para>NS1::KEY1="VALUE1",KEY2="VALUE2";NS2::KEY3="VALUE3",KEY4="VALUE4"</para>
 
-              <para>This is the most optimized form. Multiple key values for the
-              same namespace are separated by a comma "," and different
+              <para>This is the most optimized form. Multiple key values for
+              the same namespace are separated by a comma "," and different
               namespaces are separated by a semicolon ";"</para>
             </listitem>
 
@@ -528,13 +564,13 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6
         </listitem>
       </orderedlist>
 
-      <para>We need to map our declared transformations (preprocess, findranage,
-      and analyze) from the example DAX above to a simple "mock application"
-      name "keg" ("canonical example for the grid") which reads input files
-      designated by arguments, writes them back onto output files, and produces
-      on STDOUT a summary of where and when it was run. Keg ships with Pegasus
-      in the bin directory. Run keg on the command line to see how it
-      works.</para>
+      <para>We need to map our declared transformations (preprocess,
+      findranage, and analyze) from the example DAX above to a simple "mock
+      application" name "keg" ("canonical example for the grid") which reads
+      input files designated by arguments, writes them back onto output files,
+      and produces on STDOUT a summary of where and when it was run. Keg ships
+      with Pegasus in the bin directory. Run keg on the command line to see
+      how it works.</para>
 
       <programlisting>$<emphasis> keg -o /dev/fd/1</emphasis> 
 
@@ -545,13 +581,14 @@ Systemenvironm.: i686-Linux 2.4.18-3
 Processor Info.: 1 x Pentium III (Coppermine) @ 797.425 
 Output Filename: /dev/fd/1</programlisting>
 
-      <para>Now we need to map all 3 transformations onto the "keg" executable.
-      We place these mappings in our File transformation catalog for site clus1.
-      In earlier version of Pegasus one had to define entries for Pegasus
-      executables like transfer, replica client, dirmanager etc on each site as
-      well as site "local". This is no longer required. Pegasus 2.0 and later
-      automatically picks up the paths for these binaries from the environment
-      profile PEGASUS_HOME set in the site catalog for each site.</para>
+      <para>Now we need to map all 3 transformations onto the "keg"
+      executable. We place these mappings in our File transformation catalog
+      for site clus1. In earlier version of Pegasus one had to define entries
+      for Pegasus executables like transfer, replica client, dirmanager etc on
+      each site as well as site "local". This is no longer required. Pegasus
+      2.0 and later automatically picks up the paths for these binaries from
+      the environment profile PEGASUS_HOME set in the site catalog for each
+      site.</para>
 
       <para>Create a file called tc.data and edit the contents</para>
 
@@ -599,10 +636,11 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   <section>
     <title>Pegasus Properties</title>
 
-    <para>Properties allow you to configure Pegasus in various ways by selection
-    various catalog implementations, enabling and disabling various features or
-    just additionally tuning them. Pegasus utilizes Java properties technology.
-    Pegasus properties can be defined in several ways</para>
+    <para>Properties allow you to configure Pegasus in various ways by
+    selection various catalog implementations, enabling and disabling various
+    features or just additionally tuning them. Pegasus utilizes Java
+    properties technology. Pegasus properties can be defined in several
+    ways</para>
 
     <orderedlist>
       <listitem>
@@ -612,8 +650,8 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
         <para>These properties are generally set by the administrator to be
         shared by all users of the installation. They default location of
         $PEGASUS_HOME/etc/properties can be overridden by using the property
-        pegasus.system.properties=&lt;path to a file&gt; on the command line or
-        in the user properties file.</para>
+        pegasus.system.properties=&lt;path to a file&gt; on the command line
+        or in the user properties file.</para>
       </listitem>
 
       <listitem>
@@ -621,10 +659,10 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
         Priority</para>
 
         <para>Thse properties are generally set by a user to augment existing
-        properties from the system property file or override a few setting. The
-        default location of $HOME/.pegasusrc can be overridden by using the
-        property pegasus.user.properties on the command line or in the system
-        property file.</para>
+        properties from the system property file or override a few setting.
+        The default location of $HOME/.pegasusrc can be overridden by using
+        the property pegasus.user.properties on the command line or in the
+        system property file.</para>
       </listitem>
 
       <listitem>
@@ -641,16 +679,16 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
       </listitem>
     </orderedlist>
 
-    <para>There is a priority to the order of reading and evaluating properties
-    from these sources. The properties in the system file have the lowest
-    priority, user properties override system properties and command line
-    properties have the highest priority. Note that the values rely on proper
-    capitalization, unless explicitly noted otherwise. Some properties if not
-    specified may have default values. You can use variable substitution to use
-    the value of one property in a second property. For instance,
-    ${pegasus.home} means that the value depends on the value of the
-    pegasus.home property plus any noted additions. You can use this notation to
-    refer to other properties, though the extent of the substitutions are
+    <para>There is a priority to the order of reading and evaluating
+    properties from these sources. The properties in the system file have the
+    lowest priority, user properties override system properties and command
+    line properties have the highest priority. Note that the values rely on
+    proper capitalization, unless explicitly noted otherwise. Some properties
+    if not specified may have default values. You can use variable
+    substitution to use the value of one property in a second property. For
+    instance, ${pegasus.home} means that the value depends on the value of the
+    pegasus.home property plus any noted additions. You can use this notation
+    to refer to other properties, though the extent of the substitutions are
     limited. Usually, you want to refer to a set of the standard system
     properties. Nesting is not allowed. Substitutions will only be done
     once.</para>
@@ -677,22 +715,22 @@ pegasus.dir.storage=pegasusstorage
 pegasus.dir.exec=pegasusexec
 pegasus.exitcode.scope=all</programlisting>
 
-    <para>Substitute all $HOME and $USER variables above with actual values for
-    your site.</para>
+    <para>Substitute all $HOME and $USER variables above with actual values
+    for your site.</para>
 
-    <para>For a complete list of Pegasus properties refer to the properties.pdf
-    in $PEGASUS_HOME/doc or on the Pegasus webiste at
+    <para>For a complete list of Pegasus properties refer to the
+    properties.pdf in $PEGASUS_HOME/doc or on the Pegasus webiste at
     http://pegasus.isi.edu/doc.php</para>
   </section>
 
   <section>
     <title>Running Pegasus</title>
 
-    <para>Pegasus plans an abstract workflow into a concrete/executable workflow
-    by querying various catalogs and performing several refinement steps. We
-    have already setup all the catalogs required by Pegasus in the previous
-    sections and also configured properties that will affect how Pegasus plans
-    the workflow.</para>
+    <para>Pegasus plans an abstract workflow into a concrete/executable
+    workflow by querying various catalogs and performing several refinement
+    steps. We have already setup all the catalogs required by Pegasus in the
+    previous sections and also configured properties that will affect how
+    Pegasus plans the workflow.</para>
 
     <para>Pegasus planner is invoked on the command line by running the
     pegasus-plan command. The client takes several parameters including one or
@@ -702,13 +740,13 @@ pegasus.exitcode.scope=all</programlisting>
     <section>
       <title>Running Locally</title>
 
-      <para>In this section we will be planning the blackdiamond workflow to run
-      locally on the submit machine and store the data on the submit machine
-      also. Invoke the pegasus-plan command with the --sites option set to local
-      and also the --output option set to local. The -D dags option specifies to
-      Pegasus to create the Dag and submit files in a directory called dags
-      inside the current directory. Lastly specify the blackdiamond.dax file as
-      the input DAX to the client.</para>
+      <para>In this section we will be planning the blackdiamond workflow to
+      run locally on the submit machine and store the data on the submit
+      machine also. Invoke the pegasus-plan command with the --sites option
+      set to local and also the --output option set to local. The -D dags
+      option specifies to Pegasus to create the Dag and submit files in a
+      directory called dags inside the current directory. Lastly specify the
+      blackdiamond.dax file as the input DAX to the client.</para>
 
       <programlisting><emphasis>$ pegasus-plan --sites local --output local -D dags \
 --dax $PEGASUS_HOME/examples/blackdiamond.dax</emphasis>
@@ -750,10 +788,11 @@ pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS\
 
 2007.07.11 17:55:29.521 PDT: [INFO] Time taken to execute is 1.71 seconds</programlisting>
 
-      <para>Looks like the planning worked. pegasus-plan tells you what command
-      to use next to submit your workflow. Just copy the pegasus-run line from
-      your output and run the command. pegasus-plan submits your planned
-      workflow to Condor-G for execution either locally or on the grid.</para>
+      <para>Looks like the planning worked. pegasus-plan tells you what
+      command to use next to submit your workflow. Just copy the pegasus-run
+      line from your output and run the command. pegasus-plan submits your
+      planned workflow to Condor-G for execution either locally or on the
+      grid.</para>
 
       <programlisting>$<emphasis> pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
 /gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
@@ -798,8 +837,8 @@ pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run000
       submit host. The planned workflow Dag and submit files reside in the
       directory
       /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001 as
-      mentioned by the output of pegasus-run. Pegasus run also prints out a few
-      monitoring commands that we will use in Section 6.</para>
+      mentioned by the output of pegasus-run. Pegasus run also prints out a
+      few monitoring commands that we will use in Section 6.</para>
 
       <para>If you have a grid site configured the proceed to Section 5.2 else
       proceed to Section 6.</para>
@@ -808,15 +847,15 @@ pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run000
     <section>
       <title>Running on the Grid</title>
 
-      <para>While the local workflow is executing let us submit another workflow
-      to run on the Grid. We have a grid site clus1 set up for use. Replace the
-      --sites local option in the previous run with --sites clus1. We will also
-      need to add a a --force flag because we already ran the same workflow
-      earlier locally and some out of the output products of the workflow may be
-      registered in the Replica Catalog. Pegasus does workflow reduction based
-      on existence of data products in the Replica Catalog. The --force option
-      is a way to tell Pegasus to ignore existing data products and compute the
-      entire workflow again.</para>
+      <para>While the local workflow is executing let us submit another
+      workflow to run on the Grid. We have a grid site clus1 set up for use.
+      Replace the --sites local option in the previous run with --sites clus1.
+      We will also need to add a a --force flag because we already ran the
+      same workflow earlier locally and some out of the output products of the
+      workflow may be registered in the Replica Catalog. Pegasus does workflow
+      reduction based on existence of data products in the Replica Catalog.
+      The --force option is a way to tell Pegasus to ignore existing data
+      products and compute the entire workflow again.</para>
 
       <programlisting>$ <emphasis>pegasus-plan --sites clus1 --output local -D dags \
 --dax $PEGASUS_HOME/examples/blackdiamond.dax --force</emphasis>          
@@ -879,17 +918,18 @@ pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run000
     submitted for execution. The output also gave the relevant commands to use
     to monitor the progress of the workflow or to terminate it. Lets go to the
     directory where Pegasus generated the Condor Dag and submit files. Use the
-    directory name from the output of your pegasus-run command, either the local
-    run or the grid run.</para>
+    directory name from the output of your pegasus-run command, either the
+    local run or the grid run.</para>
 
     <programlisting>$ <emphasis>cd /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis></programlisting>
 
-    <para>If you do a listing of the files in the directory you will see several
-    .sub files where are the job submit files. The output of each job is written
-    in the .out.* file and the error goes in the .err file.</para>
+    <para>If you do a listing of the files in the directory you will see
+    several .sub files where are the job submit files. The output of each job
+    is written in the .out.* file and the error goes in the .err file.</para>
 
     <para>To monitor the execution of the workflow lets run the pegasus-status
-    command as suggested by the output of the pegasus-run command above.</para>
+    command as suggested by the output of the pegasus-run command
+    above.</para>
 
     <programlisting>$ <emphasis>pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis>
 
@@ -904,9 +944,9 @@ pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run000
     <para>The above output shows that several jobs are running under the main
     DAGMan process. Keep a lookout to track whether a workflow is running or
     not. If you do not see any of your job in the output for sometime (say 30
-    seconds), we know the workflow has finished. We need to wait, as there might
-    be delay in CondorDAGMAN releasing the next job into the queue after a job
-    has finished successfully.</para>
+    seconds), we know the workflow has finished. We need to wait, as there
+    might be delay in CondorDAGMAN releasing the next job into the queue after
+    a job has finished successfully.</para>
 
     <para>If output of pegasus-status is empty, then either your workflow
     has</para>
@@ -921,10 +961,10 @@ pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run000
       </listitem>
     </itemizedlist>
 
-    <para>Another way to monitor the workflow is to check the jobstate.log file.
-    This is the output file of the monitoring daemon that is parsing all the
-    condor log files to determine the status of the jobs. It logs the events
-    seen by Condor into a more readable form for us.</para>
+    <para>Another way to monitor the workflow is to check the jobstate.log
+    file. This is the output file of the monitoring daemon that is parsing all
+    the condor log files to determine the status of the jobs. It logs the
+    events seen by Condor into a more readable form for us.</para>
 
     <programlisting>$ <emphasis>less jobstate.log</emphasis>
 
@@ -956,17 +996,17 @@ pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run000
 
     <para>At the bottom of the output we see that DAGMAN and TAILSTATD have
     FINISHED and with and exit code of zero "0" which signifies that the
-    workflow ran successfully. If there were any errors then the TAILSTATD would
-    exit with a non zero exitcode and the failed jobs would have a job state of
-    FAILURE next to it.</para>
+    workflow ran successfully. If there were any errors then the TAILSTATD
+    would exit with a non zero exitcode and the failed jobs would have a job
+    state of FAILURE next to it.</para>
 
     <para>If your workflow fails then you can look at the job name (second
     column in the output) which has failed and check the contents of the
-    kickstart record output stored in the jobname.out.NNN file where NNN can be
-    000 to 999 or the jobname.err file</para>
+    kickstart record output stored in the jobname.out.NNN file where NNN can
+    be 000 to 999 or the jobname.err file</para>
 
-    <para>One can also monitor the status of the running workflow by looking at
-    the output of the Condor DAGMan output file.</para>
+    <para>One can also monitor the status of the running workflow by looking
+    at the output of the Condor DAGMan output file.</para>
 
     <programlisting>$ <emphasis>tail -f black-diamond-0.dag.dagman.out
 
@@ -981,22 +1021,23 @@ cessfully.
 7/11 18:52:27    14       0        0       1       0          2        0</emphasis></programlisting>
 
     <para>You will see lines like the one above scrolling by giving you
-    statistics of home many jobs have been finished, failed, running or queued.
-    It will also tell if you the workflow has finished if the DAGMan finishes
-    and the name of any jobs that failed.</para>
+    statistics of home many jobs have been finished, failed, running or
+    queued. It will also tell if you the workflow has finished if the DAGMan
+    finishes and the name of any jobs that failed.</para>
 
     <para>If you want to abort your workflow for any reason you can use the
-    pegasus-remove command listed in the output of pegasus-run invocation or by
-    specifiying the Dag directory for the workflow you want to terminate.</para>
+    pegasus-remove command listed in the output of pegasus-run invocation or
+    by specifiying the Dag directory for the workflow you want to
+    terminate.</para>
 
     <programlisting>$ <emphasis>pegasus-remove /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</emphasis></programlisting>
 
-    <para>Pegasus will remove the DAGMan and all the jobs related to the DAGMan
-    from the condor queue. A rescue DAG will be generated in case you want to
-    resubmit the same workflow and continue execution from where it last
-    stopped. A rescue DAG only skips jobs that have completely finished. It does
-    not continue a partially running job unless the executable supports
-    checkpointing.</para>
+    <para>Pegasus will remove the DAGMan and all the jobs related to the
+    DAGMan from the condor queue. A rescue DAG will be generated in case you
+    want to resubmit the same workflow and continue execution from where it
+    last stopped. A rescue DAG only skips jobs that have completely finished.
+    It does not continue a partially running job unless the executable
+    supports checkpointing.</para>
 
     <para>To resubmit an aborted or failed workflow with the same submit files
     and rescue Dag just rerun the pegasus-run command</para>
