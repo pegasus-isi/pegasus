@@ -6,4 +6,4 @@
 . "`dirname $0`/common.sh"
 
 # run java program
-${JAVA} "-Dpegasus.home=${PEGASUS_HOME}" $addon org.griphyn.vdl.toolkit.VersionNumber "$@"
+${JAVA} $addon edu.isi.pegasus.planner.client.VersionNumber "$@"
