@@ -1097,7 +1097,7 @@ WORKFLOW STATUS : COMPLETED | 5/58 ( 100% ) | (Workflow finished successfully)</
       <para>The simplest way to invoke pegasus-analyzer is to simply give it a
       workflow run directory, like in the example below:</para>
 
-      <para><screen><command>$ pegasus-analyzer -d </command><replaceable>/home/user/run0004</replaceable>
+      <para><screen><command>$ pegasus-analyzer -d </command><replaceable>/PATH/To/WORKFLOW DIRECTORY</replaceable>
 
 <computeroutput>pegasus-analyzer: initializing...
 
@@ -1147,78 +1147,25 @@ working dir : /lfs1/work/pegasus/run0004
       by specifiying the Dag directory for the workflow you want to
       terminate.</para>
 
-      <programlisting><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/PATH/To/WORKFLOW DIRECTORY</replaceable></programlisting>
+      <screen><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/PATH/To/WORKFLOW DIRECTORY</replaceable></screen>
+
+      <para>Pegasus will remove the workflow from the condor queue. A rescue
+      DAG will be generated in case you want to resubmit the same workflow and
+      continue execution from where it last stopped. A rescue DAG only skips
+      jobs that have completely finished. It does not continue a partially
+      running job unless the executable supports checkpointing.</para>
     </section>
 
     <section>
-      <title>pegasus-analyzer</title>
+      <title>Resubmitting failed workflows</title>
 
-      <para>pegasus-analyzer is a command-line utility for parsing several
-      files in the workflow directory and summarizing useful information to
-      the user. It should be used after the workflow has already finished
-      execution. pegasus-analyzer quickly goes through the jobstate.log file,
-      and isolates jobs that did not complete successfully. It then parses
-      their submit, and kickstart output files, printing to the user detailed
-      information for helping the user debug what happened to his/her
-      workflow.</para>
+      <para>To resubmit an aborted or failed workflow with the same submit
+      files and rescue Dag just rerun the pegasus-run command</para>
 
-      <para>The simplest way to invoke pegasus-analyzer is to simply give it a
-      workflow run directory, like in the example below:</para>
-
-      <para><programlisting>$ pegasus-analyzer -d /home/user/run0004
-pegasus-analyzer: initializing...
-
-************************************Summary*************************************
-
- Total jobs         :     26 (100.00%)
- # jobs succeeded   :     25 (96.15%)
- # jobs failed      :      1 (3.84%)
- # jobs unsubmitted :      0 (0.00%)
-
-******************************Failed jobs' details******************************
-
-============================register_viz_glidein_7_0============================
-
- last state: POST_SCRIPT_FAILURE
-       site: local
-submit file: /home/user/run0004/register_viz_glidein_7_0.sub
-output file: /home/user/run0004/register_viz_glidein_7_0.out.002
- error file: /home/user/run0004/register_viz_glidein_7_0.err.002
-
--------------------------------Task #1 - Summary--------------------------------
-
-site        : local
-executable  : /lfs1/software/install/pegasus/default/bin/rc-client
-arguments   : -Dpegasus.user.properties=/lfs1/work/pegasus/run0004/pegasus.15181.properties \
--Dpegasus.catalog.replica.url=rlsn://smarty.isi.edu --insert register_viz_glidein_7_0.in
-exitcode    : 1
-working dir : /lfs1/work/pegasus/run0004
-
----------Task #1 - pegasus::rc-client - pegasus::rc-client:1.0 - stdout---------
-
-2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
-2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1</programlisting>In
-      the case above, pegasus-analyzer's output contains a brief summary
-      section, showing how many jobs have succeeded and how many have failed.
-      After that, pegasus-analyzer will print information about each job that
-      failed, showing its last known state, along with the location of its
-      submit, output, and error files. pegasus-analyzer will also display any
-      stdout and stderr from the job, as recorded in its kickstart record.
-      Please consult pegasus-analyzer's man page for more examples and a
-      detailed description of its various command-line options.</para>
-    </section>
-
-    <section>
-      <title></title>
-
-      <para></para>
-    </section>
-
-    <section>
-      <title>pegasus-analyzer</title>
-
-      <para>If your workflow fails you can run the pegasus-analyzer command to
-      see which job/jobs failed.</para>
+      <screen><command>$ pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
+/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
+--nodatabase</command> <replaceable>/nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001</replaceable>
+</screen>
     </section>
   </section>
 
