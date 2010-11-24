@@ -1047,4 +1047,478 @@ cessfully.
 --nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
 </emphasis></programlisting>
   </section>
+
+  <section>
+    <title>Monitoring and Debugging</title>
+
+    <para></para>
+  </section>
+
+  <section>
+    <title>Monitoring, Debugging and Statistics</title>
+
+    <section>
+      <title>pegasus-status</title>
+
+      <para>To monitor the execution of the workflow lets run the
+      pegasus-status command as suggested by the output of the pegasus-run
+      command above.</para>
+
+      <screen><emphasis role="bold">$ pegasus-status -l</emphasis> <replaceable>/Workflow/dags/directory</replaceable>
+
+<computeroutput>Workflow_1-0.dag succeeded
+10/01/10 12:24:38  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+10/01/10 12:24:38   ===     ===      ===     ===     ===        ===      ===
+10/01/10 12:24:38    48       0        5       0       5          0        0
+
+WORKFLOW STATUS : RUNNING | 48/58 ( 83% ) | (workflow is running)</computeroutput></screen>
+
+      <para>After the workflow finishes the status will change to COMPLETED or
+      FAILED..</para>
+
+      <screen><emphasis role="bold">$ pegasus-status -l</emphasis> <replaceable>/Workflow/dags/directory</replaceable>
+
+<computeroutput>Workflow_1-0.dag succeeded
+10/01/10 12:24:38  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+10/01/10 12:24:38   ===     ===      ===     ===     ===        ===      ===
+10/01/10 12:24:38    58       0        0       0       0          0        0
+
+WORKFLOW STATUS : COMPLETED | 5/58 ( 100% ) | (Workflow finished successfully)</computeroutput></screen>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>pegasus-analyzer</title>
+
+      <para>If the workflow fails the you can anlyze the run using the tool
+      pegasus-analyzer.</para>
+
+      <para>The simplest way to invoke pegasus-analyzer is to simply give it a
+      workflow run directory, like in the example below:</para>
+
+      <para><screen><command>$ pegasus-analyzer -d </command><replaceable>/home/user/run0004</replaceable>
+
+<computeroutput>pegasus-analyzer: initializing...
+
+************************************Summary*************************************
+
+ Total jobs         :     26 (100.00%)
+ # jobs succeeded   :     25 (96.15%)
+ # jobs failed      :      1 (3.84%)
+ # jobs unsubmitted :      0 (0.00%)
+
+******************************Failed jobs' details******************************
+
+============================register_viz_glidein_7_0============================
+
+ last state: POST_SCRIPT_FAILURE
+       site: local
+submit file: /home/user/run0004/register_viz_glidein_7_0.sub
+output file: /home/user/run0004/register_viz_glidein_7_0.out.002
+ error file: /home/user/run0004/register_viz_glidein_7_0.err.002
+
+-------------------------------Task #1 - Summary--------------------------------
+
+site        : local
+executable  : /lfs1/software/install/pegasus/default/bin/rc-client
+arguments   : -Dpegasus.user.properties=/lfs1/work/pegasus/run0004/pegasus.15181.properties \
+-Dpegasus.catalog.replica.url=rlsn://smarty.isi.edu --insert register_viz_glidein_7_0.in
+exitcode    : 1
+working dir : /lfs1/work/pegasus/run0004
+
+---------Task #1 - pegasus::rc-client - pegasus::rc-client:1.0 - stdout---------
+
+2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
+2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1</computeroutput></screen>In
+      the case above, pegasus-analyzer's output contains a brief summary
+      section, showing how many jobs have succeeded and how many have failed.
+      After that, pegasus-analyzer will print information about each job that
+      failed, showing its last known state, along with the location of its
+      submit, output, and error files. pegasus-analyzer will also display any
+      stdout and stderr from the job. </para>
+    </section>
+
+    <section>
+      <title>pegasus-remove</title>
+
+      <para>If you want to abort your workflow for any reason you can use the
+      pegasus-remove command listed in the output of pegasus-run invocation or
+      by specifiying the Dag directory for the workflow you want to
+      terminate.</para>
+
+      <programlisting><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/PATH/To/WORKFLOW DIRECTORY</replaceable></programlisting>
+    </section>
+
+    <section>
+      <title>pegasus-analyzer</title>
+
+      <para>pegasus-analyzer is a command-line utility for parsing several
+      files in the workflow directory and summarizing useful information to
+      the user. It should be used after the workflow has already finished
+      execution. pegasus-analyzer quickly goes through the jobstate.log file,
+      and isolates jobs that did not complete successfully. It then parses
+      their submit, and kickstart output files, printing to the user detailed
+      information for helping the user debug what happened to his/her
+      workflow.</para>
+
+      <para>The simplest way to invoke pegasus-analyzer is to simply give it a
+      workflow run directory, like in the example below:</para>
+
+      <para><programlisting>$ pegasus-analyzer -d /home/user/run0004
+pegasus-analyzer: initializing...
+
+************************************Summary*************************************
+
+ Total jobs         :     26 (100.00%)
+ # jobs succeeded   :     25 (96.15%)
+ # jobs failed      :      1 (3.84%)
+ # jobs unsubmitted :      0 (0.00%)
+
+******************************Failed jobs' details******************************
+
+============================register_viz_glidein_7_0============================
+
+ last state: POST_SCRIPT_FAILURE
+       site: local
+submit file: /home/user/run0004/register_viz_glidein_7_0.sub
+output file: /home/user/run0004/register_viz_glidein_7_0.out.002
+ error file: /home/user/run0004/register_viz_glidein_7_0.err.002
+
+-------------------------------Task #1 - Summary--------------------------------
+
+site        : local
+executable  : /lfs1/software/install/pegasus/default/bin/rc-client
+arguments   : -Dpegasus.user.properties=/lfs1/work/pegasus/run0004/pegasus.15181.properties \
+-Dpegasus.catalog.replica.url=rlsn://smarty.isi.edu --insert register_viz_glidein_7_0.in
+exitcode    : 1
+working dir : /lfs1/work/pegasus/run0004
+
+---------Task #1 - pegasus::rc-client - pegasus::rc-client:1.0 - stdout---------
+
+2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
+2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1</programlisting>In
+      the case above, pegasus-analyzer's output contains a brief summary
+      section, showing how many jobs have succeeded and how many have failed.
+      After that, pegasus-analyzer will print information about each job that
+      failed, showing its last known state, along with the location of its
+      submit, output, and error files. pegasus-analyzer will also display any
+      stdout and stderr from the job, as recorded in its kickstart record.
+      Please consult pegasus-analyzer's man page for more examples and a
+      detailed description of its various command-line options.</para>
+    </section>
+
+    <section>
+      <title></title>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>pegasus-analyzer</title>
+
+      <para>If your workflow fails you can run the pegasus-analyzer command to
+      see which job/jobs failed.</para>
+    </section>
+  </section>
+
+  <section>
+    <title>Plotting and Statistics</title>
+
+    <section>
+      <title>pegasus-statistics</title>
+
+      <para>pegasus-statistics generates workflow execution statistics. To
+      generate statistics run the command as shown below.</para>
+
+      <screen><command>$ pegasus-statistics</command> <replaceable>/scratch/grid-setup/run0001/</replaceable>
+
+
+...
+
+******************************************** SUMMARY ********************************************
+Total workflow execution time      :         1741 
+Total workflow execution wall time :      276.963 
+Total jobs                         :           17 
+Total tasks                        :           17 
+# jobs succeeded                   :           17 
+# jobs failed                      :            0 
+# jobs unsubmitted                 :            0 
+# jobs unknown                     :            0 
+
+Workflow execution statistics created at :
+/scratch/grid-setup/run0001/statistics/workflow
+
+Workflow events with time starting with zero is created at :
+/scratch/grid-setup/run0001/statistics/out
+
+Job statistics is created at : 
+/scratch/grid-setup/run0001/statistics/jobs
+
+Logical transformation statistics is created at :
+/scratch/grid-setup/run0001/statistics/breakdown.txt
+**************************************************************************************************</screen>
+
+      <para>By default the output gets generated to statistics folder inside
+      the submit directory. pegasus-statistics generates the following
+      statistics list and tables.</para>
+
+      <para><emphasis role="bold">Workflow statistics table</emphasis></para>
+
+      <para>Workflow statistics table contains information about the workflow
+      run like total execution time, job's failed etc. A sample table is shown
+      below.<link linkend="???"></link></para>
+
+      <table>
+        <title>Table 3.1</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry>Total workflow execution time</entry>
+
+              <entry>1741</entry>
+            </row>
+
+            <row>
+              <entry>Total workflow execution wall time</entry>
+
+              <entry>276.963</entry>
+            </row>
+
+            <row>
+              <entry>Total jobs</entry>
+
+              <entry>17</entry>
+            </row>
+
+            <row>
+              <entry>Total tasks</entry>
+
+              <entry>17</entry>
+            </row>
+
+            <row>
+              <entry># jobs succeeded</entry>
+
+              <entry>17</entry>
+            </row>
+
+            <row>
+              <entry># jobs failed</entry>
+
+              <entry>0</entry>
+            </row>
+
+            <row>
+              <entry># jobs unsubmitted</entry>
+
+              <entry>0</entry>
+            </row>
+
+            <row>
+              <entry># jobs unknown</entry>
+
+              <entry>0</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para><emphasis role="bold">Logical transformation statistics
+      table</emphasis></para>
+
+      <para>Logical transformation statistics table contains information about
+      each type of transformation in the workflow. A sample table is shown
+      below.</para>
+
+      <table>
+        <title>Table 3.5</title>
+
+        <tgroup align="center" cols="7">
+          <thead>
+            <row>
+              <entry align="center">Transformation</entry>
+
+              <entry align="center">Count</entry>
+
+              <entry align="center">Mean</entry>
+
+              <entry align="center">Variance</entry>
+
+              <entry align="center">Min</entry>
+
+              <entry align="center">Max</entry>
+
+              <entry align="center">Total</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>pegasus::dirmanager</entry>
+
+              <entry>1</entry>
+
+              <entry>0.33</entry>
+
+              <entry>0.00</entry>
+
+              <entry>0.33</entry>
+
+              <entry>0.33</entry>
+
+              <entry>0.33</entry>
+            </row>
+
+            <row>
+              <entry>diamond::analyze:2.0</entry>
+
+              <entry>1</entry>
+
+              <entry>60.16</entry>
+
+              <entry>0.00</entry>
+
+              <entry>60.16</entry>
+
+              <entry>60.16</entry>
+
+              <entry>60.16</entry>
+            </row>
+
+            <row>
+              <entry>diamond::findrange:2.0</entry>
+
+              <entry>2</entry>
+
+              <entry>60.31</entry>
+
+              <entry>0.01</entry>
+
+              <entry>60.25</entry>
+
+              <entry>60.37</entry>
+
+              <entry>120.62</entry>
+            </row>
+
+            <row>
+              <entry>diamond::preprocess:2.0</entry>
+
+              <entry>1</entry>
+
+              <entry>60.48</entry>
+
+              <entry>0.00</entry>
+
+              <entry>60.48</entry>
+
+              <entry>60.48</entry>
+
+              <entry>60.48</entry>
+            </row>
+
+            <row>
+              <entry>pegasus::cleanup</entry>
+
+              <entry>6</entry>
+
+              <entry>3.74</entry>
+
+              <entry>18.15</entry>
+
+              <entry>0.97</entry>
+
+              <entry>10.28</entry>
+
+              <entry>22.46</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section>
+      <title>pegasus-plots</title>
+
+      <para>pegasus-plots generates graphs and charts to visualize workflow
+      execution. To generate graphs and charts run the command as shown
+      below.</para>
+
+      <screen><command>$ pegasus-plots</command> &lt;submit dag directory&gt;
+
+
+<computeroutput>******************************************** SUMMARY ********************************************
+The workflow execution Gantt chart is created at -
+png format :- /scratch/grid-setup/run0001/graph/diamond-2.png 
+eps format :- /scratch/grid-setup/run0001/graph/diamond-2.eps 
+
+The host over time chart is created at -
+png format :-/scratch/grid-setup/run0001/graph/diamond-host.png 
+eps format :-/scratch/grid-setup/run0001/graph/diamond-host.eps
+
+JPEG file corresponding to the dag is created at: 
+/scratch/grid-setup/run0001/graph/diamond-dag.jpg 
+
+JPEG file corresponding to the dax is created at: 
+/scratch/grid-setup/run0001/graph/blackdiamond-dax.jpg 
+**************************************************************************************************</computeroutput></screen>
+
+      <para>By default the output gets generated to graph folder inside the
+      submit directory. pegasus-plots generates the following graphs and
+      charts.</para>
+
+      <para><emphasis role="bold">Gantt workflow execution
+      chart</emphasis></para>
+
+      <para>Gantt chart of the workflow execution run. A sample chart is shown
+      below.</para>
+
+      <figure>
+        <title>Figure 4.1</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-2.png" scalefit="true" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold"></emphasis></para>
+
+      <para><emphasis role="bold">Dag Graph</emphasis></para>
+
+      <para>Graph representation of the DAG file. A sample graph is shown
+      below.</para>
+
+      <figure>
+        <title>Figure 4.3</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-dag.jpg" scale="50%" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold">Dax Graph</emphasis></para>
+
+      <para>Graph representation of the DAX file. A sample graph is shown
+      below.</para>
+
+      <figure>
+        <title>Figure 4.4</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/blackdiamond-dax.jpg" scale="50%" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>For more options see the man page for pegasus-plots or the <xref
+      linkend="monitoring_debugging_stats" /> section</para>
+    </section>
+  </section>
 </chapter>
