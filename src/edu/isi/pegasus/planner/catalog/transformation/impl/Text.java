@@ -179,7 +179,7 @@ public class Text extends Abstract
         try{
             java.io.File f = new java.io.File(  mTCFile );
             
-            if( f.exists() || f.createNewFile() ){
+            if( f.exists() ){
                 mTextParser = new TransformationCatalogTextParser ( new FileReader( f ),
                                                                     mLogger );
                 mTCStore = mTextParser.parse();
@@ -188,7 +188,7 @@ public class Text extends Abstract
                 //empty TCStore
                 mTCStore = new TransformationStore();
                 mLogger.log("The Transformation Catalog file " + mTCFile +
-                        " was not found - Will consider only TC Entries from the DAX", LogManager.WARNING_MESSAGE_LEVEL);
+                        " was not found - Will consider only TC Entries from the DAX", LogManager.DEBUG_MESSAGE_LEVEL );
             }
         }
         catch (FileNotFoundException ex) {
