@@ -84,7 +84,7 @@ linefeed +
 
     lo[3] = new LongOpt( "full", LongOpt.NO_ARGUMENT, null, 'f' );
     lo[4] = new LongOpt( "long", LongOpt.NO_ARGUMENT, null, 'l' );
-    lo[5] = new LongOpt( "build", LongOpt.NO_ARGUMENT, null, 'b' );
+    lo[5] = new LongOpt( "build", LongOpt.NO_ARGUMENT, null, 'f' );
     lo[6] = new LongOpt( "match", LongOpt.NO_ARGUMENT, null, 'm' );
     lo[7] = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
 
@@ -100,7 +100,7 @@ linefeed +
     try {
       me = new VersionNumber("pegasus-version");
       Getopt opts = new Getopt( me.m_application, args,
-				"Vfhmq",
+				"Vflhmq",
 				me.generateValidOptions() );
       opts.setOpterr(false);
       String installed = null;
@@ -120,6 +120,7 @@ linefeed +
 	  System.out.println( "PEGASUS version " + v.toString() );
 	  return;
 
+	case 'l':
 	case 'f':
 	  build = true;
 	  break;
