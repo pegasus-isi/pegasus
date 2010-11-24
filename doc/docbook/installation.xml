@@ -36,11 +36,19 @@ Python 2.6.2</programlisting></para>
         <filename>condor_q</filename> and
         <filename>condor_status</filename>.</para>
       </listitem>
+    </itemizedlist>
+  </section>
 
+  <section id="optional">
+    <title>Optional Software</title>
+
+    <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">Globus 4.0 or higher</emphasis>. See
-        <ulink url="http://www.globus.org/">http://www.globus.org/</ulink> for
-        more information. Check Globus Installation</para>
+        <para><emphasis role="bold">Globus 4.0 or higher</emphasis>. Globus is
+        only needed if you want to run against grid sites or use GridFTP for
+        data transfers. See <ulink
+        url="http://www.globus.org/">http://www.globus.org/</ulink> for more
+        information. Check Globus Installation</para>
 
         <programlisting>$ <emphasis>echo $GLOBUS_LOCATION</emphasis>
 /path/to/globus/install</programlisting>
