@@ -253,17 +253,15 @@ public class File  extends Abstract
         } else {
 
           java.io.File f = new java.io.File(  mTCFile );
-          try {
-          if( f.exists() || f.createNewFile() ){
+          
+          if( f.exists()  ){
                 populateTC();
             }
             else{
                 mLogger.log("The Transformation Catalog file " + mTCFile +
-                        " was not found - Will consider only TC Entries from the DAX", LogManager.WARNING_MESSAGE_LEVEL);
+                        " was not found", LogManager.DEBUG_MESSAGE_LEVEL);
             }
-            }  catch (IOException ioe){
-              mLogger.log("Could not create Transformation Catalog file "+mTCFile, LogManager.ERROR_MESSAGE_LEVEL);
-          }
+            
         }
 
     }
