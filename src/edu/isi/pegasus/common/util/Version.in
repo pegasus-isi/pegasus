@@ -45,7 +45,7 @@ public class Version
   /**
    * This constant defines the minor version number.
    */
-  public static final int MINOR = 0;
+  public static final int MINOR = 1;
 
   /**
    * This constant defines the patch level version.
