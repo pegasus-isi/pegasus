@@ -22,6 +22,10 @@ use Carp;
 use File::Basename; 		# standard module since 5.005
 use File::Spec;			# standard module since 5.005 or 5.6.0
 use Getopt::Long qw(:config bundling no_ignore_case);
+BEGIN { 
+    require File::Spec->catfile( dirname($0), 'common.pm' );
+    common->import(':all');
+}
 use Work::Common;
 
 # debug off
