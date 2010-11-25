@@ -538,7 +538,7 @@ sub run_dag2dot($$){
 	
 	if($dot_png_command_path){
 		print STDOUT "******  dot  ***** \n";
-		my ($dot_png_img_file_name) =("$dagbase"."-dag.jpg" );
+		my ($dot_png_img_file_name) =("$dagbase"."-dag.png" );
 		my ($dot_png_img_file ) =File::Spec->catfile("$output_dir", $dot_png_img_file_name);
 		my (@dot_png_args);
 		
@@ -615,7 +615,7 @@ sub run_dax2dot($$){
 	
 	if($dot_png_command_path){
 		print STDOUT "******  dot  ***** \n";
-		my ($dot_png_img_file_name) =("$daxbase"."-dax.jpg" );
+		my ($dot_png_img_file_name) =("$daxbase"."-dax.png" );
 		my ($dot_png_img_file ) =File::Spec->catfile("$output_dir", $dot_png_img_file_name);
 		my (@dot_png_args);
 		
