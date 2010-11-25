@@ -341,6 +341,10 @@ sub run_show_job($$$$){
 	if($title){
 		push(@args ,"--title '".$title."'"); # adding graph title	
 	}
+	if($keep){
+	    #pass the keep option forward to show-job
+	    push(@args ,"--keep"); 
+	}
 	push(@args, $dag_file_path); # adding dag file path
 	
 	# creating show job command 
