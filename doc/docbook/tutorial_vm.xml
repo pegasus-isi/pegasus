@@ -431,7 +431,7 @@ pimages_20080505_143233_14944.tbl
  2008.04.30 15:11:59.313 PDT: [INFO] Added tc entry sucessfully
 </emphasis></emphasis></programlisting>
 
-          <para>Let us try and query for the entry we inserted. </para>
+          <para>Let us try and query for the entry we inserted.</para>
 
           <programlisting><emphasis role="bold">$ pegasus-tc-client -Dpegasus.user.properties=config/properties -q -P -l diamond::analyze:2.0
 </emphasis>
@@ -683,13 +683,18 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
         </listitem>
       </itemizedlist>
     </section>
+  </section>
+
+  <section>
+    <title>Monitoring, Debugging and Statistics</title>
+
+    <para>In this section, we are going to list ways to track your workflow,
+    how to debug a failed workflow and how to generates statistics and plots
+    for a workflow run.</para>
 
     <section>
       <title>Tracking the progress of the workflow and debugging the
       workflows.</title>
-
-      <para>In this exercise we are going to list ways to track your workflow,
-      and give some debugging hints when something goes wrong.</para>
 
       <para>We will change into the directory, that was mentioned by the
       output of pegasus-run command.</para>
@@ -794,10 +799,11 @@ pegasus-analyzer: end of status report
 1290676552 INTERNAL *** DAGMAN_FINISHED 0 ***
 1290676554 INTERNAL *** MONITORD_FINISHED 0 ***
 </computeroutput></programlisting> Looking at the last two lines we see that
-          DAGMan finished, and tailstatd finished successfully with a status
-          0. This means workflow ran successfully. Congratulations you ran
-          your workflow on the local site successfully. The workflow generates
-          a final output file f.d that resides in the directory <emphasis
+          DAGMan finished, and pegasus-monitord finished successfully with a
+          status 0. This means workflow ran successfully. Congratulations you
+          ran your workflow on the local site successfully. The workflow
+          generates a final output file f.d that resides in the directory
+          <emphasis
           role="bold">/home/pegasus/local-storage/storage/f.d</emphasis>
           .</para>
 
@@ -889,8 +895,8 @@ Input Filenames: f.c1 f.c2
 1290677134 INTERNAL *** MONITORD_FINISHED 0 ***
 
 </computeroutput></programlisting>Looking at the last two lines we see that
-          DAGMan finished, and tailstatd finished unsuccessfully with a status
-          1. We can easily determine which job failed. It is
+          DAGMan finished, and pegasus-monitord finished unsuccessfully with a
+          status 1. We can easily determine which job failed. It is
           stage_in_local_local_0 in this case. To determine the reason for
           failure we need to look at it's kickstart output file which is
           JOBNAME.out.NNN. where NNN is 000 - NNN</para>
@@ -1038,91 +1044,90 @@ pegasus-analyzer: end of status report
       was launched. the machine information about the node that the job ran on
       Amongst the above information, the dagman.out file gives a coarser
       grained estimate of the job duration and start time</para>
-    </section>
-
-    <section>
-      <title>Kickstart</title>
-
-      <para>Kickstart is a light weight C executable that is shipped with the
-      pegasus worker package. All jobs are launced via Kickstart on the remote
-      end, unless explicitly disabled at the time of running
-      pegasus-plan.</para>
-
-      <para>Kickstart does not work with</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Condor Standard Universe Jobs</para>
-        </listitem>
-
-        <listitem>
-          <para>MPI jobs</para>
-        </listitem>
-      </orderedlist>
-
-      <para>Pegasus automatically disables kickstart for the above
-      jobs.</para>
-
-      <para>Kickstart captures useful runtime provenance information about the
-      job launched by it on the remote note, and puts in an XML record that it
-      writes to it's stdout. The stdout appears in the workflow submit
-      directory as &lt;job&gt;.out.00n . Some useful information captured by
-      kickstart and logged are as follows</para>
-
-      <orderedlist>
-        <listitem>
-          <para>the exitcode with which the job it launched exited</para>
-        </listitem>
-
-        <listitem>
-          <para>the duration of the job</para>
-        </listitem>
-
-        <listitem>
-          <para>the start time for the job</para>
-        </listitem>
-
-        <listitem>
-          <para>the node on which the job ran</para>
-        </listitem>
-
-        <listitem>
-          <para>the directory in which the job ran</para>
-        </listitem>
-
-        <listitem>
-          <para>the stdout/stderr of the job</para>
-        </listitem>
-
-        <listitem>
-          <para>the arguments with which it launched the job</para>
-        </listitem>
-
-        <listitem>
-          <para>the environment that was set for the job before it was
-          launched.</para>
-        </listitem>
-
-        <listitem>
-          <para>the machine information about the node that the job ran
-          on</para>
-        </listitem>
-      </orderedlist>
 
       <section>
-        <title>Reading a Kickstart Output File</title>
+        <title>Kickstart</title>
 
-        <para>Lets look at the stdout of our failed job.</para>
+        <para>Kickstart is a light weight C executable that is shipped with
+        the pegasus worker package. All jobs are launced via Kickstart on the
+        remote end, unless explicitly disabled at the time of running
+        pegasus-plan.</para>
 
-        <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ cat  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002/stage_in_local_0.out.002</emphasis>
+        <para>Kickstart does not work with</para>
+
+        <orderedlist>
+          <listitem>
+            <para>Condor Standard Universe Jobs</para>
+          </listitem>
+
+          <listitem>
+            <para>MPI jobs</para>
+          </listitem>
+        </orderedlist>
+
+        <para>Pegasus automatically disables kickstart for the above
+        jobs.</para>
+
+        <para>Kickstart captures useful runtime provenance information about
+        the job launched by it on the remote note, and puts in an XML record
+        that it writes to it's stdout. The stdout appears in the workflow
+        submit directory as &lt;job&gt;.out.00n . Some useful information
+        captured by kickstart and logged are as follows</para>
+
+        <orderedlist>
+          <listitem>
+            <para>the exitcode with which the job it launched exited</para>
+          </listitem>
+
+          <listitem>
+            <para>the duration of the job</para>
+          </listitem>
+
+          <listitem>
+            <para>the start time for the job</para>
+          </listitem>
+
+          <listitem>
+            <para>the node on which the job ran</para>
+          </listitem>
+
+          <listitem>
+            <para>the directory in which the job ran</para>
+          </listitem>
+
+          <listitem>
+            <para>the stdout/stderr of the job</para>
+          </listitem>
+
+          <listitem>
+            <para>the arguments with which it launched the job</para>
+          </listitem>
+
+          <listitem>
+            <para>the environment that was set for the job before it was
+            launched.</para>
+          </listitem>
+
+          <listitem>
+            <para>the machine information about the node that the job ran
+            on</para>
+          </listitem>
+        </orderedlist>
+
+        <section>
+          <title>Reading a Kickstart Output File</title>
+
+          <para>Lets look at the stdout of our failed job.</para>
+
+          <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ cat  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002/stage_in_local_0.out.002</emphasis>
 
 &lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
 &lt;invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
 xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.0.xsd" version="2.0" \
 start="2010-07-19T17:41:57.857-07:00" duration="0.091" <emphasis role="bold">transformation="globus::guc"</emphasis> derivation="globus::guc" <emphasis
-            role="bold">resource="local"</emphasis> \
+              role="bold">resource="local"</emphasis> \
 wf-label="diamond" wf-stamp="2010-07-19T14:36:28-07:00" <emphasis role="bold">hostaddr="172.16.80.128"</emphasis> <emphasis
-            role="bold">hostname="pegasus"</emphasis> pid="12792" uid="501" \
+              role="bold">hostname="pegasus"</emphasis> pid="12792" uid="501" \
 user="pegasus" gid="501" group="pegasus" umask="0022"&gt;
   <emphasis role="bold">&lt;mainjob start="2010-07-19T17:41:57.870-07:00" duration="0.078" pid="12793"&gt;</emphasis>
     &lt;usage utime="0.012" stime="0.012" minflt="1115" majflt="0" nswap="0" nsignals="0" nvcsw="2" nivcsw="24"/&gt;
@@ -1248,20 +1253,20 @@ error: globus_ftp_client: the server responded with an error
 [pegasus@pegasus pegasus-wms]$ 
 
 </programlisting>
+        </section>
       </section>
-    </section>
 
-    <section>
-      <title>Condor DAGMan format and log files etc.</title>
+      <section>
+        <title>Condor DAGMan format and log files etc.</title>
 
-      <para>In this exercise we will learn about the DAG file format and some
-      of the log files generated when the DAG runs.</para>
+        <para>In this exercise we will learn about the DAG file format and
+        some of the log files generated when the DAG runs.</para>
 
-      <itemizedlist>
-        <listitem>
-          <para>Now take a look at the DAG file...</para>
+        <itemizedlist>
+          <listitem>
+            <para>Now take a look at the DAG file...</para>
 
-          <programlisting><command>$ cat $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag</command><computeroutput>
+            <programlisting><command>$ cat $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag</command><computeroutput>
 
 
 ######################################################################
@@ -1326,12 +1331,12 @@ PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
 ######################################################################
 # End of DAG
 ##################################################################</computeroutput></programlisting>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para>... and the dagman.out file.</para>
+          <listitem>
+            <para>... and the dagman.out file.</para>
 
-          <programlisting><emphasis role="bold"><command>$</command><computeroutput> cat $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag.dagman.out </computeroutput></emphasis><computeroutput>
+            <programlisting><emphasis role="bold"><command>$</command><computeroutput> cat $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag.dagman.out </computeroutput></emphasis><computeroutput>
 
 11/25 01:10:47 ******************************************************
 11/25 01:10:47 ** condor_scheduniv_exec.339.0 (CONDOR_DAGMAN) STARTING UP
@@ -1433,70 +1438,71 @@ PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
 [p
 
 </computeroutput></programlisting>
-        </listitem>
-      </itemizedlist>
-    </section>
+          </listitem>
+        </itemizedlist>
+      </section>
 
-    <section>
-      <title>Removing a running workflow</title>
+      <section>
+        <title>Removing a running workflow</title>
 
-      <para>Sometimes you may want to halt the execution of the workflow or
-      just permanently remove it. You can stop/halt a workflow by running the
-      pegasus-remove command mentioned in the output of pegasus-run</para>
+        <para>Sometimes you may want to halt the execution of the workflow or
+        just permanently remove it. You can stop/halt a workflow by running
+        the pegasus-remove command mentioned in the output of
+        pegasus-run</para>
 
-      <programlisting><command>$ pegasus-remove $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/runXXXX</command><computeroutput>
+        <programlisting><command>$ pegasus-remove $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/runXXXX</command><computeroutput>
 
 Job 2788.0 marked for removal</computeroutput></programlisting>
-    </section>
+      </section>
 
-    <section>
-      <title>Planning workflow using pegasus-plan and Running pegasus-run to
-      submit the workflow to a grid resource.</title>
+      <section>
+        <title>Planning workflow using pegasus-plan and Running pegasus-run to
+        submit the workflow to a grid resource.</title>
 
-      <para>In this exercise we are going to run pegasus-plan to generate a
-      executable workflow from the abstract workflow (montage.dax). The
-      Executable workflow generated, are condor submit files that are
-      submitted to remote grid resources using pegasus-run</para>
+        <para>In this exercise we are going to run pegasus-plan to generate a
+        executable workflow from the abstract workflow (montage.dax). The
+        Executable workflow generated, are condor submit files that are
+        submitted to remote grid resources using pegasus-run</para>
 
-      <para>The instructors have provided:</para>
+        <para>The instructors have provided:</para>
 
-      <itemizedlist>
-        <listitem>
-          <para>A dax (montage.dax) in the $HOME/pegasus-wms/dax/
-          directory.</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>You will need to write some things yourself, by following the
-      instructions below: <itemizedlist>
+        <itemizedlist>
           <listitem>
-            <para>Run pegasus-plan to generate the condor submit files out of
-            the dax.</para>
+            <para>A dax (montage.dax) in the $HOME/pegasus-wms/dax/
+            directory.</para>
           </listitem>
-        </itemizedlist></para>
+        </itemizedlist>
 
-      <para>Instructions:</para>
+        <para>You will need to write some things yourself, by following the
+        instructions below: <itemizedlist>
+            <listitem>
+              <para>Run pegasus-plan to generate the condor submit files out
+              of the dax.</para>
+            </listitem>
+          </itemizedlist></para>
 
-      <itemizedlist>
-        <listitem>
-          <para>Let us run pegasus-plan on the montage dax on the tg_ncsa
-          cluster. If multiple sites are available you could provide the sites
-          using a comma "," separated list like tg_ncsa,viz
-          etc.<programlisting><command>$ cd $HOME/pegasus-wms
+        <para>Instructions:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>Let us run pegasus-plan on the montage dax on the tg_ncsa
+            cluster. If multiple sites are available you could provide the
+            sites using a comma "," separated list like tg_ncsa,viz
+            etc.<programlisting><command>$ cd $HOME/pegasus-wms
 $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
                -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
                --dir dags --sites cluster --output local --force \
                --nocleanup --dax `pwd`/dax/montage.dax --submit -v</command></programlisting>
-          The above command says that we need to plan the montage dax on the
-          <emphasis role="bold">cluster</emphasis> site. The cluster site in
-          the VM is managed by SGE that is running in the VM. The jobs for
-          this workflow will be submitted to <emphasis
-          role="bold">jobmanager-sge</emphasis> in the VM. The output data
-          needs to be transferred back to the local host. The condor submit
-          files are to be generated in a directory structure whose base is
-          dags. We also are requesting that no cleanup jobs be added as we
-          require the intermediate data on the remote host. Here is the output
-          of pegasus-plan. <programlisting><computeroutput>
+            The above command says that we need to plan the montage dax on the
+            <emphasis role="bold">cluster</emphasis> site. The cluster site in
+            the VM is managed by SGE that is running in the VM. The jobs for
+            this workflow will be submitted to <emphasis
+            role="bold">jobmanager-sge</emphasis> in the VM. The output data
+            needs to be transferred back to the local host. The condor submit
+            files are to be generated in a directory structure whose base is
+            dags. We also are requesting that no cleanup jobs be added as we
+            require the intermediate data on the remote host. Here is the
+            output of pegasus-plan. <programlisting><computeroutput>
 2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - STARTED 
 2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - FINISHED 
 2010.11.24 18:20:11.350 PST: [INFO] event.pegasus.refinement dax.id montage_0  - STARTED 
@@ -1545,30 +1551,418 @@ $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
 2010.11.24 18:20:13.617 PST:   Time taken to execute is 3.76 seconds 
 2010.11.24 18:20:13.617 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
 </computeroutput></programlisting></para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para>If you get any errors above while running pegasus-plan you can
-          add -vvvvv to enable maximum verbosity on pegasus-run.</para>
-        </listitem>
-      </itemizedlist>
+          <listitem>
+            <para>If you get any errors above while running pegasus-plan you
+            can add -vvvvv to enable maximum verbosity on pegasus-run.</para>
+          </listitem>
+        </itemizedlist>
 
-      <para>The above command submits the workflow to Condor DAGMan/CondorG.
-      After submitting it starts a monitoring daemon pegasus-monitord that
-      parses the condor log files to update the status of the jobs and push it
-      in a work database.</para>
+        <para>The above command submits the workflow to Condor DAGMan/CondorG.
+        After submitting it starts a monitoring daemon pegasus-monitord that
+        parses the condor log files to update the status of the jobs and push
+        it in a work database.</para>
 
-      <para>Monitor the workflow using the commands provided in the output of
-      the pegasus-run command and other commands explained earlier.</para>
+        <para>Monitor the workflow using the commands provided in the output
+        of the pegasus-run command and other commands explained
+        earlier.</para>
 
-      <para>The workflow generates a single output file montage.jpg that
-      resides in the directory <emphasis
-      role="bold">/home/pegasus/local-storage/storage/montage.jpg</emphasis>
-      if it runs successfully</para>
+        <para>The workflow generates a single output file montage.jpg that
+        resides in the directory <emphasis
+        role="bold">/home/pegasus/local-storage/storage/montage.jpg</emphasis>
+        if it runs successfully</para>
 
-      <para>The grid workflow will take time to execute on the VM. On the
-      instructor's MAC Pro Desktop it took about<emphasis role="bold"> 30
-      minutes </emphasis>to run.</para>
+        <para>The grid workflow will take time to execute on the VM. On the
+        instructor's MAC Pro Desktop it took about<emphasis role="bold"> 30
+        minutes </emphasis>to run.</para>
+      </section>
+    </section>
+
+    <section>
+      <title>Generating statistics and plots of a workflow run</title>
+
+      <para>In this section, we will generate statistics and plots of the
+      diamond workflow we ran using pegasus-statistics and
+      pegasus-plots</para>
+
+      <para></para>
+
+      <section>
+        <title>Generating Statistics Using pegasus-statistics</title>
+
+        <para>pegasus-statistics generates workflow execution statistics. To
+        generate statistics run the command as shown below</para>
+
+        <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wm
+
+
+$ pegasus-statistics dags/pegasus/pegasus/blackdiamond/run0001/
+</emphasis>
+
+******************************************** SUMMARY ********************************************
+Total workflow execution time      :          306 
+Total workflow execution wall time :      240.843 
+Total jobs                         :            8 
+Total tasks                        :            8 
+# jobs succeeded                   :            8 
+# jobs failed                      :            0 
+# jobs unsubmitted                 :            0 
+# jobs unknown                     :            0 
+
+Workflow execution statistics created at :
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/workflow
+
+Workflow events with time starting with zero is created at :
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/out
+
+Job statistics is created at : 
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/jobs
+
+Logical transformation statistics is created at :
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/breakdown.txt
+ </programlisting>
+
+        <para><emphasis role="bold">Workflow statistics
+        table</emphasis></para>
+
+        <para>Workflow statistics table contains information about the
+        workflow run like total execution time, job's failed etc.</para>
+
+        <table>
+          <title>Table Workflow Statistics</title>
+
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry>Total workflow execution time</entry>
+
+                <entry>306</entry>
+              </row>
+
+              <row>
+                <entry>Total workflow execution wall time</entry>
+
+                <entry>240.843</entry>
+              </row>
+
+              <row>
+                <entry>Total jobs</entry>
+
+                <entry>8</entry>
+              </row>
+
+              <row>
+                <entry>Total tasks</entry>
+
+                <entry>8</entry>
+              </row>
+
+              <row>
+                <entry># jobs succeeded</entry>
+
+                <entry>8</entry>
+              </row>
+
+              <row>
+                <entry># jobs failed</entry>
+
+                <entry>0</entry>
+              </row>
+
+              <row>
+                <entry># jobs unsubmitted</entry>
+
+                <entry>0</entry>
+              </row>
+
+              <row>
+                <entry># jobs unknown</entry>
+
+                <entry>0</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+
+        <para><emphasis role="bold">Job statistics table</emphasis></para>
+
+        <para>Job statistics table contains the following details about the
+        jobs in the workflow. A sample table is shown below.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>Job - the name of the job</para>
+          </listitem>
+
+          <listitem>
+            <para>Site - the site where the job ran</para>
+          </listitem>
+
+          <listitem>
+            <para>Kickstart - the actual duration of the job in seconds on the
+            remote compute node</para>
+          </listitem>
+
+          <listitem>
+            <para>Post - the postscript time as reported by DAGMan</para>
+          </listitem>
+
+          <listitem>
+            <para>DAGMan - the time between the last parent job of a job
+            completes and the job gets submitted</para>
+          </listitem>
+
+          <listitem>
+            <para>CondorQTime - the time between submission by DAGMan and the
+            remote Grid submission. It is an estimate of the time spent in the
+            condor q on the submit node</para>
+          </listitem>
+
+          <listitem>
+            <para>Resource - the time between the remote Grid submission and
+            start of remote execution . It is an estimate of the time job
+            spent in the remote queue</para>
+          </listitem>
+
+          <listitem>
+            <para>Runtime - the time spent on the resource as seen by Condor
+            DAGMan . Is always &gt;=kickstart</para>
+          </listitem>
+
+          <listitem>
+            <para>CondorQLen - the number of outstanding jobs in the queue
+            when this job was released</para>
+          </listitem>
+
+          <listitem>
+            <para>Seqexec - the time taken for the completion of a clustered
+            job</para>
+          </listitem>
+
+          <listitem>
+            <para>Seqexec-Delay- the time difference between the time for the
+            completion of a clustered job and sum of all the individual tasks
+            kickstart time</para>
+          </listitem>
+        </itemizedlist>
+
+        <programlisting><emphasis role="bold">$ cat /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/jobs
+</emphasis>....
+#Job                                                     Site Kickstart     Post   DAGMan   CondorQTime Resource  Runtime CondorQLen Seqexec Seqexec-Delay
+analyze_j4                                              local    60.03     6.00     6.00          0.00     0.00    60.00     0           -          -
+create_dir_blackdiamond_0_local                         local     0.04     5.00    14.00          0.00     0.00     0.00     0           -          -
+findrange_j2                                            local    60.06     5.00     6.00          0.00     0.00    65.00     0           -          -
+findrange_j3                                            local    60.02     5.00     6.00          0.00     0.00    60.00     0           -          -
+preprocess_j1                                           local    60.02     5.00     6.00          0.00     0.00    60.00     0           -          -
+register_local_2_0                                      local     0.50     5.00     6.00          0.00     0.00     0.00     0           -          -
+stage_in_local_local_0                                  local     0.08     5.00     6.00          0.00     0.00     0.00     0           -          -
+stage_out_local_local_2_0                               local     0.08     5.00     6.00          0.00     0.00     0.00     0           -          -
+</programlisting>
+
+        <para><emphasis role="bold">Logical transformation statistics
+        table</emphasis></para>
+
+        <para>Logical transformation statistics table contains information
+        about each type of transformation in the workflow.</para>
+
+        <table>
+          <title>Table: Logical Transformation Statistics</title>
+
+          <tgroup align="center" cols="7">
+            <thead>
+              <row>
+                <entry align="center">Transformation</entry>
+
+                <entry align="center">Count</entry>
+
+                <entry align="center">Mean</entry>
+
+                <entry align="center">Variance</entry>
+
+                <entry align="center">Min</entry>
+
+                <entry align="center">Max</entry>
+
+                <entry align="center">Total</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>diamond::analyze:2.0</entry>
+
+                <entry>1</entry>
+
+                <entry>60.16</entry>
+
+                <entry>0.00</entry>
+
+                <entry>60.16</entry>
+
+                <entry>60.16</entry>
+
+                <entry>60.16</entry>
+              </row>
+
+              <row>
+                <entry>diamond::findrange:2.0</entry>
+
+                <entry>2</entry>
+
+                <entry>60.31</entry>
+
+                <entry>0.01</entry>
+
+                <entry>60.25</entry>
+
+                <entry>60.37</entry>
+
+                <entry>120.62</entry>
+              </row>
+
+              <row>
+                <entry>diamond::preprocess:2.0</entry>
+
+                <entry>1</entry>
+
+                <entry>60.48</entry>
+
+                <entry>0.00</entry>
+
+                <entry>60.48</entry>
+
+                <entry>60.48</entry>
+
+                <entry>60.48</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+
+      <section>
+        <title>Generating plots using pegasus-plots</title>
+
+        <para>pegasus-plots generates graphs and charts to visualize workflow
+        execution. To generate graphs and charts run the command as shown
+        below.</para>
+
+        <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms 
+$ pegasus-plots dags/pegasus/pegasus/blackdiamond/run0001/</emphasis>
+
+******  show-job *****  
+Please wait, this may take a few minutes ...
+****** Finished executing show-job  ***** 
+******  show-run *****  
+Please wait, this may take a few minutes ...
+****** Finished executing show-run  ***** 
+******  dag2dot  ***** 
+Please wait, this may take a few minutes ...
+****** Finished executing dag2dot ***** 
+******  dot  ***** 
+****** Finished executing dot2png ***** 
+******  dax2dot  ***** 
+Please wait, this may take a few minutes ...
+****** Finished executing dax2dot ***** 
+******  dot  ***** 
+****** Finished executing dot2png ***** 
+
+
+******************************************** SUMMARY ********************************************
+The workflow execution Gantt chart is created at -
+png format :- /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-2.png 
+eps format :- /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-2.eps 
+
+The host over time chart is created at -
+png format :-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-host.png 
+eps format :-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-host.eps
+
+PNG file corresponding to the dag is created at: 
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png 
+
+PNG file corresponding to the dax is created at: 
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/diamond-dax.png 
+**************************************************************************************************
+[pegasus@pegasus pegasus-wms]$ 
+</programlisting>
+
+        <para></para>
+
+        <section>
+          <title>Abstract Worfklow / DAX Image</title>
+
+          <para>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/diamond-dax.png</para>
+
+          <figure>
+            <title>Figure: Black Diamond DAX Image</title>
+
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="images/tutorial-blackdiamond-dax.png" />
+              </imageobject>
+            </mediaobject>
+          </figure>
+        </section>
+
+        <section>
+          <title>Executable Workflow / DAG Image</title>
+
+          <para>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png</para>
+
+          <figure>
+            <title>Figure: Black Diamond DAG Image</title>
+
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="images/tutorial-blackdiamond-dag.png" />
+              </imageobject>
+            </mediaobject>
+          </figure>
+        </section>
+
+        <section>
+          <title>Gantt Chart of Workflow Execution</title>
+
+          <para>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-2.png</para>
+
+          <para><emphasis role="bold">X axis </emphasis>- time in seconds .
+          Each tic is 60 seconds</para>
+
+          <para><emphasis role="bold">Y axis</emphasis> - Job Number .</para>
+
+          <figure>
+            <title>Figure: Gantt Chart of Workflow Execution</title>
+
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="images/tutorial-blackdiamond-gantt.png" />
+              </imageobject>
+            </mediaobject>
+          </figure>
+        </section>
+
+        <section>
+          <title>Host over time chart</title>
+
+          <para>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-host.png</para>
+
+          <para><emphasis role="bold">X axis </emphasis>- time in seconds .
+          Each tic is 60 seconds</para>
+
+          <para><emphasis role="bold">Y axis</emphasis> - Job Number .</para>
+
+          <figure>
+            <title>Figure: Gantt Chart of Workflow Execution</title>
+
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="images/tutorial-blackdiamond-host.png" />
+              </imageobject>
+            </mediaobject>
+          </figure>
+        </section>
+      </section>
     </section>
   </section>
 
@@ -1652,7 +2046,7 @@ pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/peg
 </programlisting>
 
       <para>You can increase the debug level to see how pegasus deletes the
-      jobs bottom up of the workflow. Pass -vvvvv to pegasus-plan
+      jobs bottom up of the workflow. Pass -vvvv to pegasus-plan
       command.</para>
     </section>
   </section>
