@@ -23,7 +23,8 @@ Text like this is the output you should get.</computeroutput></programlisting>
   <para>For example:</para>
 
   <programlisting><command>$ date</command><computeroutput>
-Mon June 1 11:54:58 BST 2008</computeroutput></programlisting>
+Wed Nov 24 14:47:59 PST 2010
+</computeroutput></programlisting>
 
   <section>
     <title>Downloading and Running the VM</title>
@@ -73,8 +74,8 @@ Mon June 1 11:54:58 BST 2008</computeroutput></programlisting>
     <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init 
 
 </command><computeroutput>Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
-Creating proxy ............................................. Done
-Your proxy is valid until: Tue Jul 20 02:19:53 2010
+Creating proxy ................................... Done
+Your proxy is valid until: Thu Nov 25 02:48:18 2010
 
 </computeroutput></programlisting>
 
@@ -82,13 +83,13 @@ Your proxy is valid until: Tue Jul 20 02:19:53 2010
 
     <programlisting><command>$ </command><emphasis role="bold">[pegasus@pegasus ~]$ grid-proxy-info</emphasis><computeroutput><computeroutput>
 
-subject  : /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User/CN=294698404
+subject  : /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User/CN=1814822797
 issuer   : /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
 identity : /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
 type     : RFC 3820 compliant impersonation proxy
 strength : 512 bits
 path     : /tmp/x509up_u501
-timeleft : 11:55:49
+timeleft : 11:59:29
 
 </computeroutput></computeroutput></programlisting>
   </section>
@@ -110,7 +111,7 @@ timeleft : 11:55:49
 
     <programlisting><command>$ ls</command><computeroutput><computeroutput>
 
-config dags dax</computeroutput></computeroutput></programlisting>
+config  dax</computeroutput></computeroutput></programlisting>
 
     <para>You may also see some other files here.</para>
 
@@ -127,35 +128,25 @@ config dags dax</computeroutput></computeroutput></programlisting>
       the DAX. Towards the end of the function there is some commented out
       code.</para>
 
-      <programlisting>$ //create fourth job //analyze
-    //To be uncommented for exercise 2.1
-    /*
-    String id4="ID0000004";
-    job=new Job (NAMESPACE,ANALYZE,VERSION,id4);
-    //add the arguments to the job
-    job.addArgument(new PseudoText("-a analyze "));
-    job.addArgument(new PseudoText("-T60 "));
-    job.addArgument(new PseudoText("-i "));
-    job.addArgument(new Filename(FC1));
-    job.addArgument(new PseudoText(" "));
-    job.addArgument(new Filename(FC2));
-    job.addArgument(new PseudoText(" -o "));
-    job.addArgument(new Filename(FD));
-
-    //add the files used by the job
-    job.addUses(new Filename(FC1,LFN.INPUT));
-    job.addUses(new Filename(FC2,LFN.INPUT));
-    job.addUses(new Filename(FD,LFN.OUTPUT));
-
-    //add the job to the dax
-    dax.addJob(job);
+      <programlisting> // Add analyze job
+//To be uncommented for exercise 2.1
     
-    //the job with id4 is a child to both jobs id2 and id3
-    dax.addChild(id4,id2);
-    dax.addChild(id4,id3);
-    */
-    //End of commented out code for Exercise 2.1
+        Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
+        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument(" ").addArgument(fc2);
+        j4.addArgument("-o ").addArgument(fd);
+        j4.uses(fc1, File.LINK.INPUT);
+        j4.uses(fc2, File.LINK.INPUT);
+        j4.uses(fd, File.LINK.OUTPUT);
+        
+        //add job to the DAX
+        dax.addJob(j4);
 
+        //analyze job is a child to the findrange jobs
+        dax.addDependency("j2", "j4");
+        dax.addDependency("j3", "j4");
+    
+//End of commented out code for Exercise 2.1
 </programlisting>
 
       <para>The above snippet of code, adds a job with the ID0000004 to the
@@ -184,9 +175,9 @@ config dags dax</computeroutput></computeroutput></programlisting>
 
       <programlisting><emphasis role="bold">$ cd dax
 
-$ javac CreateDAX.java
+$ javac -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX.java
 
-$ java -classpath .:$CLASSPATH CreateDAX ./diamond.dax
+$  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/pegasus/default ./diamond.dax
 </emphasis></programlisting>
 
       <para>Let us view the generated diamond.dax.</para>
@@ -197,7 +188,11 @@ $ java -classpath .:$CLASSPATH CreateDAX ./diamond.dax
 
       <orderedlist>
         <listitem>
-          <para>list of all the files used in the workflow</para>
+          <para>list of input file locations</para>
+        </listitem>
+
+        <listitem>
+          <para>list of executable locations</para>
         </listitem>
 
         <listitem>
@@ -228,8 +223,9 @@ $ java -classpath .:$CLASSPATH CreateDAX ./diamond.dax
       materialized data is registered into Replica Catalog for data reuse
       later on.</para>
 
-      <para>You can use the <emphasis role="bold"> rc-client</emphasis>
-      command to insert , query and delete from the replica catalog.</para>
+      <para>You can use the <emphasis role="bold">
+      pegasus-rc-client</emphasis> command to insert , query and delete from
+      the replica catalog.</para>
 
       <para>To execute the diamond dax created in <emphasis
       role="bold">exercise 2.1</emphasis>, we will need to register input file
@@ -237,32 +233,33 @@ $ java -classpath .:$CLASSPATH CreateDAX ./diamond.dax
       /scratch/tutorial/inputdata/diamond/f.a . Let us insert a single entry
       into the replica catalog.</para>
 
-      <programlisting><command>$  rc-client -Dpegasus.user.properties=config/properties insert f.a \
+      <programlisting><command>$  pegasus-rc-client -Dpegasus.user.properties=config/properties insert f.a \
           gsiftp://pegasus/scratch/tutorial/inputdata/diamond/f.a pool=local
 </command></programlisting>
 
       <para>Let us know verify if f.a has been registered successfully by
       querying the replica catalog using rc-client</para>
 
-      <programlisting><emphasis role="bold">$ rc-client -Dpegasus.user.properties=config/properties lookup f.a</emphasis>
+      <programlisting><emphasis role="bold">$ pegasus-rc-client -Dpegasus.user.properties=config/properties lookup f.a</emphasis>
 
  f.a gsiftp://pegasus/scratch/tutorial/inputdata/diamond/f.a pool="local"
 </programlisting>
 
-      <para>The <emphasis role="bold">rc-client</emphasis> also allows for
-      bulk insertion of entries. We will be inserting the entries for montage
-      workflow using the bulk mode. The input data to be used for the montage
-      workflow resides in the /scratch/tutorial/inputdata/0.2degree directory.
-      We are going to insert entries into the replica catalog that point to
-      the files in this directory.</para>
+      <para>The <emphasis role="bold">pegasus-rc-client</emphasis> also allows
+      for bulk insertion of entries. We will be inserting the entries for
+      montage workflow using the bulk mode. The input data to be used for the
+      montage workflow resides in the /scratch/tutorial/inputdata/0.2degree
+      directory. We are going to insert entries into the replica catalog that
+      point to the files in this directory.</para>
 
       <para>The instructors have provided:</para>
 
       <itemizedlist>
         <listitem>
-          <para>A file replicas.in, the input data file for the rc-client that
-          contains the mappings that need to be populated in the Replica
-          Catalog. The file is inside the config directory</para>
+          <para>A file replicas.in, the input data file for the
+          pegasus-rc-client that contains the mappings that need to be
+          populated in the Replica Catalog. The file is inside the config
+          directory</para>
         </listitem>
       </itemizedlist>
 
@@ -305,7 +302,7 @@ statfile_20070529_153243_22618.tbl
         <listitem>
           <para>Now we are ready to run rc-client and populate the data. Since
           each of you have an individual file replica catalog, all the 10
-          entries should be successfully registered. <programlisting><command>$ rc-client -Dpegasus.user.properties=config/properties --insert config/rc.in</command><computeroutput><computeroutput>
+          entries should be successfully registered. <programlisting><command>$ pegasus-rc-client -Dpegasus.user.properties=config/properties --insert config/rc.in</command><computeroutput><computeroutput>
 
 #Successfully worked on : 12 lines</computeroutput>
 #Worked on total number of : 12 lines.</computeroutput></programlisting></para>
@@ -314,7 +311,7 @@ statfile_20070529_153243_22618.tbl
         <listitem>
           <para>Now the entries have been successfully inserted into the
           Replica Catalog. We should query the replica catalog for a
-          particular lfn. <programlisting><command>$ rc-client -Dpegasus.user.properties=config/properties \
+          particular lfn. <programlisting><command>$ pegasus-rc-client -Dpegasus.user.properties=config/properties \
                    lookup pimages_20080505_143233_14944.tbl</command><computeroutput><computeroutput>
 
 pimages_20080505_143233_14944.tbl
@@ -336,7 +333,7 @@ pimages_20080505_143233_14944.tbl
 
       <para>The instructors have provided: <itemizedlist>
           <listitem>
-            <para>A ready transformation catalog (tc.data) in the
+            <para>A ready transformation catalog (tc.data.text) in the
             $HOME/pegasus-wms/config directory.</para>
           </listitem>
 
@@ -358,40 +355,63 @@ pimages_20080505_143233_14944.tbl
           sites <emphasis role="bold">local</emphasis> and <emphasis
           role="bold">cluster</emphasis> .</para>
 
-          <para><programlisting><command>$ cat $HOME/pegasus-wms/config/sites.xml</command><computeroutput></computeroutput><computeroutput>
+          <para><programlisting><command>$ cat $HOME/pegasus-wms/config/sites.xml3</command><computeroutput>
 
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
- http://pegasus.isi.edu/schema/sc-2.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0"&gt;
-  
-  &lt;site handle="local" sysinfo="INTEL32::LINUX"&gt;
-    &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/pegasus/default&lt;/profile&gt;
-    &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/usr/local/globus/default&lt;/profile&gt;
-    &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/usr/local/globus/default/lib&lt;/profile&gt;
-    &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr/java/default&lt;/profile&gt;
-    &lt;lrc url="rlsn://localhost" /&gt;
-    &lt;gridftp  url="file://" storage="/home/pegasus/local-storage" major="5" minor="0" patch="1"&gt; 
-    &lt;/gridftp&gt;
-    &lt;jobmanager universe="transfer" url="localhost/jobmanager-fork" major="5" minor="0" patch="1" /&gt;
-    &lt;jobmanager universe="vanilla" url="localhost/jobmanager-fork" major="5" minor="0" patch="1" /&gt;
-    &lt;workdirectory &gt;/home/pegasus/local-scratch&lt;/workdirectory&gt;
-  &lt;/site&gt;
-  
-  &lt;site handle="cluster" sysinfo="INTEL32::LINUX"&gt;
-    &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/pegasus/default&lt;/profile&gt;
-    &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/usr/local/globus/default&lt;/profile&gt;
-    &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/usr/local/globus/default/lib&lt;/profile&gt;
-    &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr/java/default&lt;/profile&gt;
-    &lt;profile namespace="pegasus" key="bundle.stagein" &gt;1&lt;/profile&gt;
-    &lt;profile namespace="pegasus" key="bundle" &gt;1&lt;/profile&gt;
-    &lt;lrc url="rlsn://localhost" /&gt;
-    &lt;gridftp  url="gsiftp://pegasus" storage="/home/pegasus/cluster-storage" major="5" minor="0" patch="1"&gt; 
-    &lt;/gridftp&gt;
-    &lt;jobmanager universe="transfer" url="pegasus/jobmanager-fork" major="5" minor="0" patch="1" /&gt;
-    &lt;jobmanager universe="vanilla" url="pegasus/jobmanager-sge" major="5" minor="0" patch="1" /&gt;
-    &lt;workdirectory &gt;/home/pegasus/cluster-scratch&lt;/workdirectory&gt;
-  &lt;/site&gt;
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
+  xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
+
+&lt;site  handle="cluster" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+  &lt;grid  type="gt2" contact="pegasus/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
+  &lt;grid  type="gt2" contact="pegasus/jobmanager-sge" scheduler="SGE" jobtype="compute"/&gt;
+  &lt;head-fs&gt;
+   &lt;scratch&gt;
+    &lt;shared&gt;
+     &lt;file-server protocol="gsiftp" url="gsiftp://pegasus" mount-point="/home/pegasus/cluster-scratch"/&gt;
+     &lt;internal-mount-point mount-point="/home/pegasus/cluster-scratch"/&gt;
+    &lt;/shared&gt;
+   &lt;/scratch&gt;
+   &lt;storage&gt;
+    &lt;shared&gt;
+     &lt;file-server protocol="gsiftp" url="gsiftp://pegasus" mount-point="/home/pegasus/cluster-storage"/&gt;
+     &lt;internal-mount-point mount-point="/home/pegasus/cluster-storage"/&gt;
+    &lt;/shared&gt;
+   &lt;/storage&gt;
+  &lt;/head-fs&gt;
+  &lt;replica-catalog  type="LRC" url="rlsn://localhost"/&gt;
+  &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/usr/local/globus/gt-5.0.2&lt;/profile&gt;
+  &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr/java/default&lt;/profile&gt;
+  &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/usr/local/globus/gt-5.0.2/lib&lt;/profile&gt;
+  &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/pegasus/default&lt;/profile&gt;
+  &lt;profile namespace="pegasus" key="bundle" &gt;1&lt;/profile&gt;
+  &lt;profile namespace="pegasus" key="stagein.clusters" &gt;1&lt;/profile&gt;
+ &lt;/site&gt;
+
+ &lt;site  handle="local" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+  &lt;grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
+  &lt;grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="compute"/&gt;
+  &lt;head-fs&gt;
+   &lt;scratch&gt;
+    &lt;shared&gt;
+     &lt;file-server protocol="gsiftp" url="file://" mount-point="/home/pegasus/local-scratch"/&gt;
+     &lt;internal-mount-point mount-point="/home/pegasus/local-scratch"/&gt;
+    &lt;/shared&gt;
+   &lt;/scratch&gt;
+   &lt;storage&gt;
+    &lt;shared&gt;
+     &lt;file-server protocol="gsiftp" url="file://" mount-point="/home/pegasus/local-storage"/&gt;
+     &lt;internal-mount-point mount-point="/home/pegasus/local-storage"/&gt;
+    &lt;/shared&gt;
+   &lt;/storage&gt;
+  &lt;/head-fs&gt;
+  &lt;replica-catalog  type="LRC" url="rlsn://localhost"/&gt;
+  &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/usr/local/globus/gt-5.0.2&lt;/profile&gt;
+  &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr/java/default&lt;/profile&gt;
+  &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/usr/local/globus/gt-5.0.2/lib&lt;/profile&gt;
+  &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/pegasus/default&lt;/profile&gt;
+ &lt;/site&gt;
 
 &lt;/sitecatalog&gt;
+ 
 </computeroutput></programlisting></para>
         </listitem>
       </itemizedlist>
@@ -401,35 +421,36 @@ pimages_20080505_143233_14944.tbl
           <para>The transformation catalog maintains information about where
           the application code resides on the grid. In our case, it contains
           the locations where the Diamond or Montage code is installed in the
-          Pegasus VM. We will use the <emphasis
+          Pegasus VM. We will use the pegasus-<emphasis
           role="bold">tc-client</emphasis> to add the entry for the
           transformation analyze into the transformation catalog.</para>
 
-          <programlisting><emphasis role="bold">$ tc-client -Dpegasus.user.properties=config/properties -a -l diamond::analyze:2.0 \
+          <programlisting><emphasis role="bold">$ pegasus-tc-client -Dpegasus.user.properties=config/properties -a -l diamond::analyze:2.0 \
       -p /opt/pegasus/default/bin/keg -r local -t INSTALLED -s INTEL32::LINUX 
 <emphasis>
  2008.04.30 15:11:59.313 PDT: [INFO] Added tc entry sucessfully
 </emphasis></emphasis></programlisting>
 
-          <para>Let us try and query for the entry we inserted</para>
+          <para>Let us try and query for the entry we inserted. </para>
 
-          <programlisting><emphasis role="bold">$ tc-client -Dpegasus.user.properties=config/properties -q -P -l diamond::analyze:2.0
-<emphasis>
- #RESID     LTX                 PFN                                       TYPE          SYSINFO
+          <programlisting><emphasis role="bold">$ pegasus-tc-client -Dpegasus.user.properties=config/properties -q -P -l diamond::analyze:2.0
+</emphasis>
+#RESID     LTX                     PFN                                           TYPE          SYSINFO
 
-local    diamond::analyze:2.0    /opt/pegasus/default/bin/keg    INSTALLED    INTEL32::LINUX
-</emphasis></emphasis></programlisting>
+local    diamond::analyze:2.0    /cluster-software/pegasus/current/bin/keg    INSTALLED    INTEL32::LINUX
 
-          <para>We can also query the transformation catalog for all the
+</programlisting>
+
+          <para>Let us try and query the transformation catalog for all the
           entries in it. Let us see what our transformation catalog looks
           like</para>
 
-          <programlisting><command>$ tc-client -Dpegasus.user.properties=config/properties -q -B          </command><computeroutput>
+          <programlisting><command>$ pegasus-tc-client -Dpegasus.user.properties=config/properties -q -B          </command><computeroutput>
 
-local  bin/mDiff       
+local   mDiff       
              gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mDiff       
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
-local   bin/mFitplane
+local   mFitplane
              gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mFitplane
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mAdd:3.0  
@@ -468,111 +489,78 @@ local   mShrink:3.0
           <para>Open the properties file and check a few properties.</para>
 
           <programlisting><command>$ cat config/properties</command><computeroutput><computeroutput>
+ 
 ##########################
 # PEGASUS USER PROPERTIES 
 ##########################
 
 ## SELECT THE REPLICAT CATALOG MODE AND URL
-pegasus.catalog.replica = SimpleFile
+pegasus.catalog.replica = File
 pegasus.catalog.replica.file = ${user.home}/pegasus-wms/config/rc.data
-#pegasus.catalog.replica.url=rlsn://smarty.isi.edu
+
 
 ## SELECT THE SITE CATALOG MODE AND FILE
-pegasus.catalog.site = XML
-pegasus.catalog.site.file = ${user.home}/pegasus-wms/config/sites.xml
+pegasus.catalog.site = XML3
+pegasus.catalog.site.file = ${user.home}/pegasus-wms/config/sites.xml3
 
 
 ## SELECT THE TRANSFORMATION CATALOG MODE AND FILE
-pegasus.catalog.transformation = File
-pegasus.catalog.transformation.file = ${user.home}/pegasus-wms/config/tc.data
-
-## SET UP THE WORK AND INVOCATION DATABASE
-#pegasus.catalog.work =  Database
-#pegasus.catalog.provenance = InvocationSchema
-
-## Database related properties
-#pegasus.catalog..db.driver = MySQL
-#pegasus.catalog.*.db.url = jdbc:mysql://smarty.isi.edu/osg2008
-#pegasus.catalog.*.db.user = osg2008user
-#pegasus.catalog.*.db.password =  Osg2008
+pegasus.catalog.transformation = Text
+pegasus.catalog.transformation.file = ${user.home}/pegasus-wms/config/tc.data.text
 
 ## USE DAGMAN RETRY FEATURE FOR FAILURES
-pegasus.dagman.retry=2
+dagman.retry=2
+
+## CHECK JOB EXIT CODES FOR FAILURE
+dagman.post.scope=all
 
 ## STAGE ALL OUR EXECUTABLES OR USE INSTALLED ONES 
 pegasus.catalog.transformation.mapper = All
-
-## CHECK JOB EXIT CODES FOR FAILURE
-pegasus.exitcode.scope=all
-
-## OPTIMZE DATA &amp; EXECUTABLE TRANSFERS
-pegasus.transfer.refiner=Bundle
-
-#STAGE DATA AND EXECUTABLES USING GRIDFTP 3rd PARTY MODE
-pegasus.transfer.*.thirdparty.sites=*
-
-pegasus.transfer.*.impl = GUC
-
 
 ## WORK AND STORAGE DIR  
 pegasus.dir.storage = storage
 pegasus.dir.exec = exec
 
-# JOB Priorities
-
-pegasus.job.priority=10
-pegasus.transfer.*.priority=100
-
 #JOB CATEGORIES
-pegasus.dagman.projection.maxjobs 2
-</computeroutput></computeroutput></programlisting>
+dagman.projection.maxjobs 2
+[pegasus@pegasus pegasus-wms</computeroutput></computeroutput></programlisting>
         </listitem>
 
         <listitem>
-          <para>Also the client pegasus-get-sites can be used to generate a
+          <para>Also the client pegasus-sc-client can be used to generate a
           site catalog and transformation catalog for the Open Science
           Grid.</para>
 
-          <programlisting><command>$ </command><emphasis role="bold"><computeroutput>[pegasus@pegasus pegasus-wms]$ pegasus-get-sites -Dpegasus.user.properties=`pwd`/config/properties --vo engage --sc ./engage-osg-sc.xml \
-  --source OSGMM --grid OSG 
+          <programlisting><command>$ </command><emphasis role="bold"><computeroutput>[pegasus@pegasus pegasus-wms]$ pegasus-sc-client -Dpegasus.user.properties=`pwd`/config/properties --vo engage --sc ./engage-osg-sc.xml \
+  --source OSGMM --grid OSG -vvvv 
 </computeroutput></emphasis><computeroutput>
+2010.11.24 18:00:46.410 PST: [INFO]  Skipping site CIT_CMS_T2 
+2010.11.24 18:00:46.416 PST: [INFO]  Adding site RENCI-Engagement 
+2010.11.24 18:00:46.475 PST: [INFO]  Adding site Nebraska 
+2010.11.24 18:00:46.476 PST: [INFO]  Adding site Prairiefire 
+2010.11.24 18:00:46.476 PST: [INFO]  Adding site BNL-ATLAS 
+2010.11.24 18:00:46.477 PST: [INFO]  Adding site BNL-ATLAS__1 
+2010.11.24 18:00:46.478 PST: [INFO]  Adding site UFlorida-PG 
+2010.11.24 18:00:46.478 PST: [INFO]  Skipping site CIT_CMS_T2__1 
+2010.11.24 18:00:46.478 PST: [INFO]  Adding site RENCI-Blueridge 
+2010.11.24 18:00:46.479 PST: [INFO]  Adding site Nebraska__1 
+2010.11.24 18:00:46.480 PST: [INFO]  Adding site UMissHEP 
+2010.11.24 18:00:46.480 PST: [INFO]  Adding site UCR-HEP 
+2010.11.24 18:00:46.481 PST: [INFO]  Adding site LIGO_UWM_NEMO 
+2010.11.24 18:00:46.482 PST: [INFO]  Adding site FNAL_FERMIGRID 
+2010.11.24 18:00:46.482 PST: [INFO]  Adding site USCMS-FNAL-WC1 
+2010.11.24 18:00:46.483 PST: [INFO]  Adding site UConn-OSG 
+2010.11.24 18:00:46.484 PST: [INFO]  Adding site UFlorida-HPC 
+2010.11.24 18:00:46.484 PST: [INFO]  Adding site GridUNESP_CENTRAL 
+2010.11.24 18:00:46.493 PST: [INFO]  Adding site NWICG_NotreDame 
+2010.11.24 18:00:46.494 PST: [INFO]  Site LOCAL . Creating default entry 
+2010.11.24 18:00:46.527 PST: [INFO]  Loaded 19 sites  
+2010.11.24 18:00:46.527 PST:   Writing out site catalog to /home/pegasus/pegasus-wms/./engage-osg-sc.xml 
+2010.11.24 18:00:46.959 PST:   Number of SRM Properties retrieved 14 
+2010.11.24 18:00:46.970 PST:   Writing out properties to /home/pegasus/pegasus-wms/./pegasus.6475454308491531036.properties 
+2010.11.24 18:00:46.972 PST: [INFO]  Time taken to execute is 1.101 seconds 
+2010.11.24 18:00:46.972 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
 
-2010.07.19 16:44:49.933 PDT: [INFO] event.pegasus.planner planner.version 2.4.2  - STARTED 
-2010.07.19 16:44:52.481 PDT: [INFO]  Adding site BNL-ATLAS 
-2010.07.19 16:44:52.561 PDT: [INFO]  Adding site BNL-ATLAS__1 
-2010.07.19 16:44:52.562 PDT: [INFO]  Adding site CIT_CMS_T2 
-2010.07.19 16:44:52.563 PDT: [INFO]  Adding site CIT_CMS_T2__1 
-2010.07.19 16:44:52.563 PDT: [INFO]  Adding site Clemson-Palmetto 
-2010.07.19 16:44:52.564 PDT: [INFO]  Adding site FNAL_FERMIGRID 
-2010.07.19 16:44:52.565 PDT: [INFO]  Adding site Firefly 
-2010.07.19 16:44:52.565 PDT: [INFO]  Adding site Firefly__1 
-2010.07.19 16:44:52.566 PDT: [INFO]  Adding site GLOW 
-2010.07.19 16:44:52.567 PDT: [INFO]  Adding site GridUNESP_CENTRAL 
-2010.07.19 16:44:52.567 PDT: [INFO]  Adding site LIGO_UWM_NEMO 
-2010.07.19 16:44:52.568 PDT: [INFO]  Adding site MIT_CMS 
-2010.07.19 16:44:52.569 PDT: [INFO]  Adding site NYSGRID_CORNELL_NYS1 
-2010.07.19 16:44:52.569 PDT: [INFO]  Adding site Nebraska 
-2010.07.19 16:44:52.570 PDT: [INFO]  Adding site Nebraska__1 
-2010.07.19 16:44:52.570 PDT: [INFO]  Adding site Purdue-RCAC 
-2010.07.19 16:44:52.571 PDT: [INFO]  Adding site Purdue-Steele 
-2010.07.19 16:44:52.572 PDT: [INFO]  Adding site RENCI-Engagement 
-2010.07.19 16:44:52.573 PDT: [INFO]  Adding site SBGrid-Harvard-East 
-2010.07.19 16:44:52.587 PDT: [INFO]  Adding site TTU-ANTAEUS 
-2010.07.19 16:44:52.588 PDT: [INFO]  Adding site UCHC_CBG 
-2010.07.19 16:44:52.601 PDT: [INFO]  Adding site UCR-HEP 
-2010.07.19 16:44:52.602 PDT: [INFO]  Adding site UCSDT2 
-2010.07.19 16:44:52.604 PDT: [INFO]  Adding site UConn-OSG 
-2010.07.19 16:44:52.618 PDT: [INFO]  Adding site UFlorida-HPC 
-2010.07.19 16:44:52.619 PDT: [INFO]  Adding site UFlorida-PG 
-2010.07.19 16:44:52.619 PDT: [INFO]  Adding site USCMS-FNAL-WC1 
-2010.07.19 16:44:52.620 PDT: [INFO]  Adding site WQCG-Harvard-OSG 
-2010.07.19 16:44:52.620 PDT: [INFO]  Site LOCAL . Creating default entry 
-2010.07.19 16:44:52.691 PDT: [INFO]  Loaded 30 sites  
-2010.07.19 16:44:52.691 PDT: [INFO]  Writing out site catalog to /home/pegasus/pegasus-wms/./engage-osg-sc.xml 
-2010.07.19 16:44:54.050 PDT: [INFO]  Number of SRM Properties retrieved 14 
-2010.07.19 16:44:54.086 PDT: [INFO]  Writing out properties to /home/pegasus/pegasus-wms/./pegasus.5645415039834437744.properties 
-2010.07.19 16:44:54.089 PDT: [INFO]  Time taken to execute is 4.15 seconds 
-2010.07.19 16:44:54.089 PDT: [INFO] event.pegasus.planner planner.version 2.4.2
 
 </computeroutput></programlisting>
         </listitem>
@@ -614,7 +602,7 @@ pegasus.dagman.projection.maxjobs 2
           <para>Let us run pegasus-plan on the diamond dax. <programlisting><command>$ cd ~/pegasus-wms
 $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
                --dax `pwd`/dax/diamond.dax --force\
-               --dir dags -s local -o local --nocleanup</command></programlisting>
+               --dir dags -s local -o local --nocleanup -v</command></programlisting>
           The above command says that we need to plan the diamond dax locally.
           The condor submit files are to be generated in a directory structure
           whose base is dags. We also are requesting that no cleanup jobs be
@@ -658,42 +646,38 @@ pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/peg
           <para><emphasis role="bold">Now run pegasus-run as mentioned in the
           output of pegasus-plan. Do not copy the command below it is just for
           illustration purpose.</emphasis><programlisting><emphasis
-                role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
-     -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001/pegasus.4459134667464687814.properties \
-    --nodatabase /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001
-</emphasis>
+                role="bold"></emphasis><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
+      -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/pegasus.350356687577055673.properties \
+       /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
+
 -----------------------------------------------------------------------
-File for submitting this DAG to Condor           : diamond-0.dag.condor.sub
-Log of DAGMan debugging messages                 : diamond-0.dag.dagman.out
-Log of Condor library output                     : diamond-0.dag.lib.out
-Log of Condor library error messages             : diamond-0.dag.lib.err
-Log of the life of condor_dagman itself          : diamond-0.dag.dagman.log
+File for submitting this DAG to Condor           : blackdiamond-0.dag.condor.sub
+Log of DAGMan debugging messages                 : blackdiamond-0.dag.dagman.out
+Log of Condor library output                     : blackdiamond-0.dag.lib.out
+Log of Condor library error messages             : blackdiamond-0.dag.lib.err
+Log of the life of condor_dagman itself          : blackdiamond-0.dag.dagman.log
 
 -no_submit given, not submitting DAG to Condor.  You can do this with:
-"condor_submit diamond-0.dag.condor.sub"
+"condor_submit blackdiamond-0.dag.condor.sub"
 -----------------------------------------------------------------------
 Submitting job(s).
 Logging submit event(s).
-1 job(s) submitted to cluster 72.
+1 job(s) submitted to cluster 320.
 
-I have started your workflow, committed it to DAGMan, and updated its
-state in the work database. A separate daemon was started to collect
-information about the progress of the workflow. The job state will soon
-be visible. Your workflow runs in base directory. 
+Your Workflow has been started and runs in base directory given below
 
-cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001
+cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001
 
 *** To monitor the workflow you can run ***
 
-pegasus-status -w diamond-0 -t 20100719T164705-0700 
-or
-pegasus-status /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001
+pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001
 
 *** To remove your workflow run ***
-
-pegasus-remove -d 72.0
+pegasus-remove -d 320.0
 or
-pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001
+pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001
+
+[pegasus@pegasus pegasus-wms]$ 
 
 </programlisting></para>
         </listitem>
@@ -710,7 +694,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001
       <para>We will change into the directory, that was mentioned by the
       output of pegasus-run command.</para>
 
-      <programlisting><command>$ cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/runXXXX</command></programlisting>
+      <programlisting><command>$ cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001</command></programlisting>
 
       <para>In this directory you will see a whole lot of files. That should
       not scare you. Unless things go wrong, you need to look at just a very
@@ -721,7 +705,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001
           <para><emphasis role="bold">Run the command pegasus-status as
           mentioned by pegasus-run above to check the status of your jobs. Use
           the watch command to auto repeat the command every 2
-          seconds.</emphasis><programlisting><command>$ watch pegasus-status /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/runXXXX</command><computeroutput>
+          seconds.</emphasis><programlisting><command>$ watch pegasus-status /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001</command><computeroutput>
 
 -- Submitter: pegasus : &lt;172.16.80.128:40195&gt; : pegasus
  ID      OWNER/NODENAME   SUBMITTED     RUN_TIME ST PRI SIZE CMD               
@@ -745,20 +729,21 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001
           <para>Using <emphasis role="bold">pegasus-analyzer</emphasis> to
           analyze the workflow</para>
 
-          <programlisting><emphasis role="bold">[pegasus@pegasus run0001]$ pegasus-analyzer -q -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001</emphasis>
+          <programlisting><emphasis role="bold">[pegasus@pegasus run0001]$ pegasus-analyzer -q -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
 
 pegasus-analyzer: initializing...
 
 ************************************Summary*************************************
 
- Total jobs         :     11 (100.00%)
- # jobs succeeded   :     11 (100.00%)
+ Total jobs         :      8 (100.00%)
+ # jobs succeeded   :      8 (100.00%)
  # jobs failed      :      0 (0.00%)
  # jobs unsubmitted :      0 (0.00%)
 
 **************************************Done**************************************
 
 pegasus-analyzer: end of status report
+
 
 </programlisting>
         </listitem>
@@ -770,24 +755,22 @@ pegasus-analyzer: end of status report
           determine the status of the jobs. It logs the events seen by Condor
           into a more readable form for us. <programlisting><command>$ more jobstate.log</command><computeroutput>
 
-1201557528 INTERNAL *** TAILSTATD_STARTED ***
-1201557528 INTERNAL *** DAGMAN_STARTED *** 
-1201557528 generate_ID000001_0 UN_READY - - - 
-1201557528 findrange_ID000003_0 UN_READY - - - 
-1201557528 findrange_ID000002_0 UN_READY - - - 
-1201557528 analyze_ID000004_0 UN_READY - - -
+1290676248 INTERNAL *** MONITORD_STARTED ***
+1290676247 INTERNAL *** DAGMAN_STARTED 339.0 ***
 [..]</computeroutput></programlisting> In the starting of the jobstate.log,
           when the workflow has just started running you will see a lot of
           entries with status UN_READY. That designates that DAGMan has just
           parsed in the .dag file and has not started working on any job as
           yet. Initially all the jobs in the workflow are listed as UN_READY.
           After sometime you will see entries in jobstate.log, that shows a
-          job is being executed etc. <programlisting><computeroutput>1201557747 generate_ID000001_0 EXECUTE 19996.0 local - 
-1201557747 generate_ID000001_0 GLOBUS_SUBMIT 19996.0 local - 
-1201557812 generate_ID000001_0 JOB_TERMINATED 19996.0 local - 
-1201557812 generate_ID000001_0 POST_SCRIPT_STARTED - local - 
-1201557817 generate_ID000001_0 POST_SCRIPT_TERMINATED 19996.0 local - 
-1201557817 generate_ID000001_0 POST_SCRIPT_SUCCESS - local -</computeroutput></programlisting></para>
+          job is being executed etc. <programlisting><computeroutput>
+1290676261 create_dir_blackdiamond_0_local SUBMIT 340.0 local - 1
+1290676266 create_dir_blackdiamond_0_local EXECUTE 340.0 local - 1
+1290676266 create_dir_blackdiamond_0_local JOB_TERMINATED 340.0 local - 1
+1290676266 create_dir_blackdiamond_0_local JOB_SUCCESS 0 local - 1
+1290676266 create_dir_blackdiamond_0_local POST_SCRIPT_STARTED 340.0 local - 1
+1290676271 create_dir_blackdiamond_0_local POST_SCRIPT_TERMINATED 340.0 local - 1
+1290676271 create_dir_blackdiamond_0_local POST_SCRIPT_SUCCESS 0 local - 1</computeroutput></programlisting></para>
 
           <para>The above shows the being submitted and then executed on the
           grid. In addition it lists that job is being run on the grid site
@@ -801,38 +784,51 @@ pegasus-analyzer: end of status report
           jobstate.log. This time we need to look at the last few lines of
           jobstate.log <programlisting><command>$ tail jobstate.log</command><computeroutput>
 
-1201559232 analyze_ID000004 JOB_TERMINATED 20023.0 local - 
-1201559232 analyze_ID000004 POST_SCRIPT_STARTED - local -
-1201559238 analyze_ID000004 POST_SCRIPT_TERMINATED 20023.0 local -
-1201559238 analyze_ID000004 POST_SCRIPT_SUCCESS - local -
-1201559238 INTERNAL *** DAGMAN_FINISHED ***
-1201559239 INTERNAL *** TAILSTATD_FINISHED 0 ***</computeroutput></programlisting>
-          Looking at the last two lines we see that DAGMan finished, and
-          tailstatd finished successfully with a status 0. This means workflow
-          ran successfully. Congratulations you ran your workflow on the local
-          site successfully. The workflow generates a final output file f.d
-          that resides in the directory <emphasis
+1290676542 register_local_2_0 SUBMIT 347.0 local - 8
+1290676547 register_local_2_0 EXECUTE 347.0 local - 8
+1290676547 register_local_2_0 JOB_TERMINATED 347.0 local - 8
+1290676547 register_local_2_0 JOB_SUCCESS 0 local - 8
+1290676547 register_local_2_0 POST_SCRIPT_STARTED 347.0 local - 8
+1290676552 register_local_2_0 POST_SCRIPT_TERMINATED 347.0 local - 8
+1290676552 register_local_2_0 POST_SCRIPT_SUCCESS 0 local - 8
+1290676552 INTERNAL *** DAGMAN_FINISHED 0 ***
+1290676554 INTERNAL *** MONITORD_FINISHED 0 ***
+</computeroutput></programlisting> Looking at the last two lines we see that
+          DAGMan finished, and tailstatd finished successfully with a status
+          0. This means workflow ran successfully. Congratulations you ran
+          your workflow on the local site successfully. The workflow generates
+          a final output file f.d that resides in the directory <emphasis
           role="bold">/home/pegasus/local-storage/storage/f.d</emphasis>
           .</para>
 
           <para>To view the file, you can do the following <programlisting><command>$ cat /home/pegasus/local-storage/storage/f.d
-</command>--- start f.c1 ----
+</command>
+
+--- start f.c1 ----
   --- start f.b1 ----
     --- start f.a ----
       Input File for the Diamond Workflow.--- final f.a ----
-    Timestamp Today: 20100719T170023-07:00 (1279584023.790;60.001)
-    Applicationname: preprocess @ 172.16.80.128 (VPN)
-    Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/diamond/run0001
+    Timestamp Today: 20101125T011133.275-08:00 (1290676293.275;60.001)
+    Applicationname: preprocess @ 172.16.80.129 (VPN)
+    Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
     Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-    Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.173
+    Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
+    Load Averages  : 0.691 0.238 0.113
+    Memory Usage MB: 1002 total, 350 free, 0 shared, 33 buffered
+    Swap Usage   MB: 2015 total, 2015 free
+    Filesystem Info: /                        ext3    17GB total,     9GB avail
     Output Filename: f.b1
     Input Filenames: f.a
   --- final f.b1 ----
-  Timestamp Today: 20100719T170139-07:00 (1279584099.621;60.022)
-  Applicationname: findrange @ 172.16.80.128 (VPN)
-  Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/diamond/run0001
+  Timestamp Today: 20101125T011249.441-08:00 (1290676369.441;60.024)
+  Applicationname: findrange @ 172.16.80.129 (VPN)
+  Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
   Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-  Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.173
+  Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
+  Load Averages  : 1.413 0.530 0.219
+  Memory Usage MB: 1002 total, 349 free, 0 shared, 33 buffered
+  Swap Usage   MB: 2015 total, 2015 free
+  Filesystem Info: /                        ext3    17GB total,     9GB avail
   Output Filename: f.c1
   Input Filenames: f.b1
 --- final f.c1 ----
@@ -840,27 +836,39 @@ pegasus-analyzer: end of status report
   --- start f.b2 ----
     --- start f.a ----
       Input File for the Diamond Workflow.--- final f.a ----
-    Timestamp Today: 20100719T170023-07:00 (1279584023.790;60.001)
-    Applicationname: preprocess @ 172.16.80.128 (VPN)
-    Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/diamond/run0001
+    Timestamp Today: 20101125T011133.275-08:00 (1290676293.275;60.001)
+    Applicationname: preprocess @ 172.16.80.129 (VPN)
+    Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
     Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-    Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.173
+    Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
+    Load Averages  : 0.691 0.238 0.113
+    Memory Usage MB: 1002 total, 350 free, 0 shared, 33 buffered
+    Swap Usage   MB: 2015 total, 2015 free
+    Filesystem Info: /                        ext3    17GB total,     9GB avail
     Output Filename: f.b2
     Input Filenames: f.a
   --- final f.b2 ----
-  Timestamp Today: 20100719T170144-07:00 (1279584104.781;60.001)
-  Applicationname: findrange @ 172.16.80.128 (VPN)
-  Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/diamond/run0001
+  Timestamp Today: 20101125T011254.555-08:00 (1290676374.555;60.001)
+  Applicationname: findrange @ 172.16.80.129 (VPN)
+  Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
   Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-  Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.173
+  Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
+  Load Averages  : 1.380 0.538 0.223
+  Memory Usage MB: 1002 total, 349 free, 0 shared, 33 buffered
+  Swap Usage   MB: 2015 total, 2015 free
+  Filesystem Info: /                        ext3    17GB total,     9GB avail
   Output Filename: f.c2
   Input Filenames: f.b2
 --- final f.c2 ----
-Timestamp Today: 20100719T170300-07:00 (1279584180.331;60.001)
-Applicationname: analyze @ 172.16.80.128 (VPN)
-Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/diamond/run0001
+Timestamp Today: 20101125T011410.669-08:00 (1290676450.669;60.001)
+Applicationname: analyze @ 172.16.80.129 (VPN)
+Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
 Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.173
+Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
+Load Averages  : 1.025 0.597 0.266
+Memory Usage MB: 1002 total, 349 free, 0 shared, 34 buffered
+Swap Usage   MB: 2015 total, 2015 free
+Filesystem Info: /                        ext3    17GB total,     9GB avail
 Output Filename: f.d
 Input Filenames: f.c1 f.c2
 </programlisting></para>
@@ -871,18 +879,21 @@ Input Filenames: f.c1 f.c2
           Let us again look at the jobstate.log. Again we need to look at the
           last few lines of jobstate.log <programlisting><command>$ tail jobstate.log</command><computeroutput>
 
-1180840233 analyze_ID000004_0 JOB_TERMINATED 2787.0 local -
-1180840233 analyze_ID000004_0 POST_SCRIPT_STARTED - local - 
-1180840238 analyze_ID000004_0 POST_SCRIPT_TERMINATED 2787.0 local - 
-1180840238 analyze_ID000004_0 POST_SCRIPT_FAILURE 1 local -
-1180840373 INTERNAL *** DAGMAN_FINISHED *** 
-1180840373 INTERNAL *** TAILSTATD_FINISHED 1 ***</computeroutput></programlisting>Looking
-          at the last two lines we see that DAGMan finished, and tailstatd
-          finished unsuccessfully with a status 1. We can easily determine
-          which job failed. It is inter_tx_mDiffFit_ID000007_0 in this case.
-          To determine the reason for failure we need to look at it's
-          kickstart output file which is JOBNAME.out.NNN. where NNN is 000 -
-          NNN</para>
+1290677127 stage_in_local_local_0 EXECUTE 352.0 local - 4
+1290677127 stage_in_local_local_0 JOB_TERMINATED 352.0 local - 4
+1290677127 stage_in_local_local_0 JOB_FAILURE 1 local - 4
+1290677127 stage_in_local_local_0 POST_SCRIPT_STARTED 352.0 local - 4
+1290677132 stage_in_local_local_0 POST_SCRIPT_TERMINATED 352.0 local - 4
+1290677132 stage_in_local_local_0 POST_SCRIPT_FAILURE 1 local - 4
+1290677132 INTERNAL *** DAGMAN_FINISHED 1 ***
+1290677134 INTERNAL *** MONITORD_FINISHED 0 ***
+
+</computeroutput></programlisting>Looking at the last two lines we see that
+          DAGMan finished, and tailstatd finished unsuccessfully with a status
+          1. We can easily determine which job failed. It is
+          stage_in_local_local_0 in this case. To determine the reason for
+          failure we need to look at it's kickstart output file which is
+          JOBNAME.out.NNN. where NNN is 000 - NNN</para>
         </listitem>
       </itemizedlist>
     </section>
@@ -905,12 +916,12 @@ Input Filenames: f.c1 f.c2
       <programlisting><emphasis role="bold">Plan and Submit the diamond workflow</emphasis> . Pass --submit to pegasus-plan to submit in case of successful planning
 
 [pegasus@pegasus pegasus-wms]$  pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties --dax `pwd`/dax/diamond.dax --force \
-        --dir dags -s local -o local --nocleanup --submit
+        --dir dags -s local -o local --nocleanup --submit -v
 
 <emphasis role="bold">
 Use pegasus-status to track the workflow and wait it to fail</emphasis>
 
-[pegasus@pegasus pegasus-wms]$ pegasus-status  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002
+[pegasus@pegasus pegasus-wms]$ pegasus-status  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
 
 
 -- Submitter: pegasus : &lt;172.16.80.128:40195&gt; : pegasus
@@ -918,45 +929,100 @@ Use pegasus-status to track the workflow and wait it to fail</emphasis>
   96.0   pegasus         7/19 17:40   0+00:01:06 R  0   7.3  condor_dagman -f -
 
 <emphasis role="bold">
+The --long option to pegasus-status of a running workflow gives more detail
+<emphasis>[pegasus@pegasus pegasus-wms]$ pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+blackdiamond-0.dag is running.
+11/25 01:25:06  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+11/25 01:25:06   ===     ===      ===     ===     ===        ===      ===
+11/25 01:25:06     1       0        1       0       0          6        0</emphasis><emphasis>
+
+WORKFLOW STATUS : RUNNING | 1/8 ( 12% ) | (condor processing workflow)
+</emphasis>
+
+
 We can also use --long option to pegasus-status to see the FINAL status of the workflow</emphasis>
 
-[pegasus@pegasus pegasus-wms]$ pegasus-status --long /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002
-diamond-0.dag FAILED (status 1)
-07/19 17:42:07  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
-07/19 17:42:07   ===     ===      ===     ===     ===        ===      ===
-07/19 17:42:07     1       0        0       0       0          9        1
+[pegasus@pegasus pegasus-wms]$ pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+blackdiamond-0.dag FAILED (status 1)
+11/25 01:25:32  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+11/25 01:25:32   ===     ===      ===     ===     ===        ===      ===
+11/25 01:25:32     1       0        0       0       0          6        1
 
-WORKFLOW STATUS : 1/11 ( 9% ) FAILED (rescue needs to be submitted)
+WORKFLOW STATUS : FAILED | 1/8 ( 12% ) | (rescue needs to be submitted)
+
 
 </programlisting>
 
       <para>We will now run pegasus-analyzer on the failed workflow submit
       directory to see what job failed.</para>
 
-      <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-analyzer -q -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002
-</emphasis>
+      <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-analyzer -q -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002<emphasis>
 pegasus-analyzer: initializing...
-
+</emphasis></emphasis>
 ************************************Summary*************************************
 
- Total jobs         :     11 (100.00%)
- # jobs succeeded   :      1 (9.09%)
- # jobs failed      :      1 (9.09%)
- # jobs unsubmitted :      9 (81.82%)
+ Total jobs         :      8 (100.00%)
+ # jobs succeeded   :      1 (12.50%)
+ # jobs failed      :      1 (12.50%)
+ # jobs unsubmitted :      6 (75.00%)
 
 ******************************Failed jobs' details******************************
 
-================================stage_in_local_0================================
+=============================stage_in_local_local_0=============================
 
  last state: POST_SCRIPT_FAILURE
        site: local
-submit file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002/stage_in_local_0.sub
-output file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002/stage_in_local_0.out.002
- error file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002/stage_in_local_0.err.002
+submit file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.sub
+output file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002
+ error file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.err.002
 
 **************************************Done**************************************
 
 pegasus-analyzer: end of status report
+
+[pegasus@pegasus pegasus-wms]$ pegasus-analyzer  -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+pegasus-analyzer: initializing...
+
+************************************Summary*************************************
+
+ Total jobs         :      8 (100.00%)
+ # jobs succeeded   :      1 (12.50%)
+ # jobs failed      :      1 (12.50%)
+ # jobs unsubmitted :      6 (75.00%)
+
+******************************Failed jobs' details******************************
+
+=============================stage_in_local_local_0=============================
+
+ last state: POST_SCRIPT_FAILURE
+       site: local
+submit file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.sub
+output file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002
+ error file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.err.002
+
+-------------------------------Task #1 - Summary--------------------------------
+
+site        : local
+hostname    : pegasus
+executable  : /opt/pegasus/default/bin/pegasus-transfer
+arguments   : 
+exitcode    : 1
+working dir : /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+
+--Task #1 - pegasus::pegasus-transfer - pegasus::pegasus-transfer:1.0 - stdout--
+
+2010-11-25 01:25:22,320    INFO:  Reading URL pairs from stdin
+2010-11-25 01:25:22,321    INFO:  PATH=/usr/local/globus/default/bin:/opt/pegasus/default/bin:/usr/bin:/bin
+2010-11-25 01:25:22,321    INFO:  LD_LIBRARY_PATH=/usr/local/globus/default/lib:/usr/java/jdk1.6.0_20/jre/lib/amd64/server:/usr/java/jdk1.6.0_20/jre/lib/amd64:/usr/java/jdk1.6.0_20/jre/../lib/amd64
+2010-11-25 01:25:22,321    INFO:  Executing cp commands
+/bin/cp: cannot stat `/scratch/tutorial/inputdata/diamond/f.a': No such file or directory
+2010-11-25 01:25:22,331 CRITICAL:  Command'/bin/cp -L"/scratch/tutorial/inputdata/diamond/f.a""/home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0002/f.a"'failed with error code 1
+
+**************************************Done**************************************
+
+pegasus-analyzer: end of status report
+
+[pegasus@pegasus pegasus-wms]$ 
 
 </programlisting>
 
@@ -1195,131 +1261,176 @@ error: globus_ftp_client: the server responded with an error
         <listitem>
           <para>Now take a look at the DAG file...</para>
 
-          <programlisting><command>$ cat $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/run0001/diamond-0.dag</command><computeroutput>
+          <programlisting><command>$ cat $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag</command><computeroutput>
+
 
 ######################################################################
-# PEGASUS GENERATED SUBMIT FILE 
-# DAG diamond 
+# PEGASUS WMS GENERATED DAG FILE
+# DAG blackdiamond
 # Index = 0, Count = 1
 ######################################################################
-JOB generate_ID000001 generate_ID000001.sub
-RETRY generate_ID000001 2
+MAXJOBS projection 2
 
-JOB findrange_ID000002 findrange_ID000002.sub
-RETRY findrange_ID000002 2
+JOB create_dir_blackdiamond_0_local create_dir_blackdiamond_0_local.sub
+SCRIPT POST create_dir_blackdiamond_0_local /opt/pegasus/default/bin/pegasus-exitcode \
+  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/create_dir_blackdiamond_0_local.out
+RETRY create_dir_blackdiamond_0_local 2
 
-JOB findrange_ID000003 findrange_ID000003.sub
-RETRY findrange_ID000003 2
+JOB stage_in_local_local_0 stage_in_local_local_0.sub
+SCRIPT POST stage_in_local_local_0 /opt/pegasus/default/bin/pegasus-exitcode  \
+ /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/stage_in_local_local_0.out
+RETRY stage_in_local_local_0 2
 
-JOB analyze_ID000004 analyze_ID000004.sub
-RETRY analyze_ID000004 2
+JOB preprocess_j1 preprocess_j1.sub
+SCRIPT POST preprocess_j1 /opt/pegasus/default/bin/pegasus-exitcode   \
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/preprocess_j1.out
+RETRY preprocess_j1 2
 
-JOB diamond_0_pegasus_concat diamond_0_pegasus_concat.sub 
+JOB findrange_j2 findrange_j2.sub
+SCRIPT POST findrange_j2 /opt/pegasus/default/bin/pegasus-exitcode   \
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/findrange_j2.out
+RETRY findrange_j2 2
 
-JOB diamond_0_local_cdir diamond_0_local_cdir.sub 
-SCRIPT POST diamond_0_local_cdir /nfs/software/pegasus/default/bin/exitpost 
-      -Dpegasus.user.properties=/nfs/home/trainXX/pegasus-wms/dags/trainXX/pegasus
-/diamond/run0001/pegasus.31433.properties
-/home/trainXX/pegasus-wms/dags/trainXX/pegasus/diamond/run0001/diamond_0_local_cdir.out
-          
-RETRY diamond_0_local_cdir 2 
+JOB findrange_j3 findrange_j3.sub
+SCRIPT POST findrange_j3 /opt/pegasus/default/bin/pegasus-exitcode   \
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/findrange_j3.out
+RETRY findrange_j3 2
 
-PARENT generate_ID000001 CHILD findrange_ID000002 
-PARENT generate_ID000001 CHILD findrange_ID000003
-PARENT findrange_ID000002 CHILD analyze_ID000004
-PARENT findrange_ID000003 CHILD analyze_ID000004
-PARENT diamond_0_pegasus_concat CHILD generate_ID000001
-PARENT diamond_0_local_cdir CHILD diamond_0_pegasus_concat
+JOB analyze_j4 analyze_j4.sub
+SCRIPT POST analyze_j4 /opt/pegasus/default/bin/pegasus-exitcode   \
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/analyze_j4.out
+RETRY analyze_j4 2
+
+JOB stage_out_local_local_2_0 stage_out_local_local_2_0.sub
+SCRIPT POST stage_out_local_local_2_0 /opt/pegasus/default/bin/pegasus-exitcode   \
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/stage_out_local_local_2_0.out
+RETRY stage_out_local_local_2_0 2
+
+JOB register_local_2_0 register_local_2_0.sub
+SCRIPT POST register_local_2_0 /opt/pegasus/default/bin/pegasus-exitcode   \
+/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/register_local_2_0.out
+RETRY register_local_2_0 2
+
+PARENT findrange_j2 CHILD analyze_j4
+PARENT preprocess_j1 CHILD findrange_j2
+PARENT preprocess_j1 CHILD findrange_j3
+PARENT findrange_j3 CHILD analyze_j4
+PARENT analyze_j4 CHILD stage_out_local_local_2_0
+PARENT stage_in_local_local_0 CHILD preprocess_j1
+PARENT stage_out_local_local_2_0 CHILD register_local_2_0
+PARENT create_dir_blackdiamond_0_local CHILD analyze_j4
+PARENT create_dir_blackdiamond_0_local CHILD findrange_j2
+PARENT create_dir_blackdiamond_0_local CHILD preprocess_j1
+PARENT create_dir_blackdiamond_0_local CHILD findrange_j3
+PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
 ######################################################################
 # End of DAG
-######################################################################</computeroutput></programlisting>
+##################################################################</computeroutput></programlisting>
         </listitem>
 
         <listitem>
           <para>... and the dagman.out file.</para>
 
-          <programlisting><command>$ cat $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/run0001/diamond-0.dag.dagman.out</command><computeroutput>
+          <programlisting><emphasis role="bold"><command>$</command><computeroutput> cat $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag.dagman.out </computeroutput></emphasis><computeroutput>
 
-07/19 16:59:37 ******************************************************
-07/19 16:59:37 ** condor_scheduniv_exec.84.0 (CONDOR_DAGMAN) STARTING UP
-07/19 16:59:37 ** /opt/condor/7.4.2/bin/condor_dagman
-07/19 16:59:37 ** SubsystemInfo: name=DAGMAN type=DAGMAN(10) class=DAEMON(1)
-07/19 16:59:37 ** Configuration: subsystem:DAGMAN local:&lt;NONE&gt; class:DAEMON
-07/19 16:59:37 ** $CondorVersion: 7.4.2 Mar 29 2010 BuildID: 227044 $
-07/19 16:59:37 ** $CondorPlatform: X86_64-LINUX_RHEL5 $
-07/19 16:59:37 ** PID = 11922
-07/19 16:59:37 ** Log last touched time unavailable (No such file or directory)
-07/19 16:59:37 ******************************************************
-07/19 16:59:37 Using config source: /opt/condor/config/condor_config
-07/19 16:59:37 Using local config sources: 
-07/19 16:59:37    /opt/condor/config/condor_config.local
-07/19 16:59:37 DaemonCore: Command Socket at &lt;172.16.80.128:40962&gt;
-07/19 16:59:37 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
-07/19 16:59:37 DAGMAN_DEBUG_CACHE_ENABLE setting: False
-07/19 16:59:37 DAGMAN_SUBMIT_DELAY setting: 0
-07/19 16:59:37 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+11/25 01:10:47 ******************************************************
+11/25 01:10:47 ** condor_scheduniv_exec.339.0 (CONDOR_DAGMAN) STARTING UP
+11/25 01:10:47 ** /opt/condor/7.4.2/bin/condor_dagman
+11/25 01:10:47 ** SubsystemInfo: name=DAGMAN type=DAGMAN(10) class=DAEMON(1)
+11/25 01:10:47 ** Configuration: subsystem:DAGMAN local:&lt;NONE&gt; class:DAEMON
+11/25 01:10:47 ** $CondorVersion: 7.4.2 Mar 29 2010 BuildID: 227044 $
+11/25 01:10:47 ** $CondorPlatform: X86_64-LINUX_RHEL5 $
+11/25 01:10:47 ** PID = 7844
+11/25 01:10:47 ** Log last touched time unavailable (No such file or directory)
+11/25 01:10:47 ******************************************************
+11/25 01:10:47 Using config source: /opt/condor/config/condor_config
+11/25 01:10:47 Using local config sources: 
+11/25 01:10:47    /opt/condor/config/condor_config.local
+11/25 01:10:47 DaemonCore: Command Socket at &lt;172.16.80.129:40035&gt;
+11/25 01:10:47 DAGMAN_DEBUG_CACHE_SIZE setting: 5242880
+11/25 01:10:47 DAGMAN_DEBUG_CACHE_ENABLE setting: False
+11/25 01:10:47 DAGMAN_SUBMIT_DELAY setting: 0
+11/25 01:10:47 DAGMAN_MAX_SUBMIT_ATTEMPTS setting: 6
+11/25 01:10:47 DAGMAN_STARTUP_CYCLE_DETECT setting: 0
+11/25 01:10:47 DAGMAN_MAX_SUBMITS_PER_INTERVAL setting: 5
+11/25 01:10:47 DAGMAN_USER_LOG_SCAN_INTERVAL setting: 5
+11/25 01:10:47 allow_events (DAGMAN_IGNORE_DUPLICATE_JOB_EXECUTION, DAGMAN_ALLOW_EVENTS) setting: 114
+11/25 01:10:47 DAGMAN_RETRY_SUBMIT_FIRST setting: 1
+11/25 01:10:47 DAGMAN_RETRY_NODE_FIRST setting: 0
+11/25 01:10:47 DAGMAN_MAX_JOBS_IDLE setting: 0
+11/25 01:10:47 DAGMAN_MAX_JOBS_SUBMITTED setting: 0
+11/25 01:10:47 DAGMAN_MUNGE_NODE_NAMES setting: 1
+11/25 01:10:47 DAGMAN_PROHIBIT_MULTI_JOBS setting: 0
+11/25 01:10:47 DAGMAN_SUBMIT_DEPTH_FIRST setting: 0
+11/25 01:10:47 DAGMAN_ABORT_DUPLICATES setting: 1
+11/25 01:10:47 DAGMAN_ABORT_ON_SCARY_SUBMIT setting: 1
+11/25 01:10:47 DAGMAN_PENDING_REPORT_INTERVAL setting: 600
+11/25 01:10:47 DAGMAN_AUTO_RESCUE setting: 1
+11/25 01:10:47 DAGMAN_MAX_RESCUE_NUM setting: 100
+11/25 01:10:47 DAGMAN_DEFAULT_NODE_LOG setting: null
+11/25 01:10:47 ALL_DEBUG setting: 
+11/25 01:10:47 DAGMAN_DEBUG setting: 
 ....
-07/19 16:59:51 From submit: 1 job(s) submitted to cluster 85.
-07/19 16:59:51  assigned Condor ID (85.0)
-07/19 16:59:51 Just submitted 1 job this cycle...
-07/19 16:59:51 Currently monitoring 1 Condor log file(s)
-07/19 16:59:51 Event: ULOG_SUBMIT for Condor Node create_dir_diamond_0_local (85.0)
-07/19 16:59:51 Number of idle job procs: 1
-07/19 16:59:51 Of 11 nodes total:
-07/19 16:59:51  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
-07/19 16:59:51   ===     ===      ===     ===     ===        ===      ===
-07/19 16:59:51     0       0        1       0       0         10        0
-07/19 16:59:56 Currently monitoring 1 Condor log file(s)
-07/19 16:59:56 Event: ULOG_EXECUTE for Condor Node create_dir_diamond_0_local (85.0)
-07/19 16:59:56 Number of idle job procs: 0
-07/19 16:59:56 Event: ULOG_JOB_TERMINATED for Condor Node create_dir_diamond_0_local (85.0)
-07/19 16:59:56 Node create_dir_diamond_0_local job proc (85.0) completed successfully.
-07/19 16:59:56 Node create_dir_diamond_0_local job completed
-07/19 16:59:56 Running POST script of Node create_dir_diamond_0_local...
-07/19 16:59:56 Number of idle job procs: 0
-07/19 16:59:56 Of 11 nodes total:
-07/19 16:59:56  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
-07/19 16:59:56   ===     ===      ===     ===     ===        ===      ===
-07/19 16:59:56     0       0        0       1       0         10        0
-07/19 17:00:01 Currently monitoring 1 Condor log file(s)
-07/19 17:00:01 Event: ULOG_POST_SCRIPT_TERMINATED for Condor Node create_dir_diamond_0_local (85.0)
-07/19 17:00:01 POST Script of Node create_dir_diamond_0_local completed successfully.
-07/19 17:00:01 Of 11 nodes total:
-07/19 17:00:01  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
-07/19 17:00:01   ===     ===      ===     ===     ===        ===      ===
-07/19 17:00:01     1       0        0       0       1          9        0
-7/19 17:01:39  assigned Condor ID (90.0)
-07/19 17:01:39 Just submitted 3 jobs this cycle...
-07/19 17:01:39 Currently monitoring 1 Condor log file(s)
-07/19 17:01:39 Event: ULOG_SUBMIT for Condor Node findrange_ID0000002 (88.0)
-07/19 17:01:39 Number of idle job procs: 1
-07/19 17:01:39 Event: ULOG_SUBMIT for Condor Node findrange_ID0000003 (89.0)
-07/19 17:01:39 Number of idle job procs: 2
-07/19 17:01:39 Event: ULOG_EXECUTE for Condor Node findrange_ID0000002 (88.0)
-07/19 17:01:39 Number of idle job procs: 1
-07/19 17:01:39 Event: ULOG_SUBMIT for Condor Node stage_out_local_0_0 (90.0)
-.......
-07/19 17:04:33 Number of idle job procs: 0
-07/19 17:04:33 Of 11 nodes total:
-07/19 17:04:33  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
-07/19 17:04:33   ===     ===      ===     ===     ===        ===      ===
-07/19 17:04:33    10       0        0       1       0          0        0
-07/19 17:04:38 Currently monitoring 1 Condor log file(s)
-07/19 17:04:38 Event: ULOG_POST_SCRIPT_TERMINATED for Condor Node register_local_2_0 (95.0)
-07/19 17:04:38 POST Script of Node register_local_2_0 completed successfully.
-07/19 17:04:38 Of 11 nodes total:
-07/19 17:04:38  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
-07/19 17:04:38   ===     ===      ===     ===     ===        ===      ===
-07/19 17:04:38    11       0        0       0       0          0        0
-07/19 17:04:38 All jobs Completed!
-07/19 17:04:38 Note: 0 total job deferrals because of -MaxJobs limit (0)
-07/19 17:04:38 Note: 0 total job deferrals because of -MaxIdle limit (0)
-07/19 17:04:38 Note: 0 total job deferrals because of node category throttles
-07/19 17:04:38 Note: 0 total PRE script deferrals because of -MaxPre limit (20)
-07/19 17:04:38 Note: 0 total POST script deferrals because of -MaxPost limit (20)
-07/19 17:04:38 **** condor_scheduniv_exec.84.0 (condor_DAGMAN) pid 11922 EXITING WITH STATUS 0
-
-
+11/25 01:10:47 Default node log file is: &lt;/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag.nodes.log&gt;
+11/25 01:10:47 DAG Lockfile will be written to blackdiamond-0.dag.lock
+11/25 01:10:47 DAG Input file is blackdiamond-0.dag
+11/25 01:10:47 Parsing 1 dagfiles
+11/25 01:10:47 Parsing blackdiamond-0.dag ...
+11/25 01:10:47 Dag contains 8 total jobs
+11/25 01:10:47 Sleeping for 12 seconds to ensure ProcessId uniqueness
+11/25 01:10:59 Bootstrapping...
+11/25 01:10:59 Number of pre-completed nodes: 0
+11/25 01:10:59 Registering condor_event_timer...
+11/25 01:11:00 Sleeping for one second for log file consistency
+11/25 01:11:01 Submitting Condor Node create_dir_blackdiamond_0_local job(s)...
+11/25 01:11:01 submitting: condor_submit -a dag_node_name' '=' 'create_dir_blackdiamond_0_local -a +DAGManJobId' '=' '339 -a DAGManJobId' '=' '339 -a submit_event_notes' '=' 'DAG' 'Node:' 'create_dir_blackdiamond_0_local -a +DAGParentNodeNames' '=' '"" create_dir_blackdiamond_0_local.sub
+11/25 01:11:01 From submit: Submitting job(s).
+11/25 01:11:01 From submit: Logging submit event(s).
+11/25 01:11:01 From submit: 1 job(s) submitted to cluster 340.
+11/25 01:11:01  assigned Condor ID (340.0)
+11/25 01:11:01 Just submitted 1 job this cycle...
+11/25 01:11:01 Currently monitoring 1 Condor log file(s)
+11/25 01:11:01 Event: ULOG_SUBMIT for Condor Node create_dir_blackdiamond_0_local (340.0)
+11/25 01:11:01 Number of idle job procs: 1
+11/25 01:11:01 Of 8 nodes total:
+11/25 01:11:01  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+11/25 01:11:01   ===     ===      ===     ===     ===        ===      ===
+11/25 01:11:01     0       0        1       0       0          7        0
+....
+11/25 01:11:06 Currently monitoring 1 Condor log file(s)
+11/25 01:11:06 Event: ULOG_EXECUTE for Condor Node create_dir_blackdiamond_0_local (340.0)
+11/25 01:11:06 Number of idle job procs: 0
+11/25 01:11:06 Event: ULOG_JOB_TERMINATED for Condor Node create_dir_blackdiamond_0_local (340.0)
+11/25 01:11:06 Node create_dir_blackdiamond_0_local job proc (340.0) completed successfully.
+11/25 01:11:06 Node create_dir_blackdiamond_0_local job completed
+11/25 01:11:06 Running POST script of Node create_dir_blackdiamond_0_local...
+11/25 01:11:06 Number of idle job procs: 0
+11/25 01:11:06 Of 8 nodes total:
+11/25 01:11:06  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+11/25 01:11:06   ===     ===      ===     ===     ===        ===      ===
+11/25 01:11:06     0       0        0       1       0          7        0
+11/25 01:11:11 Currently monitoring 1 Condor log file(s)
+11/25 01:11:11 Event: ULOG_POST_SCRIPT_TERMINATED for Condor Node create_dir_blackdiamond_0_local (340.0)
+11/25 01:11:11 POST Script of Node create_dir_blackdiamond_0_local completed successfully.
+11/25 01:11:11 Of 8 nodes total:
+11/25 01:11:11  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+11/25 01:11:11   ===     ===      ===     ===     ===        ===      ===
+11/25 01:11:11     1       0        0       0       1          6        0
+....
+11/25 01:15:52 Event: ULOG_POST_SCRIPT_TERMINATED for Condor Node register_local_2_0 (347.0)
+11/25 01:15:52 POST Script of Node register_local_2_0 completed successfully.
+11/25 01:15:52 Of 8 nodes total:
+11/25 01:15:52  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+11/25 01:15:52   ===     ===      ===     ===     ===        ===      ===
+11/25 01:15:52     8       0        0       0       0          0        0
+11/25 01:15:52 All jobs Completed!
+11/25 01:15:52 Note: 0 total job deferrals because of -MaxJobs limit (0)
+11/25 01:15:52 Note: 0 total job deferrals because of -MaxIdle limit (0)
+11/25 01:15:52 Note: 0 total job deferrals because of node category throttles
+11/25 01:15:52 Note: 0 total PRE script deferrals because of -MaxPre limit (20)
+11/25 01:15:52 Note: 0 total POST script deferrals because of -MaxPost limit (20)
+11/25 01:15:52 **** condor_scheduniv_exec.339.0 (condor_DAGMAN) pid 7844 EXITING WITH STATUS 0
+[p
 
 </computeroutput></programlisting>
         </listitem>
@@ -1373,8 +1484,9 @@ Job 2788.0 marked for removal</computeroutput></programlisting>
           using a comma "," separated list like tg_ncsa,viz
           etc.<programlisting><command>$ cd $HOME/pegasus-wms
 $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
+               -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
                --dir dags --sites cluster --output local --force \
-               --nocleanup --dax `pwd`/dax/montage.dax --submit</command></programlisting>
+               --nocleanup --dax `pwd`/dax/montage.dax --submit -v</command></programlisting>
           The above command says that we need to plan the montage dax on the
           <emphasis role="bold">cluster</emphasis> site. The cluster site in
           the VM is managed by SGE that is running in the VM. The jobs for
@@ -1384,60 +1496,54 @@ $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
           files are to be generated in a directory structure whose base is
           dags. We also are requesting that no cleanup jobs be added as we
           require the intermediate data on the remote host. Here is the output
-          of pegasus-plan. <programlisting><computeroutput>2010.07.20 13:51:34.808 PDT: [INFO] event.pegasus.planner planner.version 2.4.2  - STARTED 
-2010.07.20 13:51:35.324 PDT: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - STARTED 
-2010.07.20 13:51:35.493 PDT: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - FINISHED 
-2010.07.20 13:51:35.525 PDT: [INFO] event.pegasus.refinement dax.id montage_0  - STARTED 
-2010.07.20 13:51:35.535 PDT: [INFO] event.pegasus.siteselection dax.id montage_0  - STARTED 
-2010.07.20 13:51:35.590 PDT: [INFO] event.pegasus.siteselection dax.id montage_0  - FINISHED 
-2010.07.20 13:51:35.598 PDT: [INFO]  Grafting transfer nodes in the workflow 
-2010.07.20 13:51:35.599 PDT: [INFO] event.pegasus.generate.transfer-nodes dax.id montage_0  - STARTED 
-2010.07.20 13:51:35.662 PDT: [INFO] event.pegasus.generate.transfer-nodes dax.id montage_0  - FINISHED 
-2010.07.20 13:51:35.663 PDT: [INFO] event.pegasus.generate.workdir-nodes dax.id montage_0  - STARTED 
-2010.07.20 13:51:35.665 PDT: [INFO] event.pegasus.generate.workdir-nodes dax.id montage_0  - FINISHED 
-2010.07.20 13:51:35.665 PDT: [INFO] event.pegasus.generate.cleanup-wf dax.id montage_0  - STARTED 
-2010.07.20 13:51:35.666 PDT: [INFO] event.pegasus.generate.cleanup-wf dax.id montage_0  - FINISHED 
-2010.07.20 13:51:35.666 PDT: [INFO] event.pegasus.refinement dax.id montage_0  - FINISHED 
-2010.07.20 13:51:35.732 PDT: [INFO]  Generating codes for the concrete workflow 
-2010.07.20 13:51:35.932 PDT: [INFO]  Generating codes for the concrete workflow -DONE 
-2010.07.20 13:51:35.932 PDT: [INFO]  Generating code for the cleanup workflow 
-2010.07.20 13:51:35.985 PDT: [INFO]  Generating code for the cleanup workflow -DONE 
-2010.07.20 13:51:36.143 PDT: [INFO]   
-2010.07.20 13:51:36.150 PDT: [INFO]  ----------------------------------------------------------------------- 
-2010.07.20 13:51:36.156 PDT: [INFO]  File for submitting this DAG to Condor           : montage-0.dag.condor.sub 
-2010.07.20 13:51:36.163 PDT: [INFO]  Log of DAGMan debugging messages                 : montage-0.dag.dagman.out 
-2010.07.20 13:51:36.169 PDT: [INFO]  Log of Condor library output                     : montage-0.dag.lib.out 
-2010.07.20 13:51:36.176 PDT: [INFO]  Log of Condor library error messages             : montage-0.dag.lib.err 
-2010.07.20 13:51:36.183 PDT: [INFO]  Log of the life of condor_dagman itself          : montage-0.dag.dagman.log 
-2010.07.20 13:51:36.193 PDT: [INFO]   
-2010.07.20 13:51:36.201 PDT: [INFO]  -no_submit given, not submitting DAG to Condor.  You can do this with: 
-2010.07.20 13:51:36.225 PDT: [INFO]  "condor_submit montage-0.dag.condor.sub" 
-2010.07.20 13:51:36.231 PDT: [INFO]  ----------------------------------------------------------------------- 
-2010.07.20 13:51:36.237 PDT: [INFO]  Submitting job(s). 
-2010.07.20 13:51:36.247 PDT: [INFO]  Logging submit event(s). 
-2010.07.20 13:51:36.253 PDT: [INFO]  1 job(s) submitted to cluster 118. 
-2010.07.20 13:51:36.355 PDT: [INFO]   
-2010.07.20 13:51:36.363 PDT: [INFO]  I have started your workflow, committed it to DAGMan, and updated its 
-2010.07.20 13:51:36.369 PDT: [INFO]  state in the work database. A separate daemon was started to collect 
-2010.07.20 13:51:36.374 PDT: [INFO]  information about the progress of the workflow. The job state will soon 
-2010.07.20 13:51:36.380 PDT: [INFO]  be visible. Your workflow runs in base directory.  
-2010.07.20 13:51:36.386 PDT: [INFO]   
-2010.07.20 13:51:36.393 PDT: [INFO]  cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
-2010.07.20 13:51:36.399 PDT: [INFO]   
-2010.07.20 13:51:36.405 PDT: [INFO]  *** To monitor the workflow you can run *** 
-2010.07.20 13:51:36.415 PDT: [INFO]   
-2010.07.20 13:51:36.421 PDT: [INFO]  pegasus-status -w montage-0 -t 20100720T135134-0700  
-2010.07.20 13:51:36.427 PDT: [INFO]  or 
-2010.07.20 13:51:36.433 PDT: [INFO]  pegasus-status /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
-2010.07.20 13:51:36.440 PDT: [INFO]   
-2010.07.20 13:51:36.446 PDT: [INFO]  *** To remove your workflow run *** 
-2010.07.20 13:51:36.452 PDT: [INFO]   
-2010.07.20 13:51:36.458 PDT: [INFO]  pegasus-remove -d 118.0 
-2010.07.20 13:51:36.465 PDT: [INFO]  or 
-2010.07.20 13:51:36.471 PDT: [INFO]  pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
-2010.07.20 13:51:36.478 PDT: [INFO]   
-2010.07.20 13:51:36.484 PDT: [INFO]  Time taken to execute is 1.666 seconds 
-2010.07.20 13:51:36.484 PDT: [INFO] event.pegasus.planner planner.version 2.4.2  - FINISHED 
+          of pegasus-plan. <programlisting><computeroutput>
+2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - STARTED 
+2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - FINISHED 
+2010.11.24 18:20:11.350 PST: [INFO] event.pegasus.refinement dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.360 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.416 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.504 PST: [INFO]  Grafting transfer nodes in the workflow 
+2010.11.24 18:20:11.505 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.655 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.657 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.660 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.660 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.661 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.661 PST: [INFO] event.pegasus.refinement dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.715 PST: [INFO]  Generating codes for the concrete workflow 
+2010.11.24 18:20:12.406 PST: [INFO]  Generating codes for the concrete workflow -DONE 
+2010.11.24 18:20:12.406 PST: [INFO]  Generating code for the cleanup workflow 
+2010.11.24 18:20:12.528 PST: [INFO]  Generating code for the cleanup workflow -DONE 
+2010.11.24 18:20:12.672 PST:    
+2010.11.24 18:20:12.679 PST:   ----------------------------------------------------------------------- 
+2010.11.24 18:20:12.685 PST:   File for submitting this DAG to Condor           : montage-0.dag.condor.sub 
+2010.11.24 18:20:12.691 PST:   Log of DAGMan debugging messages                 : montage-0.dag.dagman.out 
+2010.11.24 18:20:12.704 PST:   Log of Condor library output                     : montage-0.dag.lib.out 
+2010.11.24 18:20:12.711 PST:   Log of Condor library error messages             : montage-0.dag.lib.err 
+2010.11.24 18:20:12.726 PST:   Log of the life of condor_dagman itself          : montage-0.dag.dagman.log 
+2010.11.24 18:20:12.731 PST:    
+2010.11.24 18:20:12.762 PST:   -no_submit given, not submitting DAG to Condor.  You can do this with: 
+2010.11.24 18:20:12.792 PST:   "condor_submit montage-0.dag.condor.sub" 
+2010.11.24 18:20:12.798 PST:   ----------------------------------------------------------------------- 
+2010.11.24 18:20:12.804 PST:   Submitting job(s). 
+2010.11.24 18:20:12.815 PST:   Logging submit event(s). 
+2010.11.24 18:20:12.821 PST:   1 job(s) submitted to cluster 275. 
+2010.11.24 18:20:13.504 PST:    
+2010.11.24 18:20:13.510 PST:   Your Workflow has been started and runs in base directory given below 
+2010.11.24 18:20:13.519 PST:    
+2010.11.24 18:20:13.530 PST:   cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.535 PST:    
+2010.11.24 18:20:13.542 PST:   *** To monitor the workflow you can run *** 
+2010.11.24 18:20:13.555 PST:    
+2010.11.24 18:20:13.562 PST:   pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.570 PST:    
+2010.11.24 18:20:13.578 PST:   *** To remove your workflow run *** 
+2010.11.24 18:20:13.585 PST:   pegasus-remove -d 275.0 
+2010.11.24 18:20:13.592 PST:   or 
+2010.11.24 18:20:13.604 PST:   pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.610 PST:    
+2010.11.24 18:20:13.617 PST:   Time taken to execute is 3.76 seconds 
+2010.11.24 18:20:13.617 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
 </computeroutput></programlisting></para>
         </listitem>
 
@@ -1448,9 +1554,9 @@ $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
       </itemizedlist>
 
       <para>The above command submits the workflow to Condor DAGMan/CondorG.
-      After submitting it starts a monitoring daemon tailstatd that parses the
-      condor log files to update the status of the jobs and push it in a work
-      database.</para>
+      After submitting it starts a monitoring daemon pegasus-monitord that
+      parses the condor log files to update the status of the jobs and push it
+      in a work database.</para>
 
       <para>Monitor the workflow using the commands provided in the output of
       the pegasus-run command and other commands explained earlier.</para>
@@ -1482,11 +1588,12 @@ $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
 
       <programlisting><command>$ cd $HOME/pegasus-wms
 $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
+            -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
             --dir `pwd`/dags --sites cluster --output local --nocleanup --force\
-            --cluster horizontal --dax `pwd`/dax/montage.dax </command></programlisting>
+            --cluster horizontal --dax `pwd`/dax/montage.dax -v</command></programlisting>
 
-      <para>After clustering the executable workflow will contain 29 jobs
-      compared to 46 in the non clustered mode.</para>
+      <para>After clustering the executable workflow will contain 26 jobs
+      compared to 44 in the non clustered mode.</para>
     </section>
 
     <section>
@@ -1503,31 +1610,45 @@ $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
 
       <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms
 $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties --dax `pwd`/dax/diamond.dax --dir `pwd`/dags -s local \
-                   -o local --nocleanup
+                   -o local --nocleanup -v
 </emphasis>
-2008.04.30 17:12:09.851 PDT: [INFO] Parsing the DAX
-2008.04.30 17:12:10.299 PDT: [INFO] Parsing the DAX (completed)
-2008.04.30 17:12:10.344 PDT: [INFO] Parsing the site catalog 
-2008.04.30 17:12:10.480 PDT: [INFO] Parsing the site catalog (completed)
-2008.04.30 17:12:10.545 PDT: [INFO] Doing site selection
-2008.04.30 17:12:10.568 PDT: [INFO] Doing site selection (completed)
-2008.04.30 17:12:10.569 PDT: [INFO] Grafting transfer nodes in the workflow
-2008.04.30 17:12:10.618 PDT: [INFO] The leaf file f.d is already at the output pool local
-2008.04.30 17:12:10.618 PDT: [INFO] Grafting transfer nodes in the workflow (completed)
-2008.04.30 17:12:10.627 PDT: [INFO] Grafting the remote workdirectory creation jobs in the workflow
-2008.04.30 17:12:10.632 PDT: [INFO] Grafting the remote workdirectory creation jobs in the workflow (completed)
-2008.04.30 17:12:10.632 PDT: [INFO] Generating the cleanup workflow
-2008.04.30 17:12:10.636 PDT: [INFO] Generating the cleanup workflow (completed)
-2008.04.30 17:12:10.662 PDT: [INFO] 
+2010.11.25 01:35:11.186 PST: [INFO] event.pegasus.refinement dax.id blackdiamond_0  - STARTED 
+2010.11.25 01:35:11.210 PST: [INFO] event.pegasus.reduce dax.id blackdiamond_0  - STARTED 
+2010.11.25 01:35:11.211 PST: [INFO]  Nodes/Jobs Deleted from the Workflow during reduction  
+2010.11.25 01:35:11.211 PST: [INFO]     analyze_j4 
+2010.11.25 01:35:11.211 PST: [INFO]     findrange_j2 
+2010.11.25 01:35:11.211 PST: [INFO]     findrange_j3 
+2010.11.25 01:35:11.211 PST: [INFO]     preprocess_j1 
+2010.11.25 01:35:11.211 PST: [INFO]  Nodes/Jobs Deleted from the Workflow during reduction  - DONE 
+2010.11.25 01:35:11.212 PST: [INFO] event.pegasus.reduce dax.id blackdiamond_0  - FINISHED 
+2010.11.25 01:35:11.212 PST: [INFO] event.pegasus.siteselection dax.id blackdiamond_0  - STARTED 
+2010.11.25 01:35:11.219 PST: [INFO] event.pegasus.siteselection dax.id blackdiamond_0  - FINISHED 
+2010.11.25 01:35:11.289 PST: [INFO]  Grafting transfer nodes in the workflow 
+2010.11.25 01:35:11.290 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id blackdiamond_0  - STARTED 
+2010.11.25 01:35:11.370 PST: [INFO]  Adding stage out jobs for jobs deleted from the workflow 
+2010.11.25 01:35:11.370 PST: [INFO]  The leaf file f.d is already at the output pool local 
+2010.11.25 01:35:11.371 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id blackdiamond_0  - FINISHED 
+2010.11.25 01:35:11.372 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id blackdiamond_0  - STARTED 
+2010.11.25 01:35:11.374 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id blackdiamond_0  - FINISHED 
+2010.11.25 01:35:11.374 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id blackdiamond_0  - STARTED 
+2010.11.25 01:35:11.375 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id blackdiamond_0  - FINISHED 
+2010.11.25 01:35:11.375 PST: [INFO] event.pegasus.refinement dax.id blackdiamond_0  - FINISHED 
+2010.11.25 01:35:11.426 PST: [INFO]  Generating codes for the concrete workflow 
+2010.11.25 01:35:12.078 PST: [INFO]  Generating codes for the concrete workflow -DONE 
+2010.11.25 01:35:12.083 PST:   
 
 
-The executable workflow generated contains no nodes.
+The executable workflow generated contains only a single NOOP job.
 It seems that the output files are already at the output site. 
 To regenerate the output data from scratch specify --force option.
 
 
 
-2008.04.30 17:12:10.663 PDT: [INFO] Time taken to execute is 1.081 seconds
+pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003/pegasus.4078026914028890643.properties /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003
+
+ 
+2010.11.25 01:35:12.083 PST:   Time taken to execute is 1.508 seconds 
+2010.11.25 01:35:12.083 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
 </programlisting>
 
       <para>You can increase the debug level to see how pegasus deletes the
