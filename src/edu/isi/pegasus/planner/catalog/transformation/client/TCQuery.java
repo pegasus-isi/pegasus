@@ -183,8 +183,12 @@ public class TCQuery
                     " TYPE" + getSpace( count[ 2 ], "TYPE".length() ) +
                     " SYSINFO" );
                 System.out.println( "" );
-                for ( Iterator i = l.iterator(); i.hasNext(); ) {
-                    String[] s = ( String[] ) i.next();
+                for ( TransformationCatalogEntry entry : l  ) {
+                    String[] s = {
+                        entry.getResourceId(),
+                        entry.getPhysicalTransformation(),
+                        entry.getType().toString(),
+                        entry.getVDSSysInfo().toString()};
                     System.out.println( s[ 0 ] + getSpace( count[ 0 ],
                         s[ 0 ].length() ) +
                         lfn + getSpace( lfn.length(), lfn.length() ) +
