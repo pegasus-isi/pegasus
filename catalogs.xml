@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="catalogs">
   <title>Catalogs</title>
@@ -437,7 +437,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
             OSVERSION and GLIBC are optional</para>
 
             <para>ARCH can have one of the following values X86, X86_64,
-            SPARCV7, SPARCV9, AIX, PPC. </para>
+            SPARCV7, SPARCV9, AIX, PPC.</para>
 
             <para>OS can have one of the following values LINUX,SUNOS,MACOSX.
             The default value for sysinfo if none specified is
@@ -707,11 +707,38 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       VORS or OSGMM. See pegasus-sc-client --help for more details</para>
     </section>
 
-    <section id="pegasus-sc-converter">
+    <section>
       <title>Site Catalog Converter pegasus-sc-converter</title>
 
-      <para>The pegasus-sc-converter converts the sitecatalog from one format
-      (File, XML) to another (XML3)..</para>
+      <para>Pegasus 3.0 by default now parses Site Catalog format conforming
+      to the SC schema 3.0 ( XML3 ) available <ulink role=""
+      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
+      userlevel="">here</ulink> and is explained in detail in the chapter on
+      Catalogs.</para>
+
+      <para>Pegasus 3.0 comes with a pegasus-sc-converter that will convert
+      users old site catalog ( XML ) to the XML3 format. Sample usage is given
+      below.</para>
+
+      <programlisting><emphasis role="bold">$ pegasus-sc-converter -i sample.sites.xml -I XML -o sample.sites.xml3 -O XML3
+</emphasis>
+2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml3 
+</programlisting>
+
+      <para>To use the converted site catalog, in the properties do the
+      following</para>
+
+      <orderedlist>
+        <listitem>
+          <para>unset pegasus.catalog.site or set pegasus.catalog.site to
+          XML3</para>
+        </listitem>
+
+        <listitem>
+          <para>point pegasus.catalog.site.file to the converted site
+          catalog</para>
+        </listitem>
+      </orderedlist>
     </section>
   </section>
 
@@ -970,7 +997,7 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
     </section>
 
     <section id="tc-Database">
-      <title>Datbase TC (Database)</title>
+      <title>Database TC (Database)</title>
 
       <para>The database TC alows you to use a relational database. To use the
       database TC you need to have installed a MySQL or PostgreSQL server. The
@@ -1070,11 +1097,37 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
       <para></para>
     </section>
 
-    <section id="pegasus-tc-converter">
+    <section>
       <title>TC Converter Client pegasus-tc-converter</title>
 
-      <para>This client converts the simple column based TC to a Multiline
-      based TC.</para>
+      <para>Pegasus 3.0 by default now parses a file based multiline textual
+      format of a Transformation Catalog. The new Text format is explained in
+      detail in the chapter on Catalogs.</para>
+
+      <para>Pegasus 3.0 comes with a pegasus-tc-converter that will convert
+      users old transformation catalog ( File ) to the Text format. Sample
+      usage is given below.</para>
+
+      <programlisting><emphasis role="bold">$ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
+</emphasis>
+2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text 
+2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text 
+</programlisting>
+
+      <para>To use the converted transformation catalog, in the properties do
+      the following</para>
+
+      <orderedlist>
+        <listitem>
+          <para>unset pegasus.catalog.transformation or set
+          pegasus.catalog.transformation to Text</para>
+        </listitem>
+
+        <listitem>
+          <para>point pegasus.catalog.transformation.file to the converted
+          transformation catalog</para>
+        </listitem>
+      </orderedlist>
     </section>
   </section>
 </chapter>
