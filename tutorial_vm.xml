@@ -45,14 +45,19 @@ Wed Nov 24 14:47:59 PST 2010
     <itemizedlist>
       <listitem>
         <para><ulink
-        url="http://pegasus.isi.edu/tutorial/virtual/PegasusVM.tar.bz2">VMWare
+        url="http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM.tar.bz2">VMWare
         Pegasus Image</ulink></para>
+
+        <para>The Image is bzipped. You will need to unzip it.</para>
+
+        <programlisting><emphasis role="bold">$ tar jxvf Pegasus3.0-VM.tar.bz2</emphasis></programlisting>
       </listitem>
     </itemizedlist>
 
-    <para>When you start the virtual machine , it will ask for a password for
-    a user called <emphasis role="bold">pegasus</emphasis>. The password is
-    same as the username i.e. pegasus.</para>
+    <para>When you start the virtual machine ( Pegasus3.0-VM.vmwarevm ), it
+    will ask for a password for a user called <emphasis
+    role="bold">pegasus</emphasis>. The password is same as the username i.e.
+    pegasus.</para>
 
     <para>After logging on, start a terminal</para>
 
