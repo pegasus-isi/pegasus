@@ -553,10 +553,10 @@ public class Database
 
         ResultSet rs = ps.executeQuery();
 
-        List result = null;
+        List<TransformationCatalogEntry> result = null;
         while (rs.next()) {
             if (result == null) {
-                result = new ArrayList();
+                result = new ArrayList<TransformationCatalogEntry>();
             }
             String ttype=rs.getString(3);
             if(TCType.valueOf(ttype)==TCType.STATIC_BINARY){
@@ -565,12 +565,16 @@ public class Database
 
             String pfn=rs.getString(2);
             pfn=Abstract.modifyForFileURLS(pfn, ttype);
-            String[] s = {
-                rs.getString(1), pfn, ttype,
-                (new
-                 VDSSysInfo(rs.getString(4), rs.getString(5), rs.getString(6),
-                         rs.getString(7))).toString()};
-            result.add(s);
+
+            TransformationCatalogEntry entry = new TransformationCatalogEntry(namespace,name,version);
+            entry.setPhysicalTransformation(pfn);
+            entry.setType(TCType.valueOf(ttype));
+            entry.setVDSSysInfo(new VDSSysInfo(rs.getString(4), rs.getString(5), rs.getString(6),
+                         rs.getString(7)));
+            entry.setResourceId(rs.getString(1));
+
+          
+            result.add(entry);
             //columnLength(s, count);
         }
         rs.close();

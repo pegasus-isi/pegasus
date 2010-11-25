@@ -146,7 +146,7 @@ public class TCQuery
     private void getPfn( String namespace, String name, String version,
         String resource, String type ) {
         if ( name != null ) {
-            List l = null;
+            List<TransformationCatalogEntry> l = null;
             TCType t = ( type == null ) ? null : TCType.valueOf( type );
             try {
                 mLogger.log(
@@ -166,10 +166,15 @@ public class TCQuery
             	int count[] = {
                         0, 0, 0};
                 //l.remove( l.size() - 1 );
-            	for ( Iterator itr = l.iterator(); itr.hasNext(); ) {
-                	String[] s = ( String[] ) itr.next();
+            	for ( TransformationCatalogEntry entry : l ) {
+                	String[] s = {
+                        entry.getResourceId(),
+                        entry.getPhysicalTransformation(),
+                        entry.getType().toString(),
+                        entry.getVDSSysInfo().toString()};
                 	columnLength(s, count);
                 }
+               
                 System.out.println( "#RESID" +
                     getSpace( count[ 0 ], "#RESID".length() ) +
                     "  LTX" +
