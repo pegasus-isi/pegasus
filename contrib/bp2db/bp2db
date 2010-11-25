@@ -212,14 +212,6 @@ class Loader:
 		rec['wf_id'] = wf_id
 		rec['wf_uuid'] = rec['wf.id']
 		rec['timestamp'] = parse_ts(rec['ts'])
-			
-		rec.setdefault('submit_hostname', None)
-		rec.setdefault('submit_dir', None)
-		rec.setdefault('planner_arguments', None)
-		rec.setdefault('user', None)
-		rec.setdefault('grid_dn', None)
-		rec.setdefault('planner_version', None)
-		rec.setdefault('parent_workflow_id', None)
 		
 		self.workflow_batch.add_batch(rec)
 			
@@ -327,8 +319,12 @@ class Loader:
 			job_id = self.new_job(rec)
 		rec['job_id'] = job_id
 		
-		rec['condor_id'] = rec['condor.id']
 		rec['job_submit_seq'] = rec['job.id']
+		
+		# Sometimes we don't get a condor ID
+		rec['condor_id'] = None
+		if 'condor.id' in rec:
+			rec['condor_id'] = rec['condor.id']
 		
 		# Update job table
 		self.job_batch.add_batch(rec)
