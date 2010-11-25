@@ -374,6 +374,12 @@ class Loader:
 		"Handle a stampede.task.mainjob event"
 		
 		job_id = self.lookup_job(rec)
+		
+		# If the job hasn't been loaded yet, we just have to skip it
+		if job_id is None:
+			self.skip_event(rec)
+			return
+		
 		task_id = self.new_task()
 		
 		rec['job_id'] = job_id
