@@ -233,10 +233,10 @@ public class VDSSysInfo{
     public String toString() {
         StringBuffer s = new StringBuffer();
         s.append(arch + "::" + os);
-        if (osversion != null || !osversion.isEmpty()) {
+        if (osversion != null && !osversion.isEmpty()) {
             s.append(":" + osversion);
         }
-        if (glibc != null || !glibc.isEmpty()) {
+        if (glibc != null && !glibc.isEmpty()) {
             s.append(":" + glibc);
         }
         return s.toString();
