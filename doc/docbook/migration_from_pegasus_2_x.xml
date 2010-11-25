@@ -117,7 +117,7 @@
 
         <listitem>
           <para>point pegasus.catalog.transformation.file to the converted
-          transfomation catalog</para>
+          transformation catalog</para>
         </listitem>
       </orderedlist>
     </section>
