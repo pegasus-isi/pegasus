@@ -988,7 +988,7 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
       <para><orderedlist>
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.transformation.db=MySQL |
+            role="bold">pegasus.catalog.transformation.db.driver=MySQL |
             Postgres</emphasis></para>
           </listitem>
 
@@ -1000,7 +1000,7 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
 
           <listitem>
             <para><emphasis
-            role="bold">pegasus.catalog.transformation.db.username=<replaceable>&lt;database
+            role="bold">pegasus.catalog.transformation.db.user=<replaceable>&lt;database
             user&gt;</replaceable></emphasis></para>
           </listitem>
 
