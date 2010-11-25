@@ -124,7 +124,7 @@ public class TransformationCatalogTextScanner {
             return null;
         }
 
-        //for identifier after tr we allow for . - and :
+        //for identifier after tr we allow for . - : and / \
         boolean previousTokenIsTR = false;
         boolean previousTokenIsSite = false;
         if( ( mPreviousToken instanceof TransformationCatalogReservedWord &&
@@ -143,10 +143,10 @@ public class TransformationCatalogTextScanner {
             mLookAhead = mInputReader.read();
 
             if( previousTokenIsTR ){
-                //allow : - and . for transformation names
+                //allow : - / \ and . for transformation names
                 while ( mLookAhead != -1 &&
                         ( Character.isJavaIdentifierPart((char) mLookAhead) || 
-                          mLookAhead == ':'  || mLookAhead == '.' || mLookAhead == '-' ) ) {
+                          mLookAhead == ':'  || mLookAhead == '.' || mLookAhead == '-' ||  mLookAhead == '/' || mLookAhead == '\\') ) {
                     identifier.append( (char) mLookAhead );
                     mLookAhead = mInputReader.read();
                 }
