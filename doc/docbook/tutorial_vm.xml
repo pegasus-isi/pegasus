@@ -1044,6 +1044,13 @@ pegasus-analyzer: end of status report
       was launched. the machine information about the node that the job ran on
       Amongst the above information, the dagman.out file gives a coarser
       grained estimate of the job duration and start time</para>
+    </section>
+
+    <section>
+      <title>Kickstart and Condor DAGMan format and log files</title>
+
+      <para>This section explains how to read kickstart output and DAGMan
+      Condor log files.</para>
 
       <section>
         <title>Kickstart</title>
@@ -1441,142 +1448,18 @@ PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
           </listitem>
         </itemizedlist>
       </section>
+    </section>
 
-      <section>
-        <title>Removing a running workflow</title>
+    <section>
+      <title>Removing a running workflow</title>
 
-        <para>Sometimes you may want to halt the execution of the workflow or
-        just permanently remove it. You can stop/halt a workflow by running
-        the pegasus-remove command mentioned in the output of
-        pegasus-run</para>
+      <para>Sometimes you may want to halt the execution of the workflow or
+      just permanently remove it. You can stop/halt a workflow by running the
+      pegasus-remove command mentioned in the output of pegasus-run</para>
 
-        <programlisting><command>$ pegasus-remove $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/runXXXX</command><computeroutput>
+      <programlisting><command>$ pegasus-remove $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/runXXXX</command><computeroutput>
 
 Job 2788.0 marked for removal</computeroutput></programlisting>
-      </section>
-
-      <section>
-        <title>Planning workflow using pegasus-plan and Running pegasus-run to
-        submit the workflow to a grid resource.</title>
-
-        <para>In this exercise we are going to run pegasus-plan to generate a
-        executable workflow from the abstract workflow (montage.dax). The
-        Executable workflow generated, are condor submit files that are
-        submitted to remote grid resources using pegasus-run</para>
-
-        <para>The instructors have provided:</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>A dax (montage.dax) in the $HOME/pegasus-wms/dax/
-            directory.</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>You will need to write some things yourself, by following the
-        instructions below: <itemizedlist>
-            <listitem>
-              <para>Run pegasus-plan to generate the condor submit files out
-              of the dax.</para>
-            </listitem>
-          </itemizedlist></para>
-
-        <para>Instructions:</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>Let us run pegasus-plan on the montage dax on the tg_ncsa
-            cluster. If multiple sites are available you could provide the
-            sites using a comma "," separated list like tg_ncsa,viz
-            etc.<programlisting><command>$ cd $HOME/pegasus-wms
-$ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
-               -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
-               --dir dags --sites cluster --output local --force \
-               --nocleanup --dax `pwd`/dax/montage.dax --submit -v</command></programlisting>
-            The above command says that we need to plan the montage dax on the
-            <emphasis role="bold">cluster</emphasis> site. The cluster site in
-            the VM is managed by SGE that is running in the VM. The jobs for
-            this workflow will be submitted to <emphasis
-            role="bold">jobmanager-sge</emphasis> in the VM. The output data
-            needs to be transferred back to the local host. The condor submit
-            files are to be generated in a directory structure whose base is
-            dags. We also are requesting that no cleanup jobs be added as we
-            require the intermediate data on the remote host. Here is the
-            output of pegasus-plan. <programlisting><computeroutput>
-2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - STARTED 
-2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - FINISHED 
-2010.11.24 18:20:11.350 PST: [INFO] event.pegasus.refinement dax.id montage_0  - STARTED 
-2010.11.24 18:20:11.360 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - STARTED 
-2010.11.24 18:20:11.416 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - FINISHED 
-2010.11.24 18:20:11.504 PST: [INFO]  Grafting transfer nodes in the workflow 
-2010.11.24 18:20:11.505 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id montage_0  - STARTED 
-2010.11.24 18:20:11.655 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id montage_0  - FINISHED 
-2010.11.24 18:20:11.657 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id montage_0  - STARTED 
-2010.11.24 18:20:11.660 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id montage_0  - FINISHED 
-2010.11.24 18:20:11.660 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id montage_0  - STARTED 
-2010.11.24 18:20:11.661 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id montage_0  - FINISHED 
-2010.11.24 18:20:11.661 PST: [INFO] event.pegasus.refinement dax.id montage_0  - FINISHED 
-2010.11.24 18:20:11.715 PST: [INFO]  Generating codes for the concrete workflow 
-2010.11.24 18:20:12.406 PST: [INFO]  Generating codes for the concrete workflow -DONE 
-2010.11.24 18:20:12.406 PST: [INFO]  Generating code for the cleanup workflow 
-2010.11.24 18:20:12.528 PST: [INFO]  Generating code for the cleanup workflow -DONE 
-2010.11.24 18:20:12.672 PST:    
-2010.11.24 18:20:12.679 PST:   ----------------------------------------------------------------------- 
-2010.11.24 18:20:12.685 PST:   File for submitting this DAG to Condor           : montage-0.dag.condor.sub 
-2010.11.24 18:20:12.691 PST:   Log of DAGMan debugging messages                 : montage-0.dag.dagman.out 
-2010.11.24 18:20:12.704 PST:   Log of Condor library output                     : montage-0.dag.lib.out 
-2010.11.24 18:20:12.711 PST:   Log of Condor library error messages             : montage-0.dag.lib.err 
-2010.11.24 18:20:12.726 PST:   Log of the life of condor_dagman itself          : montage-0.dag.dagman.log 
-2010.11.24 18:20:12.731 PST:    
-2010.11.24 18:20:12.762 PST:   -no_submit given, not submitting DAG to Condor.  You can do this with: 
-2010.11.24 18:20:12.792 PST:   "condor_submit montage-0.dag.condor.sub" 
-2010.11.24 18:20:12.798 PST:   ----------------------------------------------------------------------- 
-2010.11.24 18:20:12.804 PST:   Submitting job(s). 
-2010.11.24 18:20:12.815 PST:   Logging submit event(s). 
-2010.11.24 18:20:12.821 PST:   1 job(s) submitted to cluster 275. 
-2010.11.24 18:20:13.504 PST:    
-2010.11.24 18:20:13.510 PST:   Your Workflow has been started and runs in base directory given below 
-2010.11.24 18:20:13.519 PST:    
-2010.11.24 18:20:13.530 PST:   cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
-2010.11.24 18:20:13.535 PST:    
-2010.11.24 18:20:13.542 PST:   *** To monitor the workflow you can run *** 
-2010.11.24 18:20:13.555 PST:    
-2010.11.24 18:20:13.562 PST:   pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
-2010.11.24 18:20:13.570 PST:    
-2010.11.24 18:20:13.578 PST:   *** To remove your workflow run *** 
-2010.11.24 18:20:13.585 PST:   pegasus-remove -d 275.0 
-2010.11.24 18:20:13.592 PST:   or 
-2010.11.24 18:20:13.604 PST:   pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
-2010.11.24 18:20:13.610 PST:    
-2010.11.24 18:20:13.617 PST:   Time taken to execute is 3.76 seconds 
-2010.11.24 18:20:13.617 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
-</computeroutput></programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>If you get any errors above while running pegasus-plan you
-            can add -vvvvv to enable maximum verbosity on pegasus-run.</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>The above command submits the workflow to Condor DAGMan/CondorG.
-        After submitting it starts a monitoring daemon pegasus-monitord that
-        parses the condor log files to update the status of the jobs and push
-        it in a work database.</para>
-
-        <para>Monitor the workflow using the commands provided in the output
-        of the pegasus-run command and other commands explained
-        earlier.</para>
-
-        <para>The workflow generates a single output file montage.jpg that
-        resides in the directory <emphasis
-        role="bold">/home/pegasus/local-storage/storage/montage.jpg</emphasis>
-        if it runs successfully</para>
-
-        <para>The grid workflow will take time to execute on the VM. On the
-        instructor's MAC Pro Desktop it took about<emphasis role="bold"> 30
-        minutes </emphasis>to run.</para>
-      </section>
     </section>
 
     <section>
@@ -1963,6 +1846,128 @@ PNG file corresponding to the dax is created at:
           </figure>
         </section>
       </section>
+    </section>
+
+    <section>
+      <title>Planning workflow using pegasus-plan and Running pegasus-run to
+      submit the workflow to a grid resource.</title>
+
+      <para>In this exercise we are going to run pegasus-plan to generate a
+      executable workflow from the abstract workflow (montage.dax). The
+      Executable workflow generated, are condor submit files that are
+      submitted to remote grid resources using pegasus-run</para>
+
+      <para>The instructors have provided:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>A dax (montage.dax) in the $HOME/pegasus-wms/dax/
+          directory.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>You will need to write some things yourself, by following the
+      instructions below: <itemizedlist>
+          <listitem>
+            <para>Run pegasus-plan to generate the condor submit files out of
+            the dax.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Instructions:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Let us run pegasus-plan on the montage dax on the tg_ncsa
+          cluster. If multiple sites are available you could provide the sites
+          using a comma "," separated list like tg_ncsa,viz
+          etc.<programlisting><command>$ cd $HOME/pegasus-wms
+$ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
+               -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
+               --dir dags --sites cluster --output local --force \
+               --nocleanup --dax `pwd`/dax/montage.dax --submit -v</command></programlisting>
+          The above command says that we need to plan the montage dax on the
+          <emphasis role="bold">cluster</emphasis> site. The cluster site in
+          the VM is managed by SGE that is running in the VM. The jobs for
+          this workflow will be submitted to <emphasis
+          role="bold">jobmanager-sge</emphasis> in the VM. The output data
+          needs to be transferred back to the local host. The condor submit
+          files are to be generated in a directory structure whose base is
+          dags. We also are requesting that no cleanup jobs be added as we
+          require the intermediate data on the remote host. Here is the output
+          of pegasus-plan. <programlisting><computeroutput>
+2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - STARTED 
+2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - FINISHED 
+2010.11.24 18:20:11.350 PST: [INFO] event.pegasus.refinement dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.360 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.416 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.504 PST: [INFO]  Grafting transfer nodes in the workflow 
+2010.11.24 18:20:11.505 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.655 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.657 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.660 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.660 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id montage_0  - STARTED 
+2010.11.24 18:20:11.661 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.661 PST: [INFO] event.pegasus.refinement dax.id montage_0  - FINISHED 
+2010.11.24 18:20:11.715 PST: [INFO]  Generating codes for the concrete workflow 
+2010.11.24 18:20:12.406 PST: [INFO]  Generating codes for the concrete workflow -DONE 
+2010.11.24 18:20:12.406 PST: [INFO]  Generating code for the cleanup workflow 
+2010.11.24 18:20:12.528 PST: [INFO]  Generating code for the cleanup workflow -DONE 
+2010.11.24 18:20:12.672 PST:    
+2010.11.24 18:20:12.679 PST:   ----------------------------------------------------------------------- 
+2010.11.24 18:20:12.685 PST:   File for submitting this DAG to Condor           : montage-0.dag.condor.sub 
+2010.11.24 18:20:12.691 PST:   Log of DAGMan debugging messages                 : montage-0.dag.dagman.out 
+2010.11.24 18:20:12.704 PST:   Log of Condor library output                     : montage-0.dag.lib.out 
+2010.11.24 18:20:12.711 PST:   Log of Condor library error messages             : montage-0.dag.lib.err 
+2010.11.24 18:20:12.726 PST:   Log of the life of condor_dagman itself          : montage-0.dag.dagman.log 
+2010.11.24 18:20:12.731 PST:    
+2010.11.24 18:20:12.762 PST:   -no_submit given, not submitting DAG to Condor.  You can do this with: 
+2010.11.24 18:20:12.792 PST:   "condor_submit montage-0.dag.condor.sub" 
+2010.11.24 18:20:12.798 PST:   ----------------------------------------------------------------------- 
+2010.11.24 18:20:12.804 PST:   Submitting job(s). 
+2010.11.24 18:20:12.815 PST:   Logging submit event(s). 
+2010.11.24 18:20:12.821 PST:   1 job(s) submitted to cluster 275. 
+2010.11.24 18:20:13.504 PST:    
+2010.11.24 18:20:13.510 PST:   Your Workflow has been started and runs in base directory given below 
+2010.11.24 18:20:13.519 PST:    
+2010.11.24 18:20:13.530 PST:   cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.535 PST:    
+2010.11.24 18:20:13.542 PST:   *** To monitor the workflow you can run *** 
+2010.11.24 18:20:13.555 PST:    
+2010.11.24 18:20:13.562 PST:   pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.570 PST:    
+2010.11.24 18:20:13.578 PST:   *** To remove your workflow run *** 
+2010.11.24 18:20:13.585 PST:   pegasus-remove -d 275.0 
+2010.11.24 18:20:13.592 PST:   or 
+2010.11.24 18:20:13.604 PST:   pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.610 PST:    
+2010.11.24 18:20:13.617 PST:   Time taken to execute is 3.76 seconds 
+2010.11.24 18:20:13.617 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
+</computeroutput></programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>If you get any errors above while running pegasus-plan you can
+          add -vvvvv to enable maximum verbosity on pegasus-run.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>The above command submits the workflow to Condor DAGMan/CondorG.
+      After submitting it starts a monitoring daemon pegasus-monitord that
+      parses the condor log files to update the status of the jobs and push it
+      in a work database.</para>
+
+      <para>Monitor the workflow using the commands provided in the output of
+      the pegasus-run command and other commands explained earlier.</para>
+
+      <para>The workflow generates a single output file montage.jpg that
+      resides in the directory <emphasis
+      role="bold">/home/pegasus/local-storage/storage/montage.jpg</emphasis>
+      if it runs successfully</para>
+
+      <para>The grid workflow will take time to execute on the VM. On the
+      instructor's MAC Pro Desktop it took about<emphasis role="bold"> 30
+      minutes </emphasis>to run.</para>
     </section>
   </section>
 
