@@ -214,9 +214,10 @@
   <section>
     <title>Executable Workflow (DAG)</title>
 
-    <para>When you take the workflow DAX above, and plan it for a remote grid
-    execution without clean-up nodes, the following concrete workflow is
-    built:</para>
+    <para>When you take the workflow DAX above, and plan it for a single
+    remote grid execution, here a site with handle <emphasis>hpcc</emphasis>,
+    and plan the workflow without clean-up nodes, the following concrete
+    workflow is built:</para>
 
     <para><figure id="concepts-fig-dag">
         <title>Black Diamond DAG</title>
@@ -238,18 +239,25 @@
       <listitem>
         <para>the creation of remote working directories. These directories
         typically have name that seeks to avoid conflicts with other
-        simultaneously running similar workflows.</para>
+        simultaneously running similar workflows. Such tasks use a job prefix
+        of <code>create_dir</code>. </para>
       </listitem>
 
       <listitem>
-        <para>the stage-in of input files before any task that requires these
+        <para>the stage-in of input files before any task which requires these
         files. Any file consumed by a task needs to be staged to the task, if
-        it does not already exist on that site.</para>
+        it does not already exist on that site. Such tasks use a job prefix of
+        <code>stage_in</code>.If multiple files from various sources need to
+        be transferred, multiple stage-in jobs will be created. Additional
+        advanced options permit to control the size and number of these jobs,
+        and whether multiple compute tasks can share stage-in jobs. </para>
       </listitem>
 
       <listitem>
         <para>the original DAX job is concretized into a compute task in the
-        DAG.</para>
+        DAG. Compute jobs are a concatination of the job's
+        <emphasis>name</emphasis> and <emphasis>id</emphasis> attribute from
+        the DAX file. </para>
       </listitem>
 
       <listitem>
@@ -257,7 +265,15 @@
         products with their <emphasis>transfer</emphasis> flag set to
         <literal>false</literal> will not be staged to the output site.
         However, they may still be eligible for staging to other, dependent
-        tasks.</para>
+        tasks. Stage-out tasks use a job prefix of <code>stage_out</code>.
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>If compute jobs run at different sites, an intermediary staging
+        task with prefix <code>stage_inter</code> is inserted between the
+        compute jobs in the workflow, ensuring that the data products of the
+        parent are available to the child job. </para>
       </listitem>
 
       <listitem>
@@ -272,6 +288,10 @@
         to the planner.</para>
       </listitem>
     </itemizedlist>
+
+    <para><link linkend="advanced_concepts_transfers">Chapter "Advanced
+    Concepts: Transfers"</link> will talk more about when and how staging
+    nodes are inserted into the workflow. </para>
 
     <para>The DAG will be found in file <filename>diamond-0.dag</filename>,
     constructed from the <emphasis>name</emphasis> and
