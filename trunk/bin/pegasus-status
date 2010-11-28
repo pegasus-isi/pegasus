@@ -1,0 +1,319 @@
+#!/usr/bin/env perl
+#
+# This file or a portion of this file is licensed under the terms of
+# the Globus Toolkit Public License, found in file GTPL, or at
+# http://www.globus.org/toolkit/download/license.html. This notice must
+# appear in redistributions of this file, with or without modification.
+#
+# Redistributions of this Software, with or without modification, must
+# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+# some other similar material which is provided with the Software (if
+# any).
+#
+# Copyright 1999-2004 University of Chicago and The University of
+# Southern California. All rights reserved.
+#
+# Author  Gaurang Mehta gmehta@isi.edu
+# Revision : $Revision$
+
+use 5.006;
+use strict;
+
+use File::Basename; 		# standard module since 5.005
+use File::Spec;			# standard module since 5.005 or 5.6.0
+use Cwd qw(getcwd abs_path);
+use Getopt::Long qw(:config bundling no_ignore_case);
+
+# path to load our libs.. 
+BEGIN { 
+    require File::Spec->catfile( dirname($0), 'common.pm' );
+    common->import(':all');
+}
+
+use Work::Common;
+use Data::Dumper;
+
+# debug off
+$main::DEBUG = 0;
+$_ = '$Revision$';      # don't edit, automatically updated by CVS
+$main::revision=$1 if /Revision:\s+([0-9.]+)/o;
+
+sub myversion() {
+    my $version = version();
+    print "Pegasus $version, @{[basename($0)]} $main::revision\n";
+    exit 0;
+}
+
+# this magic needed for recursive function (as per Jens)
+sub recurse(\@$$); # {};
+
+
+
+sub recurse(\@$$) {
+    local(*DIR); 
+    my $dref = shift; 
+    my $dir = shift; 
+    my $level = shift;
+
+    opendir( DIR, $dir ); # FIXME in case of error 
+   
+    while ( defined ($_ = readdir(DIR)) ) {
+	next if $_ eq '.' || $_ eq '..';
+
+	my $full = File::Spec->catfile( $dir, $_ ); 
+	if ( -d $full ) {
+	    recurse( @{ $dref }, $full, $level+1 );
+	} elsif ( $_ =~ /\.dag\.dagman\.out/ ) {
+	    push( @{ $dref->[$level] }, $full ); 
+	}
+    }
+    closedir DIR;
+}
+
+sub getsubdagfromdag(\@$$){
+    my $dref=shift;
+    my $dag=shift;
+    my $level=shift;
+    my @subdags=();
+
+    open(F,"<$dag") || die "Could not read dag file $dag $! \n";
+    
+    while (<F>) {
+	push (@subdags,$1)  if /^SUBDAG EXTERNAL \S+ (\S+.dag)$/ || /^SUBDAG EXTERNAL \S+ (\S+.dag) DIR/; 
+    }
+    close F;
+    foreach my $sdag ( @subdags ) {
+	my $dagman=$sdag.".dagman.out";
+	push ( @{$dref->[$level]}, $dagman) if -e $dagman && -f _ && -r _ && ! -z _;
+    }
+}
+
+
+sub longstatus(;$$) {
+    my $ddir = shift;
+    my $dag= shift || undef;
+    my @dirs = ();
+ 
+    recurse(@dirs,$ddir,0);
+    getsubdagfromdag(@dirs,File::Spec->catfile($ddir,$dag),1);
+
+    
+    my @statnum;
+    my $running=0;
+    my @list = (); 
+    foreach my $a ( reverse @dirs ) { 
+	next unless defined $a; 
+	foreach my $fn ( @{$a} ) {
+	    my $short;
+	    if ($fn =~ /^$ddir/) {
+		$short = substr( $fn, length($ddir)+1, -length('.dagman.out') ); 
+	    } 
+	    else {
+	       $short = substr($fn,0,-length('.dagman.out'));
+	    }
+	    open( F, "<$fn" ); 
+	    my ($start,$final,$pid,$status,@tab);
+	    while ( <F> ) {
+		($start,$final) = ($1,"") if /\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP/;
+		$pid=$1 if /\*\*\sPID\s=\s(\d+)/;
+		($final,$status) = ($1,$2) 
+		    if /\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s\d+\sEXITING\sWITH\sSTATUS\s(\S+)/; 
+		
+
+		if ( /Done/ ) {
+		    $tab[0] = $_; 
+		    $tab[1] = <F>;
+		    $tab[2] = <F>;
+		}
+	    }
+	    close F; 
+
+	    # Status numbers
+	    @statnum=split('\s+',$tab[2]);
+	    if ( $start ne $final ) {
+		warn "# $start $final\n" if $main::DEBUG; 
+		if ( kill( 0, $pid ) ) {
+		    print "$short is running.\n" ;
+		    $running++;
+		} else {
+		    print "$short -- can't say\n";
+		}
+	    } else {
+		if ( $status ) {
+		    print "$short FAILED (status $status)\n"; 
+		} else {
+		    print "$short succeeded\n";
+		}
+	    }
+	    print join('',@tab), "\n"; 
+	}
+	
+    }
+    
+    my $total=$statnum[2]+$statnum[3]+$statnum[4]+$statnum[5]+$statnum[6]+$statnum[7]+$statnum[8];
+    my $done=$statnum[2];
+    my $percent=0;
+    if ($done != 0) {
+	$percent=(100*$done)/$total;
+    }
+    if($running){
+	print sprintf("WORKFLOW STATUS : RUNNING | %d/%d ( %.0f%% ) | (condor processing workflow)\n",$done,$total,$percent);
+    } else {
+	if ($total == $done){
+	    print sprintf("WORKFLOW STATUS : COMPLETED | %d/%d ( %.0f%% ) | (all jobs finished successfully)\n",$done,$total,$percent);
+	} else {
+	print sprintf ("WORKFLOW STATUS : FAILED | %d/%d ( %.0f%% ) | (rescue needs to be submitted)\n",$done,$total,$percent);
+#	    print "WORKFLOW FAILED : $done/$total ( $percent%) DONE\n";
+	}
+    }
+    exit 0;
+}
+
+sub usage(;$) {
+    my $msg = shift;
+    print "ERROR: $msg\n" if defined $msg && lc($msg) ne 'help';
+
+    print << "EOF";
+Usage: @{[basename($0)]} [options ] [dagdir]
+ Pegasus_status helps monitor your jobs by querying condor.
+ Options:
+ -w|--workflow wf    The workflow to monitor.Default is all
+ -t|--time t         The workflow planned time.
+ -s|--site site     Montior jobs only on this site. Default is all sites
+ -u|--user user      Monitor jobs for user x. Default is \$USER
+ -j|--jobtype type  Monitor jobs of one of these types [compute, stagein, stageout, replica,cleanup,intersitetx,computestaged, createdir] . Default is all types.
+ -v|--verbose   Enter verbose mode, default is not
+ -V|--version   Print version number and exit.
+ -l|--long      Print Status of jobs from the dagman out file
+EOF
+    exit(1);
+}
+
+
+sub handler {
+    # purpose: generic signal handler
+    # paramtr: whatever the OS sends a signal handler and Perl makes of it
+    # returns: dies
+    my $sig = shift;
+    # you should not do this in signal handler, but what the heck
+    warn "# Signal $sig found\n" if $main::DEBUG;
+    die "ERROR: Killed by SIG$sig\n";
+}
+
+
+#
+# --- main
+#
+
+$SIG{HUP} = \&handler;
+$SIG{INT} = \&handler;
+$SIG{TERM} = \&handler;
+$SIG{QUIT} = \&handler;
+
+
+my $workflow=undef;
+my $time=undef;
+my $site=undef;
+my $jobtype=undef;
+my $user=$ENV{'USER'};
+my $notify=undef;
+my $condor_q=find_exec('condor_q');
+my $longstatus=0;
+my $dag=undef;
+GetOptions( "workflow|w=s"    => \$workflow,
+	    "time|t=s"   => \$time,
+	    "user|u=s"  => \$user,
+	    "sites|s=s" => \$site, 
+	    "jobtype|j=s" => \$jobtype,
+	    "notify|n=s" => \$notify,
+	    "version|V" => \&myversion,
+	    "long|l" => \$longstatus,
+	    "verbose|v" => \$main::DEBUG,
+	    "help|h|?" => \&usage );
+
+
+my $guess = 0; 
+my $run = getcwd(); 
+if ( @ARGV == 0 ) {
+    $guess = 1;
+} else {
+    $run = shift; 
+}
+warn "# Using run dir $run\n" if $main::DEBUG;
+
+#  
+# JOBTYPE to num mappings
+my %jobtypes=("compute",1,
+	      "stagein",2,
+	      "stageout",3,
+	      "replica",4,
+	      "intersitetx",5,
+	      "createdir",6,
+	      "computestaged",7,
+	      "cleanup",8);
+
+if (defined $run) {
+    my %config = slurp_braindb($run) or
+	die( "FATAL: ", 
+	     ( $guess ? 
+	       "I was guessing the run-directory but failed. Please provide your\n" .
+	       "run-dir as argument, or cd into your run-dir, and re-run.\n" :
+	       "$run is not a valid run-directory.\n" ) ); 
+    $workflow=$config{pegasus_wf_name};
+    $time=$config{timestamp};
+    $dag=$config{dag};
+    warn "#Got workflow = $workflow, time =$time from rundir\n" if $main::DEBUG;  
+} 
+
+if ( defined $run ) {
+    # ensure that we don't start with dot                                                                                                           
+    $run = abs_path($run);
+}
+
+
+if ($longstatus) {
+    if ( ! defined($run)) {
+	print "Error: Rundir not defined.\n\tPlease define workflow rundirectory for getting longstatus\n" ;
+	exit(1);
+    }
+
+    longstatus($run,$dag);
+}
+
+my ($rc,$errors,@result);
+
+my $arg1="-constraint";
+my $args=undef;
+
+## construct the command line string
+my @arg=($condor_q,'-dag');
+push(@arg, '-constraint') if defined $workflow || defined $time || defined $site || defined $jobtype;
+$args = "(pegasus_wf_name==\"$workflow\")" if defined $workflow;
+
+if (defined $time) {
+    $args.="&&" if defined $args;
+    $args.= "(pegasus_wf_time==\"$time\")";
+}
+if (defined $site) {
+    $args.="&&" if defined $args;
+    $args.= "(pegasus_site==\"$site\")";
+}
+
+if (defined $jobtype) {
+    $args.="&&" if defined $args;
+    $args.= "(pegasus_job_class==$jobtypes{$jobtype})";
+}
+
+push(@arg,"$args") if defined $args;
+
+push(@arg,$user);
+
+warn "# Running @arg \n" if $main::DEBUG;
+
+## Run the command 
+@result=pipe_out_cmd(@arg);
+
+## Print the output result
+ print "$_\n" foreach ( @result );
+
+exit(parse_exit($?));

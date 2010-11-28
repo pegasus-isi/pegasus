@@ -1,0 +1,240 @@
+#!/usr/bin/env perl
+#
+# This file or a portion of this file is licensed under the terms of
+# the Globus Toolkit Public License, found in file GTPL, or at
+# http://www.globus.org/toolkit/download/license.html. This notice must
+# appear in redistributions of this file, with or without modification.
+#
+# Redistributions of this Software, with or without modification, must
+# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+# some other similar material which is provided with the Software (if
+# any).
+#
+# Copyright 1999-2004 University of Chicago and The University of
+# Southern California. All rights reserved.
+#
+# Authors Gaurang Mehta gmehta@isi.edu
+# Revision : $Revision$
+
+require 5.005;
+use strict;
+#use warnings;                  # use only for devel+debugging
+#use diagnostics;               # use only for devel+debugging
+use File::Spec;                 # standard module since 5.005 or 5.6.0
+use Getopt::Long qw(:config bundling no_ignore_case);
+
+$main::debug = 0;		# debug off by default; do not use undef
+
+my $default_path='/bin:/usr/bin';
+if ( exists $ENV{PATH} && $ENV{PATH} ) {
+    # if an env variable exists, it is also defined (always for %ENV)
+    # if it has any sensible content (except '' and '0'), it is true
+    $ENV{PATH} = $default_path . ':' . $ENV{PATH};
+} else {
+    $ENV{PATH} = $default_path;
+}
+
+my $create=0;
+my $remove=0;
+my $chmod=0;
+my $none=0;
+my $dir='';
+my $file='';
+my $mode='';
+
+# let CVS set version automagically
+$main::revision = 'unknown';
+$main::revision = $1 if ( '$Revision$' =~ /([0-9.]+)/o );
+
+sub version {
+    # puporse: print version and exit
+    # returns: does not return.
+    # globals: $main::revision (IN): version number of module.
+    print "dirmanager $main::revision\n";
+    exit 0;
+}
+
+sub usage {
+    # purpose: print usage and exit
+    # returns: does not return.
+    print "Usage: dirmanager [options] [-d <DIRECTORY...>|-f <file name>]\n";
+    print "       dirmanager [options] [--dir <DIRECTORY...>|--file <file name>]\n\n";
+    print "Options:\n";
+    print "\t -c|--create  Create a directory/directories specified by --dir\n";
+    print "\t -r|--remove  Remove the directory/directories specified by --dir\n";
+    print "\t -X|--exec    Marks  files or directories executable\n";
+    print "\t  -m, --mode=MODE   set permission mode (as in chmod), not rwxrwxrwx - umask\n";
+    print "\t -n|--none    Dummy job: Prints the system time\n";
+    print "\t -h|--help    Print this usage\n";
+    print "\t -v|--verbose Print debug messages\n";
+    print "\t -V|--version Print version message and exit\n";
+    
+    exit(1);
+}
+
+sub find_exec ($) {
+    # purpose: determine location of a binary
+    # paramtr: $program (IN): basename of the executable to look for
+    # returns: fully qualified path to binary, undef if not found
+    my $program = shift;
+    local($_);
+    foreach ( File::Spec->path ) {
+        my $fs = File::Spec->catfile( $_, $program );
+        return $fs if -x $fs;
+    }
+    undef;
+}
+
+sub exit_code ($$) {
+    # purpose: check the exit code of a process
+    # paramtr: $rc (IN): the raw exitcode
+    #          $id (IN): some name to use in the generated messages
+    # returns: undef: should not happen
+    #          0: all is well
+    #          1: non-zero exitcode
+    #          2: died on signal
+    my $rc = shift;
+    my $id = shift;
+
+    printf STDERR "# jobid=%s, exitcode=0x%04X\n", $id, $rc if $main::debug;
+    if ( $rc == 0 ) {
+        print "$id finished successfully.\n";
+        return 0;
+    } elsif ( ($rc >> 8) ) {
+        print "$id exited with exitcode ", $rc>>8, "\n";
+        return 1;
+    } elsif ( ($rc & 127) > 0 ) {
+        print "$id died on signal ", $rc & 127, "\n";
+        return 2;
+    }
+    undef;
+}
+
+
+sub pipe_out_cmd {
+    # purpose: Runs a cmd w/o invoking a shell, and captures stdout+stderr
+    # warning: DO NOT use shell meta characters in the argument string.
+    # paramtr: @arg (IN): argument string, executable first
+    # returns: failed: undef
+    #          scalar: first line of output
+    #          vector: all lines of output
+    local(*READ);               # must use type glob and local for FDs
+    
+    my $pid = open( READ, '-|' );
+    return undef unless defined $pid;
+    
+    my @result;
+    if ( $pid ) {
+        # parent
+        while ( <READ> ) {
+            chomp;
+            warn "# << $_\n" if $main::debug;
+            push( @result, $_ );
+        }
+        close READ;
+    } else {
+        # child
+        open( STDERR, '>&STDOUT');
+        select(STDERR); $|=1;
+        select(STDOUT); $|=1;
+        exec { $_[0] } @_;      # lotsa magic :-)
+        exit 127;               # no such exe :-(
+    }
+
+    wantarray ? @result : $result[0];
+}
+
+sub handler {
+    # purpose: generic signal handler
+    # paramtr: whatever the OS sends a signal handler and Perl makes of it
+    # returns: dies
+    my $sig = shift;
+    # you should not do this in signal handler, but what the heck
+    warn "# Signal $sig found\n" if $main::debug;
+    die "ERROR: Killed by SIG$sig\n";
+}
+
+#
+# --- main
+#
+
+$SIG{HUP} = \&handler;
+$SIG{INT} = \&handler;
+$SIG{TERM} = \&handler;
+$SIG{QUIT} = \&handler;
+
+my $result=GetOptions( "create|c"   => \$create,
+		       "remove|r"   => \$remove,
+                       "none|n"     => \$none,
+ 		       "dir|d=s"    => \$dir,
+		       "file|f=s"   => \$file,
+	               "exec|X"     => \$chmod,
+		       "mode|m=s"   => \$mode,
+		       "verbose|v+" => \$main::debug,
+		       "version|V"  => \&version,
+		       "help|h"     => \&usage );
+
+my %executables;                     # location of rm,date and mkdir
+foreach my $executables ( qw( rm mkdir date chmod) ) {
+    $executables{$executables} = find_exec($executables) || 
+        die "ERROR: Unable to determine location of $executables.\n";
+    warn "# Found $executables{$executables}\n" if $main::debug;
+}
+
+my ($rc,$errors,@result);
+
+# option combination sanity checks
+if( $create+$remove+$none+$chmod != 1 ) {
+    # specified too few or too many options
+    print "ERROR: Specify one of the options -c, -d, -X or -n\n";
+    usage();
+} elsif ( ($create || $remove) && ($dir eq '') ) {
+    print "ERROR: Missing directory name\n";
+    usage();
+} elsif ( $chmod && (length($file)+length($dir) == 0) ) {
+    print "ERROR: Missing file- or directory name\n";
+    usage();
+} elsif ( $mode && (length($file)+length($dir) == 0) ) {
+    print "ERROR: Missing file- or directory name\n";
+    usage();
+}
+
+if( $create && $mode ){
+    warn "# Directories to create are " , join( "\n# ", split( '\s+',$dir) ) ,"\n" if $main::debug ;
+    warn "# Running ", $executables{'mkdir'}, " -m $mode -p  $dir\n" if $main::debug;
+    @result=pipe_out_cmd( $executables{'mkdir'}, '-p', '-m', $mode,  split( '\s+',$dir) );
+    exit(exit_code($?, 'mkdir'));
+}elsif ($create) {
+    warn "# Directories to create are " , join( "\n# ", split( '\s+',$dir) ) ,"\n" if $main::debug ;
+    warn "# Running ", $executables{'mkdir'}, " -p  $dir\n" if $main::debug;    
+    @result=pipe_out_cmd( $executables{'mkdir'}, '-p',  split( '\s+',$dir) );
+    exit(exit_code($?, 'mkdir'));
+} 
+elsif ($remove) {
+    warn "# Directories to remove are " , join( "\n# ", split( '\s+',$dir) ) ,"\n" if $main::debug ;
+    warn "# Running ", $executables{'rm'}, " -rf  $dir\n" if $main::debug;
+    @result=pipe_out_cmd( $executables{'rm'}, '-rf', split( '\s+',$dir) );
+    exit(exit_code($?, 'rm'));
+} elsif ($none) {
+    warn "# Running ", $executables{'date'}, "\n" if $main::debug;
+    @result=pipe_out_cmd($executables{'date'});
+    exit(exit_code($?, 'date'));
+} elsif ($chmod) {
+    my $obj = $file || $dir;	# take whatever was specified
+    warn "# Entities to chmod  are " , join( "\n# ", split( '\s+',$obj) ) ,"\n" if $main::debug ;
+    warn "# Running ",$executables{'chmod'}," a+x $obj\n" if $main::debug;
+    @result=pipe_out_cmd( $executables{'chmod'}, 'a+x', split( '\s+',$obj)  );
+    exit(exit_code($?,'chmod'));
+}
+elsif( $mode ){
+    my $obj = $file || $dir;	# take whatever was specified   
+    warn "# Running ",$executables{'chmod'}," $mode \n" if $main::debug;
+    @result=pipe_out_cmd( $executables{'chmod'}, $mode, $obj );
+    exit(exit_code($?,'chmod'));
+}
+else {
+    # assertion failure. No \n, let Perl print lineno
+    die "ERROR: Assertion failure: Illegal code branch"; 
+}
+
+

@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# Show the version number. May be used to show even more (e.g. build)
+# $Id$
+#
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA} -Dpegasus.home=$PEGASUS_HOME $addon edu.isi.pegasus.planner.client.VersionNumber "$@"

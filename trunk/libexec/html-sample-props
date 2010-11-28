@@ -1,0 +1,393 @@
+#!/usr/bin/env perl
+#
+# Parses $PEGASUS_HOME/etc/sample.properties and generated HTML from it
+# $Id$
+#
+# Usage: html-sample-props [sample.properties] > doc.html
+#
+# The following markup is required to be adhered to:
+#
+# 1. Any new section starts like this:
+#
+# #
+# # SECTION "ALL CAPS TITLE IN QUOTES"
+# #
+#
+# Three comment-marked lines, the reserved word SECTION (all caps), 
+# and the section's title inside quotes. Use all caps for the title.
+# It will be word-wise de-capped into the LaTeX document.
+#
+# #
+# # SUBSECTION "ALL CAPS SUBTITLE IN QUOTES"
+# #
+#
+# See above, except that a sub-section will be generated.
+#
+# 2. Item format
+#
+# Any item starts out with the key "Property: some.prop", followed
+# by other such tabular keywords, colon, and their respective values. 
+# The following keywords are approved, parsed, and may have special
+# meaning:
+# 
+#    Systems     the subsystem this applies to, e.g. Pegasus, Chimera
+#    Type        a symbolic description of the type the prop can have
+#    Value[X]    For enumeration types, the possible values 1 <= X <= N
+#    Default     value assumed in absence of property
+#    See also    Cross reference to other props, repeat as necessary!
+#    Example     Sample for complex properties
+#    Moved to    Cross references the new name of a property (deprecated)
+#    New Name    Cross references the new name of a property (preferred)
+#
+# After the initial table comes the description. Please use paragraphs
+# (empty comment lines) as necessary. 
+#
+# The final section in any item is always the property followed by its
+# default value in a paragraph of its own. It is followed by an empty (!)
+# line without comment. This final section is skipped in the output. 
+#
+# 3. The following markup is permitted inside sample.properties:
+#
+# as is verbatim <pre></pre>
+# visual markup  <tt></tt> <b></b> <i></i>
+# numbered list  <ol><li></li></ol>
+# bullet list    <ul><li></li></ul>
+# definitions    <dl><dt></dt><dd></dd></dl>
+# 2-column table <tb2> & </te></tb2>
+# 3-column table <tb3> & & </te></tb3>
+#
+# Note: While </li> and </dd> are optional (but should be used for
+# XHTML), </dt> is _not_ optional, and must be used.
+#
+use 5.006;
+use strict;
+use File::Spec;
+use File::Temp qw(tempfile);
+use POSIX qw(strftime);
+
+die "Set your PEGASUS_HOME environment variable\n" 
+    unless exists $ENV{'PEGASUS_HOME'};
+my $fn = shift || 
+    File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'etc', 'sample.properties' );
+
+my %replace = ( 'tb2' => "<table><tr><td>\n"
+              , '/tb2' => "</td></tr></table>\n"
+              , 'tb3' => "<table><tr><td>\n"
+              , '/tb3' => "</td></tr></table>\n"
+              , '/te' => "</td></tr><tr><td>\n" );
+
+# we only need to escape the basic three, ignoring quot and apos
+my %escape = ( '&' => '&amp;', '<' => '&lt;', '>' => '&gt;' );
+my $rx_escape = '([' . join('',keys %escape) . '])';
+
+# but on the reverse track, we need to do the right thing.
+my %unescape = ( 'amp' => '&', 'lt' => '<', 'gt' => '>',
+                 'quot' => '"', 'apos' => "'" );
+my $rx_unescape = '&(' . join('|',keys %unescape) . ');';
+
+
+
+sub lookup($) {
+    my $key = shift;
+    exists $replace{$key} ? $replace{$key} : "<$key>";
+}
+
+sub escape($) {
+    # purpose: HTML escape an arbitrary sentence (imperfect)
+    # paramtr: $x (IN): some raw string
+    # returns: cooked string
+    local $_ = shift;
+
+    # are we inside a pre?
+    $main::inpre=1 if m{<pre>};
+    $main::inpre=0 if m{</pre>};
+
+    # replace only known <TAG> items with LaTeX formatting.
+    # unknown "TAG" strings are copied verbatim.
+    s/<([^>]+)>/lookup($1)/eg;
+    s{&}{</td><td>}g;
+
+#    # escape all HTML special chars (that I can think of, not complete)
+#    s/$rx_escape/$escape{$1}/ge;
+
+    # special escape for 1-line verbatims -- only do once per line
+    s{<pre>(.*?)</pre>}{<tt>$1</tt>}; 
+
+    # done
+    $_;
+}
+
+sub trim($) {
+    # purpose: Trims redundant whitespace from head and tail of a string
+    # paramtr: $x (IN): some raw string
+    # returns: trimmed string, may be identical to argument, or even empty. 
+    local $_ = shift;
+    s/^\s+//;
+    s/\s+$//;
+    $_;
+}
+
+my $__flag = 0;
+sub regular($) {
+    my $p = shift;
+    if ( length($p) > 1 ) {
+	$__flag = 0;
+	print "$p\n";
+    } else {
+	print "</p>\n\n<p>" unless ( $__flag || $main::inpre );
+	$__flag = 1;
+    }
+}
+
+#
+# --- main ---
+#
+my $tmp = $ENV{'MY_TMP'} ||     # Wei likes MY_TMP, so try that first
+    $ENV{TMP} ||                # standard
+    $ENV{TEMP} ||               # windows standard
+    $ENV{TMPDIR} ||             # also somewhat used
+    File::Spec->tmpdir() ||     # OK, this gets used if all above fail
+    '/tmp';                     # last resort
+
+# which version 
+my $v_v = File::Spec->catfile($ENV{'PEGASUS_HOME'},'bin','pegasus-version');
+my $version = `$v_v`;
+chomp($version);
+
+my ($tmpfh,$tmpfn) = tempfile( 'tmp-XXXXXX', DIR => $tmp, UNLINK => 1 );
+die "FATAL: Unable to create files in $tmp\n" unless defined $tmpfh;
+warn "# toc into $tmpfn\n";
+
+# open file (and fail) before print LaTeX preambles
+$/ = '';                        # activate paragraph mode
+open( SP, '<' . $fn ) || die "open $fn: $!\n";
+
+
+if (!defined($ENV{'HTML_SNIPPET_ONLY'})) {
+#
+# print LaTeX preamble -- do not interpolate anything here
+#
+my $now = POSIX::strftime("%Y-%m-%dT%H:%M:%S%z", localtime());
+my $then = POSIX::strftime("%Y-%m-%d %H:%M", localtime());
+print << "EOF";
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>The Pegasus Workflow Planner Properties</title>
+<meta name="date" content="$now">
+<meta name="keywords" content="Pegasus, properties">
+<style type="text/css">
+<!--
+body {
+  color : black;
+  background-color : white;
+}
+// a:link { color : #FF9966; }
+// a:visited { color : #FF9900; }
+// a:active { color : #FFCCCC; }
+h1 {
+  font-family : Helvetica, Arial, sans-serif;
+  font-weight : bold;
+  color : #000888;
+  background-color : white;
+}
+h2 {
+  font-family : Helvetica, Arial, sans-serif;
+  font-weight : bold;
+  color : #000888;
+  background-color : white;
+}
+h3 {
+  font-family : Helvetica, Arial, sans-serif;
+  font-weight : bold;
+  color : #000888;
+  background-color : white;
+}
+h4 {
+  font-family : Helvetica, Arial, sans-serif;
+  font-weight : bold;
+  color : #000888;
+  background-color : white;
+}
+table tr th {
+  font-family : Helvetica, Arial, sans-serif;
+  font-weight : bold;
+  text-align : left;
+}
+-->
+</style>
+</head>
+<body>
+<h1>The Pegasus Workflow Planner Properties</h1>
+
+<p>V&nbsp;$version</p>
+<p>$then</p>
+
+<p><b>Note:</b> For printing, we highly recommend to use the PDF file
+instead.</p>
+
+<h2>Table Of Contents</h2>
+
+EOF
+}
+
+select $tmpfh;			# write all regular prints to tmpfh
+
+my %index = ();
+my (@line,%line,$k,$v,$i);
+my $depth = 0;
+my @count = ( 0, 0, 0 ); # section, subsection, subsubsection
+while ( <SP> ) {
+    if ( /^\# Property : (.*)/ ) {
+        my $title = $1;
+	my $secmark = undef;
+	if ( $depth == 2 ) {
+#	    print "\\subsubsection{$title}\n";
+	    $count[2]++;
+	    $secmark = join('.',@count[0,1,2]);
+	    print "\n\n\n<h4 class=\"prop_name\" id=\"$title\">$title</h4>\n\n";
+#	    print STDOUT "&nbsp;";
+	} else {
+#	    print "\\subsection{$title}\n";
+	    $count[1]++;
+	    $count[2] = 0;
+	    $secmark = join('.',@count[0,1]);
+	    print "\n\n\n<h3 class=\"prop_name\" id=\"$title\">$title</h3>\n\n";
+	}
+#        print '\label{sec:', $title, "}\n";
+#        print '\index{', $title, "}\n"; 
+#	 print STDOUT "&nbsp;$secmark&nbsp;<a href=\"#$title\">$title</a><br>\n";
+	$index{$title} = defined $secmark ? $secmark : 42;
+        print "\n";
+
+        # break paragraph into lines, and remove comment+space
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+
+        # rip first section
+        %line = ();
+	print "<table border=\"0\" cellpadding=\"0\" cellspacing=\"2\">\n";
+	#print "<table border=\"1\" cellpadding=\"2\" cellspacing=\"1\">\n";
+        for ( $i=0; $i<@line; ++$i ) {
+            # exit at first empty line
+            last if length($line[$i]) < 1;
+            ($k,$v) = map { escape($_) } split( /\s+:\s+/, $line[$i], 2 );
+            $line{$k} = $v;
+            if ( $k eq 'Property' ) {
+                # ignore - this is already the subsection
+            } elsif ( $k =~ /moved?\s*to/i || $k =~ /see\s*also/i ||
+                      $k =~ /new\s*name/i ) {
+                # generate cross reference
+                $k = "New name" if $k =~ /moved?\s*to/i; 
+#                print "\t$k & $v, section~\\rref{sec:$v}\\dd\n";
+                print "<tr><th>$k</th><td>&nbsp;</td>";
+		print "<td><a href=\"#$v\">$v</a></td></tr>\n";
+            } else {
+                # default action
+                print "<tr><th>$k</th><td>&nbsp;</td>";
+		print "<td>$v</td></tr>\n";
+#                print "$k & $v\\dd\n";
+            }
+        }
+	print "</table>\n\n"; 
+
+        # print everything but last paragraph
+	print "<p>";
+        for ( ; $i < @line - 2; ++$i ) {
+	    regular( escape($line[$i]) );
+        }
+        print "</p>\n\n";
+
+    } elsif ( /\# (SECTION|SUBSECTION|TITLE)/ ) {
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+        my $flag = undef;
+        for ( $i=0; $i<@line; ++$i ) {
+            last if ( length($line[$i]) <= 1 && $flag );
+            if ( $line[$i] =~ /^SECTION "([^\"]+)"/ ) {
+                my @title = map { ucfirst lc } split /\s+/,$1;
+#                print "\n\n\\section{@title}\n";
+#                print '\label{sec:', join('',@title), "}\n\n";
+		$count[0]++;
+		$count[1] = $count[2] = 0;
+		my $title = join('',@title);
+		print "\n\n\n<h2 class=\"title\" id=\"$title\">$count[0]&nbsp;@title</h2>\n\n";
+		print STDOUT "$count[0]&nbsp;<a href=\"#$title\">@title</a><br>\n";
+
+                $flag = 1;
+		$depth = 1;
+            } elsif ( $line[$i] =~ /^SUBSECTION "([^\"]+)"/ ) {
+                my @title = map { ucfirst lc } split /\s+/,$1;
+#                print "\n\n\\subsection{@title}\n";
+#                print '\label{sec:', join('',@title), "}\n\n";
+		my $title = join('',@title);
+		$count[1]++;
+		$count[2] = 0;
+		my $mark = join('.',@count[0,1]);
+		print "\n\n\n<h3 class=\"title\" id=\"$title\">$mark&nbsp;@title</h3>\n\n";
+		print STDOUT "&nbsp;$mark&nbsp;<a href=\"#$title\">@title</a><br>\n";
+                $flag = 1;
+		$depth = 2;
+            } elsif ( $line[$i] =~ /^TITLE "([^\"]+)"/ ) {
+                $flag = 1;
+		$depth = 0;
+            }
+        }
+
+	print "<p>";
+        for ( ; $i<@line; ++$i ) {
+	    regular( escape($line[$i]) );
+        }
+	print "</p>\n\n"; 
+
+    } elsif ( /^\#/ ) {
+        warn "Warning: $.: Found regular textual paragraph, copying\n";
+        warn "<<<$_>>>\n";
+
+	print "<p>";
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+        for ( $i=0; $i<@line; ++$i ) {
+	    regular( escape($line[$i]) );
+        }
+	print "</p>\n\n"; 
+
+    } else {
+        warn "Warning: $.: Found uncommented paragraph, ignoring\n";
+        warn "<<<$_>>>\n";
+    }
+}
+close SP;
+
+select STDOUT;
+$/="\n";
+seek( $tmpfh, 0, 0 ) || die "FATAL: seek $tmpfn: $!\n";
+while ( <$tmpfh> ) {
+    print STDOUT $_ ;
+}
+close $tmpfh;
+unlink $tmpfn if -e $tmpfn;
+
+if (!defined($ENV{'HTML_SNIPPET_ONLY'})) {
+    # 
+    # index
+    #
+    print "\n\n\n<h2 id=\"Index\">Index</h2>\n\n<table>\n";
+    foreach my $i ( sort keys %index ) {
+        print "<tr>";
+        print "<td><a href=\"#$i\">$i</a></td>";
+        print "<td>$index{$i}</td>";
+        print "</tr>\n";
+    }
+    print "</table>\n\n";
+
+    #
+    # print HTML post-amble
+    #
+p   rint << 'EOF';
+
+</body>
+</html>
+
+
+EOF
+}
+

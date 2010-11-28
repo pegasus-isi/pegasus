@@ -1,0 +1,13 @@
+TR @USER@::hw:1.0( in stdi, out stdo, out stde )
+{
+  argument = "-i /dev/fd/0 -o /dev/fd/1 /dev/fd/2";
+#  argument = " -l keg.log";
+  argument stdin  = ${stdi};
+  argument stdout = ${stdo};
+  argument stderr = ${stde};
+}
+DV @USER@::dvhw:1.0->@USER@::hw:1.0,1.0( 
+  stdi=@{input:"@USER@.hwi.txt"}, 
+  stdo=@{out:"@USER@.hwo.txt"},
+  stde=@{out:"@USER@.hwe.txt"} 
+);

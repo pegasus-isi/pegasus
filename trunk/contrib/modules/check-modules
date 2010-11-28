@@ -1,0 +1,61 @@
+#!/usr/bin/env perl
+#
+# Checks that all non-standard perl modules are accessible and loadable.
+#
+require 5.005;
+use File::Basename;		# this is a standard module
+# DO NOT use any other "use" -- we want to find modules, not stumble over 'em.
+
+sub check($) {
+    my $module = shift;
+    my ($filename,$realname,$result,$dir);
+    ($filename = $module) =~ s{::}{/}g;
+    $filename .= '.pm' unless substr($filename,-3) eq '.pm';
+
+  ITER: {
+	foreach $dir ( @INC ) {
+	    $realname = "$dir/$filename";
+	    warn "# trying $realname\n" if $main::DEBUG;
+	    if ( -f $realname ) {
+		local $SIG{__WARN__} = sub { };
+		$result = do $realname;
+		last ITER;
+	    }
+	}
+	die "Can't find $filename in \@INC\n";
+    }
+    die $@ if $@;
+    die "$module does not return true value" unless $result;
+    $result;
+}
+
+my $fn = dirname($0) . '/modulelist.txt';
+open( LIST, "<$fn" ) || die "open $fn: $!\n";
+while ( <LIST> ) {
+    s/[\r\n]+$//;		# chomp
+    next if /^\#/;		# skip comments
+    next unless length($_)>1;	# skip empty lines
+    my $x = eval { check($_) };
+    if ( $x ) {
+	# module was loaded
+	warn( "# OK: loaded module $_\n" );
+    } else {
+	warn( "# NOTFOUND: module $_ requires installation.\n" );
+	push( @notfound, $_ );
+    }
+}
+close LIST;
+
+if ( @notfound > 0 ) {
+    print "\nModules that require installation:\n\n";
+    print join("\n",@notfound), "\n";
+    print << "EOF";
+
+You may want to consider either downloading and installing the tarballs
+from http://www.cpan.org/modules/, or install them using perl -MCPAN -e shell
+
+EOF
+} else {
+    print "\nAll modules found, very good.\n\n";
+}
+

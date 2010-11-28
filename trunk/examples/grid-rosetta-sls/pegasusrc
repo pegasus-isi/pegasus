@@ -1,0 +1,15 @@
+
+pegasus.catalog.site=XML3
+pegasus.catalog.site.file=sites.xml
+
+pegasus.transfer.*.thirdparty.sites=*
+pegasus.transfer.worker.package = true
+
+pegasus.dir.useTimestamp=true
+pegasus.dir.storage.deep=false
+
+# turn on second level staging
+pegasus.execute.*.filesystem.local = true
+pegasus.transfer.stage.sls.file = false
+pegasus.gridstart = SeqExec
+

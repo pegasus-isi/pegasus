@@ -1,0 +1,355 @@
+#!/usr/bin/env perl
+#
+# Parses $PEGASUS_HOME/etc/sample.properties and generated LaTeX from it
+# $Id$
+#
+# Usage: parse-sample-props [sample.properties] > doc.tex
+#        pdflatex doc
+#        makeindex doc.idx
+#        pdflatex doc
+#        pdflatex doc
+#
+# The following markup is required to be adhered to:
+#
+# 0. You must now (new) start your document with a title like this:
+#
+# # 
+# # TITLE "ALL CAPS TITLE IN QUOTES"
+# #
+#
+# Only after the TITLE was met in the input, the table of contents
+# will be generated right there. Thus, it is imperative that you
+# start your document with the TITLE you want to give it. 
+#
+# 1. Any new section starts like this:
+#
+# #
+# # SECTION "ALL CAPS TITLE IN QUOTES"
+# #
+#
+# Three comment-marked lines, the reserved word SECTION (all caps), 
+# and the section's title inside quotes. Use all caps for the title.
+# It will be word-wise de-capped into the LaTeX document.
+#
+# #
+# # SUBSECTION "ALL CAPS SUBTITLE IN QUOTES"
+# #
+#
+# See above, except that a sub-section will be generated.
+#
+# 2. Item format
+#
+# Any item starts out with the key "Property: some.prop", followed
+# by other such tabular keywords, colon, and their respective values. 
+# The following keywords are approved, parsed, and may have special
+# meaning:
+# 
+#    Systems     the subsystem this applies to, e.g. Pegasus
+#    Type        a symbolic description of the type the prop can have
+#    Value[X]    For enumeration types, the possible values 1 <= X <= N
+#    Default     value assumed in absence of property
+#    See also    Cross reference to other props, repeat as necessary!
+#    Example     Sample for complex properties
+#    Moved to    Cross references the new name of a property (deprecated)
+#    New Name    Cross references the new name of a property (preferred)
+#
+# After the initial table comes the description. Please use paragraphs
+# (empty comment lines) as necessary. 
+#
+# The final section in any item is always the property followed by its
+# default value in a paragraph of its own. It is followed by an empty (!)
+# line without comment. This final section is skipped in the output. 
+#
+# 3. The following markup is permitted inside sample.properties:
+#
+# as is verbatim <pre></pre>
+# visual markup  <tt></tt> <b></b> <i></i>
+# numbered list  <ol><li></li></ol>
+# bullet list    <ul><li></li></ul>
+# definitions    <dl><dt></dt><dd></dd></dl>
+# 2-column table <tb2> & </te></tb2>
+# 3-column table <tb3> & & </te></tb3>
+#
+# Note: While </li> and </dd> are optional (but should be used for
+# XHTML), </dt> is _not_ optional, and must be used.
+#
+use 5.006;
+use strict;
+use File::Spec;
+use Cwd qw(abs_path);
+use POSIX qw(strftime);
+
+die "Set your PEGASUS_HOME environment variable\n" 
+    unless exists $ENV{'PEGASUS_HOME'};
+my $fn = shift || 
+    File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'etc', 'sample.properties' );
+
+my %replace = ( 'pre' => "\n\\begin{verbatim}",
+                '/pre' => "\\end{verbatim}\n",
+                'ol' => "\n\\begin{enumerate}\n",
+                '/ol' => "\n\\end{enumerate}\n",
+                'ul' => "\n\\begin{itemize}\n",
+                '/ul' => "\n\\end{itemize}\n",
+                'li' => "\n\\item ",
+                '/li' => '',
+                'i' => "\\emph{",
+                '/i' => "}",
+                'b' => "\\textbf{",
+                '/b' => "}",
+                'tt' => "\\texttt{",
+                '/tt' => "}",
+                'tb2' => "\n\\begin{tabular}{lp{100mm}}\n",
+                '/tb2' => "\n\\end{tabular}\n",
+                'tb3' => "\n\\begin{tabular}{lll}\n",
+                '/tb3' => "\n\\end{tabular}\n",
+                '/te' => "\\\\\n", 
+                'dl' => "\n\\begin{description}\n",
+                '/dl' => "\n\\end{description}\n",
+                'dt' => "\n\\item[",
+                '/dt' => "] ",
+                'dd' => '',
+                '/dd' => '' );
+
+sub lookup($) {
+    my $key = shift;
+    exists $replace{$key} ? $replace{$key} : $key;
+}
+
+sub escape($) {
+    # purpose: LaTeX escape an arbitrary sentence (imperfect)
+    # paramtr: $x (IN): some raw string
+    # returns: cooked string
+    local $_ = shift;
+
+    # are we inside a pre?
+    $main::inpre=1 if m{<pre>};
+    $main::inpre=0 if m{</pre>};
+
+    # escape all TeX special chars (that I can think of, not complete)
+    s/([\$_%{}])/\\$1/g unless $main::inpre;
+
+    # special escape for 1-line verbatims -- only do once per line
+    s{<pre>(.*)</pre>}{\\verb|$1|}; 
+
+    # replace only known <TAG> items with LaTeX formatting.
+    # unknown "TAG" strings are copied verbatim.
+    s/<([^>]+)>/lookup($1)/eg;
+
+    # done
+    $_;
+}
+
+sub trim($) {
+    # purpose: Trims redundant whitespace from head and tail of a string
+    # paramtr: $x (IN): some raw string
+    # returns: trimmed string, may be identical to argument, or even empty. 
+    local $_ = shift;
+    s/^\s+//;
+    s/\s+$//;
+    $_;
+}
+
+# open file (and fail) before print LaTeX preambles
+$/ = '';                        # activate paragraph mode
+open( SP, '<' . $fn ) || die "open $fn: $!\n";
+
+#
+# print LaTeX preamble -- do not interpolate anything here
+#
+print << 'EOF';
+\documentclass[11pt,letterpaper,headsepline,pagesize,letterpaper,DIV11]{scrartcl}
+\usepackage[T1]{fontenc}
+\usepackage{times,verbatim}
+\usepackage{makeidx}
+%\usepackage[latin1]{inputenc}
+% paragraph setup
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4\baselineskip plus1pt minus1pt}
+% not in this country: \frenchspacing
+%
+% page setup
+%
+\usepackage[automark]{scrpage2}
+\renewcommand{\headfont}{\normalfont\sffamily}
+\renewcommand{\pnumfont}{\normalfont\sffamily}
+\clearscrheadfoot
+\ohead{\pagemark}\chead{}\ihead{\headmark}
+\ofoot{}\cfoot{}\ifoot{}
+\pagestyle{scrheadings}
+\thispagestyle{empty}
+%
+% I hate KOMA page layout, so I fix it my way
+%
+%\setlength{\topmargin}{0pt} % headexclude document style is broken
+\setlength{\textheight}{1.05\textheight} % add n% more length
+\setlength{\textwidth}{1.03\textwidth} % add n% more width
+%
+% my verbatim stuff
+%
+\makeatletter
+\newlength{\myverbatimindent}
+\setlength{\myverbatimindent}{10mm}
+\renewcommand{\verbatim@processline}{%
+  \leavevmode\hspace*{\myverbatimindent}\the\verbatim@line\par}
+\renewcommand{\verbatim@font}{\ttfamily\small\baselineskip10pt}
+\makeatother
+%
+% personal shortcuts
+%
+\def\dd{\\\hline}
+\def\at{\symbol{64}}
+\def\ul#1{\underline{#1}}
+\def\rref#1{\ref{#1} (page~\pageref{#1})}
+%
+% should be last
+%
+\makeindex
+\usepackage{hyperref}
+%
+\begin{document}
+
+\subject{The Pegasus Workflow Planner Properties}
+%% \title{Property Documentation}
+EOF
+
+# which version 
+my $version=$ENV{'PEGASUS_VERSION'};
+if ( ! defined $version || $version eq '' ) {
+    # didn't find a valid version, ask pegasus-version
+    my $v_v = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 
+				   'bin', 'pegasus-version' );
+    chomp($version = `$v_v`);
+}
+
+#
+# print LaTeX preamble, 2nd part, now with interpolation
+#
+print << "EOF";
+\\author{V~$version automatically generated on}
+\\date{@{[POSIX::strftime("%Y-%m-%d %H:%M", localtime())]}}
+%% defer until we hit TITLE in input
+%% \\maketitle
+%% \\tableofcontents
+%% \\clearpage
+
+EOF
+
+$main::title = 0; 
+my (@line,%line,$k,$v,$i);
+my $depth = 0;
+while ( <SP> ) {
+    if ( /^\# Property : (.*)/ ) {
+        my $title = $1;
+	if ( $depth == 2 ) {
+	    print "\\subsubsection{$title}\n";
+	} else {
+	    print "\\subsection{$title}\n";
+	}
+        print '\label{sec:', $title, "}\n";
+
+#       my @title = split /\./, $title;
+#       print '\index{', join('.',@title[0,1]), "}\n";  
+#       print( '\index{', join('.',@title[0,1]), '!',
+#              join('.',@title[2..$#title]) , "}\n" ) if @title > 2;
+        print '\index{', $title, "}\n"; 
+        print "\n";
+
+        # break paragraph into lines, and remove comment+space
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+
+        # rip first section
+        %line = ();
+        print "  \\begin{tabular}{|p{20mm}|p{120mm}|}\\hline\n";
+        #print "    \\textsf{Key} & \\textsf{Meaning}\\dd\\hline\n";
+        for ( $i=0; $i<@line; ++$i ) {
+            # exit at first empty line
+            last if length($line[$i]) < 1;
+            ($k,$v) = map { escape($_) } split( /\s+:\s+/, $line[$i], 2 );
+            $line{$k} = $v;
+            if ( $k eq 'Property' ) {
+                # ignore - this is already the subsection
+            } elsif ( $k =~ /moved?\s*to/i || $k =~ /see\s*also/i ||
+                      $k =~ /new\s*name/i ) {
+                # generate cross reference
+                $k = "New name" if $k =~ /moved?\s*to/i; 
+                print "\t$k & $v, section~\\rref{sec:$v}\\dd\n";
+            } else {
+                # default action
+                print "\t$k & $v\\dd\n";
+            }
+        }
+        print "  \\end{tabular}\n";
+        print "\n";
+
+        # print everything but last paragraph
+        for ( ; $i < @line - 2; ++$i ) {
+            print escape($line[$i]), "\n";
+        }
+
+        # done with the subsection
+        print "\n\n";
+
+    } elsif ( /\# (SECTION|SUBSECTION|TITLE)/ ) {
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+        my $flag = undef;
+        for ( $i=0; $i<@line; ++$i ) {
+            last if ( length($line[$i]) <= 1 && $flag );
+            if ( $line[$i] =~ /^SECTION "([^\"]+)"/ ) {
+                my @title = map { ucfirst lc } split /\s+/,$1;
+                print "\n\n\\section{@title}\n";
+                print '\label{sec:', join('',@title), "}\n\n";
+                $flag = 1;
+		$depth = 1;
+            } elsif ( $line[$i] =~ /^SUBSECTION "([^\"]+)"/ ) {
+                my @title = map { ucfirst lc } split /\s+/,$1;
+                print "\n\n\\subsection{@title}\n";
+                print '\label{sec:', join('',@title), "}\n\n";
+                $flag = 1;
+		$depth = 2;
+            } elsif ( $line[$i] =~ /^TITLE "([^\"]+)"/ ) {
+		$main::title += 1; # remember 
+		my @title = map { ucfirst lc } split /\s+/,$1;
+		print "\n\n\\title{@title}\n"; 
+		print "\\maketitle\n\\tableofcontents\n\\clearpage\n\n";
+                $flag = 1;
+		$depth = 0;
+            }
+        }
+
+        for ( ; $i<@line; ++$i ) {
+            print escape($line[$i]), "\n";
+        }
+    } elsif ( /^\#/ ) {
+        warn "Warning: $.: Found regular textual paragraph, copying\n";
+        warn "<<<$_>>>\n";
+
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+        for ( $i=0; $i<@line; ++$i ) {
+            print escape($line[$i]), "\n";
+        }
+    } else {
+        warn "Warning: $.: Found uncommented paragraph, ignoring\n";
+        warn "<<<$_>>>\n";
+    }
+}
+close SP;
+die "FATAL: You didn't have a TITLE in your input\n"
+    unless $main::title > 0; 
+
+#
+# print LaTeX post-amble
+#
+print << 'EOF';
+
+\clearpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
+EOF
+

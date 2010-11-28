@@ -1,0 +1,107 @@
+.\"  Copyright 2010-2011 University Of Southern California
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"  http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\"  Unless required by applicable law or agreed to in writing,
+.\"  software distributed under the License is distributed on an "AS IS" BASIS,
+.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\"  See the License for the specific language governing permissions and
+.\" limitations under the License.
+.\"
+.\"
+.\" $Id$
+.\"
+.\" Authors: Prasanth Thomas
+.\"
+.TH "pegasus-statistics" "1" "1.0.0" "PEGASUS Workflow Planner"
+.SH "NAME"
+pegasus-statistics \- A tool to generate statistics about the workflow execution.
+
+.SH "SYNOPSIS"
+.B pegasus-statistics <submit directory>
+[\-o|\-\-output <output directory>] 
+[\-m|\-\-monitord]
+[\-c|\-\-condor]
+[\-k|\-\-keep]
+[\-v|\-\-verbose] 
+[\-h|\-\-help] 
+.SH "DESCRIPTION"
+The pegasus-statistics generates statistics about the workflow execution like job's run time, condor queue delay etc. 
+
+.SH "ARGUMENTS"
+.TP
+.B \-o <output directory>
+.PD 0
+.TP
+.PD 1
+.B \-\-output  <output directory>
+Writes the output to the given directory 
+
+.TP
+.B \-m
+.PD 0
+.TP
+.PD 1
+.B \-\-monitord
+Invokes pegasus-monitord beforre running pegasus-statistics.
+
+.TP
+.B \-c
+.PD 0
+.TP
+.PD 1
+.B \-\-condor
+Specifies a pure condor run with no GRID_SUBMIT events
+
+.TP
+.B \-k
+.PD 0
+.TP
+.PD 1
+.B \-\-keep
+Keeps the log created by the pegasus-statistics run.
+
+.TP
+.B \-v
+.PD 0
+.TP
+.PD 1
+.B \-\-verbose
+Enters the verbose mode.
+
+.TP
+.B \-h
+.PD 0
+.TP
+.PD 1
+.B \-\-help
+Displays all the options to the
+.B pegasus-statistics
+command.
+
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B PEGASUS_HOME
+points to the installation base directory of your the PEGASUS execution
+environment. 
+
+.SH "EXAMPLE"
+.TP
+Runs pegasus-statistics and writes the output to the given directory :\-
+.nf 
+\f(CB
+ pegasus-statistics  -o /scratch/statistics /scratch/grid-setup/run0001
+\fP
+.fi 
+ 
+.SH "AUTHORS"
+Prasanth Thomas 
+.PP 
+.br 
+PEGASUS
+.B http://pegasus.isi.edu
+

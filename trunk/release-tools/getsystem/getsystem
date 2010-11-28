@@ -1,0 +1,287 @@
+#! /usr/bin/env perl
+use strict;
+use warnings;
+use Config;
+
+# Global Hawkeye data
+
+my %uname_cmd = 
+(
+    "arch", "uname -m",
+    "os", "uname -s",
+    "os_ver", "uname -r",
+);
+
+my %short_os = 
+(
+    "SunOS", "sol",
+    "IRIX64", "irix",
+    "Darwin", "macos",
+    "OSF1", "osf",
+    "AIX", "aix",
+    "HP-UX", "hpux",
+    "Microsoft Windows XP Professional", "winnt",
+    "NT", "winnt",
+    "FreeBSD", "freebsd",
+    "Ubuntu", "ubuntu"
+);
+
+my %short_arch = 
+(
+    "alpha", "alpha",
+    "sun4u", "sun4u",
+    "powerpc", "ppc",
+    "ppc", "ppc",
+    "ppc64", "ppc64",
+    "ps3", "ps3",
+    "i686", "x86",
+    "i386", "x86",
+    "x86", "x86",
+    "ia32", "ia32",
+    "ia64", "ia64",
+    "x86_64", "x86_64",
+    "X86-based PC", "x86",
+    "HP-UX", "hppa",
+);
+
+# Override the flags based on a system
+if ( ($Config{'archname'} =~ m!aix!) or
+     ($Config{'archname'} =~ m!darwin!) ) {
+    $uname_cmd{"arch"} = "uname -p";
+}
+
+# $Config{'archname'} = PA-RISC2.0 on hpux 10.20
+if ( ($Config{'archname'} =~ m!PA!) ) {
+    $uname_cmd{"arch"} = "uname -s";
+}
+
+
+
+sub getPlatform(){
+    my ($arch, $os, $os_version, $os_sp);
+
+    if ($Config{'archname'} =~ m!MSWin!) {
+        my $info_str = `systeminfo.exe`;
+        my @info = split /\n/, $info_str;
+        $arch = (split /:\s*/, $info[14])[1];
+        $os = (split /:\s*/, $info[2])[1];
+        $os_version = (split /\./ ,(split /:\s*/, $info[3])[1])[0] . "." .
+                      (split /\./ ,(split /:\s*/, $info[3])[1])[1];
+        if ($info[3] =~ m/Service Pack/){
+            $os_sp = "SP" . (split " ", (split /:\s*/, $info[3])[1])[3];
+        }
+    }
+    else {
+        $arch = `$uname_cmd{"arch"}`;
+        $os = `$uname_cmd{"os"}`;
+        $os_version = `$uname_cmd{"os_ver"}`;
+        chomp($arch);
+        chomp($os);
+        chomp($os_version);
+    }
+
+    if ($os =~ m!CYGWIN!) {
+        $os_version = substr($os, 10);
+        $os = substr($os, 7, 2);
+    }
+
+    if ($Config{'archname'} =~ m!aix!) {
+        my $major = `uname -v`;
+        my $minor = `uname -r`;
+        chomp $major;
+        chomp $minor;
+        $os_version = "$major.$minor"
+    }
+
+    # differentiate IBM PPC64 from Sony PS3
+    if ($arch eq "ppc64" && $os_version =~ /ps3$/) {
+	$arch = "ps3";
+    }
+
+    # Simplify HPUX 11 version string
+    if ($Config{'archname'} =~ m!PA!) {
+      if ($os_version eq "B.11.11") {
+        $os_version = "11";
+      }
+    }
+
+    if ( lc($os) eq "linux") {
+        my %distro = &get_linux_distro();
+
+      return($short_arch{$arch},$distro{'short'},$distro{'version'});
+    }
+    elsif($short_os{$os} eq "macos") { # need something like 'ppc_macos_10.3' 
+     # find if processor is 64 bit.
+        my $x64=`/usr/sbin/sysctl -a -n hw.cpu64bit_capable 2>/dev/null`;
+        my $vers = `/usr/bin/sw_vers -productVersion`;
+	chomp $vers;
+	$vers =~ s/(^\d+\.\d+).*/$1/;
+        
+        return (  ($x64) ? $short_arch{$arch}."_64" : $short_arch{$arch},$short_os{$os},$vers);
+    }
+    elsif($short_os{$os} eq "irix") {
+        return ($short_os{$os},$os_version);
+    }
+    elsif ( lc($os) eq "freebsd" ) {
+        $os_version =~ s/\.[\d]-RELEASE//i;
+        return ($short_arch{$arch},$short_os{$os}, $os_version);
+    }
+    else {
+        return ($short_arch{$arch}, $short_os{$os}, $os_version);
+    }
+}
+
+sub get_linux_distro () {
+    my $issue_file;
+    if (-f "/etc/rocks-release") {
+        $issue_file = "/etc/rocks-release";
+    }
+    else {
+        $issue_file = "/etc/issue";
+    }
+    open(DISTRO, $issue_file) || die "Unable to open $issue_file";
+    my %distro =
+    ( "long", "unknown",
+      "short", "unknown",
+      "version", "unknown",
+    );
+
+    while(<DISTRO>) {
+        next if /^(\s)*$/;      # skip blank lines
+        chomp($_);
+        my $line = $_;
+        my @distro_strs = split(" ", $line);
+
+        if($line =~ m!Red Hat!) {
+            if($line =~ m!Red Hat Enterprise Linux!) {
+                $distro{"long"} = "$distro_strs[0]$distro_strs[1]$distro_strs[4]";
+                $distro{"version"} = "$distro_strs[6]";
+                $distro{"short"} = "rhel";
+            }
+            else {
+                $distro{"long"} = "$distro_strs[0]$distro_strs[1]";
+                $distro{"version"} = "$distro_strs[4]";
+                $distro{"short"} = "rh";
+            }
+        }
+        elsif($line =~ m!Rocks !) {
+            $distro{"long"} = "$distro_strs[0]";
+            $distro{"version"} = "$distro_strs[2]";
+            $distro{"short"} = "rocks";
+        }
+        elsif($line =~ m!SuSE! || $line =~ m!SUSE!) {
+            if ($line =~ m!Enterprise Server!) {
+              $distro{"long"} = "$distro_strs[3]";
+              $distro{"version"} = "$distro_strs[6]";
+
+            } elsif ($line =~ m!openSUSE!) {
+              $distro{"long"} = "$distro_strs[3]";
+              $distro{"version"} = "$distro_strs[3]";
+
+            } else {
+              $distro{"long"} = "$distro_strs[3]";
+              $distro{"version"} = "$distro_strs[4]";
+            }
+
+            if($line =~ m!SuSE SLES! || $line =~ m!Enterprise!) {
+                $distro{"short"} = "sles";
+            }
+            else {
+                $distro{"short"} = "suse";
+            }
+        }
+        elsif($line =~ m!Fedora Core!) {
+            $distro{"long"} = "$distro_strs[0] $distro_strs[1]";
+            $distro{"version"} = "$distro_strs[3]";
+            $distro{"short"} = "fc";
+        }
+	elsif($line =~ m!Fedora release!){
+            $distro{"long"} = "$distro_strs[0] $distro_strs[1]";
+            $distro{"version"} = "$distro_strs[2]";
+            $distro{"short"} = "fc";
+       }
+        elsif($line =~ m!Tao Linux!) {
+            $distro{"long"} = "$distro_strs[0]";
+            $distro{"version"} = "$distro_strs[3]";
+            $distro{"short"} = "tao";
+        }
+        elsif($line =~ m!Scientific Linux!) {
+            $distro{"long"} = "Scientific Linux";
+	    $distro{"version"} = 'xxx';
+	    if ($line =~ m/(\d)/) {
+              $distro{"version"} = $1;
+            }
+	    if ($line =~ m/CERN/i) {
+	      $distro{"short"} = "slc";
+	    } elsif ($line =~ m/Fermi/i) {
+	      $distro{"short"} = "slf";
+	    } else {
+              $distro{"short"} = "sl";
+            
+	      if ($line =~ m/(\d)/) {
+                $distro{"version"} = "$distro_strs[4]";
+              }
+	    }
+        }
+        elsif ($line =~ m!CentOS!) {  
+            $distro{"long"} = "$distro_strs[0]";
+            $distro{"version"} = "$distro_strs[2]";
+            $distro{"short"} = "cent";   
+        } 
+
+        elsif ($line =~ m!Yellow!) {
+            $distro{"long"} = "$distro_strs[0] $distro_strs[1]";
+            $distro{"version"} = "$distro_strs[4]";
+            $distro{"short"} = "ydl";
+        } 
+        elsif($line =~ m!Debian!) {
+            $distro{"long"} = "$distro_strs[0]";
+            $distro{"version"} = "$distro_strs[2]";
+            $distro{"short"} = "deb";
+        }
+        elsif($line =~ m!Ubuntu!) {
+            $distro{"long"} = "$distro_strs[0]";
+            $distro{"version"} = "$distro_strs[1]";
+            $distro{"short"} = "ubuntu";
+        }
+	
+	#hack to handle "/" in version numbers should probably apply to other places as well
+	$distro{"version"} =~ s/\//_/g ;
+        return %distro;
+    }
+}
+
+#sub trim () {
+#    my @str = @_;
+#    return &ltrim(&rtrim(@str));
+#}
+#
+#sub rtrim () { 
+#    my @str = @_;
+#    for (@str) {
+#        s/\S+$//;
+#    }   
+#    return @str == 1 ? $str[0] : @str;
+#}
+#    
+#sub ltrim () {
+#    my @str = @_;
+#    for (@str) {
+#        s/^\S+//;
+#    }
+#    return @str == 1 ? $str[0] : @str;
+#}
+
+#my ($arch, $os, $version)=getPlatform();
+
+my @platform=getPlatform();
+for(my $i=0 ; $i<@platform; $i++){
+    if ($i==@platform-1){
+	print $platform[$i];
+    }else{
+    print $platform[$i],"_";
+    }
+}
+print "\n";
+
+#print  "NMI Platform :", $arch,"_", $os,"_",$version,"\n";

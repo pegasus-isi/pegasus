@@ -1,0 +1,272 @@
+.\"
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id$
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.TH k.2 1   " March, 17th 2004 " "
+.SH NAME
+k.2 \- run an executable while recording invocation data
+.SH SYNOPSIS
+.B k.2
+[cfgfile]
+.SH DESCRIPTION
+The 
+.B k.2 
+executable is a light-weight program which connects the
+.I stdio
+filehandles for Chimera jobs on the remote site. In addition, it
+records the invocation data from the runtime environment. It can
+be extensively configured using a configuration file, which is usually
+passied via
+.I stdin .
+.PP 
+Sitting in between the remote scheduler and the executable, it is
+possible for
+.B k.2 
+to gather additional information about the executable run-time behavior,
+including the exit status of jobs. This information is important
+for Chimera invocation tracking as well as to Condor DAGMan's awareness
+of Globus job failures. 
+.PP
+.B K.2
+permits the optional execution of jobs before and after the main
+application job that run in chained execution with the main application
+job. In addition, it permits for any number of clean-up jobs, which run
+independent of any exit code.
+.PP
+All jobs with relative path specifications to the application are part
+of search relative to the current working directory (yes, this is unsafe),
+and by prepending each component from the
+.I PATH
+environment variable. The first match is used. Jobs that use absolute
+pathnames, starting in a slash, are exempt.
+.PP
+.B K.2
+rewrites the commandline of any job (pre, post and main) with variable
+substitutions from Unix environment variables. Please refer to the 
+external documentation for details.
+.PP
+.B K.2
+provides a temporary named pipe (fifo) for applications that are gridstart
+aware. Any data an application writes to the FIFO will be propagated back
+to the submit host, thus enabling progress meters and other application
+dependent monitoring. Please refer to the external documentation for details.
+.PP
+Last but not least, 
+.B k.2
+provides a exponential back-off heart-beat to verify that an application
+is indeed running. However, due to the best-effort transportation through
+GRAM protocols, the heart beats may not be streamed back. Please refer to
+the external documentation for details. 
+.SH ARGUMENTS
+.TP
+.B cfgfile
+The explicit configuration file 
+.I cfgfile
+is optional to overide default behavior. The configuration file in depth
+configures the run-time behavior of k.2. Furthermore, it may
+attempt to include further configuration files, which are site-specific.
+.IP
+By default, k.2 reads the configuration file from 
+.IR stdin . 
+It is expected that Globus, GRAM and the scheduling system work together to
+connect a staged configuration file to the 
+.I stdin 
+filedescriptor of
+.B k.2 .
+.SH "RETURN VALUE"
+.B k.2
+will return the return value of the last job it ran. Since prejobs, main
+job and post jobs are chained, it can be any of these. In addition, the
+error code 127 signals that a call to exec failed, and 126 that
+reconnecting the stdio failed. A job failing with the same exit codes of
+126 and 127 is indistinguishable from
+.B k.2
+failures.
+.SH "SEE ALSO"
+.BR condor_submit_dag (1),
+.BR condor_submit (1),
+.BR getrusage (3c),
+.BR gencdag (1).
+.PP
+.BR http://www.griphyn.org/workspace/VDS/iv-1.3/iv-1.3.html ,
+.br
+.BR http://www.griphyn.org/workspace/VDS/ ,
+.br
+.BR http://www.griphyn.org/chimera/
+.br
+.BR http://www.cs.wisc.edu/condor/manual/
+.SH EXAMPLE
+You can run the
+.B k.2
+executable locallly to verify that it is functioning well. In the
+initial phase, the format of the performance data may be slightly
+adjusted. However, you must provide a minimal configuration file. 
+.nf
+\f(CB
+$ echo 'main "/bin/date"' | $(PEGASUS_HOME)/bin/linux/k.2
+# line 1: 2004-03-15T13:37:39 k.2 is running
+# line 1: added valid main application /bin/date
+# 2004-03-15T13:37:39.378: about to invoke /bin/date
+<?xml version="1.0" charset="ISO-8859-1"?>
+<invocation xmlns="http://www.griphyn.org/chimera/Invocation" xmlns:gvds_xsi="http://www.w3.org/2001/XMLSchema-instance" gvds_xsi:schemaLocation="http://www.griphyn.org/chimera/Invocation http://www.griphyn.org/chimera/iv-1.3.xsd" version="1.3" start="2004-03-15T13:37:39.377-06:00" duration="0.003" pid="13502" uid="500" gid="100">
+  <provenance host="128.135.152.241">
+    <uname system="linux" archmode="IA32" nodename="griodine.uchicago.edu" release="2.4.25" machine="i686" domainname="(none)">#2 SMP Thu Feb 19 16:09:15 CST 2004</uname>
+  </provenance>
+  <cwd>/home/voeckler/vds/src/tools/k.2</cwd>
+  <usage utime="0.000" stime="0.000" minflt="59" majflt="200" nswap="0" nsignals="0" nvcsw="0" nivcsw="0"/>
+  <main start="2004-03-15T13:37:39.378-06:00" duration="0.003" pid="13503">
+    <usage utime="0.000" stime="0.000" minflt="25" majflt="146" nswap="0" nsignals="0" nvcsw="0" nivcsw="0"/>
+    <status raw="0"><regular exitcode="0"/></status>
+    <statcall>
+      <file name="/bin/date">7f454c46010101000000000000000000</file>
+      <statinfo mode="0100755" size="26152" inode="4161791" nlink="1" blksize="4096" mtime="2002-04-08T11:02:12-05:00 atime="2004-03-15T13:37:09-06:00 ctime="2003-12-04T17:52:59-06:00" uid="0" gid="0"/>
+    </statcall>
+    <arguments argc="1"/>
+  </main>
+  <statcall id="gridstart">
+    <file name="/home/voeckler/vds/bin/linux/k.2">7f454c46010101000000000000000000</file>
+    <statinfo mode="0100755" size="569660" inode="3671570" nlink="1" blksize="4096" mtime="2004-03-15T13:07:27-06:00 atime="2004-03-15T13:37:39-06:00 ctime="2004-03-15T13:07:27-06:00" uid="500" gid="100"/>
+  </statcall>
+  <statcall id="stdin">
+    <file name="/dev/null"/>
+    <statinfo mode="020666" size="0" inode="65538" nlink="1" blksize="4096" mtime="2002-04-11T09:25:15-05:00 atime="2002-04-11T09:25:15-05:00 ctime="2003-12-04T17:37:35-06:00" uid="0" gid="0"/>
+  </statcall>
+  <statcall id="stdout">
+    <temporary name="/tmp/gs.out.b6UGYv" descriptor="3"/>
+    <statinfo mode="0100600" size="29" inode="2622191" nlink="1" blksize="4096" mtime="2004-03-15T13:37:39-06:00 atime="2004-03-15T13:37:39-06:00 ctime="2004-03-15T13:37:39-06:00" uid="500" gid="100"/>
+    <data>Mon Mar 15 13:37:39 CST 2004
+</data>
+  </statcall>
+  <statcall id="stderr">
+    <temporary name="/tmp/gs.err.Ju25Wr" descriptor="4"/>
+    <statinfo mode="0100600" size="0" inode="2622214" nlink="1" blksize="4096" mtime="2004-03-15T13:37:39-06:00 atime="2004-03-15T13:37:39-06:00 ctime="2004-03-15T13:37:39-06:00" uid="500" gid="100"/>
+  </statcall>
+  <statcall id="logfile">
+    <descriptor number="1"/>
+    <statinfo mode="0100644" size="153" inode="4490345" nlink="1" blksize="4096" mtime="2004-03-15T13:37:39-06:00 atime="2004-03-15T13:37:39-06:00 ctime="2004-03-15T13:37:39-06:00" uid="500" gid="100"/>
+  </statcall>
+</invocation>
+\fP
+.fi
+Please take note a few things about the output:
+.PP 
+The above example still contains debug information - the lines starting
+with an octothorpe. 
+.PP
+The output from the postjob can be appended to the output of the main job on
+.IR stdout .
+The output could potentially be separated into different data sections
+through different temporary files. If you truly need the separation,
+request that feature.
+.PP
+The log file may be reported with a size of zero, because the log file
+did indeed barely exist at the time the data structure was (re-)
+initialized. With regular GASS output, it will report the status of the
+socket file descriptor, though.
+.PP
+The file descriptors reported for the temporary files are from the 
+perspective of 
+.BR k.2 .
+Since the temporary files have the close-on-exec flag set, 
+.BR k.2 's
+filedescriptors are invisible to the job processes. Still, the 
+.I stdio
+of the job processes are connected to the temporary files.
+.PP
+Even this output already appears large. The output may already be too
+large to guarantee that the append operation on networked pipes (GASS,
+NFS) are atomically written. If logical file and secondary staging is 
+defined, the output may become even larger. 
+.SH "OUTPUT FORMAT"
+Refer to
+.B http://www.griphyn.org/workspace/VDS/iv-1.3/iv-1.3.html
+for an up-to-date description of elements and their attributes. Check with
+.B http://www.griphyn.org/workspace/VDS/
+for IV schemas with a higher version number.
+.SH RESTRICTIONS
+There is no version for the Condor
+.I standard 
+universe. It is simply not possible within the constraints of Condor. 
+.PP
+Due to its very nature,
+.B k.2
+will also prove difficult to port outside the Unix environment.
+.PP
+Any of the pre-, main-, cleanup and postjob are unable to influence one 
+anothers visible environment. However, you can set up environment variables
+using the configuration file. These variables will be visible to all jobs.
+.PP
+Do not use a Chimera definition with just the name
+.I null 
+and no namespace or version.
+.PP
+A job failing with exit code 126 or 127 is indistinguishable from
+.B k.2
+failing with the same exit codes. Sometimes, careful examination of the
+returned data can help.
+.PP
+If the logfile is collected into a shared file, due to the size of the
+data, simultaneous appends on a shared filesystem from different
+machines may still mangle data. Currently, file locking is not even
+attempted, although all data is written atomically from the perspective
+of 
+.BR k.2 .
+.PP
+The upper limit of characters of commandline characters is currently not 
+checked by 
+.BR k.2 .
+Thus, some variable substitutions could potentially result in a
+commandline that is larger than permissable.
+.PP
+If the output or error file is opened in append mode, but the
+application decides to truncate its output file,
+the resulting file will still be truncated. This is correct behavior,
+but sometimes not obvious.
+.SH FILES
+.TP
+.B $PEGASUS_HOME/etc/iv-1.3.xsd
+is the suggested location of the latest XML schema describing the data
+on the submit host.
+.SH ENVIRONMENT VARIABLES
+.TP
+.B TMP
+is the hightest priority to look for a temporary directory, if specified.
+Fixme: Still true?
+.TP
+.B TEMP
+is the next highest priority for an environment variable denoting a 
+temporary files directory.
+.TP
+.B TMPDIR
+is next in the checklist. If none of these are found, either the
+.I stdio
+definition 
+.I P_tmpdir
+is taken, or the fixed string
+.I /tmp .
+.SH AUTHORS
+Jens-S. Vöckler <voeckler@cs.uchicago.edu>,
+.br
+Mike Wilde <wilde@mcs.anl.gov>,
+.br
+Yong Zhao <yongzh@cs.uchicago.edu>.
+.PP
+Chimera
+.B http://www.griphyn.org/chimera/
+.br
+GriPhyN
+.BR http://www.griphyn.org/

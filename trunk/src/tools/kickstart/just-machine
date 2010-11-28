@@ -1,0 +1,83 @@
+#!/usr/bin/env perl
+#
+# script to just grab the machine element from kickstart output
+#
+use 5.006;
+use strict;
+use XML::Parser;
+
+my %break = ( machine => 1 );	# elements that enclose other elements
+my %state = ( machine => 1 ); 	# elements that trigger printing
+
+my $mixed = 0; 			# binary state on how to close elements
+my $state = 0;			# binary (counted) state on when to print
+my @stack = (); 		# path from root element
+
+sub start_element {
+    my $self = shift;
+    my $element = shift;
+    $state++ if exists $state{$element};
+
+    if ( $state ) {
+	print ' ' x ( @stack*2 ), '<', $element; 
+	for ( my $i=0; $i < @_; $i += 2 ) {
+	    # keep original ordering of attributes
+	    print ' ', $_[$i], '="', $_[$i+1], '"';
+	}
+
+	if ( exists $break{$element} ) {
+	    print ">\n"; 
+	    $mixed = 0; 
+	} else {
+	    $mixed = 1; 
+	}
+    }
+
+    push( @stack, $element );
+}
+
+sub final_element {
+    my $self = shift;
+    my $element = shift;
+
+    if ( $state ) {
+	if ( $mixed == 1 ) {
+	    print "/>\n"; 
+	} else { 
+	    print ' ' x ($#stack*2) if exists $break{$element};
+	    print "</$element>\n";
+	}
+	$mixed = 0; 
+    }
+
+    --$state if exists $state{$element};
+
+    pop(@stack) eq $element;
+}
+
+sub text_handler {
+    my $self = shift;
+    my $text = shift; 
+    $text =~ s/[\012\015]+//;
+
+    if ( $state ) {
+	print '>' if $mixed == 1; 
+	$mixed = 0; 
+	print $text unless $text =~ /^[ \t]*$/; 
+    }
+    1; 
+}
+
+my $xml = new XML::Parser::Expat;
+$xml->setHandlers( Start => \&start_element,
+		   End => \&final_element,
+		   Char => \&text_handler ); 
+
+if ( @ARGV ) {
+    my $fn = shift; 
+    open( F, "<$fn" ) || die "open $fn: $!\n"; 
+    $xml->parse( \*F );
+    close F;
+} else {
+    $xml->parse( \*STDIN );
+}

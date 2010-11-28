@@ -1,0 +1,234 @@
+#!/bin/bash
+
+my_usage () {
+    # purpose: Show usage string and exit
+echo 
+echo 'Tool to provide a human-readable representation of kickstart records.'
+echo 
+echo 'Usage: '$self' [-h] [-v] [-s] [-b] [-k] [-d] [-n] [-S] [-o file]'
+echo 
+echo '-h|--help                 	provide this help.'
+echo '-v|--verbose              	provide information about every .out file in the directory'
+echo '-s|--stdouts              	retrieve the stdout and stderr of each vds-format-kickstart record with a nonzero exitcode'
+echo '-b|--badfile              	retrieve all kickstart records with a nonzero exitcode.'
+echo '-k|--vds-format-kickstart 	run the given file through vds-format-kickstart.'
+echo '-d|--data	                run the given file through vds-format-kickstart using the -v argument'
+echo '-n|--numerr              	give the number of kickstart records with nonzero exitcodes'
+echo '-S|--sum				sum the amount of time for all jobs processed through kickstart'
+echo '-a|--args				display the filename and arguments that were invoked by kickstart'
+echo '-o file| --output file    	put the output into file (not named 0)     '
+echo
+echo
+    exit $1
+}
+	
+#
+# parse commandline options, long and short
+#
+OPTS=`getopt -l numerr,help,verbose,vds-format-kickstart,data,stdouts,badfiles,sum,args,output: -o hvkdnasbSo: -- "$@"`
+test $? -ne 0 && my_usage 1
+eval set -- "$OPTS"
+
+self=vds-stat
+args=0
+sum=0
+verbose=0
+kickstand=0
+data=0
+stdouts=0
+badfiles=0
+filename=0
+numerr=0
+
+while true; do
+    case "$1" in
+	--numerr|-n)
+	    shift
+	    badfiles=1
+	    numerr=1
+	    ;;
+        --verbose|-v)
+            shift
+            verbose=1
+            ;;
+	--sum|-S)
+	    shift
+	    sum=1
+	    ;;
+        --help|-h)
+            shift
+            my_usage 0
+            ;;
+	--args|-a)
+	    shift
+	    args=1
+	    ;;
+        --kickstand|-k)
+            shift
+            kickstand=1
+            ;;
+        --data|-d)
+            shift
+	    kickstand=1
+            data=1
+            ;;
+        --stdouts|-s)
+            shift
+            stdouts=1
+            ;;
+        --badfiles|-b)
+            shift
+            badfiles=1
+            ;;
+	--output|-o)
+            shift
+            filename=$1
+	    shift
+            ;;
+	--)
+            shift
+            break
+            ;;
+        *)
+            echo "$self: Error: Unknow argument \"$1\", see --help:"
+            my_usage 1
+            ;;
+    esac
+done
+
+TMPFILE=`mktemp /tmp/kickfileXXXXXXXXXXXXX`
+
+if [ ${#@} == 0 ]
+then
+	echo $self': Incorrect number of arguments'
+	my_usage 1
+fi
+
+#echo verbose: $verbose
+#echo vds-format-kickstart: $vds-format-kickstart
+#echo data: $data
+#echo stdouts: $stdouts
+#echo badfiles: $badfiles
+#echo filename: $filename
+
+if [ -f $1 ]
+then
+	if [ $kickstand == 1 ]
+	then
+		if [ $data == 1 ]
+		then
+			if [ $filename == 0 ]
+			then
+				vds-format-kickstart -v $1
+				exit 0
+			else
+				vds-format-kickstart -v $1 > filename
+				exit 0
+			fi
+		else
+			if [ $filename == 0 ]
+			then
+				vds-format-kickstart $1
+				exit 0
+			else
+				vds-format-kickstart $1 > filename
+				exit 0
+			fi
+		fi
+	else
+		echo 'Invalid argument '$1'. Use -k for file, and -h for help options:'
+		my_usage 1
+	fi
+elif [ -d $1 ]
+then
+	for file in `find $1 | grep .*\.out`
+	do
+		vds-format-kickstart $file >> $TMPFILE 2>&1
+	done
+	#make sure that there is a '/' at the end of the directory
+	workingdir=`echo $1 | sed -e 's/\([/a-zA-Z0-9_]*[a-zA-Z0-9_]\)\/\?/\1\//g'`
+else
+	echo '-'$self': '$1': directory or file not found.'
+	exit 1
+fi
+
+#echo workingdir: $workingdir
+
+if [ $verbose == 1 ]
+then
+	if [ $filename == 0 ]
+	then
+		cat $TMPFILE
+	else
+		cp $TMPFILE $filename
+	fi
+elif [ $badfiles == 1 ]
+then
+	if [ $filename == 0 ]
+	then
+		if [ $numerr = 1 ]
+		then
+			grep 'N\?TEMP' $TMPFILE | 
+			awk '$10 != "r0" {print $0}' | 
+			wc -l
+		else
+			grep 'N\?TEMP' $TMPFILE | 
+			awk '$10 != "r0" {print $0}'
+		fi
+	else
+		if [ $numerr = 1 ]
+		then
+			grep 'N\?TEMP' $TMPFILE | 
+			awk '$10 != "r0" {print $0}' | 
+			wc -l > $filename
+		else
+			grep 'N\?TEMP' $TMPFILE | 
+			awk '$10 != "r0" {print $0}' > $filename
+		fi
+	fi
+elif [ $stdouts == 1 ]
+then
+	if [ $filename == 0 ]
+	then
+		for file in `grep 'N\?TEMP' $TMPFILE | awk '$10 != "r0" {print $1}'`
+		do
+			vds-format-kickstart -v $workingdir$file
+		done
+	else
+		for file in `grep 'N\?TEMP' $TMPFILE | awk '$10 != "r0" {print $1}'`
+		do
+			vds-format-kickstart -v $workingdir$file >> $filename 2>&1
+		done
+	fi
+elif [ $sum == 1 ]
+then
+	if [ $filename == 0 ]
+	then
+		grep 'N\?TEMP' $TMPFILE | 
+		awk '{sumfile+=$6} END {print sumfile}' 
+	else
+		grep 'N\?TEMP' $TMPFILE | 
+		awk '{sumfile+=$6} END {print sumfile}' > $filename
+	fi
+elif [ $args == 1 ]
+then
+	if [ $filename == 0 ]
+	then
+		grep 'N\?TEMP' $TMPFILE |
+		sed -e 's/.*N\?TEMP[ \t]\(.*\)/\1/g' 
+	else
+		grep 'N\?TEMP' $TMPFILE | 
+		sed -e 's/.*N\?TEMP[ \t]\(.*\)/\1/g' > $filename
+	fi
+else
+	if [ $filename == 0 ]
+	then
+		grep 'N\?TEMP' $TMPFILE | 
+		awk '{print $1"\t"$2" " $3" " $4"\t" $5"\t" $6"\t" $7"\t" $8"\t" $9"\t" $10"\t"}'
+	else
+		grep 'N\?TEMP' $TMPFILE | 
+		awk '{print $1"\t" $2" " $3" " $4"\t" $5"\t" $6"\t" $7"\t" $8"\t" $9"\t" $10"\t"}' > $filename
+	fi
+fi
+
+rm $TMPFILE

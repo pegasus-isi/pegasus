@@ -1,0 +1,7 @@
+#!/usr/bin/env perl
+require 5.003;
+use strict;
+
+chomp($_=uc `uname -s`);
+s{[^[:alnum:]]}{}g;
+print "$_\n";

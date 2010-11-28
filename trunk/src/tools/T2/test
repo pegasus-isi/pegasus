@@ -1,0 +1,12 @@
+# comment 1
+T2.c any
+ gsiftp://griodine.uchicago.edu/home/voeckler/vds/src/tools/T2/T2.c
+  gsiftp://e.cs.uchicago.edu/home/voeckler/src/T2/T2.c
+READXX optional
+ gsiftp://griodine.uchicago.edu/home/voeckler/vds/src/tools/T2/READXX
+ gsiftp://griodine.uchicago.edu/home/voeckler/vds/src/tools/T2/README
+  gsiftp://e.cs.uchicago.edu/home/voeckler/src/T2/README
+T2.1 all
+ gsiftp://griodine.uchicago.edu/home/voeckler/vds/src/tools/T2/T2.1
+  gsiftp://e.cs.uchicago.edu/home/voeckler/src/T2/T2.1
+  gsiftp://e.cs.uchicago.edu/home/voeckler/src/T2/T2.1.1

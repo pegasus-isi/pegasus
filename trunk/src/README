@@ -1,0 +1,35 @@
+THE SOURCE TREE
+===============
+
+1. files
+--------
+
+GTPL		The new Globus Toolkit Public License, which applies to
+		*ALL* our source code in these branches -- unless stated
+		otherwise. Some source files may still cite the (old)
+		LICENSE file. The GTPL supercedes the cited LICENSE file.
+README		This file.
+ShowProperties	A small helper to show specific or all System properties. 
+		The program is used by test0 test, and may be invoked
+		simple as "java ShowProperties" if you CLASSPATH is set
+		correctly.
+VersionTask	is a bridge class between Ant and the PEGASUS. It provides
+		the PEGASUS version number inside Ant.
+
+
+2. directories
+--------------
+
+CVS		Don't touch.
+jarsrc		directory with sources (as available) for the 3rd party
+		jars we use. Many GPL and GLPL programs require us to 
+		provide the sources. 
+org		PEGASUS sources
+tools		C and C++ program that help the PEGASUS working. These
+		programs currently include: keg, kickstart, k.2, T2,
+		condor-log-parser and the various free programs.
+
+3. ignore for now
+=================
+
+exp 		some internal test code, do not even look at it

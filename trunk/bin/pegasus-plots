@@ -1,0 +1,796 @@
+#!/usr/bin/perl -w
+# author Prasanth Thomas
+# propose: Runs visualization tools on pegasus workflow execution
+
+use strict; # Perl pragma to restrict unsafe constructs
+use FileHandle; #  Supply object methods for filehandles
+use Getopt::Long qw(:config no_ignore_case bundling); #  Extended processing of command line options
+use Term::ANSIColor qw(:constants colored); # Color screen output using ANSI escape sequences
+$Term::ANSIColor::AUTORESET = 1;
+use Data::Dumper; # help debug
+use File::Basename;
+use File::Path qw(rmtree);
+use File::Copy;
+use File::Spec;
+use File::Temp qw/ tempfile tempdir  /;
+
+use lib dirname($0);
+use common ':all'; 
+
+# use local modules
+use Work::Common;
+
+my $MAX_LOG_FILE = 1000;
+my $job_state_file_name = 'jobstate.log';
+my $brain_db_file_name ='braindump.txt';
+my @predefined_transformations = 
+   ( 
+     "pegasus::dirmanager",
+     "pegasus::transfer",
+     "pegasus::rc-client" 
+    );
+my ($log_dir) = undef;    
+my($keep) = undef;
+my ($base_submit_dir) = undef;
+my ($base_path_len) =0;
+
+sub clean_exit();
+$SIG{'INT'} =  \&clean_exit; 
+$main::DEBUG =0;
+
+END{
+	remove_logs();
+}
+    
+&main();
+
+
+sub print_usage() {
+	print "\n";
+	print "Usage : pegasus-plots <submit directory> \n";
+	print GREEN "Optional :\n";
+	print "\t -o|--output: write outputs in given directory\n";
+	print "\t -m|--monitord: invokes pegasus-monitord before running pegasus-plots\n";
+	print "\t -G|--gnatt-chart-title: title of the workflow execution Gnatt chart\n";
+	print "\t -H|--host-chart-title: title of the host over time chart \n";
+	print "\t -S|--use-site: 0: use gatekeeper host (default)\n                        1: use site handle \n                        2: use reported workernode handle\n";
+	print "\t -K|--kickstart: parallelize host over time chart with kickstart intervals, default is Condor\n";
+	print "\t -O|--omit: omit the gridstart gray boxes from the host over time chart, default draw\n";
+	print "\t -k|--keep: keeps the logs of the pegasus-plots run  \n";
+	print "\t -v|--verbose: enter verbose mode \n";
+	print "\t -h|--help: display this help message\n";
+}
+
+sub remove_logs(){
+# purpose : removes logs if keep option is not set.
+	if($log_dir){
+		if(!$keep){
+			rmtree($log_dir) or print "Unable to delete $log_dir . $! \n";
+		}else{
+			print "Logs are stored at $log_dir \n";
+		}
+	}
+}
+
+sub clean_exit(){
+# purpose : makes a clean exit in case of interrupt event.
+	exit(1);
+}
+
+sub main(){
+	my ($help,$monitord,$kickstart,$omit)=(undef,undef,undef,undef);
+	my ($output_dir,$show_job_title ,$host_show_run_title ,$use_site) = (undef,undef,undef,undef);
+	
+	if(!GetOptions(
+		"output|o=s"=>\$output_dir,
+		"gnatt-chart-title|G=s"=>\$show_job_title,
+		"host-chart-title|H=s"=>\$host_show_run_title,
+		"use-site|S=s"=>\$use_site,
+		"kickstart|K"=>\$kickstart,
+		"monitord|m"=>\$monitord,
+		"omit|M"=>\$omit,
+		"keep|k"=>\$keep,
+		"verbose|v" => \$main::DEBUG,
+		"help|h"=>\$help)){
+			 print "Unable to parse the options. $! \n";
+			 print_usage();
+			 exit 1;
+		 }
+		
+		
+	if ($help){
+		print_usage();
+		exit 0;
+	}
+	if(!$ARGV[0]){
+		print "You need to provide submit directory. \n";
+		print_usage();
+		exit 1;
+	}
+	my ($submit_dir) = $ARGV[0];
+	#sanity check first                                                                                                                            
+	if( !defined $ENV{PEGASUS_HOME} ){
+	    print STDERR "ERROR: PEGASUS_HOME is not set. Please source the setup-with-pegasus script.\n";
+	    exit 1;
+	}
+	if($output_dir){
+		$output_dir = File::Spec->rel2abs($output_dir);
+	}
+	($submit_dir) = File::Spec->rel2abs($submit_dir);
+	$base_submit_dir = $submit_dir;
+	my (%config) = slurp_braindb( $submit_dir ) or die "ERROR: open braindump.txt: $!\n";
+	# Gets the new and old submit directory value
+	my ($bd_submit_dir,$bd_run_dir) = parse_run_dir_db_file(File::Spec->catfile( $submit_dir, $brain_db_file_name ));
+	if(!$bd_submit_dir){
+			$bd_submit_dir = $bd_run_dir;
+			if(!$bd_submit_dir){
+				print STDERR "ERROR: Unable to find the submit directory in the braindump.txt file.\n";
+				exit 1;
+			}
+	}
+	$base_path_len = length($bd_submit_dir);
+	my($dag_file_name , $dax_file_path) =  ($config{'dag'} , $config{'dax'});
+	
+	if(!$dag_file_name){
+		print STDERR "ERROR: Unable to find the dag file name in the braindump.txt file.\n";
+		exit 1;
+	}
+	
+	if(!$dax_file_path){
+		print STDERR "ERROR: Unable to find the dax file path in the braindump.txt file.\n";
+		exit 1;
+	}
+	
+	
+	$log_dir = tempdir('pegasus_plots_XXXXXX' , TMPDIR=> 1);
+	if($monitord){
+		my($jsd_file_path) =  ($config{'jsd'});
+		if(!$jsd_file_path){
+			print STDERR "ERROR: Unable to find the jobstate file path in the braindump.txt file.\n";
+			exit 1;
+		}
+		my $job_state_backup = undef;
+		my ($job_state_base_file)= File::Spec->catfile( $submit_dir, $job_state_file_name);
+		if(-e "$job_state_base_file"){
+			# Invoke only if jobstate.log is there
+			$job_state_backup = setup_monitord($job_state_base_file);
+		}
+		my($dagman_out_file) = File::Spec->catfile( $submit_dir ,$dag_file_name .".dagman.out");
+		my($monitord_status, $monitord_summary_msg)  = invoke_monitord($dagman_out_file,rlb($jsd_file_path) );
+		if($monitord_status !=0 ){
+			if($job_state_backup){
+			# Revert back the jobstate file
+				if(!move($job_state_backup ,$job_state_base_file)) {
+					print STDERR "ERROR : Failed to create a revert back the jobstate file . $! \n";
+				}
+			}
+			
+			exit 1;
+		}
+	}
+	
+	if(!$output_dir){
+		$output_dir =  File::Spec->catdir($submit_dir,"graph");
+		if (-d "$output_dir") {
+			if ($main::DEBUG){
+				print STDERR "WARNING: Output directory $output_dir exists. Overwriting the contents ....\n";
+			}
+			rmtree($output_dir) or die "Unable to delete $output_dir . $! \n";
+		}
+		mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
+	}else{
+		if (!(-d "$output_dir")) {
+			if ($main::DEBUG){
+				print STDERR "WARNING: Output directory $output_dir doesn't exists. Creating the directory ....\n";
+			}
+			mkdir ($output_dir) or die "Unable to create $output_dir . $! \n";
+		}
+	}
+	
+	
+	
+	my($dag_file_path) =  File::Spec->catfile("$submit_dir","$dag_file_name");
+	my ($color_file_path) = &generate_compute_job_color($dag_file_path);
+	my($show_job_status , $show_job_status_msg ,$show_job_summary_msg);
+	my($show_run_status , $show_run_status_msg ,$show_run_summary_msg);
+	if(find_exec('ploticus') || find_exec('pl')){
+		# Executing show job command
+		($show_job_status ,$show_job_summary_msg ) =run_show_job($dag_file_path ,$output_dir, $color_file_path,$show_job_title);
+		# Executing show run command
+		($show_run_status ,$show_run_summary_msg) =run_show_run($dag_file_path ,$output_dir, $host_show_run_title ,$kickstart,$use_site,$omit);
+	}else{
+		if ($main::DEBUG){
+			print STDERR  "ERROR: Application \'ploticus\' not available. Unable to create workflow execution Gantt chart and job over time chart\n";
+		}
+		$show_job_summary_msg = "ERROR: Application \'ploticus\' not available. Unable to create workflow execution Gantt chart\n";
+		$show_run_summary_msg =  "ERROR: Application \'ploticus\' not available. Unable to create host over time chart\n";
+	}
+	## Executing dag2dot command
+	my($dag2dot_id_status  , $dag2dot_summary_msg) =run_dag2dot($dag_file_path ,$output_dir  );
+	## Executing dax2dot command
+	my($dax2dot_id_status , $dax2dot_summary_msg);
+	if (-e $dax_file_path){
+		($dax2dot_id_status , $dax2dot_summary_msg) =run_dax2dot($dax_file_path ,$output_dir  );
+	}else{
+		 $dax2dot_summary_msg="\nERROR: Unable to find the dax file.$dax_file_path \n";
+	}
+	
+	
+	print "\n\n******************************************** SUMMARY ********************************************\n";
+	
+	print $show_job_summary_msg.$show_run_summary_msg.$dag2dot_summary_msg.$dax2dot_summary_msg;
+	
+	print "**************************************************************************************************\n";
+	exit 0;
+}
+
+sub parse_run_dir_db_file($){
+	# purpose : parses the brain dump file to find the  'run'(old format) or 'submit_dir' config value in the brain dump file.
+	#returns : submit,run directory if it exists, undef otherwise
+	my ($braindump_file)=(@_);
+	my ($run_dir,$sub_dir) = (undef,undef);
+	open CONFIG, "$braindump_file" or die "Unable to open brain dump file: $braindump_file . $! \n";
+	for (<CONFIG>) {
+    	chomp;
+    	s/\#.*//;
+    	s/^\s+//;
+    	s/\s+$//;
+    	next unless length;
+    	my ($var, $val) = split(/\s/, $_, 2);
+    	# new format
+		if ($var eq 'submit_dir'){
+    		$sub_dir =  $val;
+		}
+    	# old format
+    	if ($var eq 'run'){
+    		$run_dir =  $val;
+		}
+	}	
+	close(CONFIG);
+	return ($sub_dir ,$run_dir);
+}
+
+sub rlb($){
+	# purpose : changes the path relative to the base directory
+	# returns : path relative to the base directory
+	my( $file_path) =@_;
+	chomp($file_path);
+    $file_path =~ s/^\s+//;
+	$file_path =~ s/\s+$//;
+	my $file_relative_path = substr($file_path ,$base_path_len );
+	# Removing '/' from the path
+	$file_relative_path =~ s/^\///;
+	my $relative_to_base_path =  File::Spec->catfile("$base_submit_dir" , "$file_relative_path" );
+	return $relative_to_base_path;
+}
+
+
+sub invoke_monitord($$){
+# purpose : executing pegasus-monitord command
+# returns : status code and status message
+
+	my($dagman_out_file,$job_state_file) = @_;
+	my(@args);
+	print STDOUT "******  pegasus-monitord  ***** \n";
+	my $summary_msg;
+	# Adding arguments
+	push(@args ,"-r "); # add replay option
+	push(@args ,"-j ".$job_state_file); # adding job state file 
+	push(@args ,"$dagman_out_file"); #/adding show-jobnames option
+	
+	# create pegasus-monitord command
+	my (@pegasus_monitord_directory_path) = ("$ENV{PEGASUS_HOME}","bin");
+	my ($pegasus_monitord_path) =  File::Spec->catfile( @pegasus_monitord_directory_path, 'pegasus-monitord');
+	my ($pegasus_monitord_command) = "$pegasus_monitord_path ".join(" ",@args);
+	
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n$pegasus_monitord_command \n";
+	}
+	my($status,$exec_msg) = execute_command($pegasus_monitord_command, 'pegasus-monitord');
+	if($status == 0  ){
+		print STDOUT "****** Finished executing pegasus-monitord  ***** \n";
+		$summary_msg = "Finished executing pegasus-monitord\n";		
+	}else{
+		print STDERR "ERROR : Failed to execute pegasus-monitord command . $exec_msg\n";
+		$summary_msg ="ERROR : Failed to execute pegasus-monitord  . $exec_msg\n";
+	}
+	return ($status, $summary_msg);
+	
+}
+
+
+sub setup_monitord($){
+	#purpose : makes set up for pegasus-monitord command, by creating a backup of jobstate.log file
+	#returns : job state backup file path
+	my ($job_state_base_file) =@_;
+	my ($count) =0;
+	my ($job_state_tmp_file);
+	while($count < $MAX_LOG_FILE){
+		if($count <10){
+			$job_state_tmp_file = $job_state_base_file.".00".$count;
+		}elsif($count <100){
+			$job_state_tmp_file = $job_state_base_file.".0".$count;
+		}else{
+			$job_state_tmp_file = $job_state_base_file.".".$count;
+		}
+		if(-e "$job_state_tmp_file"){
+			$count++;
+		}else{
+			if(!move($job_state_base_file,$job_state_tmp_file)) {
+				print STDERR "ERROR : Failed to create a backup of jobstate file . $! \n";
+				exit 1;
+			}
+			return $job_state_tmp_file;
+		}	
+	}
+	print STDERR "ERROR : Failed to create a backup of jobstate file . Exceeded the rotation limit. \n";
+	exit 1;
+}
+
+
+sub run_show_job($$$$){
+# purpose : executing show-job command
+# returns : status code and status message
+	my(  $dag_file_path , $output_dir ,$color_file,$title)=(@_);
+	my(@args);
+	print STDOUT"******  show-job *****  \n";	
+	my $summary_msg;
+	#Adding arguments
+	push(@args ,"--color-file ".$color_file); # adding color option
+	push(@args ,"--show-jobnames"); #/adding show-jobnames option
+	if($title){
+		push(@args ,"--title '".$title."'"); # adding graph title	
+	}
+	if($keep){
+	    #pass the keep option forward to show-job
+	    push(@args ,"--keep"); 
+	}
+	push(@args, $dag_file_path); # adding dag file path
+	
+	# creating show job command 
+	my (@show_job_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","visualize");
+	my ($show_job_path) =  File::Spec->catfile( @show_job_directory_path, 'show-job');
+	my ($show_job_command) = "$show_job_path ".join(" ",@args);
+	
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $show_job_command \n";
+	}
+	print STDOUT "Please wait, this may take a few minutes ...\n";
+	my($status,$exec_msg) = execute_command($show_job_command,'show-job');
+	if($status == 0  ){
+		print STDOUT "****** Finished executing show-job  ***** \n";		
+	}else{
+		print STDERR "ERROR : Failed to execute show-job command . $exec_msg\n";
+		$summary_msg = "ERROR : Failed to create workflow execution Gantt chart  . $exec_msg\n";
+		return ($status , $summary_msg);
+	}
+	
+	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+    $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $dagbase =~ s/-\d+$//;
+    my($eps_file_name ,$png_file_name) =("$dagbase"."-2.eps" ,"$dagbase"."-2.png" );
+    my($eps_file_name_xtra ,$png_file_name_xtra) =("$dagbase"."-1.eps" ,"$dagbase"."-1.png" );
+    my($eps_file ,$png_file) = (File::Spec->catfile("$submit_dir",$eps_file_name) ,File::Spec->catfile("$submit_dir",$png_file_name));
+    my($eps_file_xtra ,$png_file_xtra) = (File::Spec->catfile("$submit_dir",$eps_file_name_xtra) ,File::Spec->catfile("$submit_dir",$png_file_name_xtra));
+    
+    if (-e $eps_file_xtra){
+    	if(!unlink($eps_file_xtra)){
+    		if ($main::DEBUG){
+				print STDERR  "ERROR : Failed to delete the eps file.$eps_file_xtra $! \n";
+			}
+    	}
+    }
+    
+    if (-e $png_file_xtra){
+    	if(!unlink($png_file_xtra)){
+    		if ($main::DEBUG){
+				print STDERR  "ERROR : Failed to delete the png file.$png_file_xtra $! \n";
+			}
+    	}
+    }
+    
+	
+	#Moving the output file to <submit dir>/graph directory
+	if(!move($eps_file,$output_dir)){
+		if ($main::DEBUG){
+			print STDERR  "ERROR : Failed to move the eps file to $output_dir. $! \n";
+		}
+		$summary_msg = "ERROR : Failed to move the eps file to $output_dir. $! \n";
+		return ($status,$summary_msg);
+	}
+	my ($eps_out_path , $png_out_path) = (File::Spec->catfile( $output_dir, $eps_file_name) , File::Spec->catfile( $output_dir, $png_file_name));
+	if(find_exec('convert')){
+		if(!move($png_file,$output_dir)) {
+			if ($main::DEBUG){
+				print STDERR "ERROR : Failed to move the png file to $output_dir. $! \n";
+			}
+			$summary_msg = "ERROR : Failed to move the png file to $output_dir. $! \n";
+			return ($status,$summary_msg);
+		}
+	}else{
+			if ($main::DEBUG){	
+				print STDERR "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The workflow execution Gantt chart is created at :-\neps format :- $eps_out_path \n************ \n";
+			}
+			$summary_msg = "Application \'convert\' not available. Only eps file will be generated.\n.The workflow execution Gantt chart is created at :-\neps format :-$eps_out_path \n";
+			return ($status,$summary_msg);
+	}
+	if ($main::DEBUG){
+		print STDOUT "The workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n************ \n";
+	}
+	$summary_msg = "The workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n";
+	return ($status,$summary_msg);
+	
+}
+
+sub run_show_run($$$$$$){
+# purpose : executing show -run command
+# returns : status code and status message
+	my( $dag_file_path , $output_dir ,$host_title,$kickstart,$use_site,$omit)=(@_);
+	my(@args);
+	print STDOUT "******  show-run *****  \n";
+	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+	my $summary_msg;
+	
+    $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $dagbase =~ s/-\d+$//;
+    my($job_eps_file_name ,$job_png_file_name ,$host_eps_file_name ,$host_png_file_name) =("$dagbase-job".".eps" ,"$dagbase-job".".png" ,"$dagbase-host".".eps" ,"$dagbase-host".".png" );
+    my($job_eps_file ,$job_png_file ,$host_eps_file,$host_png_file) = (File::Spec->catfile("$output_dir",$job_eps_file_name) ,File::Spec->catfile("$output_dir",$job_png_file_name) ,File::Spec->catfile("$output_dir",$host_eps_file_name),File::Spec->catfile("$output_dir",$host_png_file_name));
+    
+    
+	#Adding arguments
+	push(@args ,"-o ".$job_eps_file); # adding job eps element
+	push(@args ,"-O ".$host_eps_file); #/adding host eps element
+	if($omit){
+		push(@args ,"-g "."0x02"); # omit the gridstart gray boxes in the output
+	}
+	if($use_site){
+		push(@args ,"-S ".$use_site); # omit the gridstart gray boxes in the output
+	}
+	if($host_title){
+		push(@args ,"-T '".$host_title."'"); # adding graph title	
+	}
+	if($kickstart){
+		push(@args,"-K"); # parallelize the host over time chart with kickstart intervals
+	}
+	push(@args, "-D ".$dag_file_path); # adding dag file path
+	push(@args,"-p"); # setting to do post ploticus run
+	push(@args,"-P"); # setting the format to png  
+	
+	# creating show id command 
+	my (@show_run_directory_path) = ("$ENV{PEGASUS_HOME}","libexec" ,"visualize");
+	my ($show_run_path) =  File::Spec->catfile( @show_run_directory_path, 'show-run');
+	my ($show_run_command) = "$show_run_path ".join(" ", @args);
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $show_run_command \n";
+	}
+	print STDOUT "Please wait, this may take a few minutes ...\n";
+	my($status,$exec_msg) = execute_command($show_run_command,'show-run');
+	if($status == 0  ){
+		print STDOUT "****** Finished executing show-run  ***** \n";
+		if (!unlink($job_eps_file)) {
+				if ($main::DEBUG){
+	    			print STDERR "WARNING : Failed to remove file . $job_eps_file\n";
+	    		}
+		}
+		#Creating png fromat
+		my ($convert_path) = find_exec('convert');
+		if($convert_path){
+			if (!unlink($job_png_file)) {
+				if ($main::DEBUG){
+	    			print STDERR "WARNING : Failed to remove file . $job_eps_file\n";
+	    		}
+			}
+			if ($main::DEBUG){ 	
+				print STDOUT "The host over time chart is created at -\npng format :-$host_png_file \neps format :-  $host_eps_file.  \n************ \n";
+			}
+			$summary_msg = "\nThe host over time chart is created at -\npng format :-$host_png_file \neps format :-$host_eps_file\n";
+		}else{
+			if ($main::DEBUG){
+				print STDERR "WARNING: Application \'convert\' not available. Only eps file will be generated.\n.The host over time chart is created at::-\neps format :- $host_eps_file \n************ \n";
+			}
+			$summary_msg = "\nApplication \'convert\' not available. Only eps file will be generated.\n.The host over time chart is created at:-\neps format :-$host_eps_file \n";	
+		}
+	}else{
+		if ($main::DEBUG){
+			print STDERR "ERROR:Failed to execute show-run command . $exec_msg\n";
+		}
+		$summary_msg = "\nERROR:Failed to create host over time chart with job type classification. $exec_msg\n";
+	}
+	return ($status ,$summary_msg);
+	
+}
+
+sub run_dag2dot($$){
+# purpose : executing dag2dot command
+# returns : status code and status message
+    my ($dag_file_path,  $output_dir )=(@_);
+    my (@args);
+	print STDOUT "******  dag2dot  ***** \n";
+	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+	my $summary_msg;
+	
+    $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $dagbase =~ s/-\d+$//;    
+    my ($dot_img_file_name) =("$dagbase"."-dag.dot" );
+	my ($dot_img_file ) =File::Spec->catfile("$output_dir", $dot_img_file_name);	
+	
+	#Adding arguments 
+	push(@args , "--output ".$dot_img_file);
+	push(@args, $dag_file_path); # adding dag file path
+	
+	# creating dag2dot command 
+	my (@dag2dot_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","visualize");
+	my ($dag2dot_path) =  File::Spec->catfile( @dag2dot_directory_path, 'dag2dot');
+	my ($dag2dot_command) = "$dag2dot_path ".join(" ",@args);
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $dag2dot_command \n";
+	}
+	print STDOUT "Please wait, this may take a few minutes ...\n";
+	my($status ,$exec_msg) = execute_command($dag2dot_command ,'dag2dot');
+	if($status == 0  ){
+		print STDOUT "****** Finished executing dag2dot ***** \n";
+		if ($main::DEBUG){
+			print STDOUT "dot file corresponding to the dag is created at $dot_img_file \n************\n";
+		}
+	}else{
+		print STDERR "ERROR : Failed to execute dag2dot command. $exec_msg \n";
+		$summary_msg = "ERROR : Failed to create dot file corresponding to the dag file. $exec_msg \n";
+		return ($status  ,$summary_msg);
+	}
+	
+	my ($dot_png_command_path) = find_exec('dot');
+	
+	if($dot_png_command_path){
+		print STDOUT "******  dot  ***** \n";
+		my ($dot_png_img_file_name) =("$dagbase"."-dag.png" );
+		my ($dot_png_img_file ) =File::Spec->catfile("$output_dir", $dot_png_img_file_name);
+		my (@dot_png_args);
+		
+		#Adding arguments 
+		push(@dot_png_args , "-Tpng"); # adding output file path
+		push(@dot_png_args , "-o ".$dot_png_img_file); # adding output file path
+		push(@dot_png_args, $dot_img_file); # adding dot file path
+		
+		# creating dag2png command 
+		my ($dag2png_command) = "$dot_png_command_path ".join(" ",@dot_png_args);
+		if ($main::DEBUG){
+			print STDOUT "Executing command :-\n $dag2png_command \n";
+		}
+		my($dot_png_status ,$dot_png_exec_msg) = execute_command($dag2png_command ,'dag_dot2png');
+		if($dot_png_status == 0  ){
+			print STDOUT "****** Finished executing dot2png ***** \n";
+			if ($main::DEBUG){
+				print STDOUT "PNG file corresponding to the dag is created at $dot_png_img_file \n************\n";
+			}
+			$summary_msg = "\nPNG file corresponding to the dag is created at: \n$dot_png_img_file \n";
+		}else{
+			print STDERR "WARNING : Failed to execute dot2png command. $dot_png_exec_msg \n";
+			$summary_msg = "\nWARNING : Failed to create PNG file. $dot_png_exec_msg .dot file corresponding to the dag is created at: \n$dot_img_file "
+		}
+	}else{
+		if ($main::DEBUG){
+			print STDERR "WARNING: Application \'dot\' not available. PNG file will not be generated.\n************ \n";
+		}
+		$summary_msg = "\nApplication \'dot\' not available. PNG file will not be generated.dot file corresponding to the dag is created at: \n$dot_img_file \n";
+	}
+	return ($status ,$summary_msg);
+}
+
+
+sub run_dax2dot($$){
+# purpose : executing dax2dot command
+# returns : status code and status message
+    my ($dax_file_path,  $output_dir)=(@_);
+    my (@args);
+	print STDOUT "******  dax2dot  ***** \n";
+	my ($daxbase,$submit_dir ,$type ) = fileparse( $dax_file_path  ,qr{\..*});
+	my $summary_msg;
+	
+    $daxbase =~ s/(?:\.(?:rescue|dag))+$//;
+    $daxbase =~ s/-\d+$//;
+    my ($dot_img_file_name) =("$daxbase"."-dax.dot" );
+	my ($dot_img_file ) =File::Spec->catfile("$output_dir", $dot_img_file_name);	
+	
+	#Adding arguments
+	push(@args , "--output ".$dot_img_file);
+	push(@args, $dax_file_path); # adding dax file path
+	#create dax2dot command
+	my (@dax2dot_directory_path) = ("$ENV{PEGASUS_HOME}","libexec","visualize");
+	my ($dax2dot_path) =  File::Spec->catfile( @dax2dot_directory_path, 'dag2dot');
+	my ($dax2dot_command) = "$dax2dot_path ".join(" ",@args);
+	
+	if ($main::DEBUG){
+		print STDOUT "Executing command :-\n $dax2dot_command \n";
+	}
+	print STDOUT "Please wait, this may take a few minutes ...\n";
+	my($status ,$exec_msg) = execute_command($dax2dot_command,'dax2dot');
+	if($status == 0  ){
+		print STDOUT "****** Finished executing dax2dot ***** \n";
+		if ($main::DEBUG){
+			print STDOUT "dot file corresponding to the dax is created at $dot_img_file \n************ \n";
+		}
+	}else{
+		print STDERR "ERROR : Failed to execute dax2dot. $exec_msg \n";
+		$summary_msg = "ERROR : Failed to create dot file corresponding to the dax file. $exec_msg \n";
+		return ($status ,$summary_msg);
+	}
+	
+	my ($dot_png_command_path) = find_exec('dot');
+	
+	if($dot_png_command_path){
+		print STDOUT "******  dot  ***** \n";
+		my ($dot_png_img_file_name) =("$daxbase"."-dax.png" );
+		my ($dot_png_img_file ) =File::Spec->catfile("$output_dir", $dot_png_img_file_name);
+		my (@dot_png_args);
+		
+		#Adding arguments 
+		push(@dot_png_args , "-Tpng"); # adding output file path
+		push(@dot_png_args , "-o ".$dot_png_img_file); # adding output file path
+		push(@dot_png_args, $dot_img_file); # adding dot file path
+		
+		# creating dag2png command 
+		my ($dag2png_command) = "$dot_png_command_path ".join(" ",@dot_png_args);
+		if ($main::DEBUG){
+			print STDOUT "Executing command :-\n $dag2png_command \n";
+		}
+		my($dot_png_status ,$dot_png_exec_msg) = execute_command($dag2png_command,'dax_dot2png');
+		
+		if($dot_png_status == 0  ){
+			print STDOUT "****** Finished executing dot2png ***** \n";
+			if ($main::DEBUG){
+				print STDOUT "PNG file corresponding to the dax is created at $dot_png_img_file \n************\n";
+			}
+			$summary_msg = "\nPNG file corresponding to the dax is created at: \n$dot_png_img_file \n";
+		}else{
+			print STDERR "WARNING : Failed to execute dot2png command. $dot_png_exec_msg \n";
+			$summary_msg ="\nWARNING : Failed to create PNG file. $dot_png_exec_msg .dot file corresponding to the dax is created at: \n$dot_img_file \n";
+		}
+	}else{
+		if ($main::DEBUG){
+			print STDERR "WARNING: Application \'dot\' not available. PNG file will not be generated.\n************ \n";
+		}
+		$summary_msg = "\nApplication \'dot\' not available. PNG file will not be generated.dot file corresponding to the dax is created at: \n$dot_img_file \n";
+	}
+	return ($status ,$summary_msg);
+}
+
+
+
+
+sub generate_compute_job_color($){
+	# purpose : generates color code for compute job
+	# returns : color configuration file
+	my($dag_file_path) =(@_);
+	my(%job_submit_file_hash); # stores the job name and corresponding submit file
+	
+	# Reads the dag file to get the JOB names
+	open CONFIG, "$dag_file_path" or die "Unable to open dag file: $dag_file_path . $! \n";
+	while (my $line = <CONFIG>) {
+    	chomp $line;
+    	$line =~ s/^\s+//; 
+    	$line =~ s/^\s+//;
+    	if( $line =~m/^JOB\s.*/i ){
+    		my @values = split(/\s+/, $line);
+  			$job_submit_file_hash{$values[1]} =$values[2];
+    	}
+    }
+    my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+    my ($submit_file_path,$wf_transformation_value);
+    my($key, $value);
+    my(%transformations_count_hash); # stores the transformation name and count
+    
+    # Reads the corresponding .sub file and gets the transformation value 
+    while (($key, $value) = each(%job_submit_file_hash)){
+	     $submit_file_path = File::Spec->catfile($submit_dir,$value);
+	     $wf_transformation_value = &parse_submit_file($submit_file_path);
+	     if($wf_transformation_value){
+	     	if(defined($transformations_count_hash{$wf_transformation_value})){
+	     		$transformations_count_hash{$wf_transformation_value} = ++($transformations_count_hash{$wf_transformation_value});
+	     	}else{
+	     		$transformations_count_hash{$wf_transformation_value} = 1;
+	     	}
+	     }
+	}
+	my ($color);
+	# Assign color to each transformation
+	my ($color_file_path) = File::Spec->catfile($log_dir,'color.in');
+	open COLORS ,">$color_file_path";
+	while (($key, $value) = each(%transformations_count_hash)){
+		 $color = generateColorCode();
+		 $key =~s/^"(.*)"$/$1/;
+		 if(!checkIfPredefinedTransformation($key)){
+		 	print COLORS "$key  $color \n";
+		 }
+    }
+    close(COLORS);
+    my ($number_of_elements) = scalar(keys %transformations_count_hash);
+    return $color_file_path;
+}
+
+
+sub checkIfPredefinedTransformation($){
+	#purpose : check if it is a predefined transformation
+	#returns : true , it is a predefined transfromation, false otherwise	
+	my ($transformation) =(@_);
+	my ($predef_trans_count) = scalar(@predefined_transformations);
+	my ($i);
+	for ($i = 0; $i < $predef_trans_count; $i++) {
+		if($transformation eq $predefined_transformations[$i]){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub parse_submit_file($){
+	# purpose : parses the submit file to find the '+pegasus_wf_xformation' configuration value.
+	# returns : '+pegasus_wf_xformation' configuration value if present , undef otherwise
+	my ($submit_file)=(@_);
+	if(open CONFIG, "$submit_file"){ 
+		for (<CONFIG>) {
+	    	chomp;
+	    	s/\#.*//;
+	    	s/^\s+//;
+	    	s/\s+$//;
+	    	next unless length;
+	    	my ($var, $val) = split(/\s*=\s*/, $_, 2);
+	    	if ($var eq '+pegasus_wf_xformation'){
+	    		close(CONFIG);
+				return $val;
+			}
+	    	
+		}
+		close(CONFIG);
+		if ($main::DEBUG){
+			print STDERR "WARNING: Unable to find '+pegasus_wf_xformation' configuration value in the submit file $submit_file.\n";
+		}
+		return undef;
+	}else{
+		if ($main::DEBUG){
+			print STDERR "WARNING: Unable to open submit file: $submit_file . $! \n";
+		}
+		return undef;
+	}
+	
+}
+
+
+sub  execute_command($$){
+	# purpose : executes command and returns the status and error message
+	# returns : status and error message
+	my ($command ,$prefix)=(@_);
+	my ($error_msg) = (undef);
+	my ($out_fh,$out_fn) = tempfile($prefix."_XXXX",SUFFIX => '.out',DIR =>$log_dir);
+	my ($err_fh,$err_fn) = tempfile($prefix."_XXXX",SUFFIX => '.err',DIR =>$log_dir);
+	close($out_fh);
+	close($err_fh);
+	my($ret) = system("$command  1>$out_fn 2>$err_fn");
+	if($ret != 0){
+		$error_msg = $!;
+	}
+	return ($ret , $error_msg);
+}
+
+sub generateColorCode(){
+#purpose : generates random color code which is used by ploticus
+#returns : color code used by ploticus
+	my ($rand,$i ,$color);
+	my @hex;
+
+    for ($i = 0; $i < 3; $i++) {
+    	$rand = rand(255);
+    	$hex[$i] = sprintf ("%x", $rand);
+	    if ($rand < 9) {
+	      $hex[$i] = "0" . $hex[$i];
+	    }
+	    if ($rand > 9 && $rand < 16) {
+	      $hex[$i] = "0" . $hex[$i];
+	    }
+  	}
+	$color = "x" . $hex[0] . $hex[1] . $hex[2];
+	return $color;
+
+}
+
+
+

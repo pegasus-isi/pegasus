@@ -1,0 +1,22 @@
+site local {
+  lrc "rlsn://smarty.isi.edu"
+  gridftp "gsiftp://smarty.isi.edu/smarty/storage" "4.0.4"
+  gridlaunch "/smarty/software/pegasus/bin/kickstart"
+  workdir "/smarty/scratch/"
+  universe vanilla "smarty.isi.edu/jobmanager-fork"  "4.0.4"
+  universe transfer "smarty.isi.edu/jobmanager-fork"  "4.0.4"
+  profile pegasus "group" "local"
+  profile env "PEGASUS_HOME" "/usr/local/pegasus"
+  profile env "JAVA_HOME" "/usr/local/java"
+  profile env "GLOBUS_LOCATION" "/usr/local/globus"
+  profile env "LD_LIBRARY_PATH" "/usr/local/globus/lib"
+}
+
+site isi {
+  lrc "rlsn://smarty.isi.edu"
+  gridftp "gsiftp://skynet-data.isi.edu/exports/storage01" "4.0.4"
+  gridlaunch "/nfs/software/pegasus/default/bin/kickstart"
+  workdir "/nfs/scratch01"
+  universe vanilla "smarty.isi.edu/jobmanager-pbs"  "4.0.4"
+  universe transfer "smarty.isi.edu/jobmanager-pbs"  "4.0.4"
+}

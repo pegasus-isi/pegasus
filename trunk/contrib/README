@@ -1,0 +1,16 @@
+graph-build: builds a graph image of an ant build file.
+
+exitcode: This contains two scripts, "fixdag" to insert post-processing
+  scripts into a gencdag-generated DAG, and "parse-exitcode" to process
+  the kickstart results to determine job failure. This is an old version!
+
+showlog: help display results from a DAG run
+
+summary: summarizes a Condor DAGMan log file (or multiple ones), and
+  print some elementary statistics about job and site performance.
+
+gstar: A set of 'UNIX' like utilities for the Grid/Grid3.
+
+qq: A simple script to give a more comprehensive output from condor_q. 
+  This one is useful if you have grid jobs, but does not hurt with 
+  plain Condor jobs, either. 

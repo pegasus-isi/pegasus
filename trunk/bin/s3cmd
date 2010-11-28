@@ -1,0 +1,1162 @@
+#!/usr/bin/env python
+
+## Amazon S3 manager
+## Author: Michal Ludvig <michal@logix.cz>
+##         http://www.logix.cz/michal
+## License: GPL Version 2
+
+import sys
+import logging
+import time
+import os
+import re
+import errno
+import pwd, grp
+import glob
+import traceback
+import codecs
+import shutil
+
+from copy import copy
+from optparse import OptionParser, Option, OptionValueError, IndentedHelpFormatter
+from logging import debug, info, warning, error
+from distutils.spawn import find_executable
+from uuid import uuid4
+
+## Output native on TTY, UTF-8 otherwise (redirects)
+#_stdout = sys.stdout.isatty() and sys.stdout or codecs.getwriter("utf-8")(sys.stdout)
+#_stderr = sys.stderr.isatty() and sys.stderr or codecs.getwriter("utf-8")(sys.stderr)
+## Output UTF-8 in all cases
+_stdout = codecs.getwriter("utf-8")(sys.stdout)
+_stderr = codecs.getwriter("utf-8")(sys.stderr)
+## Leave it to the terminal
+#_stdout = sys.stdout
+#_stderr = sys.stderr
+
+def output(message):
+	_stdout.write(message + "\n")
+
+def check_args_type(args, type, verbose_type):
+	for arg in args:
+		if S3Uri(arg).type != type:
+			raise ParameterError("Expecting %s instead of '%s'" % (verbose_type, arg))
+
+def cmd_du(args):
+	s3 = S3(Config())
+	if len(args) > 0:
+		uri = S3Uri(args[0])
+		if uri.type == "s3" and uri.has_bucket():
+			subcmd_bucket_usage(s3, uri)
+			return
+	subcmd_bucket_usage_all(s3)
+
+def subcmd_bucket_usage_all(s3):
+	response = s3.list_all_buckets()
+
+	buckets_size = 0
+	for bucket in response["list"]:
+		size = subcmd_bucket_usage(s3, S3Uri("s3://" + bucket["Name"]))
+		if size != None:
+			buckets_size += size
+	total_size, size_coeff = formatSize(buckets_size, Config().human_readable_sizes)
+	total_size_str = str(total_size) + size_coeff 
+	output("".rjust(8, "-"))
+	output("%s Total" % (total_size_str.ljust(8)))
+
+def subcmd_bucket_usage(s3, uri):
+	bucket = uri.bucket()
+	object = uri.object()
+
+	if object.endswith('*'):
+		object = object[:-1]
+	try:
+		response = s3.bucket_list(bucket, prefix = object)
+	except S3Error, e:
+		if S3.codes.has_key(e.Code):
+			error(S3.codes[e.Code] % bucket)
+			return
+		else:
+			raise
+	bucket_size = 0
+	for object in response["list"]:
+		size, size_coeff = formatSize(object["Size"], False)
+		bucket_size += size
+	total_size, size_coeff = formatSize(bucket_size, Config().human_readable_sizes)
+	total_size_str = str(total_size) + size_coeff 
+	output("%s %s" % (total_size_str.ljust(8), uri))
+	return bucket_size
+
+def cmd_ls(args):
+	s3 = S3(Config())
+	if len(args) > 0:
+		uri = S3Uri(args[0])
+		if uri.type == "s3" and uri.has_bucket():
+			subcmd_bucket_list(s3, uri)
+			return
+	subcmd_buckets_list_all(s3)
+
+def cmd_buckets_list_all_all(args):
+	s3 = S3(Config())
+
+	response = s3.list_all_buckets()
+
+	for bucket in response["list"]:
+		subcmd_bucket_list(s3, S3Uri("s3://" + bucket["Name"]))
+		output("")
+
+
+def subcmd_buckets_list_all(s3):
+	response = s3.list_all_buckets()
+	for bucket in response["list"]:
+		output("%s  s3://%s" % (
+			formatDateTime(bucket["CreationDate"]),
+			bucket["Name"],
+			))
+
+def subcmd_bucket_list(s3, uri):
+	bucket = uri.bucket()
+	object = uri.object()
+
+	output("Bucket 's3://%s':" % bucket)
+	if object.endswith('*'):
+		object = object[:-1]
+	try:
+		response = s3.bucket_list(bucket, prefix = object)
+	except S3Error, e:
+		if S3.codes.has_key(e.info["Code"]):
+			error(S3.codes[e.info["Code"]] % bucket)
+			return
+		else:
+			raise
+	for object in response["list"]:
+		size, size_coeff = formatSize(object["Size"], Config().human_readable_sizes)
+		output("%s  %s%s  %s" % (
+			formatDateTime(object["LastModified"]),
+			str(size).rjust(8), size_coeff.ljust(1),
+			uri.compose_uri(bucket, object["Key"]),
+			))
+
+def cmd_bucket_create(args):
+	uri = S3Uri(args[0])
+	if not uri.type == "s3" or not uri.has_bucket() or uri.has_object():
+		raise ParameterError("Expecting S3 URI with just the bucket name set instead of '%s'" % args[0])
+	try:
+		s3 = S3(Config())
+		response = s3.bucket_create(uri.bucket(), cfg.bucket_location)
+	except S3Error, e:
+		if S3.codes.has_key(e.info["Code"]):
+			error(S3.codes[e.info["Code"]] % uri.bucket())
+			return
+		else:
+			raise
+	output("Bucket '%s' created" % uri.bucket())
+
+def cmd_bucket_delete(args):
+	uri = S3Uri(args[0])
+	if not uri.type == "s3" or not uri.has_bucket() or uri.has_object():
+		raise ParameterError("Expecting S3 URI with just the bucket name set instead of '%s'" % args[0])
+	try:
+		s3 = S3(Config())
+		response = s3.bucket_delete(uri.bucket())
+	except S3Error, e:
+		if S3.codes.has_key(e.info["Code"]):
+			error(S3.codes[e.info["Code"]] % uri.bucket())
+			return
+		else:
+			raise
+	output("Bucket '%s' removed" % uri.bucket())
+
+def cmd_object_put(args):
+	s3 = S3(Config())
+
+	uri_arg = args.pop()
+	check_args_type(args, 'file', 'filename')
+
+	uri = S3Uri(uri_arg)
+	if uri.type != "s3":
+		raise ParameterError("Expecting S3 URI instead of '%s'" % uri_arg)
+
+	if len(args) > 1 and uri.object() != "" and not Config().force:
+		error("When uploading multiple files the last argument must")
+		error("be a S3 URI specifying just the bucket name")
+		error("WITHOUT object name!")
+		error("Alternatively use --force argument and the specified")
+		error("object name will be prefixed to all stored filenames.")
+		sys.exit(1)
+	
+	seq = 0
+	total = len(args)
+	for file in args:
+		seq += 1
+		uri_arg_final = str(uri)
+		if len(args) > 1 or uri.object() == "":
+			uri_arg_final += os.path.basename(file)
+
+		uri_final = S3Uri(uri_arg_final)
+	
+		# Gideon added
+		if not os.path.exists(file):
+			warning("File %s does not exist. Skipping." % file)
+			continue
+
+		# Gideon added
+		while os.path.islink(file):
+			file = os.readlink(file)
+
+		# Gideon added
+		if Config.cache:
+			# Copy to cache
+			cache_bucket = os.path.join(Config().cache_dir, uri_final.bucket(), os.path.dirname(uri_final.object()))
+			if not os.path.exists(cache_bucket):
+				os.makedirs(cache_bucket)
+			cache_file = os.path.join(cache_bucket, os.path.basename(uri_final.object()))
+			if file != cache_file:
+				shutil.copy(file, cache_file)
+
+		extra_headers = {}
+		real_filename = file
+		if Config().encrypt:
+			exitcode, real_filename, extra_headers["x-amz-meta-s3tools-gpgenc"] = gpg_encrypt(file)
+		try:
+			response = s3.object_put_uri(real_filename, uri_final, extra_headers)
+		except S3UploadError, e:
+			error("Upload of '%s' failed too many times. Skipping that file." % real_filename)
+			continue
+		except InvalidFileError, e:
+			warning("File can not be uploaded: %s" % e)
+			continue
+		speed_fmt = formatSize(response["speed"], human_readable = True, floating_point = True)
+		output("File '%s' stored as %s (%d bytes in %0.1f seconds, %0.2f %sB/s) [%d of %d]" %
+			(file, uri_final, response["size"], response["elapsed"], speed_fmt[0], speed_fmt[1],
+			seq, total))
+		if Config().acl_public:
+			output("Public URL of the object is: %s" %
+				(uri_final.public_url()))
+		if Config().encrypt and real_filename != file:
+			debug("Removing temporary encrypted file: %s" % real_filename)
+			os.remove(real_filename)
+
+def cmd_object_get(args):
+	s3 = S3(Config())
+
+	if not S3Uri(args[0]).type == 's3':
+		raise ParameterError("Expecting S3 URI instead of '%s'" % args[0])
+
+	destination_dir = None
+	destination_file = None
+	if len(args) > 1:
+		if S3Uri(args[-1]).type == 's3':
+			# all S3, use object names to local dir
+			check_args_type(args, type="s3", verbose_type="S3 URI")	# May raise ParameterError
+		else:
+			if (len(args) > 2):
+				# last must be dir, all preceding S3
+				if not os.path.isdir(args[-1]):
+					raise ParameterError("Last parameter must be a directory")
+				destination_dir = args.pop()
+				check_args_type(args, type="s3", verbose_type="S3 URI")	# May raise ParameterError
+			else:
+				# last must be a dir or a filename
+				if os.path.isdir(args[-1]):
+					destination_dir = args.pop()
+				else:
+					destination_file = args.pop()
+
+	while (len(args)):
+		uri_arg = args.pop(0)
+		uri = S3Uri(uri_arg)
+
+		if destination_file:
+			destination = destination_file
+		elif destination_dir:
+			destination = destination_dir + "/" + uri.object()
+		else: # By default the destination filename is the object name
+			destination = uri.object()
+		
+		# Gideon added
+		if Config.cache:
+			cache_bucket = os.path.join(Config().cache_dir, uri.bucket(), os.path.dirname(uri.object()))
+			cache_file = os.path.join(cache_bucket, os.path.basename(uri.object()))
+
+		# Gideon added
+		dest_dir = os.path.dirname(destination)
+		if dest_dir != '' and not os.path.exists(dest_dir):
+			os.makedirs(dest_dir)
+
+		if destination == "-":
+			## stdout
+			dst_stream = sys.stdout
+		else:
+			# File exists already
+			if not Config().force and os.path.exists(destination):
+				warning("File %s already exists. Use --force to overwrite it. Skipping" % destination)
+				continue
+			# Gideon added
+			if Config().cache and os.path.exists(cache_file):
+				os.symlink(cache_file, destination)
+				warning("File %s retrieved from cache" % destination)
+				continue
+			# Gideon added
+			if Config().cache:
+				# Copy to a temporary location
+				dst_file = os.path.join(Config().cache_dir, str(uuid4()))
+			else:
+				dst_file = destination
+			try:
+				dst_stream = open(dst_file, "wb")
+			except IOError, e:
+				error("Skipping %s: %s" % (destination, e.strerror))
+				continue
+		response = s3.object_get_uri(uri, dst_stream)
+		if response["headers"].has_key("x-amz-meta-s3tools-gpgenc"):
+			gpg_decrypt(destination, response["headers"]["x-amz-meta-s3tools-gpgenc"])
+			response["size"] = os.stat(destination)[6]
+		if destination != "-":
+			speed_fmt = formatSize(response["speed"], human_readable = True, floating_point = True)
+			output("Object %s saved as '%s' (%d bytes in %0.1f seconds, %0.2f %sB/s)" %
+				(uri, destination, response["size"], response["elapsed"], speed_fmt[0], speed_fmt[1]))
+
+		# Added by Gideon
+		if Config().cache:
+			# Copy to the cache and link destination
+			if not os.path.exists(cache_bucket):
+				os.makedirs(cache_bucket)
+			os.rename(dst_file, cache_file) # Hopefully this is atomic
+			os.symlink(cache_file, destination)
+
+def cmd_object_del(args):
+	s3 = S3(Config())
+
+	while (len(args)):
+		uri_arg = args.pop(0)
+		uri = S3Uri(uri_arg)
+		if uri.type != "s3" or not uri.has_object():
+			raise ParameterError("Expecting S3 URI instead of '%s'" % uri_arg)
+
+		response = s3.object_delete_uri(uri)
+		output("Object %s deleted" % uri)
+
+def cmd_info(args):
+	s3 = S3(Config())
+
+	while (len(args)):
+		uri_arg = args.pop(0)
+		uri = S3Uri(uri_arg)
+		if uri.type != "s3" or not uri.has_bucket():
+			raise ParameterError("Expecting S3 URI instead of '%s'" % uri_arg)
+
+		try:
+			if uri.has_object():
+				info = s3.object_info(uri)
+				output("%s (object):" % uri.uri())
+				output("   File size: %s" % info['headers']['content-length'])
+				output("   Last mod:  %s" % info['headers']['last-modified'])
+				output("   MIME type: %s" % info['headers']['content-type'])
+				output("   MD5 sum:   %s" % info['headers']['etag'].strip('"'))
+			else:
+				info = s3.bucket_info(uri)
+				output("%s (bucket):" % uri.uri())
+				output("   Location:  %s" % info['bucket-location'])
+			acl = s3.get_acl(uri)
+			for user in acl.keys():
+				output("   ACL:       %s: %s" % (user, acl[user]))
+		except S3Error, e:
+			if S3.codes.has_key(e.info["Code"]):
+				error(S3.codes[e.info["Code"]] % uri.bucket())
+				return
+			else:
+				raise
+
+def _get_filelist_local(local_uri):
+	output("Compiling list of local files...")
+	local_path = local_uri.path()
+	if os.path.isdir(local_path):
+		loc_base = os.path.join(local_path, "")
+		filelist = os.walk(local_path)
+	else:
+		loc_base = "./"
+		filelist = [( '.', [], [local_path] )]
+	loc_base_len = len(loc_base)
+	loc_list = {}
+	for root, dirs, files in filelist:
+		## TODO: implement explicit exclude
+		for f in files:
+			full_name = os.path.join(root, f)
+			if not os.path.isfile(full_name):
+				continue
+			if os.path.islink(full_name):
+				## Synchronize symlinks... one day
+				## for now skip over
+				continue
+			file = full_name[loc_base_len:]
+			sr = os.stat_result(os.lstat(full_name))
+			loc_list[file] = {
+				'full_name' : full_name,
+				'size' : sr.st_size, 
+				'mtime' : sr.st_mtime,
+				## TODO: Possibly more to save here...
+			}
+	return loc_list
+
+def _get_filelist_remote(remote_uri):
+	output("Retrieving list of remote files...")
+
+	s3 = S3(Config())
+	response = s3.bucket_list(remote_uri.bucket(), prefix = remote_uri.object())
+
+	rem_base = remote_uri.object()
+	rem_base_len = len(rem_base)
+	rem_list = {}
+	for object in response['list']:
+		key = object['Key'][rem_base_len:]
+		rem_list[key] = { 
+			'size' : int(object['Size']),
+			# 'mtime' : dateS3toUnix(object['LastModified']), ## That's upload time, not our lastmod time :-(
+			'md5' : object['ETag'][1:-1],
+			'object_key' : object['Key']
+		}
+	return rem_list
+	
+def _compare_filelists(src_list, dst_list, src_is_local_and_dst_is_remote):
+	output("Verifying checksums...")
+	cfg = Config()
+	exists_list = {}
+	exclude_list = {}
+	if cfg.debug_syncmatch:
+		logging.root.setLevel(logging.DEBUG)
+	for file in src_list.keys():
+		if not cfg.debug_syncmatch:
+			debug("CHECK: %s" % (os.sep + file))
+		excluded = False
+		for r in cfg.exclude:
+			## all paths start with '/' from the base dir
+			if r.search(os.sep + file):
+				## Can't directly 'continue' to the outer loop
+				## therefore this awkward excluded switch :-(
+				excluded = True
+				if cfg.debug_syncmatch:
+					debug("EXCL: %s" % (os.sep + file))
+					debug("RULE: '%s'" % (cfg.debug_exclude[r]))
+				else:
+					info("%s: excluded" % file)
+				break
+		if excluded:
+			exclude_list = src_list[file]
+			del(src_list[file])
+			continue
+		else:
+			debug("PASS: %s" % (os.sep + file))
+		if dst_list.has_key(file):
+			## Check size first
+			if dst_list[file]['size'] == src_list[file]['size']:
+				#debug("%s same size: %s" % (file, dst_list[file]['size']))
+				## ... same size, check MD5
+				if src_is_local_and_dst_is_remote:
+					src_md5 = Utils.hash_file_md5(src_list[file]['full_name'])
+					dst_md5 = dst_list[file]['md5']
+				else:
+					src_md5 = src_list[file]['md5']
+					dst_md5 = Utils.hash_file_md5(dst_list[file]['full_name'])
+				if src_md5 == dst_md5:
+					#debug("%s md5 matches: %s" % (file, dst_md5))
+					## Checksums are the same.
+					## Remove from source-list, all that is left there will be transferred
+					debug("IGNR: %s (transfer not needed: MD5 OK, Size OK)" % file)
+					exists_list[file] = src_list[file]
+					del(src_list[file])
+				else:
+					debug("XFER: %s (md5 mismatch: src=%s dst=%s)" % (file, src_md5, dst_md5))
+			else:
+				debug("XFER: %s (size mismatch: src=%s dst=%s)" % (file, src_list[file]['size'], dst_list[file]['size']))
+                        
+			## Remove from destination-list, all that is left there will be deleted
+			#debug("%s removed from destination list" % file)
+			del(dst_list[file])
+	if cfg.debug_syncmatch:
+		warning("Exiting because of --debug-syncmatch")
+		sys.exit(0)
+
+	return src_list, dst_list, exists_list, exclude_list
+
+def cmd_sync_remote2local(src, dst):
+	def _parse_attrs_header(attrs_header):
+		attrs = {}
+		for attr in attrs_header.split("/"):
+			key, val = attr.split(":")
+			attrs[key] = val
+		return attrs
+		
+	s3 = S3(Config())
+
+	src_uri = S3Uri(src)
+	dst_uri = S3Uri(dst)
+
+	rem_list = _get_filelist_remote(src_uri)
+	rem_count = len(rem_list)
+
+	loc_list = _get_filelist_local(dst_uri)
+	loc_count = len(loc_list)
+	
+	output("Found %d remote files, %d local files" % (rem_count, loc_count))
+
+	_compare_filelists(rem_list, loc_list, False)
+
+	output("Summary: %d remote files to download, %d local files to delete" % (len(rem_list), len(loc_list)))
+
+	for file in loc_list:
+		if cfg.delete_removed:
+			# os.unlink(file)
+			output("deleted '%s'" % file)
+		else:
+			output("not-deleted '%s'" % file)
+
+	total_size = 0
+	total_count = len(rem_list)
+	total_elapsed = 0.0
+	timestamp_start = time.time()
+	seq = 0
+	dir_cache = {}
+	src_base = src_uri.uri()
+	dst_base = dst_uri.path()
+	if not src_base[-1] == "/": src_base += "/"
+	file_list = rem_list.keys()
+	file_list.sort()
+	for file in file_list:
+		seq += 1
+		uri = S3Uri(src_base + file)
+		dst_file = dst_base + file
+		try:
+			dst_dir = os.path.dirname(dst_file)
+			if not dir_cache.has_key(dst_dir):
+				dir_cache[dst_dir] = Utils.mkdir_with_parents(dst_dir)
+			if dir_cache[dst_dir] == False:
+				warning("%s: destination directory not writable: %s" % (file, dst_dir))
+				continue
+			try:
+				open_flags = os.O_CREAT
+				if cfg.force:
+					open_flags |= os.O_TRUNC
+				else:
+					open_flags |= os.O_EXCL
+
+				debug("dst_file=%s" % dst_file)
+				# This will have failed should the file exist
+				os.close(os.open(dst_file, open_flags))
+				# Yeah I know there is a race condition here. Sadly I don't know how to open() in exclusive mode.
+				dst_stream = open(dst_file, "wb")
+				response = s3.object_get_uri(uri, dst_stream)
+				dst_stream.close()
+				if response['headers'].has_key('x-amz-meta-s3cmd-attrs') and cfg.preserve_attrs:
+					attrs = _parse_attrs_header(response['headers']['x-amz-meta-s3cmd-attrs'])
+					if attrs.has_key('mode'):
+						os.chmod(dst_file, int(attrs['mode']))
+					if attrs.has_key('mtime') or attrs.has_key('atime'):
+						mtime = attrs.has_key('mtime') and int(attrs['mtime']) or int(time.time())
+						atime = attrs.has_key('atime') and int(attrs['atime']) or int(time.time())
+						os.utime(dst_file, (atime, mtime))
+					## FIXME: uid/gid / uname/gname handling comes here! TODO
+			except OSError, e:
+				try: dst_stream.close()
+				except: pass
+				if e.errno == errno.EEXIST:
+					warning("%s exists - not overwriting" % (dst_file))
+					continue
+				if e.errno in (errno.EPERM, errno.EACCES):
+					warning("%s not writable: %s" % (dst_file, e.strerror))
+					continue
+				raise e
+			except KeyboardInterrupt:
+				try: dst_stream.close()
+				except: pass
+				warning("Exiting after keyboard interrupt")
+				return
+			except Exception, e:
+				try: dst_stream.close()
+				except: pass
+				error("%s: %s" % (file, e))
+				continue
+			# We have to keep repeating this call because 
+			# Python 2.4 doesn't support try/except/finally
+			# construction :-(
+			try: dst_stream.close()
+			except: pass
+		except S3DownloadError, e:
+			error("%s: download failed too many times. Skipping that file." % file)
+			continue
+		speed_fmt = formatSize(response["speed"], human_readable = True, floating_point = True)
+		output("File '%s' stored as %s (%d bytes in %0.1f seconds, %0.2f %sB/s) [%d of %d]" %
+			(uri, dst_file, response["size"], response["elapsed"], speed_fmt[0], speed_fmt[1],
+			seq, total_count))
+		total_size += response["size"]
+
+	total_elapsed = time.time() - timestamp_start
+	speed_fmt = formatSize(total_size/total_elapsed, human_readable = True, floating_point = True)
+	output("Done. Downloaded %d bytes in %0.1f seconds, %0.2f %sB/s" % 
+	       (total_size, total_elapsed, speed_fmt[0], speed_fmt[1]))
+
+def cmd_sync_local2remote(src, dst):
+	def _build_attr_header(src):
+		attrs = {}
+		st = os.stat_result(os.stat(src))
+		for attr in cfg.preserve_attrs_list:
+			if attr == 'uname':
+				try:
+					val = pwd.getpwuid(st.st_uid).pw_name
+				except KeyError:
+					attr = "uid"
+					val = st.st_uid
+					warning("%s: Owner username not known. Storing UID=%d instead." % (src, val))
+			elif attr == 'gname':
+				try:
+					val = grp.getgrgid(st.st_gid).gr_name
+				except KeyError:
+					attr = "gid"
+					val = st.st_gid
+					warning("%s: Owner groupname not known. Storing GID=%d instead." % (src, val))
+			else:
+				val = getattr(st, 'st_' + attr)
+			attrs[attr] = val
+		result = ""
+		for k in attrs: result += "%s:%s/" % (k, attrs[k])
+		return { 'x-amz-meta-s3cmd-attrs' : result[:-1] }
+
+	s3 = S3(cfg)
+
+	if cfg.encrypt:
+		error("S3cmd 'sync' doesn't support GPG encryption, sorry.")
+		error("Either use unconditional 's3cmd put --recursive'")
+		error("or disable encryption with --no-encryption parameter.")
+		sys.exit(1)
+
+
+	src_uri = S3Uri(src)
+	dst_uri = S3Uri(dst)
+
+	loc_list = _get_filelist_local(src_uri)
+	loc_count = len(loc_list)
+	
+	rem_list = _get_filelist_remote(dst_uri)
+	rem_count = len(rem_list)
+
+	output("Found %d local files, %d remote files" % (loc_count, rem_count))
+
+	_compare_filelists(loc_list, rem_list, True)
+
+	output("Summary: %d local files to upload, %d remote files to delete" % (len(loc_list), len(rem_list)))
+
+	for file in rem_list:
+		uri = S3Uri("s3://" + dst_uri.bucket()+"/"+rem_list[file]['object_key'])
+		if cfg.delete_removed:
+			response = s3.object_delete_uri(uri)
+			output("deleted '%s'" % uri)
+		else:
+			output("not-deleted '%s'" % uri)
+
+	total_size = 0
+	total_count = len(loc_list)
+	total_elapsed = 0.0
+	timestamp_start = time.time()
+	seq = 0
+	dst_base = dst_uri.uri()
+	if not dst_base[-1] == "/": dst_base += "/"
+	file_list = loc_list.keys()
+	file_list.sort()
+	for file in file_list:
+		seq += 1
+		src = loc_list[file]['full_name']
+		uri = S3Uri(dst_base + file)
+		if cfg.preserve_attrs:
+			attr_header = _build_attr_header(src)
+			debug(attr_header)
+		try:
+			response = s3.object_put_uri(src, uri, attr_header)
+		except S3UploadError, e:
+			error("%s: upload failed too many times. Skipping that file." % src)
+			continue
+		except InvalidFileError, e:
+			warning("File can not be uploaded: %s" % e)
+			continue
+		speed_fmt = formatSize(response["speed"], human_readable = True, floating_point = True)
+		output("File '%s' stored as %s (%d bytes in %0.1f seconds, %0.2f %sB/s) [%d of %d]" %
+			(src, uri, response["size"], response["elapsed"], speed_fmt[0], speed_fmt[1],
+			seq, total_count))
+		total_size += response["size"]
+
+	total_elapsed = time.time() - timestamp_start
+	speed_fmt = formatSize(total_size/total_elapsed, human_readable = True, floating_point = True)
+	output("Done. Uploaded %d bytes in %0.1f seconds, %0.2f %sB/s" % 
+	       (total_size, total_elapsed, speed_fmt[0], speed_fmt[1]))
+
+def cmd_sync(args):
+	src = args.pop(0)
+	dst = args.pop(0)
+	if (len(args)):
+		raise ParameterError("Too many parameters! Expected: %s" % commands['sync']['param'])
+
+	if S3Uri(src).type == "s3" and not src.endswith('/'):
+		src += "/"
+
+	if not dst.endswith('/'):
+		dst += "/"
+
+	if S3Uri(src).type == "file" and S3Uri(dst).type == "s3":
+		return cmd_sync_local2remote(src, dst)
+	if S3Uri(src).type == "s3" and S3Uri(dst).type == "file":
+		return cmd_sync_remote2local(src, dst)
+	
+def resolve_list(lst, args):
+	retval = []
+	for item in lst:
+		retval.append(item % args)
+	return retval
+
+def gpg_command(command, passphrase = ""):
+	p_in, p_out = os.popen4(command)
+	if command.count("--passphrase-fd"):
+		p_in.write(passphrase+"\n")
+		p_in.flush()
+	for line in p_out:
+		info(line.strip())
+	p_pid, p_exitcode = os.wait()
+	return p_exitcode
+
+def gpg_encrypt(filename):
+	tmp_filename = Utils.mktmpfile()
+	args = {
+		"gpg_command" : cfg.gpg_command,
+		"passphrase_fd" : "0",
+		"input_file" : filename, 
+		"output_file" : tmp_filename,
+	}
+	info("Encrypting file %(input_file)s to %(output_file)s..." % args)
+	command = resolve_list(cfg.gpg_encrypt.split(" "), args)
+	code = gpg_command(command, cfg.gpg_passphrase)
+	return (code, tmp_filename, "gpg")
+
+def gpg_decrypt(filename, gpgenc_header = "", in_place = True):
+	tmp_filename = Utils.mktmpfile(filename)
+	args = {
+		"gpg_command" : cfg.gpg_command,
+		"passphrase_fd" : "0",
+		"input_file" : filename, 
+		"output_file" : tmp_filename,
+	}
+	info("Decrypting file %(input_file)s to %(output_file)s..." % args)
+	command = resolve_list(cfg.gpg_decrypt.split(" "), args)
+	code = gpg_command(command, cfg.gpg_passphrase)
+	if code == 0 and in_place:
+		debug("Renaming %s to %s" % (tmp_filename, filename))
+		os.unlink(filename)
+		os.rename(tmp_filename, filename)
+		tmp_filename = filename
+	return (code, tmp_filename)
+
+def run_configure(config_file):
+	cfg = Config()
+	options = [
+		("access_key", "Access Key", "Access key and Secret key are your identifiers for Amazon S3"),
+		("secret_key", "Secret Key"),
+		("gpg_passphrase", "Encryption password", "Encryption password is used to protect your files from reading\nby unauthorized persons while in transfer to S3"),
+		("gpg_command", "Path to GPG program"),
+		("use_https", "Use HTTPS protocol", "When using secure HTTPS protocol all communication with Amazon S3\nservers is protected from 3rd party eavesdropping. This method is\nslower than plain HTTP and can't be used if you're behind a proxy"),
+		("proxy_host", "HTTP Proxy server name", "On some networks all internet access must go through a HTTP proxy.\nTry setting it here if you can't conect to S3 directly"),
+		("proxy_port", "HTTP Proxy server port"),
+		]
+	## Option-specfic defaults
+	if getattr(cfg, "gpg_command") == "":
+		setattr(cfg, "gpg_command", find_executable("gpg"))
+
+	if getattr(cfg, "proxy_host") == "" and os.getenv("http_proxy"):
+		re_match=re.match("(http://)?([^:]+):(\d+)", os.getenv("http_proxy"))
+		if re_match:
+			setattr(cfg, "proxy_host", re_match.groups()[1])
+			setattr(cfg, "proxy_port", re_match.groups()[2])
+
+	try:
+		while 1:
+			output("\nEnter new values or accept defaults in brackets with Enter.")
+			output("Refer to user manual for detailed description of all options.")
+			for option in options:
+				prompt = option[1]
+				## Option-specific handling
+				if option[0] == 'proxy_host' and getattr(cfg, 'use_https') == True:
+					setattr(cfg, option[0], "")
+					continue
+				if option[0] == 'proxy_port' and getattr(cfg, 'proxy_host') == "":
+					setattr(cfg, option[0], 0)
+					continue
+
+				try:
+					val = getattr(cfg, option[0])
+					if type(val) is bool:
+						val = val and "Yes" or "No"
+					if val not in (None, ""):
+						prompt += " [%s]" % val
+				except AttributeError:
+					pass
+
+				if len(option) >= 3:
+					output("\n%s" % option[2])
+
+				val = raw_input(prompt + ": ")
+				if val != "":
+					if type(getattr(cfg, option[0])) is bool:
+						# Turn 'Yes' into True, everything else into False
+						val = val.lower().startswith('y')
+					setattr(cfg, option[0], val)
+			output("\nNew settings:")
+			for option in options:
+				output("  %s: %s" % (option[1], getattr(cfg, option[0])))
+			val = raw_input("\nTest access with supplied credentials? [Y/n] ")
+			if val.lower().startswith("y") or val == "":
+				try:
+					output("Please wait...")
+					S3(Config()).bucket_list("", "")
+					output("Success. Your access key and secret key worked fine :-)")
+
+					output("\nNow verifying that encryption works...")
+					if not getattr(cfg, "gpg_command") or not getattr(cfg, "gpg_passphrase"):
+						output("Not configured. Never mind.")
+					else:
+						if not getattr(cfg, "gpg_command"):
+							raise Exception("Path to GPG program not set")
+						if not os.path.isfile(getattr(cfg, "gpg_command")):
+							raise Exception("GPG program not found")
+						filename = Utils.mktmpfile()
+						f = open(filename, "w")
+						f.write(os.sys.copyright)
+						f.close()
+						ret_enc = gpg_encrypt(filename)
+						ret_dec = gpg_decrypt(ret_enc[1], ret_enc[2], False)
+						hash = [
+							Utils.hash_file_md5(filename),
+							Utils.hash_file_md5(ret_enc[1]),
+							Utils.hash_file_md5(ret_dec[1]),
+						]
+						os.unlink(filename)
+						os.unlink(ret_enc[1])
+						os.unlink(ret_dec[1])
+						if hash[0] == hash[2] and hash[0] != hash[1]:
+							output ("Success. Encryption and decryption worked fine :-)") 
+						else:
+							raise Exception("Encryption verification error.")
+
+				except Exception, e:
+					error("Test failed: %s" % (e))
+					val = raw_input("\nRetry configuration? [Y/n] ")
+					if val.lower().startswith("y") or val == "":
+						continue
+					
+
+			val = raw_input("\nSave settings? [y/N] ")
+			if val.lower().startswith("y"):
+				break
+			val = raw_input("Retry configuration? [Y/n] ")
+			if val.lower().startswith("n"):
+				raise EOFError()
+
+		## Overwrite existing config file, make it user-readable only
+		old_mask = os.umask(0077)
+		try:
+			os.remove(config_file)
+		except OSError, e:
+			if e.errno != errno.ENOENT:
+				raise
+		f = open(config_file, "w")
+		os.umask(old_mask)
+		cfg.dump_config(f)
+		f.close()
+		output("Configuration saved to '%s'" % config_file)
+
+	except (EOFError, KeyboardInterrupt):
+		output("\nConfiguration aborted. Changes were NOT saved.")
+		return
+	
+	except IOError, e:
+		error("Writing config file failed: %s: %s" % (config_file, e.strerror))
+		sys.exit(1)
+
+def process_exclude_from_file(exf, exclude_array):
+	exfi = open(exf, "rt")
+	for ex in exfi:
+		ex = ex.strip()
+		if re.match("^#", ex) or re.match("^\s*$", ex):
+			continue
+		debug("adding rule: %s" % ex)
+		exclude_array.append(ex)
+
+commands = {}
+commands_list = [
+	{"cmd":"mb", "label":"Make bucket", "param":"s3://BUCKET", "func":cmd_bucket_create, "argc":1},
+	{"cmd":"rb", "label":"Remove bucket", "param":"s3://BUCKET", "func":cmd_bucket_delete, "argc":1},
+	{"cmd":"ls", "label":"List objects or buckets", "param":"[s3://BUCKET[/PREFIX]]", "func":cmd_ls, "argc":0},
+	{"cmd":"la", "label":"List all object in all buckets", "param":"", "func":cmd_buckets_list_all_all, "argc":0},
+	{"cmd":"put", "label":"Put file into bucket", "param":"FILE [FILE...] s3://BUCKET[/PREFIX]", "func":cmd_object_put, "argc":2},
+	{"cmd":"get", "label":"Get file from bucket", "param":"s3://BUCKET/OBJECT LOCAL_FILE", "func":cmd_object_get, "argc":1},
+	{"cmd":"del", "label":"Delete file from bucket", "param":"s3://BUCKET/OBJECT", "func":cmd_object_del, "argc":1},
+	#{"cmd":"mkdir", "label":"Make a virtual S3 directory", "param":"s3://BUCKET/path/to/dir", "func":cmd_mkdir, "argc":1},
+	{"cmd":"sync", "label":"Synchronize a directory tree to S3", "param":"LOCAL_DIR s3://BUCKET[/PREFIX] or s3://BUCKET[/PREFIX] LOCAL_DIR", "func":cmd_sync, "argc":2},
+	{"cmd":"du", "label":"Disk usage by buckets", "param":"[s3://BUCKET[/PREFIX]]", "func":cmd_du, "argc":0},
+	{"cmd":"info", "label":"Get various information about Buckets or Objects", "param":"s3://BUCKET[/OBJECT]", "func":cmd_info, "argc":1},
+	#{"cmd":"setacl", "label":"Modify Access control list for Bucket or Object", "param":"s3://BUCKET[/OBJECT]", "func":cmd_setacl, "argc":1},
+	]
+
+def format_commands(progname):
+	help = "Commands:\n"
+	for cmd in commands_list:
+		help += "  %s\n      %s %s %s\n" % (cmd["label"], progname, cmd["cmd"], cmd["param"])
+	return help
+
+class OptionMimeType(Option):
+	def check_mimetype(option, opt, value):
+		if re.compile("^[a-z0-9]+/[a-z0-9+\.-]+$", re.IGNORECASE).match(value):
+			return value
+		raise OptionValueError("option %s: invalid MIME-Type format: %r" % (opt, value))
+
+	TYPES = Option.TYPES + ("mimetype",)
+	TYPE_CHECKER = copy(Option.TYPE_CHECKER)
+	TYPE_CHECKER["mimetype"] = check_mimetype
+
+class MyHelpFormatter(IndentedHelpFormatter):
+	def format_epilog(self, epilog):
+		if epilog:
+			return "\n" + epilog + "\n"
+		else:
+			return ""
+
+def main():
+	global cfg
+	if float("%d.%d" %(sys.version_info[0], sys.version_info[1])) < 2.4:
+		sys.stderr.write("ERROR: Python 2.4 or higher required, sorry.\n")
+		sys.exit(1)
+
+	## Populate "commands" from "commands_list"
+	for cmd in commands_list:
+		if cmd.has_key("cmd"):
+			commands[cmd["cmd"]] = cmd
+
+	default_verbosity = Config().verbosity
+	optparser = OptionParser(option_class=OptionMimeType, formatter=MyHelpFormatter())
+	#optparser.disable_interspersed_args()
+
+	if os.getenv("HOME"):
+		optparser.set_defaults(config=os.getenv("HOME")+"/.s3cfg")
+	
+	# Gideon added
+	if os.getenv("S3CFG"):
+		optparser.set_defaults(config=os.getenv("S3CFG"))
+
+	optparser.set_defaults(verbosity = default_verbosity)
+
+	optparser.add_option(      "--configure", dest="run_configure", action="store_true", help="Invoke interactive (re)configuration tool.")
+	optparser.add_option("-c", "--config", dest="config", metavar="FILE", help="Config file name. Defaults to %default")
+	optparser.add_option(      "--dump-config", dest="dump_config", action="store_true", help="Dump current configuration after parsing config files and command line options and exit.")
+
+	#optparser.add_option("-n", "--dry-run", dest="dry_run", action="store_true", help="Only show what should be uploaded or downloaded but don't actually do it. May still perform S3 requests to get bucket listings and other information though.")
+
+	optparser.add_option("-e", "--encrypt", dest="encrypt", action="store_true", help="Encrypt files before uploading to S3.")
+	optparser.add_option(      "--no-encrypt", dest="encrypt", action="store_false", help="Don't encrypt files.")
+	optparser.add_option("-f", "--force", dest="force", action="store_true", help="Force overwrite and other dangerous operations.")
+	optparser.add_option("-C", "--cache", dest="cache", action="store_true", help="Cache the result of get operations.")
+	optparser.add_option("-P", "--acl-public", dest="acl_public", action="store_true", help="Store objects with ACL allowing read for anyone.")
+	optparser.add_option(      "--acl-private", dest="acl_public", action="store_false", help="Store objects with default ACL allowing access for you only.")
+	optparser.add_option(      "--delete-removed", dest="delete_removed", action="store_true", help="Delete remote objects with no corresponding local file [sync]")
+	optparser.add_option(      "--no-delete-removed", dest="delete_removed", action="store_false", help="Don't delete remote objects.")
+	optparser.add_option("-p", "--preserve", dest="preserve_attrs", action="store_true", help="Preserve filesystem attributes (mode, ownership, timestamps). Default for [sync] command.")
+	optparser.add_option(      "--no-preserve", dest="preserve_attrs", action="store_false", help="Don't store FS attributes")
+	optparser.add_option(      "--exclude", dest="exclude", action="append", metavar="GLOB", help="Filenames and paths matching GLOB will be excluded from sync")
+	optparser.add_option(      "--exclude-from", dest="exclude_from", action="append", metavar="FILE", help="Read --exclude GLOBs from FILE")
+	optparser.add_option(      "--rexclude", dest="rexclude", action="append", metavar="REGEXP", help="Filenames and paths matching REGEXP (regular expression) will be excluded from sync")
+	optparser.add_option(      "--rexclude-from", dest="rexclude_from", action="append", metavar="FILE", help="Read --rexclude REGEXPs from FILE")
+	optparser.add_option(      "--debug-syncmatch", "--debug-exclude", dest="debug_syncmatch", action="store_true", help="Output detailed information about remote vs. local filelist matching and --exclude processing and then exit")
+
+	optparser.add_option(      "--bucket-location", dest="bucket_location", help="Datacentre to create bucket in. Either EU or US (default)")
+
+	optparser.add_option("-m", "--mime-type", dest="default_mime_type", type="mimetype", metavar="MIME/TYPE", help="Default MIME-type to be set for objects stored.")
+	optparser.add_option("-M", "--guess-mime-type", dest="guess_mime_type", action="store_true", help="Guess MIME-type of files by their extension. Falls back to default MIME-Type as specified by --mime-type option")
+
+	optparser.add_option("-H", "--human-readable-sizes", dest="human_readable_sizes", action="store_true", help="Print sizes in human readable form.")
+
+	optparser.add_option("-v", "--verbose", dest="verbosity", action="store_const", const=logging.INFO, help="Enable verbose output.")
+	optparser.add_option("-d", "--debug", dest="verbosity", action="store_const", const=logging.DEBUG, help="Enable debug output.")
+	optparser.add_option(      "--version", dest="show_version", action="store_true", help="Show s3cmd version (%s) and exit." % (PkgInfo.version))
+
+	optparser.set_usage(optparser.usage + " COMMAND [parameters]")
+	optparser.set_description('S3cmd is a tool for managing objects in '+
+		'Amazon S3 storage. It allows for making and removing '+
+		'"buckets" and uploading, downloading and removing '+
+		'"objects" from these buckets.')
+	optparser.epilog = format_commands(optparser.get_prog_name())
+	optparser.epilog += ("\nSee program homepage for more information at\n%s\n" % PkgInfo.url)
+
+	(options, args) = optparser.parse_args()
+
+	## Some mucking with logging levels to enable 
+	## debugging/verbose output for config file parser on request
+	logging.basicConfig(level=options.verbosity,
+	                    format='%(levelname)s: %(message)s',
+	                    stream = _stderr)
+	
+	if options.show_version:
+		output("s3cmd version %s" % PkgInfo.version)
+		sys.exit(0)
+
+	## Now finally parse the config file
+	if not options.config:
+		error("Can't find a config file. Please use --config option.")
+		sys.exit(1)
+
+	try:
+		cfg = Config(options.config)
+	except IOError, e:
+		if options.run_configure:
+			cfg = Config()
+		else:
+			error("%s: %s"  % (options.config, e.strerror))
+			error("Configuration file not available.")
+			error("Consider using --configure parameter to create one.")
+			sys.exit(1)
+
+	## And again some logging level adjustments
+	## according to configfile and command line parameters
+	if options.verbosity != default_verbosity:
+		cfg.verbosity = options.verbosity
+	logging.root.setLevel(cfg.verbosity)
+
+	## Update Config with other parameters
+	for option in cfg.option_list():
+		try:
+			if getattr(options, option) != None:
+				debug("Updating %s -> %s" % (option, getattr(options, option)))
+				cfg.update_option(option, getattr(options, option))
+		except AttributeError:
+			## Some Config() options are not settable from command line
+			pass
+
+	## Process GLOB (shell wildcard style) excludes
+	if options.exclude is None:
+		options.exclude = []
+
+	if options.exclude_from:
+		for exf in options.exclude_from:
+			debug("processing --exclude-from %s" % exf)
+			process_exclude_from_file(exf, options.exclude)
+
+	if options.exclude:
+		for ex in options.exclude:
+			debug("processing rule: %s" % ex)
+			exc = re.compile(glob.fnmatch.translate(ex))
+			cfg.exclude.append(exc)
+			if options.debug_syncmatch:
+				cfg.debug_exclude[exc] = ex
+
+	## Process REGEXP style excludes
+	if options.rexclude is None:
+		options.rexclude = []
+
+	if options.rexclude_from:
+		for exf in options.rexclude_from:
+			debug("processing --rexclude-from %s" % exf)
+			process_exclude_from_file(exf, options.rexclude)
+
+	if options.rexclude:
+		for ex in options.rexclude:
+			debug("processing rule: %s" % ex)
+			exc = re.compile(ex)
+			cfg.exclude.append(exc)
+			if options.debug_syncmatch:
+				cfg.debug_exclude[exc] = ex
+
+	if cfg.encrypt and cfg.gpg_passphrase == "":
+		error("Encryption requested but no passphrase set in config file.")
+		error("Please re-run 's3cmd --configure' and supply it.")
+		sys.exit(1)
+
+	if options.dump_config:
+		cfg.dump_config(sys.stdout)
+		sys.exit(0)
+
+	if options.run_configure:
+		run_configure(options.config)
+		sys.exit(0)
+
+	if len(args) < 1:
+		error("Missing command. Please run with --help for more information.")
+		sys.exit(1)
+
+	## Unicodise all remaining arguments:
+	args = [unicodise(arg) for arg in args]
+
+	command = args.pop(0)
+	try:
+		debug("Command: %s" % commands[command]["cmd"])
+		## We must do this lookup in extra step to 
+		## avoid catching all KeyError exceptions
+		## from inner functions.
+		cmd_func = commands[command]["func"]
+	except KeyError, e:
+		error("Invalid command: %s" % e)
+		sys.exit(1)
+
+	if len(args) < commands[command]["argc"]:
+		error("Not enough paramters for command '%s'" % command)
+		sys.exit(1)
+	
+	# Gideon added
+	if cfg.cache:
+		if not os.path.exists(cfg.cache_dir):
+			os.mkdir(cfg.cache_dir)
+
+	try:
+		cmd_func(args)
+	except S3Error, e:
+		error("S3 error: %s" % e)
+		sys.exit(1)
+	except ParameterError, e:
+		error("Parameter problem: %s" % e)
+		sys.exit(1)
+
+if __name__ == '__main__':
+	# Set python path
+	binpath = os.path.dirname(sys.argv[0])
+	pypath = os.path.join(binpath,"..","lib","python")
+	sys.path.insert(0,os.path.normpath(pypath))
+	
+	try:
+		## Our modules
+		## Keep them in try/except block to 
+		## detect any syntax errors in there
+		from S3 import PkgInfo
+		from S3.S3 import *
+		from S3.Config import Config
+		from S3.S3Uri import *
+		from S3 import Utils
+		from S3.Exceptions import *
+		from S3.Utils import unicodise
+
+		main()
+		sys.exit(0)
+	except SystemExit, e:
+		sys.exit(e.code)
+
+	except Exception, e:
+		sys.stderr.write("""
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    An unexpected error has occurred.
+  Please report the following lines to:
+  s3tools-general@lists.sourceforge.net
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+""")
+		sys.stderr.write("S3cmd:  %s\n" % PkgInfo.version)
+		sys.stderr.write("Python: %s\n" % sys.version.replace('\n', ' '))
+		sys.stderr.write("\n")
+		sys.stderr.write(traceback.format_exc(sys.exc_info())+"\n")
+		sys.stderr.write("""
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    An unexpected error has occurred.
+    Please report the above lines to:
+  s3tools-general@lists.sourceforge.net
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+""")
+		sys.exit(1)

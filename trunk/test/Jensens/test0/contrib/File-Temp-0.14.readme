@@ -1,0 +1,181 @@
+File::Temp - provides functions for generating temporary files
+
+This is release V0.14 of File::Temp. This module can be used to
+generate temporary files (providing a filename and filehandle) or directories.
+Possible race conditions are avoided and some security checks are performed
+(eg making sure the sticky bit is set on world writeable temp directories).
+
+It could be considered to be in a late beta state since it has only been
+tested on six operating systems. The Windows implementation is not
+yet at release quality since currently files are only deleted when
+the program exits (via an END block), this differs from the Unix
+implementation where files can be deleted when the file is closed.
+The object-oriented implementation can get around this problem
+by making use of the object destructor to delete the file.
+
+Please let me know if it fails on other operating systems.
+
+INSTALLATION
+
+ % perl Makefile.PL
+ % make
+ % make test
+ % make install
+
+TEST FAILURES
+
+Test failures from lib/security saying "system possibly insecure"
+
+Firstly, test failures from the ftmp-security are not necessarily
+serious or indicative of a real security threat.  That being said,
+they bear investigating.
+
+The tests may fail for the following reasons.   Note that each of the
+tests is run both in the building directory and the temporary
+directory, as returned by File::Spec->tmpdir().
+
+(1) If the directory the tests are being run is owned by somebody else
+than the user running the tests, or root (uid 0).  This failure can
+happen if the Perl source code distribution is unpacked in a way that
+the user ids in the distribution package are used as-is.  Some tar
+programs do this.
+
+(2) If the directory the test are being run in is writable by group
+or by other (remember: with UNIX/POSIX semantics, write access to
+a directory means the right to add/remove files in that directory),
+and there is no sticky bit set in the directory.  'Sticky bit' is
+a feature used in some UNIXes to give extra protection to files: if
+the bit is on a directory, no one but the owner (or the root) can remove
+that file even if the permissions of the directory would allow file
+removal by others.  This failure can happen if the permissions in the
+directory simply are a bit too liberal for the tests' liking.  This
+may or may not be a real problem: it depends on the permissions policy
+used on this particular directory/project/system/site.  This failure
+can also happen if the system either doesn't support the sticky bit
+(this is the case with many non-UNIX platforms: in principle the
+File::Temp should know about these platforms and skip the tests), or
+if the system supports the sticky bit but for some reason or reasons
+it is not being used.  This is for example the case with HP-UX: as of
+HP-UX release 11.00, the sticky bit is very much supported, but HP-UX
+doesn't use it on its /tmp directory as shipped.  Also as with the
+permissions, some local policy might dictate that the stickiness is
+not used.
+
+(3) If the system supports the POSIX 'chown giveaway' feature and if
+any of the parent directories of the temporary file back to the root
+directory are 'unsafe', using the definitions given above in (1) and
+(2).
+
+See the documentation for the File::Temp module for more information
+about the various security aspects.
+
+REQUIREMENTS
+
+Requires perl 5.005 or newer.
+Perl 5.6.0 will give access to extra security checks.
+
+Written completely in Perl. XS is not required.
+
+File::Spec greater than or equal to 0.8 is required.
+Fcntl from perl5.5.670 or higher [but will work without it].
+The above two modules are standard on Perl 5.6
+
+PLATFORMS
+
+Tested on the following platforms:
+
+ Redhat Linux 9, perl 5.8.0
+ RedHat Linux 7, perl 5.6.0
+ Solaris 2.6, perl 5.6.0
+ Windows NT 4, perl 5.6.0
+ VMS, perl5.7.0
+ OS/2, perl5.7.0
+ DOS/DJGPP, perl5.7.0
+
+ RedHat Linux 6.1, perl 5.005_03
+ Digital Unix 4.0, perl 5.005_03
+
+File::Temp is a standard Perl module as of perl 5.7.0 and 5.6.1.
+
+Still may need work on non-Unix platforms to adjust test severity (for example
+stickyness test does not work on NT, and neither does unlink on an open
+file). MEDIUM and HIGH security checks have only been tested on Unix.
+Porting notes are provided at the start of Temp.pm.
+
+AUTHOR
+
+Tim Jenness <tjenness@cpan.org>
+
+Copyright (C) 1999 - 2003 Tim Jenness and the UK Particle Physics and
+Astronomy Research Council. All Rights Reserved.  This program is free
+software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+CHANGES IN THIS RELEASE
+
+V0.14
+      - new Object oriented interface. The file can now be deleted
+	when the object goes out of scope:
+          $tmp = new File::Temp;
+	  print $tmp "Some data\n";
+          print "Filename is $tmp\n";
+
+      - MPE/IX fixes from Ken Hirsch
+
+V0.13:
+      - Documentation tweaks from Slaven Rezic and Jeffrey Friedl
+      - MacOS patches from Chris Nandor
+      - Test tweak from Andy Dougherty
+
+V0.12:
+      - Fix problem with Fcntl warnings on CGI and CGI::Carp 
+            [Thanks to John Labovitz <johnl@valiha.inside.sealabs.com>]
+      - Remove most of the carp warnings and wrap all information into a
+        single croak (this allows security failures to die without 
+        additional warnings getting in the way)
+
+V0.11:
+      - Fix bug on NT with O_TEMPORARY. The file was removed on close
+        rather than on exit
+
+V0.10:
+      - More fixes for VMS
+      - Add DOS/DJGPP support
+      - Make security test less prone to failure on insecure systems
+        since we are testing the module rather than the system.
+      - Security tests is run in build dir and tmpdir
+
+V0.09:
+      - Add VMS support
+      - OS/2 can not understand sticky bits
+
+V0.08:
+      - Improve performance by a factor of 3 over V0.07
+      - Simplify the END block code
+      - Ignore requests for HIGH or MEDIUM safety on platforms that 
+        can not support it (rather than generating a fatal error)
+      - Add OS/2 to list of platforms that can not unlink open file
+
+V0.07:
+      - Add support for perl 5.005. On perl 5.005 the HIGH and
+        MEDIUM security levels are not supported due to changes in 
+        the Fcntl module.
+
+      - A benchmark has been added to the misc directory to compare
+        IO::File->new_tmpfile, File::Temp and a simple creation wrapper
+        around POSIX::tmpnam. On my Linux system File::Temp::tempfile()
+        is an order of magnitude slower than the other two......
+
+V0.06:
+      - Add a test suite
+      - Fix unlinking during the END blocks (was only removing the
+        first file generated)
+      - unlink0 can now be run on WinNT - the unlink of the file
+        is now deferred to an END block since can not unlink an
+        open file on WinNT
+      - If the POSIX _PC_CHOWN_RESTRICTED symbol is not available
+        it is assumed that "chown giveaway" is allowed.
+
+
+V0.05: 
+      - First release to CPAN

@@ -1,0 +1,6 @@
+This is a monster for internal testing. The DAG is composed of 291 jobs.
+The general structure is a "tree of diamonds". The monster is
+well-suited to do some simple stress testing of your grid setup.
+However, if you don't quite know what you are doing here, you should
+consider writing your own test jobs.
+

@@ -1,0 +1,12 @@
+pegasus.catalog.provenance=InvocationSchema
+pegasus.catalog.db.driver=Postgres
+pegasus.catalog.db.url=jdbc:postgresql:${user.name}
+pegasus.catalog.db.user=${user.name}
+pegasus.catalog.db.password=${user.name}
+pegasus.catalog.replica.url=rlsn://smarty.isi.edu
+pegasus.catalog.replica=RLS
+pegasus.catalog.transformation=File
+pegasus.catalog.transformation.file=${pegasus.home}/var/tc.data
+pegasus.catalog.site=XML
+pegasus.catalog.site.file={pegasus.home}/etc/sites.xml
+pegasus.exitcode.scope=all

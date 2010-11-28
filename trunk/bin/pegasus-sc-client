@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# generate a Concrete Dag by providing a DAX
+#
+# $Id$
+
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA} "-Dpegasus.home=${PEGASUS_HOME}" $addon edu.isi.pegasus.planner.client.PegasusGetSites "$@"

@@ -1,0 +1,622 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="concepts">
+  <title>Concepts</title>
+
+  <section>
+    <title>Abstract Workflow (DAX)</title>
+
+    <section>
+      <title>Introduction to DAXs</title>
+
+      <para>Pegasus takes an abstract workflow in XML format called DAX as its
+      fundamental input. Pegasus plans the abstract workflow provided by the
+      DAX using the concrete information found the in the replica catalog
+      (RC), site catalog (SC), and transformation catalog (TC). The concrete
+      behavior is controlled by the configuration (properties). Pegasus
+      refines the abstract workflow to create a number of concretely runnable
+      jobs that can be executed in the Grid, clouds, locally or
+      remotely.</para>
+
+      <para>The DAX format is described by the XML schema instance document
+      <ulink
+      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>.
+      A local copy of the schema definition is provided in the
+      <quote>etc</quote> directory. The documentation of the schema and its
+      elements can be found in <ulink
+      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>.
+      The example below shows a workflow we call the "black diamond" for
+      historical reasons and due to its shape. This simple workflow
+      incorporates some of the elementary graph structures you will deal with
+      in your own workflows:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis>fan-out</emphasis>, <emphasis>scatter</emphasis>,
+          and <emphasis>diverge</emphasis> all describe the fact that multiple
+          siblings are dependent on a fewer parents.</para>
+
+          <para>The example shows how the <emphasis>findrange</emphasis> nodes
+          depend on the <emphasis>preprocess</emphasis> node.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis>fan-in</emphasis>, <emphasis>gather</emphasis>,
+          <emphasis>join</emphasis>, and <emphasis>converge</emphasis>
+          describe how multiple siblings are merged into fewer dependent child
+          nodes.</para>
+
+          <para>The example shows how the <emphasis>analyze</emphasis> node
+          depends on both <emphasis>findrange</emphasis> nodes.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis>serial execution</emphasis> implies that nodes are
+          dependent on one another, like pearls on a string.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis>parallel execution</emphasis> implies that nodes can
+          be executed in parallel, as shown by the
+          <emphasis>findrange</emphasis> nodes in the example.</para>
+
+          <para>Note that even though it is possible to execute these nodes in
+          parallel, planning constraints may limit the amount of parallelism
+          achieved.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para><figure id="concepts-fig-dax">
+          <title>Black Diamond Dax</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center" fileref="images/concepts-diamond.jpg"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
+
+      <para>The example diamond workflow consits of four nodes representing
+      jobs, and are linked by six files.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>If you follow the arrows, you realize that one arrow end in
+          file <filename>f.d</filename>, but not arrows are leaving it. This
+          mean that <filename>f.d</filename> is a leaf file. It is a product
+          or output of this workflow. Output files can be collected at a
+          location.</para>
+        </listitem>
+
+        <listitem>
+          <para>If you follow the arrows, you also realize that only one arrow
+          comes from file <filename>f.a</filename>, but not arrows are leading
+          to it. This means that <filename>f.a</filename> is a required input
+          file to the workflow. Its location must be registered with the
+          replica catalog in order for Pegasus to find it and integrate it
+          into the workflow.</para>
+        </listitem>
+
+        <listitem>
+          <para>The remaining files all have arrows leading to them and
+          originating from them. These files are products of some job steps
+          (arrows leading to them), and consumed by other job steps (arrows
+          leading out of them). Often, these files represent intermediary
+          results that can be cleaned.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>There are two main ways of generating DAX's</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Using a DAX generating API in <link
+          linkend="api-java">Java</link>, <link linkend="api-perl">Perl</link>
+          or <link linkend="api-python">Python</link>.</para>
+
+          <para>This option is what we recommend.</para>
+        </listitem>
+
+        <listitem>
+          <para>Generating XML directly from your script.</para>
+
+          <para>This option should only be considered by advanced users who
+          can also read XML schema definitions.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>One example for a DAX representing the example workflow can look
+      like the following:</para>
+
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- generated: 2010-11-22T22:55:08Z --&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" 
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" 
+      version="3.2" name="diamond" index="0" count="1"&gt;
+  &lt;!-- part 2: definition of all jobs (at least one) --&gt;
+  &lt;job namespace="diamond" name="preprocess" version="2.0" id="ID000001"&gt;
+    &lt;argument&gt;-a preprocess -T60 -i &lt;file name="f.a" /&gt; -o &lt;file name="f.b1" /&gt; &lt;file name="f.b2" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.b2" link="output" register="false" transfer="false" /&gt;
+    &lt;uses name="f.b1" link="output" register="false" transfer="false" /&gt;
+    &lt;uses name="f.a" link="input" /&gt;
+  &lt;/job&gt;
+  &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000002"&gt;
+    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b1" /&gt; -o &lt;file name="f.c1" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.b1" link="input" register="false" transfer="false" /&gt;
+    &lt;uses name="f.c1" link="output" register="false" transfer="false" /&gt;
+  &lt;/job&gt;
+  &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000003"&gt;
+    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b2" /&gt; -o &lt;file name="f.c2" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.c2" link="output" register="false" transfer="false" /&gt;
+    &lt;uses name="f.b2" link="input" register="false" transfer="false" /&gt;
+  &lt;/job&gt;
+  &lt;job namespace="diamond" name="analyze" version="2.0" id="ID000004"&gt;
+    &lt;argument&gt;-a analyze -T60 -i &lt;file name="f.c1" /&gt; &lt;file name="f.c2" /&gt; -o &lt;file name="f.d" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.c2" link="input" register="false" transfer="false" /&gt;
+    &lt;uses name="f.d" link="output" register="false" transfer="true" /&gt;
+    &lt;uses name="f.c1" link="input" register="false" transfer="false" /&gt;
+  &lt;/job&gt;
+  &lt;!-- part 3: list of control-flow dependencies --&gt;
+  &lt;child ref="ID000002"&gt;
+    &lt;parent ref="ID000001" /&gt;
+  &lt;/child&gt;
+  &lt;child ref="ID000003"&gt;
+    &lt;parent ref="ID000001" /&gt;
+  &lt;/child&gt;
+  &lt;child ref="ID000004"&gt;
+    &lt;parent ref="ID000002" /&gt;
+    &lt;parent ref="ID000003" /&gt;
+  &lt;/child&gt;
+&lt;/adag&gt;</programlisting>
+
+      <para>The example workflow representation in form of a DAX requires
+      external catalogs, like a transformation catalog (TC) to resolve the
+      logical job names like diamond::preprocess:2.0, and a replica catalog
+      (RC) to resolve the input file <filename>f.a</filename>. The above
+      workflow defines the four jobs just like the example picture, and the
+      files that flow between the jobs. The intermediary files are neither
+      registered nor staged out, and can be considered transient. Only the
+      final result file <filename>f.d</filename> is staged out.</para>
+
+      <para>The decision between not staging nor remembering intermediary
+      files, and staging them, is a balance act of your faith into the
+      workflow. If it is a very large workflow that is likely to fail at some
+      point due to a site problem, or even a transient problem, you may want
+      to be able to restart your workflow without losing too much work. If
+      intermediary files were saved and registered, you can reduce the number
+      of repeated, previously computed tasks, especially when
+      re-planning.</para>
+    </section>
+
+    <section>
+      <title>Workflow Gallery</title>
+
+      <para>Pegasus is being used in a broad range of applications. Our <link
+      linkend="example_workflows">example workflows</link> can be found in a
+      later chapter. <ulink
+      url="http://pegasus.isi.edu/applications.php">These external
+      pages</ulink> shows some of the examples. Also to see the details of the
+      workflows of the applications below you can visit our <ulink
+      url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">gallery
+      of workflows</ulink>.</para>
+
+      <para>We are always looking for new applications willing to leverage our
+      workflow technologies. If you are interested please contact us at
+      pegasus at isi dot edu.</para>
+    </section>
+  </section>
+
+  <section>
+    <title>Executable Workflow (DAG)</title>
+
+    <para>When you take the workflow DAX above, and plan it for a single
+    remote grid execution, here a site with handle <emphasis>hpcc</emphasis>,
+    and plan the workflow without clean-up nodes, the following concrete
+    workflow is built:</para>
+
+    <para><figure id="concepts-fig-dag">
+        <title>Black Diamond DAG</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/concepts-diamond-dag.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
+    <para>Planning augments the original abstract workflow with ancillary
+    tasks to facility the proper execution of the workflow. These tasks
+    include:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>the creation of remote working directories. These directories
+        typically have name that seeks to avoid conflicts with other
+        simultaneously running similar workflows. Such tasks use a job prefix
+        of <code>create_dir</code>. </para>
+      </listitem>
+
+      <listitem>
+        <para>the stage-in of input files before any task which requires these
+        files. Any file consumed by a task needs to be staged to the task, if
+        it does not already exist on that site. Such tasks use a job prefix of
+        <code>stage_in</code>.If multiple files from various sources need to
+        be transferred, multiple stage-in jobs will be created. Additional
+        advanced options permit to control the size and number of these jobs,
+        and whether multiple compute tasks can share stage-in jobs. </para>
+      </listitem>
+
+      <listitem>
+        <para>the original DAX job is concretized into a compute task in the
+        DAG. Compute jobs are a concatination of the job's
+        <emphasis>name</emphasis> and <emphasis>id</emphasis> attribute from
+        the DAX file. </para>
+      </listitem>
+
+      <listitem>
+        <para>the stage-out of data products to a collecting site. Data
+        products with their <emphasis>transfer</emphasis> flag set to
+        <literal>false</literal> will not be staged to the output site.
+        However, they may still be eligible for staging to other, dependent
+        tasks. Stage-out tasks use a job prefix of <code>stage_out</code>.
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>If compute jobs run at different sites, an intermediary staging
+        task with prefix <code>stage_inter</code> is inserted between the
+        compute jobs in the workflow, ensuring that the data products of the
+        parent are available to the child job. </para>
+      </listitem>
+
+      <listitem>
+        <para>the registration of data products in a replica catalog. Data
+        products with their <emphasis>register</emphasis> flag set to
+        <literal>false</literal> will not be registered.</para>
+      </listitem>
+
+      <listitem>
+        <para>the clean-up of transient files and working directories. These
+        steps can be omitted with the <command>--no-cleanup</command> option
+        to the planner.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para><link linkend="advanced_concepts_transfers">Chapter "Advanced
+    Concepts: Transfers"</link> will talk more about when and how staging
+    nodes are inserted into the workflow. </para>
+
+    <para>The DAG will be found in file <filename>diamond-0.dag</filename>,
+    constructed from the <emphasis>name</emphasis> and
+    <emphasis>index</emphasis> attributes found in the root element of the DAX
+    file.</para>
+
+    <programlisting>######################################################################
+# PEGASUS WMS GENERATED DAG FILE
+# DAG diamond
+# Index = 0, Count = 1
+######################################################################
+
+JOB create_dir_diamond_0_hpcc create_dir_diamond_0_hpcc.sub
+SCRIPT POST create_dir_diamond_0_hpcc /opt/pegasus/default/bin/pegasus-exitcode create_dir_diamond_0_hpcc.out
+
+JOB stage_in_local_hpcc_0 stage_in_local_hpcc_0.sub
+SCRIPT POST stage_in_local_hpcc_0 /opt/pegasus/default/bin/pegasus-exitcode stage_in_local_hpcc_0.out
+
+JOB preprocess_ID000001 preprocess_ID000001.sub
+SCRIPT POST preprocess_ID000001 /opt/pegasus/default/bin/pegasus-exitcode preprocess_ID000001.out
+
+JOB findrange_ID000002 findrange_ID000002.sub
+SCRIPT POST findrange_ID000002 /opt/pegasus/default/bin/pegasus-exitcode findrange_ID000002.out
+
+JOB findrange_ID000003 findrange_ID000003.sub
+SCRIPT POST findrange_ID000003 /opt/pegasus/default/bin/pegasus-exitcode findrange_ID000003.out
+
+JOB analyze_ID000004 analyze_ID000004.sub
+SCRIPT POST analyze_ID000004 /opt/pegasus/default/bin/pegasus-exitcode analyze_ID000004.out
+
+JOB stage_out_local_hpcc_2_0 stage_out_local_hpcc_2_0.sub
+SCRIPT POST stage_out_local_hpcc_2_0 /opt/pegasus/default/bin/pegasus-exitcode stage_out_local_hpcc_2_0.out
+
+PARENT findrange_ID000002 CHILD analyze_ID000004
+PARENT findrange_ID000003 CHILD analyze_ID000004
+PARENT preprocess_ID000001 CHILD findrange_ID000002
+PARENT preprocess_ID000001 CHILD findrange_ID000003
+PARENT analyze_ID000004 CHILD stage_out_local_hpcc_2_0
+PARENT stage_in_local_hpcc_0 CHILD preprocess_ID000001
+PARENT create_dir_diamond_0_hpcc CHILD findrange_ID000002
+PARENT create_dir_diamond_0_hpcc CHILD findrange_ID000003
+PARENT create_dir_diamond_0_hpcc CHILD preprocess_ID000001
+PARENT create_dir_diamond_0_hpcc CHILD analyze_ID000004
+PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
+######################################################################
+# End of DAG
+######################################################################
+</programlisting>
+
+    <para>The DAG file declares all jobs and links them to a Condor submit
+    file that describes the planned, concrete job. In the same directory as
+    the DAG file are all Condor submit files for the jobs from the picture
+    plus a number of additional helper files.</para>
+
+    <para>The various instructions that can be put into a DAG file are
+    described in <ulink
+    url="http://www.cs.wisc.edu/condor/manual/v7.5/2_10DAGMan_Applications.html">Condor's
+    DAGMAN documentation</ulink>.The constituents of the submit directory are
+    shown in <link linkend="submit_directory-layout">chapter "submit
+    directory"</link>.</para>
+  </section>
+
+  <section>
+    <title>Execution Environments</title>
+
+    <para>Pegasus supports a number of execution environments. An execution
+    environment is a setup where jobs from a workflow are running.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The simplest execution environment does not involve Condor.
+        Pegasus is capable of planning small workflows for full-local
+        execution using a shell planner. Please refer to the <filename
+        class="directory">examples</filename> directory in your Pegasus
+        installation, the shell planner's <link
+        linkend="local_shell_examples">documentation section</link>, or the
+        tutorials, for details.</para>
+      </listitem>
+
+      <listitem>
+        <para>A slighly more challenging setup is still all-local, but Condor
+        manages queued jobs and Condor DAGMan the workflow. This setup permits
+        limited parallelism with full scalability. With proper setup, Condor
+        can scavenge cycles from unused computers in your department, enabling
+        a pool of more than just a single machine.</para>
+      </listitem>
+
+      <listitem>
+        <para>The vanilla setup are workflows to be executed in a grid
+        environment. This setup requires a number of configurations, and an
+        understanding of remote sites.</para>
+      </listitem>
+
+      <listitem>
+        <para>Various advanced execution environment setups deal with
+        minimally using Globus to obtain remote resources (Glide-ins),
+        by-passing Globus completely (Condor-C), or supporting cloud computing
+        (Nimbus, Eucalyptus, EC2). You should be familiar with the Grid
+        Execution Environment, as some concept are borrowed.</para>
+      </listitem>
+    </itemizedlist>
+
+    <section>
+      <title>The Grid Execution Environment</title>
+
+      <para>The rest of this chapter will focus on the vanilla grid execution
+      environment.</para>
+
+      <para><figure id="concepts-fig-site-layout">
+          <title>Grid Sample Site Layout</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center"
+                         fileref="images/concepts-site-layout.jpg"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
+
+      <para>The vanilla grid environment shown in the figure <link
+      linkend="concepts-fig-site-layout">above</link>. We will work from the
+      left to the right top, then the right bottom.</para>
+
+      <para>On the left side, you have a submit machine where Pegasus runs,
+      Condor schedules jobs, and workflows are executed. We call it the
+      <emphasis>submit host</emphasis> (SH), though its functionality can be
+      assumed by a virtual machine image. In order to properly communicate
+      over secured channels, it is important that the submit machine has a
+      proper notion of time, i.e. runs an NTP daemon to keep accurate time. To
+      be able to connect to remote clusters and receive connections from the
+      remote clusters, the submit host has a public IP address to facilitate
+      this communication.</para>
+
+      <para>In order to send a job request to the remote cluster, Condor wraps
+      the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs
+      on remote sites. In terms of a software stack, Pegasus wraps the job
+      into Condor. Condor wraps the job into Globus. Globus transports the job
+      to the remote site, and unwraps the Globus component, sending it to the
+      remote site's <emphasis>resource manager</emphasis> (RM).</para>
+
+      <para>To be able to communicate using the Globus security infrastructure
+      (GSI), the submit machine needs to have the certificate authority (CA)
+      certificates configured, requires a host certificate in certain
+      circumstances, and the user a user certificate that is enabled on the
+      remote site. On the remote end, the remote gatekeeper node requires a
+      host certificate, all signing CA certificate chains and policy files,
+      and a goot time source.</para>
+
+      <para>In a grid environment, there are one or more clusters accessible
+      via grid middleware like the <ulink url="http://www.globus.org/">Globus
+      Toolkit</ulink>. In case of Globus, there is the Globus gatekeeper
+      listening on TCP port 2119 of the remote cluster. The port is opened to
+      a single machine called <emphasis>head node</emphasis> (HN).The
+      head-node is typically located in a de-militarized zone (DMZ) of the
+      firewall setup, as it requires limited outside connectivity and a public
+      IP address so that it can be contacted. Additionally, once the
+      gatekeeper accepted a job, it passes it on to a jobmanager. Often, these
+      jobmanagers require a limited port range, in the example TCP ports
+      40000-41000, to call back to the submit machine.</para>
+
+      <para>For the user to be able to run jobs on the remote site, the user
+      must have some form of an account on the remtoe site. The user's grid
+      identity is passed from the submit host. An entity called <emphasis>grid
+      mapfile</emphasis> on the gatekeeper maps the user's grid identity into
+      a remote account. While most sites do not permit account sharing, it is
+      possible to map multiple user certificates to the same account.</para>
+
+      <para>The gatekeeper is the interface through which jobs are submitted
+      to the remote cluster's resource manager. A resource manager is a
+      scheduling system like PBS, Maui, LSF, FBSNG or Condor that queues tasks
+      and allocates worker nodes. The <emphasis>worker nodes</emphasis> (WN)
+      in the remote cluster might not have outside connectivity and often use
+      all private IP addresses. The Globus toolkit requires a shared
+      filesystem to properly stage files between the head node and worker
+      nodes.</para>
+
+      <note>
+        <para>The shared filesystem requirement is imposed by Globus. Pegasus
+        is capable of supporting advanced site layouts that do not require a
+        shared filesystem. Please contact us for details, should you require
+        such a setup.</para>
+      </note>
+
+      <para>To stage data between external sites for the job, it is
+      recommended to enable a GridFTP server. If a shared networked filesystem
+      is involved, the GridFTP server should be located as close to the
+      file-server as possible. The GridFTP server requires TCP port 2811 for
+      the control channel, and a limited port range for data channels, here as
+      an example the TPC ports from 40000 to 41000. The GridFTP server
+      requires a host certificate, the signing CA chain and policy files, a
+      stable time source, and a gridmap file that maps between a user's grid
+      identify and the user's account on the remote site.</para>
+
+      <para>The GridFTP server is often installed on the head node, the same
+      as the gatekeeper, so that they can share the grid mapfile, CA
+      certificate chains and other setups. However, for performance purposes
+      it is recommended that the GridFTP server has its own machine.</para>
+    </section>
+
+    <section>
+      <title>A Cloud Execution Environment</title>
+
+      <para><figure id="concepts-fig-cloud-layout">
+          <title>Cloud Sample Site Layout</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center" fileref="images/fg-pwms-prefio.3.png"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
+
+      <para>The pevious figure shows a sample layout for sky computing (as in:
+      multiple clouds) as supported by Pegasus. At this point, it is up to the
+      user to provision the remote resources with a proper VM image that
+      includes a Condor startd and proper Condor configuration to report back
+      to a Condor collector that the Condor schedd has access to.</para>
+
+      <para>In this discussion, the <emphasis>submit host</emphasis> (SH) is
+      located logically external to the cloud provider(s). The SH is the point
+      where a user submits Pegasus workflows for execution. This site
+      typically runs a Condor collector to gather resource announcements, or
+      is part of a larger Condor pool that collects these announcement. Condor
+      makes the remote resources available to the submit host’s Condor
+      installation.</para>
+
+      <para>The <link linkend="concepts-fig-cloud-layout">figure above</link>
+      shows the way Pegasus WMS is deployed in cloud computing resources,
+      ignoring how these resources were provisioned. The provisioning request
+      shows multiple resources per provisioning request.</para>
+
+      <para>The provisioning broker -- Nimbus, Eucalyptus or EC2 -- at the
+      remote site is responsible to allocate and set up the resources. For a
+      multi-node request, the worker nodes often require access to a form of
+      shared data storage. Concretely, either a POSIX-compliant shared file
+      system (e.g. NFS, PVFS) is available to the nodes, or can be brought up
+      for the lifetime of the application workflow. The task steps of the
+      application workflow facilitate shared file systems to exchange
+      intermediary results between tasks on the same cloud site. Pegasus also
+      supports an S3 data mode for the application workflow data
+      staging.</para>
+
+      <para>The initial stage-in and final stage-out of application data into
+      and out of the node set is part of any Pegasus-planned workflow. Several
+      configuration options exist in Pegasus to deal with the dynamics of push
+      and pull of data, and when to stage data. In many use-cases, some form
+      of external access to or from the shared file system that is visible to
+      the application workflow is required to facilitate successful data
+      staging. However, Pegasus is prepared to deal with a set of boundary
+      cases.</para>
+
+      <para>The data server in the figure is shown at the submit host. This is
+      not a strict requirement. The data server for consumed data and data
+      products may both be different and external to the submit host.</para>
+
+      <para>Once resources begin appearing in the pool managed by the submit
+      machine’s Condor collector, the application workflow can be submitted to
+      Condor. A Condor DAGMan will manage the application workflow execution.
+      Pegasus run-time tools obtain timing-, performance and provenance
+      information as the application workflow is executed. At this point, it
+      is the user's responsibility to de-provision the allocated
+      resources.</para>
+
+      <para>In the figure, the cloud resources on the right side are assumed
+      to have uninhibited outside connectivity. This enables the Condor I/O to
+      communicate with the resources. The right side includes a setup where
+      the worker nodes use all private IP, but have out-going connectivity and
+      a NAT router to talk to the internet. The <emphasis>Condor connection
+      broker</emphasis> (CCB) facilitates this setup almost
+      effortlessly.</para>
+
+      <para>The left side shows a more difficult setup where the connectivity
+      is fully firewalled without any connectivity except to in-site nodes. In
+      this case, a proxy server process, the <emphasis>generic connection
+      broker</emphasis> (GCB), needs to be set up in the DMZ of the cloud site
+      to facilitate Condor I/O between the submit host and worker
+      nodes.</para>
+
+      <para>If the cloud supports data storage servers, Pegasus is starting to
+      support workflows that require staging in two steps: Consumed data is
+      first staged to a data server in the remote site's DMZ, and then a
+      second staging task moves the data from the data server to the worker
+      node where the job runs. For staging out, data needs to be first staged
+      from the job's worker node to the site's data server, and possibly from
+      there to another data server external to the site. Pegasus is capable to
+      plan both steps: Normal staging to the site's data server, and the
+      worker-node staging from and to the site's data server as part of the
+      job. We are working on expanding the current code to support a more
+      generic set by Pegasus 3.1.</para>
+
+      <section>
+        <title>Shared File Systems</title>
+
+        <para>Ideally, any allocation of multiple resources shares a file
+        system among them. This can be either a globally shared file system
+        like NFS, or a per-request file system dynamically allocated like PVFS
+        or NFS. Often, for the sake of speed, it is advisable that each
+        resource has its own fast local non-shared disk space that can be
+        transiently used by application workflow jobs.</para>
+
+        <para>Pegasus recommends the use of a shared file system, because it
+        simplifies workflows and may even improve performance. Without shared
+        file system, the same data may need to be staged to the same site but
+        different resources multiple times. Without shared file systems, data
+        products of a parent job need to be staged out, and staged back in to
+        the child job, currently via an external data server, even if parent
+        and child run on the same multi-resource allocation.</para>
+
+        <para>The Pegasus team explores the option of dynamically bringing up
+        an NFS server on one resource of a multi-resource allocation for the
+        duration of the allocation. This option is part of the configuration
+        for an experiment’s workflow’s provisioning stage. We do not expect
+        cloud sites to ban NFS and RPC traffic between resources of the same
+        multi-resource allocation.</para>
+      </section>
+    </section>
+  </section>
+
+  <section>
+    <title>Pegasus Workflow Job States and Delays</title>
+
+    <para>The states that a job moves through during execution and possible
+    delays are discussed in <link linkend="submit_directory-delays">chapter
+    "submit directory"</link>.</para>
+  </section>
+</chapter>

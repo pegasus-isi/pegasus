@@ -1,0 +1,363 @@
+.\"  Copyright 2010-2011 University Of Southern California
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"  http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\"  Unless required by applicable law or agreed to in writing,
+.\"  software distributed under the License is distributed on an "AS IS" BASIS,
+.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\"  See the License for the specific language governing permissions and
+.\" limitations under the License.
+.\"
+.\" 
+.\" $Id: pegasus-monitord.1 2428 2010-09-20 23:19:55Z prasanth $
+.TH "pegasus-monitord" "1" "3.0" "Pegasus Monitoring Daemon"
+.SH "NAME"
+.LP 
+pegasus\-monitord \- tracks a workflow progress, mining information
+.SH "SYNTAX"
+.TP 17
+.B pegasus\-monitord [\-\-help|\-help] [\-\-debug|-d level]
+.br
+.B [\-\-adjustment|\-a i] [\-\-foreground|\-N]
+.br
+.B [\-\-no-daemon|\-n] [\-\-job|\-j jobstate.log file]
+.br
+.B [\-\-log|\-l logfile] [\-\-config|\-C config_opts]
+.br
+.B [\-\-no\-recursive] [\-\-no\-database] [\-\-replay|\r]
+.br
+.B [\-\-sim|\-s millisleep] [\-\-db\-stats]
+.br
+.B [\-\-output\-file|\-f output_file]
+.br
+.B [\-\-output\-db|\-o output_db]
+.br
+.B [\-\-host|\-H host_string]
+.br
+.B DAGMan output file
+.br
+.SH "DESCRIPTION"
+.LP 
+This program follows a workflow, parsing the output of DAGMAN's
+dagman.out file. In addition to generating the jobstate.log file,
+.B "pegasus\-monitord"
+can also be used mine information from the workflow
+dag file and jobs' submit and output files, and either populate a
+database or write a NetLogger events file with that information.
+.SH "ARGUMENTS"
+.TP
+.B \-\-help | \-h
+Prints a usage summary with all the available command-line options.
+.TP
+.B \-\-debug | \-d level
+Sets the log level for
+.BR "pegasus\-monitord" .
+Possible values are
+.IR "INFO" ,
+.IR "DEBUG" ,
+.IR "WARNING" ,
+.IR "ERROR"
+and
+.IR "CRITICAL" ,
+in the more verbose to least verbose order.
+.br
+If omitted, the default
+.I level
+will be set to
+.IR "WARNING" .
+.br
+The log level in
+.B "pegasus\-monitord"
+can also be adjusted interactively, by sending the
+.I USR1
+and
+.I USR2
+signals to the process, respectively for incrementing and decrementing the log level.
+.TP
+.B \-\-adjustment | \-a i
+For adjusting time zone differences by
+.I i
+seconds, default is 0.
+.TP
+.B \-\-foreground | \-N
+Do not daemonize
+.B "pegasus\-monitord"
+, go through the motions as if (Condor).
+.TP
+.B \-\-no\-daemon | \-n	
+Do not daemonize
+.B "pegasus\-monitord"
+, keep it in the foreground (for debugging).
+.TP
+.B \-\-job | \-j jobstate.log file
+Alternative location for the
+.I jobstate.log
+file. The default is to write a 
+.I jobstate.log
+in the workflow directory. An absolute file name should only be used
+if the workflow does not have any sub-workflows, as each sub-workflow
+will generate its own 
+.I jobstate.log
+file. If an alternative, non-absolute, filename is given with this
+option,
+.B "pegasus\-monitord"
+will create one file in each workflow (and sub-workflow) directory
+with the filename provided by the user with this option. If an absolute
+filename is provided and sub-workflows are found, a warning message
+will be printed and
+.B "pegasus\-monitord"
+will not track any sub-workflows.
+.TP
+.B \-\-log\-file | \-\-log logfile
+Specifies an alternative 
+.I logfile
+to use instead of the 
+.I monitord.log
+file in the main workflow directory. Differently from the 
+.I jobstate.log
+file above, 
+.B "pegasus\-monitord"
+only generates one 
+.I logfile
+per execution (and not one per workflow and sub-workflow it tracks).
+.TP
+.B \-\-config | \-C config_opts
+.I config_opts
+are in the
+.I key=value
+format, and allow users to override values read from the braindump.txt
+file. This option should be used carefully, as it will apply not only
+to the main workflow, but also to all sub-workflows found.
+.TP
+.B \-\-no\-recursive
+This options disables
+.B "pegasus\-monitord"
+to automatically follow any sub-workflows that are found.
+.TP
+.B \-\-no\-database
+Turns off logging information to a database. The default is to
+automatically log information to a SQLite database (see the
+.B \-\-output\-db
+option below for more details. This option must also be given if users
+prefer to output logging events to a NetLogger file (see the
+.B \-\-output\-file
+option below for more details).
+.TP
+.B \-\-replay | \-r
+This option is used to replay the output of an already finished
+workflow. It should only be used after the workflow is finished (not
+necessarily successfully). If a
+.I jobstate.log
+file is found, it will be rotated. However, if a database file is found,
+all references to the workflow (and all its sub-workflows) will be erased
+from it (unless the
+.B \-\-no\-database
+option is specified). When running in replay mode, 
+.B "pegasus\-monitord"
+will always run with the 
+.B \-\-no\-daemon
+option, and any errors will be output directly to the terminal.
+.TP
+.B \-\-sim | \-s millisleep
+This option simulates delays between reads, by sleeping
+.I millisleep
+milliseconds. This option is mainly used by developers.
+.TP
+.B \-\-db\-stats
+This option causes the database module to collect and print database
+statistics at the end of the execution. It has no effect if the
+.B \-\-no\-database
+option is given.
+.TP
+.B \-\-output\-file | \-f output_file
+Turns on NetLogger's logging API, and
+.I output_file
+specifies the filename to where log the data. This option cannot be
+used with the database option, and will not be activated unless the
+.B \-\-no\-database
+option is given. Also, this option cannot be used with the
+.B \-\---host
+option below. See the examples section for more details.
+.TP
+.B \-\-output\-db | \- o db_string
+This option is used to specify a database connection string that will
+be used for loading the data. If this option is omitted,
+.B "pegasus\-monitord"
+will create a SQLite database in the workflow's run directory with the
+same name as the workflow, but with a
+.I .stampede.db
+prefix.
+.I db_string
+can be used to provide an alternative database location. Please see
+the examples section below for more information on how to use this
+option.
+.TP
+.B \-\-host | \-H host_string
+In this option,
+.I host_string
+specifies the host and port to where to send the data. This option is
+tipically used when a broker is set up. In this case, it will send
+the data to the host and port where the broker is listening. See the
+examples section below for an example on how to use this option.
+.TP
+.B DAGMan output file
+The
+.I DAGMan_output_file
+is the only requires command\-line argument in
+.B "pegasus\-monitord"
+and must have the
+.I .dag.dagman.out
+extension.
+.SH "RETURN VALUE"
+If the plan could be constructed, 
+.B pegasus\-monitord
+returns with an exit code of 0. However, in case of error, a non-zero
+exit code indicates problems. In that case, the
+.I logfile
+should contain additional information about the error condition.
+.SH "ENVIRONMENT VARIABLES"
+.LP
+.B "pegasus\-monitord"
+does not require that any environmental variables be set. It locates
+its required Python modules based on its own location, and therefore
+should not be moved outside of Pegasus' bin directory.
+.SH "EXAMPLES"
+.LP
+Usually,
+.B "pegasus\-monitord"
+is invoked automatically by
+.B "pegasus\-run"
+and tracks the workflow progress in real-time, producing the
+.I jobstate.log
+file and a corresponding SQLite database. When a workflow fails, and
+is re-submitted with a rescue DAG,
+.B "pegasus\-monitord"
+will automatically pick up from where it left previously and continue
+the
+.I jobstate.log
+file and the database.
+.LP
+If users need to create the
+.I jobstate.log
+file after a workflow is already finished, the
+.B \-\-replay | -r
+option should be used when running
+.B "pegasus\-monitord"
+manually. For example:
+.TP
+$ pegasus_monitord -r diamond-0.dag.dagman.out
+.LP
+will launch
+.B "pegasus\-monitord"
+in replay mode. In this case, if a
+.I jobstate.log
+file already exists, it will be rotated and a new file will be
+created. If a
+.I diamong-0.stampede.db
+SQLite database already exists,
+.B "pegasus\-monitord"
+will purge all references to the workflow id specified in the
+.I braindump.txt
+file, including all sub-workflows associated with that workflow id.
+.TP
+$ pegasus_monitord -r --no-database diamong-0.dag.dagman.out
+.LP
+will do the same thing, but without using any databases.
+.TP
+$ pegasus_monitord -r --no-database -f diamong-0.bp diamong-0.dag.dagman.out
+.LP
+will turn on NetLogger's logging API and create a file containing
+NetLogger events with all the workflow data. This is in addition to the
+.I jobstate.log
+file.
+.LP
+When using the
+.B \-\-output\-db | \-o
+option, the user should provide a database connection string in the
+format of:
+.TP
+dialect://username:password@host/database
+.LP
+Where
+.I dialect
+is the name of the underlying driver (
+.I mysql
+,
+.I sqlite
+,
+.I oracle
+,
+.I postgres
+) and
+.I database
+is the name of the database running on the server at the
+.I host
+computer.
+.LP
+If users want to use a different
+.I SQLite
+database,
+.B "pegasus\-monitord"
+requires them to specify the absolute path of the alternate file. For example:
+.TP
+$ pegasus_monitord -r sqlite:////home/user/diamong_database.db diamong-0.dag.dagman.out
+.TP
+Here are docs with details for all of the supported drivers:
+.TP
+.B http://www.sqlalchemy.org/docs/05/reference/dialects/index.html
+.LP
+Additional per-database options that work into the connection strings
+are outlined there.
+.LP
+It is important to note that one will need to have the appropriate db
+interface library installed. Which is to say,
+.I SQLAlchemy
+is a wrapper around the mysql interface library (for instance), it
+does not provide a
+.I MySQL
+driver itself. The
+.B Pegasus
+distribution includes both
+.B SQLAlchemy
+and the
+.B SQLite
+Python driver.
+.LP
+As a final note, it is important to mention that unlike when using
+.I SQLite
+databases, using
+.B SQLAlchemy
+with other database servers, e.g.
+.I MySQL
+or
+.I Postgres
+, the target database needs to exist. So, if a user wanted to connect to:
+.LP
+.B mysql://pegasus-user:supersecret@localhost/diamond
+.LP
+it would need to first connect to the server at
+.I localhost
+and issue the appropriate create database command before running
+.B "pegasus\-monitord"
+as
+.B SQLAlchemy
+will take care of creating the tables and indexes if they do not
+already exist.
+.SH "SEE ALSO"
+.BR pegasus\-run (1).
+.SH "AUTHORS"
+.LP
+Gaurang Mehta <gmehta at isi dot edu>
+.br
+Fabio Silva   <fabio at isi dot edu>
+.br
+Karan Vahi    <vahi at isi dot edu>
+.br
+Jens\-S. Vöckler <voeckler at isi dot edu>
+.PP 
+PEGASUS
+.B http://pegasus.isi.edu

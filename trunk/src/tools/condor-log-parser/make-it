@@ -1,0 +1,15 @@
+#!/bin/sh
+if [ "X$CONDOR_HOME" = "X" ]; then
+    if [ "X$CONDOR_LOCATION" = "X" ]; then
+	echo "ERROR! Please set either CONDOR_HOME or CONDOR_LOCATION"
+	exit 1;
+    else 
+	CONDOR_HOME=${CONDOR_LOCATION}
+	export CONDOR_HOME
+    fi
+fi
+
+set -x
+g++ -O2 -c -I${CONDOR_HOME}/include userlog-reader.C || exit 1
+g++ userlog-reader.o -O2 -static -o condor-log-parser -L${CONDOR_HOME}/lib -lcondorapi -lc -lnss_files -lnss_dns -lresolv -lc -lnss_files -lnss_dns -lresolv -lc -ldl || exit 1
+set +x
