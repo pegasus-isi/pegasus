@@ -529,7 +529,7 @@ public class File  extends Abstract
                    "String version, String resourceid,TCType type)");
         logMessage("\t getTCPhysicalNames(" + namespace + ", " + name + ", " +
                    version + ", " + resourceid + ", " + type + ")");
-        List results = null;
+        List<TransformationCatalogEntry> results = null;
         List lfnMap = new ArrayList();
         /*
         int count[] = {
@@ -560,17 +560,11 @@ public class File  extends Abstract
                             break;
                         }
                     }
-                    String[] s = {
-                        entry.getResourceId(),
-                        entry.getPhysicalTransformation(),
-                        entry.getType().toString(),
-                        entry.getVDSSysInfo().toString()};
-                    // Moved the format logic to client classes
-                    //columnLength(s, count);
+
                     if (results == null) {
-                        results = new ArrayList();
+                        results = new ArrayList<TransformationCatalogEntry>();
                     }
-                    results.add(s);
+                    results.add(entry);
                 }
             }
         }

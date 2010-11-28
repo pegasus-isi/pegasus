@@ -13,7 +13,7 @@
  * Southern California. All rights reserved.
  */
 
-package org.griphyn.vdl.toolkit;
+package edu.isi.pegasus.planner.client;
 
 import java.io.*;
 import edu.isi.pegasus.common.util.Version;
@@ -59,6 +59,7 @@ public class VersionNumber
 " -V|--version   print version information about itself and exit." + linefeed +
 "    --verbose   increases the verbosity level (ignored)." + linefeed +
 " -f|--full      also shows the internal built time stamp." + linefeed +
+" -l|--long      alias for --full." + linefeed +
 " -m|--match     matches internal version with installation." + linefeed +
 " -q|--quiet     in match mode, no news are good news, use exit code." + linefeed +
 linefeed +
@@ -75,16 +76,17 @@ linefeed +
    */
   protected LongOpt[] generateValidOptions()
   {
-    LongOpt[] lo = new LongOpt[7];
+    LongOpt[] lo = new LongOpt[8];
 
     lo[0] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
     lo[1] = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
     lo[2] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 1 );
 
     lo[3] = new LongOpt( "full", LongOpt.NO_ARGUMENT, null, 'f' );
-    lo[4] = new LongOpt( "build", LongOpt.NO_ARGUMENT, null, 'f' );
-    lo[5] = new LongOpt( "match", LongOpt.NO_ARGUMENT, null, 'm' );
-    lo[6] = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
+    lo[4] = new LongOpt( "long", LongOpt.NO_ARGUMENT, null, 'l' );
+    lo[5] = new LongOpt( "build", LongOpt.NO_ARGUMENT, null, 'f' );
+    lo[6] = new LongOpt( "match", LongOpt.NO_ARGUMENT, null, 'm' );
+    lo[7] = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
 
 
     return lo;
@@ -98,7 +100,7 @@ linefeed +
     try {
       me = new VersionNumber("pegasus-version");
       Getopt opts = new Getopt( me.m_application, args,
-				"Vfhmq",
+				"Vflhmq",
 				me.generateValidOptions() );
       opts.setOpterr(false);
       String installed = null;
@@ -118,6 +120,7 @@ linefeed +
 	  System.out.println( "PEGASUS version " + v.toString() );
 	  return;
 
+	case 'l':
 	case 'f':
 	  build = true;
 	  break;

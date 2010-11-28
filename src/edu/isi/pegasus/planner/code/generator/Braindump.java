@@ -416,7 +416,7 @@ public class Braindump {
 
             dn = credential.getIdentity();
         } catch (GlobusCredentialException ex) {
-            mLogger.log( "Unable to determine GRID DN", ex, LogManager.ERROR_MESSAGE_LEVEL );
+            mLogger.log( "Unable to determine GRID DN", ex, LogManager.DEBUG_MESSAGE_LEVEL );
         }
         return dn;
     }

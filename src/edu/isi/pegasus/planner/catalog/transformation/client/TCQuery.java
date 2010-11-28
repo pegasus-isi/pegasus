@@ -146,7 +146,7 @@ public class TCQuery
     private void getPfn( String namespace, String name, String version,
         String resource, String type ) {
         if ( name != null ) {
-            List l = null;
+            List<TransformationCatalogEntry> l = null;
             TCType t = ( type == null ) ? null : TCType.valueOf( type );
             try {
                 mLogger.log(
@@ -166,10 +166,15 @@ public class TCQuery
             	int count[] = {
                         0, 0, 0};
                 //l.remove( l.size() - 1 );
-            	for ( Iterator itr = l.iterator(); itr.hasNext(); ) {
-                	String[] s = ( String[] ) itr.next();
+            	for ( TransformationCatalogEntry entry : l ) {
+                	String[] s = {
+                        entry.getResourceId(),
+                        entry.getPhysicalTransformation(),
+                        entry.getType().toString(),
+                        entry.getVDSSysInfo().toString()};
                 	columnLength(s, count);
                 }
+               
                 System.out.println( "#RESID" +
                     getSpace( count[ 0 ], "#RESID".length() ) +
                     "  LTX" +
@@ -178,8 +183,12 @@ public class TCQuery
                     " TYPE" + getSpace( count[ 2 ], "TYPE".length() ) +
                     " SYSINFO" );
                 System.out.println( "" );
-                for ( Iterator i = l.iterator(); i.hasNext(); ) {
-                    String[] s = ( String[] ) i.next();
+                for ( TransformationCatalogEntry entry : l  ) {
+                    String[] s = {
+                        entry.getResourceId(),
+                        entry.getPhysicalTransformation(),
+                        entry.getType().toString(),
+                        entry.getVDSSysInfo().toString()};
                     System.out.println( s[ 0 ] + getSpace( count[ 0 ],
                         s[ 0 ].length() ) +
                         lfn + getSpace( lfn.length(), lfn.length() ) +
