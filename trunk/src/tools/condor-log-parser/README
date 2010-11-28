@@ -1,3 +1,0 @@
-This is a condor-log parser written in C. To compile you need a Condor
-distribution and then edit the Condor paths in the Makefile.
-

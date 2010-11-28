@@ -1,1 +1,0 @@
-produced: 245 diamonds, 35 collectors and 1 final = 281 DVs and 1016 jobs

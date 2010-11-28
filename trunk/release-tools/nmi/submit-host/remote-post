@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -e
-
-TOP_DIR=`pwd`
-
-cd pegasus/build-results/
-tar czf $TOP_DIR/results.tar.gz *
-

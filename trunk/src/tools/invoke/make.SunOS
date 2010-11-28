@@ -1,8 +1,0 @@
-#!/bin/sh
-gmake distclean
-gmake EXTRACFLAGS='$(V7FLAGS)' invoke
-mv invoke invoke.sparcv7
-gmake clean
-gmake EXTRACFLAGS='$(V9FLAGS)' invoke
-mv invoke invoke.sparcv9
-gmake clean

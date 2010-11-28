@@ -341,6 +341,10 @@ sub run_show_job($$$$){
 	if($title){
 		push(@args ,"--title '".$title."'"); # adding graph title	
 	}
+	if($keep){
+	    #pass the keep option forward to show-job
+	    push(@args ,"--keep"); 
+	}
 	push(@args, $dag_file_path); # adding dag file path
 	
 	# creating show job command 
@@ -534,40 +538,40 @@ sub run_dag2dot($$){
 		return ($status  ,$summary_msg);
 	}
 	
-	my ($dot_jpeg_command_path) = find_exec('dot');
+	my ($dot_png_command_path) = find_exec('dot');
 	
-	if($dot_jpeg_command_path){
+	if($dot_png_command_path){
 		print STDOUT "******  dot  ***** \n";
-		my ($dot_jpeg_img_file_name) =("$dagbase"."-dag.jpg" );
-		my ($dot_jpeg_img_file ) =File::Spec->catfile("$output_dir", $dot_jpeg_img_file_name);
-		my (@dot_jpeg_args);
+		my ($dot_png_img_file_name) =("$dagbase"."-dag.png" );
+		my ($dot_png_img_file ) =File::Spec->catfile("$output_dir", $dot_png_img_file_name);
+		my (@dot_png_args);
 		
 		#Adding arguments 
-		push(@dot_jpeg_args , "-Tjpeg"); # adding output file path
-		push(@dot_jpeg_args , "-o ".$dot_jpeg_img_file); # adding output file path
-		push(@dot_jpeg_args, $dot_img_file); # adding dot file path
+		push(@dot_png_args , "-Tpng"); # adding output file path
+		push(@dot_png_args , "-o ".$dot_png_img_file); # adding output file path
+		push(@dot_png_args, $dot_img_file); # adding dot file path
 		
-		# creating dag2jpeg command 
-		my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
+		# creating dag2png command 
+		my ($dag2png_command) = "$dot_png_command_path ".join(" ",@dot_png_args);
 		if ($main::DEBUG){
-			print STDOUT "Executing command :-\n $dag2jpeg_command \n";
+			print STDOUT "Executing command :-\n $dag2png_command \n";
 		}
-		my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command ,'dag_dot2jpeg');
-		if($dot_jpeg_status == 0  ){
-			print STDOUT "****** Finished executing dot2jpeg ***** \n";
+		my($dot_png_status ,$dot_png_exec_msg) = execute_command($dag2png_command ,'dag_dot2png');
+		if($dot_png_status == 0  ){
+			print STDOUT "****** Finished executing dot2png ***** \n";
 			if ($main::DEBUG){
-				print STDOUT "JPEG file corresponding to the dag is created at $dot_jpeg_img_file \n************\n";
+				print STDOUT "PNG file corresponding to the dag is created at $dot_png_img_file \n************\n";
 			}
-			$summary_msg = "\nJPEG file corresponding to the dag is created at: \n$dot_jpeg_img_file \n";
+			$summary_msg = "\nPNG file corresponding to the dag is created at: \n$dot_png_img_file \n";
 		}else{
-			print STDERR "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
-			$summary_msg = "\nWARNING : Failed to create JPEG file. $dot_jpeg_exec_msg .dot file corresponding to the dag is created at: \n$dot_img_file "
+			print STDERR "WARNING : Failed to execute dot2png command. $dot_png_exec_msg \n";
+			$summary_msg = "\nWARNING : Failed to create PNG file. $dot_png_exec_msg .dot file corresponding to the dag is created at: \n$dot_img_file "
 		}
 	}else{
 		if ($main::DEBUG){
-			print STDERR "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+			print STDERR "WARNING: Application \'dot\' not available. PNG file will not be generated.\n************ \n";
 		}
-		$summary_msg = "\nApplication \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dag is created at: \n$dot_img_file \n";
+		$summary_msg = "\nApplication \'dot\' not available. PNG file will not be generated.dot file corresponding to the dag is created at: \n$dot_img_file \n";
 	}
 	return ($status ,$summary_msg);
 }
@@ -611,41 +615,41 @@ sub run_dax2dot($$){
 		return ($status ,$summary_msg);
 	}
 	
-	my ($dot_jpeg_command_path) = find_exec('dot');
+	my ($dot_png_command_path) = find_exec('dot');
 	
-	if($dot_jpeg_command_path){
+	if($dot_png_command_path){
 		print STDOUT "******  dot  ***** \n";
-		my ($dot_jpeg_img_file_name) =("$daxbase"."-dax.jpg" );
-		my ($dot_jpeg_img_file ) =File::Spec->catfile("$output_dir", $dot_jpeg_img_file_name);
-		my (@dot_jpeg_args);
+		my ($dot_png_img_file_name) =("$daxbase"."-dax.png" );
+		my ($dot_png_img_file ) =File::Spec->catfile("$output_dir", $dot_png_img_file_name);
+		my (@dot_png_args);
 		
 		#Adding arguments 
-		push(@dot_jpeg_args , "-Tjpeg"); # adding output file path
-		push(@dot_jpeg_args , "-o ".$dot_jpeg_img_file); # adding output file path
-		push(@dot_jpeg_args, $dot_img_file); # adding dot file path
+		push(@dot_png_args , "-Tpng"); # adding output file path
+		push(@dot_png_args , "-o ".$dot_png_img_file); # adding output file path
+		push(@dot_png_args, $dot_img_file); # adding dot file path
 		
-		# creating dag2jpeg command 
-		my ($dag2jpeg_command) = "$dot_jpeg_command_path ".join(" ",@dot_jpeg_args);
+		# creating dag2png command 
+		my ($dag2png_command) = "$dot_png_command_path ".join(" ",@dot_png_args);
 		if ($main::DEBUG){
-			print STDOUT "Executing command :-\n $dag2jpeg_command \n";
+			print STDOUT "Executing command :-\n $dag2png_command \n";
 		}
-		my($dot_jpeg_status ,$dot_jpeg_exec_msg) = execute_command($dag2jpeg_command,'dax_dot2jpeg');
+		my($dot_png_status ,$dot_png_exec_msg) = execute_command($dag2png_command,'dax_dot2png');
 		
-		if($dot_jpeg_status == 0  ){
-			print STDOUT "****** Finished executing dot2jpeg ***** \n";
+		if($dot_png_status == 0  ){
+			print STDOUT "****** Finished executing dot2png ***** \n";
 			if ($main::DEBUG){
-				print STDOUT "JPEG file corresponding to the dax is created at $dot_jpeg_img_file \n************\n";
+				print STDOUT "PNG file corresponding to the dax is created at $dot_png_img_file \n************\n";
 			}
-			$summary_msg = "\nJPEG file corresponding to the dax is created at: \n$dot_jpeg_img_file \n";
+			$summary_msg = "\nPNG file corresponding to the dax is created at: \n$dot_png_img_file \n";
 		}else{
-			print STDERR "WARNING : Failed to execute dot2jpeg command. $dot_jpeg_exec_msg \n";
-			$summary_msg ="\nWARNING : Failed to create JPEG file. $dot_jpeg_exec_msg .dot file corresponding to the dax is created at: \n$dot_img_file \n";
+			print STDERR "WARNING : Failed to execute dot2png command. $dot_png_exec_msg \n";
+			$summary_msg ="\nWARNING : Failed to create PNG file. $dot_png_exec_msg .dot file corresponding to the dax is created at: \n$dot_img_file \n";
 		}
 	}else{
 		if ($main::DEBUG){
-			print STDERR "WARNING: Application \'dot\' not available. JPEG file will not be generated.\n************ \n";
+			print STDERR "WARNING: Application \'dot\' not available. PNG file will not be generated.\n************ \n";
 		}
-		$summary_msg = "\nApplication \'dot\' not available. JPEG file will not be generated.dot file corresponding to the dax is created at: \n$dot_img_file \n";
+		$summary_msg = "\nApplication \'dot\' not available. PNG file will not be generated.dot file corresponding to the dax is created at: \n$dot_img_file \n";
 	}
 	return ($status ,$summary_msg);
 }
