@@ -1140,11 +1140,11 @@ The host over time chart is created at -
 png format :-/scratch/grid-setup/run0001/graph/diamond-host.png 
 eps format :-/scratch/grid-setup/run0001/graph/diamond-host.eps
 
-JPEG file corresponding to the dag is created at: 
-/scratch/grid-setup/run0001/graph/diamond-dag.jpg 
+PNG file corresponding to the dag is created at: 
+/scratch/grid-setup/run0001/graph/diamond-dag.png 
 
-JPEG file corresponding to the dax is created at: 
-/scratch/grid-setup/run0001/graph/blackdiamond-dax.jpg 
+PNG file corresponding to the dax is created at: 
+/scratch/grid-setup/run0001/graph/blackdiamond-dax.png 
 **************************************************************************************************</programlisting>
 
       <para>By default the output gets generated to graph folder inside the
