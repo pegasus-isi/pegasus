@@ -22,7 +22,144 @@ Wed Nov 24 14:47:59 PST 2010
 </computeroutput></programlisting>
 
   <section>
-    <title>Downloading and Running the VM</title>
+    <title>Downloading and Running the VM using Virtual Box</title>
+
+    <para>You will need to install Virtual Box to run the virtual machine on
+    your computer. If you already have one of the tools installed, use that.
+    Otherwise download the binary versions and install them from the<ulink
+    url="http://www.virtualbox.org/wiki/Downloads"> Virtual Box
+    Website</ulink> . </para>
+
+    <para>The instructors have tested the image with Virtual Box 3.2.10</para>
+
+    <section>
+      <title>Download the VM for Virtual Box use</title>
+
+      <para>Download the corresponding disk image.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><ulink
+          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus3.0-VM-box.tar.bz2">Virtual
+          Box Pegasus Image</ulink></para>
+
+          <para>It is around <emphasis role="bold">2 GB</emphasis> in size. We
+          recommend using a command line tool like <emphasis
+          role="bold">wget</emphasis> to download the image. Downloading the
+          image using the browser sometimes corrupts the image.</para>
+
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus3.0-VM-box.tar.bz2
+
+--</emphasis>14:52:11--  http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM-box.tar.bz2
+           =&gt; `Pegasus3.0-VM-box.tar.bz2'
+Resolving pegasus.isi.edu... 128.9.64.219
+Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1,487,950,091 (1.4G) [application/x-bzip2]
+...</programlisting>
+
+          <para>The Image is bzipped . You will need to unzip it.</para>
+
+          <para>If you have gnu tar you can do this directly</para>
+
+          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus3.0-VM-box.tar.bz2</emphasis></programlisting>
+
+          <para>Else you need to do the following</para>
+
+          <programlisting><emphasis role="bold">$ bunzip2 Pegasus3.0-VM-box.tar.bz2
+
+$ tar xvf Pegasus3.0-VM-box.tar</emphasis></programlisting>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>Running the VM with Virtual Box</title>
+
+      <para>Launch Virtual Box on your machine. Follow the steps to add the
+      vmdk file to Virtual Box and create a virtual machine inside the Virtual
+      Box </para>
+
+      <orderedlist>
+        <listitem>
+          <para>In the Menu, click File and select Virtual Media Manager (
+          File &gt; Virtual Media Manager )</para>
+        </listitem>
+
+        <listitem>
+          <para>The Virtual Media Manager Windows opens up.</para>
+        </listitem>
+
+        <listitem>
+          <para>Click on "Add" button to add the <emphasis
+          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> file that you just
+          downloaded and unzipped.</para>
+        </listitem>
+
+        <listitem>
+          <para>You will now see the <emphasis
+          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> in the list of hard
+          disks with Actual size listed as around 5.10 GB</para>
+        </listitem>
+
+        <listitem>
+          <para>Close the Window for the Virtual Media Manager</para>
+        </listitem>
+      </orderedlist>
+
+      <para>We will now create a Virtual Machine in the Virtual Box.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>In the Menu, click Machine and select New ( Machine &gt; New
+          )</para>
+        </listitem>
+
+        <listitem>
+          <para>It will open the New Virtual Machine Wizard. Click
+          Continue</para>
+        </listitem>
+
+        <listitem>
+          <para>In the VM Name and OS Type Window specify the name as<emphasis
+          role="bold"> PegasusVM-3.0</emphasis>. Select the <emphasis
+          role="bold">Operating System as Linux </emphasis>and <emphasis
+          role="bold">Version as Red Hat ( 64 bit )</emphasis>. Click
+          Continue.</para>
+        </listitem>
+
+        <listitem>
+          <para>You will now see the <emphasis
+          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> in the list of hard
+          disks with Actual size listed as around 5.10 GB</para>
+        </listitem>
+
+        <listitem>
+          <para>Set the base memory to <emphasis role="bold">1024
+          MB</emphasis> . It defaults to 512 MB. Click Continue</para>
+        </listitem>
+
+        <listitem>
+          <para>We now select the Virtual Hard Disk to use with the machine.
+          Select the option box for Use Existing Hard Disk. Select <emphasis
+          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> from the list . Click
+          Continue</para>
+        </listitem>
+
+        <listitem>
+          <para>Click Done</para>
+        </listitem>
+
+        <listitem>
+          <para>Now in the Virtual Box , start the PegasusVM-3.0
+          machine.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+  </section>
+
+  <section>
+    <title>Downloading and Running the VM using VMWare</title>
 
     <para>You will need to install VMWare to run the virtual machine on your
     computer. If you already have one of the tools installed, use that.
@@ -53,7 +190,7 @@ Wed Nov 24 14:47:59 PST 2010
     </itemizedlist>
 
     <section>
-      <title>Download the VM</title>
+      <title>Download the VM for VMWare use</title>
 
       <para>Download the corresponding disk image.</para>
 
@@ -94,7 +231,7 @@ $ tar xvf Pegasus3.0-VM.tar</emphasis></programlisting>
     </section>
 
     <section>
-      <title>Running the VM</title>
+      <title>Running the VM with VMWare</title>
 
       <para>To start the virtual machine double click on the vmware suffixed
       file/package Pegasus3.0-VM.vmwarevm . After double clicking, VMware will
@@ -116,31 +253,6 @@ $ tar xvf Pegasus3.0-VM.tar</emphasis></programlisting>
 
       <para>Select the option<emphasis role="bold"> 3</emphasis> i.e you
       copied it.</para>
-
-      <para>When the virtual machine ( Pegasus3.0-VM.vmwarevm ) starts , it
-      will ask for a password for a user called <emphasis
-      role="bold">pegasus</emphasis>. The password is same as the username
-      i.e. pegasus.</para>
-
-      <para>After logging on, start a terminal</para>
-
-      <programlisting><command>$ </command><emphasis role="bold">[pegasus@pegasus ~]$ pwd</emphasis>
-
-/home/pegasus
-</programlisting>
-
-      <para>In general, to run workflows on the Grid you will need to obtain
-      Grid Credentials. The VM already has a user certificate installed for
-      the pegasus user. To generate the proxy ( grid credentials ) run the
-      <emphasis role="bold">grid-proxy-init</emphasis> command.</para>
-
-      <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init 
-
-</command><computeroutput>Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
-Creating proxy ................................... Done
-Your proxy is valid until: Thu Nov 25 02:48:18 2010
-
-</computeroutput></programlisting>
     </section>
   </section>
 
@@ -150,6 +262,32 @@ Your proxy is valid until: Thu Nov 25 02:48:18 2010
     <para>In this chapter you will be introduced to planning and executing a
     workflow through Pegasus WMS locally. You will then plan and execute a
     larger Montage workflow on the GRID.</para>
+
+    <para>When the virtual machine ( Pegasus3.0-VM.vmwarevm ) starts , it will
+    ask for a password for a user called <emphasis
+    role="bold">pegasus</emphasis>. The password is same as the username i.e.
+    pegasus.</para>
+
+    <para>After logging on, start a terminal. There is a shortcut on the
+    desktop for the terminal.</para>
+
+    <programlisting><command>$ </command><emphasis role="bold">[pegasus@pegasus ~]$ pwd</emphasis>
+
+/home/pegasus
+</programlisting>
+
+    <para>In general, to run workflows on the Grid you will need to obtain
+    Grid Credentials. The VM already has a user certificate installed for the
+    pegasus user. To generate the proxy ( grid credentials ) run the <emphasis
+    role="bold">grid-proxy-init</emphasis> command.</para>
+
+    <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init 
+
+</command><computeroutput>Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
+Creating proxy ................................... Done
+Your proxy is valid until: Thu Nov 25 02:48:18 2010
+
+</computeroutput></programlisting>
 
     <para>All the exercises in this Chapter will be run from the
     $HOME/pegasus-wms/ directory. All the files that are required reside in
@@ -338,7 +476,7 @@ statfile_20070529_153243_22618.tbl
         <para>Before executing any of the pegasus-rc-client exercises lets us
         remove the pre populated replica catalog.</para>
 
-        <programlisting><emphasis role="bold">$ rm $HOME/config/rc.data</emphasis></programlisting>
+        <programlisting><emphasis role="bold">$ rm $HOME/pegasus-wms/config/rc.data</emphasis></programlisting>
 
         <para>To execute the diamond dax created in <emphasis
         role="bold">exercise 2.1</emphasis>, we will need to register input
@@ -1290,7 +1428,7 @@ $  pegasus-plan --dax `pwd`/dax/diamond.dax --force \
 <emphasis role="bold">
 Use pegasus-status to track the workflow and wait it to fail</emphasis>
 
-$ pegasus-status  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+$ watch pegasus-status  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
 
 
 -- Submitter: pegasus : &lt;172.16.80.128:40195&gt; : pegasus
@@ -1325,7 +1463,7 @@ WORKFLOW STATUS : FAILED | 1/8 ( 12% ) | (rescue needs to be submitted)
       <para>We will now run pegasus-analyzer on the failed workflow submit
       directory to see what job failed.</para>
 
-      <programlisting><emphasis role="bold">ß$ pegasus-analyzer  -i $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002<emphasis>
+      <programlisting><emphasis role="bold">$ pegasus-analyzer  -i $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002<emphasis>
 pegasus-analyzer: initializing...
 </emphasis></emphasis>
 ************************************Summary*************************************
