@@ -1496,9 +1496,9 @@ pegasus-analyzer: end of status report
  &lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
  &lt;invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.1.xsd" version="2.1"
-  start="2010-11-29T19:10:23.862-08:00" duration="0.076" <emphasis role="bold">transformation="pegasus::pegasus-transfer"</emphasis> derivation="pegasus::pegasus-transfer:1.0"
-  <emphasis role="bold">resource="local"</emphasis> wf-label="blackdiamond" wf-stamp="2010-11-29T18:57:59-08:00" interface="eth0" <emphasis
-              role="bold">hostaddr="172.16.80.131" hostname="pegasus" </emphasis>
+  start="2010-11-29T19:10:23.862-08:00" duration="0.076" <emphasis role="bold">transformation="pegasus::pegasus-transfer"</emphasis> 
+  derivation="pegasus::pegasus-transfer:1.0" <emphasis role="bold">resource="local"</emphasis> wf-label="blackdiamond" 
+  wf-stamp="2010-11-29T18:57:59-08:00" interface="eth0" <emphasis role="bold">hostaddr="172.16.80.131" hostname="pegasus" </emphasis>
   pid="5428" uid="501" user="pegasus" gid="501" group="pegasus" umask="0022"&gt;
  
  <emphasis role="bold">&lt;mainjob start="2010-11-29T19:10:23.876-08:00" duration="0.063" pid="5429"&gt;
@@ -1506,8 +1506,10 @@ pegasus-analyzer: end of status report
     <emphasis role="bold">&lt;status raw="256"&gt;&lt;regular exitcode="1"/&gt;&lt;/status&gt;</emphasis>
     &lt;statcall error="0"&gt;
       &lt;file name="/opt/pegasus/default/bin/pegasus-transfer"&gt;23212F7573722F62696E2F656E762070&lt;/file&gt;
-      &lt;statinfo mode="0100775" size="25314" inode="2022205" nlink="1" blksize="4096" blocks="64" mtime="2010-11-23T13:14:52-08:00" 
-             atime="2010-11-29T19:10:07-08:00" ctime="2010-11-25T00:01:52-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
+      &lt;statinfo mode="0100775" size="25314" inode="2022205" nlink="1" blksize="4096" blocks="64" 
+               mtime="2010-11-23T13:14:52-08:00" 
+             atime="2010-11-29T19:10:07-08:00" ctime="2010-11-25T00:01:52-08:00" uid="501" user="pegasus" 
+               gid="501" group="pegasus"/&gt;
     &lt;/statcall&gt;
     &lt;argument-vector/&gt;
   &lt;/mainjob&gt;
@@ -1516,7 +1518,8 @@ pegasus-analyzer: end of status report
   
  <emphasis role="bold">&lt;machine page-size="4096"&gt;
     &lt;stamp&gt;2010-11-29T19:10:23.862-08:00&lt;/stamp&gt;
-    &lt;uname system="linux" nodename="pegasus" release="2.6.18-194.8.1.el5" machine="x86_64"&gt;#1 SMP Thu Jul 1 19:04:48 EDT 2010&lt;/uname&gt;
+    &lt;uname system="linux" nodename="pegasus" release="2.6.18-194.8.1.el5" machine="x86_64"&gt;
+                  #1 SMP Thu Jul 1 19:04:48 EDT 2010&lt;/uname&gt;
    &lt;linux&gt;
     &lt;ram total="1051533312" free="306233344" shared="0" buffer="44756992"/&gt;
     &lt;swap total="536862720" free="536862720"/&gt;
@@ -1530,17 +1533,19 @@ pegasus-analyzer: end of status report
 
   &lt;statcall error="0" id="stdin"&gt;
     &lt;descriptor number="0"/&gt;
-    &lt;statinfo mode="0100664" size="142" inode="2250032" nlink="1" blksize="4096" blocks="16" mtime="2010-11-29T19:09:20-08:00" 
-       atime="2010-11-29T19:10:07-08:00" ctime="2010-11-29T19:09:20-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
+    &lt;statinfo mode="0100664" size="142" inode="2250032" nlink="1" blksize="4096" blocks="16" 
+     mtime="2010-11-29T19:09:20-08:00"   atime="2010-11-29T19:10:07-08:00" ctime="2010-11-29T19:09:20-08:00" 
+     uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
   &lt;/statcall&gt;
 
   <emphasis role="bold">&lt;statcall error="0" id="stdout"&gt;
     &lt;temporary name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.out.awOX6p" descriptor="3"/&gt;
-    &lt;statinfo mode="0100600" size="762" inode="2054511" nlink="1" blksize="4096" blocks="16" mtime="2010-11-29T19:10:23-08:00" 
-        atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
+    &lt;statinfo mode="0100600" size="762" inode="2054511" nlink="1" blksize="4096" blocks="16" 
+          mtime="2010-11-29T19:10:23-08:00" atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" 
+             uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
     &lt;data&gt;2010-11-29 19:10:23,920    INFO:  Reading URL pairs from stdin
 2010-11-29 19:10:23,921    INFO:  PATH=/usr/local/globus/default/bin:/opt/pegasus/default/bin:/usr/bin:/bin
-2010-11-29 19:10:23,921    INFO:  LD_LIBRARY_PATH=/usr/local/globus/default/lib:/usr/java/jdk1.6.0_20/jre/lib/amd64/server:
+2010-11-29 19:10:23,921    INFO:  LD_LIBRARY_PATH=/usr/local/globus/default/lib:/usr/java/jdk1.6.0_20/jre/lib/amd64/
 2010-11-29 19:10:23,921    INFO:  Executing cp commands
 /bin/cp: cannot stat `/scratch/tutorial/inputdata/diamond/f.a&amp;apos;: No such file or directory
 2010-11-29 19:10:23,932 CRITICAL:  Command &amp;apos;/bin/cp -L &amp;quot;/scratch/tutorial/inputdata/diamond/f.a&amp;quot; 
@@ -1550,8 +1555,9 @@ pegasus-analyzer: end of status report
 
   <emphasis role="bold">&lt;statcall error="0" id="stderr"&gt;
     &lt;temporary name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.err.oz9MOG" descriptor="4"/&gt;
-    &lt;statinfo mode="0100600" size="0" inode="2054512" nlink="1" blksize="4096" blocks="8" mtime="2010-11-29T19:10:23-08:00" 
-   atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
+    &lt;statinfo mode="0100600" size="0" inode="2054512" nlink="1" blksize="4096" blocks="8" 
+    mtime="2010-11-29T19:10:23-08:00"  atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" 
+    uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
   &lt;/statcall&gt;
 </emphasis>
   &lt;statcall error="2" id="gridstart"&gt;
@@ -1564,9 +1570,11 @@ pegasus-analyzer: end of status report
     atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
   &lt;/statcall&gt;
   &lt;statcall error="0" id="channel"&gt;
-    &lt;fifo name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.app.qCOCwX" descriptor="5" count="0" rsize="0" wsize="0"/&gt;
+    &lt;fifo name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.app.qCOCwX" descriptor="5" count="0"
+     rsize="0" wsize="0"/&gt;
     &lt;statinfo mode="010640" size="0" inode="2054524" nlink="1" blksize="4096" blocks="8" mtime="2010-11-29T19:10:23-08:00" 
-     atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
+     atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" 
+    group="pegasus"/&gt;
   &lt;/statcall&gt;
   &lt;environment&gt;
     &lt;env key="GLOBUS_LOCATION"&gt;/usr/local/globus/default&lt;/env&gt;
