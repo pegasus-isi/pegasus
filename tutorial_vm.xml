@@ -60,7 +60,7 @@ Wed Nov 24 14:47:59 PST 2010
       <itemizedlist>
         <listitem>
           <para><ulink
-          url="http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM.tar.bz2">VMWare
+          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus3.0-VM.tar.bz2">VMWare
           Pegasus Image</ulink></para>
 
           <para>It is around <emphasis role="bold">2 GB</emphasis> in size. We
@@ -98,7 +98,7 @@ $ tar xvf Pegasus3.0-VM.tar</emphasis></programlisting>
 
       <para>To start the virtual machine double click on the vmware suffixed
       file/package Pegasus3.0-VM.vmwarevm . After double clicking, VMware will
-      start up asking </para>
+      start up asking</para>
 
       <orderedlist>
         <listitem>
@@ -115,7 +115,7 @@ $ tar xvf Pegasus3.0-VM.tar</emphasis></programlisting>
       </orderedlist>
 
       <para>Select the option<emphasis role="bold"> 3</emphasis> i.e you
-      copied it. </para>
+      copied it.</para>
 
       <para>When the virtual machine ( Pegasus3.0-VM.vmwarevm ) starts , it
       will ask for a password for a user called <emphasis
@@ -273,7 +273,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
         </listitem>
 
         <listitem>
-          <para>JDBC implementation </para>
+          <para>JDBC implementation</para>
         </listitem>
       </itemizedlist>
 
@@ -377,7 +377,7 @@ statfile_20070529_153243_22618.tbl
           </listitem>
 
           <listitem>
-            <para>Let us see what the file looks like. </para>
+            <para>Let us see what the file looks like.</para>
 
             <programlisting><command>$ cat config/rc.in</command><computeroutput>
 
@@ -414,7 +414,7 @@ statfile_20070529_153243_22618.tbl
           <listitem>
             <para>Now we are ready to run rc-client and populate the data.
             Since each of you have an individual file replica catalog, all the
-            10 entries should be successfully registered. </para>
+            10 entries should be successfully registered.</para>
 
             <programlisting><command>$ pegasus-rc-client  --insert config/rc.in</command><computeroutput><computeroutput>
 
@@ -425,7 +425,7 @@ statfile_20070529_153243_22618.tbl
           <listitem>
             <para>Now the entries have been successfully inserted into the
             Replica Catalog. We should query the replica catalog for a
-            particular lfn. </para>
+            particular lfn.</para>
 
             <programlisting><command>$ pegasus-rc-client lookup pimages_20080505_143233_14944.tbl</command><computeroutput><computeroutput>
 
@@ -438,7 +438,7 @@ pimages_20080505_143233_14944.tbl
     </section>
 
     <section>
-      <title>The Site Catalog </title>
+      <title>The Site Catalog</title>
 
       <para>The site catalog contains information about the layout of your
       grid where you want to run your workflows. For each site following
@@ -446,7 +446,7 @@ pimages_20080505_143233_14944.tbl
 
       <itemizedlist>
         <listitem>
-          <para>grid gateways </para>
+          <para>grid gateways</para>
         </listitem>
 
         <listitem>
@@ -1064,7 +1064,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
   84.0   pegasus         7/19 16:59   0+00:01:17 R  0   7.3  condor_dagman -f -
   87.0    |-preprocess_  7/19 17:00   0+00:00:31 R  10  0.1  kickstart -n diamo
 </computeroutput></programlisting><tip>
-              <para> watch does not end with ESC nor (q)uit, but with
+              <para>watch does not end with ESC nor (q)uit, but with
               Ctrl+C.</para>
             </tip> The above output shows that a couple of jobs are running
           under the main dagman process. Keep a lookout to track whether a
@@ -1079,11 +1079,11 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
 
           <orderedlist>
             <listitem>
-              <para> successfully completed </para>
+              <para>successfully completed</para>
             </listitem>
 
             <listitem>
-              <para> stopped midway due to non recoverable error.</para>
+              <para>stopped midway due to non recoverable error.</para>
             </listitem>
           </orderedlist>
 
@@ -2083,7 +2083,7 @@ Logical transformation statistics is created at :
               </row>
 
               <row>
-                <entry>findrange_j2 </entry>
+                <entry>findrange_j2</entry>
 
                 <entry>local</entry>
 
@@ -2751,8 +2751,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
 
 </programlisting>
 
-      <para>You can track the workflow using the pegasus-status command
-      </para>
+      <para>You can track the workflow using the pegasus-status command</para>
 
       <programlisting><emphasis role="bold">$ watch  pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/superdiamond/run0001</emphasis> 
 
@@ -2760,7 +2759,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
 </programlisting>
 
       <para>After the workflow has completed you will see the black-1-f.d and
-      black-2-f.d in the storage directory </para>
+      black-2-f.d in the storage directory</para>
 
       <programlisting><emphasis role="bold">$ ls -lh /home/pegasus/local-storage/storage/black-*
 </emphasis>
@@ -2818,21 +2817,21 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
               <row>
                 <entry>superdiamond ( the outer level workflow )</entry>
 
-                <entry> /home/pegasus/local-scratch
+                <entry>/home/pegasus/local-scratch
                 /exec/pegasus/pegasus/superdiamond/run0001</entry>
               </row>
 
               <row>
                 <entry>black-1 ( the first sub workflow )</entry>
 
-                <entry> /home/pegasus/local-scratch/exec
+                <entry>/home/pegasus/local-scratch/exec
                 /pegasus/pegasus/superdiamond/run0001/black-1_d1</entry>
               </row>
 
               <row>
                 <entry>black-2 ( the second sub workflow )</entry>
 
-                <entry> /home/pegasus/local-scratch/exec
+                <entry>/home/pegasus/local-scratch/exec
                 /pegasus/pegasus/superdiamond/run0001/black-2_d2</entry>
               </row>
             </tbody>
