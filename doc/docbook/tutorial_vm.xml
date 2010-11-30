@@ -979,8 +979,9 @@ into the workflow database with a state of "planned". The next step is
 to start or execute your workflow. The invocation required is
 
 
-pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001/pegasus.4459134667464687814.properties \
- --nodatabase /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001
+pegasus-run 
+-Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.4459134667464687814.properties 
+ --nodatabase /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001
 
  
 2010.07.19 16:47:06.373 PDT: [INFO]  Time taken to execute is 1.065 seconds 
@@ -993,7 +994,7 @@ pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/peg
           output of pegasus-plan. Do not copy the command below it is just for
           illustration purpose.</emphasis><programlisting><emphasis
                 role="bold"></emphasis><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
- -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/pegasus.350356687577055673.properties \
+ -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.350356687577055673.properties \
        $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
 
 -----------------------------------------------------------------------
@@ -1045,7 +1046,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
       <para>We will change into the directory, that was mentioned by the
       output of pegasus-run command.</para>
 
-      <programlisting><command>$ cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001</command></programlisting>
+      <programlisting><command>$ cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</command></programlisting>
 
       <para>In this directory you will see a whole lot of files. That should
       not scare you. Unless things go wrong, you need to look at just a very
@@ -1056,7 +1057,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
           <para><emphasis role="bold">Run the command pegasus-status as
           mentioned by pegasus-run above to check the status of your jobs. Use
           the watch command to auto repeat the command every 2
-          seconds.</emphasis><programlisting><command>$ watch pegasus-status /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0001</command><computeroutput>
+          seconds.</emphasis><programlisting><command>$ watch pegasus-status /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</command><computeroutput>
 
 -- Submitter: pegasus : &lt;172.16.80.128:40195&gt; : pegasus
  ID      OWNER/NODENAME   SUBMITTED     RUN_TIME ST PRI SIZE CMD               
@@ -1094,7 +1095,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
           <para>Using <emphasis role="bold">pegasus-analyzer</emphasis> to
           analyze the workflow</para>
 
-          <programlisting><emphasis role="bold">[pegasus@pegasus run0001]$ pegasus-analyzer -q -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
+          <programlisting><emphasis role="bold">$ pegasus-analyzer -q -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
 
 pegasus-analyzer: initializing...
 
@@ -1273,21 +1274,23 @@ Input Filenames: f.c1 f.c2
 
       <para>First of all lets rename the input file f.a</para>
 
-      <programlisting><emphasis role="bold"> mv /scratch/tutorial/inputdata/diamond/f.a /scratch/tutorial/inputdata/diamond/f.a.old
-</emphasis></programlisting>
+      <programlisting><emphasis role="bold"> $ mv /scratch/tutorial/inputdata/diamond/f.a /scratch/tutorial/inputdata/diamond/f.a.old
+
+ $ cd $HOME/pegasus-wms
+ </emphasis></programlisting>
 
       <para>We will now repeat exercise <emphasis role="bold">2.4 and
       2.5</emphasis> and submit the workflow again.</para>
 
-      <programlisting><emphasis role="bold">Plan and Submit the diamond workflow</emphasis> . Pass --submit to pegasus-plan to submit in case of successful planning
+      <programlisting><emphasis><emphasis role="bold">Plan and Submit the diamond workflow</emphasis> .</emphasis> Pass --submit to pegasus-plan to submit in case of successful planning
 
-[pegasus@pegasus pegasus-wms]$  pegasus-plan --dax `pwd`/dax/diamond.dax --force \
+$  pegasus-plan --dax `pwd`/dax/diamond.dax --force \
         --dir dags -s local -o local --nocleanup --submit -v
 
 <emphasis role="bold">
 Use pegasus-status to track the workflow and wait it to fail</emphasis>
 
-[pegasus@pegasus pegasus-wms]$ pegasus-status  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+$ pegasus-status  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
 
 
 -- Submitter: pegasus : &lt;172.16.80.128:40195&gt; : pegasus
@@ -1308,7 +1311,7 @@ WORKFLOW STATUS : RUNNING | 1/8 ( 12% ) | (condor processing workflow)
 
 We can also use --long option to pegasus-status to see the FINAL status of the workflow</emphasis>
 
-[pegasus@pegasus pegasus-wms]$ pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+$ pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
 blackdiamond-0.dag FAILED (status 1)
 11/25 01:25:32  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
 11/25 01:25:32   ===     ===      ===     ===     ===        ===      ===
@@ -1322,7 +1325,7 @@ WORKFLOW STATUS : FAILED | 1/8 ( 12% ) | (rescue needs to be submitted)
       <para>We will now run pegasus-analyzer on the failed workflow submit
       directory to see what job failed.</para>
 
-      <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-analyzer -q -i $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002<emphasis>
+      <programlisting><emphasis role="bold">ß$ pegasus-analyzer  -i $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002<emphasis>
 pegasus-analyzer: initializing...
 </emphasis></emphasis>
 ************************************Summary*************************************
@@ -1487,102 +1490,101 @@ pegasus-analyzer: end of status report
 
           <para>Lets look at the stdout of our failed job.</para>
 
-          <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ cat  $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/run0002/stage_in_local_0.out.002</emphasis>
+          <programlisting><emphasis role="bold">$ </emphasis><emphasis
+              role="bold">cat /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002 </emphasis>
 
-&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
-&lt;invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
-xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.0.xsd" version="2.0" \
-start="2010-07-19T17:41:57.857-07:00" duration="0.091" <emphasis role="bold">transformation="globus::guc"</emphasis> derivation="globus::guc" <emphasis
-              role="bold">resource="local"</emphasis> \
-wf-label="diamond" wf-stamp="2010-07-19T14:36:28-07:00" <emphasis role="bold">hostaddr="172.16.80.128"</emphasis> <emphasis
-              role="bold">hostname="pegasus"</emphasis> pid="12792" uid="501" \
-user="pegasus" gid="501" group="pegasus" umask="0022"&gt;
-  <emphasis role="bold">&lt;mainjob start="2010-07-19T17:41:57.870-07:00" duration="0.078" pid="12793"&gt;</emphasis>
-    &lt;usage utime="0.012" stime="0.012" minflt="1115" majflt="0" nswap="0" nsignals="0" nvcsw="2" nivcsw="24"/&gt;
+ &lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+ &lt;invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.1.xsd" version="2.1"
+  start="2010-11-29T19:10:23.862-08:00" duration="0.076" <emphasis role="bold">transformation="pegasus::pegasus-transfer"</emphasis> derivation="pegasus::pegasus-transfer:1.0"
+  <emphasis role="bold">resource="local"</emphasis> wf-label="blackdiamond" wf-stamp="2010-11-29T18:57:59-08:00" interface="eth0" <emphasis
+              role="bold">hostaddr="172.16.80.131" hostname="pegasus" </emphasis>
+  pid="5428" uid="501" user="pegasus" gid="501" group="pegasus" umask="0022"&gt;
+ 
+ <emphasis role="bold">&lt;mainjob start="2010-11-29T19:10:23.876-08:00" duration="0.063" pid="5429"&gt;
+ </emphasis>   &lt;usage utime="0.040" stime="0.023" minflt="2758" majflt="0" nswap="0" nsignals="0" nvcsw="5" nivcsw="20"/&gt;
     <emphasis role="bold">&lt;status raw="256"&gt;&lt;regular exitcode="1"/&gt;&lt;/status&gt;</emphasis>
     &lt;statcall error="0"&gt;
-      &lt;!-- deferred flag: 0 --&gt;
-      &lt;file name="/usr/local/globus/default/bin/globus-url-copy"&gt;7F454C46020101000000000000000000&lt;/file&gt;
-      &lt;statinfo mode="0100755" size="94699" inode="1109806" nlink="1" blksize="4096" blocks="208" mtime="2008-10-02T14:38:57-07:00" atime="2010-07-19T17:41:42-07:00" ctime="2010-05-24T15:17:51-07:00" uid="30101" gid="30101"/&gt;
+      &lt;file name="/opt/pegasus/default/bin/pegasus-transfer"&gt;23212F7573722F62696E2F656E762070&lt;/file&gt;
+      &lt;statinfo mode="0100775" size="25314" inode="2022205" nlink="1" blksize="4096" blocks="64" mtime="2010-11-23T13:14:52-08:00" 
+             atime="2010-11-29T19:10:07-08:00" ctime="2010-11-25T00:01:52-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
     &lt;/statcall&gt;
-    <emphasis role="bold">&lt;argument-vector&gt;
-      &lt;arg nr="1"&gt;-p&lt;/arg&gt;
-      &lt;arg nr="2"&gt;1&lt;/arg&gt;
-      &lt;arg nr="3"&gt;-cd&lt;/arg&gt;
-      &lt;arg nr="4"&gt;-vb&lt;/arg&gt;
-      &lt;arg nr="5"&gt;-f&lt;/arg&gt;
-      &lt;arg nr="6"&gt;stage_in_local_0.in&lt;/arg&gt;
-    &lt;/argument-vector&gt;</emphasis>
+    &lt;argument-vector/&gt;
   &lt;/mainjob&gt;
-  <emphasis role="bold">&lt;cwd&gt;/home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002&lt;/cwd&gt;</emphasis>
-  &lt;usage utime="0.002" stime="0.014" minflt="472" majflt="0" nswap="0" nsignals="0" nvcsw="1" nivcsw="6"/&gt;
-  <emphasis role="bold">&lt;machine page-size="4096" provider="LINUX"&gt;
-    &lt;stamp&gt;2010-07-19T17:41:57.857-07:00&lt;/stamp&gt;
+  <emphasis role="bold">&lt;cwd&gt;/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002&lt;/cwd&gt;</emphasis>
+  &lt;usage utime="0.002" stime="0.013" minflt="475" majflt="0" nswap="0" nsignals="0" nvcsw="1" nivcsw="5"/&gt;
+  
+ <emphasis role="bold">&lt;machine page-size="4096"&gt;
+    &lt;stamp&gt;2010-11-29T19:10:23.862-08:00&lt;/stamp&gt;
     &lt;uname system="linux" nodename="pegasus" release="2.6.18-194.8.1.el5" machine="x86_64"&gt;#1 SMP Thu Jul 1 19:04:48 EDT 2010&lt;/uname&gt;
-    &lt;ram total="1051533312" free="43859968" shared="0" buffer="102002688"/&gt;
-    &lt;swap total="2113921024" free="2113921024"/&gt;
-    &lt;boot idle="21305.050"&gt;2010-07-19T11:37:35.937-07:00&lt;/boot&gt;
+   &lt;linux&gt;
+    &lt;ram total="1051533312" free="306233344" shared="0" buffer="44756992"/&gt;
+    &lt;swap total="536862720" free="536862720"/&gt;
+    &lt;boot idle="2026.550"&gt;2010-11-29T18:32:29.013-08:00&lt;/boot&gt;
     &lt;cpu count="1" speed="2794" vendor="GenuineIntel"&gt;Intel(R) Xeon(R) CPU E5462 @ 2.80GHz&lt;/cpu&gt;
-    &lt;load min1="0.00" min5="0.00" min15="0.00"/&gt;
-    &lt;proc total="113" running="1" sleeping="111" zombie="1" vmsize="7912247296" rss="401776640"/&gt;
-    &lt;task total="140" running="1" sleeping="138" zombie="1"/&gt;
+    &lt;load min1="0.00" min5="0.15" min15="0.17"/&gt;
+    &lt;proc total="114" running="2" sleeping="112" vmsize="8332234752" rss="381333504"/&gt;
+    &lt;task total="141" running="2" sleeping="139"/&gt;
+   &lt;/linux&gt;
   &lt;/machine&gt;</emphasis>
+
   &lt;statcall error="0" id="stdin"&gt;
-    &lt;!-- deferred flag: 0 --&gt;
-    &lt;file name="/dev/null"/&gt;
-    &lt;statinfo mode="020666" size="0" inode="1777" nlink="1" blksize="4096" blocks="0" mtime="2010-07-19T11:38:11-07:00" atime="2010-07-19T11:38:11-07:00" ctime="2010-07-19T11:38:11-07:00" uid="0" user="root" gid="0" group="root"/&gt;
+    &lt;descriptor number="0"/&gt;
+    &lt;statinfo mode="0100664" size="142" inode="2250032" nlink="1" blksize="4096" blocks="16" mtime="2010-11-29T19:09:20-08:00" 
+       atime="2010-11-29T19:10:07-08:00" ctime="2010-11-29T19:09:20-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
   &lt;/statcall&gt;
+
   <emphasis role="bold">&lt;statcall error="0" id="stdout"&gt;
-    &lt;temporary name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791/gs.out.3qsk2X" descriptor="3"/&gt;
-    &lt;statinfo mode="0100600" size="149" inode="2021925" nlink="1" blksize="4096" blocks="16" mtime="2010-07-19T17:41:57-07:00" atime="2010-07-19T17:41:57-07:00" ctime="2010-07-19T17:41:57-07:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
-    &lt;data&gt;Source: gsiftp://pegasus/scratch/tutorial/inputdata/diamond/
-Dest:   file:///home/pegasus/local-scratch/exec/pegasus/pegasus/diamond/run0002/
-  f.a
-
+    &lt;temporary name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.out.awOX6p" descriptor="3"/&gt;
+    &lt;statinfo mode="0100600" size="762" inode="2054511" nlink="1" blksize="4096" blocks="16" mtime="2010-11-29T19:10:23-08:00" 
+        atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
+    &lt;data&gt;2010-11-29 19:10:23,920    INFO:  Reading URL pairs from stdin
+2010-11-29 19:10:23,921    INFO:  PATH=/usr/local/globus/default/bin:/opt/pegasus/default/bin:/usr/bin:/bin
+2010-11-29 19:10:23,921    INFO:  LD_LIBRARY_PATH=/usr/local/globus/default/lib:/usr/java/jdk1.6.0_20/jre/lib/amd64/server:
+2010-11-29 19:10:23,921    INFO:  Executing cp commands
+/bin/cp: cannot stat `/scratch/tutorial/inputdata/diamond/f.a&amp;apos;: No such file or directory
+2010-11-29 19:10:23,932 CRITICAL:  Command &amp;apos;/bin/cp -L &amp;quot;/scratch/tutorial/inputdata/diamond/f.a&amp;quot; 
+    &amp;quot;/home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0002/f.a&amp;quot;&amp;apos; failed with error code 1
 &lt;/data&gt;
-  &lt;/statcall&gt;
-  &lt;statcall error="0" id="stderr"&gt;
-    &lt;temporary name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791/gs.err.kooIKM" descriptor="4"/&gt;
-    &lt;statinfo mode="0100600" size="338" inode="2021926" nlink="1" blksize="4096" blocks="16" mtime="2010-07-19T17:41:57-07:00" atime="2010-07-19T17:41:57-07:00" ctime="2010-07-19T17:41:57-07:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
-    &lt;data&gt;
-error: globus_ftp_client: the server responded with an error
-500 500-Command failed. : globus_l_gfs_file_open failed.
-500-globus_xio: Unable to open file /scratch/tutorial/inputdata/diamond/f.a
-500-globus_xio: System error in open: No such file or directory
-500-globus_xio: A system call failed: No such file or directory
-500 End.
+  &lt;/statcall&gt;</emphasis>
 
-&lt;/data&gt;</emphasis>
+  <emphasis role="bold">&lt;statcall error="0" id="stderr"&gt;
+    &lt;temporary name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.err.oz9MOG" descriptor="4"/&gt;
+    &lt;statinfo mode="0100600" size="0" inode="2054512" nlink="1" blksize="4096" blocks="8" mtime="2010-11-29T19:10:23-08:00" 
+   atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
   &lt;/statcall&gt;
+</emphasis>
   &lt;statcall error="2" id="gridstart"&gt;
-    &lt;!-- deferred flag: 0 --&gt;
+    &lt;!-- ignore above error --&gt;
     &lt;file name="condor_exec.exe"/&gt;
   &lt;/statcall&gt;
   &lt;statcall error="0" id="logfile"&gt;
     &lt;descriptor number="1"/&gt;
-    &lt;statinfo mode="0100644" size="0" inode="2054616" nlink="1" blksize="4096" blocks="8" mtime="2010-07-19T17:41:57-07:00" atime="2010-07-19T17:41:57-07:00" ctime="2010-07-19T17:41:57-07:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
+    &lt;statinfo mode="0100644" size="0" inode="2250072" nlink="1" blksize="4096" blocks="8" mtime="2010-11-29T19:10:23-08:00" 
+    atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
   &lt;/statcall&gt;
   &lt;statcall error="0" id="channel"&gt;
-    &lt;fifo name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791/gs.app.zYO6sB" descriptor="5" count="0" rsize="0" wsize="0"/&gt;
-    &lt;statinfo mode="010640" size="0" inode="2021927" nlink="1" blksize="4096" blocks="8" mtime="2010-07-19T17:41:57-07:00" atime="2010-07-19T17:41:57-07:00" ctime="2010-07-19T17:41:57-07:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
+    &lt;fifo name="/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.app.qCOCwX" descriptor="5" count="0" rsize="0" wsize="0"/&gt;
+    &lt;statinfo mode="010640" size="0" inode="2054524" nlink="1" blksize="4096" blocks="8" mtime="2010-11-29T19:10:23-08:00" 
+     atime="2010-11-29T19:10:23-08:00" ctime="2010-11-29T19:10:23-08:00" uid="501" user="pegasus" gid="501" group="pegasus"/&gt;
   &lt;/statcall&gt;
   &lt;environment&gt;
     &lt;env key="GLOBUS_LOCATION"&gt;/usr/local/globus/default&lt;/env&gt;
-    &lt;env key="GRIDSTART_CHANNEL"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791/gs.app.zYO6sB&lt;/env&gt;
+    &lt;env key="GRIDSTART_CHANNEL"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.app.qCOCwX&lt;/env&gt;
     &lt;env key="JAVA_HOME"&gt;/usr/java/default&lt;/env&gt;
-    &lt;env key="LD_LIBRARY_PATH"&gt;/usr/local/globus/default/lib&lt;/env&gt;
+    &lt;env key="LD_LIBRARY_PATH"&gt;/usr/java/jdk1.6.0_20/jre/lib/amd64/server:/usr/java/jdk1.6.0_20/jre/lib/amd64:&lt;/env&gt;
     &lt;env key="PEGASUS_HOME"&gt;/opt/pegasus/default&lt;/env&gt;
-    &lt;env key="TEMP"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791&lt;/env&gt;
-    &lt;env key="TMP"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791&lt;/env&gt;
-    &lt;env key="TMPDIR"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791&lt;/env&gt;
-    &lt;env key="_CONDOR_ANCESTOR_12791"&gt;12792:1279586517:2377531392&lt;/env&gt;
-    &lt;env key="_CONDOR_ANCESTOR_3849"&gt;4088:1279564727:2726859010&lt;/env&gt;
-    &lt;env key="_CONDOR_ANCESTOR_4088"&gt;12791:1279586517:3701537309&lt;/env&gt;
+    &lt;env key="TEMP"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427&lt;/env&gt;
+    &lt;env key="TMP"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427&lt;/env&gt;
+    &lt;env key="TMPDIR"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427&lt;/env&gt;
+    &lt;env key="_CONDOR_ANCESTOR_4843"&gt;4862:1291085504:2790807554&lt;/env&gt;
+    &lt;env key="_CONDOR_ANCESTOR_4862"&gt;5427:1291086623:1798288782&lt;/env&gt;
+    &lt;env key="_CONDOR_ANCESTOR_5427"&gt;5428:1291086623:2750667008&lt;/env&gt;
     &lt;env key="_CONDOR_HIGHPORT"&gt;41000&lt;/env&gt;
-    &lt;env key="_CONDOR_JOB_AD"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791/.job.ad&lt;/env&gt;
+    &lt;env key="_CONDOR_JOB_AD"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/.job.ad&lt;/env&gt;
     &lt;env key="_CONDOR_LOWPORT"&gt;40000&lt;/env&gt;
-    &lt;env key="_CONDOR_MACHINE_AD"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791/.machine.ad&lt;/env&gt;
-    &lt;env key="_CONDOR_SCRATCH_DIR"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_12791&lt;/env&gt;
+    &lt;env key="_CONDOR_MACHINE_AD"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/.machine.ad&lt;/env&gt;
+    &lt;env key="_CONDOR_SCRATCH_DIR"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427&lt;/env&gt;
     &lt;env key="_CONDOR_SLOT"&gt;1&lt;/env&gt;
   &lt;/environment&gt;
   &lt;resource&gt;
@@ -1598,8 +1600,8 @@ error: globus_ftp_client: the server responded with an error
     &lt;hard id="RLIMIT_CORE"&gt;0&lt;/hard&gt;
     &lt;soft id="RESOURCE_5"&gt;unlimited&lt;/soft&gt;
     &lt;hard id="RESOURCE_5"&gt;unlimited&lt;/hard&gt;
-    &lt;soft id="RLIMIT_NPROC"&gt;8192&lt;/soft&gt;
-    &lt;hard id="RLIMIT_NPROC"&gt;8192&lt;/hard&gt;
+    &lt;soft id="RLIMIT_NPROC"&gt;unlimited&lt;/soft&gt;
+    &lt;hard id="RLIMIT_NPROC"&gt;unlimited&lt;/hard&gt;
     &lt;soft id="RLIMIT_NOFILE"&gt;1024&lt;/soft&gt;
     &lt;hard id="RLIMIT_NOFILE"&gt;1024&lt;/hard&gt;
     &lt;soft id="RLIMIT_MEMLOCK"&gt;32768&lt;/soft&gt;
@@ -1618,7 +1620,6 @@ error: globus_ftp_client: the server responded with an error
     &lt;hard id="RLIMIT_RTPRIO"&gt;0&lt;/hard&gt;
   &lt;/resource&gt;
 &lt;/invocation&gt;
-[pegasus@pegasus pegasus-wms]$ 
 
 </programlisting>
         </section>
@@ -1645,42 +1646,42 @@ error: globus_ftp_client: the server responded with an error
 MAXJOBS projection 2
 
 JOB create_dir_blackdiamond_0_local create_dir_blackdiamond_0_local.sub
-SCRIPT POST create_dir_blackdiamond_0_local /opt/pegasus/default/bin/pegasus-exitcode \
+SCRIPT POST create_dir_blackdiamond_0_local /opt/pegasus/default/bin/pegasus-exitcode 
   /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/create_dir_blackdiamond_0_local.out
 RETRY create_dir_blackdiamond_0_local 2
 
 JOB stage_in_local_local_0 stage_in_local_local_0.sub
-SCRIPT POST stage_in_local_local_0 /opt/pegasus/default/bin/pegasus-exitcode  \
+SCRIPT POST stage_in_local_local_0 /opt/pegasus/default/bin/pegasus-exitcode  
  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/stage_in_local_local_0.out
 RETRY stage_in_local_local_0 2
 
 JOB preprocess_j1 preprocess_j1.sub
-SCRIPT POST preprocess_j1 /opt/pegasus/default/bin/pegasus-exitcode   \
+SCRIPT POST preprocess_j1 /opt/pegasus/default/bin/pegasus-exitcode   
 /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/preprocess_j1.out
 RETRY preprocess_j1 2
 
 JOB findrange_j2 findrange_j2.sub
-SCRIPT POST findrange_j2 /opt/pegasus/default/bin/pegasus-exitcode   \
+SCRIPT POST findrange_j2 /opt/pegasus/default/bin/pegasus-exitcode   
 /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/findrange_j2.out
 RETRY findrange_j2 2
 
 JOB findrange_j3 findrange_j3.sub
-SCRIPT POST findrange_j3 /opt/pegasus/default/bin/pegasus-exitcode   \
+SCRIPT POST findrange_j3 /opt/pegasus/default/bin/pegasus-exitcode   
 /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/findrange_j3.out
 RETRY findrange_j3 2
 
 JOB analyze_j4 analyze_j4.sub
-SCRIPT POST analyze_j4 /opt/pegasus/default/bin/pegasus-exitcode   \
+SCRIPT POST analyze_j4 /opt/pegasus/default/bin/pegasus-exitcode   
 /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/analyze_j4.out
 RETRY analyze_j4 2
 
 JOB stage_out_local_local_2_0 stage_out_local_local_2_0.sub
-SCRIPT POST stage_out_local_local_2_0 /opt/pegasus/default/bin/pegasus-exitcode   \
+SCRIPT POST stage_out_local_local_2_0 /opt/pegasus/default/bin/pegasus-exitcode   
 /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/stage_out_local_local_2_0.out
 RETRY stage_out_local_local_2_0 2
 
 JOB register_local_2_0 register_local_2_0.sub
-SCRIPT POST register_local_2_0 /opt/pegasus/default/bin/pegasus-exitcode   \
+SCRIPT POST register_local_2_0 /opt/pegasus/default/bin/pegasus-exitcode   
 /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/register_local_2_0.out
 RETRY register_local_2_0 2
 
@@ -1744,7 +1745,8 @@ PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
 11/25 01:10:47 ALL_DEBUG setting: 
 11/25 01:10:47 DAGMAN_DEBUG setting: 
 ....
-11/25 01:10:47 Default node log file is: &lt;/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag.nodes.log&gt;
+11/25 01:10:47 Default node log file is:
+ &lt;/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag.nodes.log&gt;
 11/25 01:10:47 DAG Lockfile will be written to blackdiamond-0.dag.lock
 11/25 01:10:47 DAG Input file is blackdiamond-0.dag
 11/25 01:10:47 Parsing 1 dagfiles
@@ -1756,7 +1758,9 @@ PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
 11/25 01:10:59 Registering condor_event_timer...
 11/25 01:11:00 Sleeping for one second for log file consistency
 11/25 01:11:01 Submitting Condor Node create_dir_blackdiamond_0_local job(s)...
-11/25 01:11:01 submitting: condor_submit -a dag_node_name' '=' 'create_dir_blackdiamond_0_local -a +DAGManJobId' '=' '339 -a DAGManJobId' '=' '339 -a submit_event_notes' '=' 'DAG' 'Node:' 'create_dir_blackdiamond_0_local -a +DAGParentNodeNames' '=' '"" create_dir_blackdiamond_0_local.sub
+11/25 01:11:01 submitting: condor_submit -a dag_node_name' '=' 'create_dir_blackdiamond_0_local -a 
++DAGManJobId' '=' '339 -a DAGManJobId' '=' '339 -a submit_event_notes' '=' 'DAG' 'Node:' '
+create_dir_blackdiamond_0_local -a +DAGParentNodeNames' '=' '"" create_dir_blackdiamond_0_local.sub
 11/25 01:11:01 From submit: Submitting job(s).
 11/25 01:11:01 From submit: Logging submit event(s).
 11/25 01:11:01 From submit: 1 job(s) submitted to cluster 340.
@@ -1991,18 +1995,231 @@ Logical transformation statistics is created at :
           </listitem>
         </itemizedlist>
 
-        <programlisting><emphasis role="bold">$ cat /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/jobs
-</emphasis>....
-#Job                                                     Site Kickstart     Post   DAGMan   CondorQTime Resource  Runtime CondorQLen Seqexec Seqexec-Delay
-analyze_j4                                              local    60.03     6.00     6.00          0.00     0.00    60.00     0           -          -
-create_dir_blackdiamond_0_local                         local     0.04     5.00    14.00          0.00     0.00     0.00     0           -          -
-findrange_j2                                            local    60.06     5.00     6.00          0.00     0.00    65.00     0           -          -
-findrange_j3                                            local    60.02     5.00     6.00          0.00     0.00    60.00     0           -          -
-preprocess_j1                                           local    60.02     5.00     6.00          0.00     0.00    60.00     0           -          -
-register_local_2_0                                      local     0.50     5.00     6.00          0.00     0.00     0.00     0           -          -
-stage_in_local_local_0                                  local     0.08     5.00     6.00          0.00     0.00     0.00     0           -          -
-stage_out_local_local_2_0                               local     0.08     5.00     6.00          0.00     0.00     0.00     0           -          -
-</programlisting>
+        <table>
+          <title>Table Job Statistics</title>
+
+          <tgroup align="center" cols="11">
+            <thead>
+              <row>
+                <entry align="center">Job</entry>
+
+                <entry align="center">Site</entry>
+
+                <entry align="center">Kickstart</entry>
+
+                <entry align="center">Post</entry>
+
+                <entry align="center">DAGMan</entry>
+
+                <entry align="center">CondorQTime</entry>
+
+                <entry align="center">Resource</entry>
+
+                <entry align="center">Runtime</entry>
+
+                <entry align="center">CondorQLen</entry>
+
+                <entry align="center">Seqexec</entry>
+
+                <entry align="center">Seqexec-Delay</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>analyze_j4</entry>
+
+                <entry>local</entry>
+
+                <entry>60.03</entry>
+
+                <entry>6.00</entry>
+
+                <entry>6.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>60.00</entry>
+
+                <entry>0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>create_dir_blackdiamond_0_local</entry>
+
+                <entry>local</entry>
+
+                <entry>0.04</entry>
+
+                <entry>5.00</entry>
+
+                <entry>14.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.06</entry>
+
+                <entry>0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>findrange_j2 </entry>
+
+                <entry>local</entry>
+
+                <entry>60.03</entry>
+
+                <entry>5.00</entry>
+
+                <entry>6.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>65.00</entry>
+
+                <entry>0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>findrange_j3</entry>
+
+                <entry>local</entry>
+
+                <entry>60.03</entry>
+
+                <entry>5.00</entry>
+
+                <entry>6.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>60.00</entry>
+
+                <entry>0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>preprocess_j1</entry>
+
+                <entry>local</entry>
+
+                <entry>60.03</entry>
+
+                <entry>5.00</entry>
+
+                <entry>6.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>60.00</entry>
+
+                <entry>0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>register_local_2_0</entry>
+
+                <entry>local</entry>
+
+                <entry>0.50</entry>
+
+                <entry>5.00</entry>
+
+                <entry>6.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.05</entry>
+
+                <entry>0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>stage_in_local_local_0</entry>
+
+                <entry>local</entry>
+
+                <entry>0.08</entry>
+
+                <entry>6.00</entry>
+
+                <entry>6.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.04</entry>
+
+                <entry>0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+
+              <row>
+                <entry>stage_out_local_local_2_0</entry>
+
+                <entry>local</entry>
+
+                <entry>0.08</entry>
+
+                <entry>5.00</entry>
+
+                <entry>6.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.00</entry>
+
+                <entry>0.03</entry>
+
+                <entry>0</entry>
+
+                <entry>-</entry>
+
+                <entry>-</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
 
         <para><emphasis role="bold">Logical transformation statistics
         table</emphasis></para>
@@ -2255,8 +2472,8 @@ $ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
         are requesting that no cleanup jobs be added as we require the
         intermediate data on the remote host. Here is the output of
         pegasus-plan. <programlisting><computeroutput>
-2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - STARTED 
-2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - FINISHED 
+2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax   
+2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax 
 2010.11.24 18:20:11.350 PST: [INFO] event.pegasus.refinement dax.id montage_0  - STARTED 
 2010.11.24 18:20:11.360 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - STARTED 
 2010.11.24 18:20:11.416 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - FINISHED 
