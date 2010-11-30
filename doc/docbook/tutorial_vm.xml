@@ -48,10 +48,10 @@ Wed Nov 24 14:47:59 PST 2010
           role="bold">wget</emphasis> to download the image. Downloading the
           image using the browser sometimes corrupts the image.</para>
 
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus3.0-VM-box.tar.bz2
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus3.0-VM-vbox.tar.bz2
 
---</emphasis>14:52:11--  http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM-box.tar.bz2
-           =&gt; `Pegasus3.0-VM-box.tar.bz2'
+--</emphasis>14:52:11--  http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM-vbox.tar.bz2
+           =&gt; `Pegasus3.0-VM-vbox.tar.bz2'
 Resolving pegasus.isi.edu... 128.9.64.219
 Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -62,13 +62,13 @@ Length: 1,487,950,091 (1.4G) [application/x-bzip2]
 
           <para>If you have gnu tar you can do this directly</para>
 
-          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus3.0-VM-box.tar.bz2</emphasis></programlisting>
+          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus3.0-VM-vbox.tar.bz2</emphasis></programlisting>
 
           <para>Else you need to do the following</para>
 
-          <programlisting><emphasis role="bold">$ bunzip2 Pegasus3.0-VM-box.tar.bz2
+          <programlisting><emphasis role="bold">$ bunzip2 Pegasus3.0-VM-vbox.tar.bz2
 
-$ tar xvf Pegasus3.0-VM-box.tar</emphasis></programlisting>
+$ tar xvf Pegasus3.0-VM-vbox.tar</emphasis></programlisting>
         </listitem>
       </itemizedlist>
     </section>
