@@ -24,74 +24,124 @@ Wed Nov 24 14:47:59 PST 2010
   <section>
     <title>Downloading and Running the VM</title>
 
-    <para>You will need to install VMPlayer or Virtual Box to run the virtual
-    machine on your computer. If you already have one of the tools installed,
-    use that. Otherwise download and install one from:</para>
+    <para>You will need to install VMWare to run the virtual machine on your
+    computer. If you already have one of the tools installed, use that.
+    Otherwise download and install one from:</para>
 
     <itemizedlist>
       <listitem>
-        <para><ulink
-        url="http://www.virtualbox.org/">http://www.virtualbox.org/</ulink></para>
+        <para><emphasis role="bold">Windows</emphasis> - Download VMPlayer (
+        free download ) from the <ulink
+        url="http://www.vmware.com/products/player/">VMWare
+        website</ulink></para>
       </listitem>
 
       <listitem>
-        <para><ulink
-        url="http://www.vmware.com/products/player/">http://www.vmware.com/products/player/</ulink></para>
+        <para><emphasis role="bold">MacOSX</emphasis> - Download VMware Fusion
+        ( not free ). A 30 day trial version can be downloaded from <ulink
+        url="https://www.vmware.com/tryvmware/?p=vmware-fusion31&amp;lp=1">VMWare
+        website</ulink></para>
       </listitem>
-    </itemizedlist>
 
-    <para>Download the corresponding disk image:</para>
-
-    <itemizedlist>
       <listitem>
-        <para><ulink
-        url="http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM.tar.bz2">VMWare
-        Pegasus Image</ulink></para>
-
-        <para>The Image is bzipped. You will need to unzip it.</para>
-
-        <programlisting><emphasis role="bold">$ tar jxvf Pegasus3.0-VM.tar.bz2</emphasis></programlisting>
+        <para><emphasis role="bold">Linux</emphasis> - Download VMware
+        Workstation ( not free ). A 30 day trial version can be downloaded
+        from <ulink
+        url="https://www.vmware.com/tryvmware/?p=vmware-workstation&amp;lp=1">VMWare
+        website</ulink></para>
       </listitem>
     </itemizedlist>
 
-    <para>When you start the virtual machine ( Pegasus3.0-VM.vmwarevm ), it
-    will ask for a password for a user called <emphasis
-    role="bold">pegasus</emphasis>. The password is same as the username i.e.
-    pegasus.</para>
+    <section>
+      <title>Download the VM</title>
 
-    <para>After logging on, start a terminal</para>
+      <para>Download the corresponding disk image.</para>
 
-    <programlisting><command>$ </command><emphasis role="bold">[pegasus@pegasus ~]$ pwd</emphasis>
+      <itemizedlist>
+        <listitem>
+          <para><ulink
+          url="http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM.tar.bz2">VMWare
+          Pegasus Image</ulink></para>
+
+          <para>It is around <emphasis role="bold">2 GB</emphasis> in size. We
+          recommend using a command line tool like <emphasis
+          role="bold">wget</emphasis> to download the image. Downloading the
+          image using the browser sometimes corrupts the image.</para>
+
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM.tar.bz2
+
+--</emphasis>14:52:11--  http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM.tar.bz2
+           =&gt; `Pegasus3.0-VM.tar.bz2'
+Resolving pegasus.isi.edu... 128.9.64.219
+Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1,487,950,091 (1.4G) [application/x-bzip2]
+...</programlisting>
+
+          <para>The Image is bzipped. You will need to unzip it.</para>
+
+          <para>If you have gnu tar you can do this directly</para>
+
+          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus3.0-VM.tar.bz2</emphasis></programlisting>
+
+          <para>Else you need to do the following</para>
+
+          <programlisting><emphasis role="bold">$ bunzip2 Pegasus3.0-VM.tar.bz2
+
+$ tar xvf Pegasus3.0-VM.tar</emphasis></programlisting>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>Running the VM</title>
+
+      <para>To start the virtual machine double click on the vmware suffixed
+      file/package Pegasus3.0-VM.vmwarevm . After double clicking, VMware will
+      start up asking </para>
+
+      <orderedlist>
+        <listitem>
+          <para>if you moved it</para>
+        </listitem>
+
+        <listitem>
+          <para>if you want to cancel.</para>
+        </listitem>
+
+        <listitem>
+          <para>if you copied</para>
+        </listitem>
+      </orderedlist>
+
+      <para>Select the option<emphasis role="bold"> 3</emphasis> i.e you
+      copied it. </para>
+
+      <para>When the virtual machine ( Pegasus3.0-VM.vmwarevm ) starts , it
+      will ask for a password for a user called <emphasis
+      role="bold">pegasus</emphasis>. The password is same as the username
+      i.e. pegasus.</para>
+
+      <para>After logging on, start a terminal</para>
+
+      <programlisting><command>$ </command><emphasis role="bold">[pegasus@pegasus ~]$ pwd</emphasis>
 
 /home/pegasus
 </programlisting>
 
-    <para>In general, to run workflows on the Grid you will need to obtain
-    Grid Credentials. The VM already has a user certificate installed for the
-    pegasus user. To generate the proxy ( grid credentials) run the <emphasis
-    role="bold">grid-proxy-init</emphasis> command.</para>
+      <para>In general, to run workflows on the Grid you will need to obtain
+      Grid Credentials. The VM already has a user certificate installed for
+      the pegasus user. To generate the proxy ( grid credentials ) run the
+      <emphasis role="bold">grid-proxy-init</emphasis> command.</para>
 
-    <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init 
+      <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init 
 
 </command><computeroutput>Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
 Creating proxy ................................... Done
 Your proxy is valid until: Thu Nov 25 02:48:18 2010
 
 </computeroutput></programlisting>
-
-    <para>Check your proxy using grid-proxy-info.</para>
-
-    <programlisting><command>$ </command><emphasis role="bold">[pegasus@pegasus ~]$ grid-proxy-info</emphasis><computeroutput><computeroutput>
-
-subject  : /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User/CN=1814822797
-issuer   : /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
-identity : /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
-type     : RFC 3820 compliant impersonation proxy
-strength : 512 bits
-path     : /tmp/x509up_u501
-timeleft : 11:59:29
-
-</computeroutput></computeroutput></programlisting>
+    </section>
   </section>
 
   <section>
@@ -208,14 +258,24 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
     <section>
-      <title>Setting up the Replica Catalog</title>
+      <title>Replica Catalog</title>
 
       <para>First lets change to the tutorial base directory.<programlisting><command>$ cd $HOME/pegasus-wms</command></programlisting></para>
 
       <para>In this exercise you will insert entries into the Replica Catalog.
       The replica catalog that we will use today is a simple file based
-      catalog. We also support and recommend GLOBUS RLS or a JDBC
-      implementation for production runs.</para>
+      catalog. We also support and recommend the following for production
+      runs</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Globus RLS</para>
+        </listitem>
+
+        <listitem>
+          <para>JDBC implementation </para>
+        </listitem>
+      </itemizedlist>
 
       <para>A Replica Catalog maintains the LFN to PFN mapping for the input
       files of your workflow. Pegasus queries it to determine the locations of
@@ -223,51 +283,16 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
       materialized data is registered into Replica Catalog for data reuse
       later on.</para>
 
-      <para>You can use the <emphasis role="bold">
-      pegasus-rc-client</emphasis> command to insert , query and delete from
-      the replica catalog.</para>
+      <section>
+        <title>Pre Populated Replica Catalog</title>
 
-      <para>To execute the diamond dax created in <emphasis
-      role="bold">exercise 2.1</emphasis>, we will need to register input file
-      f.a in the replica catalog. The file f.a resides at
-      /scratch/tutorial/inputdata/diamond/f.a . Let us insert a single entry
-      into the replica catalog.</para>
+        <para>The instructors have provided a File based Replica Catalog
+        configured for the tutorial exercises. The file is inside the config
+        directory.</para>
 
-      <programlisting><command>$  pegasus-rc-client -Dpegasus.user.properties=config/properties insert f.a \
-          gsiftp://pegasus/scratch/tutorial/inputdata/diamond/f.a pool=local
-</command></programlisting>
-
-      <para>Let us know verify if f.a has been registered successfully by
-      querying the replica catalog using rc-client</para>
-
-      <programlisting><emphasis role="bold">$ pegasus-rc-client -Dpegasus.user.properties=config/properties lookup f.a</emphasis>
-
- f.a gsiftp://pegasus/scratch/tutorial/inputdata/diamond/f.a pool="local"
-</programlisting>
-
-      <para>The <emphasis role="bold">pegasus-rc-client</emphasis> also allows
-      for bulk insertion of entries. We will be inserting the entries for
-      montage workflow using the bulk mode. The input data to be used for the
-      montage workflow resides in the /scratch/tutorial/inputdata/0.2degree
-      directory. We are going to insert entries into the replica catalog that
-      point to the files in this directory.</para>
-
-      <para>The instructors have provided:</para>
-
-      <itemizedlist>
-        <listitem>
-          <para>A file replicas.in, the input data file for the
-          pegasus-rc-client that contains the mappings that need to be
-          populated in the Replica Catalog. The file is inside the config
-          directory</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>Instructions:</para>
-
-      <itemizedlist>
-        <listitem>
-          <para>Let us see what the file looks like. <programlisting><command>$ cat config/rc.in</command><computeroutput>
+        <itemizedlist>
+          <listitem>
+            <para>Let us see what the file looks like. <programlisting><command>$ cat config/rc.data</command><computeroutput>
 
 
 statfile_20070529_153243_22618.tbl
@@ -296,68 +321,170 @@ statfile_20070529_153243_22618.tbl
      gsiftp://pegasus/scratch/0.2degree/region.hdr pool="local"
  2mass-atlas-990502s-j1430080.fits
      gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1430080.fits
-          pool="local"</computeroutput></programlisting></para>
-        </listitem>
+          pool="local"
 
-        <listitem>
-          <para>Now we are ready to run rc-client and populate the data. Since
-          each of you have an individual file replica catalog, all the 10
-          entries should be successfully registered. <programlisting><command>$ pegasus-rc-client -Dpegasus.user.properties=config/properties --insert config/rc.in</command><computeroutput><computeroutput>
+...</computeroutput></programlisting></para>
+          </listitem>
+        </itemizedlist>
+      </section>
+
+      <section>
+        <title>pegasus-rc-client ( Optional Exercise )</title>
+
+        <para>You can use the <emphasis role="bold">
+        pegasus-rc-client</emphasis> command to insert , query and delete from
+        the replica catalog.</para>
+
+        <para>Before executing any of the pegasus-rc-client exercises lets us
+        remove the pre populated replica catalog.</para>
+
+        <programlisting><emphasis role="bold">$ rm $HOME/config/rc.data</emphasis></programlisting>
+
+        <para>To execute the diamond dax created in <emphasis
+        role="bold">exercise 2.1</emphasis>, we will need to register input
+        file f.a in the replica catalog. The file f.a resides at
+        /scratch/tutorial/inputdata/diamond/f.a . Let us insert a single entry
+        into the replica catalog.</para>
+
+        <programlisting><command>$  pegasus-rc-client  insert f.a \
+          gsiftp://pegasus/scratch/tutorial/inputdata/diamond/f.a pool=local
+</command></programlisting>
+
+        <para>Let us know verify if f.a has been registered successfully by
+        querying the replica catalog using pegasus-rc-client</para>
+
+        <programlisting><emphasis role="bold">$ pegasus-rc-client  lookup f.a</emphasis>
+
+ f.a gsiftp://pegasus/scratch/tutorial/inputdata/diamond/f.a pool="local"
+</programlisting>
+
+        <para>The <emphasis role="bold">pegasus-rc-client</emphasis> also
+        allows for bulk insertion of entries. We will be inserting the entries
+        for montage workflow using the bulk mode. The input data to be used
+        for the montage workflow resides in the
+        /scratch/tutorial/inputdata/0.2degree directory. We are going to
+        insert entries into the replica catalog that point to the files in
+        this directory.</para>
+
+        <para>The instructors have provided:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>A file replicas.in, the input data file for the
+            pegasus-rc-client that contains the mappings that need to be
+            populated in the Replica Catalog. The file is inside the config
+            directory</para>
+          </listitem>
+
+          <listitem>
+            <para>Let us see what the file looks like. </para>
+
+            <programlisting><command>$ cat config/rc.in</command><computeroutput>
+
+
+statfile_20070529_153243_22618.tbl
+     gsiftp://pegasus/scratch/tutorial/inputdata/0.2degree/statfile.tbl
+          pool="local"
+2mass-atlas-990502s-j1440198.fits
+     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1440198.fits
+          pool="local"
+2mass-atlas-990502s-j1440186.fits
+     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1440186.fits
+          pool="local"
+ 2mass-atlas-990502s-j1430092.fits
+     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1430092.fits
+          pool="local"
+ 2mass-atlas-990502s-j1420198.fits
+     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1420198.fits
+          pool="local"
+ 2mass-atlas-990502s-j1420186.fits
+     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1420186.fits
+          pool="local"
+ cimages_20070529_153243_22618.tbl
+     gsiftp://pegasus/scratch/0.2degree/cimages.tbl pool="local"
+ pimages_20070529_153243_22618.tbl
+     gsiftp://pegasus/scratch/0.2degree/pimages.tbl pool="local"
+ region_20070529_153243_22618.hdr
+     gsiftp://pegasus/scratch/0.2degree/region.hdr pool="local"
+ 2mass-atlas-990502s-j1430080.fits
+     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1430080.fits
+          pool="local"</computeroutput></programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Now we are ready to run rc-client and populate the data.
+            Since each of you have an individual file replica catalog, all the
+            10 entries should be successfully registered. </para>
+
+            <programlisting><command>$ pegasus-rc-client  --insert config/rc.in</command><computeroutput><computeroutput>
 
 #Successfully worked on : 12 lines</computeroutput>
-#Worked on total number of : 12 lines.</computeroutput></programlisting></para>
-        </listitem>
+#Worked on total number of : 12 lines.</computeroutput></programlisting>
+          </listitem>
 
-        <listitem>
-          <para>Now the entries have been successfully inserted into the
-          Replica Catalog. We should query the replica catalog for a
-          particular lfn. <programlisting><command>$ pegasus-rc-client -Dpegasus.user.properties=config/properties \
-                   lookup pimages_20080505_143233_14944.tbl</command><computeroutput><computeroutput>
+          <listitem>
+            <para>Now the entries have been successfully inserted into the
+            Replica Catalog. We should query the replica catalog for a
+            particular lfn. </para>
+
+            <programlisting><command>$ pegasus-rc-client lookup pimages_20080505_143233_14944.tbl</command><computeroutput><computeroutput>
 
 pimages_20080505_143233_14944.tbl
          gsiftp://pegasus/scratch/tutorial/inputdata/0.2degree/pimages.tbl 
-           pool="local"</computeroutput></computeroutput></programlisting></para>
-        </listitem>
-      </itemizedlist>
-
-      <para>Congratulations!! You have the replica catalog setup correctly for
-      use. This is the catalog which you will tinker with most, while running
-      Pegasus.</para>
+           pool="local"</computeroutput></computeroutput></programlisting>
+          </listitem>
+        </itemizedlist>
+      </section>
     </section>
 
     <section>
-      <title>Setting up the Site Catalog and Transformation Catalog</title>
+      <title>The Site Catalog </title>
 
-      <para>In this exercise you will setup your Site Catalog and the
-      Transformation Catalog.</para>
-
-      <para>The instructors have provided: <itemizedlist>
-          <listitem>
-            <para>A ready transformation catalog (tc.data.text) in the
-            $HOME/pegasus-wms/config directory.</para>
-          </listitem>
-
-          <listitem>
-            <para>A semi ready properties file in the $HOME/pegasus-wms/config
-            directory.</para>
-          </listitem>
-        </itemizedlist></para>
+      <para>The site catalog contains information about the layout of your
+      grid where you want to run your workflows. For each site following
+      information is maintained</para>
 
       <itemizedlist>
         <listitem>
-          <para>The site catalog contains information about the layout of your
-          grid where you want to run your workflows. For each site information
-          like workdirectory, jobmanagers to use, gridftp servers to use and
-          other site wide information like environment variables to be set is
-          maintained.</para>
+          <para>grid gateways </para>
+        </listitem>
 
-          <para>Lets see the site catalog for the Pegasus VM. It refers to two
-          sites <emphasis role="bold">local</emphasis> and <emphasis
-          role="bold">cluster</emphasis> .</para>
+        <listitem>
+          <para>head node filesystem</para>
+        </listitem>
 
-          <para><programlisting><command>$ cat $HOME/pegasus-wms/config/sites.xml3</command><computeroutput>
+        <listitem>
+          <para>worker node filesystem</para>
+        </listitem>
 
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
+        <listitem>
+          <para>scratch and shared file systems on the head nodes and worker
+          nodes</para>
+        </listitem>
+
+        <listitem>
+          <para>replica catalog URL for the site</para>
+        </listitem>
+
+        <listitem>
+          <para>site wide information like environment variables to be set
+          when a job is run.</para>
+        </listitem>
+      </itemizedlist>
+
+      <section>
+        <title>Pre Populated Site Catalog</title>
+
+        <para>The instructors have provided a pre-populated site catalog for
+        use in the tutorial in $HOME/pegasus-wms/config directory.</para>
+
+        <para>Lets see the site catalog for the Pegasus VM. It refers to two
+        sites <emphasis role="bold">local</emphasis> and <emphasis
+        role="bold">cluster</emphasis> .</para>
+
+        <programlisting><command>$ cat $HOME/pegasus-wms/config/sites.xml3</command><computeroutput>
+
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
   xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
 &lt;site  handle="cluster" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
@@ -412,28 +539,283 @@ pimages_20080505_143233_14944.tbl
 
 &lt;/sitecatalog&gt;
  
-</computeroutput></programlisting></para>
-        </listitem>
-      </itemizedlist>
+</computeroutput></programlisting>
+      </section>
 
-      <itemizedlist>
-        <listitem>
-          <para>The transformation catalog maintains information about where
-          the application code resides on the grid. In our case, it contains
-          the locations where the Diamond or Montage code is installed in the
-          Pegasus VM. We will use the pegasus-<emphasis
-          role="bold">tc-client</emphasis> to add the entry for the
-          transformation analyze into the transformation catalog.</para>
+      <section>
+        <title>Generating a Site Catalog for OSG</title>
 
-          <programlisting><emphasis role="bold">$ pegasus-tc-client -Dpegasus.user.properties=config/properties -a -l diamond::analyze:2.0 \
+        <para>The client pegasus-sc-client can be used to generate a site
+        catalog and transformation catalog for the Open Science Grid.</para>
+
+        <programlisting><command>$ </command><emphasis role="bold"><computeroutput>[pegasus@pegasus pegasus-wms]$ pegasus-sc-client --vo engage --sc ./engage-osg-sc.xml \
+  --source OSGMM --grid OSG -vvvv 
+</computeroutput></emphasis><computeroutput>
+2010.11.24 18:00:46.410 PST: [INFO]  Skipping site CIT_CMS_T2 
+2010.11.24 18:00:46.416 PST: [INFO]  Adding site RENCI-Engagement 
+2010.11.24 18:00:46.475 PST: [INFO]  Adding site Nebraska 
+2010.11.24 18:00:46.476 PST: [INFO]  Adding site Prairiefire 
+2010.11.24 18:00:46.476 PST: [INFO]  Adding site BNL-ATLAS 
+2010.11.24 18:00:46.477 PST: [INFO]  Adding site BNL-ATLAS__1 
+2010.11.24 18:00:46.478 PST: [INFO]  Adding site UFlorida-PG 
+2010.11.24 18:00:46.478 PST: [INFO]  Skipping site CIT_CMS_T2__1 
+2010.11.24 18:00:46.478 PST: [INFO]  Adding site RENCI-Blueridge 
+2010.11.24 18:00:46.479 PST: [INFO]  Adding site Nebraska__1 
+2010.11.24 18:00:46.480 PST: [INFO]  Adding site UMissHEP 
+2010.11.24 18:00:46.480 PST: [INFO]  Adding site UCR-HEP 
+2010.11.24 18:00:46.481 PST: [INFO]  Adding site LIGO_UWM_NEMO 
+2010.11.24 18:00:46.482 PST: [INFO]  Adding site FNAL_FERMIGRID 
+2010.11.24 18:00:46.482 PST: [INFO]  Adding site USCMS-FNAL-WC1 
+2010.11.24 18:00:46.483 PST: [INFO]  Adding site UConn-OSG 
+2010.11.24 18:00:46.484 PST: [INFO]  Adding site UFlorida-HPC 
+2010.11.24 18:00:46.484 PST: [INFO]  Adding site GridUNESP_CENTRAL 
+2010.11.24 18:00:46.493 PST: [INFO]  Adding site NWICG_NotreDame 
+2010.11.24 18:00:46.494 PST: [INFO]  Site LOCAL . Creating default entry 
+2010.11.24 18:00:46.527 PST: [INFO]  Loaded 19 sites  
+2010.11.24 18:00:46.527 PST:   Writing out site catalog to /home/pegasus/pegasus-wms/./engage-osg-sc.xml 
+2010.11.24 18:00:46.959 PST:   Number of SRM Properties retrieved 14 
+2010.11.24 18:00:46.970 PST:   Writing out properties to /home/pegasus/pegasus-wms/./pegasus.6475454308491531036.properties 
+2010.11.24 18:00:46.972 PST: [INFO]  Time taken to execute is 1.101 seconds 
+2010.11.24 18:00:46.972 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
+
+
+</computeroutput></programlisting>
+      </section>
+    </section>
+
+    <section>
+      <title>Transformation Catalog</title>
+
+      <para>The transformation catalog maintains information about where the
+      application code resides on the grid. It also provides additional
+      information about the transformation as to what system they are compiled
+      for, what profiles or environment variables need to be set when the
+      transformation is invoked etc.</para>
+
+      <section>
+        <title>Pre Populated Transformation Catalog</title>
+
+        <para>The instructors have provided a ready transformation catalog
+        (tc.data.text) in the $HOME/pegasus-wms/config directory</para>
+
+        <para>In our case, it contains the locations where the Diamond or
+        Montage code is installed in the Pegasus VM. Let us see the
+        Transformation Catalog</para>
+
+        <para>For each transformation the following information is
+        captured</para>
+
+        <orderedlist>
+          <listitem>
+            <para>tr - A transformation identifier. (Normally a
+            Namespace::Name:Version.. The Namespace and Version are
+            optional.)</para>
+          </listitem>
+
+          <listitem>
+            <para>pfn - URL or file path for the location of the executable.
+            The pfn is a file path if the transformation is of type INSTALLED
+            and generally a url (file:/// or http:// or gridftp://) if of type
+            STAGEABLE</para>
+          </listitem>
+
+          <listitem>
+            <para>site - The site identifier for the site where the
+            transformation is available</para>
+          </listitem>
+
+          <listitem>
+            <para>type - The type of transformation. Whether it is Iinstalled
+            ("INSTALLED") on the remote site or is availabe to stage
+            ("STAGEABLE").</para>
+          </listitem>
+
+          <listitem>
+            <para>arch os, osrelease, osversion - The
+            arch/os/osrelease/osversion of the transformation. osrelease and
+            osversion are optional.</para>
+
+            <para>ARCH can have one of the following values x86, x86_64,
+            sparcv7, sparcv9, ppc, aix. The default value for arch is
+            x86</para>
+
+            <para>OS can have one of the following values linux,sunos,macosx.
+            The default value for OS if none specified is linux</para>
+          </listitem>
+
+          <listitem>
+            <para>Profiles - One or many profiles can be attached to a
+            transformation for all sites or to a transformation on a
+            particular site.</para>
+          </listitem>
+        </orderedlist>
+
+        <programlisting><emphasis role="bold">$ cat $HOME/pegasus-wms/config/tc.data.text</emphasis>
+
+
+# multiple line text-based transformation catalog: 2010-11-24T20:46:41.710-08:00
+tr bin/mDiff {
+        site local {
+                profile env "MONTAGE_HOME" "." 
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mDiff"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr bin/mFitplane {
+        site local {
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mFitplane"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr condor::dagman {
+        site local {
+                pfn "/opt/condor/default/bin/condor_dagman"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+
+tr diamond::findrange:2.0 {
+        site local {
+                pfn "/opt/pegasus/default/bin/keg"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+
+tr diamond::preprocess:2.0 {
+        site local {
+                pfn "/opt/pegasus/default/bin/keg"
+                arch "x86"
+                os "LINUX"
+                type "INSTALLED"
+        }
+}
+
+tr mAdd:3.0 {
+        site local {
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mAdd"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr mBackground:3.0 {
+        site local {
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mBackground"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr mBgModel:3.0 {
+        site local {
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mBgModel"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr mConcatFit:3.0 {
+        site local {
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mConcatFit"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr mDiffFit:3.0 {
+        site local {
+                profile env "MONTAGE_HOME" "." 
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mDiffFit"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr mImgtbl:3.0 {
+        site local {
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mImgtbl"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr mJPEG:3.0 {
+        site local {
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mJPEG"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr mProjectPP:3.0 {
+        site local {
+                profile condor "priority" "25" 
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mProjectPP"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+
+tr mShrink:3.0 {
+        site local {
+                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+bin/mShrink"
+                arch "x86"
+                os "LINUX"
+                type "STAGEABLE"
+        }
+}
+</programlisting>
+      </section>
+
+      <section>
+        <title>pegasus-tc-client ( Optional )</title>
+
+        <para>We will use the <emphasis
+        role="bold">pegasus-tc-client</emphasis> to add the entry for the
+        transformation dummy into the transformation catalog.</para>
+
+        <itemizedlist>
+          <listitem>
+            <para></para>
+
+            <programlisting><emphasis role="bold">$ pegasus-tc-client  -a -l diamond::dummy:2.0 \
       -p /opt/pegasus/default/bin/keg -r local -t INSTALLED -s INTEL32::LINUX 
 <emphasis>
  2008.04.30 15:11:59.313 PDT: [INFO] Added tc entry sucessfully
 </emphasis></emphasis></programlisting>
 
-          <para>Let us try and query for the entry we inserted.</para>
+            <para>Let us try and query for the entry we inserted.</para>
 
-          <programlisting><emphasis role="bold">$ pegasus-tc-client -Dpegasus.user.properties=config/properties -q -P -l diamond::analyze:2.0
+            <programlisting><emphasis role="bold">$ pegasus-tc-client  -q -P -l diamond::dummy:2.0
 </emphasis>
 #RESID     LTX                     PFN                                           TYPE          SYSINFO
 
@@ -441,11 +823,11 @@ local    diamond::analyze:2.0    /cluster-software/pegasus/current/bin/keg    IN
 
 </programlisting>
 
-          <para>Let us try and query the transformation catalog for all the
-          entries in it. Let us see what our transformation catalog looks
-          like</para>
+            <para>Let us try and query the transformation catalog for all the
+            entries in it. Let us see what our transformation catalog looks
+            like</para>
 
-          <programlisting><command>$ pegasus-tc-client -Dpegasus.user.properties=config/properties -q -B          </command><computeroutput>
+            <programlisting><command>$ pegasus-tc-client  -q -B          </command><computeroutput>
 
 local   mDiff       
              gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mDiff       
@@ -483,12 +865,19 @@ local   mProjectPP:3.0
 local   mShrink:3.0
              gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mShrink
                                 STATIC_BINARY   INTEL32::LINUX  NULL</computeroutput></programlisting>
-        </listitem>
+          </listitem>
+        </itemizedlist>
+      </section>
+    </section>
 
-        <listitem>
-          <para>Open the properties file and check a few properties.</para>
+    <section>
+      <title>Properties</title>
 
-          <programlisting><command>$ cat config/properties</command><computeroutput><computeroutput>
+      <para>Pegasus Workflow Planner is configured via the use of java
+      properties. The instructors have provided a ready properties file at
+      $HOME/.pegasusrc .</para>
+
+      <programlisting><command>$ cat $HOME/.pegasusrc</command><computeroutput><computeroutput>
  
 ##########################
 # PEGASUS USER PROPERTIES 
@@ -524,52 +913,10 @@ pegasus.dir.exec = exec
 #JOB CATEGORIES
 dagman.projection.maxjobs 2
 [pegasus@pegasus pegasus-wms</computeroutput></computeroutput></programlisting>
-        </listitem>
-
-        <listitem>
-          <para>Also the client pegasus-sc-client can be used to generate a
-          site catalog and transformation catalog for the Open Science
-          Grid.</para>
-
-          <programlisting><command>$ </command><emphasis role="bold"><computeroutput>[pegasus@pegasus pegasus-wms]$ pegasus-sc-client -Dpegasus.user.properties=`pwd`/config/properties --vo engage --sc ./engage-osg-sc.xml \
-  --source OSGMM --grid OSG -vvvv 
-</computeroutput></emphasis><computeroutput>
-2010.11.24 18:00:46.410 PST: [INFO]  Skipping site CIT_CMS_T2 
-2010.11.24 18:00:46.416 PST: [INFO]  Adding site RENCI-Engagement 
-2010.11.24 18:00:46.475 PST: [INFO]  Adding site Nebraska 
-2010.11.24 18:00:46.476 PST: [INFO]  Adding site Prairiefire 
-2010.11.24 18:00:46.476 PST: [INFO]  Adding site BNL-ATLAS 
-2010.11.24 18:00:46.477 PST: [INFO]  Adding site BNL-ATLAS__1 
-2010.11.24 18:00:46.478 PST: [INFO]  Adding site UFlorida-PG 
-2010.11.24 18:00:46.478 PST: [INFO]  Skipping site CIT_CMS_T2__1 
-2010.11.24 18:00:46.478 PST: [INFO]  Adding site RENCI-Blueridge 
-2010.11.24 18:00:46.479 PST: [INFO]  Adding site Nebraska__1 
-2010.11.24 18:00:46.480 PST: [INFO]  Adding site UMissHEP 
-2010.11.24 18:00:46.480 PST: [INFO]  Adding site UCR-HEP 
-2010.11.24 18:00:46.481 PST: [INFO]  Adding site LIGO_UWM_NEMO 
-2010.11.24 18:00:46.482 PST: [INFO]  Adding site FNAL_FERMIGRID 
-2010.11.24 18:00:46.482 PST: [INFO]  Adding site USCMS-FNAL-WC1 
-2010.11.24 18:00:46.483 PST: [INFO]  Adding site UConn-OSG 
-2010.11.24 18:00:46.484 PST: [INFO]  Adding site UFlorida-HPC 
-2010.11.24 18:00:46.484 PST: [INFO]  Adding site GridUNESP_CENTRAL 
-2010.11.24 18:00:46.493 PST: [INFO]  Adding site NWICG_NotreDame 
-2010.11.24 18:00:46.494 PST: [INFO]  Site LOCAL . Creating default entry 
-2010.11.24 18:00:46.527 PST: [INFO]  Loaded 19 sites  
-2010.11.24 18:00:46.527 PST:   Writing out site catalog to /home/pegasus/pegasus-wms/./engage-osg-sc.xml 
-2010.11.24 18:00:46.959 PST:   Number of SRM Properties retrieved 14 
-2010.11.24 18:00:46.970 PST:   Writing out properties to /home/pegasus/pegasus-wms/./pegasus.6475454308491531036.properties 
-2010.11.24 18:00:46.972 PST: [INFO]  Time taken to execute is 1.101 seconds 
-2010.11.24 18:00:46.972 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
-
-
-</computeroutput></programlisting>
-        </listitem>
-      </itemizedlist>
     </section>
 
     <section>
-      <title>Planning workflow using pegasus-plan and running locally using
-      pegasus-run.</title>
+      <title>Planning and Running Workflows Locally</title>
 
       <para>In this exercise we are going to run pegasus-plan to generate a
       executable workflow from the abstract workflow (diamond.dax). The
@@ -600,16 +947,15 @@ dagman.projection.maxjobs 2
       <itemizedlist>
         <listitem>
           <para>Let us run pegasus-plan on the diamond dax. <programlisting><command>$ cd ~/pegasus-wms
-$ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
-               --dax `pwd`/dax/diamond.dax --force\
+$ pegasus-plan --dax `pwd`/dax/diamond.dax --force\
                --dir dags -s local -o local --nocleanup -v</command></programlisting>
           The above command says that we need to plan the diamond dax locally.
           The condor submit files are to be generated in a directory structure
           whose base is dags. We also are requesting that no cleanup jobs be
           added as we require the intermediate data to be saved. Here is the
           output of pegasus-plan. <programlisting><computeroutput>2010.07.19 16:47:05.276 PDT: [INFO] event.pegasus.planner planner.version 2.4.2  - STARTED 
-2010.07.19 16:47:05.858 PDT: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/diamond.dax  - STARTED 
-2010.07.19 16:47:05.901 PDT: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/diamond.dax  - FINISHED 
+2010.07.19 16:47:05.858 PDT: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/diamond.dax  
+2010.07.19 16:47:05.901 PDT: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/diamond.dax   
 2010.07.19 16:47:05.944 PDT: [INFO] event.pegasus.refinement dax.id diamond_0  - STARTED 
 2010.07.19 16:47:05.957 PDT: [INFO] event.pegasus.siteselection dax.id diamond_0  - STARTED 
 2010.07.19 16:47:05.977 PDT: [INFO] event.pegasus.siteselection dax.id diamond_0  - FINISHED 
@@ -647,8 +993,8 @@ pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/peg
           output of pegasus-plan. Do not copy the command below it is just for
           illustration purpose.</emphasis><programlisting><emphasis
                 role="bold"></emphasis><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
-      -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/pegasus.350356687577055673.properties \
-       /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
+ -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/pegasus.350356687577055673.properties \
+       $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
 
 -----------------------------------------------------------------------
 File for submitting this DAG to Condor           : blackdiamond-0.dag.condor.sub
@@ -716,17 +1062,31 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
  ID      OWNER/NODENAME   SUBMITTED     RUN_TIME ST PRI SIZE CMD               
   84.0   pegasus         7/19 16:59   0+00:01:17 R  0   7.3  condor_dagman -f -
   87.0    |-preprocess_  7/19 17:00   0+00:00:31 R  10  0.1  kickstart -n diamo
-</computeroutput></programlisting> The above output shows that a couple of
-          jobs are running under the main dagman process. Keep a lookout to
-          track whether a workflow is running or not. If you do not see any of
-          your job in the output for sometime (say 30 seconds), we know the
-          workflow has finished. We need to wait, as there might be delay in
-          Condor DAGMan releasing the next job into the queue after a job has
-          finished successfully.</para>
+</computeroutput></programlisting><tip>
+              <para> watch does not end with ESC nor (q)uit, but with
+              Ctrl+C.</para>
+            </tip> The above output shows that a couple of jobs are running
+          under the main dagman process. Keep a lookout to track whether a
+          workflow is running or not. If you do not see any of your job in the
+          output for sometime (say 30 seconds), we know the workflow has
+          finished. We need to wait, as there might be delay in Condor DAGMan
+          releasing the next job into the queue after a job has finished
+          successfully.</para>
 
           <para>If output of pegasus-status is empty, then either your
-          workflow has - successfully completed - stopped midway due to non
-          recoverable error. We can now run pegasus-analyzer to analyze the
+          workflow has</para>
+
+          <orderedlist>
+            <listitem>
+              <para> successfully completed </para>
+            </listitem>
+
+            <listitem>
+              <para> stopped midway due to non recoverable error.</para>
+            </listitem>
+          </orderedlist>
+
+          <para>We can now run pegasus-analyzer to analyze the
           workflow.</para>
         </listitem>
 
@@ -921,7 +1281,7 @@ Input Filenames: f.c1 f.c2
 
       <programlisting><emphasis role="bold">Plan and Submit the diamond workflow</emphasis> . Pass --submit to pegasus-plan to submit in case of successful planning
 
-[pegasus@pegasus pegasus-wms]$  pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties --dax `pwd`/dax/diamond.dax --force \
+[pegasus@pegasus pegasus-wms]$  pegasus-plan --dax `pwd`/dax/diamond.dax --force \
         --dir dags -s local -o local --nocleanup --submit -v
 
 <emphasis role="bold">
@@ -962,7 +1322,7 @@ WORKFLOW STATUS : FAILED | 1/8 ( 12% ) | (rescue needs to be submitted)
       <para>We will now run pegasus-analyzer on the failed workflow submit
       directory to see what job failed.</para>
 
-      <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-analyzer -q -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002<emphasis>
+      <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-analyzer -q -i $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002<emphasis>
 pegasus-analyzer: initializing...
 </emphasis></emphasis>
 ************************************Summary*************************************
@@ -1019,10 +1379,11 @@ working dir : /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run000
 
 2010-11-25 01:25:22,320    INFO:  Reading URL pairs from stdin
 2010-11-25 01:25:22,321    INFO:  PATH=/usr/local/globus/default/bin:/opt/pegasus/default/bin:/usr/bin:/bin
-2010-11-25 01:25:22,321    INFO:  LD_LIBRARY_PATH=/usr/local/globus/default/lib:/usr/java/jdk1.6.0_20/jre/lib/amd64/server:/usr/java/jdk1.6.0_20/jre/lib/amd64:/usr/java/jdk1.6.0_20/jre/../lib/amd64
+2010-11-25 01:25:22,321    INFO:  LD_LIBRARY_PATH=/usr/local/globus/default/lib:/usr/java/jdk1.6.0_20/jre/lib/amd64
 2010-11-25 01:25:22,321    INFO:  Executing cp commands
 /bin/cp: cannot stat `/scratch/tutorial/inputdata/diamond/f.a': No such file or directory
-2010-11-25 01:25:22,331 CRITICAL:  Command'/bin/cp -L"/scratch/tutorial/inputdata/diamond/f.a""/home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0002/f.a"'failed with error code 1
+2010-11-25 01:25:22,331 CRITICAL:  Command'/bin/cp -L"/scratch/tutorial/inputdata/diamond/f.a"
+                 "/home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0002/f.a"'failed with error code 1
 
 **************************************Done**************************************
 
@@ -1126,7 +1487,7 @@ pegasus-analyzer: end of status report
 
           <para>Lets look at the stdout of our failed job.</para>
 
-          <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ cat  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/diamond/run0002/stage_in_local_0.out.002</emphasis>
+          <programlisting><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ cat  $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/run0002/stage_in_local_0.out.002</emphasis>
 
 &lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
 &lt;invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
@@ -1477,7 +1838,7 @@ Job 2788.0 marked for removal</computeroutput></programlisting>
         <para>pegasus-statistics generates workflow execution statistics. To
         generate statistics run the command as shown below</para>
 
-        <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wm
+        <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms
 
 
 $ pegasus-statistics dags/pegasus/pegasus/blackdiamond/run0001/
@@ -1847,55 +2208,53 @@ PNG file corresponding to the dax is created at:
         </section>
       </section>
     </section>
+  </section>
 
-    <section>
-      <title>Planning workflow using pegasus-plan and Running pegasus-run to
-      submit the workflow to a grid resource.</title>
+  <section>
+    <title>Planning and Executing Workflow against a Remote Resource</title>
 
-      <para>In this exercise we are going to run pegasus-plan to generate a
-      executable workflow from the abstract workflow (montage.dax). The
-      Executable workflow generated, are condor submit files that are
-      submitted to remote grid resources using pegasus-run</para>
+    <para>In this exercise we are going to run pegasus-plan to generate a
+    executable workflow from the abstract workflow (montage.dax). The
+    Executable workflow generated, are condor submit files that are submitted
+    to remote grid resources using pegasus-run</para>
 
-      <para>The instructors have provided:</para>
+    <para>The instructors have provided:</para>
 
-      <itemizedlist>
+    <itemizedlist>
+      <listitem>
+        <para>A dax (montage.dax) in the $HOME/pegasus-wms/dax/
+        directory.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>You will need to write some things yourself, by following the
+    instructions below: <itemizedlist>
         <listitem>
-          <para>A dax (montage.dax) in the $HOME/pegasus-wms/dax/
-          directory.</para>
+          <para>Run pegasus-plan to generate the condor submit files out of
+          the dax.</para>
         </listitem>
-      </itemizedlist>
+      </itemizedlist></para>
 
-      <para>You will need to write some things yourself, by following the
-      instructions below: <itemizedlist>
-          <listitem>
-            <para>Run pegasus-plan to generate the condor submit files out of
-            the dax.</para>
-          </listitem>
-        </itemizedlist></para>
+    <para>Instructions:</para>
 
-      <para>Instructions:</para>
-
-      <itemizedlist>
-        <listitem>
-          <para>Let us run pegasus-plan on the montage dax on the tg_ncsa
-          cluster. If multiple sites are available you could provide the sites
-          using a comma "," separated list like tg_ncsa,viz
-          etc.<programlisting><command>$ cd $HOME/pegasus-wms
-$ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
-               -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
+    <itemizedlist>
+      <listitem>
+        <para>Let us run pegasus-plan on the montage dax on the tg_ncsa
+        cluster. If multiple sites are available you could provide the sites
+        using a comma "," separated list like tg_ncsa,viz etc.<programlisting><command>$ cd $HOME/pegasus-wms
+$ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
                --dir dags --sites cluster --output local --force \
                --nocleanup --dax `pwd`/dax/montage.dax --submit -v</command></programlisting>
-          The above command says that we need to plan the montage dax on the
-          <emphasis role="bold">cluster</emphasis> site. The cluster site in
-          the VM is managed by SGE that is running in the VM. The jobs for
-          this workflow will be submitted to <emphasis
-          role="bold">jobmanager-sge</emphasis> in the VM. The output data
-          needs to be transferred back to the local host. The condor submit
-          files are to be generated in a directory structure whose base is
-          dags. We also are requesting that no cleanup jobs be added as we
-          require the intermediate data on the remote host. Here is the output
-          of pegasus-plan. <programlisting><computeroutput>
+        The above command says that we need to plan the montage dax on the
+        <emphasis role="bold">cluster</emphasis> site. The cluster site in the
+        VM is managed by SGE that is running in the VM. The jobs for this
+        workflow will be submitted to <emphasis
+        role="bold">jobmanager-sge</emphasis> in the VM. The output data needs
+        to be transferred back to the local host. The condor submit files are
+        to be generated in a directory structure whose base is dags. We also
+        are requesting that no cleanup jobs be added as we require the
+        intermediate data on the remote host. Here is the output of
+        pegasus-plan. <programlisting><computeroutput>
 2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - STARTED 
 2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax  - FINISHED 
 2010.11.24 18:20:11.350 PST: [INFO] event.pegasus.refinement dax.id montage_0  - STARTED 
@@ -1944,31 +2303,30 @@ $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
 2010.11.24 18:20:13.617 PST:   Time taken to execute is 3.76 seconds 
 2010.11.24 18:20:13.617 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
 </computeroutput></programlisting></para>
-        </listitem>
+      </listitem>
 
-        <listitem>
-          <para>If you get any errors above while running pegasus-plan you can
-          add -vvvvv to enable maximum verbosity on pegasus-run.</para>
-        </listitem>
-      </itemizedlist>
+      <listitem>
+        <para>If you get any errors above while running pegasus-plan you can
+        add -vvvvv to enable maximum verbosity on pegasus-run.</para>
+      </listitem>
+    </itemizedlist>
 
-      <para>The above command submits the workflow to Condor DAGMan/CondorG.
-      After submitting it starts a monitoring daemon pegasus-monitord that
-      parses the condor log files to update the status of the jobs and push it
-      in a work database.</para>
+    <para>The above command submits the workflow to Condor DAGMan/CondorG.
+    After submitting it starts a monitoring daemon pegasus-monitord that
+    parses the condor log files to update the status of the jobs and push it
+    in a work database.</para>
 
-      <para>Monitor the workflow using the commands provided in the output of
-      the pegasus-run command and other commands explained earlier.</para>
+    <para>Monitor the workflow using the commands provided in the output of
+    the pegasus-run command and other commands explained earlier.</para>
 
-      <para>The workflow generates a single output file montage.jpg that
-      resides in the directory <emphasis
-      role="bold">/home/pegasus/local-storage/storage/montage.jpg</emphasis>
-      if it runs successfully</para>
+    <para>The workflow generates a single output file montage.jpg that resides
+    in the directory <emphasis
+    role="bold">/home/pegasus/local-storage/storage/montage.jpg</emphasis> if
+    it runs successfully</para>
 
-      <para>The grid workflow will take time to execute on the VM. On the
-      instructor's MAC Pro Desktop it took about<emphasis role="bold"> 30
-      minutes </emphasis>to run.</para>
-    </section>
+    <para>The grid workflow will take time to execute on the VM. On the
+    instructor's MAC Pro Desktop it took about<emphasis role="bold"> 30
+    minutes </emphasis>to run.</para>
   </section>
 
   <section>
@@ -1986,8 +2344,7 @@ $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
       sequential jobs.</para>
 
       <programlisting><command>$ cd $HOME/pegasus-wms
-$ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
-            -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
+$ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
             --dir `pwd`/dags --sites cluster --output local --nocleanup --force\
             --cluster horizontal --dax `pwd`/dax/montage.dax -v</command></programlisting>
 
@@ -2008,8 +2365,7 @@ $ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties \
       role="bold">--force</emphasis> option.</para>
 
       <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms
-$ pegasus-plan -Dpegasus.user.properties=`pwd`/config/properties --dax `pwd`/dax/diamond.dax --dir `pwd`/dags -s local \
-                   -o local --nocleanup -v
+$ pegasus-plan --dax `pwd`/dax/diamond.dax --dir `pwd`/dags -s local -o local --nocleanup -v
 </emphasis>
 2010.11.25 01:35:11.186 PST: [INFO] event.pegasus.refinement dax.id blackdiamond_0  - STARTED 
 2010.11.25 01:35:11.210 PST: [INFO] event.pegasus.reduce dax.id blackdiamond_0  - STARTED 
@@ -2043,7 +2399,8 @@ To regenerate the output data from scratch specify --force option.
 
 
 
-pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003/pegasus.4078026914028890643.properties /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003
+pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003/pegasus.4078026914028890643.properties\
+ /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003
 
  
 2010.11.25 01:35:12.083 PST:   Time taken to execute is 1.508 seconds 
