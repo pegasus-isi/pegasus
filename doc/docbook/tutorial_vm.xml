@@ -174,9 +174,9 @@ config  dax</computeroutput></computeroutput></programlisting>
 
       <programlisting><command>$ emacs -nw dax/CreateDAX.java</command></programlisting>
 
-      <para>There is a function constructDAX( String daxFile ) that constructs
-      the DAX. Towards the end of the function there is some commented out
-      code.</para>
+      <para>There is a function Diamond( String site_handle, String
+      pegasus_location ) that constructs the DAX. Towards the end of the
+      function there is some commented out code.</para>
 
       <programlisting> // Add analyze job
 //To be uncommented for exercise 2.1
