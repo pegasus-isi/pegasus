@@ -2616,7 +2616,7 @@ To regenerate the output data from scratch specify --force option.
 
 
 
-pegasus-run -Dpegasus.user.properties=/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003/pegasus.4078026914028890643.properties\
+pegasus-run -Dpegasus.user.properties=$HOME/.../blackdiamond/run0003/pegasus.4078026914028890643.properties\
  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003
 
  
