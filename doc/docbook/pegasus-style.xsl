@@ -13,8 +13,8 @@
     <xsl:param name="chunker.output.indent">yes</xsl:param>
     <xsl:param name="chunk.section.depth">0</xsl:param>
     <xsl:param name="navig.showtitles">0</xsl:param>
-    <!-- xsl:param name="section.label.includes.component.label">1</xsl:param -->
-    <!-- xsl:param name="section.autolabel">1</xsl:param -->
+    <xsl:param name="section.label.includes.component.label">1</xsl:param>
+    <xsl:param name="section.autolabel">1</xsl:param>
 
 
     <xsl:param name="generate.toc">
