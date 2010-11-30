@@ -91,13 +91,15 @@ $ tar xvf Pegasus3.0-VM-box.tar</emphasis></programlisting>
         </listitem>
 
         <listitem>
-          <para>Click on "Add" button to add the PegasusVM3.0-vbox.vmdk file
-          that you just downloaded and unzipped.</para>
+          <para>Click on "Add" button to add the <emphasis
+          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> file that you just
+          downloaded and unzipped.</para>
         </listitem>
 
         <listitem>
-          <para>You will now see the PegasusVM3.0-vbox.vmdk in the list of
-          hard disks with Actual size listed as around 5.10 GB</para>
+          <para>You will now see the <emphasis
+          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> in the list of hard
+          disks with Actual size listed as around 5.10 GB</para>
         </listitem>
 
         <listitem>
@@ -119,25 +121,29 @@ $ tar xvf Pegasus3.0-VM-box.tar</emphasis></programlisting>
         </listitem>
 
         <listitem>
-          <para>In the VM Name and OS Type Window specify the name as
-          PegasusVM-3.0. Select the Operating System as Linux and Version as
-          Red Hat ( 64 bit ). Click Continue.</para>
+          <para>In the VM Name and OS Type Window specify the name as<emphasis
+          role="bold"> PegasusVM-3.0</emphasis>. Select the <emphasis
+          role="bold">Operating System as Linux </emphasis>and <emphasis
+          role="bold">Version as Red Hat ( 64 bit )</emphasis>. Click
+          Continue.</para>
         </listitem>
 
         <listitem>
-          <para>You will now see the PegasusVM3.0-vbox.vmdk in the list of
-          hard disks with Actual size listed as around 5.10 GB</para>
+          <para>You will now see the <emphasis
+          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> in the list of hard
+          disks with Actual size listed as around 5.10 GB</para>
         </listitem>
 
         <listitem>
-          <para>Set the base memory to 1024 MB . It defaults to 512 MB. Click
-          Continue</para>
+          <para>Set the base memory to <emphasis role="bold">1024
+          MB</emphasis> . It defaults to 512 MB. Click Continue</para>
         </listitem>
 
         <listitem>
           <para>We now select the Virtual Hard Disk to use with the machine.
-          Select the option box for Use Existing Hard Disk. Select
-          PegasusVM3.0-vbox.vmdk from the list . Click Continue</para>
+          Select the option box for Use Existing Hard Disk. Select <emphasis
+          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> from the list . Click
+          Continue</para>
         </listitem>
 
         <listitem>
