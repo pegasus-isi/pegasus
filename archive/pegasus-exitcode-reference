@@ -6,10 +6,7 @@
 # $Id$
 #
 no_heap_setup=1
-save=$CLASSPATH
 . `dirname $0`/../bin/common.sh
-CLASSPATH=$save; export CLASSPATH
-unset save
 
 # run java program
-${JAVA_HOME}/bin/java "-Dpegasus.home=${PEGASUS_HOME}" $addon edu.isi.pegasus.planner.client.ExitCode "$@"
+${JAVA} "-Dpegasus.home=${PEGASUS_HOME}" $addon edu.isi.pegasus.planner.client.ExitCode "$@"
