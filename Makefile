@@ -1,6 +1,6 @@
 
 
-all: pegasus-user-guide.pdf html/basic.properties.html html/index.php
+all: html/basic.properties.html html/index.php
 
 pegasus-user-guide.fo: *.xml
 	xsltproc --xinclude pegasus-pdf-style.xsl pegasus-book.xml > pegasus-user-guide.fo
