@@ -28,7 +28,7 @@ Wed Nov 24 14:47:59 PST 2010
     your computer. If you already have one of the tools installed, use that.
     Otherwise download the binary versions and install them from the<ulink
     url="http://www.virtualbox.org/wiki/Downloads"> Virtual Box
-    Website</ulink> . </para>
+    Website</ulink> .</para>
 
     <para>The instructors have tested the image with Virtual Box 3.2.10</para>
 
@@ -78,7 +78,7 @@ $ tar xvf Pegasus3.0-VM-vbox.tar</emphasis></programlisting>
 
       <para>Launch Virtual Box on your machine. Follow the steps to add the
       vmdk file to Virtual Box and create a virtual machine inside the Virtual
-      Box </para>
+      Box</para>
 
       <orderedlist>
         <listitem>
@@ -641,7 +641,7 @@ pimages_20080505_143233_14944.tbl
   &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr/java/default&lt;/profile&gt;
   &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/usr/local/globus/gt-5.0.2/lib&lt;/profile&gt;
   &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/pegasus/default&lt;/profile&gt;
-  &lt;profile namespace="pegasus" key="bundle" &gt;1&lt;/profile&gt;
+  &lt;profile namespace="pegasus" key="clusters.num" &gt;1&lt;/profile&gt;
   &lt;profile namespace="pegasus" key="stagein.clusters" &gt;1&lt;/profile&gt;
  &lt;/site&gt;
 
