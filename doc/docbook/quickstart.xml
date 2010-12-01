@@ -120,7 +120,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</command></screen></para>
     more sites where to compute the workflow, an optional single site if the
     output data needs to be staged and stored and the input DAX file.</para>
 
-    <section id="example_black_diamond" xreflabel="Black Diamond">
+    <section id="example_black_diamond_quick" xreflabel="Black Diamond">
       <title>Running a Diamond Workflow</title>
 
       <para>Pegasus is shipped with a Diamond example. The example we are

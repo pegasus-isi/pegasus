@@ -979,7 +979,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
         outside the cloud, and to provision several worker nodes and a file
         server node in the cloud as shown here:</para>
 
-        <para><figure id="concepts-fig-dax">
+        <para><figure id="ec2">
             <title>Amazon EC2</title>
 
             <mediaobject>
