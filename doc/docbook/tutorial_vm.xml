@@ -129,12 +129,6 @@ $ tar xvf Pegasus3.0-VM-vbox.tar</emphasis></programlisting>
         </listitem>
 
         <listitem>
-          <para>You will now see the <emphasis
-          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> in the list of hard
-          disks with Actual size listed as around 5.10 GB</para>
-        </listitem>
-
-        <listitem>
           <para>Set the base memory to <emphasis role="bold">1024
           MB</emphasis> . It defaults to 512 MB. Click Continue</para>
         </listitem>
