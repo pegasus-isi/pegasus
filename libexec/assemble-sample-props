@@ -113,6 +113,10 @@ print $fh join( "\n", @lines );
 push( @rc, [ basename($psp), $? ] );
 seek( $fh, 0, 0 );
 
+# FIX: makeindex *now* fails with absolute paths. This brain-amputation is
+# called a security feature. Yeah, more secure like advanced TSA-groping...
+$ENV{'openout_any'} = 'a';
+
 push( @rc, [ run_app( $pdflatex, $fn ) ] );
 push( @rc, [ run_app( $pdflatex, $fn ) ] );
 push( @rc, [ run_app( $makeindex, "$base.idx" ) ] );
