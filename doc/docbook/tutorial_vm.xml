@@ -1227,7 +1227,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
           <para>Using <emphasis role="bold">pegasus-analyzer</emphasis> to
           analyze the workflow</para>
 
-          <programlisting><emphasis role="bold">$ pegasus-analyzer -q -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
+          <programlisting><emphasis role="bold">$ pegasus-analyzer  -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
 
 pegasus-analyzer: initializing...
 
