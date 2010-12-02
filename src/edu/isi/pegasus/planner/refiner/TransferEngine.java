@@ -1125,7 +1125,7 @@ public class TransferEngine extends Engine {
                     (mUseSymLinks && selLoc.getResourceHandle().equals( job.getSiteHandle() )) ) {
                 
                 //resolve any srm url's that are specified
-                selLoc = replaceSRMProtocolFromURL( selLoc );
+                selLoc = replaceSourceProtocolFromURL( selLoc );
             }
             
                                         
@@ -1262,9 +1262,14 @@ public class TransferEngine extends Engine {
      *
      * @return  the object with the url replaced.
      */
-    protected ReplicaCatalogEntry replaceSRMProtocolFromURL( ReplicaCatalogEntry rce ) {
+    protected ReplicaCatalogEntry replaceSourceProtocolFromURL( ReplicaCatalogEntry rce ) {
         String pfn = rce.getPFN();
-        
+
+         //if the pfn starts with a file url we
+        //dont need to replace . a sanity check
+        if( pfn.startsWith( FILE_URL_SCHEME ) ){
+            return rce;
+        }
         
         /* special handling for SRM urls */
         StringBuffer newPFN = new StringBuffer();
@@ -1282,10 +1287,18 @@ public class TransferEngine extends Engine {
             }
         }
         if( newPFN.length() == 0 ){
-       
-            //there is no replacement to do
+            //there is no SRM Replacement to do
+            //Still do the FILE replacement
             //return the original object
-            return rce;
+
+            //we have to the manual replacement
+            String hostName = Utility.getHostName( pfn );
+
+            newPFN.append( FILE_URL_SCHEME ).append( "//" );
+
+            //we want to skip out the hostname
+            newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
+
         }
         
         //we do not need a full clone, just the PFN
