@@ -1277,9 +1277,12 @@ public class TransferEngine extends Engine {
                 newPFN.append( FILE_URL_SCHEME ).append( "//" );
                 newPFN.append( nv.getValue() );
                 newPFN.append( pfn.substring( urlPrefix.length(), pfn.length() ));
+                mLogger.log( "Replaced pfn " + pfn + " with " + newPFN.toString() ,
+                             LogManager.TRACE_MESSAGE_LEVEL );
             }
         }
-        else{
+        if( newPFN.length() == 0 ){
+       
             //there is no replacement to do
             //return the original object
             return rce;
