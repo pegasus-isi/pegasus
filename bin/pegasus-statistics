@@ -200,19 +200,19 @@ sub main(){
 	
 	my $wf_summary_msg;
 	my ($all_exec_time) =((defined $workflow_statistics[0]{'total_execution_time'})?$workflow_statistics[0]{'total_execution_time'}:undef);
-	my ($all_wall_time) = ((defined $workflow_statistics[0]{'total_wall_time'})?$workflow_statistics[0]{'total_wall_time'}:undef);
+	my ($all_cpu_time) = ((defined $workflow_statistics[0]{'total_cpu_time'})?$workflow_statistics[0]{'total_cpu_time'}:undef);
 	my( $all_total_jobs,$all_total_tasks,$all_succceeded,$all_failed,$all_unsubmitted, $all_unknown) =(0,0,0,0,0,0);
 	for my $wstats (@workflow_statistics){
     	$wf_summary_msg .= "\n#$wstats->{'submit_dir'} \n";
     	if((defined $wstats->{'total_execution_time'})){
-    		$wf_summary_msg .= sprintf("%-30s % 12d \n", "Total workflow execution time      :",  $wstats->{'total_execution_time'});
+    		$wf_summary_msg .= sprintf("%-30s % 12d \n", "Workflow execution wall time       :",  $wstats->{'total_execution_time'});
     	}else{
-    		$wf_summary_msg .= sprintf("%-30s % 12s \n", "Total workflow execution time      :",  '-');
+    		$wf_summary_msg .= sprintf("%-30s % 12s \n", "Workflow execution wall time       :",  '-');
     	}
-    	if(defined $wstats->{'total_wall_time'}){ 
-			$wf_summary_msg .= sprintf("%-30s % 12.3f \n", "Total workflow execution wall time :",$wstats->{'total_wall_time'});
+    	if(defined $wstats->{'total_cpu_time'}){ 
+			$wf_summary_msg .= sprintf("%-30s % 12.3f \n", "Total cpu time consumed            :",$wstats->{'total_cpu_time'});
 		}else{
-			$wf_summary_msg .= sprintf("%-30s % 12s \n", "Total workflow execution wall time :",'-');
+			$wf_summary_msg .= sprintf("%-30s % 12s \n"  , "Total cpu time consumed            :",'-');
 		}
 		$wf_summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $wstats->{'total_jobs'} );
 		
@@ -242,14 +242,14 @@ sub main(){
    	}
 	my $summary_msg = "";
 	if (defined $all_exec_time){
-		$summary_msg .= sprintf("%-30s % 12d \n", "Total workflow execution time      :", $all_exec_time );
+		$summary_msg .= sprintf("%-30s % 12d \n", "Workflow execution wall time       :", $all_exec_time );
 	}else{
-		$summary_msg .= sprintf("%-30s % 12s \n", "Total workflow execution time      :", '-' );
+		$summary_msg .= sprintf("%-30s % 12s \n", "Workflow execution wall time       :", '-' );
 	} 
-	if(defined $all_wall_time){
-		$summary_msg .= sprintf("%-30s % 12.3f \n", "Total workflow execution wall time :",$all_wall_time );
+	if(defined $all_cpu_time){
+		$summary_msg .= sprintf("%-30s % 12.3f \n", "Total cpu time consumed            :",$all_cpu_time );
 	}else{
-		$summary_msg .= sprintf("%-30s % 12s \n", "Total workflow execution wall time :",'-' );
+		$summary_msg .= sprintf("%-30s % 12s \n"  , "Total cpu time consumed            :",'-' );
 	}
 	$summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $all_total_jobs );
 	if(defined $all_total_tasks){
@@ -433,24 +433,24 @@ sub print_workflow_statistics($$$$){
     my $current_dir = getcwd();
     # Change the directory to submit directory
     chdir $submit_dir || die "Cannot chdir to $submit_dir\n";
-    my ($total_wall_time ,$total_wall_time_status_msg) = (0.0, ' ');
-    print STDOUT "******  calculating workflow execution wall time  ***** \n";
+    my ($total_cpu_time ,$total_cpu_time_status_msg) = (0.0, ' ');
+    print STDOUT "******  calculating workflow execution cpu time  ***** \n";
     print STDOUT "Please wait, this may take a few minutes ...\n";
     foreach my $job (@job_list) {
     	if($condor){
     		if(defined( $job_state_hoh{$job})){
     			if (defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and defined($job_state_hoh{$job}{'EXECUTE'}) ){
-    				$total_wall_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'EXECUTE'};
+    				$total_cpu_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'EXECUTE'};
     			}elsif (defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and defined($job_state_hoh{$job}{'SUBMIT'}) ){
-    				$total_wall_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'SUBMIT'};
+    				$total_cpu_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'SUBMIT'};
     			}else{
-    				$total_wall_time = undef;
-    				$total_wall_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
+    				$total_cpu_time = undef;
+    				$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
     				last;
     			}
     		}else{
-    			$total_wall_time = undef;
-    			$total_wall_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
+    			$total_cpu_time = undef;
+    			$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
     			last;
     		}
     	}else{
@@ -463,7 +463,7 @@ sub print_workflow_statistics($$$$){
 				my $i2 = index($line, "\"");
 				$line= substr($line, 0, $i2);
 				if ($line =~ /^[\.0-9]*$/) {
-					$total_wall_time += $line;
+					$total_cpu_time += $line;
 					$job_kruntime = $line;
 				}
 			}
@@ -471,27 +471,27 @@ sub print_workflow_statistics($$$$){
 			if(!$job_kruntime){
 				if(defined( $job_state_hoh{$job})){
 	    			if (defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and defined($job_state_hoh{$job}{'EXECUTE'}) ){
-	    				$total_wall_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'EXECUTE'};
+	    				$total_cpu_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'EXECUTE'};
 	    			}elsif (defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and defined($job_state_hoh{$job}{'SUBMIT'}) ){
-	    				$total_wall_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'SUBMIT'};
+	    				$total_cpu_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'SUBMIT'};
 	    			}else{
-	    				$total_wall_time = undef;
-	    				$total_wall_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
+	    				$total_cpu_time = undef;
+	    				$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
 	    				last;
 	    			}
 	    		}else{
-	    			$total_wall_time = undef;
-	    			$total_wall_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
+	    			$total_cpu_time = undef;
+	    			$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
 	    			last;
 	    		}
 	    	}
 		}
 		
 	}
-	if(!$total_wall_time){ 
-			print STDERR "****** WARNING: Failed to calculate the total execution wall time.$total_wall_time_status_msg ******\n";
+	if(!$total_cpu_time){ 
+			print STDERR "****** WARNING: Failed to calculate the total cpu time.$total_cpu_time_status_msg ******\n";
     }else{
-    	print STDOUT "****** Finished calculating workflow execution wall time  ***** \n";
+    	print STDOUT "****** Finished calculating workflow cpu time  ***** \n";
     }
   	
   	#Finding total task count
@@ -537,20 +537,20 @@ sub print_workflow_statistics($$$$){
    }
    	my $workflow_stats_hash ={};
    	$workflow_stats_hash->{'submit_dir'} =$submit_dir;
-   	print STDOUT "******  calculating workflow execution time  ***** \n";
+   	print STDOUT "******  calculating workflow execution wall time  ***** \n";
    	if($startTime || $endTime){
-    	print STDERR "****** WARNING: Failed to find the workflow execution time ****** \n";
+    	print STDERR "****** WARNING: Failed to find the workflow execution wall time ****** \n";
     }else{
     	if($total_execution_time){
     		$workflow_stats_hash->{'total_execution_time'} = $total_execution_time;
-    		print STDOUT "****** Finished calculating workflow execution time    ***** \n";
+    		print STDOUT "****** Finished calculating workflow execution wall time    ***** \n";
     	}else{
     		#case where it doesn't find start or end time
-    		print STDERR "****** WARNING: Failed to find the workflow execution time ****** \n";
+    		print STDERR "****** WARNING: Failed to find the workflow execution wall time ****** \n";
     	}
     }
-    if($total_wall_time){
-    	$workflow_stats_hash->{'total_wall_time'} =  $total_wall_time; 
+    if($total_cpu_time){
+    	$workflow_stats_hash->{'total_cpu_time'} =  $total_cpu_time; 
     }
     
    	$job_unsubmitted_count = $total_job_count - $job_state_count;
