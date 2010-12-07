@@ -252,10 +252,43 @@ Logical transformation statistics is created at :
 
       <para><emphasis role="bold">Workflow statistics table</emphasis></para>
 
-      <para>Workflow statistics table contains information about the workflow
-      run like total execution time, job's failed etc. A sample table is shown
+      <para>Workflow statistics table contains the following information about the workflow
+      run. A sample table is shown
       below.</para>
+	 <itemizedlist>
+        <listitem>
+          <para>Total workflow execution time - the time spent between dagman start and dagman ends. Starting 3.0.1 this field will be referred as 'Workflow execution wall time'.</para>
+        </listitem>
 
+        <listitem>
+          <para>Total workflow execution wall time - the total time taken for the execution of each jobs.Starting 3.0.1 this field will be referred as 'Total cpu time consumed'. </para>
+        </listitem>
+        
+         <listitem>
+          <para>Total jobs - the total number of jobs in the workflow. </para>
+         </listitem>
+         
+         <listitem>
+          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task. </para>
+         </listitem>
+         
+         <listitem>
+          <para> # jobs succeeded - the total number of jobs succeeded. </para>
+         </listitem>
+         
+          <listitem>
+          <para> # jobs failed - the total number of jobs failed. </para>
+         </listitem>
+         
+         <listitem>
+          <para># jobs unsubmitted - the total number of jobs that are not submitted. </para>
+         </listitem>
+         
+         <listitem>
+          <para># jobs unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown. </para>
+         </listitem>
+      </itemizedlist>
+      
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
