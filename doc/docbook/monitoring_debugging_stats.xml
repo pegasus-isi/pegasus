@@ -224,8 +224,8 @@ working dir : /lfs1/work/pegasus/run0004
 ...
 
 ******************************************** SUMMARY ********************************************
-Total workflow execution time      :         1741 
-Total workflow execution wall time :      276.963 
+Workflow execution wall time       :         1741 
+Total cpu time consumed            :      276.963 
 Total jobs                         :           17 
 Total tasks                        :           17 
 # jobs succeeded                   :           17 
@@ -252,10 +252,43 @@ Logical transformation statistics is created at :
 
       <para><emphasis role="bold">Workflow statistics table</emphasis></para>
 
-      <para>Workflow statistics table contains information about the workflow
-      run like total execution time, job's failed etc. A sample table is shown
+      <para>Workflow statistics table contains the following information about the workflow
+      run. A sample table is shown
       below.</para>
+	 <itemizedlist>
+        <listitem>
+          <para>Workflow execution wall time - the time spent between dagman start and dagman ends. </para>
+        </listitem>
 
+        <listitem>
+          <para>Total cpu time consumed - the total time taken for the execution of each jobs. </para>
+        </listitem>
+        
+         <listitem>
+          <para>Total jobs - the total number of jobs in the workflow. </para>
+         </listitem>
+         
+         <listitem>
+          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task. </para>
+         </listitem>
+         
+         <listitem>
+          <para> # jobs succeeded - the total number of jobs succeeded. </para>
+         </listitem>
+         
+          <listitem>
+          <para> # jobs failed - the total number of jobs failed. </para>
+         </listitem>
+         
+         <listitem>
+          <para># jobs unsubmitted - the total number of jobs that are not submitted. </para>
+         </listitem>
+         
+         <listitem>
+          <para># jobs unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown. </para>
+         </listitem>
+      </itemizedlist>
+      
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
@@ -264,13 +297,13 @@ Logical transformation statistics is created at :
         <tgroup cols="2">
           <tbody>
             <row>
-              <entry>Total workflow execution time</entry>
+              <entry>Workflow execution wall time</entry>
 
               <entry>1741</entry>
             </row>
 
             <row>
-              <entry>Total workflow execution wall time</entry>
+              <entry>Total cpu time consumed</entry>
 
               <entry>276.963</entry>
             </row>
