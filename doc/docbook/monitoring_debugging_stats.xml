@@ -290,7 +290,7 @@ Logical transformation statistics is created at :
       </itemizedlist>
       
       <note>
-        <para>For the calculation of '#All' table  attributes 'Total workflow execution time' and'Total workflow execution wall time' is assigned value same as that of the root workflow corresponding value.
+        <para>For the calculation of '#All' table  attributes 'Total workflow execution time' and'Total workflow execution wall time' are assigned values same as that of the root workflow corresponding value.
 	    For all the other attributes like total jobs, total tasks, jobs succeeded etc the sum of all the values of the corresponding value including that of the root workflow value is taken.</para>
       </note>
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
