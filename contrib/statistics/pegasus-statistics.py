@@ -40,7 +40,7 @@ class WorkflowStatistics:
 	def __init__(self):
 		self.submit_dir ='-'
 		self.workflow_run_time = '-'
-		self.workflow_run_wall_time ='-'
+		self.workflow_cpu_time ='-'
 		self.total_jobs = '-'
 		self.succeeded_jobs ='-'
 		self.failed_jobs ='-'
@@ -57,9 +57,9 @@ class WorkflowStatistics:
 		workflow_info = ''
 		workflow_info +=("#" + self.submit_dir)
 		workflow_info +=( "\n")
-		workflow_info +=(("Total workflow execution time      :" + str(self.workflow_run_time)).ljust(job_run_statistics_size))
+		workflow_info +=(("Workflow execution wall time       :" + str(self.workflow_run_time)).ljust(job_run_statistics_size))
 		workflow_info +=("\n")
-		workflow_info +=(("Total workflow execution wall time :" + str(self.workflow_run_wall_time)).ljust(job_run_statistics_size))
+		workflow_info +=(("Total cpu time consumed            :" + str(self.workflow_cpu_time)).ljust(job_run_statistics_size))
 		workflow_info +=("\n")
 		workflow_info +=(("Total jobs run                     :" + str(self.total_jobs)).ljust(job_run_statistics_size))
 		workflow_info +=("\n")	
@@ -434,13 +434,13 @@ def populate_workflow_details(workflow):
 	unknown_jobs =0
 	unsubmitted_jobs =0
 	workflow_run_time = None
-	workflow_run_wall_time =0
+	workflow_cpu_time =0
 	if not workflow.is_running :
 		workflow_run_time = convert_to_seconds(workflow.total_time)
 	for job in workflow.jobs:
 		for task in job.tasks:
 			if (task.task_submit_seq > 0):
-				workflow_run_wall_time +=task.duration
+				workflow_cpu_time +=task.duration
 				if (task.exitcode == 0):	
 					total_succeeded_tasks +=1
 				else :
@@ -482,7 +482,7 @@ def populate_workflow_details(workflow):
 	workflow_stat.submit_dir = workflow.submit_dir		
 	if workflow_run_time is not None:
 		workflow_stat.workflow_run_time =workflow_run_time
-	workflow_stat.workflow_run_wall_time = workflow_run_wall_time
+	workflow_stat.workflow_cpu_time = workflow_cpu_time
 	workflow_stat.total_jobs = total_jobs
 	workflow_stat.succeeded_jobs = succeeded_jobs
 	workflow_stat.failed_jobs = failed_jobs
@@ -507,7 +507,7 @@ def print_workflow_details(workflow_stat_list):
 		fh = open(wf_stats_file, "w")
 		all_stat.submit_dir = "All"
 		all_stat.workflow_run_time =workflow_stat_list[0].workflow_run_time
-		all_stat.workflow_run_wall_time = workflow_stat_list[0].workflow_run_wall_time
+		all_stat.workflow_cpu_time = workflow_stat_list[0].workflow_cpu_time
 		all_stat.total_jobs = 0
 		all_stat.succeeded_jobs  =0
 		all_stat.failed_jobs  = 0
