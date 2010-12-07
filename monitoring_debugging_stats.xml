@@ -265,11 +265,11 @@ Logical transformation statistics is created at :
         </listitem>
         
          <listitem>
-          <para>Total jobs - the total number of jobs in the workflow. </para>
+          <para>Total jobs - the total number of jobs in the workflow.In the workflow of workflow scenario sub workflow job is considered as a single job. </para>
          </listitem>
          
          <listitem>
-          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task. </para>
+          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task. In the workflow of workflow scenario sub workflow job is considered as a single task.</para>
          </listitem>
          
          <listitem>
@@ -288,6 +288,11 @@ Logical transformation statistics is created at :
           <para># jobs unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown. </para>
          </listitem>
       </itemizedlist>
+      
+      <note>
+        <para>For the calculation of '#All' table  attributes 'Workflow execution wall time' and'Total cpu time consumed' are assigned values same as that of the root workflow corresponding value.
+	    For all the other attributes like total jobs, total tasks, jobs succeeded etc the sum of all the values of the corresponding value including that of the root workflow value is taken.</para>
+      </note>
       
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
