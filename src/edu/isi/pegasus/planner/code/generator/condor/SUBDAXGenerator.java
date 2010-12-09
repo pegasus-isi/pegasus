@@ -786,11 +786,11 @@ public class SUBDAXGenerator{
         }
         else{
             //generate the prefix from the name of the dag
-            sb.append( label ).append("_").
+            sb.append( label ).append("-").
            append( index );
         }
         //append the suffix
-        sb.append(".cache");
+        sb.append( SUBDAXGenerator.CACHE_FILE_SUFFIX );
 
         return sb.toString();
 
