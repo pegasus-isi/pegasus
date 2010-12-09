@@ -101,7 +101,7 @@ public class Client {
                     LogManager.ERROR_MESSAGE_LEVEL );
             }
         }
-        if ( systemstring == null ) {
+        if ( systemstring != null ) {
             system = new VDSSysInfo( systemstring );
         }
     }
