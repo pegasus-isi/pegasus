@@ -80,7 +80,7 @@ public class TCQuery
                 break;
             default:
                 mLogger.log(
-                    "Wrong trigger invoked in TC Query. Try tc-client --help for a detailed help.",
+                    "Wrong trigger invoked in TC Query. Try pegasus-tc-client --help for a detailed help.",
                     LogManager.FATAL_MESSAGE_LEVEL );
                 System.exit( 1 );
         }
@@ -130,7 +130,7 @@ public class TCQuery
         } else {
             mLogger.log(
                 "No Logical Transformations found.",
-                LogManager.FATAL_MESSAGE_LEVEL );
+                LogManager.CONSOLE_MESSAGE_LEVEL );
             System.exit( 1 );
         }
     }
@@ -199,7 +199,7 @@ public class TCQuery
             } else {
                 mLogger.log(
                     "No Physical Transformations found.",
-                    LogManager.FATAL_MESSAGE_LEVEL );
+                    LogManager.CONSOLE_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
         } else {
@@ -236,7 +236,7 @@ public class TCQuery
                 }
             } else {
                 mLogger.log( "No LFN Profiles found.",
-                    LogManager.FATAL_MESSAGE_LEVEL );
+                    LogManager.CONSOLE_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
         } else {
@@ -277,7 +277,7 @@ public class TCQuery
                 }
             } else {
                 mLogger.log( "No PFN Profiles found.",
-                    LogManager.FATAL_MESSAGE_LEVEL );
+                    LogManager.CONSOLE_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
         } else {
@@ -311,7 +311,7 @@ public class TCQuery
             }
         } else {
             mLogger.log( "No resources found.",
-                LogManager.FATAL_MESSAGE_LEVEL );
+                LogManager.CONSOLE_MESSAGE_LEVEL );
             System.exit( 1 );
         }
     }
@@ -371,7 +371,7 @@ public class TCQuery
                 }
             } else {
                 mLogger.log( "No Entries found in the TC.",
-                    LogManager.FATAL_MESSAGE_LEVEL );
+                    LogManager.CONSOLE_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
         } catch ( Exception e ) {
