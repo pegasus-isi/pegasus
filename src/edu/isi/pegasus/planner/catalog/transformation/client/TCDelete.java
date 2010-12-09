@@ -55,7 +55,7 @@ public class TCDelete
                             "You need to provide the logical name by which you want to delete",
                            LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -101,7 +101,7 @@ public class TCDelete
                                      "name by which you want to delete" ,
                                      LogManager.ERROR_MESSAGE_LEVEL);
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -146,7 +146,7 @@ public class TCDelete
                             "You need to provide the resourceid by which you want to delete",
                            LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -176,7 +176,7 @@ public class TCDelete
                                      "which you want to delete the profiles",
                                     LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details " ,
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details " ,
                             LogManager.FATAL_MESSAGE_LEVEL);
                         System.exit( 1 );
                     } else {
@@ -207,7 +207,7 @@ public class TCDelete
                                      " resource and type by which you want to delete the profiles",
                                      LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -242,7 +242,7 @@ public class TCDelete
                                      "which you want to delete the TC." ,
                                      LogManager.ERROR_MESSAGE_LEVEL);
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -279,7 +279,7 @@ public class TCDelete
                                      "by which you want to delete the TC.",
                                     LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -320,7 +320,7 @@ public class TCDelete
 
                 default:
                     mLogger.log(
-                        "Wrong trigger invoked in TC Delete. Try tc-client --help for a detailed help." +
+                        "Wrong trigger invoked in TC Delete. Try pegasus-tc-client --help for a detailed help." +
                         trigger, LogManager.FATAL_MESSAGE_LEVEL );
                     System.exit( 1 );
             }
