@@ -79,7 +79,7 @@ public class TCAdd
                             "The logical transformation cannot be null.  " ,
                             LogManager.ERROR_MESSAGE_LEVEL);
                         mLogger.log(
-                            "Please try tc-client --help or man tc-client for more information." ,
+                            "Please try pegasus-tc-client --help or man pegasus-tc-client for more information." ,
                             LogManager.ERROR_MESSAGE_LEVEL);
                         System.exit( 1 );
 
@@ -106,7 +106,7 @@ public class TCAdd
                             "The resourceid or physical name or type cannot be null.",
                            LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "Please try tc-client --help or man tc-client for more information.",
+                            "Please try pegasus-tc-client --help or man pegasus-tc-client for more information.",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     }
@@ -130,7 +130,7 @@ public class TCAdd
                     mLogger.log( "Wrong trigger invoked in TC ADD" ,
                                  LogManager.ERROR_MESSAGE_LEVEL);
                     mLogger.log(
-                        "Check tc-client --help or man tc-client for correct usage." ,
+                        "Check pegasus-tc-client --help or man pegasus-tc-client for correct usage." ,
                         LogManager.FATAL_MESSAGE_LEVEL);
                     System.exit( 1 );
             }
@@ -152,7 +152,7 @@ public class TCAdd
         if ( lfn == null || pfn == null || resource == null ) {
             System.out.println(
                 "Error : Please enter atleast the lfn, pfn and resource you want to add" );
-            System.out.println( "See tc-client --help for more information." );
+            System.out.println( "See pegasus-tc-client --help for more information." );
             System.exit( 1 );
             return false;
         }
