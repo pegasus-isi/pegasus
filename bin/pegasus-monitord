@@ -155,6 +155,7 @@ wfs = []			# list of workflow entries monitord is tracking
 tracked_workflows = []		# list of workflows we have started tracking
 follow_subworkflows = True	# Flag for tracking sub-workflows
 replay_mode = 0			# disable checking if DAGMan's pid is gone
+keep_state = 0			# Flag for keeping a Workflow's state across several DAGMan start/stop cycles
 use_db = 1			# flag for using the database
 output_db = None		# connection string for the database
 db_stats = 'no'			# collect and print database stats at the end of execution
@@ -1666,6 +1667,8 @@ parser.add_option("-f", "--output-file", action = "store", type = "string", dest
 		  help = "Turn on using NetLogger's log api and specifies the file to where log data (cannot be used together with the database)")
 parser.add_option("-H", "--host", action = "store", type = "string", dest = "host_string",
                   help = "Turn on using NetLogger's log api and specifies the host:port to where send data (cannot be used together with the database, or the log to file option)")
+parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
+                  help = "keep state across several DAGMan start/stop cycles (development option)")
 
 # Re-insert our base name to avoid optparse confusion when printing error messages
 # (options, args) = parser.parse_args(sys.argv[0:]) # Does not work 100%
@@ -1706,6 +1709,8 @@ if options.output_db is not None:
     output_db = options.output_db
 if options.db_stats is not None:
     db_stats = options.db_stats
+if options.keep_state is not None:
+    keep_state = options.keep_state
 if options.file_string is not None or options.host_string is not None:
     if options.file_string is not None and options.host_string is not None:
         logger.warning("cannot log to both file and host/port, NL api logging disabled")
@@ -2065,8 +2070,9 @@ def process(wf, log_line):
             # DAGMan starting, capture its condor id
             my_expr = re_parse_dagman_condor_id.search(log_line)
             wf._dagman_condor_id = my_expr.group(1)
-            # Initialize workflow parameters
-            wf.start_wf()
+            if not keep_state:
+                # Initialize workflow parameters
+                wf.start_wf()
 	elif re_parse_dagman_pid.search(log_line) is not None and not replay_mode:
 	    # DAGMan's pid, but only set pid if not running in replay mode
             # (otherwise pid may belong to another process)
