@@ -205,14 +205,14 @@ sub main(){
 	for my $wstats (@workflow_statistics){
     	$wf_summary_msg .= "\n#$wstats->{'submit_dir'} \n";
     	if((defined $wstats->{'total_execution_time'})){
-    		$wf_summary_msg .= sprintf("%-30s % 12d \n", "Workflow execution wall time       :",  $wstats->{'total_execution_time'});
+    		$wf_summary_msg .= sprintf("%-30s % 12.2f min.\n","Workflow runtime                   :",  ($wstats->{'total_execution_time'})/60);
     	}else{
-    		$wf_summary_msg .= sprintf("%-30s % 12s \n", "Workflow execution wall time       :",  '-');
+    		$wf_summary_msg .= sprintf("%-30s % 12s \n","Workflow runtime                   :",  '-');
     	}
     	if(defined $wstats->{'total_cpu_time'}){ 
-			$wf_summary_msg .= sprintf("%-30s % 12.3f \n", "Total cpu time consumed            :",$wstats->{'total_cpu_time'});
+			$wf_summary_msg .= sprintf("%-30s % 12.2f min.\n","Cumulative workflow runtime        :",($wstats->{'total_cpu_time'})/60);
 		}else{
-			$wf_summary_msg .= sprintf("%-30s % 12s \n"  , "Total cpu time consumed            :",'-');
+			$wf_summary_msg .= sprintf("%-30s % 12s \n"  ,"Cumulative workflow runtime        :",'-');
 		}
 		$wf_summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $wstats->{'total_jobs'} );
 		
@@ -242,14 +242,14 @@ sub main(){
    	}
 	my $summary_msg = "";
 	if (defined $all_exec_time){
-		$summary_msg .= sprintf("%-30s % 12d \n", "Workflow execution wall time       :", $all_exec_time );
+		$summary_msg .= sprintf("%-30s % 12.2f min.\n","Workflow runtime                   :", ($all_exec_time)/60 );
 	}else{
-		$summary_msg .= sprintf("%-30s % 12s \n", "Workflow execution wall time       :", '-' );
+		$summary_msg .= sprintf("%-30s % 12s \n","Workflow runtime                   :", '-' );
 	} 
 	if(defined $all_cpu_time){
-		$summary_msg .= sprintf("%-30s % 12.3f \n", "Total cpu time consumed            :",$all_cpu_time );
+		$summary_msg .= sprintf("%-30s % 12.2f min.\n","Cumulative workflow runtime        :",($all_cpu_time)/60 );
 	}else{
-		$summary_msg .= sprintf("%-30s % 12s \n"  , "Total cpu time consumed            :",'-' );
+		$summary_msg .= sprintf("%-30s % 12s \n"  ,"Cumulative workflow runtime        :",'-' );
 	}
 	$summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $all_total_jobs );
 	if(defined $all_total_tasks){
@@ -262,9 +262,19 @@ sub main(){
 	$summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :", $all_unsubmitted );
 	$summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $all_unknown);
 	
+	my $legends_msg = "#Legends\n";
+	$legends_msg.= "#Workflow runtime (min) - the waltime from the start of the workflow execution to the end.\n";
+	$legends_msg.= "#Cumulative workflow runtime (min) - the sum of the walltime of all jobs.\n";
+	$legends_msg.= "#Total jobs - the total number of jobs in the workflow.In the workflow of workflow scenario sub workflow job is considered as a single job.\n";
+	$legends_msg.= "#Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.In the workflow of workflow scenario sub workflow job is considered as a single task.\n";
+	$legends_msg.= "# jobs succeeded - the total number of jobs succeeded.\n";
+	$legends_msg.= "# jobs failed - the total number of jobs failed.\n";
+	$legends_msg.= "# jobs unsubmitted - the total number of jobs that are not submitted.\n";
+	$legends_msg.= "# jobs unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown.\n";
 	
 	my $workflow_stats_file_path =  File::Spec->catfile("$output_dir","workflow");
 	open(STATSOUT,">$workflow_stats_file_path") || die("Unable to open file $workflow_stats_file_path.\n$!" );
+	print STATSOUT "$legends_msg\n";
 	print STATSOUT "$wf_summary_msg\n";
 	print STATSOUT "#All \n$summary_msg";
 	close STATSOUT;
@@ -424,6 +434,32 @@ sub print_workflow_statistics($$$$){
             	$job_status_hash{$job} = $event;
             }
             $job_state_hoh{$job}{$event} = $timestamp;
+            # Finding the run time of each from the job state.log
+            #sanity test just to make sure the SUBMIT/EXECUTE and JOB_TERMINATED comes in pair
+            if($event eq 'SUBMIT' or $event eq 'EXECUTE'){
+            	$job_state_hoh{$job}{'JOB_TERMINATED'} = undef;
+            }
+            if($event eq 'JOB_TERMINATED'){
+            	# if EXECUTE event is not present then runtime is calculated by subtracting from the SUBMIT event
+				if (defined($job_state_hoh{$job}{'EXECUTE'}) or defined($job_state_hoh{$job}{'SUBMIT'}) ){
+					my $exec_start_time =  (defined($job_state_hoh{$job}{'EXECUTE'}))?$job_state_hoh{$job}{'EXECUTE'}:$job_state_hoh{$job}{'SUBMIT'};
+					if(defined ($job_state_hoh{$job}{'cumulative_job_runtime'})){
+						if(!($job_state_hoh{$job}{'cumulative_job_runtime'} eq '-')){
+							if ($main::DEBUG){
+	            	 			print STDOUT "INFO: The job '$job' is retried.\n";
+	            	 		}
+							$job_state_hoh{$job}{'cumulative_job_runtime'} += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $exec_start_time;
+						}	
+					}else{
+						$job_state_hoh{$job}{'cumulative_job_runtime'}= $job_state_hoh{$job}{'JOB_TERMINATED'}  - $exec_start_time;
+					}
+				}else{
+					$job_state_hoh{$job}{'cumulative_job_runtime'} ='-';
+					if ($main::DEBUG){
+            	 			print STDERR "WARNING: Absent or mismatch between the order of the events JOB_TERMINATED and EXECUTE/SUBMIT $job ....\n";
+            	 	}
+				}
+			}
         }
     }
     
@@ -437,55 +473,20 @@ sub print_workflow_statistics($$$$){
     print STDOUT "******  calculating workflow execution cpu time  ***** \n";
     print STDOUT "Please wait, this may take a few minutes ...\n";
     foreach my $job (@job_list) {
-    	if($condor){
-    		if(defined( $job_state_hoh{$job})){
-    			if (defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and defined($job_state_hoh{$job}{'EXECUTE'}) ){
-    				$total_cpu_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'EXECUTE'};
-    			}elsif (defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and defined($job_state_hoh{$job}{'SUBMIT'}) ){
-    				$total_cpu_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'SUBMIT'};
-    			}else{
-    				$total_cpu_time = undef;
-    				$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
-    				last;
-    			}
-    		}else{
-    			$total_cpu_time = undef;
-    			$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
-    			last;
-    		}
-    	}else{
-			my @grepLines = `grep -h '<invocation' $job.out* 2>&1`;
-			my $job_kruntime = undef;
-	        foreach my $line (@grepLines) {
-				chomp($line);
-				my $i1 = index($line, "duration=\"");
-				$line = substr($line, $i1 + 10);
-				my $i2 = index($line, "\"");
-				$line= substr($line, 0, $i2);
-				if ($line =~ /^[\.0-9]*$/) {
-					$total_cpu_time += $line;
-					$job_kruntime = $line;
-				}
+		if(defined( $job_state_hoh{$job})){
+			if (defined($job_state_hoh{$job}{'cumulative_job_runtime'}) and defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and !($job_state_hoh{$job}{'cumulative_job_runtime'} eq '-')){
+				$total_cpu_time += $job_state_hoh{$job}{'cumulative_job_runtime'};
+			}else{
+				$total_cpu_time = undef;
+				$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
+				last;
 			}
-			# If kickstart files are missing, try to get it from the jobstate.log
-			if(!$job_kruntime){
-				if(defined( $job_state_hoh{$job})){
-	    			if (defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and defined($job_state_hoh{$job}{'EXECUTE'}) ){
-	    				$total_cpu_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'EXECUTE'};
-	    			}elsif (defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and defined($job_state_hoh{$job}{'SUBMIT'}) ){
-	    				$total_cpu_time += $job_state_hoh{$job}{'JOB_TERMINATED'}  - $job_state_hoh{$job}{'SUBMIT'};
-	    			}else{
-	    				$total_cpu_time = undef;
-	    				$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
-	    				last;
-	    			}
-	    		}else{
-	    			$total_cpu_time = undef;
-	    			$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
-	    			last;
-	    		}
-	    	}
+		}else{
+			$total_cpu_time = undef;
+			$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
+			last;
 		}
+    	
 		
 	}
 	if(!$total_cpu_time){ 
