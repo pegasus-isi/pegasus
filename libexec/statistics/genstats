@@ -328,6 +328,121 @@ sub processJobstateLog {
                     }
                 }
                 $jobsRef->{$job}->{$event} = $tokens[0];
+                
+                #cumulative run time
+                if($event eq 'JOB_TERMINATED'){
+                	if (defined ($jobsRef->{$job}->{'EXECUTE'}) or defined($jobsRef->{$job}->{'SUBMIT'}) ) {
+                		my $exec_runtime_start = (defined ($jobsRef->{$job}->{'EXECUTE'}))? $jobsRef->{$job}->{'EXECUTE'}:$jobsRef->{$job}->{'SUBMIT'};
+                		if(defined($jobsRef->{$job}->{'cumulative_runtime'})){
+                			if(!($jobsRef->{$job}->{'cumulative_runtime'} eq '-')){
+			            		$jobsRef->{$job}->{'cumulative_runtime'} += $jobsRef->{$job}->{'JOB_TERMINATED'} -  $exec_runtime_start;
+			            	}
+			            }else{
+			            	$jobsRef->{$job}->{'cumulative_runtime'} = $jobsRef->{$job}->{'JOB_TERMINATED'} -  $exec_runtime_start;
+			            }
+			        } else {
+			        	# Mismatch between the tags.
+			        	warn "Unable to calculate runtime for job '$job'.Absence or mismatch of events JOB_TERMINATED,EXECUTE.\n";
+			            $jobsRef->{$job}->{'cumulative_runtime'} = '-';
+			        }
+                }
+                
+                #cumulative post script time
+                if ( $event eq 'POST_SCRIPT_TERMINATED') {
+		            if ( defined($jobsRef->{$job}->{'POST_SCRIPT_STARTED'}) or defined($jobsRef->{$job}->{'JOB_TERMINATED'})) {
+		            	my $post_start = (defined($jobsRef->{$job}->{'POST_SCRIPT_STARTED'}) )? $jobsRef->{$job}->{'POST_SCRIPT_STARTED'}:$jobsRef->{$job}->{'JOB_TERMINATED'};
+		                if (defined($jobsRef->{$job}->{'cumulative_postscripttime'})){
+		                	if(!($jobsRef->{$job}->{'cumulative_postscripttime'} eq '-')){
+		                		$jobsRef->{$job}->{'cumulative_postscripttime'} += $jobsRef->{$job}->{'POST_SCRIPT_TERMINATED'} - $post_start;
+		                	} 
+		                }else{
+		                	$jobsRef->{$job}->{'cumulative_postscripttime'} = $jobsRef->{$job}->{'POST_SCRIPT_TERMINATED'} - $post_start;
+		                }
+		            }else {
+			        	# Mismatch between the tags.
+			        	warn "Unable to calculate post script time for job '$job'.Absence or mismatch of events POST_SCRIPT_TERMINATED ,POST_SCRIPT_STARTED/JOB_TERMINATED.\n";
+			            $jobsRef->{$job}->{'cumulative_postscripttime'} = '-';
+			        }
+		        }
+		        
+		        # cumulative resource delay and dagman delay
+		        
+		        #Find with GRID_SUBMIT
+		        if(!$condorRun){
+			        if ( $event eq 'GRID_SUBMIT') {
+			        	if(defined ( $jobsRef->{$job}->{'SUBMIT'}) ){
+			        		if (defined($jobsRef->{$job}->{'cumulative_condorDelay'})){
+				        		if(!($jobsRef->{$job}->{'cumulative_condorDelay'} eq '-')){
+				        			$jobsRef->{$job}->{'cumulative_condorDelay'} += $jobsRef->{$job}->{'GRID_SUBMIT'} - $jobsRef->{$job}->{'SUBMIT'};
+				        		}
+				        	}else{
+				        		$jobsRef->{$job}->{'cumulative_condorDelay'} = $jobsRef->{$job}->{'GRID_SUBMIT'} - $jobsRef->{$job}->{'SUBMIT'};
+				        	}
+				        	
+			        	}else{
+			        		# Mismatch between the tags.
+			        		warn "Calculate of condor delay may fail for job '$job'.Absence or mismatch of events  GRID_SUBMIT , SUBMIT.\n";
+			        		$jobsRef->{$job}->{'cumulative_condorDelay'} ='-';
+			        	}
+	            		
+			        }
+		        }
+		        
+		        #Find with GLOBUS_SUBMIT
+		        if(!$condorRun){
+			        if ( $event eq 'GLOBUS_SUBMIT') {
+			        	if(defined ( $jobsRef->{$job}->{'SUBMIT'}) ){
+			        		if (defined($jobsRef->{$job}->{'cumulative_condorDelay_globus'})){
+				        		if(!($jobsRef->{$job}->{'cumulative_condorDelay_globus'} eq '-')){
+				        			$jobsRef->{$job}->{'cumulative_condorDelay_globus'} += $jobsRef->{$job}->{'GLOBUS_SUBMIT'} - $jobsRef->{$job}->{'SUBMIT'};
+				        		}
+				        	}else{
+				        		$jobsRef->{$job}->{'cumulative_condorDelay_globus'} =$jobsRef->{$job}->{'GLOBUS_SUBMIT'} - $jobsRef->{$job}->{'SUBMIT'};
+				        	}
+				        	
+			        	}else{
+			        		# Mismatch between the tags.
+			        		warn "Calculate of condor delay may fail for job '$job'.Absence or mismatch of events  GLOBUS_SUBMIT , SUBMIT.\n";
+			        		$jobsRef->{$job}->{'cumulative_condorDelay_globus'} ='-';
+			        	}
+	            		
+			        }
+		        }
+		        
+		        if ($event eq 'EXECUTE'){
+		        	if ( defined($jobsRef->{$job}->{'GRID_SUBMIT'}) or defined($jobsRef->{$job}->{'GLOBUS_SUBMIT'})) {
+		        		my $remote_submit_start =  (defined($jobsRef->{$job}->{'GRID_SUBMIT'}) )? $jobsRef->{$job}->{'GRID_SUBMIT'}:$jobsRef->{$job}->{'GLOBUS_SUBMIT'};
+	        			if (defined($jobsRef->{$job}->{'cumulative_resourceDelay'})){
+	        				if(!($jobsRef->{$job}->{'cumulative_resourceDelay'} eq '-')){
+	        					$jobsRef->{$job}->{'cumulative_resourceDelay'} += $jobsRef->{$job}->{'EXECUTE'} - $remote_submit_start;
+	        				}	
+	        			}else{
+	        				$jobsRef->{$job}->{'cumulative_resourceDelay'} = $jobsRef->{$job}->{'EXECUTE'} - $remote_submit_start;
+	        			}
+		        	}else{
+		        		# Mismatch between the tags.
+		        			warn "Unable to calculate resource delay for job '$job' .Absence or mismatch of events GRID_SUBMIT/ GLOBUS_SUBMIT , EXECUTE.\n";
+			        		$jobsRef->{$job}->{'cumulative_resourceDelay'} ='-';
+		        	}
+		        	
+		        	if($condorRun){
+		        		if(defined ( $jobsRef->{$job}->{'SUBMIT'}) ){
+	        				if (defined($jobsRef->{$job}->{'cumulative_condorDelay'})){
+	        					if(!($jobsRef->{$job}->{'cumulative_condorDelay'} eq '-')){
+	        						$jobsRef->{$job}->{'cumulative_condorDelay'} += $jobsRef->{$job}->{'EXECUTE'} -$jobsRef->{$job}->{'SUBMIT'};
+	        					}
+	        				}else{
+	        					$jobsRef->{$job}->{'cumulative_condorDelay'} = $jobsRef->{$job}->{'EXECUTE'} -$jobsRef->{$job}->{'SUBMIT'};
+	        				}
+		        		}else{
+		        			# Mismatch between the tags.
+		        			warn "Unable to calculate condor delay for job '$job'.Absence or mismatch of events EXECUTE , SUBMIT.\n";
+			        		$jobsRef->{$job}->{'cumulative_condorDelay'} ='-';
+		        		}
+		        	}
+		        	
+		        } 
+                
             }
             print OUT join(' ', @tokens), "\n";
         }
@@ -361,11 +476,18 @@ sub processJobstateLog {
             $line= substr($line, 0, $i2);
             if ($line =~ /^[\.0-9]*$/) {
                 $jobsRef->{$job}->{'ksruntime'} += $line;
+                if(defined ($jobsRef->{$job}->{'cumulative_ksruntime'})){
+			     	$jobsRef->{$job}->{'cumulative_ksruntime'} += $line;		
+			    }else{
+			     	$jobsRef->{$job}->{'cumulative_ksruntime'} = $line;
+			    }			
             }
         }
         if ($jobsRef->{$job}->{'site'} eq 'local' && $job !~ /register_/ ) {
             $jobsRef->{$job}->{'seqexec'} = "-";
 			$jobsRef->{$job}->{'seqexec-delay'} = "-";
+			$jobsRef->{$job}->{'cumulative_seqexec'} = "-";
+	        $jobsRef->{$job}->{'cumulative_seqexec-delay'} = "-";
         }
 	#elsif ($job =~ /stage_in/) {
         #    $jobsRef->{$job}->{'ksruntime'} = 0;
@@ -374,27 +496,57 @@ sub processJobstateLog {
             
 	    #for clustered jobs try to get seqexec progress at end of .out
 	    if( $job =~ /merge_/ ){
-		my $tail = `tail -n 1  $job.out* 2>&1`;
-		chomp($tail);
-		if( index($tail, "[struct") == 0 ){
-      		     my $i1 = index($tail, "duration=");
-		     $tail = substr($tail, $i1 + 9);
-		     my $i2 = index($tail, ",");
-		     $tail=substr( $tail, 0, $i2);
-		     if ($tail =~ /^[\.0-9]*$/) {
-			 $jobsRef->{$job}->{'seqexec'} = $tail;
-			 $jobsRef->{$job}->{'seqexec-delay'} = sprintf( "%.2f", $tail - $jobsRef->{$job}->{'ksruntime'});
-		     }
-		     else{
-			 #some problem with the parsing of .out files
-			 $jobsRef->{$job}->{'seqexec'} = "-";
-			 $jobsRef->{$job}->{'seqexec-delay'} = "-";
-		     }
-		}
-	    }
-	    else{
-		$jobsRef->{$job}->{'seqexec'} = "-";
+			my $tail = `tail -n 1  $job.out* 2>&1`;
+			chomp($tail);
+			if( index($tail, "[struct") == 0 ){
+	      		     my $i1 = index($tail, "duration=");
+			     $tail = substr($tail, $i1 + 9);
+			     my $i2 = index($tail, ",");
+			     $tail=substr( $tail, 0, $i2);
+			     if ($tail =~ /^[\.0-9]*$/) {
+				 $jobsRef->{$job}->{'seqexec'} = $tail;
+				 $jobsRef->{$job}->{'seqexec-delay'} = sprintf( "%.2f", $tail - $jobsRef->{$job}->{'ksruntime'});
+			     }
+			     else{
+				 #some problem with the parsing of .out files
+				 $jobsRef->{$job}->{'seqexec'} = "-";
+				 $jobsRef->{$job}->{'seqexec-delay'} = "-";
+			     }
+			}
+			my @clusterLines = `grep -h '[struct' $job.out* 2>&1`;
+			foreach my $clusterLine (@clusterLines) {
+	            chomp($clusterLine);
+	            if( index($clusterLine, "[struct") == 0 ){
+	      		 	my $i1 = index($clusterLine, "duration=");
+			     	$clusterLine = substr($clusterLine, $i1 + 9);
+			     	my $i2 = index($clusterLine, ",");
+			     	$clusterLine=substr( $clusterLine, 0, $i2);
+			     	if ($clusterLine =~ /^[\.0-9]*$/) {
+			     		if(defined ($jobsRef->{$job}->{'cumulative_seqexec'})){
+			     			if(!($jobsRef->{$job}->{'cumulative_seqexec'} eq '-')){
+						 		$jobsRef->{$job}->{'cumulative_seqexec'} += $clusterLine;
+						 	}
+				 		}else{
+				 			$jobsRef->{$job}->{'cumulative_seqexec'} = $clusterLine;
+				 			
+				 		}
+			     	}
+				    else{
+						#some problem with the parsing of .out files
+						$jobsRef->{$job}->{'cumulative_seqexec'} = "-";
+						$jobsRef->{$job}->{'cumulative_seqexec-delay'} = "-";
+				    }
+				}
+			}
+			# Find the seqexec-delay after taking the cumulative seqexec time
+			if(defined ($jobsRef->{$job}->{'cumulative_seqexec'}) and defined ($jobsRef->{$job}->{'cumulative_ksruntime'})){
+					 			$jobsRef->{$job}->{'cumulative_seqexec-delay'} =  $jobsRef->{$job}->{'cumulative_seqexec'} - $jobsRef->{$job}->{'cumulative_ksruntime'};
+			}		
+	    }else{
+			$jobsRef->{$job}->{'seqexec'} = "-";
 	        $jobsRef->{$job}->{'seqexec-delay'} = "-";
+	        $jobsRef->{$job}->{'cumulative_seqexec'} = "-";
+	        $jobsRef->{$job}->{'cumulative_seqexec-delay'} = "-";
 	    }
         }
         if (defined $jobsRef->{$job}->{'POST_SCRIPT_TERMINATED'}) {
@@ -425,6 +577,8 @@ sub processJobstateLog {
         my $dagmanDelay = 0;
         if(defined $jobsRef->{$child}->{'SUBMIT'}){
         	$dagmanDelay = $jobsRef->{$child}->{'SUBMIT'} - $maxParentEnd;
+        	# dagman delay is not cumulative only name is to match the other values
+        	$jobsRef->{$child}->{'cumulative_dagmanDelay'} = $jobsRef->{$child}->{'SUBMIT'} - $maxParentEnd;
         }
         my ($condorDelay, $resourceDelay);
 
@@ -464,31 +618,43 @@ sub writeJobs {
 
     my $jobsFile = "$outputDir/jobs";
     open(JOBS, ">$jobsFile") || die "Could not open $jobsFile\n";
-    print JOBS "#legends \n";
+    print JOBS "#Legends \n";
     print JOBS "#Job - the name of the job \n";
     print JOBS "#Site - the site where the job ran \n";
-    print JOBS "#Kickstart - the actual duration of the job in seconds on the remote compute node \n";
-    print JOBS "#Post - the postscript time as reported by DAGMan \n";
-    print JOBS "#DAGMan - the time between the last parent job  of a job completes and the job gets submitted \n";
-    print JOBS "#CondorQTime - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node \n";
-    print JOBS "#Resource - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue \n";
-    print JOBS "#Runtime - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart \n";
+    print JOBS "#Kickstart(sec.) - the actual duration of the job in seconds on the remote compute node \n";
+    print JOBS "#Post(sec.) - the postscript time as reported by DAGMan \n";
+    print JOBS "#DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted \n";
+    print JOBS "#CondorQTime(sec.) - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node \n";
+    print JOBS "#Resource(sec.) - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue \n";
+    print JOBS "#Runtime(sec.) - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart \n";
     print JOBS "#CondorQLen - the number of outstanding jobs in the queue when this job was released \n";
-    print JOBS "#Seqexec -  the time taken for the completion of a clustered job\n";
-    print JOBS "#Seqexec-Delay - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n";
+    print JOBS "#Seqexec(sec.) -  the time taken for the completion of a clustered job\n";
+    print JOBS "#Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n";
     if ($longJobNames) {
         print JOBS sprintf("#%-79s %20s %8s %8s %8s %13s %8s %8s %5s %7s %13s\n", "Job", "Site", "Kickstrt", "Post", "DAGMan", "CondorQTime", "Res", "Runtime", "CQLen", "Seqexec", "Seqexec-Delay");
     } else {
         print JOBS sprintf("#%-39s %20s %8s %8s %8s %13s %8s %8s %10s %7s %13s\n", "Job", "Site", "Kickstart", "Post", "DAGMan", "CondorQTime", "Resource", "Runtime", "CondorQLen", "Seqexec", "Seqexec-Delay");
     }
     foreach my $job (sort keys %{$jobsRef}) {
+    	#Setting default values 
         if (!defined($jobsRef->{$job}->{"site"})) {
             $jobsRef->{$job}->{"site"} = "local";
         }
+        $jobsRef->{$job}->{'cumulative_ksruntime'} = defined($jobsRef->{$job}->{'cumulative_ksruntime'} )?$jobsRef->{$job}->{'cumulative_ksruntime'} :'-';
+        $jobsRef->{$job}->{'cumulative_postscripttime'} = defined($jobsRef->{$job}->{'cumulative_postscripttime'} )?$jobsRef->{$job}->{'cumulative_postscripttime'} :'-';
+        if(!defined($jobsRef->{$job}->{'cumulative_condorDelay'}) or  $jobsRef->{$job}->{'cumulative_condorDelay'} eq '-'){
+        	if (defined($jobsRef->{$job}->{'cumulative_condorDelay_globus'})){
+        		$jobsRef->{$job}->{'cumulative_condorDelay'} = $jobsRef->{$job}->{'cumulative_condorDelay_globus'};
+        	}
+        }
+        $jobsRef->{$job}->{'cumulative_dagmanDelay'} = defined($jobsRef->{$job}->{'cumulative_dagmanDelay'})?$jobsRef->{$job}->{'cumulative_dagmanDelay'}:'-'; 
+    	$jobsRef->{$job}->{'cumulative_condorDelay'} = defined($jobsRef->{$job}->{'cumulative_condorDelay'})?$jobsRef->{$job}->{'cumulative_condorDelay'}:'-';
+    	$jobsRef->{$job}->{'cumulative_resourceDelay'} = defined($jobsRef->{$job}->{'cumulative_resourceDelay'})?$jobsRef->{$job}->{'cumulative_resourceDelay'}:'-';
+    	$jobsRef->{$job}->{'cumulative_runtime'} = defined($jobsRef->{$job}->{'cumulative_runtime'})?$jobsRef->{$job}->{'cumulative_runtime'}:'-';
         if ($longJobNames) {
-            print JOBS sprintf("%-80s %20s %8.2f %8.2f %8.2f %13.2f %8.2f %8.2f %5d %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'ksruntime'}, $jobsRef->{$job}->{'postscripttime'}, $jobsRef->{$job}->{'dagmanDelay'}, $jobsRef->{$job}->{'condorDelay'}, $jobsRef->{$job}->{'resourceDelay'}, $jobsRef->{$job}->{'runtime'}, $jobsRef->{$job}->{'condorQLength'}, $jobsRef->{$job}->{'seqexec'}, $jobsRef->{$job}->{'seqexec-delay'});
+        	print JOBS sprintf("%-80s %20s %8s %8s %8s %13s %8s %8s %5s %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'condorQLength'}, $jobsRef->{$job}->{'cumulative_seqexec'}, $jobsRef->{$job}->{'cumulative_seqexec-delay'});
         } else {
-            print JOBS sprintf("%-40s %20s %8.2f %8.2f %8.2f %13.2f %8.2f %8.2f %5d %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'ksruntime'}, $jobsRef->{$job}->{'postscripttime'}, $jobsRef->{$job}->{'dagmanDelay'}, $jobsRef->{$job}->{'condorDelay'}, $jobsRef->{$job}->{'resourceDelay'}, $jobsRef->{$job}->{'runtime'}, $jobsRef->{$job}->{'condorQLength'}, $jobsRef->{$job}->{'seqexec'},$jobsRef->{$job}->{'seqexec-delay'});
+        	print JOBS sprintf("%-40s %20s %8s %8s %8s %13s %8s %8s %5s %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'condorQLength'}, $jobsRef->{$job}->{'cumulative_seqexec'},$jobsRef->{$job}->{'cumulative_seqexec-delay'});
         }
     }
     close(JOBS);
