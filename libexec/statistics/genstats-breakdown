@@ -19,6 +19,7 @@ Usage: $basename --help --output=<output file>
 Optional arguments:
 -h|--help           Print this help message.
 -o|--output file    Write outputs to specified file.
+-f|--file           input file path which contains newline separated run directory path.
 -x|--extra          Generate individual statistics for each run directory.
 EOF
     exit($ec);
@@ -119,6 +120,7 @@ for $dir (@ARGV) {
 
 if($file){
 	@dirs_arr = keys(%samples);
+	$file= File::Spec->rel2abs($file);
 	open CONFIG, "$file" or die "Unable to open file: $file . $! \n";
 	for (<CONFIG>) {
     	chomp;
@@ -141,7 +143,14 @@ if (defined($output)) {
     open $oldout, ">&STDOUT" or die "Can't dup STDOUT $!";
     open STDOUT, '>', $output or die "Can't redirect STDOUT $!";
 }
-
+print "#Legends ";
+print "\n#Transformation - name of the transformation";
+print "\n#Count - the number of times the transformation was executed";
+print "\n#Mean(sec.) - the mean of the transformation runtime ";
+print "\n#Variance(sec.) - the variance of the transformation runtime";
+print "\n#Min(sec.) - the minimum transformation runtime value";
+print "\n#Max(sec.) - the maximum transformation runtime value";
+print "\n#Total(sec.) - the cummulative of transformation runtime \n";
 if ($extra) {
     for $dir (@ARGV) {
         print sprintf("\n#$dir\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
