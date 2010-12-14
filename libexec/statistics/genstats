@@ -513,9 +513,9 @@ sub processJobstateLog {
 				 $jobsRef->{$job}->{'seqexec-delay'} = "-";
 			     }
 			}
-			my @clusterLines = `grep -h '[struct' $job.out* 2>&1`;
+			my @clusterLines = `grep -h '.*struct.*duration=.*' $job.out* 2>&1`;
 			foreach my $clusterLine (@clusterLines) {
-	            chomp($clusterLine);
+				chomp($clusterLine);
 	            if( index($clusterLine, "[struct") == 0 ){
 	      		 	my $i1 = index($clusterLine, "duration=");
 			     	$clusterLine = substr($clusterLine, $i1 + 9);
@@ -524,23 +524,24 @@ sub processJobstateLog {
 			     	if ($clusterLine =~ /^[\.0-9]*$/) {
 			     		if(defined ($jobsRef->{$job}->{'cumulative_seqexec'})){
 			     			if(!($jobsRef->{$job}->{'cumulative_seqexec'} eq '-')){
-						 		$jobsRef->{$job}->{'cumulative_seqexec'} += $clusterLine;
+						 		$jobsRef->{$job}->{'cumulative_seqexec'} += sprintf( "%.2f",$clusterLine);
 						 	}
 				 		}else{
-				 			$jobsRef->{$job}->{'cumulative_seqexec'} = $clusterLine;
+				 			$jobsRef->{$job}->{'cumulative_seqexec'} = sprintf( "%.2f",$clusterLine);
 				 			
 				 		}
 			     	}
 				    else{
 						#some problem with the parsing of .out files
 						$jobsRef->{$job}->{'cumulative_seqexec'} = "-";
-						$jobsRef->{$job}->{'cumulative_seqexec-delay'} = "-";
-				    }
+					}
 				}
 			}
 			# Find the seqexec-delay after taking the cumulative seqexec time
 			if(defined ($jobsRef->{$job}->{'cumulative_seqexec'}) and defined ($jobsRef->{$job}->{'cumulative_ksruntime'})){
-					 			$jobsRef->{$job}->{'cumulative_seqexec-delay'} =  $jobsRef->{$job}->{'cumulative_seqexec'} - $jobsRef->{$job}->{'cumulative_ksruntime'};
+				$jobsRef->{$job}->{'cumulative_seqexec-delay'} =  sprintf( "%.2f",$jobsRef->{$job}->{'cumulative_seqexec'} - $jobsRef->{$job}->{'cumulative_ksruntime'});
+			}else{
+				$jobsRef->{$job}->{'cumulative_seqexec-delay'} = "-";
 			}		
 	    }else{
 			$jobsRef->{$job}->{'seqexec'} = "-";
@@ -629,7 +630,7 @@ sub writeJobs {
     print JOBS "#Runtime(sec.) - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart \n";
     print JOBS "#CondorQLen - the number of outstanding jobs in the queue when this job was released \n";
     print JOBS "#Seqexec(sec.) -  the time taken for the completion of a clustered job\n";
-    print JOBS "#Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n";
+    print JOBS "#Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n\n";
     if ($longJobNames) {
         print JOBS sprintf("#%-79s %20s %8s %8s %8s %13s %8s %8s %5s %7s %13s\n", "Job", "Site", "Kickstrt", "Post", "DAGMan", "CondorQTime", "Res", "Runtime", "CQLen", "Seqexec", "Seqexec-Delay");
     } else {
@@ -641,6 +642,9 @@ sub writeJobs {
             $jobsRef->{$job}->{"site"} = "local";
         }
         $jobsRef->{$job}->{'cumulative_ksruntime'} = defined($jobsRef->{$job}->{'cumulative_ksruntime'} )?$jobsRef->{$job}->{'cumulative_ksruntime'} :'-';
+        if (!($jobsRef->{$job}->{'cumulative_ksruntime'} eq '-')){
+        	$jobsRef->{$job}->{'cumulative_ksruntime'}  =  sprintf( "%.2f",$jobsRef->{$job}->{'cumulative_ksruntime'} );
+        }
         $jobsRef->{$job}->{'cumulative_postscripttime'} = defined($jobsRef->{$job}->{'cumulative_postscripttime'} )?$jobsRef->{$job}->{'cumulative_postscripttime'} :'-';
         if(!defined($jobsRef->{$job}->{'cumulative_condorDelay'}) or  $jobsRef->{$job}->{'cumulative_condorDelay'} eq '-'){
         	if (defined($jobsRef->{$job}->{'cumulative_condorDelay_globus'})){
