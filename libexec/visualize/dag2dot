@@ -31,7 +31,8 @@ COLORS = [
 class Job:
 	def __init__(self):
 		self.id = None
-		self.name = None
+		self.xform = None
+		self.label = None
 		self.level = 0
 		self.parents = []
 		self.children = []
@@ -46,17 +47,32 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 	def startElement(self, name, attrs):
 		if name in ["job","dax","dag"]:
 			job = Job()
+		
 			job.id = attrs.get("id")
 			if job.id is None:
 				raise Exception("Invalid DAX: attribute 'id' missing")
-			label = attrs.get("node-label")
-			if label is None:
-				label = attrs.get("name")
-				if label is None:
-					label = attrs.get("file")
-			job.name = label
-			if job.name is None:
-				raise Exception("Invalid DAX: unable to determine label for job %s" % job.id)
+			
+			if name == "job":
+				job.xform = attrs.get("name")
+				if job.xform is None:
+					raise Exception("Invalid DAX: job name missing for job %s" % job.id)
+				ns = attrs.get("namespace")
+				version = attrs.get("version")
+				if ns is not None:
+					job.xform = ns + "::" + job.xform
+				if version is not None:
+					job.xform = job.xform + ":" + version
+			elif name == "dax":
+				job.xform = "pegasus::dax"
+			else:
+				job.xform = "pegasus::dag"
+			
+			job.label = attrs.get("node-label")
+			if job.label is None:
+				job.label = attrs.get("file")
+				if job.label is None:
+					job.label = job.xform
+			
 			self.dag[job.id] = job
 		elif name == "child":
 			self.lastchild = attrs.get("ref")
@@ -85,19 +101,6 @@ def parse_daxfile(fname):
 	f.close()
 	return handler.dag
 	
-def xform_name(xform):
-	"""
-	Get the name part of a transformation. Format could be:
-	  namespace::name:version
-	  namespace::name
-	  name:version
-	  name
-	"""
-	rec = xform.split(':')
-	if len(rec) == 2: return rec[0]
-	elif len(rec) > 2: return rec[2]
-	else: return xform
-	
 def parse_xform_name(path):
 	"""
 	Parse the transformation name from a submit script. Usually the
@@ -106,20 +109,21 @@ def parse_xform_name(path):
 	"""
 	# Handle special cases
 	fname = os.path.basename(path)
-	if fname.startswith("create_dir_"): return "create_dir"
-	if fname.startswith("stage_in_"): return "stage_in"
-	if fname.startswith("stage_out_"): return "stage_out"
-	if fname.startswith("stage_inter_"): return "stage_inter"
-	if fname.startswith("stage_worker_"): return "stage_worker"
-	if fname.startswith("register_"): return "register"
-	if fname.startswith("clean_up_"): return "clean_up"
+	if fname.startswith("create_dir_"): return "pegasus::create_dir"
+	if fname.startswith("stage_in_"): return "pegasus::stage_in"
+	if fname.startswith("stage_out_"): return "pegasus::stage_out"
+	if fname.startswith("stage_inter_"): return "pegasus::stage_inter"
+	if fname.startswith("stage_worker_"): return "pegasus::stage_worker"
+	if fname.startswith("register_"): return "pegasus::register"
+	if fname.startswith("clean_up_"): return "pegasus::clean_up"
 	
 	# Get it from the submit file
-	f = open(path,'r')
-	for line in f.readlines():
-		if '+pegasus_wf_xformation' in line:
-			full = line.split('"')[1]
-			return xform_name(full)
+	if os.path.isfile(path):
+		f = open(path,'r')
+		for line in f.readlines():
+			if '+pegasus_wf_xformation' in line:
+				return line.split('"')[1]
+	
 	return None
 	
 def parse_dagfile(fname):
@@ -141,12 +145,11 @@ def parse_dagfile(fname):
 			subfile = rec[2] # submit script
 			if not os.path.isabs(subfile):
 				subfile = os.path.join(dagdir,subfile)
-			if os.path.isfile(subfile):
-				# Try to get it from the file if it exists
-				job.name = parse_xform_name(subfile)
-			if job.name is None:
-				# Otherwise just use the first 8 characters
-				job.name = job.id[0:8]
+			job.xform = parse_xform_name(subfile)
+			if job.xform is None:
+				# Otherwise just use the ID
+				job.xform = job.id
+			job.label = job.id
 			dag[job.id] = job
 		elif line.startswith("PARENT"):
 			rec = line.split()
@@ -168,7 +171,7 @@ def remove_xforms(dag, xforms):
 		return
 	for id in dag.keys():
 		job = dag[id]
-		if job.name in xforms:
+		if job.xform in xforms:
 			print "Removing %s" % job.id
 			for p in job.parents:
 				p.children.remove(job)
@@ -209,8 +212,6 @@ def simplify(dag):
 	
 	# Assign surrogate root
 	root = Job()
-	root.id = 'root'
-	root.name = 'root'
 	root.level = 0
 	for j in roots:
 		root.children.append(j)
@@ -243,7 +244,7 @@ def simplify(dag):
 		
 	return dag
 	
-def emit_dot(dag, use_xforms=False, outfile="/dev/stdout"):
+def emit_dot(dag, use_xforms=False, outfile="/dev/stdout", width=8.0, height=10.0):
 	"""
 	Write a DOT-formatted diagram.
 	use_xforms: Use transformation names instead of job names
@@ -255,24 +256,25 @@ def emit_dot(dag, use_xforms=False, outfile="/dev/stdout"):
 	out = open(outfile,'w')
 	
 	out.write("""digraph dag {
-	size="8.0,10.0"
+	size="%s,%s"
 	ratio=fill
 	node [shape=ellipse, style=filled]
 	edge [arrowhead=normal, arrowsize=1.0]
-	\n""")
+	\n""" % (width,height))
 	
 	for id in dag:
 		j = dag[id]
-		j.id = j.id.replace("-","_")
 		if use_xforms:
-			label = j.name
+			label = j.xform
 		else:
-			label = j.id
-		if j.name not in xforms:
-			xforms[j.name] = next_color
+			label = j.label
+		if j.xform not in xforms:
+			xforms[j.xform] = next_color
 			next_color += 1
-		color = xforms[j.name]
-		out.write('\t%s [color="%s",label="%s"]\n' % (j.id,COLORS[color],label))
+			# Just in case we run out of colors
+			next_color = min(len(COLORS)-1, next_color)
+		color = xforms[j.xform]
+		out.write('\t"%s" [color="%s",label="%s"]\n' % (j.id,COLORS[color],label))
 		
 	out.write('\n')
 	
@@ -293,15 +295,21 @@ DAGMan file, or a Pegasus DAX file."""
 	parser.add_option("-s", "--nosimplify", action="store_false",
 		dest="simplify", default=True,
 		help="Do not simplify the graph by removing redundant edges")
-	parser.add_option("-n", "--names", action="store_false", 
-		dest="xforms", default=True,
-		help="Use job names as labels instead of transformation names")
+	parser.add_option("-x", "--xforms", action="store_true", 
+		dest="xforms", default=False,
+		help="Use transformation names as labels instead of the default label")
 	parser.add_option("-o", "--output", action="store",
 		dest="outfile", metavar="FILE", default="/dev/stdout",
 		help="Write output to FILE [default: stdout]")
 	parser.add_option("-r", "--remove", action="append",
 		dest="remove", metavar="XFORM", default=[],
 		help="Remove jobs from the workflow by transformation name")
+	parser.add_option("-W", "--width", action="store",
+		dest="width", default="8.0",
+		help="Width of the digraph [default: 8.0]")
+	parser.add_option("-H", "--height", action="store",
+		dest="height", default="10.0",
+		help="Height of the digraph [default: 10.0]")
 
 	(options, args) = parser.parse_args()
 	
@@ -322,7 +330,7 @@ DAGMan file, or a Pegasus DAX file."""
 	if options.simplify:
 		dag = simplify(dag)
 		
-	emit_dot(dag, options.xforms, options.outfile)
+	emit_dot(dag, options.xforms, options.outfile, options.width, options.height)
 	
 if __name__ == '__main__':
 	main()
