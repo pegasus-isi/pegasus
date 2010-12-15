@@ -197,7 +197,7 @@ sub main(){
 	if (-e $dax_file_path){
 		($dax2dot_id_status , $dax2dot_summary_msg) =run_dax2dot($dax_file_path ,$output_dir  );
 	}else{
-		 $dax2dot_summary_msg="\nERROR: Failed to generate dax graph. Unable to find the dax file :- $dax_file_path \n";
+		 $dax2dot_summary_msg="\nERROR: Failed to generate dax graph. Unable to find the dax file : $dax_file_path \n";
 	}
 	
 	## Executing dag2dot command
@@ -287,7 +287,7 @@ sub invoke_monitord($$){
 	my ($pegasus_monitord_command) = "$pegasus_monitord_path ".join(" ",@args);
 	
 	if ($main::DEBUG){
-		print STDOUT "Executing command :-\n$pegasus_monitord_command \n";
+		print STDOUT "Executing command - \n$pegasus_monitord_command \n";
 	}
 	my($status,$exec_msg) = execute_command($pegasus_monitord_command, 'pegasus-monitord');
 	if($status == 0  ){
@@ -356,7 +356,7 @@ sub run_show_job($$$$){
 	my ($show_job_command) = "$show_job_path ".join(" ",@args);
 	
 	if ($main::DEBUG){
-		print STDOUT "Executing command :-\n $show_job_command \n";
+		print STDOUT "Executing command -\n $show_job_command \n";
 	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status,$exec_msg) = execute_command($show_job_command,'show-job');
@@ -412,15 +412,15 @@ sub run_show_job($$$$){
 		}
 	}else{
 			if ($main::DEBUG){	
-				print STDERR "WARNING: The workflow execution Gantt chart is created at -\npng format :- Failed to generate png format.Application \'convert\' not available.\neps format :- $eps_out_path \n************ \n";
+				print STDERR "WARNING: Workflow execution Gantt chart -\npng format : Failed to generate png format.Application \'convert\' not available.\neps format : $eps_out_path \n************ \n";
 			}
-			$summary_msg = "\nThe workflow execution Gantt chart is created at -\npng format :- Failed to generate png format.Application \'convert\' not available.\neps format :- $eps_out_path\n";
+			$summary_msg = "\nWorkflow execution Gantt chart -\npng format : Failed to generate png format.Application \'convert\' not available.\neps format : $eps_out_path\n";
 			return ($status,$summary_msg);
 	}
 	if ($main::DEBUG){
-		print STDOUT "The workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n************ \n";
+		print STDOUT "Workflow execution Gantt chart -\npng format : $png_out_path \neps format : $eps_out_path \n************ \n";
 	}
-	$summary_msg = "\nThe workflow execution Gantt chart is created at -\npng format :- $png_out_path \neps format :- $eps_out_path \n";
+	$summary_msg = "\nWorkflow execution Gantt chart -\npng format : $png_out_path \neps format : $eps_out_path \n";
 	return ($status,$summary_msg);
 	
 }
@@ -464,7 +464,7 @@ sub run_show_run($$$$$$){
 	my ($show_run_path) =  File::Spec->catfile( @show_run_directory_path, 'show-run');
 	my ($show_run_command) = "$show_run_path ".join(" ", @args);
 	if ($main::DEBUG){
-		print STDOUT "Executing command :-\n $show_run_command \n";
+		print STDOUT "Executing command :\n $show_run_command \n";
 	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status,$exec_msg) = execute_command($show_run_command,'show-run');
@@ -484,14 +484,14 @@ sub run_show_run($$$$$$){
 	    		}
 			}
 			if ($main::DEBUG){ 	
-				print STDOUT "The host over time chart is created at -\npng format :- $host_png_file \neps format :- $host_eps_file.  \n************ \n";
+				print STDOUT "Host over time chart -\npng format : $host_png_file \neps format : $host_eps_file.  \n************ \n";
 			}
-			$summary_msg = "\nThe host over time chart is created at -\npng format :- $host_png_file \neps format :- $host_eps_file\n";
+			$summary_msg = "\nHost over time chart -\npng format : $host_png_file \neps format : $host_eps_file\n";
 		}else{
 			if ($main::DEBUG){
-				print STDERR "WARNING: The host over time chart is created at:-\npng format :- Failed to generate png format.Application \'convert\' not available.\neps format :- $host_eps_file \n************ \n";
+				print STDERR "WARNING: Host over time chart -\npng format : Failed to generate png format.Application \'convert\' not available.\neps format : $host_eps_file \n************ \n";
 			}
-			$summary_msg = "\nThe host over time chart is created at:-\npng format :- Failed to generate png format.Application \'convert\' not available.\neps format :- $host_eps_file \n";	
+			$summary_msg = "\nHost over time chart -\npng format : Failed to generate png format.Application \'convert\' not available.\neps format : $host_eps_file \n";	
 		}
 	}else{
 		if ($main::DEBUG){
@@ -526,7 +526,7 @@ sub run_dag2dot($$){
 	my ($dag2dot_path) =  File::Spec->catfile( @dag2dot_directory_path, 'dag2dot');
 	my ($dag2dot_command) = "$dag2dot_path ".join(" ",@args);
 	if ($main::DEBUG){
-		print STDOUT "Executing command :-\n $dag2dot_command \n";
+		print STDOUT "Executing command -\n $dag2dot_command \n";
 	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status ,$exec_msg) = execute_command($dag2dot_command ,'dag2dot');
@@ -558,7 +558,7 @@ sub run_dag2dot($$){
 		# creating dag2png command 
 		my ($dag2png_command) = "$dot_command_path ".join(" ",@dot_png_args);
 		if ($main::DEBUG){
-			print STDOUT "Executing command :-\n $dag2png_command \n";
+			print STDOUT "Executing command -\n $dag2png_command \n";
 		}
 		my($dot_png_status ,$dot_png_exec_msg) = execute_command($dag2png_command ,'dag_dot2png');
 		
@@ -569,35 +569,35 @@ sub run_dag2dot($$){
 		# creating dag2eps command 
 		my ($dag2eps_command) = "$dot_command_path ".join(" ",@dot_eps_args);
 		if ($main::DEBUG){
-			print STDOUT "Executing command :-\n $dag2eps_command \n";
+			print STDOUT "Executing command -\n $dag2eps_command \n";
 		}
 		
 		my($dot_eps_status ,$dot_eps_exec_msg) = execute_command($dag2eps_command ,'dag_dot2eps');
 		if($dot_png_status == 0  and $dot_eps_status  == 0){
 			print STDOUT "****** Finished executing dot ***** \n";
 			if ($main::DEBUG){
-				print STDOUT "DAG graph is created at - \npng format :- $dot_png_img_file \neps format :- $dot_eps_img_file \n************\n";
+				print STDOUT "DAG graph - \npng format : $dot_png_img_file \neps format : $dot_eps_img_file \n************\n";
 			}
-			$summary_msg = "\nDAG graph is created at - \npng format :- $dot_png_img_file \neps format :- $dot_eps_img_file \n";
+			$summary_msg = "\nDAG graph - \npng format : $dot_png_img_file \neps format : $dot_eps_img_file \n";
 		}elsif($dot_eps_status == 0){
 			if ($main::DEBUG){
-				print STDOUT "DAG graph is created at - \npng format :- Failed to generate png format.$dot_png_exec_msg \neps format :- $dot_eps_img_file \n************\n";
+				print STDOUT "DAG graph - \npng format : Failed to generate png format.$dot_png_exec_msg \neps format : $dot_eps_img_file \n************\n";
 			}
-			$summary_msg = "\nDAG graph is created at  - \npng format :- Failed to generate png format.$dot_png_exec_msg \neps format :- $dot_eps_img_file \n";
+			$summary_msg = "\nDAG graph - \npng format : Failed to generate png format.$dot_png_exec_msg \neps format : $dot_eps_img_file \n";
 		}elsif($dot_png_status == 0){
 			if ($main::DEBUG){
-				print STDOUT "DAG graph is created at - \npng format :- $dot_png_img_file \neps format :- Failed to generate eps format.$dot_eps_exec_msg \n************\n";
+				print STDOUT "DAG graph - \npng format : $dot_png_img_file \neps format : Failed to generate eps format.$dot_eps_exec_msg \n************\n";
 			}
-			$summary_msg = "\nDAG graph is created at - \npng format :- $dot_png_img_file \neps format :- Failed to generate eps format.$dot_eps_exec_msg \n";
+			$summary_msg = "\nDAG graph - \npng format : $dot_png_img_file \neps format : Failed to generate eps format.$dot_eps_exec_msg \n";
 		}else{
 			print STDERR "WARNING : Failed to execute dot command. $dot_png_exec_msg \n";
-			$summary_msg = "\nWARNING : DAG graph in dot format is created at :- \n$dot_img_file. \nFailed to create DAG graph in png and eps format. $dot_png_exec_msg. "
+			$summary_msg = "\nWARNING : DAG graph - \ndot format : $dot_img_file \nFailed to create DAG graph in png and eps format. $dot_png_exec_msg. "
 		}
 	}else{
 		if ($main::DEBUG){
-			print STDERR "WARNING: DAG graph in dot format is created at :-\n$dot_img_file.\nFailed to create DAG graph in png and eps format. Application \'dot\' not available.\n************ \n";
+			print STDERR "WARNING: DAG graph - \ndot format :$dot_img_file\nFailed to create DAG graph in png and eps format. Application \'dot\' not available.\n************ \n";
 		}
-		$summary_msg = "\nDAG graph in dot format is created at :- \n$dot_img_file.\nFailed to create DAG graph in png and eps format. Application \'dot\' not available.\n";
+		$summary_msg = "\nDAG graph - \ndot format : $dot_img_file\nFailed to create DAG graph in png and eps format. Application \'dot\' not available.\n";
 	}
 	return ($status ,$summary_msg);
 }
@@ -626,7 +626,7 @@ sub run_dax2dot($$){
 	my ($dax2dot_command) = "$dax2dot_path ".join(" ",@args);
 	
 	if ($main::DEBUG){
-		print STDOUT "Executing command :-\n $dax2dot_command \n";
+		print STDOUT "Executing command -\n $dax2dot_command \n";
 	}
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status ,$exec_msg) = execute_command($dax2dot_command,'dax2dot');
@@ -658,7 +658,7 @@ sub run_dax2dot($$){
 		# creating dag2png command 
 		my ($dag2png_command) = "$dot_command_path ".join(" ",@dot_png_args);
 		if ($main::DEBUG){
-			print STDOUT "Executing command :-\n $dag2png_command \n";
+			print STDOUT "Executing command -\n $dag2png_command \n";
 		}
 		my($dot_png_status ,$dot_png_exec_msg) = execute_command($dag2png_command,'dax_dot2png');
 		
@@ -670,35 +670,35 @@ sub run_dax2dot($$){
 		# creating dag2eps command 
 		my ($dag2eps_command) = "$dot_command_path ".join(" ",@dot_eps_args);
 		if ($main::DEBUG){
-			print STDOUT "Executing command :-\n $dag2eps_command \n";
+			print STDOUT "Executing command -\n $dag2eps_command \n";
 		}
 		my($dot_eps_status ,$dot_eps_exec_msg) = execute_command($dag2eps_command,'dax_dot2eps');
 		
 		if($dot_png_status == 0  and $dot_eps_status  == 0 ){
 			print STDOUT "****** Finished executing dot ***** \n";
 			if ($main::DEBUG){
-				print STDOUT "DAX graph is created at - \npng format :- $dot_png_img_file \neps format :- $dot_eps_img_file \n************\n";
+				print STDOUT "DAX graph - \npng format : $dot_png_img_file \neps format : $dot_eps_img_file \n************\n";
 			}
-			$summary_msg = "\nDAX graph is created at - \npng format :- $dot_png_img_file \neps format :- $dot_eps_img_file  \n";
+			$summary_msg = "\nDAX graph - \npng format : $dot_png_img_file \neps format : $dot_eps_img_file  \n";
 		}elsif($dot_eps_status == 0){
 			if ($main::DEBUG){
-				print STDOUT "DAX graph is created at - \npng format :- Failed to generate png format.$dot_png_exec_msg \neps format :- $dot_eps_img_file \n************\n";
+				print STDOUT "DAX graph - \npng format : Failed to generate png format.$dot_png_exec_msg \neps format : $dot_eps_img_file \n************\n";
 			}
-			$summary_msg = "\nDAX graph is created at  - \npng format :- Failed to generate png format.$dot_png_exec_msg \neps format :- $dot_eps_img_file \n";
+			$summary_msg = "\nDAX graph  - \npng format : Failed to generate png format.$dot_png_exec_msg \neps format : $dot_eps_img_file \n";
 		}elsif($dot_png_status == 0){
 			if ($main::DEBUG){
-				print STDOUT "DAX graph is created at - \npng format :- $dot_png_img_file\neps format :- Failed to generate eps format.$dot_eps_exec_msg \n************\n";
+				print STDOUT "DAX graph - \npng format : $dot_png_img_file\neps format : Failed to generate eps format.$dot_eps_exec_msg \n************\n";
 			}
-			$summary_msg = "\nDAX graph is created at - \npng format :- $dot_png_img_file\neps format :- Failed to generate eps format.$dot_eps_exec_msg \n";
+			$summary_msg = "\nDAX graph - \npng format : $dot_png_img_file\neps format : Failed to generate eps format.$dot_eps_exec_msg \n";
 		}else{
 			print STDERR "WARNING : Failed to execute dot command. $dot_png_exec_msg \n";
-			$summary_msg = "\nWARNING : DAX graph in dot format is created at :- \n$dot_img_file. \nFailed to create DAX graph in png and eps format. $dot_png_exec_msg. "
+			$summary_msg = "\nWARNING : DAX graph - \ndot format : $dot_img_file \nFailed to create DAX graph in png and eps format. $dot_png_exec_msg. "
 		}
 	}else{
 		if ($main::DEBUG){
-			print STDERR "WARNING:DAX graph in dot format is created at :- \n$dot_img_file.\nFailed to create DAX graph in png and eps format.Application \'dot\' not available.\n************ \n";
+			print STDERR "WARNING:DAX graph - \ndot format : $dot_img_file\nFailed to create DAX graph in png and eps format.Application \'dot\' not available.\n************ \n";
 		}
-		$summary_msg = "\nDAX graph in dot format is created at :- \n$dot_img_file.\nFailed to create DAX graph in png and eps format.Application \'dot\' not available.\n";
+		$summary_msg = "\nDAX graph - \ndot format : $dot_img_file\nFailed to create DAX graph in png and eps format.Application \'dot\' not available.\n";
 	}
 	return ($status ,$summary_msg);
 }
