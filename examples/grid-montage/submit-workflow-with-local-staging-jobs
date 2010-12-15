@@ -24,7 +24,7 @@ CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
 CLUSTER_MONTAGE_LOCATION="/cluster-software/montage/3.2_beta6_mats"
 
 # this will bundle N jobs togehter
-JOB_COLLAPSE="10"
+JOB_CLUSTERS_SIZE="10"
 #######################################################################
 
 TOP_DIR=`pwd`
@@ -54,7 +54,7 @@ tr $BINARY:3.0 {
         arch "x86"
         os "linux"
         type "INSTALLED"
-        profile pegasus "collapse" "$JOB_COLLAPSE" 
+        profile pegasus "clusters.size" "$JOB_CLUSTERS_SIZE" 
     }
 }
 EOF
