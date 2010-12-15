@@ -279,5 +279,5 @@ if ( system( 'gzip', '-5', $tarname ) == 0 ) {
 print "\n\n";
 print "I have collected information about the directory and your system.\n";
 print "Please send $tarname as a proper binary attachment to\n";
-print "\n\tpegasus-support\@griphyn.org\n\n";
+print "\n\tpegasus-support\@isi.edu\n\n";
 print "Remember to include your bug description in the regular email body.\n";
