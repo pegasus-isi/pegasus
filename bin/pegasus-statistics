@@ -203,7 +203,7 @@ sub main(){
 	my ($all_cpu_time) = ((defined $workflow_statistics[0]{'total_cpu_time'})?$workflow_statistics[0]{'total_cpu_time'}:undef);
 	my( $all_total_jobs,$all_total_tasks,$all_succceeded,$all_failed,$all_unsubmitted, $all_unknown) =(0,0,0,0,0,0);
 	for my $wstats (@workflow_statistics){
-    	$wf_summary_msg .= "\n#$wstats->{'submit_dir'} \n";
+    	$wf_summary_msg .= "#$wstats->{'submit_dir'} \n";
     	if((defined $wstats->{'total_execution_time'})){
     		$wf_summary_msg .= sprintf("%-30s % 12.2f min.\n","Workflow runtime                   :",  ($wstats->{'total_execution_time'})/60);
     	}else{
@@ -284,9 +284,9 @@ sub main(){
 	my($genstats_status ,$genstats_summary_msg) =run_genstats($dag_file_path ,rlb($jsd_file_path),$output_dir ,$condor );
 	## Executing genstats-breakdown command
 	my($genstats_breakdown_status ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir  );
-	
+	$legends_msg.= "\n";
 	print "\n\n******************************************** SUMMARY ********************************************\n";
-	print $summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
+	print $legends_msg.$summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
 	
 	print "**************************************************************************************************\n";
 	
@@ -678,8 +678,8 @@ sub run_genstats($$$$){
 		$summary_msg = "\nWorkflow events with time starting with zero is created at :\n$genstats_out_path\n";
 		$summary_msg .= "\nJob statistics is created at : \n$genstats_job_path\n";
 	}else{
-		print STDERR "ERROR : Failed to execute genstats command . $exec_msg\n";
-		$summary_msg = "\nERROR : Failed to create job statistics . $exec_msg\n";
+		print STDERR "ERROR: Failed to execute genstats command. $exec_msg\n";
+		$summary_msg = "\nERROR: Failed to create job statistics. $exec_msg\n";
 	}
 	return ($status,$summary_msg);
 	
@@ -720,8 +720,8 @@ sub run_genstats_breakdown($$$){
 		}
 		$summary_msg = "\nLogical transformation statistics is created at :\n$output_file\n";
 	}else{
-		print STDERR "ERROR:Failed to execute genstats-breakdown command . $exec_msg\n";
-		$summary_msg ="\nERROR:Failed to create logical transformations statistics. $exec_msg\n";
+		print STDERR "ERROR: Failed to execute genstats-breakdown command . $exec_msg\n";
+		$summary_msg ="\nERROR: Failed to create logical transformations statistics. $exec_msg\n";
 	}
 	return ($status ,$summary_msg);
 	
@@ -756,7 +756,7 @@ sub invoke_monitord_for_sub_workflow(@){
 			if($job_state_backup){
 			# Revert back the jobstate file
 				if(!move($job_state_backup ,$job_state_base_file)) {
-					print STDERR "ERROR : Failed to create a revert back the jobstate file . $! \n";
+					print STDERR "ERROR: Failed to create a revert back the jobstate file . $! \n";
 				}
 			}
 			
@@ -888,12 +888,35 @@ sub  execute_command($$){
 	my ($command , $prefix)=(@_);
 	my ($error_msg) = (undef);
 	my ($out_fh,$out_fn) = tempfile($prefix."_XXXX",SUFFIX => '.out',DIR =>$log_dir);
-	my ($err_fh,$err_fn) = tempfile($prefix."_XXXX",SUFFIX => '.err',DIR =>$log_dir);
 	close($out_fh);
-	close($err_fh);
+	my ($err_fn) = substr($out_fn,0,-4).".err";
+	open( ERROUT, ">$err_fn" ) || die "ERROR: open $err_fn: $!\n";
+    close(ERROUT);
 	my($ret) = system("$command  1>$out_fn 2>$err_fn");
-	if($ret != 0){
-		$error_msg = $!;
+	$error_msg = "";
+	if($ret == -1){
+		#Fatal error : error running the system command
+		$error_msg .= $!;
+	}elsif($ret != 0){
+		if ($main::DEBUG){
+			if(open OUTPUT ,"$out_fn"){ 
+				while(<OUTPUT>){
+					 print STDOUT "$_ \n";
+				}
+			}
+			close(OUTPUT);
+			if(open ERR ,"$err_fn"){
+				while(<ERR>){
+					 print STDERR "$_ \n";
+				}
+			}
+			close(ERR);
+		}else{
+			$keep = 1;
+			print STDERR  "Failed to execute command '$command'.\n";
+			print STDERR  "The STDOUT file is stored at '$out_fn'.\n";
+			print STDERR  "The STDERR file is stored at '$err_fn'.\n";
+		}
 	}
 	return ($ret , $error_msg);
 }
