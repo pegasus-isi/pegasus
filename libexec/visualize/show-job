@@ -588,7 +588,7 @@ END
   minorticinc: 1
   grid: color=gray(0.8)
   location: max
-  stubdetails: adjust=5.0,0 color=redorange
+  stubdetails: adjust=4.5,0 color=redorange
 
 END
     ;
