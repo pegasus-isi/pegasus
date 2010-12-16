@@ -739,7 +739,9 @@ sub generate_compute_job_color($){
 	while (($key, $value) = each(%transformations_count_hash)){
 		 $color = generateColorCode();
 		 $key =~s/^"(.*)"$/$1/;
-		 if(!checkIfPredefinedTransformation($key)){
+		 if ($key eq 'condor::dagman'){
+		 	print COLORS "$key  orange \n";
+		 }elsif(!checkIfPredefinedTransformation($key)){
 		 	print COLORS "$key  $color \n";
 		 }
     }
