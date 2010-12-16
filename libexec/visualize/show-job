@@ -29,6 +29,7 @@ sub usage {
     print " -a|--adjust s adjust time information by s seconds.\n";
     print " -c|--color-file <file> the file mapping job transformation names to color.\n";
     print " -t|--title <title name> the title to be assigned to generated graph. Replaces the default title.\n";
+    print " -s|--show-jobnames whether to show the jobnames on right y axis \n";
     print "\n";
     exit(1);
 }
@@ -533,9 +534,15 @@ END
 	#this is when we are creating graph sorted by start time
 	print OUT "#proc legend\n";
 	print OUT "  format: multiline\n";
-# change by Karan. Want in lower right always.
-#	print OUT "  location: min+0.5 max\n\n";
-	print OUT "  location: max-1 min+3\n\n";
+
+	#location is upper left
+	#print OUT "  location: min+0.5 max\n\n";
+
+        # change by Karan. Want in lower right always.
+        #print OUT "  location: max-1 min+3\n\n";
+	
+	#location is below the x axis
+	print OUT "  location: min+0.5 min-0.5\n\n";
 
 	if (defined $show_jobnames ){
 	    #generate right hand y axis that lists the jobnames
@@ -552,7 +559,20 @@ END
 	    #to start time of the jobs i.e descending numeric sort on value
 	    my %phash = %$p;
 	    foreach my $key (sort { $phash{$b} <=> $phash{$a} } keys %phash) {
-		printf OUT "      $key\n";
+		
+		if($key =~ m/subdax_.*ID(.*)/) {
+		    #for subdax jobs we want to shorten the names.
+		    #my $short_name = "subdax...ID$1";
+		    
+		    #for time being , we do no tinkering.
+		    my $short_name = "$key";
+		    #print "Shortened subworkflow name for $key is $short_name \n";
+		    printf OUT "      $short_name\n";
+		}
+		else{
+		    #print the whole name
+		    printf OUT "      $key\n";
+		}
 	    }
 	    print OUT << "END";
 
@@ -568,7 +588,7 @@ END
   minorticinc: 1
   grid: color=gray(0.8)
   location: max
-  stubdetails: adjust=2.0,0 color=redorange
+  stubdetails: adjust=5.0,0 color=redorange
 
 END
     ;
