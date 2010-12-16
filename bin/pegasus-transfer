@@ -551,6 +551,11 @@ def gsiftp():
             # -fast only for Globus 4 and above
             if tool_info['globus-version']['version_major'] >= 4:
                 cmd += " -fast"
+            # -pipeline only for Globus 4.2 and above
+            if tool_info['globus-version']['version_major'] == 5 \
+               or (tool_info['globus-version']['version_major'] >= 4 \
+                   and tool_info['globus-version']['version_minor'] >= 2):
+                cmd += " -pipeline"       
         else:
             cmd += " -no-third-party-transfers -no-data-channel-authentication"
 
