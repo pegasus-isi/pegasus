@@ -329,7 +329,9 @@ sub gen_data($$$\%) {
     }
 
     my $title = defined( $user_title )? $user_title : default_title($dagfn);
-    my $height = ( $n <= 101 ? 5.0 : $n / 20 );
+
+    my $divisor  = (defined $show_jobnames )? 10 : 20; #for show-jobnames we need names on right y axis to be displayed correctly.
+    my $height = ( $n <= 101 ? 5.0 : $n / $divisor );
     warn "# xstubs=$xstubs, xticks=$xtics, width=$width, height=$height\n";
 
     my $cfn = substr( $dfn, 0, -4 ) . "-$y.pls";
