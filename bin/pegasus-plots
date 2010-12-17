@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # author Prasanth Thomas
 # propose: Runs visualization tools on pegasus workflow execution
 
@@ -29,6 +29,19 @@ my @predefined_transformations =
      "pegasus::transfer",
      "pegasus::rc-client" 
     );
+my @predefined_colors =(
+	"x8dd3c7" ,
+	"xffffb3" ,
+	"xbebada" ,
+	"xfb8072" ,
+	"x80b1d3" ,
+	"xb3de69" ,
+	"xfccde5" ,
+	"xd9d9d9" ,
+	"xbc80bd" ,
+	"xccebc5"
+	); 
+    
 my ($log_dir) = undef;    
 my($keep) = undef;
 my ($base_submit_dir) = undef;
@@ -143,6 +156,7 @@ sub main(){
 	
 	
 	$log_dir = tempdir('pegasus_plots_XXXXXX' , TMPDIR=> 1);
+	chmod(0755, $log_dir) or die "Couldn't chmod $log_dir: $!";
 	if($monitord){
 		my($jsd_file_path) =  ($config{'jsd'});
 		if(!$jsd_file_path){
@@ -369,6 +383,8 @@ sub run_show_job($$$$){
 	}
 	
 	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
+	# To handle the case where there are more than one . in the file name
+	$dagbase = basename( $dag_file_path );
     $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
     $dagbase =~ s/-\d+$//;
     my($eps_file_name ,$png_file_name) =("$dagbase"."-2.eps" ,"$dagbase"."-2.png" );
@@ -398,9 +414,9 @@ sub run_show_job($$$$){
 	#Moving the output file to <submit dir>/graph directory
 	if(!move($eps_file,$output_dir)){
 		if ($main::DEBUG){
-			print STDERR  "ERROR : Failed to move the eps file from $eps_file to $output_dir. $! \n";
+			print STDERR  "ERROR : Failed to move the eps file from $eps_file to $output_dir. $! \n************\n\n";
 		}
-		$summary_msg = "ERROR : Failed to move the eps file from $eps_file to $output_dir. $! \n************\n\n";
+		$summary_msg = "\nERROR : Failed to move the eps file from $eps_file to $output_dir. $! \n";
 		return ($status,$summary_msg);
 	}
 	my ($eps_out_path , $png_out_path) = (File::Spec->catfile( $output_dir, $eps_file_name) , File::Spec->catfile( $output_dir, $png_file_name));
@@ -409,7 +425,7 @@ sub run_show_job($$$$){
 			if ($main::DEBUG){
 				print STDERR "ERROR : Failed to move the png file from $png_file to $output_dir. $! \n************\n\n";
 			}
-			$summary_msg = "ERROR : Failed to move the png file from $png_file to $output_dir. $! \n";
+			$summary_msg = "\nERROR : Failed to move the png file from $png_file to $output_dir. $! \n";
 			return ($status,$summary_msg);
 		}
 	}else{
@@ -435,7 +451,8 @@ sub run_show_run($$$$$$){
 	print STDOUT "******  show-run *****  \n";
 	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
 	my $summary_msg;
-	
+	# To handle the case where there are more than one . in the file name
+	$dagbase = basename( $dag_file_path );
     $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
     $dagbase =~ s/-\d+$//;
     my($job_eps_file_name ,$job_png_file_name ,$host_eps_file_name ,$host_png_file_name) =("$dagbase-job".".eps" ,"$dagbase-job".".png" ,"$dagbase-host".".eps" ,"$dagbase-host".".png" );
@@ -444,7 +461,7 @@ sub run_show_run($$$$$$){
     
 	#Adding arguments
 	push(@args ,"-o ".$job_eps_file); # adding job eps element
-	push(@args ,"-O ".$host_eps_file); #/adding host eps element
+	push(@args ,"-O ".$host_eps_file); # adding host eps element
 	if($omit){
 		push(@args ,"-g "."0x02"); # omit the gridstart gray boxes in the output
 	}
@@ -486,7 +503,7 @@ sub run_show_run($$$$$$){
 	    		}
 			}
 			if ($main::DEBUG){ 	
-				print STDOUT "Host over time chart -\npng format : $host_png_file \neps format : $host_eps_file.  \n************ \n\n";
+				print STDOUT "Host over time chart -\npng format : $host_png_file \neps format : $host_eps_file  \n************ \n\n";
 			}
 			$summary_msg = "\nHost over time chart -\npng format : $host_png_file \neps format : $host_eps_file\n";
 		}else{
@@ -511,7 +528,8 @@ sub run_dag2dot($$){
 	print STDOUT "******  dag2dot  ***** \n";
 	my ($dagbase,$submit_dir ,$type ) = fileparse( $dag_file_path  ,qr{\..*});
 	my $summary_msg;
-	
+	# To handle the case where there are more than one . in the file name
+	$dagbase = basename( $dag_file_path );
     $dagbase =~ s/(?:\.(?:rescue|dag))+$//;
     $dagbase =~ s/-\d+$//;    
     my ($dot_img_file_name) =("$dagbase"."-dag.dot" );
@@ -587,7 +605,7 @@ sub run_dag2dot($$){
 			$summary_msg = "\nDAG graph - \npng format : $dot_png_img_file \neps format : Failed to generate eps format.$dot_eps_exec_msg \n";
 		}else{
 			print STDERR "WARNING : Failed to execute dot command. $dot_png_exec_msg \n************\n\n";
-			$summary_msg = "\nWARNING : DAG graph - \ndot format : $dot_img_file \nFailed to create DAG graph in png and eps format. $dot_png_exec_msg. "
+			$summary_msg = "\nWARNING : DAG graph - \ndot format : $dot_img_file \nFailed to create DAG graph in png and eps format. $dot_png_exec_msg\n"
 		}
 	}else{
 		if ($main::DEBUG){
@@ -607,7 +625,8 @@ sub run_dax2dot($$){
 	print STDOUT "******  dax2dot  ***** \n";
 	my ($daxbase,$submit_dir ,$type ) = fileparse( $dax_file_path  ,qr{\..*});
 	my $summary_msg;
-	
+	# To handle the case where there are more than one . in the file name
+	$daxbase = basename( $dax_file_path );
     $daxbase =~ s/(?:\.(?:rescue|dag))+$//;
     $daxbase =~ s/-\d+$//;
     my ($dot_img_file_name) =("$daxbase"."-dax.dot" );
@@ -633,7 +652,7 @@ sub run_dax2dot($$){
 		}
 	}else{
 		print STDERR "ERROR : Failed to execute dax2dot. $exec_msg \n************\n\n";
-		$summary_msg = "ERROR : Failed to generate DAX graph. $exec_msg \n";
+		$summary_msg = "\nERROR : Failed to generate DAX graph. $exec_msg \n";
 		return ($status ,$summary_msg);
 	}
 	
@@ -684,7 +703,7 @@ sub run_dax2dot($$){
 			$summary_msg = "\nDAX graph - \npng format : $dot_png_img_file\neps format : Failed to generate eps format.$dot_eps_exec_msg \n";
 		}else{
 			print STDERR "WARNING : Failed to execute dot command. $dot_png_exec_msg \n************\n\n";
-			$summary_msg = "\nWARNING : DAX graph - \ndot format : $dot_img_file \nFailed to create DAX graph in png and eps format. $dot_png_exec_msg. "
+			$summary_msg = "\nWARNING : DAX graph - \ndot format : $dot_img_file \nFailed to create DAX graph in png and eps format. $dot_png_exec_msg\n"
 		}
 	}else{
 		if ($main::DEBUG){
@@ -735,14 +754,17 @@ sub generate_compute_job_color($){
 	my ($color);
 	# Assign color to each transformation
 	my ($color_file_path) = File::Spec->catfile($log_dir,'color.in');
+	my ($color_count) =0;
 	open COLORS ,">$color_file_path";
 	while (($key, $value) = each(%transformations_count_hash)){
-		 $color = generateColorCode();
+		 #$color = generateColorCode();
 		 $key =~s/^"(.*)"$/$1/;
 		 if ($key eq 'condor::dagman'){
 		 	print COLORS "$key  orange \n";
 		 }elsif(!checkIfPredefinedTransformation($key)){
+		 	$color = $predefined_colors[$color_count % scalar(@predefined_colors)];
 		 	print COLORS "$key  $color \n";
+		 	++$color_count;
 		 }
     }
     close(COLORS);
@@ -808,6 +830,8 @@ sub  execute_command($$){
 	my ($err_fn) = substr($out_fn,0,-4).".err";
 	open( ERROUT, ">$err_fn" ) || die "ERROR: open $err_fn: $!\n";
     close(ERROUT);
+    chmod(0755, $out_fn) or die "Couldn't chmod $out_fn: $!";
+    chmod(0755, $err_fn) or die "Couldn't chmod $err_fn: $!";
 	my($ret) = system("$command  1>$out_fn 2>$err_fn");
 	$error_msg = "";
 	if($ret == -1){
