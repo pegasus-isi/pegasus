@@ -25,21 +25,24 @@ my $job_state_file_name = 'jobstate.log';
 my $brain_db_file_name ='braindump.txt';
 my @predefined_transformations = 
    ( 
-     "pegasus::dirmanager",
-     "pegasus::transfer",
-     "pegasus::rc-client" 
+     #"pegasus::dirmanager",
+     #"pegasus::transfer",
+     #"pegasus::rc-client" 
     );
+
+#picked from graphviz color scheme set312 unless mentioned in the comments
 my @predefined_colors =(
-	"x8dd3c7" ,
-	"xffffb3" ,
-	"xbebada" ,
-	"xfb8072" ,
-	"x80b1d3" ,
-	"xb3de69" ,
-	"xfccde5" ,
-	"xd9d9d9" ,
-	"xbc80bd" ,
-	"xccebc5"
+	"x8dd3c7" , #1
+	#"xffffb3" , #2
+        "x4daf4a", #3 from set17
+	"xbebada" , #3
+	"x80b1d3" , #5
+	"xb3de69" , #7
+	"xfccde5" , #8
+	"xd9d9d9" , #9
+	"xbc80bd" , #10
+	"xccebc5" ,  #11
+    	"xfb8072" , #4
 	); 
     
 my ($log_dir) = undef;    
