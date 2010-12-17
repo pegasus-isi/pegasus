@@ -89,9 +89,9 @@ $main::failure = 0;
 %main::color = 
    ( 
      "pegasus::dirmanager" => "lavender",
-     "pegasus::transfer" => "magenta",
+     "pegasus::pegasus-transfer" => "magenta",
      "pegasus::rc-client" => "powderblue2",
-     "unknown" => "gray(0.75)",
+     "unknown" => "gray(0.1)", 
     );
 
 
@@ -533,7 +533,8 @@ END
     } else {
 	#this is when we are creating graph sorted by start time
 	print OUT "#proc legend\n";
-	print OUT "  format: multiline\n";
+	print OUT "  format: singlerow\n";
+	print OUT "  extent: 8.0 \n";
 
 	#location is upper left
 	#print OUT "  location: min+0.5 max\n\n";
