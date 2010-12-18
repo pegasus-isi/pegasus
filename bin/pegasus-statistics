@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # author Prasanth Thomas
 # propose: Runs statistics tools on pegasus workflow execution
 
@@ -30,7 +30,7 @@ my($keep) = undef;
 my ($base_submit_dir) = undef;
 my ($base_path_len) =0;
 # list of sub workflows
-my (@sub_workflow_submit_dirs) = ();
+my (%sub_workflow_submit_hash) = ();
 my (@workflow_statistics) =();
 
 sub clean_exit();		
@@ -133,6 +133,7 @@ sub main(){
 			exit 1;
 	}
 	$log_dir = tempdir('pegasus_statistics_XXXXXX' , TMPDIR=> 1) or die "Unable to create temp directory. $!";
+	chmod(0755, $log_dir) or die "Couldn't chmod $log_dir: $!";
 	if($monitord){
 		my $job_state_backup = undef;
 		my ($job_state_base_file)= File::Spec->catfile( $submit_dir, $job_state_file_name);
@@ -173,14 +174,34 @@ sub main(){
 	print STDOUT "\n******  calculating workflow statistics for workflow : $submit_dir  ***** \n";
 	my($workflow_statistics_status) = print_workflow_statistics($submit_dir,rlb($jsd_file_path),$dag_file_path,$condor);
 	print STDOUT "******  Finished workflow statistics for workflow : $submit_dir  ***** \n\n";
-	@sub_workflow_submit_dirs = get_sub_workflow_list($dag_file_path);
-	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
-	my $sub_submit_dir;
+	
+	# Adding legends
+	my ($genstats_cumulative_job_stats_path) =  File::Spec->catfile($output_dir ,'jobs.txt');
+	open(JOBS_OUT,">$genstats_cumulative_job_stats_path") || die("Failed to open file $genstats_cumulative_job_stats_path");
+	print JOBS_OUT "#Job - the name of the job \n";
+    print JOBS_OUT "#Site - the site where the job ran \n";
+    print JOBS_OUT "#Kickstart(sec.) - the actual duration of the job in seconds on the remote compute node. In case of retries the value is the cumulative of all retries. \n";
+    print JOBS_OUT "#Post(sec.) - the postscript time as reported by DAGMan .In case of retries the value is the cumulative of all retries.\n";
+    print JOBS_OUT "#DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted \n";
+    print JOBS_OUT "#CondorQTime(sec.) - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node .In case of retries the value is the cumulative of all retries. \n";
+    print JOBS_OUT "#Resource(sec.) - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue .In case of retries the value is the cumulative of all retries. \n";
+    print JOBS_OUT "#Runtime(sec.) - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart .In case of retries the value is the cumulative of all retries.\n";
+    print JOBS_OUT "#Seqexec(sec.) -  the time taken for the completion of a clustered job .In case of retries the value is the cumulative of all retries.\n";
+    print JOBS_OUT "#Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time .In case of retries the value is the cumulative of all retries.\n";
+	close(JOBS_OUT);
+	print STDOUT "\n******  calculating job statistics for workflow : $submit_dir  ***** \n";
+	my($genstats_status ,$genstats_summary_msg) =run_genstats($dag_file_path ,rlb($jsd_file_path),$output_dir ,$condor ,$submit_dir, '');
+	print STDOUT "******  Finished calculating job statistics for workflow : $submit_dir  ***** \n\n";
+	## Executing genstats-breakdown command
+	%sub_workflow_submit_hash = get_sub_workflow_list($dag_file_path);
+	my ($number_of_elements) = scalar(keys %sub_workflow_submit_hash);
+	my ($sub_wf_id ,$sub_submit_dir ) ;
+	my ($genstats_error) = undef;
 	if($number_of_elements > 0){
 		if($monitord){
-			invoke_monitord_for_sub_workflow(@sub_workflow_submit_dirs);
+			invoke_monitord_for_sub_workflow(values %sub_workflow_submit_hash);
 		}
-		foreach $sub_submit_dir (@sub_workflow_submit_dirs){
+		while (($sub_wf_id, $sub_submit_dir) = each(%sub_workflow_submit_hash)){
 			my (%sub_config) = slurp_braindb( $sub_submit_dir ) or die "ERROR: open braindump.txt in directory $sub_submit_dir: $!\n";
 			my($sub_dag_file_name , $sub_jsd_file_path) =  ($sub_config{'dag'} ,$sub_config{'jsd'});
 			my($sub_dag_file_path) =  File::Spec->catfile("$sub_submit_dir","$sub_dag_file_name");
@@ -195,22 +216,38 @@ sub main(){
 			print STDOUT "\n******  calculating workflow statistics for workflow : $sub_submit_dir  ***** \n";
 			my($sub_workflow_statistics_status) = print_workflow_statistics($sub_submit_dir,rlb($sub_jsd_file_path),$sub_dag_file_path,$condor);
 			print STDOUT "******  Finished calculating workflow statistics for workflow : $sub_submit_dir  ***** \n\n";
+			print STDOUT "\n******  calculating job statistics for workflow : $sub_submit_dir  ***** \n";
+			my($genstats_status_sub ,$genstats_summary_msg_sub) =run_genstats($sub_dag_file_path ,rlb($sub_jsd_file_path),$output_dir ,$condor ,$sub_submit_dir, $sub_wf_id);
+			if($genstats_status_sub != 0){
+				print STDERR "$genstats_summary_msg_sub \n";
+				$genstats_error = 1;
+			}
+			print STDOUT "******  Finished calculating job statistics for workflow : $sub_submit_dir  ***** \n\n";
 		}
 	}
+	if($number_of_elements > 0){
+		$genstats_summary_msg .= "Workflow events with time starting with zero for sub workflows : \n$output_dir\n";
+	}
+	if(defined ($genstats_error)){
+		$genstats_summary_msg .= "Failed to generate job statistics or Workflow events with time starting with zero for sub workflows.You can find details from the STDOUT.\n";
+	}
+	
+	my($genstats_breakdown_status ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir  );
 	
 	my $wf_summary_msg;
 	my ($all_exec_time) =((defined $workflow_statistics[0]{'total_execution_time'})?$workflow_statistics[0]{'total_execution_time'}:undef);
-	my ($all_cpu_time) = ((defined $workflow_statistics[0]{'total_cpu_time'})?$workflow_statistics[0]{'total_cpu_time'}:undef);
-	my( $all_total_jobs,$all_total_tasks,$all_succceeded,$all_failed,$all_unsubmitted, $all_unknown) =(0,0,0,0,0,0);
+	my( $all_cpu_time,$all_total_jobs,$all_total_tasks,$all_succceeded,$all_failed,$all_unsubmitted, $all_unknown) =(0,0,0,0,0,0,0);
+	my( $sub_dax_total_jobs,$sub_dax_total_tasks,$sub_dax_succceeded,$sub_dax_failed,$sub_dax_unsubmitted, $sub_dax_unknown) =(0,0,0,0,0,0);
+	my( $sub_dag_total_jobs,$sub_dag_total_tasks,$sub_dag_succceeded,$sub_dag_failed,$sub_dag_unsubmitted, $sub_dag_unknown) =(0,0,0,0,0,0);
 	for my $wstats (@workflow_statistics){
-    	$wf_summary_msg .= "#$wstats->{'submit_dir'} \n";
+    	$wf_summary_msg .= "\n#$wstats->{'submit_dir'} \n";
     	if((defined $wstats->{'total_execution_time'})){
-    		$wf_summary_msg .= sprintf("%-30s % 12.2f min.\n","Workflow runtime                   :",  ($wstats->{'total_execution_time'})/60);
+    		$wf_summary_msg .= sprintf("%-30s % 12d min. %2d sec.\n","Workflow runtime                   :",  ($wstats->{'total_execution_time'})/60 ,($wstats->{'total_execution_time'})%60);
     	}else{
     		$wf_summary_msg .= sprintf("%-30s % 12s \n","Workflow runtime                   :",  '-');
     	}
     	if(defined $wstats->{'total_cpu_time'}){ 
-			$wf_summary_msg .= sprintf("%-30s % 12.2f min.\n","Cumulative workflow runtime        :",($wstats->{'total_cpu_time'})/60);
+			$wf_summary_msg .= sprintf("%-30s % 12d min. %2d sec.\n","Cumulative workflow runtime        :",($wstats->{'total_cpu_time'})/60 ,($wstats->{'total_cpu_time'})%60);
 		}else{
 			$wf_summary_msg .= sprintf("%-30s % 12s \n"  ,"Cumulative workflow runtime        :",'-');
 		}
@@ -226,45 +263,97 @@ sub main(){
    		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :", $wstats->{'unsubmitted'} );
    		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $wstats->{'unknown'});
    		
-   		$all_total_jobs +=$wstats->{'total_jobs'};
+   		# Non sub workflow jobs calculation
+   		if(defined $all_cpu_time ){
+   			if(defined $wstats->{'total_cpu_time_non_sub_wf'}){
+   				$all_cpu_time += $wstats->{'total_cpu_time_non_sub_wf'};
+   			}else{
+   				$all_cpu_time = undef;
+   			}
+   			
+   		}
+   		
+   		$all_total_jobs +=$wstats->{'total_jobs_non_sub_wf'};
    		if(defined $all_total_tasks ){
-   			if(defined $wstats->{'total_tasks'}){
-   				$all_total_tasks += $wstats->{'total_tasks'};
+   			if(defined $wstats->{'total_tasks_non_sub_wf'}){
+   				$all_total_tasks += $wstats->{'total_tasks_non_sub_wf'};
    			}else{
    				$all_total_tasks = undef;
    			}
    			
    		}
-   		$all_succceeded += $wstats->{'succeeded'};
-   		$all_failed +=$wstats->{'failed'};
-   		$all_unsubmitted +=$wstats->{'unsubmitted'};
-   		$all_unknown +=$wstats->{'unknown'};
+   		$all_succceeded += $wstats->{'non_sub_wf_succeeded'};
+   		$all_failed +=$wstats->{'non_sub_wf_failed'};
+   		$all_unsubmitted +=$wstats->{'non_sub_wf_unsubmitted'};
+   		$all_unknown +=$wstats->{'non_sub_wf_unknown'};
+   		
+   		# dax job calculation
+   		$sub_dax_total_jobs +=$wstats->{'total_jobs_sub_dax'};
+   		$sub_dax_succceeded += $wstats->{'sub_dax_succeeded'};
+   		$sub_dax_failed +=$wstats->{'sub_dax_failed'};
+   		$sub_dax_unsubmitted +=$wstats->{'sub_dax_unsubmitted'};
+   		$sub_dax_unknown +=$wstats->{'sub_dax_unknown'};
+   		
+   		# dag job calculation
+   		
+   		$sub_dag_total_jobs +=$wstats->{'total_jobs_sub_dag'};
+   		$sub_dag_succceeded += $wstats->{'sub_dag_succeeded'};
+   		$sub_dag_failed +=$wstats->{'sub_dag_failed'};
+   		$sub_dag_unsubmitted +=$wstats->{'sub_dag_unsubmitted'};
+   		$sub_dag_unknown +=$wstats->{'sub_dag_unknown'};
    	}
 	my $summary_msg = "";
 	if (defined $all_exec_time){
-		$summary_msg .= sprintf("%-30s % 12.2f min.\n","Workflow runtime                   :", ($all_exec_time)/60 );
+		$summary_msg .= sprintf("%-30s % 12d min. %2d sec.\n","Workflow runtime                   :", ($all_exec_time)/60 ,($all_exec_time)%60 );
 	}else{
 		$summary_msg .= sprintf("%-30s % 12s \n","Workflow runtime                   :", '-' );
 	} 
 	if(defined $all_cpu_time){
-		$summary_msg .= sprintf("%-30s % 12.2f min.\n","Cumulative workflow runtime        :",($all_cpu_time)/60 );
+		$summary_msg .= sprintf("%-30s % 12d min. %2d sec.\n","Cumulative workflow runtime        :",($all_cpu_time)/60 ,($all_cpu_time)%60  );
 	}else{
 		$summary_msg .= sprintf("%-30s % 12s \n"  ,"Cumulative workflow runtime        :",'-' );
 	}
-	$summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $all_total_jobs );
 	if(defined $all_total_tasks){
 		$summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $all_total_tasks);
 	}else{
 		$summary_msg .= sprintf("%-30s % 12s \n","Total tasks                        :", '-');
 	}
-	$summary_msg .= sprintf("%-30s % 12d \n","# jobs succeeded                   :", $all_succceeded );
-	$summary_msg .= sprintf("%-30s % 12d \n","# jobs failed                      :", $all_failed );
-	$summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :", $all_unsubmitted );
-	$summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $all_unknown);
+	$summary_msg .= sprintf("\n          %-12s %-12s %-12s %-12s %-12s   \n","Total","Succeeded","Failed","Unsubmitted","Unknown");
+	$summary_msg .= sprintf("Jobs      %-12s %-12s %-12s %-12s %-12s   \n",$all_total_jobs,$all_succceeded,$all_failed ,$all_unsubmitted,$all_unknown);
+	$summary_msg .= sprintf("SUBDAX    %-12s %-12s %-12s %-12s %-12s   \n",$sub_dax_total_jobs,$sub_dax_succceeded,$sub_dax_failed ,$sub_dax_unsubmitted,$sub_dax_unknown);
+	$summary_msg .= sprintf("SUBDAG    %-12s %-12s %-12s %-12s %-12s   \n",$sub_dag_total_jobs,$sub_dag_succceeded,$sub_dag_failed ,$sub_dag_unsubmitted,$sub_dag_unknown);
+	
+	
+	
+	
+	
+	my $legends_msg_summary = "#Legends\n";
+	$legends_msg_summary.= "#Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.\n";
+	$legends_msg_summary.= "#Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.\n";
+	$legends_msg_summary.= "#Total tasks - the total number of tasks in the workflow .\n";
+	$legends_msg_summary.= "Job summary\n";
+	$legends_msg_summary.="\t Total - the total number of jobs in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs).\n";
+	$legends_msg_summary.="\t Succeeded - the total number of succeeded jobs in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs). \n";
+	$legends_msg_summary.="\t Failed - the total number of failed jobs in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs).\n";
+	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted jobs in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs).\n";
+	$legends_msg_summary.="\t Unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs).\n";
+	$legends_msg_summary.= "SUB DAX summary\n";
+	$legends_msg_summary.="\t Total - the total number of sub dax jobs in the workflow \n";
+	$legends_msg_summary.="\t Succeeded - the total number of succeeded sub dax jobs in the workflow.\n";
+	$legends_msg_summary.="\t Failed - the total number of failed sub dax jobs in the workflow.\n";
+	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted sub dax jobs in the workflow.\n";
+	$legends_msg_summary.="\t Unknown - the total number of sub dax jobs that are submitted, but has not completed execution or the state is unknown in the workflow.\n";
+	$legends_msg_summary.= "SUB DAG summary\n";
+	$legends_msg_summary.="\t Total - the total number of sub dag jobs in the workflow \n";
+	$legends_msg_summary.="\t Succeeded - the total number of succeeded sub dag jobs in the workflow.\n";
+	$legends_msg_summary.="\t Failed - the total number of failed sub dag jobs in the workflow.\n";
+	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted sub dag jobs in the workflow.\n";
+	$legends_msg_summary.="\t Unknown - the total number of sub dag jobs that are submitted, but has not completed execution or the state is unknown in the workflow.\n";
+	
 	
 	my $legends_msg = "#Legends\n";
-	$legends_msg.= "#Workflow runtime (min) - the waltime from the start of the workflow execution to the end.\n";
-	$legends_msg.= "#Cumulative workflow runtime (min) - the sum of the walltime of all jobs.\n";
+	$legends_msg.= "#Workflow runtime (min) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.\n";
+	$legends_msg.= "#Cumulative workflow runtime (min) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.\n";
 	$legends_msg.= "#Total jobs - the total number of jobs in the workflow.In the workflow of workflow scenario sub workflow job is considered as a single job.\n";
 	$legends_msg.= "#Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.In the workflow of workflow scenario sub workflow job is considered as a single task.\n";
 	$legends_msg.= "# jobs succeeded - the total number of jobs succeeded.\n";
@@ -272,21 +361,20 @@ sub main(){
 	$legends_msg.= "# jobs unsubmitted - the total number of jobs that are not submitted.\n";
 	$legends_msg.= "# jobs unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown.\n";
 	
-	my $workflow_stats_file_path =  File::Spec->catfile("$output_dir","workflow");
+	my $workflow_stats_file_path =  File::Spec->catfile("$output_dir","workflow.txt");
 	open(STATSOUT,">$workflow_stats_file_path") || die("Unable to open file $workflow_stats_file_path.\n$!" );
-	print STATSOUT "$legends_msg\n";
+	print STATSOUT "$legends_msg";
 	print STATSOUT "$wf_summary_msg\n";
-	print STATSOUT "#All \n$summary_msg";
+	#print STATSOUT "#All \n$summary_msg";
 	close STATSOUT;
 	
-	$summary_msg .= "\nWorkflow execution statistics created at :\n$workflow_stats_file_path\n";
+	$summary_msg .= "\nWorkflow execution statistics :\n$workflow_stats_file_path\n";
 	# Executing genstat command
-	my($genstats_status ,$genstats_summary_msg) =run_genstats($dag_file_path ,rlb($jsd_file_path),$output_dir ,$condor );
-	## Executing genstats-breakdown command
-	my($genstats_breakdown_status ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir  );
-	$legends_msg.= "\n";
+	 
+	
+	$legends_msg_summary.= "\n";
 	print "\n\n******************************************** SUMMARY ********************************************\n";
-	print $legends_msg.$summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
+	print $legends_msg_summary.$summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
 	
 	print "**************************************************************************************************\n";
 	
@@ -348,6 +436,10 @@ sub get_job_list($){
 	    if ($line =~ '^JOB') {
 	    	my @tokens = split(' ', $line);
             my $job = $tokens[1];
+            push(@job_list,$job);
+        }elsif($line =~ '^SUBDAG.*EXTERNAL'){
+        	my @tokens = split(' ', $line);
+            my $job = $tokens[2];
             push(@job_list,$job);
         }
     }
@@ -470,8 +562,6 @@ sub print_workflow_statistics($$$$){
     # Change the directory to submit directory
     chdir $submit_dir || die "Cannot chdir to $submit_dir\n";
     my ($total_cpu_time ,$total_cpu_time_status_msg) = (0.0, ' ');
-    print STDOUT "******  calculating workflow execution cpu time  ***** \n";
-    print STDOUT "Please wait, this may take a few minutes ...\n";
     foreach my $job (@job_list) {
 		if(defined( $job_state_hoh{$job})){
 			if (defined($job_state_hoh{$job}{'cumulative_job_runtime'}) and defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and !($job_state_hoh{$job}{'cumulative_job_runtime'} eq '-')){
@@ -486,38 +576,84 @@ sub print_workflow_statistics($$$$){
 			$total_cpu_time_status_msg .= "Failed to find the runtime for the job '$job' \n";
 			last;
 		}
-    	
-		
-	}
-	if(!$total_cpu_time){ 
-			print STDERR "****** WARNING: Failed to calculate the total cpu time.$total_cpu_time_status_msg ******\n";
-    }else{
-    	print STDOUT "****** Finished calculating workflow cpu time  ***** \n";
     }
-  	
-  	#Finding total task count
+	if(!defined($total_cpu_time)){ 
+			print STDERR "****** WARNING: Failed to calculate the total cpu time.$total_cpu_time_status_msg ******\n";
+    }
+    
+    #calculating the workflow time without the sub workflow details
+
+    my ($total_cpu_time_non_sub_wf ,$total_cpu_time_non_sub_wf_status_msg) = (0.0, ' ');
+  	foreach my $job (@job_list) {
+		my $is_sub_wf_job = (($job =~m/^pegasus-plan.*/i) || ($job  =~m/^subdax_.*/i) || ($job  =~m/^subdag_.*/i))?1:0;
+		if(!$is_sub_wf_job){  		
+			if(defined( $job_state_hoh{$job})){
+				if (defined($job_state_hoh{$job}{'cumulative_job_runtime'}) and defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and !($job_state_hoh{$job}{'cumulative_job_runtime'} eq '-')){
+					$total_cpu_time_non_sub_wf += $job_state_hoh{$job}{'cumulative_job_runtime'};
+				}else{
+					$total_cpu_time_non_sub_wf = undef;
+					$total_cpu_time_non_sub_wf_status_msg .= "Failed to find the runtime for the job '$job' \n";
+					last;
+				}
+			}else{
+				$total_cpu_time_non_sub_wf = undef;
+				$total_cpu_time_non_sub_wf_status_msg .= "Failed to find the runtime for the job '$job' \n";
+				last;
+			}
+		}	
+    }
+    
+    if(!(defined $total_cpu_time_non_sub_wf)){ 
+			print STDERR "****** WARNING: Failed to calculate the total cpu time without the sub workflow run time .$total_cpu_time_non_sub_wf_status_msg ******\n";
+    }
+   
+    # Finding the total job count without the sub dax name
+    my $total_job_count_non_sub_wf =0;
+    my $total_dax_job_count =0;
+    my $total_dag_job_count =0;
+  	foreach my $job (@job_list) {
+  		my $is_dax_job = (($job =~m/^pegasus-plan.*/i) || ($job  =~m/^subdax_.*/i))?1:0;
+    	my $is_dag_job = (($job  =~m/^subdag_.*/i))?1:0;
+  		if($is_dax_job){
+  			++$total_dax_job_count;
+  		}elsif($is_dag_job){
+  			++$total_dag_job_count;
+  		}else{
+  			++ $total_job_count_non_sub_wf;
+  		}
+  	}
+    
+   #Finding total task count
   	my $total_task_count =0;
+  	my $total_task_count_non_sub_wf =0;
   	my $total_task_count_msg ='';
 	print STDOUT "******  calculating total tasks  ***** \n";
     print STDOUT "Please wait, this may take a few minutes ...\n";
 	my $task_count = 0; 
 	foreach my $job (@job_list) {
 		$job =~ s/^\s+//; 
+		my $is_sub_wf_job = (($job =~m/^pegasus-plan.*/i) || ($job  =~m/^subdax_.*/i) ||(($job  =~m/^subdag_.*/i)))?1:0;
 		if($job =~ /^merge_/){
 			my($in_file) = File::Spec->catfile( $submit_dir ,$job .".in");
 			$task_count = get_task_count($in_file);
 			if($task_count){
 				$total_task_count += $task_count;
+				$total_task_count_non_sub_wf += $task_count;
 			}else{
 				$total_task_count = undef;
+				$total_task_count_non_sub_wf = undef;
 				$total_task_count_msg = "Failed to find the task count for the job '$job' \n";
+				last;
 			}
 		
 		}else{
 			++$total_task_count;
+			if(!$is_sub_wf_job){
+				++$total_task_count_non_sub_wf;
+			}
 		}
 	}
-	if(!$total_task_count){ 
+	if(!defined($total_task_count)){ 
 		print STDERR "****** WARNING: Failed to find the total tasks .$total_task_count_msg ******\n";
     }else{
     	print STDOUT "****** Finished calculating total tasks    ***** \n";
@@ -527,37 +663,62 @@ sub print_workflow_statistics($$$$){
     
     my $job_state_count = scalar(keys %job_status_hash); # total jobs that have been submitted as per the jobstate file
     my ($job_succeeded_count,$job_failed_count, $job_unknown_count,$job_unsubmitted_count) =(0,0,0,0);
-    while (my($key, $value) = each(%job_status_hash)){
+    my ($non_sub_wf_job_succeeded_count,$non_sub_wf_job_failed_count, $non_sub_wf_job_unknown_count,$non_sub_wf_job_unsubmitted_count) =(0,0,0,0);
+    my ($sub_dax_job_succeeded_count,$sub_dax_job_failed_count, $sub_dax_job_unknown_count,$sub_dax_job_unsubmitted_count) =(0,0,0,0);
+    my ($sub_dag_job_succeeded_count,$sub_dag_job_failed_count, $sub_dag_job_unknown_count,$sub_dag_job_unsubmitted_count) =(0,0,0,0);
+    while (my($job, $value) = each(%job_status_hash)){
+    	my $is_dax_job = (($job =~m/^pegasus-plan.*/i) || ($job  =~m/^subdax_.*/i))?1:0;
+    	my $is_dag_job = (($job  =~m/^subdag_.*/i))?1:0;
      	if($value eq 'JOB_SUCCESS') {
      		++$job_succeeded_count;
+     		if($is_dax_job){
+     			++$sub_dax_job_succeeded_count;
+     		}elsif($is_dag_job){
+     			++$sub_dag_job_succeeded_count;
+     		}else{
+     			++$non_sub_wf_job_succeeded_count;
+     		}
      	}elsif($value eq 'JOB_FAILURE') {
      		++$job_failed_count;
+     		if($is_dax_job){
+     			++$sub_dax_job_failed_count;
+     		}elsif($is_dag_job){
+     			++$sub_dag_job_failed_count;
+     		}else{
+     			++$non_sub_wf_job_failed_count;
+     		}
      	}elsif($value eq 'SUBMIT') {
      		++$job_unknown_count;
+     		if($is_dax_job){
+     			++$sub_dax_job_unknown_count;
+     		}elsif($is_dag_job){
+     			++$sub_dag_job_unknown_count;
+     		}else{
+     			++$non_sub_wf_job_unknown_count;
+     		}
      	}
    }
+   	# Assigning values
    	my $workflow_stats_hash ={};
    	$workflow_stats_hash->{'submit_dir'} =$submit_dir;
-   	print STDOUT "******  calculating workflow execution wall time  ***** \n";
    	if($startTime || $endTime){
     	print STDERR "****** WARNING: Failed to find the workflow execution wall time ****** \n";
     }else{
     	if($total_execution_time){
     		$workflow_stats_hash->{'total_execution_time'} = $total_execution_time;
-    		print STDOUT "****** Finished calculating workflow execution wall time    ***** \n";
     	}else{
     		#case where it doesn't find start or end time
     		print STDERR "****** WARNING: Failed to find the workflow execution wall time ****** \n";
     	}
     }
-    if($total_cpu_time){
+    # Assigning 'All' jobs
+    if(defined( $total_cpu_time)){
     	$workflow_stats_hash->{'total_cpu_time'} =  $total_cpu_time; 
     }
     
-   	$job_unsubmitted_count = $total_job_count - $job_state_count;
+    $job_unsubmitted_count = $total_job_count - $job_state_count;
    	$workflow_stats_hash->{'total_jobs'} =  $total_job_count;
-   	
-   	if($total_task_count){
+   	if(defined ($total_task_count)){
    	 	$workflow_stats_hash->{'total_tasks'} =  $total_task_count;
     }
     
@@ -565,6 +726,40 @@ sub print_workflow_statistics($$$$){
     $workflow_stats_hash->{'failed'} = $job_failed_count;
     $workflow_stats_hash->{'unsubmitted'} = $job_unsubmitted_count;
     $workflow_stats_hash->{'unknown'} = $job_unknown_count;
+   
+	# Assigning now sub wf jobs
+	if(defined ($total_cpu_time_non_sub_wf)){
+    	$workflow_stats_hash->{'total_cpu_time_non_sub_wf'} =  $total_cpu_time_non_sub_wf; 
+    }   
+   	$non_sub_wf_job_unsubmitted_count = $total_job_count_non_sub_wf -($non_sub_wf_job_succeeded_count + $non_sub_wf_job_failed_count + $non_sub_wf_job_unknown_count);
+    $workflow_stats_hash->{'total_jobs_non_sub_wf'} =  $total_job_count_non_sub_wf;
+    if(defined ($total_task_count_non_sub_wf)){
+   	 	$workflow_stats_hash->{'total_tasks_non_sub_wf'} =  $total_task_count_non_sub_wf;
+    }
+    $workflow_stats_hash->{'non_sub_wf_succeeded'} = $non_sub_wf_job_succeeded_count;
+    $workflow_stats_hash->{'non_sub_wf_failed'} = $non_sub_wf_job_failed_count;
+    $workflow_stats_hash->{'non_sub_wf_unsubmitted'} = $non_sub_wf_job_unsubmitted_count;
+    $workflow_stats_hash->{'non_sub_wf_unknown'} = $non_sub_wf_job_unknown_count;
+    
+    
+    # Assigning dax jobs
+    $workflow_stats_hash->{'total_jobs_sub_dax'} =  $total_dax_job_count;
+    $sub_dax_job_unsubmitted_count = $total_dax_job_count -($sub_dax_job_succeeded_count + $sub_dax_job_failed_count + $sub_dax_job_unknown_count);
+    $workflow_stats_hash->{'sub_dax_succeeded'} = $sub_dax_job_succeeded_count;
+    $workflow_stats_hash->{'sub_dax_failed'} = $sub_dax_job_failed_count;
+    $workflow_stats_hash->{'sub_dax_unsubmitted'} = $sub_dax_job_unsubmitted_count;
+    $workflow_stats_hash->{'sub_dax_unknown'} = $sub_dax_job_unknown_count;
+    
+    # Assigning dag jobs
+    $workflow_stats_hash->{'total_jobs_sub_dag'} =  $total_dag_job_count;
+    $sub_dag_job_unsubmitted_count =$total_dag_job_count -($sub_dag_job_succeeded_count+$sub_dag_job_failed_count + $sub_dag_job_unknown_count);
+    $workflow_stats_hash->{'sub_dag_succeeded'} = $sub_dag_job_succeeded_count;
+    $workflow_stats_hash->{'sub_dag_failed'} = $sub_dag_job_failed_count;
+    $workflow_stats_hash->{'sub_dag_unsubmitted'} = $sub_dag_job_unsubmitted_count;
+    $workflow_stats_hash->{'sub_dag_unknown'} = $sub_dag_job_unknown_count;
+    
+    
+    
    	push(@workflow_statistics,$workflow_stats_hash);
    	return ($status );
 }
@@ -635,10 +830,10 @@ sub setup_monitord($){
 }
 
 
-sub run_genstats($$$$){
+sub run_genstats($$$$$$){
 # purpose : executing genstats command
 # returns : status code and status message
-	my(  $dag_file_path , $jobstate_log, $output_dir ,$condor )=(@_);
+	my(  $dag_file_path , $jobstate_log, $output_dir ,$condor, $submit_dir, $prefix )=(@_);
 	my(@args);
 	my $summary_msg;
 	print STDOUT "******  genstats *****  \n";
@@ -660,6 +855,7 @@ sub run_genstats($$$$){
 	print STDOUT "Please wait, this may take a few minutes ...\n";
 	my($status,$exec_msg) = execute_command($genstats_command,'genstats');
 	if($status == 0  ){
+		print STDOUT "****** Finished executing genstats  ***** \n";
 		my (@genstats_misc_files) =  (File::Spec->catfile($output_dir ,'dag'),File::Spec->catfile($output_dir ,'dax'),File::Spec->catfile($output_dir ,'files'));
 		foreach my $file (@genstats_misc_files) {
 	 		if (!unlink($file)) {
@@ -671,15 +867,39 @@ sub run_genstats($$$$){
 		
 		my ($genstats_job_path) =  File::Spec->catfile($output_dir ,'jobs');
 		my ($genstats_out_path) =  File::Spec->catfile($output_dir ,'out');
-		print STDOUT "****** Finished executing genstats  ***** \n";
-		if ($main::DEBUG){
-			print STDOUT "The genstats result is created at $output_dir \n************ \n";
+		my ($genstats_cumulative_job_stats_path) =  File::Spec->catfile($output_dir ,'jobs.txt');
+		my ($genstats_out_path_prefixed) =  File::Spec->catfile($output_dir ,$prefix.'out.txt');
+		
+		open(JOBS_IN,"$genstats_job_path") || die("Failed to open file $genstats_job_path");
+		open(JOBS_OUT,">>$genstats_cumulative_job_stats_path") || die("Failed to open file $genstats_cumulative_job_stats_path");
+		print JOBS_OUT "\n#$submit_dir\n";
+		foreach my $line (<JOBS_IN>) {
+			print JOBS_OUT "$line";
 		}
-		$summary_msg = "\nWorkflow events with time starting with zero is created at :\n$genstats_out_path\n";
-		$summary_msg .= "\nJob statistics is created at : \n$genstats_job_path\n";
+		close(JOBS_IN);
+		close(JOBS_OUT);
+		if(!unlink($genstats_job_path)){
+    		if ($main::DEBUG){
+				print STDERR  "ERROR : Failed to delete the jobs file.$genstats_job_path $! \n";
+			}
+		}
+    	
+    	
+		if(!move($genstats_out_path ,$genstats_out_path_prefixed)) {
+			print STDERR "ERROR : Failed to move file from $genstats_job_path to $genstats_out_path_prefixed. $! \n";
+			$summary_msg = "\nFailed to move file from $genstats_job_path to $genstats_out_path_prefixed. $! \n";
+			$summary_msg .= "\nJob statistics : \n$genstats_cumulative_job_stats_path\n";
+			$status = 1;
+			return ($status,$summary_msg);
+		}
+		if ($main::DEBUG){
+			print STDOUT "The genstats result - $output_dir \n************ \n";
+		}
+		$summary_msg = "\nWorkflow events with time starting with zero : \n$genstats_out_path_prefixed\n";
+		$summary_msg .= "\nJob statistics : \n$genstats_cumulative_job_stats_path\n";
 	}else{
 		print STDERR "ERROR: Failed to execute genstats command. $exec_msg\n";
-		$summary_msg = "\nERROR: Failed to create job statistics. $exec_msg\n";
+		$summary_msg = "\nERROR: Failed to generate job statistics. $exec_msg\n";
 	}
 	return ($status,$summary_msg);
 	
@@ -691,11 +911,11 @@ sub run_genstats_breakdown($$$){
 	my ($dag_file_path , $submit_dir , $output_dir )=(@_);
 	my (@args);
 	my ($submit_dirs) = $submit_dir;
-	my ($number_of_elements) = scalar(@sub_workflow_submit_dirs);
+	my ($number_of_elements) = scalar(keys %sub_workflow_submit_hash);
 	my $summary_msg;
 	
 	if($number_of_elements > 0){
-		$submit_dirs .= " ".join(" ",@sub_workflow_submit_dirs);
+		$submit_dirs .= " ".join(" ",values %sub_workflow_submit_hash);
 	}
 	my $submit_dirs_file =&create_submit_directories_file($submit_dirs);
     print STDOUT "******  genstats-breakdown *****  \n";
@@ -716,12 +936,12 @@ sub run_genstats_breakdown($$$){
 	if($status == 0  ){
 		print STDOUT "****** Finished executing genstats-breakdown  ***** \n";
 		if ($main::DEBUG){
-			print STDOUT "The genstats breakdown result is created at $output_file \n************ \n";
+			print STDOUT "The genstats breakdown result - $output_file \n************ \n";
 		}
-		$summary_msg = "\nLogical transformation statistics is created at :\n$output_file\n";
+		$summary_msg = "\nLogical transformation statistics :\n$output_file\n";
 	}else{
 		print STDERR "ERROR: Failed to execute genstats-breakdown command . $exec_msg\n";
-		$summary_msg ="\nERROR: Failed to create logical transformations statistics. $exec_msg\n";
+		$summary_msg ="\nERROR: Failed to generate logical transformations statistics. $exec_msg\n";
 	}
 	return ($status ,$summary_msg);
 	
@@ -795,7 +1015,7 @@ sub get_sub_workflow_list($){
     my (%config);
     my($sub_dag_file_name);
     my ($sub_dag_file_path);
-    my(@sub_workflow_submit_dirs);
+    my(%sub_wf_name_submit_dir_hash);
 	
 	push(@dag_path_list,$root_dag_file_path);
 	while(@dag_path_list){
@@ -828,7 +1048,9 @@ sub get_sub_workflow_list($){
 		     	$sub_wf_submit_dir = rlb($sub_wf_submit_dir);
 		        %config = slurp_braindb( $sub_wf_submit_dir ) or die "ERROR: open braindump.txt in directory $sub_wf_submit_dir: $!\n";
 	     	    $sub_dag_file_name = $config{'dag'};
-	     	    push (@sub_workflow_submit_dirs ,$sub_wf_submit_dir);
+	     	    #Striping of the .sub extension
+	     	    my $sub_wf_id = substr($sub_wf_submit_file_name,0,-4);
+	     	    $sub_wf_name_submit_dir_hash{$sub_wf_id} = $sub_wf_submit_dir;
 	     		if($sub_dag_file_name){
 	     			$sub_dag_file_path = File::Spec->catfile($sub_wf_submit_dir,$sub_dag_file_name);
 	     			push(@dag_path_list,$sub_dag_file_path);
@@ -845,7 +1067,7 @@ sub get_sub_workflow_list($){
 		     
 		}   
 	}
-	return @sub_workflow_submit_dirs;
+	return %sub_wf_name_submit_dir_hash;
 }
 
 sub parse_submit_file($){
@@ -892,6 +1114,8 @@ sub  execute_command($$){
 	my ($err_fn) = substr($out_fn,0,-4).".err";
 	open( ERROUT, ">$err_fn" ) || die "ERROR: open $err_fn: $!\n";
     close(ERROUT);
+    chmod(0755, $out_fn) or die "Couldn't chmod $out_fn: $!";
+    chmod(0755, $err_fn) or die "Couldn't chmod $err_fn: $!";
 	my($ret) = system("$command  1>$out_fn 2>$err_fn");
 	$error_msg = "";
 	if($ret == -1){
