@@ -561,6 +561,7 @@ END
 	    #print out the names for categories in descending order accd
 	    #to start time of the jobs i.e descending numeric sort on value
 	    my %phash = %$p;
+	    my $tic_count = $n;
 	    foreach my $key (sort { $phash{$b} <=> $phash{$a} } keys %phash) {
 		
 		if($key =~ m/subdax_.*ID(.*)/) {
@@ -568,14 +569,15 @@ END
 		    #my $short_name = "subdax...ID$1";
 		    
 		    #for time being , we do no tinkering.
-		    my $short_name = "$key";
+		    my $short_name = "$tic_count:$key";
 		    #print "Shortened subworkflow name for $key is $short_name \n";
 		    printf OUT "      $short_name\n";
 		}
 		else{
 		    #print the whole name
-		    printf OUT "      $key\n";
+		    printf OUT "      $tic_count:$key\n";
 		}
+		$tic_count--;
 	    }
 	    print OUT << "END";
 
@@ -591,7 +593,7 @@ END
   minorticinc: 1
   grid: color=gray(0.8)
   location: max
-  stubdetails: adjust=4.5,0 color=redorange
+  stubdetails: adjust=4.8,0 color=redorange
 
 END
     ;
