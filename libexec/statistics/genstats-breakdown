@@ -143,6 +143,7 @@ if (defined($output)) {
     open $oldout, ">&STDOUT" or die "Can't dup STDOUT $!";
     open STDOUT, '>', $output or die "Can't redirect STDOUT $!";
 }
+my $submit_dir_count = 0;
 print "#Legends ";
 print "\n#Transformation - name of the transformation";
 print "\n#Count - the number of times the transformation was executed";
@@ -165,6 +166,7 @@ if ($extra) {
             $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
             print $out;
         }
+        ++$submit_dir_count;
     }
 }
 
@@ -192,22 +194,24 @@ if($file){
 	            $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
 	            print $out;
 	        }
+	        ++$submit_dir_count;
         }
     }
     close CONFIG;
 }
-
-print sprintf("\n#All\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
-for $transformation (keys %{$samples{$allKey}}) {
-	$count = $samples{$allKey}{$transformation}{'count'};
-    if ($count == 1) {
-        $denom = 1;
-    } else {
-        $denom = $count - 1;
-    }
-
-    $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$allKey}{$transformation}{'mean'}, $samples{$allKey}{$transformation}{'diff'} / $denom, $samples{$allKey}{$transformation}{'min'}, $samples{$allKey}{$transformation}{'max'}, $count * $samples{$allKey}{$transformation}{'mean'});
-    print $out;
+if ($submit_dir_count >1){
+	print sprintf("\n#All\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
+	for $transformation (keys %{$samples{$allKey}}) {
+		$count = $samples{$allKey}{$transformation}{'count'};
+	    if ($count == 1) {
+	        $denom = 1;
+	    } else {
+	        $denom = $count - 1;
+	    }
+	
+	    $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$allKey}{$transformation}{'mean'}, $samples{$allKey}{$transformation}{'diff'} / $denom, $samples{$allKey}{$transformation}{'min'}, $samples{$allKey}{$transformation}{'max'}, $count * $samples{$allKey}{$transformation}{'mean'});
+	    print $out;
+	}
 }
 
 if (defined($output)) {
