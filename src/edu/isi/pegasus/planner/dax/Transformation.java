@@ -21,21 +21,44 @@ import java.util.LinkedList;
 import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
- *
+ * This Object is used to create a complex Transformation.
+ * A complex transformation is one that uses other executables and files
  * @author gmehta
  * @version $Revision$
  */
 public class Transformation {
 
+    /**
+     * Namespace of the Transformation
+     */
     protected String mNamespace;
+    /**
+     * Name of the transformation
+     */
     protected String mName;
+    /**
+     * Version of the transformation
+     */
     protected String mVersion;
+    /**
+     * List of executable of files used by the transformation
+     */
     protected List<CatalogType> mUses;
 
+    /**
+     * Create a new Transformation object
+     * @param name
+     */
     public Transformation(String name) {
         this("", name, "");
     }
 
+    /**
+     * Create a new Transformation Object
+     * @param namespace
+     * @param name
+     * @param version
+     */
     public Transformation(String namespace, String name, String version) {
         mNamespace = (namespace == null) ? "" : namespace;
         mName = (name == null) ? "" : name;
@@ -44,28 +67,55 @@ public class Transformation {
         mUses = new LinkedList<CatalogType>();
     }
 
+    /**
+     * Get the name of the transformation
+     * @return
+     */
     public String getName() {
         return mName;
     }
 
+    /**
+     * Get the namespace of the transformation
+     * @return
+     */
     public String getNamespace() {
         return mNamespace;
     }
 
+    /**
+     * Get the version of the transformation
+     * @return
+     */
     public String getVersion() {
         return mVersion;
     }
 
+    /**
+     * Set the file or executable being used by the transformation
+     * @param fileorexecutable
+     * @return
+     */
     public Transformation uses(CatalogType fileorexecutable) {
         mUses.add(fileorexecutable);
         return this;
     }
 
+    /**
+     * Set the List of files and/or executables being used by the transformation
+     *
+     * @param filesorexecutables
+     * @return
+     */
     public Transformation uses(List<CatalogType> filesorexecutables) {
         mUses.addAll(filesorexecutables);
         return this;
     }
 
+    /**
+     * Get the List of files and/or executables being used by the transformation
+     * @return
+     */
     public List<CatalogType> getUses() {
         return Collections.unmodifiableList(mUses);
     }

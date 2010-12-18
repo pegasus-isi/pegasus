@@ -19,114 +19,228 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.XMLWriter;
 
 /**
- *
+ * The Transformation Catalog object the represent the entries in the DAX transformation section.
  * @author gmehta
  * @version $Revision$
  */
 public class Executable extends CatalogType {
 
+    /**
+     * ARCH Types
+     */
     public static enum ARCH {
 
-        X86, x86, X86_64, x86_64, PPC, ppc, PPC_64,ppc_64, IA64, ia64,SPARCV7,sparcv7, SPARCV9,sparcv9
+        X86, x86, X86_64, x86_64, PPC, ppc, PPC_64, ppc_64, IA64, ia64, SPARCV7, sparcv7, SPARCV9, sparcv9
     }
 
+    /**
+     * OS Types
+     */
     public static enum OS {
 
-        LINUX,linux, SUNOS,sunos, AIX,aix, MACOSX,macosx, WINDOWS,windows    }
-
-
-
+        LINUX, linux, SUNOS, sunos, AIX, aix, MACOSX, macosx, WINDOWS, windows
+    }
+    /**
+     * Namespace of the executable
+     */
     protected String mNamespace;
+    /**
+     * Name of the executable
+     */
     protected String mName;
+    /**
+     * Version of the executable
+     */
     protected String mVersion;
+    /**
+     * Architecture the executable is compiled for
+     */
     protected ARCH mArch;
+    /**
+     * Os the executable is compiled for
+     */
     protected OS mOs;
+    /**
+     * Os release the executable is compiled for
+     */
     protected String mOsRelease;
+    /**
+     * OS version the executable is compiled for
+     */
     protected String mOsVersion;
+    /**
+     * Glibc the executable is compiled for
+     */
     protected String mGlibc;
-    protected boolean mInstalled=true;
+    /**
+     * Flag to mark if the executable is installed or can be staged.
+     */
+    protected boolean mInstalled = true;
 
+    /**
+     * Create a new executable
+     * @param name
+     */
     public Executable(String name) {
         this("", name, "");
     }
 
+    /**
+     * Create a new Executable
+     * @param namespace
+     * @param name
+     * @param version
+     */
     public Executable(String namespace, String name, String version) {
         mNamespace = (namespace == null) ? "" : namespace;
         mName = (name == null) ? "" : name;
         mVersion = (version == null) ? "" : version;
     }
 
+    /**
+     * Get the name of the executable
+     * @return
+     */
     public String getName() {
         return mName;
     }
 
+    /**
+     * Get the namespace of the executable
+     * @return
+     */
     public String getNamespace() {
         return mNamespace;
     }
 
+    /**
+     * Get the version of the executablle
+     * @return
+     */
     public String getVersion() {
         return mVersion;
     }
 
+    /**
+     * Set the architecture the executable is compiled for
+     * @param arch
+     * @return
+     */
     public Executable setArchitecture(ARCH arch) {
         mArch = arch;
         return this;
     }
 
+    /**
+     * Set the OS the executable is compiled for
+     * @param os
+     * @return
+     */
     public Executable setOS(OS os) {
         mOs = os;
         return this;
     }
 
+    /**
+     * Set the osrelease the executable is compiled for
+     * @param osrelease
+     * @return
+     */
     public Executable setOSRelease(String osrelease) {
         mOsRelease = osrelease;
         return this;
     }
 
+    /**
+     * Set the osversion the executable is compiled for
+     * @param osversion
+     * @return
+     */
     public Executable setOSVersion(String osversion) {
         mOsVersion = osversion;
         return this;
     }
 
+    /**
+     * Set the glibc this executable is compiled for
+     * @param glibc
+     * @return
+     */
     public Executable setGlibc(String glibc) {
         mGlibc = glibc;
         return this;
     }
 
+    /**
+     * set the installed flag on the executable. Default is installed
+     * @return
+     */
     public Executable setInstalled() {
-        mInstalled=true;
+        mInstalled = true;
         return this;
     }
 
-    public Executable unsetInstalled(){
-        mInstalled=false;
+    /**
+     * Unset the installed flag on the executable. Default is installed.
+     * @return
+     */
+    public Executable unsetInstalled() {
+        mInstalled = false;
         return this;
     }
 
-    public Executable setInstalled(boolean installed){
-        mInstalled=installed;
+    /**
+     * Set the installed flag on the executable. Default is installed
+     */
+    public Executable setInstalled(boolean installed) {
+        mInstalled = installed;
         return this;
     }
+
+    /**
+     * Check if the executable is of type installed.
+     * @return
+     */
     public boolean getInstalled() {
         return mInstalled;
     }
 
+    /**
+     * Get the architecture the Executable is compiled for
+     * @return
+     */
     public ARCH getArchitecture() {
         return mArch;
     }
 
+    /**
+     * Get the OS the Executable is compiled for
+     * @return
+     */
     public OS getOS() {
         return mOs;
     }
 
+    /**
+     * Get the OS release set for this executable. Returns empty string if not set
+     * @return
+     */
     public String getOsRelease() {
         return (mOsRelease == null) ? "" : mOsRelease;
     }
 
+    /**
+     * Get the OS version set for this executable.
+     * @return
+     */
     public String getOsVersion() {
         return (mOsVersion == null) ? "" : mOsVersion;
     }
 
+    /**
+     * Get the Glibc version if any set for this file. Returns empty string if not set
+     * @return
+     */
     public String getGlibc() {
         return (mGlibc == null) ? "" : mGlibc;
     }
@@ -152,7 +266,7 @@ public class Executable extends CatalogType {
             if (mInstalled) {
                 writer.writeAttribute("installed", "true");
             } else {
-                writer.writeAttribute("installed","false");
+                writer.writeAttribute("installed", "false");
             }
             if (mArch != null) {
                 writer.writeAttribute("arch", mArch.toString().toLowerCase());
