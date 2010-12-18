@@ -20,29 +20,64 @@ import edu.isi.pegasus.common.util.XMLWriter;
 import edu.isi.pegasus.common.util.Separator;
 
 /**
- *
+ * This class is the container for any File object, either the RC section, or uses
  * @author gmehta
  * @version $Revision$
  */
 public class File extends CatalogType {
 
+    /**
+     * The linkages that a file can be of
+     */
     public static enum LINK {
 
         INPUT, input, OUTPUT, output, INOUT, inout
     };
 
+    /**
+     * Three Transfer modes supported, Transfer this file, don't transfer or stageout as well as optional. Dont mark transfer or absence as a failure
+     */
     public static enum TRANSFER {
         TRUE, FALSE, OPTIONAL
     }
+
+    /**
+     * The namespace on a file. This is used for Executables only
+     */
     protected String mNamespace;
+    /**
+     * The logical name of the file.
+     */
     protected String mName;
+    /**
+     * The logical version of the file. This is used for executables only.
+     */
     protected String mVersion;
+    /*
+     * The Linkage of the file. (Input, Output, or INOUT)
+     */
     protected LINK mLink;
+    /**
+     * Is the file optional
+     */
     protected boolean mOptional = false;
+    /**
+     * Should the file be registered in the replica catalog
+     */
     protected boolean mRegister = true;
+    /**
+     * Should the file be transferred on generation.
+     */
     protected TRANSFER mTransfer = TRANSFER.TRUE;
+    /**
+     * Is the file an executable.
+     */
     protected boolean mExecutable = false;
 
+    /**
+     * Copy constructor
+     * @param f File
+     */
     public File(File f) {
         this(f.getNamespace(), f.getName(), f.getVersion(), f.getLink());
         this.mOptional = f.getOptional();
@@ -51,6 +86,11 @@ public class File extends CatalogType {
         this.mExecutable = f.getExecutable();
     }
 
+    /**
+     * Copy constructor, but change the linkage of the file.
+     * @param f File
+     * @param link Link
+     */
     public File(File f, LINK link) {
         this(f.getNamespace(), f.getName(), f.getVersion(), link);
         this.mOptional = f.getOptional();
@@ -59,16 +99,27 @@ public class File extends CatalogType {
         this.mExecutable = f.getExecutable();
     }
 
+    /**
+     *  Create new File object
+     * @param namespace
+     * @param name
+     * @param version
+     */
     public File(String namespace, String name, String version) {
         mNamespace = namespace;
         mName = name;
         mVersion = version;
     }
 
+    /**
+     *  Create new file object
+     * @param name
+     */
     public File(String name) {
         mName = name;
     }
 
+    
     public File(String name, LINK link) {
         mName = name;
         mLink = link;
@@ -136,6 +187,16 @@ public class File extends CatalogType {
         return this;
     }
 
+    public File setExecutable() {
+        mExecutable = true;
+        return this;
+    }
+
+   /**
+    * Use setExecutable instead
+    * @deprecated
+    * @return
+    */
     public File SetExecutable() {
         mExecutable = true;
         return this;
