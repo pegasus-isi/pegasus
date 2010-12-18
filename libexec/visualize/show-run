@@ -72,6 +72,8 @@ sub ungarble($) {
   'double fault', 'failed worker', 'failed stage-in', 'failed stage-out', 'failed replica' );
 
 my %opts = ( S => 0 );
+my $tmpdir = $ENV{TMPDIR} || $ENV{TMP} || $ENV{TEMP} || 
+    File::Spec->tmpdir() || '/tmp';
 GetOptions( 'help|h|?' => sub { $opts{h}=1 },
 	    'offset|a=i' => sub { $opts{a}=$_[1] },
 	    'base|b=s' => sub { $opts{b}=$_[1] },
@@ -88,7 +90,8 @@ GetOptions( 'help|h|?' => sub { $opts{h}=1 },
 	    'png|P' => sub { $opts{P} = 1 },
 	    'use-site|S=i' => sub { $opts{S}=$_[1]+0 },
 	    'ytitle|t=s' => sub { $opts{t}=$_[1] },
-	    'ztitle|T=s' => sub { $opts{T}=$_[1] } );
+	    'ztitle|T=s' => sub { $opts{T}=$_[1] },
+	    'tmpdir=s' => \$tmpdir );
 
 if ( exists $opts{h} || ! exists $opts{D} ) {
     my $base = basename($0,'.pl');
@@ -123,6 +126,7 @@ Usage: $base [-d level] -D dagfile [-b basedir] [-o ypic] [-O zpic] [-p [-P]]
 	        2: use reported workernode handle
  -t|--ytitle t  title phrase on top of ypic - and zpic in absence of -T
  -T|--ztitle t  title phrase on top of zpic, default is timestamp/user
+ --tmpdir dir   which directory to use for /tmp. Default is complex...
 
 EOF
     exit 0;
@@ -147,9 +151,9 @@ END {
     unlink( @main::unlink ) if @main::unlink > 0;
 }
 
-my @y=File::Temp->tempfile( 'ydata-XXXXX', DIR => '/tmp', SUFFIX => '.dat' );
+my @y=File::Temp->tempfile( 'ydata-XXXXX', DIR => $tmpdir, SUFFIX => '.dat' );
 die "ERROR: Unable to create transient ydata file" unless defined $y[0]; 
-my @z=File::Temp->tempfile( 'zdata-XXXXX', DIR => '/tmp', SUFFIX => '.dat' );
+my @z=File::Temp->tempfile( 'zdata-XXXXX', DIR => $tmpdir, SUFFIX => '.dat' );
 die "ERROR: Unable to create transient zdata file" unless defined $z[0]; 
 
 my $ypic = $y[1];
@@ -221,12 +225,12 @@ sub graphics($$$$$) {
 	# @arg = ( $ploticus, $plsfn, '-jpeg', '-pagesize', "$width,$height" );
 	push( @arg, '-maxrows', $count+1, '-cpulimit', 600 ) if $count > 9999;
 
-	warn "# running @arg...\n"; # if $main::debug;
+	warn "# running @arg\n"; # if $main::debug;
 	system { $arg[0] } @arg;
 	if ( $? == 0 ) {
 	    my $fn = ($pos >= 0 ? substr($datafn,0,$pos) : $datafn) . '.eps'; 
 	    @arg = ( '/bin/mv', '-f', $fn, $outfn );
-	    warn "# running @arg...\n"; # if $main::debug;
+	    warn "# running @arg\n"; # if $main::debug;
 	    system { $arg[0] } @arg;
 
 	    if ( $? == 0 ) { 
@@ -236,7 +240,7 @@ sub graphics($$$$$) {
 		    $fn = basename($outfn,('.eps','.png','.jpeg'));
 		    push( @arg, $outfn, File::Spec->catfile( dirname($outfn), $fn.".png" ) ); 
 
-		    warn "# running @arg...\n"; # if $main::debug;
+		    warn "# running @arg\n"; # if $main::debug;
 		    system { $arg[0] } @arg;
 		    warn( "Warning: @arg returned ", ($?>>8), '/', ($? & 127), "\n" )
 			if $?;
@@ -537,6 +541,11 @@ sub read_log ($\%\%\%) {
 			}
 		    }
 		}
+		if ( abs($y[2] - 1E20) < 100 ) { 
+		    # Ayieeh, no sane data, @y is still defaults
+		    $y[2] = $tds;
+		    $y[3] = 0; 
+		}
 		$dbase{$job}{$tag} = [ @y ];
 		$stat[$y[1] ? 0 : $dbase{$job}{'000'}->[3]]++;
 
@@ -745,7 +754,8 @@ sub write_ypic_ploticus ($$$$\$\$\$\$\$\$) {
 	$$xtics = 10;
 	$$xstub = 60;
 	while ( $$upperx > 20 ) {
-	    warn "# extreme x-scaling\n";
+	    warn( "# extreme x-scaling [", 
+		  join(",",$$upperx,$$xtics,$$xstub), "]\n" );
 	    $$upperx /= 5;
 	    $$xtics *= 5;
 	    $$xstub *= 5;
