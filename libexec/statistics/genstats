@@ -619,22 +619,22 @@ sub writeJobs {
 
     my $jobsFile = "$outputDir/jobs";
     open(JOBS, ">$jobsFile") || die "Could not open $jobsFile\n";
-    print JOBS "#Legends \n";
-    print JOBS "#Job - the name of the job \n";
-    print JOBS "#Site - the site where the job ran \n";
-    print JOBS "#Kickstart(sec.) - the actual duration of the job in seconds on the remote compute node \n";
-    print JOBS "#Post(sec.) - the postscript time as reported by DAGMan \n";
-    print JOBS "#DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted \n";
-    print JOBS "#CondorQTime(sec.) - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node \n";
-    print JOBS "#Resource(sec.) - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue \n";
-    print JOBS "#Runtime(sec.) - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart \n";
-    print JOBS "#CondorQLen - the number of outstanding jobs in the queue when this job was released \n";
-    print JOBS "#Seqexec(sec.) -  the time taken for the completion of a clustered job\n";
-    print JOBS "#Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n\n";
+    #print JOBS "#Legends \n";
+    #print JOBS "#Job - the name of the job \n";
+    #print JOBS "#Site - the site where the job ran \n";
+    #print JOBS "#Kickstart(sec.) - the actual duration of the job in seconds on the remote compute node \n";
+    #print JOBS "#Post(sec.) - the postscript time as reported by DAGMan \n";
+    #print JOBS "#DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted \n";
+    #print JOBS "#CondorQTime(sec.) - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node \n";
+    #print JOBS "#Resource(sec.) - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue \n";
+    #print JOBS "#Runtime(sec.) - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart \n";
+    #print JOBS "#CondorQLen - the number of outstanding jobs in the queue when this job was released \n";
+    #print JOBS "#Seqexec(sec.) -  the time taken for the completion of a clustered job\n";
+    #print JOBS "#Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n\n";
     if ($longJobNames) {
-        print JOBS sprintf("#%-79s %20s %8s %8s %8s %13s %8s %8s %5s %7s %13s\n", "Job", "Site", "Kickstrt", "Post", "DAGMan", "CondorQTime", "Res", "Runtime", "CQLen", "Seqexec", "Seqexec-Delay");
+        print JOBS sprintf("#%-79s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", "Job", "Site", "Kickstart", "Post", "DAGMan", "CondorQTime", "Res", "Runtime", "Seqexec", "Seqexec-Delay");
     } else {
-        print JOBS sprintf("#%-39s %20s %8s %8s %8s %13s %8s %8s %10s %7s %13s\n", "Job", "Site", "Kickstart", "Post", "DAGMan", "CondorQTime", "Resource", "Runtime", "CondorQLen", "Seqexec", "Seqexec-Delay");
+        print JOBS sprintf("#%-39s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", "Job", "Site", "Kickstart", "Post", "DAGMan", "CondorQTime", "Resource", "Runtime",  "Seqexec", "Seqexec-Delay");
     }
     foreach my $job (sort keys %{$jobsRef}) {
     	#Setting default values 
@@ -656,9 +656,9 @@ sub writeJobs {
     	$jobsRef->{$job}->{'cumulative_resourceDelay'} = defined($jobsRef->{$job}->{'cumulative_resourceDelay'})?$jobsRef->{$job}->{'cumulative_resourceDelay'}:'-';
     	$jobsRef->{$job}->{'cumulative_runtime'} = defined($jobsRef->{$job}->{'cumulative_runtime'})?$jobsRef->{$job}->{'cumulative_runtime'}:'-';
         if ($longJobNames) {
-        	print JOBS sprintf("%-80s %20s %8s %8s %8s %13s %8s %8s %5s %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'condorQLength'}, $jobsRef->{$job}->{'cumulative_seqexec'}, $jobsRef->{$job}->{'cumulative_seqexec-delay'});
+        	print JOBS sprintf("%-80s %20s %8s %8s %8s %13s %8s %8s %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'}, $jobsRef->{$job}->{'cumulative_seqexec-delay'});
         } else {
-        	print JOBS sprintf("%-40s %20s %8s %8s %8s %13s %8s %8s %5s %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'condorQLength'}, $jobsRef->{$job}->{'cumulative_seqexec'},$jobsRef->{$job}->{'cumulative_seqexec-delay'});
+        	print JOBS sprintf("%-40s %20s %8s %8s %8s %13s %8s %8s %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'},$jobsRef->{$job}->{'cumulative_seqexec-delay'});
         }
     }
     close(JOBS);
