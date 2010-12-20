@@ -50,7 +50,7 @@ public class Version
   /**
    * This constant defines the patch level version.
    */
-  public static final int PLEVEL = 4;
+  public static final int PLEVEL = 5;
 
   /**
    * Instance variable keeping track of the Singleton.
@@ -84,7 +84,7 @@ public class Version
   public String toString()
   {
     return ( Integer.toString(MAJOR) + '.' + Integer.toString(MINOR) + 
-	     '.' + Integer.toString(PLEVEL) + "" ); // !! HERE !!
+	     '.' + Integer.toString(PLEVEL) + "cvs" ); // !! HERE !!
   }
 
   /**
