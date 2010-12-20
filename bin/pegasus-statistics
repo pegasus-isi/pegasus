@@ -32,7 +32,7 @@ my ($base_path_len) =0;
 # list of sub workflows
 my (%sub_workflow_submit_hash) = ();
 my (@workflow_statistics) =();
-
+my $contains_dag_job = undef;
 sub clean_exit();		
 $SIG{'INT'} = \&clean_exit; 
 $main::DEBUG =0;
@@ -321,7 +321,7 @@ sub main(){
 	$summary_msg .= sprintf("\n          %-12s %-12s %-12s %-12s %-12s   \n","Total","Succeeded","Failed","Unsubmitted","Unknown");
 	$summary_msg .= sprintf("Jobs      %-12s %-12s %-12s %-12s %-12s   \n",$all_total_jobs,$all_succceeded,$all_failed ,$all_unsubmitted,$all_unknown);
 	$summary_msg .= sprintf("SUBDAX    %-12s %-12s %-12s %-12s %-12s   \n",$sub_dax_total_jobs,$sub_dax_succceeded,$sub_dax_failed ,$sub_dax_unsubmitted,$sub_dax_unknown);
-	$summary_msg .= sprintf("SUBDAG    %-12s %-12s %-12s %-12s %-12s   \n",$sub_dag_total_jobs,$sub_dag_succceeded,$sub_dag_failed ,$sub_dag_unsubmitted,$sub_dag_unknown);
+	#$summary_msg .= sprintf("SUBDAG    %-12s %-12s %-12s %-12s %-12s   \n",$sub_dag_total_jobs,$sub_dag_succceeded,$sub_dag_failed ,$sub_dag_unsubmitted,$sub_dag_unknown);
 	
 	
 	
@@ -332,30 +332,30 @@ sub main(){
 	$legends_msg_summary.= "#Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.\n";
 	$legends_msg_summary.= "#Total tasks - the total number of tasks in the workflow .\n";
 	$legends_msg_summary.= "Job summary\n";
-	$legends_msg_summary.="\t Total - the total number of jobs in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs).\n";
-	$legends_msg_summary.="\t Succeeded - the total number of succeeded jobs in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs). \n";
-	$legends_msg_summary.="\t Failed - the total number of failed jobs in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs).\n";
-	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted jobs in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs).\n";
-	$legends_msg_summary.="\t Unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown in the workflow excluding sub workflow jobs(sub_dax jobs and sub_dag jobs).\n";
-	$legends_msg_summary.= "SUB DAX summary\n";
-	$legends_msg_summary.="\t Total - the total number of sub dax jobs in the workflow \n";
-	$legends_msg_summary.="\t Succeeded - the total number of succeeded sub dax jobs in the workflow.\n";
-	$legends_msg_summary.="\t Failed - the total number of failed sub dax jobs in the workflow.\n";
-	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted sub dax jobs in the workflow.\n";
-	$legends_msg_summary.="\t Unknown - the total number of sub dax jobs that are submitted, but has not completed execution or the state is unknown in the workflow.\n";
-	$legends_msg_summary.= "SUB DAG summary\n";
-	$legends_msg_summary.="\t Total - the total number of sub dag jobs in the workflow \n";
-	$legends_msg_summary.="\t Succeeded - the total number of succeeded sub dag jobs in the workflow.\n";
-	$legends_msg_summary.="\t Failed - the total number of failed sub dag jobs in the workflow.\n";
-	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted sub dag jobs in the workflow.\n";
-	$legends_msg_summary.="\t Unknown - the total number of sub dag jobs that are submitted, but has not completed execution or the state is unknown in the workflow.\n";
+	$legends_msg_summary.="\t Total - the total number of jobs in the workflow.\n";
+	$legends_msg_summary.="\t Succeeded - the total number of succeeded jobs in the workflow . \n";
+	$legends_msg_summary.="\t Failed - the total number of failed jobs in the workflow .\n";
+	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted jobs in the workflow .\n";
+	$legends_msg_summary.="\t Unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown in the workflow.\n";
+	$legends_msg_summary.= "SUBDAX summary\n";
+	$legends_msg_summary.="\t Total - the total number of SUBDAX jobs in the workflow \n";
+	$legends_msg_summary.="\t Succeeded - the total number of succeeded SUBDAX jobs in the workflow.\n";
+	$legends_msg_summary.="\t Failed - the total number of failed SUBDAX jobs in the workflow.\n";
+	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted SUBDAX jobs in the workflow.\n";
+	$legends_msg_summary.="\t Unknown - the total number of SUBDAX jobs that are submitted, but has not completed execution or the state is unknown in the workflow.\n";
+	#$legends_msg_summary.= "SUBDAG summary\n";
+	#$legends_msg_summary.="\t Total - the total number of SUBDAG jobs in the workflow \n";
+	#$legends_msg_summary.="\t Succeeded - the total number of succeeded SUBDAG jobs in the workflow.\n";
+	#$legends_msg_summary.="\t Failed - the total number of failed SUBDAG jobs in the workflow.\n";
+	#$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted SUBDAG jobs in the workflow.\n";
+	#$legends_msg_summary.="\t Unknown - the total number of SUBDAG jobs that are submitted, but has not completed execution or the state is unknown in the workflow.\n";
 	
 	
 	my $legends_msg = "#Legends\n";
 	$legends_msg.= "#Workflow runtime (min) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.\n";
-	$legends_msg.= "#Cumulative workflow runtime (min) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.\n";
-	$legends_msg.= "#Total jobs - the total number of jobs in the workflow.In the workflow of workflow scenario sub workflow job is considered as a single job.\n";
-	$legends_msg.= "#Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.In the workflow of workflow scenario sub workflow job is considered as a single task.\n";
+	$legends_msg.= "#Cumulative workflow runtime (min) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded.\n";
+	$legends_msg.= "#Total jobs - the total number of jobs in the workflow.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded.\n";
+	$legends_msg.= "#Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded.\n";
 	$legends_msg.= "# jobs succeeded - the total number of jobs succeeded.\n";
 	$legends_msg.= "# jobs failed - the total number of jobs failed.\n";
 	$legends_msg.= "# jobs unsubmitted - the total number of jobs that are not submitted.\n";
@@ -373,8 +373,12 @@ sub main(){
 	 
 	
 	$legends_msg_summary.= "\n";
+	my $dag_job_warning_msg ="";
+	if (defined $contains_dag_job){
+		$dag_job_warning_msg = "\nWARNING: This workflow has $sub_dag_total_jobs SUBDAG jobs.\nSUBDAG jobs are treated like regular jobs.The jobs making up the SUBDAG are not included in the cummulative numbers.\n\n";
+	}
 	print "\n\n******************************************** SUMMARY ********************************************\n";
-	print $legends_msg_summary.$summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
+	print $legends_msg_summary.$dag_job_warning_msg.$summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
 	
 	print "**************************************************************************************************\n";
 	
@@ -585,7 +589,8 @@ sub print_workflow_statistics($$$$){
 
     my ($total_cpu_time_non_sub_wf ,$total_cpu_time_non_sub_wf_status_msg) = (0.0, ' ');
   	foreach my $job (@job_list) {
-		my $is_sub_wf_job = (($job =~m/^pegasus-plan.*/i) || ($job  =~m/^subdax_.*/i) || ($job  =~m/^subdag_.*/i))?1:0;
+		my $is_sub_wf_job = (($job =~m/^pegasus-plan.*/i) || ($job  =~m/^subdax_.*/i))?1:0;
+		# sub dag job is considered as a regular job
 		if(!$is_sub_wf_job){  		
 			if(defined( $job_state_hoh{$job})){
 				if (defined($job_state_hoh{$job}{'cumulative_job_runtime'}) and defined($job_state_hoh{$job}{'JOB_TERMINATED'}) and !($job_state_hoh{$job}{'cumulative_job_runtime'} eq '-')){
@@ -616,10 +621,13 @@ sub print_workflow_statistics($$$$){
     	my $is_dag_job = (($job  =~m/^subdag_.*/i))?1:0;
   		if($is_dax_job){
   			++$total_dax_job_count;
-  		}elsif($is_dag_job){
-  			++$total_dag_job_count;
   		}else{
+  			# sub dag job is considered as a regular job
   			++ $total_job_count_non_sub_wf;
+  			if($is_dag_job){
+  				++$total_dag_job_count;
+  				$contains_dag_job = 1;
+  			}
   		}
   	}
     
@@ -632,7 +640,7 @@ sub print_workflow_statistics($$$$){
 	my $task_count = 0; 
 	foreach my $job (@job_list) {
 		$job =~ s/^\s+//; 
-		my $is_sub_wf_job = (($job =~m/^pegasus-plan.*/i) || ($job  =~m/^subdax_.*/i) ||(($job  =~m/^subdag_.*/i)))?1:0;
+		my $is_sub_wf_job = (($job =~m/^pegasus-plan.*/i) || ($job  =~m/^subdax_.*/i))?1:0;
 		if($job =~ /^merge_/){
 			my($in_file) = File::Spec->catfile( $submit_dir ,$job .".in");
 			$task_count = get_task_count($in_file);
@@ -673,28 +681,34 @@ sub print_workflow_statistics($$$$){
      		++$job_succeeded_count;
      		if($is_dax_job){
      			++$sub_dax_job_succeeded_count;
-     		}elsif($is_dag_job){
-     			++$sub_dag_job_succeeded_count;
      		}else{
      			++$non_sub_wf_job_succeeded_count;
+     			# sub dag job is considered as a regular job
+     			if($is_dag_job){
+     				++$sub_dag_job_succeeded_count;
+     			}
      		}
      	}elsif($value eq 'JOB_FAILURE') {
      		++$job_failed_count;
      		if($is_dax_job){
      			++$sub_dax_job_failed_count;
-     		}elsif($is_dag_job){
-     			++$sub_dag_job_failed_count;
      		}else{
      			++$non_sub_wf_job_failed_count;
+     			# sub dag job is considered as a regular job
+     			if($is_dag_job){
+     				++$sub_dag_job_failed_count;
+     			}
      		}
      	}elsif($value eq 'SUBMIT') {
      		++$job_unknown_count;
      		if($is_dax_job){
      			++$sub_dax_job_unknown_count;
-     		}elsif($is_dag_job){
-     			++$sub_dag_job_unknown_count;
      		}else{
      			++$non_sub_wf_job_unknown_count;
+     			# sub dag job is considered as a regular job
+     			if($is_dag_job){
+     				++$sub_dag_job_unknown_count;
+     			}
      		}
      	}
    }
