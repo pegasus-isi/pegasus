@@ -5,8 +5,7 @@ Release Notes for PEGASUS 2.4.4
 ===============================
 This is minor release, that has support for GT5 and some minor bug
 fixes in 2.4 branch. This is the last release in the 2.4 series. We
-recommend that users migrate to 3.x series. Currently, the recommended
-version in the 3.x series is 3.0.1
+recommend that users migrate to 3.x series.
 
 NEW FEATURES
 --------------
