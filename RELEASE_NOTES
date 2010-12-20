@@ -134,7 +134,7 @@ NEW FEATURES
     Users can use pegasus-sc-converter to convert their site catalogs
     to the XML3 format.
     Sample Usage:
-    sc-client -I XML -O XML3 -i sites.xml -o sites.xml3 
+    pegasus-sc-converter -I XML -O XML3 -i sites.xml -o sites.xml3 
 
  
 9) pegasus-analyzer can parse kickstart outputs
