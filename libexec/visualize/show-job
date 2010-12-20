@@ -357,7 +357,7 @@ sub gen_data($$$\%) {
   grid: color=rgb(1,0.9,0.8) style=1 dashscale=2
 
 #proc xaxis
-  label: jobs over time
+  label: jobs over time ( in seconds )
   tics: yes
   stubs: incremental $xstubs
   minorticinc: $xtics
