@@ -158,7 +158,22 @@ sub processDAGManOutput {
             }
 
             print DAGOUT $line, "\n";
-        } elsif ($line =~ '^PARENT') {
+        }elsif ($line =~ '^SUBDAG') {
+            my @tokens = split(' ', $line);
+            my $job = $tokens[2];
+
+            my %jobParams;
+            $jobsRef->{$job} = \%jobParams;
+            
+            my @parents = ();
+            $mapRef->{$job} = \@parents;
+
+            if (length($job) > $defaultJobNameLength) {
+                $longJobNames++;
+            }
+
+            print DAGOUT $line, "\n";
+        }elsif ($line =~ '^PARENT') {
             my @tokens = split(' ', $line);
             my $parent = $tokens[1];
             my $child = $tokens[3];
