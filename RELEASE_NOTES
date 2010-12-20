@@ -1,6 +1,65 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 2.4.4
+===============================
+This is minor release, that has support for GT5 and some minor bug
+fixes in 2.4 branch. This is the last release in the 2.4 series. We
+recommend that users migrate to 3.x series. Currently, the recommended
+version in the 3.x series is 3.0.1
+
+NEW FEATURES
+--------------
+1)  Support for GT5
+
+   Pegasus now has support for GT5. 
+
+   Users can use GT5 only if they are using the new site catalog
+   schema ( XML3 ) , as only that has a place holder to specify grid
+   type with the grid gateways element.  
+   e.g 
+   <site handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""> 
+               <grid type="gt5"  contact="viz-login.isi.edu/jobmanager-pbs" scheduler="PBS"
+   jobtype="compute"/>  
+               <grid type="gt2" contact="viz-login.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/> 
+          .... 
+    </site> 
+
+    Users can use pegasus-sc-converter to convert their site catalogs
+    to the XML3 format.
+    Sample Usage:
+    sc-client -I XML -O XML3 -i sites.xml -o sites.xml3 
+
+2) LOFGenerator Interface
+
+   This release has a LOFGenerator ( List of Filenames) Interface. By
+   default if Pegasus generates the LOF files for the job, they
+   contain the LFN's only.
+
+   This interface is currently used to integrate Pegasus with PDPS (
+   Policy Driven Data Placement Service ).
+
+3) tailstatd support dagman 7.5.3 logs
+
+   Changes were made to tailstatd ( the monitoring deamon) to take
+   into account the changes in the timestamp format in the DAGMan logs.
+
+Bugs FIXED
+----------
+
+1) pegasus-status did not handle restarted dagman instances
+
+   pegasus-status was modified to handle restarts of dagman instances
+   while displaying the status.
+
+2) NPE in planning if no GridGateway was specified
+
+   If no GridGateway is specified for a site while mapping the compute
+   job, a NPE ( Null Pointer Exception ) was encountered. This is now
+   fixed. 
+   
+
+===============================
 Release Notes for PEGASUS 2.4.3
 ===============================
 This is minor release, that fixes some RPM and DEB packaging bugs. It
