@@ -260,15 +260,15 @@ sub main(){
 		}
 		$wf_summary_msg .= sprintf("%-30s % 12d \n","Total jobs                         :", $wstats->{'total_jobs'} );
 		
-		if((defined $wstats->{'total_tasks'})){
+		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs succeeded                   :", $wstats->{'succeeded'} );
+   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs failed                      :", $wstats->{'failed'} );
+   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :", $wstats->{'unsubmitted'} );
+   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $wstats->{'unknown'});
+   		if((defined $wstats->{'total_tasks'})){
 			$wf_summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $wstats->{'total_tasks'});
 		}else{
 			$wf_summary_msg .= sprintf("%-30s % 12s \n","Total tasks                        :", '-');
 		}
-    	$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs succeeded                   :", $wstats->{'succeeded'} );
-   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs failed                      :", $wstats->{'failed'} );
-   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :", $wstats->{'unsubmitted'} );
-   		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $wstats->{'unknown'});
    		
    		# Non sub workflow jobs calculation
    		if(defined $all_cpu_time ){
