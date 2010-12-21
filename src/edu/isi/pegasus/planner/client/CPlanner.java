@@ -532,17 +532,7 @@ public class CPlanner extends Executable{
                 //connect the jobs and the DAG via the hierarchy message
                 this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowID() );
 
-                //generate only the braindump file that is required.
-                //no spawning off the tailstatd for time being
-                codeGenerator.startMonitoring();
-
-                /*
-                if (mPOptions.monitorWorkflow()) {
-                    //submit files successfully generated.
-                    //spawn off the monitoring daemon
-                    codeGenerator.startMonitoring();
-                }
-               */
+                
             }
             catch ( Exception e ){
                 throw new RuntimeException( "Unable to generate code", e );
@@ -1185,9 +1175,7 @@ public class CPlanner extends Executable{
             errorStatus = 3;
             result = codeGenerator.generateCode( megaDAG );
 
-            //generate only the braindump file that is required.
-            //no spawning off the tailstatd for time being
-            codeGenerator.startMonitoring();
+            
 
         }
         catch(FactoryException fe){
