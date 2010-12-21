@@ -381,7 +381,7 @@ def cp():
     logger.info("Executing cp commands")
     for i, url_pair in enumerate(cp_list): 
         prepare_local_dir(os.path.dirname(url_pair.dst_path))
-        cmd = "/bin/cp -L \"%s\" \"%s\"" % (url_pair.src_path, url_pair.dst_path)
+        cmd = "/bin/cp -f -L \"%s\" \"%s\"" % (url_pair.src_path, url_pair.dst_path)
         myexec(cmd, 1*60*60, False, delay_errors)
         stats_add(url_pair.dst_path)
 
