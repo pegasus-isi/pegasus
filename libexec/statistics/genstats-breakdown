@@ -151,7 +151,7 @@ print "\n#Mean(sec.) - the mean of the transformation runtime ";
 print "\n#Variance(sec.) - the variance of the transformation runtime";
 print "\n#Min(sec.) - the minimum transformation runtime value";
 print "\n#Max(sec.) - the maximum transformation runtime value";
-print "\n#Total(sec.) - the cummulative of transformation runtime \n";
+print "\n#Total(sec.) - the cumulative of transformation runtime \n";
 if ($extra) {
     for $dir (@ARGV) {
         print sprintf("\n#$dir\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
