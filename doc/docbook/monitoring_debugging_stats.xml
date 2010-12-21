@@ -247,8 +247,9 @@ Logical transformation statistics :
 /scratch/grid-setup/run0001/breakdown.txt
 **************************************************************************************************</programlisting>
 
-      <para>By default the output gets generated to statistics folder inside
-      the submit directory. pegasus statistics summary which is displayed on the standard output is the summary across all the workflows.pegasus-statistics summary contains the following information.</para>
+      <para>By default the output gets generated to statistics folder inside the submit directory. </para>
+      <note><para>In case of workflows of workflows, the metrics that are displayed on the stdout take into account all the subworkflow dax'es.For example, if you have a workflow with 2 DAX jobs each containing 4 jobs each, the total number of jobs displayed will be 8 not 10.</para></note> 
+      <para>pegasus-statistics summary contains the following information.</para>
 	  <itemizedlist>
 	  <listitem>
           <para>Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.</para>
@@ -264,45 +265,83 @@ Logical transformation statistics :
          
          <listitem>
           <para>Job summary
-          	<itemizedlist>
-	  			<listitem>
-	 			Total - the total number of jobs in the workflow.
-	 			</listitem>
-	 			<listitem>
-	 			Succeeded - the total number of succeeded jobs in the workflow .
-	 			</listitem>
-	 			<listitem> 
-	 			Failed - the total number of failed jobs in the workflow .
-	 			</listitem>
-	 			<listitem>
-	 			Unsubmitted - the total number of unsubmitted jobs in the workflow .
-	 			</listitem>
-	 			<listitem>
-	 			Unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown in the workflow.
-	 			</listitem>	
-      		</itemizedlist>
- 		  </para>
+          	<table>
+		        <title></title>
+		
+		        <tgroup cols="2">
+		          <tbody>
+		            <row>
+		              <entry>Total </entry>
+		
+		              <entry>the total number of jobs in the workflow.</entry>
+		            </row>
+		
+		            <row>
+		              <entry>Succeeded</entry>
+		
+		              <entry>the total number of succeeded jobs in the workflow .</entry>
+		            </row>
+		
+		            <row>
+		              <entry>Failed</entry>
+		
+		              <entry>the total number of failed jobs in the workflow .</entry>
+		            </row>
+		
+		            <row>
+		              <entry>Unsubmitted</entry>
+		
+		              <entry>the total number of unsubmitted jobs in the workflow .</entry>
+		            </row>
+		            <row>
+		              <entry>Unknown</entry>
+		
+		              <entry>the total number of jobs that are submitted, but has not completed execution or the state is unknown in the workflow.</entry>
+		            </row>
+		          </tbody>
+		        </tgroup>
+		      </table>
+          </para>
          </listitem>
          
          <listitem>
           <para>SUBDAX summary
-          <itemizedlist>
-          	<listitem> 
-	 		Total - the total number of SUBDAX jobs in the workflow
-	 		</listitem>
-	 		<listitem> 
-	 		Succeeded - the total number of succeeded SUBDAX jobs in the workflow.
-	 		</listitem>
-	 		<listitem>
-	 		Failed - the total number of failed SUBDAX jobs in the workflow.
-	 		</listitem>
-	 		<listitem>
-	 		Unsubmitted - the total number of unsubmitted SUBDAX jobs in the workflow.
-	 		</listitem>
-	 		<listitem>
-	 		Unknown - the total number of SUBDAX jobs that are submitted, but has not completed execution or the state is unknown in the workflow.
-	 		</listitem>
-	 		</itemizedlist>
+          <table>
+		        <title></title>
+		
+		        <tgroup cols="2">
+		          <tbody>
+		            <row>
+		              <entry>Total </entry>
+		
+		              <entry>the total number of SUBDAX jobs in the workflow.</entry>
+		            </row>
+		
+		            <row>
+		              <entry>Succeeded</entry>
+		
+		              <entry>the total number of succeeded SUBDAX jobs in the workflow.</entry>
+		            </row>
+		
+		            <row>
+		              <entry>Failed</entry>
+		
+		              <entry>the total number of failed SUBDAX jobs in the workflow.</entry>
+		            </row>
+		
+		            <row>
+		              <entry>Unsubmitted</entry>
+		
+		              <entry>the total number of unsubmitted SUBDAX jobs in the workflow.</entry>
+		            </row>
+		            <row>
+		              <entry>Unknown</entry>
+		
+		              <entry>the total number of SUBDAX jobs that are submitted, but has not completed execution or the state is unknown in the workflow.</entry>
+		            </row>
+		          </tbody>
+		        </tgroup>
+		      </table>
           </para>
          </listitem>	
       </itemizedlist>
@@ -316,7 +355,7 @@ Logical transformation statistics :
       <para><emphasis role="bold">Workflow statistics file per workflow [workflow.txt]</emphasis></para>
 
       <para>Workflow statistics file per workflow contains the following information about each workflow
-      run. A sample file is shown
+      run as seen by the DAGMAN instance that executed the workflow.</para> <note><para>For computing statistics in this file, the SUBDAG and SUBDAX jobs are treated like regular jobs. For example, if you have a workflow W with 2 DAX jobs each containing 4 jobs each, the total number of jobs displayed for workflow W will be 2.</para></note><para>A sample file is shown
       below.</para>
 	 <itemizedlist>
         <listitem>
@@ -329,10 +368,6 @@ Logical transformation statistics :
         
          <listitem>
           <para>Total jobs - the total number of jobs in the workflow.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
-         </listitem>
-         
-         <listitem>
-          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
          </listitem>
          
          <listitem>
@@ -350,12 +385,16 @@ Logical transformation statistics :
          <listitem>
           <para># jobs unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown. </para>
          </listitem>
+         
+          <listitem>
+          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
+         </listitem>
       </itemizedlist>
       
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
-        <title>Table 3.1</title>
+        <title>Workflow statistics</title>
 
         <tgroup cols="2">
           <tbody>
@@ -373,12 +412,6 @@ Logical transformation statistics :
 
             <row>
               <entry>Total jobs</entry>
-
-              <entry>16</entry>
-            </row>
-
-            <row>
-              <entry>Total tasks</entry>
 
               <entry>16</entry>
             </row>
@@ -405,6 +438,11 @@ Logical transformation statistics :
               <entry># jobs unknown</entry>
 
               <entry>0</entry>
+            </row>
+            <row>
+              <entry>Total tasks</entry>
+
+              <entry>16</entry>
             </row>
           </tbody>
         </tgroup>
@@ -458,7 +496,7 @@ Logical transformation statistics :
       </itemizedlist>
 	<para><link linkend="???">/scratch/grid-setup/run0001</link></para>
       <table>
-        <title>Table 3.3</title>
+        <title>Job statistics</title>
 
         <tgroup align="center" cols="10">
           <thead>
@@ -881,7 +919,7 @@ Logical transformation statistics :
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
-        <title>Table 3.4</title>
+        <title>Transformation statistics</title>
 
         <tgroup align="center" cols="7">
           <thead>
@@ -908,15 +946,15 @@ Logical transformation statistics :
 
               <entry>1</entry>
 
-              <entry>0.31</entry>
+              <entry>0.3140</entry>
 
-              <entry>0.00</entry>
+              <entry>0.0000</entry>
 
-              <entry>0.31</entry>
+              <entry>0.3140</entry>
 
-              <entry>0.31</entry>
+              <entry>0.3140</entry>
 
-              <entry>0.31</entry>
+              <entry>0.3140</entry>
             </row>
 
             <row>
@@ -924,15 +962,15 @@ Logical transformation statistics :
 
               <entry>1</entry>
 
-              <entry>60.75</entry>
+              <entry>60.7480</entry>
 
-              <entry>0.00</entry>
+              <entry>0.0000</entry>
 
-              <entry>60.75</entry>
+              <entry>60.7480</entry>
 
-              <entry>60.75</entry>
+              <entry>60.7480</entry>
 
-              <entry>60.75</entry>
+              <entry>60.7480</entry>
             </row>
 
             <row>
@@ -940,15 +978,15 @@ Logical transformation statistics :
 
               <entry>6</entry>
 
-              <entry>1.40</entry>
+              <entry>1.4015</entry>
 
-              <entry>0.09</entry>
+              <entry>0.0917</entry>
 
-              <entry>1.16</entry>
+              <entry>1.1610</entry>
 
-              <entry>1.91</entry>
+              <entry>1.9080</entry>
 
-              <entry>8.41</entry>
+              <entry>8.4090</entry>
             </row>
 
             <row>
@@ -956,15 +994,15 @@ Logical transformation statistics :
 
               <entry>1</entry>
 
-              <entry>61.24</entry>
+              <entry>61.2360</entry>
 
-              <entry>0.00</entry>
+              <entry>0.0000</entry>
 
-              <entry>61.24</entry>
+              <entry>61.2360</entry>
 
-              <entry>61.24</entry>
+              <entry>61.2360</entry>
 
-              <entry>61.24</entry>
+              <entry>61.2360</entry>
             </row>
 
             <row>
@@ -972,15 +1010,15 @@ Logical transformation statistics :
 
               <entry>2</entry>
 
-              <entry>60.22</entry>
+              <entry>60.2210</entry>
 
-              <entry>0.00</entry>
+              <entry>0.0015</entry>
 
-              <entry>60.19</entry>
+              <entry>60.1940</entry>
 
-              <entry>60.25</entry>
+              <entry>60.2480</entry>
 
-              <entry>120.44</entry>
+              <entry>120.4420</entry>
             </row>            
           </tbody>
         </tgroup>
@@ -1013,6 +1051,7 @@ Logical transformation statistics :
 4343 INTERNAL *** DAGMAN_FINISHED 0 ***
 1290553981 INTERNAL *** MONITORD_FINISHED 0 ***
 </programlisting>
+	<para>In the above example, the timestamp associated with MONITORD_STARTED and MONITORD_FINISHED are the actual timestamps. All the other timestamps are in reference to the time when DAGMAN started i.e DAGMAN_STARTED event has a 0 time associated with it.</para>
     </section>
 
     <section>
@@ -1054,7 +1093,7 @@ PNG file corresponding to the dax is created at:
       below.</para>
 
       <figure>
-        <title>Figure 4.1</title>
+        <title>Gantt chart</title>
 
         <mediaobject>
           <imageobject>
@@ -1069,7 +1108,7 @@ PNG file corresponding to the dax is created at:
       is shown below.</para>
 
       <figure>
-        <title>Figure 4.2</title>
+        <title>Host over time chart</title>
 
         <mediaobject>
           <imageobject>
@@ -1084,7 +1123,7 @@ PNG file corresponding to the dax is created at:
       below.</para>
 
       <figure>
-        <title>Figure 4.3</title>
+        <title>DAG Graph</title>
 
         <mediaobject>
           <imageobject>
@@ -1099,7 +1138,7 @@ PNG file corresponding to the dax is created at:
       below.</para>
 
       <figure>
-        <title>Figure 4.4</title>
+        <title>DAX Graph</title>
 
         <mediaobject>
           <imageobject>
