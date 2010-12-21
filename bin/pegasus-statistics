@@ -178,11 +178,11 @@ sub main(){
 	# Adding legends
 	my ($genstats_cumulative_job_stats_path) =  File::Spec->catfile($output_dir ,'jobs.txt');
 	open(JOBS_OUT,">$genstats_cumulative_job_stats_path") || die("Failed to open file $genstats_cumulative_job_stats_path");
-	print JOBS_OUT "#Job - the name of the job \n";
-    print JOBS_OUT "#Site - the site where the job ran \n";
+	print JOBS_OUT "#Job - the name of the job. \n";
+    print JOBS_OUT "#Site - the site where the job ran. \n";
     print JOBS_OUT "#Kickstart(sec.) - the actual duration of the job in seconds on the remote compute node. In case of retries the value is the cumulative of all retries. \n";
     print JOBS_OUT "#Post(sec.) - the postscript time as reported by DAGMan .In case of retries the value is the cumulative of all retries.\n";
-    print JOBS_OUT "#DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted \n";
+    print JOBS_OUT "#DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted. \n";
     print JOBS_OUT "#CondorQTime(sec.) - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node .In case of retries the value is the cumulative of all retries. \n";
     print JOBS_OUT "#Resource(sec.) - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue .In case of retries the value is the cumulative of all retries. \n";
     print JOBS_OUT "#Runtime(sec.) - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart .In case of retries the value is the cumulative of all retries.\n";
@@ -359,10 +359,10 @@ sub main(){
 	
 	
 	my $legends_msg = "#Legends\n";
-	$legends_msg.= "#Workflow runtime (min) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.\n";
-	$legends_msg.= "#Cumulative workflow runtime (min) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded.\n";
-	$legends_msg.= "#Total jobs - the total number of jobs in the workflow.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded.\n";
-	$legends_msg.= "#Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded.\n";
+	$legends_msg.= "#Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.\n";
+	$legends_msg.= "#Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. \n";
+	$legends_msg.= "#Total jobs - the total number of jobs in the workflow.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. \n";
+	$legends_msg.= "#Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. \n";
 	$legends_msg.= "# jobs succeeded - the total number of jobs succeeded.\n";
 	$legends_msg.= "# jobs failed - the total number of jobs failed.\n";
 	$legends_msg.= "# jobs unsubmitted - the total number of jobs that are not submitted.\n";
