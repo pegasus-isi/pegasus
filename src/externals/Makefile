@@ -2,7 +2,9 @@ ifndef ${prefix}
 prefix = $(PEGASUS_HOME)
 endif
 
-all: touch.pysqlite touch.sqlalchemy
+BOTO=boto-2.0b3-24047c8
+
+all: touch.pysqlite touch.sqlalchemy touch.boto
 
 touch.pysqlite:
 	@rm -rf pysqlite-2.6.0
@@ -23,8 +25,20 @@ touch.sqlalchemy:
 	)
 	@rm -rf SQLAlchemy-0.6.4
 	touch touch.sqlalchemy
+
+touch.boto:
+	@rm -rf $(BOTO)
+	tar xzf $(BOTO).tar.gz
+	(cd $(BOTO) && \
+	  python setup.py build && \
+	  rm -rf ${prefix}/lib/python/boto && \
+	  cp -R build/lib*/boto ${prefix}/lib/python/ \
+	)
+	@rm -rf $(BOTO)
+	touch touch.boto
 	
 clean:
 	rm -rf touch.pysqlite pysqlite-2.6.0
 	rm -rf touch.sqlalchemy SQLAlchemy-0.6.4
+	rm -rf touch.boto $(BOTO)
 

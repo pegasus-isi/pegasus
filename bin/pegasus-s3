@@ -1,0 +1,839 @@
+#!/usr/bin/env python
+#
+# A client for the Amazon S3 storage service
+#
+# URL Format:
+#	All URLs for objects stored in S3 should be specified in the following
+#	format:
+#
+#		s3://USER@SITE/BUCKET/KEY
+#
+# Configuration file search path:
+# 	This client will look in the following locations to locate the
+#	user's configuration file:
+#	
+#		1. The -c/--config argument
+#		2. The $S3CFG environment variable
+#		3. ~/.s3cfg
+#
+# Configuration file format:
+#	The configuration is an INI-style file with two types of entries.
+#	The first type of entry is a site entry, which specifies the
+#	configuration for a storage service. For example:
+#
+#		[amazon]
+#		endpoint = http://s3.amazonaws.com/
+#
+#	The other type of entry is an identity entry, which specifies the
+#	authentication information for a user at a particular site. For example:
+#
+#		[juve@amazon]
+#		access_key = <access key here>
+#		secret_key = <secret key here>
+#
+#	It is important to note that user names and site names used are only
+#	logical--they do not correspond to actual hostnames or usernames.
+#
+# Configuration variables:
+#
+#	Variable			Scope		Description
+#	endpoint			site		The URL of the web service endpoint (http, or https)
+#	max_object_size		site		The maximum size of an object in GB (default: 5)
+#	multipart_uploads	site		Does the service support multipart uploads (True/False, default: False)
+#	ranged_downloads	site		Does the service support ranged downloads (True/False, default: False)
+#	access_key			identity	The access key for the identity
+#	secret_key			identity	The secret key for the identity
+#
+# Example configuration:
+#
+#	[amazon]
+#	endpoint = https://s3.amazonaws.com/
+#	max_object_size = 5120
+#	multipart_uploads = True
+#	ranged_downloads = True
+#
+#	[juve@amazon]
+#	# No, not my real keys :-P
+#	access_key = 90c4143642cb097c88fe2ec66ce4ad4e
+#	secret_key = a0e3840e5baee6abb08be68e81674dca
+#
+import sys
+import os
+import math
+import stat
+import threading
+import Queue
+import mmap
+from optparse import OptionParser
+from urlparse import urlsplit
+from ConfigParser import ConfigParser
+
+# Add pegasus python libraries
+binpath = os.path.abspath(os.path.dirname(sys.argv[0]))
+libpath = os.path.normpath(os.path.join(binpath,"..","lib","python"))
+sys.path.insert(0,libpath)
+
+try:
+	import boto
+	import boto.exception
+	import boto.s3.connection
+	from boto.s3.bucket import Bucket
+	from boto.s3.key import Key
+	from boto.s3.multipart import MultiPartUpload
+except ImportError, e:
+	sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
+	exit(1)
+
+COMMANDS = {
+	'ls': 'List the contents of a bucket',
+	'mkdir': 'Create a bucket in S3',
+	'rmdir': 'Delete a bucket from S3',
+	'rm': 'Delete a file from S3',
+	'put': 'Upload a file to S3',
+	'get': 'Download a file from S3',
+	'lsup': 'List multipart uploads',
+	'rmup': 'Cancel multipart uploads',
+	'help': 'Print this message'
+}
+
+KB = 1024
+MB = 1024*KB
+GB = 1024*MB
+TB = 1024*GB
+
+DEFAULT_CONFIG = {
+	"max_object_size": str(5),
+	"multipart_uploads": str(False),
+	"ranged_downloads": str(False)
+}
+
+DEBUG = False
+VERBOSE = False
+
+class ChunkedFile:
+	def __init__(self, mm, offset):
+		self.mm = mm
+		self.offset = offset
+		
+	def write(self, bytes):
+		size = len(bytes)
+		start = self.offset
+		end = self.offset + size
+		self.mm[start:end] = bytes
+		self.offset += size
+
+class FilePart:
+	"""
+	This is a file-like object that can be used to access a given range
+	of bytes in a file. It is used for multipart uploads.
+	"""
+	
+	def __init__(self, filename, offset, length):
+		self.filename = filename
+		self.fp = open(filename, "rb")
+		self.offset = offset
+		self.fp.seek(0, os.SEEK_END)
+		self.length = min(length, self.fp.tell()-self.offset)
+		self.fp.seek(self.offset, os.SEEK_SET)
+		
+	def seek(self, offset, whence=os.SEEK_SET):
+		if self.fp is None:
+			raise Exception("File closed")
+		
+		if whence == os.SEEK_SET: # Absolute
+			self.fp.seek(self.offset + offset, os.SEEK_SET)
+		elif whence == os.SEEK_CUR: # From current
+			self.fp.seek(offset, os.SEEK_CUR)
+		elif whence == os.SEEK_END: # From end
+			pos = self.length + offset
+			if pos < 0:
+				raise Exception("Invalid argument")
+			self.fp.seek(self.offset + pos, os.SEEK_SET)
+		else:
+			raise Exception("Invalid argument")
+		
+	def tell(self):
+		if self.fp is None:
+			raise Exception("File closed")
+			
+		return self.fp.tell() - self.offset
+		
+	def read(self, size=None):
+		if self.fp is None:
+			raise Exception("File closed")
+		
+		pos = self.tell()
+		if pos >= self.length:
+			return ''
+		
+		remaining = self.length - pos
+		if size > remaining or size is None:
+			size = remaining
+		
+		return self.fp.read(size)
+		
+	def close(self):
+		if self.fp is not None:
+			self.fp.close()
+			self.fp = None
+			
+class WorkThread(threading.Thread):
+	def __init__(self, queue, conn):
+		threading.Thread.__init__(self)
+		self.queue = queue
+		self.conn = conn
+		self.exception = None
+		self.daemon = True
+		
+	def run(self):
+		try:
+			# Just keep grabbing work units and
+			# executing them until there are no
+			# more to process, then exit
+			while True:
+				fn = self.queue.get(False)
+				fn(self.conn)
+		except Queue.Empty:
+			return
+		except Exception, e:
+			self.exception = e
+		
+def debug(message):
+	if DEBUG:
+		sys.stderr.write(message)
+		sys.stderr.write("\n")
+		
+def info(message):
+	if VERBOSE:
+		sys.stdout.write(message)
+		sys.stdout.write("\n")
+		
+def warn(message):
+	sys.stderr.write("WARNING: ")
+	sys.stderr.write(message)
+	sys.stderr.write("\n")
+
+def help(args):
+	sys.stderr.write("Usage: %s COMMAND\n\n" % os.path.basename(sys.argv[0]))
+	sys.stderr.write("Commands:\n")
+	for cmd in COMMANDS:
+		sys.stderr.write("\t%s\t%s\n" % (cmd, COMMANDS[cmd]))
+
+def option_parser(usage):
+	command = os.path.basename(sys.argv[0])
+	
+	parser = OptionParser(usage="usage: %s %s" % (command, usage))
+	parser.add_option("-d", "--debug", dest="debug", action="store_true",
+		default=False, help="Turn on debugging")
+	parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+		default=False, help="Show progress messages")
+	parser.add_option("-C", "--conf", dest="config",
+		metavar="FILE", default=None,
+		help="Path to configuration file")
+	
+	# Add a hook so we can handle global arguments
+	fn = parser.parse_args
+	def parse(*args, **kwargs):
+		options, args = fn(*args, **kwargs)
+		
+		if options.debug:
+			boto.set_stream_logger("boto")
+			global DEBUG
+			DEBUG = True
+			
+		if options.verbose:
+			global VERBOSE
+			VERBOSE = True
+		
+		return options, args
+	parser.parse_args = parse
+	
+	return parser
+	
+def get_config(options):
+	if options.config:
+		cfg = options.config
+	else:
+		cfg = os.getenv("S3CFG", None)
+		if cfg is None:
+			cfg = os.path.expanduser("~/.s3cfg")
+			
+	if not os.path.isfile(cfg):
+		raise Exception("Unable to locate config file: %s" % cfg)
+	
+	# Make sure nobody else can read the file
+	mode = os.stat(cfg).st_mode
+	if mode & (stat.S_IRWXG | stat.S_IRWXO):
+		raise Exception("Permissions of config file %s are too liberal" % cfg)
+	
+	config = ConfigParser(DEFAULT_CONFIG)
+	config.read(cfg)
+	
+	return config
+
+def parse_endpoint(uri):
+	result = urlsplit(uri)
+	
+	return {
+		'is_secure': result.scheme=='https',
+		'host': result.hostname,
+		'port': result.port,
+		'path': result.path
+	}
+
+def get_connection(config, uri):
+	if not config.has_section(uri.site):
+		raise Exception("Config file has no section for site '%s'" % uri.site)
+		
+	if not config.has_section(uri.ident):
+		raise Exception("Config file has no section for identity '%s'" % uri.ident)
+	
+	endpoint = config.get(uri.site,"endpoint")
+	kwargs = parse_endpoint(endpoint)
+	
+	kwargs['aws_access_key_id'] = config.get(uri.ident,"access_key")
+	kwargs['aws_secret_access_key'] = config.get(uri.ident,"secret_key")
+	kwargs['calling_format'] = boto.s3.connection.OrdinaryCallingFormat()
+	
+	return boto.s3.connection.S3Connection(**kwargs)
+
+class S3URI:
+	def __init__(self, user, site, bucket=None, key=None):
+		self.user = user
+		self.site = site
+		self.ident = "%s@%s" % (user, site)
+		self.bucket = bucket
+		self.key = key
+		
+	def __repr__(self):
+		uri = "s3://%s" % self.ident
+		if self.bucket is not None:
+			uri += "/%s" % self.bucket
+		if self.key is not None:
+			uri += "/%s" % self.key
+		return uri
+	
+def parse_uri(uri):
+	"Parse S3 uri into an S3URI object"
+	
+	if not uri.startswith("s3://"):
+		raise Exception("Invalid URL scheme: %s" % (uri))
+	
+	# Need to do this because urlparse does not recognize
+	# custom URI schemes
+	http = uri.replace("s3://","http://")
+	result = urlsplit(http)
+	
+	# The path should be empty, /BUCKET or /BUCKET/KEY
+	path = result.path.strip()
+	if path.startswith("/"):
+		path = path[1:]
+	if len(path) == 0:
+		bucket = None
+		key = None
+	else:
+		comp = path.split('/',1)
+		bucket = comp[0]
+		if len(comp) == 1:
+			key = None
+		elif comp[1] == '':
+			key = None
+		else:
+			key = comp[1]
+	
+	# We require the username part
+	user = result.username
+	if user is None:
+		raise Exception("User missing from URL: %s" % uri)
+	
+	if result.port is None:
+		site = result.hostname
+	else:
+		site = "%s:%s" % (result.hostname, result.port)
+	
+	return S3URI(user, site, bucket, key)
+
+def ls(args):
+	parser = option_parser("ls URL...")
+	options, args = parser.parse_args(args)
+	
+	if len(args) == 0:
+		parser.error("Specify a URL")
+	
+	config = get_config(options)
+	
+	items = []
+	for uri in args:
+		items.append(parse_uri(uri))
+	
+	for uri in items:
+		conn = get_connection(config, uri)
+		
+		bucket = uri.bucket
+		key = uri.key
+		
+		sys.stdout.write("%s\n" % uri)
+		if bucket is None:
+			buckets = conn.get_all_buckets()
+			for bucket in buckets:
+				sys.stdout.write("\t%s\n" % bucket.name)
+		else:
+			b = conn.get_bucket(uri.bucket)
+			for o in b.list(prefix=uri.key):
+				# For some reason, Walrus sometimes returns a Prefix object
+				if isinstance(o, boto.s3.prefix.Prefix):
+					continue
+				sys.stdout.write("\t%s\n" % o.name)
+			
+def mkdir(args):
+	parser = option_parser("mkdir URL...")
+	options, args = parser.parse_args(args)
+	
+	if len(args) == 0:
+		parser.error("Specify URL")
+	
+	buckets = []
+	for arg in args:
+		uri = parse_uri(arg)
+		if uri.bucket is None:
+			raise Exception("URL for mkdir must contain a bucket: %s" % arg)
+		if uri.key is not None:
+			raise Exception("URL for mkdir cannot contain a key: %s" % arg)
+		buckets.append(uri)
+		
+	config = get_config(options)
+	
+	for uri in buckets:
+		info("Creating %s" % uri)
+		conn = get_connection(config, uri)
+		conn.create_bucket(uri.bucket)
+	
+def rmdir(args):
+	parser = option_parser("rmdir URL...")
+	options, args = parser.parse_args(args)
+	
+	if len(args) == 0:
+		parser.error("Specify URL")
+	
+	buckets = []
+	for arg in args:
+	 	uri = parse_uri(arg)
+		if uri.bucket is None:
+			raise Exception("URL for rmdir must contain a bucket: %s" % arg)
+		if uri.key is not None:
+			raise Exception("URL for rmdir cannot contain a key: %s" % arg)
+		buckets.append(uri)
+	
+	config = get_config(options)
+	
+	for uri in buckets:
+		info("Removing bucket %s" % uri)
+		conn = get_connection(config, uri)
+		conn.delete_bucket(uri.bucket)
+	
+def rm(args):
+	parser = option_parser("rm URL...")
+	parser.add_option("-f", "--force", dest="force", action="store_true",
+		default=False, help="Ignore nonexistent keys")
+	options, args = parser.parse_args(args)
+	
+	if len(args) == 0:
+		parser.error("Specify URL")
+	
+	buckets = {}
+	for arg in args:
+		uri = parse_uri(arg)
+		if uri.bucket is None:
+			raise Exception("URL for rm must contain a bucket: %s" % arg)
+		if uri.key is None:
+			raise Exception("URL for rm must contain a key: %s" % arg)
+		
+		bid = "%s/%s" % (uri.ident, uri.bucket)
+		buri = S3URI(uri.user, uri.site, uri.bucket)
+		
+		if bid not in buckets:
+			buckets[bid] = (buri, [])
+		buckets[bid][1].append(uri)
+	
+	config = get_config(options)
+	
+	for bucket in buckets:
+		uri, keys = buckets[bucket]
+		conn = get_connection(config, uri)
+		b = conn.get_bucket(uri.bucket)
+		for key in keys:
+			info("Removing key %s" % key)
+			k = b.get_key(key.key)
+			if k is None and not options.force:
+				raise Exception("No such object: %s" % key)
+			if k is not None:
+				k.delete()
+
+def PartialUpload(uri, id, part, parts, infile, offset, length):
+	def upload(conn):
+		info("Uploading part %d of %d" % (part, parts))
+		f = FilePart(infile, offset, length)
+		b = Bucket(connection=conn, name=uri.bucket)
+		up = MultiPartUpload(bucket=b)
+		up.id = id
+		up.key_name = uri.key
+		up.upload_part_from_file(f, part)
+		f.close()
+		info("Finished uploading part %d (%s bytes)" % (part, length))
+	return upload
+	
+def put(args):
+	parser = option_parser("put FILE URL")
+	parser.add_option("-c", "--chunksize", dest="chunksize", action="store", type="int",
+		metavar="X", default=10, help="Set the chunk size for multipart uploads to X MB."
+		"A value of 0 disables multipart uploads. The default is 10MB, the min is 5MB "
+		"and the max is 1024MB. This parameter only applies for sites that support "
+		"multipart uploads (see multipart_uploads configuration parameter). The maximum "
+		"number of chunks is 10,000, so if you are uploading a large file, then the "
+		"chunksize is automatically increased to enable the upload. Choose smaller values "
+		"to reduce the impact of transient failures.")
+	parser.add_option("-p", "--parallel", dest="parallel", action="store", type="int",
+		metavar="N", default=0, help="Use N threads to upload FILE in parallel. "
+			"The default value is 0, which disables parallel uploads. This parameter "
+			"is only valid if the site supports mulipart uploads and the --chunksize "
+			"parameter is not 0.")
+	options, args = parser.parse_args(args)
+	
+	if options.chunksize!=0 and (options.chunksize < 5 or options.chunksize > 1024):
+		parser.error("Invalid chunksize")
+		
+	if options.parallel < 0:
+		parser.error("Invalid value for --parallel")
+	
+	if len(args) != 2:
+		parser.error("Specify FILE and URL")
+	
+	infile = args[0]
+	url = args[1]
+	
+	if not os.path.isfile(infile):
+		raise Exception("No such file: %s" % infile)
+	
+	# Validate URL
+	uri = parse_uri(url)
+	if uri.bucket is None:
+		raise Exception("URL for put must have a bucket: %s" % url)
+	if uri.key is None:
+		uri.key = os.path.basename(infile)
+	
+	config = get_config(options)
+	
+	# Make sure file is not too large for the service
+	size = os.stat(infile).st_size
+	max_object_size = config.getint(uri.site, "max_object_size")
+	if size > (max_object_size*GB):
+		raise Exception("File %s exceeds object size limit"
+		" (%sGB) of service" % (infile, max_object_size))
+		
+	info("Uploading %s" % uri)
+	
+	# Does the site support multipart uploads?
+	multipart_uploads = config.getboolean(uri.site, "multipart_uploads")
+	
+	# Warn the user
+	if options.parallel > 0:
+		if not multipart_uploads:
+			warn("Multipart uploads disabled, ignoring --parallel ")
+		elif options.chunksize == 0:
+			warn("--chunksize set to 0, ignoring --parallel")
+	
+	conn = get_connection(config, uri)
+	b = Bucket(connection=conn, name=uri.bucket)
+	
+	if (not multipart_uploads) or (options.chunksize==0):
+		# no multipart, or chunks disabled, just do it the simple way
+		k = Key(bucket=b, name=uri.key)
+		k.set_contents_from_filename(infile)
+	else:
+		# Multipart supported, chunking requested
+		
+		# The target chunk size is user-defined, but we may need
+		# to go larger if the file is big because the maximum number
+		# of chunks is 10,000. So the actual size of a chunk
+		# will range from 5MB to ~525MB.
+		part_size = max(options.chunksize*MB, size/9999)
+		num_parts = int(math.ceil(size / float(part_size)))
+	
+		if num_parts <= 1:
+			k = Key(bucket=b, name=uri.key)
+			k.set_contents_from_filename(infile)
+		else:
+			info("Creating multipart upload")
+			upload = b.initiate_multipart_upload(uri.key)
+			try:
+				# Create all uploads
+				uploads = []
+				for i in range(0, num_parts):
+					up = PartialUpload(uri, upload.id, i+1, num_parts, infile, i*part_size, part_size)
+					uploads.append(up)
+				
+				if options.parallel <= 1:
+					# Serial
+					for up in uploads:
+						up(conn)
+				else:
+					# Parallel
+					
+					# Queue up requests
+					queue = Queue.Queue()
+					for up in uploads:
+						queue.put(up)
+					
+					# No sense forking more threads than there are chunks
+					nthreads = min(options.parallel, num_parts)
+					
+					# Fork threads
+					threads = []
+					for i in range(0, nthreads):
+						conn = get_connection(config, uri)
+						t = WorkThread(queue, conn)
+						threads.append(t)
+						t.start()
+					
+					# Wait for the threads
+					for t in threads:
+						t.join()
+						# If any of the threads encountered
+						# an error, then we fail here
+						if t.exception is not None:
+							raise t.exception
+				
+				info("Completing upload")	
+				upload.complete_upload()
+			except Exception, e:
+				# If there is an error, then we need to try and abort
+				# the multipart upload so that it doesn't hang around
+				# forever on the server.
+				try:
+					info("Aborting multipart upload")
+					upload.cancel_upload()
+				except Exception, f:
+					sys.stderr.write("ERROR: Unable to abort multipart"
+						" upload (use lsup/rmup): %s\n" % f)
+				raise e
+	
+	info("Upload complete")
+
+def lsup(args):
+	parser = option_parser("lsup BUCKET")
+	options, args = parser.parse_args(args)
+	
+	if len(args) == 0:
+		parser.error("Specify BUCKET")
+	
+	uri = parse_uri(args[0])
+	
+	if uri.bucket is None:
+		raise Exception("URL must contain a bucket: %s" % args[0])
+	if uri.key is not None:
+		raise Exception("URL cannot contain a key: %s" % args[0])
+		
+	config = get_config(options)
+	conn = get_connection(config, uri)
+	
+	b = conn.get_bucket(uri.bucket)
+	
+	for up in b.list_multipart_uploads():
+		uri.key = up.key_name
+		sys.stdout.write("%s %s\n" % (uri, up.id))
+
+def rmup(args):
+	parser = option_parser("rmup BUCKET UPLOAD")
+	options, args = parser.parse_args(args)
+	
+	if len(args) != 2:
+		parser.error("Specify BUCKET and UPLOAD")
+	
+	uri = parse_uri(args[0])
+	upload = args[1]
+	
+	if uri.bucket is None:
+		raise Exception("URL must contain a bucket: %s" % args[0])
+	if uri.key is not None:
+		raise Exception("URL cannot contain a key: %s" % args[0])
+		
+	config = get_config(options)
+	conn = get_connection(config, uri)
+	
+	# There is no easy way to do this with boto
+	b = Bucket(connection=conn, name=uri.bucket)
+	for up in b.list_multipart_uploads():
+		if up.id == upload:
+			info("Removing upload %s" % up.id)
+			up.cancel_upload()
+	
+def PartialDownload(uri, mm, part, parts, start, end):
+	def download(conn):
+		info("Downloading part %d of %d" % (part, parts))
+		f = ChunkedFile(mm, start)
+		bucket = Bucket(connection=conn, name=uri.bucket)
+		key = Key(bucket=bucket, name=uri.key)
+		key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
+		info("Part %d finished (%s bytes)" % (part, key.size))
+		
+	return download
+
+def get(args):
+	parser = option_parser("get URL [FILE]")
+	parser.add_option("-c", "--chunksize", dest="chunksize", action="store", type="int",
+		metavar="X", default=10, help="Set the chunk size for parallel downloads to X "
+		"megabytes. A value of 0 will avoid chunked reads. This option only applies for "
+		"sites that support ranged downloads (see ranged_downloads configuration "
+		"parameter). The default chunk size is 10MB, the min is 1MB and the max is "
+		"1024MB. Choose smaller values to reduce the impact of transient failures.")
+	parser.add_option("-p", "--parallel", dest="parallel", action="store", type="int",
+		metavar="N", default=0, help="Use N threads to upload FILE in parallel. The "
+			"default value is 0, which disables parallel downloads. This parameter is "
+			"only valid if the site supports ranged downloads and the --chunksize "
+			"parameter is not 0.")
+	options, args = parser.parse_args(args)
+	
+	if options.chunksize < 0 or options.chunksize > 1024:
+		parser.error("Invalid chunksize")
+		
+	if options.parallel < 0:
+		parser.error("Invalid value for --parallel")
+	
+	if len(args) == 0:
+		parser.error("Specify URL")
+	
+	uri = parse_uri(args[0])
+	
+	if uri.bucket is None:
+		raise Exception("URL must contain a bucket: %s" % args[0])
+	if uri.key is None:
+		raise Exception("URL must contain a key: %s" % args[0])
+		
+	if len(args) > 1:
+		outfile = args[1]
+	else:
+		outfile = uri.key
+	
+	info("Downloading %s" % uri)
+	
+	config = get_config(options)
+	conn = get_connection(config, uri)
+	
+	# Does the site support ranged downloads properly?
+	ranged_downloads = config.getboolean(uri.site, "ranged_downloads")
+	
+	# Warn the user
+	if options.parallel > 1:
+		if not ranged_downloads:
+			warn("ranged downloads not supported, ignoring --parallel")
+		elif options.chunksize == 0:
+			warn("--chunksize set to 0, ignoring --parallel")
+	
+	if (not ranged_downloads) or (options.chunksize == 0):
+		# Ranged downloads not supported, or chunking disabled
+		b = Bucket(connection=conn, name=uri.bucket)
+		k = Key(bucket=b, name=uri.key)
+		k.get_contents_to_filename(outfile)
+	else:
+		# Ranged downloads and chunking requested
+		
+		# Get the size of the key
+		k = Bucket(connection=conn, name=uri.bucket).get_key(uri.key)
+		if k is None:
+			raise Exception("No such key: %s" % uri)
+		size = k.size
+		
+		# Compute chunks
+		part_size = options.chunksize*MB
+		num_parts = int(math.ceil(size / float(part_size)))
+		
+		if num_parts <= 1:
+			# No point if there is only one chunk
+			k.get_contents_to_filename(outfile)
+		else:
+			# Create the file and mmap it. We have to pre-create
+			# the file, otherwise the mmaping won't work properly.
+			# We use mmap because opening multiple file descriptors
+			# didn't work.
+			f = open(outfile, "w+b")
+			f.seek(size-1)
+			f.write('\0')
+			f.flush()
+			mm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED)
+			
+			# Create all the downloads
+			downloads = []
+			for i in range(0, num_parts):
+				start = i*part_size
+				end = min(size, start+part_size-1)
+				down = PartialDownload(uri, mm, i+1, num_parts, start, end)
+				downloads.append(down)
+				
+			if options.parallel <= 1:
+				# Serial
+				for down in downloads:
+					down(conn)
+			else:
+				# Parallel
+				
+				# No sense forking more threads than there are chunks
+				nthreads = min(options.parallel, num_parts)
+				
+				info("Starting parallel download with %d threads" % nthreads)
+				
+				# Queue up requests
+				queue = Queue.Queue()
+				for down in downloads:
+					queue.put(down)
+				
+				# Fork threads
+				threads = []
+				for i in range(0, nthreads):
+					t = WorkThread(queue, get_connection(config, uri))
+					threads.append(t)
+					t.start()
+			
+				# Wait for the threads
+				for t in threads:
+					t.join()
+					# If any of the threads encountered
+					# an error, then we fail here
+					if t.exception is not None:
+						raise t.exception
+						
+			# Close the mmap()ed file
+			mm.close()
+			f.close()
+	
+	info("Download complete")
+	
+def main():
+	if len(sys.argv) < 2:
+		help(sys.argv)
+		exit(1)
+	
+	command = sys.argv[1].lower()
+	args = sys.argv[2:]
+	
+	if command in COMMANDS:
+		fn = globals()[command]
+		try:
+			fn(args)
+		except boto.exception.S3ResponseError, e:
+			if sys.stderr.isatty() and not DEBUG:
+				sys.stderr.write("ERROR: %s\n" % e.error_message)
+				exit(1)
+			else:
+				raise
+		except Exception, e:
+			if sys.stderr.isatty() and not DEBUG:
+				sys.stderr.write("ERROR: %s\n" % e)
+				exit(1)
+			else:
+				raise
+	else:
+		sys.stderr.write("ERROR: Unknown command: %s\n" % command)
+		exit(1)
+	
+if __name__ == '__main__':
+	main()
