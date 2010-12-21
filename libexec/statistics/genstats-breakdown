@@ -163,7 +163,7 @@ if ($extra) {
                 $denom = $count - 1;
             }
 
-            $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
+            $out = sprintf("%-40s % 6d % 12.4f % 16.4f % 12.4f % 12.4f % 12.4f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
             print $out;
         }
         ++$submit_dir_count;
@@ -191,7 +191,7 @@ if($file){
 	                $denom = $count - 1;
 	            }
 	
-	            $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
+	            $out = sprintf("%-40s % 6d % 12.4f % 16.4f % 12.4f % 12.4f % 12.4f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
 	            print $out;
 	        }
 	        ++$submit_dir_count;
@@ -209,7 +209,7 @@ if ($submit_dir_count >1){
 	        $denom = $count - 1;
 	    }
 	
-	    $out = sprintf("%-40s % 6d % 12.2f % 16.2f % 12.2f % 12.2f % 12.2f\n", $transformation, $count, $samples{$allKey}{$transformation}{'mean'}, $samples{$allKey}{$transformation}{'diff'} / $denom, $samples{$allKey}{$transformation}{'min'}, $samples{$allKey}{$transformation}{'max'}, $count * $samples{$allKey}{$transformation}{'mean'});
+	    $out = sprintf("%-40s % 6d % 12.4f % 16.4f % 12.4f % 12.4f % 12.4f\n", $transformation, $count, $samples{$allKey}{$transformation}{'mean'}, $samples{$allKey}{$transformation}{'diff'} / $denom, $samples{$allKey}{$transformation}{'min'}, $samples{$allKey}{$transformation}{'max'}, $count * $samples{$allKey}{$transformation}{'mean'});
 	    print $out;
 	}
 }
