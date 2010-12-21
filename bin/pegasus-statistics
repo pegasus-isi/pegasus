@@ -190,14 +190,21 @@ sub main(){
     print JOBS_OUT "#Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time .In case of retries the value is the cumulative of all retries.\n";
 	close(JOBS_OUT);
 	print STDOUT "\n******  calculating job statistics for workflow : $submit_dir  ***** \n";
-	my($genstats_status ,$genstats_summary_msg) =run_genstats($dag_file_path ,rlb($jsd_file_path),$output_dir ,$condor ,$submit_dir, '');
+	my($genstats_status ,$genstats_summary_msg) =run_genstats($dag_file_path ,rlb($jsd_file_path),$output_dir ,$condor ,$submit_dir, undef);
 	print STDOUT "******  Finished calculating job statistics for workflow : $submit_dir  ***** \n\n";
 	## Executing genstats-breakdown command
 	%sub_workflow_submit_hash = get_sub_workflow_list($dag_file_path);
 	my ($number_of_elements) = scalar(keys %sub_workflow_submit_hash);
 	my ($sub_wf_id ,$sub_submit_dir ) ;
 	my ($genstats_error) = undef;
+	my $workflow_events_dir  = undef;
 	if($number_of_elements > 0){
+	 	$workflow_events_dir  = File::Spec->catdir($output_dir,"workflow_events");
+	 	if (-d "$workflow_events_dir") {
+			print STDERR "WARNING: Output directory $workflow_events_dir exists. Overwriting the contents ....\n";
+			rmtree($workflow_events_dir) or die "Unable to delete $workflow_events_dir . $! \n";
+		}
+		mkdir ($workflow_events_dir) or die "Unable to create $workflow_events_dir . $! \n";
 		if($monitord){
 			invoke_monitord_for_sub_workflow(values %sub_workflow_submit_hash);
 		}
@@ -217,7 +224,7 @@ sub main(){
 			my($sub_workflow_statistics_status) = print_workflow_statistics($sub_submit_dir,rlb($sub_jsd_file_path),$sub_dag_file_path,$condor);
 			print STDOUT "******  Finished calculating workflow statistics for workflow : $sub_submit_dir  ***** \n\n";
 			print STDOUT "\n******  calculating job statistics for workflow : $sub_submit_dir  ***** \n";
-			my($genstats_status_sub ,$genstats_summary_msg_sub) =run_genstats($sub_dag_file_path ,rlb($sub_jsd_file_path),$output_dir ,$condor ,$sub_submit_dir, $sub_wf_id);
+			my($genstats_status_sub ,$genstats_summary_msg_sub) =run_genstats($sub_dag_file_path ,rlb($sub_jsd_file_path),$output_dir ,$condor ,$sub_submit_dir, $sub_wf_id."_");
 			if($genstats_status_sub != 0){
 				print STDERR "$genstats_summary_msg_sub \n";
 				$genstats_error = 1;
@@ -226,10 +233,10 @@ sub main(){
 		}
 	}
 	if($number_of_elements > 0){
-		$genstats_summary_msg .= "Workflow events with time starting with zero for sub workflows : \n$output_dir\n";
+		$genstats_summary_msg .= "Directory that has the workflow events files for all sub workflows : \n$workflow_events_dir\n";
 	}
 	if(defined ($genstats_error)){
-		$genstats_summary_msg .= "Failed to generate job statistics or Workflow events with time starting with zero for sub workflows.You can find details from the STDOUT.\n";
+		$genstats_summary_msg .= "Failed to generate job statistics or Workflow events with time starting from zero for sub workflows.You can find details from the STDOUT.\n";
 	}
 	
 	my($genstats_breakdown_status ,$genstats_breakdown_summary_msg) =run_genstats_breakdown($dag_file_path ,$submit_dir ,$output_dir  );
@@ -375,7 +382,7 @@ sub main(){
 	$legends_msg_summary.= "\n";
 	my $dag_job_warning_msg ="";
 	if (defined $contains_dag_job){
-		$dag_job_warning_msg = "\nWARNING: This workflow has $sub_dag_total_jobs SUBDAG jobs.\nSUBDAG jobs are treated like regular jobs.The jobs making up the SUBDAG are not included in the cummulative numbers.\n\n";
+		$dag_job_warning_msg = "\n[WARNING]: This workflow has $sub_dag_total_jobs SUBDAG jobs.\nSUBDAG jobs are treated like regular jobs.The jobs making up the SUBDAG are not included in the cummulative numbers.\n\n";
 	}
 	print "\n\n******************************************** SUMMARY ********************************************\n";
 	print $legends_msg_summary.$dag_job_warning_msg.$summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
@@ -882,7 +889,14 @@ sub run_genstats($$$$$$){
 		my ($genstats_job_path) =  File::Spec->catfile($output_dir ,'jobs');
 		my ($genstats_out_path) =  File::Spec->catfile($output_dir ,'out');
 		my ($genstats_cumulative_job_stats_path) =  File::Spec->catfile($output_dir ,'jobs.txt');
-		my ($genstats_out_path_prefixed) =  File::Spec->catfile($output_dir ,$prefix.'out.txt');
+		my ($genstats_out_path_prefixed);
+		#sub workflow has a prefix
+		if(defined ($prefix)){ 
+			my $workflow_events_dir  = File::Spec->catdir($output_dir,"workflow_events");
+			$genstats_out_path_prefixed =  File::Spec->catfile($workflow_events_dir ,$prefix.'jobstate.txt');	
+		}else{
+			$genstats_out_path_prefixed =  File::Spec->catfile($output_dir ,"jobstate.txt");
+		}
 		
 		open(JOBS_IN,"$genstats_job_path") || die("Failed to open file $genstats_job_path");
 		open(JOBS_OUT,">>$genstats_cumulative_job_stats_path") || die("Failed to open file $genstats_cumulative_job_stats_path");
@@ -901,16 +915,16 @@ sub run_genstats($$$$$$){
     	
 		if(!move($genstats_out_path ,$genstats_out_path_prefixed)) {
 			print STDERR "ERROR : Failed to move file from $genstats_job_path to $genstats_out_path_prefixed. $! \n";
-			$summary_msg = "\nFailed to move file from $genstats_job_path to $genstats_out_path_prefixed. $! \n";
-			$summary_msg .= "\nJob statistics : \n$genstats_cumulative_job_stats_path\n";
+			$summary_msg = "\nJob statistics : \n$genstats_cumulative_job_stats_path\n";
+			$summary_msg .= "\nFailed to move file from $genstats_job_path to $genstats_out_path_prefixed. $! \n";
 			$status = 1;
 			return ($status,$summary_msg);
 		}
 		if ($main::DEBUG){
 			print STDOUT "The genstats result - $output_dir \n************ \n";
 		}
-		$summary_msg = "\nWorkflow events with time starting with zero : \n$genstats_out_path_prefixed\n";
-		$summary_msg .= "\nJob statistics : \n$genstats_cumulative_job_stats_path\n";
+		$summary_msg = "\nJob statistics : \n$genstats_cumulative_job_stats_path\n";
+		$summary_msg .= "\nWorkflow events with time starting from zero : \n$genstats_out_path_prefixed\n";
 	}else{
 		print STDERR "ERROR: Failed to execute genstats command. $exec_msg\n";
 		$summary_msg = "\nERROR: Failed to generate job statistics. $exec_msg\n";
