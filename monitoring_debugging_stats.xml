@@ -248,8 +248,7 @@ Logical transformation statistics :
 **************************************************************************************************</programlisting>
 
       <para>By default the output gets generated to statistics folder inside
-      the submit directory. pegasus-statistics generates the following
-      statistics list and tables. pegasus statistics summary contains the following information</para>
+      the submit directory. pegasus statistics summary which is displayed on the standard output is the summary across all the workflows.pegasus-statistics summary contains the following information.</para>
 	  <itemizedlist>
 	  <listitem>
           <para>Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.</para>
@@ -311,11 +310,13 @@ Logical transformation statistics :
       	<warning>
           <para>SUBDAG jobs are treated like regular jobs. The jobs making up the SUBDAG are not included in the cummulative numbers.</para>
         </warning>
-      </para>   
-      <para><emphasis role="bold">Workflow statistics table</emphasis></para>
+      </para>
+      <para>pegasus-statistics generates the following
+      statistics files.</para>   
+      <para><emphasis role="bold">Workflow statistics file per workflow [workflow.txt]</emphasis></para>
 
-      <para>Workflow statistics table contains the following information about the workflow
-      run. A sample table is shown
+      <para>Workflow statistics file per workflow contains the following information about each workflow
+      run. A sample file is shown
       below.</para>
 	 <itemizedlist>
         <listitem>
@@ -323,15 +324,15 @@ Logical transformation statistics :
         </listitem>
 
         <listitem>
-          <para>Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded. </para>
+          <para>Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
         </listitem>
         
          <listitem>
-          <para>Total jobs - the total number of jobs in the workflow.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded. </para>
+          <para>Total jobs - the total number of jobs in the workflow.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
          </listitem>
          
          <listitem>
-          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. There are not expanded. </para>
+          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
          </listitem>
          
          <listitem>
@@ -409,10 +410,10 @@ Logical transformation statistics :
         </tgroup>
       </table>
 
-      <para><emphasis role="bold">Job statistics table</emphasis></para>
+      <para><emphasis role="bold">Job statistics file per workflow [jobs.txt]</emphasis></para>
 
-      <para>Job statistics table contains the following details about the jobs
-      in the workflow. A sample table is shown below.</para>
+      <para>Job statistics file per workflow contains the following details about the jobs
+      in each workflow. A sample file is shown below.</para>
 
       <itemizedlist>
         <listitem>
@@ -840,11 +841,11 @@ Logical transformation statistics :
         </tgroup>
       </table>
 
-      <para><emphasis role="bold">Logical transformation statistics
-      table</emphasis></para>
+      <para><emphasis role="bold">Logical transformation statistics file per 
+      workflow [breakdown.txt]</emphasis></para>
 
-      <para>Logical transformation statistics table contains information about
-      each type of transformation in the workflow. A sample table is shown
+      <para>Logical transformation statistics file per workflow contains information about
+      transformations in each workflow. A sample file is shown
       below.</para>
 	  <itemizedlist>
         <listitem>
@@ -860,7 +861,8 @@ Logical transformation statistics :
         </listitem>
 
         <listitem>
-          <para>Variance(sec.) - the variance of the transformation runtime.</para>
+          <para>Variance(sec.) - the variance of the transformation runtime.Variance is calculated using the on-line algorithm by Knuth (<ulink
+    url="http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance">http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance</ulink>).</para>
         </listitem>
 
         <listitem>
@@ -984,10 +986,10 @@ Logical transformation statistics :
         </tgroup>
       </table>
 
-      <para><emphasis role="bold">Workflow events list</emphasis></para>
+      <para><emphasis role="bold">Workflow events list file [jobstate.txt]</emphasis></para>
 
-      <para>Workflow events list contains the events listed with time starting
-      with zero. A sample list is shown below.</para>
+      <para>Workflow events list file contains the events listed with time starting
+      with zero. In case of subworkflows the files are stored in the 'workflow_events' folder inside the output directory. The sub workflow file names are prefixed with the sub workflow job ID. A sample file is shown below.</para>
 
       <programlisting>1290549637 INTERNAL *** MONITORD_STARTED ***
 0 INTERNAL *** DAGMAN_STARTED 904.0 ***
