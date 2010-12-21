@@ -92,7 +92,7 @@ if sys.version_info < (2, 5):
 # Used in the initialization code of the Workflow class, while reading the DAG file
 re_parse_dag_submit_files = re.compile(r"JOB\s+(\S+)\s(\S+)(\s+DONE)?", re.IGNORECASE)
 re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
-re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\sDIR\s(\S+)", re.IGNORECASE)
+re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\s?(?:DIR)?\s?(\S+)?", re.IGNORECASE)
 re_parse_dag_edge = re.compile(r"PARENT\s+(\S+)\s+CHILD\s+(\S+)")
 
 # Used in out2log
@@ -155,6 +155,7 @@ wfs = []			# list of workflow entries monitord is tracking
 tracked_workflows = []		# list of workflows we have started tracking
 follow_subworkflows = True	# Flag for tracking sub-workflows
 replay_mode = 0			# disable checking if DAGMan's pid is gone
+keep_state = 0			# Flag for keeping a Workflow's state across several DAGMan start/stop cycles
 use_db = 1			# flag for using the database
 output_db = None		# connection string for the database
 db_stats = 'no'			# collect and print database stats at the end of execution
@@ -598,6 +599,10 @@ class Workflow:
                         my_jobid = my_match.group(1)
                         my_dag = my_match.group(2)
                         my_dir = my_match.group(3)
+                        if my_dir is None:
+                            # SUBDAG EXTERNAL line without DIR, let's get it from the DAG path
+                            if my_dag is not None:
+                                my_dir = os.path.dirname(my_dag)
                         if my_jobid in self._job_info:
                             # Entry already exists for this job, just set subdag flag, and dag/dir info
 			    self._job_info[my_jobid][5] = True
@@ -1553,7 +1558,10 @@ class Workflow:
 
         # First we take care of SUBDAG jobs
         if self._job_info[jobid][5] == True:
-            # This is a SUBDAG job, return new dagman.out
+            # This is a SUBDAG job, first check if dag is there
+            if self._job_info[jobid][6] is None:
+                return None
+            # Looks ok, return new dagman.out
             my_dagman_out = self._job_info[jobid][6] + ".dagman.out"
         else:
             # Now check if this is a pegasus-plan or a subdax_ job
@@ -1666,6 +1674,8 @@ parser.add_option("-f", "--output-file", action = "store", type = "string", dest
 		  help = "Turn on using NetLogger's log api and specifies the file to where log data (cannot be used together with the database)")
 parser.add_option("-H", "--host", action = "store", type = "string", dest = "host_string",
                   help = "Turn on using NetLogger's log api and specifies the host:port to where send data (cannot be used together with the database, or the log to file option)")
+parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
+                  help = "keep state across several DAGMan start/stop cycles (development option)")
 
 # Re-insert our base name to avoid optparse confusion when printing error messages
 # (options, args) = parser.parse_args(sys.argv[0:]) # Does not work 100%
@@ -1706,6 +1716,8 @@ if options.output_db is not None:
     output_db = options.output_db
 if options.db_stats is not None:
     db_stats = options.db_stats
+if options.keep_state is not None:
+    keep_state = options.keep_state
 if options.file_string is not None or options.host_string is not None:
     if options.file_string is not None and options.host_string is not None:
         logger.warning("cannot log to both file and host/port, NL api logging disabled")
@@ -2065,8 +2077,9 @@ def process(wf, log_line):
             # DAGMan starting, capture its condor id
             my_expr = re_parse_dagman_condor_id.search(log_line)
             wf._dagman_condor_id = my_expr.group(1)
-            # Initialize workflow parameters
-            wf.start_wf()
+            if not keep_state:
+                # Initialize workflow parameters
+                wf.start_wf()
 	elif re_parse_dagman_pid.search(log_line) is not None and not replay_mode:
 	    # DAGMan's pid, but only set pid if not running in replay mode
             # (otherwise pid may belong to another process)
