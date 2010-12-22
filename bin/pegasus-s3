@@ -135,10 +135,9 @@ class FilePart:
 			self.fp = None
 			
 class WorkThread(threading.Thread):
-	def __init__(self, queue, conn):
+	def __init__(self, queue):
 		threading.Thread.__init__(self)
 		self.queue = queue
-		self.conn = conn
 		self.exception = None
 		self.daemon = True
 		
@@ -149,7 +148,7 @@ class WorkThread(threading.Thread):
 			# more to process, then exit
 			while True:
 				fn = self.queue.get(False)
-				fn(self.conn)
+				fn()
 		except Queue.Empty:
 			return
 		except Exception, e:
@@ -157,18 +156,14 @@ class WorkThread(threading.Thread):
 		
 def debug(message):
 	if DEBUG:
-		sys.stderr.write(message)
-		sys.stderr.write("\n")
+		sys.stderr.write("%s\n" % message)
 		
 def info(message):
 	if VERBOSE:
-		sys.stdout.write(message)
-		sys.stdout.write("\n")
+		sys.stdout.write("%s\n" % message)
 		
 def warn(message):
-	sys.stderr.write("WARNING: ")
-	sys.stderr.write(message)
-	sys.stderr.write("\n")
+	sys.stderr.write("WARNING: %s\n" % message)
 	
 def fix_file(url):
 	if url.startswith("file://"):
@@ -431,17 +426,13 @@ def rm(args):
 			if k is not None:
 				k.delete()
 
-def PartialUpload(uri, id, part, parts, infile, offset, length):
-	def upload(conn):
+def PartialUpload(up, part, parts, infile, offset, length):
+	def upload():
 		info("Uploading part %d of %d" % (part, parts))
 		f = FilePart(infile, offset, length)
-		b = Bucket(connection=conn, name=uri.bucket)
-		up = MultiPartUpload(bucket=b)
-		up.id = id
-		up.key_name = uri.key
 		up.upload_part_from_file(f, part)
 		f.close()
-		info("Finished uploading part %d (%s bytes)" % (part, length))
+		info("Finished uploading part %d (%s bytes)" % (part, f.length))
 	return upload
 	
 def put(args):
@@ -517,7 +508,8 @@ def put(args):
 		# The target chunk size is user-defined, but we may need
 		# to go larger if the file is big because the maximum number
 		# of chunks is 10,000. So the actual size of a chunk
-		# will range from 5MB to ~525MB.
+		# will range from 5MB to ~525MB if the maximum object size
+		# is 5 TB.
 		part_size = max(options.chunksize*MB, size/9999)
 		num_parts = int(math.ceil(size / float(part_size)))
 	
@@ -531,13 +523,13 @@ def put(args):
 				# Create all uploads
 				uploads = []
 				for i in range(0, num_parts):
-					up = PartialUpload(uri, upload.id, i+1, num_parts, infile, i*part_size, part_size)
+					up = PartialUpload(upload, i+1, num_parts, infile, i*part_size, part_size)
 					uploads.append(up)
 				
 				if options.parallel <= 1:
 					# Serial
 					for up in uploads:
-						up(conn)
+						up()
 				else:
 					# Parallel
 					
@@ -552,8 +544,7 @@ def put(args):
 					# Fork threads
 					threads = []
 					for i in range(0, nthreads):
-						conn = get_connection(config, uri)
-						t = WorkThread(queue, conn)
+						t = WorkThread(queue)
 						threads.append(t)
 						t.start()
 					
@@ -629,12 +620,10 @@ def rmup(args):
 			info("Removing upload %s" % up.id)
 			up.cancel_upload()
 	
-def PartialDownload(uri, mm, part, parts, start, end):
-	def download(conn):
+def PartialDownload(key, mm, part, parts, start, end):
+	def download():
 		info("Downloading part %d of %d" % (part, parts))
 		f = ChunkedFile(mm, start)
-		bucket = Bucket(connection=conn, name=uri.bucket)
-		key = Key(bucket=bucket, name=uri.key)
 		key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
 		info("Part %d finished (%s bytes)" % (part, key.size))
 		
@@ -678,10 +667,8 @@ def get(args):
 	
 	info("Downloading %s" % uri)
 	
-	config = get_config(options)
-	conn = get_connection(config, uri)
-	
 	# Does the site support ranged downloads properly?
+	config = get_config(options)
 	ranged_downloads = config.getboolean(uri.site, "ranged_downloads")
 	
 	# Warn the user
@@ -691,16 +678,18 @@ def get(args):
 		elif options.chunksize == 0:
 			warn("--chunksize set to 0, ignoring --parallel")
 	
+	conn = get_connection(config, uri)
+	b = Bucket(connection=conn, name=uri.bucket)
+	
 	if (not ranged_downloads) or (options.chunksize == 0):
-		# Ranged downloads not supported, or chunking disabled
-		b = Bucket(connection=conn, name=uri.bucket)
+		# Ranged downloads not supported, or chunking disabled	
 		k = Key(bucket=b, name=uri.key)
 		k.get_contents_to_filename(outfile)
 	else:
 		# Ranged downloads and chunking requested
 		
 		# Get the size of the key
-		k = Bucket(connection=conn, name=uri.bucket).get_key(uri.key)
+		k = b.get_key(uri.key)
 		if k is None:
 			raise Exception("No such key: %s" % uri)
 		size = k.size
@@ -715,8 +704,6 @@ def get(args):
 		else:
 			# Create the file and mmap it. We have to pre-create
 			# the file, otherwise the mmaping won't work properly.
-			# We use mmap because opening multiple file descriptors
-			# didn't work.
 			f = open(outfile, "w+b")
 			f.seek(size-1)
 			f.write('\0')
@@ -728,13 +715,16 @@ def get(args):
 			for i in range(0, num_parts):
 				start = i*part_size
 				end = min(size, start+part_size-1)
-				down = PartialDownload(uri, mm, i+1, num_parts, start, end)
+				# Need to pass a different key object to each thread because
+				# the Key object in boto is not thread-safe
+				ki = Key(bucket=b, name=uri.key)
+				down = PartialDownload(ki, mm, i+1, num_parts, start, end)
 				downloads.append(down)
 				
 			if options.parallel <= 1:
 				# Serial
 				for down in downloads:
-					down(conn)
+					down()
 			else:
 				# Parallel
 				
@@ -751,7 +741,7 @@ def get(args):
 				# Fork threads
 				threads = []
 				for i in range(0, nthreads):
-					t = WorkThread(queue, get_connection(config, uri))
+					t = WorkThread(queue)
 					threads.append(t)
 					t.start()
 			
