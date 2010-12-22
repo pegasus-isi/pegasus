@@ -21,6 +21,7 @@ import stat
 import threading
 import Queue
 import mmap
+import fnmatch
 from optparse import OptionParser
 from urlparse import urlsplit
 from ConfigParser import ConfigParser
@@ -164,6 +165,15 @@ def fix_file(url):
 	if url.startswith("file://"):
 		url = os.path.abspath(url.replace("file:",""))
 	return url
+	
+def has_wildcards(string):
+	if string is None:
+		return False
+	wildcards = "*?[]"
+	for c in wildcards:
+		if c in string:
+			return True
+	return False
 
 def help(args):
 	sys.stderr.write("Usage: %s COMMAND\n\n" % os.path.basename(sys.argv[0]))
@@ -331,11 +341,16 @@ def ls(args):
 				sys.stdout.write("\t%s\n" % bucket.name)
 		else:
 			b = conn.get_bucket(uri.bucket)
-			for o in b.list(prefix=uri.key):
-				# For some reason, Walrus sometimes returns a Prefix object
-				if isinstance(o, boto.s3.prefix.Prefix):
-					continue
-				sys.stdout.write("\t%s\n" % o.name)
+			if has_wildcards(uri.key):
+				for o in b.list():
+					if fnmatch.fnmatch(o.name, uri.key):
+						sys.stdout.write("\t%s\n" % o.name)
+			else:
+				for o in b.list(prefix=uri.key):
+					# For some reason, Walrus sometimes returns a Prefix object
+					if isinstance(o, boto.s3.prefix.Prefix):
+						continue
+					sys.stdout.write("\t%s\n" % o.name)
 			
 def mkdir(args):
 	parser = option_parser("mkdir URL...")
@@ -412,14 +427,17 @@ def rm(args):
 	for bucket in buckets:
 		uri, keys = buckets[bucket]
 		conn = get_connection(config, uri)
-		b = conn.get_bucket(uri.bucket)
+		b = Bucket(connection=conn, name=uri.bucket)
 		for key in keys:
-			info("Removing key %s" % key)
-			k = b.get_key(key.key)
-			if k is None and not options.force:
-				raise Exception("No such object: %s" % key)
-			if k is not None:
-				k.delete()
+			key_name = key.key
+			if has_wildcards(key_name):
+				for k in b.list():
+					if fnmatch.fnmatch(k.name, key_name):
+						info("Removing key %s" % k.name)
+						k.delete()
+			else:
+				info("Removing key %s" % key.key)
+				b.delete_key(key_name=key.key)
 
 def PartialUpload(up, part, parts, mm, offset, length):
 	def upload():
