@@ -9,3 +9,5 @@ pegasus.dir.storage.deep=false
 
 pegasus.stagein.clusters=8
 
+dagman.retry=3
+

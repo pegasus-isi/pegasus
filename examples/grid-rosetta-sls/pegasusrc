@@ -13,3 +13,5 @@ pegasus.execute.*.filesystem.local = true
 pegasus.transfer.stage.sls.file = false
 pegasus.gridstart = SeqExec
 
+dagman.retry=3
+

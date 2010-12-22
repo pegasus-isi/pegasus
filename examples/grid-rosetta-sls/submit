@@ -7,19 +7,21 @@ set -e
 #
 #  Settings
 #
-CLUSTER_NAME="RENCI-Engagement"
-CLUSTER_HOSTNAME="belhaven-1.renci.org"
+CLUSTER_NAME="Obelix"
+CLUSTER_HOSTNAME="obelix.isi.edu"
+CLUSTER_GRID_TYPE="gt5"
+CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_SCHEDULER="condor"
 
 # pegasus still has to create a shared directory - hopefully this
 # will go away after Pegasus 3.0
-CLUSTER_WORK_DIR="/nfs/osg-data/engage/tmp"
+CLUSTER_WORK_DIR="/data/scratch"
 
 # local filesystem where the jobs will actually run
 CLUSTER_WN_TMP="/condor/osg_wn_tmp"
 
 # Globus is required on the remote side for globus-url-copy
-CLUSTER_GLOBUS_LOCATION="/nfs/software/osg-wn/current/globus"
+CLUSTER_GLOBUS_LOCATION="/opt/globus/default"
 
 #######################################################################
 
@@ -80,8 +82,8 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
     </site>
     <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+        <grid  type="$CLUSTER_GRID_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="$CLUSTER_GRID_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
         <head-fs>
             <scratch>
                 <shared>

@@ -7,13 +7,13 @@ set -e
 #
 #  Settings
 #
-CLUSTER_NAME="ISIViz"
-CLUSTER_HOSTNAME="viz-login.isi.edu"
-CLUSTER_GATEKEEPER_PORT="2121"
+CLUSTER_NAME="Obelix"
+CLUSTER_HOSTNAME="obelix.isi.edu"
 CLUSTER_GRID_TYPE="gt5"
+CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
-CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.1"
+CLUSTER_WORK_DIR="/data/scratch"
+CLUSTER_GLOBUS_LOCATION="/opt/globus/default"
 #######################################################################
 
 
