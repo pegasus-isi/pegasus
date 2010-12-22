@@ -182,7 +182,7 @@ sub main(){
     print JOBS_OUT "#Site - the site where the job ran. \n";
     print JOBS_OUT "#Kickstart(sec.) - the actual duration of the job in seconds on the remote compute node. In case of retries the value is the cumulative of all retries. \n";
     print JOBS_OUT "#Post(sec.) - the postscript time as reported by DAGMan .In case of retries the value is the cumulative of all retries.\n";
-    print JOBS_OUT "#DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted. \n";
+    print JOBS_OUT "#DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted. In case of retries the value of the last retry is used for calculation.\n";
     print JOBS_OUT "#CondorQTime(sec.) - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node .In case of retries the value is the cumulative of all retries. \n";
     print JOBS_OUT "#Resource(sec.) - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue .In case of retries the value is the cumulative of all retries. \n";
     print JOBS_OUT "#Runtime(sec.) - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart .In case of retries the value is the cumulative of all retries.\n";
@@ -264,11 +264,11 @@ sub main(){
    		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs failed                      :", $wstats->{'failed'} );
    		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unsubmitted                 :", $wstats->{'unsubmitted'} );
    		$wf_summary_msg .= sprintf("%-30s % 12d \n","# jobs unknown                     :", $wstats->{'unknown'});
-   		if((defined $wstats->{'total_tasks'})){
-			$wf_summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $wstats->{'total_tasks'});
-		}else{
-			$wf_summary_msg .= sprintf("%-30s % 12s \n","Total tasks                        :", '-');
-		}
+   		#if((defined $wstats->{'total_tasks'})){
+		#	$wf_summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $wstats->{'total_tasks'});
+		#}else{
+		#	$wf_summary_msg .= sprintf("%-30s % 12s \n","Total tasks                        :", '-');
+		#}
    		
    		# Non sub workflow jobs calculation
    		if(defined $all_cpu_time ){
@@ -320,11 +320,11 @@ sub main(){
 	}else{
 		$summary_msg .= sprintf("%-30s % 12s \n"  ,"Cumulative workflow runtime        :",'-' );
 	}
-	if(defined $all_total_tasks){
-		$summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $all_total_tasks);
-	}else{
-		$summary_msg .= sprintf("%-30s % 12s \n","Total tasks                        :", '-');
-	}
+	#if(defined $all_total_tasks){
+	#	$summary_msg .= sprintf("%-30s % 12d \n","Total tasks                        :", $all_total_tasks);
+	#}else{
+	#	$summary_msg .= sprintf("%-30s % 12s \n","Total tasks                        :", '-');
+	#}
 	$summary_msg .= sprintf("\n          %-12s %-12s %-12s %-12s %-12s   \n","Total","Succeeded","Failed","Unsubmitted","Unknown");
 	$summary_msg .= sprintf("Jobs      %-12s %-12s %-12s %-12s %-12s   \n",$all_total_jobs,$all_succceeded,$all_failed ,$all_unsubmitted,$all_unknown);
 	$summary_msg .= sprintf("SUBDAX    %-12s %-12s %-12s %-12s %-12s   \n",$sub_dax_total_jobs,$sub_dax_succceeded,$sub_dax_failed ,$sub_dax_unsubmitted,$sub_dax_unknown);
@@ -337,9 +337,9 @@ sub main(){
 	my $legends_msg_summary = "#Legends\n";
 	$legends_msg_summary.= "#Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.\n";
 	$legends_msg_summary.= "#Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.\n";
-	$legends_msg_summary.= "#Total tasks - the total number of tasks in the workflow .\n";
+	#$legends_msg_summary.= "#Total tasks - the total number of tasks in the workflow .\n";
 	$legends_msg_summary.= "Job summary\n";
-	$legends_msg_summary.="\t Total - the total number of jobs in the workflow.\n";
+	$legends_msg_summary.="\t Total - the total number of jobs in the workflow. The total number of jobs is calculated by parsing the .dag file. For workflows having SUBDAX jobs , the SUDBAX job is skipped , but the calculation takes into account all the jobs that make up the SUBDAX sub workflow.For workflows having SUBDAG jobs , the SUBDAG jobs are treated like regular jobs.\n";
 	$legends_msg_summary.="\t Succeeded - the total number of succeeded jobs in the workflow . \n";
 	$legends_msg_summary.="\t Failed - the total number of failed jobs in the workflow .\n";
 	$legends_msg_summary.="\t Unsubmitted - the total number of unsubmitted jobs in the workflow .\n";
@@ -361,8 +361,8 @@ sub main(){
 	my $legends_msg = "#Legends\n";
 	$legends_msg.= "#Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.\n";
 	$legends_msg.= "#Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. \n";
-	$legends_msg.= "#Total jobs - the total number of jobs in the workflow.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. \n";
-	$legends_msg.= "#Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. \n";
+	$legends_msg.= "#Total jobs - the total number of jobs in the workflow.The total number of jobs is calculated by parsing the .dag file.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. \n";
+	#$legends_msg.= "#Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs. \n";
 	$legends_msg.= "# jobs succeeded - the total number of jobs succeeded.\n";
 	$legends_msg.= "# jobs failed - the total number of jobs failed.\n";
 	$legends_msg.= "# jobs unsubmitted - the total number of jobs that are not submitted.\n";
@@ -382,7 +382,7 @@ sub main(){
 	$legends_msg_summary.= "\n";
 	my $dag_job_warning_msg ="";
 	if (defined $contains_dag_job){
-		$dag_job_warning_msg = "\n[WARNING]: This workflow has $sub_dag_total_jobs SUBDAG jobs.\nSUBDAG jobs are treated like regular jobs.The jobs making up the SUBDAG are not included in the cummulative numbers.\n\n";
+		$dag_job_warning_msg = "\n[WARNING]: This workflow has $sub_dag_total_jobs SUBDAG jobs.SUBDAG jobs are treated like regular jobs.The jobs making up the SUBDAG are not included in the cummulative numbers.\n\n";
 	}
 	print "\n\n******************************************** SUMMARY ********************************************\n";
 	print $legends_msg_summary.$dag_job_warning_msg.$summary_msg.$genstats_summary_msg.$genstats_breakdown_summary_msg;
