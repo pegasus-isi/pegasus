@@ -1,61 +1,18 @@
 #!/usr/bin/env python
 #
-# A client for the Amazon S3 storage service
+#  Copyright 2010 University Of Southern California
 #
-# URL Format:
-#	All URLs for objects stored in S3 should be specified in the following
-#	format:
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-#		s3://USER@SITE/BUCKET/KEY
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
-# Configuration file search path:
-# 	This client will look in the following locations to locate the
-#	user's configuration file:
-#	
-#		1. The -c/--config argument
-#		2. The $S3CFG environment variable
-#		3. ~/.s3cfg
-#
-# Configuration file format:
-#	The configuration is an INI-style file with two types of entries.
-#	The first type of entry is a site entry, which specifies the
-#	configuration for a storage service. For example:
-#
-#		[amazon]
-#		endpoint = http://s3.amazonaws.com/
-#
-#	The other type of entry is an identity entry, which specifies the
-#	authentication information for a user at a particular site. For example:
-#
-#		[juve@amazon]
-#		access_key = <access key here>
-#		secret_key = <secret key here>
-#
-#	It is important to note that user names and site names used are only
-#	logical--they do not correspond to actual hostnames or usernames.
-#
-# Configuration variables:
-#
-#	Variable			Scope		Description
-#	endpoint			site		The URL of the web service endpoint (http, or https)
-#	max_object_size		site		The maximum size of an object in GB (default: 5)
-#	multipart_uploads	site		Does the service support multipart uploads (True/False, default: False)
-#	ranged_downloads	site		Does the service support ranged downloads (True/False, default: False)
-#	access_key			identity	The access key for the identity
-#	secret_key			identity	The secret key for the identity
-#
-# Example configuration:
-#
-#	[amazon]
-#	endpoint = https://s3.amazonaws.com/
-#	max_object_size = 5120
-#	multipart_uploads = True
-#	ranged_downloads = True
-#
-#	[juve@amazon]
-#	# No, not my real keys :-P
-#	access_key = 90c4143642cb097c88fe2ec66ce4ad4e
-#	secret_key = a0e3840e5baee6abb08be68e81674dca
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 #
 import sys
 import os
@@ -212,6 +169,11 @@ def warn(message):
 	sys.stderr.write("WARNING: ")
 	sys.stderr.write(message)
 	sys.stderr.write("\n")
+	
+def fix_file(url):
+	if url.startswith("file://"):
+		url = os.path.abspath(url.replace("file:",""))
+	return url
 
 def help(args):
 	sys.stderr.write("Usage: %s COMMAND\n\n" % os.path.basename(sys.argv[0]))
@@ -508,7 +470,7 @@ def put(args):
 	if len(args) != 2:
 		parser.error("Specify FILE and URL")
 	
-	infile = args[0]
+	infile = fix_file(args[0])
 	url = args[1]
 	
 	if not os.path.isfile(infile):
@@ -620,11 +582,11 @@ def put(args):
 	info("Upload complete")
 
 def lsup(args):
-	parser = option_parser("lsup BUCKET")
+	parser = option_parser("lsup URL")
 	options, args = parser.parse_args(args)
 	
 	if len(args) == 0:
-		parser.error("Specify BUCKET")
+		parser.error("Specify URL")
 	
 	uri = parse_uri(args[0])
 	
@@ -643,11 +605,11 @@ def lsup(args):
 		sys.stdout.write("%s %s\n" % (uri, up.id))
 
 def rmup(args):
-	parser = option_parser("rmup BUCKET UPLOAD")
+	parser = option_parser("rmup URL UPLOAD")
 	options, args = parser.parse_args(args)
 	
 	if len(args) != 2:
-		parser.error("Specify BUCKET and UPLOAD")
+		parser.error("Specify URL and UPLOAD")
 	
 	uri = parse_uri(args[0])
 	upload = args[1]
@@ -710,7 +672,7 @@ def get(args):
 		raise Exception("URL must contain a key: %s" % args[0])
 		
 	if len(args) > 1:
-		outfile = args[1]
+		outfile = fix_file(args[1])
 	else:
 		outfile = uri.key
 	
