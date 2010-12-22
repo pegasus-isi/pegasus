@@ -671,9 +671,9 @@ sub writeJobs {
     	$jobsRef->{$job}->{'cumulative_resourceDelay'} = defined($jobsRef->{$job}->{'cumulative_resourceDelay'})?$jobsRef->{$job}->{'cumulative_resourceDelay'}:'-';
     	$jobsRef->{$job}->{'cumulative_runtime'} = defined($jobsRef->{$job}->{'cumulative_runtime'})?$jobsRef->{$job}->{'cumulative_runtime'}:'-';
         if ($longJobNames) {
-        	print JOBS sprintf("%-80s %20s %8s %8s %8s %13s %8s %8s %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'}, $jobsRef->{$job}->{'cumulative_seqexec-delay'});
+        	print JOBS sprintf("%-80s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'}, $jobsRef->{$job}->{'cumulative_seqexec-delay'});
         } else {
-        	print JOBS sprintf("%-40s %20s %8s %8s %8s %13s %8s %8s %11s %10s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'},$jobsRef->{$job}->{'cumulative_seqexec-delay'});
+        	print JOBS sprintf("%-40s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'},$jobsRef->{$job}->{'cumulative_seqexec-delay'});
         }
     }
     close(JOBS);
