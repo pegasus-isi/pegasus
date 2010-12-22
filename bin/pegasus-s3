@@ -286,8 +286,16 @@ def parse_uri(uri):
 	http = uri.replace("s3://","http://")
 	result = urlsplit(http)
 	
+	# The user should not be specifying a query part unless
+	# they are trying to use the ? wildcard. If they do use
+	# the ? wildcard, then urlsplit thinks it is the query
+	# separator. This puts the path and query back together.
+	if '?' in uri:
+		path = "?".join([result.path, result.query]).strip()
+	else:
+		path = result.path.strip()
+	
 	# The path should be empty, /BUCKET or /BUCKET/KEY
-	path = result.path.strip()
 	if path.startswith("/"):
 		path = path[1:]
 	if len(path) == 0:
