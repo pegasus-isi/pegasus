@@ -602,14 +602,20 @@ def lsup(args):
 		sys.stdout.write("%s %s\n" % (uri, up.id))
 
 def rmup(args):
-	parser = option_parser("rmup URL UPLOAD")
+	parser = option_parser("rmup URL [UPLOAD]")
+	parser.add_option("-a", "--all", dest="all", action="store_true",
+		default=False, help="Cancel all uploads for the specified bucket")
 	options, args = parser.parse_args(args)
 	
-	if len(args) != 2:
-		parser.error("Specify URL and UPLOAD")
+	if options.all:
+		if len(args) < 1:
+			parser.error("Specify bucket URL")
+	else:
+		if len(args) != 2:
+			parser.error("Specify bucket URL and UPLOAD")
+		upload = args[1]
 	
 	uri = parse_uri(args[0])
-	upload = args[1]
 	
 	if uri.bucket is None:
 		raise Exception("URL must contain a bucket: %s" % args[0])
@@ -622,7 +628,7 @@ def rmup(args):
 	# There is no easy way to do this with boto
 	b = Bucket(connection=conn, name=uri.bucket)
 	for up in b.list_multipart_uploads():
-		if up.id == upload:
+		if options.all or up.id == upload:
 			info("Removing upload %s" % up.id)
 			up.cancel_upload()
 	
