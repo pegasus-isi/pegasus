@@ -630,8 +630,7 @@ sub run_dax2dot($$){
 	my $summary_msg;
 	# To handle the case where there are more than one . in the file name
 	$daxbase = basename( $dax_file_path );
-    $daxbase =~ s/(?:\.(?:rescue|dag))+$//;
-    $daxbase =~ s/-\d+$//;
+    $daxbase =~ s/(?:\.(?:dax))+$//;
     my ($dot_img_file_name) =("$daxbase"."-dax.dot" );
 	my ($dot_img_file ) =File::Spec->catfile("$output_dir", $dot_img_file_name);	
 	
