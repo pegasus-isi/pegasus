@@ -247,150 +247,206 @@ Logical transformation statistics :
 /scratch/grid-setup/run0001/breakdown.txt
 **************************************************************************************************</programlisting>
 
-      <para>By default the output gets generated to statistics folder inside the submit directory. </para>
-      <note><para>In case of workflows of workflows, the metrics that are displayed on the stdout take into account all the subworkflow dax'es.For example, if you have a workflow with 2 DAX jobs each containing 4 jobs each, the total number of jobs displayed will be 8 not 10.</para></note> 
-      <para>pegasus-statistics summary contains the following information.</para>
-	  <itemizedlist>
-	  <listitem>
-          <para>Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.</para>
+      <para>By default the output gets generated to statistics folder inside
+      the submit directory.</para>
+
+      <note>
+        <para>In case of hierarchal workflows, the metrics that are displayed
+        on stdout take into account all the jobs that make up the executable
+        sub-workflows. These executable sub workflows are the ones that are
+        created corresponding to the DAX jobs in the DAX. For example, if you
+        have a workflow with 2 DAX jobs whose corresponding executable
+        workflows have 4 jobs each, the total number of jobs displayed will be
+        8 not 10 ( 2 + 4 + 4 ). During the count the DAX jobs in the outer
+        level workflow are excluded. The same is true for other metrics
+        displayed on the stdout. </para>
+      </note>
+
+      <para>pegasus-statistics summary contains the following
+      information.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Workflow runtime (min,sec) - the walltime from the start of
+          the workflow execution to the end as reported by the DAGMAN.In case
+          of rescue dag the value is the cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries. </para>
+          <para>Cumulative workflow runtime (min,sec) - the sum of the
+          walltime of all jobs as reported by the DAGMan .In case of job
+          retries the value is the cumulative of all retries.</para>
         </listitem>
-        
-         <listitem>
-          <para>Total tasks - the total number of tasks in the workflow . </para>
-         </listitem>
-         
-         <listitem>
-          <para>Job summary
-          	<table>
-		        <title></title>
-		
-		        <tgroup cols="2">
-		          <tbody>
-		            <row>
-		              <entry>Total </entry>
-		
-		              <entry>the total number of jobs in the workflow.</entry>
-		            </row>
-		
-		            <row>
-		              <entry>Succeeded</entry>
-		
-		              <entry>the total number of succeeded jobs in the workflow .</entry>
-		            </row>
-		
-		            <row>
-		              <entry>Failed</entry>
-		
-		              <entry>the total number of failed jobs in the workflow .</entry>
-		            </row>
-		
-		            <row>
-		              <entry>Unsubmitted</entry>
-		
-		              <entry>the total number of unsubmitted jobs in the workflow .</entry>
-		            </row>
-		            <row>
-		              <entry>Unknown</entry>
-		
-		              <entry>the total number of jobs that are submitted, but has not completed execution or the state is unknown in the workflow.</entry>
-		            </row>
-		          </tbody>
-		        </tgroup>
-		      </table>
-          </para>
-         </listitem>
-         
-         <listitem>
-          <para>SUBDAX summary
-          <table>
-		        <title></title>
-		
-		        <tgroup cols="2">
-		          <tbody>
-		            <row>
-		              <entry>Total </entry>
-		
-		              <entry>the total number of SUBDAX jobs in the workflow.</entry>
-		            </row>
-		
-		            <row>
-		              <entry>Succeeded</entry>
-		
-		              <entry>the total number of succeeded SUBDAX jobs in the workflow.</entry>
-		            </row>
-		
-		            <row>
-		              <entry>Failed</entry>
-		
-		              <entry>the total number of failed SUBDAX jobs in the workflow.</entry>
-		            </row>
-		
-		            <row>
-		              <entry>Unsubmitted</entry>
-		
-		              <entry>the total number of unsubmitted SUBDAX jobs in the workflow.</entry>
-		            </row>
-		            <row>
-		              <entry>Unknown</entry>
-		
-		              <entry>the total number of SUBDAX jobs that are submitted, but has not completed execution or the state is unknown in the workflow.</entry>
-		            </row>
-		          </tbody>
-		        </tgroup>
-		      </table>
-          </para>
-         </listitem>	
+
+        <listitem>
+          <para>Total tasks - the total number of tasks in the workflow
+          .</para>
+        </listitem>
+
+        <listitem>
+          <para>Job summary <table>
+              <title></title>
+
+              <tgroup cols="2">
+                <tbody>
+                  <row>
+                    <entry>Total</entry>
+
+                    <entry>the total number of jobs in the workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Succeeded</entry>
+
+                    <entry>the total number of succeeded jobs in the workflow
+                    .</entry>
+                  </row>
+
+                  <row>
+                    <entry>Failed</entry>
+
+                    <entry>the total number of failed jobs in the workflow
+                    .</entry>
+                  </row>
+
+                  <row>
+                    <entry>Unsubmitted</entry>
+
+                    <entry>the total number of unsubmitted jobs in the
+                    workflow .</entry>
+                  </row>
+
+                  <row>
+                    <entry>Unknown</entry>
+
+                    <entry>the total number of jobs that are submitted, but
+                    has not completed execution or the state is unknown in the
+                    workflow.</entry>
+                  </row>
+                </tbody>
+              </tgroup>
+            </table></para>
+        </listitem>
+
+        <listitem>
+          <para>SUBDAX summary <table>
+              <title></title>
+
+              <tgroup cols="2">
+                <tbody>
+                  <row>
+                    <entry>Total</entry>
+
+                    <entry>the total number of SUBDAX jobs in the
+                    workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Succeeded</entry>
+
+                    <entry>the total number of succeeded SUBDAX jobs in the
+                    workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Failed</entry>
+
+                    <entry>the total number of failed SUBDAX jobs in the
+                    workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Unsubmitted</entry>
+
+                    <entry>the total number of unsubmitted SUBDAX jobs in the
+                    workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Unknown</entry>
+
+                    <entry>the total number of SUBDAX jobs that are submitted,
+                    but has not completed execution or the state is unknown in
+                    the workflow.</entry>
+                  </row>
+                </tbody>
+              </tgroup>
+            </table></para>
+        </listitem>
       </itemizedlist>
-      <para>
-      	<warning>
-          <para>SUBDAG jobs are treated like regular jobs. The jobs making up the SUBDAG are not included in the cummulative numbers.</para>
-        </warning>
-      </para>
-      <para>pegasus-statistics generates the following
-      statistics files.</para>   
-      <para><emphasis role="bold">Workflow statistics file per workflow [workflow.txt]</emphasis></para>
 
-      <para>Workflow statistics file per workflow contains the following information about each workflow
-      run as seen by the DAGMAN instance that executed the workflow.</para> <note><para>For computing statistics in this file, the SUBDAG and SUBDAX jobs are treated like regular jobs. For example, if you have a workflow W with 2 DAX jobs each containing 4 jobs each, the total number of jobs displayed for workflow W will be 2.</para></note><para>A sample file is shown
-      below.</para>
-	 <itemizedlist>
+      <para><warning>
+          <para>SUBDAG jobs are treated like regular jobs. The jobs making up
+          the SUBDAG are not included in the cumulative numbers.</para>
+        </warning></para>
+
+      <para>pegasus-statistics generates the following statistics
+      files.</para>
+
+      <para><emphasis role="bold">Workflow statistics file per workflow
+      [workflow.txt]</emphasis></para>
+
+      <para>Workflow statistics file per workflow contains the following
+      information about each workflow run as seen by the DAGMAN instance that
+      executed the workflow.</para>
+
+      <note>
+        <para>For computing statistics in this file, the SUBDAG and SUBDAX
+        jobs are treated like regular jobs. For example, if you have a
+        workflow W with 2 DAX jobs whose corresponding executable workflows
+        have 4 jobs each, the total number of jobs displayed will be 2
+        .</para>
+      </note>
+
+      <para>A sample file is shown below.</para>
+
+      <itemizedlist>
         <listitem>
-          <para>Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.</para>
+          <para>Workflow runtime (min,sec) - the waltime from the start of the
+          workflow execution to the end as reported by the DAGMAN.In case of
+          rescue dag the value is the cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .In case of job retries the value is the cumulative of all retries.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
+          <para>Cumulative workflow runtime (min,sec) - the sum of the
+          walltime of all jobs as reported by the DAGMan .In case of job
+          retries the value is the cumulative of all retries. For workflows
+          having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub
+          workflow jobs are treated like regular jobs.</para>
         </listitem>
-        
-         <listitem>
-          <para>Total jobs - the total number of jobs in the workflow.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
-         </listitem>
-         
-         <listitem>
-          <para> # jobs succeeded - the total number of jobs succeeded. </para>
-         </listitem>
-         
-          <listitem>
-          <para> # jobs failed - the total number of jobs failed. </para>
-         </listitem>
-         
-         <listitem>
-          <para># jobs unsubmitted - the total number of jobs that are not submitted. </para>
-         </listitem>
-         
-         <listitem>
-          <para># jobs unknown - the total number of jobs that are submitted, but has not completed execution or the state is unknown. </para>
-         </listitem>
-         
-          <listitem>
-          <para>Total tasks - the total number of tasks.Every job other than clustered job is considered as a single task.For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow jobs are treated like regular jobs.  </para>
-         </listitem>
+
+        <listitem>
+          <para>Total jobs - the total number of jobs in the workflow. For
+          workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) ,
+          the sub workflow jobs are treated like regular jobs.</para>
+        </listitem>
+
+        <listitem>
+          <para># jobs succeeded - the total number of jobs succeeded.</para>
+        </listitem>
+
+        <listitem>
+          <para># jobs failed - the total number of jobs failed.</para>
+        </listitem>
+
+        <listitem>
+          <para># jobs unsubmitted - the total number of jobs that are not
+          submitted.</para>
+        </listitem>
+
+        <listitem>
+          <para># jobs unknown - the total number of jobs that are submitted,
+          but has not completed execution or the state is unknown.</para>
+        </listitem>
+
+        <listitem>
+          <para>Total tasks - the total number of tasks. Every job other than
+          clustered job is considered as a single task. For workflows having
+          sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow
+          jobs are treated like regular jobs.</para>
+        </listitem>
       </itemizedlist>
-      
+
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
@@ -399,7 +455,7 @@ Logical transformation statistics :
         <tgroup cols="2">
           <tbody>
             <row>
-              <entry>Workflow runtime </entry>
+              <entry>Workflow runtime</entry>
 
               <entry>72 min. 23 sec.</entry>
             </row>
@@ -439,6 +495,7 @@ Logical transformation statistics :
 
               <entry>0</entry>
             </row>
+
             <row>
               <entry>Total tasks</entry>
 
@@ -448,10 +505,11 @@ Logical transformation statistics :
         </tgroup>
       </table>
 
-      <para><emphasis role="bold">Job statistics file per workflow [jobs.txt]</emphasis></para>
+      <para><emphasis role="bold">Job statistics file per workflow
+      [jobs.txt]</emphasis></para>
 
-      <para>Job statistics file per workflow contains the following details about the jobs
-      in each workflow. A sample file is shown below.</para>
+      <para>Job statistics file per workflow contains the following details
+      about the jobs in each workflow. A sample file is shown below.</para>
 
       <itemizedlist>
         <listitem>
@@ -463,38 +521,57 @@ Logical transformation statistics :
         </listitem>
 
         <listitem>
-          <para>Kickstart(sec.) - the actual duration of the job in seconds on the remote compute node. In case of retries the value is the cumulative of all retries.</para>
+          <para>Kickstart(sec.) - the actual duration of the job in seconds on
+          the remote compute node. In case of retries the value is the
+          cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Post(sec.) - the postscript time as reported by DAGMan .In case of retries the value is the cumulative of all retries.</para>
+          <para>Post(sec.) - the postscript time as reported by DAGMan .In
+          case of retries the value is the cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>DAGMan(sec.) - the time between the last parent job  of a job completes and the job gets submitted. </para>
+          <para>DAGMan(sec.) - the time between the last parent job of a job
+          completes and the job gets submitted.</para>
         </listitem>
 
         <listitem>
-          <para>CondorQTime(sec.) - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node .In case of retries the value is the cumulative of all retries.</para>
+          <para>CondorQTime(sec.) - the time between submission by DAGMan and
+          the remote Grid submission. It is an estimate of the time spent in
+          the condor q on the submit node .In case of retries the value is the
+          cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Resource(sec.) - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue .In case of retries the value is the cumulative of all retries.</para>
+          <para>Resource(sec.) - the time between the remote Grid submission
+          and start of remote execution . It is an estimate of the time job
+          spent in the remote queue .In case of retries the value is the
+          cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Runtime(sec.) - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart .In case of retries the value is the cumulative of all retries.</para>
+          <para>Runtime(sec.) - the time spent on the resource as seen by
+          Condor DAGMan . Is always &gt;=kickstart .In case of retries the
+          value is the cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Seqexec(sec.) -  the time taken for the completion of a clustered job .In case of retries the value is the cumulative of all retries.</para>
+          <para>Seqexec(sec.) - the time taken for the completion of a
+          clustered job .In case of retries the value is the cumulative of all
+          retries.</para>
         </listitem>
 
         <listitem>
-          <para>Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time .In case of retries the value is the cumulative of all retries.</para>
+          <para>Seqexec-Delay(sec.) - the time difference between the time for
+          the completion of a clustered job and sum of all the individual
+          tasks kickstart time .In case of retries the value is the cumulative
+          of all retries.</para>
         </listitem>
       </itemizedlist>
-	<para><link linkend="???">/scratch/grid-setup/run0001</link></para>
+
+      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
+
       <table>
         <title>Job statistics</title>
 
@@ -879,19 +956,21 @@ Logical transformation statistics :
         </tgroup>
       </table>
 
-      <para><emphasis role="bold">Logical transformation statistics file per 
+      <para><emphasis role="bold">Logical transformation statistics file per
       workflow [breakdown.txt]</emphasis></para>
 
-      <para>Logical transformation statistics file per workflow contains information about
-      transformations in each workflow. A sample file is shown
-      below.</para>
-	  <itemizedlist>
+      <para>Logical transformation statistics file per workflow contains
+      information about transformations in each workflow. A sample file is
+      shown below.</para>
+
+      <itemizedlist>
         <listitem>
           <para>Transformation - name of the transformation.</para>
         </listitem>
 
         <listitem>
-          <para>Count - the number of times the transformation was executed.</para>
+          <para>Count - the number of times the transformation was
+          executed.</para>
         </listitem>
 
         <listitem>
@@ -899,8 +978,10 @@ Logical transformation statistics :
         </listitem>
 
         <listitem>
-          <para>Variance(sec.) - the variance of the transformation runtime.Variance is calculated using the on-line algorithm by Knuth (<ulink
-    url="http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance">http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance</ulink>).</para>
+          <para>Variance(sec.) - the variance of the transformation
+          runtime.Variance is calculated using the on-line algorithm by Knuth
+          (<ulink
+          url="http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance">http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance</ulink>).</para>
         </listitem>
 
         <listitem>
@@ -915,7 +996,7 @@ Logical transformation statistics :
           <para>Total(sec.) - the cumulative of transformation runtime.</para>
         </listitem>
       </itemizedlist>
-		
+
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
@@ -1019,15 +1100,19 @@ Logical transformation statistics :
               <entry>60.2480</entry>
 
               <entry>120.4420</entry>
-            </row>            
+            </row>
           </tbody>
         </tgroup>
       </table>
 
-      <para><emphasis role="bold">Workflow events list file [jobstate.txt]</emphasis></para>
+      <para><emphasis role="bold">Workflow events list file
+      [jobstate.txt]</emphasis></para>
 
-      <para>Workflow events list file contains the events listed with time starting
-      with zero. In case of subworkflows the files are stored in the 'workflow_events' folder inside the output directory. The sub workflow file names are prefixed with the sub workflow job ID. A sample file is shown below.</para>
+      <para>Workflow events list file contains the events listed with time
+      starting with zero. In case of subworkflows the files are stored in the
+      'workflow_events' folder inside the output directory. The sub workflow
+      file names are prefixed with the sub workflow job ID. A sample file is
+      shown below.</para>
 
       <programlisting>1290549637 INTERNAL *** MONITORD_STARTED ***
 0 INTERNAL *** DAGMAN_STARTED 904.0 ***
@@ -1051,7 +1136,11 @@ Logical transformation statistics :
 4343 INTERNAL *** DAGMAN_FINISHED 0 ***
 1290553981 INTERNAL *** MONITORD_FINISHED 0 ***
 </programlisting>
-	<para>In the above example, the timestamp associated with MONITORD_STARTED and MONITORD_FINISHED are the actual timestamps. All the other timestamps are in reference to the time when DAGMAN started i.e DAGMAN_STARTED event has a 0 time associated with it.</para>
+
+      <para>In the above example, the timestamp associated with
+      MONITORD_STARTED and MONITORD_FINISHED are the actual timestamps. All
+      the other timestamps are in reference to the time when DAGMAN started
+      i.e DAGMAN_STARTED event has a 0 time associated with it.</para>
     </section>
 
     <section>
