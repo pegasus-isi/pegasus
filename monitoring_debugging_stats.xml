@@ -533,7 +533,8 @@ Logical transformation statistics :
 
         <listitem>
           <para>DAGMan(sec.) - the time between the last parent job of a job
-          completes and the job gets submitted.</para>
+          completes and the job gets submitted.In case of retries the value of
+          the last retry is used for calculation.</para>
         </listitem>
 
         <listitem>
@@ -955,7 +956,44 @@ Logical transformation statistics :
           </tbody>
         </tgroup>
       </table>
+	
+	  <para><emphasis role="bold">Workflow events list file
+      [jobstate.txt]</emphasis></para>
 
+      <para>Workflow events list file contains the events listed with time
+      starting with zero. In case of subworkflows the files are stored in the
+      'workflow_events' folder inside the output directory. The sub workflow
+      file names are prefixed with the sub workflow job ID. A sample file is
+      shown below.</para>
+
+      <programlisting>1290549637 INTERNAL *** MONITORD_STARTED ***
+0 INTERNAL *** DAGMAN_STARTED 904.0 ***
+14 create_dir_diamond_0_TestCluster SUBMIT 905.0 TestCluster - 1
+34 create_dir_diamond_0_TestCluster EXECUTE 905.0 TestCluster - 1
+34 create_dir_diamond_0_TestCluster GLOBUS_SUBMIT 905.0 TestCluster - 1
+34 create_dir_diamond_0_TestCluster GRID_SUBMIT 905.0 TestCluster - 1
+49 create_dir_diamond_0_TestCluster JOB_TERMINATED 905.0 TestCluster - 1
+49 create_dir_diamond_0_TestCluster JOB_SUCCESS 0 TestCluster - 1
+49 create_dir_diamond_0_TestCluster POST_SCRIPT_STARTED 905.0 TestCluster - 1
+54 create_dir_diamond_0_TestCluster POST_SCRIPT_TERMINATED 905.0 TestCluster - 1
+54 create_dir_diamond_0_TestCluster POST_SCRIPT_SUCCESS 0 TestCluster - 1
+....
+4338 clean_up_analyze_ID0000004 JOB_TERMINATED 920.0 TestCluster - 16
+4338 clean_up_analyze_ID0000004 JOB_SUCCESS 0 TestCluster - 16
+4338 clean_up_analyze_ID0000004 POST_SCRIPT_STARTED 920.0 TestCluster - 16
+4343 clean_up_stage_out_local_TestCluster_2_0 POST_SCRIPT_TERMINATED 919.0 TestCluster - 15
+4343 clean_up_stage_out_local_TestCluster_2_0 POST_SCRIPT_SUCCESS 0 TestCluster - 15
+4343 clean_up_analyze_ID0000004 POST_SCRIPT_TERMINATED 920.0 TestCluster - 16
+4343 clean_up_analyze_ID0000004 POST_SCRIPT_SUCCESS 0 TestCluster - 16
+4343 INTERNAL *** DAGMAN_FINISHED 0 ***
+1290553981 INTERNAL *** MONITORD_FINISHED 0 ***
+</programlisting>
+
+      <para>In the above example, the timestamp associated with
+      MONITORD_STARTED and MONITORD_FINISHED are the actual timestamps. All
+      the other timestamps are in reference to the time when DAGMAN started
+      i.e DAGMAN_STARTED event has a 0 time associated with it.</para>
+      		
       <para><emphasis role="bold">Logical transformation statistics file per
       workflow [breakdown.txt]</emphasis></para>
 
@@ -1104,43 +1142,6 @@ Logical transformation statistics :
           </tbody>
         </tgroup>
       </table>
-
-      <para><emphasis role="bold">Workflow events list file
-      [jobstate.txt]</emphasis></para>
-
-      <para>Workflow events list file contains the events listed with time
-      starting with zero. In case of subworkflows the files are stored in the
-      'workflow_events' folder inside the output directory. The sub workflow
-      file names are prefixed with the sub workflow job ID. A sample file is
-      shown below.</para>
-
-      <programlisting>1290549637 INTERNAL *** MONITORD_STARTED ***
-0 INTERNAL *** DAGMAN_STARTED 904.0 ***
-14 create_dir_diamond_0_TestCluster SUBMIT 905.0 TestCluster - 1
-34 create_dir_diamond_0_TestCluster EXECUTE 905.0 TestCluster - 1
-34 create_dir_diamond_0_TestCluster GLOBUS_SUBMIT 905.0 TestCluster - 1
-34 create_dir_diamond_0_TestCluster GRID_SUBMIT 905.0 TestCluster - 1
-49 create_dir_diamond_0_TestCluster JOB_TERMINATED 905.0 TestCluster - 1
-49 create_dir_diamond_0_TestCluster JOB_SUCCESS 0 TestCluster - 1
-49 create_dir_diamond_0_TestCluster POST_SCRIPT_STARTED 905.0 TestCluster - 1
-54 create_dir_diamond_0_TestCluster POST_SCRIPT_TERMINATED 905.0 TestCluster - 1
-54 create_dir_diamond_0_TestCluster POST_SCRIPT_SUCCESS 0 TestCluster - 1
-....
-4338 clean_up_analyze_ID0000004 JOB_TERMINATED 920.0 TestCluster - 16
-4338 clean_up_analyze_ID0000004 JOB_SUCCESS 0 TestCluster - 16
-4338 clean_up_analyze_ID0000004 POST_SCRIPT_STARTED 920.0 TestCluster - 16
-4343 clean_up_stage_out_local_TestCluster_2_0 POST_SCRIPT_TERMINATED 919.0 TestCluster - 15
-4343 clean_up_stage_out_local_TestCluster_2_0 POST_SCRIPT_SUCCESS 0 TestCluster - 15
-4343 clean_up_analyze_ID0000004 POST_SCRIPT_TERMINATED 920.0 TestCluster - 16
-4343 clean_up_analyze_ID0000004 POST_SCRIPT_SUCCESS 0 TestCluster - 16
-4343 INTERNAL *** DAGMAN_FINISHED 0 ***
-1290553981 INTERNAL *** MONITORD_FINISHED 0 ***
-</programlisting>
-
-      <para>In the above example, the timestamp associated with
-      MONITORD_STARTED and MONITORD_FINISHED are the actual timestamps. All
-      the other timestamps are in reference to the time when DAGMAN started
-      i.e DAGMAN_STARTED event has a 0 time associated with it.</para>
     </section>
 
     <section>
@@ -1156,24 +1157,57 @@ Logical transformation statistics :
 ...
 
 ******************************************** SUMMARY ********************************************
-The workflow execution Gantt chart is created at -
-png format :- /scratch/grid-setup/run0001/graph/diamond-2.png 
-eps format :- /scratch/grid-setup/run0001/graph/diamond-2.eps 
+DAX graph - 
+png format : /scratch/grid-setup/run0001/graph/blackdiamond-dax.png
+eps format : /scratch/grid-setup/run0001/graph/blackdiamond-dax.eps 
 
-The host over time chart is created at -
-png format :-/scratch/grid-setup/run0001/graph/diamond-host.png 
-eps format :-/scratch/grid-setup/run0001/graph/diamond-host.eps
+DAG graph - 
+png format : /scratch/grid-setup/run0001/graph/diamond-dag.png 
+eps format : /scratch/grid-setup/run0001/graph/diamond-dag.eps 
 
-PNG file corresponding to the dag is created at: 
-/scratch/grid-setup/run0001/graph/diamond-dag.png 
+Workflow execution Gantt chart -
+png format : /scratch/grid-setup/run0001/graph/diamond-2.png 
+eps format : /scratch/grid-setup/run0001/graph/diamond-2.eps 
 
-PNG file corresponding to the dax is created at: 
-/scratch/grid-setup/run0001/graph/blackdiamond-dax.png 
+Host over time chart -
+png format : /scratch/grid-setup/run0001/graph/diamond-host.png 
+eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps 
 **************************************************************************************************</programlisting>
 
       <para>By default the output gets generated to graph folder inside the
       submit directory. pegasus-plots generates the following graphs and
       charts.</para>
+      
+      <para><emphasis role="bold">Dax Graph</emphasis></para>
+
+      <para>Graph representation of the DAX file. A sample graph is shown
+      below.</para>
+
+      <figure>
+        <title>DAX Graph</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/blackdiamond-dax.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+      
+      
+	  <para><emphasis role="bold">Dag Graph</emphasis></para>
+
+      <para>Graph representation of the DAG file. A sample graph is shown
+      below.</para>
+
+      <figure>
+        <title>DAG Graph</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-dag.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
 
       <para><emphasis role="bold">Gantt workflow execution
       chart</emphasis></para>
@@ -1205,36 +1239,6 @@ PNG file corresponding to the dax is created at:
           </imageobject>
         </mediaobject>
       </figure>
-
-      <para><emphasis role="bold">Dag Graph</emphasis></para>
-
-      <para>Graph representation of the DAG file. A sample graph is shown
-      below.</para>
-
-      <figure>
-        <title>DAG Graph</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata fileref="images/diamond-dag.jpg" />
-          </imageobject>
-        </mediaobject>
-      </figure>
-
-      <para><emphasis role="bold">Dax Graph</emphasis></para>
-
-      <para>Graph representation of the DAX file. A sample graph is shown
-      below.</para>
-
-      <figure>
-        <title>DAX Graph</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata fileref="images/blackdiamond-dax.jpg" />
-          </imageobject>
-        </mediaobject>
-      </figure>
-    </section>
+     </section>
   </section>
 </chapter>
