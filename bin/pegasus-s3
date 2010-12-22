@@ -67,72 +67,67 @@ DEFAULT_CONFIG = {
 DEBUG = False
 VERBOSE = False
 
-class ChunkedFile:
-	def __init__(self, mm, offset):
-		self.mm = mm
-		self.offset = offset
-		
-	def write(self, bytes):
-		size = len(bytes)
-		start = self.offset
-		end = self.offset + size
-		self.mm[start:end] = bytes
-		self.offset += size
-
 class FilePart:
 	"""
 	This is a file-like object that can be used to access a given range
-	of bytes in a file. It is used for multipart uploads.
+	of bytes in a file. It is used for chunked uploads and downloads.
 	"""
-	
-	def __init__(self, filename, offset, length):
-		self.filename = filename
-		self.fp = open(filename, "rb")
-		self.offset = offset
-		self.fp.seek(0, os.SEEK_END)
-		self.length = min(length, self.fp.tell()-self.offset)
-		self.fp.seek(self.offset, os.SEEK_SET)
+	def __init__(self, mm, start, length):
+		self.mm = mm
+		self.start = start
+		self.offset = start
+		self.length = length
 		
 	def seek(self, offset, whence=os.SEEK_SET):
-		if self.fp is None:
-			raise Exception("File closed")
-		
-		if whence == os.SEEK_SET: # Absolute
-			self.fp.seek(self.offset + offset, os.SEEK_SET)
-		elif whence == os.SEEK_CUR: # From current
-			self.fp.seek(offset, os.SEEK_CUR)
-		elif whence == os.SEEK_END: # From end
-			pos = self.length + offset
-			if pos < 0:
-				raise Exception("Invalid argument")
-			self.fp.seek(self.offset + pos, os.SEEK_SET)
+		if whence==os.SEEK_SET:
+			self.offset = self.start + offset
+		elif whence==os.SEEK_CUR:
+			self.offset += offset
+		elif whence==os.SEEK_END:
+			self.offset = self.start + self.length + offset
 		else:
-			raise Exception("Invalid argument")
+			raise Exception("Invalid seek")
 		
 	def tell(self):
-		if self.fp is None:
-			raise Exception("File closed")
-			
-		return self.fp.tell() - self.offset
+		return self.offset - self.start
 		
 	def read(self, size=None):
-		if self.fp is None:
-			raise Exception("File closed")
-		
-		pos = self.tell()
-		if pos >= self.length:
+		# Attempt to read before start
+		if self.offset < self.start:
+			return ''
+			
+		# Attempt to read past end
+		if self.offset - self.start >= self.length:
 			return ''
 		
-		remaining = self.length - pos
+		remaining = self.start + self.length - self.offset
 		if size > remaining or size is None:
 			size = remaining
 		
-		return self.fp.read(size)
+		start = self.offset
+		end = self.offset + size
 		
-	def close(self):
-		if self.fp is not None:
-			self.fp.close()
-			self.fp = None
+		data = self.mm[start:end]
+		
+		self.offset += size
+		
+		return data
+		
+	def write(self, data):
+		size = len(data)
+		start = self.offset
+		end = self.offset + size
+		
+		# Attempt to write before start
+		if start < self.start:
+			raise Exception("Invalid offset")
+		
+		# Attempt to write past end
+		if end > self.start + self.length + 1:
+			raise Exception("Invalid offset")
+		
+		self.mm[start:end] = data
+		self.offset += size
 			
 class WorkThread(threading.Thread):
 	def __init__(self, queue):
@@ -426,13 +421,12 @@ def rm(args):
 			if k is not None:
 				k.delete()
 
-def PartialUpload(up, part, parts, infile, offset, length):
+def PartialUpload(up, part, parts, mm, offset, length):
 	def upload():
 		info("Uploading part %d of %d" % (part, parts))
-		f = FilePart(infile, offset, length)
+		f = FilePart(mm, offset, length)
 		up.upload_part_from_file(f, part)
-		f.close()
-		info("Finished uploading part %d (%s bytes)" % (part, f.length))
+		info("Finished uploading part %d (%s bytes)" % (part, length))
 	return upload
 	
 def put(args):
@@ -514,16 +508,25 @@ def put(args):
 		num_parts = int(math.ceil(size / float(part_size)))
 	
 		if num_parts <= 1:
+			# Serial
 			k = Key(bucket=b, name=uri.key)
 			k.set_contents_from_filename(infile)
 		else:
+			# Parallel
+			
+			# Map the file
+			f = open(infile, "r+b")
+			mm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED)
+			
+			# Request upload
 			info("Creating multipart upload")
 			upload = b.initiate_multipart_upload(uri.key)
 			try:
 				# Create all uploads
 				uploads = []
 				for i in range(0, num_parts):
-					up = PartialUpload(upload, i+1, num_parts, infile, i*part_size, part_size)
+					length = min(size-(i*part_size), part_size)
+					up = PartialUpload(upload, i+1, num_parts, mm, i*part_size, length)
 					uploads.append(up)
 				
 				if options.parallel <= 1:
@@ -558,6 +561,9 @@ def put(args):
 				
 				info("Completing upload")	
 				upload.complete_upload()
+				
+				mm.close()
+				f.close()
 			except Exception, e:
 				# If there is an error, then we need to try and abort
 				# the multipart upload so that it doesn't hang around
@@ -623,7 +629,8 @@ def rmup(args):
 def PartialDownload(key, mm, part, parts, start, end):
 	def download():
 		info("Downloading part %d of %d" % (part, parts))
-		f = ChunkedFile(mm, start)
+		length = end - start
+		f = FilePart(mm, start, length)
 		key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
 		info("Part %d finished (%s bytes)" % (part, key.size))
 		
