@@ -257,18 +257,26 @@ def get_connection(config, uri):
 	kwargs['aws_secret_access_key'] = config.get(uri.ident,"secret_key")
 	kwargs['calling_format'] = boto.s3.connection.OrdinaryCallingFormat()
 	
+	# If the URI is s3s, then override the config
+	if uri.secure:
+		kwargs['is_secure'] = True
+	
 	return boto.s3.connection.S3Connection(**kwargs)
 
 class S3URI:
-	def __init__(self, user, site, bucket=None, key=None):
+	def __init__(self, user, site, bucket=None, key=None, secure=False):
 		self.user = user
 		self.site = site
 		self.ident = "%s@%s" % (user, site)
 		self.bucket = bucket
 		self.key = key
+		self.secure = secure
 		
 	def __repr__(self):
-		uri = "s3://%s" % self.ident
+		if self.secure:
+			uri = "s3s://%s" % self.ident
+		else:
+			uri = "s3://%s" % self.ident
 		if self.bucket is not None:
 			uri += "/%s" % self.bucket
 		if self.key is not None:
@@ -278,18 +286,29 @@ class S3URI:
 def parse_uri(uri):
 	"Parse S3 uri into an S3URI object"
 	
-	if not uri.startswith("s3://"):
+	# The only valid schemes are s3s:// and s3://
+	if uri.startswith("s3s://"):
+		secure = True
+	elif uri.startswith("s3://"):
+		secure = False
+	else:
 		raise Exception("Invalid URL scheme: %s" % (uri))
 	
 	# Need to do this because urlparse does not recognize
-	# custom URI schemes
-	http = uri.replace("s3://","http://")
+	# custom URI schemes. Replace our scheme with http.
+	# The actual scheme used isn't important as long as
+	# urlsplit recognizes it.
+	if secure:
+		http = uri.replace("s3s://","http://")
+	else:
+		http = uri.replace("s3://","http://")
 	result = urlsplit(http)
 	
 	# The user should not be specifying a query part unless
 	# they are trying to use the ? wildcard. If they do use
 	# the ? wildcard, then urlsplit thinks it is the query
-	# separator. This puts the path and query back together.
+	# separator. In that case, we put the path and query
+	# back together.
 	if '?' in uri:
 		path = "?".join([result.path, result.query]).strip()
 	else:
@@ -321,7 +340,7 @@ def parse_uri(uri):
 	else:
 		site = "%s:%s" % (result.hostname, result.port)
 	
-	return S3URI(user, site, bucket, key)
+	return S3URI(user, site, bucket, key, secure)
 
 def ls(args):
 	parser = option_parser("ls URL...")
@@ -424,7 +443,7 @@ def rm(args):
 			raise Exception("URL for rm must contain a key: %s" % arg)
 		
 		bid = "%s/%s" % (uri.ident, uri.bucket)
-		buri = S3URI(uri.user, uri.site, uri.bucket)
+		buri = S3URI(uri.user, uri.site, uri.bucket, uri.secure)
 		
 		if bid not in buckets:
 			buckets[bid] = (buri, [])
