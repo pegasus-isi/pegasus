@@ -93,7 +93,17 @@
       <para>All URLs for objects stored in S3 should be specified in the
       following format:</para>
 
-      <programlisting>s3://USER@SITE/BUCKET/KEY</programlisting>
+      <programlisting>s3[s]://USER@SITE[/BUCKET[/KEY]]</programlisting>
+
+      <para>The protocol part can be s3:// or s3s://. If s3s:// is used, then
+      pegasus-s3 will force the connection to use SSL and override the setting
+      in the configuration file. If s3:// is used, then whether the connection
+      uses SSL or not is determined by the value of the 'endpoint' variable in
+      the configuration for the site.</para>
+
+      <para>The <emphasis>USER@SITE</emphasis> part is required, but the
+      <emphasis>BUCKET</emphasis> and <emphasis>KEY</emphasis> parts may be
+      optional depending on the context.</para>
 
       <para>The <emphasis>USER@SITE</emphasis> portion is referred to as the
       'identity', and the <emphasis>SITE</emphasis> portion is referred to as
@@ -121,6 +131,13 @@
       keys are treated like opaque identifiers for individual objects. So, for
       example, the keys 'a/b' and 'a/c' have a common prefix, but cannot be
       said to be in the same 'directory'.</para>
+
+      <para>Some example URLs are:</para>
+
+      <programlisting>s3://ewa@amazon
+s3://juve@skynet/gideon.isi.edu
+s3://juve@magellan/pegasus-images/centos-5.5-x86_64-20101101.part.1
+s3s://ewa@amazon/pegasus-images/data.tar.gz</programlisting>
     </section>
 
     <section>
@@ -376,9 +393,10 @@
         <programlisting>[amazon]
 endpoint = http://s3.amazonaws.com/</programlisting>
 
-        <para>The other type of entry is an <emphasis role="bold">identity entry</emphasis>,
-        which specifies the authentication information for a user at a
-        particular site. Here is an example of an identity entry:</para>
+        <para>The other type of entry is an <emphasis role="bold">identity
+        entry</emphasis>, which specifies the authentication information for a
+        user at a particular site. Here is an example of an identity
+        entry:</para>
 
         <programlisting>[pegasus@amazon]
 access_key = 90c4143642cb097c88fe2ec66ce4ad4e
