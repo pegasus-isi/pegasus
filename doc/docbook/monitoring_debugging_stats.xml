@@ -228,7 +228,6 @@ working dir : /lfs1/work/pegasus/run0004
 
 Workflow runtime                   :           72 min. 23 sec.
 Cumulative workflow runtime        :           79 min. 31 sec.
-Total tasks                        :           16 
 
           Total        Succeeded    Failed       Unsubmitted  Unknown        
 Jobs      16           16           0            0            0              
@@ -278,10 +277,6 @@ Logical transformation statistics :
           retries the value is the cumulative of all retries.</para>
         </listitem>
 
-        <listitem>
-          <para>Total tasks - the total number of tasks in the workflow
-          .</para>
-        </listitem>
 
         <listitem>
           <para>Job summary <table>
@@ -292,7 +287,13 @@ Logical transformation statistics :
                   <row>
                     <entry>Total</entry>
 
-                    <entry>the total number of jobs in the workflow.</entry>
+                    <entry>the total number of jobs in the workflow. The 
+                    total number of jobs is calculated by parsing the .dag 
+                    file. For workflows having SUBDAX jobs , the SUDBAX job 
+                    is skipped , but the calculation takes into account all 
+                    the jobs that make up the SUBDAX sub workflow.For 
+                    workflows having SUBDAG jobs , the SUBDAG jobs are 
+                    treated like regular jobs.</entry>
                   </row>
 
                   <row>
@@ -416,7 +417,8 @@ Logical transformation statistics :
         </listitem>
 
         <listitem>
-          <para>Total jobs - the total number of jobs in the workflow. For
+          <para>Total jobs - the total number of jobs in the workflow. The 
+          total number of jobs is calculated by parsing the .dag file.For
           workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) ,
           the sub workflow jobs are treated like regular jobs.</para>
         </listitem>
@@ -439,12 +441,6 @@ Logical transformation statistics :
           but has not completed execution or the state is unknown.</para>
         </listitem>
 
-        <listitem>
-          <para>Total tasks - the total number of tasks. Every job other than
-          clustered job is considered as a single task. For workflows having
-          sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub workflow
-          jobs are treated like regular jobs.</para>
-        </listitem>
       </itemizedlist>
 
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
@@ -496,12 +492,7 @@ Logical transformation statistics :
               <entry>0</entry>
             </row>
 
-            <row>
-              <entry>Total tasks</entry>
-
-              <entry>16</entry>
-            </row>
-          </tbody>
+           </tbody>
         </tgroup>
       </table>
 
