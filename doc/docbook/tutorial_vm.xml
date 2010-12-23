@@ -40,35 +40,39 @@ Wed Nov 24 14:47:59 PST 2010
       <itemizedlist>
         <listitem>
           <para><ulink
-          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus3.0-VM-vbox.tar.bz2">Virtual
-          Box Pegasus Image</ulink></para>
+          url="http://pegasus.isi.edu/wms/download/3.0.1/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2"
+          xml:base="">Virtual Box Pegasus Image</ulink></para>
 
-          <para>It is around <emphasis role="bold">2 GB</emphasis> in size. We
-          recommend using a command line tool like <emphasis
+          <para>It is around <emphasis role="bold">1.2 GB</emphasis> in size.
+          We recommend using a command line tool like <emphasis
           role="bold">wget</emphasis> to download the image. Downloading the
           image using the browser sometimes corrupts the image.</para>
 
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus3.0-VM-vbox.tar.bz2
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0.1/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
 
---</emphasis>14:52:11--  http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM-vbox.tar.bz2
-           =&gt; `Pegasus3.0-VM-vbox.tar.bz2'
+</emphasis> http://pegasus.isi.edu/wms/download/3.0.1/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
+           =&gt; `Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2'
 Resolving pegasus.isi.edu... 128.9.64.219
 Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
 HTTP request sent, awaiting response... 200 OK
-Length: 1,487,950,091 (1.4G) [application/x-bzip2]
-...</programlisting>
+Length: 1,336,554,492 (1.2G) [application/x-bzip2]
+</programlisting>
 
           <para>The Image is bzipped . You will need to unzip it.</para>
 
           <para>If you have gnu tar you can do this directly</para>
 
-          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus3.0-VM-vbox.tar.bz2</emphasis></programlisting>
+          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
 
           <para>Else you need to do the following</para>
 
-          <programlisting><emphasis role="bold">$ bunzip2 Pegasus3.0-VM-vbox.tar.bz2
+          <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
 
-$ tar xvf Pegasus3.0-VM-vbox.tar</emphasis></programlisting>
+$ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
+
+          <para>After untarring a folder named<emphasis role="bold">
+          Pegasus-3.0.1-Debian-6-x86.vbox</emphasis> will be created that has
+          the vmdk files for the VM.</para>
         </listitem>
       </itemizedlist>
     </section>
@@ -91,15 +95,14 @@ $ tar xvf Pegasus3.0-VM-vbox.tar</emphasis></programlisting>
         </listitem>
 
         <listitem>
-          <para>Click on "Add" button to add the <emphasis
-          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> file that you just
-          downloaded and unzipped.</para>
+          <para>Click on "Add" button to add the<emphasis role="bold">
+          Pegasus-3.0.1-Debian-6-x86.vbox/Debian-6-x86.vmdk</emphasis> file
+          that you just downloaded and unzipped.</para>
         </listitem>
 
         <listitem>
-          <para>You will now see the <emphasis
-          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> in the list of hard
-          disks with Actual size listed as around 5.10 GB</para>
+          <para>You will now see the Debian-6-x86.vmdk in the list of hard
+          disks with Actual size listed as around 3.0 GB</para>
         </listitem>
 
         <listitem>
@@ -122,21 +125,20 @@ $ tar xvf Pegasus3.0-VM-vbox.tar</emphasis></programlisting>
 
         <listitem>
           <para>In the VM Name and OS Type Window specify the name as<emphasis
-          role="bold"> PegasusVM-3.0</emphasis>. Select the <emphasis
+          role="bold"> PegasusVM-3.0</emphasis>.1 Select the <emphasis
           role="bold">Operating System as Linux </emphasis>and <emphasis
-          role="bold">Version as Red Hat ( 64 bit )</emphasis>. Click
-          Continue.</para>
+          role="bold">Version as Debian </emphasis>. Click Continue.</para>
         </listitem>
 
         <listitem>
-          <para>Set the base memory to <emphasis role="bold">1024
-          MB</emphasis> . It defaults to 512 MB. Click Continue</para>
+          <para>Set the base memory to <emphasis role="bold">384 MB</emphasis>
+          . It defaults to 512 MB. Click Continue</para>
         </listitem>
 
         <listitem>
           <para>We now select the Virtual Hard Disk to use with the machine.
           Select the option box for Use Existing Hard Disk. Select <emphasis
-          role="bold">PegasusVM3.0-vbox.vmdk</emphasis> from the list . Click
+          role="bold">Debian-6-x86.vmdk</emphasis> from the list . Click
           Continue</para>
         </listitem>
 
@@ -145,108 +147,10 @@ $ tar xvf Pegasus3.0-VM-vbox.tar</emphasis></programlisting>
         </listitem>
 
         <listitem>
-          <para>Now in the Virtual Box , start the PegasusVM-3.0
+          <para>Now in the Virtual Box , start the PegasusVM-3.0.1
           machine.</para>
         </listitem>
       </orderedlist>
-    </section>
-  </section>
-
-  <section>
-    <title>Downloading and Running the VM using VMWare</title>
-
-    <para>You will need to install VMWare to run the virtual machine on your
-    computer. If you already have one of the tools installed, use that.
-    Otherwise download and install one from:</para>
-
-    <itemizedlist>
-      <listitem>
-        <para><emphasis role="bold">Windows</emphasis> - Download VMPlayer (
-        free download ) from the <ulink
-        url="http://www.vmware.com/products/player/">VMWare
-        website</ulink></para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">MacOSX</emphasis> - Download VMware Fusion
-        ( not free ). A 30 day trial version can be downloaded from <ulink
-        url="https://www.vmware.com/tryvmware/?p=vmware-fusion31&amp;lp=1">VMWare
-        website</ulink></para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">Linux</emphasis> - Download VMware
-        Workstation ( not free ). A 30 day trial version can be downloaded
-        from <ulink
-        url="https://www.vmware.com/tryvmware/?p=vmware-workstation&amp;lp=1">VMWare
-        website</ulink></para>
-      </listitem>
-    </itemizedlist>
-
-    <section>
-      <title>Download the VM for VMWare use</title>
-
-      <para>Download the corresponding disk image.</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><ulink
-          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus3.0-VM.tar.bz2">VMWare
-          Pegasus Image</ulink></para>
-
-          <para>It is around <emphasis role="bold">2 GB</emphasis> in size. We
-          recommend using a command line tool like <emphasis
-          role="bold">wget</emphasis> to download the image. Downloading the
-          image using the browser sometimes corrupts the image.</para>
-
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM.tar.bz2
-
---</emphasis>14:52:11--  http://pegasus.isi.edu/tutorial/virtual/Pegasus3.0-VM.tar.bz2
-           =&gt; `Pegasus3.0-VM.tar.bz2'
-Resolving pegasus.isi.edu... 128.9.64.219
-Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 1,487,950,091 (1.4G) [application/x-bzip2]
-...</programlisting>
-
-          <para>The Image is bzipped. You will need to unzip it.</para>
-
-          <para>If you have gnu tar you can do this directly</para>
-
-          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus3.0-VM.tar.bz2</emphasis></programlisting>
-
-          <para>Else you need to do the following</para>
-
-          <programlisting><emphasis role="bold">$ bunzip2 Pegasus3.0-VM.tar.bz2
-
-$ tar xvf Pegasus3.0-VM.tar</emphasis></programlisting>
-        </listitem>
-      </itemizedlist>
-    </section>
-
-    <section>
-      <title>Running the VM with VMWare</title>
-
-      <para>To start the virtual machine double click on the vmware suffixed
-      file/package Pegasus3.0-VM.vmwarevm . After double clicking, VMware will
-      start up asking</para>
-
-      <orderedlist>
-        <listitem>
-          <para>if you moved it</para>
-        </listitem>
-
-        <listitem>
-          <para>if you want to cancel.</para>
-        </listitem>
-
-        <listitem>
-          <para>if you copied</para>
-        </listitem>
-      </orderedlist>
-
-      <para>Select the option<emphasis role="bold"> 3</emphasis> i.e you
-      copied it.</para>
     </section>
   </section>
 
@@ -265,9 +169,10 @@ $ tar xvf Pegasus3.0-VM.tar</emphasis></programlisting>
     <para>After logging on, start a terminal. There is a shortcut on the
     desktop for the terminal.</para>
 
-    <programlisting><command>$ </command><emphasis role="bold">[pegasus@pegasus ~]$ pwd</emphasis>
+    <programlisting><command>$ </command><emphasis role="bold">tutorial@pegasus-vm:$</emphasis><emphasis
+        role="bold"> pwd</emphasis>
 
-/home/pegasus
+/home/tutorial
 </programlisting>
 
     <para>In general, to run workflows on the Grid you will need to obtain
@@ -277,9 +182,10 @@ $ tar xvf Pegasus3.0-VM.tar</emphasis></programlisting>
 
     <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init 
 
-</command><computeroutput>Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-seqware/CN=Pegasus User
-Creating proxy ................................... Done
-Your proxy is valid until: Thu Nov 25 02:48:18 2010
+</command><computeroutput>Your identity: /O=edu/OU=ISI/OU=isi.edu/CN=Tutorial User
+Creating proxy ............................................. Done
+Your proxy is valid until: Thu Dec 23 22:41:36 2010
+
 
 </computeroutput></programlisting>
 
@@ -304,7 +210,7 @@ config  dax</computeroutput></computeroutput></programlisting>
       code that uses the DAX API to generate the DAX. Open the file
       $HOME/pegasus-wms/dax/CreateDAX.java in a file editor:</para>
 
-      <programlisting><command>$ emacs -nw dax/CreateDAX.java</command></programlisting>
+      <programlisting><command>$ vi dax/CreateDAX.java</command></programlisting>
 
       <para>There is a function Diamond( String site_handle, String
       pegasus_location ) that constructs the DAX. Towards the end of the
@@ -428,31 +334,31 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 statfile_20070529_153243_22618.tbl
-     gsiftp://pegasus/scratch/tutorial/inputdata/0.2degree/statfile.tbl
+     gsiftp://pegasus-vm/scratch/tutorial/inputdata/0.2degree/statfile.tbl
           pool="local"
 2mass-atlas-990502s-j1440198.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1440198.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1440198.fits
           pool="local"
 2mass-atlas-990502s-j1440186.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1440186.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1440186.fits
           pool="local"
  2mass-atlas-990502s-j1430092.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1430092.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1430092.fits
           pool="local"
  2mass-atlas-990502s-j1420198.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1420198.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1420198.fits
           pool="local"
  2mass-atlas-990502s-j1420186.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1420186.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1420186.fits
           pool="local"
  cimages_20070529_153243_22618.tbl
-     gsiftp://pegasus/scratch/0.2degree/cimages.tbl pool="local"
+     gsiftp://pegasus-vm/scratch/0.2degree/cimages.tbl pool="local"
  pimages_20070529_153243_22618.tbl
-     gsiftp://pegasus/scratch/0.2degree/pimages.tbl pool="local"
+     gsiftp://pegasus-vm/scratch/0.2degree/pimages.tbl pool="local"
  region_20070529_153243_22618.hdr
-     gsiftp://pegasus/scratch/0.2degree/region.hdr pool="local"
+     gsiftp://pegasus-vm/scratch/0.2degree/region.hdr pool="local"
  2mass-atlas-990502s-j1430080.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1430080.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1430080.fits
           pool="local"
 
 ...</computeroutput></programlisting></para>
@@ -479,7 +385,7 @@ statfile_20070529_153243_22618.tbl
         into the replica catalog.</para>
 
         <programlisting><command>$  pegasus-rc-client  insert f.a \
-          gsiftp://pegasus/scratch/tutorial/inputdata/diamond/f.a pool=local
+          gsiftp://pegasus-vm/scratch/tutorial/inputdata/diamond/f.a pool=local
 </command></programlisting>
 
         <para>Let us know verify if f.a has been registered successfully by
@@ -487,7 +393,7 @@ statfile_20070529_153243_22618.tbl
 
         <programlisting><emphasis role="bold">$ pegasus-rc-client  lookup f.a</emphasis>
 
- f.a gsiftp://pegasus/scratch/tutorial/inputdata/diamond/f.a pool="local"
+ f.a gsiftp://pegasus-vm/scratch/tutorial/inputdata/diamond/f.a pool="local"
 </programlisting>
 
         <para>The <emphasis role="bold">pegasus-rc-client</emphasis> also
@@ -515,31 +421,31 @@ statfile_20070529_153243_22618.tbl
 
 
 statfile_20070529_153243_22618.tbl
-     gsiftp://pegasus/scratch/tutorial/inputdata/0.2degree/statfile.tbl
+     gsiftp://pegasus-vm/scratch/tutorial/inputdata/0.2degree/statfile.tbl
           pool="local"
 2mass-atlas-990502s-j1440198.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1440198.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1440198.fits
           pool="local"
 2mass-atlas-990502s-j1440186.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1440186.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1440186.fits
           pool="local"
  2mass-atlas-990502s-j1430092.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1430092.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1430092.fits
           pool="local"
  2mass-atlas-990502s-j1420198.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1420198.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1420198.fits
           pool="local"
  2mass-atlas-990502s-j1420186.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1420186.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1420186.fits
           pool="local"
  cimages_20070529_153243_22618.tbl
-     gsiftp://pegasus/scratch/0.2degree/cimages.tbl pool="local"
+     gsiftp://pegasus-vm/scratch/0.2degree/cimages.tbl pool="local"
  pimages_20070529_153243_22618.tbl
-     gsiftp://pegasus/scratch/0.2degree/pimages.tbl pool="local"
+     gsiftp://pegasus-vm/scratch/0.2degree/pimages.tbl pool="local"
  region_20070529_153243_22618.hdr
-     gsiftp://pegasus/scratch/0.2degree/region.hdr pool="local"
+     gsiftp://pegasus-vm/scratch/0.2degree/region.hdr pool="local"
  2mass-atlas-990502s-j1430080.fits
-     gsiftp://pegasus/scratch/0.2degree/2mass-atlas-990502s-j1430080.fits
+     gsiftp://pegasus-vm/scratch/0.2degree/2mass-atlas-990502s-j1430080.fits
           pool="local"</computeroutput></programlisting>
           </listitem>
 
@@ -562,7 +468,7 @@ statfile_20070529_153243_22618.tbl
             <programlisting><command>$ pegasus-rc-client lookup pimages_20080505_143233_14944.tbl</command><computeroutput><computeroutput>
 
 pimages_20080505_143233_14944.tbl
-         gsiftp://pegasus/scratch/tutorial/inputdata/0.2degree/pimages.tbl 
+         gsiftp://pegasus-vm/scratch/tutorial/inputdata/0.2degree/pimages.tbl 
            pool="local"</computeroutput></computeroutput></programlisting>
           </listitem>
         </itemizedlist>
@@ -620,26 +526,26 @@ pimages_20080505_143233_14944.tbl
   xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
 &lt;site  handle="cluster" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-  &lt;grid  type="gt2" contact="pegasus/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
-  &lt;grid  type="gt2" contact="pegasus/jobmanager-sge" scheduler="SGE" jobtype="compute"/&gt;
+  &lt;grid  type="gt2" contact="pegasus-vm/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
+  &lt;grid  type="gt2" contact="pegasus-vm/jobmanager-condor" scheduler="SGE" jobtype="compute"/&gt;
   &lt;head-fs&gt;
    &lt;scratch&gt;
     &lt;shared&gt;
-     &lt;file-server protocol="gsiftp" url="gsiftp://pegasus" mount-point="/home/pegasus/cluster-scratch"/&gt;
-     &lt;internal-mount-point mount-point="/home/pegasus/cluster-scratch"/&gt;
+     &lt;file-server protocol="gsiftp" url="gsiftp://pegasus" mount-point="/home/tutorial/cluster-scratch"/&gt;
+     &lt;internal-mount-point mount-point="/home/tutorial/cluster-scratch"/&gt;
     &lt;/shared&gt;
    &lt;/scratch&gt;
    &lt;storage&gt;
     &lt;shared&gt;
-     &lt;file-server protocol="gsiftp" url="gsiftp://pegasus" mount-point="/home/pegasus/cluster-storage"/&gt;
-     &lt;internal-mount-point mount-point="/home/pegasus/cluster-storage"/&gt;
+     &lt;file-server protocol="gsiftp" url="gsiftp://pegasus" mount-point="/home/tutorial/cluster-storage"/&gt;
+     &lt;internal-mount-point mount-point="/home/tutorial/cluster-storage"/&gt;
     &lt;/shared&gt;
    &lt;/storage&gt;
   &lt;/head-fs&gt;
   &lt;replica-catalog  type="LRC" url="rlsn://localhost"/&gt;
-  &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/usr/local/globus/gt-5.0.2&lt;/profile&gt;
-  &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr/java/default&lt;/profile&gt;
-  &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/usr/local/globus/gt-5.0.2/lib&lt;/profile&gt;
+  &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/opt/globus/default&lt;/profile&gt;
+  &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr&lt;/profile&gt;
+  &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/opt/globus/default/lib&lt;/profile&gt;
   &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/pegasus/default&lt;/profile&gt;
   &lt;profile namespace="pegasus" key="clusters.num" &gt;1&lt;/profile&gt;
   &lt;profile namespace="pegasus" key="stagein.clusters" &gt;1&lt;/profile&gt;
@@ -651,21 +557,21 @@ pimages_20080505_143233_14944.tbl
   &lt;head-fs&gt;
    &lt;scratch&gt;
     &lt;shared&gt;
-     &lt;file-server protocol="gsiftp" url="file://" mount-point="/home/pegasus/local-scratch"/&gt;
-     &lt;internal-mount-point mount-point="/home/pegasus/local-scratch"/&gt;
+     &lt;file-server protocol="gsiftp" url="file://" mount-point="/home/tutorial/local-scratch"/&gt;
+     &lt;internal-mount-point mount-point="/home/tutorial/local-scratch"/&gt;
     &lt;/shared&gt;
    &lt;/scratch&gt;
    &lt;storage&gt;
     &lt;shared&gt;
-     &lt;file-server protocol="gsiftp" url="file://" mount-point="/home/pegasus/local-storage"/&gt;
-     &lt;internal-mount-point mount-point="/home/pegasus/local-storage"/&gt;
+     &lt;file-server protocol="gsiftp" url="file://" mount-point="/home/tutorial/local-storage"/&gt;
+     &lt;internal-mount-point mount-point="/home/tutorial/local-storage"/&gt;
     &lt;/shared&gt;
    &lt;/storage&gt;
   &lt;/head-fs&gt;
   &lt;replica-catalog  type="LRC" url="rlsn://localhost"/&gt;
-  &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/usr/local/globus/gt-5.0.2&lt;/profile&gt;
-  &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr/java/default&lt;/profile&gt;
-  &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/usr/local/globus/gt-5.0.2/lib&lt;/profile&gt;
+  &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/opt/globus/default&lt;/profile&gt;
+  &lt;profile namespace="env" key="JAVA_HOME" &gt;/usr&lt;/profile&gt;
+  &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/opt/globus/default/lib&lt;/profile&gt;
   &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/pegasus/default&lt;/profile&gt;
  &lt;/site&gt;
 
@@ -704,9 +610,9 @@ pimages_20080505_143233_14944.tbl
 2010.11.24 18:00:46.493 PST: [INFO]  Adding site NWICG_NotreDame 
 2010.11.24 18:00:46.494 PST: [INFO]  Site LOCAL . Creating default entry 
 2010.11.24 18:00:46.527 PST: [INFO]  Loaded 19 sites  
-2010.11.24 18:00:46.527 PST:   Writing out site catalog to /home/pegasus/pegasus-wms/./engage-osg-sc.xml 
+2010.11.24 18:00:46.527 PST:   Writing out site catalog to /home/tutorial/pegasus-wms/./engage-osg-sc.xml 
 2010.11.24 18:00:46.959 PST:   Number of SRM Properties retrieved 14 
-2010.11.24 18:00:46.970 PST:   Writing out properties to /home/pegasus/pegasus-wms/./pegasus.6475454308491531036.properties 
+2010.11.24 18:00:46.970 PST:   Writing out properties to /home/tutorial/pegasus-wms/./pegasus.6475454308491531036.properties 
 2010.11.24 18:00:46.972 PST: [INFO]  Time taken to execute is 1.101 seconds 
 2010.11.24 18:00:46.972 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
 
@@ -789,7 +695,7 @@ pimages_20080505_143233_14944.tbl
 tr bin/mDiff {
         site local {
                 profile env "MONTAGE_HOME" "." 
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mDiff"
                 arch "x86"
                 os "LINUX"
@@ -799,7 +705,7 @@ bin/mDiff"
 
 tr bin/mFitplane {
         site local {
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mFitplane"
                 arch "x86"
                 os "LINUX"
@@ -809,7 +715,7 @@ bin/mFitplane"
 
 tr condor::dagman {
         site local {
-                pfn "/opt/condor/default/bin/condor_dagman"
+                pfn "﻿/usr/bin/condor_dagman"
                 arch "x86"
                 os "LINUX"
                 type "INSTALLED"
@@ -836,7 +742,7 @@ tr diamond::preprocess:2.0 {
 
 tr mAdd:3.0 {
         site local {
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mAdd"
                 arch "x86"
                 os "LINUX"
@@ -846,7 +752,7 @@ bin/mAdd"
 
 tr mBackground:3.0 {
         site local {
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mBackground"
                 arch "x86"
                 os "LINUX"
@@ -856,7 +762,7 @@ bin/mBackground"
 
 tr mBgModel:3.0 {
         site local {
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mBgModel"
                 arch "x86"
                 os "LINUX"
@@ -866,7 +772,7 @@ bin/mBgModel"
 
 tr mConcatFit:3.0 {
         site local {
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mConcatFit"
                 arch "x86"
                 os "LINUX"
@@ -877,7 +783,7 @@ bin/mConcatFit"
 tr mDiffFit:3.0 {
         site local {
                 profile env "MONTAGE_HOME" "." 
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mDiffFit"
                 arch "x86"
                 os "LINUX"
@@ -887,7 +793,7 @@ bin/mDiffFit"
 
 tr mImgtbl:3.0 {
         site local {
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mImgtbl"
                 arch "x86"
                 os "LINUX"
@@ -897,7 +803,7 @@ bin/mImgtbl"
 
 tr mJPEG:3.0 {
         site local {
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mJPEG"
                 arch "x86"
                 os "LINUX"
@@ -908,7 +814,7 @@ bin/mJPEG"
 tr mProjectPP:3.0 {
         site local {
                 profile condor "priority" "25" 
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mProjectPP"
                 arch "x86"
                 os "LINUX"
@@ -918,7 +824,7 @@ bin/mProjectPP"
 
 tr mShrink:3.0 {
         site local {
-                pfn "gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/
+                pfn "gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/
 bin/mShrink"
                 arch "x86"
                 os "LINUX"
@@ -962,40 +868,40 @@ local    diamond::analyze:2.0    /cluster-software/pegasus/current/bin/keg    IN
             <programlisting><command>$ pegasus-tc-client  -q -B          </command><computeroutput>
 
 local   mDiff       
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mDiff       
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mDiff       
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mFitplane
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mFitplane
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mFitplane
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mAdd:3.0  
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mAdd
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mAdd
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mBackground:3.0
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mBackground
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mBackground
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mBgModel:3.0
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mBgModel
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mBgModel
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mConcatFit:3.0 
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mConcatFit
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mConcatFit
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mDiffFit:3.0
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mDiffFit 
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mDiffFit 
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mImgtbl:3.0 
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mImgtbl  
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mImgtbl  
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mJPEG:3.0       
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mJPEG  
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mJPEG  
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mProject:3.0 
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mProjectPP 
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mProjectPP 
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mProjectPP:3.0
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mProjectPP
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mProjectPP
                                 STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mShrink:3.0
-             gsiftp://pegasus/scratch/tutorial/software/montage/3.0/x86/bin/mShrink
+             gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mShrink
                                 STATIC_BINARY   INTEL32::LINUX  NULL</computeroutput></programlisting>
           </listitem>
         </itemizedlist>
@@ -1085,25 +991,23 @@ $ pegasus-plan --dax `pwd`/dax/diamond.dax --force\
           The condor submit files are to be generated in a directory structure
           whose base is dags. We also are requesting that no cleanup jobs be
           added as we require the intermediate data to be saved. Here is the
-          output of pegasus-plan. <programlisting><computeroutput>2010.07.19 16:47:05.276 PDT: [INFO] event.pegasus.planner planner.version 2.4.2  - STARTED 
-2010.07.19 16:47:05.858 PDT: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/diamond.dax  
-2010.07.19 16:47:05.901 PDT: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/diamond.dax   
-2010.07.19 16:47:05.944 PDT: [INFO] event.pegasus.refinement dax.id diamond_0  - STARTED 
-2010.07.19 16:47:05.957 PDT: [INFO] event.pegasus.siteselection dax.id diamond_0  - STARTED 
-2010.07.19 16:47:05.977 PDT: [INFO] event.pegasus.siteselection dax.id diamond_0  - FINISHED 
-2010.07.19 16:47:05.986 PDT: [INFO]  Grafting transfer nodes in the workflow 
-2010.07.19 16:47:05.987 PDT: [INFO] event.pegasus.generate.transfer-nodes dax.id diamond_0  - STARTED 
-2010.07.19 16:47:06.031 PDT: [INFO] event.pegasus.generate.transfer-nodes dax.id diamond_0  - FINISHED 
-2010.07.19 16:47:06.032 PDT: [INFO] event.pegasus.generate.workdir-nodes dax.id diamond_0  - STARTED 
-2010.07.19 16:47:06.034 PDT: [INFO] event.pegasus.generate.workdir-nodes dax.id diamond_0  - FINISHED 
-2010.07.19 16:47:06.034 PDT: [INFO] event.pegasus.generate.cleanup-wf dax.id diamond_0  - STARTED 
-2010.07.19 16:47:06.035 PDT: [INFO] event.pegasus.generate.cleanup-wf dax.id diamond_0  - FINISHED 
-2010.07.19 16:47:06.035 PDT: [INFO] event.pegasus.refinement dax.id diamond_0  - FINISHED 
-2010.07.19 16:47:06.202 PDT: [INFO]  Generating codes for the concrete workflow 
-2010.07.19 16:47:06.316 PDT: [INFO]  Generating codes for the concrete workflow -DONE 
-2010.07.19 16:47:06.316 PDT: [INFO]  Generating code for the cleanup workflow 
-2010.07.19 16:47:06.369 PDT: [INFO]  Generating code for the cleanup workflow -DONE 
-2010.07.19 16:47:06.373 PDT: [INFO]  
+          output of pegasus-plan. <programlisting><computeroutput>
+2010.12.23 10:54:02.180 PST: [INFO] event.pegasus.refinement dax.id blackdiamond_0  - STARTED 
+2010.12.23 10:54:02.189 PST: [INFO] event.pegasus.siteselection dax.id blackdiamond_0  - STARTED 
+2010.12.23 10:54:02.203 PST: [INFO] event.pegasus.siteselection dax.id blackdiamond_0  - FINISHED 
+2010.12.23 10:54:02.317 PST: [INFO]  Grafting transfer nodes in the workflow 
+2010.12.23 10:54:02.318 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id blackdiamond_0  - STARTED 
+2010.12.23 10:54:02.447 PST: [INFO] event.pegasus.generate.transfer-nodes dax.id blackdiamond_0  - FINISHED 
+2010.12.23 10:54:02.449 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id blackdiamond_0  - STARTED 
+2010.12.23 10:54:02.452 PST: [INFO] event.pegasus.generate.workdir-nodes dax.id blackdiamond_0  - FINISHED 
+2010.12.23 10:54:02.452 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id blackdiamond_0  - STARTED 
+2010.12.23 10:54:02.453 PST: [INFO] event.pegasus.generate.cleanup-wf dax.id blackdiamond_0  - FINISHED 
+2010.12.23 10:54:02.453 PST: [INFO] event.pegasus.refinement dax.id blackdiamond_0  - FINISHED 
+2010.12.23 10:54:02.539 PST: [INFO]  Generating codes for the concrete workflow 
+2010.12.23 10:54:03.340 PST: [INFO]  Generating codes for the concrete workflow -DONE 
+2010.12.23 10:54:03.340 PST: [INFO]  Generating code for the cleanup workflow 
+2010.12.23 10:54:03.482 PST: [INFO]  Generating code for the cleanup workflow -DONE 
+2010.12.23 10:54:03.530 PST:   
 
 
 I have concretized your abstract workflow. The workflow has been entered 
@@ -1111,13 +1015,13 @@ into the workflow database with a state of "planned". The next step is
 to start or execute your workflow. The invocation required is
 
 
-pegasus-run 
--Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.4459134667464687814.properties 
- --nodatabase /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001
+pegasus-run -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.7289539421670233327.properties 
+        /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001
 
  
-2010.07.19 16:47:06.373 PDT: [INFO]  Time taken to execute is 1.065 seconds 
-2010.07.19 16:47:06.374 PDT: [INFO] event.pegasus.planner planner.version 2.4.2  - FINISHED 
+2010.12.23 10:54:03.530 PST:   Time taken to execute is 1.757 seconds 
+2010.12.23 10:54:03.530 PST: [INFO] event.pegasus.planner planner.version 3.0.1  - FINISHED 
+
 </computeroutput></programlisting></para>
         </listitem>
 
@@ -1127,7 +1031,7 @@ pegasus-run
           illustration purpose.</emphasis><programlisting><emphasis
                 role="bold"></emphasis><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
  -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.350356687577055673.properties \
-       $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
+       $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</emphasis>
 
 -----------------------------------------------------------------------
 File for submitting this DAG to Condor           : blackdiamond-0.dag.condor.sub
@@ -1145,16 +1049,16 @@ Logging submit event(s).
 
 Your Workflow has been started and runs in base directory given below
 
-cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001
+cd /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001
 
 *** To monitor the workflow you can run ***
 
-pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001
+pegasus-status -l /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001
 
 *** To remove your workflow run ***
 pegasus-remove -d 320.0
 or
-pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001
+pegasus-remove /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001
 
 [pegasus@pegasus pegasus-wms]$ 
 
@@ -1178,7 +1082,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
       <para>We will change into the directory, that was mentioned by the
       output of pegasus-run command.</para>
 
-      <programlisting><command>$ cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</command></programlisting>
+      <programlisting><command>$ cd /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</command></programlisting>
 
       <para>In this directory you will see a whole lot of files. That should
       not scare you. Unless things go wrong, you need to look at just a very
@@ -1189,7 +1093,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
           <para><emphasis role="bold">Run the command pegasus-status as
           mentioned by pegasus-run above to check the status of your jobs. Use
           the watch command to auto repeat the command every 2
-          seconds.</emphasis><programlisting><command>$ watch pegasus-status /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</command><computeroutput>
+          seconds.</emphasis><programlisting><command>$ watch pegasus-status /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</command><computeroutput>
 
 -- Submitter: pegasus : &lt;172.16.80.128:40195&gt; : pegasus
  ID      OWNER/NODENAME   SUBMITTED     RUN_TIME ST PRI SIZE CMD               
@@ -1227,7 +1131,7 @@ pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run00
           <para>Using <emphasis role="bold">pegasus-analyzer</emphasis> to
           analyze the workflow</para>
 
-          <programlisting><emphasis role="bold">$ pegasus-analyzer  -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001</emphasis>
+          <programlisting><emphasis role="bold">$ pegasus-analyzer  -i /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</emphasis>
 
 pegasus-analyzer: initializing...
 
@@ -1297,37 +1201,38 @@ pegasus-analyzer: end of status report
           ran your workflow on the local site successfully. The workflow
           generates a final output file f.d that resides in the directory
           <emphasis
-          role="bold">/home/pegasus/local-storage/storage/f.d</emphasis>
+          role="bold">/home/tutorial/local-storage/storage/f.d</emphasis>
           .</para>
 
-          <para>To view the file, you can do the following <programlisting><command>$ cat /home/pegasus/local-storage/storage/f.d
+          <para>To view the file, you can do the following <programlisting><command>$ cat /home/tutorial/local-storage/storage/f.d
 </command>
-
 --- start f.c1 ----
   --- start f.b1 ----
     --- start f.a ----
       Input File for the Diamond Workflow.--- final f.a ----
-    Timestamp Today: 20101125T011133.275-08:00 (1290676293.275;60.001)
-    Applicationname: preprocess @ 172.16.80.129 (VPN)
-    Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
-    Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-    Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
-    Load Averages  : 0.691 0.238 0.113
-    Memory Usage MB: 1002 total, 350 free, 0 shared, 33 buffered
-    Swap Usage   MB: 2015 total, 2015 free
-    Filesystem Info: /                        ext3    17GB total,     9GB avail
+    Timestamp Today: 20101223T105659.955-08:00 (1293130619.955;60.002)
+    Applicationname: preprocess @ 10.0.2.15 (VPN)
+    Current Workdir: /home/tutorial/local-scratch/exec/tutorial/pegasus/blackdiamond/run0001
+    Systemenvironm.: i686-Linux 2.6.32-5-686
+    Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2797.463
+    Load Averages  : 0.646 0.192 0.060
+    Memory Usage MB: 502 total, 229 free, 0 shared, 39 buffered
+    Swap Usage   MB: 397 total, 397 free
+    Filesystem Info: /media/cdrom0            udf,iso9660    31MB total,     0B avail
+    Filesystem Info: /media/floppy0           auto  7668MB total,  5436MB avail
     Output Filename: f.b1
     Input Filenames: f.a
   --- final f.b1 ----
-  Timestamp Today: 20101125T011249.441-08:00 (1290676369.441;60.024)
-  Applicationname: findrange @ 172.16.80.129 (VPN)
-  Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
-  Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-  Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
-  Load Averages  : 1.413 0.530 0.219
-  Memory Usage MB: 1002 total, 349 free, 0 shared, 33 buffered
-  Swap Usage   MB: 2015 total, 2015 free
-  Filesystem Info: /                        ext3    17GB total,     9GB avail
+  Timestamp Today: 20101223T105815.334-08:00 (1293130695.334;60.003)
+  Applicationname: findrange @ 10.0.2.15 (VPN)
+  Current Workdir: /home/tutorial/local-scratch/exec/tutorial/pegasus/blackdiamond/run0001
+  Systemenvironm.: i686-Linux 2.6.32-5-686
+  Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2797.463
+  Load Averages  : 1.444 0.509 0.177
+  Memory Usage MB: 502 total, 227 free, 0 shared, 39 buffered
+  Swap Usage   MB: 397 total, 397 free
+  Filesystem Info: /media/cdrom0            udf,iso9660    31MB total,     0B avail
+  Filesystem Info: /media/floppy0           auto  7668MB total,  5436MB avail
   Output Filename: f.c1
   Input Filenames: f.b1
 --- final f.c1 ----
@@ -1335,41 +1240,45 @@ pegasus-analyzer: end of status report
   --- start f.b2 ----
     --- start f.a ----
       Input File for the Diamond Workflow.--- final f.a ----
-    Timestamp Today: 20101125T011133.275-08:00 (1290676293.275;60.001)
-    Applicationname: preprocess @ 172.16.80.129 (VPN)
-    Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
-    Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-    Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
-    Load Averages  : 0.691 0.238 0.113
-    Memory Usage MB: 1002 total, 350 free, 0 shared, 33 buffered
-    Swap Usage   MB: 2015 total, 2015 free
-    Filesystem Info: /                        ext3    17GB total,     9GB avail
+    Timestamp Today: 20101223T105659.955-08:00 (1293130619.955;60.003)
+    Applicationname: preprocess @ 10.0.2.15 (VPN)
+    Current Workdir: /home/tutorial/local-scratch/exec/tutorial/pegasus/blackdiamond/run0001
+    Systemenvironm.: i686-Linux 2.6.32-5-686
+    Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2797.463
+    Load Averages  : 0.646 0.192 0.060
+    Memory Usage MB: 502 total, 229 free, 0 shared, 39 buffered
+    Swap Usage   MB: 397 total, 397 free
+    Filesystem Info: /media/cdrom0            udf,iso9660    31MB total,     0B avail
+    Filesystem Info: /media/floppy0           auto  7668MB total,  5436MB avail
     Output Filename: f.b2
     Input Filenames: f.a
   --- final f.b2 ----
-  Timestamp Today: 20101125T011254.555-08:00 (1290676374.555;60.001)
-  Applicationname: findrange @ 172.16.80.129 (VPN)
-  Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
-  Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-  Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
-  Load Averages  : 1.380 0.538 0.223
-  Memory Usage MB: 1002 total, 349 free, 0 shared, 33 buffered
-  Swap Usage   MB: 2015 total, 2015 free
-  Filesystem Info: /                        ext3    17GB total,     9GB avail
+  Timestamp Today: 20101223T105820.478-08:00 (1293130700.478;60.001)
+  Applicationname: findrange @ 10.0.2.15 (VPN)
+  Current Workdir: /home/tutorial/local-scratch/exec/tutorial/pegasus/blackdiamond/run0001
+  Systemenvironm.: i686-Linux 2.6.32-5-686
+  Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2797.463
+  Load Averages  : 1.409 0.517 0.182
+  Memory Usage MB: 502 total, 228 free, 0 shared, 39 buffered
+  Swap Usage   MB: 397 total, 397 free
+  Filesystem Info: /media/cdrom0            udf,iso9660    31MB total,     0B avail
+  Filesystem Info: /media/floppy0           auto  7668MB total,  5436MB avail
   Output Filename: f.c2
   Input Filenames: f.b2
 --- final f.c2 ----
-Timestamp Today: 20101125T011410.669-08:00 (1290676450.669;60.001)
-Applicationname: analyze @ 172.16.80.129 (VPN)
-Current Workdir: /home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0001
-Systemenvironm.: x86_64-Linux 2.6.18-194.8.1.el5
-Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2794.306
-Load Averages  : 1.025 0.597 0.266
-Memory Usage MB: 1002 total, 349 free, 0 shared, 34 buffered
-Swap Usage   MB: 2015 total, 2015 free
-Filesystem Info: /                        ext3    17GB total,     9GB avail
+Timestamp Today: 20101223T105936.718-08:00 (1293130776.718;60.000)
+Applicationname: analyze @ 10.0.2.15 (VPN)
+Current Workdir: /home/tutorial/local-scratch/exec/tutorial/pegasus/blackdiamond/run0001
+Systemenvironm.: i686-Linux 2.6.32-5-686
+Processor Info.: 1 x Intel(R) Xeon(R) CPU           E5462  @ 2.80GHz @ 2797.463
+Load Averages  : 1.033 0.581 0.226
+Memory Usage MB: 502 total, 228 free, 0 shared, 40 buffered
+Swap Usage   MB: 397 total, 397 free
+Filesystem Info: /media/cdrom0            udf,iso9660    31MB total,     0B avail
+Filesystem Info: /media/floppy0           auto  7668MB total,  5436MB avail
 Output Filename: f.d
 Input Filenames: f.c1 f.c2
+
 </programlisting></para>
         </listitem>
 
@@ -1422,7 +1331,7 @@ $  pegasus-plan --dax `pwd`/dax/diamond.dax --force \
 <emphasis role="bold">
 Use pegasus-status to track the workflow and wait it to fail</emphasis>
 
-$ watch pegasus-status  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+$ watch pegasus-status  /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002
 
 
 -- Submitter: pegasus : &lt;172.16.80.128:40195&gt; : pegasus
@@ -1431,7 +1340,7 @@ $ watch pegasus-status  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiam
 
 <emphasis role="bold">
 The --long option to pegasus-status of a running workflow gives more detail
-<emphasis>[pegasus@pegasus pegasus-wms]$ pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+<emphasis>[pegasus@pegasus pegasus-wms]$ pegasus-status -l /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002
 blackdiamond-0.dag is running.
 11/25 01:25:06  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
 11/25 01:25:06   ===     ===      ===     ===     ===        ===      ===
@@ -1443,7 +1352,7 @@ WORKFLOW STATUS : RUNNING | 1/8 ( 12% ) | (condor processing workflow)
 
 We can also use --long option to pegasus-status to see the FINAL status of the workflow</emphasis>
 
-$ pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+$ pegasus-status -l /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002
 blackdiamond-0.dag FAILED (status 1)
 11/25 01:25:32  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
 11/25 01:25:32   ===     ===      ===     ===     ===        ===      ===
@@ -1457,7 +1366,7 @@ WORKFLOW STATUS : FAILED | 1/8 ( 12% ) | (rescue needs to be submitted)
       <para>We will now run pegasus-analyzer on the failed workflow submit
       directory to see what job failed.</para>
 
-      <programlisting><emphasis role="bold">$ pegasus-analyzer  -i $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002<emphasis>
+      <programlisting><emphasis role="bold">$ pegasus-analyzer  -i $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002<emphasis>
 pegasus-analyzer: initializing...
 </emphasis></emphasis>
 ************************************Summary*************************************
@@ -1473,15 +1382,15 @@ pegasus-analyzer: initializing...
 
  last state: POST_SCRIPT_FAILURE
        site: local
-submit file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.sub
-output file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002
- error file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.err.002
+submit file: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.sub
+output file: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002
+ error file: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.err.002
 
 **************************************Done**************************************
 
 pegasus-analyzer: end of status report
 
-[pegasus@pegasus pegasus-wms]$ pegasus-analyzer  -i /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+[pegasus@pegasus pegasus-wms]$ pegasus-analyzer  -i /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002
 pegasus-analyzer: initializing...
 
 ************************************Summary*************************************
@@ -1497,9 +1406,9 @@ pegasus-analyzer: initializing...
 
  last state: POST_SCRIPT_FAILURE
        site: local
-submit file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.sub
-output file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002
- error file: /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.err.002
+submit file: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.sub
+output file: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002
+ error file: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.err.002
 
 -------------------------------Task #1 - Summary--------------------------------
 
@@ -1508,7 +1417,7 @@ hostname    : pegasus
 executable  : /opt/pegasus/default/bin/pegasus-transfer
 arguments   : 
 exitcode    : 1
-working dir : /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002
+working dir : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002
 
 --Task #1 - pegasus::pegasus-transfer - pegasus::pegasus-transfer:1.0 - stdout--
 
@@ -1518,7 +1427,7 @@ working dir : /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run000
 2010-11-25 01:25:22,321    INFO:  Executing cp commands
 /bin/cp: cannot stat `/scratch/tutorial/inputdata/diamond/f.a': No such file or directory
 2010-11-25 01:25:22,331 CRITICAL:  Command'/bin/cp -L"/scratch/tutorial/inputdata/diamond/f.a"
-                 "/home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0002/f.a"'failed with error code 1
+                 "/home/tutorial/local-scratch/exec/pegasus/pegasus/blackdiamond/run0002/f.a"'failed with error code 1
 
 **************************************Done**************************************
 
@@ -1623,14 +1532,14 @@ pegasus-analyzer: end of status report
           <para>Lets look at the stdout of our failed job.</para>
 
           <programlisting><emphasis role="bold">$ </emphasis><emphasis
-              role="bold">cat /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002 </emphasis>
+              role="bold">cat /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002 </emphasis>
 
  &lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
  &lt;invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.1.xsd" version="2.1"
   start="2010-11-29T19:10:23.862-08:00" duration="0.076" <emphasis role="bold">transformation="pegasus::pegasus-transfer"</emphasis> 
   derivation="pegasus::pegasus-transfer:1.0" <emphasis role="bold">resource="local"</emphasis> wf-label="blackdiamond" 
-  wf-stamp="2010-11-29T18:57:59-08:00" interface="eth0" <emphasis role="bold">hostaddr="172.16.80.131" hostname="pegasus" </emphasis>
+  wf-stamp="2010-11-29T18:57:59-08:00" interface="eth0" <emphasis role="bold">hostaddr="﻿10.0.2.15" hostname="pegasus-vm.local" </emphasis>
   pid="5428" uid="501" user="pegasus" gid="501" group="pegasus" umask="0022"&gt;
  
  <emphasis role="bold">&lt;mainjob start="2010-11-29T19:10:23.876-08:00" duration="0.063" pid="5429"&gt;
@@ -1645,24 +1554,26 @@ pegasus-analyzer: end of status report
     &lt;/statcall&gt;
     &lt;argument-vector/&gt;
   &lt;/mainjob&gt;
-  <emphasis role="bold">&lt;cwd&gt;/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0002&lt;/cwd&gt;</emphasis>
+  <emphasis role="bold">&lt;cwd&gt;/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002&lt;/cwd&gt;</emphasis>
   &lt;usage utime="0.002" stime="0.013" minflt="475" majflt="0" nswap="0" nsignals="0" nvcsw="1" nivcsw="5"/&gt;
   
- <emphasis role="bold">&lt;machine page-size="4096"&gt;
-    &lt;stamp&gt;2010-11-29T19:10:23.862-08:00&lt;/stamp&gt;
-    &lt;uname system="linux" nodename="pegasus" release="2.6.18-194.8.1.el5" machine="x86_64"&gt;
-                  #1 SMP Thu Jul 1 19:04:48 EDT 2010&lt;/uname&gt;
+
+   ﻿<emphasis role="bold">&lt;machine page-size="4096"&gt;
+    &lt;stamp&gt;2010-12-23T10:56:43.817-08:00&lt;/stamp&gt;
+    &lt;uname system="linux" nodename="pegasus-vm" release="2.6.32-5-686" machine="i686"&gt;
+      #1 SMP Fri Dec 10 16:12:40 UTC 2010&lt;/uname&gt;
    &lt;linux&gt;
-    &lt;ram total="1051533312" free="306233344" shared="0" buffer="44756992"/&gt;
-    &lt;swap total="536862720" free="536862720"/&gt;
-    &lt;boot idle="2026.550"&gt;2010-11-29T18:32:29.013-08:00&lt;/boot&gt;
-    &lt;cpu count="1" speed="2794" vendor="GenuineIntel"&gt;Intel(R) Xeon(R) CPU E5462 @ 2.80GHz&lt;/cpu&gt;
-    &lt;load min1="0.00" min5="0.15" min15="0.17"/&gt;
-    &lt;proc total="114" running="2" sleeping="112" vmsize="8332234752" rss="381333504"/&gt;
-    &lt;task total="141" running="2" sleeping="139"/&gt;
+    &lt;ram total="527044608" free="242290688" shared="0" buffer="41041920"/&gt;
+    &lt;swap total="417325056" free="417325056"/&gt;
+    &lt;boot idle="1597.500"&gt;2010-12-23T10:29:16.599-08:00&lt;/boot&gt;
+    &lt;cpu count="1" speed="2797" vendor="GenuineIntel"&gt;Intel(R) Xeon(R) CPU E5462 @ 2.80GHz&lt;/cpu&gt;
+    &lt;load min1="0.05" min5="0.02" min15="0.00"/&gt;
+    &lt;proc total="88" running="1" sleeping="87" vmsize="344793088" rss="123768832"/&gt;
+    &lt;task total="101" running="1" sleeping="100"/&gt;
    &lt;/linux&gt;
   &lt;/machine&gt;</emphasis>
-
+ <emphasis role="bold">
+</emphasis>
   &lt;statcall error="0" id="stdin"&gt;
     &lt;descriptor number="0"/&gt;
     &lt;statinfo mode="0100664" size="142" inode="2250032" nlink="1" blksize="4096" blocks="16" 
@@ -1681,7 +1592,7 @@ pegasus-analyzer: end of status report
 2010-11-29 19:10:23,921    INFO:  Executing cp commands
 /bin/cp: cannot stat `/scratch/tutorial/inputdata/diamond/f.a&amp;apos;: No such file or directory
 2010-11-29 19:10:23,932 CRITICAL:  Command &amp;apos;/bin/cp -L &amp;quot;/scratch/tutorial/inputdata/diamond/f.a&amp;quot; 
-    &amp;quot;/home/pegasus/local-scratch/exec/pegasus/pegasus/blackdiamond/run0002/f.a&amp;quot;&amp;apos; failed with error code 1
+    &amp;quot;/home/tutorial/local-scratch/exec/pegasus/pegasus/blackdiamond/run0002/f.a&amp;quot;&amp;apos; failed with error code 1
 &lt;/data&gt;
   &lt;/statcall&gt;</emphasis>
 
@@ -1711,7 +1622,7 @@ pegasus-analyzer: end of status report
   &lt;environment&gt;
     &lt;env key="GLOBUS_LOCATION"&gt;/usr/local/globus/default&lt;/env&gt;
     &lt;env key="GRIDSTART_CHANNEL"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427/gs.app.qCOCwX&lt;/env&gt;
-    &lt;env key="JAVA_HOME"&gt;/usr/java/default&lt;/env&gt;
+    &lt;env key="JAVA_HOME"&gt;/usr&lt;/env&gt;
     &lt;env key="LD_LIBRARY_PATH"&gt;/usr/java/jdk1.6.0_20/jre/lib/amd64/server:/usr/java/jdk1.6.0_20/jre/lib/amd64:&lt;/env&gt;
     &lt;env key="PEGASUS_HOME"&gt;/opt/pegasus/default&lt;/env&gt;
     &lt;env key="TEMP"&gt;/opt/condor/local.pegasus/spool/local_univ_execute/dir_5427&lt;/env&gt;
@@ -1775,7 +1686,7 @@ pegasus-analyzer: end of status report
           <listitem>
             <para>Now take a look at the DAG file...</para>
 
-            <programlisting><command>$ cat $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag</command><computeroutput>
+            <programlisting><command>$ cat $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/blackdiamond-0.dag</command><computeroutput>
 
 
 ######################################################################
@@ -1787,42 +1698,42 @@ MAXJOBS projection 2
 
 JOB create_dir_blackdiamond_0_local create_dir_blackdiamond_0_local.sub
 SCRIPT POST create_dir_blackdiamond_0_local /opt/pegasus/default/bin/pegasus-exitcode 
-  /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/create_dir_blackdiamond_0_local.out
+  /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/create_dir_blackdiamond_0_local.out
 RETRY create_dir_blackdiamond_0_local 2
 
 JOB stage_in_local_local_0 stage_in_local_local_0.sub
 SCRIPT POST stage_in_local_local_0 /opt/pegasus/default/bin/pegasus-exitcode  
- /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/stage_in_local_local_0.out
+ /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/stage_in_local_local_0.out
 RETRY stage_in_local_local_0 2
 
 JOB preprocess_j1 preprocess_j1.sub
 SCRIPT POST preprocess_j1 /opt/pegasus/default/bin/pegasus-exitcode   
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/preprocess_j1.out
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/preprocess_j1.out
 RETRY preprocess_j1 2
 
 JOB findrange_j2 findrange_j2.sub
 SCRIPT POST findrange_j2 /opt/pegasus/default/bin/pegasus-exitcode   
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/findrange_j2.out
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/findrange_j2.out
 RETRY findrange_j2 2
 
 JOB findrange_j3 findrange_j3.sub
 SCRIPT POST findrange_j3 /opt/pegasus/default/bin/pegasus-exitcode   
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/findrange_j3.out
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/findrange_j3.out
 RETRY findrange_j3 2
 
 JOB analyze_j4 analyze_j4.sub
 SCRIPT POST analyze_j4 /opt/pegasus/default/bin/pegasus-exitcode   
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/analyze_j4.out
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/analyze_j4.out
 RETRY analyze_j4 2
 
 JOB stage_out_local_local_2_0 stage_out_local_local_2_0.sub
 SCRIPT POST stage_out_local_local_2_0 /opt/pegasus/default/bin/pegasus-exitcode   
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/stage_out_local_local_2_0.out
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/stage_out_local_local_2_0.out
 RETRY stage_out_local_local_2_0 2
 
 JOB register_local_2_0 register_local_2_0.sub
 SCRIPT POST register_local_2_0 /opt/pegasus/default/bin/pegasus-exitcode   
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/register_local_2_0.out
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/register_local_2_0.out
 RETRY register_local_2_0 2
 
 PARENT findrange_j2 CHILD analyze_j4
@@ -1845,7 +1756,7 @@ PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
           <listitem>
             <para>... and the dagman.out file.</para>
 
-            <programlisting><emphasis role="bold"><command>$</command><computeroutput> cat $HOME/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag.dagman.out </computeroutput></emphasis><computeroutput>
+            <programlisting><emphasis role="bold"><command>$</command><computeroutput> cat $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/blackdiamond-0.dag.dagman.out </computeroutput></emphasis><computeroutput>
 
 11/25 01:10:47 ******************************************************
 11/25 01:10:47 ** condor_scheduniv_exec.339.0 (CONDOR_DAGMAN) STARTING UP
@@ -1886,7 +1797,7 @@ PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
 11/25 01:10:47 DAGMAN_DEBUG setting: 
 ....
 11/25 01:10:47 Default node log file is:
- &lt;/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/blackdiamond-0.dag.nodes.log&gt;
+ &lt;/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/blackdiamond-0.dag.nodes.log&gt;
 11/25 01:10:47 DAG Lockfile will be written to blackdiamond-0.dag.lock
 11/25 01:10:47 DAG Input file is blackdiamond-0.dag
 11/25 01:10:47 Parsing 1 dagfiles
@@ -1962,7 +1873,7 @@ create_dir_blackdiamond_0_local -a +DAGParentNodeNames' '=' '"" create_dir_black
       just permanently remove it. You can stop/halt a workflow by running the
       pegasus-remove command mentioned in the output of pegasus-run</para>
 
-      <programlisting><command>$ pegasus-remove $HOME/pegasus-wms/dags/pegasus/pegasus/diamond/runXXXX</command><computeroutput>
+      <programlisting><command>$ pegasus-remove $HOME/pegasus-wms/dags/tutorial/pegasus/diamond/runXXXX</command><computeroutput>
 
 Job 2788.0 marked for removal</computeroutput></programlisting>
     </section>
@@ -1985,30 +1896,60 @@ Job 2788.0 marked for removal</computeroutput></programlisting>
         <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms
 
 
-$ pegasus-statistics dags/pegasus/pegasus/blackdiamond/run0001/
+$ pegasus-statistics dags/tutorial/pegasus/blackdiamond/run0001/
 </emphasis>
 
+﻿tutorial@pegasus-vm:~/pegasus-wms$ pegasus-statistics dags/tutorial/pegasus/blackdiamond/run0001/
+
+
+
 ******************************************** SUMMARY ********************************************
-Total workflow execution time      :          306 
-Total workflow execution wall time :      240.843 
-Total jobs                         :            8 
-Total tasks                        :            8 
-# jobs succeeded                   :            8 
-# jobs failed                      :            0 
-# jobs unsubmitted                 :            0 
-# jobs unknown                     :            0 
+#Legends
+#Workflow runtime (min,sec) - the waltime from the start of the workflow execution to the end as 
+                              reported by the DAGMAN.In case of rescue dag the value is the cumulative 
+                              of all retries.
+#Cumulative workflow runtime (min,sec) - the sum of the walltime of all jobs as reported by the DAGMan .
+                                         In case of job retries the value is the cumulative of all retries.
 
-Workflow execution statistics created at :
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/workflow
+Job summary
+  Total - the total number of jobs in the workflow. The total number of jobs is calculated by parsing 
+          the .dag file.  For workflows having SUBDAX jobs , the SUDBAX job is skipped , but the 
+          calculation takes into account all the jobs that make up the SUBDAX sub workflow. 
+          For workflows having SUBDAG jobs , the SUBDAG jobs are treated like regular jobs.
+  Succeeded - the total number of succeeded jobs in the workflow . 
+  Failed - the total number of failed jobs in the workflow .
+  Unsubmitted - the total number of unsubmitted jobs in the workflow .
+  Unknown - the total number of jobs that are submitted, but has not completed execution or the state
+            is unknown in the workflow.
 
-Workflow events with time starting with zero is created at :
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/out
+SUBDAX summary
+  Total - the total number of SUBDAX jobs in the workflow 
+  Succeeded - the total number of succeeded SUBDAX jobs in the workflow.
+  Failed - the total number of failed SUBDAX jobs in the workflow.
+  Unsubmitted - the total number of unsubmitted SUBDAX jobs in the workflow.
+  Unknown - the total number of SUBDAX jobs that are submitted, but has not completed execution or
+            the state is unknown in the workflow.
 
-Job statistics is created at : 
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/jobs
+Workflow runtime                   :            5 min.  5 sec.
+Cumulative workflow runtime        :            4 min.  0 sec.
 
-Logical transformation statistics is created at :
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/statistics/breakdown.txt
+          Total        Succeeded    Failed       Unsubmitted  Unknown        
+Jobs      8            8            0            0            0              
+SUBDAX    0            0            0            0            0              
+
+Workflow execution statistics :
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/statistics/workflow.txt
+
+Job statistics : 
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/statistics/jobs.txt
+
+Workflow events with time starting from zero : 
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/statistics/jobstate.txt
+
+Logical transformation statistics :
+/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/statistics/breakdown.txt
+**************************************************************************************************
+
  </programlisting>
 
         <para><emphasis role="bold">Workflow statistics
@@ -2023,25 +1964,19 @@ Logical transformation statistics is created at :
           <tgroup cols="2">
             <tbody>
               <row>
-                <entry>Total workflow execution time</entry>
+                <entry>Workflow runtime</entry>
 
-                <entry>306</entry>
+                <entry>5 min. 5 sec.</entry>
               </row>
 
               <row>
-                <entry>Total workflow execution wall time</entry>
+                <entry>Cumulative workflow runtime</entry>
 
-                <entry>240.843</entry>
+                <entry>4 min. 0 sec.</entry>
               </row>
 
               <row>
                 <entry>Total jobs</entry>
-
-                <entry>8</entry>
-              </row>
-
-              <row>
-                <entry>Total tasks</entry>
 
                 <entry>8</entry>
               </row>
@@ -2088,50 +2023,53 @@ Logical transformation statistics is created at :
           </listitem>
 
           <listitem>
-            <para>Kickstart - the actual duration of the job in seconds on the
-            remote compute node</para>
+            <para>Kickstart(sec.) - the actual duration of the job in seconds
+            on the remote compute node. In case of retries the value is the
+            cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>Post - the postscript time as reported by DAGMan</para>
+            <para>Post(sec.) - the postscript time as reported by DAGMan .In
+            case of retries the value is the cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>DAGMan - the time between the last parent job of a job
-            completes and the job gets submitted</para>
+            <para>DAGMan(sec.) - the time between the last parent job of a job
+            completes and the job gets submitted.In case of retries the value
+            of the last retry is used for calculation.</para>
           </listitem>
 
           <listitem>
-            <para>CondorQTime - the time between submission by DAGMan and the
-            remote Grid submission. It is an estimate of the time spent in the
-            condor q on the submit node</para>
+            <para>CondorQTime(sec.) - the time between submission by DAGMan
+            and the remote Grid submission. It is an estimate of the time
+            spent in the condor q on the submit node .In case of retries the
+            value is the cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>Resource - the time between the remote Grid submission and
-            start of remote execution . It is an estimate of the time job
-            spent in the remote queue</para>
+            <para>Resource(sec.) - the time between the remote Grid submission
+            and start of remote execution . It is an estimate of the time job
+            spent in the remote queue .In case of retries the value is the
+            cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>Runtime - the time spent on the resource as seen by Condor
-            DAGMan . Is always &gt;=kickstart</para>
+            <para>Runtime(sec.) - the time spent on the resource as seen by
+            Condor DAGMan . Is always &gt;=kickstart .In case of retries the
+            value is the cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>CondorQLen - the number of outstanding jobs in the queue
-            when this job was released</para>
+            <para>Seqexec(sec.) - the time taken for the completion of a
+            clustered job .In case of retries the value is the cumulative of
+            all retries.</para>
           </listitem>
 
           <listitem>
-            <para>Seqexec - the time taken for the completion of a clustered
-            job</para>
-          </listitem>
-
-          <listitem>
-            <para>Seqexec-Delay- the time difference between the time for the
-            completion of a clustered job and sum of all the individual tasks
-            kickstart time</para>
+            <para>Seqexec-Delay(sec.) - the time difference between the time
+            for the completion of a clustered job and sum of all the
+            individual tasks kickstart time .In case of retries the value is
+            the cumulative of all retries.</para>
           </listitem>
         </itemizedlist>
 
@@ -2395,15 +2333,15 @@ Logical transformation statistics is created at :
 
                 <entry>1</entry>
 
-                <entry>60.16</entry>
+                <entry>60.1600</entry>
 
-                <entry>0.00</entry>
+                <entry>0.0000</entry>
 
-                <entry>60.16</entry>
+                <entry>60.1600</entry>
 
-                <entry>60.16</entry>
+                <entry>60.1600</entry>
 
-                <entry>60.16</entry>
+                <entry>60.1600</entry>
               </row>
 
               <row>
@@ -2411,15 +2349,15 @@ Logical transformation statistics is created at :
 
                 <entry>2</entry>
 
-                <entry>60.31</entry>
+                <entry>60.3100</entry>
 
-                <entry>0.01</entry>
+                <entry>0.0100</entry>
 
-                <entry>60.25</entry>
+                <entry>60.2500</entry>
 
-                <entry>60.37</entry>
+                <entry>60.3700</entry>
 
-                <entry>120.62</entry>
+                <entry>120.6200</entry>
               </row>
 
               <row>
@@ -2427,15 +2365,15 @@ Logical transformation statistics is created at :
 
                 <entry>1</entry>
 
-                <entry>60.48</entry>
+                <entry>60.4800</entry>
 
-                <entry>0.00</entry>
+                <entry>0.0000</entry>
 
-                <entry>60.48</entry>
+                <entry>60.4800</entry>
 
-                <entry>60.48</entry>
+                <entry>60.4800</entry>
 
-                <entry>60.48</entry>
+                <entry>60.4800</entry>
               </row>
             </tbody>
           </tgroup>
@@ -2450,7 +2388,7 @@ Logical transformation statistics is created at :
         below.</para>
 
         <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms 
-$ pegasus-plots dags/pegasus/pegasus/blackdiamond/run0001/</emphasis>
+$ pegasus-plots dags/tutorial/pegasus/blackdiamond/run0001/</emphasis>
 
 ******  show-job *****  
 Please wait, this may take a few minutes ...
@@ -2470,21 +2408,27 @@ Please wait, this may take a few minutes ...
 ****** Finished executing dot2png ***** 
 
 
+﻿
 ******************************************** SUMMARY ********************************************
-The workflow execution Gantt chart is created at -
-png format :- /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-2.png 
-eps format :- /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-2.eps 
 
-The host over time chart is created at -
-png format :-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-host.png 
-eps format :-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-host.eps
+DAX graph - 
+png format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/diamond-dax.png 
+eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/diamond-dax.eps  
 
-PNG file corresponding to the dag is created at: 
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png 
+DAG graph - 
+png format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png 
+eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.eps 
 
-PNG file corresponding to the dax is created at: 
-/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/diamond-dax.png 
+Workflow execution Gantt chart -
+png format : Failed to generate png format.Application 'convert' not available.
+eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-2.eps
+
+Host over time chart -
+png format : Failed to generate png format.Application 'convert' not available.
+eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-host.eps 
 **************************************************************************************************
+
+
 [pegasus@pegasus pegasus-wms]$ 
 </programlisting>
 
@@ -2493,7 +2437,7 @@ PNG file corresponding to the dax is created at:
         <section>
           <title>Abstract Worfklow / DAX Image</title>
 
-          <para>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/diamond-dax.png</para>
+          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/diamond-dax.png</para>
 
           <figure>
             <title>Figure: Black Diamond DAX Image</title>
@@ -2509,7 +2453,7 @@ PNG file corresponding to the dax is created at:
         <section>
           <title>Executable Workflow / DAG Image</title>
 
-          <para>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png</para>
+          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png</para>
 
           <figure>
             <title>Figure: Black Diamond DAG Image</title>
@@ -2525,7 +2469,7 @@ PNG file corresponding to the dax is created at:
         <section>
           <title>Gantt Chart of Workflow Execution</title>
 
-          <para>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-2.png</para>
+          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-2.png</para>
 
           <para><emphasis role="bold">X axis </emphasis>- time in seconds .
           Each tic is 60 seconds</para>
@@ -2537,7 +2481,8 @@ PNG file corresponding to the dax is created at:
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/tutorial-blackdiamond-gantt.png" />
+                <imagedata fileref="images/tutorial-blackdiamond-gantt.png"
+                           format="PNG" remap="" width="1000" />
               </imageobject>
             </mediaobject>
           </figure>
@@ -2546,7 +2491,7 @@ PNG file corresponding to the dax is created at:
         <section>
           <title>Host over time chart</title>
 
-          <para>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0001/graph/blackdiamond-host.png</para>
+          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-host.png</para>
 
           <para><emphasis role="bold">X axis </emphasis>- time in seconds .
           Each tic is 60 seconds</para>
@@ -2606,14 +2551,14 @@ $ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
         <emphasis role="bold">cluster</emphasis> site. The cluster site in the
         VM is managed by SGE that is running in the VM. The jobs for this
         workflow will be submitted to <emphasis
-        role="bold">jobmanager-sge</emphasis> in the VM. The output data needs
-        to be transferred back to the local host. The condor submit files are
-        to be generated in a directory structure whose base is dags. We also
-        are requesting that no cleanup jobs be added as we require the
+        role="bold">jobmanager-condor</emphasis> in the VM. The output data
+        needs to be transferred back to the local host. The condor submit
+        files are to be generated in a directory structure whose base is dags.
+        We also are requesting that no cleanup jobs be added as we require the
         intermediate data on the remote host. Here is the output of
         pegasus-plan. <programlisting><computeroutput>
-2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax   
-2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/pegasus/pegasus-wms/dax/montage.dax 
+2010.11.24 18:20:10.948 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax   
+2010.11.24 18:20:11.309 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax 
 2010.11.24 18:20:11.350 PST: [INFO] event.pegasus.refinement dax.id montage_0  - STARTED 
 2010.11.24 18:20:11.360 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - STARTED 
 2010.11.24 18:20:11.416 PST: [INFO] event.pegasus.siteselection dax.id montage_0  - FINISHED 
@@ -2646,16 +2591,16 @@ $ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
 2010.11.24 18:20:13.504 PST:    
 2010.11.24 18:20:13.510 PST:   Your Workflow has been started and runs in base directory given below 
 2010.11.24 18:20:13.519 PST:    
-2010.11.24 18:20:13.530 PST:   cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.530 PST:   cd /home/tutorial/pegasus-wms/dags/tutorial/pegasus/montage/run0001 
 2010.11.24 18:20:13.535 PST:    
 2010.11.24 18:20:13.542 PST:   *** To monitor the workflow you can run *** 
 2010.11.24 18:20:13.555 PST:    
-2010.11.24 18:20:13.562 PST:   pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.562 PST:   pegasus-status -l /home/tutorial/pegasus-wms/dags/tutorial/pegasus/montage/run0001 
 2010.11.24 18:20:13.570 PST:    
 2010.11.24 18:20:13.578 PST:   *** To remove your workflow run *** 
 2010.11.24 18:20:13.585 PST:   pegasus-remove -d 275.0 
 2010.11.24 18:20:13.592 PST:   or 
-2010.11.24 18:20:13.604 PST:   pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/montage/run0001 
+2010.11.24 18:20:13.604 PST:   pegasus-remove /home/tutorial/pegasus-wms/dags/tutorial/pegasus/montage/run0001 
 2010.11.24 18:20:13.610 PST:    
 2010.11.24 18:20:13.617 PST:   Time taken to execute is 3.76 seconds 
 2010.11.24 18:20:13.617 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
@@ -2678,7 +2623,7 @@ $ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
 
     <para>The workflow generates a single output file montage.jpg that resides
     in the directory <emphasis
-    role="bold">/home/pegasus/local-storage/storage/montage.jpg</emphasis> if
+    role="bold">/home/tutorial/local-storage/storage/montage.jpg</emphasis> if
     it runs successfully</para>
 
     <para>The grid workflow will take time to execute on the VM. On the
@@ -2757,7 +2702,7 @@ To regenerate the output data from scratch specify --force option.
 
 
 pegasus-run -Dpegasus.user.properties=$HOME/.../blackdiamond/run0003/pegasus.4078026914028890643.properties\
- /home/pegasus/pegasus-wms/dags/pegasus/pegasus/blackdiamond/run0003
+ /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0003
 
  
 2010.11.25 01:35:12.083 PST:   Time taken to execute is 1.508 seconds 
@@ -2795,11 +2740,11 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
    &lt;/file&gt;
    
    &lt;file name="black-1.dax"&gt;
-      &lt;pfn url="/home/pegasus/pegasus-wms/dax/black-1.dax" site="local"/&gt;
+      &lt;pfn url="/home/tutorial/pegasus-wms/dax/black-1.dax" site="local"/&gt;
    &lt;/file&gt;
 
    &lt;file name="black-2.dax"&gt;
-      &lt;pfn url="/home/pegasus/pegasus-wms/dax/black-2.dax" site="local"/&gt;
+      &lt;pfn url="/home/tutorial/pegasus-wms/dax/black-2.dax" site="local"/&gt;
    &lt;/file&gt;
 
 
@@ -2867,16 +2812,16 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
 2010.11.29 21:15:51.179 PST:    
 2010.11.29 21:15:51.185 PST:   Your Workflow has been started and runs in base directory given below 
 2010.11.29 21:15:51.191 PST:    
-2010.11.29 21:15:51.197 PST:   cd /home/pegasus/pegasus-wms/dags/pegasus/pegasus/superdiamond/run0001 
+2010.11.29 21:15:51.197 PST:   cd /home/tutorial/pegasus-wms/dags/tutorial/pegasus/superdiamond/run0001 
 2010.11.29 21:15:51.208 PST:    
 2010.11.29 21:15:51.214 PST:   *** To monitor the workflow you can run *** 
 2010.11.29 21:15:51.220 PST:    
-2010.11.29 21:15:51.227 PST:   pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/superdiamond/run0001 
+2010.11.29 21:15:51.227 PST:   pegasus-status -l /home/tutorial/pegasus-wms/dags/tutorial/pegasus/superdiamond/run0001 
 2010.11.29 21:15:51.234 PST:    
 2010.11.29 21:15:51.240 PST:   *** To remove your workflow run *** 
 2010.11.29 21:15:51.245 PST:   pegasus-remove -d 1.0 
 2010.11.29 21:15:51.253 PST:   or 
-2010.11.29 21:15:51.261 PST:   pegasus-remove /home/pegasus/pegasus-wms/dags/pegasus/pegasus/superdiamond/run0001 
+2010.11.29 21:15:51.261 PST:   pegasus-remove /home/tutorial/pegasus-wms/dags/tutorial/pegasus/superdiamond/run0001 
 2010.11.29 21:15:51.268 PST:    
 2010.11.29 21:15:51.277 PST:   Time taken to execute is 2.745 seconds 
 2010.11.29 21:15:51.277 PST: [INFO] event.pegasus.planner planner.version 3.0.0  - FINISHED 
@@ -2885,7 +2830,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
 
       <para>You can track the workflow using the pegasus-status command</para>
 
-      <programlisting><emphasis role="bold">$ watch  pegasus-status -l /home/pegasus/pegasus-wms/dags/pegasus/pegasus/superdiamond/run0001</emphasis> 
+      <programlisting><emphasis role="bold">$ watch  pegasus-status -l /home/tutorial/pegasus-wms/dags/tutorial/pegasus/superdiamond/run0001</emphasis> 
 
 
 </programlisting>
@@ -2893,11 +2838,11 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
       <para>After the workflow has completed you will see the black-1-f.d and
       black-2-f.d in the storage directory</para>
 
-      <programlisting><emphasis role="bold">$ ls -lh /home/pegasus/local-storage/storage/black-*
+      <programlisting><emphasis role="bold">$ ls -lh /home/tutorial/local-storage/storage/black-*
 </emphasis>
 
--rw-r--r-- 1 pegasus pegasus 3.6K Nov 29 21:36 /home/pegasus/local-storage/storage/black-1-f.d
--rw-r--r-- 1 pegasus pegasus 3.6K Nov 29 21:41 /home/pegasus/local-storage/storage/black-2-f.d
+-rw-r--r-- 1 pegasus pegasus 3.6K Nov 29 21:36 /home/tutorial/local-storage/storage/black-1-f.d
+-rw-r--r-- 1 pegasus pegasus 3.6K Nov 29 21:41 /home/tutorial/local-storage/storage/black-2-f.d
 
 </programlisting>
 
@@ -2919,19 +2864,19 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
               <row>
                 <entry>superdiamond ( the outer level workflow )</entry>
 
-                <entry>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/superdiamond/run0001</entry>
+                <entry>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/superdiamond/run0001</entry>
               </row>
 
               <row>
                 <entry>black-1 ( the first sub workflow )</entry>
 
-                <entry>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/superdiamond/run0001/black-1_d1</entry>
+                <entry>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/superdiamond/run0001/black-1_d1</entry>
               </row>
 
               <row>
                 <entry>black-2 ( the second sub workflow )</entry>
 
-                <entry>/home/pegasus/pegasus-wms/dags/pegasus/pegasus/superdiamond/run0001/black-2_d2</entry>
+                <entry>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/superdiamond/run0001/black-2_d2</entry>
               </row>
             </tbody>
           </tgroup>
@@ -2949,21 +2894,21 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
               <row>
                 <entry>superdiamond ( the outer level workflow )</entry>
 
-                <entry>/home/pegasus/local-scratch
+                <entry>/home/tutorial/local-scratch
                 /exec/pegasus/pegasus/superdiamond/run0001</entry>
               </row>
 
               <row>
                 <entry>black-1 ( the first sub workflow )</entry>
 
-                <entry>/home/pegasus/local-scratch/exec
+                <entry>/home/tutorial/local-scratch/exec
                 /pegasus/pegasus/superdiamond/run0001/black-1_d1</entry>
               </row>
 
               <row>
                 <entry>black-2 ( the second sub workflow )</entry>
 
-                <entry>/home/pegasus/local-scratch/exec
+                <entry>/home/tutorial/local-scratch/exec
                 /pegasus/pegasus/superdiamond/run0001/black-2_d2</entry>
               </row>
             </tbody>
