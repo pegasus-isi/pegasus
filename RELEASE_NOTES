@@ -1,6 +1,70 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 3.0.1
+===============================
+This is minor release, that fixes some bugs discovered after 3.0
+release and some  enhancements. 
+
+NEW FEATURES
+--------------
+
+1) Pegasus VM Tutorial updated
+
+   The Pegasus VM Tutorial has been updated to use a new smaller
+   Virtual Image running Debian 6 on x86. The tutorial notes are
+   available online at 
+
+   http://pegasus.isi.edu/wms/docs/3.0/tutorial_vm.php
+
+2) pegasus-plots improvements
+
+   The worklfow gantt chart produced by pegasus-plots now has better
+   legend placement. The legends are placed below the x axis so that
+   they dont interfere with the chart in the plotting area. Also the
+   gantt chart generated now uses a fixed pallete of colors to assign
+   colors to the different compute jobs in the workflows. Earlier,
+   random colors were assigned to the compute jobs.
+
+
+Bugs FIXED
+----------
+
+1) In the case where symlinking was turned on and the pool attributes
+   of the source URL ( discovered in the Replica Catalog ) matched with
+   the compute site, the source URL was not converted to a file URL. This
+   lead to the symlink job failing when the workflow executed. This is
+   fixed now and the planner now converts the source URL's used for
+   symlink jobs to a file URL scheme.
+
+
+2) Metrics displayed by pegasus-statistics were not clear as to what
+   the worfklow execution time was, as two metrics with similar meaning
+   were displayed ( Workflow Execution Time and Workflow Walltime ). The
+   metrics names have been changed and the meaning of the metrics are
+   explained in detail in both the output of pegasus-statistics and in
+   the online user guide. 
+   http://pegasus.isi.edu/wms/docs/3.0/monitoring_debugging_stats.php#id2841404
+
+   Additional clarifications have been made to as how the metrics
+   calculations happen on hierarchal worklfows.
+
+3) pegasus-transfer when in file copy mode complained if the
+   destination file already existed. This is now fixed .
+
+4) pegasus-bug-report was broken in 3.0 release. This is now fixed.
+
+5) Added support in pegasus-monitord for handling SUBDAG EXTERNAL jobs 
+   without the DIR option. 
+
+   More details at This is related to JIRA issue PM-300.
+
+
+
+
+
+
+===============================
 Release Notes for PEGASUS 3.0
 ===============================
 This is a major release that attempts to simplify configuration and
