@@ -2894,22 +2894,19 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
               <row>
                 <entry>superdiamond ( the outer level workflow )</entry>
 
-                <entry>/home/tutorial/local-scratch
-                /exec/pegasus/pegasus/superdiamond/run0001</entry>
+                <entry>/home/tutorial/local-scratch/exec/tutorial/pegasus/superdiamond/run0001</entry>
               </row>
 
               <row>
                 <entry>black-1 ( the first sub workflow )</entry>
 
-                <entry>/home/tutorial/local-scratch/exec
-                /pegasus/pegasus/superdiamond/run0001/black-1_d1</entry>
+                <entry>/home/tutorial/local-scratch/exec/tutorial/pegasus/superdiamond/run0001/black-1_d1</entry>
               </row>
 
               <row>
                 <entry>black-2 ( the second sub workflow )</entry>
 
-                <entry>/home/tutorial/local-scratch/exec
-                /pegasus/pegasus/superdiamond/run0001/black-2_d2</entry>
+                <entry>/home/tutorial/local-scratch/exec/tutorial/pegasus/superdiamond/run0001/black-2_d2</entry>
               </row>
             </tbody>
           </tgroup>
