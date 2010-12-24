@@ -7,12 +7,16 @@ set -e
 #
 #  Settings
 #
-CLUSTER_NAME="Viz"
-CLUSTER_HOSTNAME="viz-login.isi.edu"
+
+CLUSTER_NAME="Obelix"
+CLUSTER_HOSTNAME="obelix.isi.edu"
+CLUSTER_GATEKEEPER_TYPE="gt5"
+CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
-CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/testing/latest"
-CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
+CLUSTER_WORK_DIR="/data/scratch"
+CLUSTER_PEGASUS_HOME="/opt/pegasus/3.0"
+CLUSTER_GLOBUS_LOCATION="/opt/globus/default"
+
 #######################################################################
 
 
@@ -67,8 +71,8 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
     </site>
     <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+        <grid  type="$CLUSTER_GATEKEEPER_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="$CLUSTER_GATEKEEPER_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
         <head-fs>
             <scratch>
                 <shared>
