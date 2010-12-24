@@ -40,7 +40,7 @@ Wed Nov 24 14:47:59 PST 2010
       <itemizedlist>
         <listitem>
           <para><ulink
-          url="http://pegasus.isi.edu/wms/download/3.0.1/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2"
+          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2"
           xml:base="">Virtual Box Pegasus Image</ulink></para>
 
           <para>It is around <emphasis role="bold">1.2 GB</emphasis> in size.
@@ -48,9 +48,9 @@ Wed Nov 24 14:47:59 PST 2010
           role="bold">wget</emphasis> to download the image. Downloading the
           image using the browser sometimes corrupts the image.</para>
 
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0.1/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
 
-</emphasis> http://pegasus.isi.edu/wms/download/3.0.1/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
+</emphasis> http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
            =&gt; `Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2'
 Resolving pegasus.isi.edu... 128.9.64.219
 Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
@@ -161,10 +161,9 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
     workflow through Pegasus WMS locally. You will then plan and execute a
     larger Montage workflow on the GRID.</para>
 
-    <para>When the virtual machine ( Pegasus3.0-VM.vmwarevm ) starts , it will
-    ask for a password for a user called <emphasis
-    role="bold">pegasus</emphasis>. The password is same as the username i.e.
-    pegasus.</para>
+    <para>When the virtual machine starts , it will automatically log you in
+    as user <emphasis role="bold">tutorial</emphasis> . The password for this
+    account is <emphasis role="bold">pegasus</emphasis>.</para>
 
     <para>After logging on, start a terminal. There is a shortcut on the
     desktop for the terminal.</para>
