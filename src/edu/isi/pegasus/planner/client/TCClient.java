@@ -16,29 +16,23 @@
 
 package edu.isi.pegasus.planner.client;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationFactoryException;
-
-import edu.isi.pegasus.planner.catalog.transformation.client.TCAdd;
-import edu.isi.pegasus.planner.catalog.transformation.client.TCDelete;
-import edu.isi.pegasus.planner.catalog.transformation.client.TCQuery;
-
-
-import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.common.util.FactoryException;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
+import edu.isi.pegasus.planner.catalog.transformation.client.TCAdd;
+import edu.isi.pegasus.planner.catalog.transformation.client.TCDelete;
+import edu.isi.pegasus.planner.catalog.transformation.client.TCQuery;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
 /**
- * A commom client to add, modify, delete, query any Transformation Catalog
+ * A common client to add, modify, delete, query any Transformation Catalog
  * implementation.
  *
  * @author Gaurang Mehta
@@ -69,6 +63,8 @@ public class TCClient extends Executable{
     private int issysinfo = 0;
 
     private boolean isxml = false;
+    
+    private boolean isoldformat = false;
 
     private String lfn = null;
 
@@ -115,7 +111,7 @@ public class TCClient extends Executable{
 
     
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[14 ];
+        LongOpt[] longopts = new LongOpt[15 ];
         longopts[ 0 ] = new LongOpt( "add", LongOpt.NO_ARGUMENT, null, 'a' );
         longopts[ 1 ] = new LongOpt( "delete", LongOpt.NO_ARGUMENT, null, 'd' );
         longopts[ 2 ] = new LongOpt( "query", LongOpt.NO_ARGUMENT, null, 'q' );
@@ -138,6 +134,8 @@ public class TCClient extends Executable{
             's' );
         longopts[ 13 ] = new LongOpt( "xml", LongOpt.NO_ARGUMENT, null,
             'x' );
+        longopts[ 14 ] = new LongOpt( "oldformat", LongOpt.NO_ARGUMENT, null,
+        	'o' );
         return longopts;
     }
 
@@ -154,7 +152,7 @@ public class TCClient extends Executable{
     	}
         LongOpt[] longOptions = generateValidOptions();
         Getopt g = new Getopt( "TCClient", opts,
-            "adqhvxVLPERTBSs:t:l:p:r:e:f:",
+            "adqhvxoVLPERTBSs:t:l:p:r:e:f:",
             longOptions, false );
         int option = 0;
         int noOfOptions = 0;
@@ -228,7 +226,16 @@ public class TCClient extends Executable{
                     break;
                 case 'x': //Is XML
                     isxml = true;
+                    if(isoldformat){
+                    	throw new IllegalArgumentException("Error: Illegal Argument passed. Options -x and -o cannot be set at the same time");
+                    }
                     break;
+                case 'o': //Is Old format
+                    isoldformat = true;
+                    if(isxml){
+                    	throw new IllegalArgumentException("Error: Illegal Argument passed. Options -x and -o cannot be set at the same time");
+                    }
+                    break;    
                 default:
                     mLogger.log( "Unrecognized Option : " + ( char ) option,
                         LogManager.FATAL_MESSAGE_LEVEL );
@@ -257,6 +264,7 @@ public class TCClient extends Executable{
         argsmap.put( "system", system );
         argsmap.put( "file", file );
         argsmap.put( "isxml", new Boolean( isxml ) );
+        argsmap.put( "isoldformat", new Boolean( isoldformat ) );
 
         //Select what operation is to be performed.
         int operationcase = query + add + delete;
@@ -308,8 +316,8 @@ public class TCClient extends Executable{
     public void printShortVersion() {
         String text =
             "\n " + version.toString() +
-            "\n Usage :tc-client  [ operation ]  [ operation arguments ]" +
-            "\n Type tc-client -h for more details";
+            "\n Usage :pegasus-tc-client  [ operation ]  [ operation arguments ]" +
+            "\n Type pegasus-tc-client -h for more details";
 
         System.out.println(text);
         System.exit( 1 );
@@ -319,9 +327,9 @@ public class TCClient extends Executable{
         String text =
             "\n" + version.toString() +
             "\n" +
-            "\n tc-client - This client is used to add, delete, query any Tranformation Catalog implemented to the TC interface." +
+            "\n pegasus-tc-client - This client is used to add, delete, query any Tranformation Catalog implemented to the TC interface." +
             "\n" +
-            "\n Usage: tc-client  [Operation] [Triggers] [Options]...." +
+            "\n Usage: pegasus-tc-client  [Operation] [Triggers] [Options]...." +
             "\n" +
             "\n Operations :" +
             "\n ------------" +
@@ -360,15 +368,17 @@ public class TCClient extends Executable{
             "\n                                 e.g -e ENV::JAVA_HOME=/usr/bin/java -e GLOBUS::JobType=MPI,COUNT=10" +
             "\n -s | --system <system type>     The architecture,os and glibc if any for the executable." +
             "\n                                 Each system info is written in the form ARCH::OS:OSVER:GLIBC" +
-            "\n                                 The allowed ARCH's are INTEL32, INTEL64, SPARCV7, SPARCV9" +
-            "\n                                 The allowed OS's are LINUX, SUNOS, AIX" +
+            "\n                                 The allowed ARCH's are x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64" +
+            "\n                                 The allowed OS's are LINUX, SUNOS, AIX, MACOSX, WINDOWS" +
             "\n" +
             "\n Other Options :" +
             "\n ---------------" +
             "\n" +
-            "\n --verbose | -v    increases the verbosity level" +
-            "\n --version | -V    Displays the version number of the Griphyn Virtual Data System software " +
-            "\n --help    | -h    Generates this help" +
+            "\n --xml       | -x  Generates the output in the xml format " +
+            "\n --oldformat | -o  Generates the output in the old single line format " +
+            "\n --verbose   | -v  increases the verbosity level" +
+            "\n --version   | -V  Displays the version number of the Griphyn Virtual Data System software " +
+            "\n --help      | -h  Generates this help" +
             "\n" +
             "\n Valid Combinations :" +
             "\n --------------------" +
@@ -384,7 +394,7 @@ public class TCClient extends Executable{
             "\n ------" +
             "\n" +
             "\n\tDelete all TC      : -d -BPRELST " +
-            "\n\t                    (!!!WARNING : THIS DELETETS THE ENTIRE TC!!!)" +
+            "\n\t                    (!!!WARNING : THIS DELETES THE ENTIRE TC!!!)" +
             "\n\tDelete by LFN      : -d -L -l <lfn> [-r <resource>] [-t <type>]" +
             "\n\tDelete by PFN      : -d -P -l <lfn> -p <pfn> [-r <resource>] [-t type]" +
             "\n\tDelete by Type     : -d -T -t <type> [-r <resource>]" +
