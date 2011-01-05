@@ -524,7 +524,6 @@ public class Database
      * 
      * @throws Exception  NotImplementedException if not implemented.
      * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
-     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
      */
     public List <TransformationCatalogEntry> lookupNoProfiles( String namespace, 
            String name,String version,String resourceid, TCType type ) throws Exception {
@@ -812,7 +811,7 @@ public class Database
      * @param resourceid   String The resource location id where the transformation is located.
      * @param lfnprofiles     List   The List of Profile objects associated with a Logical Transformation. (can be null)
      * @param pfnprofiles     List   The List of Profile objects associated with a Physical Transformation. (can be null)
-     * @param sysinfo     VDSSysInfo  The System information associated with a physical transformation.
+     * @param sysinfo     SysInfo  The System information associated with a physical transformation.
      * 
      * @return number of insertions, should always be 1. On failure,
      * throw an exception, don't use zero.
@@ -821,7 +820,7 @@ public class Database
      * @throws Exception
      *
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
-     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
+     * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
     public int insert(String namespace, String name,
@@ -865,7 +864,7 @@ public class Database
      * @return boolean   Returns true if succesfully added, returns false if
      * error and throws exception.
      * @see org.griphyn.common.catalog.TransformationCatalogEntry
-     * @see org.griphyn.common.classes.VDSSysInfo
+     * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
     public boolean addTCEntry(String namespace, String name,
@@ -1430,11 +1429,11 @@ if(!write) return false;
 
     /**
      * Deletes entries from the catalog which have a particular system information.
-     * @param sysinfo VDSSysInfo The System Information by which you want to delete
+     * @param sysinfo SysInfo The System Information by which you want to delete
      * 
      * @return the number of removed entries.
      * 
-     * @see edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
+     * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
      * @throws Exception
      */
     public int removeBySysInfo( SysInfo sysinfo) throws Exception {
