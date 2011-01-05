@@ -71,7 +71,7 @@ public class TransformationCatalogEntry
     private String mResourceID;
 
     /**
-     * The physical path on the resource for a particual arch, os and type.
+     * The physical path on the resource for a particular arch, os and type.
      */
     private String mPFN;
 
@@ -80,7 +80,7 @@ public class TransformationCatalogEntry
      */
     //private List profiles;
     /**
-     * The profiles asscociated with the site.
+     * The profiles associated with the site.
      */
     private Profiles mProfiles;
 
