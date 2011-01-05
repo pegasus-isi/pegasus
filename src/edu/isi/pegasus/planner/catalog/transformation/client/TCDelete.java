@@ -23,9 +23,6 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import edu.isi.pegasus.planner.catalog.classes.VDSSysInfo2NMI;
-
-
 import java.util.Map;
 
 /**
@@ -55,7 +52,7 @@ public class TCDelete
                             "You need to provide the logical name by which you want to delete",
                            LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -101,7 +98,7 @@ public class TCDelete
                                      "name by which you want to delete" ,
                                      LogManager.ERROR_MESSAGE_LEVEL);
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -146,7 +143,7 @@ public class TCDelete
                             "You need to provide the resourceid by which you want to delete",
                            LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -176,7 +173,7 @@ public class TCDelete
                                      "which you want to delete the profiles",
                                     LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details " ,
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details " ,
                             LogManager.FATAL_MESSAGE_LEVEL);
                         System.exit( 1 );
                     } else {
@@ -207,7 +204,7 @@ public class TCDelete
                                      " resource and type by which you want to delete the profiles",
                                      LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -242,7 +239,7 @@ public class TCDelete
                                      "which you want to delete the TC." ,
                                      LogManager.ERROR_MESSAGE_LEVEL);
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
@@ -279,14 +276,14 @@ public class TCDelete
                                      "by which you want to delete the TC.",
                                     LogManager.ERROR_MESSAGE_LEVEL );
                         mLogger.log(
-                            "See tc-client --help or man tc-client for more details ",
+                            "See pegasus-tc-client --help or man pegasus-tc-client for more details ",
                            LogManager.FATAL_MESSAGE_LEVEL );
                         System.exit( 1 );
                     } else {
                         mLogger.log(
                             "Trying to delete the TC by VDSSysInfo " +
                             systemstring, LogManager.DEBUG_MESSAGE_LEVEL);
-                        status = tc.removeBySysInfo( VDSSysInfo2NMI.vdsSysInfo2NMI(system) );
+                        status = tc.removeBySysInfo( system );
                         if ( status  == 0) {
                             mLogger.log(
                                 "No match found for TC entries for VDSSysInfo " +
@@ -320,7 +317,7 @@ public class TCDelete
 
                 default:
                     mLogger.log(
-                        "Wrong trigger invoked in TC Delete. Try tc-client --help for a detailed help." +
+                        "Wrong trigger invoked in TC Delete. Try pegasus-tc-client --help for a detailed help." +
                         trigger, LogManager.FATAL_MESSAGE_LEVEL );
                     System.exit( 1 );
             }
