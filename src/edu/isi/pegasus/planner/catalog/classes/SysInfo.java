@@ -90,6 +90,71 @@ public class SysInfo implements Cloneable {
         mOSVersion    = "";
         mGlibc        = "";
     }
+    /**
+     * This constructor takes the system information in the format arch::os:osversion:glibc
+     * @param system the system information string
+     */
+    public SysInfo(String system){
+    	 if (system != null) {
+             String s1[] = system.split("::", 2);
+             if (s1.length == 2) {
+            	 if(isValidArchitecture(s1[0].trim())){
+            		 mArchitecture =Architecture.valueOf(s1[0].trim());
+            	 }else {
+	                 throw new IllegalStateException(
+	                     "Error: Illegal Architecture defined. Please specify one of the predefined types \n [x86, x86_64, ppc, ppc_64, ia64,  sparcv7, sparcv9, amd64]");
+            	 }
+                 String s2[] = s1[1].split(":", 3);
+                 if(isValidOS(s2[0].trim())){
+                	 mOS = OS.valueOf(s2[0].trim());
+                 }else {
+                     throw new IllegalStateException(
+                     "Error: Illegal Operating System defined. Please specify one of the predefined types \n [LINUX, SUNOS, AIX, MACOSX, WINDOWS]");
+                 }
+                 for (int i = 1; i < s2.length; i++) {
+                     if (i == 1) {
+                         mOSVersion = s2[i];
+                     }
+                     if (i == 2) {
+                         mGlibc = s2[i];
+                     }
+                 }
+             } else {
+                 throw new IllegalStateException(
+                     "Error : Please check your system info string");
+             }
+         } else {
+        	 mArchitecture = SysInfo.DEFAULT_ARCHITECTURE;
+             mOS           = SysInfo.DEFAULT_OS;
+             mOSRelease    = "";
+             mOSVersion    = "";
+             mGlibc        = "";
+         }
+    }
+    /**
+     * Checks if the architecture is a valid supported architecture
+     * @param arch architecture
+     * @return true if it is a valid supported architecture, false otherwise
+     */
+    private static boolean isValidArchitecture(String arch){
+    	for(Architecture architecture : Architecture.values()){
+    		if(architecture.toString().equals(arch))
+    			return true;
+    	}
+    	return false;
+    }
+    /**
+     * Checks if the operating system is a valid supported operating system
+     * @param os operating system 
+     * @return true if it is a valid supported operating system, false otherwise
+     */
+    private static boolean isValidOS(String os){
+    	for(OS osystem : OS.values()){
+    		if(osystem.toString().equals(os))
+    			return true;
+    	}
+    	return false;
+    }
 
     /**
      * Sets the architecture of the site.
