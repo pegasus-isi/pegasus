@@ -23,18 +23,18 @@ package edu.isi.pegasus.planner.catalog.transformation.client;
  * @version $Revision$
  */
 
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
-import edu.isi.pegasus.common.util.FactoryException;
-import edu.isi.pegasus.common.util.ProfileParser;
-import edu.isi.pegasus.common.util.ProfileParserException;
-import edu.isi.pegasus.common.util.Separator;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
+
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.ProfileParser;
+import edu.isi.pegasus.common.util.ProfileParserException;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
 public class Client {
     protected int trigger = 0;
@@ -59,7 +59,7 @@ public class Client {
 
     protected List profiles = null;
 
-    protected VDSSysInfo system = null;
+    protected SysInfo system = null;
 
     protected String file = null;
 
@@ -68,6 +68,8 @@ public class Client {
     protected TransformationCatalog tc = null;
 
     protected boolean isxml = false;
+    
+    protected boolean isoldformat = false;
 
     public Client() {
     }
@@ -86,6 +88,7 @@ public class Client {
         trigger = ( ( Integer ) argsmap.get( "trigger" ) ).intValue();
         file = ( String ) argsmap.get( "file" );
         isxml = ( ( Boolean ) argsmap.get( "isxml" ) ).booleanValue();
+        isoldformat = ( ( Boolean ) argsmap.get( "isoldformat" ) ).booleanValue();
         if ( lfn != null ) {
             String[] logicalname = Separator.split( lfn );
             namespace = logicalname[ 0 ];
@@ -101,8 +104,8 @@ public class Client {
                     LogManager.ERROR_MESSAGE_LEVEL );
             }
         }
-        if ( systemstring == null ) {
-            system = new VDSSysInfo( systemstring );
+        if ( systemstring != null ) {
+        	system = new SysInfo( systemstring );
         }
     }
     
