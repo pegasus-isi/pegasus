@@ -643,7 +643,7 @@ public class File  extends Abstract
                                 resource = r;
                                 tctype = t;
                                 String[] s = {
-                                    l, r, t};
+                                    r, l, t};
                                 //columnLength(s, length);
                                 if (result == null) {
                                     result = new ArrayList(5);

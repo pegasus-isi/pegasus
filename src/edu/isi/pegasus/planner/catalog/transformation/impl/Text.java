@@ -608,7 +608,7 @@ public class Text extends Abstract
             String r = entry.getResourceId();
             String t = entry.getType().toString();
 
-            String[] s = { l, r, t};
+            String[] s = { r, l, t};
             result.add( s );
         }
 
