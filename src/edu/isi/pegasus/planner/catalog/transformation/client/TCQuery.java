@@ -23,19 +23,19 @@ package edu.isi.pegasus.planner.catalog.transformation.client;
  * @version $Revision$
  */
 
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.ProfileParser;
-import java.util.Date;
-import java.util.Comparator;
-import java.util.Collections;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.classes.Profile;
 
 public class TCQuery
     extends Client {
@@ -80,7 +80,7 @@ public class TCQuery
                 break;
             default:
                 mLogger.log(
-                    "Wrong trigger invoked in TC Query. Try tc-client --help for a detailed help.",
+                    "Wrong trigger invoked in TC Query. Try pegasus-tc-client --help for a detailed help.",
                     LogManager.FATAL_MESSAGE_LEVEL );
                 System.exit( 1 );
         }
@@ -130,7 +130,7 @@ public class TCQuery
         } else {
             mLogger.log(
                 "No Logical Transformations found.",
-                LogManager.FATAL_MESSAGE_LEVEL );
+                LogManager.CONSOLE_MESSAGE_LEVEL );
             System.exit( 1 );
         }
     }
@@ -161,45 +161,56 @@ public class TCQuery
                     LogManager.FATAL_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
-            if ( l != null ) {
-                //int[] count = ( int[] ) l.get( l.size() - 1 );
-            	int count[] = {
-                        0, 0, 0};
-                //l.remove( l.size() - 1 );
-            	for ( TransformationCatalogEntry entry : l ) {
-                	String[] s = {
-                        entry.getResourceId(),
-                        entry.getPhysicalTransformation(),
-                        entry.getType().toString(),
-                        entry.getVDSSysInfo().toString()};
-                	columnLength(s, count);
-                }
-               
-                System.out.println( "#RESID" +
-                    getSpace( count[ 0 ], "#RESID".length() ) +
-                    "  LTX" +
-                    getSpace( lfn.length(), "  LTX".length() ) +
-                    "  PFN" + getSpace( count[ 1 ], "PFN".length() ) +
-                    " TYPE" + getSpace( count[ 2 ], "TYPE".length() ) +
-                    " SYSINFO" );
-                System.out.println( "" );
-                for ( TransformationCatalogEntry entry : l  ) {
-                    String[] s = {
-                        entry.getResourceId(),
-                        entry.getPhysicalTransformation(),
-                        entry.getType().toString(),
-                        entry.getVDSSysInfo().toString()};
-                    System.out.println( s[ 0 ] + getSpace( count[ 0 ],
-                        s[ 0 ].length() ) +
-                        lfn + getSpace( lfn.length(), lfn.length() ) +
-                        s[ 1 ] +
-                        getSpace( count[ 1 ], s[ 1 ].length() ) + s[ 2 ] +
-                        getSpace( count[ 2 ], s[ 2 ].length() ) + s[ 3 ] );
-                }
+            if ( l != null && !l.isEmpty() ) {
+            	if(isoldformat){
+	            	int count[] = {
+	                        0, 0, 0};
+	                for ( TransformationCatalogEntry entry : l ) {
+	                	String[] s = {
+	                        entry.getResourceId(),
+	                        entry.getPhysicalTransformation(),
+	                        entry.getType().toString(),
+	                        entry.getSysInfo().toString()};
+	                	columnLength(s, count);
+	                }
+	               
+	                System.out.println( "#RESID" +
+	                    getSpace( count[ 0 ], "#RESID".length() ) +
+	                    "  LTX" +
+	                    getSpace( lfn.length(), "  LTX".length() ) +
+	                    "  PFN" + getSpace( count[ 1 ], "PFN".length() ) +
+	                    " TYPE" + getSpace( count[ 2 ], "TYPE".length() ) +
+	                    " SYSINFO" );
+	                System.out.println( "" );
+	                for ( TransformationCatalogEntry entry : l  ) {
+	                    String[] s = {
+	                        entry.getResourceId(),
+	                        entry.getPhysicalTransformation(),
+	                        entry.getType().toString(),
+	                        entry.getSysInfo().toString()};
+	                    System.out.println( s[ 0 ] + getSpace( count[ 0 ],
+	                        s[ 0 ].length() ) +
+	                        lfn + getSpace( lfn.length(), lfn.length() ) +
+	                        s[ 1 ] +
+	                        getSpace( count[ 1 ], s[ 1 ].length() ) + s[ 2 ] +
+	                        getSpace( count[ 2 ], s[ 2 ].length() ) + s[ 3 ] );
+	                }
+            	}else{
+            		TransformationStore tcStore = new TransformationStore();
+					 for ( TransformationCatalogEntry entry : l ) {
+						 tcStore.addEntry(entry);
+					 }
+					 if(isxml){
+						 TCFormatUtility.printXMLFormat(tcStore);
+					 }else{
+						 String textFormat = TCFormatUtility.toTextFormat(tcStore);
+						 System.out.println(textFormat);
+					 }
+            	}
             } else {
                 mLogger.log(
                     "No Physical Transformations found.",
-                    LogManager.FATAL_MESSAGE_LEVEL );
+                    LogManager.CONSOLE_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
         } else {
@@ -236,7 +247,7 @@ public class TCQuery
                 }
             } else {
                 mLogger.log( "No LFN Profiles found.",
-                    LogManager.FATAL_MESSAGE_LEVEL );
+                    LogManager.CONSOLE_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
         } else {
@@ -260,7 +271,7 @@ public class TCQuery
             try {
                 mLogger.log( "Query the TC for profiles with pfn=" + pfn +
                     " type=" + type + " resource=" +
-                    resource, LogManager.FATAL_MESSAGE_LEVEL );
+                    resource, LogManager.DEBUG_MESSAGE_LEVEL );
                 l = tc.lookupPFNProfiles( pfn, resource, TCType.valueOf( type ) );
             } catch ( Exception e ) {
 
@@ -283,7 +294,7 @@ public class TCQuery
         } else {
             mLogger.log(
                 "Please provide an pfn, resource and type to list the pfn profiles",
-                LogManager.FATAL_MESSAGE_LEVEL );
+                LogManager.CONSOLE_MESSAGE_LEVEL );
             System.exit( 1 );
         }
 
@@ -311,7 +322,7 @@ public class TCQuery
             }
         } else {
             mLogger.log( "No resources found.",
-                LogManager.FATAL_MESSAGE_LEVEL );
+                LogManager.CONSOLE_MESSAGE_LEVEL );
             System.exit( 1 );
         }
     }
@@ -321,57 +332,66 @@ public class TCQuery
      */
     private void getTC() {
         try {
-           List l = tc.getContents();
+           List <TransformationCatalogEntry>l = tc.getContents();
             if (l!=null && !l.isEmpty() ) {
-                //this means entries are there.
-                //get the pretty print column size information.
-                int[] count = {0, 0, 0, 0, 0};
-                for ( Iterator i = l.iterator(); i.hasNext(); ) {
-                    TransformationCatalogEntry tcentry = (
-                        TransformationCatalogEntry ) i.next();
-                    String[] s = {tcentry.getResourceId(),
-                        tcentry.getLogicalTransformation(),
-                        tcentry.getPhysicalTransformation(),
-                        tcentry.getType().toString(), tcentry.getVDSSysInfo().toString(),
-                        ( ( tcentry.getProfiles() != null ) ?
-                        ProfileParser.combine( tcentry.getProfiles() ) : "NULL" )};
-                    columnLength( s, count );
-
-                }
-                System.out.println( "#RESID" +
-                    getSpace( count[ 0 ], "#RESID".length() ) +
-                    "  LTX" + getSpace( count[ 1 ], "  LTX".length() ) +
-                    "  PTX" + getSpace( count[ 2 ], "  PTX".length() ) +
-                    " TYPE" + getSpace( count[ 3 ], "TYPE".length() ) +
-                    " SYSINFO" +
-                    getSpace( count[ 4 ], "SYSINFO".length() ) +
-                    "  PROFILES" );
-                System.out.println( "" );
-                //start printing the results.
-                for ( Iterator i = l.iterator(); i.hasNext(); ) {
-                    TransformationCatalogEntry tcentry = (
-                        TransformationCatalogEntry ) i.next();
-                    StringBuffer sb=new StringBuffer();
-                    sb.append(tcentry.getResourceId());
-                    sb.append(getSpace(count[0],tcentry.getResourceId().length()));
-                    sb.append(tcentry.getLogicalTransformation());
-                    sb.append(getSpace( count[ 1 ],tcentry.getLogicalTransformation().length()));
-                    sb.append(tcentry.getPhysicalTransformation());
-                    sb.append(getSpace(count[2],tcentry.getPhysicalTransformation().length()));
-                    sb.append(tcentry.getType());
-                    sb.append(getSpace(count[3],tcentry.getType().toString().length()));
-                    sb.append(tcentry.getVDSSysInfo());
-                    sb.append(getSpace(count[4],tcentry.getVDSSysInfo().toString().length()));
-                    if( tcentry.getProfiles() != null ) {
-                        sb.append(ProfileParser.combine( tcentry.getProfiles()));
-                    } else {
-                        sb.append("NULL");
-                    }
-                        System.out.println( sb );
-                }
+            	if(isoldformat){
+	                //this means entries are there.
+	                //get the pretty print column size information.
+	                int[] count = {0, 0, 0, 0, 0};
+	                for ( Iterator i = l.iterator(); i.hasNext(); ) {
+	                    TransformationCatalogEntry tcentry = (
+	                        TransformationCatalogEntry ) i.next();
+	                    String[] s = {tcentry.getResourceId(),
+	                        tcentry.getLogicalTransformation(),
+	                        tcentry.getPhysicalTransformation(),
+	                        tcentry.getType().toString(), tcentry.getSysInfo().toString(),
+	                        ( ( tcentry.getProfiles() != null ) ?
+	                        ProfileParser.combine( tcentry.getProfiles() ) : "NULL" )};
+	                    columnLength( s, count );
+	
+	                }
+	                System.out.println( "#RESID" +
+	                    getSpace( count[ 0 ], "#RESID".length() ) +
+	                    "  LTX" + getSpace( count[ 1 ], "  LTX".length() ) +
+	                    "  PFN" + getSpace( count[ 2 ], "  PFN".length() ) +
+	                    " TYPE" + getSpace( count[ 3 ], "TYPE".length() ) +
+	                    " SYSINFO" +
+	                    getSpace( count[ 4 ], "SYSINFO".length() ) +
+	                    "  PROFILES" );
+	                System.out.println( "" );
+	                //start printing the results.
+	                for ( Iterator i = l.iterator(); i.hasNext(); ) {
+	                    TransformationCatalogEntry tcentry = (
+	                        TransformationCatalogEntry ) i.next();
+	                    StringBuffer sb=new StringBuffer();
+	                    sb.append(tcentry.getResourceId());
+	                    sb.append(getSpace(count[0],tcentry.getResourceId().length()));
+	                    sb.append(tcentry.getLogicalTransformation());
+	                    sb.append(getSpace( count[ 1 ],tcentry.getLogicalTransformation().length()));
+	                    sb.append(tcentry.getPhysicalTransformation());
+	                    sb.append(getSpace(count[2],tcentry.getPhysicalTransformation().length()));
+	                    sb.append(tcentry.getType());
+	                    sb.append(getSpace(count[3],tcentry.getType().toString().length()));
+	                    sb.append(tcentry.getSysInfo());
+	                    sb.append(getSpace(count[4],tcentry.getSysInfo().toString().length()));
+	                    if( tcentry.getProfiles() != null ) {
+	                        sb.append(ProfileParser.combine( tcentry.getProfiles()));
+	                    } else {
+	                        sb.append("NULL");
+	                    }
+	                        System.out.println( sb );
+	                }
+            	}else{
+            		TransformationStore tcStore = new TransformationStore();
+					 for ( TransformationCatalogEntry entry : l ) {
+						 tcStore.addEntry(entry);
+					 }
+					 String textFormat = TCFormatUtility.toTextFormat(tcStore);
+					 System.out.println(textFormat);
+            	}
             } else {
                 mLogger.log( "No Entries found in the TC.",
-                    LogManager.FATAL_MESSAGE_LEVEL );
+                    LogManager.CONSOLE_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
         } catch ( Exception e ) {
@@ -383,52 +403,22 @@ public class TCQuery
     }
 
     private void getTCXML() {
-      StringBuffer out = new StringBuffer();
-      out.append( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" );
-      out.append( "<!--Generated " + new Date().toString() + "-->\n" );
-      out.append( "<!--Generated by " + System.getProperty( "user.name" ) +
-          " [" +
-          System.getProperty( "user.country" ) + "] " + "-->\n" );
-      out.append( "<transformationcatalog" );
-      out.append( " xmlns=\""+XML_NAMESPACE+"/transformationcatalog\"" );
-      out.append( " xsi:schemaLocation=\""+XML_NAMESPACE+"transformationcatalog ");
-      out.append( XML_NAMESPACE+"/tc-"+XML_VERSION+".xsd\"" );
-      out.append( " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" );
-      out.append( " version=\""+XML_VERSION+"\">\n" );
-      try {
-          List l=tc.getContents();
-          Collections.sort(l,new LFNComparator());
-          String prev="";
-          String current="";
-              for ( Iterator i = l.iterator(); i.hasNext(); ) {
-                  TransformationCatalogEntry tcEntry = (
-                      TransformationCatalogEntry ) i.next();
-                      current=tcEntry.getLogicalTransformation();
-                      if(!current.equals(prev)){
-                          if(!prev.equals("")){
-                              out.append("\t</lfn>\n");
-                          }
-                          out.append( "\t<lfn namespace=\"" );
-                          if ( tcEntry.getLogicalNamespace() != null ) {
-                          out.append( tcEntry.getLogicalNamespace() );
-                      }
-                      out.append( "\" name=\"" )
-                          .append( tcEntry.getLogicalName() )
-                          .append( "\" version=\"" );
-                      if ( tcEntry.getLogicalVersion() != null ) {
-                          out.append( tcEntry.getLogicalVersion() );
-                      }
-                      out.append( "\">\n" );
-                      prev=current;
-                  }
-                  out.append( tcEntry.toXML() );
-              }
-              out.append( "\t</lfn>\n" );
-              out.append( "</transformationcatalog>" );
-      } catch (Exception e) {
-          mLogger.log("Unable to query entire TC",LogManager.ERROR_MESSAGE_LEVEL);
-      }
-      System.out.println( out );
+    	try{
+    		List <TransformationCatalogEntry> l=tc.getContents();
+	    	if (l!=null && !l.isEmpty() ) {
+	    		TransformationStore tcStore = new TransformationStore();
+				 for ( TransformationCatalogEntry entry : l ) {
+					 tcStore.addEntry(entry);
+				 }
+				 TCFormatUtility.printXMLFormat(tcStore);
+	    	}
+    	}catch ( Exception e ) {
+            mLogger.log( "Unable to query entire TC", 
+                    LogManager.FATAL_MESSAGE_LEVEL );
+                mLogger.log(convertException(e,mLogger.getLevel()),LogManager.FATAL_MESSAGE_LEVEL);
+                System.exit( 1 );
+            }
+
   }
 
 
