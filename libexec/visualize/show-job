@@ -296,6 +296,7 @@ sub gen_data($$$\%) {
     die unless ref $p eq 'HASH';
 
     warn "# Ploticus Data File generated is $dfn\n"  unless !$nounlink;
+    my $nn = $n+1; 
 
     # try auto-guess x scale
     my ($xstubs,$xtics,$width);
@@ -553,6 +554,7 @@ END
 	    print OUT << "END";
 #proc categories
   axis: y
+  listsize: $nn
   comparemethod: exact
   categories:
 END
@@ -773,6 +775,7 @@ for ( my $y=1; $y <= 2; ++$y ) {
 	gen_data( $dfn, $y, $n, %keylist ) :
 	gen_data( $dfn, $y, $n, %start );
     @arg = ( $app{ploticus}, $cfn, '-eps', '-o', $epsfn  );
+    push( @arg, '-maxrows', $count+1, '-cpulimit', 600 ) if $n > 4999; 
     warn "# @arg\n";
     system( @arg ) == 0 || warn( join(' ',@arg), ": $?\n" );
 
