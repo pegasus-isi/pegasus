@@ -489,6 +489,8 @@ def put(args):
 			"The default value is 0, which disables parallel uploads. This parameter "
 			"is only valid if the site supports mulipart uploads and the --chunksize "
 			"parameter is not 0.")
+	parser.add_option("-b", "--create-bucket", dest="create_bucket", action="store_true",
+		default=False, help="Create the destination bucket if it does not already exist")
 	options, args = parser.parse_args(args)
 	
 	if options.chunksize!=0 and (options.chunksize < 5 or options.chunksize > 1024):
@@ -535,7 +537,14 @@ def put(args):
 			warn("--chunksize set to 0, ignoring --parallel")
 	
 	conn = get_connection(config, uri)
-	b = Bucket(connection=conn, name=uri.bucket)
+	
+	# Create the bucket if the user requested it and it does not exist
+	if options.create_bucket:
+		b = conn.lookup(uri.bucket)
+		if b is None:
+			conn.create_bucket(uri.bucket)
+	
+	b = Bucket(connection=conn, name=uri.bucket)	
 	
 	if (not multipart_uploads) or (options.chunksize==0):
 		# no multipart, or chunks disabled, just do it the simple way
