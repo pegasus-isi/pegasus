@@ -47,17 +47,17 @@
         <para>The Data Reuse Algorithm can be disabled by passing the
         <emphasis role="bold">--force</emphasis> option to
         pegasus-plan.</para>
-
-        <figure>
-          <title>Workflow Data Reuse</title>
-
-          <mediaobject>
-            <imageobject>
-              <imagedata fileref="./images/refinement-data-reuse.png" />
-            </imageobject>
-          </mediaobject>
-        </figure>
       </tip>
+
+      <figure>
+        <title>Workflow Data Reuse</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="./images/refinement-data-reuse.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
     </section>
 
     <section>
@@ -269,16 +269,18 @@
       <tip>
         <para>The site selector to use for site selection can be specified by
         setting the property <emphasis
-        role="bold">pegasus.selector.site</emphasis><figure>
-            <title>Workflow Site Selection</title>
-
-            <mediaobject>
-              <imageobject>
-                <imagedata fileref="./images/refinement-site-selection.png" />
-              </imageobject>
-            </mediaobject>
-          </figure></para>
+        role="bold">pegasus.selector.site</emphasis></para>
       </tip>
+
+      <figure>
+        <title>Workflow Site Selection</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="./images/refinement-site-selection.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
     </section>
 
     <section>
@@ -391,17 +393,17 @@
         <para>The addition of the cleanup nodes to the workflow can be
         disabled by passing the <emphasis role="bold">--nocleanup</emphasis>
         option to pegasus-plan.</para>
-
-        <figure>
-          <title>Addition of Directory Creation and File Removal Jobs</title>
-
-          <mediaobject>
-            <imageobject>
-              <imagedata fileref="./images/refinement-creadir-rm-jobs.png" />
-            </imageobject>
-          </mediaobject>
-        </figure>
       </tip>
+
+      <figure>
+        <title>Addition of Directory Creation and File Removal Jobs</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="./images/refinement-creadir-rm-jobs.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
     </section>
 
     <section>
@@ -434,19 +436,19 @@
           <tip>
             <para>To use the Shell code Generator set the property <emphasis
             role="bold">pegasus.code.generator</emphasis> Shell</para>
-
-            <figure>
-              <title>Final Executable Workflow</title>
-
-              <mediaobject>
-                <imageobject>
-                  <imagedata fileref="./images/refinement-final-executable-wf.png" />
-                </imageobject>
-              </mediaobject>
-            </figure>
           </tip>
         </listitem>
       </orderedlist>
+
+      <figure>
+        <title>Final Executable Workflow</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="./images/refinement-final-executable-wf.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
     </section>
   </section>
 
