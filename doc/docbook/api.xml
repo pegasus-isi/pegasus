@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="api">
   <title>API Reference</title>
@@ -357,7 +357,7 @@
   &lt;/file&gt;</programlisting>
         </section>
 
-        <section>
+        <section id="dax_transformation_catalog" label="">
           <title>The Transformation Catalog Section</title>
 
           <para>The executable section acts as an in-file transformation
