@@ -817,7 +817,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
   }
 }</programlisting></para>
 
-      <para>The entries in this catalog have the following meanign</para>
+      <para>The entries in this catalog have the following meaning</para>
 
       <para><orderedlist>
           <listitem>
@@ -845,7 +845,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para>arch os, osrelease, osversion - The
+            <para>arch, os, osrelease, osversion - The
             arch/os/osrelease/osversion of the transformation. osrelease and
             osversion are optional.</para>
 
