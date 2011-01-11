@@ -132,8 +132,7 @@
     transfer job that is executed locally and is used to transfer input data
     to compute site isi_viz. The prefix naming scheme for the transfer jobs is
     <emphasis
-    role="bold">[stage_in|stage_out|inter]_[local|remote]_</emphasis> .
-    </para>
+    role="bold">[stage_in|stage_out|inter]_[local|remote]_</emphasis> .</para>
   </section>
 
   <section>
@@ -148,7 +147,7 @@
     site, by inspecting the pool attribute associated with the URL in the
     Replica Catalog. If the pool attribute of an input file location matches
     the compute site where the job is scheduled, then that particular input
-    file is a candidate for symlinking. </para>
+    file is a candidate for symlinking.</para>
 
     <para>For Pegasus to symlink against existing input data on a compute
     site, following must be true</para>
@@ -175,8 +174,8 @@
     <para>In the symlinking case, Pegasus strips out URL prefix from a URL and
     replaces it with a file URL.</para>
 
-    <para> For example if a user has the following URL catalogued in the
-    Replica Catalog for an input file f.input </para>
+    <para>For example if a user has the following URL catalogued in the
+    Replica Catalog for an input file f.input</para>
 
     <programlisting>f.input   gsiftp://server.isi.edu/shared/storage/input/data/f.input pool="isi"</programlisting>
 
@@ -307,10 +306,10 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     around various transfer clients . pegasus-transfer looks at source and
     destination url and figures out automatically which underlying client to
     use. pegasus-transfer is distributed with the PEGASUS and can be found at
-    $PEGASUS_HOME/bin/pegasus-transfer. </para>
+    $PEGASUS_HOME/bin/pegasus-transfer.</para>
 
     <para>Currently, pegasus-transfer interfaces with the following transfer
-    clients </para>
+    clients</para>
 
     <table>
       <title>Transfer Clients interfaced to by pegasus-transfer</title>
@@ -346,7 +345,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
           <row>
             <entry>cp</entry>
 
-            <entry>copying files from a POSIX filesystem . </entry>
+            <entry>copying files from a POSIX filesystem .</entry>
           </row>
 
           <row>
@@ -376,12 +375,12 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     catalog as the PFN and the type of executable needs to be set to <emphasis
     role="bold">STAGEABLE</emphasis> .</para>
 
-    <para>The location of a transformation can be specified either in </para>
+    <para>The location of a transformation can be specified either in</para>
 
     <itemizedlist>
       <listitem>
         <para>DAX in the executables section. More details <link
-        linkend="dax_transformation_catalog">here</link> . </para>
+        linkend="dax_transformation_catalog">here</link> .</para>
       </listitem>
 
       <listitem>
@@ -394,7 +393,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     compatible with a compute site only if all the System Information
     attributes associated with the entry match with the System Information
     attributes for the compute site in the Site Catalog. The following
-    attributes make up the System Information attributes </para>
+    attributes make up the System Information attributes</para>
 
     <orderedlist>
       <listitem>
@@ -402,7 +401,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </listitem>
 
       <listitem>
-        <para>os </para>
+        <para>os</para>
       </listitem>
 
       <listitem>
@@ -410,7 +409,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </listitem>
 
       <listitem>
-        <para>osversion </para>
+        <para>osversion</para>
       </listitem>
     </orderedlist>
 
@@ -422,15 +421,15 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       remote compute site. For transfer of executables, Pegasus constructs a
       soft state map that resides on top of the transformation catalog, that
       helps in determining the locations from where an executable can be
-      staged to the remote site. </para>
+      staged to the remote site.</para>
 
       <para>Users can specify the following property to pick up a specific
       transformation mapper</para>
 
       <programlisting><emphasis role="bold">pegasus.catalog.transformation.mapper</emphasis> </programlisting>
 
-      <para>Currently, the following transformation mappers are supported.
-      </para>
+      <para>Currently, the following transformation mappers are
+      supported.</para>
 
       <table>
         <title>Transformation Mappers Supported in Pegasus</title>
@@ -513,17 +512,17 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     the compatible worker package from the Pegasus Website. To specify a
     different worker package location, users can specify the transformation
     <emphasis role="bold">pegasus::worker</emphasis> in the transformation
-    catalog with </para>
+    catalog with</para>
 
     <itemizedlist>
       <listitem>
-        <para>type set to STAGEABLE </para>
+        <para>type set to STAGEABLE</para>
       </listitem>
 
       <listitem>
         <para>System Information attributes of the transformation catalog
-        entry match the System Information attributes of the compute site.
-        </para>
+        entry match the System Information attributes of the compute
+        site.</para>
       </listitem>
 
       <listitem>
@@ -531,5 +530,48 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         the compute site.</para>
       </listitem>
     </itemizedlist>
+  </section>
+
+  <section>
+    <title>Second Level Staging</title>
+
+    <para>By default, Pegasus executes the jobs in the workflow specific
+    directory created on the shared filesystem of a compute site. However, if
+    a user wants Pegasus can execute the jobs on the worker nodes filesystem.
+    When the jobs are executed on the worker node, they pull the input data
+    for the job from the workflow specific directory on the staging server (
+    usually the shared filesystem on the compute site ) to a directory on the
+    worker node filesystem, and after the job has completed stages out the
+    output files from the worker node to the workflow specific execution
+    directory.</para>
+
+    <para> The separate data stagein and stageout jobs are still added to the
+    workflow. They are responsible for getting the input data to the workflow
+    specific directory on the staging server ( usually the shared filesystem
+    on the compute site ) , and pushing out the output data to final storage
+    site from that directory.</para>
+
+    <figure>
+      <title>Second Level Staging : Getting Data to and from a directory on
+      the worker nodes</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="./images/sls-transfer-worker.png" />
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>This mode is especially useful for running in the cloud environments
+    where you don't want to setup a shared filesystem between the worker
+    nodes. Running in that mode is explained in detail <link
+    linkend="running_on_cloud">here.</link> </para>
+
+    <para>To turn on second level staging for the workflows users should set
+    the following properties</para>
+
+    <programlisting><emphasis role="bold">pegasus.execute.*.filesystem.local = true   </emphasis>    # Turn on second-level staging (SLS)
+<emphasis role="bold">pegasus.transfer.sls.s3.stage.sls.file = false</emphasis>  # Do not transfer .sls files via transfer jobs
+<emphasis role="bold">pegasus.gridstart = SeqExec </emphasis>                    # Use SeqExec to launch the jobs</programlisting>
   </section>
 </chapter>

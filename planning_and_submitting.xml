@@ -47,6 +47,16 @@
         <para>The Data Reuse Algorithm can be disabled by passing the
         <emphasis role="bold">--force</emphasis> option to
         pegasus-plan.</para>
+
+        <figure>
+          <title>Workflow Data Reuse</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="./images/refinement-data-reuse.png" />
+            </imageobject>
+          </mediaobject>
+        </figure>
       </tip>
     </section>
 
@@ -259,7 +269,15 @@
       <tip>
         <para>The site selector to use for site selection can be specified by
         setting the property <emphasis
-        role="bold">pegasus.selector.site</emphasis></para>
+        role="bold">pegasus.selector.site</emphasis><figure>
+            <title>Workflow Site Selection</title>
+
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="./images/refinement-site-selection.png" />
+              </imageobject>
+            </mediaobject>
+          </figure></para>
       </tip>
     </section>
 
@@ -281,17 +299,18 @@
     </section>
 
     <section>
-      <title>Addition of Data Transfer Nodes</title>
+      <title>Addition of Data Transfer and Registration Nodes</title>
 
       <para>After job clustering, the workflow is handed to the Data Transfer
-      module that adds data stage-in and stage-out nodes to the workflow. Data
-      Stage-in Nodes transfer input data required by the workflow from the
-      locations specified in the Replica Catalog to a directory on the
-      execution site where the job executes. In case, multiple locations are
-      specified for the same input file, the location from where to stage the
-      data is selected using a <emphasis role="bold">Replica
-      Selector</emphasis> . Replica Selection is described in detail in the
-      <link linkend="advanced_concepts_replica_selection">Chapter on Advanced
+      module that adds data stage-in , inter site and stage-out nodes to the
+      workflow. Data Stage-in Nodes transfer input data required by the
+      workflow from the locations specified in the Replica Catalog to a
+      directory on the execution site where the job executes. In case,
+      multiple locations are specified for the same input file, the location
+      from where to stage the data is selected using a <emphasis
+      role="bold">Replica Selector</emphasis> . Replica Selection is described
+      in detail in the <link
+      linkend="advanced_concepts_replica_selection">Chapter on Advanced
       Concepts - Replica Selection.</link></para>
 
       <para>The process of adding the data stage-in and data stage-out nodes
@@ -308,6 +327,32 @@
       is the <emphasis role="bold">Bundle</emphasis> Transfer Refiner, that
       bundles data stage-in nodes and data stage-out nodes on the basis of
       certain pegasus profile keys associated with the workflow.</para>
+
+      <figure>
+        <title>Addition of Data Transfer Nodes to the Workflow</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="./images/refinement-transfer-jobs.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Data Registration Nodes may also be added to the final executable
+      workflow to register the location of the output files on the final
+      output site back in the Replica Catalog . An output file is registered
+      in the Replica Catalog if the register flag for the file is set to true
+      in the DAX.</para>
+
+      <figure>
+        <title>Addition of Data Registration Nodes to the Workflow</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="./images/refinement-registration-jobs.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
 
       <para>The data staged-in and staged-out from a directory that is created
       on the head node by a create dir job in the workflow. In the vanilla
@@ -346,6 +391,16 @@
         <para>The addition of the cleanup nodes to the workflow can be
         disabled by passing the <emphasis role="bold">--nocleanup</emphasis>
         option to pegasus-plan.</para>
+
+        <figure>
+          <title>Addition of Directory Creation and File Removal Jobs</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="./images/refinement-creadir-rm-jobs.png" />
+            </imageobject>
+          </mediaobject>
+        </figure>
       </tip>
     </section>
 
@@ -379,6 +434,16 @@
           <tip>
             <para>To use the Shell code Generator set the property <emphasis
             role="bold">pegasus.code.generator</emphasis> Shell</para>
+
+            <figure>
+              <title>Final Executable Workflow</title>
+
+              <mediaobject>
+                <imageobject>
+                  <imagedata fileref="./images/refinement-final-executable-wf.png" />
+                </imageobject>
+              </mediaobject>
+            </figure>
           </tip>
         </listitem>
       </orderedlist>
@@ -964,7 +1029,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
       </section>
     </section>
 
-    <section>
+    <section id="running_on_cloud">
       <title>Cloud</title>
 
       <section>
