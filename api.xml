@@ -257,7 +257,7 @@
           </listitem>
         </orderedlist>
 
-        <section>
+        <section id="dax_replica_catalog">
           <title>The Replica Catalog Section</title>
 
           <para>The file section acts as in in-file replica catalog (RC). Any
@@ -945,7 +945,7 @@
 
           <programlisting>  &lt;dax id="ID000002" name="black.dax" node-label="bar" &gt;
     &lt;profile namespace="env" key="foo"&gt;bar&lt;/profile&gt;
-    &lt;argument&gt;-Xmx1024 -Xms512 -Dpegasus.dir.storage=duncan  -Dpegasus.dir.exec=raphael -o local --dir ./datafind -vvvvv --force -s dax_site --basename karan&lt;/argument&gt;
+    &lt;argument&gt;-Xmx1024 -Xms512 -Dpegasus.dir.storage=storagedir  -Dpegasus.dir.exec=execdir -o local --dir ./datafind -vvvvv --force -s dax_site &lt;/argument&gt;
     &lt;invoke&gt; &lt;!-- optional, may not be possible here --&gt; &lt;/invoke&gt;
     &lt;uses file="sites.xml" link="input" register="false" transfer="true" type="data" /&gt;
   &lt;/dax&gt;</programlisting>
