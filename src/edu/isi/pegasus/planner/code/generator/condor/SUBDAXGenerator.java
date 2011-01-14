@@ -21,6 +21,7 @@ package edu.isi.pegasus.planner.code.generator.condor;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.CondorVersion;
+import edu.isi.pegasus.common.util.FindExecutable;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -52,11 +53,9 @@ import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 
 import java.text.NumberFormat;
@@ -65,7 +64,6 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Map;
 import java.util.Set;
 /**
@@ -837,8 +835,37 @@ public class SUBDAXGenerator{
         if( m.containsKey( key ) ){
             env.construct( key, m.get( key ) );
         }
-        
-        return constructTCEntryFromEnvProfiles( env );
+
+
+        return ( env.isEmpty() ) ?
+                constructTCEntryFromPath( )://construct entry from PATH environment variable
+                constructTCEntryFromEnvProfiles( env ); //construct entry from environment
+    }
+
+    /**
+     * Returns a tranformation catalog entry object constructed from the path
+     * environment variable
+     *
+     * @param env  the environment profiles.
+     *
+     * @return  the entry constructed else null if environment variables not defined.
+     */
+    private TransformationCatalogEntry constructTCEntryFromPath( ) {
+        //find path to condor_dagman
+        TransformationCatalogEntry entry = null;
+        File condorDagMan = FindExecutable.findExec( "condor_dagman" );
+
+        if( condorDagMan == null ){
+            mLogger.log( "Unable to determine path to condor_dagman using PATH environment variable ",
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            return entry;
+        }
+
+        String dagManPath = condorDagMan.getAbsolutePath();
+        mLogger.log( "Constructing path to dagman on basis of env variable PATH " + dagManPath ,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        return this.constructTransformationCatalogEntryForDAGMan( dagManPath );
     }
     
     /**
@@ -857,7 +884,6 @@ public class SUBDAXGenerator{
      * @return  the entry constructed else null if environment variables not defined.
      */
     private TransformationCatalogEntry constructTCEntryFromEnvProfiles( ENV env ) {
-        TransformationCatalogEntry entry = null;
         
         //check if either CONDOR_HOME or CONDOR_LOCATION is defined
         String key = null;
@@ -870,26 +896,46 @@ public class SUBDAXGenerator{
         
         if( key == null ){
             //environment variables are not defined.
-            return entry;
+            return null;
         }
         
         mLogger.log( "Constructing path to dagman on basis of env variable " + key,
                      LogManager.DEBUG_MESSAGE_LEVEL );
-        entry = new TransformationCatalogEntry();
-        entry.setLogicalTransformation( CONDOR_DAGMAN_NAMESPACE,
-                                        CONDOR_DAGMAN_LOGICAL_NAME,
-                                        null );
-        entry.setType( TCType.INSTALLED );
-        entry.setResourceId( "local" );
         
         //construct path to condor dagman
         StringBuffer path = new StringBuffer();
         path.append( env.get( key ) ).append( File.separator ).
              append( "bin" ).append( File.separator).
              append( "condor_dagman" );
-        entry.setPhysicalTransformation( path.toString() );
         
+        return this.constructTransformationCatalogEntryForDAGMan( path.toString() );
+    }
+
+    /**
+     * Constructs TransformationCatalogEntry for DAGMan.
+     *
+     * @param path   path to dagman
+     *
+     * @return TransformationCatalogEntry for dagman if path is not null, else null.
+     */
+    private TransformationCatalogEntry constructTransformationCatalogEntryForDAGMan( String path ){
+        if( path == null ){
+            return null;
+        }
+
+        TransformationCatalogEntry entry = new TransformationCatalogEntry();
+        entry = new TransformationCatalogEntry();
+        entry.setLogicalTransformation( CONDOR_DAGMAN_NAMESPACE,
+                                        CONDOR_DAGMAN_LOGICAL_NAME,
+                                        null );
+        entry.setType( TCType.INSTALLED );
+        entry.setResourceId( "local" );
+
+
+        entry.setPhysicalTransformation( path.toString() );
+
         return entry;
+
     }
 
 
