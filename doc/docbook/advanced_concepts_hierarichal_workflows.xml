@@ -166,6 +166,11 @@
 
       <orderedlist>
         <listitem>
+          <para>entry in the transformation catalog for condor::dagman for
+          site local, else</para>
+        </listitem>
+
+        <listitem>
           <para>pick up the value of CONDOR_HOME from the environment if
           specified and set path to condor dagman as
           $CONDOR_HOME/bin/condor_dagman , else</para>
@@ -183,8 +188,7 @@
         </listitem>
 
         <listitem>
-          <para>entry in the transformation catalog for condor::dagman for
-          site local</para>
+          <para></para>
         </listitem>
       </orderedlist>
 
