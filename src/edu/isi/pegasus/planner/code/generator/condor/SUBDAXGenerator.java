@@ -557,22 +557,27 @@ public class SUBDAXGenerator{
 
         //get the path to condor dagman
         try{
-            //try to construct the path from the environment
-            entry = constructTCEntryFromEnvironment( );
-            
-            //try to construct from the TC
-            if( entry == null ){
-                mLogger.log( "Unable to construct path to dagman from the environment. CONDOR_HOME and CONDOR_LOCATION not set.",
-                             LogManager.DEBUG_MESSAGE_LEVEL );
-                entries = mTCHandle.lookup(job.namespace, job.logicalName,
+            entries = mTCHandle.lookup(job.namespace, job.logicalName,
                                                  job.version, job.getSiteHandle(),
                                                  TCType.INSTALLED);
-                entry = (entries == null) ?
-                    defaultTCEntry( "local") ://construct from site catalog
-                    //Gaurang assures that if no record is found then
-                    //TC Mechanism returns null
-                    (TransformationCatalogEntry) entries.get(0);
+            entry = (entries == null) ?
+                     defaultTCEntry( "local") ://construct from site catalog
+                      //Gaurang assures that if no record is found then
+                      //TC Mechanism returns null
+                      (TransformationCatalogEntry) entries.get(0);
+            
+            if( entry == null ){
+                mLogger.log( "DAGMan not catalogued in the TC. Trying to construct from the environment",
+                              LogManager.DEBUG_MESSAGE_LEVEL );
+                entry = constructTCEntryFromEnvironment( );
             }
+            else{
+                mLogger.log( "Picked path to DAGMan from the TC " + entry.getPhysicalTransformation() ,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+
+            }
+
+            
         }
         catch(Exception e){
             throw new RuntimeException( "ERROR: While accessing the Transformation Catalog",e);
