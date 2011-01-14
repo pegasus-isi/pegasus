@@ -178,6 +178,11 @@
         </listitem>
 
         <listitem>
+          <para>pick up the path to condor dagman from what is defined in the
+          user's PATH </para>
+        </listitem>
+
+        <listitem>
           <para>entry in the transformation catalog for condor::dagman for
           site local</para>
         </listitem>
@@ -186,7 +191,7 @@
       <tip>
         <para>It is recommended that user dagman.maxpre in their properties
         file to control the maximum number of pegasus plan instances launched
-        by each running dagman instance. </para>
+        by each running dagman instance.</para>
       </tip>
     </section>
   </section>
