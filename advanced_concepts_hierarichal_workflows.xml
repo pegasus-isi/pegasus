@@ -186,10 +186,6 @@
           <para>pick up the path to condor dagman from what is defined in the
           user's PATH </para>
         </listitem>
-
-        <listitem>
-          <para></para>
-        </listitem>
       </orderedlist>
 
       <tip>
