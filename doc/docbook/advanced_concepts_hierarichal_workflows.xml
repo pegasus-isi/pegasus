@@ -184,7 +184,7 @@
 
         <listitem>
           <para>pick up the path to condor dagman from what is defined in the
-          user's PATH </para>
+          user's PATH</para>
         </listitem>
       </orderedlist>
 
@@ -249,6 +249,33 @@
       executed in directory /dag-dir/test . The /dag-dir/test should be
       created beforehand.</para>
     </section>
+  </section>
+
+  <section>
+    <title>File Dependencies Across DAX Jobs</title>
+
+    <para>In hierarchal workflows , if a sub workflow generates some output
+    files required by another sub workflow then there should be an edge
+    connecting the two dax jobs. Pegasus will ensure that the prescript for
+    the child sub-workflow, has the path to the cache file generated during
+    the planning of the parent sub workflow. The cache file in the submit
+    directory for a workflow is a textual replica catalog that lists the
+    locations of all the output files created in the remote workflow execution
+    directory when the workflow executes.</para>
+
+    <para>This automatic passing of the cache file to a child sub-workflow
+    ensures that the datasets from the same workflow run are used. However,
+    the passing of the locations in a cache file also ensures that Pegasus
+    will prefer them over all other locations in the Replica Catalog. If you
+    need the Replica Selection to consider locations in the Replica Catalog
+    also, then set the following property.</para>
+
+    <programlisting><emphasis role="bold">pegasus.catalog.replica.cache.asrc  true</emphasis></programlisting>
+
+    <para>The above is useful in the case, where you are staging out the
+    output files to a storage site, and you want the child sub workflow to
+    stage these files from the storage output site instead of the workflow
+    execution directory where the files were originally created.</para>
   </section>
 
   <section>
