@@ -1031,6 +1031,121 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
       </section>
     </section>
 
+    <section>
+      <title>Condor Pools Without a Shared Filesystem and Using Condor File
+      Transfers</title>
+
+      <para>It is possible to run on a condor pool without the worker nodes
+      sharing a filesystem and relying on Condor to do the file transfers.
+      However, for the Condor file to transfer the input data for a job, all
+      the input data</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Must be on the submit host</para>
+        </listitem>
+
+        <listitem>
+          <para>The input files should be catalogued as file URL's in the
+          Replica Catalog with the pool attribute set as local for all the
+          locations. To make sure that local URL's are always picked up use
+          the Local Replica Selector.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>To set up Pegasus to plan workflows for Amazon you need to create
+      an 'local-condor' entry your site catalog. The site configuration is
+      similar to what you would create for running on a local Condor pool (See
+      previous section).</para>
+
+      <programlisting> &lt;site  handle="local-condor" arch="x86" os="LINUX"&gt;
+        &lt;grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
+        &lt;grid  type="gt2" contact="localhost/jobmanager-condor" scheduler="unknown" jobtype="compute"/&gt;
+        &lt;head-fs&gt;
+
+          <emphasis role="bold">&lt;!-- the paths for scratch filesystem are the paths on local site as we execute create dir job
+               on local site. Improvements planned for 3.1 release.--&gt;</emphasis>
+            &lt;scratch&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file:///" mount-point="/submit-host/scratch"/&gt;
+                    &lt;internal-mount-point mount-point="/submit-host/scratch"/&gt;
+                &lt;/shared&gt;
+            &lt;/scratch&gt;
+            &lt;storage&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file:///" mount-point="/glusterfs/scratch"/&gt;
+                    &lt;internal-mount-point mount-point="/glusterfs/scratch"/&gt;
+                &lt;/shared&gt;
+            &lt;/storage&gt;
+        &lt;/head-fs&gt;
+        &lt;replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" /&gt;
+        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/cluster-software/pegasus/2.4.1&lt;/profile&gt;
+        &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/cluster-software/globus/5.0.1&lt;/profile&gt;
+
+        <emphasis role="bold">&lt;!-- profies for site to be treated as condor pool --&gt;</emphasis>
+        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
+        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profile&gt;
+
+        <emphasis role="bold">&lt;!-- required for Condor File IO and transferring stdout and stderr back --&gt;</emphasis>
+        &lt;profile namespace="condor" key="should_transfer_files"&gt;YES&lt;/profile&gt;
+        &lt;profile namespace="condor" key="transfer_output"&gt;true&lt;/profile&gt;
+        &lt;profile namespace="condor" key="transfer_error"&gt;true&lt;/profile&gt;
+        &lt;profile namespace="condor" key="WhenToTransferOutput"&gt;ON_EXIT&lt;/profile&gt;
+        
+        <emphasis role="bold">&lt;!-- to enable kickstart staging from local site--&gt;</emphasis>
+        &lt;profile namespace="condor" key="transfer_executable"&gt;true&lt;/profile&gt;
+
+
+    &lt;/site&gt;
+</programlisting>
+
+      <para>Next you need need to update pegasus.properties to tell Pegasus to
+      turn on Condor File IO and execute jobs on the worker nodes
+      filesystem.</para>
+
+      <programlisting>pegasus.execute.*.filesystem.local = true       # Turn on second-level staging (SLS)
+pegasus.transfer.refiner = Condor               # Condor Specific Transfer Refiner
+pegasus.transfer.sls.*.impl = Condor            # Turn on Condor File Transfer to stage data to the worker nodes
+pegasus.selector.replica =  Local               # Always prefer file URL's on the submit host with pool attribute set to local
+</programlisting>
+
+      <para>By default, Pegasus creates a workflow specific execution
+      directory that is associated with the compute site ( in this case
+      local-condor). However, in this scenario, the workflow specific
+      execution directory needs to be created on the submit host, as native
+      Condor File I/O only works against local directories. To ensure that the
+      create dir job for the workflow for the local-condor site, you need to
+      do the following</para>
+
+      <orderedlist>
+        <listitem>
+          <para>the paths for the scratch filesystem in the site catalog entry
+          for local-condor site should actually refer to paths on the submit
+          host. It is illustrated in the example site catalog entry
+          above.</para>
+        </listitem>
+
+        <listitem>
+          <para>have an entry in the transformation catalog for
+          pegasus::dirmanager for site local-condor that has a condor profile
+          that makes the create dir job run in local universe instead of
+          vanilla.</para>
+
+          <programlisting># This entry for pegaasus-dirmanager is to force the create dir jobs to run in the local universe instead of
+# the vanilla universe. The CONDOR transfer settings are so that stdout and stderr are
+# not redirected to initialdir instead of the submit dir
+
+local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INSTALLED INTEL32::LINUX CONDOR::universe="local"CONDOR::requirements="";CONDOR::transfer_output="";CONDOR::transfer_error="";CONDOR::whentotransferoutput=""
+</programlisting>
+        </listitem>
+      </orderedlist>
+
+      <note>
+        <para>For Pegasus 3.1 running workflows in this setup will be made
+        much simpler.</para>
+      </note>
+    </section>
+
     <section id="running_on_cloud">
       <title>Cloud</title>
 
@@ -1184,7 +1299,7 @@ verbosity = WARNING</programlisting>
         use S3. This environment variable will be used by s3cmd in the S3
         transfer jobs to locate the config file.</para>
 
-        <programlisting>&gt;&lt;profile namespace="env" key="S3CFG"&gt;/local/path/to/s3cmd.cfg&lt;/profile&gt;</programlisting>
+        <programlisting>&lt;profile namespace="env" key="S3CFG"&gt;/local/path/to/s3cmd.cfg&lt;/profile&gt;</programlisting>
 
         <para>Next, you need to update your pegasus.properties file to tell
         Pegasus to turn on SLS, to use S3 for first and second-level staging,

@@ -181,6 +181,21 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
       <para>Before applying any regular expressions on the PFN’s for a
       particular LFN that has to be staged to a site X, the file URL’s that
       don't match the site X are explicitly filtered out.</para>
+
+      <para>To use this replica selector set the following
+      property<programlisting>pegasus.selector.replica                  Regex</programlisting></para>
+    </section>
+
+    <section>
+      <title>Local</title>
+
+      <para>This replica selector always prefers replicas from the local host
+      ( pool attribute set to local ) and that start with a file: URL scheme.
+      It is useful, when users want to stagein files to a remote site from the
+      submit host using the Condor file transfer mechanism.</para>
+
+      <para>To use this replica selector set the following
+      property<programlisting>pegasus.selector.replica                  Default</programlisting></para>
     </section>
   </section>
 </chapter>
