@@ -3,6 +3,7 @@ Base for analysis modules.
 """
 from logging import DEBUG
 import Queue
+import re
 import sys
 import threading
 import time
@@ -54,6 +55,14 @@ try:
     from sqlalchemy import create_engine, MetaData, orm
 except ImportError:
     pass
+
+def dsn_dialect(s):
+    """Data source name (dsn) dialect."""
+    dialect = ""
+    m = re.match(r'(.*?)[:+]', s)
+    if m and (len(m.groups()) == 1):
+        dialect = m.group(1)
+    return dialect.lower()
 
 """
 Database classes
@@ -109,19 +118,21 @@ The module netlogger.analysis.modules.stampede_loader shows the use
 of this to initialize to a DB.
 """
 class SQLAlchemyInit:
-    def __init__(self, connString, initFunction):
+    def __init__(self, connString, initFunction, **kwarg):
         if not hasattr(self, '_dbg'):
             # The Analyzer superclass SHOULD have been _init__'ed
             # already but if not, bulletproof this attr.
             self._dbg = False
         self.db = create_engine(connString, echo=self._dbg)
         self.metadata = MetaData()
-        initFunction(self.db, self.metadata)
+        dialect_kw = kwarg.get(dsn_dialect(connString), {})
+        initFunction(self.db, self.metadata, kw=dialect_kw)
         self.metadata.bind = self.db
         sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False, 
                                 expire_on_commit=False)
         self.session = orm.scoped_session(sm)
 
+            
 """
 Base classes
 """

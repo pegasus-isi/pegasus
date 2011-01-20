@@ -4,7 +4,7 @@ SQLAlchemy interface to the Stampede backend.
 Named sql_alchemy to avoid import errors with the library proper.
 """
 
-__rcsid__ = "$Id: sql_alchemy.py 26605 2010-10-14 22:18:57Z mgoode $"
+__rcsid__ = "$Id: sql_alchemy.py 26972 2011-01-11 16:19:33Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 import calendar
@@ -79,6 +79,9 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
         # Job information
         self._jobs = []
         self._jobtypes_executed = {}
+        
+        # Sub-workflow information
+        self._sub_wf_uuid = None
         
         # A debug flag that can be manually switched to turn off
         # generation of job edges.  Just used in development
@@ -262,6 +265,24 @@ class Workflow(BaseWorkflow, SQLAlchemyInit):
                     msg='Multiple wf_uuid results for parent_workflow_id %s : %s' % (self._parent_workflow_id, e))
                     return
         return self._parent_wf_uuid
+        
+    @property
+    def sub_wf_uuids(self):
+        """
+        Returns a list of the wf_uuids of any sub-workflows associated
+        with the current workflow object.  Returned in the order in 
+        which they are entered in the workflow table.  If no sub-workflows
+        are found, return an empty list.
+        
+        @rtype:     List of strings
+        @return:    The wf_uuids of any sub-workflows.
+        """
+        if self._sub_wf_uuid == None:
+            self._sub_wf_uuid = []
+            query = self.session.query(WorkflowTable.wf_uuid).filter(WorkflowTable.parent_workflow_id == self._wf_id).order_by(WorkflowTable.wf_id)
+            for row in query.all():
+                self._sub_wf_uuid.append(row.wf_uuid)
+        return self._sub_wf_uuid
         
     @property
     def start_events(self):

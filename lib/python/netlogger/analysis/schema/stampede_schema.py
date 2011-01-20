@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 26790 2010-11-22 18:34:13Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 26830 2010-12-01 19:29:40Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -46,7 +46,7 @@ class Edge(SABase):
 class EdgeStatic(SABase):
     pass
     
-def initializeToPegasusDB(db, metadata):
+def initializeToPegasusDB(db, metadata, kw={}):
     """
     Function to create the Stampede schema if it does not exist,
     if it does exist, then connect and set up object mappings.
@@ -55,8 +55,9 @@ def initializeToPegasusDB(db, metadata):
     @param  db: Engine object to initialize.
     @type   metadata: SQLAlch metadata object.
     @param  metadata: Associated metadata object to initialize.
+    @type   kw: dict
+    @param  kw: Keywords to pass to Table() functions
     """
-    
     KeyInt = Integer
     # MySQL likes using BIGINT for PKs but some other
     # DB don't like it so swap as needed.
@@ -81,10 +82,10 @@ def initializeToPegasusDB(db, metadata):
                     Column('hostname', VARCHAR(255), nullable=False),
                     Column('ip_address', VARCHAR(255), nullable=False),
                     Column('uname', VARCHAR(255), nullable=True),
-                    Column('total_ram', Integer, nullable=True)
+                    Column('total_ram', Integer, nullable=True),
+                    **kw
     )
     
-    #Index('host_id_UNIQUE', st_host.c.host_id, unique=True)
     Index('UNIQUE_HOST', st_host.c.site_name, st_host.c.hostname,
         st_host.c.ip_address, unique=True)
     
@@ -119,11 +120,11 @@ def initializeToPegasusDB(db, metadata):
                         Column('grid_dn', VARCHAR(255), nullable=True),
                         Column('planner_version', VARCHAR(255), nullable=True),
                         Column('parent_workflow_id', KeyInt,
-                                ForeignKey("workflow.wf_id"), nullable=True)
+                                ForeignKey("workflow.wf_id"), nullable=True),
+                        **kw
     )
     
     Index('wf_uuid_UNIQUE', st_workflow.c.wf_uuid, unique=True)
-    #Index('FK_PARENT_WF_ID', st_workflow.c.parent_workflow_id, unique=False)
     
     try:
         orm.mapper(Workflow, st_workflow, properties = {
@@ -139,14 +140,14 @@ def initializeToPegasusDB(db, metadata):
     # All three columns are marked as primary key to produce the desired
     # effect - ie: it is the combo of the three columns that make a row
     # unique.
-                        Column('wf_id', KeyInt, ForeignKey('workflow.wf_id'), 
-                                nullable=False, primary_key=True),
-                        Column('state', VARCHAR(255), nullable=False, primary_key=True),
-                        Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True,
-                        default=time.time())
+                             Column('wf_id', KeyInt, ForeignKey('workflow.wf_id'), 
+                                    nullable=False, primary_key=True),
+                             Column('state', VARCHAR(255), nullable=False, primary_key=True),
+                             Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True,
+                                    default=time.time()),
+                             **kw
     )
     
-    #Index('FK_STATE_WF_ID', st_workflowstate.c.wf_id, unique=False)
     Index('UNIQUE_WORKFLOWSTATE', st_workflowstate.c.wf_id, st_workflowstate.c.state, 
         st_workflowstate.c.timestamp, unique=True)
     
@@ -186,11 +187,10 @@ def initializeToPegasusDB(db, metadata):
                     Column('remote_user', VARCHAR(255), nullable=True),
                     Column('remote_working_dir', TEXT, nullable=True),
                     Column('cluster_start_time', NUMERIC(16,6), nullable=True),
-                    Column('cluster_duration', NUMERIC(10,3), nullable=True)
+                    Column('cluster_duration', NUMERIC(10,3), nullable=True),
+                    **kw
     )
     
-    #Index('FK_JOB_WF_ID', st_job.c.wf_id, unique=False)
-    #Index('FK_JOB_HOST_ID', st_job.c.host_id, unique=False)
     Index('UNIQUE_JOB', st_job.c.wf_id, st_job.c.job_submit_seq, unique=True)
     Index('IDX_JOB_LOOKUP', st_job.c.wf_id, st_job.c.name, unique=False)
     
@@ -223,10 +223,10 @@ def initializeToPegasusDB(db, metadata):
                         Column('state', VARCHAR(255), nullable=False, primary_key=True),
                         Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True,
                         default=time.time()),
-                        Column('jobstate_submit_seq', INT, nullable=False, primary_key=True)
+                        Column('jobstate_submit_seq', INT, nullable=False, primary_key=True),
+                        **kw
     )
     
-    #Index('FK_STATE_JOB_ID', st_jobstate.c.job_id, unique=False)
     Index('UNIQUE_JOBSTATE', st_jobstate.c.job_id, st_jobstate.c.state, 
         st_jobstate.c.timestamp, st_jobstate.c.jobstate_submit_seq, unique=True)
     
@@ -257,11 +257,10 @@ def initializeToPegasusDB(db, metadata):
                     Column('exitcode', INT, nullable=False),
                     Column('transformation', TEXT, nullable=False),
                     Column('executable', TEXT, nullable=False),
-                    Column('arguments', TEXT, nullable=True)
+                    Column('arguments', TEXT, nullable=True),
+                    **kw
     )
     
-    #Index('task_id_UNIQUE', st_task.c.task_id, unique=True)
-    #Index('FK_TASK_JOB_ID', st_task.c.job_id, unique=False)
     Index('UNIQUE_TASK', st_task.c.job_id, st_task.c.task_submit_seq, unique=True)
     
     try:
@@ -279,7 +278,8 @@ def initializeToPegasusDB(db, metadata):
                     Column('lfn', VARCHAR(255), nullable=True),
                     Column('size', INT, nullable=True),
                     Column('md_checksum', VARCHAR(255), nullable=True),
-                    Column('type', VARCHAR(255), nullable=True)
+                    Column('type', VARCHAR(255), nullable=True),
+                    **kw
     )
     
     #Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
@@ -293,11 +293,12 @@ def initializeToPegasusDB(db, metadata):
     st_edge_static = Table('edge_static', metadata,
                             Column('wf_uuid', VARCHAR(255), primary_key=True, nullable=False),
                             Column('parent', VARCHAR(255), primary_key=True, nullable=False),
-                            Column('child', VARCHAR(255), primary_key=True, nullable=False)
+                            Column('child', VARCHAR(255), primary_key=True, nullable=False),
+                           **kw
     )
     
     Index('UNIQUE_STATIC_EDGE', st_edge_static.c.wf_uuid, 
-            st_edge_static.c.parent, st_edge_static.c.child, unique=True)
+            st_edge_static.c.child, st_edge_static.c.parent, unique=True)
     
     try:
         orm.mapper(EdgeStatic, st_edge_static)
@@ -308,7 +309,8 @@ def initializeToPegasusDB(db, metadata):
                     Column('parent_id', KeyInt,
                             ForeignKey('job.job_id'), primary_key=True, nullable=False),
                     Column('child_id', KeyInt,
-                            ForeignKey('job.job_id'), primary_key=True, nullable=False)
+                            ForeignKey('job.job_id'), primary_key=True, nullable=False),
+                    **kw
     )
     
     Index('UNIQUE_EDGE', st_edge.c.parent_id, st_edge.c.child_id, unique=True)
