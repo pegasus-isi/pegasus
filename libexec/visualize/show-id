@@ -359,8 +359,11 @@ sub slurp_jobstate($) {
 	
 	# mytime
 	$tds += $main::adjust if $main::adjust;
-	$main::min = $tds if $tds < $main::min; 
-	$main::max = $tds if $tds > $main::max;
+	unless ( /MONITORD_/ ) {
+	    # exclude monitord messages - it may run after the fact!
+	    $main::min = $tds if $tds < $main::min; 
+	    $main::max = $tds if $tds > $main::max;
+	}
 	(undef,undef,undef,undef,undef,$main::year) = localtime($tds); 
 
 	next if $tag eq '***'; 
