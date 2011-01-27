@@ -795,6 +795,9 @@ class Workflow:
         be called every time DAGMAN starts so that we can wipe out any old state
         in case of restarts.
         """
+        # We only wipe state about jobs that have completed
+        return
+
         # Restore some class variables to what they should be when initialized
         self._jobs_map = {}
         self._jobs = {}
