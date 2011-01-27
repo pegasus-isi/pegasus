@@ -2485,7 +2485,7 @@ if use_db == 1:
 	output_db = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
     if replay_mode:
         purge_wf_uuid_from_database(run, output_db)
-    workdb = stampede_loader.Analyzer(output_db, perf=db_stats)
+    workdb = stampede_loader.Analyzer(output_db, perf=db_stats, batch="yes")
     atexit.register(finish_stampede_loader)
 
 # Initialize the logging API
