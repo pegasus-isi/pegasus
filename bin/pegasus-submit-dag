@@ -22,6 +22,7 @@
 use 5.006;
 use strict;
 use File::Spec;
+use File::Copy;
 use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use Data::Dumper;
@@ -169,8 +170,13 @@ sub salvage_logfile($) {
 		    close LOG;
 		} else {
 		    # file does not exist, use that
+		    my $newresult=$result;
+		    #check if the file is a smylink then dereference it.
+		    if ( -l $result ) {
+			$newresult=readlink($result);
+		    }
 		    print STDOUT "Rescued $result as $newfn\n" 
-			if rename( $result, $newfn );
+			if copy( $newresult, $newfn )  or warn "Could not rescue the log file $newresult to $newfn\n $! \nTrying to continue\n";
 		    last;
 		}
 	    }
