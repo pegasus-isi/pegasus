@@ -796,13 +796,39 @@ class Workflow:
         in case of restarts.
         """
         # We only wipe state about jobs that have completed
-        return
+        logger.debug("DAGMan restarted, cleaning up old job information...")
+        # Keep list of jobs whose information we want to delete
+        jobs_to_delete = []
 
-        # Restore some class variables to what they should be when initialized
-        self._jobs_map = {}
-        self._jobs = {}
-        self._walltime = {}			# jid --> walltime
-        self._job_site = {}			# last site a job was planned for
+        # Compile list of jobs whose information we don't need anymore...
+        for (my_jobid, my_job_submit_seq) in self._jobs:
+            my_job = self._jobs[my_jobid, my_job_submit_seq]
+            my_job_state = my_job._job_state
+            if my_job_state == "POST_SCRIPT_SUCCESS":
+                # This job is done
+                jobs_to_delete.append((my_jobid, my_job_submit_seq))
+            elif my_job_state == "JOB_SUCCESS":
+                    if my_jobid in self._job_info and self._job_info[my_jobid][3] is None:
+                        # No postscript for this job
+                        jobs_to_delete.append((my_jobid, my_job_submit_seq))
+                    else:
+                        logger.debug("keeping job %s..." % (my_jobid))
+            else:
+                logger.debug("keeping job %s..." % (my_jobid))
+
+        # Delete jobs...
+        for (my_jobid, my_job_submit_seq) in jobs_to_delete:
+            if my_jobid in self._walltime:
+                del self._walltime[my_jobid]
+            if my_jobid in self._job_site:
+                del self._job_site[my_jobid]
+            if my_jobid in self._jobs_map:
+                del self._jobs_map[my_jobid]
+            if (my_jobid, my_job_submit_seq) in self._jobs:
+                del self._jobs[(my_jobid, my_job_submit_seq)]
+
+        # Done!
+        return
 
     def __init__(self, rundir, outfile, extra_params=None, database=None,
                  workflow_config_file=None, jsd=None, parent_id=None):
@@ -1663,7 +1689,7 @@ parser.add_option("-C", "--config", action = "append", type = "string", dest = "
 		  help = "k=v defines configurations that override values read from the braindump.txt file.")
 parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
 		  help = "disable pegasus-monitord the automatic follow any sub-workflows that are found")
-parser.add_option("--no-database", action = "store_const", const = 0, dest = "use_db",
+parser.add_option("--no-database", "--nodatabase", action = "store_const", const = 0, dest = "use_db",
 		  help = "turn off logging information to the database (this option must be given when using the NL api's option's below)")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
