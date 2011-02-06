@@ -650,6 +650,12 @@ if ( $main::duration <= 60 ) {
     $mywidth = 8.0;
     $xlabel = 's';
     $xdivider = 1;
+} elsif ( $main::duration <= 600 ) { 
+    $xstubs = 60;
+    $xtics = 10;
+    $mywidth = 8.0;
+    $xlabel = 'min'; 
+    $xdivider = 60; 
 } elsif ( $main::duration <= 3600 ) {
     $xstubs = 600;
     $xtics = 60;
@@ -710,6 +716,9 @@ $title = default_title($dagfn,$minimum) unless ( defined $title );
 
 my $myheight = ( $n <= 51 ? 5.0 : $n / 10 );
 $height=$myheight unless defined $height && $height > 2.0;
+
+# too high (too much data)? 
+$height /= 2.0 while ( $height > 200 ); 
 log( "n=$n, height=$height, title=\"$title\"" ) 
     if $main::debug > 1;
 
