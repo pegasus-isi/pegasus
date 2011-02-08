@@ -34,7 +34,7 @@ sub parse_kick_start_files($$){
         if (open(FILE, $file)) {
             while ($line = <FILE>) {
                 chomp $line;
-                if ($line =~ /.* duration=\"([\.0-9]*)\" transformation=\"([_A-Za-z0-9:\.]*)\" .*/) {
+                if ($line =~ /.* duration=\"([\.0-9]*)\" transformation=\"([-_A-Za-z0-9:\.]*)\" .*/) {
                     $duration = $1;
                     $transformation = $2;
                     if (!defined($samples{$dir}{$transformation})) {
