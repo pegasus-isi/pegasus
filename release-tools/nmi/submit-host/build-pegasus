@@ -311,7 +311,6 @@ sub test_binary
         'bin/pegasus-cleanup',
         'bin/pegasus-transfer',
         'bin/seqexec',
-        'bin/symlink',
     );
     foreach my $efile (@expected_files) {
         my $msg = "Checking install for $efile...";
