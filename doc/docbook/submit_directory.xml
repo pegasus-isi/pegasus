@@ -703,6 +703,13 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           </row>
 
           <row>
+            <entry>properties</entry>
+
+            <entry>the full path to the properties file in the submit
+            directory</entry>
+          </row>
+
+          <row>
             <entry>planner</entry>
 
             <entry>the planner used to construct the executable workflow.
@@ -748,6 +755,13 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           </row>
 
           <row>
+            <entry>condor_log</entry>
+
+            <entry>the full path to condor common log in the submit
+            directory</entry>
+          </row>
+
+          <row>
             <entry>dag</entry>
 
             <entry>the basename of the dag file created</entry>
@@ -765,23 +779,25 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
     <para>A Sample Braindump File is displayed below</para>
 
     <programlisting>user vahi
-grid_dn /DC=org/DC=doegrids/OU=People/CN=Karan Vahi 476301
-submit_hostname corbusier.local
-wf_uuid 7463f3df-7a7e-4be9-8e85-9dbb32263a7b
-dax /lfs1/work/pegasus-features/dax-3.2/outer_level_dax.xml
-dax_label blackdiamond
-pegasus_wf_name blackdiamond-0
-timestamp 20101119T222948-0800
-basedir /lfs1/work/pegasus-features/dax-3.2/dags
-submit_dir /lfs1/work/pegasus-features/dax-3.2/dags/vahi/pegasus/blackdiamond/run0005
-planner /lfs1/devel/Pegasus/pegasus/bin/pegasus-plan
-planner_version 3.0.0cvs
+grid_dn null
+submit_hostname pierre.local
+wf_uuid 66550511-a5da-4e8d-8c51-e482f5dc11f6
+dax /Users/vahi/Pegasus/work/bugs/PM-311/test_dax.xml
+dax_label Brain
+pegasus_wf_name Brain-0
+timestamp 20110211T154749-0800
+basedir /Users/vahi/Pegasus/work/bugs/PM-311/dags
+submit_dir /Users/vahi/Pegasus/work/bugs/PM-311/dags/vahi/pegasus/Brain/run0009
+properties /Users/vahi/Pegasus/work/bugs/PM-311/dags/vahi/pegasus/Brain/run0009/pegasus.188331607045368933.properties
+planner /Users/vahi/Pegasus/pegasus/bin/pegasus-plan
+planner_version 3.1.0cvs
 pegasus_build BUILDTIMESTAMP
-jsd /lfs1/work/pegasus-features/dax-3.2/dags/vahi/pegasus/blackdiamond/run0005/jobstate.log
-rundir run0005
-pegasushome /lfs1/devel/Pegasus/pegasus
+jsd /Users/vahi/Pegasus/work/bugs/PM-311/dags/vahi/pegasus/Brain/run0009/jobstate.log
+rundir run0009
+pegasushome /Users/vahi/Pegasus/pegasus
 vogroup pegasus
-dag blackdiamond-0.dag
+condor_log /Users/vahi/Pegasus/work/bugs/PM-311/dags/vahi/pegasus/Brain/run0009/Brain-0.log
+dag Brain-0.dag
 type dag
 </programlisting>
   </section>
