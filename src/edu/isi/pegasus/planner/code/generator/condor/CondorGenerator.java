@@ -1203,17 +1203,17 @@ public class CondorGenerator extends Abstract {
     
     /**
      * Returns a Map containing additional braindump entries that are specific
-     * to a Code Generator
+     * to a Code Generator. 
      * 
      * @param workflow  the executable workflow
      * 
-     * @return Map
+     * @return Map containing entries for dag and condor_log
      */
     public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
         Map entries = new HashMap();
         entries.put( Braindump.GENERATOR_TYPE_KEY, "dag" );
         entries.put( "dag", this.getDAGFilename( workflow, ".dag") );
-        
+        entries.put( "condor_log", this.getCondorLogInSubmitDirectory( workflow ) );
         return entries;
     }
     

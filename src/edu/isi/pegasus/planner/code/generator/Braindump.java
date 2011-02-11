@@ -62,6 +62,7 @@ import java.util.UUID;
  * submit_dir
  * planner_version
  * type
+ * properties
  * </pre>
  * 
  * Additionally, the following duplicate keys exist till pegasus-run is modified.
@@ -100,6 +101,10 @@ public class Braindump {
      */
     public static final String GRID_DN_KEY = "grid_dn";
     
+    /**
+     * The path to the pegasus properties file
+     */
+    public static final String PROPERTIES_KEY = "properties";
     
     /**
      * The key for the submit hostname.
@@ -261,7 +266,10 @@ public class Braindump {
         entries.put( "basedir", mPOptions.getBaseSubmitDirectory() );
                  //append( "dag " ).append(dagFile).append("\n").
         entries.put( Braindump.SUBMIT_DIR_KEY, absPath );
-                 
+        
+        //the properties file
+        entries.put( Braindump.PROPERTIES_KEY, mProps.getPropertiesInSubmitDirectory() );
+        
         //information about the planner
         StringBuffer planner = new StringBuffer();
         planner.append( mProps.getPegasusHome() ).append( File.separator ).
