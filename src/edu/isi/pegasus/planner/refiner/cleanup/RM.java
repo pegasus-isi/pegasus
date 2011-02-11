@@ -117,6 +117,12 @@ public class RM implements CleanupImplementation{
         cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
         cJob.setSiteHandle( job.getSiteHandle() );
+        
+        //bug fix for JIRA PM-311
+        //we dont want cleanup job to inherit any stdout or stderr
+        //specified in the DAX for compute job
+        cJob.setStdOut( "" );
+        cJob.setStdErr( "" );
 
         //inconsistency between job name and logical name for now
         cJob.setTXVersion( null );

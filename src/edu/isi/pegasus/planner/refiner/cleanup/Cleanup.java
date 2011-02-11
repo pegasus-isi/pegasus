@@ -180,6 +180,12 @@ public class Cleanup implements CleanupImplementation{
         cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
         cJob.setArguments( "" );
+        
+        //bug fix for JIRA PM-311
+        //we dont want cleanup job to inherit any stdout or stderr
+        //specified in the DAX for compute job
+        cJob.setStdOut( "" );
+        cJob.setStdErr( "" );
 
         //inconsistency between job name and logical name for now
         cJob.setTransformation( Cleanup.TRANSFORMATION_NAMESPACE,
