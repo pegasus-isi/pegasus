@@ -98,7 +98,7 @@ Python 2.6.2</programlisting></para>
       <title>RHEL 5 / CentOS 5 / Scientific Linux 5</title>
 
       <para>Add the Pegasus repository to yum by creating a file named
-      <filename>/etc/yum.repos.d/pegasus</filename> with the content:</para>
+      <filename>/etc/yum.repos.d/pegasus.repo</filename> with the content:</para>
 
       <programlisting># Pegasus 3.0
 [Pegasus30]
