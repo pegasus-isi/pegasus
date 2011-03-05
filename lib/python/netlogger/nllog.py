@@ -539,11 +539,11 @@ class OptionParser(optparse.OptionParser):
     def _add_options(self):
         group = optparse.OptionGroup(self, "Logging options")
         if self._dmn:
-            opt_parser.add_option(self.OPTIONS[self.DEST_DAEMON][1],
-                                  action='store_true',
-                                  dest=self.DEST_DAEMON,
-                                  default=False,
-                                  help="run in daemon mode")
+            self.add_option(self.OPTIONS[self.DEST_DAEMON][1],
+                            action='store_true',
+                            dest=self.DEST_DAEMON,
+                            default=False,
+                            help="run in daemon mode")
             logfile_default = "required"
         else:
             logfile_default = "default=stderr"
@@ -639,7 +639,6 @@ class OptionParser(optparse.OptionParser):
                 # stderr and BP logs -> logfile
                 setLoggerClass(BPLogger)
                 logfile = logfile.strip()
-                sys.stderr = handler.stream
                 try:
                     if do_logrot:
                         handler = _tfrh(logfile, when=tm_unit, interval=tm_interval)
@@ -647,6 +646,7 @@ class OptionParser(optparse.OptionParser):
                         handler = logging.FileHandler(logfile)
                 except IOError,err:
                     self.error("Cannot open log file '%s': %s" % (logfile, err))
+                sys.stderr = handler.stream
                 handler.setFormatter(logging.Formatter("%(message)s"))
         else:
             if logfile is None or logfile == '': # missing

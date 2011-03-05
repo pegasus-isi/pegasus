@@ -41,30 +41,20 @@ import commands
 import datetime
 import operator
 import optparse
+import urlparse
 
 # Initialize logging object
 logger = logging.getLogger()
 # Set default level to WARNING
 logger.setLevel(logging.WARNING)
 #logger.setLevel(logging.DEBUG)
+# Don't send events further up
+logger.propagate = 0
+# Cached debugging state
+g_isdgb = 0
 
-LOG_LEVELS = {'debug': logging.DEBUG,
-              'info': logging.INFO,
-              'warning': logging.WARNING,
-              'error': logging.ERROR,
-              'critical': logging.CRITICAL}
-
-INCREASE_LOG_LEVELS = {logging.DEBUG: logging.DEBUG,
-                       logging.INFO: logging.DEBUG,
-                       logging.WARNING: logging.INFO,
-                       logging.ERROR: logging.WARNING,
-                       logging.CRITICAL: logging.ERROR}
-
-DECREASE_LOG_LEVELS = {logging.DEBUG: logging.INFO,
-                       logging.INFO: logging.WARNING,
-                       logging.WARNING: logging.ERROR,
-                       logging.ERROR: logging.CRITICAL,
-                       logging.CRITICAL: logging.CRITICAL}
+# Ordered logging levels
+_LEVELS = (logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG)
 
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
@@ -74,6 +64,30 @@ import common	       		# Takes care of setting up PEGASUS_HOME and PYTHONPATH
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.tools import kickstart_parser
+
+# Optional imports, only generate 'warnings' if they fail
+nlapi = None
+stampede_loader = None
+bson = None
+amqp = None
+
+try:
+    from netlogger import nlapi
+except:
+    logger.info("cannot import netlogger.nlapi")
+try:
+    from netlogger.analysis.modules import stampede_loader
+    from netlogger.analysis.workflow.util import Expunge
+except:
+    logger.info("cannot import NetLogger's stampede_loader")
+try:
+    import bson
+except:
+    logger.info("cannot import BSON library, 'bson'")
+try:
+    from amqplib import client_0_8 as amqp
+except:
+    logger.info("cannot import AMQP library")
 
 # Import Python > 2.5 modules
 try:
@@ -136,7 +150,6 @@ re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 
 # Constants
-debug_level = logging.WARNING	# For now
 logbase = "monitord.log" 	# Basename of daemon logfile
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
 speak = "PMD/1.0"
@@ -156,13 +169,12 @@ tracked_workflows = []		# list of workflows we have started tracking
 follow_subworkflows = True	# Flag for tracking sub-workflows
 replay_mode = 0			# disable checking if DAGMan's pid is gone
 keep_state = 0			# Flag for keeping a Workflow's state across several DAGMan start/stop cycles
-use_db = 1			# flag for using the database
-output_db = None		# connection string for the database
 db_stats = 'no'			# collect and print database stats at the end of execution
-use_nllog = 0			# flag for using Netlogger's log api
-use_nllogfile = 0		# flag for using a file to log Netlogger events
-nllog_string = None		# Filename or host:port when using Netlogger's log api
+no_events = 0			# Flag for disabling event output altogether
 monitord_exit_code = 0		# Exit code for pegasus-monitord
+
+wf_event_sink = None 		# Where wf events go
+STAMPEDE_NS = "stampede."	# Event name-space
 
 # Revision handling
 revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
@@ -173,7 +185,6 @@ run = None			# run directory from command-line dagman.out file
 server = None			# server socket
 sockfn = None			# socket filename
 condor_dagman_executable = None	# condor_dagman binary location
-workdb = None			# Instance of the database
 
 jobtypes = {0: "unassigned",
 	    1: "compute",
@@ -192,18 +203,214 @@ if condor_dagman_executable is None:
     # Default value
     condor_dagman_executable = "condor_dagman"
 
+class OutputURL:
+    """
+    Break output URL into named parts for easier handling.
+    """
+    def __init__(self, url):
+        self.scheme, self.netloc, self.path, self.params, query, frag = urlparse.urlparse(url)
+        if ':' in self.netloc:
+            self.host, portstr = url.netloc.split(':')
+            self.port = int(portstr)
+        else:
+            self.host = self.netloc
+            self.port = None
+
+class EventSink(object):
+    def __init__(self):
+        name = self.__class__.__name__.split('.')[-1]
+        self._log = logging.getLogger("pegasus.monitord." + name)
+        self._isdbg = self._log.isEnabledFor(logging.DEBUG)
+        
+    def send(self, event, kw):
+        pass
+
+    def close(self):
+        pass
+
+class EmptySink(EventSink):
+    """
+    Empty class, doesn't do anything, events go nowhere...
+    Just a placeholder in case we need to do something different later...
+    """
+    def __init__(self):
+        super(EmptySink, self).__init__()
+
+    def send(self, event, kw):
+        pass
+
+    def close(self):
+        pass
+
+class DBEventSink(EventSink):
+    """
+    Write wflow event logs to database via loader
+    """
+    def __init__(self, dest, db_stats=False, **kw):
+        assert stampede_loader is not None, "Database destination selected, "+\
+               "but cannot import stampede loader"
+        self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes")
+        super(DBEventSink, self).__init__()
+        
+    def send(self, event, kw):
+        if self._isdbg:
+            self._log.debug("send.start event={e}".format(e=event))
+        d = {'event' : "stampede." + event}
+        for k, v in kw.iteritems():
+            d[k.replace('__','.')] = v
+        self._db.notify(d)
+        if self._isdbg:
+            self._log.debug("send.end event={e}".format(e=event))
+        
+    def close(self):
+        self._log.debug("close.start")
+        self._db.finish()
+        self._log.debug("close.end")
+    
+class FileEventSink(EventSink):
+    """
+    Write wflow event logs to a file.
+    """
+    def __init__(self, path, encoder=None, **kw):
+        assert nlapi is not None, "File/socket destination selected, "+\
+               "but cannot import NetLogger API"
+        super(FileEventSink, self).__init__()
+        self._output = open(path, 'a')
+        self._encoder = encoder
+
+    def send(self, event, kw):
+        if self._isdbg:
+            self._log.debug("send.start event={e}".format(e=event))
+        self._output.write(self._encoder(event=event, **kw))
+        if self._isdbg:
+            self._log.debug("send.end event={e}".format(e=event))
+
+    def close(self):
+        self._log.debug("close.start")
+        self._output.close()
+        self._log.debug("close.end")
+
+class TCPEventSink(EventSink):
+    def __init__(self, host, port, encoder=None, **kw):
+        super(TCPEventSink, self).__init__()
+        self._encoder = encoder
+        self._sock = socket.socket()
+        self._sock.connect((host, port))
+
+    def send(self, event, kw):
+        if self._isdbg:
+            self._log.debug("send.start event={e}".format(e=event))
+        self._sock.send(self._encoder(event=event, **kw))
+        if self._isdbg:
+            self._log.debug("send.end event={e}".format(e=event))
+
+    def close(self):
+        self._log.debug("close.start")
+        self._sock.close()
+        self._log.debug("close.end")
+
+class AMQPEventSink(EventSink):
+    EXCH_OPTS = {'type' : 'topic'}
+    def __init__(self, host, port, exch=None, encoder=None,
+                 userid='guest', password='guest', virtual_host='/',
+                 ssl=False, connect_timeout=None, **kw):
+        super(AMQPEventSink, self).__init__()
+        self._encoder = encoder
+        self._conn = amqp.Connection(host="{0}:{1:d}".format(host, port),
+                                     userid=userid, password=password, virtual_host=virtual_host,
+                                     ssl=ssl, connect_timeout=connect_timeout, **kw)
+        self._channel = self._conn.channel()
+        self._exch = exch
+        self._channel.exchange_declare(exch, **self.EXCH_OPTS)
+
+    def send(self, event, kw):
+        full_event = STAMPEDE_NS + event
+        if self._isdbg:
+            self._log.debug("send.start event={e}".format(e=full_event))
+        data = self._encoder(event=event, **kw)
+        self._channel.basic_publish(amqp.Message(body=data),
+                                    exchange=self._exch, routing_key=full_event)
+        if self._isdbg:
+            self._log.debug("send.end event={e}".format(e=event))
+
+    def close(self):
+        self._log.debug("close.start")
+        self._conn.close()
+        self._log.debug("close.end")
+
+def get_default_sqlite_db(dagman_file):
+    return "sqlite:///" + dagman_file[:dagman_file.find(".dag.dagman.out")] + ".stampede.db"
+
+def bson_encode(event, **kw):
+    """
+    Adapt bson.dumps() to NetLogger's Log.write() signature.
+    """
+    kw['event'] = STAMPEDE_NS + event
+    return bson.dumps(kw)        
+
+def create_wf_event_sink(dest, enc=None, **kw):
+    """
+    Create & return subclass of EventSink, chosen by value of 'dest'
+    and parameterized by values (if any) in 'kw'.
+    """
+    url = OutputURL(dest)
+    
+    # Pick an encoder
+
+    def pick_encfn(enc_name):
+        ##enc_name = url.query.get('enc', 'bp').lower()
+        if enc_name is None or enc_name == 'bp':
+            assert nlapi is not None, "NetLogger encoding selected, but cannot "+\
+                   "import nlapi library"
+            # NetLogger name=value encoding
+            encfn = nlapi.Log(level=nlapi.Level.ALL, prefix=STAMPEDE_NS)
+        elif enc_name == 'bson':
+            # BSON
+            assert bson is not None, "BSON encoding selected, but cannot import bson library"
+            encfn = bson_encode
+        else:
+            raise ValueError("Unknown encoding '{enc}'".format(enc=enc_name))
+        return encfn
+
+    # Branch on scheme
+    if url.scheme == '':
+        sink = FileEventSink(dest, encoder=pick_encfn(enc), **kw)
+        _type, _name = "file", dest
+    elif url.scheme == 'file':
+        sink = FileEventSink(url.path, encoder=pick_encfn(enc), **kw)
+        _type, _name = "file", url.path
+    elif url.scheme == 'x-tcp':
+        if url.port is None:
+            url.port = 14380
+        sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc), **kw)
+        _type, _name = "network", "{h}:{p:d}".format(h=url.host, p=url.port)
+    elif url.scheme == 'amqp':
+        assert amqp is not None, "AMQP destination selected, but cannot import AMQP library"
+        if url.port is None:
+            url.port = 5672 # RabbitMQ default
+        while url.path.startswith('/'):
+            url.path = url.path[1:]
+        sink = AMQPEventSink(url.host, url.port, exch=url.path, encoder=pick_encfn(enc), **kw)
+        _type, _name="AMQP", "{h}:{p:d}/{e}".format(h=url.host, p=url.port, e=url.path)
+    else:
+        sink = DBEventSink(dest, **kw)
+        _type, _name = "DB", dest
+    logger.info("output type={otype} name={name}".format(otype=_type, name=_name))
+
+    return sink
+
 def finish_stampede_loader():
     """
     This function is called by the atexit module when monitord exits.
     It is used to make sure the loader has finished loading all data
     into the database. It will also produce stats for benchmarking.
     """
-    if workdb is not None:
+    if wf_event_sink is not None:
         try:
             if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
                 # Make sure log level is enough to display database benchmarking information
                 logger.setLevel(logging.INFO)
-            workdb.finish()
+            wf_event_sink.close()
         except:
             logger.warning("could not call the finish method in the nl loader class... exiting anyway")
 
@@ -480,42 +687,18 @@ class Workflow:
 	This function sends an NetLogger event to the loader class.
 	"""
         # Sanity check (should also be done elsewhere, but repeated here)
-        if self._db is None:
+        if self._sink is None:
             return
 
-        if use_nllog == 1:
-            # We are using NetLogger's logging api to output our logs
-            self._db.write(event=event, **kwargs)
-
-        if use_db == 1:
-            # Before we send anything to the loader, we need to make a few adjustments
-
-            # Add event key
-            kwargs["event"] = "stampede." + event
-
-            # Translate __ keys to .
-            if "wf__id" in kwargs:
-                kwargs["wf.id"] = str(kwargs.pop("wf__id"))
-            if "parent__wf__id" in kwargs:
-                kwargs["parent.wf.id"] = kwargs.pop("parent__wf__id")
-            if "job__id" in kwargs:
-                kwargs["job.id"] = kwargs.pop("job__id")
-            if "condor__id" in kwargs:
-                kwargs["condor.id"] = kwargs.pop("condor__id")
-            if "js__id" in kwargs:
-                kwargs["js.id"] = kwargs.pop("js__id")
-            if "task__id" in kwargs:
-                kwargs["task.id"] = kwargs.pop("task__id")
-
-            # Send it to the loader
-            self._db.notify(kwargs)
+        # Send event to corresponding sink
+        self._sink.send(event, kwargs)
 
     def db_send_edge(self, parent, child):
 	"""
 	This function sends to the DB information about a parent-child relationship.
 	"""
 	# Check if database is configured
-	if self._db is None:
+	if self._sink is None:
 	    return
 	# Make sure parameters are not None
 	if parent is None or child is None:
@@ -757,7 +940,7 @@ class Workflow:
 	This function sends to the DB information about the current workflow state
 	"""
 	# Check if database is configured
-	if self._db is None:
+	if self._sink is None:
 	    return
 	# Make sure parameters are not None
 	if state is None:
@@ -842,7 +1025,7 @@ class Workflow:
         self._out_file = outfile
 	self._run_dir = rundir
         self._parent_workflow_id = parent_id
-	self._db = database
+	self._sink = database
         self._workflow_start = int(time.time())
         self._wf_uuid = None
         self._dax_label = None
@@ -983,7 +1166,7 @@ class Workflow:
 
         # All done... last step is to send to the database the workflow plan event
         # However, we only do this, if this is the first time we run
-        if self._db is not None and self._last_processed_line == 0:
+        if self._sink is not None and self._last_processed_line == 0:
             # Add workflow info to database
             self.db_send_wf_info()
 
@@ -1459,7 +1642,7 @@ class Workflow:
             return my_job_submit_seq
 
 	# All done!
-	if self._db is not None:
+	if self._sink is not None:
 	    # Send job event to database
 	    self.db_send_job_info(my_job, job_state)
 
@@ -1515,7 +1698,7 @@ class Workflow:
         # Prepare for atomic append
         self._JSDB.write("%s\n" % (my_line))
 
-	if self._db is None:
+	if self._sink is None:
 	    # Not using a database, nothing else to do!
 	    return
 
@@ -1666,9 +1849,6 @@ prog_desc = """Mandatory arguments: outfile is the log file produced by Condor D
 
 parser = optparse.OptionParser(usage=prog_usage, description=prog_desc)
 
-parser.add_option("-d", "--debug", action = "store", type = "string", dest = "debug_level",
-		  help = "set log level, possible values are INFO, DEBUG, WARNING, ERROR, CRITICAL. Default level is %s and dynamic adjustments via signals USR1 (incr) and USR2 (decr)"
-		  % logging.getLevelName(debug_level))
 parser.add_option("-a", "--adjust", action = "store", type = "int", dest = "adjustment",
 		  help = "adjust for time zone differences by i seconds, default 0")
 parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest = "nodaemon",
@@ -1689,93 +1869,33 @@ parser.add_option("-C", "--config", action = "append", type = "string", dest = "
 		  help = "k=v defines configurations that override values read from the braindump.txt file.")
 parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
 		  help = "disable pegasus-monitord the automatic follow any sub-workflows that are found")
-parser.add_option("--no-database", "--nodatabase", action = "store_const", const = 0, dest = "use_db",
-		  help = "turn off logging information to the database (this option must be given when using the NL api's option's below)")
+parser.add_option("--no-database", "--nodatabase", "--no-events", action = "store_const", const = 0, dest = "no_events",
+		  help = "turn off event generation completely, and overrides the URL in the -d option")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
 		  help = "disables checking for DAGMan's pid while running %s" % (prog_base))
-parser.add_option("-o", "--output-db", action = "store", type = "string", dest = "output_db",
-		  help = "name of the database file to use, default is workflow basename in the submit directory (this should contain the complete connection string to the database, for example to use SQLite, it should be sqlite:///<path_to_file>)")
 parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "db_stats",
                   help = "collect and print database stats at the end")
-parser.add_option("-f", "--output-file", action = "store", type = "string", dest = "file_string",
-		  help = "Turn on using NetLogger's log api and specifies the file to where log data (cannot be used together with the database)")
-parser.add_option("-H", "--host", action = "store", type = "string", dest = "host_string",
-                  help = "Turn on using NetLogger's log api and specifies the host:port to where send data (cannot be used together with the database, or the log to file option)")
 parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
                   help = "keep state across several DAGMan start/stop cycles (development option)")
+parser.add_option("-v", "--verbose", action="count", default=0, dest="vb", help="Increase verbosity, repeatable")
+grp = optparse.OptionGroup(parser, "Output options")
+grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH or URL",
+               help="Output destination URL [<scheme>]<params>, where "
+               "scheme = [empty] | x-tcp:// | DB-dialect+driver://. "
+               "For empty scheme, params are a file path with '-' meaning standard output. "
+               "For x-tcp scheme, params are TCP host[:port=14380]. "
+               "For DB, use SQLAlchemy engine URL. "
+               "(default=sqlite:///<dagman-output-file>.sqlite.db)",   default=None)
+grp.add_option("-e", "--encoding", action='store', dest='enc', default="bp", metavar='FORMAT',
+                help="How to encode log events: bson | bp (default=%default)")
+parser.add_option_group(grp)
 
 # Re-insert our base name to avoid optparse confusion when printing error messages
 # (options, args) = parser.parse_args(sys.argv[0:]) # Does not work 100%
 sys.argv.insert(0, prog_base)
 (options, args) = parser.parse_args()
-
-# Copy command line options into our variables
-if options.debug_level is not None:
-    try:
-        # Convert the user-specified debug level (string) into a logging level value
-        debug_level = LOG_LEVELS.get(options.debug_level.lower(), debug_level)
-        logger.setLevel(debug_level)
-    except:
-        logger.warning("could not set logging level to %s" % options.debug_level)
-if options.adjustment is not None:
-    adjustment = options.adjustment
-if options.nodaemon is not None:
-    nodaemon = options.nodaemon
-if options.doplot is not None:
-    doplot = options.doplot
-if options.fuse is not None:
-    fuse = options.fuse
-if options.jsd is not None:
-    jsd = options.jsd
-if options.logfile is not None:
-    logfile = options.logfile
-if options.use_db is not None:
-    use_db = options.use_db
-if options.millisleep is not None:
-    millisleep = options.millisleep
-if options.replay_mode is not None:
-    replay_mode = options.replay_mode
-    # Replay mode always runs in foreground
-    nodaemon = 1
-if options.disable_subworkflows is not None:
-    follow_subworkflows = False
-if options.output_db is not None:
-    output_db = options.output_db
-if options.db_stats is not None:
-    db_stats = options.db_stats
-if options.keep_state is not None:
-    keep_state = options.keep_state
-if options.file_string is not None or options.host_string is not None:
-    if options.file_string is not None and options.host_string is not None:
-        logger.warning("cannot log to both file and host/port, NL api logging disabled")
-    else:
-        if options.file_string is not None:
-            use_nllogfile = 1
-            nllog_string = options.file_string
-        else:
-            nllog_string = options.host_string
-        # Only turn on the NL log mode if the database logging is turned off
-        if use_db == 0:
-            use_nllog = 1
-        else:
-            logger.warning("NL api logging disabled, in order to use the logging api, please also specify --nodatabase.")
-
-# Walk through any config properties
-if options.config_opts is not None:
-    for prop in options.config_opts:
-	prop = prop.strip()
-	try:
-	    k, v = prop.split("=", 1)
-	except:
-	    parser.print_help()
-	    sys.exit(1)
-	config[k] = v
-
-# Sanity check
-if fuse < 60:
-    fuse = 60
 
 # Remaining argument is .dag.dagman.out file
 if len(args) != 1:
@@ -1794,6 +1914,68 @@ out = os.path.abspath(out)
 # Infer run directory
 run = os.path.dirname(out)
 
+# Copy command line options into our variables
+
+if options.vb == 0:
+     lvl = logging.WARN
+elif options.vb == 1:
+     lvl = logging.INFO
+else:
+     lvl = logging.DEBUG
+
+# Set logging level
+logger.setLevel(lvl)
+# Cache whether debugging
+g_isdbg = logger.isEnabledFor(logging.DEBUG)
+
+if options.adjustment is not None:
+    adjustment = options.adjustment
+if options.nodaemon is not None:
+    nodaemon = options.nodaemon
+if options.doplot is not None:
+    doplot = options.doplot
+if options.fuse is not None:
+    fuse = options.fuse
+if options.jsd is not None:
+    jsd = options.jsd
+if options.logfile is not None:
+    logfile = options.logfile
+if options.millisleep is not None:
+    millisleep = options.millisleep
+if options.replay_mode is not None:
+    replay_mode = options.replay_mode
+    # Replay mode always runs in foreground
+    nodaemon = 1
+if options.disable_subworkflows is not None:
+    follow_subworkflows = False
+if options.db_stats is not None:
+    db_stats = options.db_stats
+if options.keep_state is not None:
+    keep_state = options.keep_state
+if options.no_events is not None:
+    # Turn off event generation
+    no_events = 1
+# Create event sink
+if options.event_dest is None:
+    event_dest = get_default_sqlite_db(out)
+else:
+    event_dest = options.event_dest
+
+# Walk through any config properties
+if options.config_opts is not None:
+    for prop in options.config_opts:
+	prop = prop.strip()
+	try:
+	    k, v = prop.split("=", 1)
+	except:
+	    parser.print_help()
+	    sys.exit(1)
+	config[k] = v
+
+# Sanity check
+if fuse < 60:
+    fuse = 60
+
 # Use default monitord logfile if user hasn't specified another file
 if not logfile:
     logfile = os.path.join(run, logbase)
@@ -1806,24 +1988,6 @@ if jsd is not None:
         # Yes, this is an absolute path
         follow_subworkflows = False
         logger.warning("jsd file is an absolute filename, disabling sub-workflow tracking")
-
-# To use NetLogger's command-line parser
-# from netlogger.nllog import get_root_logger, OptionParser
-# Import NetLogger DB loader
-if use_db == 1:
-    try:
-	from netlogger.analysis.modules import stampede_loader
-        from netlogger.analysis.workflow.util import Expunge
-    except:
-	logger.warning("cannot import NetLogger's stampede_loader library, disabling database output!")
-	use_db = 0
-# Import NetLogger nlapi for using the logging api
-if use_nllog == 1:
-    try:
-        from netlogger import nlapi
-    except:
-        logger.warning("cannot import NetLogger's nlapi library, disabling the logging api output!")
-        use_nllog = 0
 
 #
 # --- functions ---------------------------------------------------------------------------
@@ -2451,15 +2615,38 @@ def prog_sigusr1_handler(signum, frame):
     """
     This function increases the log level to the next one.
     """
-    debug_level = INCREASE_LOG_LEVELS.get(debug_level, debug_level)
-    logger.setLogLevel(debug_level)
+    global g_isdbg
+
+    cur_level = logger.getEffectiveLevel()
+
+    try:
+        idx = _LEVELS.index(cur_level)
+        if idx < len(_LEVELS):
+            logger.setLevel(_LEVELS[idx + 1])
+    except ValueError:
+        logger.setLevel(logging.INFO)
+        logger.error("Unknown current level = {lvl}, setting to INFO".format(cur_level))
+
+    g_isdbg = logger.isEnabledFor(logging.DEBUG)
+
 
 def prog_sigusr2_handler(signum, frame):
     """
     This function decreases the log level to the previous one.
     """
-    debug_level = DECREASE_LOG_LEVELS.get(debug_level, debug_level)
-    logger.setLogLevel(debug_level)
+    global g_isdbg
+
+    cur_level = logger.getEffectiveLevel()
+
+    try:
+        idx = _LEVELS.index(cur_level)
+        if idx > 0:
+            logger.setLevel(_LEVELS[idx - 1])
+    except ValueError:
+        logger.setLevel(logging.WARN)
+        logger.error("Unknown current level = {lvl}, setting to WARN".format(cur_level))
+
+    g_isdbg = logger.isEnabledFor(logging.DEBUG)
 
 #
 # --- at exit handlers -------------------------------------------------------------------
@@ -2504,23 +2691,23 @@ sys.stdin.close()
 # dup stderr onto stdout
 sys.stderr = sys.stdout
 
-# Initialize database
-if use_db == 1:
-    # Figure out the database connection string
-    if output_db is None:
-	output_db = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
-    if replay_mode:
-        purge_wf_uuid_from_database(run, output_db)
-    workdb = stampede_loader.Analyzer(output_db, perf=db_stats, batch="yes")
-    atexit.register(finish_stampede_loader)
+# Create wf_event_sink object
+if no_events:
+    # Create an empty sink when no event generation is needed
+    wf_event_sink = EmptySink()
+else:
+    try:
+        wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats,
+                                             enc=options.enc)
+        atexit.register(finish_stampede_loader)
+    except ValueError,err:
+        logger.critical("Cannot create output: {0}. Abort.".format(err))
+        sys.exit(1)
 
-# Initialize the logging API
-if use_nllog == 1:
-#    rotate_log_file(os.path.join(run, output_db))
-    # using nlapi to create log file or sending data to a host:port (and not use the loader)
-    if use_nllogfile == 1:
-        nllog_string = os.path.join(run, nllog_string)
-    workdb = nlapi.Log(level=nlapi.Level.ALL, prefix="stampede.", logfile=nllog_string)
+# If in replay mode and it is a DB, attempt to purge wf_uuid_first
+if wf_event_sink is not None:
+    if replay_mode and isinstance(wf_event_sink, DBEventSink):
+        purge_wf_uuid_from_database(run, event_dest)
 
 # Say hello
 logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
@@ -2578,7 +2765,7 @@ else:
 # Ok! Let's start now...
 
 # Instantiate workflow class
-wf = Workflow(run, out, config, database=workdb, jsd=jsd)
+wf = Workflow(run, out, config, database=wf_event_sink, jsd=jsd)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
@@ -2762,7 +2949,7 @@ while (len(wfs) > 0):
                                 # Not tracking this workflow, let's try to add it to our list
                                 new_run_dir = os.path.dirname(new_dagman_out)
                                 parent_wf_id = workflow_entry.wf._wf_uuid
-                                new_wf = Workflow(new_run_dir, new_dagman_out, config, database=workdb,
+                                new_wf = Workflow(new_run_dir, new_dagman_out, config, database=wf_event_sink,
                                                   parent_id=parent_wf_id, jsd=jsd)
 
                                 if new_wf._monitord_exit_code == 0:

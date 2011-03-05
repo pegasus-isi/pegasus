@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 26919 2010-12-16 23:04:40Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 27010 2011-01-31 19:24:41Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -90,7 +90,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.wf_id_cache = {}
         self.job_id_cache = {}
         self.host_cache = {}
-        self.hosts_written_cache = {}
+        self.hosts_written_cache = None
         self._wf_pks = []
         
         # undocumented performance option
@@ -515,13 +515,20 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.log.debug('host', msg=host)
         
         if self._batch:
+            # initialize from previous runs into same db
+            if self.hosts_written_cache == None:
+                self.hosts_written_cache = {}
+                query = self.session.query(Host)
+                for row in query.all():
+                    self.hosts_written_cache[(row.site_name,row.hostname,row.ip_address)] = True
+                
             if not self.hosts_written_cache.has_key((host.site_name,host.hostname,host.ip_address)):
                 self._host_events.append(host)
                 self.hosts_written_cache[(host.site_name,host.hostname,host.ip_address)] = True
             self._host_to_job.append(host)
             return
+        
         try:
-            # host info needs to be written to the db
             host.commit_to_db(self.session)
         except exceptions.IntegrityError, e:
             # In this case, catch the duplicate insert exception

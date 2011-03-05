@@ -4,7 +4,7 @@ SQLAlchemy interface to the Stampede backend.
 Named sql_alchemy to avoid import errors with the library proper.
 """
 
-__rcsid__ = "$Id: sql_alchemy.py 26972 2011-01-11 16:19:33Z mgoode $"
+__rcsid__ = "$Id: sql_alchemy.py 27235 2011-02-24 16:10:26Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 import calendar
@@ -18,6 +18,8 @@ from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
     Job as BaseJob, Host as BaseHost, Task as BaseTask, Jobstate as BaseJobstate, \
     Discovery as BaseDiscovery, Workflowstate as BaseWorkflowstate
+    
+from sqlalchemy import or_
     
 debug = False
 
@@ -895,7 +897,7 @@ class Job(BaseJob):
         """
         # XXX: note - this is not fully accurate at the moment.
         # Mostly here to improve later and act as example code.
-        fcount = self.session.query(JobstateTable.state).filter(JobstateTable.state.like('%_FAILURE')).filter(JobstateTable.job_id == self._job_id).count()
+        fcount = self.session.query(JobstateTable.state).filter(or_(JobstateTable.state.like('%_FAILURE'),JobstateTable.state.like('%_FAILED'))).filter(JobstateTable.job_id == self._job_id).count()
         if fcount > 0:
             return True
         return False

@@ -32,10 +32,6 @@ class Analyzer(BaseAnalyzer):
       - indices {field1,field2,...,""*}: Comma-separated list of fields to index.
         Add a caret ('^') before the field name to make the index "unique".
         Example: "ts,event,^_hash".
-      - intvals {field1,field2,..,""*}: Comma-separated list of fields to 
-        convert to an integer before inserting.
-      - floatvals {field1,field2,...,""*}: Comma-separated list of fields to 
-        convert to a floating point number before inserting.
       - datetime {yes,no,yes*}: If 'yes', convert the timestamp
         in 'ts' into a datetime object. Otherwise, leave it as
         a floating-point number.
@@ -50,10 +46,10 @@ class Analyzer(BaseAnalyzer):
        - collection: MongoDB Collection instance.
     """
     def __init__(self, host="localhost", port=27017,
-                 database='application', collection='netlogger', 
-                 indices="", datetime='yes', perf='no',
+                 database='application', collection='netlogger',
+                 indices="", datetime='yes',
                  intvals="", floatvals="", event_filter="",
-                 user="", password="", **kw):
+                 user="", password="", batch=0, perf=None, **kw):
         BaseAnalyzer.__init__(self, _validate=True, **kw)
         # map for converting values
         self._convert = { }
@@ -105,10 +101,13 @@ class Analyzer(BaseAnalyzer):
         self._event_re = None
         if event_filter:
             self._event_re = re.compile(event_filter)
-        # undocumented performance option
-        self._perf = util.as_bool(perf)
-        if self._perf:
-            self._insert_time, self._insert_num = 0, 0
+        # batch, if requested
+        if batch:
+            self._batch = int(batch)
+            self._curbatch = [ ]
+            self._batchlen = 0
+        else:
+            self._batch = 0
 
     def fix_key_formats(self, data):
         """Make sure key names are not illegal
@@ -117,10 +116,9 @@ class Analyzer(BaseAnalyzer):
         """
         fixed_data = { }
         for key, value in data.items():
-            if '.' in key:
-                key = key.replace('.', '_')
+            key = key.replace('.', '_')
             if key[0] == '$':
-                key = key.lstrip('$')
+                key = key[1:]
             fixed_data[key] = value
         return fixed_data
 
@@ -163,28 +161,23 @@ class Analyzer(BaseAnalyzer):
                 try:
                     data[key] = func(data[key])
                 except ValueError:
-                        self.log.warn("bad_value", value=data[key],
-                                      msg="expected " + str(func))
-                        del data[key]
+                    self.log.warn("bad_value", value=data[key],
+                                  msg="expected " + str(func))
+                    del data[key]
         # insert data
-        if self._trace:
-            self.log.trace("process_data.insert.start", data=str(data))
-        if self._perf:
-            t = time.time()
-            self.collection.insert(data)
-            self._insert_time += (time.time() - t)
-            self._insert_num += 1
+        if self._batch > 0:
+            self._curbatch.append(data)
+            self._batchlen += 1
+            if self._batchlen > self._batch:
+                self.collection.insert(self._curbatch)
+                self._curbatch = [ ]
+                self._batchlen = 0
         else:
             self.collection.insert(data)
-        if self._trace:
-            self.log.trace("process_data.insert.end", status=0)
 
         if self._dbg:
             self.log.debug("process_data.end", status=0)
 
     def finish(self):
-#        BaseAnalyzer.finish(self)
-        if self._perf:
-            self.log.info("performance", insert_time=self._insert_time,
-                          insert_num=self._insert_num, 
-                          mean_time=self._insert_time / self._insert_num)
+        if self._batch > 0 and self._batchlen > 0:
+            self.collection.insert(self._curbatch)
