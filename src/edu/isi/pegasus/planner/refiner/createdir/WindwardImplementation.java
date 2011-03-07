@@ -249,7 +249,7 @@ public class WindwardImplementation implements Implementation {
         
         
         //now lets merge all these jobs
-        Job merged = mSeqExecAggregator.construct( l, "dirmanager", pegasusJob.getName()  );
+        Job merged = mSeqExecAggregator.constructAbstractAggregatedJob( l, "dirmanager", pegasusJob.getName()  );
   
         
         //set the name of the merged job back to the name of

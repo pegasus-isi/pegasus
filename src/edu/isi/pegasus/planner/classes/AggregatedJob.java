@@ -17,6 +17,8 @@
 
 package edu.isi.pegasus.planner.classes;
 
+import edu.isi.pegasus.planner.cluster.JobAggregator;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
@@ -40,6 +42,17 @@ public class AggregatedJob extends Job {
      */
     private List mConstituentJobs;
 
+    /**
+     * Boolean indicating whether a job has been fully rendered to an executable
+     * job or not i.e the aggregated job has been mapped to the aggregator and
+     * the constituent jobs have been gridstarted or not.
+     */
+    private boolean mHasBeenRenderedToExecutableForm;
+
+    /**
+     * Handle to the JobAggregator that created this job.
+     */
+    private JobAggregator mJobAggregator;
 
     /**
      * The default constructor.
@@ -47,6 +60,8 @@ public class AggregatedJob extends Job {
     public AggregatedJob() {
         super();
         mConstituentJobs = new ArrayList(3);
+        mHasBeenRenderedToExecutableForm = false;
+        this.mJobAggregator = null;
     }
 
     /**
@@ -55,7 +70,7 @@ public class AggregatedJob extends Job {
      * @param num  the number of constituent jobs
      */
     public AggregatedJob(int num) {
-        super();
+        this();
         mConstituentJobs = new ArrayList(num);
     }
 
@@ -68,6 +83,49 @@ public class AggregatedJob extends Job {
     public AggregatedJob(Job job,int num) {
         super((Job)job.clone());
         mConstituentJobs = new ArrayList(num);
+        mHasBeenRenderedToExecutableForm = false;
+        this.mJobAggregator = null;
+    }
+
+    /**
+     * Returns a boolean indicating whether a job has been rendered to an executable
+     * form or not
+     *
+     * @return boolean
+     */
+    public boolean renderedToExecutableForm( ){
+        return this.mHasBeenRenderedToExecutableForm;
+    }
+
+
+    /**
+     * Returns a boolean indicating whether a job has been rendered to an executable
+     * form or not
+     *
+     * @param value boolean to set to.
+     */
+    public void setRenderedToExecutableForm( boolean value ){
+        this.mHasBeenRenderedToExecutableForm = value;
+    }
+
+    /**
+     * Sets the JobAggregator that created this aggregated job.
+     * Useful for rendering the job to an executable form later on.
+     *
+     * @param aggregator   handle to the JobAggregator used for aggregating the job
+     */
+    public void setJobAggregator( JobAggregator aggregator ){
+        this.mJobAggregator = aggregator;
+    }
+
+    /**
+     * Returns the JobAggregator that created this aggregated job.
+     * Useful for rendering the job to an executable form later on.
+     *
+     * @return  JobAggregator
+     */
+    public JobAggregator getJobAggregator( ){
+        return this.mJobAggregator;
     }
 
     /**
@@ -90,6 +148,9 @@ public class AggregatedJob extends Job {
         for(Iterator it = this.mConstituentJobs.iterator();it.hasNext();){
             newJob.add( (Job)(((Job)it.next()).clone()));
         }
+        newJob.mHasBeenRenderedToExecutableForm = this.mHasBeenRenderedToExecutableForm;
+        newJob.mJobAggregator = this.mJobAggregator;
+
         return newJob;
     }
 

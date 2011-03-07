@@ -54,6 +54,7 @@ import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Globus;
@@ -1827,7 +1828,14 @@ public class CondorGenerator extends Abstract {
         GridStart gridStart = mGridStartFactory.loadGridStart( job, gridStartPath );
 
         //enable the job
-        if( !gridStart.enable( job,isGlobusJob ) ){
+        boolean enable = false;
+        if( job instanceof AggregatedJob ){
+            enable = gridStart.enable( (AggregatedJob) job, isGlobusJob );
+        }
+        else{
+            enable = gridStart.enable( job,isGlobusJob );
+        }
+        if( !enable ){
             String msg = "Job " +  jobName + " cannot be enabled by " +
                          gridStart.shortDescribe() + " to run at " +
                          job.getSiteHandle();

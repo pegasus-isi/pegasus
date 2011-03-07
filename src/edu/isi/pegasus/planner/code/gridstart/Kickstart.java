@@ -50,6 +50,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.StringTokenizer;
@@ -63,7 +64,7 @@ import java.io.IOException;
 
 
 /**
- * This enables a job to be run on the grid, by launching it through kickstart.
+ * This enables a constituentJob to be run on the grid, by launching it through kickstart.
  * The kickstart executable is a light-weight program which  connects  the
  * stdin,  stdout  and  stderr  filehandles for Pegasus jobs on the remote
  * site.
@@ -79,6 +80,7 @@ import java.io.IOException;
  * @version $Revision$
  */
 public class Kickstart implements GridStart {
+    
     
 
     /**
@@ -214,7 +216,7 @@ public class Kickstart implements GridStart {
     private SLS mSLS;
 
     /**
-     * An instance variable to track if enabling is happening as part of a clustered job.
+     * An instance variable to track if enabling is happening as part of a clustered constituentJob.
      * See Bug 21 comments on Pegasus Bugzilla
      */
     private boolean mEnablingPartOfAggregatedJob;
@@ -233,6 +235,11 @@ public class Kickstart implements GridStart {
      * Whether kickstart should set the X Bit on the staged executables.
      */
     private boolean mSetXBit;
+
+    /**
+     * Handle to NoGridStart implementation.
+     */
+    private GridStart mNoGridStartImpl;
 
 
     /**
@@ -267,8 +274,105 @@ public class Kickstart implements GridStart {
         }
         mEnablingPartOfAggregatedJob = false;
         mSetXBit = mProps.setXBitWithKickstart();
+        
+        mNoGridStartImpl = new NoGridStart();
+        mNoGridStartImpl.initialize( bag, dag );
     }
 
+    /**
+     * Enables a constituentJob to run on the grid. This also determines how the
+     * stdin,stderr and stdout of the constituentJob are to be propogated.
+     * To grid enable a constituentJob, the constituentJob may need to be wrapped into another
+     * constituentJob, that actually launches the constituentJob. It usually results in the constituentJob
+     * description passed being modified modified.
+     *
+     * @param constituentJob  the <code>Job</code> object containing the constituentJob description
+     *             of the constituentJob that has to be enabled on the grid.
+     * @param isGlobusJob is <code>true</code>, if the constituentJob generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the constituentJob runs on the submit
+     *        host in any way.
+     *
+     * @return boolean true if enabling was successful,else false.
+     */
+    public boolean enable( AggregatedJob job,boolean isGlobusJob){
+         boolean first = true;
+
+
+        //we do not want the jobs being clustered to be enabled
+        //for worker node execution just yet.
+        //mEnablingPartOfAggregatedJob = true;
+
+        
+        //get hold of the JobAggregator determined for this clustered job
+        //during clustering
+        JobAggregator aggregator = job.getJobAggregator();
+        if( aggregator == null ){
+            throw new RuntimeException( "Clustered job not associated with a job aggregator " + job.getID() );
+        }
+        
+        
+        for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
+            Job constituentJob = (Job)it.next();
+            if(first){
+                first = false;
+            }
+            else{
+                //we need to pass -H to kickstart
+                //to suppress the header creation
+                constituentJob.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
+            }
+
+            
+            //always pass isGlobus true as always
+            //interested only in executable strargs
+            //due to the fact that seqexec does not allow for setting environment
+            //per constitutent constituentJob, we cannot set the postscript removal option
+            this.enable( constituentJob, isGlobusJob, mDoStat, false  );
+            
+            //for worker node execution prepend an extra
+            //option -w to get kickstart to change directories
+            if( mWorkerNodeExecution ){
+                //add a -w only for compute or staged compute jobs
+                if( constituentJob.getJobType() == Job.COMPUTE_JOB || constituentJob.getJobType() == Job.STAGED_COMPUTE_JOB ){
+                    StringBuffer args = new StringBuffer( );
+                     
+                     //we append -w only if we are not using condor file transfers
+                     //JIRA BUG 145
+                     if( !mSLS.doesCondorModifications() ){
+                        args.append( " -w " ).append( getWorkerNodeDirectory( job ) );
+                     }
+                     args.append( " " ).append( constituentJob.condorVariables.removeKey( "arguments" ) );
+                     construct(constituentJob, "arguments", args.toString());                     
+                }
+            }
+
+            
+            //job.add( constituentJob  );
+            //check if any files are being transferred via
+            //Condor and add to Aggregated Job
+            //add condor keys to transfer files
+            //This is now taken care of in the merge profiles section
+//            if(constituentJob.condorVariables.containsKey(Condor.TRANSFER_IP_FILES_KEY)){
+//              aggJob.condorVariables.addIPFileForTransfer(
+//                                          (String)constituentJob.condorVariables.get( Condor.TRANSFER_IP_FILES_KEY) );
+//
+//           }
+        }
+
+        //all the constitutent jobs are enabled.
+        //get the job aggregator to render the job 
+        //to it's executable form
+        aggregator.makeAbstractAggregatedJobConcrete( job  );
+
+        //set the flag back to false
+        //mEnablingPartOfAggregatedJob = false;
+
+        //the aggregated job itself needs to be enabled via NoGridStart
+        mNoGridStartImpl.enable( (Job)job, isGlobusJob);
+        
+        return true;
+    }
 
     /**
      * Enables a collection of jobs and puts them into an AggregatedJob.
@@ -276,14 +380,15 @@ public class Kickstart implements GridStart {
      * implementation. It enables the jobs and puts them into the AggregatedJob
      * that is passed to it.
      * However, to create a valid single XML file, it suppresses the header
-     * creation for all but the first job.
+     * creation for all but the first constituentJob.
      *
      * @param aggJob the AggregatedJob into which the collection has to be
      *               integrated.
      * @param jobs   the collection of jobs (Job) that need to be enabled.
      *
      * @return the AggregatedJob containing the enabled jobs.
-     * @see #enable(Job,boolean)
+     * @see #enable(Job,boolean
+     * @deprecated
      */
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
         boolean first = true;
@@ -308,7 +413,7 @@ public class Kickstart implements GridStart {
             //always pass isGlobus true as always
             //interested only in executable strargs
             //due to the fact that seqexec does not allow for setting environment
-            //per constitutent job, we cannot set the postscript removal option
+            //per constitutent constituentJob, we cannot set the postscript removal option
             this.enable( job, true, mDoStat, false );
             
             //for worker node execution prepend an extra
@@ -334,9 +439,9 @@ public class Kickstart implements GridStart {
             //Condor and add to Aggregated Job
             //add condor keys to transfer files
             //This is now taken care of in the merge profiles section
-//            if(job.condorVariables.containsKey(Condor.TRANSFER_IP_FILES_KEY)){
+//            if(constituentJob.condorVariables.containsKey(Condor.TRANSFER_IP_FILES_KEY)){
 //              aggJob.condorVariables.addIPFileForTransfer(
-//                                          (String)job.condorVariables.get( Condor.TRANSFER_IP_FILES_KEY) );
+//                                          (String)constituentJob.condorVariables.get( Condor.TRANSFER_IP_FILES_KEY) );
 //
 //           }
         }
@@ -352,21 +457,21 @@ public class Kickstart implements GridStart {
    
 
     /**
-     * Enables a job to run on the grid by launching it through kickstart.
-     * Does the stdio, and stderr handling of the job to be run on the grid.
-     * It modifies the job description, and also constructs all the valid
+     * Enables a constituentJob to run on the grid by launching it through kickstart.
+     * Does the stdio, and stderr handling of the constituentJob to be run on the grid.
+     * It modifies the constituentJob description, and also constructs all the valid
      * option to be passed to kickstart for launching the executable.
      *
-     * @param job  the <code>Job</code> object containing the job description
-     *             of the job that has to be enabled on the grid.
-     * @param isGlobusJob is <code>true</code>, if the job generated a
+     * @param constituentJob  the <code>Job</code> object containing the constituentJob description
+     *             of the constituentJob that has to be enabled on the grid.
+     * @param isGlobusJob is <code>true</code>, if the constituentJob generated a
      *        line <code>universe = globus</code>, and thus runs remotely.
-     *        Set to <code>false</code>, if the job runs on the submit
+     *        Set to <code>false</code>, if the constituentJob runs on the submit
      *        host in any way.
      *
      * @return boolean true if enabling was successful,else false in case when
      *         the path to kickstart could not be determined on the site where
-     *         the job is scheduled.
+     *         the constituentJob is scheduled.
      */
     public boolean enable( Job job, boolean isGlobusJob ){
         return this.enable( job, isGlobusJob, mDoStat , true );
@@ -374,16 +479,16 @@ public class Kickstart implements GridStart {
 
 
     /**
-     * Enables a job to run on the grid by launching it through kickstart.
-     * Does the stdio, and stderr handling of the job to be run on the grid.
-     * It modifies the job description, and also constructs all the valid
+     * Enables a constituentJob to run on the grid by launching it through kickstart.
+     * Does the stdio, and stderr handling of the constituentJob to be run on the grid.
+     * It modifies the constituentJob description, and also constructs all the valid
      * option to be passed to kickstart for launching the executable.
      *
-     * @param job  the <code>Job</code> object containing the job description
-     *             of the job that has to be enabled on the grid.
-     * @param isGlobusJob is <code>true</code>, if the job generated a
+     * @param constituentJob  the <code>Job</code> object containing the constituentJob description
+     *             of the constituentJob that has to be enabled on the grid.
+     * @param isGlobusJob is <code>true</code>, if the constituentJob generated a
      *        line <code>universe = globus</code>, and thus runs remotely.
-     *        Set to <code>false</code>, if the job runs on the submit
+     *        Set to <code>false</code>, if the constituentJob runs on the submit
      *        host in any way.
      * @param stat  boolean indicating whether to generate the lof files
      *                     for kickstart stat option or not.
@@ -391,13 +496,13 @@ public class Kickstart implements GridStart {
      *
      * @return boolean true if enabling was successful,else false in case when
      *         the path to kickstart could not be determined on the site where
-     *         the job is scheduled.
+     *         the constituentJob is scheduled.
      */
     protected boolean enable( Job job, boolean isGlobusJob, boolean stat, boolean addPostScript ) {
 
         //take care of relative submit directory if specified.
         String submitDir = mSubmitDir + mSeparator;
-//        String submitDir = getSubmitDirectory( mSubmitDir , job) + mSeparator;
+//        String submitDir = getSubmitDirectory( mSubmitDir , constituentJob) + mSeparator;
 
         //To get the gridstart/kickstart path on the remote
         //pool, querying with entry for vanilla universe.
@@ -449,7 +554,7 @@ public class Kickstart implements GridStart {
                                          ) {
 
 
-                //condor needs to pick up the job stdin and
+                //condor needs to pick up the constituentJob stdin and
                 //transfer it to the remote end
                 construct( job, "input" , submitDir + job.getStdIn() );
                 gridStartArgs.append("-i ").append("-").append(' ');
@@ -467,7 +572,7 @@ public class Kickstart implements GridStart {
         }
 
         // the Condor output variable and kickstart -o option
-        // must not point to the same file for any local job.
+        // must not point to the same file for any local constituentJob.
         if (job.stdOut.equals(job.jobName + ".out") && !isGlobusJob) {
             mLogger.log("Detected WAW conflict for stdout",LogManager.WARNING_MESSAGE_LEVEL);
         }
@@ -486,7 +591,7 @@ public class Kickstart implements GridStart {
         }
 
         // the Condor error variable and kickstart -e option
-        // must not point to the same file for any local job.
+        // must not point to the same file for any local constituentJob.
         if (job.stdErr.equals(job.jobName + ".err") && !isGlobusJob) {
             mLogger.log("Detected WAW conflict for stderr",LogManager.WARNING_MESSAGE_LEVEL);
         }
@@ -516,7 +621,7 @@ public class Kickstart implements GridStart {
 //            to pick up only remote_initialdir Karan Nov 15,2005
                 
                 //check for removing the directory keys only if worker node
-                //execution is disabled and the constituent job is not enabled
+                //execution is disabled and the constituent constituentJob is not enabled
                 //during clustering. JIRA Bug 80 and Bug 263
                 String directory = null;
                 if( mEnablingPartOfAggregatedJob ){
@@ -561,7 +666,7 @@ public class Kickstart implements GridStart {
             if(  !mEnablingPartOfAggregatedJob && job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
                 String key = getDirectoryKey( job );
                 //just remove the remote_initialdir key
-                //the job needs to be run in the directory
+                //the constituentJob needs to be run in the directory
                 //Condor or GRAM decides to run
                 job.condorVariables.removeKey( key );
             }
@@ -572,7 +677,7 @@ public class Kickstart implements GridStart {
             enableForWorkerNodeExecution( job , gridStartArgs );
         }
 
-        //check if the job type indicates staging of executable
+        //check if the constituentJob type indicates staging of executable
         //The -X functionality is handled by the setup jobs that
         //are added as childern to the stage in jobs, unless they are 
         //disabled and users set a property to set the xbit
@@ -716,7 +821,7 @@ public class Kickstart implements GridStart {
      *
      * Else, we pick up the path from the site catalog that is passed as input
      *
-     * @param job   the <code>Job</code> containing the job description.
+     * @param constituentJob   the <code>Job</code> containing the constituentJob description.
      * @param path  the path to kickstart on the remote compute site, as determined
      *              from the site catalog.
      *
@@ -829,12 +934,12 @@ public class Kickstart implements GridStart {
 
 
     /**
-     * Enables a job for worker node execution, by calling out to the SLS
+     * Enables a constituentJob for worker node execution, by calling out to the SLS
      * interface to do the second level staging. Also adds the appropriate
-     * prejob/setup job/post/cleanup jobs to the job if required.
+     * prejob/setup constituentJob/post/cleanup jobs to the constituentJob if required.
      *
      *
-     * @param job     the job to be enabled
+     * @param constituentJob     the constituentJob to be enabled
      * @param args    the arguments constructed so far.
      */
     protected void enableForWorkerNodeExecution( Job job, StringBuffer args ){
@@ -859,7 +964,7 @@ public class Kickstart implements GridStart {
             //as they check for existance on the head node
             StringBuffer xBitSetInvocation = null;
             if( !mSLS.doesCondorModifications() ){
-                //only valid if job does not use SLS condor
+                //only valid if constituentJob does not use SLS condor
                 args.append("-W ").append(workerNodeDir).append(' ');
 
                 //handle for staged compute jobs. set their X bit after
@@ -886,7 +991,7 @@ public class Kickstart implements GridStart {
             //For worker node execution we no longer set any key, as
             //it creates problems with condor file staging of proxy and
             //other things. Karan Oct 11th , 2010
-            //job.condorVariables.construct( key, "/tmp" );
+            //constituentJob.condorVariables.construct( key, "/tmp" );
 
             //see if we need to generate a SLS input file in the submit directory
             File slsInputFile  = null;
@@ -898,10 +1003,10 @@ public class Kickstart implements GridStart {
                                                           directory,
                                                           workerNodeDir );
 
-                //construct a setup job not reqd as kickstart creating the directory
-                //String setupJob = constructSetupJob( job, workerNodeDir );
+                //construct a setup constituentJob not reqd as kickstart creating the directory
+                //String setupJob = constructSetupJob( constituentJob, workerNodeDir );
                 //setupJob = quote( setupJob );
-                //job.envVariables.construct( this.KICKSTART_SETUP, setupJob );
+                //constituentJob.envVariables.construct( this.KICKSTART_SETUP, setupJob );
 
                 File headNodeSLS = new File( directory, slsInputFile.getName() );
                 String preJob = mSLS.invocationString( job, headNodeSLS );
@@ -939,7 +1044,7 @@ public class Kickstart implements GridStart {
             if( mSLS.needsSLSOutput( job ) ){
                 //construct the postjob that transfers the output files
                 //back to head node directory
-                //to fix later. right now post job only created is pre job
+                //to fix later. right now post constituentJob only created is pre constituentJob
                 //created
                 slsOutputFile = mSLS.generateSLSOutputFile( job,
                                                             mSLS.getSLSOutputLFN( job ),
@@ -947,7 +1052,7 @@ public class Kickstart implements GridStart {
                                                             directory,
                                                             workerNodeDir );
 
-                //generate the post job
+                //generate the post constituentJob
                 File headNodeSLS = new File( directory, slsOutputFile.getName() );
                 String postJob = mSLS.invocationString( job, headNodeSLS );
                 if( postJob != null ){
@@ -956,9 +1061,9 @@ public class Kickstart implements GridStart {
                 }
             }
 
-            //modify the job if required
+            //modify the constituentJob if required
             if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                        //mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                        //mSiteHandle.getURLPrefix( constituentJob.getSiteHandle() ),
                                                         mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
                                                         directory,
                                                         workerNodeDir ) ){
@@ -967,7 +1072,7 @@ public class Kickstart implements GridStart {
 
             }
 
-            //only to have cleanup job when not using condor modifications
+            //only to have cleanup constituentJob when not using condor modifications
             if( !mSLS.doesCondorModifications() ){
                 String cleanupJob = constructCleanupJob( job, workerNodeDir );
                 if( cleanupJob != null ){
@@ -981,11 +1086,11 @@ public class Kickstart implements GridStart {
     
 
     /**
-     * Returns the directory in which the job executes on the worker node.
+     * Returns the directory in which the constituentJob executes on the worker node.
      * 
-     * @param job
+     * @param constituentJob
      * 
-     * @return  the full path to the directory where the job executes
+     * @return  the full path to the directory where the constituentJob executes
      */
     public String getWorkerNodeDirectory( Job job ){
         StringBuffer workerNodeDir = new StringBuffer();
@@ -996,7 +1101,7 @@ public class Kickstart implements GridStart {
         
         workerNodeDir.append( destDir ).append( File.separator ).
                       append( relativeDir.replaceAll( "/" , "-" ) ).
-                      //append( File.separator ).append( job.getCompleteTCName().replaceAll( ":[:]*", "-") );
+                      //append( File.separator ).append( constituentJob.getCompleteTCName().replaceAll( ":[:]*", "-") );
                       append( "-" ).append( job.getID() );
 
 
@@ -1050,10 +1155,10 @@ public class Kickstart implements GridStart {
     }
     
     /**
-     * Returns the directory that is associated with the job to specify
-     * the directory in which the job needs to run
+     * Returns the directory that is associated with the constituentJob to specify
+     * the directory in which the constituentJob needs to run
      * 
-     * @param job  the job
+     * @param constituentJob  the constituentJob
      * 
      * @return the condor key . can be initialdir or remote_initialdir
      */
@@ -1061,8 +1166,8 @@ public class Kickstart implements GridStart {
         /*String directory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
                                 style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE) ||
                                 style.equalsIgnoreCase(Pegasus.GLITE_STYLE))?
-                     (String)job.condorVariables.removeKey("remote_initialdir"):
-                     (String)job.condorVariables.removeKey("initialdir");
+                     (String)constituentJob.condorVariables.removeKey("remote_initialdir"):
+                     (String)constituentJob.condorVariables.removeKey("initialdir");
         */ 
         String universe = (String) job.condorVariables.get( Condor.UNIVERSE_KEY );
         
@@ -1080,7 +1185,7 @@ public class Kickstart implements GridStart {
      * the remote executable and the arguments with which it has to be invoked.
      * The kickstart input file is created in the submit directory.
      *
-     * @param job  the <code>Job</code> object containing the job description.
+     * @param constituentJob  the <code>Job</code> object containing the constituentJob description.
      * @param args the arguments buffer for gridstart invocation so far.
      *
      * @return boolean indicating whether kickstart input file was generated or not.
@@ -1141,10 +1246,10 @@ public class Kickstart implements GridStart {
 
 
     /**
-     * Constructs a kickstart setup job
+     * Constructs a kickstart setup constituentJob
      *
-     * @param job           the job to be run.
-     * @param workerNodeTmp the worker node tmp to run the job in.
+     * @param constituentJob           the constituentJob to be run.
+     * @param workerNodeTmp the worker node tmp to run the constituentJob in.
      *
      * @return String
      */
@@ -1158,10 +1263,10 @@ public class Kickstart implements GridStart {
     }
 
     /**
-     * Constructs a kickstart setup job
+     * Constructs a kickstart setup constituentJob
      *
-     * @param job           the job to be run.
-     * @param workerNodeTmp the worker node tmp to run the job in.
+     * @param constituentJob           the constituentJob to be run.
+     * @param workerNodeTmp the worker node tmp to run the constituentJob in.
      *
      * @return String
      */
@@ -1180,7 +1285,7 @@ public class Kickstart implements GridStart {
      * Constructs the prejob  that fetches sls file, and then invokes transfer
      * again.
      *
-     * @param job   the job for which the prejob is being created
+     * @param constituentJob   the constituentJob for which the prejob is being created
      * @param headNodeURLPrefix String
      * @param headNodeDirectory String
      * @param workerNodeDirectory String
@@ -1219,10 +1324,10 @@ public class Kickstart implements GridStart {
 
 
     /**
-     * Constructs the post job  that fetches sls file, and then invokes transfer
+     * Constructs the post constituentJob  that fetches sls file, and then invokes transfer
      * again.
      *
-     * @param job   the job for which the prejob is being created
+     * @param constituentJob   the constituentJob for which the prejob is being created
      * @param headNodeURLPrefix String
      * @param headNodeDirectory String
      * @param workerNodeDirectory String
@@ -1230,7 +1335,7 @@ public class Kickstart implements GridStart {
      *
      * @return String containing the postscript invocation
      *//*
-    protected String constructPOSTJob( Job job,
+    protected String constructPOSTJob( Job constituentJob,
                                        String headNodeURLPrefix,
                                        String headNodeDirectory,
                                        String workerNodeDirectory,
@@ -1246,16 +1351,16 @@ public class Kickstart implements GridStart {
        //no need to figure out proxy as already done in prejob?
        String proxy = null;
        StringBuffer proxyPath = null;
-       for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
+       for( Iterator it = constituentJob.getInputFiles().iterator(); it.hasNext(); ){
            PegasusFile pf = ( PegasusFile ) it.next();
            if( pf instanceof FileTransfer && pf.getLFN().equals( ENV.X509_USER_PROXY_KEY ) ){
-               //there is a proxy that needs to be set for the job
+               //there is a proxy that needs to be set for the constituentJob
                //actually set it in prejob somehow.
                proxy =  ((NameValue)((FileTransfer)pf).getDestURL()).getValue();
                proxy = new File( proxy ).getName();
                proxyPath =  new StringBuffer();
                proxyPath.append( headNodeDirectory ).append( File.separator ).append( proxy );
-               job.envVariables.construct( ENV.X509_USER_PROXY_KEY, proxyPath.toString()  );
+               constituentJob.envVariables.construct( ENV.X509_USER_PROXY_KEY, proxyPath.toString()  );
                break;
            }
        }
@@ -1281,7 +1386,7 @@ public class Kickstart implements GridStart {
 
 
     /**
-     * Writes out the list of filenames file for the job.
+     * Writes out the list of filenames file for the constituentJob.
      *
      * @param files  the list of <code>PegasusFile</code> objects contains the files
      *               whose stat information is required.
@@ -1322,9 +1427,9 @@ public class Kickstart implements GridStart {
 
     /**
      * Constructs a condor variable in the condor profile namespace
-     * associated with the job. Overrides any preexisting key values.
+     * associated with the constituentJob. Overrides any preexisting key values.
      *
-     * @param job   contains the job description.
+     * @param constituentJob   contains the constituentJob description.
      * @param key   the key of the profile.
      * @param value the associated value.
      */
@@ -1358,17 +1463,17 @@ public class Kickstart implements GridStart {
 
 
     /**
-     * Adds a /bin/rm post job to kickstart that removes the files passed.
+     * Adds a /bin/rm post constituentJob to kickstart that removes the files passed.
      * The post jobs is added as an environment variable.
      *
-     * @param job   the job in which the post job needs to be added.
+     * @param constituentJob   the constituentJob in which the post constituentJob needs to be added.
      * @param files the files to be deleted.
      */
     private void addCleanupPostScript( Job job, List files ){
         //sanity check
         if ( files == null || !mDoStat || files.isEmpty() ) { return; }
 
-        //do not add if job already has a postscript specified
+        //do not add if constituentJob already has a postscript specified
         if( job.envVariables.containsKey( this.KICKSTART_CLEANUP ) ){
             mLogger.log( "Not adding lof cleanup as another kickstart cleanup already exists",
                          LogManager.DEBUG_MESSAGE_LEVEL );

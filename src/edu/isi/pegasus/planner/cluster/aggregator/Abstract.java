@@ -41,7 +41,6 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -51,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Iterator;
 import edu.isi.pegasus.common.util.Separator;
+import java.util.HashSet;
 
 /**
  * An abstract implementation of the JobAggregator interface, which the other
@@ -205,6 +205,267 @@ public abstract class Abstract implements JobAggregator {
      */
     protected abstract AggregatedJob enable(  AggregatedJob mergedJob, List jobs  );
 
+
+    /**
+     * Constructs a new aggregated job that contains all the jobs passed to it.
+     * The new aggregated job, appears as a single job in the workflow and
+     * replaces the jobs it contains in the workflow.
+     *
+     * @param jobs the list of <code>Job</code> objects that need to be
+     *             collapsed. All the jobs being collapsed should be scheduled
+     *             at the same pool, to maintain correct semantics.
+     * @param name  the logical name of the jobs in the list passed to this
+     *              function.
+     * @param id   the id that is given to the new job.
+     *
+     * @return  the <code>Job</code> object corresponding to the aggregated
+     *          job containing the jobs passed as List in the input,
+     *          null if the list of jobs is empty
+     */
+    public AggregatedJob constructAbstractAggregatedJob(List jobs,String name,String id){
+        return constructAbstractAggregatedJob(jobs,name,id,getCollapserLFN());
+    }
+
+    /**
+     * Constructs an abstract aggregated job that has a handle to the appropriate
+     * JobAggregator that will be used to aggregate the jobs.
+     *
+     * @param jobs the list of <code>SubInfo</code> objects that need to be
+     *             collapsed. All the jobs being collapsed should be scheduled
+     *             at the same pool, to maintain correct semantics.
+     * @param name  the logical name of the jobs in the list passed to this
+     *              function.
+     * @param id   the id that is given to the new job.
+     * @param mergeLFN the logical name for the aggregated job that has to be
+     *                 constructed.
+     *
+     * @return  the <code>SubInfo</code> object corresponding to the aggregated
+     *          job containing the jobs passed as List in the input,
+     *          null if the list of jobs is empty
+     */
+    public AggregatedJob constructAbstractAggregatedJob( List jobs,
+                                                         String name,
+                                                         String id,
+                                                         String mergeLFN ){
+        //sanity check
+        if(jobs == null || jobs.isEmpty()){
+            mLogger.log("List of jobs for clustering is empty",
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            return null;
+        }
+
+        //sanity check missing to ensure jobs are of same type
+        //Right now done in NodeCollapser. But we do not need this for
+        //Vertical Clumping. Karan July 28, 2005
+
+        //To get the gridstart/kickstart path on the remote
+        //pool, querying with entry for vanilla universe.
+        //In the new format the gridstart is associated with the
+        //pool not pool, condor universe
+        Job firstJob = (Job)jobs.get(0);
+        AggregatedJob mergedJob = new AggregatedJob( /*(Job)jobs.get(0),*/
+                                                     jobs.size() );
+
+        mergedJob.setJobAggregator( this );
+
+        Job job    = null;
+        StringBuffer sb = new StringBuffer();
+        sb.append( Abstract.CLUSTERED_JOB_PREFIX );
+        if( name != null && name.length() > 0 ){
+            sb.append( name ).append( "_" );
+        }
+        sb.append( id );
+        String mergedJobName = sb.toString();
+
+        mLogger.log("Constructing Abstract clustered job " + mergedJobName,
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+
+
+        //enable the jobs that need to be merged
+        //before writing out the stdin file
+//        String gridStartPath = site.getKickstartPath();
+//        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,  gridStartPath );
+//        mergedJob = gridStart.enable( mergedJob, jobs );
+
+        //inconsistency between job name and logical name for now
+        mergedJob.setName( mergedJobName );
+
+        //fix for JIRA bug 83
+        //the site handle needs to be set for the aggregated job
+        //before it is enabled.
+        mergedJob.setSiteHandle( firstJob.getSiteHandle() );
+
+
+        Set ipFiles = new HashSet();
+        Set opFiles = new HashSet();
+        for( Iterator it = jobs.iterator(); it.hasNext(); ) {
+                job = (Job) it.next();
+                ipFiles.addAll( job.getInputFiles() );
+                opFiles.addAll( job.getOutputFiles() );
+                mergedJob.add(job);
+        }
+
+        //overriding the input files, output files, id
+        mergedJob.setInputFiles( ipFiles );
+        mergedJob.setOutputFiles( opFiles );
+
+
+        mergedJob.setTransformation( Abstract.TRANSFORMATION_NAMESPACE,
+                                     mergeLFN,
+                                     Abstract.TRANSFORMATION_VERSION  );
+        mergedJob.setDerivation( Abstract.DERIVATION_NAMESPACE,
+                                 mergeLFN,
+                                 Abstract.DERIVATION_VERSION);
+
+        mergedJob.setLogicalID( id );
+
+        
+        //the compute job of the VDS supernode is this job itself
+        mergedJob.setVDSSuperNode( mergedJobName );
+
+
+        //explicitly set stdout to null overriding any stdout
+        //that might have been inherited in the clone operation.
+        //FIX for bug 142 http://bugzilla.globus.org/vds/show_bug.cgi?id=142
+        mergedJob.setStdOut( "" );
+        mergedJob.setStdErr( "" );
+
+        return mergedJob;
+    }
+
+    /**
+     * Enables the abstract clustered job for execution and converts it to it's 
+     * executable form
+     * 
+     * @param job          the abstract clustered job
+     */
+    public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
+
+        String stdIn  = null;
+
+        //containers for the input and output
+        //files of fat job. Set insures no duplication
+        //The multiple transfer ensures no duplicate transfer of
+        //input files. So doing the set thing is redundant.
+        //Hashset not used correctly
+
+  
+//        mergedJob = enable( mergedJob, jobs  );
+
+        
+        Job firstJob = (Job)job.getConstituentJob( 0 );
+        try {
+            BufferedWriter writer;
+            stdIn = job.getID() + ".in";
+            writer = new BufferedWriter(new FileWriter(
+                                                       new File(mDirectory,stdIn)));
+
+            //traverse throught the jobs to determine input/output files
+            //and merge the profiles for the jobs
+            boolean merge = false;
+            for( Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
+                Job constitutentJob = (Job) it.next();
+
+                //merge profiles for all jobs except the first
+//                if( merge ) { mergedJob.mergeProfiles( job ); }
+                //merge profiles for all jobs
+                job.mergeProfiles( constitutentJob );
+
+                merge = true;
+
+                //handle stdin
+                if( constitutentJob instanceof AggregatedJob ){
+                    //slurp in contents of it's stdin
+                    File file = new File ( mDirectory, job.getStdIn() );
+                    BufferedReader reader = new BufferedReader(
+                                                             new FileReader( file )
+                                                               );
+                    String line;
+                    while( (line = reader.readLine()) != null ){
+                        writer.write( line );
+                        writer.write( "\n" );
+                    }
+                    reader.close();
+                    //delete the previous stdin file
+                    file.delete();
+                }
+                else{
+                    //write out the argument string to the
+                    //stdin file for the fat job
+                    writer.write( constitutentJob.condorVariables.get("executable")  + " " +
+                                 constitutentJob.condorVariables.get("arguments") + "\n");
+                }
+            }
+
+            //closing the handle to the writer
+            writer.close();
+        }
+        catch(IOException e){
+            mLogger.log("While writing the stdIn file " + e.getMessage(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
+        }
+
+        
+        
+
+        job.setUniverse( firstJob.getUniverse() );
+        job.setJobManager( firstJob.getJobManager() );
+        job.setJobType( Job.COMPUTE_JOB );
+
+        
+
+        //the executable that fat job refers to is collapser
+        TransformationCatalogEntry entry = this.getTCEntry( job );
+
+        job.setRemoteExecutable( entry.getPhysicalTransformation() );
+
+        //stdin file is the file containing the arguments
+        //for the jobs being collapsed
+        job.setStdIn( stdIn );
+
+        //explicitly set stdout to null overriding any stdout
+        //that might have been inherited in the clone operation.
+        //FIX for bug 142 http://bugzilla.globus.org/vds/show_bug.cgi?id=142
+        job.setStdOut( "" );
+        job.setStdErr( "" );
+
+        //set the arguments for the clustered job
+        job.setArguments( this.aggregatedJobArguments( job ) );
+
+        //get hold of one of the jobs and suck init's globus namespace
+        //info into the the map.
+
+        /* Not needed, as the clone method would have taken care of it.
+           Karan Sept 09, 2004
+        entry = getTCEntry(job);
+        mergedJob.globusRSL.checkKeyInNS(entry.getProfiles(Profile.GLOBUS));
+        */
+
+        //also put in jobType as mpi
+        //mergedJob.globusRSL.checkKeyinNS("jobtype","mpi");
+
+        //the profile information from the pool catalog does not need to be
+        //assimilated into the job. As the collapsed job is run on the
+        //same pool as the job is run
+        // mergedJob.updateProfiles(mPoolHandle.getPoolProfile(mergedJob.executionPool));
+
+        //the profile information from the transformation
+        //catalog needs to be assimilated into the job
+        //overriding the one from pool catalog.
+        job.updateProfiles( entry );
+
+        //the profile information from the properties file
+        //is assimilated overidding the one from transformation
+        //catalog.
+        job.updateProfiles( mProps );
+
+        return ;
+
+    }
+
+
+    
      /**
      * Constructs a new aggregated job that contains all the jobs passed to it.
      * The new aggregated job, appears as a single job in the workflow and
@@ -224,6 +485,7 @@ public abstract class Abstract implements JobAggregator {
     public AggregatedJob construct(List jobs,String name,String id){
         return construct(jobs,name,id,getCollapserLFN());
     }
+
 
 
     /**

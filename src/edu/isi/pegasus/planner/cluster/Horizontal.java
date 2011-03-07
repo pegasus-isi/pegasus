@@ -401,7 +401,7 @@ public class Horizontal implements Clusterer,
                 //means collapse all the jobs in the list as a fat node
                 //Note: Passing a link to iterator might be more efficient, as
                 //this would only require a single traversal through the list
-                fatJob = aggregator.construct(l.subList(0,size),name,
+                fatJob = aggregator.constructAbstractAggregatedJob(l.subList(0,size),name,
                                               constructID(partitionID,id));
                 updateReplacementTable(l.subList(0,size),fatJob);
 
@@ -428,14 +428,14 @@ public class Horizontal implements Clusterer,
                         break;
                     }
                     else if( (i + increment) < size){
-                        fatJob = aggregator.construct(l.subList(i, i + increment),
+                        fatJob = aggregator.constructAbstractAggregatedJob(l.subList(i, i + increment),
                                                       name,
                                                       constructID(partitionID,id));
 
                         updateReplacementTable(l.subList(i, i + increment), fatJob);
                     }
                     else{
-                        fatJob = aggregator.construct(l.subList(i,size),
+                        fatJob = aggregator.constructAbstractAggregatedJob(l.subList(i,size),
                                                     name,
                                                     constructID(partitionID,id));
                         updateReplacementTable(l.subList(i, size),fatJob);

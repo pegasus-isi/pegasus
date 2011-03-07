@@ -228,7 +228,7 @@ public class S3 extends Abstract
         TransferJob txJob = null;
         if( txJobs.size() > 1 ){        
             //now lets merge all these jobs
-            Job merged = mSeqExecAggregator.construct( txJobs, "transfer", txJobName  );
+            Job merged = mSeqExecAggregator.constructAbstractAggregatedJob( txJobs, "transfer", txJobName  );
             String stdIn = txJobName + ".in";
             //rename the stdin file to make in accordance with tx jobname
             File f = new File( mSubmitDirectory, merged.getStdIn() );

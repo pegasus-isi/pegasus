@@ -93,6 +93,24 @@ public interface  GridStart {
      *
      * @return boolean true if enabling was successful,else false.
      */
+    public boolean enable( AggregatedJob job,boolean isGlobusJob);
+    
+    /**
+     * Enables a job to run on the grid. This also determines how the
+     * stdin,stderr and stdout of the job are to be propogated.
+     * To grid enable a job, the job may need to be wrapped into another
+     * job, that actually launches the job. It usually results in the job
+     * description passed being modified modified.
+     *
+     * @param job  the <code>Job</code> object containing the job description
+     *             of the job that has to be enabled on the grid.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     *
+     * @return boolean true if enabling was successful,else false.
+     */
     public boolean enable(Job job,boolean isGlobusJob);
 
     /**

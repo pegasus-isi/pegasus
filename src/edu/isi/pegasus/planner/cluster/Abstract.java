@@ -235,7 +235,7 @@ public abstract class Abstract implements Clusterer {
                                           pID + " at site " + currSite );
         }
 
-        AggregatedJob clusteredJob = aggregator.construct( l,
+        AggregatedJob clusteredJob = aggregator.constructAbstractAggregatedJob( l,
                                                            getLogicalNameForJobs( l ),//firstJob.getStagedExecutableBaseName(),
                                                            this.constructClusteredJobID( partition ) );
 

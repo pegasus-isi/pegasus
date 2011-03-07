@@ -21,6 +21,7 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
+import edu.isi.pegasus.planner.code.GridStart;
 import java.util.List;
 
 
@@ -38,7 +39,7 @@ public interface JobAggregator {
     /**
      * The version number associated with this API of Job Aggregator.
      */
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.4";
 
     /**
      *Initializes the JobAggregator impelementation
@@ -67,7 +68,35 @@ public interface JobAggregator {
      *          job containing the jobs passed as List in the input,
      *          null if the list of jobs is empty
      */
-    public AggregatedJob construct(List jobs,String name,String id);
+//    public AggregatedJob construct(List jobs,String name,String id);
+
+
+    /**
+     * Constructs an abstract aggregated job that has a handle to the appropriate
+     * JobAggregator that will be used to aggregate the jobs.
+     *
+     * @param jobs the list of <code>SubInfo</code> objects that need to be
+     *             collapsed. All the jobs being collapsed should be scheduled
+     *             at the same pool, to maintain correct semantics.
+     * @param name  the logical name of the jobs in the list passed to this
+     *              function.
+     * @param id   the id that is given to the new job.
+     *
+     * @return  the <code>SubInfo</code> object corresponding to the aggregated
+     *          job containing the jobs passed as List in the input,
+     *          null if the list of jobs is empty
+     */
+    public AggregatedJob constructAbstractAggregatedJob(List jobs,String name,String id);
+
+   
+    /**
+     * Enables the abstract clustered job for execution and converts it to it's 
+     * executable form
+     * 
+     * @param job          the abstract clustered job
+     */
+    public void makeAbstractAggregatedJobConcrete( AggregatedJob job );
+   
 
     /**
      * Setter method to indicate , failure on first consitutent job should

@@ -215,7 +215,7 @@ public class S3 implements CleanupImplementation{
             
         if( files.size() > 1 ){      
             //now lets merge all these jobs
-            Job merged = mSeqExecAggregator.construct( cJobs, "cleanup", id  );
+            Job merged = mSeqExecAggregator.constructAbstractAggregatedJob( cJobs, "cleanup", id  );
             String stdIn = id + ".in";
             //rename the stdin file to make in accordance with tx jobname
             File f = new File( mSubmitDirectory, merged.getStdIn() );
