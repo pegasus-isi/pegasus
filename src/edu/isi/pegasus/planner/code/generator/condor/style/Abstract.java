@@ -27,6 +27,8 @@ import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import java.util.Iterator;
 
 
 
@@ -99,6 +101,23 @@ public abstract class Abstract implements CondorStyle {
              append( " mismatch for job " ).append( job.getName() );
 
          return sb.toString();
+    }
+
+    /**
+     * Apply a style to an AggregatedJob
+     *
+     * @param job  the <code>AggregatedJob</code> object containing the job.
+     *
+     * @throws CondorStyleException in case of any error occuring code generation.
+     */
+    public void apply( AggregatedJob job ) throws CondorStyleException{
+        //apply style to all constituent jobs
+        for( Iterator it = job.constituentJobsIterator(); it.hasNext(); ){
+            Job j = (Job) it.next();
+            this.apply( j );
+        }
+        //also apply style to the aggregated job itself
+        this.apply( (Job)job );
     }
 
 }

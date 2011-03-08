@@ -1631,7 +1631,12 @@ public class CondorGenerator extends Abstract {
         boolean isGlobus =  style.equals( Pegasus.GLOBUS_STYLE ) ? true : false;
 
         //apply the appropriate style on the job.
-        cs.apply( job );
+        if( job instanceof AggregatedJob ){
+            cs.apply( (AggregatedJob)job  );
+        }
+        else{
+            cs.apply( job );
+        }
 
         //handle GLOBUS RSL if required, and stdio appropriately
         String rslString = job.globusRSL.toString();
