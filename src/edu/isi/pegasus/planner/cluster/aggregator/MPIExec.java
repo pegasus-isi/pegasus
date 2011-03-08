@@ -70,6 +70,23 @@ public class MPIExec extends Abstract {
         super.initialize(dag, bag);
     }
 
+
+    /**
+     * Enables the abstract clustered job for execution and converts it to it's
+     * executable form. Also associates the post script that should be invoked
+     * for the AggregatedJob
+     *
+     * @param job          the abstract clustered job
+     */
+    public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
+        super.makeAbstractAggregatedJobConcrete(job);
+
+        //also put in jobType as mpi
+        job.globusRSL.checkKeyInNS("jobtype","mpi");
+
+        return;
+    }
+
     /**
      * Constructs a new aggregated job that contains all the jobs passed to it.
      * The new aggregated job, appears as a single job in the workflow and
@@ -93,6 +110,7 @@ public class MPIExec extends Abstract {
      *          job containing the jobs passed as List in the input,
      *          null if the list of jobs is empty
      */
+/*
     public AggregatedJob construct(List jobs,String name, String id) {
         AggregatedJob mergedJob = super.construct(jobs,name,id);
         //also put in jobType as mpi
@@ -106,6 +124,10 @@ public class MPIExec extends Abstract {
         return mergedJob;
     }
 
+*/
+
+
+
     /**
      * Enables the constitutent jobs that make up a aggregated job. Makes sure
      * that they all are enabled via no kickstart
@@ -115,13 +137,11 @@ public class MPIExec extends Abstract {
      *
      * @return AggregatedJob
      */
+/*
     protected AggregatedJob enable(  AggregatedJob mergedJob, List jobs  ){
         //we cannot invoke any of clustered jobs also via kickstart
         //as the output will be clobbered
         Job firstJob = (Job)jobs.get(0);
-        
-//        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
-//                                                  Condor.VANILLA_UNIVERSE);
 
         SiteCatalogEntry site = mSiteStore.lookup( firstJob.getSiteHandle() );
         firstJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
@@ -136,7 +156,7 @@ public class MPIExec extends Abstract {
 
         return gridStart.enable( mergedJob, jobs );
     }
-
+*/
 
     /**
      * Returns the logical name of the transformation that is used to

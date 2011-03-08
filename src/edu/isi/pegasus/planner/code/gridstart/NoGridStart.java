@@ -53,6 +53,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.namespace.Condor;
 /**
  * This class ends up running the job directly on the grid, without wrapping
@@ -225,7 +226,55 @@ public class NoGridStart implements GridStart {
      * @return boolean true if enabling was successful,else false.
      */
     public boolean enable( AggregatedJob job,boolean isGlobusJob){
-        return false;
+
+
+        //get hold of the JobAggregator determined for this clustered job
+        //during clustering
+        JobAggregator aggregator = job.getJobAggregator();
+        if( aggregator == null ){
+            throw new RuntimeException( "Clustered job not associated with a job aggregator " + job.getID() );
+        }
+
+        boolean first = true;
+        for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
+            Job constituentJob = (Job)it.next();
+
+            //earlier was set in SeqExec JobAggregator in the enable function
+            constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
+                                            this.getVDSKeyValue() );
+
+            if(first){
+                first = false;
+            }
+            else{
+                //we need to pass -H to kickstart
+                //to suppress the header creation
+                constituentJob.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
+            }
+
+
+            //always pass isGlobus true as always
+            //interested only in executable strargs
+            //due to the fact that seqexec does not allow for setting environment
+            //per constitutent constituentJob, we cannot set the postscript removal option
+            this.enable( constituentJob, isGlobusJob );
+
+            
+        }
+
+        //all the constitutent jobs are enabled.
+        //get the job aggregator to render the job
+        //to it's executable form
+        aggregator.makeAbstractAggregatedJobConcrete( job  );
+
+        //set the flag back to false
+        //mEnablingPartOfAggregatedJob = false;
+
+        //the aggregated job itself needs to be enabled via NoGridStart
+        this.enable( (Job)job, isGlobusJob);
+
+        return true;
+
     }
 
     /**

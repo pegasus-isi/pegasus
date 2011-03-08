@@ -203,7 +203,7 @@ public abstract class Abstract implements JobAggregator {
      *
      * @return AggregatedJob
      */
-    protected abstract AggregatedJob enable(  AggregatedJob mergedJob, List jobs  );
+//    protected abstract AggregatedJob enable(  AggregatedJob mergedJob, List jobs  );
 
 
     /**
@@ -482,9 +482,11 @@ public abstract class Abstract implements JobAggregator {
      *          job containing the jobs passed as List in the input,
      *          null if the list of jobs is empty
      */
+    /*
     public AggregatedJob construct(List jobs,String name,String id){
         return construct(jobs,name,id,getCollapserLFN());
     }
+    */
 
 
 
@@ -506,7 +508,7 @@ public abstract class Abstract implements JobAggregator {
      *          job containing the jobs passed as List in the input,
      *          null if the list of jobs is empty
      */
-    protected AggregatedJob construct( List jobs,
+/*    protected AggregatedJob construct( List jobs,
                                        String name,
                                        String id,
                                        String mergeLFN){
@@ -526,7 +528,7 @@ public abstract class Abstract implements JobAggregator {
         //In the new format the gridstart is associated with the
         //pool not pool, condor universe
         Job firstJob = (Job)jobs.get(0);
-        AggregatedJob mergedJob = new AggregatedJob( /*(Job)jobs.get(0),*/
+        AggregatedJob mergedJob = new AggregatedJob( 
                                                      jobs.size() );
 
 
@@ -665,11 +667,11 @@ public abstract class Abstract implements JobAggregator {
         //get hold of one of the jobs and suck init's globus namespace
         //info into the the map.
 
-        /* Not needed, as the clone method would have taken care of it.
-           Karan Sept 09, 2004
-        entry = getTCEntry(job);
-        mergedJob.globusRSL.checkKeyInNS(entry.getProfiles(Profile.GLOBUS));
-        */
+        // Not needed, as the clone method would have taken care of it.
+        //   Karan Sept 09, 2004
+        //entry = getTCEntry(job);
+        //mergedJob.globusRSL.checkKeyInNS(entry.getProfiles(Profile.GLOBUS));
+        //
 
         //also put in jobType as mpi
         //mergedJob.globusRSL.checkKeyinNS("jobtype","mpi");
@@ -692,6 +694,7 @@ public abstract class Abstract implements JobAggregator {
         return mergedJob;
 
     }
+ */
 
     /**
      * Helper method to get an entry from the transformation catalog for an

@@ -75,7 +75,7 @@ public interface  GridStart {
      * @return the AggregatedJob containing the enabled jobs.
      * @see #enable(Job,boolean)
      */
-    public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs);
+    //public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs);
 
     /**
      * Enables a job to run on the grid. This also determines how the

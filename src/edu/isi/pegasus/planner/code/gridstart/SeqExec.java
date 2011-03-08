@@ -284,7 +284,29 @@ public class SeqExec implements GridStart {
      * @return boolean true if enabling was successful,else false.
      */
     public boolean enable( AggregatedJob job,boolean isGlobusJob){
-        return false;
+        boolean result = true;
+        //sanity check for the arguments
+        if( job.strargs != null && job.strargs.length() > 0){
+            construct( job, "arguments", job.strargs);
+        }
+
+        for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
+            Job constituentJob = (Job)it.next();
+
+            //earlier was set in SeqExec JobAggregator in the enable function
+            constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
+                                            this.getVDSKeyValue() );
+
+
+            //always pass isGlobus true as always
+            //interested only in executable strargs
+            //due to the fact that seqexec does not allow for setting environment
+            //per constitutent constituentJob, we cannot set the postscript removal option
+            result = result && this.mKickstartGridStartImpl.enable( constituentJob, isGlobusJob );
+        }
+
+        //enable the aggregated job itself
+        return result && this.enable( (Job)job, isGlobusJob );
     }
 
     /**
@@ -300,6 +322,7 @@ public class SeqExec implements GridStart {
      * @return the AggregatedJob containing the enabled jobs.
      * @see #enable(Job,boolean)
      */
+/*
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
         //sanity check for the arguments
         if( aggJob.strargs != null && aggJob.strargs.length() > 0){
@@ -307,6 +330,7 @@ public class SeqExec implements GridStart {
         }
 
         this.mKickstartGridStartImpl.enable( aggJob, jobs );
+ */
         //we do not want the jobs being clustered to be enabled
         //for worker node execution just yet.
         /*mEnablingPartOfAggregatedJob = true;
@@ -326,10 +350,10 @@ public class SeqExec implements GridStart {
         mEnablingPartOfAggregatedJob = false;
         this.mKickstartGridStartImpl.setEnablePartOfAggregatedJob( false );
         */
-
+/*
         return aggJob;
     }
-
+*/
 
     /**
      * Enables a job to run on the grid by launching it directly. It ends

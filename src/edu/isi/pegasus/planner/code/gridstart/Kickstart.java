@@ -314,6 +314,11 @@ public class Kickstart implements GridStart {
         
         for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
             Job constituentJob = (Job)it.next();
+
+            //earlier was set in SeqExec JobAggregator in the enable function
+            constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
+                                            this.getVDSKeyValue() );
+
             if(first){
                 first = false;
             }
@@ -390,6 +395,7 @@ public class Kickstart implements GridStart {
      * @see #enable(Job,boolean
      * @deprecated
      */
+ /*
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
         boolean first = true;
 
@@ -453,7 +459,7 @@ public class Kickstart implements GridStart {
 
         return aggJob;
     }
-
+*/
    
 
     /**

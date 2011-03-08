@@ -101,6 +101,48 @@ public class SeqExec extends Abstract {
     }
 
     /**
+     * Enables the abstract clustered job for execution and converts it to it's
+     * executable form. Also associates the post script that should be invoked
+     * for the AggregatedJob
+     *
+     * @param job          the abstract clustered job
+     */
+    public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
+        super.makeAbstractAggregatedJobConcrete(job);
+
+        Job firstJob = (Job)job.getConstituentJob( 0 );
+        StringBuffer message = new StringBuffer();
+        message.append( " POSTScript for merged job " ).
+                append( job.getName() ).append( " " );
+
+        //should we tinker with the postscript for this job
+        if( job.dagmanVariables.containsKey( Dagman.POST_SCRIPT_KEY ) ){
+            //no merged job has been set to have a specific post script
+            //no tinkering
+        }
+        else{
+            //we need to tinker
+            //gridstart is always populated
+            String gridstart = (String) firstJob.vdsNS.get(Pegasus.GRIDSTART_KEY);
+            if (gridstart.equalsIgnoreCase( GridStartFactory.
+                                            GRIDSTART_SHORT_NAMES[
+                                            GridStartFactory.KICKSTART_INDEX]) ||
+                 gridstart.equalsIgnoreCase( GridStartFactory.
+                                            GRIDSTART_SHORT_NAMES[
+                                            GridStartFactory.SEQEXEC_INDEX]) ) {
+                //ensure $PEGASUS_HOME/bin/exitpost is invoked
+                //as the baby jobs are being invoked by kickstart
+                job.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY,
+                                                     PegasusExitCode.SHORT_NAME );
+            }
+        }
+        message.append( job.dagmanVariables.get( Dagman.POST_SCRIPT_KEY ) );
+        mLogger.log( message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+
+        return ;
+    }
+
+    /**
      * Constructs a new aggregated job that contains all the jobs passed to it.
      * The new aggregated job, appears as a single job in the workflow and
      * replaces the jobs it contains in the workflow.
@@ -122,6 +164,7 @@ public class SeqExec extends Abstract {
      *          job containing the jobs passed as List in the input,
      *          null if the list of jobs is empty
      */
+/*
     public AggregatedJob construct(List jobs,String name, String id) {
         AggregatedJob mergedJob = super.construct(jobs,name,id);
         //ensure that AggregatedJob is invoked via NoGridStart
@@ -160,7 +203,7 @@ public class SeqExec extends Abstract {
 
         return mergedJob;
     }
-
+*/
 
     /**
      * Enables the constitutent jobs that make up a aggregated job.
@@ -170,11 +213,9 @@ public class SeqExec extends Abstract {
      *
      * @return AggregatedJob
      */
-    protected AggregatedJob  enable(  AggregatedJob mergedJob, List jobs  ){
+/*    protected AggregatedJob  enable(  AggregatedJob mergedJob, List jobs  ){
         Job firstJob = (Job)jobs.get(0);
         
-//        SiteInfo site = mSiteHandle.getPoolEntry( firstJob.getSiteHandle(),
-//                                                  Condor.VANILLA_UNIVERSE);
 
         SiteCatalogEntry site = mSiteStore.lookup( firstJob.getSiteHandle() );
         
@@ -192,7 +233,7 @@ public class SeqExec extends Abstract {
 
         return gridStart.enable( mergedJob, jobs );
     }
-
+*/
 
     /**
      * Returns the logical name of the transformation that is used to
