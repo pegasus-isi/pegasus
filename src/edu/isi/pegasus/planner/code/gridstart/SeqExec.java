@@ -313,8 +313,20 @@ public class SeqExec implements GridStart {
     
         //lets enable the aggregated job via kickstart first
         //to create the SLS files and other things
-        result = this.m
+        result = this.mKickstartGridStartImpl.enable(job, isGlobusJob);
+        if( job instanceof AggregatedJob && !mSLS.doesCondorModifications()){
+            if( job.getJobType() == Job.COMPUTE_JOB ||
+                job.getJobType() == Job.STAGED_COMPUTE_JOB ){
 
+                AggregatedJob clusteredJob = (AggregatedJob) job;
+                enableClusteredJobForWorkerNodeExecution( clusteredJob, isGlobusJob );
+            }
+        }
+        else{
+            throw new RuntimeException( "Clustered Job is not of type compute " + job.getID() );
+        }
+
+        return result;
     }
 
     /**
@@ -521,6 +533,8 @@ public class SeqExec implements GridStart {
         }*/
 
         //check if job is a clustered compute job
+/*
+
         if( job instanceof AggregatedJob && !mSLS.doesCondorModifications()){
             if( job.getJobType() == Job.COMPUTE_JOB ||
                 job.getJobType() == Job.STAGED_COMPUTE_JOB ){
@@ -530,7 +544,9 @@ public class SeqExec implements GridStart {
             }
         }
         // or if a job is non clustered compute job
-        else if( job.getJobType() == Job.COMPUTE_JOB ||
+        else
+ */
+        if( job.getJobType() == Job.COMPUTE_JOB ||
                  job.getJobType() == Job.STAGED_COMPUTE_JOB ){
 
             File seqxecIPFile = enableAndGenerateSeqexecInputFile( job, isGlobusJob );
