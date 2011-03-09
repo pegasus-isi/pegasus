@@ -220,7 +220,7 @@ public class SeqExec implements GridStart {
      * Boolean to signify we are using s3cmd to do sls.
      * temporary.
      */
-    private boolean mS3SLSUsed;
+//    private boolean mS3SLSUsed;
 
 
     /**
@@ -251,7 +251,7 @@ public class SeqExec implements GridStart {
         mKickstartGridStartImpl.initialize( bag, dag );
 
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-        mS3SLSUsed = this.mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3;
+//        mS3SLSUsed = this.mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3;
 
         mLocalUserProxy = Proxy.getPathToUserProxy(bag);
 
@@ -285,6 +285,8 @@ public class SeqExec implements GridStart {
      */
     public boolean enable( AggregatedJob job,boolean isGlobusJob){
         boolean result = true;
+
+/*
         //sanity check for the arguments
         if( job.strargs != null && job.strargs.length() > 0){
             construct( job, "arguments", job.strargs);
@@ -307,6 +309,12 @@ public class SeqExec implements GridStart {
 
         //enable the aggregated job itself
         return result && this.enable( (Job)job, isGlobusJob );
+*/
+    
+        //lets enable the aggregated job via kickstart first
+        //to create the SLS files and other things
+        result = this.m
+
     }
 
     /**
@@ -588,15 +596,18 @@ public class SeqExec implements GridStart {
         //Job j = (Job) clusteredJob.clone();
         //gs.enable(j, isGlobusJob);
 
-
+/*
         if ( mS3SLSUsed ) {
             //only for S3 sls were the transfer job itself is a clustered
             //job. Legacy support. To be removed eventually.
             mergeSLSInputAndOutputFilesToStdIn(job, gs);
         }
         else{
+*/
             this.enableAndGenerateSeqexecInputFile( job, isGlobusJob );
+/*
         }
+*/
 
     }
 
@@ -1157,6 +1168,7 @@ public class SeqExec implements GridStart {
             else{
                 //there should be a way to determine if
                 //prejob is actually a clustered job itself
+/*
                 if( mS3SLSUsed ){
                     cmdArray = preJob.split( " " );
 
@@ -1180,6 +1192,7 @@ public class SeqExec implements GridStart {
                     slsFile.delete();
                 }
                 else{
+*/
                     //enable the pre command via kickstart
                      writer.println( enableCommandViaKickstart( preJob,
                                                             "pre-job",
@@ -1188,7 +1201,9 @@ public class SeqExec implements GridStart {
                                                             suppressXMLHeader,
                                                             directory ) );
                      suppressXMLHeader = true;
+/*
                 }
+*/
             }
 
             //write out the main command that needs to be invoked
@@ -1203,6 +1218,7 @@ public class SeqExec implements GridStart {
             if( postJob != null  ){
                 //there should be a way to determine if
                 //postjob is actually a clustered job itself
+/*
                 if( mS3SLSUsed ){
                     cmdArray = postJob.split( " " );
 
@@ -1228,6 +1244,7 @@ public class SeqExec implements GridStart {
                     slsFile.delete();
                 }
                 else{
+*/
                     //enable the post command via kickstart
                     writer.println( enableCommandViaKickstart( postJob,
                                                                "post-job",
@@ -1236,7 +1253,9 @@ public class SeqExec implements GridStart {
                                                                suppressXMLHeader,
                                                                directory ) );
                     suppressXMLHeader = true;
+/*
                 }
+ */
             }
             
             //write out the cleanup command
@@ -1274,6 +1293,7 @@ public class SeqExec implements GridStart {
       *
       * @return   the command enabled via kickstart
       */
+
      protected String enableCommandViaKickstart( String command,
                                                  String name,
                                                  String site,
@@ -1282,7 +1302,7 @@ public class SeqExec implements GridStart {
     
          return this.enableCommandViaKickstart(command, name, site, type, supressXMLHeader, null );
      }
-     
+
      /**
       * Enables a command via kickstart. This is used to enable commands that
       * are retrieved from the SLS files.
@@ -1331,7 +1351,6 @@ public class SeqExec implements GridStart {
 
          return result.toString();
      }
-
 
 
     /**
@@ -1483,6 +1502,7 @@ public class SeqExec implements GridStart {
      * @param job    the aggregated job being enabled via kickstart
      * @param gs     the GridStart impelemntation to use.
      */
+/*
     protected void mergeSLSInputAndOutputFilesToStdIn(AggregatedJob job, GridStart gs ) {
         try {
             //we merge the sls input and sls output files into
@@ -1540,5 +1560,6 @@ public class SeqExec implements GridStart {
             Logger.getLogger(SeqExec.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+*/
 
 }
