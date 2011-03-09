@@ -299,10 +299,7 @@ public class Kickstart implements GridStart {
          boolean first = true;
 
 
-        //we do not want the jobs being clustered to be enabled
-        //for worker node execution just yet.
-        //mEnablingPartOfAggregatedJob = true;
-
+     
         
         //get hold of the JobAggregator determined for this clustered job
         //during clustering
@@ -311,7 +308,8 @@ public class Kickstart implements GridStart {
             throw new RuntimeException( "Clustered job not associated with a job aggregator " + job.getID() );
         }
         
-        
+        boolean partOfClusteredJob = true;
+        String directory = getWorkerNodeDirectory( job ) ;
         for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
             Job constituentJob = (Job)it.next();
 
@@ -328,16 +326,20 @@ public class Kickstart implements GridStart {
                 constituentJob.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
             }
 
-            
-            //always pass isGlobus true as always
-            //interested only in executable strargs
-            //due to the fact that seqexec does not allow for setting environment
-            //per constitutent constituentJob, we cannot set the postscript removal option
-            this.enable( constituentJob, isGlobusJob, mDoStat, false  );
+
             
             //for worker node execution prepend an extra
             //option -w to get kickstart to change directories
             if( mWorkerNodeExecution ){
+
+                //we want the constitutent jobs to run in the same directory
+                //as the aggreagated job
+                constituentJob.vdsNS.construct( Pegasus.WORKER_NODE_DIRECTORY_KEY,
+                                                directory );
+                //now enable
+                this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob );
+
+/*
                 //add a -w only for compute or staged compute jobs
                 if( constituentJob.getJobType() == Job.COMPUTE_JOB || constituentJob.getJobType() == Job.STAGED_COMPUTE_JOB ){
                     StringBuffer args = new StringBuffer( );
@@ -350,19 +352,17 @@ public class Kickstart implements GridStart {
                      args.append( " " ).append( constituentJob.condorVariables.removeKey( "arguments" ) );
                      construct(constituentJob, "arguments", args.toString());                     
                 }
+ */
+            }
+            else{
+                //no worker node case
+                //always pass isGlobus true as always
+                //interested only in executable strargs
+                //due to the fact that seqexec does not allow for setting environment
+                //per constitutent constituentJob, we cannot set the postscript removal option
+                this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob  );
             }
 
-            
-            //job.add( constituentJob  );
-            //check if any files are being transferred via
-            //Condor and add to Aggregated Job
-            //add condor keys to transfer files
-            //This is now taken care of in the merge profiles section
-//            if(constituentJob.condorVariables.containsKey(Condor.TRANSFER_IP_FILES_KEY)){
-//              aggJob.condorVariables.addIPFileForTransfer(
-//                                          (String)constituentJob.condorVariables.get( Condor.TRANSFER_IP_FILES_KEY) );
-//
-//           }
         }
 
         //all the constitutent jobs are enabled.
@@ -370,14 +370,86 @@ public class Kickstart implements GridStart {
         //to it's executable form
         aggregator.makeAbstractAggregatedJobConcrete( job  );
 
-        //set the flag back to false
-        //mEnablingPartOfAggregatedJob = false;
-
+        if( mWorkerNodeExecution ){
+            //lets enable the AggregatedJob directly for worker node execution
+            //before handing to the NoGridStart implementation
+            StringBuffer args = new StringBuffer();
+            this.enableForWorkerNodeExecution( job, args , false );
+        }
         //the aggregated job itself needs to be enabled via NoGridStart
         mNoGridStartImpl.enable( (Job)job, isGlobusJob);
         
         return true;
     }
+
+/*
+    protected boolean enableForWorkerNodeExecution( AggregatedJob job, boolean isGlobusJob ){
+        boolean first = true;
+
+
+
+
+        //get hold of the JobAggregator determined for this clustered job
+        //during clustering
+        JobAggregator aggregator = job.getJobAggregator();
+        if( aggregator == null ){
+            throw new RuntimeException( "Clustered job not associated with a job aggregator " + job.getID() );
+        }
+
+
+        for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
+            Job constituentJob = (Job)it.next();
+
+            //earlier was set in SeqExec JobAggregator in the enable function
+            constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
+                                            this.getVDSKeyValue() );
+
+            if(first){
+                first = false;
+            }
+            else{
+                //we need to pass -H to kickstart
+                //to suppress the header creation
+                constituentJob.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
+            }
+
+
+            //always pass isGlobus true as always
+            //interested only in executable strargs
+            //due to the fact that seqexec does not allow for setting environment
+            //per constitutent constituentJob, we cannot set the postscript removal option
+            this.enable( constituentJob, isGlobusJob, mDoStat, false  );
+
+            //for worker node execution prepend an extra
+            //option -w to get kickstart to change directories
+            if( mWorkerNodeExecution ){
+                //add a -w only for compute or staged compute jobs
+                if( constituentJob.getJobType() == Job.COMPUTE_JOB || constituentJob.getJobType() == Job.STAGED_COMPUTE_JOB ){
+                    StringBuffer args = new StringBuffer( );
+
+                     //we append -w only if we are not using condor file transfers
+                     //JIRA BUG 145
+                     if( !mSLS.doesCondorModifications() ){
+                        args.append( " -w " ).append( getWorkerNodeDirectory( job ) );
+                     }
+                     args.append( " " ).append( constituentJob.condorVariables.removeKey( "arguments" ) );
+                     construct(constituentJob, "arguments", args.toString());
+                }
+            }
+
+        }
+
+        //all the constitutent jobs are enabled.
+        //get the job aggregator to render the job
+        //to it's executable form
+        aggregator.makeAbstractAggregatedJobConcrete( job  );
+
+        //the aggregated job itself needs to be enabled via NoGridStart
+        mNoGridStartImpl.enable( (Job)job, isGlobusJob);
+
+        return true;
+    }
+*/
 
     /**
      * Enables a collection of jobs and puts them into an AggregatedJob.
@@ -480,7 +552,7 @@ public class Kickstart implements GridStart {
      *         the constituentJob is scheduled.
      */
     public boolean enable( Job job, boolean isGlobusJob ){
-        return this.enable( job, isGlobusJob, mDoStat , true );
+        return this.enable( job, isGlobusJob, mDoStat , true, false );
     }
 
 
@@ -499,12 +571,14 @@ public class Kickstart implements GridStart {
      * @param stat  boolean indicating whether to generate the lof files
      *                     for kickstart stat option or not.
      * @param addPostScript boolean indicating whether to add a postscript or not.
+     * @param partOfClusteredJob boolean indicating whether the job being enabled
+     *                           is part of a clustered job or not.
      *
      * @return boolean true if enabling was successful,else false in case when
      *         the path to kickstart could not be determined on the site where
      *         the constituentJob is scheduled.
      */
-    protected boolean enable( Job job, boolean isGlobusJob, boolean stat, boolean addPostScript ) {
+    protected boolean enable( Job job, boolean isGlobusJob, boolean stat, boolean addPostScript , boolean partOfClusteredJob) {
 
         //take care of relative submit directory if specified.
         String submitDir = mSubmitDir + mSeparator;
@@ -613,7 +687,6 @@ public class Kickstart implements GridStart {
 
         
         
-//        if( !mWorkerNodeExecution  && !mEnablingPartOfAggregatedJob ){
         if( !mWorkerNodeExecution ){
             
             
@@ -621,15 +694,13 @@ public class Kickstart implements GridStart {
             //directory before launching an executable.
             if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
 
-//            Commented to take account of submitting to condor pool
-//            directly or glide in nodes. However, does not work for
-//            standard universe jobs. Also made change in Kickstart
-//            to pick up only remote_initialdir Karan Nov 15,2005
                 
                 //check for removing the directory keys only if worker node
                 //execution is disabled and the constituent constituentJob is not enabled
                 //during clustering. JIRA Bug 80 and Bug 263
                 String directory = null;
+
+/*
                 if( mEnablingPartOfAggregatedJob ){
                     //enabling part of clustered jobs.
                     //we dont have the directory figured out
@@ -637,10 +708,13 @@ public class Kickstart implements GridStart {
                     directory = mSiteStore.getWorkDirectory(job);
                 }
                 else{
+ */
                     String key = getDirectoryKey( job );
                     //we remove the key JIRA PM-80
                     directory = (String)job.condorVariables.removeKey( key );
+/*
                 }
+*/
                 //pass the directory as an argument to kickstart
                 gridStartArgs.append(" -w ").append( directory ).append(' ');
             }
@@ -654,6 +728,8 @@ public class Kickstart implements GridStart {
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
                 String directory = null;
+
+ /*
                 if( mEnablingPartOfAggregatedJob ){
                     //enabling part of clustered jobs.
                     //we dont have the directory figured out
@@ -661,15 +737,18 @@ public class Kickstart implements GridStart {
                     directory = mSiteStore.getWorkDirectory(job);
                 }
                 else{
+ */
                     String key = getDirectoryKey( job );
                     //we remove the key JIRA PM-80
                     directory = (String)job.condorVariables.removeKey( key );
-                }
+ /*
+            }
+ */
                 //pass the directory as an argument to kickstart
                 gridStartArgs.append(" -W ").append(directory).append(' ');
             }
 
-            if(  !mEnablingPartOfAggregatedJob && job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
+            if(  /*!mEnablingPartOfAggregatedJob && */job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
                 String key = getDirectoryKey( job );
                 //just remove the remote_initialdir key
                 //the constituentJob needs to be run in the directory
@@ -679,8 +758,8 @@ public class Kickstart implements GridStart {
         }
 
 
-        if ( mWorkerNodeExecution && !mEnablingPartOfAggregatedJob ){
-            enableForWorkerNodeExecution( job , gridStartArgs );
+        if ( mWorkerNodeExecution /*&& !mEnablingPartOfAggregatedJob*/ ){
+            enableForWorkerNodeExecution( job , gridStartArgs, partOfClusteredJob );
         }
 
         //check if the constituentJob type indicates staging of executable
@@ -947,9 +1026,13 @@ public class Kickstart implements GridStart {
      *
      * @param constituentJob     the constituentJob to be enabled
      * @param args    the arguments constructed so far.
+     * @param partOfClusteredJob whether part of clustered job or not.
      */
-    protected void enableForWorkerNodeExecution( Job job, StringBuffer args ){
+    protected void enableForWorkerNodeExecution( Job job, StringBuffer args , boolean partOfClusteredJob){
         
+        //for clustered jobs we dont generate sls files
+        boolean generateSLSFile = !partOfClusteredJob;
+
         if( job.getJobType() == Job.COMPUTE_JOB ||
             job.getJobType() == Job.STAGED_COMPUTE_JOB ){
             mLogger.log( "Enabling job for worker node execution " + job.getName() ,
@@ -1001,7 +1084,7 @@ public class Kickstart implements GridStart {
 
             //see if we need to generate a SLS input file in the submit directory
             File slsInputFile  = null;
-            if( mSLS.needsSLSInput( job ) ){
+            if( generateSLSFile && mSLS.needsSLSInput( job ) ){
                 //generate the sls file with the mappings in the submit directory
                 slsInputFile = mSLS.generateSLSInputFile( job,
                                                           mSLS.getSLSInputLFN( job ),
@@ -1047,7 +1130,7 @@ public class Kickstart implements GridStart {
 
             //see if we need to generate a SLS output file in the submit directory
             File slsOutputFile = null;
-            if( mSLS.needsSLSOutput( job ) ){
+            if( generateSLSFile && mSLS.needsSLSOutput( job ) ){
                 //construct the postjob that transfers the output files
                 //back to head node directory
                 //to fix later. right now post constituentJob only created is pre constituentJob
@@ -1079,7 +1162,7 @@ public class Kickstart implements GridStart {
             }
 
             //only to have cleanup constituentJob when not using condor modifications
-            if( !mSLS.doesCondorModifications() ){
+            if( !partOfClusteredJob && !mSLS.doesCondorModifications() ){
                 String cleanupJob = constructCleanupJob( job, workerNodeDir );
                 if( cleanupJob != null ){
                     cleanupJob = quote( cleanupJob );
@@ -1093,12 +1176,18 @@ public class Kickstart implements GridStart {
 
     /**
      * Returns the directory in which the constituentJob executes on the worker node.
+     *
      * 
      * @param constituentJob
      * 
      * @return  the full path to the directory where the constituentJob executes
      */
     public String getWorkerNodeDirectory( Job job ){
+        //check for Pegasus Profile
+        if( job.vdsNS.containsKey( Pegasus.WORKER_NODE_DIRECTORY_KEY ) ){
+            return job.vdsNS.getStringValue( Pegasus.WORKER_NODE_DIRECTORY_KEY );
+        }
+
         StringBuffer workerNodeDir = new StringBuffer();
         String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
         destDir = ( destDir == null ) ? "/tmp" : destDir;

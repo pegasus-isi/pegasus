@@ -356,7 +356,10 @@ public class NoGridStart implements GridStart {
         //for non condor modified SLS
         if( mWorkerNodeExecution  ){
             if( job instanceof AggregatedJob && !mSLS.doesCondorModifications()){
+
+ /*
                 try {
+  */
                     //this approach only works for S3 for time being!
                     //do a sanity check
                     /*if (!(mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3)) {
@@ -395,11 +398,11 @@ public class NoGridStart implements GridStart {
                     //the original solution as implemented for
                     //JIRA Bug PM-59
                     //http://jira.pegasus.isi.edu/browse/PM-59
-
+/*
                     //enable the whole clustered job via kickstart
                     Job j = (Job) clusteredJob.clone();
                     gs.enable(j, isGlobusJob);
-                    
+
                     //enable all constitutents jobs through the factory
                     for (Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext();) {
                         Job cJob = (Job) it.next();
@@ -442,11 +445,14 @@ public class NoGridStart implements GridStart {
                     
                     //rename tmp to stdin
                     temp.renameTo( stdin );
-                    
-                } catch (IOException ex) {
+ 
                     
                 }
-                 
+
+                catch (IOException ex) {
+                    
+                }
+  */
                 
             }
             else if( !mEnablingPartOfAggregatedJob ){
@@ -547,7 +553,7 @@ public class NoGridStart implements GridStart {
                 //JIRA PM-281
             }
             else{
-                mLogger.log( "Transfer of Executables in NoGridStart only works for staged computes jobs ",
+                mLogger.log( "Transfer of Executables in NoGridStart only works for staged computes jobs " + job.getName(),
                              LogManager.ERROR_MESSAGE_LEVEL );
                 
             }

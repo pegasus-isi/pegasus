@@ -230,6 +230,12 @@ public class Pegasus extends Namespace {
      */
     public static final String RUNTIME_KEY = "runtime";
 
+
+    /**
+     * The directory in which job needs to execute on worker node tmp.
+     */
+    public static final String WORKER_NODE_DIRECTORY_KEY = "wntmp";
+
     /**
      * The name of the key, that denotes the style of the dag that is constructed.
      * Possible styles can be
@@ -279,6 +285,7 @@ public class Pegasus extends Namespace {
      * glite execution.
      */
     public static final String GLITE_STYLE = "glite";
+
     
     /**
      * Static Handle to the sum aggregator.
@@ -458,7 +465,8 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'w':
-                if (key.compareTo(REMOTE_INITIALDIR_KEY) == 0) {
+                if ( (key.compareTo(REMOTE_INITIALDIR_KEY) == 0) ||
+                     (key.compareTo(WORKER_NODE_DIRECTORY_KEY) == 0) ) {
                     res = VALID_KEY;
                 }
                 else {
