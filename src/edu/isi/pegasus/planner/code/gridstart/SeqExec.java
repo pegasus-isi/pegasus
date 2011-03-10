@@ -922,11 +922,11 @@ public class SeqExec implements GridStart {
         job.condorVariables.removeIPFilesForTransfer();
         
         
-        Job jobcopy = (Job)job.clone();
+//        Job jobcopy = (Job)job.clone();
 
         
         //enable the job first using kickstart to get PRE JOB and POST JOB populated
-        this.mKickstartGridStartImpl.enable( jobcopy, isGlobusJob );
+//        this.mKickstartGridStartImpl.enable( jobcopy, isGlobusJob );
         String directory  = this.mKickstartGridStartImpl.getWorkerNodeDirectory( job );
 
         //remove the remote or initial dir's from the job
@@ -944,7 +944,9 @@ public class SeqExec implements GridStart {
             job.envVariables.construct( SeqExec.SEQEXEC_SETUP_ENV_VARIABLE,  "/bin/mkdir -p " + directory );
 
             //retrieve name of seqxec prejob file
-            String preJob = (String)jobcopy.envVariables.removeKey( Kickstart.KICKSTART_PREJOB );
+//            String preJob = (String)jobcopy.envVariables.removeKey( Kickstart.KICKSTART_PREJOB );     
+            String preJob = (String)job.envVariables.removeKey( Kickstart.KICKSTART_PREJOB );
+
 
             boolean suppressXMLHeader = false;
 
@@ -956,10 +958,14 @@ public class SeqExec implements GridStart {
                 //to a directory on the headnode/worker node.
                 
                 if( mSLS.needsSLSInput( job ) ){
-                    filesToBeCopied.add( mSLS.getSLSInputLFN( jobcopy ) );
+//                    filesToBeCopied.add( mSLS.getSLSInputLFN( jobcopy ) );
+                      filesToBeCopied.add( mSLS.getSLSInputLFN( job ) );
+ 
                 }
                 if( mSLS.needsSLSOutput( job ) ){
-                    filesToBeCopied.add( mSLS.getSLSOutputLFN( jobcopy ) );
+//                    filesToBeCopied.add( mSLS.getSLSOutputLFN( jobcopy ) );
+                      filesToBeCopied.add( mSLS.getSLSOutputLFN( job ) );
+  
                 }
                 String base =  this.mSubmitDir + File.separator ;
                 for( String lfn: filesToBeCopied ){
@@ -981,7 +987,8 @@ public class SeqExec implements GridStart {
                 String cmd = constructCopyFileCommand( filesToBeCopied, directory );
                 writer.println( enableCommandViaKickstart( cmd,
                                                "cp",
-                                               jobcopy.getSiteHandle(),
+//                                               jobcopy.getSiteHandle(),
+                                               job.getSiteHandle(),
                                                Job.CREATE_DIR_JOB,
                                                suppressXMLHeader  ) );
                 suppressXMLHeader = true;
@@ -1000,7 +1007,7 @@ public class SeqExec implements GridStart {
             }
 
             if( preJob == null ){
-                mLogger.log( "PREJOB was not constructed for job " + jobcopy.getName(),
+                mLogger.log( "PREJOB was not constructed for job " + job.getName(),
                              LogManager.DEBUG_MESSAGE_LEVEL );
 
             }
@@ -1008,7 +1015,8 @@ public class SeqExec implements GridStart {
                 //enable the pre command via kickstart
                 writer.println( enableCommandViaKickstart( preJob,
                                                             "pre-job",
-                                                            jobcopy.getSiteHandle(),
+//                                                            jobcopy.getSiteHandle(),
+                                                            job.getSiteHandle(),
                                                             Job.STAGE_OUT_JOB,
                                                             suppressXMLHeader,
                                                             directory ) );
@@ -1038,12 +1046,14 @@ public class SeqExec implements GridStart {
             //retrieve name of seqxec postjob file
             //there should be a way to determine if 
             //postjob is actually a clustered job itself
-            String postJob = (String)jobcopy.envVariables.removeKey( Kickstart.KICKSTART_POSTJOB );
+//            String postJob = (String)jobcopy.envVariables.removeKey( Kickstart.KICKSTART_POSTJOB );
+            String postJob = (String)job.envVariables.removeKey( Kickstart.KICKSTART_POSTJOB );
             if( postJob != null  ){
                 //enable the post command via kickstart
                 writer.println( enableCommandViaKickstart( postJob,
                                                            "post-job",
-                                                           jobcopy.getSiteHandle(),
+//                                                           jobcopy.getSiteHandle(),
+                                                           job.getSiteHandle(),
                                                            Job.STAGE_OUT_JOB,
                                                            suppressXMLHeader,
                                                            directory ) );
