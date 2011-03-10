@@ -152,6 +152,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         mXMLStore        = XMLProducerFactory.loadXMLProducer( mProps );
 
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
+        
         if( mWorkerNodeExecution ){
             //load SLS
             mSLS = SLSFactory.loadInstance( mBag );
@@ -184,11 +185,11 @@ public class InterPoolEngine extends Engine implements Refiner {
         this.mDAXTransformationStore = aDag.getTransformationStore();
         
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
+
         if( mWorkerNodeExecution ){
             //load SLS
             mSLS = SLSFactory.loadInstance( mBag );
         }
-
 
     }
 
@@ -377,6 +378,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
             }
 
+/*            
             //modify the jobs if required for worker node execution
             if( mWorkerNodeExecution ){
                 mSLS.modifyJobForFirstLevelStaging( job,
@@ -384,7 +386,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                                                     mSLS.getSLSInputLFN( job ),
                                                     mSLS.getSLSOutputLFN( job )   );
             }
-
+*/
             //log actions as XML fragment
             try{
                 logRefinerAction(job);

@@ -57,6 +57,8 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.transfer.SLS;
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
@@ -235,6 +237,10 @@ public class TransferEngine extends Engine {
      */
     private Implementation mCreateDirImpl;
 
+    /**
+     * The handle to the SLS implementor
+     */
+    private SLS mSLS;
     
 
     /**
@@ -272,7 +278,11 @@ public class TransferEngine extends Engine {
                                    true:
                                    false;
            
-        
+        if( mWorkerNodeExecution ){
+            //load SLS
+            mSLS = SLSFactory.loadInstance( mBag );
+        }
+
         
         try{
             mTXRefiner = RefinerFactory.loadInstance( reducedDag,
@@ -375,6 +385,15 @@ public class TransferEngine extends Engine {
         for( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
             currentJob = (Job)node.getContent();
+            
+            //modify the jobs if required for worker node execution
+            if( mWorkerNodeExecution ){
+                mSLS.modifyJobForFirstLevelStaging( currentJob,
+                                                    mPOptions.getSubmitDirectory(),
+                                                    mSLS.getSLSInputLFN( currentJob ),
+                                                    mSLS.getSLSOutputLFN( currentJob )   );
+            }
+            
             //set the node depth as the level
             currentJob.setLevel( node.getDepth() );
             currentJobName = currentJob.getName();

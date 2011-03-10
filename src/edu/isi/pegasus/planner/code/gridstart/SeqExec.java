@@ -786,7 +786,7 @@ public class SeqExec implements GridStart {
         File stdIn = new File( mSubmitDir, job.getID() + ".in" );
 
         //reset the list of sls files that are transferred via condor file transfer
-        job.condorVariables.removeIPFilesForTransfer();
+        //job.condorVariables.removeIPFilesForTransfer();
         
         String directory  = this.mKickstartGridStartImpl.getWorkerNodeDirectory( job );
 
@@ -825,10 +825,14 @@ public class SeqExec implements GridStart {
                       filesToBeCopied.add( mSLS.getSLSOutputLFN( job ) );
   
                 }
+                
+                /* no longer required, as the SLS file is added for transfer
+                 * correctly now in TransferEngine. Karan March 10, 2011
                 String base =  this.mSubmitDir + File.separator ;
                 for( String lfn: filesToBeCopied ){
                     job.condorVariables.addIPFileForTransfer( base + lfn );
                 }
+                 */
             }
 
             //transfer the proxy and set x bit accordingly
