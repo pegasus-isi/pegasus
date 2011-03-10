@@ -170,7 +170,9 @@ follow_subworkflows = True	# Flag for tracking sub-workflows
 replay_mode = 0			# disable checking if DAGMan's pid is gone
 keep_state = 0			# Flag for keeping a Workflow's state across several DAGMan start/stop cycles
 db_stats = 'no'			# collect and print database stats at the end of execution
-no_events = 0			# Flag for disabling event output altogether
+no_events = False		# Flag for disabling event output altogether
+event_dest = None		# URL containing the destination of the events
+encoding = None			# Way to encode the data
 monitord_exit_code = 0		# Exit code for pegasus-monitord
 
 wf_event_sink = None 		# Where wf events go
@@ -1827,21 +1829,13 @@ class WorkflowEntry:
     delete_workflow = False		# Flag for dropping this workflow
     sleep_time = None			# Time to sleep for this workflow
 
-# Parse properties
-props = properties.Properties()
-props.new(properties.PARSE_ALL)
-doplot = utils.make_boolean(props.property("pegasus.tailstatd.show"))
-
-fuse = int(props.property("pegasus.tailstatd.fuse") or 300)
-if fuse < 60:
-    fuse = 60
-
 jsd = None				# location of jobstate.log file
 nodaemon = 0				# foreground mode
 logfile = None				# location of monitord.log file
 millisleep = None			# emulated run mode delay
 config = {}				# command-line configuration key-value pairs
 adjustment = 0				# time zone adjustment (@#~! Condor)
+fuse = 60				# maximum wait for each plotting subscript
 
 # Parse command line options
 prog_usage = "usage: %s [options] workflow.dag.dagman.out" % (prog_base)
@@ -1914,6 +1908,22 @@ out = os.path.abspath(out)
 # Infer run directory
 run = os.path.dirname(out)
 
+# Get the location of the properties file from braindump
+top_level_wf_params = utils.slurp_braindb(run)
+
+# Parse, and process properties
+props = properties.Properties()
+if "properties" in top_level_wf_params:
+    props.new(properties.PARSE_ALL,
+              {"pegasus.user.properties" : top_level_wf_params["properties"]})
+else:
+    props.new(properties.PARSE_ALL)
+doplot = utils.make_boolean(props.property("pegasus.monitord.show"))
+
+fuse = int(props.property("pegasus.monitord.fuse") or 300)
+if fuse < 60:
+    fuse = 60
+
 # Copy command line options into our variables
 
 if options.vb == 0:
@@ -1954,12 +1964,29 @@ if options.keep_state is not None:
     keep_state = options.keep_state
 if options.no_events is not None:
     # Turn off event generation
-    no_events = 1
+    no_events = True
+else:
+    # Set event generation according to properties (default is False)
+    no_events = utils.make_boolean(props.property("pegasus.monitord.noevents"))
 # Create event sink
 if options.event_dest is None:
-    event_dest = get_default_sqlite_db(out)
+    if props.property("pegasus.monitord.output") is None:
+        # No command-line or property specified, use default
+        event_dest = get_default_sqlite_db(out)
+    else:
+        # Ok, get it from the properties file
+        event_dest = props.property("pegasus.monitord.output")
 else:
+    # Use command-line option
     event_dest = options.event_dest
+
+if options.enc is not None:
+    # Get encoding from command-line options
+    encoding = options.enc
+else:
+    if props.property("pegasus.monitord.encoding") is not None:
+        # Get encoding from property
+        encoding = props.property("pegasus.monitord.encoding")
 
 # Walk through any config properties
 if options.config_opts is not None:
@@ -2697,8 +2724,7 @@ if no_events:
     wf_event_sink = EmptySink()
 else:
     try:
-        wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats,
-                                             enc=options.enc)
+        wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats, enc=encoding)
         atexit.register(finish_stampede_loader)
     except ValueError,err:
         logger.critical("Cannot create output: {0}. Abort.".format(err))
