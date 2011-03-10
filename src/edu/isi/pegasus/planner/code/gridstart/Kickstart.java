@@ -382,158 +382,6 @@ public class Kickstart implements GridStart {
         return true;
     }
 
-/*
-    protected boolean enableForWorkerNodeExecution( AggregatedJob job, boolean isGlobusJob ){
-        boolean first = true;
-
-
-
-
-        //get hold of the JobAggregator determined for this clustered job
-        //during clustering
-        JobAggregator aggregator = job.getJobAggregator();
-        if( aggregator == null ){
-            throw new RuntimeException( "Clustered job not associated with a job aggregator " + job.getID() );
-        }
-
-
-        for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
-            Job constituentJob = (Job)it.next();
-
-            //earlier was set in SeqExec JobAggregator in the enable function
-            constituentJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
-                                            this.getVDSKeyValue() );
-
-            if(first){
-                first = false;
-            }
-            else{
-                //we need to pass -H to kickstart
-                //to suppress the header creation
-                constituentJob.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
-            }
-
-
-            //always pass isGlobus true as always
-            //interested only in executable strargs
-            //due to the fact that seqexec does not allow for setting environment
-            //per constitutent constituentJob, we cannot set the postscript removal option
-            this.enable( constituentJob, isGlobusJob, mDoStat, false  );
-
-            //for worker node execution prepend an extra
-            //option -w to get kickstart to change directories
-            if( mWorkerNodeExecution ){
-                //add a -w only for compute or staged compute jobs
-                if( constituentJob.getJobType() == Job.COMPUTE_JOB || constituentJob.getJobType() == Job.STAGED_COMPUTE_JOB ){
-                    StringBuffer args = new StringBuffer( );
-
-                     //we append -w only if we are not using condor file transfers
-                     //JIRA BUG 145
-                     if( !mSLS.doesCondorModifications() ){
-                        args.append( " -w " ).append( getWorkerNodeDirectory( job ) );
-                     }
-                     args.append( " " ).append( constituentJob.condorVariables.removeKey( "arguments" ) );
-                     construct(constituentJob, "arguments", args.toString());
-                }
-            }
-
-        }
-
-        //all the constitutent jobs are enabled.
-        //get the job aggregator to render the job
-        //to it's executable form
-        aggregator.makeAbstractAggregatedJobConcrete( job  );
-
-        //the aggregated job itself needs to be enabled via NoGridStart
-        mNoGridStartImpl.enable( (Job)job, isGlobusJob);
-
-        return true;
-    }
-*/
-
-    /**
-     * Enables a collection of jobs and puts them into an AggregatedJob.
-     * The assumption here is that all the jobs are being enabled by the same
-     * implementation. It enables the jobs and puts them into the AggregatedJob
-     * that is passed to it.
-     * However, to create a valid single XML file, it suppresses the header
-     * creation for all but the first constituentJob.
-     *
-     * @param aggJob the AggregatedJob into which the collection has to be
-     *               integrated.
-     * @param jobs   the collection of jobs (Job) that need to be enabled.
-     *
-     * @return the AggregatedJob containing the enabled jobs.
-     * @see #enable(Job,boolean
-     * @deprecated
-     */
- /*
-    public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
-        boolean first = true;
-
-
-        //we do not want the jobs being clustered to be enabled
-        //for worker node execution just yet.
-        mEnablingPartOfAggregatedJob = true;
-
-        for (Iterator it = jobs.iterator(); it.hasNext(); ) {
-            Job job = (Job)it.next();
-            if(first){
-                first = false;
-            }
-            else{
-                //we need to pass -H to kickstart
-                //to suppress the header creation
-                job.vdsNS.construct(Pegasus.GRIDSTART_ARGUMENTS_KEY,"-H");
-            }
-
-            
-            //always pass isGlobus true as always
-            //interested only in executable strargs
-            //due to the fact that seqexec does not allow for setting environment
-            //per constitutent constituentJob, we cannot set the postscript removal option
-            this.enable( job, true, mDoStat, false );
-            
-            //for worker node execution prepend an extra
-            //option -w to get kickstart to change directories
-            if( mWorkerNodeExecution ){
-                //add a -w only for compute or staged compute jobs
-                if( job.getJobType() == Job.COMPUTE_JOB || job.getJobType() == Job.STAGED_COMPUTE_JOB ){
-                    StringBuffer args = new StringBuffer( );
-                     
-                     //we append -w only if we are not using condor file transfers
-                     //JIRA BUG 145
-                     if( !mSLS.doesCondorModifications() ){
-                        args.append( " -w " ).append( getWorkerNodeDirectory(aggJob) );
-                     }
-                     args.append( " " ).append( job.condorVariables.removeKey( "arguments" ) );
-                     construct(job, "arguments", args.toString());                     
-                }
-            }
-
-            
-            aggJob.add( job );
-            //check if any files are being transferred via
-            //Condor and add to Aggregated Job
-            //add condor keys to transfer files
-            //This is now taken care of in the merge profiles section
-//            if(constituentJob.condorVariables.containsKey(Condor.TRANSFER_IP_FILES_KEY)){
-//              aggJob.condorVariables.addIPFileForTransfer(
-//                                          (String)constituentJob.condorVariables.get( Condor.TRANSFER_IP_FILES_KEY) );
-//
-//           }
-        }
-
-
-        //set the flag back to false
-        mEnablingPartOfAggregatedJob = false;
-
-
-        return aggJob;
-    }
-*/
-   
-
     /**
      * Enables a constituentJob to run on the grid by launching it through kickstart.
      * Does the stdio, and stderr handling of the constituentJob to be run on the grid.
@@ -699,22 +547,9 @@ public class Kickstart implements GridStart {
                 //execution is disabled and the constituent constituentJob is not enabled
                 //during clustering. JIRA Bug 80 and Bug 263
                 String directory = null;
-
-/*
-                if( mEnablingPartOfAggregatedJob ){
-                    //enabling part of clustered jobs.
-                    //we dont have the directory figured out
-                    //as yet. get from site store. JIRA PM-263
-                    directory = mSiteStore.getWorkDirectory(job);
-                }
-                else{
- */
-                    String key = getDirectoryKey( job );
-                    //we remove the key JIRA PM-80
-                    directory = (String)job.condorVariables.removeKey( key );
-/*
-                }
-*/
+                String key = getDirectoryKey( job );
+                //we remove the key JIRA PM-80
+                directory = (String)job.condorVariables.removeKey( key );
                 //pass the directory as an argument to kickstart
                 gridStartArgs.append(" -w ").append( directory ).append(' ');
             }
@@ -727,23 +562,12 @@ public class Kickstart implements GridStart {
 //            directly or glide in nodes. However, does not work for
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
+                
                 String directory = null;
 
- /*
-                if( mEnablingPartOfAggregatedJob ){
-                    //enabling part of clustered jobs.
-                    //we dont have the directory figured out
-                    //as yet. get from site store. JIRA PM-263
-                    directory = mSiteStore.getWorkDirectory(job);
-                }
-                else{
- */
-                    String key = getDirectoryKey( job );
-                    //we remove the key JIRA PM-80
-                    directory = (String)job.condorVariables.removeKey( key );
- /*
-            }
- */
+                String key = getDirectoryKey( job );
+                //we remove the key JIRA PM-80
+                directory = (String)job.condorVariables.removeKey( key );
                 //pass the directory as an argument to kickstart
                 gridStartArgs.append(" -W ").append(directory).append(' ');
             }
@@ -1416,69 +1240,6 @@ public class Kickstart implements GridStart {
         */
 
     }
-
-
-    /**
-     * Constructs the post constituentJob  that fetches sls file, and then invokes transfer
-     * again.
-     *
-     * @param constituentJob   the constituentJob for which the prejob is being created
-     * @param headNodeURLPrefix String
-     * @param headNodeDirectory String
-     * @param workerNodeDirectory String
-     * @param slsFile String
-     *
-     * @return String containing the postscript invocation
-     *//*
-    protected String constructPOSTJob( Job constituentJob,
-                                       String headNodeURLPrefix,
-                                       String headNodeDirectory,
-                                       String workerNodeDirectory,
-                                       String slsFile ){
-
-       StringBuffer postJob = new StringBuffer();
-
-       //first figure out the path to transfer
-       //hardcoded for now
-       String transfer = "/nfs/home/vahi/PEGASUS/default/bin/transfer";
-
-
-       //no need to figure out proxy as already done in prejob?
-       String proxy = null;
-       StringBuffer proxyPath = null;
-       for( Iterator it = constituentJob.getInputFiles().iterator(); it.hasNext(); ){
-           PegasusFile pf = ( PegasusFile ) it.next();
-           if( pf instanceof FileTransfer && pf.getLFN().equals( ENV.X509_USER_PROXY_KEY ) ){
-               //there is a proxy that needs to be set for the constituentJob
-               //actually set it in prejob somehow.
-               proxy =  ((NameValue)((FileTransfer)pf).getDestURL()).getValue();
-               proxy = new File( proxy ).getName();
-               proxyPath =  new StringBuffer();
-               proxyPath.append( headNodeDirectory ).append( File.separator ).append( proxy );
-               constituentJob.envVariables.construct( ENV.X509_USER_PROXY_KEY, proxyPath.toString()  );
-               break;
-           }
-       }
-
-       //add the command to chmod the proxy
-       if( proxy != null ){
-           postJob.append( "/bin/bash -c \"chmod 600 " ).append( proxyPath.toString() ).append( " && " );
-       }
-
-
-
-       postJob.append( transfer ).append( " base mnt " ).append( headNodeDirectory ).
-                                 append( File.separator ).append( slsFile );
-
-       if( proxy != null ){
-           //add the end quote
-           postJob.append( "\"" );
-       }
-
-
-       return postJob.toString();
-   }*/
-
 
     /**
      * Writes out the list of filenames file for the constituentJob.
