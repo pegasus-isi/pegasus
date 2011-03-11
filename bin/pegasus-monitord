@@ -212,7 +212,7 @@ class OutputURL:
     def __init__(self, url):
         self.scheme, self.netloc, self.path, self.params, query, frag = urlparse.urlparse(url)
         if ':' in self.netloc:
-            self.host, portstr = url.netloc.split(':')
+            self.host, portstr = self.netloc.split(':')
             self.port = int(portstr)
         else:
             self.host = self.netloc
@@ -256,13 +256,13 @@ class DBEventSink(EventSink):
         
     def send(self, event, kw):
         if self._isdbg:
-            self._log.debug("send.start event={e}".format(e=event))
+            self._log.debug("send.start event=%s" % (event))
         d = {'event' : "stampede." + event}
         for k, v in kw.iteritems():
             d[k.replace('__','.')] = v
         self._db.notify(d)
         if self._isdbg:
-            self._log.debug("send.end event={e}".format(e=event))
+            self._log.debug("send.end event=%s" % (event))
         
     def close(self):
         self._log.debug("close.start")
@@ -282,10 +282,10 @@ class FileEventSink(EventSink):
 
     def send(self, event, kw):
         if self._isdbg:
-            self._log.debug("send.start event={e}".format(e=event))
+            self._log.debug("send.start event=%s" % (event))
         self._output.write(self._encoder(event=event, **kw))
         if self._isdbg:
-            self._log.debug("send.end event={e}".format(e=event))
+            self._log.debug("send.end event=%s" % (event))
 
     def close(self):
         self._log.debug("close.start")
@@ -301,10 +301,10 @@ class TCPEventSink(EventSink):
 
     def send(self, event, kw):
         if self._isdbg:
-            self._log.debug("send.start event={e}".format(e=event))
+            self._log.debug("send.start event=%s" % (event))
         self._sock.send(self._encoder(event=event, **kw))
         if self._isdbg:
-            self._log.debug("send.end event={e}".format(e=event))
+            self._log.debug("send.end event=%s" % (event))
 
     def close(self):
         self._log.debug("close.start")
@@ -318,7 +318,7 @@ class AMQPEventSink(EventSink):
                  ssl=False, connect_timeout=None, **kw):
         super(AMQPEventSink, self).__init__()
         self._encoder = encoder
-        self._conn = amqp.Connection(host="{0}:{1:d}".format(host, port),
+        self._conn = amqp.Connection(host="%s:%s" % (host, port),
                                      userid=userid, password=password, virtual_host=virtual_host,
                                      ssl=ssl, connect_timeout=connect_timeout, **kw)
         self._channel = self._conn.channel()
@@ -328,12 +328,12 @@ class AMQPEventSink(EventSink):
     def send(self, event, kw):
         full_event = STAMPEDE_NS + event
         if self._isdbg:
-            self._log.debug("send.start event={e}".format(e=full_event))
+            self._log.debug("send.start event=%s" % (full_event))
         data = self._encoder(event=event, **kw)
         self._channel.basic_publish(amqp.Message(body=data),
                                     exchange=self._exch, routing_key=full_event)
         if self._isdbg:
-            self._log.debug("send.end event={e}".format(e=event))
+            self._log.debug("send.end event=%s" % (event))
 
     def close(self):
         self._log.debug("close.start")
@@ -371,7 +371,7 @@ def create_wf_event_sink(dest, enc=None, **kw):
             assert bson is not None, "BSON encoding selected, but cannot import bson library"
             encfn = bson_encode
         else:
-            raise ValueError("Unknown encoding '{enc}'".format(enc=enc_name))
+            raise ValueError("Unknown encoding '%s'" % (enc_name))
         return encfn
 
     # Branch on scheme
@@ -385,7 +385,7 @@ def create_wf_event_sink(dest, enc=None, **kw):
         if url.port is None:
             url.port = 14380
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc), **kw)
-        _type, _name = "network", "{h}:{p:d}".format(h=url.host, p=url.port)
+        _type, _name = "network", "%s:%s" % (url.host, url.port)
     elif url.scheme == 'amqp':
         assert amqp is not None, "AMQP destination selected, but cannot import AMQP library"
         if url.port is None:
@@ -393,11 +393,11 @@ def create_wf_event_sink(dest, enc=None, **kw):
         while url.path.startswith('/'):
             url.path = url.path[1:]
         sink = AMQPEventSink(url.host, url.port, exch=url.path, encoder=pick_encfn(enc), **kw)
-        _type, _name="AMQP", "{h}:{p:d}/{e}".format(h=url.host, p=url.port, e=url.path)
+        _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
         sink = DBEventSink(dest, **kw)
         _type, _name = "DB", dest
-    logger.info("output type={otype} name={name}".format(otype=_type, name=_name))
+    logger.info("output type=%s name=%s" % (_type, _name))
 
     return sink
 
@@ -2656,7 +2656,7 @@ def prog_sigusr1_handler(signum, frame):
             logger.setLevel(_LEVELS[idx + 1])
     except ValueError:
         logger.setLevel(logging.INFO)
-        logger.error("Unknown current level = {lvl}, setting to INFO".format(cur_level))
+        logger.error("Unknown current level = %s, setting to INFO" % (cur_level))
 
     g_isdbg = logger.isEnabledFor(logging.DEBUG)
 
@@ -2675,7 +2675,7 @@ def prog_sigusr2_handler(signum, frame):
             logger.setLevel(_LEVELS[idx - 1])
     except ValueError:
         logger.setLevel(logging.WARN)
-        logger.error("Unknown current level = {lvl}, setting to WARN".format(cur_level))
+        logger.error("Unknown current level = %s, setting to WARN" % (cur_level))
 
     g_isdbg = logger.isEnabledFor(logging.DEBUG)
 
@@ -2731,7 +2731,7 @@ else:
         wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats, enc=encoding)
         atexit.register(finish_stampede_loader)
     except ValueError,err:
-        logger.critical("Cannot create output: {0}. Abort.".format(err))
+        logger.critical("Cannot create output: %s. Abort." % (err))
         sys.exit(1)
 
 # If in replay mode and it is a DB, attempt to purge wf_uuid_first
