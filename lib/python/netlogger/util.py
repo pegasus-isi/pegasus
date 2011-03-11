@@ -1,7 +1,7 @@
 """
 Utility functions for NetLogger modules and command-line programs
 """
-__rcsid__ = "$Id: util.py 26576 2010-10-08 23:27:02Z dang $"
+__rcsid__ = "$Id: util.py 27069 2011-02-08 20:09:10Z dang $"
 __author__ = "Dan Gunter (dkgunter (at) lbl.gov)"
 
 from asyncore import compact_traceback
@@ -271,13 +271,16 @@ def mostRecentFile(dir, file_pattern, after_time=None):
     # return all 'most recent' files
     return result
 
-def daemonize(log=None, root_log=None):
+
+def daemonize(log=None, root_log=None, close_fds=True):
     """Make current process into a daemon.
     """
     # Do a double-fork so that the daemon process is completely
     # detached from its parent (it becomes a child of init).
     # For details the classic text is: 
     # W. Richard Stevens, "Advanced Programming in the UNIX Environment"
+    log.info("daemonize.start")
+    log.debug("daemonize.fork1")
     try: 
         pid = os.fork() 
         if pid > 0:
@@ -286,6 +289,7 @@ def daemonize(log=None, root_log=None):
     except OSError, err: 
         log.exc( "fork.1.failed", err)
         sys.exit(1)
+    log.debug("daemonize.fork2")
     # child: do second fork
     try: 
         pid = os.fork() 
@@ -293,43 +297,52 @@ def daemonize(log=None, root_log=None):
             # parent: exit
             sys.exit(0) 
     except OSError, err: 
-        log.exc("fork.2.failed", err)
+        log.exc("daemonize.fork2.failed", err)
         sys.exit(1)
     # child: decouple from parent environment
+    log.debug("daemonize.chdir_slash")
     os.chdir("/")
     try:
         os.setsid() 
     except OSError:
         pass
-    os.umask(0) 
-    # Remove log handlers that write to stdout or stderr.
-    # Construct list of other log handlers' file descriptors.
-    no_close = [ ] # list of fd's to keep open
-    if len(root_log.handlers) > 0:
-        console = (sys.stderr.fileno(), sys.stdout.fileno())
-        for handler in root_log.handlers[:]:
-            fd = handler.stream.fileno()
-            if fd in console:
-                log.removeHandler(handler)
-            else:
-                no_close.append(fd)
-    # Close all fd's except those that belong to non-console
-    # log handlers, just discovered above.
-    for fd in xrange(1024):
-        if fd not in no_close:
-            try:
-                os.close(fd)
-            except OSError:
-                pass
+    os.umask(0)
+    if close_fds:
+        # Remove log handlers that write to stdout or stderr.
+        # Construct list of other log handlers' file descriptors.
+        no_close = [ ] # list of fd's to keep open
+        if root_log and len(root_log.handlers) > 0:
+            console = (sys.stderr.fileno(), sys.stdout.fileno())
+            for handler in root_log.handlers[:]:
+                fd = handler.stream.fileno()
+                #print "handler: %s, fileno=%d, console=%s" % (handler, fd, console)
+                if fd in console:
+                    log.removeHandler(handler)
+                else:
+                    no_close.append(fd)
+        # Close all fd's except those that belong to non-console
+        # log handlers, just discovered above.
+        log.info("daemonize.close_fds", ignore=','.join(no_close))
+        for fd in xrange(1024):
+            if fd not in no_close:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
     # redirect stdin, stdout, stderr to /dev/null
+    log.info("daemonize.redirect")
     try:
         devnull = os.devnull
-        os.open(devnull, os.O_RDWR) # returns 0
+    except AttributeError:
+        devnull = "/dev/null"
+    os.open(devnull, os.O_RDWR)
+    try:
         os.dup2(0, 1)
         os.dup2(0, 2)
-    except AttributeError:
-        pass # oh, well
-
+    except OSError:
+        pass
+    log.info("daemonize.end")
+    
 def _getNumberedFiles(path):
     result = [ ]
     for filename in glob.glob(path + ".*"):

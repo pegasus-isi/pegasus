@@ -31,7 +31,7 @@ Etc.
 
 """
 
-__rcsid__ = "$Id: api_test.py 26758 2010-11-10 19:09:16Z mgoode $"
+__rcsid__ = "$Id: api_test.py 26974 2011-01-11 18:57:35Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.workflow._base import Job as JobBase, Host as HostBase,\
@@ -61,6 +61,7 @@ workflow_types = {
     'user' : (string, nonetype),
     'grid_dn' : (string, nonetype),
     'parent_wf_uuid' : (string, nonetype),
+    'sub_wf_uuids' : (array),
     'is_running' : (boolean),
     'is_restarted' : (boolean),
     'restart_count' : (integer),

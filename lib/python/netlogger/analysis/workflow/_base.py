@@ -18,7 +18,7 @@ This signals that the attr or method is subclass-specific and
 also allows the inherited __repr__() method to ignore it.
 """
 
-__rcsid__ = "$Id: _base.py 26758 2010-11-10 19:09:16Z mgoode $"
+__rcsid__ = "$Id: _base.py 26972 2011-01-11 16:19:33Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 import logging
@@ -196,6 +196,20 @@ class Workflow(WorkflowBase):
         """
         raise NotImplementedError, \
             'parent_wf_uuid not yet implemented'
+            
+    @property
+    def sub_wf_uuids(self):
+        """
+        Returns a list of the wf_uuids of any sub-workflows associated
+        with the current workflow object.  Returned in the order in 
+        which they are entered in the workflow table.  If no sub-workflows
+        are found, return an empty list.
+
+        @rtype:     List of strings
+        @return:    The wf_uuids of any sub-workflows.
+        """
+        raise NotImplementedError, \
+            'sub_wf_uuids not yet implemented'
             
     @property
     def start_events(self):

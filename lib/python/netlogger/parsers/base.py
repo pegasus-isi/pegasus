@@ -2,7 +2,7 @@
 Common code for NetLogger parsers
 """
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-__rcsid__ = '$Id: base.py 26512 2010-09-24 13:39:45Z dang $'
+__rcsid__ = '$Id: base.py 27236 2011-02-24 22:37:53Z dang $'
 
 import calendar 
 from netlogger.configobj import ConfigObj, Section
@@ -62,11 +62,16 @@ def autoParseValue(vstr):
             value = vstr
     return value
 
-def parseDate(s):
-    fmt, sec = nldate.guess(s, is_gmt=True, set_gmt=True, try_en=False)
-    if fmt == nldate.UNKNOWN:
-        raise ValueError("Unrecognized date '%s'" % s)
-    return sec
+def parse_ts(ts):
+    "Parse a netlogger timestamp"
+    # until 2033, a '1' in the first place means a float
+    if ts[0] == '1':
+        return float(ts)
+    ts, subs = ts.split('.')
+    subs = float(subs[:-1])
+    return calendar.timegm(time.strptime(ts, r'%Y-%m-%dT%H:%M:%S')) + subs 
+
+parseDate = parse_ts
 
 def tolerateBlanksAndComments(line=None, error=None, linenum=0):
     """Callback function fitting the signature of the callback
@@ -480,14 +485,12 @@ class NLSimpleParser(DoesLogging):
     def parseLine(self, line, strip=True):
         """Parse a BP-formatted line.
         """
-        self.log.debug("parseLine.start")
         status = 0
         if strip:
             s = line.strip()
         else:
             s = line
         if len(s) == 0:
-            self.log.debug("parseLine.end", status=1, msg="empty line")
             return { }
         d = { }
         fields = self.E1.findall(s)
@@ -501,7 +504,7 @@ class NLSimpleParser(DoesLogging):
         for name,value in fields:
             if name == 'ts':
                 if self.parse_date:
-                    d[name] = parseDate(value)
+                    d[name] = parse_ts(value)
                 else:
                     d[name] = value
             elif value and value[0] == '"':
@@ -517,7 +520,6 @@ class NLSimpleParser(DoesLogging):
                     raise ValueError("missing %s" % k)
         elif len(d) < 2:
             status = -1
-        self.log.debug("parseLine.end", status=status, num__fields=len(d))
         return d
 
 class NLFastParser(NLSimpleParser, NLBaseParser):
@@ -567,7 +569,7 @@ if HAVE_PYPARSING:
             result = {}
             for a in rlist:
                 if self.parse_date and a[0] == 'ts':
-                    result[a[0]] = parseDate(a[1])
+                    result[a[0]] = parse_ts(a[1])
                 else:
                     result[a[0]] = a[1]
             return result

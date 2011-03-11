@@ -7,7 +7,7 @@ Has all the appropriate @property methods filled in, base class initializations,
 from netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
     Job as BaseJob, Host as BaseHost, Task as BaseTask, Jobstate as BaseJobstate
 
-__rcsid__ = "$Id: example.py 26605 2010-10-14 22:18:57Z mgoode $"
+__rcsid__ = "$Id: example.py 26972 2011-01-11 16:19:33Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 class Workflow(BaseWorkflow):
@@ -151,6 +151,20 @@ class Workflow(BaseWorkflow):
         """
         raise NotImplementedError, \
             'parent_wf_uuid not yet implemented'
+            
+    @property
+    def sub_wf_uuids(self):
+        """
+        Returns a list of the wf_uuids of any sub-workflows associated
+        with the current workflow object.  Returned in the order in 
+        which they are entered in the workflow table.  If no sub-workflows
+        are found, return an empty list.
+
+        @rtype:     List of strings
+        @return:    The wf_uuids of any sub-workflows.
+        """
+        raise NotImplementedError, \
+            'sub_wf_uuids not yet implemented'
             
     @property
     def start_events(self):

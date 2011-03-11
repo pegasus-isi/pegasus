@@ -13,7 +13,7 @@ Utility functions include functions to get and set the Grid Job ID.
 """
 __author__ = "Dan Gunter"
 __created__ = "1 April 2004"
-__rcsid__ = "$Id: nlapi.py 26609 2010-10-15 18:38:47Z dang $"
+__rcsid__ = "$Id: nlapi.py 27037 2011-02-04 20:16:27Z dang $"
 
 import calendar
 import datetime
@@ -376,9 +376,17 @@ class Log:
                 del kw['traceback']
             else:
                 tbstr = None
+            if kw.has_key('msg'):
+                msg = kw['msg']
+                del kw['msg']
+            else:
+                msg = None
             remainder = ",".join(["%s=%s" % (key, value)
                                   for key, value in kw.items()])
-            buf = "%s %-6s %s - %s" % (ts, level, event, remainder)
+            if msg:
+                buf = "%s %-6s %s | %s. %s" % (ts, level, event, msg, remainder)
+            else:
+                buf = "%s %-6s %s | %s" % (ts, level, event, remainder)
             # add traceback
             if tbstr:
                 buf += '\n' + tbstr
