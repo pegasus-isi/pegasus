@@ -1966,8 +1966,12 @@ if options.no_events is not None:
     # Turn off event generation
     no_events = True
 else:
-    # Set event generation according to properties (default is False)
-    no_events = utils.make_boolean(props.property("pegasus.monitord.noevents"))
+    if props.property("pegasus.monitord.events") is not None:
+        # Set event generation according to properties (default is True)
+        no_events = not utils.make_boolean(props.property("pegasus.monitord.events"))
+    else:
+        # Default is to generate events
+        no_events = False
 # Create event sink
 if options.event_dest is None:
     if props.property("pegasus.monitord.output") is None:
