@@ -193,16 +193,6 @@ sub salvage_logfile($) {
 
 
 
-# read various property files -- all the magic is in this c'tor
-my $props = Work::Properties->new();
-
-# set true defaults from properties
-$maxpre = $props->property('dagman.maxpre') || $maxpre;
-$maxpost = $props->property('dagman.maxpost') || $maxpost;
-$maxjobs = $props->property('dagman.maxjobs') || $maxjobs;
-$maxidle = $props->property('dagman.maxidle') || $maxidle;
-$notify = $props->property('dagman.notify') || $notify;
-$verbose = 1 if lc($props->property('dagman.verbose')) =~ /(true|on|1)/;
 
 GetOptions( "debug|d=i"    => \$main::DEBUG,
 	    "maxpre|P=i"   => \$maxpre,
@@ -237,6 +227,19 @@ my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
 salvage_logfile($dag);
 my $run=dirname($dag);
 my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
+# this assumes karan writes a merged system + user properties per workflow in the dag dir.
+my $newprops = {'pegasus.properties'=> $config{properties}};
+# Enable below when we add --conf option
+#$newprops->{'pegasus.user.properties'}=$properties if defined $properties;
+my $props = Work::Properties->new($newprops);
+
+# set true defaults from properties
+$maxpre = $props->property('dagman.maxpre') || $maxpre;
+$maxpost = $props->property('dagman.maxpost') || $maxpost;
+$maxjobs = $props->property('dagman.maxjobs') || $maxjobs;
+$maxidle = $props->property('dagman.maxidle') || $maxidle;
+$notify = $props->property('dagman.notify') || $notify;
+$verbose = 1 if lc($props->property('dagman.verbose')) =~ /(true|on|1)/ || $verbose;
 
 # construct commandline
 my @arg = ( $c_s_d );

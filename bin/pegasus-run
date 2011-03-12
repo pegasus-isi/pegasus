@@ -46,14 +46,13 @@ sub usage(;$);			# { }
 $main::DEBUG = 0;		# for now
 my $condor;			# if set, use Condor for pegasus-monitord
 my $grid=0;                     # if set, disable grid checks;
-my $props = Work::Properties->new();
 my $properties="";  	        # properties file for Pegasus
 my $default_tsd = File::Spec->catfile( File::Spec->rel2abs( 
     File::Spec->canonpath(dirname($0)) ), 'pegasus-monitord' );
-my $tsd = $props->property('pegasus.monitord') || $default_tsd;
 
     
 my $database=1  ;
+my $tsd;
 GetOptions( "help|h" => \&usage,
 	    "monitor|tsd|m=s" => \$tsd,
 	    "database!"=>\$database,
@@ -68,6 +67,12 @@ GetOptions( "help|h" => \&usage,
 my $run = shift || usage(1);
 usage(1) unless -d $run;
 my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
+# this assumes karan writes a merged system + user properties per workflow in the dag dir.
+my $newprops = {'pegasus.properties'=> $config{properties}};
+$newprops->{'pegasus.user.properties'}=$properties if defined $properties;
+my $props = Work::Properties->new($newprops);
+
+$tsd = $tsd || $props->property('pegasus.monitord') || $default_tsd;
 
 #
 # --- functions -------------------------------------------------
