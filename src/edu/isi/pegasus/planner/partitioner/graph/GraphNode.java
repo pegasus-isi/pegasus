@@ -84,6 +84,15 @@ public class GraphNode extends Data {
     /**
      * The default constructor.
      */
+
+        /**
+     * added by weiwei
+     */
+    public GraphNode mAggregator;
+    public GraphNode mDistributor;
+    
+
+    
     public GraphNode() {
         mLogicalID = new String();
         mParents = new java.util.LinkedList();
@@ -92,6 +101,8 @@ public class GraphNode extends Data {
         mLogicalName = new String();
         mColor = this.WHITE_COLOR;
         mBag   = null;
+        mAggregator = null;
+        mDistributor = null;
     }
 
     /**
