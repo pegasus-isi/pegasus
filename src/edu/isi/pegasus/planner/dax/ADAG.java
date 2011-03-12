@@ -195,7 +195,7 @@ public class ADAG {
     /**
      *  The Name / Label of the DAX
      */
-    private String mName;
+    public String mName;
     /**
      *  The Index of the dax object. I out of N
      */
