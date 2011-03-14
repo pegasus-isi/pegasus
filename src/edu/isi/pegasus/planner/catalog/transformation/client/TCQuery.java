@@ -288,7 +288,7 @@ public class TCQuery
                 }
             } else {
                 mLogger.log( "No PFN Profiles found.",
-                    LogManager.CONSOLE_MESSAGE_LEVEL );
+                    LogManager.FATAL_MESSAGE_LEVEL );
                 System.exit( 1 );
             }
         } else {
