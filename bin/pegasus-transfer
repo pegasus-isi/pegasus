@@ -155,7 +155,10 @@ tool_map[('file'    , 'gsiftp'  )] = 'gsiftp'
 tool_map[('file'    , 'scp'     )] = 'scp'
 tool_map[('file'    , 'srm'     )] = 'srm'
 tool_map[('file'    , 'symlink' )] = 'symlink'
+tool_map[('ftp'     , 'ftp'     )] = 'gsiftp'
+tool_map[('ftp'     , 'gsiftp'  )] = 'gsiftp'
 tool_map[('gsiftp'  , 'file'    )] = 'gsiftp'
+tool_map[('gsiftp'  , 'ftp'     )] = 'gsiftp'
 tool_map[('gsiftp'  , 'gsiftp'  )] = 'gsiftp'
 tool_map[('gsiftp'  , 'srm'     )] = 'srm'
 tool_map[('http'    , 'file'    )] = 'webget'
@@ -165,7 +168,6 @@ tool_map[('scp'     , 'file'    )] = 'scp'
 tool_map[('srm'     , 'gsiftp'  )] = 'srm'
 tool_map[('srm'     , 'srm'     )] = 'srm'
 tool_map[('symlink' , 'symlink' )] = 'symlink'
-
 tool_info = {}
 
 all_list = []
