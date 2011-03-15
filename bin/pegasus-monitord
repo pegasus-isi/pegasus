@@ -1902,7 +1902,7 @@ grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH 
                "For empty scheme, params are a file path with '-' meaning standard output. "
                "For x-tcp scheme, params are TCP host[:port=14380]. "
                "For DB, use SQLAlchemy engine URL. "
-               "(default=sqlite:///<dagman-output-file>.sqlite.db)",   default=None)
+               "(default=sqlite:///<dagman-output-file>.stampede.db)",   default=None)
 grp.add_option("-e", "--encoding", action='store', dest='enc', default="bp", metavar='FORMAT',
                 help="How to encode log events: bson | bp (default=%default)")
 parser.add_option_group(grp)
