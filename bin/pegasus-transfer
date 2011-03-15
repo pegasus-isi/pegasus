@@ -8,7 +8,7 @@ Usage: pegasus-transfer [options]
 """
 
 ##
-#  Copyright 2007-2010 University Of Southern California
+#  Copyright 2007-2011 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -35,6 +35,10 @@ import signal
 import string
 import stat
 import time
+from collections import deque
+
+
+__author__ = "Mats Rynge <rynge@isi.edu>"
 
 # --- regular expressions -------------------------------------------------------------
 
@@ -42,20 +46,20 @@ re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)')
 
 # --- classes -------------------------------------------------------------------------
 
-class URLPair:
+class Transfer:
 
-    pair_id   = 0       # the id of the pair in the input, the nth pair in the input
-    src_proto = ""      # 
-    src_host  = ""      # 
-    src_path  = ""      #
-    dst_proto = ""      #
-    dst_host  = ""      #
-    dst_path  = ""      #
+    pair_id        = 0       # the id of the pair in the input, the nth pair in the input
+    src_proto      = ""      # 
+    src_host       = ""      # 
+    src_path       = ""      #
+    dst_proto      = ""      #
+    dst_host       = ""      #
+    dst_path       = ""      #
+    allow_grouping = True    # can this transfer be grouped with others?
 
     def __init__(self, pair_id):
         """
-        Initializes the Job class, setting job name,
-        and state, if provided
+        Initializes the transfer class
         """
         self.pair_id = pair_id
 
@@ -81,9 +85,6 @@ class URLPair:
             # file urls can either start with file://[\w]*/ or file: (no //)
             path = re.sub("^file:(//[\w\.\-:@]*)?", "", url)
             path = expand_env_vars(path)
-            # relative path?
-            if string.find(path, "/") != 0:
-                path = os.getcwd() + "/" + path
             return proto, host, path
         
         # symlink url is a special cases as it can contain relative paths and env vars
@@ -92,12 +93,9 @@ class URLPair:
             # symlink urls can either start with symlink://[\w]*/ or symlink: (no //)
             path = re.sub("^symlink:(//[\w\.\-:@]*)?", "", url)
             path = expand_env_vars(path)
-            # relative path?
-            if string.find(path, "/") != 0:
-                path = os.getcwd() + "/" + path
             return proto, host, path
 
-        # other than file:// urls
+        # other than file/symlink urls
         r = re_parse_url.search(url)
         if r:
             # Parse successful
@@ -113,6 +111,13 @@ class URLPair:
     
     def dst_url(self):
         return "%s://%s%s" % (self.dst_proto, self.dst_host, self.dst_path)
+    
+    def dst_url_dirname(self):
+        dn = os.path.dirname(self.dst_path)
+        return "%s://%s%s" % (self.dst_proto, self.dst_host, dn)
+
+    def groupable(self):
+        return self.allow_grouping and (self.src_proto == "gsiftp" or self.dst_proto == "gsiftp")
 
     def __cmp__(self, other):
         """
@@ -144,37 +149,33 @@ prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
 
-# delay errors to allow all transfers to be tried before exiting
-delays_errors = False
-delay_exit_code = 0
 
 # this is the map of what tool to use for a given protocol pair (src, dest)
 tool_map = {}
 tool_map[('file'    , 'file'    )] = 'cp'
 tool_map[('file'    , 'gsiftp'  )] = 'gsiftp'
 tool_map[('file'    , 'scp'     )] = 'scp'
+tool_map[('file'    , 's3'      )] = 's3'
+tool_map[('file'    , 's3s'     )] = 's3'
 tool_map[('file'    , 'srm'     )] = 'srm'
 tool_map[('file'    , 'symlink' )] = 'symlink'
+tool_map[('ftp'     , 'ftp'     )] = 'gsiftp'
+tool_map[('ftp'     , 'gsiftp'  )] = 'gsiftp'
 tool_map[('gsiftp'  , 'file'    )] = 'gsiftp'
+tool_map[('gsiftp'  , 'ftp'     )] = 'gsiftp'
 tool_map[('gsiftp'  , 'gsiftp'  )] = 'gsiftp'
 tool_map[('gsiftp'  , 'srm'     )] = 'srm'
 tool_map[('http'    , 'file'    )] = 'webget'
 tool_map[('http'    , 'gsiftp'  )] = 'gsiftp'
 tool_map[('https'   , 'file'    )] = 'webget'
+tool_map[('s3'      , 'file'    )] = 's3'
+tool_map[('s3s'     , 'file'    )] = 's3'
 tool_map[('scp'     , 'file'    )] = 'scp'
 tool_map[('srm'     , 'gsiftp'  )] = 'srm'
 tool_map[('srm'     , 'srm'     )] = 'srm'
 tool_map[('symlink' , 'symlink' )] = 'symlink'
 
 tool_info = {}
-
-all_list = []
-cp_list = []
-symlink_list = []
-scp_list = []
-webget_list = []
-gsiftp_list = []
-srm_list = []
 
 # stats
 stats_start = 0
@@ -212,6 +213,9 @@ def setup_logger(level_str):
     logger.addHandler(console)
     logger.debug("Logger has been configured")
 
+def prog_sigint_handler(signum, frame):
+    logger.warn("Exiting due to signal %d" % (signum))
+    myexit(1)
 
 def alarm_handler(signum, frame):
     raise Alarm
@@ -232,13 +236,13 @@ def get_env_var(match):
     return value
 
 
-def myexec(cmd_line, timeout_secs, should_log, delay_err):
+def myexec(cmd_line, timeout_secs, should_log):
     """
     executes shell commands using with timeouts
     """
     global delay_exit_code
     if should_log or logger.isEnabledFor(logging.DEBUG):
-        logger.info("Executing: " + cmd_line)
+        logger.info(cmd_line)
     sys.stdout.flush()
 
     # set up signal handler for timeout
@@ -254,11 +258,7 @@ def myexec(cmd_line, timeout_secs, should_log, delay_err):
         raise RuntimeError("Command '%s' timed out after %s seconds" % (cmd_line, timeout_secs))
     rc = p.returncode
     if rc != 0:
-        if delay_err:
-            logger.warning("Command '%s' failed with error code %s. Continuing anyways due to --delay-errors." % (cmd_line, rc))
-            delay_exit_code = 3
-        else:
-            raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, rc))
+        raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, rc))
 
 
 def backticks(cmd_line):
@@ -278,17 +278,21 @@ def check_tool(executable, version_arg, version_regex):
     full_path = backticks("which " + executable + " 2>/dev/null") 
     full_path = full_path.rstrip('\n')
     if full_path == "":
-        raise RuntimeError("Required command '%s' not found in the current environment" %(executable))
+        logger.info("Command '%s' not found in the current environment" %(executable))
+        return
     tool_info[executable]['full_path'] = full_path
 
     # version
-    version = backticks(executable + " " + version_arg + " 2>&1")
-    version = version.replace('\n', "")
-    re_version = re.compile(version_regex)
-    result = re_version.search(version)
-    if result:
-        version = result.group(1)
-    tool_info[executable]['version'] = version
+    if version_regex == None:
+        version = "N/A"
+    else:
+        version = backticks(executable + " " + version_arg + " 2>&1")
+        version = version.replace('\n', "")
+        re_version = re.compile(version_regex)
+        result = re_version.search(version)
+        if result:
+            version = result.group(1)
+        tool_info[executable]['version'] = version
 
     # if possible, break up version into major, minor, patch
     re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
@@ -353,15 +357,12 @@ def check_env_and_tools():
     logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
     
     # tools we might need later
-    if len(webget_list) > 0:
-        check_tool("wget", "--version", "([0-9]+\.[0-9]+)")
-
-    if len(gsiftp_list) > 0:
-        check_tool("globus-version", "--full", "([0-9]+\.[0-9]+\.[0-9]+)")
-        check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
-
-    if len(srm_list) > 0:
-        check_tool("lcg-cp", "--version", "lcg_util-([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+)")
+    check_tool("wget", "--version", "([0-9]+\.[0-9]+)")
+    check_tool("globus-version", "--full", "([0-9]+\.[0-9]+\.[0-9]+)")
+    check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
+    check_tool("lcg-cp", "--version", "lcg_util-([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+)")
+    check_tool("srm-copy", "-version", "srm-copy[ \t]+([\.0-9a-zA-Z]+)")
+    check_tool("pegasus-s3", "help", None)
 
 
 def prepare_local_dir(path):
@@ -372,96 +373,115 @@ def prepare_local_dir(path):
         os.makedirs(path, 0755)
 
 
-def cp():
+def cp(transfers_list, failed_q):
     """
     copies locally using /bin/cp
     """
-    if len(cp_list) == 0:
+    if len(transfers_list) == 0:
         return
-    logger.info("Executing cp commands")
-    for i, url_pair in enumerate(cp_list): 
-        prepare_local_dir(os.path.dirname(url_pair.dst_path))
-        cmd = "/bin/cp -f -L \"%s\" \"%s\"" % (url_pair.src_path, url_pair.dst_path)
-        myexec(cmd, 1*60*60, False, delay_errors)
-        stats_add(url_pair.dst_path)
+    for i, transfer in enumerate(transfers_list): 
+        prepare_local_dir(os.path.dirname(transfer.dst_path))
+        cmd = "/bin/cp -f -L \"%s\" \"%s\"" % (transfer.src_path, transfer.dst_path)
+        try:
+            myexec(cmd, 1*60*60, True)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_q.append(transfer)
+        stats_add(transfer.dst_path)
 
 
-def symlink():
+def symlink(transfers, failed_q):
     """
     symlinks locally using ln
     """
-    global delay_exit_code
-    if len(symlink_list) == 0:
-        return
-    logger.info("Executing symlink commands")
-    for i, url_pair in enumerate(symlink_list): 
-        prepare_local_dir(os.path.dirname(url_pair.dst_path))
+
+    for i, transfer in enumerate(transfers): 
+        prepare_local_dir(os.path.dirname(transfer.dst_path))
 
         # we do not allow dangling symlinks
-        if not os.path.exists(url_pair.src_path):
-            if delay_errors:
-                logger.warning("Symlink source (%s) does not exist. Continuing anyways due to --delay-errors." % (url_pair.src_path))
-                delay_exit_code = 4
-            else:
-                raise RuntimeError("Symlink source (%s) does not exist" % (url_pair.src_path))
+        if not os.path.exists(transfer.src_path):
+            logger.warning("Symlink source (%s) does not exist" % (transfer.src_path))
+            failed_q.append(transfer)
             continue
 
-        if os.path.exists(url_pair.src_path) and os.path.exists(url_pair.dst_path):
+        if os.path.exists(transfer.src_path) and os.path.exists(transfer.dst_path):
             # make sure src and target are not the same file - have to compare at the
             # inode level as paths can differ
-            src_inode = os.stat(url_pair.src_path)[stat.ST_INO]
-            dst_inode = os.stat(url_pair.dst_path)[stat.ST_INO]
+            src_inode = os.stat(transfer.src_path)[stat.ST_INO]
+            dst_inode = os.stat(transfer.dst_path)[stat.ST_INO]
             if src_inode == dst_inode:
-                logger.warning("symlink: src (%s) and dst (%s) already exists" % (url_pair.src_path, url_pair.dst_path))
+                logger.warning("symlink: src (%s) and dst (%s) already exists" % (transfer.src_path, transfer.dst_path))
                 continue
 
-        cmd = "ln -f -s %s %s" % (url_pair.src_path, url_pair.dst_path)
-        myexec(cmd, 60, False, delay_errors)
+        cmd = "ln -f -s %s %s" % (transfer.src_path, transfer.dst_path)
+        try:
+            myexec(cmd, 60, True)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_q.append(transfer)
 
 
-def scp():
+def scp(transfers, failed_q):
     """
     copies using scp
     """
-    if len(scp_list) == 0:
-        return
-    logger.info("Executing scp commands")
-    for i, url_pair in enumerate(scp_list): 
+    for i, transfer in enumerate(scp_list): 
         cmd = "/usr/bin/scp"
-        if url_pair.dst_proto == "file":
-            prepare_local_dir(os.path.dirname(url_pair.dst_path))
-            cmd += " " + url_pair.src_host + ":" + url_pair.src_path
-            cmd += " " + url_pair.dst_path
-            stats_add(url_pair.dst_path)
+        if transfer.dst_proto == "file":
+            prepare_local_dir(os.path.dirname(transfer.dst_path))
+            cmd += " " + transfer.src_host + ":" + transfer.src_path
+            cmd += " " + transfer.dst_path
+            stats_add(transfer.dst_path)
         else:
-            cmd += " " + url_pair.src_path
-            cmd += " " + url_pair.dst_host + ":" + url_pair.dst_path
-            stats_add(url_pair.src_path)
-        myexec(cmd, 1*60*60, False, delay_errors)
+            cmd += " " + transfer.src_path
+            cmd += " " + transfer.dst_host + ":" + transfer.dst_path
+            stats_add(transfer.src_path)
+        try:
+            myexec(cmd, 60, True)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_q.append(transfer)
 
 
-def webget():
+def webget(transfers, failed_q):
     """
     pulls http/https using wget
     """
-    if len(webget_list) == 0:
+    if len(transfers) == 0:
         return
-    logger.info("Executing wget commands")
-    if len(webget_list) > 0 and tool_info['wget']['full_path'] == None:
+    if len(transfers) > 0 and tool_info['wget']['full_path'] == None:
         raise RuntimeError("Unable to do http/https transfers becuase wget could not be found")
-    for i, url_pair in enumerate(webget_list): 
-        prepare_local_dir(os.path.dirname(url_pair.dst_path))
+    for i, transfer in enumerate(transfers): 
+        prepare_local_dir(os.path.dirname(transfer.dst_path))
         cmd = tool_info['wget']['full_path']
         if logger.isEnabledFor(logging.DEBUG):
             cmd += " -v"
         else:
             cmd += " -q"
-        cmd += " --no-check-certificate -O \"" + url_pair.dst_path + "\" \"" + url_pair.src_url() + "\""
-        myexec(cmd, 1*60*60, False, delay_errors)
-        stats_add(url_pair.dst_path)
+        cmd += " --no-check-certificate -O \"" + transfer.dst_path + "\" \"" + transfer.src_url() + "\""
+        try:
+            myexec(cmd, 1*60*60, True)
+            stats_add(transfer.dst_path)
+        except RuntimeError, err:
+            logger.error(err)
+            failed_q.append(transfer)
 
 
-def gsiftp_is_similar(a, b):
+def transfers_groupable(a, b):
+    """
+    compares two url_pairs, and determins if they are similar enough to be
+    grouped together for one tool
+    """
+    if not a.groupable() or not b.groupable():
+        return False
+    if a.src_proto != b.src_proto:
+        return False
+    if a.dst_proto != b.dst_proto:
+        return False
+    return True
+
+
+def gsiftp_similar(a, b):
     """
     compares two url_pairs, and determins if they are similar enough to be
     grouped together in one transfer input file
@@ -477,130 +497,244 @@ def gsiftp_is_similar(a, b):
     return True
 
 
-def gsiftp():
+def gsiftp(full_list, failed_q, attempt):
     """
     gsiftp - globus-url-copy for now, maybe uberftp in the future
     """
-    if len(gsiftp_list) == 0:
+    if len(full_list) == 0:
         return
     
     if tool_info['globus-url-copy']['full_path'] == None:
         raise RuntimeError("Unable to do gsiftp transfers becuase globus-url-copy could not be found")
 
-    # reverse the list so we can append/pop i nthe right order
-    gsiftp_list.reverse()
-    while len(gsiftp_list) > 0:
-        delayed_file_stat = []
-        # create a tmp file with similar (same src host/path, same dst host/path)
-        # url pairs
-        try:
-            tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst", dir="/tmp")
-            tmp_file = os.fdopen(tmp_fd, "w+b")
-        except:
-            raise RuntimeError("Unable to create tmp file for globus-url-copy transfers")
-        num_pairs = 0
-        curr = gsiftp_list.pop()
+    # create lists with similar (same src host/path, same dst host/path) url pairs
+    while len(full_list) > 0:
+
+        similar_list = []
+
+        curr = full_list.pop()
         prev = curr
         third_party = curr.src_proto == "gsiftp" and curr.dst_proto == "gsiftp"
-        while gsiftp_is_similar(curr, prev):
-            logger.debug("   adding %s %s" % (curr.src_url(), curr.dst_url()))
-            tmp_file.write("%s %s\n" % (curr.src_url(), curr.dst_url()))
 
-            # delay stating until we have finished the transfers
-            if curr.src_proto == "file":
-                delayed_file_stat.append(curr.src_path)
-            elif curr.dst_proto == "file":
-                delayed_file_stat.append(curr.dst_path)
+        while gsiftp_similar(curr, prev):
+            
+            similar_list.append(curr)
 
-            num_pairs += 1
-            if len(gsiftp_list) == 0:
+            if len(full_list) == 0:
                 break
             else:
                 prev = curr
-                curr = gsiftp_list.pop()
-        if not(gsiftp_is_similar(curr, prev)):
+                curr = full_list.pop()
+
+        if not gsiftp_similar(curr, prev):
             # the last pair is not part of the set and needs to be added back to the
             # beginning of the list
-            gsiftp_list.append(curr)
-        tmp_file.close()
+            full_list.append(curr)
 
-        logger.info("Grouped %d similar gsiftp transfers together in temporary file %s"
-                    %(num_pairs, tmp_name))
+        if len(similar_list) == 0:
+            break
 
-        # build command line for globus-url-copy
-        cmd = tool_info['globus-url-copy']['full_path'];
+        # we now have a list of similar transfers - break up and send the first one with create dir
+        # and the rest with no create dir options
+        first_list = []
+        first_list.append(similar_list.pop())
+        gsiftp_do_transfers(first_list, failed_q, True, third_party)
+        if len(similar_list) > 0:
+            gsiftp_do_transfers(similar_list, failed_q, False, third_party)
 
-        # make output from guc match our current log level
-        if logger.isEnabledFor(logging.DEBUG):
-            cmd += " -verbose"
 
-        # always try to create directories
+
+
+def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
+    """
+    sub to gsiftp() - transfers a list of urls
+    """
+    
+    # keep track of what transfer we attempted so we can add to fail q in case of failures
+    attempted_transfers = transfers[:]
+    delayed_file_stat = []
+
+    # create tmp file with transfer src/dst pairs
+    num_pairs = 0
+    try:
+        tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-transfer-", suffix=".lst", dir="/tmp")
+        tmp_file = os.fdopen(tmp_fd, "w+b")
+    except:
+        raise RuntimeError("Unable to create tmp file for globus-url-copy transfers")
+    for i, t in enumerate(transfers):
+        num_pairs += 1
+        logger.debug("   adding %s %s" % (t.src_url(), t.dst_url()))
+
+        # delay stating until we have finished the transfers
+        if t.src_proto == "file":
+            delayed_file_stat.append(t.src_path)
+        elif t.dst_proto == "file":
+            delayed_file_stat.append(t.dst_path)
+
+        tmp_file.write("%s %s\n" % (t.src_url(), t.dst_url()))
+
+    tmp_file.close()
+    
+    logger.info("Grouped %d similar gsiftp transfers together in temporary file %s" %(num_pairs, tmp_name))
+
+    # build command line for globus-url-copy
+    cmd = tool_info['globus-url-copy']['full_path'];
+
+    # make output from guc match our current log level
+    if logger.isEnabledFor(logging.DEBUG):
+        cmd += " -dbg"
+    elif num_pairs < 10:
+        cmd += " -verbose"
+
+    # should we try to create directories?
+    if create_dest:
         cmd += " -create-dest"
+    
+    # Only do third party transfers for gsiftp->gsiftp. For other combinations, fall
+    # back to settings which will for well over for example NAT
+    if third_party:
+        cmd += " -parallel 4"
+
+        # -fast only for Globus 4 and above
+        if tool_info['globus-version']['version_major'] >= 4:
+            cmd += " -fast"
         
-        # restart is broken in 4.0.0 and 4.0.1 - see bug#3919
-        if tool_info['globus-version']['version_major'] >= 4 \
-           and not(tool_info['globus-version']['version_major'] == 4 and
-                   tool_info['globus-version']['version_minor'] == 0 and
-                   tool_info['globus-version']['version_patch'] <= 1):
-            cmd += " -restart"
+        # -pipeline only for Globus 4.2 and above
+        if (tool_info['globus-version']['version_major'] == 5 \
+            or (tool_info['globus-version']['version_major'] >= 4 \
+                and tool_info['globus-version']['version_minor'] >= 2)):
+            cmd += " -pipeline"       
+    else:
+        cmd += " -no-third-party-transfers -no-data-channel-authentication"
 
-        # Only do third party transfers for gsiftp->gsiftp. For other combinations, fall
-        # back to settings which will for well over for example NAT
-        if third_party:
-            cmd += " -parallel 4"
-            # -fast only for Globus 4 and above
-            if tool_info['globus-version']['version_major'] >= 4:
-                cmd += " -fast"
-            # -pipeline only for Globus 4.2 and above
-            if tool_info['globus-version']['version_major'] == 5 \
-               or (tool_info['globus-version']['version_major'] >= 4 \
-                   and tool_info['globus-version']['version_minor'] >= 2):
-                cmd += " -pipeline"       
-        else:
-            cmd += " -no-third-party-transfers -no-data-channel-authentication"
-
-        cmd += " -f " + tmp_name
-        try:
-            myexec(cmd, 6*60*60, True, delay_errors)
-        except Exception, err:
-            # in case of failure, make sure we clean up
-            os.unlink(tmp_name)
-            raise err
-        os.unlink(tmp_name)
-
+    cmd += " -f " + tmp_name
+    try:
+        myexec(cmd, 6*60*60, True)
+    
         # stat the files
         for i, filename in enumerate(delayed_file_stat): 
             stats_add(filename)
+    except Exception, err:
+        logger.error(err)
+        for i, t in enumerate(attempted_transfers):
+            failed_q.append(t)
+    os.unlink(tmp_name)
 
-def srm():
+
+def srm(transfers, failed_q):
     """
     srm - use lcg-cp (Is this generic enough? Do we need to handle space tokens?)
     """
-    if len(srm_list) == 0:
+    if len(transfers) == 0:
         return
-    
-    if tool_info['lcg-cp']['full_path'] == None:
-        raise RuntimeError("Unable to do srm transfers becuase lcg-cp could not be found")
 
-    for i, url_pair in enumerate(srm_list): 
+    if tool_info['srm-copy']['full_path'] == None and tool_info['lcg-cp']['full_path'] == None:
+        raise RuntimeError("Unable to do srm transfers becuase srm-copy / lcg-cp could not be found")
+
+    for i, url_pair in enumerate(transfers): 
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
         cmd = ""
-        # lcg-cp is mostly used on OSG, so look for $OSG_GRID and if found source setup.sh
+        # srm is mostly used on OSG, so look for $OSG_GRID and if found source setup.sh
         if "OSG_GRID" in os.environ:
             cmd = ". $OSG_GRID/setup.sh ;"
-        cmd = "%s lcg-cp -D srmv2 -vb -b -n 4 %s %s" % (cmd, url_pair.src_url(), url_pair.dst_url())
-        myexec(cmd, 6*60*60, True, delay_errors)
+        if tool_info['srm-copy']['full_path'] != None:
+            cmd = "%s srm-copy  %s %s -mkdir -concurrency 4 " % (cmd, url_pair.src_url(), url_pair.dst_url())
+        else:
+            cmd = "%s lcg-cp -D srmv2 -vb -b -n 4 %s %s" % (cmd, url_pair.src_url(), url_pair.dst_url())
+        try:
+            myexec(cmd, 6*60*60, True)
+        except Exception, err:
+            logger.error(err)
+            failed_q.append(url_pair)
+
+
+def s3(transfers, failed_q):
+    """
+    s3 - uses pegasus-s3 to interact with Amazon S3 
+    """
+    if len(transfers) == 0:
+        return
+
+    if tool_info['pegasus-s3']['full_path'] == None:
+        raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
+
+    buckets_created = {}
+
+    for i, url_pair in enumerate(transfers): 
+
+        # get/put?
+        if url_pair.dst_proto == "file":
+            # this is a 'get'
+            local_filename = url_pair.dst_path
+            prepare_local_dir(os.path.dirname(url_pair.dst_path))
+            cmd = "pegasus-s3 get %s %s" % (url_pair.src_url(), url_pair.dst_path)
+        else:
+            # this is a 'put'
+            local_filename = url_pair.src_path
+            # first ensure that the bucket exists
+            bucket = url_pair.dst_url_dirname()
+            if not bucket in buckets_created:
+                buckets_created[bucket] = True
+                cmd = "pegasus-s3 mkdir %s" %(bucket)
+                try:
+                    myexec(cmd, 5*60, True)
+                except Exception, err:
+                    logger.error("mkdir failed - possibly due to the bucket already existing, so continuing...")
+            cmd = "pegasus-s3 put %s %s" % (url_pair.src_path, url_pair.dst_url())
+
+        try:
+            myexec(cmd, 6*60*60, True)
+            stats_add(local_filename)
+        except Exception, err:
+            logger.error(err)
+            failed_q.append(url_pair)
+
+
+def handle_transfers(transfers, failed_q, attempt):
+    """
+    handles a list of transfers - failed ones are added to the failed queue
+    """
+    try:
+        if tool_map.has_key((t_main.src_proto, t_main.dst_proto)):
+            tool = tool_map[(t_main.src_proto, t_main.dst_proto)]
+            if tool == "cp":
+                cp(transfers_list, failed_q)
+            elif tool == "symlink":
+                symlink(transfers, failed_q)
+            elif tool == "scp":
+                scp(transfers, failed_q)
+            elif tool == "webget":
+                webget(transfers, failed_q)
+            elif tool == "gsiftp":
+                gsiftp(transfers, failed_q, attempt)
+            elif tool == "srm":
+                srm(transfers, failed_q)
+            elif tool == "s3":
+                s3(transfers, failed_q)
+            else:
+                logger.critical("Error: No mapping for the tool '%s'" %(tool))
+                myexit(1)
+        else:
+            logger.critical("Error: This tool does not know how to transfer from %s:// to %s://" \
+                            % (url_pair.src_proto, url_pair.dst_proto))
+            myexit(1)
+
+    except RuntimeError, err:
+        logger.critical(err)
+        myexit(1)
 
 
 def stats_add(filename):
     global stats_total_bytes
-    s = os.stat(filename)
-    stats_total_bytes = stats_total_bytes + s[stat.ST_SIZE]
+    try:
+        s = os.stat(filename)
+        stats_total_bytes = stats_total_bytes + s[stat.ST_SIZE]
+    except BaseException, err:
+        pass # ignore
 
 
 def stats_summarize():
-
     if stats_total_bytes == 0:
         logger.info("Stats: no local files in the transfer set")
         return
@@ -608,7 +742,7 @@ def stats_summarize():
     total_secs = stats_end - stats_start
     Bps = stats_total_bytes / total_secs
 
-    logger.info("Stats: %s transferred in %.0f seconds. Rate: %sB/s (%sb/s)" % (
+    logger.info("Stats: %sB transferred in %.0f seconds. Rate: %sB/s (%sb/s)" % (
                 iso_prefix_formatted(stats_total_bytes), total_secs, 
                 iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
     logger.info("NOTE: stats do not include third party gsiftp transfers")
@@ -649,19 +783,22 @@ sys.stderr = sys.stdout
 prog_usage = "usage: %s [options]" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
 parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
-        help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
+                  help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
 parser.add_option("-f", "--file", action = "store", dest = "file",
-        help = "File containing URL pairs to be transferred. If not given, list is read from stdin.")
-parser.add_option("-d", "--delay-errors", action = "store_true", dest = "delay_errors",
-        default = False,
-        help = "Continue with transfers even after one fails.")
+                  help = "File containing URL pairs to be transferred. If not given, list is read from stdin.")
+parser.add_option("", "--max-attempts", action = "store", type="int", dest = "max_attempts", default = 2,
+                  help = "Number of attempts allowed for each transfer. Default is 2.")
 
 # Parse command line options
 (options, args) = parser.parse_args()
 if options.log_level == None:
     options.log_level = "info"
 setup_logger(options.log_level)
-delay_errors = options.delay_errors
+
+# Die nicely when asked to (Ctrl+C, system shutdown)
+signal.signal(signal.SIGINT, prog_sigint_handler)
+
+attempts_max = options.max_attempts
 
 # stdin or file input?
 if options.file == None:
@@ -675,8 +812,21 @@ else:
         logger.critical('Error reading url pair list: %s' % (err))
         myexit(1)
 
+logger.debug("Checking environment and tools")
+try:
+    check_env_and_tools()
+except Exception, err:
+    logger.critical(err)
+    myexit(1)
+
+# queues to track the work
+transfer_q = deque()
+failed_q = deque()
+
+# fill the transfer queue with user provided entries
 line_nr = 0
 pair_nr = 0
+inputs = []
 url_first = True
 try:
     for line in input_file.readlines():
@@ -685,74 +835,80 @@ try:
             line = line.rstrip('\n')
             if url_first:
                 pair_nr += 1
-                url_pair = URLPair(pair_nr)
+                url_pair = Transfer(pair_nr)
                 url_pair.set_src(line)
                 url_first = False
             else:
                 url_pair.set_dst(line)
-                all_list.append(url_pair)
+                inputs.append(url_pair)
                 url_first = True
 except Exception, err:
     logger.critical('Error reading url pair list: %s' % (err))
     myexit(1)
 
-# we will now sort the list, then put the url pairs into buckets
-# after this we have the url_pairs in lists based on what tool is 
-# needed for the transfers, and those lists are already sorted so
-# the tools can do further grouping based on those lists
-logger.debug("Organizing the tranfers into based on transfer type and source/destination")
-all_list.sort()
-for i, url_pair in enumerate(all_list): 
-    if tool_map.has_key((url_pair.src_proto, url_pair.dst_proto)):
-        tool = tool_map[(url_pair.src_proto, url_pair.dst_proto)]
-        if tool == "cp":
-            cp_list.append(url_pair)
-        elif tool == "symlink":
-            symlink_list.append(url_pair)
-        elif tool == "scp":
-            scp_list.append(url_pair)
-        elif tool == "webget":
-            webget_list.append(url_pair)
-        elif tool == "gsiftp":
-            gsiftp_list.append(url_pair)
-        elif tool == "srm":
-            srm_list.append(url_pair)
-        else:
-            logger.critical("Error: No mapping for the tool '%s'" %(tool))
-            myexit(1)
-    else:
-        logger.critical("Error: This tool does not know how to transfer from %s:// to %s://" % (url_pair.src_proto, url_pair.dst_proto))
-        myexit(1)
-
-logger.debug("Checking environment and tools")
-try:
-    check_env_and_tools()
-except Exception, err:
-    logger.critical(err)
-    myexit(1)
+# we will now sort the list as some tools (gridftp) can optimize when
+# given a group of similar transfers
+logger.info("Sorting the tranfers based on transfer type and source/destination")
+inputs.sort()
+transfer_q = deque(inputs)
 
 # start the stats time
 stats_start = time.time()
 
-logger.debug("Executing transfer commands")
-try:
-    cp()
-    symlink()
-    scp()
-    webget()
-    gsiftp()
-    srm()
-except RuntimeError, err:
-    logger.critical(err)
-    myexit(1)
+# attempt transfers until the queue is empty
+done = False
+attempt_current = 0
+while not done:
+
+    attempt_current = attempt_current + 1
+    logger.info("----------------------------------------------------------------------")
+    logger.info("Starting transfers - attempt %d" % (attempt_current))
+
+    # do the transfers
+    while transfer_q:
+        
+        t_main = transfer_q.popleft()
+        
+        # create a list of transfers to pass to underlying tool
+        t_list = []
+        t_list.append(t_main)
+
+        try:
+            t_next = transfer_q[0]
+        except IndexError, err:
+            t_next = False
+        while t_next and transfers_groupable(t_main, t_next):
+            t_list.append(t_next)
+            transfer_q.popleft()
+            try:
+                t_next = transfer_q[0]
+            except IndexError, err:
+                t_next = False
+
+        # magic!
+        handle_transfers(t_list, failed_q, attempt_current)
+        logger.debug("%d items in failed_q" %(len(failed_q)))
+    
+    # are we done?
+    if attempt_current == attempts_max or not failed_q:
+        done = True
+        break
+    
+    # retry failed transfers with a delay
+    if failed_q and attempt_current < attempts_max:
+        time.sleep(10) # do not sleep too long - we want to give quick feed back on failures to the workflow
+    while failed_q:
+        t = failed_q.popleft()
+        t.allow_grouping = False # only allow grouping on the first try
+        transfer_q.append(t)
 
 # end the stats timer and show summary
 stats_end = time.time()
 stats_summarize()
 
-if delay_errors and delay_exit_code != 0:
+if failed_q:
     logger.critical("Some transfers failed! See above.")
-    myexit(delay_exit_code)
+    myexit(1)
 
 logger.info("All transfers completed successfully.")
 
