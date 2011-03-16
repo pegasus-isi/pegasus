@@ -90,7 +90,7 @@ execute_job() {
 	    shift
 	done;
 
-	echo "Executing JOB $exec $args" 1>&2
+	echo "Executing JOB $exec $args" 
 	jobout="${PEGASUS_SUBMIT_DIR}/${jobname}.out"
 	joberr="${PEGASUS_SUBMIT_DIR}/${jobname}.err"
 
@@ -107,7 +107,7 @@ execute_job() {
     )
     status=$?
     
-    echo "JOB $jobname Returned with $status" 1>&2
+    echo "JOB $jobname Returned with $status" 
     return $status
     #exitcode $status
 }
@@ -160,7 +160,7 @@ execute_post_script() {
 	    shift
 	done;
 
-	echo "Executing POSTSCRIPT $exec $args" 1>&2
+	echo "Executing POSTSCRIPT $exec $args" 
 	jobout="${PEGASUS_SUBMIT_DIR}/${jobname}.post.out"
 	joberr="${PEGASUS_SUBMIT_DIR}/${jobname}.post.err"
 
@@ -177,7 +177,7 @@ execute_post_script() {
     )
     status=$?
     
-    echo "POSTSCRIPT FOR JOB $jobname Returned with $status" 1>&2
+    echo "POSTSCRIPT FOR JOB $jobname Returned with $status" 
     return $status
     #exitcode $status
 }
