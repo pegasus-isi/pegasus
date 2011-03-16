@@ -1,6 +1,126 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 3.0.2
+===============================
+This is a minor release, that fixes some bugs and has minor
+enhancements. 
+
+
+NEW FEATURES
+--------------
+
+1) New Pegasus Properties for pegasus-monitord daemon
+
+   The pegasus-monitord daemon is launched by pegasus-run while
+   submitting the workflow, and by default parses the condor logs for
+   the workflows and populates them in a sqllite DB in the workflow
+   submit directory. 
+
+   pegasus.monitord.events - A Boolean Property indicating whether to
+   parse and generate log events or not.
+
+   pegasus.monitord.output - This property can be used to specify the
+   destination for generated log events in pegasus-monitord
+	
+
+2) Improvements to pegasus-monitord 
+
+   pegasus-monitord now does batches evennts before popualating them
+   in to the stampede backend.
+
+3) New entries in braindump file
+   
+   The braindump file generated in the submit directory has two new
+   keys. 
+
+   The braindump file has two extra entries now
+
+   properties - path to the properties file
+   condor_log -  path to the condor log for the workflow
+
+4) pegasus-transfer supports ftp transfers in unauthenticated mode.
+
+BUGS FIXED
+----------
+1) Failure of rescue dags if submit directory on NFS.
+   
+   Pegasus creates a symlink in the submit directory to the condor log
+   file for the workflow in /tmp . In case the workflow failed and the
+   submit directory was on NFS, pegasus-run on rescue would take a
+   backup of the symlink file in the submit directory. This resulted
+   in the workflow failing on resubmission, as the condor log now
+   pointed to a file in the submit directory that was on NFS.
+
+   pegasus-submit-dag was fixed to copy the symlinked log while
+   rotating instead of copying just the symlink.  
+
+
+===============================
+Release Notes for PEGASUS 3.0.1
+===============================
+This is minor release, that fixes some bugs discovered after 3.0
+release and some  enhancements. 
+
+NEW FEATURES
+--------------
+
+1) Pegasus VM Tutorial updated
+
+   The Pegasus VM Tutorial has been updated to use a new smaller
+   Virtual Image running Debian 6 on x86. The tutorial notes are
+   available online at 
+
+   http://pegasus.isi.edu/wms/docs/3.0/tutorial_vm.php
+
+2) pegasus-plots improvements
+
+   The worklfow gantt chart produced by pegasus-plots now has better
+   legend placement. The legends are placed below the x axis so that
+   they dont interfere with the chart in the plotting area. Also the
+   gantt chart generated now uses a fixed pallete of colors to assign
+   colors to the different compute jobs in the workflows. Earlier,
+   random colors were assigned to the compute jobs.
+
+
+Bugs FIXED
+----------
+
+1) In the case where symlinking was turned on and the pool attributes
+   of the source URL ( discovered in the Replica Catalog ) matched with
+   the compute site, the source URL was not converted to a file URL. This
+   lead to the symlink job failing when the workflow executed. This is
+   fixed now and the planner now converts the source URL's used for
+   symlink jobs to a file URL scheme.
+
+
+2) Metrics displayed by pegasus-statistics were not clear as to what
+   the worfklow execution time was, as two metrics with similar meaning
+   were displayed ( Workflow Execution Time and Workflow Walltime ). The
+   metrics names have been changed and the meaning of the metrics are
+   explained in detail in both the output of pegasus-statistics and in
+   the online user guide. 
+   http://pegasus.isi.edu/wms/docs/3.0/monitoring_debugging_stats.php#id2841404
+
+   Additional clarifications have been made to as how the metrics
+   calculations happen on hierarchal worklfows.
+
+3) pegasus-transfer when in file copy mode complained if the
+   destination file already existed. This is now fixed .
+
+4) pegasus-bug-report was broken in 3.0 release. This is now fixed.
+
+5) Added support in pegasus-monitord for handling SUBDAG EXTERNAL jobs 
+   without the DIR option. 
+
+   More details at This is related to JIRA issue PM-300.
+
+
+
+
+
+
+===============================
 Release Notes for PEGASUS 3.0
 ===============================
 This is a major release that attempts to simplify configuration and
@@ -134,7 +254,7 @@ NEW FEATURES
     Users can use pegasus-sc-converter to convert their site catalogs
     to the XML3 format.
     Sample Usage:
-    pegasus-sc-converter -I XML -O XML3 -i sites.xml -o sites.xml3 
+    sc-client -I XML -O XML3 -i sites.xml -o sites.xml3 
 
  
 9) pegasus-analyzer can parse kickstart outputs
