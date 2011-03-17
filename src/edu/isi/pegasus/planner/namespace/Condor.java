@@ -556,10 +556,7 @@ public class Condor extends Namespace{
                 break;
                 
             case 'w':
-                if (key.compareTo( "whentotransferoutput" ) == 0 ){
-                    res = VALID_KEY;
-                }
-                else if( key.compareTo( "transfer_error" ) == 0 ){
+                if (key.compareTo( Condor.WHEN_TO_TRANSFER_OUTPUT_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else {
