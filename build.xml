@@ -161,7 +161,7 @@
   </target>
 
   <target name="validate-latex">
-    <condition property="latex.available">
+    <condition property="latex.available" else="false">
       <and>
 	<or>
 	  <available file="pdflatex"     filepath="${env.PATH}"/>
@@ -175,13 +175,11 @@
 	</or>
       </and>
     </condition>
-    <condition property="latex.notavailable">
-      <not>
-	<isset property="latex.available"/> 
-      </not>
+    <condition property="latex.notavailable" else="false">
+      <isfalse value="${latex.available}"/>
     </condition>
-    <echo>latex.available=${latex.available}</echo>
-    <echo>latex.notavailable=${latex.notavailable}</echo>
+    <echo>latex.available="${latex.available}"</echo>
+    <echo>latex.notavailable="${latex.notavailable}"</echo>
   </target>
   
   <target name="latex-pre" depends="version">
@@ -272,7 +270,7 @@
   </target>
 
   <target name="validate-make">
-    <condition property="make.available">
+    <condition property="make.available" else="false">
       <or>
 	<available file="gmake"    filepath="${env.PATH}"/>
 	<available file="make"     filepath="${env.PATH}"/>
@@ -598,12 +596,16 @@
     <delete file="dist/pegasus-binary-${pegasus.version}.tar"/>
   </target>
 
-  <target name="clean" depends="ctools-clean,externals-clean"
-	  description="Removes the build and dist directories">
+ <target name="build-clean"
+ 	  description="Removes the build and dist directories">
     <delete dir="dist"/>
     <delete dir="build"/>
     <delete file="stamp"/>
   </target>
+
+  <target name="clean" depends="build-clean,ctools-clean,externals-clean"/>
  <target name="build" depends="ctools-all,externals,jar,vdl-jar"/>
 </project>
+
+
 
