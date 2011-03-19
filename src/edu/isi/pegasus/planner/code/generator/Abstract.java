@@ -81,6 +81,66 @@ public abstract class Abstract implements CodeGenerator{
 
 
     /**
+     * Returns the name of the file on the basis of the metadata associated
+     * with the DAG.
+     * In case of Condor dagman, it is the name of the .dag file that is
+     * written out. The basename of the .dag file is dependant on whether the
+     * basename prefix has been specified at runtime or not by command line
+     * options.
+     *
+     * @param dag    the dag for which the .dag file has to be created.
+     * @param suffix the suffix to be applied at the end.
+     *
+     * @return the name of the dagfile.
+     */
+    protected  String getDAGFilename( ADag dag, String suffix ){
+        return getDAGFilename( mPOptions,
+                               dag.dagInfo.nameOfADag,
+                               dag.dagInfo.index,
+                               suffix );
+    }
+
+    /**
+     * Returns the name of the file on the basis of the metadata associated
+     * with the DAG.
+     * In case of Condor dagman, it is the name of the .dag file that is
+     * written out. The basename of the .dag file is dependant on whether the
+     * basename prefix has been specified at runtime or not by command line
+     * options.
+     *
+     * @param options  the options passed to the planner.
+     * @param name   the name attribute in dax
+     * @param index  the index attribute in dax.
+     * @param suffix the suffix to be applied at the end.
+     *
+     * @return the name of the dagfile.
+     */
+    public static String getDAGFilename( PlannerOptions options,
+                                         String name,
+                                         String index,
+                                         String suffix ){
+        //constructing the name of the dagfile
+        StringBuffer sb = new StringBuffer();
+        String bprefix = options.getBasenamePrefix();
+        if( bprefix != null){
+            //the prefix is not null using it
+            sb.append(bprefix);
+        }
+        else{
+            //generate the prefix from the name of the dag
+            sb.append( name ).append("-").
+                append( index );
+        }
+        //append the suffix
+        sb.append( suffix );
+
+
+
+        return sb.toString();
+
+    }
+
+    /**
      * Initializes the Code Generator implementation.
      *
      * @param bag   the bag of initialization objects.
@@ -112,15 +172,40 @@ public abstract class Abstract implements CodeGenerator{
         return false;
     }
 
+
+    /**
+     * Writes out the workflow metrics file for the workflow.
+     *
+     * @param workflow      the workflow whose metrics file needs to be generated.
+     */
+    protected void writeOutWorkflowMetrics( ADag workflow ){
+
+
+        try{
+            Metrics metrics = new Metrics();
+            metrics.initialize(mBag);
+
+            Collection result = metrics.generateCode(workflow );
+            for( Iterator it = result.iterator(); it.hasNext() ;){
+                mLogger.log("Written out workflow metrics file to " + it.next(), LogManager.DEBUG_MESSAGE_LEVEL);
+            }
+        }
+        catch(CodeGeneratorException ioe){
+            //log the message and return
+            mLogger.log("Unable to write out the workflow metrics file ",
+                        ioe, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+    }
+
   
     /**
-     * Writes out the braindump file for the workflow
+     * Writes out the metrics file for the workflow
      * 
-     * @param workflow      the workflow whose braindump file needs to be generated.
+     * @param workflow      the workflow whose metrics file needs to be generated.
      */
     protected void writeOutBraindump( ADag workflow ){
         
-        //generate some extra keys for braindump file
+        //generate some extra keys for metrics file
         Map<String,String> entries = getAdditionalBraindumpEntries( workflow );
                 
         
@@ -135,16 +220,16 @@ public abstract class Abstract implements CodeGenerator{
         }
         catch(CodeGeneratorException ioe){
             //log the message and return
-            mLogger.log("Unable to write out the braindump file for tailstatd",
+            mLogger.log("Unable to write out the braindump file for pegasus-monitord",
                         ioe, LogManager.ERROR_MESSAGE_LEVEL );
         }
     }
     
     /**
-     * Returns a Map containing additional braindump entries that are specific
+     * Returns a Map containing additional metrics entries that are specific
      * to a Code Generator
      *
-     * @param workflow      the workflow whose braindump file needs to be generated.
+     * @param workflow      the workflow whose metrics file needs to be generated.
      *  
      * @return Map
      */

@@ -774,6 +774,7 @@ public class Horizontal implements Clusterer,
             //remove the old job
             //remove by just creating a subinfo object with the same key
             sub.jobName = key;
+            sub.setJobType( Job.COMPUTE_JOB );
             val = mScheduledDAG.remove(sub);
             if(val == false){
                 throw new RuntimeException("Removal of job " + key + " while clustering not successful");

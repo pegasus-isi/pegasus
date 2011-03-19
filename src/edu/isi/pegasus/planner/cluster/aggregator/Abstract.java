@@ -268,6 +268,9 @@ public abstract class Abstract implements JobAggregator {
 
         mergedJob.setJobAggregator( this );
 
+
+        mergedJob.setJobType( Job.COMPUTE_JOB );
+
         Job job    = null;
         StringBuffer sb = new StringBuffer();
         sb.append( Abstract.CLUSTERED_JOB_PREFIX );
@@ -411,7 +414,6 @@ public abstract class Abstract implements JobAggregator {
 
         job.setUniverse( firstJob.getUniverse() );
         job.setJobManager( firstJob.getJobManager() );
-        job.setJobType( Job.COMPUTE_JOB );
 
         
 

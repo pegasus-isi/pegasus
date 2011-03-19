@@ -227,46 +227,7 @@ public class CondorGenerator extends Abstract {
     }
     
    
-     /**
-     * Returns the name of the file on the basis of the metadata associated
-     * with the DAG.
-     * In case of Condor dagman, it is the name of the .dag file that is
-     * written out. The basename of the .dag file is dependant on whether the
-     * basename prefix has been specified at runtime or not by command line
-     * options.
-     *
-     * @param options  the options passed to the planner.
-     * @param name   the name attribute in dax
-     * @param index  the index attribute in dax.
-     * @param suffix the suffix to be applied at the end.
-     *
-     * @return the name of the dagfile.
-     */
-    public static String getDAGFilename( PlannerOptions options, 
-                                         String name, 
-                                         String index,
-                                         String suffix ){
-        //constructing the name of the dagfile
-        StringBuffer sb = new StringBuffer();
-        String bprefix = options.getBasenamePrefix();
-        if( bprefix != null){
-            //the prefix is not null using it
-            sb.append(bprefix);
-        }
-        else{
-            //generate the prefix from the name of the dag
-            sb.append( name ).append("-").
-                append( index );
-        }
-        //append the suffix
-        sb.append( suffix );
-
-
-
-        return sb.toString();
-
-    }
-
+     
     /**
      * Initializes the Code Generator implementation. Initializes the various
      * writers.
@@ -497,6 +458,9 @@ public class CondorGenerator extends Abstract {
         
         //write out the braindump file
         this.writeOutBraindump( dag );
+
+        //write out the metrics file
+        this.writeOutWorkflowMetrics(dag);
         
         //we are donedirectory
         mDone = true;
@@ -1271,25 +1235,7 @@ public class CondorGenerator extends Abstract {
     }
 
 
-    /**
-     * Returns the name of the file on the basis of the metadata associated
-     * with the DAG.
-     * In case of Condor dagman, it is the name of the .dag file that is
-     * written out. The basename of the .dag file is dependant on whether the
-     * basename prefix has been specified at runtime or not by command line
-     * options.
-     *
-     * @param dag    the dag for which the .dag file has to be created.
-     * @param suffix the suffix to be applied at the end.
-     *
-     * @return the name of the dagfile.
-     */
-    protected String getDAGFilename( ADag dag, String suffix ){
-        return getDAGFilename( mPOptions,
-                               dag.dagInfo.nameOfADag,
-                               dag.dagInfo.index,
-                               suffix );
-    }
+    
     
    
 

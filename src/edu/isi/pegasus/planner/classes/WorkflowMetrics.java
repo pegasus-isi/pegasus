@@ -37,6 +37,11 @@ public class WorkflowMetrics extends Data {
     private int mNumComputeJobs;
 
     /**
+     * The number of clustered compute jobs.
+     */
+    private int mNumClusteredJobs;
+
+    /**
      * The number of stage in transfer jobs.
      */
     private int mNumSITxJobs;
@@ -62,6 +67,11 @@ public class WorkflowMetrics extends Data {
     private int mNumCleanupJobs;
 
     /**
+     * The number of create dir jobs.
+     */
+    private int mNumCreateDirJobs;
+
+    /**
      * The label of the dax.
      */
     private String mDAXLabel;
@@ -84,6 +94,8 @@ public class WorkflowMetrics extends Data {
         mNumInterTxJobs  = 0;
         mNumRegJobs      = 0;
         mNumCleanupJobs  = 0;
+        mNumCreateDirJobs = 0;
+        mNumClusteredJobs = 0;
     }
 
 
@@ -127,7 +139,12 @@ public class WorkflowMetrics extends Data {
             //treating compute and staged compute as same
             case Job.COMPUTE_JOB:
             case Job.STAGED_COMPUTE_JOB:
-                mNumComputeJobs++;
+                if( job instanceof AggregatedJob ){
+                    mNumClusteredJobs++;
+                }
+                else{
+                    mNumComputeJobs++;
+                }
                 break;
 
             case Job.STAGE_IN_JOB:
@@ -149,6 +166,14 @@ public class WorkflowMetrics extends Data {
             case Job.CLEANUP_JOB:
                 mNumCleanupJobs++;
                 break;
+
+            case Job.CREATE_DIR_JOB:
+                mNumCreateDirJobs++;
+                break;
+
+            default:
+                throw new RuntimeException( "Unknown or Unassigned job " + job.getID() + " of type " + type );
+
         }
 
     }
@@ -174,7 +199,12 @@ public class WorkflowMetrics extends Data {
             //treating compute and staged compute as same
             case Job.COMPUTE_JOB:
             case Job.STAGED_COMPUTE_JOB:
-                mNumComputeJobs--;
+                if( job instanceof AggregatedJob ){
+                    mNumClusteredJobs--;
+                }
+                else{
+                    mNumComputeJobs--;
+                }
                 break;
 
             case Job.STAGE_IN_JOB:
@@ -197,6 +227,12 @@ public class WorkflowMetrics extends Data {
                 mNumCleanupJobs--;
                 break;
 
+             case Job.CREATE_DIR_JOB:
+                mNumCreateDirJobs--;
+                break;
+
+            default:
+                throw new RuntimeException( "Unknown or Unassigned job " + job.getID() + " of type " + type );
 
         }
 
@@ -211,7 +247,9 @@ public class WorkflowMetrics extends Data {
         StringBuffer sb = new StringBuffer();
 
         append( sb, "dax-label", this.mDAXLabel );
+        append( sb, "createdir-jobs.count", this.mNumCreateDirJobs );
         append( sb, "compute-jobs.count", this.mNumComputeJobs );
+        append( sb, "clustered-compute-jobs.count", this.mNumClusteredJobs );
         append( sb, "si-jobs.count", this.mNumSITxJobs );
         append( sb, "so-jobs.count", this.mNumSOTxJobs );
         append( sb, "inter-jobs.count", this.mNumInterTxJobs );
@@ -270,6 +308,8 @@ public class WorkflowMetrics extends Data {
         wm.mNumSOTxJobs    = this.mNumSOTxJobs;
         wm.mNumTotalJobs   = this.mNumTotalJobs;
         wm.mDAXLabel       = this.mDAXLabel;
+        wm.mNumCreateDirJobs = this.mNumCreateDirJobs;
+        wm.mNumClusteredJobs = this.mNumClusteredJobs;
 
         return wm;
     }

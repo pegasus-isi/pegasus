@@ -177,6 +177,9 @@ public class Shell extends Abstract {
         this.writeOutBraindump( dag );
 
 
+        //write out the metrics file
+        this.writeOutWorkflowMetrics(dag);
+
         return result;
     }
 
