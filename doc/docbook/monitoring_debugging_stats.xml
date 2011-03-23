@@ -1139,9 +1139,18 @@ Logical transformation statistics :
       <title>pegasus-plots</title>
 
       <para>pegasus-plots generates graphs and charts to visualize workflow
-      execution. To generate graphs and charts run the command as shown
+      execution. </para>
+      
+      <section>
+    	<title>Prerequisites</title>
+        <para>pegasus-plots uses executables '<emphasis>ploticus</emphasis>','<emphasis>convert</emphasis>' and '<emphasis>dot</emphasis>' to generate graphs and charts. 
+        pegasus-plots looks for these executable in the system PATH and generates graphs and charts based on it's availability.</para>
+        <para><emphasis>dot</emphasis> can be downloaded from the Graphviz site <ulink url="http://www.graphviz.org/">http://www.graphviz.org/</ulink>. Graphviz software contains the <emphasis>dot</emphasis> tool which is available for most linux and OSX platforms.</para> 
+        <para><emphasis>convert</emphasis> can be downloaded from the ImageMagick site <ulink url="http://www.imagemagick.org/script/index.php">http://www.imagemagick.org/script/index.php</ulink>. ImageMagick contains the command tool <emphasis>convert</emphasis>. </para>
+        <para><emphasis>ploticus</emphasis> can be downloaded from site <ulink url="http://ploticus.sourceforge.net/doc/welcome.html">http://ploticus.sourceforge.net/doc/welcome.html</ulink>. </para>
+       </section>
+	<para>To generate graphs and charts run the command as shown
       below.</para>
-
       <programlisting>$ <emphasis>pegasus-plots /scratch/grid-setup/run0001/</emphasis>
 
 
