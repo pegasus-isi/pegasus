@@ -45,14 +45,11 @@ import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.DAGJob;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 import edu.isi.pegasus.common.util.Boolean;
-import edu.isi.pegasus.common.util.StreamGobbler;
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.namespace.Condor;
@@ -354,7 +351,7 @@ public class CondorGenerator extends Abstract {
         //in a top down manner
         Graph workflow = Adapter.convert( dag );
         SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
-        subdaxGen.initialize( mBag, workflow, mDagWriter );
+        subdaxGen.initialize( mBag, dag, workflow, mDagWriter );
                     
         for( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();

@@ -84,7 +84,15 @@ public class PlannerOptions extends Data implements Cloneable{
      * Set of cache files that need to be used, to determine the location of the
      * transiency files.
      */
-    private Set mCacheFiles;
+    private Set<String> mCacheFiles;
+
+
+    /**
+     * Set of replica catalog files that are inherited by a planning instance.
+     * Locations in this file have a lower priority than the file locations
+     * mentioned in the DAX Replica Store
+     */
+    private Set<String>mInheritedRCFiles;
 
     /**
      * The output pool on which the data products are needed to be transferred to.
@@ -236,6 +244,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mPDAXFile         = null;
         mvExecPools       = new java.util.HashSet();
         mCacheFiles       = new java.util.HashSet();
+        mInheritedRCFiles = new java.util.HashSet();
         mNonStandardJavaOptions =  new java.util.HashSet();
         mForwardOptions   = new java.util.LinkedList<NameValue>();
         mOutputPool       = null;
@@ -280,6 +289,16 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public Set getCacheFiles(){
         return mCacheFiles;
+    }
+
+    /**
+     * Returns the inherited rc files.
+     *
+     * @return Set of fully qualified paths to the cache files.
+     *
+     */
+    public Set<String> getInheritedRCFiles(){
+        return mInheritedRCFiles;
     }
 
 
@@ -745,6 +764,38 @@ public class PlannerOptions extends Data implements Cloneable{
 
 
     /**
+     * Sets the inherited RC Files. If RC files have been already specified it
+     * adds to the existing set of files. It also sanitizes the paths. Tries
+     * to resolve the path, if the path given is relative instead of absolute.
+     *
+     * @param l  comma separated list of cache files.
+     */
+    public void setInheritedRCFiles( String list ){
+        this.setInheritedRCFiles( this.generateSet( list ) );
+    }
+
+
+    /**
+     *Sets the inherited RC Files. If RC files have been already specified it
+     * adds to the existing set of files. It also sanitizes the paths. Tries
+     * to resolve the path, if the path given is relative instead of absolute.
+     *
+     * @param files  the set of fully qualified paths to the cache files.
+     *
+     */
+    public void setInheritedRCFiles(Set files){
+        //use the existing set if present
+        if (this.mInheritedRCFiles == null ) { mInheritedRCFiles = new HashSet(); }
+
+        //traverse through each file in the set, and
+        //sanitize path along the way.
+        for ( Iterator it = files.iterator(); it.hasNext(); ){
+            mInheritedRCFiles.add( this.sanitizePath( (String)it.next() ) );
+        }
+    }
+
+
+    /**
      * Sets the clustering option.
      *
      * @param value  the value to set.
@@ -1074,6 +1125,7 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Partition File       " + mPDAXFile +
                     "\n Execution Pools      " + this.setToString(mvExecPools,",")+
                     "\n Cache Files          " + this.setToString(mCacheFiles,",") +
+                    "\n Inherited RC Files   " + this.setToString(mInheritedRCFiles,",") +
                     "\n Output Pool          " + mOutputPool +
                     "\n Submit to CondorG    " + mSubmit +
                     "\n Display Help         " + mDisplayHelp +
@@ -1131,6 +1183,11 @@ public class PlannerOptions extends Data implements Cloneable{
         //cache files
         if(!mCacheFiles.isEmpty()){
             sb.append(" --cache ").append(setToString(mCacheFiles,","));
+        }
+
+        //inherited rc files
+        if( !mInheritedRCFiles.isEmpty() ){
+            sb.append( " --inherited-rc-files " ).append(setToString(mInheritedRCFiles,","));
         }
 
         //collapse option
@@ -1268,6 +1325,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mPDAXFile       = this.mPDAXFile;
         pOpt.mvExecPools     = cloneSet(this.mvExecPools);
         pOpt.mCacheFiles     = cloneSet(this.mCacheFiles);
+        pOpt.mInheritedRCFiles       = cloneSet(this.mInheritedRCFiles);
         pOpt.mNonStandardJavaOptions = cloneSet( this.mNonStandardJavaOptions );
         pOpt.mOutputPool     = this.mOutputPool;
         pOpt.mDisplayHelp    = this.mDisplayHelp;

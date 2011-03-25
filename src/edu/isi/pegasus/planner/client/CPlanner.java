@@ -776,6 +776,10 @@ public class CPlanner extends Executable{
                     options.setHelp(true);
                     break;
 
+                case '5'://inherited-rc-files
+                    options.setInheritedRCFiles( g.getOptarg() );
+                    break;
+                    
                 case 'j'://job-prefix
                     options.setJobnamePrefix( g.getOptarg() );
                     break;
@@ -1006,7 +1010,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[28];
+        LongOpt[] longopts = new LongOpt[29];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1039,7 +1043,8 @@ public class CPlanner extends Executable{
         longopts[25]  = new LongOpt( "X", LongOpt.REQUIRED_ARGUMENT, null, 'X' );
         longopts[26]  = new LongOpt( "relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4' );
         longopts[27]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
-        
+        longopts[28]  = new LongOpt( "inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5' );
+
         return longopts;
     }
 
@@ -1055,6 +1060,7 @@ public class CPlanner extends Executable{
           " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
           "\n [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [ --relative-dir <relative directory to base directory> ] [ --relative-submit-dir <relative submit directory to base directory> ]" +
+          "\n [ --inherited-rc-files f1[,f2[..]]] " +
           "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]]  [-F option[=value] ] " +
           "\n [-S] [-n]  [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
 
@@ -1084,6 +1090,7 @@ public class CPlanner extends Executable{
            "\n Other Options  " +
            "\n -b |--basename     the basename prefix while constructing the per workflow files like .dag etc." +
            "\n -c |--cache        comma separated list of replica cache files." +
+           "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file" +
            "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to " +
            "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads." +
            "\n -D |--dir          the directory where to generate the concrete workflow." +
