@@ -392,7 +392,7 @@ public class CondorGenerator extends Abstract {
         //in a top down manner
         Graph workflow = Adapter.convert( dag );
         SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
-        subdaxGen.initialize( mBag, workflow, mDagWriter );
+        subdaxGen.initialize( mBag, dag, workflow, mDagWriter );
                     
         for( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();

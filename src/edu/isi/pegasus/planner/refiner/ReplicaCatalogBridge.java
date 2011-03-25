@@ -24,9 +24,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
 import edu.isi.pegasus.planner.classes.NameValue;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
@@ -166,6 +164,18 @@ public class ReplicaCatalogBridge
 
 
     /**
+     * The DAX Replica Store.
+     */
+    private ReplicaStore mDAXReplicaStore;
+
+
+    /**
+     * The inherited Replica Store
+     */
+    private ReplicaStore mInheritedReplicaStore;
+
+
+    /**
      * A boolean indicating whether the cache file needs to be treated as a
      * replica catalog or not.
      */
@@ -193,10 +203,6 @@ public class ReplicaCatalogBridge
      */
     private ADag mDag;
 
-    /**
-     * The DAX Replica Store.
-     */
-    private ReplicaStore mDAXReplicaStore;
 
     /**
      * The overloaded constructor.
@@ -243,6 +249,7 @@ public class ReplicaCatalogBridge
         mPOptions = options;
         mRCDown = false;
         mCacheStore = new ReplicaStore();
+        mInheritedReplicaStore = new ReplicaStore();
         mTreatCacheAsRC = mProps.treatCacheAsRC();
         mDefaultTCRCCreated = false;
 
@@ -301,6 +308,11 @@ public class ReplicaCatalogBridge
         if ( !options.getCacheFiles().isEmpty() ) {
             loadCacheFiles( options.getCacheFiles() );
         }
+
+        //load inherited replica store
+        if ( !options.getInheritedRCFiles().isEmpty() ) {
+            this.loadInheritedReplicaStore( options.getInheritedRCFiles() );
+        }
     }
 
 
@@ -315,7 +327,7 @@ public class ReplicaCatalogBridge
         }
     }
 
-    /**
+    /**         
      * Closes the connection to the rli.
      */
     public void finalize() {
@@ -352,6 +364,9 @@ public class ReplicaCatalogBridge
         //lookup from the DAX Replica Store
         lfnsFound.addAll( this.mDAXReplicaStore.getLFNs() );
 
+        //lookup from the inherited Replica Store
+        lfnsFound.addAll( this.mInheritedReplicaStore.getLFNs( mSearchFiles ) );
+
         //look up from the the main replica catalog
         lfnsFound.addAll( mReplicaStore.getLFNs() );
 
@@ -384,9 +399,14 @@ public class ReplicaCatalogBridge
         }
 
 
-        //we prefer location in DAX over the Replica Catalog
+        //we prefer location in DAX over the inherited replica store
         if( this.mDAXReplicaStore.containsLFN( lfn ) ){
             return this.mDAXReplicaStore.getReplicaLocation(lfn);
+        }
+
+        //we prefer location in inherited replica store over replica catalog
+        if( this.mInheritedReplicaStore.containsLFN(lfn) ){
+            return this.mInheritedReplicaStore.getReplicaLocation(lfn);
         }
 
         ReplicaLocation rcEntry = mReplicaStore.getReplicaLocation( lfn );
@@ -788,6 +808,16 @@ public class ReplicaCatalogBridge
         return mCacheStore.getReplicaLocation( lfn );
     }
 
+
+    /**
+     * Ends up loading the inherited replica files.
+     *
+     * @param files  set of paths to the inherited replica files.
+     */
+    private void loadInheritedReplicaStore( Set files ) {
+        mLogger.log("Loading Inhertied ReplicaFiles files: " + files,  LogManager.DEBUG_MESSAGE_LEVEL);
+        this.mInheritedReplicaStore = this.getReplicaStoreFromFiles( files );
+    }
     /**
      * Ends up loading the cache files so as to enable the lookup for the transient
      * files created by the parent jobs.
@@ -795,6 +825,17 @@ public class ReplicaCatalogBridge
      * @param cacheFiles  set of paths to the cache files.
      */
     private void loadCacheFiles( Set cacheFiles ) {
+        mLogger.log("Loading cache files: " + cacheFiles,  LogManager.DEBUG_MESSAGE_LEVEL);
+        mCacheStore = this.getReplicaStoreFromFiles(cacheFiles);
+    }
+
+    /**
+     * Ends up loading a Replica Store from replica catalog files
+     *
+     * @param files  set of paths to the cache files.
+     */
+    private ReplicaStore getReplicaStoreFromFiles( Set files ) {
+        ReplicaStore store = new ReplicaStore();
         Properties cacheProps = mProps.getVDSProperties().matchingSubset(
                                                               ReplicaCatalog.c_prefix,
                                                               false );
@@ -809,13 +850,13 @@ public class ReplicaCatalogBridge
         //all cache files are loaded in readonly mode
         cacheProps.setProperty( ReplicaCatalogBridge.CACHE_READ_ONLY_KEY, "true" );
         
-        for ( Iterator it = cacheFiles.iterator(); it.hasNext() ; ) {
+        for ( Iterator it = files.iterator(); it.hasNext() ; ) {
             //read each of the cache file and load in memory
             String  file = ( String ) it.next();
             //set the appropriate property to designate path to file
             cacheProps.setProperty( ReplicaCatalogBridge.CACHE_REPLICA_CATALOG_KEY, file );
 
-            mLogger.log("Loading cache file: " + file,  LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("Loading  file: " + file,  LogManager.DEBUG_MESSAGE_LEVEL);
             try{
                 simpleFile = ReplicaFactory.loadInstance( CACHE_REPLICA_CATALOG_IMPLEMENTER,
                                                           cacheProps );
@@ -828,7 +869,7 @@ public class ReplicaCatalogBridge
             }
             //suck in all the entries into the cache replica store.
             //returns an unmodifiable collection. so merging an issue..
-            mCacheStore.add( simpleFile.lookup( mSearchFiles ) );
+            store.add( simpleFile.lookup( mSearchFiles ) );
 
             //no wildcards as we only want to load mappings for files that
             //we require
@@ -839,6 +880,7 @@ public class ReplicaCatalogBridge
         }
 
         mLogger.logEventCompletion();
+        return store;
     }
 
     /**
