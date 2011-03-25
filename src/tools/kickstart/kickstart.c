@@ -175,7 +175,7 @@ helpMe( const AppInfo* run )
 " -n xid\tProvides the TR name, default is \"%s\".\n"
 " -N did\tProvides the DV name, default is \"%s\".\n" 
 " -R res\tReflects the resource handle into record, default is \"%s\".\n"
-" -B sz\tResizes the data section size for stdio capture, default is %u.\n",
+" -B sz\tResizes the data section size for stdio capture, default is %zu.\n",
 	   show(run->xformation), show(run->derivation), 
 	   show(run->sitehandle), data_section_size );
   fprintf( stderr,

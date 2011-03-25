@@ -66,7 +66,7 @@ hexdump( void* area, size_t size )
   for ( i=0; i<size; i+=16 ) {
     memset( a, 0, sizeof(a) );
     memset( b, 0, sizeof(b) );
-    sprintf( a, "%04X: ", i );
+    sprintf( a, "%04zX: ", i );
     for ( j=0; j<16 && j+i<size; ++j ) {
       c = (unsigned char) buffer[i+j];
 
