@@ -210,6 +210,8 @@ finish( void )
     }
     deleteAppInfo( &appinfo );
   }
+
+  nfs_sync( STDERR_FILENO, DEFAULT_SYNC_IDLE );
 }
 
 #ifdef DEBUG_ARGV
@@ -630,7 +632,10 @@ main( int argc, char* argv[] )
   /* FIXME: No locking on stdout, because printAppInfo will have done so */
   nfs_sync( STDOUT_FILENO, DEFAULT_SYNC_IDLE );
 #endif
+#if 0
+  /* FIXME: No locking on stderr, because atexit-handler finish() does it. */
   nfs_sync( STDERR_FILENO, DEFAULT_SYNC_IDLE );
+#endif
 
   /* done */
   return result;
