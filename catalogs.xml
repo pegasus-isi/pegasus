@@ -62,8 +62,8 @@ LFN PFN a="b" [..]
       </programlisting>
 
       <para>The LFN may or may not be quoted. If it contains linear
-      whitespace, quotes, backslash or an equality sign, it must be quoted and
-      escaped. Ditto for the PFN. The attribute key-value pairs are separated
+      whitespace, quotes, backslash or an equality (equal?) sign, it must be quoted and
+      escaped. The same conditions apply for the PFN. The attribute key-value pairs are separated
       by an equality sign without any whitespaces. The value may be in quoted.
       The LFN sentiments about quoting apply.</para>
 
@@ -328,7 +328,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/sc-3.0_p2.png" />
+            <imagedata fileref="images/sc-3.0_p2.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1094,7 +1094,7 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
-      <para></para>
+      <para/>
     </section>
 
     <section>
