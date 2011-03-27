@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="submit_directory">
-  <title>Submit Directory Contents Explained</title>
+  <title>Submit Directory Contents</title>
 
   <section>
     <title>Introduction</title>
@@ -624,7 +624,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/Pegasus_Job_State_Delay.jpg" scalefit="" />
+          <imagedata fileref="images/Pegasus_Job_State_Delay.jpg" scalefit=""/>
         </imageobject>
       </mediaobject>
     </section>

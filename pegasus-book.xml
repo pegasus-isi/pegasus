@@ -25,4 +25,6 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="tutorial_vm.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="useful_tips.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glossary.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="workflow_types.xml"/>
 </book>
+

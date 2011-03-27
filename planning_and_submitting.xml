@@ -5,7 +5,7 @@
   <title>Planning and Submitting</title>
 
   <section>
-    <title>Refinement Steps Explained</title>
+    <title>Mapping Refinement Steps</title>
 
     <para>During the mapping process, the abstract workflow undergoes a series
     of refinement steps that converts it to an executable form.</para>
@@ -54,7 +54,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-data-reuse.png" />
+            <imagedata fileref="./images/refinement-data-reuse.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -277,7 +277,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-site-selection.png" />
+            <imagedata fileref="./images/refinement-site-selection.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -335,7 +335,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-transfer-jobs.png" />
+            <imagedata fileref="./images/refinement-transfer-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -351,7 +351,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-registration-jobs.png" />
+            <imagedata fileref="./images/refinement-registration-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -400,7 +400,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-creadir-rm-jobs.png" />
+            <imagedata fileref="./images/refinement-creadir-rm-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -445,7 +445,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-final-executable-wf.png" />
+            <imagedata fileref="./images/refinement-final-executable-wf.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -636,7 +636,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/gram_layout.png" />
+            <imagedata fileref="./images/gram_layout.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -697,7 +697,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/condor_layout.png" />
+            <imagedata fileref="images/condor_layout.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -935,7 +935,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
  &lt;/site&gt;
 </programlisting>
 
-      <para></para>
+      <para/>
 
       <section>
         <title>Changes to Jobs</title>
@@ -954,7 +954,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
           </listitem>
         </orderedlist>
 
-        <para></para>
+        <para/>
 
         <section>
           <title>Remote CE Requirements</title>

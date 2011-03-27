@@ -8,7 +8,22 @@
     <title>Getting Started</title>
 
     <para>This document is structured to get you and up running with the
-    Pegasus planner with minimal effort.</para>
+    Pegasus planner with minimal effort. </para>
+    
+    <para>Pegasus is available for installation with two methods:</para>
+    
+    <itemizedlist>
+      <listitem>
+        <para>Install with image file to laptop</para>
+      </listitem>
+
+      <listitem>
+        <para>Download and install on networked computers</para>
+      </listitem>
+
+
+    </itemizedlist>
+
 
     <para>Download the latest release of Pegasus WMS 3.0 from <ulink
     url="http://pegasus.isi.edu/wms/download.php">http://pegasus.isi.edu/wms/download.php</ulink></para>
@@ -74,7 +89,7 @@ Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)</computerout
 
 RELEASE_DIR = !!PEGASUS_HOME!!    # CHANGE THIS TO PATH OF PEGASUS_WMS INSTALLATION
 
-CONDOR_ADMIN = !!USER!! # CHANGE THIS To THE USER WHO wILL GET EMAIL INCASE OF ERROR.</computeroutput></screen></para>
+CONDOR_ADMIN = !!USER!! # CHANGE THIS TO THE USER WHO WILL GET EMAIL IN CASE OF ERROR.</computeroutput></screen></para>
       </listitem>
 
       <listitem>
@@ -91,7 +106,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</command></screen></para>
       </listitem>
 
       <listitem>
-        <para>Check if condor is up by running the condor_q command</para>
+        <para>Verify that Condor is up by running the condor_q command</para>
 
         <para><screen><command>$ condor_q</command>
 
@@ -116,16 +131,16 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</command></screen></para>
     affect how Pegasus plans the workflow.</para>
 
     <para>Pegasus planner is invoked on the command line by running the
-    pegasus-plan command. The client takes several parameters including one or
+    <emphasis>pegasus-plan</emphasis> command. The client takes several parameters including one or
     more sites where to compute the workflow, an optional single site if the
     output data needs to be staged and stored and the input DAX file.</para>
 
     <section id="example_black_diamond_quick" xreflabel="Black Diamond">
       <title>Running a Diamond Workflow</title>
 
-      <para>Pegasus is shipped with a Diamond example. The example we are
-      going to run is found at PEGASUS_HOME/examples/condor-blackdiamond. Lets
-      change into the example directory</para>
+      <para>Pegasus is shipped with a Diamond workflow example. The example workflow is found at PEGASUS_HOME/examples/condor-blackdiamond.</para>
+
+      <para> Change the current directory to the example directory:</para>
 
       <screen><command>$ cd</command> <computeroutput>PEGASUS_HOME/examples/condor-blackdiamond</computeroutput></screen>
 
@@ -145,28 +160,29 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</command></screen></para>
       and produces on STDOUT a summary of where and when it was run. Keg ships
       with Pegasus in the bin directory.</para>
 
-      <para>This example ships with a "submit" script which will build the
-      replica catalog, the transformation catalog, and the site catalog. When
+      <para>This example ships with a ,<emphasis>submit</emphasis> script that builds the
+      replica catalog, transformation catalog, and site catalog. When
       you create your own workflows, such a submit script is not needed if you
       want to maintain those catalogs manually.</para>
 
       <note>
         <para>The use of <filename>./submit</filename> scripts in this example
-        are just to make it more easy to run the examples out of the
-        box.</para>
+        is to make it easier to run the examples quickly.</para>
       </note>
 
-      <para>To test the examples, to run it locally on your submit machine
+      <para>To test the examples, run it locally on your submit machine
       run:</para>
 
       <para><screen><command>$ ./submit condor</command></screen></para>
 
-      <para>The workflow should now be submitted in the local condor and in
-      the output you should see a work dir location for the instance. With
-      that directory you can monitor the workflow as mentioned below in
-      section 3. For now lets see what all steps were run inside the submit
-      script to generate the workflow and to run it. You don't have to run
-      these steps upto Section 3.</para>
+      <para>The workflow is submitted in the local condor. The workflow output contains a work dir location for the instance. With
+      that directory you can monitor the workflow as mentioned below in section 3. /&gt;para&gt;
+
+      <para><emphasis>Submit Script Steps </emphasis> </para>
+
+      <para>The following are the steps that run inside the submit script to generate the workflow and execute it</para>
+
+</para>
     </section>
 
     <section>
@@ -238,8 +254,8 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</command></screen></para>
         </listitem>
       </itemizedlist>
 
-      <para>Shown below is the BlackDiamond.java class that is used to
-      generate the abstract workflow</para>
+      <para>The BlackDiamond.java class that is used to
+      generate the abstract workflow is displayed below</para>
 
       <programlisting>import edu.isi.pegasus.planner.dax.*;
 public class BlackDiamondDAX {
@@ -471,10 +487,10 @@ public class BlackDiamondDAX {
 
 
 
-</programlisting>The site catalog describe the layout of the submit host and
+</programlisting>The site catalog describes the layout of the submit host and
       other sites (grid/cloud etc) where you can run your workflows. In our
       example we are running the workflow locally on your submit host so it is
-      using the site local. The scratch and storage filesystems described
+      using the site local. The scratch and storage file systems described
       above indicate where the workflow will run and where the data will be
       saved at the end.</para>
     </section>
@@ -544,7 +560,7 @@ pegasus.dir.storage.deep=false
     <section>
       <title>pegasus-status</title>
 
-      <para>To monitor the execution of the workflow lets run the
+      <para>To monitor the execution of the workflow, run the
       pegasus-status command as suggested by the output of the pegasus-run
       command above.</para>
 
@@ -568,17 +584,17 @@ pegasus.dir.storage.deep=false
 
 WORKFLOW STATUS : COMPLETED | 15/15 ( 100% ) | (all jobs finished successfully)</computeroutput></screen>
 
-      <para></para>
+      <para/>
     </section>
 
     <section>
       <title>pegasus-analyzer</title>
 
-      <para>If the workflow fails the you can anlyze the run using the tool
-      pegasus-analyzer.</para>
+      <para>If the workflow fails the you can analyze the run using the
+      pegasus-analyzer tool.</para>
 
-      <para>The simplest way to invoke pegasus-analyzer is to simply give it a
-      workflow run directory, like in the example below:</para>
+      <para>The simplest way to invoke pegasus-analyzer is to give it a
+      workflow run directory, such as in the example below:</para>
 
       <para><screen><command>$ pegasus-analyzer -d </command><replaceable>/Workflow/dags/directory</replaceable>
 
@@ -630,7 +646,7 @@ working dir : /lfs1/work/pegasus/run0004
       by specifiying the Dag directory for the workflow you want to
       terminate.</para>
 
-      <screen><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/Workflow/dags/directory</replaceable><replaceable></replaceable></screen>
+      <screen><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/Workflow/dags/directory</replaceable><replaceable/></screen>
 
       <para>Pegasus will remove the workflow from the condor queue. A rescue
       DAG will be generated in case you want to resubmit the same workflow and
@@ -663,7 +679,7 @@ working dir : /lfs1/work/pegasus/run0004
 
       <screen><command>$ pegasus-statistics</command> <replaceable>/Workflow/dags/directory</replaceable></screen>
 
-      <para>By default the output gets generated to statistics folder inside
+      <para>By default the output gets generated to a statistics folder inside
       the submit directory. For detailed information about the files created check <xref
       linkend="monitoring_debugging_stats" /> section.</para>
     </section>
@@ -683,3 +699,6 @@ working dir : /lfs1/work/pegasus/run0004
     </section>
   </section>
 </chapter>
+
+
+
