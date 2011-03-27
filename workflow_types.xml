@@ -6,13 +6,42 @@
 
   <section>
       <title>Workflow Types</title>   </section>
+      <section>
+      <title>High Level Description of Workflows</title>
       
+      <para>Simply worded description of what workflows are, how they basically work, and how they can sae time, money, etc</para>
+      
+      </section>
       <section>
       <title>Abstract Workflow</title>
+      
+      <para>Abstract workflows are............</para>
+      
+      <para>The following are subject to be covered on this page:</para>
+      
+      <itemizedlist>
+        <listitem>
+          <para>Workflow Creation Steps</para>
+
+          <para>Simple Workflow Creation</para>
+          
+          <para>link to more complex workflow page</para>
+        </listitem>
+
+        <listitem>
+          <para>Setting Up Workflow Environments</para>
+
+          <para/>
+        </listitem>
+      </itemizedlist>
+      
+
       
       <title>Executable Workflow</title>
       
       <para>Executable workflows are..................</para>
+      
       </section>
 
 </chapter>
+
