@@ -72,9 +72,35 @@ public class WorkflowMetrics extends Data {
     private int mNumCreateDirJobs;
 
     /**
+     * The number of dax jobs in the workflow
+     */
+    private int mNumDAXJobs;
+
+    /**
+     * The number of DAG jobs in the workflow
+     */
+    private int mNumDAGJobs;
+
+    /**
+     * The number of compute tasks in the DAX
+     */
+    private int mNumComputeTasks;
+
+    /**
+     * The number of DAX tasks in the DAX
+     */
+    private int mNumDAXTasks;
+
+    /**
+     * The number of DAG tasks in the DAX.
+     */
+    private int mNumDAGTasks;
+
+    /**
      * The label of the dax.
      */
     private String mDAXLabel;
+
 
     /**
      * The default constructor.
@@ -96,6 +122,11 @@ public class WorkflowMetrics extends Data {
         mNumCleanupJobs  = 0;
         mNumCreateDirJobs = 0;
         mNumClusteredJobs = 0;
+        mNumDAXJobs          = 0;
+        mNumDAGJobs          = 0;
+        mNumComputeTasks  = 0;
+        mNumDAXTasks      = 0;
+        mNumDAGTasks      = 0;
     }
 
 
@@ -142,8 +173,17 @@ public class WorkflowMetrics extends Data {
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs++;
                 }
+                else if( job instanceof DAXJob ){
+                    mNumDAXJobs++;
+                    mNumDAXTasks++;
+                }
+                else if( job instanceof DAGJob ){
+                    mNumDAGJobs++;
+                    mNumDAGTasks++;
+                }
                 else{
                     mNumComputeJobs++;
+                    mNumComputeTasks++;
                 }
                 break;
 
@@ -180,6 +220,7 @@ public class WorkflowMetrics extends Data {
 
     /**
      * Decrement the metrics when on the basis of type of job.
+     * Does not decrement the task related metrics.
      *
      * @param job  the job being removed.
      */
@@ -201,6 +242,12 @@ public class WorkflowMetrics extends Data {
             case Job.STAGED_COMPUTE_JOB:
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs--;
+                }
+                else if( job instanceof DAXJob ){
+                    mNumDAXJobs--;
+                }
+                else if( job instanceof DAGJob ){
+                    mNumDAGJobs--;
                 }
                 else{
                     mNumComputeJobs--;
@@ -247,9 +294,19 @@ public class WorkflowMetrics extends Data {
         StringBuffer sb = new StringBuffer();
 
         append( sb, "dax-label", this.mDAXLabel );
+
+        //dax task related metrics
+        append( sb, "compute-tasks.count", this.mNumComputeTasks );
+        append( sb, "dax-tasks.count", this.mNumDAXTasks );
+        append( sb, "dag-tasks.count", this.mNumDAGTasks );
+        append( sb, "total-tasks.count", this.mNumComputeTasks + this.mNumDAGTasks + this.mNumDAXTasks );
+
+        //job related metrics
         append( sb, "createdir-jobs.count", this.mNumCreateDirJobs );
-        append( sb, "compute-jobs.count", this.mNumComputeJobs );
+        append( sb, "unclustered-compute-jobs.count", this.mNumComputeJobs );
         append( sb, "clustered-compute-jobs.count", this.mNumClusteredJobs );
+        append( sb, "dax-jobs.count", this.mNumDAXJobs );
+        append( sb, "dag-jobs.count", this.mNumDAGJobs );
         append( sb, "si-jobs.count", this.mNumSITxJobs );
         append( sb, "so-jobs.count", this.mNumSOTxJobs );
         append( sb, "inter-jobs.count", this.mNumInterTxJobs );
@@ -310,7 +367,11 @@ public class WorkflowMetrics extends Data {
         wm.mDAXLabel       = this.mDAXLabel;
         wm.mNumCreateDirJobs = this.mNumCreateDirJobs;
         wm.mNumClusteredJobs = this.mNumClusteredJobs;
-
+        wm.mNumDAXJobs       = this.mNumDAGJobs;
+        wm.mNumDAGJobs       = this.mNumDAGJobs;
+        wm.mNumComputeTasks  = this.mNumComputeTasks;
+        wm.mNumDAXTasks      = this.mNumDAXTasks;
+        wm.mNumDAGTasks      = this.mNumDAGTasks;
         return wm;
     }
 

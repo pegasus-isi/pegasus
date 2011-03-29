@@ -171,41 +171,6 @@ public class Metrics {
         return f;
     }
    
-    /**
-     * Returns the submit hostname
-     * 
-     * @return hostname
-     * 
-     * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
-     */
-    protected String getSubmitHostname( ) throws CodeGeneratorException{
-        try {
-            InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            return localMachine.getHostName();
-        } catch ( UnknownHostException ex) {
-            throw new CodeGeneratorException( "Unable to determine hostname", ex );
-        }
-    }
-    
-    /**
-     * Returns the distinguished name from the proxy
-     * 
-     * 
-     * @return the DN else null if proxy file not found.
-     */
-    protected String getGridDN( ){
-        String dn = null;
-        try {
-            
-            GlobusCredential credential = GlobusCredential.getDefaultCredential();
-                    //new GlobusCredential(proxyFile);
-
-            dn = credential.getIdentity();
-        } catch (GlobusCredentialException ex) {
-            mLogger.log( "Unable to determine GRID DN", ex, LogManager.DEBUG_MESSAGE_LEVEL );
-        }
-        return dn;
-    }
     
     
 }
