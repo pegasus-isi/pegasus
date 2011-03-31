@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+REPO_DIR=~/tmp/yum-repo
+
+rm -rf $REPO_DIR
+rsync -a -v -e ssh pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/3.0/yum/ $REPO_DIR/
+
+cd $REPO_DIR
+for DER in `find . -type d -name i386 -o -name x86_64`; do 
+    cd $REPO_DIR/$DER
+    createrepo .
+done
+
+rsync -a -v -e ssh $REPO_DIR/ pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/3.0/yum/
+
+
