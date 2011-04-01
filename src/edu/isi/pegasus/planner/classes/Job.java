@@ -117,21 +117,17 @@ public class Job extends Data implements GraphNodeContent{
      */
     public static final int CHMOD_JOB = 9;
 
-    /**
-     * Denotes an aggregated job.
-     */
-    public static final int AGGREAGTED_JOB = 10;
 
     /**
      * Denotes a chmod job that sets the xbit on the remote end.
      */
-    public static final int DAX_JOB = 11;
+    public static final int DAX_JOB = 10;
 
 
     /**
      * Denotes a chmod job that sets the xbit on the remote end.
      */
-    public static final int DAG_JOB = 12;
+    public static final int DAG_JOB = 11;
 
     /**
      * Returns an appropriate grid gateway job type corresponding to a job type
