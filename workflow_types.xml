@@ -2,46 +2,47 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="workflow_types">
-  <title>Workflow Types</title>
+  <title>Workflows</title>
 
   <section>
-      <title>Workflow Types</title>   </section>
+      <title>Workflow Basics</title>   </section>
       <section>
       <title>High Level Description of Workflows</title>
       
-      <para>Simply worded description of what workflows are, how they basically work, and how they can sae time, money, etc</para>
+      <para>Simply worded description of what workflows are, how they basically work, and how they can save time, money, etc</para>
       
       </section>
+      
+                <section>
+                 <title>Abstract Workflow</title>
+
+                   <para>Abstract workflows are............</para>
+
+                 </section>
+                 
+                 <section>
+                  <title> Executable Workflows </title>
+                  
+                  <para>Execuable Workflows are....</para>
+                    
+                 </section>
+      
       <section>
-      <title>Abstract Workflow</title>
+      <title>Creating Workflows</title>
       
-      <para>Abstract workflows are............</para>
+      Workflows are created as follows:
       
-      <para>The following are subject to be covered on this page:</para>
+      <para>Preparation.............</para>
       
-      <itemizedlist>
-        <listitem>
-          <para>Workflow Creation Steps</para>
+      <para>Assembly............</para>
 
-          <para>Simple Workflow Creation</para>
-          
-          <para>link to more complex workflow page</para>
-        </listitem>
 
-        <listitem>
-          <para>Setting Up Workflow Environments</para>
+        <para>Simple Workflow Creation</para>
 
-          <para/>
-        </listitem>
-      </itemizedlist>
+        <para>link to more complex workflow page</para>
       
-
-      
-      <title>Executable Workflow</title>
-      
-      <para>Executable workflows are..................</para>
       
       </section>
-
 </chapter>
+
 
