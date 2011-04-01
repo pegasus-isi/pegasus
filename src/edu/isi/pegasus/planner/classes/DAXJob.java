@@ -54,6 +54,7 @@ public class DAXJob extends Job {
         super();
         mDAXFile = null;
         mDirectory = null;
+        this.setJobType( Job.DAX_JOB );
     }
 
     /**
@@ -65,6 +66,7 @@ public class DAXJob extends Job {
     public DAXJob(Job job){
         super(job);
         mDAXFile = null;
+        this.setJobType( Job.DAX_JOB );
     }
 
     

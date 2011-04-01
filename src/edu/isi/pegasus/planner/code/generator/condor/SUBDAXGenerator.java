@@ -553,7 +553,7 @@ public class SUBDAXGenerator{
         
     
         //for time being use the old functions.
-        Job job = new Job();
+        Job job = new DAXJob();
         //the parent directory where the submit file for condor dagman has to
         //reside. the submit files for the corresponding partition are one level
         //deeper.
@@ -635,7 +635,7 @@ public class SUBDAXGenerator{
         //the job itself is the main job of the super node
         //construct the classad specific information
         job.jobID = job.getName();
-        job.jobClass = Job.COMPUTE_JOB;
+//        job.jobClass = Job.COMPUTE_JOB;
 
 
         //directory where all the dagman related files for the nested dagman

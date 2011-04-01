@@ -709,7 +709,7 @@ public abstract class Abstract implements Implementation{
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
         xBitJob.strargs         = arguments.toString();
-        xBitJob.jobClass        = Job.CREATE_DIR_JOB;
+        xBitJob.jobClass        = Job.CHMOD_JOB;
         xBitJob.jobID           = name;
 
         //the profile information from the pool catalog needs to be

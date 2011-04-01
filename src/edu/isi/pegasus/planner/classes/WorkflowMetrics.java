@@ -81,6 +81,11 @@ public class WorkflowMetrics extends Data {
      */
     private int mNumDAGJobs;
 
+    /*
+     * The number of chmod jobs in the workflow
+     */
+    private int mNumChmodJobs;
+
     /**
      * The number of compute tasks in the DAX
      */
@@ -100,6 +105,7 @@ public class WorkflowMetrics extends Data {
      * The label of the dax.
      */
     private String mDAXLabel;
+
 
 
     /**
@@ -122,6 +128,7 @@ public class WorkflowMetrics extends Data {
         mNumCleanupJobs  = 0;
         mNumCreateDirJobs = 0;
         mNumClusteredJobs = 0;
+        mNumChmodJobs     = 0;
         mNumDAXJobs          = 0;
         mNumDAGJobs          = 0;
         mNumComputeTasks  = 0;
@@ -172,7 +179,7 @@ public class WorkflowMetrics extends Data {
             case Job.STAGED_COMPUTE_JOB:
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs++;
-                }
+                }/*
                 else if( job instanceof DAXJob ){
                     mNumDAXJobs++;
                     mNumDAXTasks++;
@@ -181,11 +188,23 @@ public class WorkflowMetrics extends Data {
                     mNumDAGJobs++;
                     mNumDAGTasks++;
                 }
+                  */
                 else{
                     mNumComputeJobs++;
                     mNumComputeTasks++;
                 }
                 break;
+
+            case Job.DAX_JOB:
+                mNumDAXJobs++;
+                mNumDAXTasks++;
+                break;
+
+            case Job.DAG_JOB:
+                mNumDAGJobs++;
+                mNumDAGTasks++;
+                break;
+
 
             case Job.STAGE_IN_JOB:
                 mNumSITxJobs++;
@@ -209,6 +228,11 @@ public class WorkflowMetrics extends Data {
 
             case Job.CREATE_DIR_JOB:
                 mNumCreateDirJobs++;
+                break;
+
+
+            case Job.CHMOD_JOB:
+                mNumChmodJobs++;
                 break;
 
             default:
@@ -242,17 +266,26 @@ public class WorkflowMetrics extends Data {
             case Job.STAGED_COMPUTE_JOB:
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs--;
-                }
+                }/*
                 else if( job instanceof DAXJob ){
                     mNumDAXJobs--;
                 }
                 else if( job instanceof DAGJob ){
                     mNumDAGJobs--;
-                }
+                }*/
                 else{
                     mNumComputeJobs--;
                 }
                 break;
+
+            case Job.DAX_JOB:
+                mNumDAXJobs--;
+                break;
+
+            case Job.DAG_JOB:
+                mNumDAGJobs--;
+                break;
+
 
             case Job.STAGE_IN_JOB:
                 mNumSITxJobs--;
@@ -276,6 +309,10 @@ public class WorkflowMetrics extends Data {
 
              case Job.CREATE_DIR_JOB:
                 mNumCreateDirJobs--;
+                break;
+
+            case Job.CHMOD_JOB:
+                mNumChmodJobs--;
                 break;
 
             default:
@@ -303,6 +340,7 @@ public class WorkflowMetrics extends Data {
 
         //job related metrics
         append( sb, "createdir-jobs.count", this.mNumCreateDirJobs );
+        append( sb, "chmod-jobs.count", this.mNumChmodJobs );
         append( sb, "unclustered-compute-jobs.count", this.mNumComputeJobs );
         append( sb, "clustered-compute-jobs.count", this.mNumClusteredJobs );
         append( sb, "dax-jobs.count", this.mNumDAXJobs );
@@ -367,6 +405,7 @@ public class WorkflowMetrics extends Data {
         wm.mDAXLabel       = this.mDAXLabel;
         wm.mNumCreateDirJobs = this.mNumCreateDirJobs;
         wm.mNumClusteredJobs = this.mNumClusteredJobs;
+        wm.mNumChmodJobs     = this.mNumChmodJobs;
         wm.mNumDAXJobs       = this.mNumDAGJobs;
         wm.mNumDAGJobs       = this.mNumDAGJobs;
         wm.mNumComputeTasks  = this.mNumComputeTasks;

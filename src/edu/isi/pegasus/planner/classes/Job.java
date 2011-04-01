@@ -113,9 +113,25 @@ public class Job extends Data implements GraphNodeContent{
     public static final int CLEANUP_JOB = 8;
 
     /**
-     * Denotes a symbolic link stagein job
+     * Denotes a chmod job that sets the xbit on the remote end.
      */
-    //public static final int SYMLINK_STAGE_IN_JOB = 9;
+    public static final int CHMOD_JOB = 9;
+
+    /**
+     * Denotes an aggregated job.
+     */
+    public static final int AGGREAGTED_JOB = 10;
+
+    /**
+     * Denotes a chmod job that sets the xbit on the remote end.
+     */
+    public static final int DAX_JOB = 11;
+
+
+    /**
+     * Denotes a chmod job that sets the xbit on the remote end.
+     */
+    public static final int DAG_JOB = 12;
 
     /**
      * Returns an appropriate grid gateway job type corresponding to a job type
@@ -135,6 +151,9 @@ public class Job extends Data implements GraphNodeContent{
         
         switch( type ){
             case Job.COMPUTE_JOB:
+            case Job.STAGED_COMPUTE_JOB:
+            case Job.DAG_JOB:
+            case Job.DAX_JOB:
                 jtype = GridGateway.JOB_TYPE.compute;
                 break;
                 
@@ -155,14 +174,9 @@ public class Job extends Data implements GraphNodeContent{
                 break;
             
             case Job.CREATE_DIR_JOB:
+            case Job.CHMOD_JOB:
                 jtype = GridGateway.JOB_TYPE.auxillary;
                 break;
-            
-            
-            case Job.STAGED_COMPUTE_JOB:
-                jtype = GridGateway.JOB_TYPE.compute;
-                break;
-                
             
             case Job.CLEANUP_JOB:
                 jtype = GridGateway.JOB_TYPE.cleanup;
@@ -931,6 +945,18 @@ public class Job extends Data implements GraphNodeContent{
                 desc = "Cleanup Job";
                 break;
 
+            case CHMOD_JOB:
+                desc = "Chmod Job";
+                break;
+
+            case DAX_JOB:
+                desc = "DAX Job";
+                break;
+
+            case DAG_JOB:
+                desc = "DAG Job";
+                break;
+
             default:
                 desc = "Unknown Job";
                 break;
@@ -1286,7 +1312,7 @@ public class Job extends Data implements GraphNodeContent{
      */
     public static boolean typeInRange(int type){
         return ( type >= Job.UNASSIGNED_JOB &&
-                 type <= Job.CLEANUP_JOB );
+                 type <= Job.DAG_JOB );
     }
 
 

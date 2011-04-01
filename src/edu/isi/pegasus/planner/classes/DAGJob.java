@@ -55,6 +55,7 @@ public class DAGJob extends Job {
         super();
         mDAGFile = null;
         mDirectory = null;
+        this.setJobType( Job.DAG_JOB );
     }
 
     /**
@@ -66,6 +67,7 @@ public class DAGJob extends Job {
     public DAGJob(Job job){
         super(job);
         mDAGFile = null;
+        this.setJobType( Job.DAG_JOB );
     }
 
     
