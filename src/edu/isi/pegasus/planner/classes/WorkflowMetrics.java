@@ -176,20 +176,9 @@ public class WorkflowMetrics extends Data {
 
             //treating compute and staged compute as same
             case Job.COMPUTE_JOB:
-            case Job.STAGED_COMPUTE_JOB:
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs++;
-                }/*
-                else if( job instanceof DAXJob ){
-                    mNumDAXJobs++;
-                    mNumDAXTasks++;
-                }
-                else if( job instanceof DAGJob ){
-                    mNumDAGJobs++;
-                    mNumDAGTasks++;
-                }
-                  */
-                else{
+                }else{
                     mNumComputeJobs++;
                     mNumComputeTasks++;
                 }
@@ -263,16 +252,9 @@ public class WorkflowMetrics extends Data {
 
             //treating compute and staged compute as same
             case Job.COMPUTE_JOB:
-            case Job.STAGED_COMPUTE_JOB:
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs--;
-                }/*
-                else if( job instanceof DAXJob ){
-                    mNumDAXJobs--;
                 }
-                else if( job instanceof DAGJob ){
-                    mNumDAGJobs--;
-                }*/
                 else{
                     mNumComputeJobs--;
                 }

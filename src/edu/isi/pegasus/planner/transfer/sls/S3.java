@@ -666,7 +666,7 @@ public class S3   implements SLS {
         
         //determine the type of command to issue on the basis of 
         //type of transfer job
-        String command = ( type == TransferJob.STAGED_COMPUTE_JOB ||
+        String command = ( /*type == TransferJob.STAGED_COMPUTE_JOB ||*/
                            type == TransferJob.STAGE_IN_JOB ) ?
                            "put" : //used for stagein
                            "get" ; //used for stageout

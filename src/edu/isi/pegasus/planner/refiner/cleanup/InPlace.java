@@ -156,7 +156,7 @@ public class InPlace implements CleanupStrategy{
             GraphNode _GN = ( GraphNode ) it.next();
             Job _SI = ( Job ) _GN.getContent();
             //only for compute jobs
-            if( ! ( _SI.getJobType() == _SI.COMPUTE_JOB || _SI.getJobType() == _SI.STAGED_COMPUTE_JOB ) ) {
+            if( ! ( _SI.getJobType() == _SI.COMPUTE_JOB /*|| _SI.getJobType() == _SI.STAGED_COMPUTE_JOB*/ ) ) {
                 continue;
             }
 
@@ -608,7 +608,7 @@ public class InPlace implements CleanupStrategy{
         return (   type == Job.COMPUTE_JOB
                 || type == Job.STAGE_OUT_JOB
                 || type == Job.INTER_POOL_JOB
-                || type == Job.STAGED_COMPUTE_JOB );
+                /*|| type == Job.STAGED_COMPUTE_JOB*/ );
     }
 
     

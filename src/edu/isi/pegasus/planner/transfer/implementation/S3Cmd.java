@@ -238,7 +238,7 @@ public class S3Cmd extends AbstractSingleFTPerXFERJob {
         
         //determine the type of command to issue on the basis of 
         //type of transfer job
-        String type = ( job.getJobType() == TransferJob.STAGED_COMPUTE_JOB ||
+        String type = ( /*job.getJobType() == TransferJob.STAGED_COMPUTE_JOB ||*/
                         job.getJobType() == TransferJob.STAGE_IN_JOB ) ?
                         "put" : //used for stagein
                         "get" ; //used for stageout

@@ -167,7 +167,7 @@ public class NetloggerJobMapper{
             //a clustered job the number of constituent is count
             count = ((AggregatedJob)job).numberOfConsitutentJobs();
         }
-        else if ( type == Job.COMPUTE_JOB || type == Job.STAGED_COMPUTE_JOB ){
+        else if ( type == Job.COMPUTE_JOB /*|| type == Job.STAGED_COMPUTE_JOB*/ ){
             //non clustered job check whether compute or not 
             //and make sure there is dax job associated with it
             if( job.getLogicalID().length() == 0 ){

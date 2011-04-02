@@ -456,8 +456,8 @@ public class NoGridStart implements GridStart {
                 
             }
             else if( !mEnablingPartOfAggregatedJob ){
-                if( job.getJobType() == Job.COMPUTE_JOB ||
-                    job.getJobType() == Job.STAGED_COMPUTE_JOB ){
+                if( job.getJobType() == Job.COMPUTE_JOB /*||
+                    job.getJobType() == Job.STAGED_COMPUTE_JOB*/ ){
 
                     if( !mSLS.doesCondorModifications() && 
                             //do the check only if input/output files are not empty
@@ -542,7 +542,8 @@ public class NoGridStart implements GridStart {
         if ( cvar.getBooleanValue( "transfer_executable" )) {
             
             //explicitly check for whether the job is a staged compute job or not
-            if( job.getJobType() == Job.STAGED_COMPUTE_JOB ){
+//            if( job.getJobType() == Job.STAGED_COMPUTE_JOB ){
+            if( job.userExecutablesStagedForJob() ){
                 //the executable is being staged to the remote site.
                 //all we need to do is unset transfer_executable
                 cvar.construct( "transfer_executable", "false" );

@@ -568,7 +568,8 @@ public class InterPoolEngine extends Engine implements Refiner {
             }
             //setting the job type of the job to
             //denote the executable is being staged
-            job.setJobType(Job.STAGED_COMPUTE_JOB);
+            //job.setJobType(Job.STAGED_COMPUTE_JOB);
+            job.setExecutableStagingForJob( true );
         }
         else{
             //the executable needs to point to the physical
@@ -607,7 +608,7 @@ public class InterPoolEngine extends Engine implements Refiner {
      */
     private void handleDependantExecutables( Job job ){
         String siteHandle = job.getSiteHandle();
-        boolean installedTX =  !(job.getJobType() == Job.STAGED_COMPUTE_JOB );
+        boolean installedTX =  !( job.userExecutablesStagedForJob() );
 
         List dependantExecutables = new ArrayList();
         for (Iterator it = job.getInputFiles().iterator(); it.hasNext(); ) {

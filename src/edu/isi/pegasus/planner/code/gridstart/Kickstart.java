@@ -591,7 +591,8 @@ public class Kickstart implements GridStart {
         //are added as childern to the stage in jobs, unless they are 
         //disabled and users set a property to set the xbit
         //Karan November 22, 2005
-        if( mSetXBit && job.getJobType() == Job.STAGED_COMPUTE_JOB  ){
+        if( mSetXBit &&
+                job.userExecutablesStagedForJob()  ){
             //add the -X flag to denote turning on
             gridStartArgs.append( " -X " );
        }
@@ -600,7 +601,7 @@ public class Kickstart implements GridStart {
         //and if the input variable is true
         if ( stat ){
             if (job.getJobType() == Job.COMPUTE_JOB ||
-                job.getJobType() == Job.STAGED_COMPUTE_JOB ||
+//                job.getJobType() == Job.STAGED_COMPUTE_JOB ||
                 job.getJobType() == Job.CLEANUP_JOB ||
                 job.getJobType() == Job.STAGE_IN_JOB ||
                 job.getJobType() == Job.INTER_POOL_JOB) {
@@ -685,7 +686,7 @@ public class Kickstart implements GridStart {
             }
         }
         else{
-            if( this.mWorkerNodeExecution && job.getJobType() == Job.STAGED_COMPUTE_JOB ){
+            if( this.mWorkerNodeExecution && job.userExecutablesStagedForJob() ){
                 //we need to put the path of the executable
                 //staged in the worker node temp directory
                 //JIRA PM-20 and PM-68
@@ -857,8 +858,8 @@ public class Kickstart implements GridStart {
         //for clustered jobs we dont generate sls files
         boolean generateSLSFile = !partOfClusteredJob;
 
-        if( job.getJobType() == Job.COMPUTE_JOB ||
-            job.getJobType() == Job.STAGED_COMPUTE_JOB ){
+        if( job.getJobType() == Job.COMPUTE_JOB /*||
+            job.getJobType() == Job.STAGED_COMPUTE_JOB */){
             mLogger.log( "Enabling job for worker node execution " + job.getName() ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -882,7 +883,7 @@ public class Kickstart implements GridStart {
 
                 //handle for staged compute jobs. set their X bit after
                 // SLS has happened
-                if( job.getJobType() == Job.STAGED_COMPUTE_JOB ){
+                if( job.userExecutablesStagedForJob() ){
                     xBitSetInvocation = new StringBuffer();
                     xBitSetInvocation.append( "/bin/chmod 777 " );
 

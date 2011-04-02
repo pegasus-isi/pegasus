@@ -103,7 +103,7 @@ public class Job extends Data implements GraphNodeContent{
      * Denotes a job for which the executable has been staged as part of the
      * workflow.
      */
-    public static final int STAGED_COMPUTE_JOB = 7;
+//    public static final int STAGED_COMPUTE_JOB = 7;
 
 
     /**
@@ -147,7 +147,6 @@ public class Job extends Data implements GraphNodeContent{
         
         switch( type ){
             case Job.COMPUTE_JOB:
-            case Job.STAGED_COMPUTE_JOB:
             case Job.DAG_JOB:
             case Job.DAX_JOB:
                 jtype = GridGateway.JOB_TYPE.compute;
@@ -379,6 +378,11 @@ public class Job extends Data implements GraphNodeContent{
     private double mRuntime;
 
     /**
+     * Boolean indicating whether the job executables were staged for it or not.
+     */
+    private boolean mJobExecutablesStaged;
+
+    /**
      * The relative path to the submit directory for the job, from the workflows
      * base submit directory.
      */
@@ -417,6 +421,7 @@ public class Job extends Data implements GraphNodeContent{
         jobClass         = UNASSIGNED_JOB;
         level            = -1;
         mRuntime = -1;
+        mJobExecutablesStaged = false;
 //        submitDirectory  = null;
     }
 
@@ -454,6 +459,7 @@ public class Job extends Data implements GraphNodeContent{
         jobClass         = job.getJobType();
         level            = job.level;
         mRuntime = job.mRuntime;
+        mJobExecutablesStaged = false;
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -505,6 +511,9 @@ public class Job extends Data implements GraphNodeContent{
         newSub.level        = this.level;
         newSub.mRuntime = this.mRuntime;
 //        newSub.submitDirectory = this.submitDirectory == null ? null : new String(this.submitDirectory);
+
+        
+        newSub.mJobExecutablesStaged = this.mJobExecutablesStaged;
 
         return newSub;
     }
@@ -585,6 +594,25 @@ public class Job extends Data implements GraphNodeContent{
     }
 
 
+    /**
+     * Sets the executable staging flag in the job to the value passed.
+     *
+     * @param value  the boolean value.
+     */
+    public void setExecutableStagingForJob( boolean value ){
+        
+        mJobExecutablesStaged = value;
+    }
+
+    /**
+     * Returns whether user executables need to be staged for job or not.
+     * 
+     * @return user executable staging.
+     */
+    public boolean userExecutablesStagedForJob(){
+
+        return mJobExecutablesStaged ;
+    }
 
     /**
      * Adds an input file to the underlying collection of input files
@@ -931,10 +959,6 @@ public class Job extends Data implements GraphNodeContent{
 
             case CREATE_DIR_JOB:
                 desc = "Create Directory job";
-                break;
-
-            case STAGED_COMPUTE_JOB:
-                desc = "Staged Compute job";
                 break;
                 
             case CLEANUP_JOB:
