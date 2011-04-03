@@ -6,10 +6,10 @@
 
   <section>
       <title>Workflow Basics</title>   </section>
-      <section>
-      <title>High Level Description of Workflows</title>
+                      <section>
+                      <para>High Level Description of Workflows</para>
       
-      <para>Simply worded description of what workflows are, how they basically work, and how they can save time, money, etc</para>
+                                 <para>Simply worded description of what workflows are, how they basically work, and how they can save time, money, etc</para>
       
       </section>
       
@@ -51,5 +51,6 @@
       
       </section>
 </chapter>
+
 
 
