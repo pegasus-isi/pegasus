@@ -5,34 +5,36 @@
   <title>Workflows</title>
 
   <section>
-      <title>Workflow Basics</title>   </section>
-                      <section>
-                      <para>High Level Description of Workflows</para>
+      <title>Workflow Introduction</title>   </section>
+      <section>
+      <para>High Level Description of Workflows</para>
       
-                                 <para>Simply worded description of what workflows are, how they basically work, and how they can save time, money, etc</para>
+      <para>Simply worded description of what workflows are, how they basically work, and how they can save time, money, etc</para>
+      
+      <para> workflo diagrams</para>
       
       </section>
       
-                <section>
-                 <title>Abstract Workflows</title>
+      <section>
+      <title>Abstract Workflows</title>
 
-                   <para>Abstract workflows are............</para>
+      <para>Abstract workflows are............</para>
 
-                 </section>
+      </section>
                  
-                 <section>
-                  <title> Executable Workflows </title>
+      <section>
+      <title> Executable Workflows </title>
                   
-                  <para>Execuable Workflows are....</para>
+      <para>Execuable Workflows are....</para>
                     
-                 </section>
+      </section>
                  
-                 <section>
-                  <title> Comparison </title>
+      <section>
+      <title> Comparison </title>
 
-                  <para>Insert a table here with the differences between the two</para>
+      <para>Insert a table here with the differences between the two</para>
 
-                 </section>
+      </section>
       
       <section>
       <title>Creating Workflows</title>
