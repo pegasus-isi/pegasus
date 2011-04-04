@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="components">
+  <title>Workflows</title>
+
+  <section>
+      <title>DAX</title>   </section>
+      <section>
+      <para>High Level Description of DAX</para>
+
+      <para>Simply worded description of what a DAX is, how they basically work, and user benefits </para>
+      </section>
+      
+      <section>
+      <title>DAG </title>
+      </section>
+      
+      
+      <section>
+      <title>Catalogs </title>
+      </section>
+      
+      
+      <section>
+
+      <title>Pegasus Mapper</title></section>
+      
+      
+      <section>
+
+      <title>Condor Schedd  </title>
+      </section>
