@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="quickstart">
+  <title>Pegasus Quick Start Guide</title>
+
+  <section>
+    <title>Getting Started</title>
+
+    <para>This document is structured to get you and up running with the
+    Pegasus planner with minimal effort. </para>
+    
+    <para>Pegasus is available for installation with two methods:</para>
+    
+    <itemizedlist>
+      <listitem>
+        <para>Install with image file to laptop</para>
+      </listitem>
+
+      <listitem>
+        <para>Download and install on networked computers</para>
+      </listitem>
+
+
+    </itemizedlist>
+
+
+    <para>Download the latest release of Pegasus WMS 3.0 from <ulink
+    url="http://pegasus.isi.edu/wms/download.php">http://pegasus.isi.edu/wms/download.php</ulink></para>
+
+    <para>For convenience, there are Pegasus WMS tarballs which has Condor
+    included. This way you can instlal Pegasus and Condor at the same time,
+    with just minor configuration to get up and running.</para>
+
+    <para>To run Pegasus you will need</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>JAVA 1.6</para>
+      </listitem>
+
+      <listitem>
+        <para>Python 2.6</para>
+      </listitem>
+
+      <listitem>
+        <para>Perl</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Check Java version and ensure it is JAVA 1.6.x</para>
+
+    <screen><command>$ java -version</command><computeroutput>
+
+java version "1.5.0_07"
+Java(TM) 2 Runtime Environment, Standard Edition (build 1.5.0_07-164)
+Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)</computeroutput></screen>
+
+    <para>To install Pegsus</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Untar the tarball. The code will be untarred in a directory
+        pegasus-&lt;version&gt;. Lets call this PEGASUS_HOME. Change
+        PEGASUS_HOME on the command line to the directory where you untarred
+        the code.</para>
+
+        <para><screen><code><command>$ tar zxf pegasus-wms-*.tar.gz</command></code></screen></para>
+      </listitem>
+
+      <listitem>
+        <para>Edit the Condor Configuration file located at
+        PEGASUS_HOME/etc/condor_config (Additional configuration may be
+        required for Production Environment).</para>
+
+        <orderedlist>
+          <listitem>
+            <para>Change !!PEGASUS_HOME!! to the actual path where PEGASUS_WMS
+            is installed</para>
+          </listitem>
+
+          <listitem>
+            <para>CHANGE !!USER!! to the user who will receive email in case
+            of error. (This can generally be just your username )</para>
+          </listitem>
+        </orderedlist>
+
+        <para><screen><command>$ vim $PEGASUS_HOME/etc/condor_config</command><computeroutput>
+
+RELEASE_DIR = !!PEGASUS_HOME!!    # CHANGE THIS TO PATH OF PEGASUS_WMS INSTALLATION
+
+CONDOR_ADMIN = !!USER!! # CHANGE THIS TO THE USER WHO WILL GET EMAIL IN CASE OF ERROR.</computeroutput></screen></para>
+      </listitem>
+
+      <listitem>
+        <para>Set up the environment:</para>
+
+        <para><screen><command>$ export PATH=PEGASUS_HOME/bin:PEGASUS_HOME/condor/bin:$PATH
+$ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</command></screen></para>
+      </listitem>
+
+      <listitem>
+        <para>Start Condor by running ./sbin/condor_master</para>
+
+        <para><screen><command>$ PEGASUS_HOME/sbin/condor_master</command></screen></para>
+      </listitem>
+
+      <listitem>
+        <para>Verify that Condor is up by running the condor_q command</para>
+
+        <para><screen><command>$ condor_q</command>
+
+<computeroutput>-- Submitter: gmehta@smarty.isi.edu : &lt;128.9.72.26:60126&gt; : smarty.isi.edu
+ ID      OWNER            SUBMITTED     RUN_TIME ST PRI SIZE CMD               
+
+0 jobs; 0 idle, 0 running, 0 held</computeroutput></screen></para>
+      </listitem>
+    </itemizedlist>
+
+    <para>This guide assumes you are using a Bourne Shell derived shell. e.g.
+    /bin/sh or /bin/bash.</para>
+  </section>
+
+  <section>
+    <title>Running Pegasus</title>
+
+    <para>Pegasus plans an abstract workflow (DAX) into a concrete/executable
+    workflow by querying various catalogs listed above and performing several
+    refinement steps. We have already setup all the catalogs required by
+    Pegasus in the previous sections and also configured properties that will
+    affect how Pegasus plans the workflow.</para>
+
+    <para>Pegasus planner is invoked on the command line by running the
+    <emphasis>pegasus-plan</emphasis> command. The client takes several parameters including one or
+    more sites where to compute the workflow, an optional single site if the
+    output data needs to be staged and stored and the input DAX file.</para>
+
+    <section id="example_black_diamond_quick" xreflabel="Black Diamond">
+      <title>Running a Diamond Workflow</title>
+
+      <para>Pegasus is shipped with a Diamond workflow example. The example workflow is found at PEGASUS_HOME/examples/condor-blackdiamond.</para>
+
+      <para> Change the current directory to the example directory:</para>
+
+      <screen><command>$ cd</command> <computeroutput>PEGASUS_HOME/examples/condor-blackdiamond</computeroutput></screen>
+
+      <para>The workflow has 4 nodes, layed out in a diamond shape, with files
+      being passed between them (f.*):</para>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata align="center" fileref="images/examples-diamond.jpg"
+                     valign="middle" />
+        </imageobject>
+      </mediaobject>
+
+      <para>The binary for the nodes is a simple "mock application" name
+      <command>keg</command> ("canonical example for the grid") which reads
+      input files designated by arguments, writes them back onto output files,
+      and produces on STDOUT a summary of where and when it was run. Keg ships
+      with Pegasus in the bin directory.</para>
+
+      <para>This example ships with a ,<emphasis>submit</emphasis> script that builds the
+      replica catalog, transformation catalog, and site catalog. When
+      you create your own workflows, such a submit script is not needed if you
+      want to maintain those catalogs manually.</para>
+
+      <note>
+        <para>The use of <filename>./submit</filename> scripts in this example
+        is to make it easier to run the examples quickly.</para>
+      </note>
+
+      <para>To test the examples, run it locally on your submit machine
+      run:</para>
+
+      <para><screen><command>$ ./submit condor</command></screen></para>
+
+      <para>The workflow is submitted in the local condor. The workflow output contains a work dir location for the instance. With
+      that directory you can monitor the workflow as mentioned below in section 3. /&gt;para&gt;
+
+      <para><emphasis>Submit Script Steps </emphasis> </para>
+
+      <para>The following are the steps that run inside the submit script to generate the workflow and execute it</para>
+
+</para>
+    </section>
+
+    <section>
+      <title>Abstract Workflow (DAX)</title>
+
+      <para>The submit script generates a DAX representation of the workflow
+      by compiling and running the BlackDiamondDAX.java code. Pegasus provides
+      several ways to generate your abstract workflow (DAX).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>JAVA API</para>
+        </listitem>
+
+        <listitem>
+          <para>PERL API</para>
+        </listitem>
+
+        <listitem>
+          <para>PYTHON API</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>You can read the <link linkend="api">API chapter</link> on the
+      details about writing your own workflow generator using our API's</para>
+
+      <para>Pegasus uses an XML format to describe the input abstract workflow
+      (DAX). The DAX is divided into 5 sections.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Replica Catalog Section:</emphasis> This
+          section lists all the files used in the workflow. They can be of
+          type input, output, inout or executable. You can define the physical
+          paths to the file. These files can also be describe in a separate
+          Replica Catalog. See the Chapter on <link
+          linkend="catalogs">Catalogs</link> . This Section is
+          optional.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Transformation Catalog
+          Section:</emphasis> This section lists all the executables used in
+          the workflow. You can define the physical paths to the executable
+          either here or in a separate Transformation Catalog. See the Chapter
+          on <link linkend="catalogs">Catalogs</link> . This Section is
+          optional</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Complex Transformation:</emphasis> This
+          section lists any complex transformation (Transformation requiring
+          additional transformations/executables). This section is
+          optional.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Tasks:</emphasis> This section lists all
+          the tasks of type jobs, dax or dags in the workflow. Along with the
+          tasks are arguments required to invoke the tasks, any profiles that
+          may be associated with the tasks and any files used as input or
+          output by the task.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Dependencies:</emphasis> This section
+          lists all the dependencies betweeen the tasks in the
+          workflow.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>The BlackDiamond.java class that is used to
+      generate the abstract workflow is displayed below</para>
+
+      <programlisting>import edu.isi.pegasus.planner.dax.*;
+public class BlackDiamondDAX {
+    /**
+     * Create an example DIAMOND DAX
+     * @param args
+     */
+    public static void main(String[] args) {
+        if (args.length != 3) {
+            System.out.println("Usage: java ADAG &lt;site_handle&gt; &lt;pegasus_location&gt; &lt;filename.dax&gt;");
+            System.exit(1);
+        }
+        try {
+            Diamond(args[0], args[1]).writeToFile(args[2]);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private static ADAG Diamond(String site_handle, String pegasus_location) throws Exception {
+        java.io.File cwdFile = new java.io.File (".");
+        String cwd = cwdFile.getCanonicalPath(); 
+        ADAG dax = new ADAG("blackdiamond");
+
+        File fa = new File("f.a");
+        fa.addPhysicalFile("file://" + cwd + "/f.a", site_handle);
+        dax.addFile(fa);
+        File fb1 = new File("f.b1");
+        File fb2 = new File("f.b2");
+        File fc1 = new File("f.c1");
+        File fc2 = new File("f.c2");
+        File fd = new File("f.d");
+        fd.setRegister(true);
+
+        Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
+        preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        preprocess.setInstalled(true);
+        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+
+        Executable findrange = new Executable("pegasus", "findrange", "4.0");
+        findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        findrange.setInstalled(true);
+        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+
+        Executable analyze = new Executable("pegasus", "analyze", "4.0");
+        analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        analyze.setInstalled(true);
+        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+        dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+
+        // Add a preprocess job
+        Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
+        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+        j1.addArgument("-o ").addArgument(fb1);
+        j1.addArgument(" ").addArgument(fb2);
+        j1.uses(fa, File.LINK.INPUT);
+        j1.uses(fb1, File.LINK.OUTPUT);
+        j1.uses(fb2, File.LINK.OUTPUT);
+        dax.addJob(j1);
+
+        // Add left Findrange job
+        Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
+        j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j2.addArgument("-o ").addArgument(fc1);
+        j2.uses(fb1, File.LINK.INPUT);
+        j2.uses(fc1, File.LINK.OUTPUT);
+        dax.addJob(j2);
+
+        // Add right Findrange job
+        Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
+        j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
+        j3.addArgument("-o ").addArgument(fc2);
+        j3.uses(fb2, File.LINK.INPUT);
+        j3.uses(fc2, File.LINK.OUTPUT);
+        dax.addJob(j3);
+
+        // Add analyze job
+        Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
+        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument(" ").addArgument(fc2);
+        j4.addArgument("-o ").addArgument(fd);
+        j4.uses(fc1, File.LINK.INPUT);
+        j4.uses(fc2, File.LINK.INPUT);
+        j4.uses(fd, File.LINK.OUTPUT);
+        dax.addJob(j4);
+        dax.addDependency("j1", "j2");
+        dax.addDependency("j1", "j3");
+        dax.addDependency("j2", "j4");
+        dax.addDependency("j3", "j4");
+        return dax;
+    }
+}</programlisting>
+
+      <para>The abstract workflow this is generated is show from the file
+      blackdiamond.dax below</para>
+
+      <programlisting>
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="blackdiamond" index="0" count="1"&gt;
+
+&lt;!-- Section 1: Files - Acts as a Replica Catalog (can be empty) --&gt;
+
+   &lt;file name="f.a"&gt;
+      &lt;pfn url="file:///usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs/examples/condor-blackdiamond/f.a" site="condorpool"/&gt;
+   &lt;/file&gt;
+
+&lt;!-- Section 2: Executables - Acts as a Transformaton Catalog (can be empty) --&gt;
+
+   &lt;executable namespace="pegasus" name="preprocess" version="4.0" installed="true" arch="x86" os="linux"&gt;
+      &lt;pfn url="file:///usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs/bin/keg" site="condorpool"/&gt;
+   &lt;/executable&gt;
+   &lt;executable namespace="pegasus" name="findrange" version="4.0" installed="true" arch="x86" os="linux"&gt;
+      &lt;pfn url="file:///usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs/bin/keg" site="condorpool"/&gt;
+   &lt;/executable&gt;
+   &lt;executable namespace="pegasus" name="analyze" version="4.0" installed="true" arch="x86" os="linux"&gt;
+      &lt;pfn url="file:///usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs/bin/keg" site="condorpool"/&gt;
+   &lt;/executable&gt;
+
+&lt;!-- Section 3: Transformations - Aggregates executables and Files (can be empty) --&gt;
+
+
+&lt;!-- Section 4: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required) --&gt;
+
+   &lt;job id="j1" namespace="pegasus" name="preprocess" version="4.0"&gt;
+      &lt;argument&gt;-a preprocess -T 60 -i  &lt;file name="f.a"/&gt; -o  &lt;file name="f.b1"/&gt;   &lt;file name="f.b2"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.a" link="input" transfer="true" register="true"/&gt;
+      &lt;uses name="f.b1" link="output" transfer="true" register="true"/&gt;
+      &lt;uses name="f.b2" link="output" transfer="true" register="true"/&gt;
+   &lt;/job&gt;
+   &lt;job id="j2" namespace="pegasus" name="findrange" version="4.0"&gt;
+      &lt;argument&gt;-a findrange -T 60 -i  &lt;file name="f.b1"/&gt; -o  &lt;file name="f.c1"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.b1" link="input" transfer="true" register="true"/&gt;
+      &lt;uses name="f.c1" link="output" transfer="true" register="true"/&gt;
+   &lt;/job&gt;
+   &lt;job id="j3" namespace="pegasus" name="findrange" version="4.0"&gt;
+      &lt;argument&gt;-a findrange -T 60 -i  &lt;file name="f.b2"/&gt; -o  &lt;file name="f.c2"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.b2" link="input" transfer="true" register="true"/&gt;
+      &lt;uses name="f.c2" link="output" transfer="true" register="true"/&gt;
+   &lt;/job&gt;
+   &lt;job id="j4" namespace="pegasus" name="analyze" version="4.0"&gt;
+      &lt;argument&gt;-a analyze -T 60 -i  &lt;file name="f.c1"/&gt;   &lt;file name="f.c2"/&gt; -o  &lt;file name="f.d"/&gt;&lt;/argument&gt;
+      &lt;uses name="f.c1" link="input" transfer="true" register="true"/&gt;
+      &lt;uses name="f.c2" link="input" transfer="true" register="true"/&gt;
+      &lt;uses name="f.d" link="output" transfer="true" register="true"/&gt;
+   &lt;/job&gt;
+
+&lt;!-- Section 5: Dependencies - Parent Child relationships (can be empty) --&gt;
+
+   &lt;child ref="j4"&gt;
+      &lt;parent ref="j2"/&gt;
+      &lt;parent ref="j3"/&gt;
+   &lt;/child&gt;
+   &lt;child ref="j2"&gt;
+      &lt;parent ref="j1"/&gt;
+   &lt;/child&gt;
+   &lt;child ref="j3"&gt;
+      &lt;parent ref="j1"/&gt;
+   &lt;/child&gt;
+&lt;/adag&gt;</programlisting>
+    </section>
+
+    <section>
+      <title>Catalogs</title>
+
+      <para>Pegasus uses several catalogs to help in its planning. These
+      catalogs need to be setup or defined inside the DAX before Pegasus can
+      plan a workflow. The catalogs used by Pegasus are :</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Replica Catalog</emphasis><emphasis
+          role="bold">:</emphasis> This catalog is used to lookup the location
+          of input data as well as any existing output data referenced in the
+          abstract workflow.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Site Catalog</emphasis><emphasis
+          role="bold">:</emphasis> This catalog is used to track information
+          about the various sites and their layout on the grid.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Transformation
+          Catalog</emphasis><emphasis role="bold">:</emphasis> This catalog is
+          used to lookup information about the location of executables
+          (transformation) installed or available for staging on the
+          Grid.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>If you want to learn about the various catalogs and
+      implementations in detail you can refer to the <link
+      linkend="catalogs">Catalogs</link> guide.</para>
+
+      <para>In this example the Replica Catalog and the Transformation Catalog
+      are embedded in the blackdiamond.dax file. The submit script creates the
+      site catalog required to run the workflow on the local node.</para>
+
+      <para>Take a look at the site catalog that is generated in
+      sites.xml.</para>
+
+      <para><programlisting>
+&lt;site  handle="local" arch="x86" os="LINUX"&gt;
+   &lt;grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
+   &lt;grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="unknown" jobtype="compute"/&gt;
+   &lt;head-fs&gt;
+      &lt;scratch&gt;
+         &lt;shared&gt;
+             &lt;file-server protocol="file" url="file://" 
+                mount-point="/usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs/examples/condor-blackdiamond/outputs"/&gt;
+                &lt;internal-mount-point  
+                   mount-point="/usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs/examples/condor-blackdiamond/work/output"
+                   free-size="100G" total-size="30G"/&gt;
+         &lt;/shared&gt;
+      &lt;/scratch&gt;
+      &lt;storage&gt;
+         &lt;shared&gt;
+             &lt;file-server protocol="file" url="file://" 
+                 mount-point="/usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs/examples/condor-blackdiamond/outputs"/&gt;
+                 &lt;internal-mount-point 
+                    mount-point="/usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs/examples/condor-blackdiamond/work/outputs"
+                    free-size="100G" total-size="30G"/&gt;
+                &lt;/shared&gt;
+            &lt;/storage&gt;
+        &lt;/head-fs&gt;
+        &lt;replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" /&gt;
+        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/usr/local/pegasus/src/pegasus/dist/pegasus-3.0.0cvs&lt;/profile&gt;
+&lt;/site&gt;
+
+
+
+</programlisting>The site catalog describes the layout of the submit host and
+      other sites (grid/cloud etc) where you can run your workflows. In our
+      example we are running the workflow locally on your submit host so it is
+      using the site local. The scratch and storage filesystems described
+      above indicate where the workflow will run and where the data will be
+      saved at the end.</para>
+    </section>
+
+    <section>
+      <title>Pegasus Properties</title>
+
+      <para>The submit file also generates a file pegasusrc, which is the
+      Pegasus Properties file. This file contains configurations for Pegasus
+      to find various catalogs and also turns on/off various optimizations.
+      The Properties file is well documented and available in the distribution
+      as basic-properties.pdf and advanced-properties.pdf. </para>
+
+      <para><programlisting>pegasus.catalog.site=XML3
+pegasus.catalog.site.file=sites.xml
+
+pegasus.dir.useTimestamp=true
+pegasus.dir.storage.deep=false
+</programlisting></para>
+    </section>
+
+    <section>
+      <title>Pegasus Plan and Pegasus-run</title>
+
+      <para>Finally the submit script run the Pegasus planning command.</para>
+
+      <screen><command>$ pegasus-plan -Dpegasus.user.properties=pegasusrc \
+               --sites local \
+               --dir work \
+               --output local \
+               --dax blackdiamond.dax \
+               --submit
+ </command></screen>
+
+      <para>The above command plan the workflow for running on site local and
+      requests that the output data be saved also on the local site. </para>
+
+      <para>It generates the planned submit files and dags in the directory
+      <emphasis
+      role="bold">work/&lt;username&gt;/blackdiamond&lt;time-stamp&gt;.</emphasis></para>
+
+      <para>Pegasus allows you to submit your planned workflow by givign the
+      <emphasis role="bold">--submit </emphasis>option. If you want to only
+      generate the planned workflow and submit the workflow later for
+      execution you can run the pegasus-run command.</para>
+
+      <screen><command>$ pegasus-run -Dpegasus.user.properties=pegasusrc</command> &lt;Workflow/dags/directory&gt;</screen>
+
+      <para>After the workflow runs succesfully the data files f.* will be
+      availabe in the directory outputs.</para>
+    </section>
+  </section>
+
+  <section>
+    <title>Monitoring, Debugging and Statistics</title>
+
+    <para><note>
+        <para>Substitute the directory <emphasis
+        role="bold">/Workflow/dags/directory</emphasis> with the path to your
+        actual work directory as mentioned above <emphasis
+        role="bold">work/&lt;username&gt;/blackdiamond&lt;time-stamp&gt;</emphasis>
+        where username is your actual username and time-stamp is the
+        time-stamped directory created by pegasus when you planned and
+        submitted your workflow.</para>
+      </note></para>
+
+    <section>
+      <title>pegasus-status</title>
+
+      <para>To monitor the execution of the workflow, run the
+      pegasus-status command as suggested by the output of the pegasus-run
+      command above.</para>
+
+      <screen><emphasis role="bold">$ pegasus-status -l</emphasis> <replaceable>/Workflow/dags/directory</replaceable>
+
+<computeroutput>blackdiamond-0.dag is running.
+11/24/10 16:06:48  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+11/24/10 16:06:48   ===     ===      ===     ===     ===        ===      ===
+11/24/10 16:06:48     2       0        1       0       0         12        0
+</computeroutput></screen>
+
+      <para>After the workflow finishes the status will change to COMPLETED or
+      FAILED..</para>
+
+      <screen><emphasis role="bold">$ pegasus-status -l</emphasis> <replaceable>/Workflow/dags/directory</replaceable>
+
+<computeroutput>blackdiamond-0.dag succeeded
+11/24/10 16:11:09  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+11/24/10 16:11:09   ===     ===      ===     ===     ===        ===      ===
+11/24/10 16:11:09    15       0        0       0       0          0        0
+
+WORKFLOW STATUS : COMPLETED | 15/15 ( 100% ) | (all jobs finished successfully)</computeroutput></screen>
+
+      <para/>
+    </section>
+
+    <section>
+      <title>pegasus-analyzer</title>
+
+      <para>If the workflow fails the you can analyze the run using the
+      pegasus-analyzer tool.</para>
+
+      <para>The simplest way to invoke pegasus-analyzer is to give it a
+      workflow run directory, such as in the example below:</para>
+
+      <para><screen><command>$ pegasus-analyzer -d </command><replaceable>/Workflow/dags/directory</replaceable>
+
+<computeroutput>pegasus-analyzer: initializing...
+
+************************************Summary*************************************
+
+ Total jobs         :     26 (100.00%)
+ # jobs succeeded   :     25 (96.15%)
+ # jobs failed      :      1 (3.84%)
+ # jobs unsubmitted :      0 (0.00%)
+
+******************************Failed jobs' details******************************
+
+============================register_viz_glidein_7_0============================
+
+ last state: POST_SCRIPT_FAILURE
+       site: local
+submit file: /home/user/run0004/register_viz_glidein_7_0.sub
+output file: /home/user/run0004/register_viz_glidein_7_0.out.002
+ error file: /home/user/run0004/register_viz_glidein_7_0.err.002
+
+-------------------------------Task #1 - Summary--------------------------------
+
+site        : local
+executable  : /lfs1/software/install/pegasus/default/bin/rc-client
+arguments   : -Dpegasus.user.properties=/lfs1/work/pegasus/run0004/pegasus.15181.properties \
+-Dpegasus.catalog.replica.url=rlsn://smarty.isi.edu --insert register_viz_glidein_7_0.in
+exitcode    : 1
+working dir : /lfs1/work/pegasus/run0004
+
+---------Task #1 - pegasus::rc-client - pegasus::rc-client:1.0 - stdout---------
+
+2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
+2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1</computeroutput></screen>In
+      the case above, pegasus-analyzer's output contains a brief summary
+      section, showing how many jobs have succeeded and how many have failed.
+      After that, pegasus-analyzer will print information about each job that
+      failed, showing its last known state, along with the location of its
+      submit, output, and error files. pegasus-analyzer will also display any
+      stdout and stderr from the job.</para>
+    </section>
+
+    <section>
+      <title>pegasus-remove</title>
+
+      <para>If you want to abort your workflow for any reason you can use the
+      pegasus-remove command listed in the output of pegasus-run invocation or
+      by specifiying the Dag directory for the workflow you want to
+      terminate.</para>
+
+      <screen><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/Workflow/dags/directory</replaceable><replaceable/></screen>
+
+      <para>Pegasus will remove the workflow from the condor queue. A rescue
+      DAG will be generated in case you want to resubmit the same workflow and
+      continue execution from where it last stopped. A rescue DAG only skips
+      jobs that have completely finished. It does not continue a partially
+      running job unless the executable supports checkpointing.</para>
+    </section>
+
+    <section>
+      <title>Resubmitting failed workflows</title>
+
+      <para>To resubmit an aborted or failed workflow with the same submit
+      files and rescue Dag just rerun the pegasus-run command</para>
+
+      <screen><command>$ pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
+/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
+--nodatabase</command> <replaceable>/Workflow/dags/directory</replaceable>
+</screen>
+    </section>
+  </section>
+
+  <section>
+    <title>Plotting and Statistics</title>
+
+    <section>
+      <title>pegasus-statistics</title>
+
+      <para>pegasus-statistics generates workflow execution statistics. To
+      generate statistics run the command as shown below.</para>
+
+      <screen><command>$ pegasus-statistics</command> <replaceable>/Workflow/dags/directory</replaceable></screen>
+
+      <para>By default the output gets generated to statistics folder inside
+      the submit directory. For detailed information about the files created check <xref
+      linkend="monitoring_debugging_stats" /> section.</para>
+    </section>
+
+    <section>
+      <title>pegasus-plots</title>
+
+      <para>pegasus-plots generates graphs and charts to visualize workflow
+      execution. To generate graphs and charts run the command as shown
+      below.</para>
+
+      <screen><command>$ pegasus-plots</command> <replaceable>/Workflow/dags/directory</replaceable></screen>
+
+      <para>By default the output gets generated to graph folder inside the
+      submit directory. For detailed information of the charts and graphs created check <xref
+      linkend="monitoring_debugging_stats" /> section.</para>
+    </section>
+  </section>
+</chapter>
+
+
+

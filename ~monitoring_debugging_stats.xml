@@ -1,0 +1,1235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="monitoring_debugging_stats">
+  <title>Monitoring, Debugging and Statistics</title>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>Pegasus comes bundled with useful tools that help users debug
+    workflows and generate useful statistics and plots about their workflow
+    runs. These tools internally parse the Condor log files and have a similar
+    interface. With the exception of pegasus-monitord (see below), all tools
+    take in the submit directory as an argument. Users can invoke the tools
+    listed in this chapter as follows</para>
+
+    <programlisting>$ pegasus-[toolname]   &lt;path to the submit directory&gt;</programlisting>
+  </section>
+
+  <section>
+    <title>Monitoring and Debugging</title>
+
+    <para>As the number of jobs and tasks in workflows increase, the ability
+    to track the progress and quickly debug a workflow becomes more and more
+    important. Pegasus comes with a series of utilities that can be used to
+    monitor and debug workflows both in real-time as well as after execution
+    is already completed.</para>
+
+    <section>
+      <title>pegasus-monitord</title>
+
+      <para>pegasus-monitord is used to follow a workflow, parsing the output
+      of DAGMan's dagman.out file. In addition to generating the jobstate.log
+      file, which contains the various states that a job goes through during
+      the workflow execution, pegasus-monitord can also be used to mine
+      information from jobs' submit and output files, and either populate a
+      database, or write a file with NetLogger events containing this
+      information.</para>
+
+      <para>pegasus-monitord is automatically invoked by pegasus-run, and
+      tracks workflows in real-time. By default, it produces the jobstate.log
+      file, and a SQLite database, which contains all the information listed
+      in the Stampede schema. When a workflow fails, and is re-submitted with
+      a rescue DAG, pegasus-monitord will automatically pick up from where it
+      left previously and continue to write the jobstate.log file and populate
+      the database.</para>
+
+      <para>If, after the workflow has already finished, users need to
+      re-create the jobstate.log file, or re-populate the database from
+      scratch, pegasus-monitord's --replay option should be used when running
+      it manually. In addition to SQLite, pegasus-monitord supports other
+      types of databases, such as MySQL and Postgres. Users will need to
+      install the low-level database drivers, and should consult
+      pegasus-monitord's man page for more detailed information.</para>
+
+      <para>As an example:</para>
+
+      <para><programlisting>$ pegasus-monitord -r diamond-0.dag.dagman.out</programlisting>will
+      launch pegasus-monitord in replay mode. In this case, if a jobstate.log
+      file already exists, it will be rotated and a new file will be created.
+      It will also create/use a SQLite database in the workflow's run
+      directory, with the name of diamond-0.stampede.db. If the database
+      already exists, it will make sure to remove any references to the
+      current workflow before it populates the database. In this case,
+      pegasus-monitord will process the workflow information from start to
+      finish, including any restarts that may have happened.</para>
+
+      <para>One important detail is that while processing a workflow,
+      pegasus-monitord will automatically detect if/when sub-workflows are
+      initiated, and will automatically track those sub-workflows as well. In
+      this case, although pegasus-monitord will create a separate jobstate.log
+      file in each workflow directory, the database at the top-level workflow
+      will contain the information from not only the main workflow, but also
+      from all sub-workflows.</para>
+    </section>
+
+    <section>
+      <title>pegasus-status</title>
+
+      <para>To monitor the execution of the workflow lets run the
+      pegasus-status command as suggested by the output of the pegasus-run
+      command above.</para>
+
+      <programlisting><emphasis role="bold">$ pegasus-status -l</emphasis> <replaceable>/Workflow/dags/directory</replaceable>
+
+Workflow_1-0.dag succeeded
+10/01/10 12:24:38  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
+10/01/10 12:24:38   ===     ===      ===     ===     ===        ===      ===
+10/01/10 12:24:38    48       0        5       0       5          0        0
+
+WORKFLOW STATUS : RUNNING | 48/58 ( 83% ) | (workflow is running)</programlisting>
+
+      <para>To see the jobs in the queue while the workflow is running you can
+      run the pegasus-status without the -l option as shown below.</para>
+
+      <programlisting>$ <emphasis>pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis>
+
+
+-- Submitter: smarty.isi.edu : &lt;128.9.72.26:53194&gt; : smarty.isi.edu
+ ID      OWNER/NODENAME   SUBMITTED     RUN_TIME ST PRI SIZE CMD
+22417.0   gmehta          7/11 18:13   0+00:03:58 R  0   9.8  condor_dagman -f -
+22423.0    |-rc_tx_analy  7/11 18:16   0+00:00:54 R  2   0.0  kickstart -n pegas
+22424.0    |-rc_tx_findr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas
+22425.0    |-rc_tx_prepr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas</programlisting>
+
+      <para>If you do not see any of your job in the output of pegasus status
+      or if the the pegasus-status says FAILED or Completed 100% then the
+      workflow has</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>successfully completed</para>
+        </listitem>
+
+        <listitem>
+          <para>stopped midway due to non recoverable error.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>pegasus-analyzer</title>
+
+      <para>pegasus-analyzer is a command-line utility for parsing several
+      files in the workflow directory and summarizing useful information to
+      the user. It should be used after the workflow has already finished
+      execution. pegasus-analyzer quickly goes through the jobstate.log file,
+      and isolates jobs that did not complete successfully. It then parses
+      their submit, and kickstart output files, printing to the user detailed
+      information for helping the user debug what happened to his/her
+      workflow.</para>
+
+      <para>The simplest way to invoke pegasus-analyzer is to simply give it a
+      workflow run directory, like in the example below:</para>
+
+      <para><programlisting>$ pegasus-analyzer -d /home/user/run0004
+pegasus-analyzer: initializing...
+
+************************************Summary*************************************
+
+ Total jobs         :     26 (100.00%)
+ # jobs succeeded   :     25 (96.15%)
+ # jobs failed      :      1 (3.84%)
+ # jobs unsubmitted :      0 (0.00%)
+
+******************************Failed jobs' details******************************
+
+============================register_viz_glidein_7_0============================
+
+ last state: POST_SCRIPT_FAILURE
+       site: local
+submit file: /home/user/run0004/register_viz_glidein_7_0.sub
+output file: /home/user/run0004/register_viz_glidein_7_0.out.002
+ error file: /home/user/run0004/register_viz_glidein_7_0.err.002
+
+-------------------------------Task #1 - Summary--------------------------------
+
+site        : local
+executable  : /lfs1/software/install/pegasus/default/bin/rc-client
+arguments   : -Dpegasus.user.properties=/lfs1/work/pegasus/run0004/pegasus.15181.properties \
+-Dpegasus.catalog.replica.url=rlsn://smarty.isi.edu --insert register_viz_glidein_7_0.in
+exitcode    : 1
+working dir : /lfs1/work/pegasus/run0004
+
+---------Task #1 - pegasus::rc-client - pegasus::rc-client:1.0 - stdout---------
+
+2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
+2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1</programlisting>In
+      the case above, pegasus-analyzer's output contains a brief summary
+      section, showing how many jobs have succeeded and how many have failed.
+      After that, pegasus-analyzer will print information about each job that
+      failed, showing its last known state, along with the location of its
+      submit, output, and error files. pegasus-analyzer will also display any
+      stdout and stderr from the job, as recorded in its kickstart record.
+      Please consult pegasus-analyzer's man page for more examples and a
+      detailed description of its various command-line options.</para>
+    </section>
+
+    <section>
+      <title>pegasus-remove</title>
+
+      <para>If you want to abort your workflow for any reason you can use the
+      pegasus-remove command listed in the output of pegasus-run invocation or
+      by specifiying the Dag directory for the workflow you want to
+      terminate.</para>
+
+      <programlisting><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/PATH/To/WORKFLOW DIRECTORY</replaceable></programlisting>
+    </section>
+
+    <section>
+      <title>Resubmitting failed workflows</title>
+
+      <para>Pegasus will remove the DAGMan and all the jobs related to the
+      DAGMan from the condor queue. A rescue DAG will be generated in case you
+      want to resubmit the same workflow and continue execution from where it
+      last stopped. A rescue DAG only skips jobs that have completely
+      finished. It does not continue a partially running job unless the
+      executable supports checkpointing.</para>
+
+      <para>To resubmit an aborted or failed workflow with the same submit
+      files and rescue Dag just rerun the pegasus-run command</para>
+
+      <programlisting>$ <emphasis>pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
+/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
+--nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
+</emphasis></programlisting>
+    </section>
+  </section>
+
+  <section>
+    <title>Plotting and Statistics</title>
+
+    <para></para>
+
+    <section>
+      <title>pegasus-statistics</title>
+
+      <para>pegasus-statistics generates workflow execution statistics. To
+      generate statistics run the command as shown below.</para>
+
+      <programlisting>$ <emphasis>pegasus-statistics /scratch/grid-setup/run0001/</emphasis>
+
+
+...
+
+******************************************** SUMMARY ********************************************
+...
+
+Workflow runtime                   :           72 min. 23 sec.
+Cumulative workflow runtime        :           79 min. 31 sec.
+
+          Total        Succeeded    Failed       Unsubmitted  Unknown        
+Jobs      16           16           0            0            0              
+SUBDAX    0            0            0            0            0              
+
+Workflow execution statistics :
+/scratch/grid-setup/run0001/workflow.txt
+
+Job statistics : 
+/scratch/grid-setup/run0001/jobs.txt
+
+Workflow events with time starting from zero : 
+/scratch/grid-setup/run0001/jobstate.txt
+
+Logical transformation statistics :
+/scratch/grid-setup/run0001/breakdown.txt
+**************************************************************************************************</programlisting>
+
+      <para>By default the output gets generated to statistics folder inside
+      the submit directory.</para>
+
+      <note>
+        <para>In case of hierarchal workflows, the metrics that are displayed
+        on stdout take into account all the jobs that make up the executable
+        sub-workflows. These executable sub workflows are the ones that are
+        created corresponding to the DAX jobs in the DAX. For example, if you
+        have a workflow with 2 DAX jobs whose corresponding executable
+        workflows have 4 jobs each, the total number of jobs displayed will be
+        8 not 10 ( 2 + 4 + 4 ). During the count the DAX jobs in the outer
+        level workflow are excluded. The same is true for other metrics
+        displayed on the stdout. </para>
+      </note>
+
+      <para>pegasus-statistics summary contains the following
+      information.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Workflow runtime (min,sec) - the walltime from the start of
+          the workflow execution to the end as reported by the DAGMAN.In case
+          of rescue dag the value is the cumulative of all retries.</para>
+        </listitem>
+
+        <listitem>
+          <para>Cumulative workflow runtime (min,sec) - the sum of the
+          walltime of all jobs as reported by the DAGMan .In case of job
+          retries the value is the cumulative of all retries.</para>
+        </listitem>
+
+
+        <listitem>
+          <para>Job summary <table>
+              <title></title>
+
+              <tgroup cols="2">
+                <tbody>
+                  <row>
+                    <entry>Total</entry>
+
+                    <entry>the total number of jobs in the workflow. The 
+                    total number of jobs is calculated by parsing the .dag 
+                    file. For workflows having SUBDAX jobs , the SUDBAX job 
+                    is skipped , but the calculation takes into account all 
+                    the jobs that make up the SUBDAX sub workflow.For 
+                    workflows having SUBDAG jobs , the SUBDAG jobs are 
+                    treated like regular jobs.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Succeeded</entry>
+
+                    <entry>the total number of succeeded jobs in the workflow
+                    .</entry>
+                  </row>
+
+                  <row>
+                    <entry>Failed</entry>
+
+                    <entry>the total number of failed jobs in the workflow
+                    .</entry>
+                  </row>
+
+                  <row>
+                    <entry>Unsubmitted</entry>
+
+                    <entry>the total number of unsubmitted jobs in the
+                    workflow .</entry>
+                  </row>
+
+                  <row>
+                    <entry>Unknown</entry>
+
+                    <entry>the total number of jobs that are submitted, but
+                    has not completed execution or the state is unknown in the
+                    workflow.</entry>
+                  </row>
+                </tbody>
+              </tgroup>
+            </table></para>
+        </listitem>
+
+        <listitem>
+          <para>SUBDAX summary <table>
+              <title></title>
+
+              <tgroup cols="2">
+                <tbody>
+                  <row>
+                    <entry>Total</entry>
+
+                    <entry>the total number of SUBDAX jobs in the
+                    workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Succeeded</entry>
+
+                    <entry>the total number of succeeded SUBDAX jobs in the
+                    workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Failed</entry>
+
+                    <entry>the total number of failed SUBDAX jobs in the
+                    workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Unsubmitted</entry>
+
+                    <entry>the total number of unsubmitted SUBDAX jobs in the
+                    workflow.</entry>
+                  </row>
+
+                  <row>
+                    <entry>Unknown</entry>
+
+                    <entry>the total number of SUBDAX jobs that are submitted,
+                    but has not completed execution or the state is unknown in
+                    the workflow.</entry>
+                  </row>
+                </tbody>
+              </tgroup>
+            </table></para>
+        </listitem>
+      </itemizedlist>
+
+      <para><warning>
+          <para>SUBDAG jobs are treated like regular jobs. The jobs making up
+          the SUBDAG are not included in the cumulative numbers.</para>
+        </warning></para>
+
+      <para>pegasus-statistics generates the following statistics
+      files.</para>
+
+      <para><emphasis role="bold">Workflow statistics file per workflow
+      [workflow.txt]</emphasis></para>
+
+      <para>Workflow statistics file per workflow contains the following
+      information about each workflow run as seen by the DAGMAN instance that
+      executed the workflow.</para>
+
+      <note>
+        <para>For computing statistics in this file, the SUBDAG and SUBDAX
+        jobs are treated like regular jobs. For example, if you have a
+        workflow W with 2 DAX jobs whose corresponding executable workflows
+        have 4 jobs each, the total number of jobs displayed will be 2
+        .</para>
+      </note>
+
+      <para>A sample file is shown below.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Workflow runtime (min,sec) - the waltime from the start of the
+          workflow execution to the end as reported by the DAGMAN.In case of
+          rescue dag the value is the cumulative of all retries.</para>
+        </listitem>
+
+        <listitem>
+          <para>Cumulative workflow runtime (min,sec) - the sum of the
+          walltime of all jobs as reported by the DAGMan .In case of job
+          retries the value is the cumulative of all retries. For workflows
+          having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub
+          workflow jobs are treated like regular jobs.</para>
+        </listitem>
+
+        <listitem>
+          <para>Total jobs - the total number of jobs in the workflow. The 
+          total number of jobs is calculated by parsing the .dag file.For
+          workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) ,
+          the sub workflow jobs are treated like regular jobs.</para>
+        </listitem>
+
+        <listitem>
+          <para># jobs succeeded - the total number of jobs succeeded.</para>
+        </listitem>
+
+        <listitem>
+          <para># jobs failed - the total number of jobs failed.</para>
+        </listitem>
+
+        <listitem>
+          <para># jobs unsubmitted - the total number of jobs that are not
+          submitted.</para>
+        </listitem>
+
+        <listitem>
+          <para># jobs unknown - the total number of jobs that are submitted,
+          but has not completed execution or the state is unknown.</para>
+        </listitem>
+
+      </itemizedlist>
+
+      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
+
+      <table>
+        <title>Workflow statistics</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry>Workflow runtime</entry>
+
+              <entry>72 min. 23 sec.</entry>
+            </row>
+
+            <row>
+              <entry>Cumulative workflow runtime</entry>
+
+              <entry>79 min. 31 sec.</entry>
+            </row>
+
+            <row>
+              <entry>Total jobs</entry>
+
+              <entry>16</entry>
+            </row>
+
+            <row>
+              <entry># jobs succeeded</entry>
+
+              <entry>16</entry>
+            </row>
+
+            <row>
+              <entry># jobs failed</entry>
+
+              <entry>0</entry>
+            </row>
+
+            <row>
+              <entry># jobs unsubmitted</entry>
+
+              <entry>0</entry>
+            </row>
+
+            <row>
+              <entry># jobs unknown</entry>
+
+              <entry>0</entry>
+            </row>
+
+           </tbody>
+        </tgroup>
+      </table>
+
+      <para><emphasis role="bold">Job statistics file per workflow
+      [jobs.txt]</emphasis></para>
+
+      <para>Job statistics file per workflow contains the following details
+      about the jobs in each workflow. A sample file is shown below.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Job - the name of the job</para>
+        </listitem>
+
+        <listitem>
+          <para>Site - the site where the job ran</para>
+        </listitem>
+
+        <listitem>
+          <para>Kickstart(sec.) - the actual duration of the job in seconds on
+          the remote compute node. In case of retries the value is the
+          cumulative of all retries.</para>
+        </listitem>
+
+        <listitem>
+          <para>Post(sec.) - the postscript time as reported by DAGMan .In
+          case of retries the value is the cumulative of all retries.</para>
+        </listitem>
+
+        <listitem>
+          <para>DAGMan(sec.) - the time between the last parent job of a job
+          completes and the job gets submitted.In case of retries the value of
+          the last retry is used for calculation.</para>
+        </listitem>
+
+        <listitem>
+          <para>CondorQTime(sec.) - the time between submission by DAGMan and
+          the remote Grid submission. It is an estimate of the time spent in
+          the condor q on the submit node .In case of retries the value is the
+          cumulative of all retries.</para>
+        </listitem>
+
+        <listitem>
+          <para>Resource(sec.) - the time between the remote Grid submission
+          and start of remote execution . It is an estimate of the time job
+          spent in the remote queue .In case of retries the value is the
+          cumulative of all retries.</para>
+        </listitem>
+
+        <listitem>
+          <para>Runtime(sec.) - the time spent on the resource as seen by
+          Condor DAGMan . Is always &gt;=kickstart .In case of retries the
+          value is the cumulative of all retries.</para>
+        </listitem>
+
+        <listitem>
+          <para>Seqexec(sec.) - the time taken for the completion of a
+          clustered job .In case of retries the value is the cumulative of all
+          retries.</para>
+        </listitem>
+
+        <listitem>
+          <para>Seqexec-Delay(sec.) - the time difference between the time for
+          the completion of a clustered job and sum of all the individual
+          tasks kickstart time .In case of retries the value is the cumulative
+          of all retries.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
+
+      <table>
+        <title>Job statistics</title>
+
+        <tgroup align="center" cols="10">
+          <thead>
+            <row>
+              <entry align="center">Job</entry>
+
+              <entry align="center">Site</entry>
+
+              <entry align="center">Kickstart</entry>
+
+              <entry align="center">Post</entry>
+
+              <entry align="center">DAGMan</entry>
+
+              <entry align="center">CondorQTime</entry>
+
+              <entry align="center">Resource</entry>
+
+              <entry align="center">Runtime</entry>
+
+              <entry align="center">Seqexec</entry>
+
+              <entry align="center">Seqexec-Delay</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>analyze_ID0000004</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>61.24</entry>
+
+              <entry>5</entry>
+
+              <entry>6</entry>
+
+              <entry>22</entry>
+
+              <entry>5</entry>
+
+              <entry>310</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>clean_up_analyze_ID0000004</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>1.91</entry>
+
+              <entry>5</entry>
+
+              <entry>7</entry>
+
+              <entry>15</entry>
+
+              <entry>5</entry>
+
+              <entry>15</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>clean_up_findrange_ID0000002</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>1.19</entry>
+
+              <entry>5</entry>
+
+              <entry>6</entry>
+
+              <entry>15</entry>
+
+              <entry>5</entry>
+
+              <entry>15</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>clean_up_preprocess_ID0000001</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>1.62</entry>
+
+              <entry>5</entry>
+
+              <entry>7</entry>
+
+              <entry>15</entry>
+
+              <entry>5</entry>
+
+              <entry>165</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>clean_up_stage_out_local_TestCluster_0_0</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>1.16</entry>
+
+              <entry>5</entry>
+
+              <entry>6</entry>
+
+              <entry>20</entry>
+
+              <entry>5</entry>
+
+              <entry>145</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>clean_up_stage_out_local_TestCluster_1_0</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>1.34</entry>
+
+              <entry>5</entry>
+
+              <entry>7</entry>
+
+              <entry>22</entry>
+
+              <entry>0</entry>
+
+              <entry>20</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>clean_up_stage_out_local_TestCluster_2_0</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>1.18</entry>
+
+              <entry>5</entry>
+
+              <entry>7</entry>
+
+              <entry>15</entry>
+
+              <entry>5</entry>
+
+              <entry>15</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>create_dir_diamond_0_TestCluster</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>0.31</entry>
+
+              <entry>5</entry>
+
+              <entry>14</entry>
+
+              <entry>20</entry>
+
+              <entry>-</entry>
+
+              <entry>15</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>findrange_ID0000002</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>60.25</entry>
+
+              <entry>5</entry>
+
+              <entry>7</entry>
+
+              <entry>22</entry>
+
+              <entry>25</entry>
+
+              <entry>3521</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>findrange_ID0000003</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>60.19</entry>
+
+              <entry>5</entry>
+
+              <entry>7</entry>
+
+              <entry>15</entry>
+
+              <entry>27</entry>
+
+              <entry>285</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>preprocess_ID0000001</entry>
+
+              <entry>TestCluster</entry>
+
+              <entry>60.75</entry>
+
+              <entry>5</entry>
+
+              <entry>6</entry>
+
+              <entry>20</entry>
+
+              <entry>0</entry>
+
+              <entry>250</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_in_local_TestCluster_0</entry>
+
+              <entry>local</entry>
+
+              <entry>2.03</entry>
+
+              <entry>5</entry>
+
+              <entry>6</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+
+              <entry>0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_out_local_TestCluster_0_0</entry>
+
+              <entry>local</entry>
+
+              <entry>1.89</entry>
+
+              <entry>5</entry>
+
+              <entry>7</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+
+              <entry>0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_out_local_TestCluster_1_0</entry>
+
+              <entry>local</entry>
+
+              <entry>2.26</entry>
+
+              <entry>6</entry>
+
+              <entry>6</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+
+              <entry>5</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_out_local_TestCluster_1_1</entry>
+
+              <entry>local</entry>
+
+              <entry>1.76</entry>
+
+              <entry>5</entry>
+
+              <entry>6</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+
+              <entry>5</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_out_local_TestCluster_2_0</entry>
+
+              <entry>local</entry>
+
+              <entry>1.77</entry>
+
+              <entry>5</entry>
+
+              <entry>7</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+
+              <entry>5</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+	
+	  <para><emphasis role="bold">Workflow events list file
+      [jobstate.txt]</emphasis></para>
+
+      <para>Workflow events list file contains the events listed with time
+      starting with zero. In case of subworkflows the files are stored in the
+      'workflow_events' folder inside the output directory. The sub workflow
+      file names are prefixed with the sub workflow job ID. A sample file is
+      shown below.</para>
+
+      <programlisting>1290549637 INTERNAL *** MONITORD_STARTED ***
+0 INTERNAL *** DAGMAN_STARTED 904.0 ***
+14 create_dir_diamond_0_TestCluster SUBMIT 905.0 TestCluster - 1
+34 create_dir_diamond_0_TestCluster EXECUTE 905.0 TestCluster - 1
+34 create_dir_diamond_0_TestCluster GLOBUS_SUBMIT 905.0 TestCluster - 1
+34 create_dir_diamond_0_TestCluster GRID_SUBMIT 905.0 TestCluster - 1
+49 create_dir_diamond_0_TestCluster JOB_TERMINATED 905.0 TestCluster - 1
+49 create_dir_diamond_0_TestCluster JOB_SUCCESS 0 TestCluster - 1
+49 create_dir_diamond_0_TestCluster POST_SCRIPT_STARTED 905.0 TestCluster - 1
+54 create_dir_diamond_0_TestCluster POST_SCRIPT_TERMINATED 905.0 TestCluster - 1
+54 create_dir_diamond_0_TestCluster POST_SCRIPT_SUCCESS 0 TestCluster - 1
+....
+4338 clean_up_analyze_ID0000004 JOB_TERMINATED 920.0 TestCluster - 16
+4338 clean_up_analyze_ID0000004 JOB_SUCCESS 0 TestCluster - 16
+4338 clean_up_analyze_ID0000004 POST_SCRIPT_STARTED 920.0 TestCluster - 16
+4343 clean_up_stage_out_local_TestCluster_2_0 POST_SCRIPT_TERMINATED 919.0 TestCluster - 15
+4343 clean_up_stage_out_local_TestCluster_2_0 POST_SCRIPT_SUCCESS 0 TestCluster - 15
+4343 clean_up_analyze_ID0000004 POST_SCRIPT_TERMINATED 920.0 TestCluster - 16
+4343 clean_up_analyze_ID0000004 POST_SCRIPT_SUCCESS 0 TestCluster - 16
+4343 INTERNAL *** DAGMAN_FINISHED 0 ***
+1290553981 INTERNAL *** MONITORD_FINISHED 0 ***
+</programlisting>
+
+      <para>In the above example, the timestamp associated with
+      MONITORD_STARTED and MONITORD_FINISHED are the actual timestamps. All
+      the other timestamps are in reference to the time when DAGMAN started
+      i.e DAGMAN_STARTED event has a 0 time associated with it.</para>
+      		
+      <para><emphasis role="bold">Logical transformation statistics file per
+      workflow [breakdown.txt]</emphasis></para>
+
+      <para>Logical transformation statistics file per workflow contains
+      information about transformations in each workflow. A sample file is
+      shown below.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Transformation - name of the transformation.</para>
+        </listitem>
+
+        <listitem>
+          <para>Count - the number of times the transformation was
+          executed.</para>
+        </listitem>
+
+        <listitem>
+          <para>Mean(sec.) - the mean of the transformation runtime.</para>
+        </listitem>
+
+        <listitem>
+          <para>Variance(sec.) - the variance of the transformation
+          runtime.Variance is calculated using the on-line algorithm by Knuth
+          (<ulink
+          url="http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance">http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance</ulink>).</para>
+        </listitem>
+
+        <listitem>
+          <para>Min(sec.) - the minimum transformation runtime value.</para>
+        </listitem>
+
+        <listitem>
+          <para>Max(sec.) - the maximum transformation runtime value.</para>
+        </listitem>
+
+        <listitem>
+          <para>Total(sec.) - the cumulative of transformation runtime.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
+
+      <table>
+        <title>Transformation statistics</title>
+
+        <tgroup align="center" cols="7">
+          <thead>
+            <row>
+              <entry align="center">Transformation</entry>
+
+              <entry align="center">Count</entry>
+
+              <entry align="center">Mean</entry>
+
+              <entry align="center">Variance</entry>
+
+              <entry align="center">Min</entry>
+
+              <entry align="center">Max</entry>
+
+              <entry align="center">Total</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>pegasus::dirmanager</entry>
+
+              <entry>1</entry>
+
+              <entry>0.3140</entry>
+
+              <entry>0.0000</entry>
+
+              <entry>0.3140</entry>
+
+              <entry>0.3140</entry>
+
+              <entry>0.3140</entry>
+            </row>
+
+            <row>
+              <entry>diamond::preprocess:4.0</entry>
+
+              <entry>1</entry>
+
+              <entry>60.7480</entry>
+
+              <entry>0.0000</entry>
+
+              <entry>60.7480</entry>
+
+              <entry>60.7480</entry>
+
+              <entry>60.7480</entry>
+            </row>
+
+            <row>
+              <entry>pegasus::cleanup</entry>
+
+              <entry>6</entry>
+
+              <entry>1.4015</entry>
+
+              <entry>0.0917</entry>
+
+              <entry>1.1610</entry>
+
+              <entry>1.9080</entry>
+
+              <entry>8.4090</entry>
+            </row>
+
+            <row>
+              <entry>diamond::analyze:4.0</entry>
+
+              <entry>1</entry>
+
+              <entry>61.2360</entry>
+
+              <entry>0.0000</entry>
+
+              <entry>61.2360</entry>
+
+              <entry>61.2360</entry>
+
+              <entry>61.2360</entry>
+            </row>
+
+            <row>
+              <entry>diamond::findrange:4.0</entry>
+
+              <entry>2</entry>
+
+              <entry>60.2210</entry>
+
+              <entry>0.0015</entry>
+
+              <entry>60.1940</entry>
+
+              <entry>60.2480</entry>
+
+              <entry>120.4420</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section>
+      <title>pegasus-plots</title>
+
+      <para>pegasus-plots generates graphs and charts to visualize workflow
+      execution. To generate graphs and charts run the command as shown
+      below.</para>
+
+      <programlisting>$ <emphasis>pegasus-plots /scratch/grid-setup/run0001/</emphasis>
+
+
+...
+
+******************************************** SUMMARY ********************************************
+DAX graph - 
+png format : /scratch/grid-setup/run0001/graph/blackdiamond-dax.png
+eps format : /scratch/grid-setup/run0001/graph/blackdiamond-dax.eps 
+
+DAG graph - 
+png format : /scratch/grid-setup/run0001/graph/diamond-dag.png 
+eps format : /scratch/grid-setup/run0001/graph/diamond-dag.eps 
+
+Workflow execution Gantt chart -
+png format : /scratch/grid-setup/run0001/graph/diamond-2.png 
+eps format : /scratch/grid-setup/run0001/graph/diamond-2.eps 
+
+Host over time chart -
+png format : /scratch/grid-setup/run0001/graph/diamond-host.png 
+eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps 
+**************************************************************************************************</programlisting>
+
+      <para>By default the output gets generated to graph folder inside the
+      submit directory. pegasus-plots generates the following graphs and
+      charts.</para>
+      
+      <para><emphasis role="bold">Dax Graph</emphasis></para>
+
+      <para>Graph representation of the DAX file. A sample graph is shown
+      below.</para>
+
+      <figure>
+        <title>DAX Graph</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/blackdiamond-dax.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+      
+      
+	  <para><emphasis role="bold">Dag Graph</emphasis></para>
+
+      <para>Graph representation of the DAG file. A sample graph is shown
+      below.</para>
+
+      <figure>
+        <title>DAG Graph</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-dag.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold">Gantt workflow execution
+      chart</emphasis></para>
+
+      <para>Gantt chart of the workflow execution run. A sample chart is shown
+      below.</para>
+
+      <figure>
+        <title>Gantt chart</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-2.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold">Host over time chart</emphasis></para>
+
+      <para>Host over time chart of the workflow execution run. A sample chart
+      is shown below.</para>
+
+      <figure>
+        <title>Host over time chart</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/diamond-host.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+     </section>
+  </section>
+</chapter>

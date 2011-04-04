@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="workflow_types">
+  <title>Workflows</title>
+
+  <section>
+      <title>Workflow Introduction</title>   </section>
+      <section>
+      <para>High Level Description of Workflows</para>
+      
+      <para>Simply worded description of what workflows are, how they basically work, and how they can save time, money, etc</para>
+      
+      <para> workflo diagrams</para>
+      
+      </section>
+      
+                <section>
+                 <title>Abstract Workflows</title>
+
+                   <para>Abstract workflows are............</para>
+
+                 </section>
+                 
+                 <section>
+                  <title> Executable Workflows </title>
+                  
+                  <para>Execuable Workflows are....</para>
+                    
+                 </section>
+                 
+                 <section>
+                  <title> Comparison </title>
+
+                  <para>Insert a table here with the differences between the two</para>
+
+                 </section>
+      
+      <section>
+      <title>Creating Workflows</title>
+      
+      Workflows are created as follows:
+      
+      <para>Preparation.............</para>
+      
+      <para>Assembly............</para>
+
+
+        <para>Simple Workflow Creation</para>
+
+        <para>link to more complex workflow page</para>
+      
+      
+      </section>
+</chapter>
+
+
+
