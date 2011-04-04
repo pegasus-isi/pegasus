@@ -2,15 +2,15 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="components">
-  <title>Workflows</title>
+  <title>Pegasus Components</title>
 
   <section>
       <title>DAX</title>   </section>
-      <section>
+
       <para>High Level Description of DAX</para>
 
       <para>Simply worded description of what a DAX is, how they basically work, and user benefits </para>
-      </section>
+
       
       <section>
       <title>DAG </title>
@@ -21,7 +21,18 @@
       <title>Catalogs </title>
       </section>
       
+      <para>Catlogs are used to ..... </para>
+      
+      <para>Insert a diagram of catalogs in a pegasus network</para>
+      
       
       <section>
 
       <title>Pegasus Mapper</title></section>
+      
+      <section>
+
+      <title> Condor Schedd </title>      </section>
+</chapter>
+
+
