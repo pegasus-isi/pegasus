@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="catalogs">
-  <title>Catalogs</title>
+  <title>Catalog Details</title>
 
   <section id="replica">
     <title>Replica</title>
@@ -1131,3 +1131,4 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     </section>
   </section>
 </chapter>
+
