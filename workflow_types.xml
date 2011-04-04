@@ -5,14 +5,14 @@
   <title>Workflows</title>
 
   <section>
-      <title>Workflow Introduction</title>   </section>
-      <section>
+  
+      <title>Workflow Introduction</title>
+
       <para>High Level Description of Workflows</para>
       
       <para>Simply worded description of what workflows are, how they basically work, and how they can save time, money, etc</para>
       
-      <para> workflo diagrams</para>
-      
+      <para> workflow diagrams</para>
       </section>
       
       <section>
@@ -37,22 +37,27 @@
       </section>
       
       <section>
+      
       <title>Creating Workflows</title>
-      
-      Workflows are created as follows:
-      
+
+      <para>Workflows are created as follows:</para>
+
       <para>Preparation.............</para>
-      
+
       <para>Assembly............</para>
 
 
-        <para>Simple Workflow Creation</para>
+      <para>Simple Workflow Creation</para>
 
-        <para>link to more complex workflow page</para>
-      
+      <para>link to more complex workflow page</para>
       
       </section>
+
+      
+      
 </chapter>
+
+
 
 
 
