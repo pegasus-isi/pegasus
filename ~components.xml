@@ -9,7 +9,28 @@
 
       <para>High Level Description of DAX</para>
 
-      <para>Simply worded description of what a DAX is, how they basically work, and user benefits </para>
+      <para>The DAX is a description of an abstract workflow in XML format that
+      is used as the primary input into Pegasus. The DAX schema is described
+       in <ulink
+      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>
+      The documentation of the schema and its elements can be found in <ulink
+      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>.
+      
+      The sample workflow below incorporates some of the elementary graph
+      structures used in all abstract workflows</para>
+      
+                 <title> DAX Graph Structures</title>
+                 <para>Nodes (Jobs)</para>
+                 <orderedlist>
+                              <listitem>Preprocess</listitem>
+
+
+
+
+
+
+
+                              </orderedlist>
 
       
       <section>
@@ -21,7 +42,7 @@
       <title>Catalogs </title>
       </section>
       
-      <para>Catlogs are used to ..... </para>
+      <para>Catalogs are used to ..... </para>
       
       <para>Insert a diagram of catalogs in a pegasus network</para>
       
@@ -32,7 +53,10 @@
       
       <section>
 
-      <title> Condor Schedd </title>      </section>
+      <title> Condor Schedd </title>
+
+      </section>
 </chapter>
+
 
 
