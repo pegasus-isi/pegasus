@@ -62,10 +62,7 @@
           <para><emphasis>parallel execution</emphasis> implies that nodes can
           be executed in parallel, as shown by the
           <emphasis>findrange</emphasis> nodes in the example.</para>
-
-          <para><emphasis>Note</emphasis> While it is possible to execute these nodes in
-          parallel, planning constraints may limit the amount of parallelism
-          achieved.</para>
+          
         </listitem>
       </itemizedlist>
 
@@ -91,18 +88,18 @@
           or output of this workflow. Output files can be collected at a
           location.</para>
         </listitem>
-
+        
         <listitem>
+
           <para>If you follow the arrows, you also realize that only one arrow
           comes from file <filename>f.a</filename>, but no arrows are leading
           to it. This indicates that <filename>f.a</filename> is a required input
           file to the workflow. Its location must be registered with the
           replica catalog in order for Pegasus to find it and integrate it
           into the workflow.</para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para>The remaining files all have arrows leading to them and
+        <listitem>                     <para>The remaining files all have arrows leading to them and
           originating from them. These files are products of some job steps
           (arrows leading to them), and consumed by other job steps (arrows
           leading out of them). Often, these files represent intermediary
@@ -620,4 +617,5 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     "submit directory"</link>.</para>
   </section>
 </chapter>
+
 

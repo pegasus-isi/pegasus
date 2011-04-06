@@ -14,23 +14,29 @@
        in <ulink
       url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>
       The documentation of the schema and its elements can be found in <ulink
-      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>.
+      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>. </para>
       
-      The sample workflow below incorporates some of the elementary graph
+      <para>A DAX can be created by all users with the DAX generating API in
+      Java, Perl, or Python format</para>
+      
+      <note><bold>NOTE:</bold>We highly recommend using the DAX API. </note>
+      
+      <para>Advanced users who can read XML schema definitions can generate a
+      DAX directly from a script</para>
+
+      <para>The sample workflow below incorporates some of the elementary graph
       structures used in all abstract workflows</para>
       
-                 <title> DAX Graph Structures</title>
-                 <para>Nodes (Jobs)</para>
-                 <orderedlist>
-                              <listitem>Preprocess</listitem>
+        <para><figure id="components_blackdiamond">
+          <title>Sample Workflow</title>
 
-
-
-
-
-
-
-                              </orderedlist>
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center" fileref="images/DiamondWorkflow.jpg"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
 
       
       <section>
@@ -56,7 +62,7 @@
       <title> Condor Schedd </title>
 
       </section>
+
+
+
 </chapter>
-
-
-

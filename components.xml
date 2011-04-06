@@ -19,7 +19,7 @@
       <para>A DAX can be created by all users with the DAX generating API in
       Java, Perl, or Python format</para>
       
-      <note><bold>NOTE:</bold>We highly recommend using the DAX API. </note>
+      <note>NOTE:We highly recommend using the DAX API. </note>
       
       <para>Advanced users who can read XML schema definitions can generate a
       DAX directly from a script</para>
@@ -66,3 +66,4 @@
 
 
 </chapter>
+
