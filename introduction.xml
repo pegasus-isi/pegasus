@@ -19,8 +19,18 @@
   of the abstract workflow in XML format.</para>
 
   <para>The Pegasus Workflow Management System consists of three main
-  components: the Pegasus mapper, Condor DAGMan, and the Condor schedd. The
-  mapping of tasks to the execution resources is done by the mapper based on
+  components:</para>
+
+  <itemizedlist>
+   <listitem>Pegasus Mapper</listitem>
+   
+   <listitem>Condor DagMan</listitem>
+   
+   <listitem>Condor Schedd</listitem>
+  </itemizedlist>
+           <title> Pegasus Mapper</title>
+
+  <para>The mapping of tasks to the execution resources is done by the mapper based on
   information derived for static and/or dynamic sources. In some cases
   information systems already in place provide the information about the
   execution environment and the location of data. In other cases, users
@@ -29,10 +39,15 @@
   case the workflow tasks are mapped to multiple resources that do not share a
   file system, explicit nodes are added to the workflow for orchestrating data
   transfer between the tasks.</para>
-
+  
+           <title>Condor Dagman</title>
+           
   <para>DAGMan relies on the resources (compute, storage and network) defined
-  in the executable workflow to perform the necessary actions. Individual
-  workflow tasks are managed by a task scheduler, which supervises their
+  in the executable workflow to perform the necessary actions. </para>
+
+           <title>Condor Schedd</title>
+   
+  <para>Individual workflow tasks are managed by a task scheduler, which supervises their
   execution on local and remote resources. In our work scheduling is performed
   by the schedd a component in the Condor Project.</para>
 
@@ -63,4 +78,5 @@
 
   <para>Pegasus related publications are available <ulink
   url="http://pegasus.isi.edu/publications.php">here</ulink> .</para>
+  
 </chapter>
