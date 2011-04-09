@@ -1325,6 +1325,17 @@ public class TransferEngine extends Engine {
     protected String replaceProtocolFromURL( String pfn ) {
         /* special handling for SRM urls */
         StringBuffer newPFN = new StringBuffer();
+        
+        if( pfn.startsWith(FILE_URL_SCHEME) ){
+            //special handling for FILE URL's as 
+            //utility hostname functions dont hold up
+            newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).
+                   append( pfn.substring( FILE_URL_SCHEME.length() ) );
+            
+            //System.out.println( "Original PFN " + pfn + " \nReplaced PFN " + newPFN.toString() );
+            return newPFN.toString();
+        }
+        
                 
         //we have to the manual replacement 
         String hostName = Utility.getHostName( pfn );
