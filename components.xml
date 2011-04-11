@@ -5,13 +5,15 @@
   <title>Pegasus Components</title>
   
   <para>The Pegasus Workflow Management System consists of six main
-  components:</para>
+  elements and components that work together to automate the processing of large scale workflows.</para>
   
   <itemizedlist>
 
    <listitem>DAX</listitem>
 
    <listitem>DAG</listitem>
+   
+   <listitem>Catalogs</listitem>
 
    <listitem>Pegasus Mapper</listitem>
 
@@ -21,7 +23,7 @@
 
   </itemizedlist>
 
-   <para>The Pegasus Workflow Management System includes monitoring tools and features system recovery capabilities that make the system robust and efficient.</para>
+   <para>The Pegasus Workflow Management System also includes monitoring tools and features system recovery capabilities that make the system robust and efficient.</para>
    
    <itemizedlist>
 
@@ -68,7 +70,7 @@
       <section>
       <title>DAG </title>
       
-      <para>The DAG an executable (concrete) workflow  that can be executed over a variety of resources. In
+      <para>The DAG an executable (concrete) workflow that can be executed over a variety of resources. In
   case the workflow tasks are mapped to multiple resources that do not share a
   file system, explicit nodes are added to the workflow for orchestrating data
   transfer between the tasks.</para>
@@ -79,7 +81,7 @@
       <title>Catalogs </title>
       </section>
       
-      <para>Catalogs are used to ..... </para>
+      <para>Catalogs contain the source data????????????? </para>
       
       <para>Insert a diagram of catalogs in a pegasus network</para>
       
