@@ -7,11 +7,11 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="components.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="workflow_types.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="catalogs.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concepts.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="simplecatalog.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="planning_and_submitting.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="submit_directory.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="monitoring_debugging_stats.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="tutorial_vm.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="example_workflows.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_properties.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_profiles.xml"/>
@@ -21,14 +21,14 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_hierarichal_workflows.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="api.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="commands.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="tutorial_vm.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="useful_tips.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glossary.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="quickstart.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="installation.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="configuration.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="migration_from_pegasus_2_x.xml"/>
+   
 </book>
+
 
 
 

@@ -4,17 +4,34 @@
 <chapter id="components">
   <title>Pegasus Components</title>
   
-  <para>The Pegasus Workflow Management System consists of three main
-  components:</para>
+  <para>The Pegasus Workflow Management System consists of six main
+  elements and components that work together to automate the processing of large scale workflows.</para>
   
   <itemizedlist>
-  
+
+   <listitem>DAX</listitem>
+
+   <listitem>DAG</listitem>
+   
+   <listitem>Catalogs</listitem>
+
    <listitem>Pegasus Mapper</listitem>
 
    <listitem>Condor DagMan</listitem>
 
    <listitem>Condor Schedd</listitem>
+
   </itemizedlist>
+
+   <para>The Pegasus Workflow Management System also includes monitoring tools and features system recovery capabilities that make the system robust and efficient.</para>
+   
+   <itemizedlist>
+
+   <listitem>Monitoring Tools</listitem>
+   
+   <listitem>Error Recovery Capability</listitem>
+   
+   </itemizedlist>
 
   <section>
       <title>DAX</title>   </section>
@@ -119,6 +136,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
