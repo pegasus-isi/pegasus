@@ -27,6 +27,7 @@ import java.util.Vector;
 import java.io.Writer;
 import java.io.StringWriter;
 import java.io.IOException;
+import java.util.UUID;
 
 
 /**
@@ -85,12 +86,18 @@ public class ADag extends Data {
     protected TransformationStore mTransformationStore;
 
     /**
+     * The UUID associated with the workflow.
+     */
+    protected String mWorkflowUUID;
+    
+    /**
      * Initialises the class member variables.
      */
     public ADag() {
         dagInfo          = new DagInfo();
         vJobSubInfos     = new Vector();
         mSubmitDirectory = ".";
+        mWorkflowUUID    = generateWorkflowUUID();
         resetStores();
     }
 
@@ -104,6 +111,7 @@ public class ADag extends Data {
         this.dagInfo      = (DagInfo)dg.clone();
         this.vJobSubInfos = (Vector)vSubs.clone();
         mSubmitDirectory  = ".";
+        mWorkflowUUID    = generateWorkflowUUID();
         resetStores();
     }
 
@@ -129,8 +137,40 @@ public class ADag extends Data {
         //the stores are not a true clone
         newAdag.setReplicaStore(mReplicaStore);
         newAdag.setTransformationStore(mTransformationStore);
+        newAdag.setWorkflowUUID( this.mWorkflowUUID );
         return newAdag;
     }
+    
+    
+    
+    /**
+     * Returns the UUID for the workflow
+     * 
+     * @return the UUID of the workflow
+     */
+    public String getWorkflowUUID() {
+        return this.mWorkflowUUID;
+    }
+    
+    
+    /**
+     * Sets the UUID for the workflow
+     * 
+     * @param uuid   the UUID of the workflow
+     */
+    public void setWorkflowUUID( String uuid ) {
+        this.mWorkflowUUID = uuid;
+    }
+    
+    /**
+     * Generates the UUID for the workflow
+     * 
+     * @return the UUID of the workflow
+     */
+    protected String generateWorkflowUUID() {
+        return UUID.randomUUID().toString();
+    }
+    
 
 
     /**
@@ -140,6 +180,7 @@ public class ADag extends Data {
      */
     public String toString(){
         String st = "\n Submit Directory " + this.mSubmitDirectory +
+                    "\n Workflow UUID " + this.getWorkflowUUID() +
                     "\n" + this.dagInfo.toString() +
                     vectorToString("\n Jobs making the DAG ",this.vJobSubInfos);
         return st;
@@ -577,5 +618,7 @@ public class ADag extends Data {
         stream.write( newLine );
 
     }
+
+    
 
 }

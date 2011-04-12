@@ -140,6 +140,7 @@ public class Stampede {
                                                                      dag.dagInfo.index,
                                                                      Stampede.NETLOGGER_BP_FILE_SUFFIX ) );
 
+        String uuid = dag.getWorkflowUUID();
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(f, true) ));
         } catch ( IOException ioe ) {
@@ -150,11 +151,9 @@ public class Stampede {
             Job job = it.next();
             mLogFormatter.addEvent( "pegasus.job", "exec_job.id", job.getID() );
 
-            //netlogger level is info
-            mLogFormatter.add( "level", "Info" );
 
             //to be retrieved
-            mLogFormatter.add( "wf.id" , null );
+            mLogFormatter.add( "wf.id" , uuid );
 
             //disconnect??
             mLogFormatter.add( "submit_file", job.getID() + ".sub" );
@@ -171,13 +170,11 @@ public class Stampede {
 //            mLogFormatter.add( "arguments" , job.getArguments() );
             mLogFormatter.add( "executable", (String)job.condorVariables.get( "executable" ) );
             mLogFormatter.add( "arguments", (String)job.condorVariables.get( "arguments" ) );
-            System.out.println( (String)job.condorVariables.get( "arguments" ) );
-
+            
             //determine count of jobs
             int taskCount = getTaskCount( job );
 
             mLogFormatter.add( "task_count", Integer.toString( taskCount ) );
-            System.out.println( mLogFormatter.createLogMessage() );
             writer.println( mLogFormatter.createLogMessage() );
             mLogFormatter.popEvent();
 
@@ -197,11 +194,9 @@ public class Stampede {
                             //create task.map event
                             //to the job in the DAX
                             mLogFormatter.addEvent( "stampede.workflow.task.map", LoggingKeys.JOB_ID, job.getID() );
-                            //netlogger level is info
-                            mLogFormatter.add( "level", "Info" );
-
+                            
                             //to be retrieved
-                            mLogFormatter.add( "wf.id" , null );
+                            mLogFormatter.add( "wf.id" , uuid );
 
                             mLogFormatter.add( "exec_job.id", job.getID() );
                             mLogFormatter.add( "abs_task.id", constituentJob.getLogicalID() );
@@ -225,11 +220,10 @@ public class Stampede {
                     //create a single task.map event that maps compute job
                     //to the job in the DAX
                     mLogFormatter.addEvent( "stampede.workflow.task.map", "exec_job.id", job.getID() );
-                    //netlogger level is info
-                    mLogFormatter.add( "level", "Info" );
+                    
 
                     //to be retrieved
-                    mLogFormatter.add( "wf.id" , null );
+                    mLogFormatter.add( "wf.id" , uuid );
 
                     mLogFormatter.add( "abs_task.id", job.getLogicalID() );
 
@@ -247,10 +241,8 @@ public class Stampede {
         for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
             PCRelation relation = it.next();
 
-            mLogFormatter.addEvent( "stampede.job.edge", "wf.id", null );
+            mLogFormatter.addEvent( "stampede.job.edge", "wf.id", uuid );
 
-            //netlogger level is info
-            mLogFormatter.add( "level", "Info" );
 
             mLogFormatter.add( "parent_exec_job.id", relation.getParent() );
             mLogFormatter.add( "child_exec_job.id", relation.getChild() );

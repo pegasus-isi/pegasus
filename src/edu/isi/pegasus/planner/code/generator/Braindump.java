@@ -246,7 +246,7 @@ public class Braindump {
         entries.put( Braindump.SUBMIT_HOSTNAME_KEY, getSubmitHostname() );
         
         //the workflow uuid
-        entries.put( Braindump.UUID_KEY, UUID.randomUUID().toString() );
+        entries.put( Braindump.UUID_KEY,  workflow.getWorkflowUUID() );
         
         //dax and dax label
         entries.put( "dax", mPOptions.getDAX() );
