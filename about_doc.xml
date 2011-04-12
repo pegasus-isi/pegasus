@@ -15,6 +15,11 @@
         <para><emphasis>System Walkthrough</emphasis></para>
         <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS.</para>
       </listitem>
+      
+      <listitem>
+        <para><emphasis>Pegasus Components</emphasis></para>
+        <para>An introduction to the components of the Pegasus Workflow Management System (WMS)</para>
+      </listitem>
 
       <listitem>
         <para><emphasis>Workflows</emphasis></para>
