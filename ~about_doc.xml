@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="about_doc">
+  <title>About this Document</title>
+  
+  <para>This document is designed to acquaint new users with the capabilities of the Pegasus Workflow Management System (WMS)
+  and to demonstrate how WMS can solve their scientific computational challenges.</para>
+  
+  <para/>
+  
+      
+      <itemizedlist>
+      <listitem>
+        <para><emphasis>System Walkthrough</emphasis></para>
+        <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Workflows</emphasis></para>
+        <para>An introducion to the concepts of workflows, the types of workflows, and how they are used in the Pegasus system</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Catalog Details</emphasis></para>
+        <para>Detailed information about catalog implementation requirements and settings</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Planning and Submitting</emphasis></para>
+        <para> How to plan an abstract XML workflow and submit it to the DAG to
+         create an executable workflow </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Monitoring Workflows</emphasis></para>
+        <para> How to monitor, debug, and view statistics about the execution of the workflow  </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Example Workflows</emphasis></para>
+        <para> Example workflows are included to assist users with becoming familiar with existing workflows to gain insight into creating their own  </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Advanced Concepts and Configurations</emphasis></para>
+        <para> Advanced information Section with details about configuration details for.....</para>
+      </listitem>
+
+    <listitem>
+        <para><emphasis>Pegasus Tutorial</emphasis></para>
+        <para> View a tutorial on Pegasus running on a virtual machine. Users download, install, and operate Pegasus with sample files in a series of exercises</para>
+      </listitem>
+      
+      </itemizedlist>
+</chapter>
+
+
+
+
+
