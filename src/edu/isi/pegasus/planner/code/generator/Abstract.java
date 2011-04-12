@@ -197,7 +197,31 @@ public abstract class Abstract implements CodeGenerator{
         }
     }
 
-  
+
+    /**
+     * Writes out the stampedeEventGenerator events for the workflow.
+     *
+     * @param workflow      the workflow whose metrics file needs to be generated.
+     */
+    protected void writeOutStampedeEvents( ADag workflow ){
+
+        try{
+            Stampede stampedeEventGenerator = new Stampede();
+            stampedeEventGenerator.initialize(mBag);
+
+            Collection result = stampedeEventGenerator.generateCode( workflow );
+            for( Iterator it = result.iterator(); it.hasNext() ;){
+                mLogger.log("Written out stampede events to " + it.next(), LogManager.DEBUG_MESSAGE_LEVEL);
+            }
+        }
+        catch(CodeGeneratorException ioe){
+            //log the message and return
+            mLogger.log("Unable to write out the stampede events file for pegasus-monitord",
+                        ioe, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+    }
+
+
     /**
      * Writes out the metrics file for the workflow
      * 
