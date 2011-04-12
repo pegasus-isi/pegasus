@@ -88,10 +88,10 @@ analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
 diamond.addJob(analyze)
 
 # Add control-flow dependencies
-diamond.addDependency(parent=preprocess, child=frl)
-diamond.addDependency(parent=preprocess, child=frr)
-diamond.addDependency(parent=frl, child=analyze)
-diamond.addDependency(parent=frr, child=analyze)
+diamond.depends(parent=preprocess, child=frl)
+diamond.depends(parent=preprocess, child=frr)
+diamond.depends(parent=frl, child=analyze)
+diamond.depends(parent=frr, child=analyze)
 
 # Write the DAX to stdout
 import sys
@@ -105,9 +105,35 @@ f.close()
 
 __author__ = "Gideon Juve <juve@usc.edu>"
 __version__ = "3.2"
+__all__ = [
+	'DuplicateError',
+	'NotFoundError',
+	'Metadata',
+	'Profile',
+	'PFN',
+	'Namespace',
+	'Arch',
+	'Link',
+	'Transfer',
+	'OS',
+	'When',
+	'File',
+	'Executable',
+	'Use',
+	'Transformation',
+	'Invoke',
+	'Job',
+	'DAX',
+	'DAG',
+	'ADAG',
+	'Dependency',
+	'parse',
+	'parseString'
+]
 
 import datetime, pwd, os, sys
 from cStringIO import StringIO
+import codecs
 import xml.sax
 import xml.sax.handler
 import shlex
@@ -116,19 +142,13 @@ SCHEMA_NAMESPACE = u"http://pegasus.isi.edu/schema/DAX"
 SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/dax-3.2.xsd"
 SCHEMA_VERSION = u"3.2"
 
-def escape(text):
-	"""Escape special characters in XML"""
-	o = ""
-	for c in text:
-		if   c == '"':	o += "&quot;"
-		elif c == "'":	o += "&apos;"
-		elif c == "<":	o += "&lt;"
-		elif c == ">":	o += "&gt;"
-		elif c == "&":	o += "&amp;"
-		else: o += c
-	return unicode(o)
-	
+class DAX3Error(Exception): pass
+class DuplicateError(DAX3Error): pass
+class NotFoundError(DAX3Error): pass
+
 class Element:
+	"""Representation of an XML element for formatting output"""
+	
 	def __init__(self, name, attrs=[]):
 		self.name = name
 		self.attrs = []
@@ -140,21 +160,40 @@ class Element:
 				self.attrs.append((attr,value))
 		self.children = []
 		self.flat = False
-		
+	
+	def __escape(self, text):
+		"""Escape special characters in XML"""
+		o = ""
+		for c in text:
+			if   c == '"':	o += "&quot;"
+			elif c == "'":	o += "&apos;"
+			elif c == "<":	o += "&lt;"
+			elif c == ">":	o += "&gt;"
+			elif c == "&":	o += "&amp;"
+			else: o += c
+		return unicode(o)
+	
 	def element(self, element):
 		self.children.append(element)
 		return element
 		
 	def text(self, value):
-		self.children.append(escape(value))
+		self.children.append(self.__escape(value))
 		return self
 		
 	def comment(self, message):
-		self.children.append(u"<!- %s -->" % escape(message))
+		self.children.append(u"<!- %s -->" % self.__escape(message))
 		
 	def flatten(self):
 		self.flat = True
 		return self
+		
+	def __str__(self):
+		s = StringIO()
+		self.toXML(s)
+		x = s.getvalue()
+		s.close()
+		return x
 		
 	def toXML(self, stream=sys.stdout, level=0, flatten=False):
 		flat = self.flat or flatten
@@ -162,7 +201,7 @@ class Element:
 		stream.write(u'<%s' % self.name)
 		
 		for attr,value in self.attrs:
-			value = escape(value)
+			value = self.__escape(value)
 			stream.write(u' %s="%s"' % (attr, value))
 		
 		if len(self.children) == 0:
@@ -248,8 +287,87 @@ class When:
 	ON_SUCCESS = u'on_success'
 	AT_END = u'at_end'
 	ALL = u'all'
-	
-class CatalogType:
+
+
+class ProfileMixin:
+	def addProfile(self, profile):
+		"""Add a profile to this object"""
+		if self.hasProfile(profile):
+			raise DuplicateError("Duplicate profile", profile)
+		self.profiles.add(profile)
+		
+	def hasProfile(self, profile):
+		"""Does this object have profile?"""
+		return profile in self.profiles
+		
+	def removeProfile(self, profile):
+		"""Remove profile from this object"""
+		if not self.hasProfile(profile):
+			raise NotFoundError("Profile not found", profile)
+		self.profiles.remove(profile)
+		
+	def clearProfiles(self):
+		"""Remove all profiles from this object"""
+		self.profiles.clear()
+		
+	def profile(self, namespace, key, value):
+		"""Declarative profile addition"""
+		self.addProfile(Profile(namespace, key, value))
+
+
+class MetadataMixin:
+	def addMetadata(self, metadata):
+		"""Add metadata to this object"""
+		if self.hasMetadata(metadata):
+			raise DuplicateError("Duplicate Metadata", metadata)
+		self.metadata.add(metadata)
+		
+	def removeMetadata(self, metadata):
+		"""Remove meta from this object"""
+		if not self.hasMetadata(metadata):
+			raise NotFoundError("Metadata not found", metadata)
+		self.metadata.remove(metadata)
+		
+	def hasMetadata(self, metadata):
+		"""Does this object have metadata?"""
+		return metadata in self.metadata
+		
+	def clearMetadata(self):
+		"""Remove all metadata from this object"""
+		self.metadata.clear()
+		
+	def metadata(self, key, type, value):
+		"""Declarative metadata addition"""
+		self.addMetadata(Metadata(key, type, value))
+
+
+class PFNMixin:
+	def addPFN(self, pfn):
+		"""Add a PFN to this object"""
+		if self.hasPFN(pfn):
+			raise DuplicateError("Duplicate PFN", pfn)
+		self.pfns.add(pfn)
+		
+	def removePFN(self, pfn):
+		"""Remove PFN from this object"""
+		if not self.hasPFN(pfn):
+			raise NotFoundError("PFN not found", pfn)
+		self.pfns.remove(pfn)
+		
+	def hasPFN(self, pfn):
+		"""Does this object have pfn?"""
+		return pfn in self.pfns
+		
+	def clearPFNs(self):
+		"""Remove all PFNs from this object"""
+		self.pfns.clear()
+		
+	def PFN(self, url, site=None):
+		"""Declarative PFN addition"""
+		self.addPFN(PFN(url,site))
+
+
+class CatalogType(ProfileMixin, MetadataMixin, PFNMixin):
 	"""Base class for File and Executable"""
 	
 	def __init__(self, name):
@@ -265,45 +383,12 @@ class CatalogType:
 		Arguments:
 			name: The name of the file (required)
 		"""
-		if name is None:
+		if not name:
 			raise ValueError, 'name required'
 		self.name = name
-		self.profiles = []
-		self.metadata = []
-		self.pfns = []
-		
-	def __unicode__(self):
-		return unicode(self.name)
-		
-	def __str__(self):
-		return str(self.name)
-		
-	def addProfile(self, profile):
-		"""Add a profile to this replica"""
-		if isinstance(profile, Profile):
-			self.profiles.append(profile)
-		elif isinstance(profile, tuple):
-			self.profiles.append(Profile(*profile))
-		else:
-			raise Exception("Invalid argument")
-		
-	def addMetadata(self, meta):
-		"""Add some metadata to this replica"""
-		if isinstance(meta, Metadata):
-			self.metadata.append(meta)
-		elif isinstance(meta, tuple):
-			self.metadata.append(Metadata(*meta))
-		else:
-			raise Exception("Invalid argument")
-		
-	def addPFN(self, pfn):
-		"""Add a PFN object to this replica"""
-		if isinstance(pfn, PFN):
-			self.pfns.append(pfn)
-		elif isinstance(pfn, tuple):
-			self.pfns.append(PFN(*pfn))
-		else:
-			raise Exception("Invalid argument")
+		self.profiles = set()
+		self.metadata = set()
+		self.pfns = set()
 			
 	def innerXML(self, element):
 		for p in self.profiles:
@@ -344,17 +429,30 @@ class File(CatalogType):
 		"""
 		CatalogType.__init__(self, name)
 		
+	def __unicode__(self):
+		return unicode(self.name)
+		
+	def __repr__(self):
+		return str(self.name)
+	
+	def __hash__(self):
+		return hash(self.name)
+		
+	def __eq__(self, other):
+		return isinstance(other, File) and self.name == other.name
+	
 	def toArgumentXML(self):
-		"""Returns an XML representation of this file as a short filename 
-		tag for use in job arguments"""
+		"""Returns an XML representation of this File with no inner elements"""
 		return Element('file',[('name',self.name)])
 		
 	def toStdioXML(self, tag):
 		"""Returns an XML representation of this file as a stdin/out/err tag"""
 		if tag is 'stdin':
 			link = "input" # stdin is always input
-		else:
+		elif tag in ['stdout','stderr']:
 			link = "output" # stdout/stderr are always output
+		else:
+			raise ValueError("invalid tag",tag,"should be one of stdin, stdout, stderr")
 		
 		return Element(tag, [
 			('name',self.name),
@@ -362,7 +460,8 @@ class File(CatalogType):
 		])
 		
 	def toXML(self):
-		e = Element('file',[('name',self.name)])
+		"""Return the XML representation of this File with inner elements"""
+		e = self.toArgumentXML()
 		self.innerXML(e)
 		return e
 	
@@ -401,6 +500,33 @@ class Executable(CatalogType):
 		self.glibc = glibc
 		self.installed = installed
 		
+	def __repr__(self):
+		return "%s::%s:%s" % (self.namespace, self.name, self.version)
+		
+	def __hash__(self):
+		return hash((self.name,
+			self.namespace,
+			self.version,
+			self.arch,
+			self.os,
+			self.osrelease,
+			self.osversion,
+			self.glibc,
+			self.installed))
+		
+	def __eq__(self, other):
+		if isinstance(other, Executable):
+			return self.name == other.name and \
+				self.namespace == other.namespace and \
+				self.version == other.version and \
+				self.arch == other.arch and \
+				self.os == other.os and \
+				self.osrelease == other.osrelease and \
+				self.osversion == other.osversion and \
+				self.glibc == other.glibc and \
+				self.installed == other.installed
+		return False
+		
 	def toXML(self):
 		"""Returns an XML representation of this file as a filename tag"""
 		e = Element('executable', [
@@ -437,9 +563,24 @@ class Metadata:
 			type: The type of the value (e.g. string, int, float)
 			value: The value of the item
 		"""
+		if not key:
+			raise ValueError("Invalid key", key)
+		if not type:
+			raise ValueError("Invalid type", type)
+		if not value:
+			raise ValueError("Invalid value", value)
 		self.key = key
 		self.type = type
 		self.value = value
+		
+	def __repr__(self):
+		return "%s %s = %s" % (self.type, self.key, self.value)
+		
+	def __hash__(self):
+		return hash(self.key)
+		
+	def __eq__(self, other):
+		return isinstance(other, Metadata) and self.key == other.key
 		
 	def toXML(self):
 		m = Element('metadata', [
@@ -449,7 +590,7 @@ class Metadata:
 		m.text(self.value).flatten()
 		return m
 		
-class PFN:
+class PFN(ProfileMixin):
 	"""PFN(url[,site])
 	
 	A physical file name. Used to provide URLs for files and executables
@@ -468,13 +609,24 @@ class PFN:
 			url: The url of the file.
 			site: The name of the site. [default: local]
 		"""
+		if not url:
+			raise ValueError("Invalid url", url)
+		if not site:
+			raise ValueError("Invalid site", site)
 		self.url = url
 		self.site = site
-		self.profiles = []
-	
-	def addProfile(self, *profile):
-		"""Add a profile to this PFN"""
-		self.profiles.extend(profile)
+		self.profiles = set()
+		
+	def __repr__(self):
+		return str(self.url)
+		
+	def __hash__(self):
+		return hash((self.url, self.site))
+		
+	def __eq__(self, other):
+		return isinstance(other, PFN) and \
+			self.url == other.url and \
+			self.site == other.site
 		
 	def toXML(self):
 		pfn = Element('pfn', [
@@ -512,6 +664,17 @@ class Profile:
 		self.key = key
 		self.value = value
 		
+	def __repr__(self):
+		return "%s::%s = %s" % (self.namespace, self.key, self.value)
+		
+	def __hash__(self):
+		return hash((self.namespace, self.key))
+		
+	def __eq__(self, other):
+		return isinstance(other, Profile) and \
+			self.namespace == other.namespace and \
+		 	self.key == other.key
+		
 	def toXML(self):
 		"""Return an XML element for this profile"""
 		p = Element("profile", [
@@ -533,8 +696,8 @@ class Use:
 
 	def __init__(self, file, link=None, register=None, transfer=None, 
 				optional=None, namespace=None, version=None, executable=None):
-		if file is None:
-			raise ValueError, 'file required'
+		if not file:
+			raise ValueError('Invalid file', file)
 		
 		if isinstance(file, CatalogType):
 			self.name = file.name
@@ -545,6 +708,7 @@ class Use:
 		self.optional = optional
 		self.register = register
 		self.transfer = transfer
+		
 		self.namespace = None
 		self.version = None
 		self.executable = None
@@ -557,9 +721,21 @@ class Use:
 		if namespace is not None:
 			self.namespace = namespace
 		if version is not None:
-			self.version = version
+			self.version = str(version)
 		if executable is not None:
 			self.executable = executable
+			
+	def __repr__(self):
+		return "uses %s::%s:%s" % (self.namespace, self.name, self.version)
+		
+	def __hash__(self):
+		return hash((self.namespace, self.name, self.version))
+		
+	def __eq__(self, other):
+		if isinstance(other, Use):
+			return self.namespace == other.namespace and \
+				self.name == other.name and \
+				self.version == other.version
 		
 	def toXML(self):
 		return Element('uses', [
@@ -573,7 +749,51 @@ class Use:
 			('executable',self.executable)
 		])
 
-class Transformation:
+
+class UseMixin:
+	def addUse(self, use):
+		"""Add Use to this object"""
+		if self.hasUse(use):
+			raise DuplicateError("Duplicate Use", use)
+		self.used.add(use)
+		
+	def removeUse(self, use):
+		"""Remove use from this object"""
+		if not self.hasUse(use):
+			raise NotFoundError("No such Use", use)
+		self.used.remove(use)
+	
+	def hasUse(self, use):
+		"""Test to see if this object has use"""
+		return use in self.used
+		
+	def clearUses(self):
+		"""Remove all uses from this object"""
+		self.used.clear()
+		
+	def uses(self, name=None, link=None, register=None, transfer=None, 
+			 optional=None, namespace=None, version=None, executable=None):
+		"""Add a file/executable that the object uses.
+		
+		Optional arguments to this method specify job-level attributes of
+		the 'uses' tag in the DAX. If not specified, these values default
+		to those specified when creating the File or Executable object.
+		
+		Arguments:
+			name: A Filename object representing the logical file name or an Executable object
+			link: Is this file a job input, output or both (See LFN) (optional)
+			register: Should this file be registered in RLS? (True/False) (optional)
+			transfer: Should this file be transferred? (True/False or See LFN) (optional)
+			optional: Is this file optional, or should its absence be an error? (optional)
+			namespace: Namespace of executable (optional)
+			version: version of executable (optional)
+			executable: Is file an executable? (True/False) (optional)
+		"""
+		use = Use(name,link,register,transfer,optional,namespace,version,executable)
+		self.addUse(use)
+
+
+class Transformation(UseMixin):
 	"""Transformation((name|executable)[,namespace][,version])
 	
 	A logical transformation. This is basically defining one or more
@@ -637,7 +857,7 @@ class Transformation:
 		self.name = None
 		self.namespace = None
 		self.version = None
-		self.used_files = []
+		self.used = set()
 		if isinstance(name, Executable):
 			self.name = name.name
 			self.namespace = name.namespace
@@ -647,25 +867,17 @@ class Transformation:
 		if namespace: self.namespace = namespace
 		if version: self.version = version
 		
-	def addUses(self, *args, **kwargs):
-		"""Alias for uses()"""
-		self.uses(*args, **kwargs)
+	def __repr__(self):
+		return "%s::%s:%s" % (self.namespace, self.name, self.version)
 		
-	def uses(self, file, namespace=None, version=None, executable=None):
-		"""Add a file or executable that the transformation uses.
+	def __hash__(self):
+		return hash((self.namespace,self.name,self.version))
 		
-		Optional arguments to this method specify job-level attributes of
-		the 'uses' tag in the DAX.
-		
-		Arguments:
-			file: A File or Executable object representing the logical file,
-			      or a string containing the name of the file (required)
-			namespace: The namespace of an executable (optional)
-			version: The version of an executable (optional)
-			executable: Is the file an executable? (optional)
-		"""
-		use = Use(file, namespace=namespace, version=version, executable=executable)
-		self.used_files.append(use)
+	def __eq__(self, other):
+		if isinstance(other, Transformation):
+			return self.namespace == other.namespace and \
+				self.name == other.name and \
+				self.version == other.version
 		
 	def toXML(self):
 		"""Return an XML representation of this transformation"""
@@ -674,82 +886,58 @@ class Transformation:
 			('name',self.name),
 			('version',self.version)
 		])
-		for u in self.used_files:
+		for u in self.used:
 			e.element(u.toXML())
 		return e
 		
-class AbstractJob:
-	"""The base class for Job, DAX, and DAG"""
-	def __init__(self, id=None, node_label=None):
-		self.id = id
-		self.node_label = node_label
+class Invoke:
+	def __init__(self, when, what):
+		if not when:
+			raise ValueError("invalid when",when)
+		if not what:
+			raise ValueError("invalid what",what)
+		self.when = when
+		self.what = what
 		
-		self.arguments = []
-		self.profiles = []
-		self.used_files = []
-		self.notifications = []
-
-		self.stdout = None
-		self.stderr = None
-		self.stdin = None
+	def __repr__(self):
+		return "invoke %s %s" % (self.when, self.what)
+		
+	def __hash__(self):
+		return hash((self.when, self.what))
+		
+	def __eq__(self, other):
+		if isinstance(other, Invoke):
+			return self.when == other.when and self.what == other.what
+		return False
+		
+	def toXML(self):
+		e = Element('invoke',[('when',self.when)])
+		e.text(self.what)
+		e.flatten()
+		return e
+		
+class InvokeMixin:
 	
-	def addArguments(self, *arguments):
-		"""Add one or more arguments to the job"""
-		for arg in arguments:
-			if len(self.arguments) > 0:
-				self.arguments.append(' ')
-			self.arguments.append(arg)
-
-	def addProfile(self, profile):
-		"""Add a profile to the job"""
-		if isinstance(profile,Profile):
-			self.profiles.append(profile)
-		elif isinstance(profile,tuple):
-			self.profiles.append(Profile(*profile))
-		else:
-			raise Exception("Invalid argument")
-			
-	def addUses(self, *args, **kwargs):
-		"""Alias for uses() to maintain backward-compatibility"""
-		self.uses(*args, **kwargs)
-
-	def uses(self, file, link=None, register=None, transfer=None, 
-			 optional=None, namespace=None, version=None, executable=None):
-		"""Add a logical filename that the job uses.
+	def addInvoke(self, invoke):
+		"""Add invoke to this object"""
+		if self.hasInvoke(invoke):
+			raise DuplicateError("Duplicate Invoke", invoke)
+		self.invocations.add(invoke)
 		
-		Optional arguments to this method specify job-level attributes of
-		the 'uses' tag in the DAX. If not specified, these values default
-		to those specified when creating the File or Executable object.
+	def hasInvoke(self, invoke):
+		"""Test to see if this object has invoke"""
+		return invoke in self.invocations
 		
-		Arguments:
-			file: A Filename object representing the logical file name
-			link: Is this file a job input, output or both (See LFN) (optional)
-			register: Should this file be registered in RLS? (True/False) (optional)
-			transfer: Should this file be transferred? (True/False or See LFN) (optional)
-			optional: Is this file optional, or should its absence be an error? (optional)
-			namespace: Namespace of executable (optional)
-			version: version of executable (optional)
-			executable: Is file an executable? (True/False) (optional)
-		"""
-		use = Use(file,link,register,transfer,optional,namespace,version,executable)
-		self.used_files.append(use)
-
-	def setStdout(self, filename):
-		"""Redirect stdout to a file"""
-		self.stdout = filename
-
-	def setStderr(self, filename):
-		"""Redirect stderr to a file"""
-		self.stderr = filename
-
-	def setStdin(self, filename):
-		"""Redirect stdin from a file"""
-		self.stdin = filename
+	def removeInvoke(self, invoke):
+		"""Remove invoke from this object"""
+		if not self.hasInvoke(invoke):
+			raise NotFoundError("Invoke not found", invoke)
+		self.invocations.remove(invoke)
 		
-	def notify(self, when, what):
-		"""Alias for invoke(when,what)"""
-		self.invoke(when, what)
-
+	def clearInvokes(self):
+		"""Remove all Invoke objects"""
+		self.invocations.clear()
+		
 	def invoke(self, when, what):
 		"""
 		Invoke executable 'what' when job reaches status 'when'. The value of 
@@ -767,27 +955,98 @@ class AbstractJob:
 		all			like start and at_end combined.
 		
 		Examples:
-			job.invoke('at_end','/usr/bin/mail -s "job done" juve@usc.edu')
-			job.invoke('on_error','/usr/bin/update_db -failure')
+			obj.invoke('at_end','/usr/bin/mail -s "job done" juve@usc.edu')
+			obj.invoke('on_error','/usr/bin/update_db -failure')
 		"""
-		self.notifications.append((when, what))
+		self.addInvoke(Invoke(when, what))
+		
+class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
+	"""The base class for Job, DAX, and DAG"""
+	def __init__(self, id=None, node_label=None):
+		self.id = id
+		self.node_label = node_label
+		
+		self.arguments = []
+		self.profiles = set()
+		self.used = set()
+		self.invocations = set()
+
+		self.stdout = None
+		self.stderr = None
+		self.stdin = None
+	
+	def addArguments(self, *arguments):
+		"""Add one or more arguments to the job"""
+		for arg in arguments:
+			if not (isinstance(arg, File) or isinstance(arg, str) or isinstance(arg, unicode)):
+				raise ValueError("Invalid argument", arg)
+		for arg in arguments:
+			if len(self.arguments) > 0:
+				self.arguments.append(' ')
+			self.arguments.append(arg)
+			
+	def clearArguments(self):
+		"""Remove all arguments from this job"""
+		self.arguments = []
+		
+	def getArguments(self):
+		"""Get the arguments of this job"""
+		args = []
+		for a in self.arguments:
+			if isinstance(a, File):
+				args.append(unicode(a.toArgumentXML()))
+			else:
+				args.append(a)
+		return ''.join(args)
+			
+	def setStdout(self, filename):
+		"""Redirect stdout to a file"""
+		if isinstance(filename,File):
+			self.stdout = filename
+		else:
+			self.stdout = File(filename)
+			
+	def clearStdout(self):
+		"""Remove stdout file"""
+		self.stdout = None
+
+	def setStderr(self, filename):
+		"""Redirect stderr to a file"""
+		if isinstance(filename,File):
+			self.stderr = filename
+		else:
+			self.stderr = File(filename)
+			
+	def clearStderr(self):
+		"""Remove stderr file"""
+		self.stderr = None
+
+	def setStdin(self, filename):
+		"""Redirect stdin from a file"""
+		if isinstance(filename,File):
+			self.stdin = filename
+		else:
+			self.stdin = File(filename)
+			
+	def clearStdin(self):
+		"""Remove stdin file"""
+		self.stdin = None
 		
 	def innerXML(self, element):
 		"""Return an XML representation of this job"""
 		# Arguments
 		if len(self.arguments) > 0:
 			args = Element('argument').flatten()
-			element.element(args)
 			for x in self.arguments:
-				if x.__class__ == File:
+				if isinstance(x, File):
 					args.element(x.toArgumentXML())
 				else:
 					args.text(x)
+			element.element(args)
 
 		# Profiles
-		if len(self.profiles) > 0:
-			for pro in self.profiles:
-				element.element(pro.toXML())
+		for pro in self.profiles:
+			element.element(pro.toXML())
 		
 		# Stdin/xml/err
 		if self.stdin is not None:
@@ -798,13 +1057,12 @@ class AbstractJob:
 			element.element(self.stderr.toStdioXML('stderr'))
 
 		# Uses
-		for use in self.used_files:
+		for use in self.used:
 			element.element(use.toXML())
 				
-		# Notifications
-		for when,what in self.notifications:
-			n = Element('invoke',[('when',when)]).text(what).flatten()
-			element.element(n)
+		# Invocations
+		for inv in self.invocations:
+			element.element(inv.toXML())
 
 class Job(AbstractJob):
 	"""Job((name|transformation)[,id][,namespace][,version][,node_label])
@@ -849,11 +1107,11 @@ class Job(AbstractJob):
 		and version from the Transformation.
 		
 		Arguments:
-			name: The transformation name (required)
-			id: A unique identifier for the job (autogenerated if None)
-			namespace: The namespace of the transformation
-			version: The transformation version
-			node_label: The label for this job to use in graphing
+			name: The transformation name or Transformation object (required)
+			id: A unique identifier for the job (optional)
+			namespace: The namespace of the transformation (optional)
+			version: The transformation version (optional)
+			node_label: The label for this job to use in graphing (optional)
 		"""
 		self.namespace = None
 		self.version = None
@@ -863,6 +1121,8 @@ class Job(AbstractJob):
 			self.version = name.version
 		else:
 			self.name = name
+		if not name:
+			raise ValueError("Invalid name",name)
 		AbstractJob.__init__(self, id=id, node_label=node_label)
 		if namespace: self.namespace = namespace
 		if version: self.version = version
@@ -905,8 +1165,10 @@ class DAX(AbstractJob):
 		"""
 		if isinstance(file, File):
 			self.file = file
-		else:
+		elif isinstance(file, str) or isinstance(file, unicode):
 			self.file = File(name=file)
+		else:
+			raise ValueError("invalid file",file)
 		AbstractJob.__init__(self, id=id, node_label=node_label)
 		
 	def toXML(self):
@@ -945,8 +1207,10 @@ class DAG(AbstractJob):
 		"""
 		if isinstance(file, File):
 			self.file = file
-		else:
+		elif isinstance(file, str) or isinstance(file, unicode):
 			self.file = File(name=file)
+		else:
+			raise ValueError("Invalid file", file)
 		AbstractJob.__init__(self, id=id, node_label=node_label)
 			
 	def toXML(self):
@@ -960,32 +1224,49 @@ class DAG(AbstractJob):
 		return e
 
 class Dependency:
-	"""A control-flow dependency between a child and its parents"""
-	def __init__(self,child):
-		self.child = child
-		self.parents = []
-
-	def addParent(self, parent, edge_label=None):
-		self.parents.append([parent,edge_label])
-
-	def toXML(self):
-		"""Generate an XML representation of this"""
-		e = Element('child',[('ref',self.child.id)])
-		for parent, edge_label in self.parents:
-			p = Element('parent',[
-				('ref',parent.id),
-				('edge-label',edge_label)
-			])
-			e.element(p)
-		return e
+	"""A dependency between two nodes in the ADAG"""
+	def __init__(self, parent, child, edge_label=None):
+		if isinstance(parent, AbstractJob):
+			if not parent.id:
+				raise ValueError("Parent job has no id", parent)
+			self.parent = parent.id
+		elif parent:
+			self.parent = parent
+		else:
+			raise ValueError("Invalid parent", parent)
+		if isinstance(child, AbstractJob):
+			if not child.id:
+				raise ValueError("Child job has no id", child)
+			self.child = child.id
+		elif child:
+			self.child = child
+		else:
+			raise ValueError("Invalid child", child)
+		if self.parent == self.child:
+			raise ValueError("No self edges allowed",(self.parent,self.child))
+		self.edge_label = edge_label
 		
-class ADAG:
+	def __repr__(self):
+		return "%s -> %s (%s)" % (self.parent, self.child, self.edge_label)
+		
+	def __hash__(self):
+		return hash((self.parent,self.child))
+		
+	def __eq__(self, other):
+		"""Equal dependencies have the same parent and child"""
+		if isinstance(other, Dependency):
+			return self.parent == other.parent and self.child == other.child
+		return False
+
+		
+class ADAG(InvokeMixin):
 	"""ADAG(name[,count][,index])
 	
 	Representation of a directed acyclic graph in XML (DAX).
 	
 	Examples:
 		dax = ADAG('diamond')
+	or, if you want to use the old style count/index partitioning stuff:
 		part5 = ADAG('partition_5',count=10,index=5)
 		
 	Adding jobs:
@@ -993,20 +1274,22 @@ class ADAG:
 		dax.addJob(a)
 		
 	Adding parent-child control-flow dependency:
-		dax.addDependency(a,b)
-		dax.addDependency(a,c)
-		dax.addDependency(b,d)
-		dax.addDependency(c,d)
+		dax.addDependency(Dependency(parent=a,child=b))
+		dax.addDependency(Dependency(parent=a,child=c))
+		dax.addDependency(Dependency(parent=b,child=d))
+		dax.addDependency(Dependency(parent=c,child=d))	
+	or:
+		dax.depends(child=b, parent=a)
 		
-	Adding Files (this is not required to produce a valid DAX):
+	Adding Files (not required if you have a replica catalog):
 		input = File(...)
 		dax.addFile(input)
 		
-	Adding Executables (not required):
+	Adding Executables (not required if you have a transformation catalog):
 		exe = Executable(...)
 		dax.addExecutable(exe)
 		
-	Adding Transformations (not required):
+	Adding Transformations (not required if you have a transformation catalog):
 		xform = Transformation(...)
 		dax.addTransformation(xform)
 		
@@ -1022,6 +1305,8 @@ class ADAG:
 			count: Total number of DAXes that will be created
 			index: Zero-based index of this DAX
 		"""
+		if not name:
+			raise ValueError("Invalid ADAG name", name)
 		self.name = name
 		self.count = count
 		self.index = index
@@ -1029,50 +1314,186 @@ class ADAG:
 		# This is used to generate unique ID numbers
 		self.sequence = 1
 		
-		self.jobs = []
-		self.files = []
-		self.executables = []
-		self.lookup = {} # A lookup table for dependencies
-		self.dependencies = []
-		self.transformations = []
+		self.jobs = {}
+		self.files = set()
+		self.executables = set()
+		self.dependencies = set()
+		self.transformations = set()
+		self.invocations = set()
+		
+	def nextJobID(self):
+		"""Get an autogenerated ID for the next job"""
+		next = None
+		while not next or next in self.jobs:
+			next = "ID%07d" % self.sequence
+			self.sequence += 1
+		return next
+		
+	def getJob(self, jobid):
+		"""Get a Job/DAG/DAX"""
+		if not jobid in self.jobs:
+			raise NotFoundError("Job not found",jobid)
+		return self.jobs[jobid]
 
 	def addJob(self, job):
-		"""Add a job to the list of jobs in the DAX"""
+		"""Add a job to this ADAG"""
 		# Add an auto-generated ID if the job doesn't have one
 		if job.id is None:
-			job.id = "ID%07d" % self.sequence
-			self.sequence += 1
-		self.jobs.append(job)
+			job.id = self.nextJobID()
+		if self.hasJob(job):
+			raise DuplicateError("Duplicate job",job)
+		self.jobs[job.id] = job
+		
+	def hasJob(self, job):
+		"""Test to see if job is in this ADAG
+		The job parameter can be an object or a job ID
+		"""
+		if isinstance(job, AbstractJob):
+			return job.id in self.jobs
+		else:
+			return job in self.jobs
+		
+	def removeJob(self, job):
+		"""Remove job from this ADAG"""
+		if not self.hasJob(job):
+			raise NotFoundError("Job not found", job)
+		if isinstance(job, AbstractJob):
+			del self.jobs[job.id]
+		else:
+			del self.jobs[job]
+			
+	def clearJobs(self):
+		"""Remove all jobs"""
+		self.jobs = {}
 		
 	def addDAX(self, dax):
+		"""Add a sub-DAX (synonym for addJob)"""
+		if not isinstance(dax, DAX):
+			raise ValueError("Not a DAX", dax)
 		self.addJob(dax)
 		
 	def addDAG(self, dag):
-		"""Add a sub-DAG"""
+		"""Add a sub-DAG (synonym for addJob)"""
+		if not isinstance(dag, DAG):
+			raise ValueError("Not a DAG", dag)
 		self.addJob(dag)
 		
 	def addFile(self, file):
-		"""Add a file"""
-		self.files.append(file)
+		"""Add a file to the DAX"""
+		if not isinstance(file, File):
+			raise ValueError("Invalid File",file)
+		if self.hasFile(file):
+			raise DuplicateError("Duplicate file", file)
+		self.files.add(file)
+		
+	def hasFile(self, file):
+		"""Check to see if file is in this ADAG"""
+		return file in self.files
+		
+	def removeFile(self, file):
+		"""Remove file from this ADAG"""
+		if not self.hasFile(file):
+			raise NotFoundError("File not found", file)
+		self.files.remove(file)
+		
+	def clearFiles(self):
+		"""Remove all files"""
+		self.files.clear()
 		
 	def addExecutable(self, executable):
-		self.executables.append(executable)
+		"""Add an executable to this ADAG"""
+		if self.hasExecutable(executable):
+			raise DuplicateError("Duplicate executable",executable)
+		self.executables.add(executable)
+		
+	def hasExecutable(self, executable):
+		"""Check if executable is in this ADAG"""
+		return executable in self.executables
+		
+	def removeExecutable(self, executable):
+		"""Remove executable from this ADAG"""
+		if not self.hasExecutable(executable):
+			raise NotFoundError("Executable not found",executable)
+		self.executables.remove(executable)
+		
+	def clearExecutables(self):
+		"""Remove all executables"""
+		self.executables.clear()
 		
 	def addTransformation(self, transformation):
-		self.transformations.append(transformation)
+		"""Add a transformation to this ADAG"""
+		if self.hasTransformation(transformation):
+			raise DuplicateError("Duplicate tranformation",transformation)
+		self.transformations.add(transformation)
 		
-	def addDependency(self, parent, child, edge_label=None):
-		"""Add a control flow dependency
+	def hasTransformation(self, transformation):
+		"""Check to see if transformation is in this ADAG"""
+		return transformation in self.transformations
+		
+	def removeTransformation(self, transformation):
+		"""Remove transformation from this ADAG"""
+		if not self.hasTransformation(transformation):
+			raise NotFoundError("Transformation not found",transformation)
+		self.transformations.remove(transformation)
+		
+	def clearTransformations(self):
+		"""Remove all transformations"""
+		self.transformations.clear()
+		
+	def depends(self, child, parent, edge_label=None):
+		"""Add a dependency to the workflow
 		Arguments:
-			parent: The parent job/dax/dag
-			child: The child job/dax/dag
+			child: The child job/dax/dag or id
+			parent: The parent job/dax/dag or id
 			edge_label: A label for the edge (optional)
 		"""
-		if not child in self.lookup:
-			dep = Dependency(child)
-			self.lookup[child] = dep
-			self.dependencies.append(dep)
-		self.lookup[child].addParent(parent,edge_label)
+		d = Dependency(parent, child, edge_label)
+		self.addDependency(d)
+	
+	def addDependency(self, dep):
+		"""Add a dependency to the workflow
+		
+		The old way to call this method is no longer valid. Please change:
+			adag.addDependency(parent="ID01", child="ID02", edge_label="E01")
+		to be:
+			adag.addDependency(Dependency(parent="ID01", child="ID02", edge_label="E01"))
+		or:
+			adag.depends(parent="ID01", child="ID02", edge_label="E01")
+		
+		"""
+		if self.hasDependency(dep):
+			raise DuplicateError("Duplicate dependency", dep)
+		# Check the jobs
+		if dep.parent not in self.jobs:
+			raise NotFoundError("Parent not found", dep.parent)
+		if dep.child not in self.jobs:
+			raise NotFoundError("Child not found", dep.child)
+		self.dependencies.add(dep)
+		
+	def hasDependency(self, dep):
+		"""Check to see if dependency exists"""
+		return dep in self.dependencies
+		
+	def removeDependency(self, dep):
+		"""Remove dependency from workflow"""
+		if not self.hasDependency(dep):
+			raise NotFoundError("Dependency not found",dep)
+		self.dependencies.remove(dep)
+		
+	def clearDependencies(self):
+		"""Remove all dependencies"""
+		self.dependencies.clear()
+		
+	def toXML(self):
+		"""Get the XML string for this ADAG
+		This is primarily intended for testing. If you have a large ADAG
+		you should use writeXML instead.
+		"""
+		s = StringIO()
+		self.writeXML(s)
+		xml = s.getvalue()
+		s.close()
+		return xml
 
 	def writeXML(self, out):
 		"""Write the DAX as XML to a stream"""
@@ -1093,6 +1514,13 @@ class ADAG:
 		if self.count: out.write(u' count="%d"' % self.count)
 		if self.index: out.write(u' index="%d"' % self.index)
 		out.write(u'>\n')
+		
+		# Invocations
+		out.write(u'\n\t<!-- part 0: Workflow-level notifications (may be empty) -->\n')
+		for i in self.invocations:
+			out.write(u'\t')
+			i.toXML().toXML(stream=out,level=1)
+			out.write(u'\n')
 
 		# Files and executables
 		out.write(u'\n\t<!-- part 1: Replica catalog (may be empty) -->\n')
@@ -1114,16 +1542,40 @@ class ADAG:
 		
 		# Jobs
 		out.write(u'\n\t<!-- part 3: Definition of all jobs/dags/daxes (at least one) -->\n')
-		for job in self.jobs:
+		keys = self.jobs.keys()
+		keys.sort()
+		for job_id in keys:
+			job = self.jobs[job_id]
 			out.write(u'\t')
 			job.toXML().toXML(stream=out,level=1)
 			out.write(u'\n')
 		
 		# Dependencies
 		out.write(u'\n\t<!-- part 4: List of control-flow dependencies (may be empty) -->\n')
+		
+		# Since we store dependencies as tuples, but we need to print them as nested elements
+		# we first build a map of all the children that maps child -> [(parent,label),...]
+		children = {}
 		for dep in self.dependencies:
+			if not dep.child in children:
+				children[dep.child] = []
+			children[dep.child].append((dep.parent, dep.edge_label))
+		
+		# Now output all the xml in sorted order by child, then parent
+		keys = children.keys()
+		keys.sort()
+		for child in keys:
 			out.write(u'\t')
-			dep.toXML().toXML(stream=out,level=1)
+			c = Element("child",[("ref",child)])
+			parents = children[child]
+			parents.sort()
+			for parent, edge_label in parents:
+				p = Element("parent",[
+					("ref",parent),
+					("edge-label",edge_label)
+				])
+				c.element(p)
+			c.toXML(stream=out,level=1)
 			out.write(u'\n')
 		
 		# Close tag
@@ -1298,7 +1750,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 			ref = attrs.get("ref")
 			edge_label = attrs.get("edge-label")
 			p = self.jobmap[ref]
-			self.adag.addDependency(p, self.lastChild, edge_label)
+			self.adag.depends(parent=p, child=self.lastChild, edge_label=edge_label)
 		else:
 			raise Exception("Unrecognized element %s" % name)
 			
@@ -1335,7 +1787,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 			self.lastInvoke = None
 		elif element == "transformation":
 			self.lastTransformation = None
-	
+		
 	
 def parse(fname):
 	"""
@@ -1355,133 +1807,8 @@ def parseString(string):
 	return handler.adag
 
 
-def test():
-	"""An example of using the DAX API"""
-
-	# Create a DAX
-	diamond = ADAG("diamond")
-
-	# Create some logical file names
-	a = File("f.a")
-	b1 = File("f.b1")
-	b2 = File("f.b2")
-	c1 = File("f.c1")
-	c2 = File("f.c2")
-	d = File("f.d")
-	
-	# Add a bunch of stuff to test functionality
-	a.addProfile(Profile(namespace="test",key="foo",value="baz"))
-	a.addMetadata(Metadata(key="size",type="int",value="1024"))
-	a_url = PFN(url="http://site.com/f.a",site="site.com")
-	a_url.addProfile(Profile(namespace="test",key="bar",value="baz"))
-	a.addPFN(a_url)
-
-	# Add the filenames to the DAX (this is not strictly required)
-	diamond.addFile(a)
-	diamond.addFile(d)
-	
-	# Add executables
-	e_preprocess = Executable(namespace="diamond", name="preprocess", version="2.0", installed=True)
-	e_findrange = Executable(namespace="diamond", name="findrange", version="2.0", installed=True)
-	e_analyze = Executable(namespace="diamond", name="analyze", version="2.0", installed=True)
-	
-	# Add a bunch of stuff to test functionality
-	e_preprocess.addProfile(Profile(namespace="test",key="pre",value="process"))
-	e_preprocess.addProfile(("test","pre","process"))
-	e_preprocess.addMetadata(Metadata(key="os",type="string",value="LINUX"))
-	e_preprocess.addMetadata(("size","int","1024"))
-	e_preprocess.addPFN(PFN(url="http://site.com/preprocess",site="site.com"))
-	e_preprocess.addPFN(("http://www.google.com","google"))
-	
-	diamond.addExecutable(e_preprocess)
-	diamond.addExecutable(e_findrange)
-	diamond.addExecutable(e_analyze)
-	
-	# Add transformation (long form)
-	t_preprocess = Transformation(namespace="diamond",name="preprocess",version="2.0")
-	t_preprocess.uses(e_preprocess)
-	t_preprocess.uses(a)
-	diamond.addTransformation(t_preprocess)
-	
-	# Add transformation (short form)
-	t_findrange = Transformation(e_findrange)
-	t_analyze = Transformation(e_analyze)
-	
-	diamond.addTransformation(t_findrange)
-	diamond.addTransformation(t_analyze)
-
-	# Add a preprocess job
-	preprocess = Job(t_preprocess,node_label="foobar")
-	preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-	preprocess.uses(a,link=Link.INPUT)
-	preprocess.uses(b1,link=Link.OUTPUT, transfer=True)
-	preprocess.uses(b2,link=Link.OUTPUT, transfer=True)
-	diamond.addJob(preprocess)
-
-	# Add left Findrange job
-	frl = Job(t_findrange)
-	frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-	frl.uses(b1,link=Link.INPUT)
-	frl.uses(c1,link=Link.OUTPUT, transfer=True)
-	diamond.addJob(frl)
-
-	# Add right Findrange job
-	frr = Job(namespace="diamond",name="findrange",version="2.0")
-	frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2,"'FOO BAR'")
-	frr.uses(b2,link=Link.INPUT)
-	frr.uses(c2,link=Link.OUTPUT, transfer=True)
-	diamond.addJob(frr)
-
-	# Add Analyze job
-	analyze = Job(namespace="diamond",name="analyze",version="2.0")
-	analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-	analyze.uses(c1,link=Link.INPUT)
-	analyze.uses(c2,link=Link.INPUT)
-	analyze.uses(d,link=Link.OUTPUT, transfer=True, register=True)
-	diamond.addJob(analyze)
-	
-	# A DAG
-	dagfile = File("pre.dag")
-	predag = DAG(dagfile,node_label="predag")
-	predag.invoke('at_end','/bin/echo "foo bar"')
-	diamond.addDAG(predag)
-	
-	# A DAX
-	daxfile = File("post.xml")
-	postdax = DAX(daxfile,node_label="postdax")
-	postdax.invoke('at_end',"/bin/echo 'yay'")
-	diamond.addDAX(postdax)
-
-	# Add control-flow dependencies
-	diamond.addDependency(parent=predag, child=preprocess)
-	diamond.addDependency(parent=preprocess, child=frl, edge_label='foobar')
-	diamond.addDependency(parent=preprocess, child=frr)
-	diamond.addDependency(parent=frl, child=analyze)
-	diamond.addDependency(parent=frr, child=analyze)
-	diamond.addDependency(parent=analyze, child=postdax)
-	
-	postdax.setStdin(File("postdax.in"))
-	postdax.setStdout(File("postdax.out"))
-	postdax.setStderr(File("postdax.err"))
-
-	# Write the DAX to stdout
-	out = StringIO()
-	diamond.writeXML(out)
-	foo1 = out.getvalue()
-	out.close()
-	
-	print foo1
-	
-	diamond = parseString(foo1)
-	
-	out = StringIO()
-	diamond.writeXML(out)
-	foo2 = out.getvalue()
-	out.close()
-	
-	print foo2
-	
-def diamond():
+def main():
+	"""Simple smoke test"""
 	# Create a DAX
 	diamond = ADAG("diamond")
 	
@@ -1489,7 +1816,7 @@ def diamond():
 	a = File("f.a")
 	a.addPFN(PFN("gsiftp://site.com/inputs/f.a","site"))
 	diamond.addFile(a)
-	
+		
 	# Add executables to the DAX-level replica catalog
 	e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
 	e_preprocess.addPFN(PFN("gsiftp://site.com/bin/preprocess","site"))
@@ -1522,7 +1849,7 @@ def diamond():
 	preprocess.uses(b1, link=Link.OUTPUT, transfer=True)
 	preprocess.uses(b2, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(preprocess)
-
+	
 	# Add left Findrange job
 	frl = Job(t_findrange)
 	c1 = File("f.c1")
@@ -1530,7 +1857,7 @@ def diamond():
 	frl.uses(b1, link=Link.INPUT)
 	frl.uses(c1, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frl)
-
+	
 	# Add right Findrange job
 	frr = Job(t_findrange)
 	c2 = File("f.c2")
@@ -1538,7 +1865,7 @@ def diamond():
 	frr.uses(b2, link=Link.INPUT)
 	frr.uses(c2, link=Link.OUTPUT, transfer=True)
 	diamond.addJob(frr)
-
+	
 	# Add Analyze job
 	analyze = Job(t_analyze)
 	d = File("f.d")
@@ -1547,17 +1874,17 @@ def diamond():
 	analyze.uses(c2, link=Link.INPUT)
 	analyze.uses(d, link=Link.OUTPUT, transfer=True, register=True)
 	diamond.addJob(analyze)
-
-	# Add control-flow dependencies
-	diamond.addDependency(parent=preprocess, child=frl)
-	diamond.addDependency(parent=preprocess, child=frr)
-	diamond.addDependency(parent=frl, child=analyze)
-	diamond.addDependency(parent=frr, child=analyze)
-
-	# Write the DAX to stdout
+	
+	# Add dependencies
+	diamond.depends(parent=preprocess, child=frl)
+	diamond.depends(parent=preprocess, child=frr)
+	diamond.depends(parent=frl, child=analyze)
+	diamond.depends(parent=frr, child=analyze)
+	
+	# Get generated diamond dax
 	import sys
 	diamond.writeXML(sys.stdout)
-	
+
+
 if __name__ == '__main__':
-	test()
-	diamond()
+	main()
