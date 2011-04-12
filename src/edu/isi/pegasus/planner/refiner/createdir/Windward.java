@@ -172,7 +172,7 @@ public class Windward extends AbstractStrategy{
         result.add( kbJob );
         List l = new LinkedList();
         l.add( kbJob.getID() );
-        mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, dag.getAbstractWorkflowID(),
+        mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, dag.getAbstractWorkflowName(),
                                            LoggingKeys.JOB_ID, l );
         
         return result;

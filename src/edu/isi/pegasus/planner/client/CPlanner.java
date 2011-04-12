@@ -420,7 +420,7 @@ public class CPlanner extends Executable{
 
             //log id hiearchy message
             //that connects dax with the jobs
-            logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowID() );
+            logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
 
             //write out a the relevant properties to submit directory
             int state = 0;
@@ -525,12 +525,12 @@ public class CPlanner extends Executable{
                 
                 //connect the DAX and the DAG via the hieararcy message
                 List l = new ArrayList(1);
-                l.add( finalDag.getExecutableWorkflowID() );
-                mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, finalDag.getAbstractWorkflowID(),
+                l.add( finalDag.getExecutableWorkflowName() );
+                mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, finalDag.getAbstractWorkflowName(),
                                                    LoggingKeys.DAG_ID, l );
                 
                 //connect the jobs and the DAG via the hierarchy message
-                this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowID() );
+                this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowName() );
 
                 
             }

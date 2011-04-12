@@ -211,7 +211,7 @@ public class ReductionEngine extends Engine implements Refiner{
 
 
         //mLogger.log("Reducing the workflow",LogManager.DEBUG_MESSAGE_LEVEL);
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowID() );
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
            
         mOrgJobsInRC =
             getJobsInRC(mOriginalDag.vJobSubInfos,mFilesInRC);

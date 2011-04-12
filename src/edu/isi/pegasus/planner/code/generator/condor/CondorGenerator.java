@@ -343,7 +343,7 @@ public class CondorGenerator extends Abstract {
 
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CODE_GENERATION,
                                LoggingKeys.DAX_ID,
-                               dag.getAbstractWorkflowID(),
+                               dag.getAbstractWorkflowName(),
                                LogManager.DEBUG_MESSAGE_LEVEL);
         
   

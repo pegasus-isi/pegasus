@@ -215,7 +215,7 @@ public class DataReuseEngine extends Engine implements Refiner{
 
 
         mLogger.log("Reducing the workflow",LogManager.DEBUG_MESSAGE_LEVEL);
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mWorkflow.getAbstractWorkflowID() );
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REDUCE, LoggingKeys.DAX_ID, mWorkflow.getAbstractWorkflowName() );
            
         //figure out jobs whose output files already exist in the Replica Catalog
         List<GraphNode> originalJobsInRC = getJobsInRC( workflow ,filesInRC );

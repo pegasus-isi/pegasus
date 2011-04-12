@@ -269,7 +269,7 @@ public class ADag extends Data {
      * Returns the workflow id
      * @return the abstract workflow id
      */
-    public String getAbstractWorkflowID(){
+    public String getAbstractWorkflowName(){
         StringBuffer id = new StringBuffer();
         id.append( this.dagInfo.getLabel() ).append( "_" ).append( this.dagInfo.index );
         return id.toString();
@@ -279,7 +279,7 @@ public class ADag extends Data {
      * Returns the workflow id
      * @return the executable workflow id
      */
-    public String getExecutableWorkflowID(){
+    public String getExecutableWorkflowName(){
         StringBuffer id = new StringBuffer();
         id.append( this.dagInfo.getLabel() ).append( "_" ).append( this.dagInfo.index ).
            append( "." ).append( "dag");

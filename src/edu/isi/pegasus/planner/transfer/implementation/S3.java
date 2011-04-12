@@ -267,7 +267,7 @@ public class S3 extends Abstract
         //always run on local host.
         txJob.setNonThirdPartySite( job.getSiteHandle() );
         
-        mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, mRefiner.getWorkflow().getAbstractWorkflowID(),
+        mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, mRefiner.getWorkflow().getAbstractWorkflowName(),
                                            LoggingKeys.JOB_ID, txJobIDs );
 
         return txJob;
