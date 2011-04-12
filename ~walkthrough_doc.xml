@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="walkthrough_doc">
+  <title>Pegasus Walkthrough</title>
+  
+  <para>We use a walkthrough of a sample project to demonstrate how Pegasus quickly and easily create, execute, and monitor workflows. The sample project runs on a VM environment and uses basic workflows.
+  The sample project is relaviely simple,with links to more information on how to create more complex project components. We also include links to terms and concepts as they arise.</para>
+  <section>
+
+  <title>Sample Project</title>
+  
+  <para>Describe the sample project - objetives, etc.</para>
+
+  <title>Overview of Workflow Steps</title>
+
+  <title>Workflow Creation </title>
+  
+  <para>2-5 based on VM</para>
+            <title>Workflow Basics</title>
+            
+            <title>How to Create a Workflow</title>
+            
+            <title>Link to more complex workflows landing page</title>
+            
+            <title>Link to example workflows</title>
+            
+  <title>Setting Up Environments</title>
+  
+                 <title>Catalog Basics</title>
+                 
+                 <title>link to Catalogs landing page</title>
+
+  </section>
+
+
+
+</chapter>
