@@ -12,8 +12,8 @@
       
       <itemizedlist>
       <listitem>
-        <para><emphasis>Pegasus Components</emphasis></para>
-        <para>An overview of the components contained in Pegasus, and how they interact to produce and monitor executable workflows.</para>
+        <para><emphasis>System Walkthrough</emphasis></para>
+        <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS.</para>
       </listitem>
 
       <listitem>
@@ -54,6 +54,7 @@
       
       </itemizedlist>
 </chapter>
+
 
 
 
