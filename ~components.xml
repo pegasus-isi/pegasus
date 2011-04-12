@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="components">
+  <title>Pegasus Components</title>
+  
+  <para>The Pegasus Workflow Management System consists of six main
+  elements and components that work together to automate the processing of large scale workflows.</para>
+  
+  <itemizedlist>
+
+   <listitem>DAX</listitem>
+
+   <listitem>DAG</listitem>
+   
+   <listitem>Catalogs</listitem>
+
+   <listitem>Pegasus Mapper</listitem>
+
+   <listitem>Condor DagMan</listitem>
+
+   <listitem>Condor Schedd</listitem>
+
+  </itemizedlist>
+
+   <para>The Pegasus Workflow Management System also includes monitoring tools and features system recovery capabilities that make the system robust and efficient.</para>
+   
+   <itemizedlist>
+
+   <listitem>Monitoring Tools</listitem>
+   
+   <listitem>Error Recovery Capability</listitem>
+   
+   </itemizedlist>
+
+  <section>
+      <title>DAX</title>   </section>
+
+
+      <para>The DAX is a description of an abstract workflow in XML format that
+      is used as the primary input into Pegasus. The DAX schema is described
+       in <ulink
+      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>
+      The documentation of the schema and its elements can be found in <ulink
+      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>. </para>
+      
+      <para>A DAX can be created by all users with the DAX generating API in
+      Java, Perl, or Python format</para>
+      
+      <note>We highly recommend using the DAX API. </note>
+      
+      <para>Advanced users who can read XML schema definitions can generate a
+      DAX directly from a script</para>
+
+      <para>The sample workflow below incorporates some of the elementary graph
+      structures used in all abstract workflows</para>
+      
+        <para><figure id="components_blackdiamond">
+          <title>Sample Workflow</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center" fileref="images/DiamondWorkflow.jpg"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
+
+      
+      <section>
+      <title>DAG </title>
+      
+      <para>The DAG an executable (concrete) workflow that can be executed over a variety of resources. In
+  case the workflow tasks are mapped to multiple resources that do not share a
+  file system, explicit nodes are added to the workflow for orchestrating data
+  transfer between the tasks.</para>
+      </section>
+      
+      
+      <section>
+      <title>Catalogs </title>
+      </section>
+      
+      <para>Catalogs contain the source data????????????? </para>
+      
+      <para>Insert a diagram of catalogs in a pegasus network</para>
+      
+      
+      <section>
+
+      <title>Pegasus Mapper</title>
+      </section>
+
+      <para>The mapping of tasks to the execution resources is done by the mapper based on
+  information derived for static and/or dynamic sources. In some cases
+  information systems already in place provide the information about the
+  execution environment and the location of data. In other cases, users
+  specify this information. </para>
+
+      <section>
+
+      <title> Condor Schedd </title>
+      
+      <para>Individual workflow tasks are managed by Condor Schedd which supervises their execution on local and remote resources.
+      Condor schedd is a component in the Condor Project.</para>
+
+      </section>
+      
+      <section>
+
+      <title>Monitoring Tools</title>
+      
+      <para>Pegasus comes with a set of tools that help monitor the progress of
+  the workflow and collect statistics and performance profiles of the
+  workflows. Pegasus WMS is a user-side application that can be deployed
+  locally by a scientist with no support from a site administrator and has no
+  impact on the target cyberinfrastructure sites. A collaboration can set up a
+  submit host, which hosts the workflow management system. Jobs are sent from
+  the submit host to the campus cluster, the Open Science Grid, the TeraGrid,
+  the cloud, or other resources.</para>
+      </section>
+      
+       <section>
+
+       <title>Error Recovery</title>
+       
+       <para>When errors occur, Pegasus tries to recover when possible by retrying
+  tasks, by retrying the entire workflow, by providing workflow-level
+  checkpointing, by re-mapping portions of the workflow, by trying alternative
+  data sources for staging data, and, when all else fails, by providing a
+  rescue workflow containing a description of only the work that remains to be
+  done. It cleans up storage as the workflow is executed so that
+  data-intensive workflows have enough space to execute on storage-constrained
+  resource. Pegasus keeps track of what has been done (provenance) including
+  the locations of data used and produced, and which software was used with
+  which parameters.</para>
+       </section>
+</chapter>
+
+
+
+
