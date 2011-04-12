@@ -4,6 +4,7 @@
 <book>
    <title>Pegasus User Guide</title>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="about_doc.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="walkthrough_doc.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="components.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="workflow_types.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="catalogs.xml"/>
@@ -29,6 +30,7 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="configuration.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="migration_from_pegasus_2_x.xml"/>
 </book>
+
 
 
 
