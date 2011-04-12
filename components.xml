@@ -13,7 +13,7 @@
 
    <listitem>DAG</listitem>
    
-   <listitem>Catalogs</listitem>
+   <listitem>Catalogs (Basics)</listitem>
 
    <listitem>Pegasus Mapper</listitem>
 
@@ -136,6 +136,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
