@@ -83,6 +83,10 @@
       
       <para>Catalogs contain the source data????????????? </para>
       
+      <link
+      linkend="catalogs">Chapter on Catalog Details</link>
+
+      
       <para>Insert a diagram of catalogs in a pegasus network</para>
       
       
@@ -136,6 +140,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
