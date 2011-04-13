@@ -938,47 +938,51 @@ public class Job extends Data implements GraphNodeContent{
 
         switch (type){
             case COMPUTE_JOB:
-                desc = "Compute Job";
+                desc = "compute";
                 break;
 
             case STAGE_IN_JOB:
-                desc = "Stage In Job";
+                desc = "stage-in-tx";
                 break;
 
             case STAGE_OUT_JOB:
-                desc = "Stage Out Job";
+                desc = "stage-out-tx";
                 break;
 
+            case INTER_POOL_JOB:
+                desc = "inter-site-tx";
+                break;
+                
             case REPLICA_REG_JOB:
-                desc = "Replica Registration Job";
+                desc = "registration";
                 break;
 
             case UNASSIGNED_JOB:
-                desc = "Unassigned Job";
+                desc = "unassigned";
                 break;
 
             case CREATE_DIR_JOB:
-                desc = "Create Directory job";
+                desc = "create-dir";
                 break;
                 
             case CLEANUP_JOB:
-                desc = "Cleanup Job";
+                desc = "cleanup";
                 break;
 
             case CHMOD_JOB:
-                desc = "Chmod Job";
+                desc = "chmod";
                 break;
 
             case DAX_JOB:
-                desc = "DAX Job";
+                desc = "dax";
                 break;
 
             case DAG_JOB:
-                desc = "DAG Job";
+                desc = "dag";
                 break;
 
             default:
-                desc = "Unknown Job";
+                desc = "unknown";
                 break;
 
             }
