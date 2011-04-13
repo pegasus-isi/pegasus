@@ -4,65 +4,95 @@
 <chapter id="walkthrough_doc">
   <title>Pegasus Walkthrough</title>
   
-  <para>We use a walkthrough of a sample project to demonstrate how Pegasus quickly and easily create, execute, and monitor workflows. The sample project runs on a VM environment and uses basic workflows.
-  The sample project is relaviely simple,with links to more information on how to create more complex project components. We also include links to terms and concepts as they arise.</para>
+  <section>
+  
+   <title> Walkthrough Objectives</title>
+    <para>Describe the sample project that the user will be assembling, what the objectives are, and what the user will be able to do after completing the walkthrough</para>
+    
+    </section>
+    
   <section>
 
-   <title>Sample Project</title>
-  
-    <para>Describe the sample project - objetives, etc.</para>
-
    <title>Overview of Workflow Steps</title>
-
+  </section>
+  
+  <section>
    <title>Workflow Creation </title>
   
-  <para>2-5 based on VM</para>
-            <title>Workflow Basics</title>
+   <para>2-5 based on VM</para>
+            <para>Workflow Basics</para>
             
-            <title>How to Create a Workflow</title>
+            <para>How to Create a Workflow</para>
             
-            <title>Link to more complex workflows landing page</title>
+            <para>Link to more complex workflows landing page</para>
             
-            <title>Link to example workflows</title>
+            <para>Link to example workflows</para>
             
-   <title>Setting Up Environments</title>
+  </section>
+
+  <section>
+    <title>Setting Up Environments</title>
   
-                 <title>Catalog Basics</title>
+                 <para>Catalog Basics</para>
                  
-                 <title>link to Catalogs landing page</title>
-                 
-  <title>Workflow Execution</title>
+                 <para>link to Catalogs landing page</para>
+  </section>
   
-  <para>Links to optimization landing page</para>
+   <section>
+    <title>Workflow Execution</title>
+  
+     <para>Links to optimization landing page</para>
+     
+ </section>
+ 
+ <section>
   
   <title>Workflow Monitoring and Analysis</title>
   
-  <title>Setting up your own Pegasus Installation</title>
+  </section>
   
-  <para>Not sure what goes here</para>
+  <section>
   
+   <title>Setting up your own Pegasus Installation</title>
+  
+    <para>Not sure what goes here</para>
+ </section>
+
+ <section>
   <title>Executing Workflows in Different Environments</title>
   
-                   <title>Detailed Catalog landing page</title>
+                   <para>Detailed Catalog landing page</para>
                    
-                   <title>Local Execution</title>
+                   <para>Local Execution</para>
                    
-                   <title>Condor Pools and Glideins</title>
+                   <para>Condor Pools and Glideins</para>
                    
-                   <title>Grids</title>
+                   <para>Grids</para>
                    
-                   <title>Clouds</title>
-                   
-  <title>Pegasus Logs</title>
+                   <para>Clouds</para>
+  </section>
   
-  <title>Debugging and Statistical Analysis of Workflows</title>
+  <section>
+   <title>Pegasus Logs</title>
+  </section>
   
-  <title>Planning Steps</title>
+  <section>
+   <title>Debugging and Statistical Analysis of Workflows</title>
+   
+  </section>
+   
+  <section>
   
-  <title>Link to Pegasus API landing page</title>
+   <title>Planning Steps</title>
+   <title>Link to Pegasus API landing page</title>
+  </section>
   
-  <title>Are You Sure Migration Info should be in the walkthrough?</title>
-  
+  <section>
+    <title>Are You Sure Migration Info should be in the walkthrough?</title>
+
+  </section>
+
+  <section>
   <title>Concepts/Glossary</title>
   
   </section>
@@ -70,4 +100,6 @@
 
 
 </chapter>
+
+
 

@@ -5,9 +5,9 @@
   <title>Pegasus Walkthrough</title>
   
   <section>
-   <title>Sample Project</title>
   
-    <para>Describe the sample project - objetives, etc.</para>
+   <title> Walkthrough Objectives</title>
+    <para>Describe the sample project that the user will be assembling, what the objectives are, and what the user will be able to do after completing the walkthrough</para>
     
     </section>
     
@@ -20,22 +20,22 @@
    <title>Workflow Creation </title>
   
    <para>2-5 based on VM</para>
-            <title>Workflow Basics</title>
+            <para>Workflow Basics</para>
             
-            <title>How to Create a Workflow</title>
+            <para>How to Create a Workflow</para>
             
-            <title>Link to more complex workflows landing page</title>
+            <para>Link to more complex workflows landing page</para>
             
-            <title>Link to example workflows</title>
+            <para>Link to example workflows</para>
             
   </section>
 
   <section>
     <title>Setting Up Environments</title>
   
-                 <title>Catalog Basics</title>
+                 <para>Catalog Basics</para>
                  
-                 <title>link to Catalogs landing page</title>
+                 <para>link to Catalogs landing page</para>
   </section>
   
    <section>
@@ -61,15 +61,15 @@
  <section>
   <title>Executing Workflows in Different Environments</title>
   
-                   <title>Detailed Catalog landing page</title>
+                   <para>Detailed Catalog landing page</para>
                    
-                   <title>Local Execution</title>
+                   <para>Local Execution</para>
                    
-                   <title>Condor Pools and Glideins</title>
+                   <para>Condor Pools and Glideins</para>
                    
-                   <title>Grids</title>
+                   <para>Grids</para>
                    
-                   <title>Clouds</title>
+                   <para>Clouds</para>
   </section>
   
   <section>
@@ -88,7 +88,8 @@
   </section>
   
   <section>
-    <title>Are You Sure Migration Info should be in the walkthrough?</title>
+    <title>Migration</title>
+     <para>Are You Sure Migration Info should be in the walkthrough?</para>
 
   </section>
 
@@ -100,5 +101,6 @@
 
 
 </chapter>
+
 
 
