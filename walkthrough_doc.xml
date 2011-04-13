@@ -8,13 +8,13 @@
   The sample project is relaviely simple,with links to more information on how to create more complex project components. We also include links to terms and concepts as they arise.</para>
   <section>
 
-  <title>Sample Project</title>
+   <title>Sample Project</title>
   
-  <para>Describe the sample project - objetives, etc.</para>
+    <para>Describe the sample project - objetives, etc.</para>
 
-  <title>Overview of Workflow Steps</title>
+   <title>Overview of Workflow Steps</title>
 
-  <title>Workflow Creation </title>
+   <title>Workflow Creation </title>
   
   <para>2-5 based on VM</para>
             <title>Workflow Basics</title>
@@ -25,7 +25,7 @@
             
             <title>Link to example workflows</title>
             
-  <title>Setting Up Environments</title>
+   <title>Setting Up Environments</title>
   
                  <title>Catalog Basics</title>
                  
@@ -70,3 +70,4 @@
 
 
 </chapter>
+
