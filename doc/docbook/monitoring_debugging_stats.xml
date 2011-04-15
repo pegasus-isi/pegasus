@@ -72,6 +72,25 @@
       file in each workflow directory, the database at the top-level workflow
       will contain the information from not only the main workflow, but also
       from all sub-workflows.</para>
+      <section>
+	<title>Using pegasus-monitord with MySQL</title>
+
+	<para>Up to Pegasus 3.0.2, when using pegasus-monitord with MySQL, users
+	have to make sure that MySQL is configured to use the MyISAM storage engine
+	by default.</para>
+
+	<para>Additionally, users need to create the database using the 'latin1' encoding.
+	This can be done by using the following MySQL command:
+	  <programlisting>create database my_database default character set = 'latin1';</programlisting>
+	changing my_databse for the database name desired by the user.</para>
+
+	<para>Finally, users should use either the '-d' command line option, or the
+	'pegasus.monitord.output' property with a MySQL connection string to configure
+	pegasus-monitord to use MySQL. Here is a sample connection string:
+	  <programlisting>mysql://user:password@host:port/database_name</programlisting></para>
+
+      </section>
+
     </section>
 
     <section>
